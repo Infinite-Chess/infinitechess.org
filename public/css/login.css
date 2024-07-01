@@ -1,0 +1,239 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: Verdana;
+    border: 0;
+    /* Enable temporarily during dev to see the borders of all elements */
+    /* outline: 1px solid rgba(0, 0, 0, 0.214); */
+}
+
+html {
+    height: 100%;
+    background-color: rgb(33, 33, 33);
+}
+
+
+
+header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    box-shadow: 0px 1px 5px rgb(107, 107, 107);
+    height: 40px;
+    font-size: 0;
+    overflow: scroll;
+    white-space: nowrap;
+    text-align: center;
+    background-color: white;
+    z-index: 1;
+}
+
+header a {
+    display: inline-block;
+    text-decoration: none;
+    line-height: 40px;
+    margin-left: 4px;
+    min-width: 70px;
+    font-size: 16px;
+    color: black;
+}
+
+header a:hover {
+    background-color: rgb(211, 235, 255);
+}
+
+header p {
+    padding: 0 10px;
+}
+
+
+
+main {
+    background-image: url('/img/blank_board.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-attachment: fixed;
+
+    margin-top: 40px;
+    min-height: 425px;
+}
+
+#content {
+    background-color: rgba(255, 255, 255, 0.805);
+    min-height: 425px;
+    margin: auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
+    padding: 30px 20px;
+}
+
+#content h1 {
+    font-size: 40px;
+    font-family: georgia;
+    margin-bottom: 60px;
+}
+
+.formfield {
+    width: fit-content;
+    text-align: right;
+    margin: auto;
+    line-height: 2.2em;
+}
+
+#usernameinputline {
+    text-align: center;
+}
+
+#passwordinputline {
+    margin-top: 12px;
+    display: inline-block;
+    text-align: center;
+    width: fit-content;
+}
+
+label {
+    font-size: 18px;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+input {
+    border: 0;
+    border-radius: 4px;
+    padding: 0.4em;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.63);
+    font-size: 15px;
+    width: 180px;
+}
+
+input:focus {
+    outline: solid 1px black;
+}
+
+input[type='text']:hover, input[type='password']:hover {
+    box-shadow: 0 0 8px rgb(0, 0, 0);
+}
+
+div.error {
+    font-size: 16px;
+    text-align: center;
+    color: red;
+    margin-top: 1.0em;
+    line-height: 1em;
+}
+
+.forgothidden {
+    display: none;
+}
+
+.forgotvisible {
+    display: block;
+    font-size: 13px;
+    margin-top: 0.5em;
+}
+
+input[type='submit'] {
+    height: 30px;
+    min-width: 0;
+    width: fit-content;
+    height: fit-content;
+    background-color: white;
+    font-size: 16px;
+    transition: 0.1s;
+    margin: 25px;
+    outline: 0;
+}
+
+input[type='submit'].ready:hover {
+    transition: 0.1s;
+    font-size: 18px;
+    box-shadow: 0 0 8px rgb(0, 0, 0);
+    margin: 23px;
+}
+
+input[type='submit'].ready:focus {
+    outline: solid 1px black;
+}
+
+
+
+footer {
+    text-align: center;
+    padding: 10px 0;
+}
+
+footer a {
+    display: inline-block;
+    color: rgb(207, 207, 207);
+    margin: 10px 10px;
+    text-decoration: underline;
+}
+
+
+
+.currPage {
+    background-color: rgb(236, 236, 236);
+}
+
+.center {
+    text-align: center;
+}
+
+.unavailable {
+    color: rgba(0, 0, 0, 0.199);
+}
+
+a {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
+    color: black;
+}
+
+
+
+/* Start increasing header links width */
+@media only screen and (min-width: 450px) {
+    header {
+        overflow: unset;
+    }
+
+    header a {
+        min-width: calc(70px + (100vw - 450px) * 0.15);
+    }
+
+    #content h1 {
+        font-size: calc(40px + 0.027 * (100vw - 450px));
+    }
+
+    input {
+        width: calc(180px + 0.15 * (100vw - 450px));
+    }
+}
+
+/* Stop increasing header links width */
+@media only screen and (min-width: 715px) {
+    header a {
+        min-width: 110px;
+    }
+
+    input {
+        width: 220px;
+    }
+}
+
+/* Cap content width size, revealing image on the sides */
+@media only screen and (min-width: 810px) {
+    #content {
+        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+        padding: 40px 30px;
+        min-height: 800px;
+    }
+
+    #content h1 {
+        font-size: 50px;
+        margin-bottom: 70px;
+    }
+}

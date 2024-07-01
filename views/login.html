@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="x-ua-compatible" content="ie=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Log In</title>
+        <link rel='stylesheet' href='/css/login.css'>
+        <link rel="icon" type="image/png" href="/img/favicon.png">
+        <script defer src="/scripts/login.js"></script>
+    </head>
+    <body>
+        <header>
+            <nav>
+                <a href="/">
+                    <p>Home</p>
+                </a>
+                <a href="/play">
+                    <p>Play</p>
+                </a>
+                <a href="/news">
+                    <p>News</p>
+                </a>
+                <a href="/login">
+                    <p class="currPage">Log In</p>
+                </a>
+                <a href="/createaccount">
+                    <p>Create Account</p>
+                </a>
+            </nav>
+        </header>
+        <main>
+            <div id="content">                  
+                <h1 class="center">Log In</h1>
+                <form action="./login" method="POST" class="center" id="form">
+                    <div class="formfield">
+                        <div id="usernameinputline">
+                            <label for="username">Username:</label>
+                            <input id="username" type="text" name="username" required maxLength="40" autocomplete="off" autofocus>
+                        </div>
+                        <div id="passwordinputline">
+                            <label for="password">Password:</label>
+                            <input id="password" type="password" name="password" required maxLength="40">
+                        </div>
+                        <!-- This is where our script inserts an error division! -->
+                    </div>
+                    <p id="forgot" class="forgothidden">Forgot? <a href="mailto:infinitechess.org@gmail.com">Email us.</a></p>
+                    <input type="submit" value="Log In" class="unavailable" id="submit">
+                </form>
+            </div>
+        </main>
+        <footer>
+            <a href="mailto:infinitechess.org@gmail.com">Contact us.</a>
+            <a href="/termsofservice">Terms of Service</a>
+        </footer>
+    </body>
+</html>
