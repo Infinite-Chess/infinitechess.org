@@ -25,7 +25,7 @@ This guide will use VSCode, but you may use another code editor if you wish, if 
 
 ## Step 3: Forking the repository ##
 
-Go to the [repository's home page](https://github.com/Infinite-Chess/infinitechess.org), then click "Fork"!
+Go to the [repository's home page](https://github.com/Infinite-Chess/infinitechess.org), then click "Fork"! You will need a github account.
 
 <img width="818" alt="21 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/287192ce-361e-4277-9ac2-249813852d2f">
 
@@ -36,7 +36,7 @@ Next, return to VSCode, and click "Clone Git Repository..."
 <img width="1024" alt="18" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/282bc4e3-3f05-4160-9125-23fd9fb3ef58">
 
 
-Click "Clone from GitHub". Then click "Allow" to sign in with your github account (create one if you have not already), and click "Authorize Visual-Studio-Code" if that option is available.
+Click "Clone from GitHub". Then click "Allow" to sign in with your github account, and click "Authorize Visual-Studio-Code" if that option is available.
 
 <img width="684" alt="19 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/fd0f4b09-d2e0-4c1f-8363-5b87b7511f09">
 
@@ -45,13 +45,13 @@ Search for "infinitechess.org" and click the one that looks similar to the follo
 
 <img width="698" alt="20" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7e4d300b-2f1c-4969-bdbd-9039ed8520c2">
 
-Choose a location on your machine to store the repository.
+Choose a location on your machine to store the repository. Then when prompted whether or not to open the repository, click "Open".
 
 
 
 ## Step 4: Install project dependancies ##
 
-Open the web server project inside VSCode and open the terminal within it.
+Inside the opened VSCode project, open a terminal window within it by going to Terminal > New Terminal.
 
 Run the following command to auto-install all project dependancies:
 ```
@@ -133,7 +133,7 @@ Now delete the `csr.pem` file as it is no longer needed. The final `cert` folder
 
 Restart the server with the command `nodemon`, and refresh your browser! It should no longer tell us it can’t provide a secure connection, but it may warn you it is unsafe. Just proceed anyway.
 
-Now you should now be able to browse the website and all it’s contents! Hooray! In the next step we will get account creation working.
+Now you should now be able to browse the website and all it’s contents! Hooray!
 
 <img width="1011" alt="5 orig" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7d9cda30-bda9-4cde-8b17-a8dcc9185b0d">
 
@@ -185,7 +185,7 @@ Now upon creating a new account, you should see a message "Email is sent to memb
 Note that you will only be able click "Verify Account" in the verification emails if you  are on the same machine running the server, as the verification link contains `localhost` within it.
 
 
-**You are all set up now to start developing!**
+**You are all set up now to start developing!** 🥳 See [Navigating the workspace](#navigating-the-workspace) below!
 
 ## Creating a Pull Request ##
 
