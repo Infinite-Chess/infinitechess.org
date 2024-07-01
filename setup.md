@@ -216,9 +216,9 @@ There has been 3 automatically generated accounts for you to test with-
 - Patron: Has patron-specific permissions (at the moment this holds no difference between member accounts).
 - Owner: Has owner permissions, allowing access to otherwise innaccessible pages, including the game's developmental version.
 
-The password for every one of these accounts is `aaaaaa`. Log in as "Owner" to access the developmental version of the game.
+The password for every one of these accounts is `1`. Log in as "Owner" to access the developmental version of the game.
 
-The html document for this page is found in `views/dev.html`, and the script where everything starts the game is `main.js`. All other game scripts include basic descriptions at the top of each of them. Ask for help in the discord for more understanding of how each script works!
+The html document for this page is found in [views/dev.html](./views/dev.html), and the script where everything starts the game is [main.js](./protected-owner/scripts/game/main.js). All other game scripts include basic descriptions at the top of each of them. Ask for help in the discord for greater understanding of how each script works!
 
 After you make changes to the game code and refresh the dev page, get in the habit of hard refreshing the page, as sometimes the browser doesn't recognize that there's new code to load. In chrome, you can do this by right clicking the refresh button and selecting "Hard Reload":
 
@@ -242,8 +242,8 @@ Now, as long as you have developer tools open whenever you refresh, the game wil
 
 ### How do I connect to the web server with other devices in my home network? ###
 
-Connecting more devices, other than the machine that is hosting, to the web server is beneficial for dev testing (especially for mobile testing). The machine you’re using to run the server is the only device that connects through `https://localhost:3443`. To connect from other devices in your home network, first they need to be connected to the same wifi, then you need to replace `localhost` with the IP address of your computer running the server. You can find your computers IP address within the network settings on your computer. An example of what your IP may look like is `192.168.1.2`. If this was your computer's IP address, then to connect to the web server on other devices you would go to `https://192.168.1.2:3443`.
+Connecting more devices to the web server, other than the machine that is hosting, is beneficial for dev testing (especially for mobile). The machine you’re using to run the server is the only device that connects through `https://localhost:3443`. To connect from other devices in your home network, first they need to be connected to the same wifi, then you need to replace `localhost` with the IP address of your computer running the server. You can find your computers IP address within the network settings on your computer. An example of what your IP may look like is `192.168.1.2`. If this was your computer's IP address, then to connect to the web server on other devices you would go to `https://192.168.1.2:3443`.
 
 ## Conclusion ##
 
-Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeNh5) to discuss with the other team members how we should go about things!
+Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeNh5) to discuss the others how we should best go about things!
