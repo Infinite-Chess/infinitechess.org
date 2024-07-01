@@ -36,12 +36,12 @@ Next, return to VSCode, and click "Clone Git Repository..."
 <img width="1024" alt="18" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/282bc4e3-3f05-4160-9125-23fd9fb3ef58">
 
 
-Click "Clone from GitHub". Then click "Allow" to sign in with your github account, and click "Authorize Visual-Studio-Code" if that option is available.
+Click "Clone from GitHub". Then click "Allow" to sign in with your github account, and click "Authorize Visual-Studio-Code".
 
 <img width="684" alt="19 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/fd0f4b09-d2e0-4c1f-8363-5b87b7511f09">
 
 
-Search for "infinitechess.org" and click the one that looks similar to the following image, except the path will be to the fork you have just created on your personal github account:
+Search for "infinitechess.org" and click the one that looks similar to the following image, except the path will be to the fork you have just created on your personal github account. DO NOT select the repository in "Infinite-Chess/infinitechess.org", as you do not have write permission on that!
 
 <img width="698" alt="20" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7e4d300b-2f1c-4969-bdbd-9039ed8520c2">
 
