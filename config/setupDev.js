@@ -20,6 +20,9 @@ function createDevelopmentAccounts() {
         generateAccount({ username: "Patron", email: "exampleemail@gmail.com", password: "1", autoVerify: true })
         giveRole_Patron("patron", "developmental account")
     }
+    if (!doesMemberExist("member")) {
+        generateAccount({ username: "Member", email: "exampleemail@gmail.com", password: "1", autoVerify: true })
+    }
 }
 
 
