@@ -1,30 +1,50 @@
 # Setting up your workspace #
 
-This guide walks you through the initial setup phase of the Infinite Chess server on your machine. This only needs to be done once. Afterward, you will be able to write and modify code, suggesting changes to the github!
+This guide walks you through the initial setup phase of the infinitechess.org server on your machine. This only needs to be done once. Afterward, you will be able to write and modify code, suggesting changes to the github!
 
-**This is a team project!!** Join (the discord)[] server to work with others, discuss how to improve the website, and ask questions!
+**This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions!
 
 
 
-## Download VSCode ##
+## Step 1: Download VSCode ##
 
 This guide will use VSCode, but you may use another code editor if you wish, if it is compatible with Node, npm, and has source control features.
 
-(Go here)[https://code.visualstudio.com/] to download and install VSCode.
+[Go here](https://code.visualstudio.com/) to download and install VSCode.
 
 
 
-## Install Node.js ##
+## Step 2: Install Node.js ##
 
-(Go here)[https://nodejs.org/en/download/package-manager] to download and install Node. The easiest method is to click the "Prebuilt Installer" tab, download that, and run the installer.
-
-
-
-## Fork the github repository ##
+[Go here](https://nodejs.org/en/download/package-manager) to download and install Node. The easiest method is to click the "Prebuilt Installer" tab, download that, and run the installer.
 
 
 
-## Install project dependancies ##
+## Step 3: Forking the repository ##
+
+Go to the [repository's home page](https://github.com/Infinite-Chess/infinitechess.org), then click "Fork"!
+
+img21
+
+On the next page, click "Create Fork".
+
+Next, return to VSCode, and click "Clone Git Repository..."
+
+(img18)
+
+Click "Clone from GitHub". Then click "Allow" to sign in with your github account (create one if you have not already), and click "Authorize Visual-Studio-Code" if that option is available.
+
+img19
+
+Search for "infinitechess.org" and click the one that looks similar to the following image, except the path will be to the fork you have just created on your github account:
+
+img20
+
+Choose a location on your machine to store the repository.
+
+
+
+## Step 4: Install project dependancies ##
 
 Open the web server project inside VSCode and open the terminal within it.
 
@@ -35,25 +55,16 @@ Now run this to install nodemon (a dev dependency):
 ```npm install -g nodemon```
 
 To test run the server, and start it up from now on, enter the command:
-```nodemon```
+```
+nodemon
+```
 
 Now you should see something like:
 (Img1)
 
-
-### Why use the command “nodemon” to start the server instead of VSCode’s built in run button? ###
-
-(Img3)
-
-Running the server with `nodemon` will automatically restart the server when you make changes and save any file. This removes the need to constantly hit the restart button, which can quickly get repetitive.
-
-Although, this can become troublesome if it is restarting too commonly, as restarting the server does terminate any active games being played. There is a list of files that nodemon will ignore when listening for changes to in order to restart, this list is within `nodemon.json` at the root level of the project. You may add or remove files or folders to this list to modify nodemon’s auto-restart behavior.
-
-
-
 You should now be able to connect to the server through local host. Open a web browser and go to `https://localhost:3443`
 
-You may be met with a message like this, don’t worry, we'll fix this@
+You may be met with a message like this, don’t worry, we'll fix this!
 
 (img4)
 
@@ -73,23 +84,31 @@ If done correctly, you should be met with the following. This means the server h
 Now we need to create a certification so we can connect to the web server with a valid protocol.
 
 The server should have created an empty `cert` folder in the project root directory. Stop the server from running by clicking on the project terminal to focus it, and hit Ctrl > C. Then, enter the command to move into the new `cert` folder:
-```cd cert```
+```
+cd cert
+```
 
 Now, enter this command to generate a self-signed private key:
-```openssl genres -out cert.key```
+```
+openssl genres -out cert.key
+```
 
 Your `cert` folder should now look like:
 (img12)
 
 Next, enter this command to generate a certificate signing request (CSR):
-```openssl req -new -key cert.key -out csr.pem```
+```
+openssl req -new -key cert.key -out csr.pem
+```
 You may skip the proceeding questions by pressing enter.
 
 Your `cert` folder should now look like:
 (img13)
 
 Finally, to generate our certificate, run this command:
-```openssl x509 -req -days 365 -in csr.pem -signkey cert.key -out cert.pem```
+```
+openssl x509 -req -days 365 -in csr.pem -signkey cert.key -out cert.pem
+```
 
 Your `cert` folder should now look like:
 (img14)
@@ -119,9 +138,9 @@ To do this, I recommend creating a brand new gmail account for this purpose. Thi
 
 Note that gmail’s terms of service only allows automated email sending upon user-triggered events. Examples of okay emails to send are emails in response to a new account created, or a password reset request. An example of an against terms of service email would be a weekly newsletter. See gmail’s terms of service for more info.
 
-After creating a new gmail account, turn on (2-Step Verification)[https://support.google.com/accounts/answer/185839?sjid=17083970032576237275-NC], this is required.
+After creating a new gmail account, turn on [2-Step Verification](https://support.google.com/accounts/answer/185839?sjid=17083970032576237275-NC), this is required.
 
-Next, (go here)[https://myaccount.google.com/apppasswords] where you will be able to create a new app password. If it tells you that App Passwords aren’t available for your account, you need to enable 2-Step Verification.
+Next, [go here](https://myaccount.google.com/apppasswords) where you will be able to create a new app password. If it tells you that App Passwords aren’t available for your account, you need to enable 2-Step Verification.
 
 (Img8)
 
@@ -137,7 +156,7 @@ Now, in the same `.env` file, fill in the `EMAIL_USERNAME` variable with the ema
 
 DO NOT LET your app password be leaked!!! If that happens, bad actors will be able to hack into your gmail account. If you only keep your app password within the `.env` file, it will not be uploaded to github, this is because ".env" is specified within the `.gitignore` file, which specifies what files to skip over when uploading to github.
 
-If your app password is ever leaked, or you suspect it might be, return to your (app passwords)[https://myaccount.google.com/apppasswords] page, and click the trash button to delete it. This invalidates that password so it can no longer be used in your account. Then you may generate a new app password.
+If your app password is ever leaked, or you suspect it might be, return to your [app passwords](https://myaccount.google.com/apppasswords) page, and click the trash button to delete it. This invalidates that password so it can no longer be used in your account. Then you may generate a new app password.
 
 At this stage, your `.env` file should be totally filled out, looking something like this:
 
@@ -188,11 +207,4 @@ Connecting more devices, other than the machine that is hosting, to the web serv
 
 ## Conclusion ##
 
-Infinite Chess is a team project! Join the discord to discuss with the other team members how we should go about things!  (Insert link)
-
-
-
-
-
-
-
+Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeNh5) to discuss with the other team members how we should go about things!
