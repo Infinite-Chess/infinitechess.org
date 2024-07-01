@@ -24,21 +24,21 @@ This guide will use VSCode, but you may use another code editor if you wish, if 
 
 Go to the [repository's home page](https://github.com/Infinite-Chess/infinitechess.org), then click "Fork"!
 
-img21
+<img width="818" alt="21 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/287192ce-361e-4277-9ac2-249813852d2f">
 
 On the next page, click "Create Fork".
 
 Next, return to VSCode, and click "Clone Git Repository..."
 
-(img18)
+<img width="1024" alt="18" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/282bc4e3-3f05-4160-9125-23fd9fb3ef58">
 
 Click "Clone from GitHub". Then click "Allow" to sign in with your github account (create one if you have not already), and click "Authorize Visual-Studio-Code" if that option is available.
 
-img19
+<img width="684" alt="19 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/fd0f4b09-d2e0-4c1f-8363-5b87b7511f09">
 
-Search for "infinitechess.org" and click the one that looks similar to the following image, except the path will be to the fork you have just created on your github account:
+Search for "infinitechess.org" and click the one that looks similar to the following image, except the path will be to the fork you have just created on your personal github account:
 
-img20
+<img width="698" alt="20" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7e4d300b-2f1c-4969-bdbd-9039ed8520c2">
 
 Choose a location on your machine to store the repository.
 
@@ -60,22 +60,19 @@ nodemon
 ```
 
 Now you should see something like:
-(Img1)
+<img width="366" alt="1" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/b1cf7bab-8973-4446-902c-3aef3a538c44">
 
 You should now be able to connect to the server through local host. Open a web browser and go to `https://localhost:3443`
 
 You may be met with a message like this, don’t worry, we'll fix this!
-
-(img4)
+<img width="667" alt="4" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/2aef8b21-dbad-404e-ac91-8d2fc301c63a">
 
 However, if you see something like below, it means either the server hasn’t started, or you entered an incorrect url. Please verify those above until you receive a message similar to the above picture.
-
-(Img6)
+<img width="678" alt="6" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/79e97985-0156-45aa-a642-9e4d75c8514a">
 
 Now, stop the server by clicking in the VSCode terminal window to re-focus it, and hit Ctrl > C.
 If done correctly, you should be met with the following. This means the server has stopped.
-
-(Img7)
+<img width="250" alt="7" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/a880cfc0-5e92-4568-aa19-abe857448d40">
 
 
 
@@ -94,7 +91,7 @@ openssl genres -out cert.key
 ```
 
 Your `cert` folder should now look like:
-(img12)
+<img width="135" alt="12" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/fb20ac73-1b74-4271-8e73-bedc93d013f2">
 
 Next, enter this command to generate a certificate signing request (CSR):
 ```
@@ -103,7 +100,7 @@ openssl req -new -key cert.key -out csr.pem
 You may skip the proceeding questions by pressing enter.
 
 Your `cert` folder should now look like:
-(img13)
+<img width="142" alt="13" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/57dceef5-307a-45a2-ba15-431eae6b83d9">
 
 Finally, to generate our certificate, run this command:
 ```
@@ -111,22 +108,21 @@ openssl x509 -req -days 365 -in csr.pem -signkey cert.key -out cert.pem
 ```
 
 Your `cert` folder should now look like:
-(img14)
+<img width="147" alt="14" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/d2ee294c-c2e0-4e5e-9411-60ae8aa937f8">
+
 
 Now delete the `csr.pem` file as it is no longer needed. The final `cert` folder should look like:
-(img11)
+<img width="136" alt="11" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/07df9477-3c0f-44fc-9547-dedb2a498a93">
 
 Restart the server with the command `nodemon`, and refresh your browser! It should no longer tell us it can’t provide a secure connection, but it may warn you it is unsafe. Just proceed anyway.
 
 Now you should now be able to browse the website and all it’s contents! Hooray! In the next step we will get account creation working.
+<img width="1011" alt="5 orig" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7d9cda30-bda9-4cde-8b17-a8dcc9185b0d">
 
-(Img5)
 
- 
 
 What is this pesky “Not Secure” message? This can safely be ignored as you develop. It IS possible to tell your computer to trust our newly created certificate, but it is not required, and these directions won’t include that. But for starters, you could search "getting chrome to trust a self signed certificate".
-
-(Img2)
+<img width="286" alt="2" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/393970f5-9b18-4ce8-b726-6fff33eb4908">
 
 
 
@@ -142,13 +138,13 @@ After creating a new gmail account, turn on [2-Step Verification](https://suppor
 
 Next, [go here](https://myaccount.google.com/apppasswords) where you will be able to create a new app password. If it tells you that App Passwords aren’t available for your account, you need to enable 2-Step Verification.
 
-(Img8)
+<img width="713" alt="8" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/3a6b1c9c-9450-4fb4-8954-369fd3d7d201">
 
 For the name field, it is unimportant, but you can enter `Node`. Then click “Create”.
 
 It will generate a new app password, your screen should look like this, with a unique password:
 
-(Img9)
+<img width="601" alt="9" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/8a0d7c78-235e-4a60-92a1-0c9026d711bf">
 
 Copy the 16-digit app password onto your clipboard. Next, go back to the web server, and in the root directory, open the `.env` file, and paste your new app password next to the `EMAIL_APP_PASSWORD` variable. Then remove the spaces in the password.
 
@@ -160,7 +156,8 @@ If your app password is ever leaked, or you suspect it might be, return to your 
 
 At this stage, your `.env` file should be totally filled out, looking something like this:
 
-(Img10)
+<img width="716" alt="10" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/6dc717f1-b463-4cef-bbfe-9f2a07acba5c">
+
 
 You do have the option of changing what port the server is hosted on locally, by modifying the `HTTPPORT_LOCAL` and `HTTPSPORT_LOCAL` variables. If you do, be sure you modify the url you are visiting to access the web server, according to the port you set. By default, you visit `https://localhost:3443`, but if you modify the port, the 3443 here needs to be changed to match what you set it to.
 
