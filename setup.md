@@ -35,9 +35,11 @@ Next, return to VSCode, and click "Clone Git Repository..."
 
 <img width="1024" alt="18" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/282bc4e3-3f05-4160-9125-23fd9fb3ef58">
 
+
 Click "Clone from GitHub". Then click "Allow" to sign in with your github account (create one if you have not already), and click "Authorize Visual-Studio-Code" if that option is available.
 
 <img width="684" alt="19 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/fd0f4b09-d2e0-4c1f-8363-5b87b7511f09">
+
 
 Search for "infinitechess.org" and click the one that looks similar to the following image, except the path will be to the fork you have just created on your personal github account:
 
@@ -85,7 +87,9 @@ If done correctly, you should be met with the following. This means the server h
 
 The server should have automatically created the files and directories .env, cert, database, logs, and node_modules!
 
-### Creating a self-signed certification ###
+
+
+## Step 5: Creating a self-signed certification ##
 
 Now we need to create a certification so we can connect to the web server with a valid protocol.
 
@@ -141,7 +145,7 @@ What is this pesky “Not Secure” message? This can safely be ignored as you d
 
 
 
-## Setting up the email service ##
+## Step 6 (optional): Setting up the email service ##
 
 While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails (planned) until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
 
@@ -155,7 +159,7 @@ Next, [go here](https://myaccount.google.com/apppasswords) where you will be abl
 
 <img width="713" alt="8" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/3a6b1c9c-9450-4fb4-8954-369fd3d7d201">
 
-For the name field, it is unimportant, but you can enter `Node`. Then click “Create”.
+For the name field, it is unimportant, but you can enter `Node.js`. Then click “Create”.
 
 It will generate a new app password, your screen should look like this, with a unique password:
 
@@ -176,19 +180,36 @@ At this stage, your `.env` file should be totally filled out, looking something 
 
 You do have the option of changing what port the server is hosted on locally, by modifying the `HTTPPORT_LOCAL` and `HTTPSPORT_LOCAL` variables. If you do, be sure you modify the url you are visiting to access the web server, according to the port you set. By default, you visit `https://localhost:3443`, but if you modify the port, the 3443 here needs to be changed to match what you set it to.
 
-Now upon creating a new account, you should see a message "Email is sent to member ExampleUsername!". If you see an error, or "Email environment variables not specified. Not sending email.", than it was setup incorrectly.
+Now upon creating a new account, you should see a message "Email is sent to member ExampleUsername!". If you see an error, or "Email environment variables not specified. Not sending email.", then it was setup incorrectly.
 
-Note that you will only be able to verify accounts you create on the same machine running the server, as the verification link contains `localhost` within it.
+Note that you will only be able click "Verify Account" in the verification emails if you  are on the same machine running the server, as the verification link contains `localhost` within it.
 
 
-You are all set up now to start developing! 
+**You are all set up now to start developing!**
+
+## Creating a Pull Request ##
+
+After you have made some changes to the code, you can push those changes to your personal fork by going to the Source Control tab, entering a custom commit message, and clicking "Commit", followed by "Sync Changes"!
+
+<img width="476" alt="23 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/298ec58f-8212-4943-9cde-ac091f4eb4fb">
+
+If you visit the fork you created on your own github account, the changes you made should now be found there as well!
+
+Next, let's suggest this change to the official infinitechess.org repository by creating a Pull Request!
+
+On the home page of the fork you created ON YOUR GITHUB account, click on "Pull Requests"
+
+<img width="816" alt="26 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/4405b906-bd76-4e34-9431-b6b2d8a2cdfe">
+
+Now click "New pull request", followed by "Create pull request"! Your changes will be reviewed soon and either be accepted, rejected, or commented on!
+
 
 
 ## Navigating the workspace ##
 
-The remainder of this guide will give you basic pointers of how to navigate the project, where to find the game’s code, and how to push commits for review on GitHub!
+The remainder of this guide will give you basic pointers of how to navigate the project, and where to find the game’s code!
 
-The game's code is located within `protected-owner/scripts/game`. This contains all the javascript code for the developomental version of the game! To access this developmental version, go to `https://localhost:3443/play/devversion`. This will forward you to the login page, because you need the owner role to access it.
+The game's code is located within [protected-owner/scripts/game](./protected-owner/scripts/game). This contains all the javascript code for the developomental version of the game! To access this developmental version in your browser, go to `https://localhost:3443/play/devversion`. This will forward you to the login page, because you need the owner role to access it.
 
 There has been 3 automatically generated accounts for you to test with-
 - Member: Has basic member permissions.
@@ -199,16 +220,22 @@ The password for every one of these accounts is `aaaaaa`. Log in as "Owner" to a
 
 The html document for this page is found in `views/dev.html`, and the script where everything starts the game is `main.js`. All other game scripts include basic descriptions at the top of each of them. Ask for help in the discord for more understanding of how each script works!
 
-After you make changes to the game code and refresh the dev page, get in the habit of hard refreshing the page, as sometimes the browser doesn't recognize that there's new code to load. In chrome, you can do this by right clicking the refresh button and selecting "Hard Refresh":
-(img17)
+After you make changes to the game code and refresh the dev page, get in the habit of hard refreshing the page, as sometimes the browser doesn't recognize that there's new code to load. In chrome, you can do this by right clicking the refresh button and selecting "Hard Reload":
+
+<img width="697" alt="17" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/92cdb828-1091-4b37-9d90-fe309b3e1cdd">
+
 
 You should have basic familiarity with your browser's developer tools.
 
 To enable automatic hard refreshing, I recommend going to your developer tool settings:
-(img15)
+
+<img width="1134" alt="15" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/8dafd293-4817-460f-a877-aca2825ba2fb">
+
 
 and under the "Preferences" tab, checking the box next to "Disable cache (while DevTools is open)". 
-(img16)
+
+<img width="1131" alt="16" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/0be82a5a-c40f-43dc-8fc4-c2f0cc250b56">
+
 
 Now, as long as you have developer tools open whenever you refresh, the game will always hard refresh and load your new code.
 
