@@ -18,6 +18,9 @@ This guide will use VSCode, but you may use another code editor if you wish, if 
 
 [Go here](https://nodejs.org/en/download/package-manager) to download and install Node. The easiest method is to click the "Prebuilt Installer" tab, download that, and run the installer.
 
+<img width="916" alt="22 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/9f0b5cab-f372-45f6-b648-cefef99e68a0">
+
+
 
 
 ## Step 3: Forking the repository ##
@@ -48,11 +51,15 @@ Choose a location on your machine to store the repository.
 
 Open the web server project inside VSCode and open the terminal within it.
 
-Run the following command:
-```npm install```
+Run the following command to auto-install all project dependancies:
+```
+npm install
+```
 
 Now run this to install nodemon (a dev dependency):
-```npm install -g nodemon```
+```
+npm install -g nodemon
+```
 
 To test run the server, and start it up from now on, enter the command:
 ```
@@ -60,6 +67,7 @@ nodemon
 ```
 
 Now you should see something like:
+
 <img width="366" alt="1" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/b1cf7bab-8973-4446-902c-3aef3a538c44">
 
 You should now be able to connect to the server through local host. Open a web browser and go to `https://localhost:3443`
@@ -72,15 +80,16 @@ However, if you see something like below, it means either the server hasn’t st
 
 Now, stop the server by clicking in the VSCode terminal window to re-focus it, and hit Ctrl > C.
 If done correctly, you should be met with the following. This means the server has stopped.
+
 <img width="250" alt="7" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/a880cfc0-5e92-4568-aa19-abe857448d40">
 
-
+The server should have automatically created the files and directories .env, cert, database, logs, and node_modules!
 
 ### Creating a self-signed certification ###
 
 Now we need to create a certification so we can connect to the web server with a valid protocol.
 
-The server should have created an empty `cert` folder in the project root directory. Stop the server from running by clicking on the project terminal to focus it, and hit Ctrl > C. Then, enter the command to move into the new `cert` folder:
+Check to make sure the server has created an empty `cert` folder in the project root directory. Stop the server from running by clicking on the project terminal to focus it, and hit Ctrl > C. Then, enter the command to move into the new `cert` folder:
 ```
 cd cert
 ```
@@ -91,6 +100,7 @@ openssl genres -out cert.key
 ```
 
 Your `cert` folder should now look like:
+
 <img width="135" alt="12" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/fb20ac73-1b74-4271-8e73-bedc93d013f2">
 
 Next, enter this command to generate a certificate signing request (CSR):
@@ -100,6 +110,7 @@ openssl req -new -key cert.key -out csr.pem
 You may skip the proceeding questions by pressing enter.
 
 Your `cert` folder should now look like:
+
 <img width="142" alt="13" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/57dceef5-307a-45a2-ba15-431eae6b83d9">
 
 Finally, to generate our certificate, run this command:
@@ -108,20 +119,24 @@ openssl x509 -req -days 365 -in csr.pem -signkey cert.key -out cert.pem
 ```
 
 Your `cert` folder should now look like:
+
 <img width="147" alt="14" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/d2ee294c-c2e0-4e5e-9411-60ae8aa937f8">
 
 
 Now delete the `csr.pem` file as it is no longer needed. The final `cert` folder should look like:
+
 <img width="136" alt="11" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/07df9477-3c0f-44fc-9547-dedb2a498a93">
 
 Restart the server with the command `nodemon`, and refresh your browser! It should no longer tell us it can’t provide a secure connection, but it may warn you it is unsafe. Just proceed anyway.
 
 Now you should now be able to browse the website and all it’s contents! Hooray! In the next step we will get account creation working.
+
 <img width="1011" alt="5 orig" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7d9cda30-bda9-4cde-8b17-a8dcc9185b0d">
 
 
 
 What is this pesky “Not Secure” message? This can safely be ignored as you develop. It IS possible to tell your computer to trust our newly created certificate, but it is not required, and these directions won’t include that. But for starters, you could search "getting chrome to trust a self signed certificate".
+
 <img width="286" alt="2" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/393970f5-9b18-4ce8-b726-6fff33eb4908">
 
 
