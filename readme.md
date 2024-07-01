@@ -1,6 +1,6 @@
 # [Infinite Chess](https://www.infinitechess.org) Web Server #
 
-Infinite Chess is a free, and ad-less website dedicated to creating a place where all variants of chess can be played on an infinite, boundless board.
+Infinite Chess is a free, and ad-less website, for playing all kinds of chess variants on an infinite, boundless board.
 
 It began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in 2022, inspired by the concept of chess and infinity, he started towards the goal of creating a place where all people can experience this sensation of freedom and exploration in the world well-known as "Chess". More than just a game of strategy, it mirrors life itself. Creation, conflict, resolution. The laws of the universe, elements, and time. **Tear down the barriers!** Step into the unknown. It is time for your next adventure.
 
