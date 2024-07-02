@@ -15,7 +15,7 @@ const main = (function(){
      * 
      * THIS SHOULD ALWAYS MATCH config/convig/DEV_VERSION
      */
-    const GAME_VERSION = "1.3.2.2"; // The current version of the game
+    const GAME_VERSION = "1.3.3"; // The current version of the game
     const devBuild = true // If true, the time when the main menu background stops moving is 2 seconds.
     const videoMode = false; // If true, doesn't render a few items, making recordings more immersive.
 
