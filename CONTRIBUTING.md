@@ -100,7 +100,7 @@ cd cert
 
 Now, enter this command to generate a self-signed private key:
 ```
-openssl genres -out cert.key
+openssl genrsa -out cert.key
 ```
 
 Your `cert` folder should now look like:
