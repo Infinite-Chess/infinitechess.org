@@ -8,7 +8,7 @@ It began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in 2
 
 It is open source! If you have skills in html, css, javascript, or Node, we welcome contributions! To get started collaborating, please read the [Contributing Guide](./CONTRIBUTING.md)!
 
-We are still far off from our vision. We refuse to stop until all crucial elements of this universe are founded:
+We are still far off from our vision. We refuse to stop until many crucial features of this universe are built:
 - Truly infinite move distance.
 - Games with infinitely many pieces.
 - Knightriders, and other exotic pieces.
