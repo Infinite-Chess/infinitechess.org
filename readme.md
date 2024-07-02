@@ -20,6 +20,7 @@ We are still far off from our vision. We refuse to stop until many crucial featu
 - Premoving
 - Highlighting squares, drawing infinite lines.
 - Snapping to easily threat pieces.
+- Engine play
 - and more! This list is not exhaustive.
 
 [Join us on Discord](https://discord.gg/NFWFGZeNh5) for more info, or just to chat about the game!
