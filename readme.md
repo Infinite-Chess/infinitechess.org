@@ -9,6 +9,7 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 This project is open source! If you have a feature idea you want to try implementing, or you have skills in html, css, javascript, or Node, we welcome contributions! To get started collaborating, please read the [Contributing Guide](./CONTRIBUTING.md)!
 
 We are still far off from our vision. We refuse to stop until many crucial features of this universe are built:
+- Truly infinite move distance
 - Board Editor
 - Rating system, with leaderboards
 - Themes, colors, board textures
@@ -18,7 +19,6 @@ We are still far off from our vision. We refuse to stop until many crucial featu
 - Engine play
 - Snapping to more easily threaten pieces
 - Games with infinitely many pieces
-- Truly infinite move distance
 - 4 Player
 - Massive Multiplayer Online
 - and more! This list is not exhaustive.
