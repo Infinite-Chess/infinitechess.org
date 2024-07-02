@@ -4,14 +4,15 @@ const variantomega1 = require('./variantomega1');
 const math1 = require('./math1');
 const pieces1 = require('./pieces1');
 
-// This script stores our variants
+// This script stores our variants,
+// and prepares them when a game is generated
 
 "use strict";
 
 const variant1 = (function() {
 
     /** Variants names the game works with */
-    const validVariants = ["Classical","Core","Standarch","Space Classic","CoaIP","Pawn Horde","Space","Obstocean","Abundance","Amazon Chandelier","Containment","Classical - Limit 7","CoaIP - Limit 7","Chess","Classical - KOTH","CoaIP - KOTH","Omega","Omega^2","Omega^3","Omega^4"];
+    const validVariants = ["Classical","Core","Standarch","Space Classic","CoaIP","Pawn Horde","Space","Obstocean","Abundance","Amazon Chandelier","Containment","Classical - Limit 7","CoaIP - Limit 7","Chess","Classical - KOTH","CoaIP - KOTH","Omega","Omega^2","Omega^3","Omega^4","Classical+","Pawndard","Knightline","Knighted Chess"];
     /** A list of all variants where black moves first */
     const blackMovesFirstGames = ['Omega','Omega^2','Omega^3','Omega^4']
 
@@ -160,6 +161,19 @@ const variant1 = (function() {
             case "CoaIP - KOTH":
                 initCoaip(gamefile, { Variant, Date })
                 break;
+            case "Classical+":
+                initClassicalPlus(gamefile, { Variant, Date })
+                break;
+            case "Pawndard":
+                initPawndard(gamefile, { Variant, Date })
+                break;
+            case "Knightline":
+                initKnightline(gamefile, { Variant, Date })
+                break;
+            case "Knighted Chess":
+                initKnightedChess(gamefile, { Variant, Date })
+                break;
+            // Showcasings...
             case "Omega": // Joel & Cory's version
                 variantomega1.initOmega(gamefile, { Variant, Date });
                 break;
@@ -210,6 +224,7 @@ const variant1 = (function() {
     function getRoyalCaptureWinConditions() { return { white: ['royalcapture'], black: ['royalcapture'] } }
     function getWinConditionsOfThreeCheck() { return { white: ['checkmate','threecheck'], black: ['checkmate','threecheck'] } }
     function getWinConditionsOfKOTH() { return { white: ['checkmate','koth'], black: ['checkmate','koth'] } }
+    function getDefaultPromotionsAllowed() { return { white: ['knights','bishops','rooks','queens'], black: ['knights','bishops','rooks','queens'] } }
 
     /**
      * Returns the bare-minimum gamerules a pasted game needs to function.
@@ -276,6 +291,18 @@ const variant1 = (function() {
                 return getStartSnapshotPosition({ positionString })
             case "CoaIP - KOTH":
                 positionString = 'P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|HA-2,-6|HA11,-6|ha-2,15|ha11,15|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+'
+                return getStartSnapshotPosition({ positionString })
+            case "Classical+":
+                positionString = 'p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p0,8+|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|p9,8+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p3,5+|p6,5+|P3,4+|P6,4+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P0,1+|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|P9,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+';
+                return getStartSnapshotPosition({ positionString })
+            case "Pawndard":
+                positionString = 'b4,14|b5,14|r4,12|r5,12|p2,10+|p3,10+|p6,10+|p7,10+|p1,9+|p8,9+|p0,8+|n2,8|n3,8|k4,8+|q5,8|n6,8|n7,8|p9,8+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|P1,5+|p2,5+|P3,5+|p6,5+|P7,5+|p8,5+|p1,4+|P2,4+|p3,4+|P6,4+|p7,4+|P8,4+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P0,1+|N2,1|N3,1|Q4,1|K5,1+|N6,1|N7,1|P9,1+|P1,0+|P8,0+|P2,-1+|P3,-1+|P6,-1+|P7,-1+|R4,-3|R5,-3|B4,-5|B5,-5';
+                return getStartSnapshotPosition({ positionString })
+            case "Knightline":
+                positionString = 'k5,8+|n3,8|n4,8|n6,8|n7,8|p-5,7+|p-4,7+|p-3,7+|p-2,7+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,7+|p12,7+|p13,7+|p14,7+|p15,7+|K5,1+|N3,1|N4,1|N6,1|N7,1|P-5,2+|P-4,2+|P-3,2+|P-2,2+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,2+|P12,2+|P13,2+|P14,2+|P15,2+';
+                return getStartSnapshotPosition({ positionString })
+            case "Knighted Chess":
+                positionString = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+';
                 return getStartSnapshotPosition({ positionString })
             case "Omega": // Joel & Cory's version
                 positionString = 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3|Q-1,-3|P2,-3|K0,-4'
@@ -390,6 +417,14 @@ const variant1 = (function() {
                 return getGameRules({ winConditions: getWinConditionsOfKOTH(), position });
             case "CoaIP - KOTH":
                 return getGameRules({ winConditions: getWinConditionsOfKOTH(), position });
+            case "Classical+":
+                return getGameRules({ position });
+            case "Pawndard":
+                return getGameRules({ position });
+            case "Knightline":
+                return getGameRules({ promotionsAllowed: { white: ['knights','queens'], black: ['knights','queens'] } });
+            case "Knighted Chess":
+                return getGameRules({ position });
             case "Omega": // Joel & Cory's version
                 return getGameRules({ promotionRanks: null, moveRule: null, position })
             case "Omega^2":
@@ -656,13 +691,85 @@ const variant1 = (function() {
         gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
     }
 
+    /**
+     * Inits the gamefile for Classical+. Sets the startSnapshot and gameRules properties.
+     * @param {gamefile} gamefile - The gamefile
+     * @param {Object} metadata - The metadata of the variant, with the following properties:
+     * @param {string} metadata.Variant - Required. The name of the variant.
+     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     */
+    function initClassicalPlus(gamefile, { Variant, Date }) {
+        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Classical+' })
+        gamefile.startSnapshot = {
+            position,
+            positionString,
+            specialRights,
+            turn: 'white'
+        }
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+    }
+
+    /**
+     * Inits the gamefile for Pawndard. Sets the startSnapshot and gameRules properties.
+     * @param {gamefile} gamefile - The gamefile
+     * @param {Object} metadata - The metadata of the variant, with the following properties:
+     * @param {string} metadata.Variant - Required. The name of the variant.
+     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     */
+    function initPawndard(gamefile, { Variant, Date }) {
+        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Pawndard' })
+        gamefile.startSnapshot = {
+            position,
+            positionString,
+            specialRights,
+            turn: 'white'
+        }
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+    }
+
+    /**
+     * Inits the gamefile for Knightline. Sets the startSnapshot and gameRules properties.
+     * @param {gamefile} gamefile - The gamefile
+     * @param {Object} metadata - The metadata of the variant, with the following properties:
+     * @param {string} metadata.Variant - Required. The name of the variant.
+     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     */
+    function initKnightline(gamefile, { Variant, Date }) {
+        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Knightline' })
+        gamefile.startSnapshot = {
+            position,
+            positionString,
+            specialRights,
+            turn: 'white'
+        }
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+    }
+
+    /**
+     * Inits the gamefile for Knighted Chess. Sets the startSnapshot and gameRules properties.
+     * @param {gamefile} gamefile - The gamefile
+     * @param {Object} metadata - The metadata of the variant, with the following properties:
+     * @param {string} metadata.Variant - Required. The name of the variant.
+     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     */
+    function initKnightedChess(gamefile, { Variant, Date }) {
+        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Knighted Chess' })
+        gamefile.startSnapshot = {
+            position,
+            positionString,
+            specialRights,
+            turn: 'white'
+        }
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+    }
+
 
 
     // function setupCOAIP(gamefile) {
 
     //     // const piecesByKey = getPositionOfCoaip()
 
-    //     // Performance statistics when drastically increasing the piece count in the game:
+    //     // Performance statistics (ON NAVIARY'S MACHINE) when drastically increasing the piece count in the game:
     //     // 1. Recalculating the piece models every frame:       *Phone lags after rendering 6,000 pieces. *Computer lags after 20,000
     //     // 2. Recalculating the piece models only when needed:  *Phone lags after 400,000 pieces.         *Computer after 3.2 million
     //     // This is great! This means the rendering method is very efficient. This will help make games with infinite pieces possible.
@@ -714,7 +821,8 @@ const variant1 = (function() {
         getStartingPositionOfVariant,
         getDefaultWinConditions,
         isVariantAVariantWhereBlackStarts,
-        isVariantValid
+        isVariantValid,
+        getPromotionsAllowed
     });
 
 })();
