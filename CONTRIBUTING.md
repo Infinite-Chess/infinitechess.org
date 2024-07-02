@@ -2,7 +2,7 @@
 
 This guide walks you through the initial setup phase of the infinitechess.org server on your machine. This only needs to be done once. Afterward, you will be able to write and modify code, suggesting changes to the github!
 
-**This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions!
+**This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions! If you have trouble during this setup process, request help in the [#help](https://discord.com/channels/1114425729569017918/1257506171376504916) channel!
 
 
 
