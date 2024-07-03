@@ -22,7 +22,7 @@ let WebSocketServer;
 const websocketConnections = {}; // Object containing all active web socket connections, with their ID's for the KEY
 /**
  * An object with IP addresses for the keys, and arrays of their
- * socket id's they have open for the value: `{ "83.28.68.253": 21 }`
+ * socket id's they have open for the value: `{ "83.28.68.253": [21] }`
  */
 const connectedIPs = {}; // Keys are the IP. Values are array lists containing all connection IDs they have going.
 /**
