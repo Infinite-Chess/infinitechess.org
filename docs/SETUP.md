@@ -150,19 +150,17 @@ Let's move on to learn how to suggest changes to the repository! Or, skip right 
 
 ## Creating a Pull Request ##
 
-After you have made some changes to the code, you can push those changes to your personal fork by going to the Source Control tab, entering a custom commit message, and clicking "Commit", followed by "Sync Changes"!
+After you have made some changes to the code, you can push those changes to your personal fork by going to the Source Control tab.
 
-<img width="476" alt="23 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/298ec58f-8212-4943-9cde-ac091f4eb4fb">
+<img width="887" alt="Screen Shot 2024-07-03 at 9 48 08 AM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/a2280180-dc4a-4cd4-a411-db026591b6a2">
 
-It may prompt you to stage all your changes. Only staged changes are pushed to your repository. Click "Yes".
+Only changes you "stage" will be sent to your fork! You can stage specific changes, or you can stage all your changes by clicking the "+" in the above image. Then click "Commit".
 
-<img width="981" alt="Screen Shot 2024-07-02 at 11 22 42 PM" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/f483e102-9f0c-4957-93d2-d3e6ed77fff2">
+Enter a brief commit message, then click the checkmark in the top-right corner.
 
-If you ever get stuck on the following page, you need to click the checkmark in the top-right corner (after writing a brief commit message)!
+<img width="928" alt="Screen Shot 2024-07-03 at 9 56 51 AM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/3f1f2351-62f7-450b-ae28-8a626dca4ab6">
 
-<img width="1090" alt="Screen Shot 2024-07-03 at 12 09 01 AM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/98c45969-fc7e-4691-b1bc-32a23266ad56">
-
-Then click "Commit" in the top-left again, followed by "Sync Changes".
+Now click "Sync Changes" back in the top-left!
 
 If you now visit the fork you created on your own github account, the changes you made should now be found there as well!
 
