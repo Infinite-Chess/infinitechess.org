@@ -144,7 +144,7 @@ Note that you will only be able click "Verify Account" in the verification email
 
 ### **You are all set up now to start developing!** 🥳 ###
 
-Let's move on to learn how to suggest changes to the repository! Or, skip right to [Navigating the Workspace](./docs/NAVIGATING.md)!
+Let's move on to learn how to suggest changes to the repository! Or, skip right to the [Conclusion](#conclusion).
 
 
 
@@ -157,6 +157,12 @@ After you have made some changes to the code, you can push those changes to your
 It may prompt you to stage all your changes. Only staged changes are pushed to your repository. Click "Yes".
 
 <img width="981" alt="Screen Shot 2024-07-02 at 11 22 42 PM" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/f483e102-9f0c-4957-93d2-d3e6ed77fff2">
+
+If you ever get stuck on the following page, you need to click the checkmark in the top-right corner (after writing a brief commit message)!
+
+<img width="1090" alt="Screen Shot 2024-07-03 at 12 09 01 AM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/98c45969-fc7e-4691-b1bc-32a23266ad56">
+
+Then click "Commit" in the top-left again, followed by "Sync Changes".
 
 If you now visit the fork you created on your own github account, the changes you made should now be found there as well!
 
