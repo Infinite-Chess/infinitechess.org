@@ -3,10 +3,6 @@
 const { initDevEnvironment } = require('./config/setupDev');
 initDevEnvironment();
 
-// Load the .env file contents into process.env
-// This needs to be as early as possible
-require('dotenv').config(); 
-
 // Dependancy/built-in imports
 const express = require('express');
 const app = express();

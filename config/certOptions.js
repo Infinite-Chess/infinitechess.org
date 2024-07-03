@@ -4,8 +4,7 @@ const { DEV_BUILD } = require('./config');
 const { readFileIfExists, ensureDirectoryExists } = require('../Utility/fileUtils')
 
 // Ensure the "cert" directory exists
-const pathToCertFolder = path.resolve("./cert"); // Resolve results in an absolute path
-ensureDirectoryExists(pathToCertFolder);
+const pathToCertFolder = path.resolve("cert"); // Resolve results in an absolute path
 
 /**
  * Holds SSL/TLS certificate files for both development and production environments.

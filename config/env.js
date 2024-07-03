@@ -1,5 +1,6 @@
 const fs = require('fs');
 const crypto = require('crypto');
+const dotenv = require('dotenv');
 
 const envPath = '.env';
 
@@ -23,6 +24,10 @@ HTTPSPORT_LOCAL=3443
     `;
     fs.writeFileSync(envPath, content.trim());
     console.log('Generated .env file');
+
+    // Load the .env file contents into process.env
+    // This needs to be as early as possible
+    dotenv.config(); 
 }
 
 /**

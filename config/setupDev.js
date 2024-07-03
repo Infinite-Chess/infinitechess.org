@@ -2,12 +2,21 @@ const { DEV_BUILD } = require('../config/config');
 const { generateAccount } = require('../controllers/createaccountController');
 const { giveRole_Owner, giveRole_Patron } = require('../controllers/roles');
 const { doesMemberExist } = require('../controllers/members');
-const { ensureEnvFile } = require('../config/env')
+const { ensureEnvFile } = require('../config/env');
+const { ensureSelfSignedCertificate } = require('./generateCert');
 
 function initDevEnvironment() {
     if (!DEV_BUILD) return; // Production
     
     ensureEnvFile();
+    // Load the .env file contents into process.env
+    // This needs to be as early as possible
+    require('dotenv').config(); 
+
+    if (ensureSelfSignedCertificate()) { 
+        // Let's also display the url to the page!
+        // console.log(`Website is hosted at https://localhost:${process.env.HTTPSPORT_LOCAL}/`);
+    }
     createDevelopmentAccounts();
 }
 

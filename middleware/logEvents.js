@@ -30,7 +30,7 @@ const logEvents = async (message, logName, { print } = {}) => {
     
     try {
         if (!fs.existsSync(path.join(__dirname, '..', 'logs'))) {
-            console.log(`Log ${logName} doesn't exist. Creating now...`)
+            // console.log(`Log ${logName} doesn't exist. Creating now...`)
             await fsPromises.mkdir(path.join(__dirname, '..', 'logs'));
         }
 
