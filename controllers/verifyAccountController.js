@@ -1,6 +1,6 @@
 
 const { logEvents } = require('../middleware/logEvents.js');
-const { getUsernameCaseSensitive, getVerified, setVerified } = require('./members.js');
+const { getUsernameCaseSensitive, getVerified, setVerified, doesVerificationIDMatch } = require('./members.js');
 
 // Called when clicked on verification link in email.
 // CAN redirect!
