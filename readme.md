@@ -1,15 +1,17 @@
 # Infinite Chess Web Server #
 
-[InfiniteChess.org](https://www.infinitechess.org) is a free and ad-less website for playing all kinds of chess variants on an infinite, boundless board.
+[InfiniteChess.org](https://www.infinitechess.org) is a cost-free and ad-free website for playing many different chess variants on an infinite, boundless board.
 
 What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in 2022 has been growing ever since. Inspired by the concepts of chess and infinity, he set out to craft a space where anyone can experience the thrills of freedom and exploration, reimagined within the familiar world of chess. Tear down the edges of the chessboard and step into the unknown. It is time for your next adventure!
 
 ## Contributing
 
-This project is open source! If you have a feature idea you want to try implementing, or you have skills in html, css, javascript, or Node, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)!
+This project is open source! If you have a feature idea you want to try implementing, or you have skills in html, css, javascript, or Node, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md).
+
+For pointers on how to navigate the workspace, including where the game's code is located, see [Navigating the Workspace](./docs/NAVIGATING.md).
 
 We are still far off from our vision. We refuse to stop until many crucial features of this universe are built:
-- Truly infinite move distance
+- Truly infinite move distance (see [BigDecimal.js](https://github.com/Naviary2/BigDecimal))
 - Board Editor
 - Rating system, with leaderboards
 - Themes, colors, board textures
