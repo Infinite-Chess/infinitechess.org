@@ -34,14 +34,15 @@ Next, open VSCode, and click "Clone Git Repository..."
 
 <img width="1024" alt="18" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/282bc4e3-3f05-4160-9125-23fd9fb3ef58">
 
-Click "Clone from GitHub". Then click "Allow" to sign in with your github account, and, in the browser that opened, click "Open Visual Studio Code.app".
+Click "Clone from GitHub".
 
 <img width="684" alt="19 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/fd0f4b09-d2e0-4c1f-8363-5b87b7511f09">
+
+Then click "Allow" to sign in with your github account, and, in the browser window that opened, click "Open Visual Studio Code.app".
 
 The fork you just created should be at or near the top of the list, click on it! Be sure it has your github username on it! If it says "Infinite-Chess", don't click that one as it is the main repository, which you don't have write access to.
 
 <img width="674" alt="Screen Shot 2024-07-02 at 1 03 01 PM" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/25dff27c-f09f-444f-8fdd-2f68b344a1fb">
-
 
 Choose a location on your machine to store the repository. Then when prompted whether or not to open the cloned repository, click "Open".
 
@@ -86,12 +87,14 @@ Now you should now be able to browse the website and all it’s contents! Hooray
 
 <img width="1011" alt="5 orig" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7d9cda30-bda9-4cde-8b17-a8dcc9185b0d">
 
+Don't worry about the url bar telling you it's not secure. This can safely be ignored as you develop. It IS possible to get your computer to trust our newly created certificate, but it is not required, and these directions won’t include that. [This one guy](https://stackoverflow.com/a/49784278) was able to figure it out though!
+
 Now, stop the server by clicking in the VSCode terminal window to re-focus it, and hit Ctrl > C.
 If done correctly, you should be met with the following. This means the server has stopped.
 
 <img width="273" alt="Screen Shot 2024-07-02 at 11 16 22 PM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/47c09831-1c17-490e-9eac-68e1a0cb5765">
 
-Don't worry about the url bar telling you it's not secure. This can safely be ignored as you develop. It IS possible to get your computer to trust our newly created certificate, but it is not required, and these directions won’t include that. [This one guy](https://stackoverflow.com/a/49784278) was able to figure it out though!
+
 
 
 
@@ -139,9 +142,9 @@ Now upon creating a new account, you should see a message "Email is sent to memb
 Note that you will only be able click "Verify Account" in the verification emails if you  are on the same machine running the server, as the verification link contains `localhost` within it.
 
 
-**You are all set up now to start developing!** 🥳
+### **You are all set up now to start developing!** 🥳 ###
 
-Let's move on to learnhow to suggest changes to the repository! Or, skip right to [Navigating the Workspace]()!
+Let's move on to learn how to suggest changes to the repository! Or, skip right to [Navigating the Workspace](./docs/NAVIGATING.md)!
 
 
 
@@ -171,4 +174,4 @@ Now click "New pull request", followed by "Create pull request"! Your changes wi
 
 Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeNh5) to discuss the others how we should best go about things!
 
-For pointers on how to navigate the workspace, including where the game's code is located, see [Navigating the Workspace]()!
+For pointers on how to navigate the workspace, including where the game's code is located, see [Navigating the Workspace](./docs/NAVIGATING.md)!
