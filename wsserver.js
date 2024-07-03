@@ -339,7 +339,8 @@ function sendmessage(ws, sub, action, value, replyto) { // socket, invites, crea
 
 
 /**
- * 
+ * Reschedule the timer to send an empty message to the client
+ * to verify they are still connected and responding.
  * @param {Socket} ws - The socket
  */
 function rescheduleRenewConnection(ws) {
