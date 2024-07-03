@@ -13,7 +13,7 @@ There has been 3 automatically generated accounts for you to test with-
 - Patron: Has patron-specific permissions (at the moment this holds no difference between member accounts).
 - Owner: Has owner permissions, allowing access to otherwise innaccessible pages, including the game's developmental version.
 
-The password for every one of these accounts is `1`. Log in as "Owner" to access the developmental version of the game.
+The password for every one of these accounts is `1`.
 
 
 
