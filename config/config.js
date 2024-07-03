@@ -20,7 +20,7 @@ const HOST_NAME = 'www.infinitechess.org';
  * 
  * THIS SHOULD ALWAYS MATCH protected-owner/scripts/game/main/DEV_VERSION
  */
-const GAME_VERSION = "1.3.3"
+const GAME_VERSION = "1.3.3.1"
 
 /** Whether or not we are currently using a whitelist for connections from other origins.
  * If we are getting unwanted origins, this can be enabled. */
