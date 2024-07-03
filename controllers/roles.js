@@ -27,12 +27,12 @@ let roles = require('../database/roles.json');
 let rolesHaveBeenEdited = false; // Set to true if we need to save the members after a change
 const intervalToSaveRolesMillis = 10000; // 10 seconds.
 
-async function saveMembersIfChangesMade() {
+async function saveRolesIfChangesMade() {
     if (!rolesHaveBeenEdited) return; // No change made, don't save the file!
     if (await save()) rolesHaveBeenEdited = false;
 }
 
-setInterval(saveMembersIfChangesMade, intervalToSaveRolesMillis)
+setInterval(saveRolesIfChangesMade, intervalToSaveRolesMillis)
 
 async function save() {
     console.log("Saving roles file..");
@@ -124,6 +124,7 @@ function removeRole(user) {
 }
 
 module.exports = {
+    saveRolesIfChangesMade,
     setRole,
     setRoleWebSocket,
     giveRole_Owner,

@@ -13,7 +13,8 @@ const wsserver = require("./wsserver");
 const gamemanager = require('./game/gamemanager')
 const getCertOptions = require('./config/certOptions');
 const { DEV_BUILD } = require('./config/config');
-const { saveMembersIfChangesMade } = require('./controllers/members')
+const { saveMembersIfChangesMade } = require('./controllers/members');
+const { saveRolesIfChangesMade } = require('./controllers/roles');
 
 
 const httpsServer = https.createServer(getCertOptions(DEV_BUILD), app);
@@ -41,6 +42,7 @@ async function handleCleanup(signal) {
     console.log(`\nReceived ${signal}. Cleaning up...`);
 
     await saveMembersIfChangesMade();
+    await saveRolesIfChangesMade();
     await gamemanager.logAllGames();
 
     process.exit(0);
