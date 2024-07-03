@@ -22,7 +22,6 @@ This guide will use VSCode, but you may use another code editor if you wish, if 
 
 
 
-
 ## Step 3: Forking the repository ##
 
 Go to the [repository's home page](https://github.com/Infinite-Chess/infinitechess.org), then click "Fork"! You will need a github account.
@@ -40,12 +39,12 @@ Click "Clone from GitHub". Then click "Allow" to sign in with your github accoun
 
 <img width="684" alt="19 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/fd0f4b09-d2e0-4c1f-8363-5b87b7511f09">
 
+The fork you just created should be at or near the top of the list, click on it! Be sure it has your github username on it! If it says "Infinite-Chess", don't click that one as it is the main repository, which you don't have write access to.
 
-Search for "infinitechess.org" and click the one that looks similar to the following image, except the path will be to the fork you have just created on your personal github account. DO NOT select the repository in "Infinite-Chess/infinitechess.org", as you do not have write permission on that!
+<img width="674" alt="Screen Shot 2024-07-02 at 1 03 01 PM" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/25dff27c-f09f-444f-8fdd-2f68b344a1fb">
 
-<img width="698" alt="20" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7e4d300b-2f1c-4969-bdbd-9039ed8520c2">
 
-Choose a location on your machine to store the repository. Then when prompted whether or not to open the repository, click "Open".
+Choose a location on your machine to store the repository. Then when prompted whether or not to open the cloned repository, click "Open".
 
 
 
@@ -68,17 +67,26 @@ To test run the server, and start it up from now on, enter the command:
 nodemon
 ```
 
-Now you should see something like:
+Now you should see something like this:
+
+<img width="404" alt="Screen Shot 2024-07-02 at 1 08 51 PM" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/9267fd8f-8669-4759-ba67-608095017154">
+
+Starting up the server from now on should look something like:
 
 <img width="366" alt="1" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/b1cf7bab-8973-4446-902c-3aef3a538c44">
 
-You should now be able to connect to the server through local host. Open a web browser and go to `https://localhost:3443`
+You should now be able to connect to the server through local host. Open a web browser and go to
+```
+https://localhost:3443
+```
 
 You may be met with a message like this, don’t worry, we'll fix this!
-<img width="667" alt="4" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/2aef8b21-dbad-404e-ac91-8d2fc301c63a">
+
+<img width="822" alt="Screen Shot 2024-07-02 at 1 48 51 PM" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/260b0392-bd5e-4f39-85f0-5f859868c842">
 
 However, if you see something like below, it means either the server hasn’t started, or you entered an incorrect url. Please verify those above until you receive a message similar to the above picture.
-<img width="678" alt="6" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/79e97985-0156-45aa-a642-9e4d75c8514a">
+
+<img width="932" alt="Screen Shot 2024-07-02 at 1 49 56 PM" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/4c7cbc8c-db79-4f35-acac-ca9a3a0eacba">
 
 Now, stop the server by clicking in the VSCode terminal window to re-focus it, and hit Ctrl > C.
 If done correctly, you should be met with the following. This means the server has stopped.
@@ -131,17 +139,20 @@ Now delete the `csr.pem` file as it is no longer needed. The final `cert` folder
 
 <img width="136" alt="11" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/07df9477-3c0f-44fc-9547-dedb2a498a93">
 
-Restart the server with the command `nodemon`, and refresh your browser! It should no longer tell us it can’t provide a secure connection, but it may warn you it is unsafe. Just proceed anyway.
+Restart the server with the command `nodemon`, and refresh your browser! It should no longer tell us it can’t provide a secure connection, but it will warn us our connection is not private.
+
+<img width="907" alt="345182644-ffedcc95-7ca8-46ab-bf67-26ff96dbe0f4 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/d03048fb-ddc2-4015-8dca-5a406866eae0">
+
+Click "Advanced", then "Proceed to localhost (unsafe)"!
+
+<img width="1029" alt="Screen Shot 2024-07-02 at 1 57 05 PM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/f822ccdf-7cd9-495b-8e52-d65756b6a77c">
+
 
 Now you should now be able to browse the website and all it’s contents! Hooray!
 
 <img width="1011" alt="5 orig" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/7d9cda30-bda9-4cde-8b17-a8dcc9185b0d">
 
-
-
-What is this pesky “Not Secure” message? This can safely be ignored as you develop. It IS possible to tell your computer to trust our newly created certificate, but it is not required, and these directions won’t include that. But for starters, you could search "getting chrome to trust a self signed certificate".
-
-<img width="286" alt="2" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/393970f5-9b18-4ce8-b726-6fff33eb4908">
+Don't worry about the url bar telling you it's not secure. This can safely be ignored as you develop. It IS possible to tell your computer to trust our newly created certificate, but it is not required, and these directions won’t include that. But for starters, you could search "getting chrome to trust a self signed certificate".
 
 
 
