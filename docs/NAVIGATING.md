@@ -37,17 +37,19 @@ The routers that actually send these htmls to the client are located in [../rout
 
 Public items such as css, scripts, audio, images, and more, that are **not** locked behind certain roles, are located in [public](../public).
 
+The play page's minified game code is located in [../public/scripts/game](../public/scripts/game). [app.js](../public/scripts/game/app.js) is loaded separately, and [htmlscript.js](../public/scripts/game/htmlscript.js) is injected directly into the html before serving to the client!
+
 
 
 ## Protected assets ##
 
 Items that are private (i.e. only served to users with the `owner` role), are located in [../protected-owner](../protected-owner).
 
-The game's code is located within [protected-owner/scripts/game](./protected-owner/scripts/game). This contains all the javascript code for the developmental version of the game! To access this developmental version in your browser, go to:
+The game's unminified code is located within [protected-owner/scripts/game](./protected-owner/scripts/game). This contains all the javascript code for the developmental version of the game! To access this developmental version in your browser, go to:
 ```
 https://localhost:3443/play/devversion
 ```
-This will forward you to the login page, login with the owner account to access it.
+This will forward you to the login page, login with the owner account to access it. The password is `1`.
 
 Every game script includes a basic description at the top. [Ask for help](https://discord.com/channels/1114425729569017918/1115358966642393190) in the discord for greater understanding of how each script works!
 
