@@ -180,4 +180,4 @@ Now click "New pull request", followed by "Create pull request"! Your changes wi
 
 Infinite Chess is a team project! Join [the discord](https://discord.gg/NFWFGZeNh5) to discuss the others how we should best go about things!
 
-For pointers on how to navigate the workspace, including where the game's code is located, see [Navigating the Workspace](./docs/NAVIGATING.md)!
+For pointers on how to navigate the workspace, including where the game's code is located, see [Navigating the Workspace](./NAVIGATING.md)!
