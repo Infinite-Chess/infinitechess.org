@@ -6,7 +6,7 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 
 ## Contributing
 
-This project is open source! If you have a feature idea you want to try implementing, or you have skills in html, css, javascript, or Node, we welcome contributions! To get started collaborating, please read the [Contributing Guide](./CONTRIBUTING.md)!
+This project is open source! If you have a feature idea you want to try implementing, or you have skills in html, css, javascript, or Node, we welcome contributions! To get started collaborating, please read the [Setup Guide](../docs/SETUP.md)!
 
 We are still far off from our vision. We refuse to stop until many crucial features of this universe are built:
 - Truly infinite move distance
@@ -22,5 +22,11 @@ We are still far off from our vision. We refuse to stop until many crucial featu
 - 4 Player
 - Massive Multiplayer Online
 - and more! This list is not exhaustive.
+
+It has a license with a goal of keeping this game free forever! Check out [Copying](./docs/COPYING.md) for more details.
+
+## Navigation ##
+
+Check out the [Navigation Guide](./docs/NAVIGATING.md) for pointers on the structure of the project!
 
 [Join us on Discord](https://discord.gg/NFWFGZeNh5) for more info, or just to chat about the game!
