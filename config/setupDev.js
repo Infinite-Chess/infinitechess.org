@@ -6,18 +6,22 @@ const { ensureEnvFile } = require('../config/env');
 const { ensureSelfSignedCertificate } = require('./generateCert');
 
 function initDevEnvironment() {
-    if (!DEV_BUILD) return; // Production
+    if (!DEV_BUILD) return callDotenvConfig(); // Production
     
     ensureEnvFile();
-    // Load the .env file contents into process.env
-    // This needs to be as early as possible
-    require('dotenv').config(); 
+    callDotenvConfig();
 
     if (ensureSelfSignedCertificate()) { 
         // Let's also display the url to the page!
         // console.log(`Website is hosted at https://localhost:${process.env.HTTPSPORT_LOCAL}/`);
     }
     createDevelopmentAccounts();
+}
+
+function callDotenvConfig() {
+    // Load the .env file contents into process.env
+    // This needs to be as early as possible
+    require('dotenv').config(); 
 }
 
 function createDevelopmentAccounts() {
