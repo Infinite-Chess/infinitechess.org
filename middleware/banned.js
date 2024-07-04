@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const { writeFile_ensureDirectory } = require('../Utility/fileUtils');
+const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 
 const bannedPath = path.resolve('./database/banned.json');
 (function ensureBannedFileExists() {

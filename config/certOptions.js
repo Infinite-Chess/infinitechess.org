@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { DEV_BUILD } = require('./config');
-const { readFileIfExists, ensureDirectoryExists } = require('../Utility/fileUtils')
+const { readFileIfExists, ensureDirectoryExists } = require('../utility/fileUtils')
 
 // Ensure the "cert" directory exists
 const pathToCertFolder = path.resolve("cert"); // Resolve results in an absolute path

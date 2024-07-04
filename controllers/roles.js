@@ -7,9 +7,9 @@
 
 const path = require('path');
 const fs = require('fs');
-const { writeFile } = require('../Utility/lockFile.js');
+const { writeFile } = require('../utility/lockFile.js');
 
-const { writeFile_ensureDirectory } = require('../Utility/fileUtils');
+const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 
 const rolesPath = path.resolve('./database/roles.json');
 (function ensureRolesFileExists() {

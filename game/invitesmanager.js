@@ -4,7 +4,7 @@ const path = require('path');
 
 // Middleware imports
 const { logEvents } = require('../middleware/logEvents.js');
-const { readFile, writeFile } = require('../Utility/lockFile.js');
+const { readFile, writeFile } = require('../utility/lockFile.js');
 const { getUsernameCaseSensitive } = require('../controllers/members.js')
 
 // Custom imports
@@ -14,7 +14,7 @@ const math1 = require('./math1.js')
 const variant1 = require('./variant1.js')
 const gamemanager = require('./gamemanager.js');
 const clockweb = require('./clockweb.js');
-const { writeFile_ensureDirectory } = require('../Utility/fileUtils');
+const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 
 
 // List of active invites

@@ -1,10 +1,10 @@
 
 const path = require('path');
 const fs = require('fs')
-const { writeFile } = require('../Utility/lockFile.js');
+const { writeFile } = require('../utility/lockFile.js');
 const math1 = require('./math1.js')
 
-const { writeFile_ensureDirectory } = require('../Utility/fileUtils');
+const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 const { Game } = require('./TypeDefinitions')
 
 const statsPath = path.resolve('./database/stats.json');

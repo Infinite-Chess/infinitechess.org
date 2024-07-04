@@ -9,7 +9,7 @@ const { handleRefreshToken } = require('../controllers/refreshTokenController');
 const { handleLogout } = require('../controllers/logoutController');
 const { verifyAccount } = require('../controllers/verifyAccountController');
 const { ensureOwner, ensurePatron } = require('../middleware/verifyRoles');
-const { getCachedHTML, sendCachedHTML } = require('../Utility/HTMLScriptInjector');
+const { getCachedHTML, sendCachedHTML } = require('../utility/HTMLScriptInjector');
 
 // router.get('/skeleton(.html)?', (req, res) => { // If it starts & ends with '/', OR it's '/index.html' OR '/index'
 //     res.sendFile(path.join(__dirname, '../views', 'skeleton.html'));

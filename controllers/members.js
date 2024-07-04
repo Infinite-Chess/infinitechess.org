@@ -1,9 +1,9 @@
 const path = require('path');
 const fs = require('fs');
 
-const { writeFile } = require('../Utility/lockFile.js');
+const { writeFile } = require('../utility/lockFile.js');
 const { logEvents } = require('../middleware/logEvents');
-const { writeFile_ensureDirectory } = require('../Utility/fileUtils.js');
+const { writeFile_ensureDirectory } = require('../utility/fileUtils.js');
 
 const membersFilePath = path.resolve('./database/members.json');
 (function ensureMembersFileExists() {

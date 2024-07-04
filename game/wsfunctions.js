@@ -2,7 +2,7 @@
 // This script contains generalized methods for working with websocket objects,
 // thus the only dependancies it has are for the type definitions.
 
-const { ensureJSONString } = require('../Utility/JSONUtils');
+const { ensureJSONString } = require('../utility/JSONUtils');
 const { Socket } = require('./TypeDefinitions')
 
 const wsfunctions = (function() {

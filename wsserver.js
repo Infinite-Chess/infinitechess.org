@@ -10,8 +10,8 @@ const wsfunctions = require('./game/wsfunctions');
 const invitesmanager = require('./game/invitesmanager')
 const gamemanager = require('./game/gamemanager');
 
-const { ensureJSONString } = require('./Utility/JSONUtils');
-const { executeSafely } = require('./Utility/errorGuard');
+const { ensureJSONString } = require('./utility/JSONUtils');
+const { executeSafely } = require('./utility/errorGuard');
 
 
 let WebSocketServer;

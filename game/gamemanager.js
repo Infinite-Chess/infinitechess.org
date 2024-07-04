@@ -16,8 +16,8 @@ const wincondition1 = require('./wincondition1');
 const movesscript1 = require('./movesscript1');
 const formatconverter1 = require('./formatconverter1');
 const statlogger = require('./statlogger');
-const { executeSafely_async } = require('../Utility/errorGuard');
-const { ensureJSONString } = require('../Utility/JSONUtils');
+const { executeSafely_async } = require('../utility/errorGuard');
+const { ensureJSONString } = require('../utility/JSONUtils');
 
 const gamemanager = (function() {
 
