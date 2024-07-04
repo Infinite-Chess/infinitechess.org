@@ -59,6 +59,7 @@ const createNewMember = async (req, res) => {
 
     // Make the email lowercase so we don't run into problems with seeing if capitalized emails are taken!
     email = email.toLowerCase();
+    const usernameLowercase = username.toLowerCase();
 
     // First we make checks on the username...
     // These 'return's are so that we don't send duplicate responses, AND so we don't create the member anyway.
@@ -69,7 +70,7 @@ const createNewMember = async (req, res) => {
     await generateAccount({ username, email, password })
 
     // SEND EMAIL CONFIRMATION
-    const memberData = getMemberData(username)
+    const memberData = getMemberData(usernameLowercase)
     sendEmailConfirmation(memberData);
 
     // GENERATE ACCESS AND REFRESH TOKENS! They just created an account, so log them in!
