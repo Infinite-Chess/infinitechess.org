@@ -161,8 +161,6 @@ const sound = (function(){
         const nodes = [];
 
         // Gain (Volume) node
-        // NEEDS TO BE FIRST IN LINE because otherwise I occasionally
-        // here a click pop and the reverb effect stops playing!!
         const gain = generateGainNode(audioContext, volume);
         nodes.push(gain);
         source.gainNode = gain; // Attach to the source object so that it can be faded out/in on demand.
