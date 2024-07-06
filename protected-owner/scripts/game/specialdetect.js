@@ -67,11 +67,13 @@ const specialdetect = (function() {
         const rightDist = right - x;
         const leftCoord = [left, y]
         const rightCoord = [right, y]
-        const leftColor = isFinite(left) ? math.getPieceColorFromType(gamefileutility.getPieceTypeAtCoords(gamefile, leftCoord)) : undefined;
-        const rightColor = isFinite(right) ? math.getPieceColorFromType(gamefileutility.getPieceTypeAtCoords(gamefile, rightCoord)) : undefined;
+        const leftPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, leftCoord);
+        const rightPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, rightCoord);
+        const leftColor = leftPieceType ? math.getPieceColorFromType(leftPieceType) : undefined;
+        const rightColor = rightPieceType ? math.getPieceColorFromType(rightPieceType) : undefined;
 
-        if (left === -Infinity || leftDist < 3  || !doesPieceHaveSpecialRight(gamefile, leftCoord)  || leftColor !== color) leftLegal = false;
-        if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color) rightLegal = false;
+        if (left === -Infinity || leftDist < 3  || !doesPieceHaveSpecialRight(gamefile, leftCoord)  || leftColor !== color  || leftPieceType.startsWith('pawns'))  leftLegal = false;
+        if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns')) rightLegal = false;
         if (!leftLegal && !rightLegal) return;
 
         // 2. IF USING CHECKMATE: The king must not currently be in check,
