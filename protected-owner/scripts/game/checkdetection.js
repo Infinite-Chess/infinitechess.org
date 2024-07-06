@@ -285,7 +285,7 @@ const checkdetection = (function(){
 
         // If it's a jumping move (not sliding), or if the piece is 1 square away,
         // then there's no way to block.
-        const dist = math.chebyshevDistance(selectedPieceCoords, attacker.coords)
+        const dist = math.chebyshevDistance(royalCoords[0], attacker.coords)
         if (!attacker.slidingCheck || dist === 1) {
             eraseAllSlidingMoves();
             return true;
@@ -375,7 +375,7 @@ const checkdetection = (function(){
 
     // Apphends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2
     function apphendBlockingMoves (square1, square2, moves, coords) { // coords is of the selected piece
-
+        
         // What is the line between our king and the attacking piece?
         let direction;
         if (square1[1] === square2[1]) direction = 'horizontal';
