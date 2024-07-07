@@ -130,10 +130,10 @@ const webgl = (function() {
      * @param {Function} func 
      * @param {...*} args - Arguments to pass to the function.
      */
-    function executeWithDepthFunc_ALWAYS(func, ...args) {
+    function executeWithDepthFunc_ALWAYS(func) {
         // This prevents tearing when rendering in the same z-level and in perspective.
         gl.depthFunc(gl.ALWAYS); // Temporary toggle the depth function to ALWAYS.
-        func(...args);
+        func();
         gl.depthFunc(gl[defaultDepthFuncParam]); // Return to the original blending.
     }
 
