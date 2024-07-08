@@ -237,7 +237,7 @@ const selection = (function() {
 
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
     function renderGhostPiece() {
-        if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported()) return;
+        if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || main.videoMode) return;
         pieces.renderGhostPiece(pieceSelected.type, hoverSquare)
     }
 
