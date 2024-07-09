@@ -10,7 +10,7 @@ const guiplay = (function(){
 
     // Variables
 
-    const element_discordCreditsLinks = document.getElementById('discord-credits-links');
+    const element_menuExternalLinks = document.getElementById('menu-external-links');
 
     const element_PlaySelection = document.getElementById('play-selection')
     const element_playName = document.getElementById('play-name')
@@ -57,7 +57,7 @@ const guiplay = (function(){
     function open() {
         gui.setScreen('title play')
         style.revealElement(element_PlaySelection)
-        style.revealElement(element_discordCreditsLinks);
+        style.revealElement(element_menuExternalLinks);
         changePlayMode('online')
         initListeners()
         invites.subscribeToInvites(); // Subscribe to the invites list subscription service!
@@ -65,7 +65,7 @@ const guiplay = (function(){
 
     function close() {
         style.hideElement(element_PlaySelection)
-        style.hideElement(element_discordCreditsLinks);
+        style.hideElement(element_menuExternalLinks);
         closeListeners()
         // This will auto-cancel our existing invite
         // IT ALSO clears the existing invites in the document!

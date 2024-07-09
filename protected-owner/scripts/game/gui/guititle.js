@@ -16,7 +16,7 @@ const guititle = (function(){
     const element_play = document.getElementById('play')
     const element_guide = document.getElementById('rules')
     const element_boardEditor = document.getElementById('board-editor')
-    const element_discordCreditsLinks = document.getElementById('discord-credits-links');
+    const element_menuExternalLinks = document.getElementById('menu-external-links');
 
     // Functions
 
@@ -27,7 +27,7 @@ const guititle = (function(){
         gui.setScreen('title');
         movement.setBoardScale(1.8, 'pidough'); // 1.8
         style.revealElement(titleElement);
-        style.revealElement(element_discordCreditsLinks);
+        style.revealElement(element_menuExternalLinks);
         initListeners() // These need to be canceled when leaving screen
     }
 
@@ -35,7 +35,7 @@ const guititle = (function(){
         // Cancel all title screen button event listeners to save cpu...
         closeListeners()
         style.hideElement(titleElement);
-        style.hideElement(element_discordCreditsLinks);
+        style.hideElement(element_menuExternalLinks);
     }
 
     function initListeners() {
