@@ -2,7 +2,7 @@
 
 [InfiniteChess.org](https://www.infinitechess.org) is a free and ad-less website for playing all kinds of chess variants on an infinite, boundless board.
 
-What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in 2022 has been growing ever since. Inspired by the concepts of chess and infinity, he set out to craft a space where anyone can experience the thrills of freedom and exploration, reimagined within the familiar world of chess. Tear down the edges of the chessboard and step into the unknown!
+What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in 2022 has been growing ever since. Inspired by the concepts of chess and infinity, he set out to craft a space where anyone can experience the thrills of freedom and exploration, reimagined within the familiar world of chess. No more limits, tear down the edges of the board, here we come!
 
 ## Contributing
 
