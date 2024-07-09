@@ -140,7 +140,7 @@ const checkdetection = (function(){
         return atleast1Attacker;
     }
 
-    // Returns true if a piece on the specified line can captured on that square
+    // Returns true if a piece on the specified line can capture on that square
     // THIS REQUIRES  coords  be already on the line.
     // direction = 'horizontal' / 'vertical' / 'diagonalup' / 'diagonaldown'
     function doesLineAttackSquare(gamefile, line, direction, coords, colorOfFriendlys, attackers) {

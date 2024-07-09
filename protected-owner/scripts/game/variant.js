@@ -446,7 +446,7 @@ const variant = (function() {
      * @returns {Object} The gamefile's `promotionsAllowed` gamerule.
      */
     function getPromotionsAllowed(position, promotionRanks) {
-        // We can't promote to royals or pawns, whether or not we started the game with them.
+        // We can't promote to royals or pawns, Whether we started the game with them.
         const unallowedPromotes = math.deepCopyObject(pieces.royals); // ['kings', 'royalQueens', 'royalCentaurs']
         unallowedPromotes.push('pawns') // ['kings', 'royalQueens', 'royalCentaurs', 'pawns']
 

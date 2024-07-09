@@ -33,14 +33,14 @@ const webgl = (function() {
     const defaultDepthFuncParam = 'LEQUAL'
 
     /**
-     * Whether or not to use WebGL2 if it's compatible. It is backwards compatible.
+     * Whether to use WebGL2 if it's compatible. It is backwards compatible.
      * 
      * WebGL2 is not supported on Safari. Let's just use WebGL1 to avoid incompatibility with browsers.
      */
     const useWebGL2 = false;
 
     /**
-     * Whether or not to cull (skip) rendering back faces.
+     * Whether to cull (skip) rendering back faces.
      * We can prevent the rasteurizer from calculating pixels on faces facing AWAY from us with backface culling.
      * 
      * IF WE AREN'T CAREFUL about all vertices going into the same clockwise/counterclockwise
@@ -48,7 +48,7 @@ const webgl = (function() {
      */
     const culling = false;
     /**
-     * If true, whether or not a face is determined as a front face depends
+     * If true, Whether a face is determined as a front face depends
      * on whether it's vertices move in a clockwise direction, otherwise counterclockwise.
      */
     const frontFaceVerticesAreClockwise = true;

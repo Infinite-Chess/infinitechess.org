@@ -105,7 +105,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
          * This helps require less severe uniform translations upon rendering when traveling massive distances.
          * The amount it is shifted depends on the nearest `regenRange`. */
         offset: undefined,
-        /** A number for whether or not the mesh of the pieces is currently being generated.
+        /** A number for Whether the mesh of the pieces is currently being generated.
          * @type {number} 0+. When > 0, is it generating. */
         isGenerating: 0,
         /** A number representing whether the mesh of the pieces is currently locked or not.

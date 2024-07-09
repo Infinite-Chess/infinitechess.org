@@ -449,7 +449,7 @@ const variantomega = (function(){
             if (y-4 - x+9 > -980) startingPos[math.getKeyFromCoords([x+9,y-4])] = 'pawnsW';
 
             // Generate bishop puzzle pieces.
-            // i tells us how many to iteratavely gen!
+            // it tells us how many to iteratively gen!
             const count = i+2;
 
             let puzzleX = x+8;
@@ -522,7 +522,7 @@ const variantomega = (function(){
             startingPos[math.getKeyFromCoords([x-4,y-5])] = 'pawnsW';
             
             // Generate segments
-            // i tells us how many to iteratavely gen!
+            // it tells us how many to iteratively gen!
             const count = i+1;
             const segSpacing = 6;
 
