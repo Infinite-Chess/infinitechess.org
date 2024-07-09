@@ -190,22 +190,11 @@ main {
 }
 
 .checkerboard {
-    display: grid;
-    grid-template-columns: repeat(29, 1fr); /* 20 columns */
-    grid-template-rows: repeat(29, 1fr); /* 20 rows */
-    min-width: calc(1000px + 120vw);
-    min-height: calc(1000px + 120vw);
+    width: 100vw;
+	height: 100svh;
+	background: repeating-conic-gradient(black 0% 25%, transparent 0% 50%) 
+      50% / 20vmin 20vmin;
 }
-
-.checkerboard div {
-    background-color: transparent;
-}
-
-.checkerboard div:nth-child(odd) {
-    background-color: black; /* Pick your color */
-}
-
-
 
 /* Canvas and the Overlay containing all html elements above the canvas */
 
