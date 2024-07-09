@@ -2,7 +2,6 @@
     "ignore": [
         "./database/**/*",
         "./public/**/*",
-        "./protected-owner/**/*",
         "./protected-patron/**/*"
     ]
 }

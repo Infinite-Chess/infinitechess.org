@@ -84,7 +84,10 @@
         <script defer src="/scripts/game/texture.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <script defer src="/scripts/game/localstorage.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <script defer src="/scripts/game/gui/guiguide.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-        <script defer src="/scripts/game/gui/tooltips.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
+		<script defer src="/scripts/game/gui/guieditor.js" onerror="htmlscript.callback_LoadingError(event)"
+			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
+		<script defer src="/scripts/game/gui/tooltips.js" onerror="htmlscript.callback_LoadingError(event)"
+			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <script defer src="/scripts/game/webgl.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <script defer src="/scripts/game/browsersupport.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
     </head>
@@ -128,9 +131,30 @@
 
 			<!-- The board editor -->
 			<div id="editor" class="hidden">
-				<canvas id="editor-checkerboard"></canvas>
+				<canvas id="editor-board"></canvas>
 				<div id="editor-sidebar">
-
+					<div id="editor-pointer-modes">
+						<div id="editor-pointer-mode-selection" class="editor-selected-pointer-mode"></div>
+						<div id="editor-pointer-mode-pieces">
+							<div id="editor-pointer-mode-pieces-white">
+								<div id="editor-pointer-mode-kingW" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-queenW" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-rookW" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-bishopW" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-knightW" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-pawnW" class="editor-pointer-mode-piece"></div>
+							</div>
+							<div id="editor-pointer-mode-pieces-black">
+								<div id="editor-pointer-mode-kingB" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-queenB" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-rookB" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-bishopB" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-knightB" class="editor-pointer-mode-piece"></div>
+								<div id="editor-pointer-mode-pawnB" class="editor-pointer-mode-piece"></div>
+							</div>
+						</div>
+						<div id="editor-pointer-mode-deletion"></div>
+					</div>
 				</div>
 			</div>
 
@@ -150,7 +174,7 @@
                     <h1>Infinite Chess</h1>
                     <button id="play" class="play titlebubble button">Play</button>
                     <button id="rules" class="rules titlebubble button">Guide</button>
-                    <button id="board-editor" class="board-editor titlebubble button opacity-0_5">Board Editor</button>
+                    <button id="board-editor" class="board-editor titlebubble button">Board Editor</button>
                 </div>
 
                 <!-- Guide -->

@@ -14,7 +14,7 @@ const guititle = (function(){
 
     const titleElement = document.getElementById('title') // Visible when on the title screen
     const element_play = document.getElementById('play')
-    const element_guide = document.getElementById('rules')
+    const element_guide = document.getElementById("rules");
     const element_boardEditor = document.getElementById('board-editor')
     const element_discordCreditsLinks = document.getElementById('discord-credits-links');
 
@@ -41,13 +41,13 @@ const guititle = (function(){
     function initListeners() {
         element_play.addEventListener('click', callback_Play)
         element_guide.addEventListener('click', callback_Guide)
-        element_boardEditor.addEventListener('click', gui.callback_featurePlanned)
+        element_boardEditor.addEventListener('click', callback_Editor)
     }
 
     function closeListeners() {
         element_play.removeEventListener('click', callback_Play)
         element_guide.removeEventListener('click', callback_Guide)
-        element_boardEditor.removeEventListener('click', gui.callback_featurePlanned)
+        element_boardEditor.removeEventListener("click", callback_Editor);
     }
 
     function callback_Play(event) {
@@ -62,6 +62,11 @@ const guititle = (function(){
         guiguide.open()
     }
 
+	function callback_Editor(event) {
+		event = event || window.event;
+        close();
+		guieditor.open();
+	}
     return Object.freeze({
         boardVel,
         open,
