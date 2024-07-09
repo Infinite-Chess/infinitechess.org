@@ -353,11 +353,11 @@ const onlinegame = (function(){
 
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
-        const endCoordsToApphendSpecial = math.deepCopyObject(move.endCoords);
-        legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToApphendSpecial) // Passes on any special moves flags to the endCoords
+        const endCoordsToAppendSpecial = math.deepCopyObject(move.endCoords);
+        legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial) // Passes on any special moves flags to the endCoords
 
         move.type = piecemoved.type;
-        specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToApphendSpecial, move)
+        specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move)
         movepiece.makeMove(gamefile, move)
 
         // Edit the clocks

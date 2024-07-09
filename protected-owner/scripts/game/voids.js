@@ -43,7 +43,7 @@ const voids = {
 
         const data64 = gamefile.voidMesh.data64;
         const data32 = gamefile.voidMesh.data32;
-        // Iterate through every void and apphend it's data!
+        // Iterate through every void and append it's data!
         for (let i = 0; i < rectangleCount; i++) {
             const thisRect = simplifiedMesh[i]
 
