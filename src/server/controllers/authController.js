@@ -9,11 +9,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const { getUsernameCaseSensitive, getHashedPassword, addRefreshToken, incrementLoginCount, updateLastSeen } = require('./members');
+const { getClientIP } = require('../middleware/IP');
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
+
+let ipTimeoutMap = {};
 
 /**
  * Called when the login page submits login form data.
@@ -26,6 +29,15 @@ const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 async function handleLogin(req, res) {
     if (!verifyBodyHasLoginFormData(req)) return; // If false, it will have already sent a response.
 
+    const clientIP = getClientIP(req);
+    if (!(clientIP in ipTimeoutMap)) {
+        ipTimeoutMap[clientIP] = { attempts: 1, timeout: 0 };
+    }
+
+    if (ipTimeoutMap[clientIP].attempts > 3) {
+        return res.status(401).json({ 'message': 'You are timed out, Please try again later.'});
+    }
+
     let { username, password } = req.body;
     const usernameLowercase = username.toLowerCase();
     const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
@@ -36,6 +48,14 @@ async function handleLogin(req, res) {
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
+        ipTimeoutMap[clientIP].attempts += 1
+        if(ipTimeoutMap[clientIP].attempts === 3) {
+            ipTimeoutMap[clientIP].timeout += 5
+            setTimeout(() => {
+                ipTimeoutMap[clientIP].attempts = 1; 
+            }, ipTimeoutMap[clientIP].timeout * 1000)
+        }
+
         console.log(`Incorrect password for user ${usernameCaseSensitive}!`)
         res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
         return;
