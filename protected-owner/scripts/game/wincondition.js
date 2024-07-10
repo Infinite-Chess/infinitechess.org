@@ -77,7 +77,7 @@ const wincondition = (function() {
     function detectAllpiecescaptured(gamefile) {
         if (!isOpponentUsingWinCondition(gamefile, 'allpiecescaptured')) return false; // Not using this gamerule
 
-        // If the player whos turn it is now has zero pieces left, win!
+        // If the player who's turn it is now has zero pieces left, win!
         const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn)
 
         if (count === 0) {

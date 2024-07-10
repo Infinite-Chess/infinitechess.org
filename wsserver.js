@@ -118,7 +118,7 @@ function onConnectionRequest(ws, req) {
     // 1. IP undefined
     // 2. Too many requests
     // 3. Message too big
-    // In ALL these cases, we are terminating all of the IPs sockets for now!
+    // In ALL these cases, we are terminating all the IPs sockets for now!
     if (!rateLimitWebSocket(req, ws)) { // Connection not allowed
         return terminateAllIPSockets(ws.metadata.IP)
     };
@@ -169,7 +169,7 @@ function onConnectionRequest(ws, req) {
 
     invitesmanager.giveSocketMetadataHasInviteFunc(ws)
 
-    // Send the current game vesion, so they will know whether or not to refresh.
+    // Send the current game vesion, so they will know whether to refresh.
     sendmessage(ws, 'general', 'gameversion', GAME_VERSION);
 }
 
@@ -459,7 +459,7 @@ function terminateAllIPSockets(IP) {
 }
 
 function closeWebSocketConnection(ws, code, message, messageID) {
-    if (messageID) { // Timer is just now ringing. Delete the timer from the echoTimers list so it doesn't fill up!
+    if (messageID) { // Timer is just now ringing. Delete the timer from the echoTimers list, so it doesn't fill up!
         delete echoTimers[messageID];
     }
     //console.log(`Closing web socket connection.. Code ${code}. Message "${message}"`)

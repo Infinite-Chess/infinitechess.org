@@ -3,3 +3,6 @@ node_modules
 cert
 database
 logs
+
+# JetBrains IDEs
+.idea/

@@ -17,7 +17,7 @@ const statustext = (function(){
     /**
      * Display a status message on-screen, auto-calculating its duration.
      * @param {string} text Message to display
-     * @param {boolean} [isError] Optional. Whether or not the backdrop should be red for an error
+     * @param {boolean} [isError] Optional. Whether the backdrop should be red for an error
      * @param {number} durationMultiplier - Optional. Multiplies the default duration. Default: 1.
      */
     function showStatus(text, isError, durationMultiplier = 1) {
@@ -29,7 +29,7 @@ const statustext = (function(){
      * Display a status message on-screen, manually passing in duration.
      * @param {string} text - Message to display
      * @param {number} durationMillis - Amount of time, in milliseconds, to display the message
-     * @param {boolean} [isError] Optional. Whether or not the backdrop should be red for an error
+     * @param {boolean} [isError] Optional. Whether the backdrop should be red for an error
      */
     function showStatusForDuration(text, durationMillis, isError) {
         if (text == null) return console.error("Cannot show status of undefined text!!")

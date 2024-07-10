@@ -36,7 +36,7 @@ const validation = (function(){
     }
 
     /**
-     * Returns whether or not we are currently logged in.
+     * Returns Whether we are currently logged in.
      * @returns {boolean} *true* if we are logged in.
      */
     function areWeLoggedIn() {

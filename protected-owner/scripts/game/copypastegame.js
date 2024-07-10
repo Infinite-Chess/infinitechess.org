@@ -281,7 +281,7 @@ const copypastegame = (function(){
 
     // Old methods for determining what win conditions are compatible with each other,
     // and for making sure you have the right royals, etc...
-    // Currently all win conditions have no piece restrictions
+    // Currently, all win conditions have no piece restrictions
 
     // function verifyWinConditions(winConditions, piecesOrganizedByType) {
     //     if (!winConditions) {

@@ -20,15 +20,15 @@ const movepiece = (function(){
      * @param {gamefile} gamefile - The gamefile
      * @param {Move} move - The move to make, with the properties `startCoords`, `endCoords`, and any special move flags, all other properties of the move will be added within. CRUCIAL: If `simulated` is true and `recordMove` is false, the move passed in MUST be one of the moves in the gamefile's move list! Otherwise we'll have trouble undo'ing the simulated move without messing up the mesh.
      * @param {Object} options - An object containing various options (ALL of these are default *true*, EXCEPT `simulated` which is default *false*):
-     * - `flipTurn`: Whether or not to flip the `whosTurn` property of the gamefile. Most of the time this will be true, except when hitting the rewind/forward buttons.
-     * - `recordMove`: Whether or not to record the move in the gamefile's move list. Should be false when rewinding/fast-forwarding the game.
-     * - `pushClock`: Whether or not to push the clock. If we're in an online game we NEVER push the clock anyway, only the server does.
-     * - `doGameOverChecks`: Whether or not to perform game-over checks, such as checkmate or other win conditions.
+     * - `flipTurn`: Whether to flip the `whosTurn` property of the gamefile. Most of the time this will be true, except when hitting the rewind/forward buttons.
+     * - `recordMove`: Whether to record the move in the gamefile's move list. Should be false when rewinding/fast-forwarding the game.
+     * - `pushClock`: Whether to push the clock. If we're in an online game we NEVER push the clock anyway, only the server does.
+     * - `doGameOverChecks`: Whether to perform game-over checks, such as checkmate or other win conditions.
      * - `concludeGameIfOver`: If true, and `doGameOverChecks` is true, then if this move ends the game, we will not stop the clocks, darken the board, display who won, or play a sound effect.
-     * - `animate`: Whether or not to animate this move.
-     * - `updateData`: Whether or not to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
-     * - `updateProperties`: Whether or not to update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
-     * - `simulated`: Whether or not you plan on undo'ing this move. If true, the `rewindInfo` property will be added to the `move` for easy restoring of the gamefile's properties when undo'ing the move.
+     * - `animate`: Whether to animate this move.
+     * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
+     * - `updateProperties`: Whether to update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
+     * - `simulated`: Whether you plan on undo'ing this move. If true, the `rewindInfo` property will be added to the `move` for easy restoring of the gamefile's properties when undo'ing the move.
      */
     function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushClock = true, doGameOverChecks = true, concludeGameIfOver = true, animate = true, updateData = true, updateProperties = true, simulated = false } = {}) {                
         const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
@@ -73,7 +73,7 @@ const movepiece = (function(){
      * @param {gamefile} gamefile - The gamefile
      * @param {Move} move - The move
      * @param {Object} options - An object that may contain the following options:
-     * - `simulated`: Whether or not you plan on undo'ing this move. If *true*, then `capturedIndex` and `pawnIndex` will also be remembered, so the mesh doesn't get screwed up when rewinding. Default: *false*
+     * - `simulated`: Whether you plan on undo'ing this move. If *true*, then `capturedIndex` and `pawnIndex` will also be remembered, so the mesh doesn't get screwed up when rewinding. Default: *false*
      */
     function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false } = {}) {
         const rewindInfoAlreadyPresent = move.rewindInfo != null;
@@ -119,9 +119,9 @@ const movepiece = (function(){
      * @param {Piece} piece - The piece to move
      * @param {Move} move - The move that's being made
      * @param {Object} options - An object containing various options (ALL of these are default *true*):
-     * - `updateData`: Whether or not to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
-     * - `animate`: Whether or not to animate this move.
-     * - `simulated`: Whether or not you plan on undo'ing this move. If true, the index of the captured piece within the gamefile's piece list will be stored in the `rewindInfo` property of the move for easy undo'ing without screwing up the mesh.
+     * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
+     * - `animate`: Whether to animate this move.
+     * - `simulated`: Whether you plan on undo'ing this move. If true, the index of the captured piece within the gamefile's piece list will be stored in the `rewindInfo` property of the move for easy undo'ing without screwing up the mesh.
      */
     function movePiece_NoSpecial(gamefile, piece, move, { updateData = true, animate = true, simulated = false } = {}) { // piece: { coords, type, index }
         const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords)
@@ -227,7 +227,7 @@ const movepiece = (function(){
      * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
      * @param {gamefile} gamefile - The gamefile
      * @param {string} typeMoved - The type of piece moved
-     * @param {boolean} wasACapture Whether or not the move made a capture
+     * @param {boolean} wasACapture Whether the move made a capture
      */
     function incrementMoveRule(gamefile, typeMoved, wasACapture) {
         if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
@@ -242,8 +242,8 @@ const movepiece = (function(){
      * the text on-screen, then pushes the clock.
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} options - An object that may contain the options (all are default *true*):
-     * - `pushClock`: Whether or not to push the clock.
-     * - `doGameOverChecks`: Whether or not game-over checks such as checkmate, or other win conditions, are performed for this move.
+     * - `pushClock`: Whether to push the clock.
+     * - `doGameOverChecks`: Whether game-over checks such as checkmate, or other win conditions, are performed for this move.
      */
     function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
         gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
@@ -355,11 +355,11 @@ const movepiece = (function(){
      * Fast-forwards the game to front, to the most-recently played move.
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} options - An object containing various options (ALL of these are default *true*):
-     * - `flipTurn`: Whether or not each forwarded move should flip whosTurn. This should be false when forwarding to the game's front after rewinding.
-     * - `animateLastMove`: Whether or not to animate the last move, or most-recently played.
-     * - `updateData`: Whether or not to modify the mesh of all the pieces. Should be false if we plan on regenerating the model manually after forwarding.
-     * - `updateProperties`: Whether or not each move should update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
-     * - `simulated`: Whether or not you plan on undo'ing this forward, rewinding back to where you were. If true, the `rewindInfo` property will be added to each forwarded move in the gamefile for easy reverting when it comes time.
+     * - `flipTurn`: Whether each forwarded move should flip whosTurn. This should be false when forwarding to the game's front after rewinding.
+     * - `animateLastMove`: Whether to animate the last move, or most-recently played.
+     * - `updateData`: Whether to modify the mesh of all the pieces. Should be false if we plan on regenerating the model manually after forwarding.
+     * - `updateProperties`: Whether each move should update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
+     * - `simulated`: Whether you plan on undo'ing this forward, rewinding back to where you were. If true, the `rewindInfo` property will be added to each forwarded move in the gamefile for easy reverting when it comes time.
      */
     
     function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, updateData = true, updateProperties = true, simulated = false } = {}) {
@@ -391,8 +391,8 @@ const movepiece = (function(){
      * @param {gamefile} gamefile - The gamefile
      * @param {number} moveIndex - The desired move index
      * @param {Object} options - An object containing various options (ALL of these are default *true*, EXCEPT `simulated` which is default *false*):
-     * - `removeMove`: Whether or not to delete the moves in the gamefile's moves list while rewinding.
-     * - `updateData`: Whether or not to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
+     * - `removeMove`: Whether to delete the moves in the gamefile's moves list while rewinding.
+     * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
      */
     function rewindGameToIndex(gamefile, moveIndex, { removeMove = true, updateData = true } = {}) {
         if (removeMove && !movesscript.areWeViewingLatestMove(gamefile)) return console.error("Cannot rewind game to index while deleting moves unless we start at the most recent move. forwardToFront() first.")
@@ -408,9 +408,9 @@ const movepiece = (function(){
      * or when the checkmate algorithm is undo'ing a move.
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} options - An object containing various options (ALL of these are default *true*, EXCEPT `simulated` which is default *false*):
-     * - `updateData`: Whether or not to modify the mesh of all the pieces. Should be false for simulated moves.
-     * - `removeMove`: Whether or not to delete the move from the gamefile's move list. Should be true if we're undo'ing simulated moves.
-     * - `animate`: Whether or not to animate this rewinding.
+     * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves.
+     * - `removeMove`: Whether to delete the move from the gamefile's move list. Should be true if we're undo'ing simulated moves.
+     * - `animate`: Whether to animate this rewinding.
      */
     function rewindMove(gamefile, { updateData = true, removeMove = true, animate = true } = {}) {
 
@@ -465,8 +465,8 @@ const movepiece = (function(){
      * @param {gamefile} gamefile - The gamefile
      * @param {Move} move - The move that's being undo'd
      * @param {Object} options - An object containing various options (ALL of these are default *true*):
-     * - `updateData`: Whether or not to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh afterward.
-     * - `animate`: Whether or not to animate this move.
+     * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh afterward.
+     * - `animate`: Whether to animate this move.
      */
     function rewindMove_NoSpecial(gamefile, move, { updateData = true, animate = true } = {}) {
         const movedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords) // Returns { type, index, coords }
@@ -487,9 +487,9 @@ const movepiece = (function(){
      * @param {Move} The move to simulate.
      * @param {string} colorToTestInCheck - The side to test if they are in check. Usually this is the color of the side making the move, because we don't want to step into check.
      * @param {Object} options - An object that may contain the properties:
-     * - `doGameOverChecks`: Whether or not, while simulating this move, to perform game over checks such as checkmate or other win conditions. SLOWER, but this can be used to verify the game conclusion the opponent claimed. Default: *false*
+     * - `doGameOverChecks`: Whether, while simulating this move, to perform game over checks such as checkmate or other win conditions. SLOWER, but this can be used to verify the game conclusion the opponent claimed. Default: *false*
      * @returns {Object} An object that may contains the properties:
-     * - `isCheck`: Whether or not making this move puts the specified color in check. Usually it's you stepping into check.
+     * - `isCheck`: Whether making this move puts the specified color in check. Usually it's you stepping into check.
      * - `gameConclusion`: The resulting `gameConclusion` after the move, if `doGameOverChecks` was specified as *true*.
      */
     function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = false } = {}) {
