@@ -316,7 +316,7 @@ const arrows = (function() {
 
         data.push(...thisData);
 
-        // Next append the data of the little arrow!
+        // Next apphend the data of the little arrow!
 
         const dist = worldHalfWidth * 1;
         const size = 0.3 * worldHalfWidth;

@@ -13,10 +13,10 @@ const coin = (function () {
     const encryption = 'jdhagkleioqcfmnzxyptsuvrw';
 
     /**
-     * Appends the vertex data of the hidden coins to the `data32` and `data64`
+     * Apphends the vertex data of the hidden coins to the `data32` and `data64`
      * properties of the provided mesh object.
      * @param {gamefile} gamefile - The gamefile
-     * @param {number} currIndex - The index of the vertex data to start appending the coin vertex data.
+     * @param {number} currIndex - The index of the vertex data to start apphending the coin vertex data.
      * @param {Object} mesh - An object containing the `data32` and `data64` properties of the pieces model currently being generated.
      * @param {boolean} usingColoredTextures - Whether or not we are using the coloredTextureProgram for rendering the pieces.
      * @returns {number} The next index in the vertex data after the coin data has been added.

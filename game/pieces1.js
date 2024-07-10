@@ -4,7 +4,7 @@
 
 const pieces1 = (function () {
 
-    /** A list of the royal pieces, without the color appended. */
+    /** A list of the royal pieces, without the color apphended. */
     const royals = ['kings', 'royalQueens', 'royalCentaurs'];
 
     return Object.freeze({

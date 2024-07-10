@@ -80,25 +80,25 @@ const variantomega = (function(){
         startingPos[math.getKeyFromCoords([4,13])] = 'rooksB';
 
         // First few pawn walls
-        appendPawnTower(startingPos, 7, -dist, dist);
-        appendPawnTower(startingPos, 8, -dist, dist);
+        apphendPawnTower(startingPos, 7, -dist, dist);
+        apphendPawnTower(startingPos, 8, -dist, dist);
 
         // Third pawn wall
-        appendPawnTower(startingPos, 9, -dist, dist);
+        apphendPawnTower(startingPos, 9, -dist, dist);
         startingPos[math.getKeyFromCoords([9,10])] = 'bishopsW'; // Overwrite with bishop
         setAir(startingPos, [9,11])
 
         // Black king wall
-        appendPawnTower(startingPos, 10, -dist, dist);
+        apphendPawnTower(startingPos, 10, -dist, dist);
         startingPos[math.getKeyFromCoords([10,12])] = 'kingsB'; // Overwrite with king
 
         // Spawn rook towers
         spawnAllRookTowers(startingPos, 11, 8, dist, dist);
 
         startingPos[math.getKeyFromCoords([11,6])] = 'bishopsW';
-        appendPawnTower(startingPos, 11, -dist, 5);
+        apphendPawnTower(startingPos, 11, -dist, 5);
 
-        appendPawnTower(startingPos, 12, -dist, 7);
+        apphendPawnTower(startingPos, 12, -dist, 7);
         startingPos[math.getKeyFromCoords([12,8])] = 'pawnsB';
 
         startingPos[math.getKeyFromCoords([13,9])] = 'pawnsB';
@@ -142,7 +142,7 @@ const variantomega = (function(){
 
         return startingPos;
 
-        function appendPawnTower(startingPos, x, startY, endY) {
+        function apphendPawnTower(startingPos, x, startY, endY) {
             if (endY < startY) return; // Don't do negative pawn towers
           
             for (let y = startY; y <= endY; y++) {
@@ -165,7 +165,7 @@ const variantomega = (function(){
             startingPos[math.getKeyFromCoords([xStart,yStart+2])] = 'bishopsW';
             startingPos[math.getKeyFromCoords([xStart,yStart+4])] = 'bishopsW';
             startingPos[math.getKeyFromCoords([xStart,yStart+6])] = 'bishopsW';
-            appendPawnTower(startingPos, xStart, yStart+8, dist)
+            apphendPawnTower(startingPos, xStart, yStart+8, dist)
             
             // Second wall with rook
             startingPos[math.getKeyFromCoords([xStart+1,yStart+1])] = 'bishopsW';
@@ -175,7 +175,7 @@ const variantomega = (function(){
             if (yStart+8 <= dist) startingPos[math.getKeyFromCoords([xStart+1,yStart+8])] = 'rooksB';
             
             // Third pawn wall
-            appendPawnTower(startingPos, xStart+2, yStart+2, dist)
+            apphendPawnTower(startingPos, xStart+2, yStart+2, dist)
             if (yStart+7 <= dist) startingPos[math.getKeyFromCoords([xStart+2,yStart+7])] = 'pawnsB';
         }
         
@@ -313,10 +313,10 @@ const variantomega = (function(){
             startingPos[key] = startOfRookTowers[key]
         }
 
-        appendPawnTower(startingPos, 0, 13, dist)
-        appendPawnTower(startingPos, 2, 13, dist)
-        appendPawnTower(startingPos, 3, 16, dist)
-        appendPawnTower(startingPos, 5, 16, dist)
+        apphendPawnTower(startingPos, 0, 13, dist)
+        apphendPawnTower(startingPos, 2, 13, dist)
+        apphendPawnTower(startingPos, 3, 16, dist)
+        apphendPawnTower(startingPos, 5, 16, dist)
 
         spawnAllRookTowers(startingPos, 6, 3, dist+3, dist)
 
@@ -333,7 +333,7 @@ const variantomega = (function(){
 
         return startingPos;
 
-        function appendPawnTower(startingPos, x, startY, endY) {
+        function apphendPawnTower(startingPos, x, startY, endY) {
             if (endY < startY) return; // Don't do negative pawn towers
           
             for (let y = startY; y <= endY; y++) {
@@ -362,7 +362,7 @@ const variantomega = (function(){
             if (yStart+10 <= dist) startingPos[math.getKeyFromCoords([xStart,yStart+10])] = 'bishopsW';
             if (yStart+12 <= dist) startingPos[math.getKeyFromCoords([xStart,yStart+12])] = 'bishopsW';
             if (yStart+14 <= dist) startingPos[math.getKeyFromCoords([xStart,yStart+14])] = 'bishopsW';
-            appendPawnTower(startingPos, xStart, yStart+16, dist)
+            apphendPawnTower(startingPos, xStart, yStart+16, dist)
             
             // Second wall with rook
             startingPos[math.getKeyFromCoords([xStart+1,yStart+1])] = 'pawnsW';
@@ -390,7 +390,7 @@ const variantomega = (function(){
             if (yStart+13 <= dist) startingPos[math.getKeyFromCoords([xStart+2,yStart+13])] = 'pawnsW';
             if (yStart+14 <= dist) startingPos[math.getKeyFromCoords([xStart+2,yStart+14])] = 'pawnsW';
             if (yStart+15 <= dist) startingPos[math.getKeyFromCoords([xStart+2,yStart+15])] = 'pawnsB';
-            appendPawnTower(startingPos, xStart+2, yStart+16, dist)
+            apphendPawnTower(startingPos, xStart+2, yStart+16, dist)
         }
         
         function spawnAllRookTowers(startingPos, xStart, yStart, xEnd, yEnd) {

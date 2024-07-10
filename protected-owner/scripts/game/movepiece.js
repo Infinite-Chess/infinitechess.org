@@ -173,7 +173,7 @@ const movepiece = (function(){
         // If no index specified, make the default the first undefined in the list!
         if (desiredIndex == null) desiredIndex = list.undefineds[0];
 
-        // If there are no undefined placeholders left, updateData better be false, because we are going to append on the end!
+        // If there are no undefined placeholders left, updateData better be false, because we are going to apphend on the end!
         if (desiredIndex == null && updateData) throw new Error("Cannot add a piece and update the data when there are no undefined placeholders remaining!")
 
         if (desiredIndex == null) list.push(coords)

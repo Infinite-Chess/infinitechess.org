@@ -20,9 +20,9 @@ const organizedlines = {
      * if we know the coordinates of a piece, we don't have to iterate
      * through the entire list of pieces to find its type.
      * @param {gamefile} gamefile - The gamefile
-     * @param {Object} [options] - An object that may contain the `appendUndefineds` option. If false, no undefined *null* placeholder pieces will be left for the mesh generation. Defaults to *true*. Set to false if you're planning on regenerating manually.
+     * @param {Object} [options] - An object that may contain the `apphendUndefineds` option. If false, no undefined *null* placeholder pieces will be left for the mesh generation. Defaults to *true*. Set to false if you're planning on regenerating manually.
      */
-    initOrganizedPieceLists: function (gamefile, { appendUndefineds = true} = {}) {
+    initOrganizedPieceLists: function (gamefile, { apphendUndefineds = true} = {}) {
         if (!gamefile.ourPieces) return console.error("Cannot init the organized lines before ourPieces is defined.")
         
         // console.log("Begin organizing lists...")
@@ -38,7 +38,7 @@ const organizedlines = {
         // Add extra undefined pieces into each type array!
         organizedlines.initUndefineds(gamefile)
 
-        if (appendUndefineds) organizedlines.appendUndefineds(gamefile)
+        if (apphendUndefineds) organizedlines.apphendUndefineds(gamefile)
     },
 
     resetOrganizedLists: function(gamefile) {
@@ -148,11 +148,11 @@ const organizedlines = {
      * These placeholders are used up when pawns promote.
      * @param {gamefile} gamefile - The gamefile
      */
-    appendUndefineds: function(gamefile) {
-        pieces.forEachPieceType(append)
+    apphendUndefineds: function(gamefile) {
+        pieces.forEachPieceType(apphend)
 
-        function append(listType) {
-            if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
+        function apphend(listType) {
+            if (!organizedlines.isTypeATypeWereApphendingUndefineds(gamefile, listType)) return;
 
             const list = gamefile.ourPieces[listType];
             for (let i = 0; i < pieces.extraUndefineds; i++) organizedlines.insertUndefinedIntoList(list)
@@ -165,7 +165,7 @@ const organizedlines = {
         pieces.forEachPieceType(areWeShort)
 
         function areWeShort(listType) {
-            if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
+            if (!organizedlines.isTypeATypeWereApphendingUndefineds(gamefile, listType)) return;
 
             const list = gamefile.ourPieces[listType];
             const undefinedCount = list.undefineds.length;
@@ -192,7 +192,7 @@ const organizedlines = {
         pieces.forEachPieceType(add)
 
         function add(listType) {
-            if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
+            if (!organizedlines.isTypeATypeWereApphendingUndefineds(gamefile, listType)) return;
 
             const list = gamefile.ourPieces[listType];
             const undefinedCount = list.undefineds.length;
@@ -203,16 +203,16 @@ const organizedlines = {
     },
 
     /**
-     * Sees if the provided type is a type we need to append undefined
+     * Sees if the provided type is a type we need to apphend undefined
      * placeholders to the piece list of this type.
      * The mesh of all the pieces needs placeholders in case we
      * promote to a new piece.
      * @param {gamefile} gamefile - The gamefile
      * @param {string} type - The type of piece (e.g. "pawnsW")
-     * @returns {boolean} *true* if we need to append placeholders for this type.
+     * @returns {boolean} *true* if we need to apphend placeholders for this type.
      */
-    isTypeATypeWereAppendingUndefineds(gamefile, type) {
-        if (!gamefile.gameRules.promotionsAllowed) throw new Error("promotionsAllowed needs to be defined before appending undefineds to the piece lists!");
+    isTypeATypeWereApphendingUndefineds(gamefile, type) {
+        if (!gamefile.gameRules.promotionsAllowed) throw new Error("promotionsAllowed needs to be defined before apphending undefineds to the piece lists!");
 
         const color = math.getPieceColorFromType(type);
 

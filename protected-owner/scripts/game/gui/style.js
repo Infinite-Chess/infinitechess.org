@@ -95,7 +95,7 @@ const style = (function() {
     }
 
     function updateJavascriptStyling() {
-        element_style.innerHTML = navigationStyle /* + "\n\n" + otherStyle */; // Other styles can be appended here later
+        element_style.innerHTML = navigationStyle /* + "\n\n" + otherStyle */; // Other styles can be apphended here later
     }
 
     return Object.freeze({

@@ -67,8 +67,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.ourPieces = undefined;
     /** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` */
     this.piecesOrganizedByKey = undefined;
-    /** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` */
-    this.piecesOrganizedByKey = undefined;
     /** Pieces organized by row: `{ 2:[{type:'queensW',coords:[1,2]}] }` */
     this.piecesOrganizedByRow = undefined;
     /** Pieces organized by column: `{ 1:[{type:'queensW',coords:[1,2]}] }` */
@@ -187,7 +185,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
     this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)
     
-    organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
+    organizedlines.initOrganizedPieceLists(this, { apphendUndefineds: false });
     // movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
     // gamefileutility.updateGameConclusion(this, { concludeGameIfOver: false });
     movepiece.makeAllMovesInGame(this, moves);

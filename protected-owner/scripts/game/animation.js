@@ -198,16 +198,16 @@ const animation = (function() {
     
             const newCoords = [newX, newY]
     
-            if (thisAnimation.captured) appendDataOfPiece3D(data, thisAnimation.captured.type, thisAnimation.captured.coords)
+            if (thisAnimation.captured) apphendDataOfPiece3D(data, thisAnimation.captured.type, thisAnimation.captured.coords)
     
-            appendDataOfPiece3D(data, thisAnimation.type, newCoords)
+            apphendDataOfPiece3D(data, thisAnimation.type, newCoords)
         }
 
         // return buffermodel.createModel_ColorTexture3D(new Float32Array(data))
         return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", pieces.getSpritesheet())
     }
     
-    function appendDataOfPiece3D(data, type, coords) {
+    function apphendDataOfPiece3D(data, type, coords) {
 
         const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
         const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation)

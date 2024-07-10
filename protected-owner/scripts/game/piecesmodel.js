@@ -336,7 +336,7 @@ const piecesmodel = {
         if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged)
     },
 
-    // Appends the index to account for coins within the data!
+    // Apphends the index to account for coins within the data!
 
     /**
      * Calculates the specified piece's index, or position in line,

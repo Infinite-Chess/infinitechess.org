@@ -214,7 +214,7 @@ canvas {
 
 /* Discord & Game Credits external links on title screen and invite creation screen */
 
-.menu-external-links {
+.discord-credits-links {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -222,7 +222,7 @@ canvas {
     z-index: 1;
 }
 
-.menu-external-links .discord-icon {
+.discord-credits-links .discord-icon {
     position: absolute;
     left: 0;
     bottom: 0;
@@ -231,24 +231,11 @@ canvas {
     opacity: 0.4;
 }
 
-.menu-external-links .discord-icon:hover {
+.discord-credits-links .discord-icon:hover {
     opacity: 0.55;
 }
 
-.menu-external-links .github-icon {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: calc(30px + var(--vw-capped) * 0.03);
-    margin: 10px calc(40px + var(--vw-capped) * 0.054);
-    opacity: 0.4;
-}
-
-.menu-external-links .github-icon:hover {
-    opacity: 0.55;
-}
-
-.menu-external-links .credits {
+.discord-credits-links .credits {
     opacity: 0.5;
     font-weight: bold;
     position: absolute;
@@ -260,7 +247,7 @@ canvas {
     font-size: calc(16px + var(--vw-capped) * 0.012)
 }
 
-.menu-external-links .credits:hover {
+.discord-credits-links .credits:hover {
     opacity: 0.7;
 }
 
