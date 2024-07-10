@@ -128,6 +128,7 @@ const guigameinfo = (function(){
             else if (condition === 'stalemate') element_whosturn.textContent = "Draw by stalemate!"
             else if (condition === 'repetition') element_whosturn.textContent = "Draw by repetition!"
             else if (condition === 'moverule') element_whosturn.textContent = `Draw by the ${game.getGamefile().gameRules.moveRule / 2}-move-rule!`
+			else if (condition === 'insuffmat') element_whosturn.textContent = "Draw by insufficient material!"
             else {
                 element_whosturn.textContent = "This is a bug, please report!"
                 console.error(`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`)

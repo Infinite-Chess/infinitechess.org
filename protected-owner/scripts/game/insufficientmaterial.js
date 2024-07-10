@@ -14,14 +14,17 @@ const insufficientmaterial = (function(){
 		return Object.keys(pieceCountTable).some(x => pieceTypes.includes(x) || x === `kings${color}` || pieceCountTable[x] === 0);
 	}
 
+	// Returns true if it is draw by insufficient material for that side otherwise returns false
 	function checkdetectInsufficientMaterialForSide(gamefile, piecesOfColor, color) {
 		const pieceCountTable = {};
-		for (let pieceType in piecesOfColor) {
-			pieceCountTable[pieceType] = gamefile.ourPieces[pieceType].length;
+		for (let pieceType of piecesOfColor) {
+			pieceCountTable[pieceType] = gamefileutility.getPieceAmount(gamefile, pieceType);
+
 		}
 		// refer to the theory spreadsheet
 		// https://docs.google.com/spreadsheets/d/13KWe6atX2fauBhthJbzCun_AmKXvso6NY2_zjKtikfc/edit
-
+		debugger;
+		if (pieceCountTable[`queens${color}`] <= 1 && noPieceTypesOtherThan([`queens${color}`], color, pieceCountTable)) return true;
 		if (pieceCountTable[`bishops${color}`] <= 3 && noPieceTypesOtherThan([`bishops${color}`], color, pieceCountTable)) return true;
 		if (pieceCountTable[`knights${color}`] <= 3 && noPieceTypesOtherThan([`knights${color}`], color, pieceCountTable)) return true;
 		if (pieceCountTable[`hawks${color}`] <= 2 && noPieceTypesOtherThan([`hawks${color}`], color, pieceCountTable)) return true;
@@ -38,16 +41,19 @@ const insufficientmaterial = (function(){
      * @returns {string | false} 'draw insuffmat', if the game is over by the insufficient material, otherwise *false*.
      */
     const detectInsufficientMaterial = function(gamefile) {
-		debugger;
-		if (gamefile.gameRules.winCondition !== "checkmate") return false
-        if (gamefileutility.getPieceCountOfGame(gamefile) >= 5) return false; // TODO: check for complicated draws (ex unpromotable pawns)
+		debugger
+		if (gamefile.gameRules.winCondition && gamefile.gameRules.winCondition[gamefile.whosTurn] !== "checkmate") return false;
         if (gamefile.ourPieces.voidsN.length > 0) return false; // temporary until the theory spreadsheet gets updated.
+		const lastMove = movesscript.getLastMove(gamefile.moves);
+		if (lastMove && !lastMove.captured) return false;
+        if (gamefileutility.getPieceCountOfGame(gamefile) >= 5) return false; // TODO: check for complicated draws (ex unpromotable pawns)
+
 		
 		let blackPieceCount = pieces.black.reduce((currentCount, pieceType) => {
-			return currentCount + gamefile.ourPieces[pieceType].length 
+			return currentCount + gamefileutility.getPieceAmount(gamefile, pieceType);
 		}, 0)
 		let whitePieceCount = pieces.white.reduce((currentCount, pieceType) => {
-			return currentCount + gamefile.ourPieces[pieceType].length 
+			return currentCount + gamefileutility.getPieceAmount(gamefile, pieceType);
 		}, 0)
 
 		if (blackPieceCount > 1 && whitePieceCount > 1) return false; // theory spreadsheet assumes a king is alone.
@@ -59,7 +65,7 @@ const insufficientmaterial = (function(){
 		} else { 
 			// if whitePieceCount isn't 1 then blackPieceCount gotta be 1
 			// check for white's pieces when black king is alone.
-			if(checkdetectInsufficientMaterialForSide(gamefile, pieces.black, 'W')) return 'draw insuffmat';
+			if(checkdetectInsufficientMaterialForSide(gamefile, pieces.white, 'W')) return 'draw insuffmat';
 		}
         return false;
     }
