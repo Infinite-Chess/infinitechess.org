@@ -5,14 +5,14 @@ const { writeFile } = require('../utility/lockFile.js');
 const { logEvents } = require('../middleware/logEvents');
 const { writeFile_ensureDirectory } = require('../utility/fileUtils.js');
 
-const membersFilePath = path.resolve('./database/members.json');
+const membersFilePath = path.resolve('../../../database/members.json');
 (function ensureMembersFileExists() {
     if (fs.existsSync(membersFilePath)) return; // Already exists
     const content = JSON.stringify({});
     writeFile_ensureDirectory(membersFilePath, content)
     console.log("Generated members file")
 })()
-const members = require('../database/members.json');
+const members = require('../../../database/members.json');
 
 /**
  * An object with refresh tokens for the keys, and for

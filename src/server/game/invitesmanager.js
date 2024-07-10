@@ -29,7 +29,7 @@ const printSubscriberCount = true;
 
 
 
-const allowinvitesPath = path.resolve('./database/allowinvites.json');
+const allowinvitesPath = path.resolve('../../../database/allowinvites.json');
 (function ensureAllowInvitesFileExists() {
     if (fs.existsSync(allowinvitesPath)) return; // Already exists
 
@@ -41,7 +41,7 @@ const allowinvitesPath = path.resolve('./database/allowinvites.json');
     writeFile_ensureDirectory(allowinvitesPath, content)
     console.log("Generated allowinvites file")
 })()
-let allowinvites = require('../database/allowinvites.json');
+let allowinvites = require('../../../database/allowinvites.json');
 
 let restartingAt;
 let timeLastReadAllowInvites = Date.now()

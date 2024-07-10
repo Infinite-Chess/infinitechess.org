@@ -4,7 +4,7 @@
  * This allows creditials (cookies, HTTP authentication...) from those origins.
  */
 
-const { allowedOrigins } = require('../config/config');
+const { allowedOrigins } = require('../../../config/config');
 
 const credentials = (req, res, next) => {
     const origin = req.headers.origin;

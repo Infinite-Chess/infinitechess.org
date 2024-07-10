@@ -11,7 +11,7 @@ const { writeFile } = require('../utility/lockFile.js');
 
 const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 
-const rolesPath = path.resolve('./database/roles.json');
+const rolesPath = path.resolve('../../../database/roles.json');
 (function ensureRolesFileExists() {
     if (fs.existsSync(rolesPath)) return; // Already exists
 
@@ -22,7 +22,7 @@ const rolesPath = path.resolve('./database/roles.json');
     writeFile_ensureDirectory(rolesPath, content)
     console.log("Generated roles file")
 })()
-let roles = require('../database/roles.json');
+let roles = require('../../../database/roles.json');
 
 let rolesHaveBeenEdited = false; // Set to true if we need to save the members after a change
 const intervalToSaveRolesMillis = 10000; // 10 seconds.

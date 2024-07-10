@@ -18,7 +18,7 @@ const { rateLimit } = require('./rateLimit')
 const { protectedStatic } = require('./protectedStatic')
 
 // Other imports
-const { useOriginWhitelist } = require('../config/config');
+const { useOriginWhitelist } = require('../../../config/config');
 
 /**
  * Configures the Middleware Waterfall
@@ -55,7 +55,7 @@ function configureMiddleware(app) {
      * 
      * Does this create a 'Access-Control-Allow-Origin' header?
      */
-    const options = useOriginWhitelist ? require('../config/corsOptions') : undefined;
+    const options = useOriginWhitelist ? require('../../../config/corsOptions') : undefined;
     app.use(cors(options));
 
     /**
@@ -80,9 +80,9 @@ function configureMiddleware(app) {
     app.use(protectedStatic);
 
     // Provide a route
-    app.use('/', require('../routes/root'));
-    app.use('/createaccount(.html)?', require('../routes/createaccount'));
-    app.use('/member', require('../routes/member'));
+    app.use('/', require('../../../routes/root'));
+    app.use('/createaccount(.html)?', require('../../../routes/createaccount'));
+    app.use('/member', require('../../../routes/member'));
 
     // If we've reached this point, send our 404 page.
     app.all('*', require('./send404'))
