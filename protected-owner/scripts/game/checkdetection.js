@@ -8,7 +8,7 @@ const checkdetection = (function(){
 
     /**
      * Tests if the provided gamefile is currently in check.
-     * Apphends any attackers to the `attackers` list.
+     * Appends any attackers to the `attackers` list.
      * @param {gamefile} gamefile - The gamefile
      * @param {string} color - The side to test if their king is in check. "white" or "black"
      * @param {Array} attackers - An empty array []
@@ -61,7 +61,7 @@ const checkdetection = (function(){
     }
 
     // Checks to see if any piece within a 3-block radius can capture. Ignores sliding movesets.
-    // If there is, apphends to "attackers".
+    // If there is, appends to "attackers".
     // DOES NOT account for pawns. For that use  doesPawnAttackSquare()
     function doesVicinityAttackSquare (gamefile, coords, color, attackers) {
 
@@ -83,7 +83,7 @@ const checkdetection = (function(){
 
             // Is that a match with any piece type on this vicinity square?
             if (thisVicinity.includes(typeOnSquareConcat)) { // This square can be captured
-                if (attackers) apphendAttackerToList(attackers, { coords: actualSquare, slidingCheck: false })
+                if (attackers) appendAttackerToList(attackers, { coords: actualSquare, slidingCheck: false })
                 return true; // There'll never be more than 1 short-range/jumping checks!
             }; 
         }
@@ -106,7 +106,7 @@ const checkdetection = (function(){
 
             const pieceIsPawn = pieceOnSquare.startsWith('pawns')
             if (pieceIsPawn) {
-                if (attackers) apphendAttackerToList(attackers, { coords: thisSquare, slidingCheck: false })
+                if (attackers) appendAttackerToList(attackers, { coords: thisSquare, slidingCheck: false })
                 return true; // A pawn can capture on this square. There'll never be more than 1 short-range checks.
             }
         }
@@ -168,7 +168,7 @@ const checkdetection = (function(){
             const isWithinMoveset = legalmoves.doesSlideMovesetContainSquare(thisPieceLegalSlide, lineIsVertical, coords)
 
             if (isWithinMoveset) {
-                if (attackers) apphendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
+                if (attackers) appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
                 return true; // There'll never be more than 1 checker on the same line
             }
         }
@@ -177,13 +177,13 @@ const checkdetection = (function(){
     }
 
     /**
-     * Only apphends the attacker giving us check if they aren't already in our list.
+     * Only appends the attacker giving us check if they aren't already in our list.
      * This can happen if the same piece is checking multiple royals.
      * However, we do want to upgrade them to `slidingCheck` if this one is.
      * @param {Object[]} attackers - The current attackers list, of pieces that are checking us.
-     * @param {Object} attacker - The current attacker we want to apphend, with the properties `coords` and `slidingCheck`.
+     * @param {Object} attacker - The current attacker we want to append, with the properties `coords` and `slidingCheck`.
      */
-    function apphendAttackerToList(attackers, attacker) {
+    function appendAttackerToList(attackers, attacker) {
         for (let i = 0; i < attackers.length; i++) {
             const thisAttacker = attackers[i]; // { coords, slidingCheck }
             if (!math.areCoordsEqual(thisAttacker.coords, attacker.coords)) continue; // Not the same piece
@@ -256,7 +256,7 @@ const checkdetection = (function(){
      * @param {LegalMoves} legalMoves - The legal moves object of which to delete moves that don't address check.
      * @param {number[][]} royalCoords - A list of our friendly jumping royal pieces
      * @param {number[]} selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
-     * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are apphended.
+     * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
      */
     function addressExistingChecks (gamefile, legalMoves, royalCoords, selectedPieceCoords) {
         if (!gamefile.inCheck) return false; // Exit if not in check
@@ -291,7 +291,7 @@ const checkdetection = (function(){
             return true;
         }
         
-        apphendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords)
+        appendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords)
         eraseAllSlidingMoves();
 
         return true;
@@ -373,8 +373,8 @@ const checkdetection = (function(){
         movepiece.addPiece(gamefile, deletedPiece.type, deletedPiece.coords, deletedPiece.index, { updateData: false })
     }
 
-    // Apphends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2
-    function apphendBlockingMoves (square1, square2, moves, coords) { // coords is of the selected piece
+    // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2
+    function appendBlockingMoves (square1, square2, moves, coords) { // coords is of the selected piece
         
         // What is the line between our king and the attacking piece?
         let direction;
@@ -387,7 +387,7 @@ const checkdetection = (function(){
         const upDiag = math.getUpDiagonalFromCoords(coords)
         const downDiag = math.getDownDiagonalFromCoords(coords)
 
-        function apphendBlockPointIfLegal (coord, value1, value2, blockPoint) {
+        function appendBlockPointIfLegal (coord, value1, value2, blockPoint) {
             if (coord > value1 && coord < value2
              || coord > value2 && coord < value1) {
                 // Can our piece legally move there?
@@ -400,7 +400,7 @@ const checkdetection = (function(){
             // Does our selected piece's vertical moveset intersect this line segment?
             if (moves.vertical) {
                 const blockPoint = [coords[0], square1[1]];
-                apphendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
+                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
             }
 
             //  Does our selected piece's diagonalUp moveset intersect this line segment?
@@ -408,14 +408,14 @@ const checkdetection = (function(){
                 // When y is the y level of our squares, what is the x intersection point?
                 const xIntsect = -upDiag + square1[1];
                 const blockPoint = [xIntsect, square1[1]]
-                apphendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
+                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
             }
 
             //  Does our selected piece's diagonalDown moveset intersect this line segment?
             if (moves.diagonalDown) {
                 const xIntsect = downDiag - square1[1];
                 const blockPoint = [xIntsect, square1[1]]
-                apphendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
+                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
             }
         }
 
@@ -424,19 +424,19 @@ const checkdetection = (function(){
             // Does our selected piece's horizontal moveset intersect this line segment?
             if (moves.horizontal) {
                 const blockPoint = [square1[0], coords[1]]
-                apphendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
+                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
             }
 
             if (moves.diagonalUp) {
                 const yIntsect = upDiag + square1[0];
                 const blockPoint = [square1[0], yIntsect]
-                apphendBlockPointIfLegal(yIntsect, square1[1], square2[1], blockPoint)
+                appendBlockPointIfLegal(yIntsect, square1[1], square2[1], blockPoint)
             }
 
             if (moves.diagonalDown) {
                 const yIntsect = downDiag - square1[0];
                 const blockPoint = [square1[0], yIntsect]
-                apphendBlockPointIfLegal(yIntsect, square1[1], square2[1], blockPoint)
+                appendBlockPointIfLegal(yIntsect, square1[1], square2[1], blockPoint)
             }
         }
 
@@ -446,14 +446,14 @@ const checkdetection = (function(){
                 const xDiff = coords[0] - square1[0];
                 const intsectY = square1[1] + xDiff;
                 const blockPoint = [coords[0], intsectY]
-                apphendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
+                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
             }
 
             if (moves.horizontal) {
                 const yDiff = coords[1] - square1[1];
                 const intsectX = square1[0] + yDiff;
                 const blockPoint = [intsectX, coords[1]]
-                apphendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
+                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
             }
 
             out: if (moves.diagonalDown) {
@@ -466,7 +466,7 @@ const checkdetection = (function(){
                 // y = -1x + downDiag
                 const yIntsect = downDiag - xIntsect;
                 const blockPoint = [xIntsect, yIntsect]
-                apphendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
+                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
             }
         }
 
@@ -476,14 +476,14 @@ const checkdetection = (function(){
                 const xDiff = coords[0] - square1[0];
                 const intsectY = square1[1] - xDiff;
                 const blockPoint = [coords[0], intsectY]
-                apphendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
+                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
             }
 
             if (moves.horizontal) {
                 const yDiff = coords[1] - square1[1];
                 const intsectX = square1[0] - yDiff;
                 const blockPoint = [intsectX, coords[1]]
-                apphendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
+                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
             }
 
             out: if (moves.diagonalUp) {
@@ -496,7 +496,7 @@ const checkdetection = (function(){
                 // y = 1x + upDiag
                 const yIntsect = xIntsect + upDiag;
                 const blockPoint = [xIntsect, yIntsect]
-                apphendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
+                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
             }
         }
     }

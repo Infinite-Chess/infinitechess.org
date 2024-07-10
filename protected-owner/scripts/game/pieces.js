@@ -14,7 +14,7 @@ const pieces = (function () {
     const black = ['kingsB', 'giraffesB', 'camelsB', 'zebrasB', 'amazonsB', 'queensB', 'royalQueensB', 'hawksB', 'chancellorsB', 'archbishopsB', 'centaursB', 'royalCentaursB', 'knightsB', 'guardsB', 'rooksB', 'bishopsB', 'pawnsB'];
     const neutral = ['obstaclesN', 'voidsN'];
 
-    /** A list of the royal pieces, without the color apphended. */
+    /** A list of the royal pieces, without the color appended. */
     const royals = ['kings', 'royalQueens', 'royalCentaurs'];
     /** A list of the royals that are compatible with checkmate. */
     const jumpingRoyals = ['kings', 'royalCentaurs'];
