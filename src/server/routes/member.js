@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 
-const {getMemberData,requestConfirmEmail} = require('../src/server/controllers/memberController');
+const {getMemberData,requestConfirmEmail} = require('../controllers/memberController');
 
 
 router.get('/:member', (req, res) => {
