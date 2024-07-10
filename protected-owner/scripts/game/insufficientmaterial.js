@@ -85,7 +85,6 @@ const insufficientmaterial = (function(){
      * @returns {string | false} 'draw insuffmat', if the game is over by the insufficient material, otherwise *false*.
      */
     const detectInsufficientMaterial = function(gamefile) {
-		debugger;
 
 		// Only make the draw check if the win condition is checkmate for both players
 		if (!gamefile.gameRules.winConditions.white.includes("checkmate") || !gamefile.gameRules.winConditions.black.includes("checkmate")) return false;
