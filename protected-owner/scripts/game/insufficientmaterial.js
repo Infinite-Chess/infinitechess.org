@@ -58,16 +58,16 @@ const insufficientmaterial = (function(){
 
 		if (blackPieceCount > 1 && whitePieceCount > 1) return false; // theory spreadsheet assumes a king is alone.
 		if (gamefileutility.getPieceAmount(gamefile, 'kingsB') !== 1 || gamefileutility.getPieceAmount(gamefile, 'kingsW') !== 1) return false;
-		if (gamefileutility.getRoyalCountOfColor(gamefile.piecesOrganizedByKey, 'W') > 1 || gamefileutility.getRoyalCountOfColor(gamefile.piecesOrganizedByKey, 'B') > 1) return false;
+		if (gamefileutility.getRoyalCountOfColor(gamefile.piecesOrganizedByKey, 'white') > 1 || gamefileutility.getRoyalCountOfColor(gamefile.piecesOrganizedByKey, 'black') > 1) return false;
 		if (blackPieceCount === 1 && whitePieceCount === 1) return 'draw insuffmat'; // trivial case.
 
 		if (whitePieceCount === 1) {
 			// check for black's pieces when white king is alone.
-			if(checkdetectInsufficientMaterialForSide(gamefile, pieces.black, 'B')) return 'draw insuffmat';
+			if(checkdetectInsufficientMaterialForSide(gamefile, pieces.black, 'black')) return 'draw insuffmat';
 		} else { 
 			// if whitePieceCount isn't 1 then blackPieceCount gotta be 1
 			// check for white's pieces when black king is alone.
-			if(checkdetectInsufficientMaterialForSide(gamefile, pieces.white, 'W')) return 'draw insuffmat';
+			if(checkdetectInsufficientMaterialForSide(gamefile, pieces.white, 'white')) return 'draw insuffmat';
 		}
         return false;
     }
