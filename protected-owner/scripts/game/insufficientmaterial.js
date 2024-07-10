@@ -12,7 +12,7 @@ const insufficientmaterial = (function(){
 	
 	/**
      * Checks if there is no pieces of color `color` with piece types other than pieces type in `pieceTypes` and the king with given `color`.
-     * @param {string[]} pieceTypes - The piece types
+     * @param {string[]} pieceTypes - The piece types (ex: `bishopsB`)
      * @param {string} c - `W` | `B` The piece's color
 	 * @param {Object} pieceCountTable - An object representing a table that maps piece types of color `color` to their count
      * @returns {boolean} **true** if there is no pieces of color `color` with pieces types other than pieces type in `pieceTypes` and the king with given `color`, otherwise returns **false**
