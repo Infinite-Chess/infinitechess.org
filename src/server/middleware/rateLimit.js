@@ -1,8 +1,8 @@
 const { logEvents } = require('./logEvents');
 const { getClientIP, getClientIP_Websocket } = require("./IP")
 
-const { isIPBanned } = require('../middleware/banned');
-const { DEV_BUILD, ARE_RATE_LIMITING } = require('../../../config/config');
+const { isIPBanned } = require('./banned');
+const { DEV_BUILD, ARE_RATE_LIMITING } = require('../config/config');
 const { Socket } = require("../game/TypeDefinitions")
 
 // For rate limiting a client...

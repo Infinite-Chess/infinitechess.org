@@ -4,7 +4,7 @@
   "description": "infinitechess.org server",
   "author": "Naviary",
   "license": "AGPL",
-  "main": "server.js",
+  "main": "src/server/server.js",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
@@ -19,5 +19,13 @@
     "proper-lockfile": "^4.1.2",
     "uuid": "^8.3.2",
     "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.23.0"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "nodemon",
+    "run": "node ."
   }
 }

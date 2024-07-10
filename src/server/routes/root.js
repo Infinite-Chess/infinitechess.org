@@ -11,7 +11,7 @@ const { verifyAccount } = require('../controllers/verifyAccountController');
 const { ensureOwner, ensurePatron } = require('../middleware/verifyRoles');
 const { getCachedHTML, sendCachedHTML } = require('../utility/HTMLScriptInjector');
 
-const htmlDirectory = path.join(__dirname, '..', 'dist', 'views');
+const htmlDirectory = path.join(__dirname, '..', '..', '..', 'dist', 'views');
 
 // router.get('/skeleton(.html)?', (req, res) => { // If it starts & ends with '/', OR it's '/index.html' OR '/index'
 //     res.sendFile(path.join(__dirname, '../views', 'skeleton.html'));

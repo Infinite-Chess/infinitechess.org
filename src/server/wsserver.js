@@ -1,17 +1,17 @@
 const WebSocket = require('ws');
-const { verifyJWTWebSocket } = require("./src/server/middleware/verifyJWT")
-const { rateLimitWebSocket } = require("./src/server/middleware/rateLimit")
-const { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } = require('./src/server/middleware/logEvents');
+const { verifyJWTWebSocket } = require("./middleware/verifyJWT")
+const { rateLimitWebSocket } = require("./middleware/rateLimit")
+const { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } = require('./middleware/logEvents');
 const { DEV_BUILD, HOST_NAME, GAME_VERSION } = require('./config/config');
 
-const { WebsocketMessage, Socket } = require('./src/server/game/TypeDefinitions')
-const { genUniqueID, generateNumbID } = require('./src/server/game/math1');
-const wsfunctions = require('./src/server/game/wsfunctions');
-const invitesmanager = require('./src/server/game/invitesmanager')
-const gamemanager = require('./src/server/game/gamemanager');
+const { WebsocketMessage, Socket } = require('./game/TypeDefinitions')
+const { genUniqueID, generateNumbID } = require('./game/math1');
+const wsfunctions = require('./game/wsfunctions');
+const invitesmanager = require('./game/invitesmanager')
+const gamemanager = require('./game/gamemanager');
 
-const { ensureJSONString } = require('./src/server/utility/JSONUtils');
-const { executeSafely } = require('./src/server/utility/errorGuard');
+const { ensureJSONString } = require('./utility/JSONUtils');
+const { executeSafely } = require('./utility/errorGuard');
 
 
 let WebSocketServer;

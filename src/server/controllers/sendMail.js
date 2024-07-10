@@ -1,6 +1,6 @@
 
 const nodemailer = require('nodemailer');
-const { DEV_BUILD, HOST_NAME } = require('../../../config/config');
+const { DEV_BUILD, HOST_NAME } = require('../config/config');
 const { logEvents } = require('../middleware/logEvents');
 
 /**

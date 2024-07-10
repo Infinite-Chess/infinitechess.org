@@ -1,8 +1,8 @@
-const { DEV_BUILD } = require('../config/config');
-const { generateAccount } = require('../src/server/controllers/createaccountController');
-const { giveRole_Owner, giveRole_Patron } = require('../src/server/controllers/roles');
-const { doesMemberExist } = require('../src/server/controllers/members');
-const { ensureEnvFile } = require('../config/env');
+const { DEV_BUILD } = require('./config');
+const { generateAccount } = require('../controllers/createaccountController');
+const { giveRole_Owner, giveRole_Patron } = require('../controllers/roles');
+const { doesMemberExist } = require('../controllers/members');
+const { ensureEnvFile } = require('./env');
 const { ensureSelfSignedCertificate } = require('./generateCert');
 
 function initDevEnvironment() {
