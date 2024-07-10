@@ -1,5 +1,6 @@
 import * as esbuild from "esbuild";
-import { readdir, cp as copy, rm as remove } from "node:fs/promises";
+import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
+import { minify } from "terser";
 
 /**
  * 
@@ -28,23 +29,23 @@ async function getExtFiles(path, ext) {
 await remove("./dist", {
   recursive: true,
   force: true,
-})
+});
 
 await copy("./src/client", "./dist", {
   recursive: true,
-  force: true
+  force: true,
 });
 
-const clientScript = await getExtFiles("./src/client/scripts", "js");
-const clientStyle = [] // await getExtFiles("./src/client/css", ".css");
+const clientScript = await getExtFiles("./src/client/scripts", ".js");
+const clientStyle = []; // await getExtFiles("./src/client/css", ".css");
 
 const clientFiles = [];
 clientFiles.push(...clientScript.map(v => `./src/client/scripts/${v}`), ...clientStyle.map(v => `./src/client/css/${v}`));
 
-const result = await esbuild.build({
+const esbuildResult = await esbuild.build({
   entryPoints: clientFiles,
   bundle: true,
-  minify: true,
+  minify: false, // Disable minification in esbuild
   outdir: "dist",
   outbase: "src/client",
   sourcemap: true,
@@ -52,4 +53,15 @@ const result = await esbuild.build({
   format: "esm",
 });
 
-console.log(result);
+console.log(esbuildResult);
+
+for (const file of clientFiles) {
+  const filePath = `./dist/${file.replace('./src/client/', '')}`;
+  const code = await readFile(filePath, 'utf8');
+  const minified = await minify(code, {
+    mangle: false, // Disable variable name mangling
+    compress: true, // Enable compression
+  });
+
+  await writeFile(filePath, minified.code, 'utf8');
+}

@@ -17,6 +17,7 @@
     "nodemailer": "^6.8.0",
     "nodemon": "^3.1.4",
     "proper-lockfile": "^4.1.2",
+    "terser": "^5.31.2",
     "uuid": "^8.3.2",
     "ws": "^8.16.0"
   },
