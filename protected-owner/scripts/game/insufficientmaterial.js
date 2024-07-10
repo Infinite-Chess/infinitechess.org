@@ -52,8 +52,8 @@ const insufficientmaterial = (function(){
 					break;
 				};
 			}
-			if(!allPiecesSatisfyPieceCount) continue
-			return true
+			if(!allPiecesSatisfyPieceCount) continue;
+			return true;
 		}
 		return false;
 	}
