@@ -7,7 +7,7 @@ const {getMemberData,requestConfirmEmail} = require('../controllers/memberContro
 
 
 router.get('/:member', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'views', 'member.html'));
+    res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', 'member.html'));
 });
 
 router.get('/:member/data', getMemberData);
