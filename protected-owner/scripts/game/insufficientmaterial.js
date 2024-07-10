@@ -63,7 +63,7 @@ const insufficientmaterial = (function(){
 		const lastMove = movesscript.getLastMove(gamefile.moves);
 		if (lastMove && !lastMove.captured) return false;
 
-		// Temporary: only make the draw check if there are 5 pieces or less
+		// Temporary: only make the draw check if there are less than 5 pieces
         if (gamefileutility.getPieceCountOfGame(gamefile) >= 5) return false;
 
 		// Temporary: only make the draw check if there are no voids
