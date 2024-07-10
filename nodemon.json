@@ -5,5 +5,5 @@
         "./protected-owner/**/*",
         "./protected-patron/**/*"
     ],
-    "exec": "npm run build && npm run run"
+    "exec": "npm run build && npm run start"
 }
