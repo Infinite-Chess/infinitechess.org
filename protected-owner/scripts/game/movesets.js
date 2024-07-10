@@ -32,7 +32,7 @@ const movesets = (function() {
                     slideMoves: {
                         '2,1': [-slideLimit, slideLimit],
                         '2,-1': [-slideLimit, slideLimit],
-                        '1,2': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+                        '1,2': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding
                         '1,-2': [-slideLimit, slideLimit]
                     }
                 }

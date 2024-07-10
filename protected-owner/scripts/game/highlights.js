@@ -299,13 +299,16 @@ const highlights = (function(){
             line = line.split(',')
             if (line[1] == 0 || line[0] == 0) {console.log("A"); continue;}
             const lineEqua = math.getLineFromCoords(line, coords)/line[0]
-            const intsect1Tile = math.getIntersectionEntryTile(line[1]/line[0], lineEqua, renderBoundingBox, 'bottomleft')
-            const intsect2Tile = math.getIntersectionEntryTile(line[1]/line[0], lineEqua, renderBoundingBox, 'topright')
-            
-            if (!intsect1Tile) return; // If there's no intersection point, it's off the screen, don't bother rendering.
-            if (!intsect2Tile) return; // Bruh
+            const lineGrad = line[1]/line[0]
+            const corner1 = lineGrad>0 ? 'bottomleft' : 'topleft'
+            const corner2 = lineGrad>0 ? 'topleft' : 'bottomright'
+            const intsect1Tile = math.getIntersectionEntryTile(lineGrad, lineEqua, renderBoundingBox, 'bottomleft')
+            const intsect2Tile = math.getIntersectionEntryTile(lineGrad, lineEqua, renderBoundingBox, 'topright')
 
-            { // Down moveset
+            if (!intsect1Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
+            if (!intsect2Tile) continue; // Bruh
+
+            { // Left moveset
                 let startTile = intsect2Tile
                 let endTile = intsect1Tile
     
@@ -331,7 +334,7 @@ const highlights = (function(){
                 addDataDiagonalVariant(iterateCount, currentX, currentY, -Math.sign(line[0]), -Math.sign(line[1]), [-line[0], -line[1]], r, g, b, a)
             }
 
-            { // Up moveset
+            { // Rigth moveset
                 let startTile = intsect1Tile
                 let endTile = intsect2Tile
     
@@ -490,17 +493,15 @@ const highlights = (function(){
 
     // Calculates the vertex data of a single diagonal direction eminating from piece. Current x & y is the starting values, followed by the hop values which are -1 or +1 dependant on the direction we're rendering
     function addDataDiagonalVariant (iterateCount, currentX, currentY, xHop, yHop, step, r, g, b, a) {
-
+        console.log(iterateCount, currentX, currentY, xHop, yHop, step)
         for (let i = 0; i < iterateCount; i++) { 
             const endX = currentX + xHop
             const endY = currentY + yHop
-
             data.push(...bufferdata.getDataQuad_Color3D(currentX, currentY, endX, endY, z, r, g, b, a))
 
             // Prepare for next iteration
             currentX += step[0]
             currentY += step[1]
-            console.log([currentX,currentY])
         }
     }
 
