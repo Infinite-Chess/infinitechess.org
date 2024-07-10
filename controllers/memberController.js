@@ -7,7 +7,7 @@
  */
 
 const { format, formatDistance } = require('date-fns');
-const { getVerified, setVerified, getInfo, getUsernameCaseSensitive, getJoinDate, getLastSeen, getElo, getEmail } = require('./members.js');
+const { getVerified, setVerified, getInfo, getUsernameCaseSensitive, getJoinDate, getLastSeen, getElo, getEmail, removeMember } = require('./members.js');
 const { sendEmailConfirmation } = require('../controllers/sendMail')
 const { logEvents } = require('../middleware/logEvents');
 
@@ -84,7 +84,26 @@ const requestConfirmEmail = (req, res) => {
     }
 }
 
+// Delete account. Called by script in member page
+const requestDeleteAccount = (req, res) => {
+    const usernameLowercase = req.params.member.toLowerCase();
+
+    // Load their case sensitive username
+    const username = getUsernameCaseSensitive(usernameLowercase);
+    if (!username) return res.status(404).json({message: 'Member not found'})
+
+    // Check to make sure that they are the same person requesting deletion
+    if (req.user === usernameLowercase) {
+        removeMember(username);
+    } else {
+        const errText = `User ${req.user} attempted to delete account for user ${usernameLowercase}!`
+        logEvents(errText, 'hackLog.txt', { print: true });
+        return res.status(401).json({sent: false})
+    }
+}
+
 module.exports = {
     getMemberData,
-    requestConfirmEmail
+    requestConfirmEmail,
+    requestDeleteAccount
 };

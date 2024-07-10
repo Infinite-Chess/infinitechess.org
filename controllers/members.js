@@ -131,6 +131,23 @@ function addMember(username, newMember) {
 }
 
 /**
+ * Removes the provided member from the members file, then flags it to be saved.
+ * ASSUMES that the member's authentication has already been checked.
+ * @param {string} username - The member's username, **in lowercase**.
+ * @returns {boolean} true if the deletion was a success
+ */
+function removeMember(username) {
+    if (!doesMemberExist(username)) {
+        const errString = `Error deleting member. ${username} does not exist!`;
+        logEvents(errString, 'errLog.txt', {print: true});
+        return false;
+    }
+    delete members[username];
+    membersHasBeenEdited = true; // Flag it to be saved
+    return true; // Success
+}
+
+/**
  * Increments the login count of the user, if found,
  * then flags the members file to be saved.
  * @param {string} username - Their username, in lowercase.
@@ -323,6 +340,7 @@ module.exports = {
     getVerified,
     doesVerificationIDMatch,
     addMember,
+    removeMember,
     addRefreshToken,
     deleteRefreshToken,
     setVerified,
