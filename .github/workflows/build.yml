@@ -1,0 +1,16 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Run build"
+        run: npm run build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Build
+          path: dist
