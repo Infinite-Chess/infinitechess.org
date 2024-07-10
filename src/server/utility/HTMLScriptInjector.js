@@ -93,13 +93,13 @@ function getCachedHTML(htmlFilePath) {
 
 { // Inject into play.html, our OBFUSCATED htmlscript.js script.
     const htmlFilePath = path.join(__dirname, '..', '..', 'client', 'views', 'play.html');
-    const jsFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'game', 'htmlscript.js');
+    const jsFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'game', "misc", 'htmlscript.js');
     prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>');
 }
 
 { // Inject into dev.html, our htmlscript.js script.
     const htmlFilePath = path.join(__dirname, '..', '..', 'client', 'views', 'dev.html');
-    const jsFilePath = path.join(__dirname, '..', '..', 'client', 'scripts', 'game', 'htmlscript.js');
+    const jsFilePath = path.join(__dirname, '..', '..', 'client', 'scripts', 'game', "misc", 'htmlscript.js');
     prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>');
 }
 
