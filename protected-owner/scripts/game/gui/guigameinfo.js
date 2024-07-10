@@ -90,6 +90,7 @@ const guigameinfo = (function(){
             else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? "Draw by stalemate!"
                                                                      : condition === 'repetition' ? "Draw by repetition!"
                                                                      : condition === 'moverule' ? `Draw by the ${game.getGamefile().gameRules.moveRule / 2}-move-rule!`
+																	 : condition === 'insuffmat' ? "Draw by insufficient material!"
                                                                      : "Draw!"
             else if (condition === 'aborted') element_whosturn.textContent = "Game aborted."
             else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? "You lose by checkmate!"
@@ -127,6 +128,7 @@ const guigameinfo = (function(){
             else if (condition === 'stalemate') element_whosturn.textContent = "Draw by stalemate!"
             else if (condition === 'repetition') element_whosturn.textContent = "Draw by repetition!"
             else if (condition === 'moverule') element_whosturn.textContent = `Draw by the ${game.getGamefile().gameRules.moveRule / 2}-move-rule!`
+			else if (condition === 'insuffmat') element_whosturn.textContent = "Draw by insufficient material!"
             else {
                 element_whosturn.textContent = "This is a bug, please report!"
                 console.error(`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`)

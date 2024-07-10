@@ -794,6 +794,7 @@ const gamemanager = (function() {
         sendGameUpdateToColor(game, opponentColor);
     }
 
+
     /** 
      * Called when client wants to offer a draw
      * Sends confirmation to opponents
@@ -1172,6 +1173,7 @@ const gamemanager = (function() {
     function isGameOver(game) { return game.gameConclusion !== false; }
 
     /**
+
      * Returns *true* if the provided game has a draw offer.
      * Games that have a draw offer can't make moves, until draw is accepted or declined.
      * @param {Game} game - The game
@@ -1183,8 +1185,9 @@ const gamemanager = (function() {
     }
 
     /**
+
      * Handles all incoming websocket messages related to active games.
-     * Possible actions: submitmove/offerdraw/acceptdraw/declinedraw/abort/resign/joingame/resync
+     * Possible actions: submitmove/offerdraw/abort/resign/joingame/resync
      * @param {Socket} ws - The socket
      * @param {WebsocketMessage} message - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
      */
@@ -1206,9 +1209,10 @@ const gamemanager = (function() {
                 abortGame(ws);
                 break;
             case 'resign':
-                resignGame(ws);
+                resignGame(ws)
                 break;
             case 'offerdraw':
+
                 offerDraw(ws);
                 break;
             case 'acceptdraw':
@@ -1216,6 +1220,9 @@ const gamemanager = (function() {
                 break;
             case 'declinedraw':
                 declineDraw(ws);
+
+                console.error("Don't know how to offer draw yet.")
+
                 break;
             case 'AFK':
                 onAFK(ws);
