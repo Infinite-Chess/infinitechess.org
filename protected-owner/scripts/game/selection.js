@@ -38,7 +38,7 @@ const selection = (function() {
 
     /**
      * Returns the pre-calculated legal moves of the selected piece.
-     * @returns {Object} The selected piece, if there is one: `{ type, index, coords }`.
+     * @returns {LegalMoves} The selected piece, if there is one: `{ type, index, coords }`.
      */
     function getLegalMovesOfSelectedPiece() { return legalMoves; }
 

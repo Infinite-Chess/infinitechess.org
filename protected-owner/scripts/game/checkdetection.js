@@ -115,10 +115,22 @@ const checkdetection = (function(){
     }
 
     // Returns true if there's any sliding piece that can capture on that square
+    /**
+     * 
+     * @param {gamefile} gamefile 
+     * @param {number[][]} coords 
+     * @param {string} color 
+     * @param {Array} attackers 
+     * @returns 
+     */
     function doesSlideAttackSquare (gamefile, coords, color, attackers) {
 
         let atleast1Attacker = false;
-
+        const line = gamefile.slideMoves;
+        for (let i=0; i<0; i++) {
+            if (doesLineAttackSquare(gamefile,gamefile.piecesOrganizedByLines[line],line,color,attackers)) return true;
+        }
+        /**
         // Horizontal
         const row = gamefile.piecesOrganizedByRow[coords[1]];
         if (doesLineAttackSquare(gamefile, row, 'horizontal', coords, color, attackers)) atleast1Attacker = true;
@@ -136,13 +148,12 @@ const checkdetection = (function(){
         key = math.getDownDiagonalFromCoords(coords)
         diag = gamefile.piecesOrganizedByDownDiagonal[key];
         if (doesLineAttackSquare(gamefile, diag, 'diagonaldown', coords, color, attackers)) atleast1Attacker = true;
-
+        */
         return atleast1Attacker;
     }
 
     // Returns true if a piece on the specified line can capture on that square
     // THIS REQUIRES  coords  be already on the line.
-    // direction = 'horizontal' / 'vertical' / 'diagonalup' / 'diagonaldown'
     function doesLineAttackSquare(gamefile, line, direction, coords, colorOfFriendlys, attackers) {
 
         if (!line) return false; // No line, no pieces to attack
@@ -155,12 +166,12 @@ const checkdetection = (function(){
             if (thisPieceColor === 'neutral') continue;
 
             const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type)
-            const lineIsVertical = direction === 'vertical' ? true : false;
-            const moveset = direction === 'horizontal' ? thisPieceMoveset.horizontal
+            //const lineIsVertical = direction === 'vertical' ? true : false;
+            /**const moveset = direction === 'horizontal' ? thisPieceMoveset.horizontal
                           : direction === 'vertical' ? thisPieceMoveset.vertical
                           : direction === 'diagonalup' ? thisPieceMoveset.diagonalUp
-                          : thisPieceMoveset.diagonalDown;
-            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, lineIsVertical, moveset, thisPiece.coords, thisPieceColor)
+                          : thisPieceMoveset.diagonalDown;*/
+            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction[0]==0, thisPieceMoveset.slideMoves[line], thisPiece.coords, thisPieceColor)
             if (!thisPieceLegalSlide) continue; // This piece has no horizontal moveset, NEXT piece on this line!
 
             // const rectangle = {left: thisPieceLegalSlide[0], right: thisPieceLegalSlide[1], bottom: coords[1], top: coords[1]}
@@ -230,10 +241,20 @@ const checkdetection = (function(){
         return movepiece.simulateMove(gamefile, move, color).isCheck;
     }
 
-    // Time complexity: O(1)
+    // Time complexity: O(slides) basically O(1) unless you add a ton of slides to a single piece
     function removeSlidingMovesThatPutYouInCheck (gamefile, moves, pieceSelected, color) {
+        // O(1)
+        function isEmpty(obj) {
+            for (var prop in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+                    return false;
+                }
+            }
+          
+            return true
+        }
 
-        if (!moves.horizontal && !moves.vertical && !moves.diagonalUp && !moves.diagonalDown) return; // No sliding movesets to remove
+        if (true) return; // No sliding movesets to remove
 
         const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color); // List of coordinates of all our royal jumping pieces
 
@@ -297,10 +318,7 @@ const checkdetection = (function(){
         return true;
 
         function eraseAllSlidingMoves() {
-            legalMoves.vertical = undefined;
-            legalMoves.horizontal = undefined;
-            legalMoves.diagonalUp = undefined;
-            legalMoves.diagonalDown = undefined;
+            legalMoves.slides = {}
         }
     }
 

@@ -143,11 +143,11 @@ const arrows = (function() {
 
             // Up Diagonal. Same diag as one onscreen?
             {
-                const diagUp = math.getUpDiagonalFromCoords(coords)
+                const diagUp = math.getLineFromCoords([1,1], coords)
                 const boardCornerTopLeft = [paddedBoundingBox.left, paddedBoundingBox.top]
                 const boardCornerBottomRight = [paddedBoundingBox.right, paddedBoundingBox.bottom]
-                const boardDiagUpStart = math.getUpDiagonalFromCoords(boardCornerTopLeft)
-                const boardDiagUpEnd = math.getUpDiagonalFromCoords(boardCornerBottomRight)
+                const boardDiagUpStart = math.getLineFromCoords([1, 1], boardCornerTopLeft)
+                const boardDiagUpEnd = math.getLineFromCoords([1, 1], boardCornerBottomRight)
                 if (diagUp < boardDiagUpStart && diagUp > boardDiagUpEnd) {
                     const topRightSide = y > paddedBoundingBox.top || x > paddedBoundingBox.right;
                     if (topRightSide) {
@@ -162,11 +162,11 @@ const arrows = (function() {
 
             // Down Diagonal. Same diag as one onscreen?
             {
-                const diagDown = math.getDownDiagonalFromCoords(coords)
+                const diagDown = math.getLineFromCoords([1, -1],coords)
                 const boardCornerBottomLeft = [paddedBoundingBox.left, paddedBoundingBox.bottom]
                 const boardCornerTopRight = [paddedBoundingBox.right, paddedBoundingBox.top]
-                const boardDiagDownStart = math.getDownDiagonalFromCoords(boardCornerBottomLeft)
-                const boardDiagDownEnd = math.getDownDiagonalFromCoords(boardCornerTopRight)
+                const boardDiagDownStart = math.getLineFromCoords([1, -1], boardCornerBottomLeft)
+                const boardDiagDownEnd = math.getLineFromCoords([1, -1], boardCornerTopRight)
                 // console.log(boardDiagDownStart, diagDown, boardDiagDownEnd)
                 if (diagDown > boardDiagDownStart && diagDown < boardDiagDownEnd) {
                     const topLeftSide = y > paddedBoundingBox.top || x < paddedBoundingBox.left;

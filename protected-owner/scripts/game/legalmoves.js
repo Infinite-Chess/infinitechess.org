@@ -10,10 +10,7 @@
 /** An object containing all the legal moves of a piece.
  * @typedef {Object} LegalMoves
  * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
- * @property {number[]} horizontal - A length-2 array containing the legal left and right slide limits: `[-5, Infinity]`
- * @property {number[]} vertical - A length-2 array containing the legal bottom and top slide limits: `[-Infinity, 1]`
- * @property {number[]} diagonalUp - A length-2 array containing the legal down-left, and up-right slides, where the number represents the `x` limit: `[-Infinity, 7]`
- * @property {number[]} diagonalDown - A length-2 array containing the legal up-left, and down-right slides, where the number represents the `x` limit: `[3, 15]`
+ * @property {Object} slides - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
  */
 
 const legalmoves = (function(){
@@ -34,7 +31,9 @@ const legalmoves = (function(){
         // For every piece moveset...
         for (let i = 0; i < pieces.white.length; i++) {
             const thisPieceType = pieces.white[i]
-            const thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
+            var thisPieceIndividualMoveset
+            if (getPieceMoveset(gamefile, thisPieceType).individual) thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
+            else thisPieceIndividualMoveset = []
 
             // For each individual move...
             for (let a = 0; a < thisPieceIndividualMoveset.length; a++) {
@@ -87,10 +86,7 @@ const legalmoves = (function(){
         const thisPieceMoveset = getPieceMoveset(gamefile, type) // Default piece moveset
 
         let legalIndividualMoves = [];
-        let legalHorizontalMoves;
-        let legalVerticalMoves;
-        let legalUpDiagonalMoves;
-        let legalDownDiagonalMoves;
+        let legalSlideMoves = {};
 
         if (!onlyCalcSpecials) {
 
@@ -98,9 +94,18 @@ const legalmoves = (function(){
     
             shiftIndividualMovesetByCoords(thisPieceMoveset.individual, coords)
             legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color)
-    
+            
             // Legal sliding moves
-    
+            if (thisPieceMoveset.slideMoves) {
+                let lines = gamefile.slideMoves;
+                for (let i=0; i<lines.length; i++) {
+                    const line = lines[i];
+                    if (!thisPieceMoveset.slideMoves[line]) continue;
+                    const key = math.getLineFromCoords(line,coords);
+                    legalSlideMoves[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line[0]===0, thisPieceMoveset.slideMoves[line], coords, color);
+                };
+            };
+            /**
             let key = coords[1]; // Key is y level for horizontal slide
             legalHorizontalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByRow[key], false, thisPieceMoveset.horizontal, coords, color)
             key = coords[0] // Key is x for vertical slide
@@ -109,6 +114,7 @@ const legalmoves = (function(){
             legalUpDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByUpDiagonal[key], false, thisPieceMoveset.diagonalUp, coords, color)
             key = math.getDownDiagonalFromCoords(coords) // Key is x + y for down-diagonal slide
             legalDownDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByDownDiagonal[key], false, thisPieceMoveset.diagonalDown, coords, color)
+            */
         }
         
         // Add any special moves!
@@ -116,10 +122,7 @@ const legalmoves = (function(){
 
         let moves = {
             individual: legalIndividualMoves,
-            horizontal: legalHorizontalMoves,
-            vertical: legalVerticalMoves,
-            diagonalUp: legalUpDiagonalMoves,
-            diagonalDown: legalDownDiagonalMoves,
+            slides: legalSlideMoves
         }
         
         // Skip if we've selected the opposite side's piece (edit mode)
@@ -237,6 +240,17 @@ const legalmoves = (function(){
             }
         }
 
+        for (var line in legalMoves.slides) {
+            line=line.split(',')
+            let limits = legalMoves.slides[line];
+            let selectedPieceLine = math.getLineFromCoords(line,startCoords);
+            let clickedCoordsLine = math.getLineFromCoords(line,endCoords);
+            if (limits && selectedPieceLine==clickedCoordsLine) {
+                if (endCoords[0]>=limits[0] && endCoords[0]<=limits[1] && line[0]!=0) return true;
+                else if (endCoords[1]>=limits[0] && endCoords[1]<=limits[1] && line[0]==0) return true;
+            }
+        }
+        /**
         // Do one of the horizontal moves match?
         const horizontal = legalMoves.horizontal;
         if (horizontal && endCoords[1] == startCoords[1]) {
@@ -268,7 +282,7 @@ const legalmoves = (function(){
             // Compare the clicked x tile with this diagonal moveset
             if (endCoords[0] >= diagonalDown[0] && endCoords[0] <= diagonalDown[1]) return true;
         }
-
+        */
         return false;
     }
 
@@ -334,7 +348,7 @@ const legalmoves = (function(){
         // Test if that piece's legal moves contain the destinationCoords.
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
         // This should pass on any special moves tags at the same time.
-        if (!legalmoves.checkIfMoveLegal(legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
+        if (!legalmoves.checkIfMoveLegal(gamefile, legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
             console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveCopy)}`)
             return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
         }
@@ -380,15 +394,22 @@ const legalmoves = (function(){
 
         return true;
     }
-
-    // Accepts the calculated legal moves, tests to see if there are any
+    /**
+     * Accepts the calculated legal moves, tests to see if there are any
+     * @param {LegalMoves} moves 
+     * @returns {boolean} 
+     */
     function hasAtleast1Move (moves) { // { individual, horizontal, vertical, ... }
         
         if (moves.individual.length > 0) return true;
+        for (var line in moves.slides)
+            if (doesSlideHaveWidth(moves.slides[line])) return true;
+        /** 
         if (doesSlideHaveWidth(moves.horizontal)) return true;
         if (doesSlideHaveWidth(moves.vertical)) return true;
         if (doesSlideHaveWidth(moves.diagonalUp)) return true;
         if (doesSlideHaveWidth(moves.diagonalDown)) return true;
+        */
 
         function doesSlideHaveWidth(slide) { // [-Infinity, Infinity]
             if (!slide) return false;

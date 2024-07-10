@@ -220,23 +220,26 @@ const highlights = (function(){
 
         // Calculate the data of the vertical slide
         concatData_HighlightedMoves_Sliding_Vert(coords, boundingBoxOfRenderRange.bottom, boundingBoxOfRenderRange.top)
-
+        // Calculate the data of the diagonals
+        concatData_HighlightedMoves_Diagonals(coords, boundingBoxOfRenderRange, r, g, b, a)
+        /**
         // Calculate the data of the up diagonal
         concatData_HighlightedMoves_Diagonal_Up(coords, boundingBoxOfRenderRange, r, g, b, a)
 
         // Calculate the data of the down diagonal
         concatData_HighlightedMoves_Diagonal_Down(coords, boundingBoxOfRenderRange, r, g, b, a)
+        */
     }
 
     function concatData_HighlightedMoves_Sliding_Horz(coords, left, right) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
-        if (!legalMoves.horizontal) return; // Break if no legal horizontal slide
+        if (!legalMoves.slides['1,0']) return; // Break if no legal horizontal slide
 
         const [r,g,b,a] = options.getDefaultLegalMoveHighlight();
 
         // Left
 
-        let startXWithoutOffset = legalMoves.horizontal[0] - board.gsquareCenter()
+        let startXWithoutOffset = legalMoves.slides['1,0'][0] - board.gsquareCenter()
         if (startXWithoutOffset < left - board.gsquareCenter()) startXWithoutOffset = left - board.gsquareCenter()
 
         let startX = startXWithoutOffset - model_Offset[0];
@@ -248,7 +251,7 @@ const highlights = (function(){
 
         // Right
 
-        startXWithoutOffset = legalMoves.horizontal[1] + 1 - board.gsquareCenter()
+        startXWithoutOffset = legalMoves.slides['1,0'][1] + 1 - board.gsquareCenter()
         if (startXWithoutOffset > right + 1 - board.gsquareCenter()) startXWithoutOffset = right + 1 - board.gsquareCenter()
 
         startX = startXWithoutOffset - model_Offset[0];
@@ -261,13 +264,13 @@ const highlights = (function(){
 
     function concatData_HighlightedMoves_Sliding_Vert (coords, bottom, top) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
-        if (!legalMoves.vertical)  return; // Break if there no legal vertical slide
+        if (!legalMoves.slides['0,1'])  return; // Break if there no legal vertical slide
 
         const [r,g,b,a] = options.getDefaultLegalMoveHighlight();
 
         // Bottom
 
-        let startYWithoutOffset = legalMoves.vertical[0] - board.gsquareCenter()
+        let startYWithoutOffset = legalMoves.slides['0,1'][0] - board.gsquareCenter()
         if (startYWithoutOffset < bottom - board.gsquareCenter()) startYWithoutOffset = bottom - board.gsquareCenter()
 
         let startY = startYWithoutOffset - model_Offset[1];
@@ -279,7 +282,7 @@ const highlights = (function(){
 
         // Top
 
-        startYWithoutOffset = legalMoves.vertical[1] + 1 - board.gsquareCenter()
+        startYWithoutOffset = legalMoves.slides['0,1'][1] + 1 - board.gsquareCenter()
         if (startYWithoutOffset > top + 1 - board.gsquareCenter()) startYWithoutOffset = top + 1 - board.gsquareCenter()
 
         startY = startYWithoutOffset - model_Offset[1];
@@ -290,12 +293,78 @@ const highlights = (function(){
         data.push(...bufferdata.getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a))
     }
 
+    function concatData_HighlightedMoves_Diagonals (coords, renderBoundingBox, r, g, b, a) {
+        const legalMoves = selection.getLegalMovesOfSelectedPiece()
+        for (var line in legalMoves.slides) {
+            line = line.split(',')
+            if (line[1] == 0 || line[0] == 0) {console.log("A"); continue;}
+            const lineEqua = math.getLineFromCoords(line, coords)/line[0]
+            const intsect1Tile = math.getIntersectionEntryTile(line[1]/line[0], lineEqua, renderBoundingBox, 'bottomleft')
+            const intsect2Tile = math.getIntersectionEntryTile(line[1]/line[0], lineEqua, renderBoundingBox, 'topright')
+            
+            if (!intsect1Tile) return; // If there's no intersection point, it's off the screen, don't bother rendering.
+            if (!intsect2Tile) return; // Bruh
+
+            { // Down moveset
+                let startTile = intsect2Tile
+                let endTile = intsect1Tile
+    
+                // Make sure it doesn't start before the tile right in front of us
+                if (startTile[0] > coords[0] - 1) startTile = [coords[0] - 1, coords[1] - 1]
+                let limit = legalMoves.slides[line][0]
+    
+                // Make sure it doesn't phase through our move limit
+                if (endTile[0] < limit) {
+                    endTile[0] = limit
+                    endTile[1] = startTile[1] + limit - startTile[0]
+                }
+    
+                // How many times will we iterate?
+                let iterateCount = startTile[0] - endTile[0] + 1
+                if (iterateCount < 0) iterateCount = 0
+    
+                // Init starting coords of the data, this will increment by 1 every iteration
+                let currentX = startTile[0] - board.gsquareCenter() + 1 - model_Offset[0]
+                let currentY = startTile[1] - board.gsquareCenter() + 1 - model_Offset[1]
+                
+                // Generate data of each highlighted square
+                addDataDiagonalVariant(iterateCount, currentX, currentY, -Math.sign(line[0]), -Math.sign(line[1]), [-line[0], -line[1]], r, g, b, a)
+            }
+
+            { // Up moveset
+                let startTile = intsect1Tile
+                let endTile = intsect2Tile
+    
+                // Make sure it doesn't start before the tile right in front of us
+                if (startTile[0] < coords[0] + 1) startTile = [coords[0] + 1, coords[1] + 1]
+                let limit = legalMoves.slides[line][1]
+    
+                // Make sure it doesn't phase through our move limit
+                if (endTile[0] > limit) {
+                    endTile[0] = limit
+                    endTile[1] = startTile[1] + limit - startTile[0]
+                }
+    
+                // How many times will we iterate?
+                let iterateCount = endTile[0] - startTile[0] + 1
+                if (iterateCount < 0) iterateCount = 0
+    
+                // Init starting coords of the data, this will increment by 1 every iteration
+                let currentX = startTile[0] - board.gsquareCenter() - model_Offset[0]
+                let currentY = startTile[1] - board.gsquareCenter() - model_Offset[1]
+                
+                // Generate data of each highlighted square
+                addDataDiagonalVariant(iterateCount, currentX, currentY, Math.sign(line[0]), Math.sign(line[1]), line, r, g, b, a)
+            }
+        }
+    }
+
     function concatData_HighlightedMoves_Diagonal_Up (coords, renderBoundingBox, r, g, b, a) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
         if (!legalMoves.diagonalUp) return;
 
         // Calculate the intersection tile of this diagonal with the left/bottom and right/top sides of the screen.
-        const lineEqua = math.getUpDiagonalFromCoords(coords) // mx + b
+        const lineEqua = math.getLineFromCoords(coords) // mx + b
         const intsect1Tile = math.getIntersectionEntryTile(1, lineEqua, renderBoundingBox, 'bottomleft')
         const intsect2Tile = math.getIntersectionEntryTile(1, lineEqua, renderBoundingBox, 'topright')
 
@@ -320,8 +389,8 @@ const highlights = (function(){
             if (iterateCount < 0) iterateCount = 0
 
             // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() + 1 - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() + 1 - model_Offset[1]
+            let currentX = startTile[0] - board.gsquareCenter() + line[0] - model_Offset[0]
+            let currentY = startTile[1] - board.gsquareCenter() + line[1] - model_Offset[1]
             
             // Generate data of each highlighted square
             addDataDiagonalVariant(iterateCount, currentX, currentY, -1, -1, r, g, b, a)
@@ -420,7 +489,7 @@ const highlights = (function(){
     }
 
     // Calculates the vertex data of a single diagonal direction eminating from piece. Current x & y is the starting values, followed by the hop values which are -1 or +1 dependant on the direction we're rendering
-    function addDataDiagonalVariant (iterateCount, currentX, currentY, xHop, yHop, r, g, b, a) {
+    function addDataDiagonalVariant (iterateCount, currentX, currentY, xHop, yHop, step, r, g, b, a) {
 
         for (let i = 0; i < iterateCount; i++) { 
             const endX = currentX + xHop
@@ -429,8 +498,9 @@ const highlights = (function(){
             data.push(...bufferdata.getDataQuad_Color3D(currentX, currentY, endX, endY, z, r, g, b, a))
 
             // Prepare for next iteration
-            currentX = endX
-            currentY = endY
+            currentX += step[0]
+            currentY += step[1]
+            console.log([currentX,currentY])
         }
     }
 

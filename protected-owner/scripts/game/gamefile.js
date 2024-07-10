@@ -67,14 +67,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.ourPieces = undefined;
     /** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` */
     this.piecesOrganizedByKey = undefined;
-    /** Pieces organized by row: `{ 2:[{type:'queensW',coords:[1,2]}] }` */
-    this.piecesOrganizedByRow = undefined;
-    /** Pieces organized by column: `{ 1:[{type:'queensW',coords:[1,2]}] }` */
-    this.piecesOrganizedByColumn = undefined;
-    /** Pieces organized by up-diagonal (slope 1). Each diagonal is given the integer value of it's y-intercept on the grid. i.e. The '0' diagonal intersects (0,0), the '1' diagonal intersects (0,1)... */
-    this.piecesOrganizedByUpDiagonal = undefined;
-    /** Pieces organized by down-diagonal (slope -1). Each diagonal is given the integar value of it's y-intercept on the grid. i.e. The '0' diagonal intersects (0,0), the '1' diagonal intersects (0,1)... */
-    this.piecesOrganizedByDownDiagonal = undefined;
+    /** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` */
+    this.piecesOrganizedByLines = undefined;
+    /** Legal slides*/
+    this.slideMoves = [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]];
 
     /** The object that contains the buffer model to render the pieces */
     this.mesh = {
@@ -159,7 +155,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** The number of half-moves played since the last capture or pawn push. */
     this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
     area.initStartingAreaBox(this);
-
     /** The move list. @type {Move[]} */
     this.moves = [];
     /** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */

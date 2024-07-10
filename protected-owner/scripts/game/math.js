@@ -146,13 +146,17 @@ const math = (function() {
         return { left, right, bottom, top }
     }
 
-    function getUpDiagonalFromCoords (coords) {
-        // What is the diagonal? It is equal to 0 - x + y. It is determined by the y-intercept point of the diagonal.
-        return -coords[0] + coords[1] // -x + y
-    }
-
-    function getDownDiagonalFromCoords (coords) {
-        return coords[0] + coords[1]; // x + y
+    /**
+     * Uses the calculation of ax + by = c
+     * c=b*y-intercept so is unique for each line
+     * Not unique when step can be factored
+     * eg [2,2]
+     * @param {number[]} step The gradient
+     * @param {number[]} coords 
+     * @returns {number} integer c
+     */
+    function getLineFromCoords(step, coords) {
+        return step[0]*coords[1]-step[1]*coords[0]
     }
 
     /**
@@ -787,8 +791,7 @@ const math = (function() {
         roundPointToNearestGridpoint,
         boxContainsBox,
         boxContainsSquare,
-        getUpDiagonalFromCoords,
-        getDownDiagonalFromCoords,
+        getLineFromCoords,
         deepCopyObject,
         getKeyFromCoords,
         getCoordsFromKey,

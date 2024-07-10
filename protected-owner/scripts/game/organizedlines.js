@@ -10,7 +10,6 @@
 
 // Module
 const organizedlines = {
-
     /**
      * Organizes all the pieces of the specified game into many different lists,
      * organized in different ways. For example, organized by key `'1,2'`,
@@ -43,10 +42,12 @@ const organizedlines = {
 
     resetOrganizedLists: function(gamefile) {
         gamefile.piecesOrganizedByKey = {}
-        gamefile.piecesOrganizedByRow = {}
-        gamefile.piecesOrganizedByColumn = {}
-        gamefile.piecesOrganizedByUpDiagonal = {}
-        gamefile.piecesOrganizedByDownDiagonal = {}
+        gamefile.piecesOrganizedByLines = {}
+
+        let lines = gamefile.slideMoves
+        for (let i = 0; i<lines.length; i++) {
+            gamefile.piecesOrganizedByLines[math.getKeyFromCoords(lines[i])] = {}
+        }
     },
 
     // Inserts given piece into all the organized piece lists (key, row, column...)
@@ -61,58 +62,34 @@ const organizedlines = {
         // Is there already a piece there? (Desync)
         if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`)
         gamefile.piecesOrganizedByKey[key] = type;
-
-        // Organize by row
-        key = coords[1]
-        // Is row initialized?
-        if (!gamefile.piecesOrganizedByRow[key]) gamefile.piecesOrganizedByRow[key] = []
-        gamefile.piecesOrganizedByRow[key].push(piece)
-
-        // Organize by column
-        key = coords[0]
-        // Is the column initialized?
-        if (!gamefile.piecesOrganizedByColumn[key]) gamefile.piecesOrganizedByColumn[key] = []
-        gamefile.piecesOrganizedByColumn[key].push(piece)
         
-        // Organize by up-diagonal
-        key = math.getUpDiagonalFromCoords(coords);
-        // Is the diagonal initialized?
-        if (!gamefile.piecesOrganizedByUpDiagonal[key]) gamefile.piecesOrganizedByUpDiagonal[key] = []
-        gamefile.piecesOrganizedByUpDiagonal[key].push(piece)
+        // Organize by line
+        let lines = gamefile.slideMoves
+        for (let i = 0; i<lines.length; i++) {
+            const line = lines[i]
+            key = math.getLineFromCoords(line,coords)
+            // Is line initialized
+            if (!gamefile.piecesOrganizedByLines[line][key]) gamefile.piecesOrganizedByLines[line][key] = []
+            gamefile.piecesOrganizedByLines[line][key].push(piece)
+        }
         
-        // Organize by down-diagonal
-        key = math.getDownDiagonalFromCoords(coords)
-        // Is the diagonal initialized?
-        if (!gamefile.piecesOrganizedByDownDiagonal[key]) gamefile.piecesOrganizedByDownDiagonal[key] = []
-        gamefile.piecesOrganizedByDownDiagonal[key].push(piece)
     },
     
     // Remove specified piece from all the organized piece lists (piecesOrganizedByKey, etc.)
     removeOrganizedPiece: function (gamefile, coords) {
 
-        // Make the piece key undefined in piecesOrganizedByKey object
+        // Make the piece key undefined in piecesOrganizedByKey object  
         let key = math.getKeyFromCoords(coords)
         if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`)
         // Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
         delete gamefile.piecesOrganizedByKey[key] 
 
-        // Remove from organized rows
-        key = coords[1]
-        removePieceFromLine(gamefile.piecesOrganizedByRow, key)
-        
-        // Remove from organized columns
-        key = coords[0]
-        removePieceFromLine(gamefile.piecesOrganizedByColumn, key)
-
-        // Remove from organized up-diagonals
-        // What is the diagonal? It is equal to 0 - x + y. It is determined by the y-intercept point of the diagonal.
-        key = math.getUpDiagonalFromCoords(coords)
-        removePieceFromLine(gamefile.piecesOrganizedByUpDiagonal, key)
-
-        // Remove from organized down-diagonals
-        // What is the diagonal? It is equal to 0 + x + y. It is determined by the y-intercept point of the diagonal.
-        key = math.getDownDiagonalFromCoords(coords)
-        removePieceFromLine(gamefile.piecesOrganizedByDownDiagonal, key)
+        let lines = gamefile.slideMoves
+        for (let i = 0; i<lines.length; i++) {
+            const line = lines[i]
+            key = math.getLineFromCoords(line,coords)
+            removePieceFromLine(gamefile.piecesOrganizedByLines[line],key)
+        }
 
         // Takes a line from a property of an organized piece list, deletes the piece at specified coords
         function removePieceFromLine (organizedPieces, lineKey) {
