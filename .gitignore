@@ -3,3 +3,4 @@ node_modules
 cert
 database
 logs
+dist

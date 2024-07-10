@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 
-const createaccountController = require('../controllers/createaccountController')
-const {getRegisterData, checkEmailAssociated, checkUsernameAssociated} = require('../controllers/createaccountController');
+const createaccountController = require('../src/server/controllers/createaccountController')
+const {getRegisterData, checkEmailAssociated, checkUsernameAssociated} = require('../src/server/controllers/createaccountController');
 
 router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'views', 'createaccount.html'));

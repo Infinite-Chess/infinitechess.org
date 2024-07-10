@@ -324,9 +324,9 @@ const gamefileutility = (function(){
     function getPieceCount(piecesByType) {
         let pieceCount = 0;
 
-        pieces.forEachPieceType(apphendCount);
+        pieces.forEachPieceType(appendCount);
 
-        function apphendCount(type) {
+        function appendCount(type) {
             pieceCount += piecesByType[type].length
         }
 
@@ -336,9 +336,9 @@ const gamefileutility = (function(){
     function getPieceCountOfColorFromPiecesByType(piecesByType, color) {
         let pieceCount = 0;
 
-        pieces.forEachPieceTypeOfColor(color, apphendCount)
+        pieces.forEachPieceTypeOfColor(color, appendCount)
 
-        function apphendCount(type) {
+        function appendCount(type) {
             const thisTypeList = piecesByType[type];
 
             for (let i = 0; i < thisTypeList.length; i++) {

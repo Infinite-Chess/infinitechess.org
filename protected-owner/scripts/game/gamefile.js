@@ -187,7 +187,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
     this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)
     
-    organizedlines.initOrganizedPieceLists(this, { apphendUndefineds: false });
+    organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
     // movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
     // gamefileutility.updateGameConclusion(this, { concludeGameIfOver: false });
     movepiece.makeAllMovesInGame(this, moves);

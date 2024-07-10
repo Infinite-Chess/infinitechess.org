@@ -31,7 +31,7 @@ const specialdetect = (function() {
     // to be able to undo any of them!
 
     /**
-     * Apphends legal king special moves to the provided legal individual moves list. (castling)
+     * Appends legal king special moves to the provided legal individual moves list. (castling)
      * @param {gamefile} gamefile - The gamefile
      * @param {number[]} coords - Coordinates of the king selected
      * @param {string} color - The color of the king selected
@@ -112,7 +112,7 @@ const specialdetect = (function() {
     }
 
     /**
-     * Apphends legal pawn moves to the provided legal individual moves list.
+     * Appends legal pawn moves to the provided legal individual moves list.
      * This also is in charge of adding single-push, double-push, and capturing
      * pawn moves, even though those don't need a special move flag.
      * @param {gamefile} gamefile - The gamefile
@@ -168,13 +168,13 @@ const specialdetect = (function() {
     }
 
     /**
-     * Apphends legal enpassant capture to the selected pawn's provided individual moves.
+     * Appends legal enpassant capture to the selected pawn's provided individual moves.
      * @param {gamefile} gamefile - The gamefile
      * @param {array[]} individualMoves - The running list of legal individual moves
      * @param {number[]} coords - The coordinates of the pawn selected, [x,y]
      * @param {string} color - The color of the pawn selected
      */
-    // If it can capture en passant, the move is apphended to  legalmoves
+    // If it can capture en passant, the move is appended to  legalmoves
     function addPossibleEnPassant (gamefile, individualMoves, coords, color) {
         if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
 
@@ -229,8 +229,7 @@ const specialdetect = (function() {
     }
 
     /**
-     * Transfers any special move flags from the provided coordinates to the move,
-     * then deletes the special move flag off of the coordinates.
+     * Transfers any special move flags from the provided coordinates to the move.
      * @param {number[]} coords - The coordinates
      * @param {Move} move - The move
      */

@@ -8,13 +8,13 @@ const express = require('express');
 const app = express();
 const https = require('https');
 // Other imports
-const configureMiddleware = require('./middleware/middleware')
+const configureMiddleware = require('./src/server/middleware/middleware')
 const wsserver = require("./wsserver");
-const gamemanager = require('./game/gamemanager')
+const gamemanager = require('./src/server/game/gamemanager')
 const getCertOptions = require('./config/certOptions');
 const { DEV_BUILD } = require('./config/config');
-const { saveMembersIfChangesMade } = require('./controllers/members');
-const { saveRolesIfChangesMade } = require('./controllers/roles');
+const { saveMembersIfChangesMade } = require('./src/server/controllers/members');
+const { saveRolesIfChangesMade } = require('./src/server/controllers/roles');
 
 
 const httpsServer = https.createServer(getCertOptions(DEV_BUILD), app);
