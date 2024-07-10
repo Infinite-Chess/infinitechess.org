@@ -229,8 +229,7 @@ const specialdetect = (function() {
     }
 
     /**
-     * Transfers any special move flags from the provided coordinates to the move,
-     * then deletes the special move flag off of the coordinates.
+     * Transfers any special move flags from the provided coordinates to the move.
      * @param {number[]} coords - The coordinates
      * @param {Move} move - The move
      */
