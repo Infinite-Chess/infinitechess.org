@@ -851,7 +851,7 @@ const gamemanager = (function() {
             if (!hasGameDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
             game.blackDrawOffer = 'confirmed'
         }
-        setGameConclusion(game, "draw by offer")
+        setGameConclusion(game, "draw agreement")
 
         // End the game
         onRequestRemovalFromPlayersInActiveGames(ws);
@@ -1212,7 +1212,6 @@ const gamemanager = (function() {
                 resignGame(ws)
                 break;
             case 'offerdraw':
-
                 offerDraw(ws);
                 break;
             case 'acceptdraw':
@@ -1220,9 +1219,6 @@ const gamemanager = (function() {
                 break;
             case 'declinedraw':
                 declineDraw(ws);
-
-                console.error("Don't know how to offer draw yet.")
-
                 break;
             case 'AFK':
                 onAFK(ws);

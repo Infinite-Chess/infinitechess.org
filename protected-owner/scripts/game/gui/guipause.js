@@ -96,7 +96,6 @@ const guipause = (function(){
     }
 
     function initListeners() {
-        console.log("adding listeners..")
         element_resume.addEventListener('click', callback_Resume)
         element_pointers.addEventListener('click', callback_TogglePointers)
         element_copygame.addEventListener('click', copypastegame.callbackCopy)
@@ -152,13 +151,13 @@ const guipause = (function(){
 
     async function callback_AcceptDraw(event) {
         onlinegame.acceptDraw()
-        // gamefile.gameConclusion = 'draw by offer'
+        // gamefile.gameConclusion = 'draw agreement'
         // gamefileutility.concludeGame(gamefile)
         callback_Resume()
 
         const gamefile = game.getGamefile();
-        gamefile.gameConclusion = 'draw by offer';
-        clock.edit(0,0,0)
+        gamefile.gameConclusion = 'draw agreement';
+        clock.stop()
         if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
     }
 
