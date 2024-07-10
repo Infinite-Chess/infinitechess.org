@@ -7,7 +7,7 @@ const math1 = require('./math1.js')
 const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 const { Game } = require('./TypeDefinitions')
 
-const statsPath = path.resolve('../../../database/stats.json');
+const statsPath = path.resolve('database/stats.json');
 (function ensureStatsFileExists() {
     if (fs.existsSync(statsPath)) return; // Already exists
 

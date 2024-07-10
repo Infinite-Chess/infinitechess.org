@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 
-const bannedPath = path.resolve('../../../database/banned.json');
+const bannedPath = path.resolve('database/banned.json');
 (function ensureBannedFileExists() {
     if (fs.existsSync(bannedPath)) return; // Already exists
 

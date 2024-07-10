@@ -5,7 +5,7 @@ const { writeFile } = require('../utility/lockFile.js');
 const { logEvents } = require('../middleware/logEvents');
 const { writeFile_ensureDirectory } = require('../utility/fileUtils.js');
 
-const membersFilePath = path.resolve('../../../database/members.json');
+const membersFilePath = path.resolve('database/members.json');
 (function ensureMembersFileExists() {
     if (fs.existsSync(membersFilePath)) return; // Already exists
     const content = JSON.stringify({});

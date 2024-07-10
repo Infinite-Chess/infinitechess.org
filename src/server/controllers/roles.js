@@ -11,7 +11,7 @@ const { writeFile } = require('../utility/lockFile.js');
 
 const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 
-const rolesPath = path.resolve('../../../database/roles.json');
+const rolesPath = path.resolve('database/roles.json');
 (function ensureRolesFileExists() {
     if (fs.existsSync(rolesPath)) return; // Already exists
 
