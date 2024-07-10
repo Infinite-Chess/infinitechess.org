@@ -102,7 +102,7 @@ function verifyBodyHasLoginFormData(req, res) {
         return false;
     }
 
-    if (typeof username !== "string" || typeof password !== "string") {
+    if (typeof username !== "string" || typeof password !== "string" || typeof ip !== "string") {
         console.log(`User ${username} sent a bad login request with either username or password not a string!`)
         res.status(400).json({ 'message': 'Username and password must be a string.'}); // 400 Bad request
         return false;
