@@ -1,4 +1,4 @@
-const { DEV_BUILD } = require('../../../config/config');
+const { DEV_BUILD } = require('../config/config');
 
 /**
  * Middleware that redirects all http requests to https

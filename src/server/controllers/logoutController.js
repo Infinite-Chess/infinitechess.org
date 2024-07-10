@@ -1,6 +1,6 @@
 
 const { findMemberFromRefreshToken, deleteRefreshToken, getUsernameCaseSensitive } = require('./members');
-const websocketserver = require('../../../wsserver')
+const websocketserver = require('../wsserver')
 const invitesmanager = require('../game/invitesmanager')
 
 const handleLogout = async (req, res) => {

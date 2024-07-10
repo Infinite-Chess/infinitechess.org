@@ -8,19 +8,18 @@ const express = require('express');
 const app = express();
 const https = require('https');
 // Other imports
-const configureMiddleware = require('./src/server/middleware/middleware')
+const configureMiddleware = require('./middleware/middleware')
 const wsserver = require("./wsserver");
-const gamemanager = require('./src/server/game/gamemanager')
+const gamemanager = require('./game/gamemanager')
 const getCertOptions = require('./config/certOptions');
 const { DEV_BUILD } = require('./config/config');
-const { saveMembersIfChangesMade } = require('./src/server/controllers/members');
-const { saveRolesIfChangesMade } = require('./src/server/controllers/roles');
+const { saveMembersIfChangesMade } = require('./controllers/members');
+const { saveRolesIfChangesMade } = require('./controllers/roles');
 
 
 const httpsServer = https.createServer(getCertOptions(DEV_BUILD), app);
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
 configureMiddleware(app); // Setup the middleware waterfall
-
  
 // Start the server
 const HTTPPORT =  DEV_BUILD ? process.env.HTTPPORT_LOCAL : process.env.HTTPPORT;

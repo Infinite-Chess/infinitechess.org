@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const forge = require('node-forge');
-const { ensureDirectoryExists } = require('../src/server/utility/fileUtils');
+const { ensureDirectoryExists } = require('../utility/fileUtils');
 
 const certDir = path.join(__dirname, '..', 'cert');
 
