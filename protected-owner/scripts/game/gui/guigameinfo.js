@@ -69,7 +69,7 @@ const guigameinfo = (function(){
 
     // Updates the whosTurn text to say who won!
     function gameEnd(conclusion) {
-        // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect
+        // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 
         const { victor, condition } = wincondition.getVictorAndConditionFromGameConclusion(conclusion)
 
@@ -91,6 +91,7 @@ const guigameinfo = (function(){
                                                                      : condition === 'repetition' ? "Draw by repetition!"
                                                                      : condition === 'moverule' ? `Draw by the ${game.getGamefile().gameRules.moveRule / 2}-move-rule!`
 																	 : condition === 'insuffmat' ? "Draw by insufficient material!"
+																	 : condition === 'agreement' ? "Draw by agreement."
                                                                      : "Draw!"
             else if (condition === 'aborted') element_whosturn.textContent = "Game aborted."
             else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? "You lose by checkmate!"
