@@ -26,6 +26,6 @@
   "scripts": {
     "build": "node build.mjs",
     "watch": "nodemon",
-    "run": "node server.js"
+    "run": "node ."
   }
 }
