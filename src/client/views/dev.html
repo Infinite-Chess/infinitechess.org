@@ -151,6 +151,10 @@
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/game/chess/invites.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
+        <script defer src="/scripts/game/rendering/statustext.js" onerror="htmlscript.callback_LoadingError(event)"
+                onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
+		<script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)"
+			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
     </head>
     <!-- The onload event listener to call main.start() is now within the htmlscript! -->
     <body>
