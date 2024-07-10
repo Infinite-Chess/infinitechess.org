@@ -28,6 +28,7 @@ router.get('/credits(.html)?', (req, res) => {
 
 router.get('/play(.html)?', (req, res) => {
     // res.sendFile(path.join(__dirname, '../views', 'play.html'));
+	console.log("html directory", htmlDirectory);
     const htmlFilePath = path.join(htmlDirectory, 'play.html');
     sendCachedHTML(req, res, htmlFilePath)
 })

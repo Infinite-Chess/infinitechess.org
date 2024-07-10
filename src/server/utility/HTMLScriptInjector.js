@@ -86,20 +86,21 @@ function sendCachedHTML(req, res, htmlFilePath) {
  * @returns {string | false} - The injected html, or *false* if it's not ready or doesn't exist.
  */
 function getCachedHTML(htmlFilePath) {
+	console.log(Object.keys(htmlCache))
     return htmlCache[htmlFilePath] || false;
 }
 
 // Inject the scripts we want...
 
 { // Inject into play.html, our OBFUSCATED htmlscript.js script.
-    const htmlFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'views', 'play.html');
-    const jsFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'game', 'htmlscript.js');
+    const htmlFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'views', 'play.html');
+    const jsFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'game', "misc", 'htmlscript.js');
     prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>');
 }
 
 { // Inject into dev.html, our htmlscript.js script.
-    const htmlFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'views', 'dev.html');
-    const jsFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'game', 'htmlscript.js');
+    const htmlFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'views', 'dev.html');
+    const jsFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'scripts', 'game', "misc", 'htmlscript.js');
     prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>');
 }
 
