@@ -37,7 +37,8 @@ const result = await esbuild.build({
   bundle: true,
   minify: true,
   outdir: "dist",
-  outbase: "src/client"
+  outbase: "src/client",
+  sourcemap: true
 });
 
 console.log(result);
