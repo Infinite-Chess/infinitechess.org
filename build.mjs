@@ -38,7 +38,8 @@ const result = await esbuild.build({
   minify: true,
   outdir: "dist",
   outbase: "src/client",
-  sourcemap: true
+  sourcemap: true,
+  format: "iife"
 });
 
 console.log(result);
