@@ -18,7 +18,7 @@ const wincondition = (function() {
      * This excludes conclusions such as resignation, time, aborted, and disconnect,
      * which can happen at any point in time.
      */
-    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule']
+    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat']
 
     // The squares in KOTH where if you get your king to you WIN
     const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
@@ -77,7 +77,7 @@ const wincondition = (function() {
     function detectAllpiecescaptured(gamefile) {
         if (!isOpponentUsingWinCondition(gamefile, 'allpiecescaptured')) return false; // Not using this gamerule
 
-        // If the player whos turn it is now has zero pieces left, win!
+        // If the player who's turn it is now has zero pieces left, win!
         const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn)
 
         if (count === 0) {

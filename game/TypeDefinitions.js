@@ -15,7 +15,7 @@ function Socket() {
     this.metadata = {
         /** What subscription lists they are subscribed to. Possible: "invites" / "game" */
         subscriptions: {
-            /** Whether or not they are subscribed to the invites list. */
+            /** Whether they are subscribed to the invites list. */
             invites: undefined,
             /** Will be defined if they are subscribed to, or in, a game. */
             game: {
@@ -81,7 +81,7 @@ function Game() {
     this.startTimeMillis = undefined;
     /** The increment amount, in seconds. */
     this.incrementMillis = undefined;
-    /** Whether or not the game is rated. "Yes" or "No" */
+    /** Whether the game is rated. "Yes" or "No" */
     this.rated = undefined;
     /** The white player: `{ member }` or `{ browser }` */
     this.white = undefined;

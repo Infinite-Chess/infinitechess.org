@@ -62,7 +62,7 @@ const animation = (function() {
         animations.length = 0; // Empties existing animations
     }
 
-    // For each animation, plays the sound if its time, and deletes the animation if over.
+    // For each animation, plays the sound if it's time, and deletes the animation if over.
     function update() {
         if (animations.length === 0) return;
 

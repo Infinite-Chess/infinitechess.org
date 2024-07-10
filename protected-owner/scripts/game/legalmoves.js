@@ -217,7 +217,7 @@ const legalmoves = (function(){
      * @param {LegalMoves} legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
      * @param {number[]} endCoords 
      * @param {Object} options - An object that may contain the options:
-     * - `ignoreIndividualMoves`: Whether or not to ignore individual (jumping) moves. Default: *false*.
+     * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
      * @returns {boolean} *true* if the provided legalMoves object contains the provided endCoords.
      */
     function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividualMoves } = {}) {

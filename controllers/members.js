@@ -40,7 +40,7 @@ const refreshTokenHash = (function constructRefreshTokenList() {
 const sessionsCap = 3;
 
 /**
- * Whether or not there has been a recent change to the members data.
+ * Whether there has been a recent change to the members data.
  * It is periodically saved.
  */
 let membersHasBeenEdited = false;

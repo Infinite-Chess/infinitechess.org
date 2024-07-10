@@ -103,7 +103,7 @@ const camera = (function() {
     /**
      * Returns a copy of the current screen bounding box,
      * or the world-space coordinates of the edges of the canvas.
-     * @param {boolean} devMode - Whether or not developer mode is enabled.
+     * @param {boolean} devMode - Whether developer mode is enabled.
      * @returns {BoundingBox} The bounding box of the screen
      */
     function getScreenBoundingBox(devMode) {
