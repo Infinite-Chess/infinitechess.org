@@ -53,7 +53,7 @@ async function handleLogin(req, res) {
         if (ipTimoutMap[ip].attempts === 3) {
             ipTimoutMap[ip].timeout += 5
             setTimeout(() => {
-                ipTimoutMap[ip].attempts = 0
+                ipTimoutMap[ip].attempts = 1
             }, ipTimoutMap[ip].timeout * 1000)
         }
 
