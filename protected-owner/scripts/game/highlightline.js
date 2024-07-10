@@ -42,7 +42,7 @@ const highlightline = (function(){
             const left = math.convertCoordToWorldSpace_ClampEdge([legalmoves.horizontal[0], pieceCoords[1]])
             const right = math.convertCoordToWorldSpace_ClampEdge([legalmoves.horizontal[1], pieceCoords[1]])
 
-            apphendLineToData(dataLines, left, right, color)
+            appendLineToData(dataLines, left, right, color)
 
             const closestPoint = math.closestPointOnLine(left, right, input.getMouseWorldLocation()) // { coords, distance }
             closestPoint.moveset = legalmoves.horizontal;
@@ -55,7 +55,7 @@ const highlightline = (function(){
             const bottom = math.convertCoordToWorldSpace_ClampEdge([pieceCoords[0], legalmoves.vertical[0]])
             const top = math.convertCoordToWorldSpace_ClampEdge([pieceCoords[0], legalmoves.vertical[1]])
 
-            apphendLineToData(dataLines, bottom, top, color)
+            appendLineToData(dataLines, bottom, top, color)
 
             const closestPoint = math.closestPointOnLine(bottom, top, input.getMouseWorldLocation())
             closestPoint.moveset = legalmoves.vertical;
@@ -82,7 +82,7 @@ const highlightline = (function(){
             const rightLimitPointWorld = math.convertCoordToWorldSpace(rightLimitPointCoord)
             point2 = capPointAtSlideLimit(point2, rightLimitPointWorld, true)
 
-            apphendLineToData(dataLines, point1, point2, color)
+            appendLineToData(dataLines, point1, point2, color)
 
             const closestPoint = math.closestPointOnLine(point1, point2, input.getMouseWorldLocation())
             closestPoint.moveset = legalmoves.diagonalUp;
@@ -105,7 +105,7 @@ const highlightline = (function(){
             const rightLimitPointWorld = math.convertCoordToWorldSpace(rightLimitPointCoord)
             point2 = capPointAtSlideLimit(point2, rightLimitPointWorld, true)
 
-            apphendLineToData(dataLines, point1, point2, color)
+            appendLineToData(dataLines, point1, point2, color)
 
             const closestPoint = math.closestPointOnLine(point1, point2, input.getMouseWorldLocation())
             closestPoint.moveset = legalmoves.diagonalDown;
@@ -219,7 +219,7 @@ const highlightline = (function(){
         transition.teleport(tel)
     }
     
-    function apphendLineToData (data, point1, point2, color) {
+    function appendLineToData (data, point1, point2, color) {
 
         const [ r, g, b, a ] = color;
 

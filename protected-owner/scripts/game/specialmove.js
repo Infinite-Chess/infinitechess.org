@@ -25,7 +25,7 @@ const specialmove = {
 
     // ALL FUNCTIONS NEED TO:
     // * Make the move
-    // * Apphend the move
+    // * Append the move
     // * Animate the piece
 
 
