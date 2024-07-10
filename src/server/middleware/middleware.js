@@ -80,9 +80,9 @@ function configureMiddleware(app) {
     app.use(protectedStatic);
 
     // Provide a route
-    app.use('/', require('../../../routes/root'));
-    app.use('/createaccount(.html)?', require('../../../routes/createaccount'));
-    app.use('/member', require('../../../routes/member'));
+    app.use('/', require('../routes/root'));
+    app.use('/createaccount(.html)?', require('../routes/createaccount'));
+    app.use('/member', require('../routes/member'));
 
     // If we've reached this point, send our 404 page.
     app.all('*', require('./send404'))

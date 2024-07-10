@@ -4,12 +4,12 @@ const router = express.Router(); // Here we define router instead of an app
 const path = require('path');
 const fs = require('fs');
 
-const { handleLogin } = require('../src/server/controllers/authController');
-const { handleRefreshToken } = require('../src/server/controllers/refreshTokenController');
-const { handleLogout } = require('../src/server/controllers/logoutController');
-const { verifyAccount } = require('../src/server/controllers/verifyAccountController');
-const { ensureOwner, ensurePatron } = require('../src/server/middleware/verifyRoles');
-const { getCachedHTML, sendCachedHTML } = require('../src/server/utility/HTMLScriptInjector');
+const { handleLogin } = require('../controllers/authController');
+const { handleRefreshToken } = require('../controllers/refreshTokenController');
+const { handleLogout } = require('../controllers/logoutController');
+const { verifyAccount } = require('../controllers/verifyAccountController');
+const { ensureOwner, ensurePatron } = require('../middleware/verifyRoles');
+const { getCachedHTML, sendCachedHTML } = require('../utility/HTMLScriptInjector');
 
 const htmlDirectory = path.join(__dirname, '..', 'dist', 'views');
 
