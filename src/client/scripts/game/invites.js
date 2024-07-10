@@ -116,7 +116,7 @@ const invites = (function(){
         // Close all previous event listeners and delete invites from the document
         clear()
 
-        // Apphend latest invites to the document and re-init event listeners.
+        // Append latest invites to the document and re-init event listeners.
         let foundOurs = false;
         let privateInviteID = undefined;
         ourInviteID = undefined;

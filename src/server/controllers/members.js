@@ -291,7 +291,7 @@ function getInfo(username) {
 async function save() {
     console.log("Saving members file..");
     return await writeFile(
-        path.join(__dirname, '..', 'database', 'members.json'),
+        path.join(__dirname, '..', '..', '..', 'database', 'members.json'),
         members,
         "Failed to lock/write members.json after periodically saving! Members should still be accurate in RAM, but not database."
     )

@@ -106,7 +106,7 @@ const statlogger = (function() {
     async function saveStats() {
         // Async function
         await writeFile(
-            path.join(__dirname, `../database/stats.json`),
+            path.join(__dirname, '..', '..', '..', 'database', 'stats.json'),
             stats,
             `Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.`
         )

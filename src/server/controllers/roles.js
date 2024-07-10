@@ -37,7 +37,7 @@ setInterval(saveRolesIfChangesMade, intervalToSaveRolesMillis)
 async function save() {
     console.log("Saving roles file..");
     return await writeFile(
-        path.join(__dirname, '..', 'database', 'roles.json'),
+        path.join(__dirname, '..', '..', '..', 'database', 'roles.json'),
         roles,
         "Failed to lock/write roles.json! Please attempt role change again."
     )
