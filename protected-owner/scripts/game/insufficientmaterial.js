@@ -13,13 +13,54 @@ const insufficientmaterial = (function(){
 	/**
      * Checks if there is no pieces of color `color` with piece types other than pieces type in `pieceTypes` and the king with given `color`.
      * @param {string[]} pieceTypes - The piece types
-     * @param {string} color - The piece's color
+     * @param {string} c - `W` | `B` The piece's color
 	 * @param {Object} pieceCountTable - A object representing a table that maps piece types of color `color` to their count
      * @returns {boolean} **true** if there is no pieces of color `color` with pieces types other than pieces type in `pieceTypes` and the king with given `color`, otherwise returns **false**
      */
-	function noPieceTypesOtherThan(pieceTypes, color, pieceCountTable) {
-		return Object.keys(pieceCountTable).some(x => pieceTypes.includes(x) || x === `kings${color}` || pieceCountTable[x] === 0);
+	function noPieceTypesOtherThan(pieceTypes, c, pieceCountTable) {
+		return Object.keys(pieceCountTable).every(x => pieceTypes.includes(x) || x === `kings${c}` || pieceCountTable[x] === 0);
 	}
+
+	/**
+	 * 
+	 * @param {string[][][]} pieceCombinationsList
+	 * @param {string} c - `W` | `B` the pieces' color
+	 * @param {Object} pieceCountTable - A object representing a table that maps piece types of color `color` to their count
+	 * @returns {boolean} **true** if the combination is found otherwise returns **false**
+	 */
+	function checkForPieceCombinations(pieceCombinationsList, c, pieceCountTable) {
+		// return pieceCombinationsList.some(combination => {
+		// 	const pieceTypes = combination.map(x => x[0]); 
+		// 	return combination.every(([pieceType, pieceCount]) => pieceCountTable[`${pieceType}${c}`] <= pieceCount) && noPieceTypesOtherThan(pieceTypes, c, pieceCountTable)
+		// })
+		for (let pieceCombination of pieceCombinationsList) {
+			const pieceTypes = pieceCombination.map(x => x[0]);
+			if(!noPieceTypesOtherThan(pieceTypes, c, pieceCountTable)) continue;
+
+			let allPiecesSatisfyPieceCount = true;
+
+			for (let [pieceType, pieceCount] of pieceCombination) {
+				if( pieceCountTable[`${pieceType}${c}`] > pieceCount) {
+					allPiecesSatisfyPieceCount = false;
+					break;
+				};
+			}
+			if(!allPiecesSatisfyPieceCount) continue
+			return true
+		}
+		return false;
+	}
+
+	const pieceCombinationsForDrawCheckmate = [
+		[['queens', 1]],
+		[['bishops', 3]],
+		[['knights', 3]],
+		[['hawks', 2]],
+		[['archbishops', 1],['bishops',1]],
+		[['archbishops', 1],['knights',1]],
+		[['bishops', 2], ['knights', 1]]
+		[['bishops', 1], ['knights', 2]]
+	]
 
 	/**
 	 * Checks if a given piece list is insufficient to achieve mate for a player of a given color against a lone king
@@ -38,15 +79,8 @@ const insufficientmaterial = (function(){
 
 		// refer to the theory spreadsheet
 		// https://docs.google.com/spreadsheets/d/13KWe6atX2fauBhthJbzCun_AmKXvso6NY2_zjKtikfc/edit
-		if (pieceCountTable[`queens${c}`] <= 1 && noPieceTypesOtherThan([`queens${c}`], color, pieceCountTable)) return true;
-		if (pieceCountTable[`bishops${c}`] <= 3 && noPieceTypesOtherThan([`bishops${c}`], color, pieceCountTable)) return true;
-		if (pieceCountTable[`knights${c}`] <= 3 && noPieceTypesOtherThan([`knights${c}`], color, pieceCountTable)) return true;
-		if (pieceCountTable[`hawks${c}`] <= 2 && noPieceTypesOtherThan([`hawks${c}`], color, pieceCountTable)) return true;
-		if (pieceCountTable[`archbishops${c}`] <= 1 && pieceCountTable[`bishops${c}`] <= 1 && noPieceTypesOtherThan([`archbishops${c}`, `bishops${c}`], color, pieceCountTable)) return true;
-		if (pieceCountTable[`archbishops${c}`] <= 1 && pieceCountTable[`knights${c}`] <= 1 && noPieceTypesOtherThan([`archbishops${c}`, `knights${c}`], color, pieceCountTable)) return true;
-		if (pieceCountTable[`bishops${c}`] <= 2 && pieceCountTable[`knights${c}`] <= 1 && noPieceTypesOtherThan([`bishops${c}`, `knights${c}`], color, pieceCountTable)) return true;
-		if (pieceCountTable[`bishops${c}`] <= 1 && pieceCountTable[`knights${c}`] <= 2 && noPieceTypesOtherThan([`bishops${c}`, `knights${c}`], color, pieceCountTable)) return true;
-		return false;
+
+		return checkForPieceCombinations(pieceCombinationsForDrawCheckmate, c, pieceCountTable);
 	}
 
 	/**
