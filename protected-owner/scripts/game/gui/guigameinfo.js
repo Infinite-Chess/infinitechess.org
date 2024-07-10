@@ -90,6 +90,7 @@ const guigameinfo = (function(){
             else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? "Draw by stalemate!"
                                                                      : condition === 'repetition' ? "Draw by repetition!"
                                                                      : condition === 'moverule' ? `Draw by the ${game.getGamefile().gameRules.moveRule / 2}-move-rule!`
+																	 : condition === 'insuffmat' ? "Draw by insufficient material!"
                                                                      : "Draw!"
             else if (condition === 'aborted') element_whosturn.textContent = "Game aborted."
             else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? "You lose by checkmate!"
