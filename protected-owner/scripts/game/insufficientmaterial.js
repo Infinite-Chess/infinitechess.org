@@ -85,6 +85,8 @@ const insufficientmaterial = (function(){
      * @returns {string | false} 'draw insuffmat', if the game is over by the insufficient material, otherwise *false*.
      */
     const detectInsufficientMaterial = function(gamefile) {
+		debugger;
+
 		// Only make the draw check if the win condition is checkmate for both players
 		if (!gamefile.gameRules.winConditions.white.includes("checkmate") || !gamefile.gameRules.winConditions.black.includes("checkmate")) return false;
 		if (gamefile.gameRules.winConditions.white.length != 1 || gamefile.gameRules.winConditions.black.length != 1) return false;
@@ -93,8 +95,8 @@ const insufficientmaterial = (function(){
 		const lastMove = movesscript.getLastMove(gamefile.moves);
 		if (lastMove && !lastMove.captured) return false;
 
-		// Temporary: only make the draw check if there are less than 5 pieces
-        if (gamefileutility.getPieceCountOfGame(gamefile) >= 5) return false;
+		// Temporary: only make the draw check if there are less than 6 pieces
+        if (gamefileutility.getPieceCountOfGame(gamefile) >= 6) return false;
 
 		// Temporary: only make the draw check if there are no voids
         if (gamefile.ourPieces.voidsN.length > 0) return false;
