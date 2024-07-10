@@ -14,7 +14,7 @@ async function getExtFiles(path, ext) {
 
   for (const folder of folders) {
     try {
-      const newFiles = await getExtFiles(`${path}/${folder}`);
+      const newFiles = await getExtFiles(`${path}/${folder}`, ext);
       files.push(...newFiles.map(v => `${folder}/${v}`));
     } catch (e) {
       if (e.code) continue;
