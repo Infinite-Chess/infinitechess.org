@@ -37,8 +37,8 @@ const wincondition = (function() {
             || detectThreecheck(gamefile)
             || detectKoth(gamefile)
 
-            // This needs to be last so that a draw isn't enforced in a true win
             || checkdetection.detectCheckmateOrDraw(gamefile) // Also checks for repetition draw!
+            // This needs to be last so that a draw isn't enforced in a true win
             || detectMoveRule(gamefile) // 50-move-rule
 			|| insufficientmaterial.detectInsufficientMaterial(gamefile) // checks for insufficient material
             || false; // No win condition passed. No game conclusion!
