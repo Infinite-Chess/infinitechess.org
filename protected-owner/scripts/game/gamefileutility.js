@@ -16,7 +16,7 @@ const gamefileutility = (function(){
 	 * Gives the count of pieces with piece type `pieceType` in the given gamefile.
 	 * @param {gamefile} gamefile
 	 * @param {string} pieceType 
-	 * @returns {Number} - amount of pieces with piece type `pieceType` in gamefile
+	 * @returns {number} - amount of pieces with piece type `pieceType` in gamefile
 	 */
 	function getPieceAmount (gamefile, pieceType) {
 		return gamefile.ourPieces[pieceType].length - gamefile.ourPieces[pieceType].undefineds.length;
@@ -438,7 +438,12 @@ const gamefileutility = (function(){
         return royalCoords;
     }
 
-    // Returns an number of the royals a side has
+	/**
+	 * Returns an number of the royal pieces a side has
+	 * @param {gamefile.piecesOrganizedByKey} piecesByKey - Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }`
+	 * @param {string} color - `white` | `black` | `neutral` a string that represents the color of pieces the function will return
+	 * @returns {number} the count of the royal pieces of color `color`
+	 */
     function getRoyalCountOfColor(piecesByKey, color) {
         const royals = pieces.royals; // ['kings', ...]
         const WorB = math.getWorBFromColor(color);
