@@ -12,7 +12,7 @@ const membersFilePath = path.resolve('database/members.json');
     writeFile_ensureDirectory(membersFilePath, content)
     console.log("Generated members file")
 })()
-const members = require('../../../database/members.json');
+let members = require('../../../database/members.json');
 
 /**
  * An object with refresh tokens for the keys, and for
@@ -47,6 +47,10 @@ let membersHasBeenEdited = false;
 /** The interval of which to save the members data, if a change has been made. */
 const intervalToSaveMembersMillis = 30000; // 30 seconds
 
+/** The maximum time an account witout verified email, is allowed to exists */
+const maxTimeUnverifiedSinceJoined = 3 * 24 * 60 * 60 * 1000;
+/** The Interval for running the function to purge all unverified for more that `maxTimeUnverifiedSinceJoined` time */
+const intervalToPurgeUnverifiedMemebersMillis = 24 * 60 * 60 * 1000;
 
 /**
  * Tests if the user exists in our member data.
@@ -288,6 +292,27 @@ function getInfo(username) {
     }
 }
 
+/**
+ * Called by the server every 24 hours, in order to check for old unverified account to purge
+ */
+function purgeUnverifiedAccounts() {
+    membersToDelete = {};
+
+    for (username in members) {
+        if (members[username].verified === undefined) continue;
+
+        const joinDate =  new Date(members[username].joined);
+        const currentDate = new Date();
+        const diff = currentDate - joinDate
+
+        if (diff > maxTimeUnverifiedSinceJoined && members[username].verified[0] === false) {
+            membersToDelete[username] = undefined;
+        }
+    }
+
+    deleteMembers(membersToDelete);
+}
+
 async function save() {
     console.log("Saving members file..");
     return await writeFile(
@@ -297,7 +322,26 @@ async function save() {
     )
 }
 
-setInterval(saveMembersIfChangesMade, intervalToSaveMembersMillis)
+async function deleteMembers(usernames) {
+    let new_members = {};
+    for (username in members) {
+        if (!(username in usernames)) {
+            new_members[username] = members[username];
+        } else {
+            console.log(`Deleting unverified member: ${username}..`);
+        }
+    }
+    members = new_members;
+    return await writeFile(
+        path.join(__dirname, '..', '..', '..', 'database', 'members.json'),
+        members,
+        "Failed to lock/write members.json after periodically saving! Members should still be accurate in RAM, but not database."
+    )
+}
+
+setInterval(purgeUnverifiedAccounts, intervalToPurgeUnverifiedMemebersMillis);
+
+setInterval(saveMembersIfChangesMade, intervalToSaveMembersMillis);
 
 async function saveMembersIfChangesMade() {
     if (!membersHasBeenEdited) return; // No change made, don't save the file!
@@ -311,8 +355,6 @@ function constructEmailHash() { // Constructs an object with each used email as 
     }
     return newEmailList;
 }
-
-
 
 module.exports = {
     doesMemberExist,
