@@ -74,6 +74,8 @@ const gamemanager = (function() {
             blackSocket: undefined,
             timeNextPlayerLosesAt: undefined,
             autoTimeLossTimeoutID: undefined,
+            whiteDrawOffer: undefined,
+            blackDrawOffer: undefined,
             disconnect: {
                 startTimer: {
                     white: undefined,
@@ -807,6 +809,8 @@ const gamemanager = (function() {
         if (isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
 
         if (hasGameDrawOffer(game)) return console.error("Client offered a draw when the game has a draw offer");
+
+        if (game.moves.length > game.drawOfferMove) return console.error("Client trying to offer a draw twice on the same move")
         
         // Update the status of game
         if (color === 'white') {
@@ -840,10 +844,10 @@ const gamemanager = (function() {
         
         // Update the status of game
         if (color === 'white') {
-            if (!hasGameDrawOffer()) return console.error("Client accepted a draw when there wasn't a draw offer")
+            if (!hasGameDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
             game.whiteDrawOffer = 'confirmed'
         } else if (color === 'black') {
-            if (!hasGameDrawOffer()) return console.error("Client accepted a draw when there wasn't a draw offer")
+            if (!hasGameDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
             game.blackDrawOffer = 'confirmed'
         }
         setGameConclusion(game, "draw by offer")
@@ -852,6 +856,11 @@ const gamemanager = (function() {
         onRequestRemovalFromPlayersInActiveGames(ws);
         unsubClientFromGame(ws, { sendMessage: false });
         sendGameUpdateToColor(game, opponentColor);
+        
+        const opponentWs = opponentColor === 'black' ? game.blackSocket : game.whiteSocket
+        onRequestRemovalFromPlayersInActiveGames(opponentWs);
+        unsubClientFromGame(opponentWs, { sendMessage: false });
+        sendGameUpdateToColor(game, color); // wasteful to send update here, but im lazy to figure out how to set client to show it drawed
     }
 
     /** 
@@ -871,11 +880,13 @@ const gamemanager = (function() {
         
         // Update the status of game
         if (color === 'white') {
-            if (!hasGameDrawOffer()) return console.error("Client declined a draw when there wasn't a draw offer")
+            if (!hasGameDrawOffer(game)) return console.error("Client declined a draw when there wasn't a draw offer")
             game.whiteDrawOffer = 'declined'
+            game.blackDrawOffer = undefined
         } else if (color === 'black') {
-            if (!hasGameDrawOffer()) return console.error("Client declined a draw when there wasn't a draw offer")
+            if (!hasGameDrawOffer(game)) return console.error("Client declined a draw when there wasn't a draw offer")
             game.blackDrawOffer = 'declined'
+            game.whiteDrawOffer = undefined
         }
 
         // Alert their opponent
@@ -1166,7 +1177,10 @@ const gamemanager = (function() {
      * @param {Game} game - The game
      * @returns {boolean}
      */
-    function hasGameDrawOffer(game) { return (game.blackDrawOffer === 'offered' || game.whiteDrawOffer === 'offered') }
+    function hasGameDrawOffer(game) {
+        const isOffering = (game.blackDrawOffer === 'offered' || game.whiteDrawOffer === 'offered')
+        return isOffering
+    }
 
     /**
      * Handles all incoming websocket messages related to active games.
@@ -1195,7 +1209,6 @@ const gamemanager = (function() {
                 resignGame(ws);
                 break;
             case 'offerdraw':
-                // console.error("Don't know how to offer draw yet.")
                 offerDraw(ws);
                 break;
             case 'acceptdraw':

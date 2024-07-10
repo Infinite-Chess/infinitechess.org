@@ -229,6 +229,12 @@ const onlinegame = (function(){
             case "serverrestart":
                 initServerRestart(data.value);
                 break;
+            case "drawoffer":
+                guipause.openDrawOffer()
+                break;
+            case "declinedraw":
+                statustext.showStatus(`Opponent declined the draw`, false, 2)
+                break;
             default:
                 statustext.showStatus(`Unknown action ${message.action} received from the server in the invites subscription!`, true)
                 break;
@@ -542,6 +548,18 @@ const onlinegame = (function(){
         websocket.sendmessage('game', 'report', message)
     }
 
+    function offerDraw() {
+        websocket.sendmessage('game', 'offerdraw')
+    }
+
+    function acceptDraw() {
+        websocket.sendmessage('game', 'acceptdraw')
+    }
+
+    function declineDraw() {
+        websocket.sendmessage('game', 'declinedraw')
+    }
+
     /**
      * This has to be called before and separate from {@link initOnlineGame}
      * because loading the gamefile and the mesh generation requires this script to know our color.
@@ -755,7 +773,10 @@ const onlinegame = (function(){
         cancelFlashTabTimer,
         cancelMoveSound,
         resetServerRestarting,
-        deleteCustomVariantOptions
+        deleteCustomVariantOptions,
+        offerDraw,
+        acceptDraw,
+        declineDraw
     })
 
 })();

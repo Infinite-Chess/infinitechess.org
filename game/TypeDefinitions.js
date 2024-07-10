@@ -124,6 +124,9 @@ function Game() {
      * AFK if they are currently AFK. */
     this.autoAFKResignTime = undefined;
 
+    /** Last move a draw was offered */
+    this.drawOfferMove = undefined
+
     /** Information about players offering a draw */
     this.whiteDrawOffer = undefined
     this.blackDrawOffer = undefined
