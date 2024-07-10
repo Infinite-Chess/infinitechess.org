@@ -12,6 +12,15 @@ const gamefileutility = (function(){
     /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
     const pieceCountToDisableCheckmate = 50_000;
 
+	/**
+	 * Gives the count of pieces with piece type `pieceType` in the given gamefile.
+	 * @param {gamefile} gamefile
+	 * @param {string} pieceType 
+	 * @returns {number} - amount of pieces with piece type `pieceType` in gamefile
+	 */
+	function getPieceAmount (gamefile, pieceType) {
+		return gamefile.ourPieces[pieceType].length - gamefile.ourPieces[pieceType].undefineds.length;
+	}
 
     // Iterates through EVERY piece in the game state, and performs specified function on the type.
     // Callback parameters should be: (type, coords, gamefile)
@@ -429,7 +438,12 @@ const gamefileutility = (function(){
         return royalCoords;
     }
 
-    // Returns an number of the royals a side has
+	/**
+	 * Returns an number of the royal pieces a side has
+	 * @param {gamefile.piecesOrganizedByKey} piecesByKey - Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }`
+	 * @param {string} color - `white` | `black` | `neutral` a string that represents the color of pieces the function will return
+	 * @returns {number} the count of the royal pieces of color `color`
+	 */
     function getRoyalCountOfColor(piecesByKey, color) {
         const royals = pieces.royals; // ['kings', ...]
         const WorB = math.getWorBFromColor(color);
@@ -460,6 +474,7 @@ const gamefileutility = (function(){
 
     return Object.freeze({
         pieceCountToDisableCheckmate,
+		getPieceAmount,
         forEachPieceInGame,
         forEachPieceInPiecesByType,
         forEachPieceInKeysState,
