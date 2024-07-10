@@ -15,6 +15,8 @@ const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 
+let ipTimoutMap = {};
+
 /**
  * Called when the login page submits login form data.
  * Tests their username and password. If correct, it logs
@@ -26,16 +28,35 @@ const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 async function handleLogin(req, res) {
     if (!verifyBodyHasLoginFormData(req)) return; // If false, it will have already sent a response.
 
-    let { username, password } = req.body;
+    let { username, password, ip } = req.body;
     const usernameLowercase = username.toLowerCase();
     const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
     const hashedPassword = getHashedPassword(usernameLowercase);
 
-    if (!usernameCaseSensitive || !hashedPassword) return res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
+    if (!(ip in ipTimoutMap)) {
+        ipTimoutMap[ip] = { attempts: 1, timeout: 0 };
+    }
 
+    // console.log(ip in ipTimoutMap);
+    // console.log({ "IP": ip, "Status": ipTimoutMap[ip] });
+    
+    if (ipTimoutMap[ip].attempts > 3) {
+        return res.status(401).json({ 'message': 'You are currently timed out. Please try again later'});
+    }
+    
+    if (!usernameCaseSensitive || !hashedPassword) return res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
+    
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
+        ipTimoutMap[ip].attempts += 1
+        if (ipTimoutMap[ip].attempts === 3) {
+            ipTimoutMap[ip].timeout += 5
+            setTimeout(() => {
+                ipTimoutMap[ip].attempts = 0
+            }, ipTimoutMap[ip].timeout * 1000)
+        }
+
         console.log(`Incorrect password for user ${usernameCaseSensitive}!`)
         res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
         return;
@@ -73,9 +94,9 @@ function verifyBodyHasLoginFormData(req, res) {
         return false;
     }
 
-    const { username, password } = req.body;
+    const { username, password, ip } = req.body;
     
-    if (!username || !password) {
+    if (!username || !password || ip === "false") {
         console.log(`User ${username} sent a bad login request missing either username or password!`)
         res.status(400).json({ 'message': 'Username and password are required.'}); // 400 Bad request
         return false;

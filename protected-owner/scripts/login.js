@@ -27,43 +27,43 @@ submitButton.addEventListener('click', (event) => {
     if (usernameInputElement.value && passwordInputElement.value && !loginErrorElement) sendLogin(usernameInputElement.value, passwordInputElement.value);
 });
 
-const sendLogin = (username, password) => {
+const sendLogin = async (username, password) => {
     submitButton.disabled = true;
+    // const ip = await getClientIp();
+    const ip = "test";
 
     let OK = false;
     let config = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin', // Allows cookie to be set from this request
-        body: JSON.stringify({username, password})
+        body: JSON.stringify({username, password, ip})
     };
-    fetch('/auth', config)
-    .then((response) => {
-        if (response.ok) OK = true;
-        return response.json();
-    })
-    .then((result) => {
-        if (OK) { // Username & password accepted! Handle our access token
-            // const token = getCookieValue('token')
-            
-            // Check for a redirectTo query parameter, and if it exists, use it
-            const redirectTo = getQueryParam('redirectTo');
-            if (redirectTo) window.location.href = redirectTo;
-            else window.location.href = `/member/${username.toLowerCase()}`;
 
-        } else { // Unauthorized, create error with the message contained in response body
-            if (!loginErrorElement) {
-                createErrorElement('loginerror', 'passwordinputline');
-                // Set variable because it now exists.
-                loginErrorElement = document.getElementById("loginerror");
-                // Make forgot password message visible
-                forgotElement.className = 'forgotvisible';
-            }
-            updateSubmitButton();
-            loginErrorElement.textContent = result['message'];
-            submitButton.disabled = false;
+    let response = await fetch('/auth', config);
+    if (response.ok) OK = true;
+    const result = await response.json();
+
+    if (OK) { // Username & password accepted! Handle our access token
+        // const token = getCookieValue('token')
+        
+        // Check for a redirectTo query parameter, and if it exists, use it
+        const redirectTo = getQueryParam('redirectTo');
+        if (redirectTo) window.location.href = redirectTo;
+        else window.location.href = `/member/${username.toLowerCase()}`;
+
+    } else { // Unauthorized, create error with the message contained in response body
+        if (!loginErrorElement) {
+            createErrorElement('loginerror', 'passwordinputline');
+            // Set variable because it now exists.
+            loginErrorElement = document.getElementById("loginerror");
+            // Make forgot password message visible
+            forgotElement.className = 'forgotvisible';
         }
-    });
+        updateSubmitButton();
+        loginErrorElement.textContent = result['message'];
+        submitButton.disabled = false;
+    }
 }
 
 // Greys-out submit button if there's any errors.
@@ -100,4 +100,20 @@ function getCookieValue(cookieName) {
 function getQueryParam(name) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(name);
+}
+
+/** 
+ * Get's client ip address.
+ * Used in api call for countering login spam from one ip address.
+ * @returns {string} Ip address or "false" when error
+*/
+async function getClientIp() {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.error('Error fetching IP address:', error);
+        return null;
+    }
 }
