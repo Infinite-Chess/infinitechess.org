@@ -169,7 +169,7 @@ function onConnectionRequest(ws, req) {
 
     invitesmanager.giveSocketMetadataHasInviteFunc(ws)
 
-    // Send the current game vesion, so they will know Whether to refresh.
+    // Send the current game vesion, so they will know whether to refresh.
     sendmessage(ws, 'general', 'gameversion', GAME_VERSION);
 }
 

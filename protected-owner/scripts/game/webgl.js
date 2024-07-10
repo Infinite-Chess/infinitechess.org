@@ -48,7 +48,7 @@ const webgl = (function() {
      */
     const culling = false;
     /**
-     * If true, Whether a face is determined as a front face depends
+     * If true, whether a face is determined as a front face depends
      * on whether it's vertices move in a clockwise direction, otherwise counterclockwise.
      */
     const frontFaceVerticesAreClockwise = true;

@@ -61,7 +61,7 @@ THE SOFTWARE.
     return a * degree;
   }
   /**
-   * Tests Whether the arguments have approximately the same value, within an absolute
+   * Tests whether the arguments have approximately the same value, within an absolute
    * or relative tolerance of glMatrix.EPSILON (an absolute tolerance is used for values less
    * than or equal to 1.0, and a relative tolerance is used for larger values)
    *
@@ -452,7 +452,7 @@ THE SOFTWARE.
     return out;
   }
   /**
-   * Returns Whether the matrices have exactly the same elements in the same position (when compared with ===)
+   * Returns whether the matrices have exactly the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyMat2} a The first matrix.
    * @param {ReadonlyMat2} b The second matrix.
@@ -463,7 +463,7 @@ THE SOFTWARE.
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
   }
   /**
-   * Returns Whether the matrices have approximately the same elements in the same position.
+   * Returns whether the matrices have approximately the same elements in the same position.
    *
    * @param {ReadonlyMat2} a The first matrix.
    * @param {ReadonlyMat2} b The second matrix.
@@ -997,7 +997,7 @@ THE SOFTWARE.
     return out;
   }
   /**
-   * Returns Whether the matrices have exactly the same elements in the same position (when compared with ===)
+   * Returns whether the matrices have exactly the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyMat2d} a The first matrix.
    * @param {ReadonlyMat2d} b The second matrix.
@@ -1008,7 +1008,7 @@ THE SOFTWARE.
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5];
   }
   /**
-   * Returns Whether the matrices have approximately the same elements in the same position.
+   * Returns whether the matrices have approximately the same elements in the same position.
    *
    * @param {ReadonlyMat2d} a The first matrix.
    * @param {ReadonlyMat2d} b The second matrix.
@@ -1798,7 +1798,7 @@ THE SOFTWARE.
     return out;
   }
   /**
-   * Returns Whether the matrices have exactly the same elements in the same position (when compared with ===)
+   * Returns whether the matrices have exactly the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyMat3} a The first matrix.
    * @param {ReadonlyMat3} b The second matrix.
@@ -1809,7 +1809,7 @@ THE SOFTWARE.
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7] && a[8] === b[8];
   }
   /**
-   * Returns Whether the matrices have approximately the same elements in the same position.
+   * Returns whether the matrices have approximately the same elements in the same position.
    *
    * @param {ReadonlyMat3} a The first matrix.
    * @param {ReadonlyMat3} b The second matrix.
@@ -3807,7 +3807,7 @@ THE SOFTWARE.
     return out;
   }
   /**
-   * Returns Whether the matrices have exactly the same elements in the same position (when compared with ===)
+   * Returns whether the matrices have exactly the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyMat4} a The first matrix.
    * @param {ReadonlyMat4} b The second matrix.
@@ -3818,7 +3818,7 @@ THE SOFTWARE.
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7] && a[8] === b[8] && a[9] === b[9] && a[10] === b[10] && a[11] === b[11] && a[12] === b[12] && a[13] === b[13] && a[14] === b[14] && a[15] === b[15];
   }
   /**
-   * Returns Whether the matrices have approximately the same elements in the same position.
+   * Returns whether the matrices have approximately the same elements in the same position.
    *
    * @param {ReadonlyMat4} a The first matrix.
    * @param {ReadonlyMat4} b The second matrix.
@@ -4619,7 +4619,7 @@ THE SOFTWARE.
     return "vec3(" + a[0] + ", " + a[1] + ", " + a[2] + ")";
   }
   /**
-   * Returns Whether the vectors have exactly the same elements in the same position (when compared with ===)
+   * Returns whether the vectors have exactly the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyVec3} a The first vector.
    * @param {ReadonlyVec3} b The second vector.
@@ -4630,7 +4630,7 @@ THE SOFTWARE.
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
   }
   /**
-   * Returns Whether the vectors have approximately the same elements in the same position.
+   * Returns whether the vectors have approximately the same elements in the same position.
    *
    * @param {ReadonlyVec3} a The first vector.
    * @param {ReadonlyVec3} b The second vector.
@@ -5331,7 +5331,7 @@ THE SOFTWARE.
     return "vec4(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ")";
   }
   /**
-   * Returns Whether the vectors have exactly the same elements in the same position (when compared with ===)
+   * Returns whether the vectors have exactly the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyVec4} a The first vector.
    * @param {ReadonlyVec4} b The second vector.
@@ -5342,7 +5342,7 @@ THE SOFTWARE.
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
   }
   /**
-   * Returns Whether the vectors have approximately the same elements in the same position.
+   * Returns whether the vectors have approximately the same elements in the same position.
    *
    * @param {ReadonlyVec4} a The first vector.
    * @param {ReadonlyVec4} b The second vector.
@@ -6141,7 +6141,7 @@ THE SOFTWARE.
 
   var normalize$2 = normalize$3;
   /**
-   * Returns Whether the quaternions have exactly the same elements in the same position (when compared with ===)
+   * Returns whether the quaternions have exactly the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyQuat} a The first quaternion.
    * @param {ReadonlyQuat} b The second quaternion.
@@ -6150,7 +6150,7 @@ THE SOFTWARE.
 
   var exactEquals$2 = exactEquals$3;
   /**
-   * Returns Whether the quaternions point approximately to the same direction.
+   * Returns whether the quaternions point approximately to the same direction.
    *
    * Both quaternions are assumed to be unit length.
    *
@@ -7090,7 +7090,7 @@ THE SOFTWARE.
     return "quat2(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " + a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ")";
   }
   /**
-   * Returns Whether the dual quaternions have exactly the same elements in the same position (when compared with ===)
+   * Returns whether the dual quaternions have exactly the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyQuat2} a the first dual quaternion.
    * @param {ReadonlyQuat2} b the second dual quaternion.
@@ -7101,7 +7101,7 @@ THE SOFTWARE.
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7];
   }
   /**
-   * Returns Whether the dual quaternions have approximately the same elements in the same position.
+   * Returns whether the dual quaternions have approximately the same elements in the same position.
    *
    * @param {ReadonlyQuat2} a the first dual quat.
    * @param {ReadonlyQuat2} b the second dual quat.
@@ -7684,7 +7684,7 @@ THE SOFTWARE.
     return "vec2(" + a[0] + ", " + a[1] + ")";
   }
   /**
-   * Returns Whether the vectors exactly have the same elements in the same position (when compared with ===)
+   * Returns whether the vectors exactly have the same elements in the same position (when compared with ===)
    *
    * @param {ReadonlyVec2} a The first vector.
    * @param {ReadonlyVec2} b The second vector.
@@ -7695,7 +7695,7 @@ THE SOFTWARE.
     return a[0] === b[0] && a[1] === b[1];
   }
   /**
-   * Returns Whether the vectors have approximately the same elements in the same position.
+   * Returns whether the vectors have approximately the same elements in the same position.
    *
    * @param {ReadonlyVec2} a The first vector.
    * @param {ReadonlyVec2} b The second vector.

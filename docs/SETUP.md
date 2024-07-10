@@ -44,7 +44,7 @@ The fork you just created should be at or near the top of the list, click on it!
 
 <img width="674" alt="Screen Shot 2024-07-02 at 1 03 01 PM" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/25dff27c-f09f-444f-8fdd-2f68b344a1fb">
 
-Choose a location on your machine to store the repository. Then when prompted Whether to open the cloned repository, click "Open".
+Choose a location on your machine to store the repository. Then when prompted whether to open the cloned repository, click "Open".
 
 
 
