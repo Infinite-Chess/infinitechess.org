@@ -33,8 +33,8 @@ const insufficientmaterial = (function(){
 		for (let pieceType of piecesOfColor) {
 			pieceCountTable[pieceType] = gamefileutility.getPieceAmount(gamefile, pieceType);
 		}
-		
-		let c = ( color == 'white' ? 'W' : 'B');
+
+		let c = math.getWorBFromColor(color);
 
 		// refer to the theory spreadsheet
 		// https://docs.google.com/spreadsheets/d/13KWe6atX2fauBhthJbzCun_AmKXvso6NY2_zjKtikfc/edit
