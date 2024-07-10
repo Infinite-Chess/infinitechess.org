@@ -19,7 +19,31 @@ const { isEmailBanned } = require('../middleware/banned')
 const emailHash = constructEmailHash();
 
 const reservedUsernames = [
-    'infinitechess'
+    'infinitechess',
+    'support', 'infinitechesssupport',
+    'admin', 'administrator',
+    'amazon', 'amazonsupport', 'aws', 'awssupport',
+    'apple', 'applesupport',
+    'microsoft', 'microsoftsupport',
+    'google', 'googlesupport',
+    'adobe', 'adobesupport',
+    'youtube', 'facebook', 'tiktok', 'twitter', 'x', 'instagram', 'snapchat',
+    'tesla', 'elonmusk', 'meta',
+    'walmart', 'costco',
+    'valve', 'valvesupport',
+    'github',
+    'nvidia', 'amd', 'intel', 'msi', 'tsmc', 'gigabyte',
+    'roblox',
+    'minecraft',
+    'fortnite',
+    'teamfortress2',
+    'amongus', 'innersloth', 'henrystickmin',
+    'halflife', 'halflife2', 'gordonfreeman',
+    'epic', 'epicgames', 'epicgamessupport',
+    'taylorswift', 'kimkardashian', 'tomcruise', 'keanureeves', 'morganfreeman', 'willsmith',
+    'office', 'office365',
+    'usa', 'america',
+    'donaldtrump', 'joebiden'
 ];
 /** Any username cannot contain these words */
 const profainWords = [
