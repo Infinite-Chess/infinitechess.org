@@ -43,7 +43,7 @@ const insufficientmaterial = (function(){
 		if (pieceCountTable[`knights${c}`] <= 3 && noPieceTypesOtherThan([`knights${c}`], color, pieceCountTable)) return true;
 		if (pieceCountTable[`hawks${c}`] <= 2 && noPieceTypesOtherThan([`hawks${c}`], color, pieceCountTable)) return true;
 		if (pieceCountTable[`archbishops${c}`] <= 1 && pieceCountTable[`bishops${c}`] <= 1 && noPieceTypesOtherThan([`archbishops${c}`, `bishops${c}`], color, pieceCountTable)) return true;
-		if (pieceCountTable[`archbishops${c}`] <= 1 && pieceCountTable[`knights${c}`] <= 1 && noPieceTypesOtherThan([`archbishops${c}`, `knights${color}`], color, pieceCountTable)) return true;
+		if (pieceCountTable[`archbishops${c}`] <= 1 && pieceCountTable[`knights${c}`] <= 1 && noPieceTypesOtherThan([`archbishops${c}`, `knights${c}`], color, pieceCountTable)) return true;
 		if (pieceCountTable[`bishops${c}`] <= 2 && pieceCountTable[`knights${c}`] <= 1 && noPieceTypesOtherThan([`bishops${c}`, `knights${c}`], color, pieceCountTable)) return true;
 		if (pieceCountTable[`bishops${c}`] <= 1 && pieceCountTable[`knights${c}`] <= 2 && noPieceTypesOtherThan([`bishops${c}`, `knights${c}`], color, pieceCountTable)) return true;
 		return false;
