@@ -14,27 +14,34 @@ const insufficientmaterial = (function(){
      * Checks if there is no pieces of color `color` with piece types other than pieces type in `pieceTypes` and the king with given `color`.
      * @param {string[]} pieceTypes - The piece types
      * @param {string} c - `W` | `B` The piece's color
-	 * @param {Object} pieceCountTable - A object representing a table that maps piece types of color `color` to their count
+	 * @param {Object} pieceCountTable - An object representing a table that maps piece types of color `color` to their count
      * @returns {boolean} **true** if there is no pieces of color `color` with pieces types other than pieces type in `pieceTypes` and the king with given `color`, otherwise returns **false**
      */
 	function noPieceTypesOtherThan(pieceTypes, c, pieceCountTable) {
 		return Object.keys(pieceCountTable).every(x => pieceTypes.includes(x) || x === `kings${c}` || pieceCountTable[x] === 0);
 	}
 
+	const pieceCombinationsForDrawCheckmate = [
+		[['queens', 1]],
+		[['bishops', 3]],
+		[['knights', 3]],
+		[['hawks', 2]],
+		[['archbishops', 1],['bishops',1]],
+		[['archbishops', 1],['knights',1]],
+		[['bishops', 2], ['knights', 1]],
+		[['bishops', 1], ['knights', 2]]
+	]
+
 	/**
 	 * 
 	 * @param {string[][][]} pieceCombinationsList
 	 * @param {string} c - `W` | `B` the pieces' color
-	 * @param {Object} pieceCountTable - A object representing a table that maps piece types of color `color` to their count
+	 * @param {Object} pieceCountTable - An object representing a table that maps piece types of color `color` to their count
 	 * @returns {boolean} **true** if the combination is found otherwise returns **false**
 	 */
 	function checkForPieceCombinations(pieceCombinationsList, c, pieceCountTable) {
-		// return pieceCombinationsList.some(combination => {
-		// 	const pieceTypes = combination.map(x => x[0]); 
-		// 	return combination.every(([pieceType, pieceCount]) => pieceCountTable[`${pieceType}${c}`] <= pieceCount) && noPieceTypesOtherThan(pieceTypes, c, pieceCountTable)
-		// })
 		for (let pieceCombination of pieceCombinationsList) {
-			const pieceTypes = pieceCombination.map(x => x[0]);
+			const pieceTypes = pieceCombination.map(x => `${x[0]}${c}`);
 			if(!noPieceTypesOtherThan(pieceTypes, c, pieceCountTable)) continue;
 
 			let allPiecesSatisfyPieceCount = true;
@@ -50,17 +57,6 @@ const insufficientmaterial = (function(){
 		}
 		return false;
 	}
-
-	const pieceCombinationsForDrawCheckmate = [
-		[['queens', 1]],
-		[['bishops', 3]],
-		[['knights', 3]],
-		[['hawks', 2]],
-		[['archbishops', 1],['bishops',1]],
-		[['archbishops', 1],['knights',1]],
-		[['bishops', 2], ['knights', 1]]
-		[['bishops', 1], ['knights', 2]]
-	]
 
 	/**
 	 * Checks if a given piece list is insufficient to achieve mate for a player of a given color against a lone king
@@ -90,8 +86,8 @@ const insufficientmaterial = (function(){
      */
     const detectInsufficientMaterial = function(gamefile) {
 		// Only make the draw check if the win condition is checkmate for both players
-		if (!gamefile.gameRules.winConditions.white.includes("checkmate") || !gamefile.gameRules.winConditions.black.includes("checkmate") ) return false;
-		if (gamefile.gameRules.winConditions.white.length != 1 || gamefile.gameRules.winConditions.black.length != 1 ) return false;
+		if (!gamefile.gameRules.winConditions.white.includes("checkmate") || !gamefile.gameRules.winConditions.black.includes("checkmate")) return false;
+		if (gamefile.gameRules.winConditions.white.length != 1 || gamefile.gameRules.winConditions.black.length != 1) return false;
 
 		// Only make the draw check if the last move was a capture
 		const lastMove = movesscript.getLastMove(gamefile.moves);
