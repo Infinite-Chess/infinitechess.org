@@ -124,10 +124,6 @@ function Game() {
      * AFK if they are currently AFK. */
     this.autoAFKResignTime = undefined;
 
-    /** Information about players offering a draw */
-    this.whiteDrawOffer = undefined
-    this.blackDrawOffer = undefined
-
     /** Contains information about which sides are
      * about to lose by disconnection. */
     this.disconnect = {
