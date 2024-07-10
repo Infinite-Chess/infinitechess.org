@@ -50,7 +50,6 @@ function generateSelfSignedCertificate() {
  * @returns {boolean} - Returns true if the certificate was generated, false if it already exists.
  */
 function ensureSelfSignedCertificate() {
-    console.log(certDir)
     // Create the cert directory if it doesn't exist
     ensureDirectoryExists(certDir);
 
