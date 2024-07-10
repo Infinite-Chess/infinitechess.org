@@ -19,5 +19,13 @@
     "proper-lockfile": "^4.1.2",
     "uuid": "^8.3.2",
     "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.23.0"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "nodemon",
+    "run": "node server.js"
   }
 }
