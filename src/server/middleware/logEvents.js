@@ -7,7 +7,8 @@ const path = require('path');
 
 const { getClientIP } = require("./IP");
 const wsfunctions = require('../game/wsfunctions');
-const { Socket } = require('../game/TypeDefinitions')
+const { Socket } = require('../game/TypeDefinitions');
+const { ensureDirectoryExists } = require('../utility/fileUtils');
 
 
 const giveLoggedItemsUUID = false;
@@ -29,12 +30,9 @@ const logEvents = async (message, logName, { print } = {}) => {
                                         : `${dateTime}   ${message}\n`;
     
     try {
-        if (!fs.existsSync(path.join(__dirname, '..', 'logs'))) {
-            // console.log(`Log ${logName} doesn't exist. Creating now...`)
-            await fsPromises.mkdir(path.join(__dirname, '..', 'logs'));
-        }
-
-        await fsPromises.appendFile(path.join(__dirname, '..', 'logs', logName), logItem);
+        const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
+        ensureDirectoryExists(logsPath)
+        await fsPromises.appendFile(path.join(logsPath, logName), logItem);
     } catch (err) {
         console.log(err);
     }
