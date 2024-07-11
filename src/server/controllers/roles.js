@@ -97,7 +97,7 @@ function setRoleWebSocket(ws) {
  * @param {string} description - A 1 or 2 word description
  */
 function giveRole_Owner(user, description) {
-    removeRole(user);
+    removeAllRoles(user);
     roles.owners[user] = description;
     rolesHaveBeenEdited = true;
 }
@@ -108,19 +108,19 @@ function giveRole_Owner(user, description) {
  * @param {string} description - A 1 or 2 word description
  */
 function giveRole_Patron(user, description) {
-    removeRole(user);
+    removeAllRoles(user);
     roles.patrons[user] = description;
     rolesHaveBeenEdited = true;
 }
 
 /**
- * Deletes a user's role.
+ * Deletes a user's roles. Call before deleting their account.
  * @param {string} user - Their username, in lowercase.
  */
-function removeRole(user) {
+function removeAllRoles(user) {
     delete roles.owners[user];
     delete roles.patrons[user];
-    rolesHaveBeenEdited = true;
+    rolesHaveBeenEdited = true; // Flag to be saved
 }
 
 module.exports = {
@@ -129,5 +129,5 @@ module.exports = {
     setRoleWebSocket,
     giveRole_Owner,
     giveRole_Patron,
-    removeRole
+    removeAllRoles
 }

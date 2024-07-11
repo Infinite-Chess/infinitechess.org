@@ -9,7 +9,7 @@ const wincondition1 = (function() {
      * This excludes conclusions such as resignation, time, aborted, and disconnect,
      * which can happen at any point in time.
      */
-    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule']
+    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat']
 
     /**
      * Calculates if the provided game conclusion is a decisive conclusion.

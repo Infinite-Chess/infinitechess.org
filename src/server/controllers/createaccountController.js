@@ -4,7 +4,7 @@
  * verifying the data, creating the account,
  * and sending them a verification email.
  * 
- * It also answers requests for whether or not
+ * It also answers requests for whether
  * a specific username or email is available.
  */
 
@@ -18,8 +18,38 @@ const { isEmailBanned } = require('../middleware/banned')
 
 const emailHash = constructEmailHash();
 
+/**
+ * Usernames that are reserved. New members cannot use these are their name.
+ * 
+ * However, the following have been used:
+ * admin, amazon, google, tesla, epic, epicgames, usa, america
+ */
 const reservedUsernames = [
-    'infinitechess'
+    'infinitechess',
+    'support', 'infinitechesssupport',
+    'admin', 'administrator',
+    'amazon', 'amazonsupport', 'aws', 'awssupport',
+    'apple', 'applesupport',
+    'microsoft', 'microsoftsupport',
+    'google', 'googlesupport',
+    'adobe', 'adobesupport',
+    'youtube', 'facebook', 'tiktok', 'twitter', 'x', 'instagram', 'snapchat',
+    'tesla', 'elonmusk', 'meta',
+    'walmart', 'costco',
+    'valve', 'valvesupport',
+    'github',
+    'nvidia', 'amd', 'intel', 'msi', 'tsmc', 'gigabyte',
+    'roblox',
+    'minecraft',
+    'fortnite',
+    'teamfortress2',
+    'amongus', 'innersloth', 'henrystickmin',
+    'halflife', 'halflife2', 'gordonfreeman',
+    'epic', 'epicgames', 'epicgamessupport',
+    'taylorswift', 'kimkardashian', 'tomcruise', 'keanureeves', 'morganfreeman', 'willsmith',
+    'office', 'office365',
+    'usa', 'america',
+    'donaldtrump', 'joebiden'
 ];
 /** Any username cannot contain these words */
 const profainWords = [
@@ -57,7 +87,7 @@ const createNewMember = async (req, res) => {
         return res.status(400).redirect('/400') // Bad request
     }
 
-    // Make the email lowercase so we don't run into problems with seeing if capitalized emails are taken!
+    // Make the email lowercase, so we don't run into problems with seeing if capitalized emails are taken!
     email = email.toLowerCase();
     const usernameLowercase = username.toLowerCase();
 
@@ -85,7 +115,7 @@ const createNewMember = async (req, res) => {
  * @param {string} param0.username - The username for the new account.
  * @param {string} param0.email - The email for the new account.
  * @param {string} param0.password - The password for the new account.
- * @param {boolean} param0.autoVerify - Whether or not to auto-verify this account.
+ * @param {boolean} param0.autoVerify - Whether to auto-verify this account.
  */
 async function generateAccount({ username, email, password, autoVerify }) {
     const usernameLowercase = username.toLowerCase();
