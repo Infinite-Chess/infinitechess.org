@@ -524,7 +524,7 @@ const gamemanager = (function() {
         }
 
         cancelDisconnectTimer(game, colorPlayingAs)
-        reinformPlayerAboutDrawOffers(game, colorPlayingAs)
+        reinformPlayerAboutDrawOffers(game, ws)
         subscribeClientToGame(game, ws, colorPlayingAs)
     }
 
