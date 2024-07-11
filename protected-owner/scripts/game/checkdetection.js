@@ -254,7 +254,7 @@ const checkdetection = (function(){
             return true
         }
 
-        if (true) return; // No sliding movesets to remove
+        if (true) return; // disabled as cba rn and it keep erroring when testing other elements
 
         const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color); // List of coordinates of all our royal jumping pieces
 

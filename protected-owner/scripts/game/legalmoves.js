@@ -241,7 +241,7 @@ const legalmoves = (function(){
         }
 
         for (var line in legalMoves.slides) {
-            line=line.split(',')
+            line=line.split(',') // can't hash array so conversion to string made, unconverting it
             let limits = legalMoves.slides[line];
             let selectedPieceLine = math.getLineFromCoords(line,startCoords);
             let clickedCoordsLine = math.getLineFromCoords(line,endCoords);

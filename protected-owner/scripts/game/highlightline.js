@@ -181,6 +181,7 @@ const highlightline = (function(){
             point2 = [pieceCoords[0], moveset[1]]
         }
 
+        /** 
         else if (closestPoint.direction === 'diagonalup') {
 
             // Calculate the intersection tile of this diagonal with the left/bottom and right/top sides of the screen.
@@ -201,8 +202,8 @@ const highlightline = (function(){
 
             point1 = moveset[0] === -Infinity ? intsect1Tile : [moveset[0], pieceCoords[1] + pieceCoords[0] - moveset[0]]
             point2 = moveset[1] ===  Infinity ? intsect2Tile : [moveset[1], pieceCoords[1] - (moveset[1] - pieceCoords[0])]
-        }
-
+        } 
+        */
         let tileMouseFingerOver;
         if (input.getTouchClicked()) { // Set to what the finger tapped above
             // let touchClickedTile = input.getTouchClickedTile() // { id, x, y }
