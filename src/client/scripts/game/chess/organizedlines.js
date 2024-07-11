@@ -183,8 +183,8 @@ const organizedlines = {
      * When they're gone, we have to regenerate the mesh, with more empty placeholders.
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} options - An object containing the various properties:
-     * - `regenModel`: Whether or not to renegerate the model of all the pieces afterward. Default: *true*.
-     * - `log`: Whether or not to log to the console that we're adding more undefineds. Default: *false*
+     * - `regenModel`: Whether to renegerate the model of all the pieces afterward. Default: *true*.
+     * - `log`: Whether to log to the console that we're adding more undefineds. Default: *false*
      */
     addMoreUndefineds: function(gamefile, { regenModel = true, log = false } = {}) {
         if (log) console.log('Adding more placeholder undefined pieces.')

@@ -11,7 +11,7 @@
 
 const bigint = (function(){
 
-    // factor (scaling factor) is the number that the TRUE-bigint has bee multiplied by
+    // factor (scaling factor) is the number that the TRUE-bigint has been multiplied by
     // to get simulated decimal precision!
     // factor = 10^n, where n is the number of decimal precision digits.
     // factor of 1000 is a precision of 3 digits

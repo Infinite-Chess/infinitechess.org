@@ -14,7 +14,7 @@ const selection = (function() {
 
     /** The tile the mouse is hovering over, OR the tile we just performed a simulated click over: `[x,y]` */
     let hoverSquare; // Current square mouse is hovering over
-    /** Whether or not the {@link hoverSquare} is legal to move the selected piece to. */
+    /** Whether the {@link hoverSquare} is legal to move the selected piece to. */
     let hoverSquareLegal = false;
 
     /** If a pawn is currently promoting (waiting on the promotion UI selection),

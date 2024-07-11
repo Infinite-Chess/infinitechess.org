@@ -1,13 +1,13 @@
 
 /**
- * Whether or not to run the server in development mode.
+ * Whether to run the server in development mode.
  * It will be hosted on a different port for local host,
  * and a few other minor adjustments.
  * Disable in production.
  */
 const DEV_BUILD = true;
 
-/** Whether or not we are currently rate limiting connections.
+/** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
 const ARE_RATE_LIMITING = true; // Set to false to temporarily get around it, during development.
 
@@ -22,7 +22,7 @@ const HOST_NAME = 'www.infinitechess.org';
  */
 const GAME_VERSION = "1.3.3.1"
 
-/** Whether or not we are currently using a whitelist for connections from other origins.
+/** Whether we are currently using a whitelist for connections from other origins.
  * If we are getting unwanted origins, this can be enabled. */
 const useOriginWhitelist = false;
 /** The whitelist of allowed origins. Only used if {@link useOriginWhitelist} is true. */

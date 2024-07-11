@@ -18,9 +18,9 @@ function Move() {
     this.endCoords = undefined;
     /** The type of piece captured (e.g. `knightsB`), if one was made. */
     this.captured = undefined;
-    /** Whether or not the move delivered check. */
+    /** Whether the move delivered check. */
     this.check = undefined;
-    /** Whether or not the move delivered mate (or the killing move). */
+    /** Whether the move delivered mate (or the killing move). */
     this.mate = undefined;
     /** Contains information for undoing simulated moves.
      * Several of these properties are impossible to recalculate without
@@ -32,9 +32,9 @@ function Move() {
         /** The index of the promoted pawn within the gamefile's piece list.
          * Required to not screw up the mesh when simulating. */
         pawnIndex: undefined,
-        /** Whether or not the moved piece had its special right before moving. */
+        /** Whether the moved piece had its special right before moving. */
         specialRightStart: undefined,
-        /** Whether or not the piece on the destination had its special rights before being captured. */
+        /** Whether the piece on the destination had its special rights before being captured. */
         specialRightEnd: undefined,
         /** The gamefile's `enpassant` property before this move was made. */
         enpassant: undefined,

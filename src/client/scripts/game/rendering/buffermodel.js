@@ -84,16 +84,16 @@ const buffermodel = (function() {
 
     /**
      * Returns the prepDraw function the buffer model can call right before rendering
-     * to tell the gpu how its going to extract the vertex data into the shader attributes.
+     * to tell the gpu how it's going to extract the vertex data into the shader attributes.
      * @param {ShaderProgram} shaderProgram - The target shader program.
      * @param {number} numPositionComponents - The number of floats for each vertice's position, either 2 or 3.
-     * @param {boolean} usingTextureCoords - Whether or not the vertex data specifies texture coordinates.
-     * @param {boolean} usingColorValues - Whether or not the vertex data specifies color values.
+     * @param {boolean} usingTextureCoords - Whether the vertex data specifies texture coordinates.
+     * @param {boolean} usingColorValues - Whether the vertex data specifies color values.
      * @returns {Function} The prepDraw function
      */
     function getPrepDrawFunc(shaderProgram, numPositionComponents, usingTextureCoords, usingColorValues) {
         /**
-         * Tells the gpu how its going to extract the vertex data
+         * Tells the gpu how it's going to extract the vertex data
          * from the buffer into the shader attributes before rendering.
          * @param {WebGLBuffer} buffer - The buffer containing our vertex data.
          * @param {number} stride - The stride length of the data, or how many floats each vertex uses to describe its position, texture, and color data.
@@ -154,7 +154,7 @@ const buffermodel = (function() {
      * @param {Object[]} [customUniformValues] An object that contains custom uniform values: `{ name: value }`
      */
     function renderPreppedModel(program, position = [0,0,0], scale = [1,1,1], vertexCount, mode, texture, customUniformValues = {}) {
-        // Create new identity worldMatrix dependant on our board position and scale.
+        // Create new identity worldMatrix dependent on our board position and scale.
         const worldMatrix = mat4.create();
         mat4.scale(worldMatrix, worldMatrix, scale)
         mat4.translate(worldMatrix, worldMatrix, position)
@@ -314,7 +314,7 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
 
 
     /** Call when you need to reinit the model because the source float32array has new data.
-     * This is faster then creating a whole new model, but it still may be slow for very large data amounts. */
+     * This is faster than creating a whole new model, but it still may be slow for very large data amounts. */
     this.updateBuffer = function() { // Float32Array
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
         // gl.bufferData(gl.ARRAY_BUFFER, data, gl[DRAW_HINT]); // OLD. SLOW
@@ -359,7 +359,7 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
      */
     this.render = function(position, scale, customUniformValues) { // [0,0,0], [1,1,1]  Can be undefined, render will use defaults.
         // Must be called before every time we render the model.
-        // Tell gl which shader program to use, how it's gonna extract the positions from the model and pass into the shader, and bind the buffer model.
+        // Tell gl which shader program to use, how it's going to extract the positions from the model and pass into the shader, and bind the buffer model.
         prepDrawFunc(buffer, stride, data.BYTES_PER_ELEMENT); // This also binds the buffer before rendering
         buffermodel.renderPreppedModel(program, position, scale, vertexCount, mode, textureToRender, customUniformValues)
     }

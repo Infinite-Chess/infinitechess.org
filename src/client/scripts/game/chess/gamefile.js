@@ -67,8 +67,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.ourPieces = undefined;
     /** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` */
     this.piecesOrganizedByKey = undefined;
-    /** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` */
-    this.piecesOrganizedByKey = undefined;
     /** Pieces organized by row: `{ 2:[{type:'queensW',coords:[1,2]}] }` */
     this.piecesOrganizedByRow = undefined;
     /** Pieces organized by column: `{ 1:[{type:'queensW',coords:[1,2]}] }` */
@@ -105,7 +103,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
          * This helps require less severe uniform translations upon rendering when traveling massive distances.
          * The amount it is shifted depends on the nearest `regenRange`. */
         offset: undefined,
-        /** A number for whether or not the mesh of the pieces is currently being generated.
+        /** A number for whether the mesh of the pieces is currently being generated.
          * @type {number} 0+. When > 0, is it generating. */
         isGenerating: 0,
         /** A number representing whether the mesh of the pieces is currently locked or not.

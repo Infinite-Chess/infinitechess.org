@@ -288,7 +288,7 @@ const clock = (function(){
     }
 
     /**
-     * Returns the clock in a slightly more human readable format: `10m+5s`
+     * Returns the clock in a slightly more human-readable format: `10m+5s`
      * @param {string} key - The clock string: `10+5`
      * @returns {string}
      */

@@ -423,7 +423,7 @@ const math = (function() {
      * Returns true if the coordinates are equal
      * @param {number[]} coord1 [x,y]
      * @param {number[]} coord2 [x,y]
-     * @returns {boolean} Whether or not the coordinates are equal
+     * @returns {boolean} Whether the coordinates are equal
      */
     function areCoordsEqual(coord1, coord2) {
         if (!coord2 || !coord2) return false; // One undefined, can't be equal
