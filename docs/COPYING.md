@@ -6,7 +6,7 @@ Infinite Chess is free software; you can redistribute and/or modify it under the
 
 Infinite Chess is distributed WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.en.html) for more details.
 
-See [LICENSE](./LICENSE) for a copy of the GNU Affero General Public License.
+See [LICENSE](../LICENSE) for a copy of the GNU Affero General Public License.
 
 ## Exceptions (free)
 
