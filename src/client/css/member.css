@@ -64,6 +64,8 @@ main {
 }
 
 #content {
+    display: flex;
+    flex-direction: column;
     background-color: rgba(255, 255, 255, 0.805);
     min-height: 450px;
     margin: auto;
@@ -133,7 +135,14 @@ main {
     line-height: 2em;
 }
 
-#show-account-info {
+#content-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 2;
+}
+
+.action-button {
+    margin-bottom: 20px;
     padding: 0.7em 1em;
     border-radius: 0.5em;
     background-color: white;
@@ -141,13 +150,32 @@ main {
     transition: 0.15s;
 }
 
-#show-account-info:hover {
+.action-button:hover {
     padding: 0.8em 1.15em;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.799);
+    cursor: pointer;
+}
+
+#delete-account {
+    margin-bottom: 0;
+    background-color: #fff1f1;
+    color: red;
+    font-weight: bold;
+    border: 1.5px solid red;
+    box-shadow: 0 0 8px rgba(148, 0, 0, 0.502);
+}
+
+#action-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255, 211, 211, 0.799);
 }
 
 #show-account-info:active {
     box-shadow: 0 0 8px rgb(0, 0, 0);
+}
+
+#delete-account:active {
+    background-color: #ffcaca;
 }
 
 #accountinfo {
@@ -164,7 +192,7 @@ main {
 #change, #change a {
     font-size: 14px;
     color: rgb(69, 69, 69);
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 
@@ -257,7 +285,7 @@ a {
     #content {
         max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
         padding: 40px 30px;
-        min-height: 800px;
+        min-height: calc(100vh - 182px);
     }
 
     .member {
