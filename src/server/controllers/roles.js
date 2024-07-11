@@ -97,7 +97,7 @@ function setRoleWebSocket(ws) {
  * @param {string} description - A 1 or 2 word description
  */
 function giveRole_Owner(user, description) {
-    removeRole(user);
+    removeAllRoles(user);
     roles.owners[user] = description;
     rolesHaveBeenEdited = true;
 }
@@ -108,7 +108,7 @@ function giveRole_Owner(user, description) {
  * @param {string} description - A 1 or 2 word description
  */
 function giveRole_Patron(user, description) {
-    removeRole(user);
+    removeAllRoles(user);
     roles.patrons[user] = description;
     rolesHaveBeenEdited = true;
 }
