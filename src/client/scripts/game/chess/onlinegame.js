@@ -232,6 +232,7 @@ const onlinegame = (function(){
             case "drawoffer":
                 guipause.openDrawOffer()
                 let gamefile = game.getGamefile()
+                gamefile.drawOffers = true
                 if (gamefile.moves) {
                     gamefile.LastDrawOfferMove = gamefile.moves.length;
                 } else {
@@ -240,6 +241,7 @@ const onlinegame = (function(){
 
                 break;
             case "declinedraw":
+                gamefile.drawOffers = false
                 statustext.showStatus(`Opponent declined the draw`, false, 2)
                 break;
             default:

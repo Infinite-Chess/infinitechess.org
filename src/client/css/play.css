@@ -1255,30 +1255,31 @@ button.join-button, button.copy-button {
 /* Draw Offer UI */
 
 .drawOfferUI {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgba(0, 0, 0, 0.564);
-    padding: 20vh;
-    padding-left: 40vh;
-    padding-right: 40vh;
+    flex-grow: 1;
     display: flex;
-    flex-direction: column;
-    gap: min(3vw, 32px);
+    align-items: center;
     justify-content: center;
-    align-content: center;
+    text-align: center;
+    font-size: 30px;
+    font-family: "Open Sans";
+    font-weight: bold;
+    padding: 15px;
+    gap: 15px;
+    transition: display 2s;
 }
 
 .drawOfferUI p.offertitle, .drawOfferUI button {
-    font-size: min(2.5vw, 27px);
+    font-size: min(3.5vw, 35px);
 }
 
 .drawOfferUI p.offertitle {
-    color: white;
+    color: black;
     text-align: center;
-    /*align-self: center;*/
+    vertical-align: middle;
+    line-height: 100%;
+    font-weight: bold;
+    top: 50%;
+    bottom: 50;
 }
 
 .drawOfferUI button {
@@ -1286,8 +1287,16 @@ button.join-button, button.copy-button {
     box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.27);
     border-radius: min(0.9vw, 10px);
     color: rgb(0, 0, 0);
-    height: 10%;
-    background: linear-gradient(to bottom, white, rgb(199, 199, 199), white);
+    height: 100%;
+    aspect-ratio: 1/1;
+    background: rgb(227, 227, 227);
+}
+
+.drawOfferUI img {
+    position: relative;
+	height: 70%;
+	margin:1px;
+	top: 0px;
 }
 
 .drawOfferUI button:hover {

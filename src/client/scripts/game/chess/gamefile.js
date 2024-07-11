@@ -184,6 +184,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** The last move when a draw offer was given
      * Used for disabling the button */
     this.LastDrawOfferMove = undefined;
+    /** Is there a draw offer currentrly */
+    this.drawOffers = false;
 
     this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
     this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)

@@ -25,6 +25,9 @@ const guipause = (function(){
     const element_drawOfferUI = document.getElementById('drawOfferUI')
     const element_acceptDraw = document.getElementById('acceptdraw')
     const element_declineDraw = document.getElementById('declinedraw')
+
+    // Whosturn
+    const element_whosturn = document.getElementById('whosturn')
     
     // Functions
 
@@ -57,6 +60,7 @@ const guipause = (function(){
     function openDrawOffer() {
         isAcceptingDraw = true;
         style.revealElement(element_drawOfferUI)
+        style.hideElement(element_whosturn)
         sound.playSound_drawOffer()
         initDrawOfferListeners()
     }
@@ -64,6 +68,7 @@ const guipause = (function(){
     function closeDrawOffer() {
         isAcceptingDraw = false;
         style.hideElement(element_drawOfferUI)
+        style.revealElement(element_whosturn)
         closeDrawOfferListeners()
     }
 
@@ -86,11 +91,12 @@ const guipause = (function(){
         const moves = gamefile.moves;
         const movesLength = parseInt(moves.length)
         const lastOffer = gamefile.LastDrawOfferMove == undefined ? 0 : gamefile.LastDrawOfferMove
+        const currentDrawOffers = gamefile.drawOffers == true
 
         const RecentDrawOffers = (movesLength == lastOffer)
         console.log(`Recent draw offers: ${RecentDrawOffers}`)
 
-        if (!onlinegame.areInOnlineGame() || RecentDrawOffers || movesLength < 2) {
+        if (!onlinegame.areInOnlineGame() || RecentDrawOffers || movesLength < 2 || currentDrawOffers) {
             element_offerDraw.classList.add('opacity-0_5')
         } else {
             console.log("allowed")
@@ -146,9 +152,7 @@ const guipause = (function(){
         if (!isPaused && !isAcceptingDraw) return;
         event = event || window.event;
         isPaused = false;
-        isAcceptingDraw = false;
         style.hideElement(element_pauseUI)
-        style.hideElement(element_drawOfferUI)
         closeListeners()
         main.renderThisFrame();
     }
@@ -190,6 +194,8 @@ const guipause = (function(){
 
     async function callback_DeclineDraw(event) {
         onlinegame.declineDraw()
+        const gamefile = game.getGamefile();
+        gamefile.drawOffers = false
         closeDrawOffer()
         statustext.showStatus(`Draw declined`, false, 2)
     }
