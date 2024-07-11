@@ -131,6 +131,27 @@ function addMember(username, newMember) {
 }
 
 /**
+ * Removes member in members file,
+ * then flags it to be saved.
+ * @param {string} username - The member's username, **in lowercase**.
+ * @returns {boolean} true if the deletion was a success.
+ */
+function removeMember(username) {
+    // Just in case
+    if (!doesMemberExist(username)) {
+        const errString = `Error deleting member. ${username} does not exist!`;
+        logEvents(errString, 'errLog.txt', {print: true});
+        return false;
+    }
+
+    // Roles are removed from within removeAccountController
+
+    delete members[username];
+    membersHasBeenEdited = true; // Flag it to be saved
+    return true; // Success
+}
+
+/**
  * Increments the login count of the user, if found,
  * then flags the members file to be saved.
  * @param {string} username - Their username, in lowercase.
@@ -334,5 +355,6 @@ module.exports = {
     constructEmailHash,
     getJoinDate,
     getLastSeen,
-    getElo
+    getElo,
+    removeMember
 }
