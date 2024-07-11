@@ -54,7 +54,7 @@ async function handleLogin(req, res) {
         
         loginAttemptData[clientIP].attempts += 1
         if(loginAttemptData[clientIP].attempts === maxLoginAttempts) {
-            loginAttemptData[clientIP].cooldownTimeSec += loginCooldownIncrementor
+            loginAttemptData[clientIP].cooldownTimeSec += loginCooldownIncrementorSec
             setTimeout(() => {
                 loginAttemptData[clientIP].attempts = 1; 
             }, loginAttemptData[clientIP].cooldownTimeSec * 1000)
