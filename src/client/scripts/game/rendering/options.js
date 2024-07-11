@@ -10,7 +10,7 @@ const options = (function() {
 
     // When enabled, your view is expanded to show what you normally can't see beyond the edge of the screen.
     // Useful for making sure rendering methods are as expected.
-    let debugMode = false // Must be toggled by calling toggleDeveloperMode()
+    let debugMode = true // Must be toggled by calling toggleDeveloperMode()
 
     let navigationVisible = true
 

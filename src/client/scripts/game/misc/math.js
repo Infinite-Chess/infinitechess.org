@@ -333,6 +333,34 @@ const math = (function() {
         return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels()
     }
 
+    function getLineIntersectionEntryTile (ax, by, c, boundingBox, corner) {
+        const { left, right, top, bottom } = boundingBox;
+        
+        // Check for intersection with left side of rectangle
+        if (corner.endsWith('left')) {
+            const yIntersectLeft = ((left * ax) + c) / by;
+            if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft]
+        }
+        
+        // Check for intersection with bottom side of rectangle
+        if (corner.startsWith('bottom')) {
+            const xIntersectBottom = (c - (bottom * by)) / ax;
+            if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom]
+        }
+
+        // Check for intersection with right side of rectangle
+        if (corner.endsWith('right')) {
+            const yIntersectRight = ((right * ax) + c) / by;
+            if (yIntersectRight >= bottom && yIntersectRight <= top) return [right, yIntersectRight];
+        }
+
+        // Check for intersection with top side of rectangle
+        if (corner.startsWith('top')) {
+            const xIntersectTop = (c - (top * by)) / ax;
+            if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
+        }
+    }
+
     // Returns point, if there is one, of a line with specified slope "b" intersection screen edge on desired corner
     function getIntersectionEntryTile (slope, b, boundingBox, corner) { // corner: "topright"/"bottomright"...
         const { left, right, top, bottom } = boundingBox;
@@ -805,6 +833,7 @@ const math = (function() {
         getBoundingBoxOfBoard,
         convertPixelsToWorldSpace_Virtual,
         convertWorldSpaceToPixels_Virtual,
+        getLineIntersectionEntryTile,
         getIntersectionEntryTile,
         convertWorldSpaceToGrid,
         euclideanDistance,
