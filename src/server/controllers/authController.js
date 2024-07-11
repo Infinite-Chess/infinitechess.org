@@ -16,6 +16,8 @@ const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 
+const maxLoginAttempts = 3;
+const loginCooldownIncrementor = 5;
 let loginAttemptData = {};
 
 /**
@@ -33,7 +35,7 @@ async function handleLogin(req, res) {
     if(!(clientIP in loginAttemptData)) {
         loginAttemptData[clientIP] = { attempts: 1, cooldownTimeSec: 0 };
     } else { // Should not continue if in cooldown
-        if (loginAttemptData[clientIP].attempts > 3) {
+        if (loginAttemptData[clientIP].attempts > maxLoginAttempts) {
             return res.status(401).json({ 'message': 'Failed to login many times, Please try again later.'});
         }
     }
@@ -51,8 +53,8 @@ async function handleLogin(req, res) {
     if (!match) {
         
         loginAttemptData[clientIP].attempts += 1
-        if(loginAttemptData[clientIP].attempts === 3) {
-            loginAttemptData[clientIP].cooldownTimeSec += 5
+        if(loginAttemptData[clientIP].attempts === maxLoginAttempts) {
+            loginAttemptData[clientIP].cooldownTimeSec += loginCooldownIncrementor
             setTimeout(() => {
                 loginAttemptData[clientIP].attempts = 1; 
             }, loginAttemptData[clientIP].cooldownTimeSec * 1000)
