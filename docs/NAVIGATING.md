@@ -26,7 +26,7 @@ The websocket server code is located [here](../src/server/wsserver.js).
 
 It has subfolders for all the HTML, CSS, JavaScript, sound and image files of the website.
 
-[src/client/views](../src/client/views) contains all our html documents.
+[src/client/views](../src/client/views) contains all our HTML documents.
 
 The routers that actually send these htmls to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
