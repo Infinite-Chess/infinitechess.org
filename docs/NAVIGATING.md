@@ -28,7 +28,7 @@ It has subfolders for all the HTML, CSS, javascript, sound and image files of th
 
 [src/client/views](../src/client/views) contains all our html documents.
 
-The routers that actually send these htmls to the client are located in [/src/server/routes/root.js](../src/server/routes/root.js).
+The routers that actually send these htmls to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
 [src/client/scripts/game/](../src/client/scripts/game/) contains all our javascipt code for running the game in the user's browser.
 
@@ -37,8 +37,8 @@ The routers that actually send these htmls to the client are located in [/src/se
 
 There are 3 automatically generated accounts for you to test with-
 - `Member`: Has basic member permissions.
-- `Patron`: Has patron-specific permissions (at the moment this holds no difference between member accounts).
-- `Owner`: Has owner permissions, allowing access to otherwise innaccessible pages, including the game's developmental version.
+- `Patron`: Has patron-specific permissions (at the moment this holds no difference to member accounts).
+- `Owner`: Has owner permissions (at the moment this holds no difference to member accounts).
 
 The password for every one of these accounts is `1`.
 
