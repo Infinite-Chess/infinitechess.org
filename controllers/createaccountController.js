@@ -16,6 +16,9 @@ const { addMember, getMemberData, constructEmailHash, doesMemberExist } = requir
 const { logEvents } = require('../middleware/logEvents');
 const { isEmailBanned } = require('../middleware/banned')
 
+/** Default elo for new users */
+const starting_elo = require('../config/eloOptions.js').starting_elo;
+
 const emailHash = constructEmailHash();
 
 /**
@@ -135,7 +138,7 @@ async function generateAccount({ username, email, password, autoVerify }) {
         joined: date,
         logins: 0,
         seen: date,
-        elo: 1200,
+        elo: starting_elo
         // , bio: ''
     };
     if (!autoVerify) newMember.verified = [false, generateID(24)]
