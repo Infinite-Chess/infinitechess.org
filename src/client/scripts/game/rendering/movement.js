@@ -153,7 +153,7 @@ const movement = (function() {
         checkIfBoardDropped() // Needs to be before exiting from teleporting
 
         if (transition.areWeTeleporting()) return; // Exit if teleporting
-        if (guipromotion.isUIOpen()) { // User needs to select a promotion piece, dont update navigation
+        if (guipromotion.isUIOpen()) { // User needs to select a promotion piece, don't update navigation
             decceleratePanVel()
             deccelerateScaleVel()
             return; 

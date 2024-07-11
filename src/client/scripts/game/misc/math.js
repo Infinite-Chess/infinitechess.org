@@ -263,7 +263,7 @@ const math = (function() {
 
     // Returns [x,y], primed to add to buffer data.
     // This function is used to calculate highlightline buffer data!
-    // It works by, if the coord is off screen, snapping it to the nearest screen edge! 
+    // It works by, if the coord is off-screen, snapping it to the nearest screen edge! 
     // We can't render arbitrarily far so let's stop at the edge of the screen.
     function convertCoordToWorldSpace_ClampEdge(coords) {
 
@@ -423,7 +423,7 @@ const math = (function() {
      * Returns true if the coordinates are equal
      * @param {number[]} coord1 [x,y]
      * @param {number[]} coord2 [x,y]
-     * @returns {boolean} Whether or not the coordinates are equal
+     * @returns {boolean} whether the coordinates are equal
      */
     function areCoordsEqual(coord1, coord2) {
         if (!coord2 || !coord2) return false; // One undefined, can't be equal

@@ -102,7 +102,7 @@ const input = (function(){
 
         overlayElement.addEventListener("contextmenu", (event) => {
             event = event || window.event;
-            // Context menu on discord icon doesnt work
+            // Context menu on discord icon doesn'ŧ work
             const isOverlay = event.target.id === 'overlay';
             if (isOverlay) event.preventDefault(); // Stop the contextual (right-click) menu from popping up.
         })
@@ -131,7 +131,7 @@ const input = (function(){
 
             // NEED preventDefault() to prevent Chrome swipe down to refresh, swipe from left to go back, and prevent 5fps when pinch zooming!!
             // ... But only preventDefault() if the target is NOT a button!
-            // Context menu on discord icon doesnt work
+            // Context menu on discord icon doesn'ŧ work
             // const isButton = typeof event.target.className !== 'string' || event.target.className.includes('button');
             const isButton = typeof event.target.className === 'string' && event.target.className.includes('button');
             const clickedOverlay = event.target.id === 'overlay';

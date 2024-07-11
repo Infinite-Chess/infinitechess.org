@@ -5,7 +5,7 @@
  * https://github.com/tsevasa/infinite-chess-notation
  * 
  * This script converts primed gamefiles from JSON notation to a
- * compact ICN (Infinite Chess Noation) and back, still human readable,
+ * compact ICN (Infinite Chess Noation) and back, still human-readable,
  * but taking less space to describe positions.
  */
 
@@ -759,7 +759,7 @@ const formatconverter = (function() {
     /**
      * Accepts a gamefile's starting position, pawnDoublePush and castleWith gamerules, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
      * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
-     * @param {boolean} pawnDoublePush - Whether or not pawns are allowed to double push
+     * @param {boolean} pawnDoublePush - whether pawns are allowed to double push
      * @param {string | undefined} castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"),
      * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
      */
@@ -774,7 +774,7 @@ const formatconverter = (function() {
      * 
      * This can be manually used to compress the starting position of variants of InfiniteChess.org to shrink the size of the code
      * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
-     * @param {boolean} pawnDoublePush - Whether or not pawns are allowed to double push
+     * @param {boolean} pawnDoublePush - whether pawns are allowed to double push
      * @param {string | undefined} castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
      * @returns {Object} The specialRights gamefile property, in the form 'x,y':true, where true means the piece at that location has their special move ability (pawn double push, castling rights..)
      */
@@ -965,7 +965,7 @@ const formatconverter = (function() {
     //     console.log(`\n\nCompressing of a variant's starting position example:\n\n${JSON.stringify(b)}`)
 
     //     // Speed test, put large position in "longposition.txt"
-    //     const fs = require('fs'); // supported in NodeJS
+    //     const fs = require('fs'); // supported in Node.js
     //     fs.readFile("longposition.txt", (err, data) => {
     //         if (err) return;
     //         const gameExampleLong = JSON.parse(data);

@@ -12,6 +12,15 @@ const gamefileutility = (function(){
     /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
     const pieceCountToDisableCheckmate = 50_000;
 
+    /**
+	 * Gives the count of pieces with piece type `pieceType` in the given gamefile.
+	 * @param {gamefile} gamefile
+	 * @param {string} pieceType 
+	 * @returns {number} - amount of pieces with piece type `pieceType` in gamefile
+	 */
+	function getPieceAmount (gamefile, pieceType) {
+		return gamefile.ourPieces[pieceType].length - gamefile.ourPieces[pieceType].undefineds.length;
+	}
 
     // Iterates through EVERY piece in the game state, and performs specified function on the type.
     // Callback parameters should be: (type, coords, gamefile)
@@ -180,7 +189,7 @@ const gamefileutility = (function(){
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} An object containing various properties:
      * - `concludeGameIfOver`: If true, we will not stop the clocks, darken the board, display who won, or play a sound effect. Default: *true*. `simulated` MUST ALSO BE FALSE.
-     * - `simulated`: Whether or not you plan on undo'ing this move. We don't conclude the game. Default: *false*
+     * - `simulated`: whether you plan on undo'ing this move. We don't conclude the game. Default: *false*
      */
     function updateGameConclusion(gamefile, { concludeGameIfOver = true, simulated = false } = {}) {
         gamefile.gameConclusion = wincondition.getGameConclusion(gamefile)
@@ -193,7 +202,7 @@ const gamefileutility = (function(){
      * @param {gamefile} gamefile - The gamefile
      * @param {string} [conclusion] - Optional. The conclusion string. For example, "white checkmate".
      * @param {Object} options - An object that may contain the following properties (all are default TRUE):
-     * - `requestRemovalFromActiveGames`: Whether or not to request the server to remove us from the player-in-active-games list, to allow us to join a new game.
+     * - `requestRemovalFromActiveGames`: whether to request the server to remove us from the player-in-active-games list, to allow us to join a new game.
      */
     function concludeGame(gamefile, conclusion = gamefile.gameConclusion, { requestRemovalFromActiveGames = true } = {}) {
         gamefile.gameConclusion = conclusion;
@@ -429,7 +438,12 @@ const gamefileutility = (function(){
         return royalCoords;
     }
 
-    // Returns an number of the royals a side has
+	/**
+	 * Returns an number of the royal pieces a side has
+	 * @param {gamefile.piecesOrganizedByKey} piecesByKey - Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }`
+	 * @param {string} color - `white` | `black` | `neutral` a string that represents the color of pieces the function will return
+	 * @returns {number} the count of the royal pieces of color `color`
+	 */
     function getRoyalCountOfColor(piecesByKey, color) {
         const royals = pieces.royals; // ['kings', ...]
         const WorB = math.getWorBFromColor(color);
@@ -460,6 +474,7 @@ const gamefileutility = (function(){
 
     return Object.freeze({
         pieceCountToDisableCheckmate,
+        getPieceAmount,
         forEachPieceInGame,
         forEachPieceInPiecesByType,
         forEachPieceInKeysState,

@@ -435,7 +435,7 @@ function informThemGameAborted(ws, isPrivate, inviteID) {
 }
 
 // Returns true if atleast 1 public invite was changed
-function deleteUsersExistingInvite(ws) { // Set dontBroadcastChange to true if you broadcast the change outside of this.
+function deleteUsersExistingInvite(ws) { // Set don'tBroadcastChange to true if you broadcast the change outside of this.
     let deleted1PublicInvite = false;
     if (ws.metadata.user) {
         const member = ws.metadata.user;

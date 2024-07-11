@@ -117,7 +117,7 @@ emailInputElement.addEventListener('input', (event) => { // When email field cha
     updateSubmitButton();
 })
 emailInputElement.addEventListener('focusout', (event) => { // Check email availability...
-    // It's it's blank, all the server would send back is the createaccount.html again..
+    // If it's blank, all the server would send back is the createaccount.html again..
     if (emailInputElement.value.length > 1 && !emailHasError) { 
         fetch(`/createaccount/email/${emailInputElement.value}`)
         .then((response) => response.json())

@@ -35,7 +35,7 @@ const requestWindowToToggleAttackModeMillis = 2000;
 const requestCapToToggleAttackMode = 200;
 
 /**
- * Whether or not we think we're currently experiencing a DDOS.
+ * whether we think we're currently experiencing a DDOS.
  * When true, in the future we can strictly limit what actions users can request/perform!
  * 
  * Ideas:

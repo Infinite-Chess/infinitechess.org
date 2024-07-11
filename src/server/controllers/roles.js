@@ -114,13 +114,13 @@ function giveRole_Patron(user, description) {
 }
 
 /**
- * Deletes a user's role.
+ * Deletes a user's roles. Call before deleting their account.
  * @param {string} user - Their username, in lowercase.
  */
-function removeRole(user) {
+function removeAllRoles(user) {
     delete roles.owners[user];
     delete roles.patrons[user];
-    rolesHaveBeenEdited = true;
+    rolesHaveBeenEdited = true; // Flag to be saved
 }
 
 module.exports = {
@@ -129,5 +129,5 @@ module.exports = {
     setRoleWebSocket,
     giveRole_Owner,
     giveRole_Patron,
-    removeRole
+    removeAllRoles
 }

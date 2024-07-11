@@ -71,7 +71,7 @@ const area = (function() {
         const navHeight = topNavHeight + bottomNavHeight;
         const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
         
-        // Round to furthest away edge of the square.
+        // Round to the furthest away edge of the square.
         const squareCenter = board.gsquareCenter();
         boxCopy.left -= squareCenter
         boxCopy.right += 1 - squareCenter
@@ -194,7 +194,7 @@ const area = (function() {
     /**
      * Tells {@link transition} where to teleport to based off the provided area object.
      * @param {Area} thisArea - The area object to teleport to
-     * @param {boolean} ignoreHistory - Whether or not to forget adding this teleport to the teleport history.
+     * @param {boolean} ignoreHistory - whether to forget adding this teleport to the teleport history.
      */
     function initTelFromArea(thisArea, ignoreHistory) {
         if (!thisArea) return console.error("Cannot init teleport from an undefined area.");

@@ -4,3 +4,6 @@ cert
 database
 logs
 dist
+
+# JetBrains IDEs
+.idea/

@@ -1,4 +1,4 @@
-// This script handles the rendering of arrows poointing to pieces off screen
+// This script handles the rendering of arrows poointing to pieces off-screen
 // and detects if they are clicked
 
 "use strict";
@@ -28,7 +28,7 @@ const arrows = (function() {
      * 0 = Off, 1 = Defense, 2 = All */
     let mode = 1;
 
-    /**  Whether or not our mouse is currently hovering over one arrow indicator.
+    /**  whether our mouse is currently hovering over one arrow indicator.
      * Could be used to cancel other mouse events. */
     let hovering = false;
 
@@ -68,7 +68,7 @@ const arrows = (function() {
 
         hovering = false;
 
-        // How do we find out what pieces are off screen?
+        // How do we find out what pieces are off-screen?
 
         // If any part of the square is on screen, this box rounds to it.
         const boundingBox = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox() 
@@ -106,7 +106,7 @@ const arrows = (function() {
 
             if (!coords) return;
 
-            // Is the piece off screen?
+            // Is the piece off-screen?
 
             if (math.boxContainsSquare(boundingBox, coords)) return;
 
@@ -120,7 +120,7 @@ const arrows = (function() {
                 const rightSide = x > boundingBox.right;
 
                 if (rightSide) {
-                    // What is the current piece on the right side? Is this piece more left than it? Dont render both
+                    // What is the current piece on the right side? Is this piece more left than it? Don't render both
                     if (!horzRight[y]) horzRight[y] = { type, coords }
                     else if (x < horzRight[y].coords[0]) horzRight[y] = { type, coords }
                 } else { // Left side

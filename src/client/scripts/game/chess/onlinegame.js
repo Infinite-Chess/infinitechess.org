@@ -5,14 +5,14 @@
 
 const onlinegame = (function(){
 
-    /** Whether or not we are currently in an online game. */
+    /** whether we are currently in an online game. */
     let inOnlineGame = false
     let gameID;
     let isPrivate;
     let ourColor; // white/black
 
     /**
-     * Whether or not we are in sync with the game on the server.
+     * whether we are in sync with the game on the server.
      * If false, we do not submit our move. (move auto-submitted upon resyncing)
      * Set to false whenever the socket closes, or we unsub from the game.
      * Set to true whenever we join game, or successfully resync.

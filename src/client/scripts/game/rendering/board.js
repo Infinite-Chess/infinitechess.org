@@ -20,7 +20,7 @@ const board = (function(){
      * @type {BufferModel} */
     let darkTilesModel; // The dark tile color is rendered on the screen underneath the white tiles (transparent image)
 
-    let tileWidth_Pixels; // Width of tiles in physical, not virtual screen pixels (greater for retina displays). Dependant on board scale.
+    let tileWidth_Pixels; // Width of tiles in physical, not virtual screen pixels (greater for retina displays). Dependent on board scale.
 
     let tile_MouseOver_Float; // [x, y]  The board location of the mouse, in floats.
     let tile_MouseOver_Int; // [x, y]  The board location of the mouse, rounded to nearest tile.
@@ -43,7 +43,7 @@ const board = (function(){
 
     const perspectiveMode_z = -0.01;
 
-    const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesnt break
+    const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesn'ŧ break
     //const limitToDampScale = 0.15; // FOR RECORDING. This slows down very fast.
 
     let whiteTiles; // [r,g,b,a]

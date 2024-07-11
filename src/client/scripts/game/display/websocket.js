@@ -452,7 +452,7 @@ const websocket = (function(){
      * @param {string} route - Where the server needs to forward this to. general/invites/game
      * @param {string} action - What action to take within the route.
      * @param {*} value - The contents of the message
-     * @param {boolean} isUserAction - Whether or not this message is a direct result of a user action. If so, and we happen to receive the "Too many requests" error, then that will be displayed on screen. Default: false
+     * @param {boolean} isUserAction - whether this message is a direct result of a user action. If so, and we happen to receive the "Too many requests" error, then that will be displayed on screen. Default: false
      * @param {Function} [onreplyFunc] An optional function to execute when we receive the server's response to this message, or to execute immediately if we can't establish a socket, or after 5 seconds if we don't hear anything back.
      * @returns {boolean} *true* if the message was able to send.
      */
