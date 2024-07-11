@@ -524,7 +524,7 @@ const gamemanager = (function() {
         }
 
         cancelDisconnectTimer(game, colorPlayingAs)
-
+        reinformPlayerAboutDrawOffers(game, colorPlayingAs)
         subscribeClientToGame(game, ws, colorPlayingAs)
     }
 
@@ -814,6 +814,8 @@ const gamemanager = (function() {
 
         if (game.moves.length <= game.drawOfferMove) return console.error("Client trying to offer a draw twice on the same move")
         
+        if (game.moves.length < 2) return console.error("Client trying to offer a draw on the first 2 moves")
+        
         // Update the status of game
         if (color === 'white') {
             game.whiteDrawOffer = 'offered'
@@ -890,6 +892,29 @@ const gamemanager = (function() {
 
         // Alert their opponent
         sendMessageToSocketOfColor(game, opponentColor, 'game', 'declinedraw')
+    }
+
+    /**
+     * Reinforms the player about draw offers after page refresh
+     * @param {Game} game The game in which the player is
+     * @param {WebSocket} ws The websocket to inform
+     */
+    function reinformPlayerAboutDrawOffers(game, ws) {
+        const color = doesSocketBelongToGame_ReturnColor(game, ws);
+        if (hasGameDrawOffer(game)) {
+            if (color == 'white') {
+                if (game.blackDrawOffer == 'offered') {
+                    const value = { offererColor: 'black' }
+                    sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
+                }
+            } else if (color == 'black') {
+                if (game.whiteDrawOffer == 'offered') {
+                    const value = { offererColor: 'white' }
+                    sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
+                }
+            }
+
+        }
     }
 
     /**

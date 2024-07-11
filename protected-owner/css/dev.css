@@ -1260,10 +1260,10 @@ button.join-button, button.copy-button {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: rgba(0, 0, 0, 0.849);
-    padding: 15vh;
-    padding-left: 35vh;
-    padding-right: 35vh;
+    background-color: rgba(0, 0, 0, 0.564);
+    padding: 20vh;
+    padding-left: 40vh;
+    padding-right: 40vh;
     display: flex;
     flex-direction: column;
     gap: min(3vw, 32px);

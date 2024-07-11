@@ -210,8 +210,9 @@ const gamefileutility = (function(){
         if (wincondition.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
         clock.stop()
         main.renderThisFrame();
-        board.darkenColor()
-        guigameinfo.gameEnd(gamefile.gameConclusion)
+        board.darkenColor();
+        guigameinfo.gameEnd(gamefile.gameConclusion);
+        guipause.disableDrawOfferButton();
         onlinegame.cancelAFKTimer();
         onlinegame.cancelFlashTabTimer();
         onlinegame.cancelMoveSound();

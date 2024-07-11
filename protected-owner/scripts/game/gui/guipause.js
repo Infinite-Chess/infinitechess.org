@@ -90,12 +90,16 @@ const guipause = (function(){
         const RecentDrawOffers = (movesLength == lastOffer)
         console.log(`Recent draw offers: ${RecentDrawOffers}`)
 
-        if (!onlinegame.areInOnlineGame() || RecentDrawOffers) {
+        if (!onlinegame.areInOnlineGame() || RecentDrawOffers || movesLength < 2) {
             element_offerDraw.classList.add('opacity-0_5')
         } else {
             console.log("allowed")
             element_offerDraw.classList.remove('opacity-0_5')
         }
+    }
+
+    function disableDrawOfferButton() {
+        element_offerDraw.classList.add('opacity-0_5')
     }
 
     function changeTextOfMainMenuButton() {
@@ -218,6 +222,7 @@ const guipause = (function(){
         closeDrawOffer,
         toggle,
         changeTextOfMainMenuButton,
+        disableDrawOfferButton,
         callback_Resume,
         callback_TogglePointers,
         callback_OfferDraw,
