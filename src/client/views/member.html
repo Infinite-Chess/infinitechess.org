@@ -44,12 +44,19 @@
                     <p><strong>Joined: </strong><spam id="joined"></spam></p>
                     <p><strong>Seen: </strong><spam id="seen"></spam> ago</p>
                 </section>
-                <button id="show-account-info" class="hidden" onclick="showAccountInfo()">Show Account Info</button>
-                <section id="accountinfo" class="hidden">
-                    <h6 class="center">Account Info</h6>
-                    <p><strong>Email: </strong><spam id="email">insert email here</spam></p>
-                </section>
-                <p id="change" class="hidden center">To change your username, email, password, or to delete your account, <a href="mailto:infinitechess.org@gmail.com">contact us.</a></p>
+                <div id="content-container">
+                    <div style="flex-grow: 1;">
+                        <button id="show-account-info" class="hidden action-button" onclick="showAccountInfo()">Show Account Info</button>
+                        <section id="accountinfo" class="hidden">
+                            <h6 class="center">Account Info</h6>
+                            <p><strong>Email: </strong><spam id="email">insert email here</spam></p>
+                        </section>
+                    </div>
+                    <div style="flex-grow: 0;">
+                        <button id="delete-account" class="hidden action-button" onclick="removeAccount()">Delete account</button>
+                    </div>
+                </div>
+                <p id="change" class="hidden center">To change your username, email or password, <a href="mailto:infinitechess.org@gmail.com">contact us.</a></p>
             </div>
             <script src="/scripts/member.js"></script>
         </main>
