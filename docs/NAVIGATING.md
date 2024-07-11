@@ -2,12 +2,12 @@
 
 This guide gives you several pointers on how to navigate the project. The entire source code of the project is located in [src](../src/).
 
-It is assumed you have already gone through the [Setup](./SETUP.md) process. Whenever you run `nodemon`, [build.mjs](../build.mjs) automatically deploys and minifies all clientside assets of the project from [src](../src/) to the newly created folder, `dist`, and an infinite chess server at `https://localhost:3443` is launched.
+It is assumed you have already gone through the [Setup](./SETUP.md) process. Whenever you run `nodemon`, [build.mjs](../build.mjs) automatically deploys and minifies all clientside assets of the project from [src](../src/) to the newly created folder `dist`, and an infinite chess server at `https://localhost:3443` is launched.
 
 
 ## Server ##
 
-[Server](../src/server/) contains all serverside files of the website.
+[src/server](../src/server/) contains all serverside files of the website.
 
 Everything starts running from [server.js](../src/server/server.js)!
 
@@ -22,7 +22,7 @@ The websocket server code is located [here](../src/server/wsserver.js).
 
 ## Client ##
 
-[Client](../src/client/) contains all clientside files of the website.
+[src/client](../src/client/) contains all clientside files of the website.
 
 It has subfolders for all the HTML, CSS, javascript, sound and image files of the website.
 
@@ -38,7 +38,7 @@ The routers that actually send these htmls to the client are located in [src/ser
 There are 3 automatically generated accounts for you to test with-
 - `Member`: Has basic member permissions.
 - `Patron`: Has patron-specific permissions (at the moment this holds no difference to member accounts).
-- `Owner`: Has owner permissions (at the moment this holds no difference to member accounts).
+- `Owner`: Has owner-specific permissions (at the moment this holds no difference to member accounts).
 
 The password for every one of these accounts is `1`.
 
