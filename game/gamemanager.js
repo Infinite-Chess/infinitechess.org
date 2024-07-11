@@ -18,6 +18,8 @@ const formatconverter1 = require('./formatconverter1');
 const statlogger = require('./statlogger');
 const { executeSafely_async } = require('../utility/errorGuard');
 const { ensureJSONString } = require('../utility/JSONUtils');
+const { getNewRating } = require('../utility/eloCalculation')
+const elo_factor = require('../config/eloOptions.js').KFactor;
 
 const gamemanager = (function() {
 
@@ -1444,6 +1446,14 @@ const gamemanager = (function() {
 
         // Set a 5-second timer to delete it and change elos,
         // to give the other client time to oppose the conclusion if they want.
+
+        // Elo calculation (work in progress)
+        /*const whiteElo = 900 // white elo here
+        const blackElo = 1200 // black elo here
+        const gameConclusion = 1 // 1 white won, 0 black won, 0.5 draw
+        const newWhiteElo = getNewRating(whiteElo, blackElo, gameConclusion, elo_factor)
+        const newBlackElo = getNewRating(blackElo, whiteElo, 1 - gameConclusion, elo_factor)*/
+
         clearTimeout(game.deleteTimeoutID); // Cancel first, in case a hacking report just ocurred.
         game.deleteTimeoutID = setTimeout(deleteGame, timeBeforeGameDeletionMillis, game.id)
     }
