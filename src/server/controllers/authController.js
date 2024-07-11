@@ -31,33 +31,38 @@ let loginAttemptData = {};
 async function handleLogin(req, res) {
     if (!verifyBodyHasLoginFormData(req)) return; // If false, it will have already sent a response.
 
-    clientIP = getClientIP(req);
-    if(!(clientIP in loginAttemptData)) {
-        loginAttemptData[clientIP] = { attempts: 1, cooldownTimeSec: 0 };
-    } else { // Should not continue if in cooldown
-        if (loginAttemptData[clientIP].attempts > maxLoginAttempts) {
-            return res.status(401).json({ 'message': 'Failed to login many times, Please try again later.'});
-        }
-    }
     
     let { username, password } = req.body;
     const usernameLowercase = username.toLowerCase();
     const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
     const hashedPassword = getHashedPassword(usernameLowercase);
-    
+
     if (!usernameCaseSensitive || !hashedPassword) return res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
     
-    
+    clientIP = getClientIP(req);
+    if(!(clientIP in loginAttemptData)) {
+        loginAttemptData[clientIP] = {};
+    }
+
+    if(!(usernameLowercase in loginAttemptData[clientIP])) {
+        loginAttemptData[clientIP][usernameLowercase] = { attempts: 1, cooldownTimeSec: 0 };
+    }
+
+    // Im not sure about all this case sensetive, I guess it's display name so I will use the lowercase one ;)
+    if (loginAttemptData[clientIP][usernameLowercase].attempts > maxLoginAttempts) {
+        return res.status(401).json({ 'message': 'Failed to login many times, Please try again later.'});
+    }
+
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
         
-        loginAttemptData[clientIP].attempts += 1
-        if(loginAttemptData[clientIP].attempts === maxLoginAttempts) {
-            loginAttemptData[clientIP].cooldownTimeSec += loginCooldownIncrementorSec
+        loginAttemptData[clientIP][usernameLowercase].attempts += 1
+        if(loginAttemptData[clientIP][usernameLowercase].attempts === maxLoginAttempts) {
+            loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec += loginCooldownIncrementorSec
             setTimeout(() => {
-                loginAttemptData[clientIP].attempts = 1; 
-            }, loginAttemptData[clientIP].cooldownTimeSec * 1000)
+                loginAttemptData[clientIP][usernameLowercase].attempts = 1; 
+            }, loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec * 1000)
         }
         
         console.log(`Incorrect password for user ${usernameCaseSensitive}!`)
@@ -65,7 +70,12 @@ async function handleLogin(req, res) {
         return;
     }
     
-    delete loginAttemptData[clientIP];
+    delete loginAttemptData[clientIP][usernameLowercase];
+    
+    // We don't want to save the data forever
+    if (loginAttemptData[clientIP] == {}) {
+        delete loginAttemptData[clientIP];
+    }
     
     // The payload can be an object with their username and their roles.
     const payload = { "username": usernameLowercase };
