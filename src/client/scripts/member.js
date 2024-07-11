@@ -19,6 +19,7 @@ const element_member = document.getElementsByClassName('member')[0];
 const element_memberName = document.getElementById('membername');
 
 const element_showAccountInfo = document.getElementById('show-account-info') // Button
+const element_deleteAccount = document.getElementById('delete-account')
 const element_accountInfo = document.getElementById('accountinfo');
 const element_email = document.getElementById('email')
 const element_change = document.getElementById('change')
@@ -107,6 +108,8 @@ function loadMemberData (loggedInAs) {
 
             // Display email
             revealElement(element_showAccountInfo)
+            // Display remove button
+            revealElement(element_deleteAccount)
             // revealElement(element_accountInfo)
             revealElement(element_change)
             element_email.textContent = result.email;
@@ -120,6 +123,31 @@ function loadMemberData (loggedInAs) {
 function showAccountInfo() {
     hideElement(element_showAccountInfo) // Button
     revealElement(element_accountInfo)
+}
+
+function removeAccount() {
+    if (confirm("Are you sure you want to delete your account?")) {
+        const config = { // Send with our access token
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            credentials: 'same-origin', // Allows cookie to be set from this request
+        };
+
+        fetch(`/member/${member}/delete`, config).then(response => {
+            if (response.status !== 301) {
+                console.error(response);
+                window.location = '/404';
+            }
+            
+            // Accept redirect
+            if (response.redirected) {
+                window.location.href = response.url;
+            }
+        });
+    }
 }
 
 function resendConfirmEmail () {

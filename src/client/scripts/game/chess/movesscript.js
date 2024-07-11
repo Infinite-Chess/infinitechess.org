@@ -16,7 +16,7 @@ function Move() {
     this.startCoords = undefined;
     /** The end coordinates of the piece: `[x,y]`  */
     this.endCoords = undefined;
-    /** The type of piece captured (e.g. `knightsB`), if one was made. */
+    /** The type of piece captured (e.g. `knightsB`), if one was made. @type {string} */
     this.captured = undefined;
     /** Whether the move delivered check. */
     this.check = undefined;
