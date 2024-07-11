@@ -971,6 +971,18 @@ button.join-button, button.copy-button {
     font-weight: bold;
 }
 
+.moveabovedrawoffer {
+    transform: translate(0%, -100%);
+    left: 30vw;
+    right: 30vw;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0px -1px 7px 0px rgba(0, 0, 0, 0.659);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.307), white, rgba(255, 255, 255, 0.84));    
+    backdrop-filter: blur(8px); /* Apply a blur effect to the background */
+    -webkit-backdrop-filter: blur(5px); /* Fixes blur for Safari */
+}
+
 .dotwhite, .dotblack {
     border: 1px solid black;
     width: 22px;
@@ -1269,10 +1281,15 @@ button.join-button, button.copy-button {
     font-size: 30px;
     font-family: "Open Sans";
     font-weight: bold;
-    /*padding: 15px;*/
     gap: 15px;
     height: 100%;
+    width: 60%;
+    margin-left: 20%;
+    margin-right: 20%;
     z-index: 1;
+    /*transform: translate(0%, -100%);*/
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
 }
 
 .drawOfferUI p.offertitle, .drawOfferUI button {
@@ -1284,9 +1301,6 @@ button.join-button, button.copy-button {
     text-align: center;
     vertical-align: middle;
     line-height: 100%;
-    font-weight: bold;
-    top: 50%;
-    bottom: 50;
 }
 
 .drawOfferUI button {

@@ -27,7 +27,8 @@ const guipause = (function(){
     const element_declineDraw = document.getElementById('declinedraw')
 
     // Whosturn
-    const element_whosturn = document.getElementById('whosturn')
+    const element_whosturn = document.querySelector('.whosturn')
+    console.log("whosturn", element_whosturn)
     
     // Functions
 
@@ -43,7 +44,7 @@ const guipause = (function(){
      */
     function areWeAcceptingDraw() { return isAcceptingDraw; }
 
-    function gelement_perspective() {
+    function getelement_perspective() {
         return element_perspective;
     }
 
@@ -60,7 +61,7 @@ const guipause = (function(){
     function openDrawOffer() {
         isAcceptingDraw = true;
         style.revealElement(element_drawOfferUI)
-        style.hideElement(element_whosturn)
+        element_whosturn.classList.add('moveabovedrawoffer')
         sound.playSound_drawOffer()
         initDrawOfferListeners()
     }
@@ -68,7 +69,7 @@ const guipause = (function(){
     function closeDrawOffer() {
         isAcceptingDraw = false;
         style.hideElement(element_drawOfferUI)
-        style.revealElement(element_whosturn)
+        element_whosturn.classList.remove('moveabovedrawoffer')
         closeDrawOfferListeners()
     }
 
@@ -222,7 +223,7 @@ const guipause = (function(){
     return Object.freeze({
         areWePaused,
         areWeAcceptingDraw,
-        gelement_perspective,
+        getelement_perspective,
         open,
         openDrawOffer,
         closeDrawOffer,

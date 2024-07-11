@@ -236,7 +236,8 @@ const gamefileutility = (function(){
         }
 
         selection.unselectPiece();
-        guipause.changeTextOfMainMenuButton()
+        guipause.changeTextOfMainMenuButton();
+        guipause.closeDrawOffer();
         setConditionMetadata(gamefile);
     }
 

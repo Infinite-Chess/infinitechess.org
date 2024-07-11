@@ -9,7 +9,7 @@ const DEV_BUILD = true;
 
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
-const ARE_RATE_LIMITING = true; // Set to false to temporarily get around it, during development.
+const ARE_RATE_LIMITING = false; // Set to false to temporarily get around it, during development.
 
 /** The domain name of the production website. */
 const HOST_NAME = 'www.infinitechess.org';
