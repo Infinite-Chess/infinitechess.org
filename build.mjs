@@ -48,11 +48,15 @@ for (const file of clientFiles) {
   const code = await readFile(filePath, 'utf8');
   const minified = await minify(code, {
     mangle: false, // Disable variable name mangling
-    compress: true // Enable compression
+    compress: true, // Enable compression
+	sourceMap: true
   });
 
   filesToWrite.push(
     writeFile(filePath, minified.code, 'utf8')
+  );
+  filesToWrite.push(
+	writeFile(filePath + ".map", minified.map, "utf8")
   );
 }
 
