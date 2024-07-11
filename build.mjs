@@ -1,8 +1,7 @@
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
 import { minify } from "terser";
-
-/** Whether to generate source maps */
-const generateMaps = true;
+import { DEV_BUILD } from "./src/server/config/config.js";
+import { exit } from "node:process";
 
 /**
  * 
@@ -38,6 +37,8 @@ await copy("./src/client", "./dist", {
   force: true,
 });
 
+if (DEV_BUILD) exit();
+
 const clientScript = await getExtFiles("./src/client/scripts", ".js");
 const clientStyle = []; // await getExtFiles("./src/client/css", ".css");
 
@@ -52,17 +53,11 @@ for (const file of clientFiles) {
   const minified = await minify(code, {
     mangle: true, // Disable variable name mangling
     compress: true, // Enable compression
-	  sourceMap: generateMaps
   });
 
   filesToWrite.push(
-    writeFile(filePath, minified.code, 'utf8')
+    writeFile(filePath, minified.code, 'utf8'),
   );
-  if (generateMaps) {
-    filesToWrite.push(
-      writeFile(filePath + ".map", minified.map, "utf8")
-    );
-  }
 }
 
 await Promise.all(filesToWrite);
