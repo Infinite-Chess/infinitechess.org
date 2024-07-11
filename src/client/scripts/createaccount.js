@@ -167,7 +167,7 @@ passwordInputElement.addEventListener('input', (event) => { // When password fie
     if (formatError) {
         passwordError.textContent = 'Password is in an incorrect format';
     } else if (lengthError) {
-        passwordError.textContent = 'Password must be more than 6 characters long';
+        passwordError.textContent = 'Password must be at least 6 characters long';
     } else if (containsPasswordError) {
         passwordError.textContent = "Password must not be 'password'";
     }
