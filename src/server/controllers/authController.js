@@ -9,11 +9,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const { getUsernameCaseSensitive, getHashedPassword, addRefreshToken, incrementLoginCount, updateLastSeen } = require('./members');
+const { getClientIP } = require('../middleware/IP');
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
+
+let loginAttemptData = {};
 
 /**
  * Called when the login page submits login form data.
@@ -26,33 +29,54 @@ const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 async function handleLogin(req, res) {
     if (!verifyBodyHasLoginFormData(req)) return; // If false, it will have already sent a response.
 
+    clientIP = getClientIP(req);
+    if(!(clientIP in loginAttemptData)) {
+        loginAttemptData[clientIP] = { attempts: 1, cooldownTimeSec: 0 };
+    } else { // Should not continue if in cooldown
+        if (loginAttemptData[clientIP].attempts > 3) {
+            return res.status(401).json({ 'message': 'Failed to login many times, Please try again later.'});
+        }
+    }
+    
     let { username, password } = req.body;
     const usernameLowercase = username.toLowerCase();
     const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
     const hashedPassword = getHashedPassword(usernameLowercase);
-
+    
     if (!usernameCaseSensitive || !hashedPassword) return res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
-
+    
+    
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
+        
+        loginAttemptData[clientIP].attempts += 1
+        if(loginAttemptData[clientIP].attempts === 3) {
+            loginAttemptData[clientIP].cooldownTimeSec += 5
+            setTimeout(() => {
+                loginAttemptData[clientIP].attempts = 1; 
+            }, loginAttemptData[clientIP].cooldownTimeSec * 1000)
+        }
+        
         console.log(`Incorrect password for user ${usernameCaseSensitive}!`)
         res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
         return;
     }
- 
+    
+    delete loginAttemptData[clientIP];
+    
     // The payload can be an object with their username and their roles.
     const payload = { "username": usernameLowercase };
     const { accessToken, refreshToken } = signTokens(payload);
-
+    
     // Save the refresh token with current user so later when they log out we can invalidate it.
     addRefreshToken(usernameLowercase, refreshToken);
-
+    
     createRefreshTokenCookie(res, refreshToken)
-
+    
     // Update our member's statistics in their data file!
     updateMembersInfo(usernameLowercase);
-
+    
     // Finally, send the access token! On front-end, don't store it anywhere except memory.
     res.json({ accessToken });
 
