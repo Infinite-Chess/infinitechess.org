@@ -3,6 +3,9 @@ import { minify } from "terser";
 import { DEV_BUILD } from "./src/server/config/config.js";
 import { exit } from "node:process";
 
+/** Whether to generate source maps in production */
+const generateSourceMapsInProduction = false;
+
 /**
  * 
  * @param {string} path 
@@ -68,16 +71,16 @@ for (const file of clientFiles) {
   const minified = await minify(minifyInput, {
     mangle: true, // Disable variable name mangling
     compress: true, // Enable compression
-    sourceMap: {
+    sourceMap: generateSourceMapsInProduction ? {
       includeSources: true,
       url: `${getFilenamePath(file)}.map`,
-    }
+    } : false
   });
 
-  filesToWrite.push(
-    writeFile(`./dist/${file}`, minified.code, 'utf8'),
-    writeFile(`./dist/${file}.map`, minified.map, 'utf8')
-  );
+  filesToWrite.push(writeFile(`./dist/${file}`, minified.code, 'utf8'));
+  if (generateSourceMapsInProduction) {
+    filesToWrite.push(writeFile(`./dist/${file}.map`, minified.map, 'utf8') )
+  }
 }
 
 await Promise.all(filesToWrite);
