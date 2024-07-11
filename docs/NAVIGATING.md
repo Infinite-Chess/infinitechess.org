@@ -30,7 +30,7 @@ It has subfolders for all the HTML, CSS, JavaScript, sound and image files of th
 
 The routers that actually send these htmls to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
-[src/client/scripts/game/](../src/client/scripts/game/) contains all our javascipt code for running the game in the user's browser.
+[src/client/scripts/game/](../src/client/scripts/game/) contains all our javascipt code for running the game in the `/play` page in the user's browser.
 
 
 ## Accounts ##
@@ -47,7 +47,7 @@ The password for every one of these accounts is `1`.
 
 Every game script includes a basic description at the top. [Ask for help](https://discord.com/channels/1114425729569017918/1115358966642393190) in the discord for greater understanding of how each script works!
 
-After you make changes to the game code and refresh the dev page, get in the habit of hard refreshing the page, as sometimes the browser doesn't recognize that there's new code to load. In chrome, you can do this by right clicking the refresh button and selecting "Hard Reload":
+After you make changes to the game code and refresh the page, get in the habit of hard refreshing it, as sometimes the browser doesn't recognize that there's new code to load. In chrome, you can do this by right clicking the refresh button and selecting "Hard Reload":
 
 <img width="697" alt="17" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/92cdb828-1091-4b37-9d90-fe309b3e1cdd">
 
