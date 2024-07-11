@@ -1347,6 +1347,22 @@ button.join-button, button.copy-button {
 	width: 100%;
 	flex: 1 1 auto;
 	background: yellowgreen;
+	display: flex;
+}
+#editor-pointer-mode-pieces-white, #editor-pointer-mode-pieces-black {
+	height: 100%;
+	width: 50%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 1rem 0;
+	gap: 1rem;
+}
+.editor-pointer-mode-piece {
+	/* background will be set by js */
+	background-repeat: no-repeat;
+	width: 50%;
+	aspect-ratio: 1;
 }
 #editor-pointer-mode-deletion {
 	flex: 0 auto;

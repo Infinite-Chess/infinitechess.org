@@ -88,6 +88,11 @@ const guieditor = (function () {
   });
   element_editorBoard.width = main.clientWidth;
   element_editorBoard.height = main.clientHeight;
+
+  // Add backgrounds to editor sidebar pieces
+  for (const editorPointerModePiece of document.getElementsByClassName("editor-pointer-mode-piece")) {
+	editorPointerModePiece.style.backgroundImage = `url("${editorPointerModePiece.dataset.pieceImgUrl}")`;
+  }
   return Object.freeze({
     open,
     close,
