@@ -1,9 +1,8 @@
 {
     "ignore": [
         "./database/**/*",
-        "./dist/**/*",
-        "./protected-owner/**/*",
-        "./protected-patron/**/*"
+        "./dist/**/*"
     ],
-    "exec": "npm run build && npm run start"
+    "exec": "npm run build && npm run start",
+    "ext": "js,html,css" 
 }
