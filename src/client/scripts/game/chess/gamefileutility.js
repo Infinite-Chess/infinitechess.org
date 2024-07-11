@@ -12,15 +12,17 @@ const gamefileutility = (function(){
     /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
     const pieceCountToDisableCheckmate = 50_000;
 
-	/**
-	 * Gives the count of pieces with piece type `pieceType` in the given gamefile.
-	 * @param {gamefile} gamefile
-	 * @param {string} pieceType 
-	 * @returns {number} - amount of pieces with piece type `pieceType` in gamefile
-	 */
-	function getPieceAmount (gamefile, pieceType) {
-		return gamefile.ourPieces[pieceType].length - gamefile.ourPieces[pieceType].undefineds.length;
-	}
+    /**
+     * Counts the number of pieces in the gamefile of a specific type. Adjusts for undefined placeholders.
+     * @param {gamefile} gamefile - The gamefile.
+     * @param {string} type - The type of piece to count (e.g. "pawnsW")
+     * @returns {number} The number of pieces of this type in the gamefile
+     */
+    function getPieceCountOfType(gamefile, type) {
+        const typeList = gamefile.ourPieces[type];
+        if (typeList == null) return 0; // Unknown piece
+        return typeList.length - typeList.undefineds.length;
+    }
 
     // Iterates through EVERY piece in the game state, and performs specified function on the type.
     // Callback parameters should be: (type, coords, gamefile)
@@ -482,7 +484,7 @@ const gamefileutility = (function(){
 
     return Object.freeze({
         pieceCountToDisableCheckmate,
-		getPieceAmount,
+		getPieceCountOfType,
         forEachPieceInGame,
         forEachPieceInPiecesByType,
         forEachPieceInKeysState,

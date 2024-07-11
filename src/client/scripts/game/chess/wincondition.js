@@ -150,15 +150,38 @@ const wincondition = (function() {
         return false;
     }
 
-    
-
-    // Tests if the player who JUST played a move
-    // can win from specified win condition.
+    /**
+     * Tests if the player who JUST played a move can win from the specified win condition.
+     * @param {gamefile} gamefile - The gamefile containing game data.
+     * @param {string} winCondition - The win condition to check against.
+     * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
+     */
     function isOpponentUsingWinCondition(gamefile, winCondition) {
-        const oppositeColor = math.getOppositeColor(gamefile.whosTurn)
+        const oppositeColor = math.getOppositeColor(gamefile.whosTurn);
         return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
     }
 
+    /**
+     * Checks if a specified color has a given win condition.
+     * @param {gamefile} gamefile - The gamefile.
+     * @param {string} color - The color to check (e.g., 'white', 'black').
+     * @param {string} winCondition - The win condition for.
+     * @returns {boolean} True if the specified color has the given win condition, otherwise false.
+     */
+    function doesColorHaveWinCondition(gamefile, color, winCondition) {
+        return gamefile.gameRules.winConditions[color].includes(winCondition);
+    }
+
+    /**
+     * Gets the count of win conditions for a specified color in the gamefile.
+     * @param {gamefile} gamefile - The gamefile.
+     * @param {string} color - The color to check (e.g., 'white', 'black').
+     * @returns {number} The number of win conditions for the specified color. Returns 0 if the color is not defined.
+     */
+    function getWinConditionCountOfColor(gamefile, color) {
+        if (gamefile.gameRules.winConditions[color] == null) return 0; // Color not defined.
+        return gamefile.gameRules.winConditions[color].length;
+    }
 
     // Returns true if the very last move captured a royal piece.
     function wasLastMoveARoyalCapture(gamefile) {
@@ -210,6 +233,8 @@ const wincondition = (function() {
         getGameConclusion,
         detectThreecheck,
         isOpponentUsingWinCondition,
+        doesColorHaveWinCondition,
+        getWinConditionCountOfColor,
         isGameConclusionDecisive,
         getVictorAndConditionFromGameConclusion
     })
