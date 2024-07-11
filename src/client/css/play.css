@@ -1307,7 +1307,53 @@ button.join-button, button.copy-button {
     word-break: break-all;
 }
 
-
+/* [Editor] */
+#editor {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+#editor-board {
+	background: green;
+}
+#editor-sidebar {
+	position: absolute;
+	width: 220px;
+	height: calc(100% - calc(60px + 40px));
+	background: rebeccapurple;
+	right: 30px;
+	top: 50%;
+	transform: translate(0, -50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	overflow-y: scroll;
+	padding: 20px;
+}
+#editor-pointer-modes {
+	width: 100%;
+	height: 300px;
+	background: blue;
+	display: flex;
+	flex-direction: column;
+}
+#editor-pointer-mode-selection {
+	width: 100%;
+	height: 40px;
+	background: magenta;
+	flex: 0 auto;
+}
+#editor-pointer-mode-pieces {
+	width: 100%;
+	flex: 1 1 auto;
+	background: yellowgreen;
+}
+#editor-pointer-mode-deletion {
+	flex: 0 auto;
+	width: 100%;
+	height: 40px;
+	background: palegreen;
+}
 
 /* General classes with basic properties */
 
