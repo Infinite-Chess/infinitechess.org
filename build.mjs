@@ -1,4 +1,3 @@
-import * as esbuild from "esbuild";
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
 import { minify } from "terser";
 
@@ -42,26 +41,19 @@ const clientStyle = []; // await getExtFiles("./src/client/css", ".css");
 const clientFiles = [];
 clientFiles.push(...clientScript.map(v => `./src/client/scripts/${v}`), ...clientStyle.map(v => `./src/client/css/${v}`));
 
-const esbuildResult = await esbuild.build({
-  entryPoints: clientFiles,
-  bundle: true,
-  minify: false, // Disable minification in esbuild
-  outdir: "dist",
-  outbase: "src/client",
-  sourcemap: true,
-  platform: "browser",
-  format: "esm",
-});
-
-console.log(esbuildResult);
+const filesToWrite = [];
 
 for (const file of clientFiles) {
   const filePath = `./dist/${file.replace('./src/client/', '')}`;
   const code = await readFile(filePath, 'utf8');
   const minified = await minify(code, {
     mangle: false, // Disable variable name mangling
-    compress: true, // Enable compression
+    compress: true // Enable compression
   });
 
-  await writeFile(filePath, minified.code, 'utf8');
+  filesToWrite.push(
+    writeFile(filePath, minified.code, 'utf8')
+  );
 }
+
+await Promise.all(filesToWrite);
