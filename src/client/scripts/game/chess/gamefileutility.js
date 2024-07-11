@@ -385,6 +385,21 @@ const gamefileutility = (function(){
     }
 
     /**
+     * Counts the number of pieces in the gamefile of a specific type. Adjusts for undefined placeholders.
+     * @param {gamefile} gamefile - The gamefile.
+     * @param {string} type - The type of piece to count (e.g. "pawnsW")
+     * @returns {number} The number of pieces of this type in the gamefile
+     */
+    function getPieceCountOfType(gamefile, type) {
+        if (gamefile.ourPieces[type] == null) return 0; // Unknown piece
+
+        const typeList = gamefile.ourPieces[type];
+        let count = typeList.length;
+        if (typeList.undefineds != null) count -= typeList.undefineds.length;
+        return count;
+    }
+
+    /**
      * Calculates the piece's index position among EVERY piece in the game.
      * Used to calculate its index within in the mesh vertex data.
      * IGNORES VOIDS.
