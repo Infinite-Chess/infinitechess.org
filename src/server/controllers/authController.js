@@ -17,7 +17,7 @@ const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 
 const maxLoginAttempts = 3;
-const loginCooldownIncrementor = 5;
+const loginCooldownIncrementorSec = 5;
 let loginAttemptData = {};
 
 /**
