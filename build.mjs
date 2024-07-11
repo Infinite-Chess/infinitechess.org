@@ -38,6 +38,8 @@ await copy("./src/client", "./dist", {
   force: true,
 });
 
+process.exit(0);
+
 const clientScript = await getExtFiles("./src/client/scripts", ".js");
 const clientStyle = []; // await getExtFiles("./src/client/css", ".css");
 
