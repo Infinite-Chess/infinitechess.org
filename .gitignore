@@ -3,6 +3,7 @@ node_modules
 cert
 database
 logs
+dist
 
 # JetBrains IDEs
 .idea/
