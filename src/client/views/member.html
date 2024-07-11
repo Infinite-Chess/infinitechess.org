@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="x-ua-compatible" content="ie=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Member</title>
+        <link rel='stylesheet' href='/css/member.css'>
+        <link rel="icon" type="image/png" href="/img/favicon.png">
+    </head>
+    <body>
+        <header>
+            <nav>
+                <a href="/">
+                    <p>Home</p>
+                </a>
+                <a href="/play">
+                    <p>Play</p>
+                </a>
+                <a href="/news">
+                    <p>News</p>
+                </a>
+                <a href="/login" id="loginlink">
+                    <p id="logintext">Log In</p>
+                </a>
+                <a href="/createaccount" id="createaccountlink">
+                    <p id="createaccounttext">Create Account</p>
+                </a>
+            </nav>
+        </header>
+        <main>
+            <div id="content">                  
+                <div id="verifyerror" class="hidden">
+                    <h2 class="red center">Please check your email to verify your account.</h2>
+                    <p class="center">Didn't get one? Check your <strong>spam</strong> folder. Also, <spam id="sendemail" class="underline">send it again.</spam> If you still can't find it, <a href="mailto:infinitechess.org@gmail.com">message me.</a></p>
+                </div>
+                <h2 id="verifyconfirm" class="hidden green center">Thank you! Your account has been verified.</h2>
+                <div class="member">
+                    <img src="/img/member_default.png" alt="Blank profile image">
+                    <h1 id="membername"></h1>
+                </div>
+                <section id="stats" class="center">
+                    <p><strong>Elo rating: </strong><spam id="elo"></spam></p>
+                    <p><strong>Joined: </strong><spam id="joined"></spam></p>
+                    <p><strong>Seen: </strong><spam id="seen"></spam> ago</p>
+                </section>
+                <div id="content-container">
+                    <div style="flex-grow: 1;">
+                        <button id="show-account-info" class="hidden action-button" onclick="showAccountInfo()">Show Account Info</button>
+                        <section id="accountinfo" class="hidden">
+                            <h6 class="center">Account Info</h6>
+                            <p><strong>Email: </strong><spam id="email">insert email here</spam></p>
+                        </section>
+                    </div>
+                    <div style="flex-grow: 0;">
+                        <button id="delete-account" class="hidden action-button" onclick="removeAccount()">Delete account</button>
+                    </div>
+                </div>
+                <p id="change" class="hidden center">To change your username, email or password, <a href="mailto:infinitechess.org@gmail.com">contact us.</a></p>
+            </div>
+            <script src="/scripts/member.js"></script>
+        </main>
+        <footer>
+            <a href="mailto:infinitechess.org@gmail.com">Contact us.</a>
+            <a href="/termsofservice">Terms of Service</a>
+            <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank">Source Code</a>
+        </footer>
+    </body>
+</html>
