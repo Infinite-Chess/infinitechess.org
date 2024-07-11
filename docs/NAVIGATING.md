@@ -15,7 +15,7 @@ This configures and starts our http, https, and websocket servers, and it cleans
 
 [src/server/game/](../src/server/game/) contains the server-side code for running online play, including the [invites-manager](../src/server/game/invitesmanager.js) and the [game-manager](../src/server/game/gamemanager.js).
 
-Both of these managers run use websockets to broadcast changes out to the clients in real-time.
+Both of these managers use websockets to broadcast changes out to the clients in real-time.
 
 The websocket server code is located [here](../src/server/wsserver.js).
 
