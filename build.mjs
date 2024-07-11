@@ -1,6 +1,9 @@
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
 import { minify } from "terser";
 
+/** Whether to generate source maps */
+const generateMaps = true;
+
 /**
  * 
  * @param {string} path 
@@ -47,17 +50,19 @@ for (const file of clientFiles) {
   const filePath = `./dist/${file.replace('./src/client/', '')}`;
   const code = await readFile(filePath, 'utf8');
   const minified = await minify(code, {
-    mangle: false, // Disable variable name mangling
+    mangle: true, // Disable variable name mangling
     compress: true, // Enable compression
-	sourceMap: true
+	  sourceMap: generateMaps
   });
 
   filesToWrite.push(
     writeFile(filePath, minified.code, 'utf8')
   );
-  filesToWrite.push(
-	writeFile(filePath + ".map", minified.map, "utf8")
-  );
+  if (generateMaps) {
+    filesToWrite.push(
+      writeFile(filePath + ".map", minified.map, "utf8")
+    );
+  }
 }
 
 await Promise.all(filesToWrite);
