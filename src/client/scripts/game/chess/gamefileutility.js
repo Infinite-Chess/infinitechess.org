@@ -361,15 +361,22 @@ const gamefileutility = (function(){
 
     /**
      * Counts the number of pieces in the gamefile. Adjusts for undefined placeholders.
-     * @param {gamefile} gamefile - The gamefile
-     * @returns {number} The number of pieces
+     * 
+     * @param {Object} gamefile - The gamefile object containing piece data.
+     * @param {Object} [options] - Optional settings.
+     * @param {boolean} [options.ignoreVoids] - Whether to ignore void pieces.
+     * @param {boolean} [options.ignoreObstacles] - Whether to ignore obstacle pieces.
+     * @returns {number} The number of pieces in the gamefile.
      */
     // Returns piece count of game, excluding undefineds.
-    function getPieceCountOfGame(gamefile) {
+    function getPieceCountOfGame(gamefile, { ignoreVoids, ignoreObstacles } = {}) {
         if (!gamefile.ourPieces) return console.error("Cannot count pieces, ourPieces is not defined")
 
         let count = 0;
         for (const key in gamefile.ourPieces) {
+            if (ignoreVoids && key === 'voidsN') continue;
+            if (ignoreObstacles && key === 'obstaclesN') continue;
+
             const typeList = gamefile.ourPieces[key]
             count += typeList.length
             if (typeList.undefineds) count -= typeList.undefineds.length;
