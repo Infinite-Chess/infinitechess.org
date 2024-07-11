@@ -569,6 +569,7 @@ const onlinegame = (function(){
 
     function declineDraw() {
         websocket.sendmessage('game', 'declinedraw')
+        statustext.showStatus(`Draw declined`, false, 2)
         if (gamefile.moves) gamefile.LastDrawOfferMove = gamefile.moves.length
     }
 
