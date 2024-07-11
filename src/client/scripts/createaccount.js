@@ -144,7 +144,7 @@ passwordInputElement.addEventListener('input', (event) => { // When password fie
     
     let passwordError = document.getElementById("passworderror"); // Does an error already exist?
 
-    const lengthError = passwordInputElement.value.length < 6 || passwordInputElement.value.length > 30;
+    const lengthError = passwordInputElement.value.length < 6;
     const formatError = !validPassword(passwordInputElement.value);
     const containsPasswordError = passwordInputElement.value.toLowerCase() === 'password';
 
