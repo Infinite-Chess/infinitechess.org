@@ -1,8 +1,7 @@
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
 import { minify } from "terser";
-
-/** Whether to generate source maps */
-const generateMaps = true;
+import { DEV_BUILD } from "./src/server/config/config.js";
+import { exit } from "node:process";
 
 /**
  * 
@@ -28,6 +27,15 @@ async function getExtFiles(path, ext) {
   return files;
 }
 
+/**
+ * @param {string} path 
+ * @returns {string}
+ */
+function getFilenamePath(path) {
+  const places = path.split("/");
+  return places[places.length-1];
+}
+
 await remove("./dist", {
   recursive: true,
   force: true,
@@ -38,31 +46,38 @@ await copy("./src/client", "./dist", {
   force: true,
 });
 
+if (DEV_BUILD) exit();
+
 const clientScript = await getExtFiles("./src/client/scripts", ".js");
 const clientStyle = []; // await getExtFiles("./src/client/css", ".css");
 
 const clientFiles = [];
-clientFiles.push(...clientScript.map(v => `./src/client/scripts/${v}`), ...clientStyle.map(v => `./src/client/css/${v}`));
+clientFiles.push(
+  ...clientScript.map(v => `scripts/${v}`),
+  ...clientStyle.map(v => `css/${v}`)
+);
 
 const filesToWrite = [];
 
 for (const file of clientFiles) {
-  const filePath = `./dist/${file.replace('./src/client/', '')}`;
-  const code = await readFile(filePath, 'utf8');
-  const minified = await minify(code, {
+  const code = await readFile(`./src/client/${file}`, 'utf8');
+
+  const minifyInput = {};
+  minifyInput[`/src/client/${file}`] = code;
+
+  const minified = await minify(minifyInput, {
     mangle: true, // Disable variable name mangling
     compress: true, // Enable compression
-	  sourceMap: generateMaps
+    sourceMap: {
+      includeSources: true,
+      url: `${getFilenamePath(file)}.map`,
+    }
   });
 
   filesToWrite.push(
-    writeFile(filePath, minified.code, 'utf8')
+    writeFile(`./dist/${file}`, minified.code, 'utf8'),
+    writeFile(`./dist/${file}.map`, minified.map, 'utf8')
   );
-  if (generateMaps) {
-    filesToWrite.push(
-      writeFile(filePath + ".map", minified.map, "utf8")
-    );
-  }
 }
 
 await Promise.all(filesToWrite);
