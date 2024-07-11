@@ -65,8 +65,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
 
     /** Pieces organized by type: `{ queensW:[[1,2],[2,3]] }` */
     this.ourPieces = undefined;
-
-
+    /** Pieces organized by row: `{ 2:[{type:'queensW',coords:[1,2]}] }` */
+    this.piecesOrganizedByRow = undefined;
     /** Pieces organized by row: `{ 2:[{type:'queensW',coords:[1,2]}] }` */
     this.piecesOrganizedByRow = undefined;
     /** Pieces organized by column: `{ 1:[{type:'queensW',coords:[1,2]}] }` */
