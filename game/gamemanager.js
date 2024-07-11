@@ -74,6 +74,7 @@ const gamemanager = (function() {
             blackSocket: undefined,
             timeNextPlayerLosesAt: undefined,
             autoTimeLossTimeoutID: undefined,
+            drawOfferMove: 0,
             whiteDrawOffer: undefined,
             blackDrawOffer: undefined,
             disconnect: {
@@ -811,7 +812,7 @@ const gamemanager = (function() {
 
         if (hasGameDrawOffer(game)) return console.error("Client offered a draw when the game has a draw offer");
 
-        if (game.moves.length > game.drawOfferMove) return console.error("Client trying to offer a draw twice on the same move")
+        if (game.moves.length <= game.drawOfferMove) return console.error("Client trying to offer a draw twice on the same move")
         
         // Update the status of game
         if (color === 'white') {
@@ -821,6 +822,8 @@ const gamemanager = (function() {
             game.blackDrawOffer = 'offered'
             game.whiteDrawOffer = 'unconfirmed'
         }
+
+        game.drawOfferMove = game.moves.length
 
         // Alert their opponent
         const opponentColor = math1.getOppositeColor(color);
@@ -857,11 +860,6 @@ const gamemanager = (function() {
         onRequestRemovalFromPlayersInActiveGames(ws);
         unsubClientFromGame(ws, { sendMessage: false });
         sendGameUpdateToColor(game, opponentColor);
-        
-        const opponentWs = opponentColor === 'black' ? game.blackSocket : game.whiteSocket
-        onRequestRemovalFromPlayersInActiveGames(opponentWs);
-        unsubClientFromGame(opponentWs, { sendMessage: false });
-        sendGameUpdateToColor(game, color); // wasteful to send update here, but im lazy to figure out how to set client to show it drawed
     }
 
     /** 

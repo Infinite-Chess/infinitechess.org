@@ -231,6 +231,13 @@ const onlinegame = (function(){
                 break;
             case "drawoffer":
                 guipause.openDrawOffer()
+                let gamefile = game.getGamefile()
+                if (gamefile.moves) {
+                    gamefile.LastDrawOfferMove = gamefile.moves.length;
+                } else {
+                    gamefile.LastDrawOfferMove = 0
+                }
+
                 break;
             case "declinedraw":
                 statustext.showStatus(`Opponent declined the draw`, false, 2)
@@ -550,14 +557,17 @@ const onlinegame = (function(){
 
     function offerDraw() {
         websocket.sendmessage('game', 'offerdraw')
+        if (gamefile.moves) gamefile.LastDrawOfferMove = gamefile.moves.length
     }
 
     function acceptDraw() {
         websocket.sendmessage('game', 'acceptdraw')
+        if (gamefile.moves) gamefile.LastDrawOfferMove = gamefile.moves.length
     }
 
     function declineDraw() {
         websocket.sendmessage('game', 'declinedraw')
+        if (gamefile.moves) gamefile.LastDrawOfferMove = gamefile.moves.length
     }
 
     /**
