@@ -2,7 +2,7 @@
 
 This guide gives you several pointers on how to navigate the project. The entire source code of the project is located in [src](../src/).
 
-It is assumed you have already gone through the [Setup](./SETUP.md) process. Whenever you run `nodemon`, [build.mjs](../build.mjs) automatically deploys and minifies all assets of the project from [src](../src/) to the newly created folder, `dist`, and an infinite chess server at `https://localhost:3443` is launched.
+It is assumed you have already gone through the [Setup](./SETUP.md) process. Whenever you run `nodemon`, [build.mjs](../build.mjs) automatically deploys and minifies all clientside assets of the project from [src](../src/) to the newly created folder, `dist`, and an infinite chess server at `https://localhost:3443` is launched.
 
 
 ## Server ##
