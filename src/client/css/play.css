@@ -1213,7 +1213,7 @@ button.join-button, button.copy-button {
     background-color: rgba(0, 0, 0, 0.849);
     padding-bottom: 15vh;
     display: grid;
-    grid-template: repeat(5, min(8vw, 86px)) / repeat(2, min(30vw, 320px));
+    grid-template: repeat(6, min(8vw, 86px)) / repeat(2, min(30vw, 320px));
     gap: min(3vw, 32px);
     justify-content: center;
     align-content: center;
@@ -1247,8 +1247,57 @@ button.join-button, button.copy-button {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
-.pauseUI p.paused, button.paused, button.resume, button.mainmenu {
+.pauseUI p.paused, button.paused, button.resume, button.mainmenu, button.offerdraw {
     grid-column: 1 / 3;
+}
+
+
+/* Draw Offer UI */
+
+.drawOfferUI {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.564);
+    padding: 20vh;
+    padding-left: 40vh;
+    padding-right: 40vh;
+    display: flex;
+    flex-direction: column;
+    gap: min(3vw, 32px);
+    justify-content: center;
+    align-content: center;
+}
+
+.drawOfferUI p.offertitle, .drawOfferUI button {
+    font-size: min(2.5vw, 27px);
+}
+
+.drawOfferUI p.offertitle {
+    color: white;
+    text-align: center;
+    /*align-self: center;*/
+}
+
+.drawOfferUI button {
+    background-color: rgb(228, 228, 228);
+    box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.27);
+    border-radius: min(0.9vw, 10px);
+    color: rgb(0, 0, 0);
+    height: 10%;
+    background: linear-gradient(to bottom, white, rgb(199, 199, 199), white);
+}
+
+.drawOfferUI button:hover {
+    /* background-color: rgb(255, 255, 255); */
+    background: linear-gradient(to bottom, white, rgb(219, 219, 219), white);
+}
+
+.drawOfferUI button:active {
+    /* box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.51); */
+    background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
 
