@@ -33,11 +33,6 @@ router.get('/play(.html)?', (req, res) => {
     sendCachedHTML(req, res, htmlFilePath)
 })
 
-router.get('/play/devversion', ensureOwner, (req, res) => {
-    const htmlFilePath = path.join(htmlDirectory, 'dev.html');
-    sendCachedHTML(req, res, htmlFilePath)
-})
-
 router.get('/news(.html)?', (req, res) => {
     res.sendFile(path.join(htmlDirectory, 'news.html'));
 })

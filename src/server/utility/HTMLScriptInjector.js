@@ -98,12 +98,6 @@ function getCachedHTML(htmlFilePath) {
     prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>');
 }
 
-{ // Inject into dev.html, our htmlscript.js script.
-    const htmlFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'views', 'dev.html');
-    const jsFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'scripts', 'game', "misc", 'htmlscript.js');
-    prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>');
-}
-
 module.exports = {
     getCachedHTML,
     sendCachedHTML
