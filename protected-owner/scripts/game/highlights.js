@@ -335,8 +335,8 @@ const highlights = (function(){
             if (iterateCount < 0) iterateCount = 0
 
             // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() + 1 - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() + 1 - model_Offset[1]
+            let currentX = startTile[0] - board.gsquareCenter() -step[0] + 2 - model_Offset[0]
+            let currentY = startTile[1] - board.gsquareCenter() -step[1] + 2 - model_Offset[1]
             
             // Generate data of each highlighted square
             addDataDiagonalVariant(iterateCount, currentX, currentY, -1, -1, [-step[0], -step[1]], r, g, b, a)
@@ -361,8 +361,8 @@ const highlights = (function(){
             if (iterateCount < 0) iterateCount = 0
 
             // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() - model_Offset[1]
+            let currentX = startTile[0] - board.gsquareCenter() + step[0] - 1 - model_Offset[0]
+            let currentY = startTile[1] - board.gsquareCenter() + step[1] - 1 - model_Offset[1]
             
             // Generate data of each highlighted square
             addDataDiagonalVariant(iterateCount, currentX, currentY, +1, +1, step, r, g, b, a)
@@ -389,8 +389,8 @@ const highlights = (function(){
             if (iterateCount < 0) iterateCount = 0
 
             // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() + 1 - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter()     - model_Offset[1]
+            let currentX = startTile[0] - board.gsquareCenter() - step[0] + 2 - model_Offset[0]
+            let currentY = startTile[1] - board.gsquareCenter() - step[1] - 1 - model_Offset[1]
             
             // Generate data of each highlighted square
             addDataDiagonalVariant(iterateCount, currentX, currentY, -1, +1, [-step[0], -step[1]], r, g, b, a)
@@ -416,8 +416,8 @@ const highlights = (function(){
             if (iterateCount < 0) iterateCount = 0
 
             // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter()     - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() + 1 - model_Offset[1]
+            let currentX = startTile[0] - board.gsquareCenter() + step[0] - 1 - model_Offset[0]
+            let currentY = startTile[1] - board.gsquareCenter() + step[1] + 2 - model_Offset[1]
             
             // Generate data of each highlighted square
             addDataDiagonalVariant(iterateCount, currentX, currentY, +1, -1, step, r, g, b, a)
