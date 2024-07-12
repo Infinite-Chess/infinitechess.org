@@ -81,7 +81,7 @@ const specialdetect = (function() {
         // The square the king lands on will be tested later, within  legalmoves.calculate()
 
         const oppositeColor = math.getOppositeColor(color)
-        if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) {
+        if (wincondition.doesColorHaveWinCondition(gamefile, oppositeColor, 'checkmate')) {
             if (gamefile.inCheck) return; // Not legal if in check
 
             // Simulate the space in-between
@@ -215,7 +215,7 @@ const specialdetect = (function() {
 
     /**
      * Tests if the piece at the given coordinates has it's special move rights.
-     * @param {gamefile} - The gamefile
+     * @param {gamefile} gamefile - The gamefile
      * @param {number[]} coords - The coordinates of the piece
      * @returns {boolean} *true* if it has it's special move rights.
      */
