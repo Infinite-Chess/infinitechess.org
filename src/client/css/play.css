@@ -1,7 +1,6 @@
 * {
     margin: 0;
     padding: 0;
-    font-family: Verdana;
     border: 0;
     /* Enable temporarily during dev to see the borders of all elements */
     /* outline: 1px solid rgba(0, 0, 0, 0.191); */
@@ -9,6 +8,7 @@
 
 html {
     background-color: rgb(33, 33, 33);
+	font-family: Verdana;
 }
 
 /* Variables */
@@ -1312,63 +1312,109 @@ button.join-button, button.copy-button {
 	position: absolute;
 	width: 100%;
 	height: 100%;
+	display: grid;
+	grid-template:
+		"t t" 40px
+		"b s" 1fr
+		/ 1fr 240px;
 }
 #editor-board {
-	background: green;
+	grid-area: b;
+	background: grey;
+}
+#editor-top-bar {
+	grid-area: t;
+	width: 100%;
+	height: 60px;
+	background: rgb(175, 198, 83);
 }
 #editor-sidebar {
-	position: absolute;
-	width: 220px;
-	height: calc(100% - calc(60px + 40px));
+	grid-area: s;
 	background: rebeccapurple;
-	right: 30px;
-	top: 50%;
-	transform: translate(0, -50%);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	overflow-y: scroll;
 	padding: 20px;
+	font-family: 'Courier New', Courier, monospace;
 }
 #editor-pointer-modes {
 	width: 100%;
-	height: 300px;
-	background: blue;
 	display: flex;
 	flex-direction: column;
+	flex-wrap: wrap;
+	user-select: none;
+	background: blue
 }
-#editor-pointer-mode-selection {
+#editor-pointer-selection-modes {
 	width: 100%;
 	height: 40px;
-	background: magenta;
-	flex: 0 auto;
+	flex: 0 0 auto;
+	display: flex;
 }
-#editor-pointer-mode-pieces {
+#editor-pointer-selection-modes .editor-pointer-mode {
+	background: lightseagreen;
+	flex: 1;
+	height: 100%;
+}
+#editor-pointer-deletion-modes {
+	flex: 0 0 auto;
 	width: 100%;
-	flex: 1 1 auto;
+	height: 40px;
+	display: flex;
+}
+#editor-pointer-mode-single-deletion {
+	height: 100%;
+	flex: 1;
+	background: purple;
+}
+.editor-pointer-mode {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#editor-pointer-deletion-modes-menu-btn {
+	height: 100%;
+	width: 16px;
+	background: orangered;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#editor-pointer-mode-pieces {
+	width: calc(100% - 2rem);
 	background: yellowgreen;
 	display: flex;
+	gap: 1rem;
+	padding: 1rem;
 }
 #editor-pointer-mode-pieces-white, #editor-pointer-mode-pieces-black {
-	height: 100%;
 	width: 50%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: 1rem 0;
-	gap: 1rem;
+	display: grid;
+	grid-template: 
+		"k q" 1fr
+		"r b" 1fr
+		"n p" 1fr / 1fr 1fr;
+	grid-gap: .5rem;
 }
 .editor-pointer-mode-piece {
 	/* background will be set by js */
 	background-repeat: no-repeat;
-	width: 50%;
+	background-position: center;
+	width: 100%;
 	aspect-ratio: 1;
 }
-#editor-pointer-mode-deletion {
-	flex: 0 auto;
-	width: 100%;
-	height: 40px;
-	background: palegreen;
+.editor-pointer-mode:hover {
+	/* !important needed to override id with class+pseudoselector */
+	filter: brightness(1.2);
+
+}
+.editor-selected-pointer-mode {
+	z-index: 10;
+	/* !important needed to override class+pseudoselector with just class */
+	outline: solid white 2px;
 }
 
 /* General classes with basic properties */
@@ -1394,7 +1440,8 @@ a {
 }
 
 .hidden {
-    display: none;
+	/* !important needed to make class have more specificity than anything else */
+    display: none !important;
 }
 
 .opacity-0_5 {

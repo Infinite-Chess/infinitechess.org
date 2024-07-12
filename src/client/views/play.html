@@ -591,28 +591,39 @@
 			<!-- The board editor -->
 			<div id="editor" class="hidden">
 				<canvas id="editor-board"></canvas>
+				<div id="editor-top-bar">
+					
+				</div>
+				<!-- the sidebar -->
 				<div id="editor-sidebar">
 					<div id="editor-pointer-modes">
-						<div id="editor-pointer-mode-selection" class="editor-selected-pointer-mode"></div>
+						<div id="editor-pointer-selection-modes">
+							<div id="editor-pointer-mode-single-selection" class="editor-pointer-mode editor-selected-pointer-mode">Sng</div>
+							<div id="editor-pointer-mode-drag-selection" class="editor-pointer-mode">Drg</div>
+							<div id="editor-pointer-mode-directional-selection" class="editor-pointer-mode">Dir</div>
+						</div>
 						<div id="editor-pointer-mode-pieces">
 							<div id="editor-pointer-mode-pieces-white">
-								<div id="editor-pointer-mode-kingW" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wk.svg"></div>
-								<div id="editor-pointer-mode-queenW" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wq.svg"></div>
-								<div id="editor-pointer-mode-rookW" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wr.svg"></div>
-								<div id="editor-pointer-mode-bishopW" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wb.svg"></div>
-								<div id="editor-pointer-mode-knightW" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wn.svg"></div>
-								<div id="editor-pointer-mode-pawnW" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wp.svg"></div>
+								<div id="editor-pointer-mode-kingW" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wk.svg"></div>
+								<div id="editor-pointer-mode-queenW" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wq.svg"></div>
+								<div id="editor-pointer-mode-rookW" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wr.svg"></div>
+								<div id="editor-pointer-mode-bishopW" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wb.svg"></div>
+								<div id="editor-pointer-mode-knightW" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wn.svg"></div>
+								<div id="editor-pointer-mode-pawnW" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/wp.svg"></div>
 							</div>
 							<div id="editor-pointer-mode-pieces-black">
-								<div id="editor-pointer-mode-kingB" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bk.svg"></div>
-								<div id="editor-pointer-mode-queenB" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bq.svg"></div>
-								<div id="editor-pointer-mode-rookB" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/br.svg"></div>
-								<div id="editor-pointer-mode-bishopB" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bb.svg"></div>
-								<div id="editor-pointer-mode-knightB" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bn.svg"></div>
-								<div id="editor-pointer-mode-pawnB" class="editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bp.svg"></div>
+								<div id="editor-pointer-mode-kingB" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bk.svg"></div>
+								<div id="editor-pointer-mode-queenB" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bq.svg"></div>
+								<div id="editor-pointer-mode-rookB" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/br.svg"></div>
+								<div id="editor-pointer-mode-bishopB" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bb.svg"></div>
+								<div id="editor-pointer-mode-knightB" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bn.svg"></div>
+								<div id="editor-pointer-mode-pawnB" class="editor-pointer-mode editor-pointer-mode-piece" data-piece-img-url="/img/pieces/bp.svg"></div>
 							</div>
 						</div>
-						<div id="editor-pointer-mode-deletion"></div>
+						<div id="editor-pointer-deletion-modes">
+							<div id="editor-pointer-mode-single-deletion" class="editor-pointer-mode">DELETION</div>
+							<div id="editor-pointer-deletion-modes-menu-btn">:</div>
+						</div>
 					</div>
 				</div>
 			</div>

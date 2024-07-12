@@ -12,13 +12,17 @@ const guieditor = (function () {
   const editorCtx = element_editorBoard.getContext("2d");
 
   // stores the currently placed pieces and their states in the editor
-  const placedPieces = new Map();
+  const placedPieces = new Map([
+	[]
+  ]);
 
-  // the zoom of the editor, from .01 to Infinity
-  const editorBoardZoom = 0.01;
+  // the zoom of the editor, from 1/Infinity to 1
+  const editorBoardZoom = 0.02;
   // The position of the top-left corner of screen
-  let editorBoardPositionX = 0;
-  let editorBoardPositionY = 0;
+  // 1 / editorBoardZoom is the size of 1 time,
+  // so the top left corner would be at the tile 1,1 instead of 0,0
+  let editorBoardPositionX = 1 / editorBoardZoom;
+  let editorBoardPositionY = 1 / editorBoardZoom;
 
   function drawCheckerboard() {
     let windowWidth = editorCtx.canvas.width;
@@ -56,43 +60,103 @@ const guieditor = (function () {
         let currentTileDrawPosY =
           currentTileRank * boardTileSideLength - editorBoardPositionY;
         if ((currentTileFile + currentTileRank) % 2 === 1) {
-			editorCtx.fillRect(
-				currentTileDrawPosX,
-				currentTileDrawPosY,
-				boardTileSideLength,
-				boardTileSideLength
-			);
-		}
-          
+          editorCtx.fillRect(
+            currentTileDrawPosX,
+            currentTileDrawPosY,
+            boardTileSideLength,
+            boardTileSideLength
+          );
+        }
       }
     }
   }
   function open() {
     style.revealElement(element_editor);
+    element_editorBoard.width = element_editorBoard.clientWidth;
+    element_editorBoard.height = element_editorBoard.clientHeight;
     drawCheckerboard();
-    setInterval(() => {
-      editorCtx.reset();
-      editorBoardPositionX += 10;
-      editorBoardPositionY += 10;
-      drawCheckerboard();
-    }, 200);
+    addListeners();
   }
   function close() {
     style.hideElement(element_editor);
+    removeListeners();
   }
   // update editor board size to match screen size
   window.addEventListener("resize", () => {
-    element_editorBoard.width = main.clientWidth;
-    element_editorBoard.height = main.clientHeight;
+    element_editorBoard.width = element_editorBoard.clientWidth;
+    element_editorBoard.height = element_editorBoard.clientHeight;
     drawCheckerboard();
   });
-  element_editorBoard.width = main.clientWidth;
-  element_editorBoard.height = main.clientHeight;
-
   // Add backgrounds to editor sidebar pieces
-  for (const editorPointerModePiece of document.getElementsByClassName("editor-pointer-mode-piece")) {
-	editorPointerModePiece.style.backgroundImage = `url("${editorPointerModePiece.dataset.pieceImgUrl}")`;
+  for (const editorPointerModePiece of document.getElementsByClassName(
+    "editor-pointer-mode-piece"
+  )) {
+    editorPointerModePiece.style.backgroundImage = `url("${editorPointerModePiece.dataset.pieceImgUrl}")`;
   }
+
+  function addListeners() {
+    let currentlySelected = null;
+    // make each pointer mode selectable
+    for (const editorPointerMode of document.getElementsByClassName(
+      "editor-pointer-mode"
+    )) {
+      editorPointerMode.addEventListener(
+        "click",
+        callback_editorPointerModeSelection
+      );
+    }
+    element_editorBoard.addEventListener("click", callback_addPieceAtPointer);
+  }
+  function removeListeners() {
+    for (const editorPointerMode of document.getElementsByClassName(
+      "editor-pointer-mode"
+    )) {
+      editorPointerMode.removeEventListener(
+        "click",
+        callback_editorPointerModeSelection
+      );
+    }
+    element_editorBoard.removeEventListener(
+      "click",
+      callback_addPieceAtPointer
+    );
+  }
+  // callback for editor pointer mode selection
+  function callback_editorPointerModeSelection() {
+    let currentlySelectedEditorPointerMode = document.querySelector(
+      ".editor-selected-pointer-mode"
+    );
+    if (!currentlySelectedEditorPointerMode) {
+      // nothing was selected beforehand
+      editorPointerMode.classList.add("editor-selected-pointer-mode");
+      return;
+    }
+    currentlySelectedEditorPointerMode.classList.remove(
+      "editor-selected-pointer-mode"
+    );
+    if (editorPointerMode !== currentlySelectedEditorPointerMode) {
+      // if editorPointerMode was deselected, don't reselect
+      editorPointerMode.classList.add("editor-selected-pointer-mode");
+    }
+  }
+
+  function callback_addPieceAtPointer(event) {
+    let { top: editorBoardTop, left: editorBoardLeft } =
+      element_editorBoard.getBoundingClientRect();
+    let editorBoardPointerX = event.clientX - editorBoardLeft;
+    let editorBoardPointerY = event.clientY - editorBoardTop;
+    let boardTileSideLength = 1 / editorBoardZoom;
+
+    // files are A-H (x), ranks are 1-8 (-y)
+    let clickedTileFile = Math.floor(
+      (editorBoardPositionX + editorBoardPointerX) / boardTileSideLength
+    );
+    let clickedTileRank = Math.floor(
+      (editorBoardPositionY + editorBoardPointerY) / boardTileSideLength
+    );
+    console.log(clickedTileFile, clickedTileRank);
+  }
+
   return Object.freeze({
     open,
     close,
