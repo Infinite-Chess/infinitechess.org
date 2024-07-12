@@ -93,7 +93,7 @@ function getCachedHTML(htmlFilePath) {
 // Inject the scripts we want...
 
 { // Inject into play.html, our OBFUSCATED htmlscript.js script.
-    const htmlFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'views', 'play.html');
+    const htmlFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'views', 'play.ejs');
     const jsFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'game', 'htmlscript.js');
     prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>');
 }
