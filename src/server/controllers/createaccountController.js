@@ -251,7 +251,7 @@ const isValidEmail = function (string) {
 
 const doPasswordFormatChecks = function (password, res) {
     // First we check password length
-    if (password.length < 6 || password.length > 1024) return res.status(400).json({ 'message': 'Password must be at least 6 characters long'});
+    if (password.length < 6 || password.length > 256) return res.status(400).json({ 'message': 'Password must be at least 6 characters long'});
     if (!isValidPassword(password)) return res.status(400).json({ 'message': 'Password is in an incorrect format'});
     if (password.toLowerCase() === 'password') return res.status(400).json({ 'message': "Password must not be 'password'"});
     return true;
