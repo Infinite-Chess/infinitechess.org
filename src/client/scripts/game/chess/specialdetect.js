@@ -215,7 +215,7 @@ const specialdetect = (function() {
 
     /**
      * Tests if the piece at the given coordinates has it's special move rights.
-     * @param {gamefile} - The gamefile
+     * @param {gamefile} gamefile - The gamefile
      * @param {number[]} coords - The coordinates of the piece
      * @returns {boolean} *true* if it has it's special move rights.
      */
