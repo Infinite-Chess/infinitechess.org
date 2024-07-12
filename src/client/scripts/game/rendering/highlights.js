@@ -306,7 +306,7 @@ const highlights = (function(){
             const intsect1Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner1)
             const intsect2Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner2)
             if (!intsect1Tile && !intsect2Tile) {continue;} // If there's no intersection point, it's off the screen, don't bother rendering.
-            if (!intsect1Tile || !intsect2Tile) {console.log(intsect1Tile,intsect2Tile, line, renderBoundingBox);} // This should not happen
+            if (!intsect1Tile || !intsect2Tile) {debugger; continue;} // This should not happen
             if (lineGrad > 0) concatData_HighlightedMoves_Diagonal_Up(coords, intsect1Tile, intsect2Tile, legalMoves.slides[line], line, r, g, b, a);
             else concatData_HighlightedMoves_Diagonal_Down(coords, intsect1Tile, intsect2Tile, legalMoves.slides[line], line, r, g, b, a)
 

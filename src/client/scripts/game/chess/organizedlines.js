@@ -68,9 +68,10 @@ const organizedlines = {
         for (let i = 0; i<lines.length; i++) {
             const line = lines[i]
             key = math.getLineFromCoords(line,coords)
+            const strline = math.getKeyFromCoords(line)
             // Is line initialized
-            if (!gamefile.piecesOrganizedByLines[line][key]) gamefile.piecesOrganizedByLines[line][key] = []
-            gamefile.piecesOrganizedByLines[line][key].push(piece)
+            if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = []
+            gamefile.piecesOrganizedByLines[strline][key].push(piece)
         }
         
     },

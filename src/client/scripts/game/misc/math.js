@@ -160,6 +160,16 @@ const math = (function() {
     }
 
     /**
+     * TODO: implement this
+     * @param {Number[][]} lines 
+     * @returns {Boolean}
+     */
+
+    function areLinesCollinear(lines) {
+        return false
+    }
+
+    /**
      * Deep copies an entire object, no matter how deep its nested.
      * No properties will contain references to the source object.
      * Use this instead of structuredClone() when that throws an error due to nested functions.
@@ -644,6 +654,21 @@ const math = (function() {
     }
 
     /**
+     * O(1) method of checking if an object/dict is empty
+     * @param {Object} obj 
+     * @returns {Boolean}
+     */
+    function isEmpty(obj) {
+        for (var prop in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+                return false;
+            }
+        }
+        
+        return true
+    }
+
+    /**
      * Tests if a string is in valid JSON format, and can thus be parsed into an object.
      * @param {string} str - The string to test
      * @returns {boolean} *true* if the string is in valid JSON fromat
@@ -820,6 +845,7 @@ const math = (function() {
         boxContainsBox,
         boxContainsSquare,
         getLineFromCoords,
+        areLinesCollinear,
         deepCopyObject,
         getKeyFromCoords,
         getCoordsFromKey,
@@ -863,6 +889,7 @@ const math = (function() {
         mergeBoundingBoxes,
         getBoxFromCoordsList,
         expandBoxToContainSquare,
+        isEmpty,
         isJson,
         invertObj,
         getUTCDateTime,
