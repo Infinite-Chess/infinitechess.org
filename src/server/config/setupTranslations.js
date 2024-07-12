@@ -26,7 +26,7 @@ function initTranslations() {
     preload: Object.keys(translations), // List of languages to preload to make sure they are loadedbefore rendering views
     resources: translations,
     defaultNS: "default",
-    fallbackLng: "en",
+    fallbackLng: "en-US",
   });
 }
 
