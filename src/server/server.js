@@ -16,6 +16,9 @@ const { DEV_BUILD } = require('./config/config');
 const { saveMembersIfChangesMade } = require('./controllers/members');
 const { saveRolesIfChangesMade } = require('./controllers/roles');
 
+// Initiate translations
+const { initTranslations } = require('./config/setupTranslations');
+initTranslations();
 
 const httpsServer = https.createServer(getCertOptions(DEV_BUILD), app);
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
