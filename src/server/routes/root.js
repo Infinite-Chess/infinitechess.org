@@ -14,31 +14,31 @@ const { getCachedHTML, sendCachedHTML } = require('../utility/HTMLScriptInjector
 const htmlDirectory = path.join(__dirname, '..', '..', '..', 'dist', 'views');
 
 // router.get('/skeleton(.html)?', (req, res) => { // If it starts & ends with '/', OR it's '/index.html' OR '/index'
-//     res.sendFile(path.join(__dirname, '../views', 'skeleton.html'));
+//     res.render(path.join(__dirname, '../views', 'skeleton.ejs'));
 // });
 
 // Send the index/root / home page
 router.get('^/$|/index(.html)?', (req, res) => { // If it starts & ends with '/', OR it's '/index.html' OR '/index'
-    res.sendFile(path.join(htmlDirectory, 'index.html'));
+    res.render(path.join(htmlDirectory, 'index.ejs'));
 });
 
 router.get('/credits(.html)?', (req, res) => {
-    res.sendFile(path.join(htmlDirectory, 'credits.html'));
+    res.render(path.join(htmlDirectory, 'credits.ejs'));
 })
 
 router.get('/play(.html)?', (req, res) => {
-    // res.sendFile(path.join(__dirname, '../views', 'play.html'));
+    // res.render(path.join(__dirname, '../views', 'play.ejs'));
 	console.log("html directory", htmlDirectory);
-    const htmlFilePath = path.join(htmlDirectory, 'play.html');
+    const htmlFilePath = path.join(htmlDirectory, 'play.ejs');
     sendCachedHTML(req, res, htmlFilePath)
 })
 
 router.get('/news(.html)?', (req, res) => {
-    res.sendFile(path.join(htmlDirectory, 'news.html'));
+    res.render(path.join(htmlDirectory, 'news.ejs'));
 })
 
 router.get('/login(.html)?', (req, res) => {
-    res.sendFile(path.join(htmlDirectory, 'login.html'));
+    res.render(path.join(htmlDirectory, 'login.ejs'));
 })
 
 router.post('/auth', handleLogin);
@@ -48,7 +48,7 @@ router.get('/refresh', handleRefreshToken);
 router.get('/logout', handleLogout);
 
 router.get('/termsofservice(.html)?', (req, res) => {
-    res.sendFile(path.join(htmlDirectory, 'termsofservice.html'));
+    res.render(path.join(htmlDirectory, 'termsofservice.ejs'));
 })
 
 router.get('/verify/:member/:id', verifyAccount);
@@ -56,19 +56,19 @@ router.get('/verify/:member/:id', verifyAccount);
 const errorDirectory = path.join(htmlDirectory, 'errors');
 
 router.get('/400(.html)?', (req, res) => {
-    res.sendFile(path.join(errorDirectory, '400.html'));
+    res.render(path.join(errorDirectory, '400.ejs'));
 });
 router.get('/401(.html)?', (req, res) => {
-    res.sendFile(path.join(errorDirectory, '401.html'));
+    res.render(path.join(errorDirectory, '401.ejs'));
 });
 router.get('/404(.html)?', (req, res) => {
-    res.sendFile(path.join(errorDirectory, '404.html'));
+    res.render(path.join(errorDirectory, '404.ejs'));
 });
 router.get('/409(.html)?', (req, res) => {
-    res.sendFile(path.join(errorDirectory, '409.html'));
+    res.render(path.join(errorDirectory, '409.ejs'));
 });
 router.get('/500(.html)?', (req, res) => {
-    res.sendFile(path.join(errorDirectory, '500.html'));
+    res.render(path.join(errorDirectory, '500.ejs'));
 });
 
 
