@@ -44,6 +44,35 @@ const variant = (function() {
         else initStartSnapshotAndGamerules(gamefile, metadata) // Default (built-in variant, not pasted)
 
         initPieceMovesets(gamefile)
+
+        initSlideMoves(gamefile)
+    }
+
+    /**
+     * 
+     * @param {gamefile} gamefile 
+     */
+    function initSlideMoves(gamefile) {
+        gamefile.startSnapshot.slideMovesPossible = getPossibleSlides(gamefile.pieceMovesets, gamefile.startSnapshot.position)
+    }
+
+    function getPossibleSlides(movesets, position) {
+        const teamtypes = new Set(Object.values(position)); // Make a set of all pieces in game
+        const rawtypes = new Set();
+        for (const tpiece of teamtypes) {
+            rawtypes.add(math.trimWorBFromType(tpiece)); // Make a set wit the team colour trimmed
+        }
+        const slides = new Set();
+        for (const type of rawtypes) {
+            let moveset = movesets[type];
+            if (!moveset) continue;
+            moveset = moveset();
+            if (!moveset.slideMoves) continue;
+            Object.keys(moveset.slideMoves).forEach(slide => {slides.add(slide)});
+        }
+        let temp = [];
+        slides.forEach(slideline => {temp.push(math.getCoordsFromKey(slideline))})
+        return temp;
     }
 
     /**
@@ -191,7 +220,6 @@ const variant = (function() {
             default:
                 throw new Error('Unknown variant.')
         }
-        gamefile.startSnapshot.slideMovesPossible = [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]]
         // Every variant has the exact same initial moveRuleState value.
         if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0
         gamefile.startSnapshot.fullMove = 1; // Every variant has the exact same fullMove value.
