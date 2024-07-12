@@ -27,6 +27,22 @@ const math = (function() {
         return (value & (value - 1)) === 0;
     }
 
+    function isAproxEqual(a, b, epsilon) {
+        if (epsilon == null) {
+            epsilon = 0.001;
+        }
+        return Math.abs(a-b)<epsilon
+    }
+
+
+    function getLineIntersection(dx1,dy1,c1,dx2,dy2,c2) {
+        return [
+            ((dx2*c1)-(dx1*c2))/((dx1*dy2)-(dx2*dy1)),
+            ((dy2*c1)-(dy1*c2))/((dx1*dy2)-(dx2*dy1))
+        ]
+
+    }
+
     // Receives theta in RADIANS
     function getXYComponents_FromAngle (theta) { // x & y will be between -1 & 1
         return [Math.cos(theta), Math.sin(theta)]; // When hypotenuse is 1.0
@@ -839,6 +855,8 @@ const math = (function() {
 
     return Object.freeze({
         isPowerOfTwo,
+        isAproxEqual,
+        getLineIntersection,
         getXYComponents_FromAngle,
         removeObjectFromArray,
         roundPointToNearestGridpoint,

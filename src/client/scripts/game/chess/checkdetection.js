@@ -147,9 +147,9 @@ const checkdetection = (function(){
 
             const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type)
 
-            if (!thisPieceMoveset.slideMoves) continue;
-            const moveset = thisPieceMoveset.slideMoves[line];
-            if (!moveset) continue;
+            if (!thisPieceMoveset.slideMoves) {console.log(thisPiece); continue};
+            const moveset = thisPieceMoveset.slideMoves[math.getKeyFromCoords(direction)];
+            if (!moveset) {console.log(thisPiece, thisPieceMoveset.slideMoves); continue};
             const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, lineIsVertical, moveset, thisPiece.coords, thisPieceColor)
             if (!thisPieceLegalSlide) continue; // This piece has no horizontal moveset, NEXT piece on this line!
 
@@ -341,127 +341,29 @@ const checkdetection = (function(){
     function appendBlockingMoves (square1, square2, moves, coords) { // coords is of the selected piece
         
         // What is the line between our king and the attacking piece?
-        let direction;
-        if (square1[1] === square2[1]) direction = 'horizontal';
-        else if (square1[0] === square2[0]) direction = 'vertical';
-        else if (square1[0] > square2[0] && square1[1] > square2[1]
-              || square2[0] > square1[0] && square2[1] > square1[1]) direction = 'diagonalUp'
-        else direction = 'diagonalDown'
+        let direction = [square1[0] - square2[0], square1[1] - square2[1]];
 
-        const upDiag = math.getUpDiagonalFromCoords(coords)
-        const downDiag = math.getDownDiagonalFromCoords(coords)
+        const box = {
+            left: Math.min(square1[0],square2[0]),
+            right: Math.max(square1[0],square2[0]),
+            top: Math.min(square1[1],square2[1]),
+            bottom: Math.max(square1[1],square2[1])
+        }
 
-        function appendBlockPointIfLegal (coord, value1, value2, blockPoint) {
-            if (coord > value1 && coord < value2
-             || coord > value2 && coord < value1) {
+        function appendBlockPointIfLegal (blockPoint) {
+            if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
+                !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) return; // Block is off grid so probably not valid
+            if (math.boxContainsSquare(box, blockPoint)) return;
                 // Can our piece legally move there?
                 if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
-            }
         }
 
-        if (direction === 'horizontal') {
-
-            // Does our selected piece's vertical moveset intersect this line segment?
-            if (moves.vertical) {
-                const blockPoint = [coords[0], square1[1]];
-                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
-            }
-
-            //  Does our selected piece's diagonalUp moveset intersect this line segment?
-            if (moves.diagonalUp) {
-                // When y is the y level of our squares, what is the x intersection point?
-                const xIntsect = -upDiag + square1[1];
-                const blockPoint = [xIntsect, square1[1]]
-                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
-            }
-
-            //  Does our selected piece's diagonalDown moveset intersect this line segment?
-            if (moves.diagonalDown) {
-                const xIntsect = downDiag - square1[1];
-                const blockPoint = [xIntsect, square1[1]]
-                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
-            }
-        }
-
-        else if (direction === 'vertical') {
-
-            // Does our selected piece's horizontal moveset intersect this line segment?
-            if (moves.horizontal) {
-                const blockPoint = [square1[0], coords[1]]
-                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
-            }
-
-            if (moves.diagonalUp) {
-                const yIntsect = upDiag + square1[0];
-                const blockPoint = [square1[0], yIntsect]
-                appendBlockPointIfLegal(yIntsect, square1[1], square2[1], blockPoint)
-            }
-
-            if (moves.diagonalDown) {
-                const yIntsect = downDiag - square1[0];
-                const blockPoint = [square1[0], yIntsect]
-                appendBlockPointIfLegal(yIntsect, square1[1], square2[1], blockPoint)
-            }
-        }
-
-        else if (direction === 'diagonalUp') {
-
-            if (moves.vertical) {
-                const xDiff = coords[0] - square1[0];
-                const intsectY = square1[1] + xDiff;
-                const blockPoint = [coords[0], intsectY]
-                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
-            }
-
-            if (moves.horizontal) {
-                const yDiff = coords[1] - square1[1];
-                const intsectX = square1[0] + yDiff;
-                const blockPoint = [intsectX, coords[1]]
-                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
-            }
-
-            out: if (moves.diagonalDown) {
-                const squaresUpDiag = math.getUpDiagonalFromCoords(square1)
-                // -1x + downDiag = 1x + squaresUpDiag   Set them equal to find their intersection point
-                // 2x = downDiag - squaresUpDiag
-                // x = (downDiag - squaresUpDiag) / 2
-                const xIntsect = (downDiag - squaresUpDiag) / 2;
-                if (!Number.isInteger(xIntsect)) break out; // Wrong color square diagonal
-                // y = -1x + downDiag
-                const yIntsect = downDiag - xIntsect;
-                const blockPoint = [xIntsect, yIntsect]
-                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
-            }
-        }
-
-        else { // direction === 'diagonalDown'
-
-            if (moves.vertical) {
-                const xDiff = coords[0] - square1[0];
-                const intsectY = square1[1] - xDiff;
-                const blockPoint = [coords[0], intsectY]
-                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
-            }
-
-            if (moves.horizontal) {
-                const yDiff = coords[1] - square1[1];
-                const intsectX = square1[0] - yDiff;
-                const blockPoint = [intsectX, coords[1]]
-                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
-            }
-
-            out: if (moves.diagonalUp) {
-                const squaresDownDiag = math.getDownDiagonalFromCoords(square1)
-                // 1x + upDiag = -1x + squaresDownDiag   Set them equal to find their intersection point
-                // 2x = squaresDownDiag - upDiag
-                // x = (squaresDownDiag - upDiag) / 2
-                const xIntsect = (squaresDownDiag - upDiag) / 2;
-                if (!Number.isInteger(xIntsect)) break out; // Wrong color square diagonal
-                // y = 1x + upDiag
-                const yIntsect = xIntsect + upDiag;
-                const blockPoint = [xIntsect, yIntsect]
-                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
-            }
+        for (const linestr in moves.slides) {
+            const line = math.getCoordsFromKey(linestr)
+            const c1 = math.getLineFromCoords(line, coords)
+            const c2 = math.getLineFromCoords(direction,square2)
+            const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2)
+            appendBlockPointIfLegal(blockPoint)
         }
     }
 
