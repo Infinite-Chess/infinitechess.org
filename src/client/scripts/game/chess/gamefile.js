@@ -49,6 +49,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         /** The bounding box surrounding the starting position, without padding.
          * @type {BoundingBox} */
         box: undefined,
+        /** Possible slide mopves*/
+        slideMovesPossible: [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]],
+    
     }
     
     this.gameRules = {
@@ -69,8 +72,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.piecesOrganizedByKey = undefined;
     /** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` */
     this.piecesOrganizedByLines = undefined;
-    /** Legal slides*/
-    this.slideMoves = [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]];
 
     /** The object that contains the buffer model to render the pieces */
     this.mesh = {

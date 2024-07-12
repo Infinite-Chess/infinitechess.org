@@ -122,9 +122,8 @@ const checkdetection = (function(){
      * @returns 
      */
     function doesSlideAttackSquare (gamefile, coords, color, attackers) {
-        const lines = gamefile.slideMoves;
-        for (let i=0; i<0; i++) {
-            const line = lines[i]
+        for (const line of gamefile.startSnapshot.slideMovesPossible) {
+            console.log(line)
             const strline = math.getKeyFromCoords(line)
             const key = math.getLineFromCoords(line, coords)
             if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[strline][key], line, coords, color, attackers)) return true;
@@ -138,7 +137,7 @@ const checkdetection = (function(){
     function doesLineAttackSquare(gamefile, line, direction, coords, colorOfFriendlys, attackers) {
 
         if (!line) return false; // No line, no pieces to attack
-
+        const lineIsVertical = direction[0]==0
         for (let a = 0; a < line.length; a++) { // { coords, type }
             const thisPiece = line[a];
 
@@ -147,12 +146,11 @@ const checkdetection = (function(){
             if (thisPieceColor === 'neutral') continue;
 
             const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type)
-            const lineIsVertical = direction[0]==0
-            /**const moveset = direction === 'horizontal' ? thisPieceMoveset.horizontal
-                          : direction === 'vertical' ? thisPieceMoveset.vertical
-                          : direction === 'diagonalup' ? thisPieceMoveset.diagonalUp
-                          : thisPieceMoveset.diagonalDown;*/
-            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, lineIsVertical, thisPieceMoveset.slideMoves[line], thisPiece.coords, thisPieceColor)
+
+            if (!thisPieceMoveset.slideMoves) continue;
+            const moveset = thisPieceMoveset.slideMoves[line];
+            if (!moveset) continue;
+            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, lineIsVertical, moveset, thisPiece.coords, thisPieceColor)
             if (!thisPieceLegalSlide) continue; // This piece has no horizontal moveset, NEXT piece on this line!
 
             // const rectangle = {left: thisPieceLegalSlide[0], right: thisPieceLegalSlide[1], bottom: coords[1], top: coords[1]}
@@ -226,7 +224,7 @@ const checkdetection = (function(){
     // Time complexity: O(slides) basically O(1) unless you add a ton of slides to a single piece
     function removeSlidingMovesThatPutYouInCheck (gamefile, moves, pieceSelected, color) {
 
-        if (math.isEmpty) return;
+        if (math.isEmpty(moves.slides)) return;
 
         const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color); // List of coordinates of all our royal jumping pieces
 
@@ -298,7 +296,7 @@ const checkdetection = (function(){
 
         const selectedPieceCoords = pieceSelected.coords;
         let sameLines = [];
-        for (const line of gamefile.slideMoves) { // Only check current possible slides
+        for (const line of gamefile.startSnapshot.slideMovesPossible) { // Only check current possible slides
             if (math.getLineFromCoords(line, kingCoords) !== math.getLineFromCoords(line, selectedPieceCoords)) continue;
             sameLines.push(line);
         };

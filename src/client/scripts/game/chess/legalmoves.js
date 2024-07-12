@@ -97,7 +97,7 @@ const legalmoves = (function(){
             
             // Legal sliding moves
             if (thisPieceMoveset.slideMoves) {
-                let lines = gamefile.slideMoves;
+                let lines = gamefile.startSnapshot.slideMovesPossible;
                 for (let i=0; i<lines.length; i++) {
                     const line = lines[i];
                     if (!thisPieceMoveset.slideMoves[line]) continue;
@@ -240,9 +240,9 @@ const legalmoves = (function(){
             }
         }
 
-        for (var line in legalMoves.slides) {
-            line=line.split(',') // can't hash array so conversion to string made, unconverting it
-            let limits = legalMoves.slides[line];
+        for (var strline in legalMoves.slides) {
+            let line=math.getCoordsFromKey(strline);
+            let limits = legalMoves.slides[strline];
             let selectedPieceLine = math.getLineFromCoords(line,startCoords);
             let clickedCoordsLine = math.getLineFromCoords(line,endCoords);
             if (limits && selectedPieceLine==clickedCoordsLine) {
@@ -250,39 +250,6 @@ const legalmoves = (function(){
                 else if (endCoords[1]>=limits[0] && endCoords[1]<=limits[1] && line[0]==0) return true;
             }
         }
-        /**
-        // Do one of the horizontal moves match?
-        const horizontal = legalMoves.horizontal;
-        if (horizontal && endCoords[1] == startCoords[1]) {
-            // Compare the clicked x tile with this horizontal moveset
-            if (endCoords[0] >= horizontal[0] && endCoords[0] <= horizontal[1]) return true;
-        }
-
-        // Do one of the vertical moves match?
-        const vertical = legalMoves.vertical;
-        if (vertical && endCoords[0] == startCoords[0]) {
-            // Compare the clicked y tile with this vertical moveset
-            if (endCoords[1] >= vertical[0] && endCoords[1] <= vertical[1]) return true;
-        }
-
-        // Do one of the up-diagonal moves match?
-        const diagonalUp = legalMoves.diagonalUp;
-        let selectedPieceDiagonal = math.getUpDiagonalFromCoords(startCoords);
-        let clickedCoordsDiagonal = math.getUpDiagonalFromCoords(endCoords);
-        if (diagonalUp && selectedPieceDiagonal == clickedCoordsDiagonal) {
-            // Compare the clicked x tile with this diagonal moveset
-            if (endCoords[0] >= diagonalUp[0] && endCoords[0] <= diagonalUp[1]) return true;
-        }
-
-        // Do one of the down-diagonal moves match?
-        const diagonalDown = legalMoves.diagonalDown;
-        selectedPieceDiagonal = math.getDownDiagonalFromCoords(startCoords);
-        clickedCoordsDiagonal = math.getDownDiagonalFromCoords(endCoords);
-        if (diagonalDown && selectedPieceDiagonal == clickedCoordsDiagonal) {
-            // Compare the clicked x tile with this diagonal moveset
-            if (endCoords[0] >= diagonalDown[0] && endCoords[0] <= diagonalDown[1]) return true;
-        }
-        */
         return false;
     }
 

@@ -295,9 +295,8 @@ const highlights = (function(){
 
     function concatData_HighlightedMoves_Diagonals (coords, renderBoundingBox, r, g, b, a) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
-        for (var line in legalMoves.slides) {
-            line = line.split(',') // can't hash array so conversion to string made, unconverting it
-            line = [Number(line[0]), Number(line[1])] // More reverting
+        for (var strline in legalMoves.slides) {
+            const line = math.getCoordsFromKey(strline)
             if (line[1] == 0 || line[0] == 0) {continue;}
             const lineEqua = math.getLineFromCoords(line, coords)
             const lineGrad = line[1]/line[0]
@@ -423,7 +422,7 @@ const highlights = (function(){
 
     // Calculates the vertex data of a single diagonal direction eminating from piece. Current x & y is the starting values, followed by the hop values which are -1 or +1 dependant on the direction we're rendering
     function addDataDiagonalVariant (iterateCount, currentX, currentY, xHop, yHop, step, r, g, b, a) {
-        if (currentX===NaN || currentY===NaN) throw new Error('CurrentX or CurrentY (${CurrentX},${CurrentY}) are NaN')
+        if (Number.isNaN(currentX) || Number.isNaN(currentY)) throw new Error('CurrentX or CurrentY (${CurrentX},${CurrentY}) are NaN')
         for (let i = 0; i < iterateCount; i++) { 
             const endX = currentX + xHop
             const endY = currentY + yHop

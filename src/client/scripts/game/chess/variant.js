@@ -191,7 +191,7 @@ const variant = (function() {
             default:
                 throw new Error('Unknown variant.')
         }
-
+        gamefile.startSnapshot.slideMovesPossible = [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]]
         // Every variant has the exact same initial moveRuleState value.
         if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0
         gamefile.startSnapshot.fullMove = 1; // Every variant has the exact same fullMove value.
