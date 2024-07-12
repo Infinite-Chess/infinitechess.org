@@ -8,7 +8,7 @@ const {removeAccount} = require('../controllers/removeAccountController');
 
 
 router.get('/:member', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', 'member.html'));
+    res.render(path.join(__dirname, '..', '..', '..', 'dist', 'views', 'member.ejs'));
 });
 
 router.get('/:member/data', getMemberData);
