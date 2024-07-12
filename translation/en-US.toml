@@ -1,1 +1,58 @@
-500_message = "Hello world"
+[credits]
+# '/credits' page
+title = "Variants"
+copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
+variants_heading = "Variants"
+# UNESCAPED INSERT - Make sure to keep the '<a>' tags intact 
+variants_credits = [
+"Core designed by Andreas Tsevas.",
+"Space designed by Andreas Tsevas.",
+"Space Classic designed by Andreas Tsevas.",
+"Coaip (Chess on an Infinite Plane) designed by Vickalan.",
+"Pawn Horde designed by Inaccessible Cardinal.",
+"Abundance designed by Clicktuck Suskriberz.",
+"Pawndard by SexiLexi.",
+"Classical+ by SexiLexi.",
+"Knightline by Inaccessible Cardinal.",
+"Knighted Chess by cycy98.",
+"<a href='https://math.colgate.edu/~integers/og2/og2.pdf' target='_blank'>Omega</a> designed by Cory Evans and Joel Hamkins.",
+"<a href='https://chess.stackexchange.com/questions/42480/checkmate-in-%cf%89%c2%b2-moves-with-finitely-many-pieces' target='_blank'>Omega^2</a> designed by Andreas Tsevas.",
+"<a href='https://math.colgate.edu/~integers/og2/og2.pdf' target='_blank'>Omega^3</a> designed by Cory Evans and Joel Hamkins.",
+"<a href='https://math.colgate.edu/~integers/rg4/rg4.pdf' target='_blank'>Omega^4</a> designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
+]
+textures_heading = "Textures"
+# UNESCAPED INSERT - Make sure to keep the '<a>' tags intact 
+textures_credits = [
+"<a target='_blank' href='https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces'>Cburnett</a> textures licensed under the <a target='_blank' href='https://creativecommons.org/licenses/by-sa/3.0/deed.en'>Creative Commons Attribution-Share Alike 3.0 Unported License</a>.",
+"<a target='_blank' href='https://greenchess.net/info.php?item=downloads'>Green Chess</a> textures licensed under the <a target='_blank' href='https://creativecommons.org/licenses/by-sa/3.0/deed.en'>Creative Commons Attribution-Share Alike 3.0</a>",
+"<a target='_blank' href='https://github.com/pychess/pychess/blob/master/LICENSE'>Pychess</a> textures licensed under the <a target='_blank' href='https://www.gnu.org/licenses/gpl-3.0.en.html'>GNU General Public License</a>",
+"Gold coin by Quolte.",
+]
+sounds_heading = "Sounds"
+sounds_credits = [
+"<p>Some sounds are provided by the <a href='https://github.com/lichess-org/lila/blob/master/COPYING.md' target='_blank'>Lichess-org Lila</a> project under the <a href='https://www.gnu.org/licenses/agpl-3.0.en.html' target='_blank'>GNU Affero General Public License</a>.</p>",
+"<p>Other sounds created by Naviary.</p>",
+]
+code_heading = "Code"
+code_credits = [
+"<a target='_blank' href='https://www.lcg.ufrj.br/WebGL/hws.edu-examples/doc-bump/gl-matrix.js.html'>High Performance Matrix & Vector Operations</a> by Brandon Jones and Colin MacKenzie IV.",
+"<a target='_blank' href='https://github.com/tsevasa/infinite-chess-notation'>Infinite Chess Notation Converter</a> by Andreas Tsevas and Naviary.</p>",
+]
+
+
+[create-account]
+# '/createaccount' page used to create new account
+title = "Create Account"
+username = "Username:"
+email = "Email:"
+password = "Password:"
+create_button = "Create Account"
+# UNESCAPED INSERT - Make sure to keep the '<a>' tags intact 
+argreement = "I agree to the <a href='/termsofservice' class='agreement' target='_blank'>Terms of Service</a>"
+
+[error-pages]
+# Messages shown on some error pages explaining what went wrong
+400_message = "Invalid parameters were received."
+# UNESCAPED INSERT - Make sure to keep the '<a>' tags intact 
+409_message = "There may have been a clashing username or email. Please <a href='/createaccount'>reload</a> the page."
+500_message = "This isn't supposed to happen. There is some debugging to be done!"
