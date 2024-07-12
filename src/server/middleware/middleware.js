@@ -76,7 +76,7 @@ function configureMiddleware(app) {
 
     app.use(cookieParser());
 
-    // Serve public assets. (e.g. css, scripts, images, audio. EXCLUDING htmls)
+    // Serve public assets. (e.g. css, scripts, images, audio)
     app.use(express.static(path.join(__dirname, '..', '..', '..', 'dist'))); // Serve public assets
 
     /**
