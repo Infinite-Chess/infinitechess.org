@@ -506,15 +506,11 @@ const websocket = (function(){
     /**
      * Flags this outgoing message to, when we receive the server's response, execute a custom function.
      * @param {number} messageID - The ID of the outgoing message
-     * @param {Function} onreplyFunc - The function to execute when we receive the server's response, or after 5 seconds of hearing no response, or immediately if the socket is terminated.
+     * @param {Function} onreplyFunc - The function to execute when we receive the server's response, or never if the socket closes before then.
      */
     function scheduleOnreplyFunc(messageID, onreplyFunc) {
         if (!onreplyFunc) return;
         onreplyFuncs[messageID] = onreplyFunc
-        // Set a timer to execute it if the server doesn't respond.
-        // This will auto delete it from the onreplyFuncs list.
-        // And this timer won't do anything if the function has already been executed.
-        // setTimeout(executeOnreplyFunc, timeToAutoExecuteOnreplyFuncs, messageID)
     }
 
     /** When we receive an incoming message with the `replyto` property specified,

@@ -167,6 +167,24 @@ const specialdetect = (function() {
         addPossibleEnPassant(gamefile, individualMoves, coords, color)
     }
 
+    // Use as inspiration for generating the rose piece's legal moves.
+    // function roses(startCol, startRow) {
+    //     let allAvailableSquares = []
+    //     let movements = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]
+        
+    //     for(let i = 0; i < movements.length; i++) {
+    //         let last = [getSquareFromCords(startCol, startRow)]
+    //         for(let j = i; j < movements.length + i; j++) {
+    //             last = universal(...getCordsOfSquare(last[0]), ...movements[j % movements.length], 1)
+    //             allAvailableSquares.push(last)
+    //             if(last.length == 0 || getPieceFromSquare(last[last.length-1]) != undefined) break
+    //         }
+    //     }
+    
+    //     allAvailableSquares = [].concat(...allAvailableSquares)
+    //     return allAvailableSquares
+    // }
+
     /**
      * Appends legal enpassant capture to the selected pawn's provided individual moves.
      * @param {gamefile} gamefile - The gamefile

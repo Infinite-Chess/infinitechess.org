@@ -19,15 +19,15 @@
         <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource -->
         <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
 		
-		<script defer src="/scripts/game/display/input.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/input.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-		<script defer src="/scripts/game/display/websocket.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/websocket.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-		<script defer src="/scripts/game/display/stats.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/gui/stats.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-		<script defer src="/scripts/game/display/main.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/main.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-		<script defer src="/scripts/game/display/camera.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/rendering/camera.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/game/gui/tooltips.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
@@ -105,11 +105,11 @@
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/game/chess/game.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-		<script defer src="/scripts/game/chess/onlinegame.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/misc/onlinegame.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/game/chess/specialdetect.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-		<script defer src="/scripts/game/chess/browsersupport.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/misc/browsersupport.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/game/chess/wincondition.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
@@ -127,7 +127,7 @@
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/game/chess/gamefileutility.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-		<script defer src="/scripts/game/chess/pieces.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/rendering/pieces.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/game/chess/movepiece.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
@@ -149,9 +149,9 @@
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/game/chess/copypastegame.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-		<script defer src="/scripts/game/chess/invites.js" onerror="htmlscript.callback_LoadingError(event)"
+		<script defer src="/scripts/game/misc/invites.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-        <script defer src="/scripts/game/rendering/statustext.js" onerror="htmlscript.callback_LoadingError(event)"
+        <script defer src="/scripts/game/gui/statustext.js" onerror="htmlscript.callback_LoadingError(event)"
                 onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 		<script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)"
 			onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
