@@ -19,11 +19,11 @@ const htmlDirectory = path.join(__dirname, '..', '..', '..', 'dist', 'views');
 
 // Send the index/root / home page
 router.get('^/$|/index(.html)?', (req, res) => { // If it starts & ends with '/', OR it's '/index.html' OR '/index'
-    res.render(path.join(htmlDirectory, 'index.ejs'));
+    res.render(path.join(htmlDirectory, 'index.ejs'), {t: req.t});
 });
 
 router.get('/credits(.html)?', (req, res) => {
-    res.render(path.join(htmlDirectory, 'credits.ejs'));
+    res.render(path.join(htmlDirectory, 'credits.ejs'), {t: req.t});
 })
 
 router.get('/play(.html)?', (req, res) => {
@@ -34,11 +34,11 @@ router.get('/play(.html)?', (req, res) => {
 })
 
 router.get('/news(.html)?', (req, res) => {
-    res.render(path.join(htmlDirectory, 'news.ejs'));
+    res.render(path.join(htmlDirectory, 'news.ejs'), {t: req.t});
 })
 
 router.get('/login(.html)?', (req, res) => {
-    res.render(path.join(htmlDirectory, 'login.ejs'));
+    res.render(path.join(htmlDirectory, 'login.ejs'), {t: req.t});
 })
 
 router.post('/auth', handleLogin);
@@ -48,7 +48,7 @@ router.get('/refresh', handleRefreshToken);
 router.get('/logout', handleLogout);
 
 router.get('/termsofservice(.html)?', (req, res) => {
-    res.render(path.join(htmlDirectory, 'termsofservice.ejs'));
+    res.render(path.join(htmlDirectory, 'termsofservice.ejs'), {t: req.t});
 })
 
 router.get('/verify/:member/:id', verifyAccount);
@@ -56,19 +56,19 @@ router.get('/verify/:member/:id', verifyAccount);
 const errorDirectory = path.join(htmlDirectory, 'errors');
 
 router.get('/400(.html)?', (req, res) => {
-    res.render(path.join(errorDirectory, '400.ejs'));
+    res.render(path.join(errorDirectory, '400.ejs'), {t: req.t});
 });
 router.get('/401(.html)?', (req, res) => {
-    res.render(path.join(errorDirectory, '401.ejs'));
+    res.render(path.join(errorDirectory, '401.ejs'), {t: req.t});
 });
 router.get('/404(.html)?', (req, res) => {
-    res.render(path.join(errorDirectory, '404.ejs'));
+    res.render(path.join(errorDirectory, '404.ejs'), {t: req.t});
 });
 router.get('/409(.html)?', (req, res) => {
-    res.render(path.join(errorDirectory, '409.ejs'));
+    res.render(path.join(errorDirectory, '409.ejs'), {t: req.t});
 });
 router.get('/500(.html)?', (req, res) => {
-    res.render(path.join(errorDirectory, '500.ejs'));
+    res.render(path.join(errorDirectory, '500.ejs'), {t: req.t});
 });
 
 
