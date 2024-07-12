@@ -14,7 +14,7 @@ const guigameinfo = (function(){
     const element_whosturn = document.getElementById('whosturn')
     const element_dot = document.getElementById('dot')
     const element_playerWhite = document.getElementById('playerwhite')
-    const element_playerBlack = document.getElementById('playerblack')
+    const element_playerBlack = document.getElementById('playerblack');
     
     // Functions
 
@@ -46,14 +46,14 @@ const guigameinfo = (function(){
     function updateWhosTurn(gamefile) {
         const color = gamefile.whosTurn;
 
-        if (color !== 'white' && color !== 'black')
-            throw new Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`)
+        if (color !== 'white' && color !== 'black' && color !== 'blue' && color !== 'green')
+            throw new Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black nor blue nor green! ${color}`)
 
         let textContent = "";
         if (onlinegame.areInOnlineGame()) {
             const ourTurn = onlinegame.isItOurTurn(gamefile)
             textContent = ourTurn ? "Your move" : "Their move";
-        } else textContent = color === "white" ? "White to move" : "Black to move"
+        } else textContent = color[0].toUpperCase() + color.slice(1) + " to move" // color === "white" ? "White to move" : "Black to move"
 
         element_whosturn.textContent = textContent;
 

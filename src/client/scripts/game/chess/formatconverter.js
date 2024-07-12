@@ -32,7 +32,17 @@ const formatconverter = (function() {
         "royalQueensW": "RQ", "royalQueensB": "rq",
         "royalCentaursW": "RC", "royalCentaursB": "rc",
         "obstaclesN": "ob",
-        "voidsN": "vo"
+        "voidsN": "vo",
+
+        // 4 player!          U = blue because B is taken
+        "kingsG": 'gk', "kingsU": "bk",
+        "pawnsG": "gp", "pawnsU": "bp",
+        "knightsG": "gn", "knightsU": "bn",
+        "bishopsG": "gb", "bishopsU": "bb",
+        "rooksG": "gr", "rooksU": "br",
+        "queensG": "gq", "queensU": "bq",
+        "royalQueensG": "rgq", "royalQueensU": "rbq",
+        "royalCentaursG": "rgc", "royalCentaursU": "rbc",
     };
 
     function invertDictionary(json){
@@ -834,6 +844,8 @@ const formatconverter = (function() {
         if (type.endsWith('W')) return "white"
         else if (type.endsWith('B')) return "black"
         else if (type.endsWith('N')) return "neutral"
+        else if(type.endsWith('G')) return "green";
+        else if(type.endsWith('U')) return "blue";
         else throw new Error(`Cannot get color of piece with type "${type}"!`)
     }
 
@@ -849,6 +861,15 @@ const formatconverter = (function() {
         const MAX_INDEX = shortposition.length - 1;
         let index = 0;
         let end_index = 0;
+        if(shortposition.startsWith('4p!') === true){
+            index=3;
+            specialRights['players'] = 4;// not using existing system bc
+            // I want "players" to be extensible and allow player count
+            // other than 2 or 4 in future
+            onlinegame.setNumPlayers(4);
+        } else {
+            onlinegame.setNumPlayers(2);
+        }
         while(index < MAX_INDEX){
             let shortpiece = shortposition[index];
             let piecelength = 1;

@@ -37,6 +37,22 @@ const math1 = (function(){
         else console.trace(`We should never get the opposite color of an invalid color ${color}!`)
     }
 
+    function getNextColor4p(color){
+        if(color === "white") return "green";
+        if(color === "green") return "black";
+        if(color === "black") return "blue";
+        if(color === "blue") return "white";
+        console.trace(`We should never get the next color of an invalid color ${color}!`)
+    }
+
+    function getPreviousColor4p(color){
+        if(color === "green") return "white";
+        if(color === "black") return "green";
+        if(color === "blue") return "black";
+        if(color === "white") return "blue";
+        console.trace(`We should never get the previous color of an invalid color ${color}!`)
+    }
+
     /**
      * Generates a random ID of the provided length, with the characters 0-9 and a-z.
      * @param {number} length - The length of the desired ID
@@ -236,6 +252,8 @@ const math1 = (function(){
     return Object.freeze({
         deepCopyObject,
         getOppositeColor,
+        getPreviousColor4p,
+        getNextColor4p,
         generateID,
         genUniqueID,
         generateNumbID,

@@ -823,6 +823,8 @@ const formatconverter1 = (function() {
         if (type.endsWith('W')) return "white"
         else if (type.endsWith('B')) return "black"
         else if (type.endsWith('N')) return "neutral"
+        else if(type.endsWith('G')) return "green";
+        else if(type.endsWith('U')) return "blue";
         else throw new Error(`Cannot get color of piece with type "${type}"!`)
     }
 

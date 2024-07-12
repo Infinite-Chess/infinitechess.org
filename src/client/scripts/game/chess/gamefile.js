@@ -181,7 +181,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.attackers = undefined;
     /** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
     this.checksGiven = undefined;
-
+    
     this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
     this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)
     

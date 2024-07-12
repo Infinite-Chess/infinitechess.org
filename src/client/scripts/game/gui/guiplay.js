@@ -340,7 +340,7 @@ const guiplay = (function(){
         options.disableEM();
 
         gameOptions.metadata.Date = gameOptions.metadata.Date || math.getUTCDateTime();
-
+        
         const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
             moves: gameOptions.moves,
             variantOptions: gameOptions.variantOptions,

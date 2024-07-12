@@ -157,7 +157,7 @@ const wincondition = (function() {
      * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
      */
     function isOpponentUsingWinCondition(gamefile, winCondition) {
-        const oppositeColor = math.getOppositeColor(gamefile.whosTurn);
+        const oppositeColor = onlinegame.getNumPlayers() === 2 ? math.getOppositeColor(gamefile.whosTurn) : math.getPreviousColor4p(gamefile.whosTurn);
         return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
     }
 

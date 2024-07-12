@@ -28,6 +28,14 @@ const piecesmodel = {
      * @param {boolean} [giveStatus] Optional. If true, displays a message when the model is complete. Default: false
      */
     regenModel: async function(gamefile, colorArgs, giveStatus) { // giveStatus can be undefined
+        if(colorArgs === undefined) colorArgs = {};
+        colorArgs.white = [1,1,1,1];
+        colorArgs.black = [1,1,1,1];
+        colorArgs.neutral = [1,1,1,1];
+        colorArgs.green = [0.1, 1, 0.1, 1];
+        colorArgs.blue = [0.1, 0.1, 1, 1];
+
+
         if (!gamefile) return;
         if (gamefile.mesh.isGenerating) return;
         gamefile.mesh.locked++;

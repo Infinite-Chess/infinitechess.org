@@ -53,7 +53,10 @@ const movepiece = (function(){
 
         if (updateProperties) incrementMoveRule(gamefile, piece.type, wasACapture);
 
-        if (flipTurn) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
+        if(flipTurn){
+            if(onlinegame.getNumPlayers() === 2) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
+            else nextPlayerTurn4Player(gamefile, { pushClock, doGameOverChecks });
+        }
 
         // if (doGameOverChecks || animate || updateProperties) updateInCheck(gamefile, recordMove)
         // ALWAYS DO THIS NOW, no matter what. 
@@ -167,7 +170,6 @@ const movepiece = (function(){
      * @param {Object} options - An object that may contain the property `updateData`, that when true will update the piece in the mesh.
      */
     function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = {}) { // desiredIndex optional
-
         const list = gamefile.ourPieces[type];
 
         // If no index specified, make the default the first undefined in the list!
@@ -248,6 +250,18 @@ const movepiece = (function(){
     function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
         gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
         if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile)
+        if (pushClock) clock.push()
+    }
+
+    function nextPlayerTurn4Player(gamefile, { pushClock = true, doGameOverChecks = true } = {}){
+        gamefile.whosTurn = math.getNextColor4p(gamefile.whosTurn);
+        if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile)
+        if (pushClock) clock.push()
+    }
+
+    function previousPlayerTurn4Player(gamefile, { pushClock = true, doGameOverChecks = true } = {}){
+        gamefile.whosTurn = math.getPreviousColor4p(gamefile.whosTurn);
+        if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
         if (pushClock) clock.push()
     }
 
@@ -447,7 +461,10 @@ const movepiece = (function(){
         if (removeMove) movesscript.deleteLastMove(gamefile.moves);
         gamefile.moveIndex--;
 
-        if (removeMove) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false })
+        if(removeMove){
+            if(onlinegame.getNumPlayers() === 2) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false })
+            else previousPlayerTurn4Player(gamefile, { pushClock: false, doGameOverChecks: false });
+        }
 
         // if (animate) updateInCheck(gamefile, false)
         // No longer needed, as rewinding the move restores the inCheck property.
