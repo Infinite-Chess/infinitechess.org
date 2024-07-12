@@ -123,9 +123,8 @@ const checkdetection = (function(){
      */
     function doesSlideAttackSquare (gamefile, coords, color, attackers) {
         for (const line of gamefile.startSnapshot.slideMovesPossible) {
-            console.log(line)
             const strline = math.getKeyFromCoords(line)
-            const key = math.getLineFromCoords(line, coords)
+            const key = math.getKeyFromLine(line, coords)
             if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[strline][key], line, coords, color, attackers)) return true;
         }
 
@@ -147,9 +146,9 @@ const checkdetection = (function(){
 
             const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type)
 
-            if (!thisPieceMoveset.slideMoves) {console.log(thisPiece); continue};
+            if (!thisPieceMoveset.slideMoves) {continue};
             const moveset = thisPieceMoveset.slideMoves[math.getKeyFromCoords(direction)];
-            if (!moveset) {console.log(thisPiece, thisPieceMoveset.slideMoves); continue};
+            if (!moveset) {continue};
             const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, lineIsVertical, moveset, thisPiece.coords, thisPieceColor)
             if (!thisPieceLegalSlide) continue; // This piece has no horizontal moveset, NEXT piece on this line!
 
@@ -297,7 +296,7 @@ const checkdetection = (function(){
         const selectedPieceCoords = pieceSelected.coords;
         let sameLines = [];
         for (const line of gamefile.startSnapshot.slideMovesPossible) { // Only check current possible slides
-            if (math.getLineFromCoords(line, kingCoords) !== math.getLineFromCoords(line, selectedPieceCoords)) continue;
+            if (math.getKeyFromLine(line, kingCoords) !== math.getKeyFromLine(line, selectedPieceCoords)) continue;
             sameLines.push(line);
         };
 
@@ -312,7 +311,7 @@ const checkdetection = (function(){
         let checklines = [];
         for (const line of sameLines) {
             const strline = math.getKeyFromCoords(line);
-            const key = math.getLineFromCoords(line,kingCoords);
+            const key = math.getKeyFromLine(line,kingCoords);
             const opensDiscovered = doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[strline][key], 'horizontal', kingCoords, color, [])
             if (!opensDiscovered) continue;
             checklines.push(line);
@@ -350,12 +349,14 @@ const checkdetection = (function(){
             bottom: Math.max(square1[1],square2[1])
         }
 
-        function appendBlockPointIfLegal (blockPoint) {
+        function appendBlockPointIfLegal (blockPoint,line) {
             if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
                 !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) return; // Block is off grid so probably not valid
-            if (math.boxContainsSquare(box, blockPoint)) return;
-                // Can our piece legally move there?
-                if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
+            blockPoint=[Math.round(blockPoint[0]), Math.round(blockPoint[1])]
+            if (!math.boxContainsSquare(box, blockPoint)) return;
+            if (math.getKeyFromLine(line,blockPoint)!==math.getKeyFromLine(line, coords)) return; // stop line multiples being annoying
+            // Can our piece legally move there?
+            if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
         }
 
         for (const linestr in moves.slides) {

@@ -101,7 +101,7 @@ const legalmoves = (function(){
                 for (let i=0; i<lines.length; i++) {
                     const line = lines[i];
                     if (!thisPieceMoveset.slideMoves[line]) continue;
-                    const key = math.getLineFromCoords(line,coords);
+                    const key = math.getKeyFromLine(line,coords);
                     legalSlideMoves[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line[0]===0, thisPieceMoveset.slideMoves[line], coords, color);
                 };
             };
@@ -243,8 +243,8 @@ const legalmoves = (function(){
         for (var strline in legalMoves.slides) {
             let line=math.getCoordsFromKey(strline);
             let limits = legalMoves.slides[strline];
-            let selectedPieceLine = math.getLineFromCoords(line,startCoords);
-            let clickedCoordsLine = math.getLineFromCoords(line,endCoords);
+            let selectedPieceLine = math.getKeyFromLine(line,startCoords);
+            let clickedCoordsLine = math.getKeyFromLine(line,endCoords);
             if (limits && selectedPieceLine==clickedCoordsLine) {
                 if (endCoords[0]>=limits[0] && endCoords[0]<=limits[1] && line[0]!=0) return true;
                 else if (endCoords[1]>=limits[0] && endCoords[1]<=limits[1] && line[0]==0) return true;

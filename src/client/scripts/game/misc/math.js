@@ -175,6 +175,13 @@ const math = (function() {
         return step[0]*coords[1]-step[1]*coords[0]
     }
 
+    function getKeyFromLine(step, coords) {
+        const lineIsVertical = step[0]===0;
+        const deltaAxis = lineIsVertical ? step[1] : step[0];
+        const coordAxis = lineIsVertical ? coords[1] : coords[0];
+        return `${getLineFromCoords(step,coords)}|${coordAxis - (Math.floor(coordAxis / deltaAxis) * deltaAxis)}`
+    }
+
     /**
      * TODO: implement this
      * @param {Number[][]} lines 
@@ -863,6 +870,7 @@ const math = (function() {
         boxContainsBox,
         boxContainsSquare,
         getLineFromCoords,
+        getKeyFromLine,
         areLinesCollinear,
         deepCopyObject,
         getKeyFromCoords,

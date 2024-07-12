@@ -422,7 +422,7 @@ const highlights = (function(){
 
     // Calculates the vertex data of a single diagonal direction eminating from piece. Current x & y is the starting values, followed by the hop values which are -1 or +1 dependant on the direction we're rendering
     function addDataDiagonalVariant (iterateCount, currentX, currentY, xHop, yHop, step, r, g, b, a) {
-        if (Number.isNaN(currentX) || Number.isNaN(currentY)) throw new Error('CurrentX or CurrentY (${CurrentX},${CurrentY}) are NaN')
+        if (Number.isNaN(currentX) || Number.isNaN(currentY)) throw new Error(`CurrentX or CurrentY (${CurrentX},${CurrentY}) are NaN`)
         for (let i = 0; i < iterateCount; i++) { 
             const endX = currentX + xHop
             const endY = currentY + yHop

@@ -67,7 +67,7 @@ const organizedlines = {
         let lines = gamefile.startSnapshot.slideMovesPossible
         for (let i = 0; i<lines.length; i++) {
             const line = lines[i]
-            key = math.getLineFromCoords(line,coords)
+            key = math.getKeyFromLine(line,coords)
             const strline = math.getKeyFromCoords(line)
             // Is line initialized
             if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = []
@@ -88,7 +88,7 @@ const organizedlines = {
         let lines = gamefile.startSnapshot.slideMovesPossible
         for (let i = 0; i<lines.length; i++) {
             const line = lines[i]
-            key = math.getLineFromCoords(line,coords)
+            key = math.getKeyFromLine(line,coords)
             removePieceFromLine(gamefile.piecesOrganizedByLines[line],key)
         }
 
