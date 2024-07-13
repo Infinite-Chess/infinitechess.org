@@ -95,9 +95,13 @@ const specialundo = {
         // Next replace piece captured
 
         // Detect en passant
-        if (move.enpassant) { // Was an an passant capture
+        if (move.enpassant !== undefined) { // Was an an passant capture
             const type = move.captured;
-            const captureCoords = [ move.endCoords[0], move.endCoords[1] + move.enpassant ]
+            let captureCoords;
+
+            if(move.type.endsWith('U') || move.type.endsWith('G')) captureCoords = [ move.endCoords[0] + move.enpassant, move.endCoords[1] ];
+            else captureCoords = [ move.endCoords[0], move.endCoords[1] + move.enpassant ]
+            
             movepiece.addPiece(gamefile, type, captureCoords, move.rewindInfo.capturedIndex, { updateData })
 
         } else if (move.captured) { // Was NOT an passant, BUT there was a capture

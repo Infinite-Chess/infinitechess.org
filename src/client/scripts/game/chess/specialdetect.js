@@ -121,31 +121,51 @@ const specialdetect = (function() {
      * @param {array[]} individualMoves - The legal individual moves calculated so far
      */
     function pawns(gamefile, coords, color, individualMoves) {
-
         // White and black pawns move and capture in opposite directions.
-        const yOneorNegOne = color === 'white' ? 1 : -1 
+        let posOneorNegOne;
+        if(color === 'white' || color === 'black'){
+            posOneorNegOne = color === 'white' ? 1 : -1 
+        } else /*if(color === 'green' || color === 'blue')*/{
+            posOneorNegOne = color === 'green' ? 1 : -1;
+        }
+        
     
         // How do we go about calculating a pawn's legal moves?
     
         // 1. It can move forward if there is no piece there
     
         // Is there a piece in front of it?
-        const coordsInFront = [coords[0], coords[1] + yOneorNegOne]
+        let coordsInFront;
+        if(color === 'white' || color === 'black'){
+            coordsInFront = [coords[0], coords[1] + posOneorNegOne];
+        } else /*if(color === 'green' || color === 'blue')*/{
+            coordsInFront = [coords[0] + posOneorNegOne, coords[1]];
+        }
+        
         if (!gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront)) {
             individualMoves.push(coordsInFront) // No piece, add the move
 
             // Is the double push legal?
-            const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yOneorNegOne]
+            let doublePushCoord;
+            if(color === 'white' || color === 'black'){
+                doublePushCoord = [coordsInFront[0], coordsInFront[1] + posOneorNegOne]
+            } else /*if(color === 'green' || color === 'blue')*/{
+                doublePushCoord = [coordsInFront[0] + posOneorNegOne, coordsInFront[1]];
+            }
+             
             const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord)
             if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) individualMoves.push(doublePushCoord) // Add the double push!
         }
     
         // 2. It can capture diagonally if there are opponent pieces there
     
-        const coordsToCapture = [
-            [coords[0] - 1, coords[1] + yOneorNegOne],
-            [coords[0] + 1, coords[1] + yOneorNegOne]
-        ]
+        const coordsToCapture = (color === 'white' || color === 'black') ? [
+            [coords[0] - 1, coords[1] + posOneorNegOne],
+            [coords[0] + 1, coords[1] + posOneorNegOne]
+        ] : [
+            [coords[0] + posOneorNegOne, coords[1] - 1],
+            [coords[0] + posOneorNegOne, coords[1] + 1]
+        ];
         for (let i = 0; i < 2; i++) {
             const thisCoordsToCapture = coordsToCapture[i];
     
@@ -177,6 +197,25 @@ const specialdetect = (function() {
     // If it can capture en passant, the move is appended to  legalmoves
     function addPossibleEnPassant (gamefile, individualMoves, coords, color) {
         if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
+
+        if(color === 'blue' || color === 'green'){
+            const yLandDiff = gamefile.enpassant[1] - coords[1];
+            const oneOrNegOne = color === 'green' ? 1 : -1;
+            if (Math.abs(yLandDiff) !== 1) return; // Not immediately left or right of us
+            if (coords[0] + oneOrNegOne !== gamefile.enpassant[0]) return; // Not one in front of us
+
+            // It is capturable en passant!
+            const captureSquare = [coords[0] + oneOrNegOne, coords[1] + yLandDiff]
+
+            // Extra check to make sure there's no piece (bug if so)
+            if (gamefileutility.getPieceTypeAtCoords(gamefile, captureSquare)) return console.error("We cannot capture onpassant onto a square with an existing piece! " + captureSquare)
+
+            // TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
+            // on the individual move to detect en passant captures and to know what piece to delete
+            captureSquare.enpassant = -oneOrNegOne;
+            individualMoves.push(captureSquare);
+            return;
+        }
 
         const xLandDiff = gamefile.enpassant[0] - coords[0];
         const oneOrNegOne = color === 'white' ? 1 : -1;

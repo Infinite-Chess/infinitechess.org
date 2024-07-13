@@ -72,7 +72,7 @@ const specialmove = {
         const promotionTag = move.promotion; // promote type
         if (!enpassantTag && !promotionTag) return false;; // No special move to execute, return false to signify we didn't move the piece.
 
-        let captureCoords = enpassantTag ? specialmove.getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
+        let captureCoords = enpassantTag ? specialmove.getEnpassantCaptureCoords(move.endCoords, enpassantTag, move.type.endsWith('U') || move.type.endsWith('G')) : move.endCoords;
         let capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords)
 
         if (capturedPiece) move.captured = capturedPiece.type;
@@ -112,5 +112,7 @@ const specialmove = {
     },
 
     // MUST require there be an enpassant tag!
-    getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag] },
+    getEnpassantCaptureCoords(endCoords, enpassantTag, isHorizontalColor=false) {
+        return isHorizontalColor === true ? [endCoords[0] + enpassantTag, endCoords[1]] : [endCoords[0], endCoords[1] + enpassantTag]
+    },
 };

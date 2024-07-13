@@ -66,7 +66,7 @@ const legalmoves = (function(){
                 // Make sure the key's already initialized
                 if (!vicinity[key]) vicinity[key] = [];
 
-                const pieceTypeConcat = math.trimWorBFromType(thisPieceType) // Remove the 'W'/'B' from end of type
+                const pieceTypeConcat = math.trimWorBFromType(thisPieceType) // Remove the 'U'/'G' from end of type
 
                 // Make sure the key contains the piece type that can capture from that distance
                 if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat)
