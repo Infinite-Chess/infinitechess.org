@@ -9,7 +9,7 @@ const onlinegame = (function(){
     let inOnlineGame = false
     let gameID;
     let isPrivate;
-    let ourColor; // white/black (or green/ blue for 4 player!)
+    let ourColor; // white/black (or red/ green/ blue for 4 player!)
     let numPlayers = 2;
 
     /**

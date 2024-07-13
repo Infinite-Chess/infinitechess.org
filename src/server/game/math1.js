@@ -39,16 +39,16 @@ const math1 = (function(){
 
     function getNextColor4p(color){
         if(color === "white") return "green";
-        if(color === "green") return "black";
-        if(color === "black") return "blue";
+        if(color === "green") return "red";
+        if(color === "red") return "blue";
         if(color === "blue") return "white";
         console.trace(`We should never get the next color of an invalid color ${color}!`)
     }
 
     function getPreviousColor4p(color){
         if(color === "green") return "white";
-        if(color === "black") return "green";
-        if(color === "blue") return "black";
+        if(color === "red") return "green";
+        if(color === "blue") return "red";
         if(color === "white") return "blue";
         console.trace(`We should never get the previous color of an invalid color ${color}!`)
     }

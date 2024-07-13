@@ -965,7 +965,7 @@ button.join-button, button.copy-button {
     font-weight: bold;
 }
 
-.dotwhite, .dotblack {
+.dotwhite, .dotblack, .dotred, .dotblue, .dotgreen {
     border: 1px solid black;
     width: 22px;
     height: 22px;
@@ -985,8 +985,23 @@ button.join-button, button.copy-button {
     box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.259);
 }
 
+.dotred {
+    background-color: red;
+    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.491);
+}
+
+.dotgreen {
+    background-color: green;
+    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.491);
+}
+
+.dotblue {
+    background-color: blue;
+    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.491);
+}
+
 @media only screen and (max-width: 850px) {
-    .dotwhite, .dotblack {
+    .dotwhite, .dotblack, .dotred, .dotgreen, .dotblue {
         display: none;
     }
     .whosturn {

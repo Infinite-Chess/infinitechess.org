@@ -66,10 +66,10 @@ const specialundo = {
     // pawnIndex should be specified if it's a promotion move we're undoing
     pawns(gamefile, move, { updateData = true, animate = true } = {}) {
 
-        const enpassantTag = move.enpassant; // -1/1
+        const enPassantData = move.enpassant; // [undo.x, undo.y]
         const promotionTag = move.promotion; // promote type
         const isDoublePush = Math.abs(move.endCoords[1] - move.startCoords[1]) === 2
-        if (!enpassantTag && !promotionTag && !isDoublePush) return false; // No special move to execute, return false to signify we didn't move the piece.
+        if (!enPassantData && !promotionTag && !isDoublePush) return false; // No special move to execute, return false to signify we didn't move the piece.
 
         
         // First move piece back
@@ -95,13 +95,9 @@ const specialundo = {
         // Next replace piece captured
 
         // Detect en passant
-        if (move.enpassant !== undefined) { // Was an an passant capture
+        if (move.enpassant !== undefined) { // Was an en passant capture
             const type = move.captured;
-            let captureCoords;
-
-            if(move.type.endsWith('U') || move.type.endsWith('G')) captureCoords = [ move.endCoords[0] + move.enpassant, move.endCoords[1] ];
-            else captureCoords = [ move.endCoords[0], move.endCoords[1] + move.enpassant ]
-            
+            const captureCoords = enPassantData;
             movepiece.addPiece(gamefile, type, captureCoords, move.rewindInfo.capturedIndex, { updateData })
 
         } else if (move.captured) { // Was NOT an passant, BUT there was a capture

@@ -204,12 +204,15 @@ const options = (function() {
      * @returns {Object} An object containing the properties "white", "black", and "neutral".
      */
     function getPieceRegenColorArgs() {
-        if (!themes[theme].useColoredPieces) return; // Not using colored pieces
+        // if (!themes[theme].useColoredPieces) return; // Not using colored pieces
         
         return {
             white: themes[theme].whitePiecesColor, // [r,g,b,a]
             black: themes[theme].blackPiecesColor,
-            neutral: themes[theme].neutralPiecesColor
+            neutral: themes[theme].neutralPiecesColor,
+            red: themes[theme].redPiecesColor ?? [1, 0.1, 0.1, 1],
+            green: themes[theme].greenPiecesColor ?? [0.1, 1, 0.1, 1],
+            blue: themes[theme].bluePiecesColor ?? [0.1, 0.1, 1, 1]
         }
     }
 

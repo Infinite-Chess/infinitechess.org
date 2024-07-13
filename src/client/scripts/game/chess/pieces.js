@@ -14,6 +14,7 @@ const pieces = (function () {
     const black = ['kingsB', 'giraffesB', 'camelsB', 'zebrasB', 'amazonsB', 'queensB', 'royalQueensB', 'hawksB', 'chancellorsB', 'archbishopsB', 'centaursB', 'royalCentaursB', 'knightsB', 'guardsB', 'rooksB', 'bishopsB', 'pawnsB'];
     const neutral = ['obstaclesN', 'voidsN'];
 
+    const red = ['kingsR', 'queensR', 'rooksR', 'bishopsR', 'pawnsR', 'knightsR', 'royalQueensR', 'royalCentaursR'];
     const green = ['kingsG', 'queensG', 'rooksG', 'bishopsG', 'pawnsG', 'knightsG', 'royalQueensG', 'royalCentaursG'];
     const blue = ['kingsU', 'queensU', 'rooksU', 'bishopsU', 'pawnsU', 'knightsU', 'royalQueensU', 'royalCentaursU'];
 
@@ -80,6 +81,7 @@ const pieces = (function () {
     function forEachPieceType(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
         if(onlinegame.getNumPlayers() === 4){
             for(let i = 0; i < green.length; i++){
+                callback(red[i]);
                 callback(green[i]);
                 callback(blue[i]);
             }
@@ -108,6 +110,7 @@ const pieces = (function () {
     async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
         if(onlinegame.getNumPlayers() === 4){
             for(let i = 0; i < green.length; i++){
+                await callback(red[i]);
                 await callback(green[i]);
                 await callback(blue[i]);
             }
@@ -128,8 +131,8 @@ const pieces = (function () {
     // Iterates through every single piece TYPE in the game state of specified COLOR,
     // and performs specified function on the type
     function forEachPieceTypeOfColor(color, callback) {
-        if (['white', 'black', 'green', 'blue'].includes(color) === false) throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`)
-        if(color === 'blue' || color === 'green'){
+        if (['white', 'black', 'red', 'green', 'blue'].includes(color) === false) throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`)
+        if(color === 'blue' || color === 'green' || color === 'red'){
             for (let i = 0; i < green.length; i++) callback(pieces[color][i]);
             return;
         }
@@ -219,20 +222,28 @@ const pieces = (function () {
             // 4 player
             kingsG: getSpriteCoords(pieceWidth, 3,2),
             kingsU: getSpriteCoords(pieceWidth, 3,2),
+            kingsR: getSpriteCoords(pieceWidth, 3,2),
             pawnsG: getSpriteCoords(pieceWidth, 1,1),
             pawnsU: getSpriteCoords(pieceWidth, 1,1),
+            pawnsR: getSpriteCoords(pieceWidth, 1,1),
             knightsG: getSpriteCoords(pieceWidth, 3,1),
             knightsU: getSpriteCoords(pieceWidth, 3,1),
+            knightsR: getSpriteCoords(pieceWidth, 3,1),
             bishopsG: getSpriteCoords(pieceWidth, 5,1),
             bishopsU: getSpriteCoords(pieceWidth, 5,1),
+            bishopsR: getSpriteCoords(pieceWidth, 5,1),
             rooksG: getSpriteCoords(pieceWidth, 7,1),
             rooksU: getSpriteCoords(pieceWidth, 7,1),
+            rooksR: getSpriteCoords(pieceWidth, 7,1),
             queensG: getSpriteCoords(pieceWidth, 1,2),
             queensU: getSpriteCoords(pieceWidth, 1,2),
+            queensR: getSpriteCoords(pieceWidth, 1,2),
             royalQueensG: getSpriteCoords(pieceWidth, 3,6),
             royalQueensU: getSpriteCoords(pieceWidth, 3,6),
+            royalQueensR: getSpriteCoords(pieceWidth, 3,6),
             royalCentaursG: getSpriteCoords(pieceWidth, 1,6),
             royalCentaursU: getSpriteCoords(pieceWidth, 1,6),
+            royalCentaursR: getSpriteCoords(pieceWidth, 3,6),
         }
 
         // pieceWidth is how many textures in 1 row.  yColumn starts from the top. 
@@ -254,6 +265,7 @@ const pieces = (function () {
     return Object.freeze({
         white,
         black,
+        red,
         green,
         blue,
         neutral,

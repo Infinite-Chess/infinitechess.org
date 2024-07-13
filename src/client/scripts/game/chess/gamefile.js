@@ -36,7 +36,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         position: undefined,
         positionString: undefined,
         specialRights: undefined,
-        /** What square coords, if legal, enpassant capture is possible in the starting position of the game. */
+        /** Array of what square coords, if legal, enpassant capture is possible in the starting position of the game. */
         enpassant: undefined,
         /** The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push) */
         moveRuleState: undefined,
@@ -184,6 +184,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     
     this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
     this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)
+    this.startSnapshot.enpassant = [];
     
     organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
     // movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.

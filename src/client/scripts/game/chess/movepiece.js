@@ -86,7 +86,7 @@ const movepiece = (function(){
         if (!rewindInfoAlreadyPresent) {
             rewindInfo.inCheck = math.deepCopyObject(gamefile.inCheck);
             if (gamefile.attackers)             rewindInfo.attackers = math.deepCopyObject(gamefile.attackers);
-            if (gamefile.enpassant)             rewindInfo.enpassant =     gamefile.enpassant;
+            if (gamefile.enpassant)             rewindInfo.enpassant =     math.deepCopyObject(gamefile.enpassant);
             if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
             if (gamefile.checksGiven)           rewindInfo.checksGiven =   gamefile.checksGiven;
             let key = math.getKeyFromCoords(move.startCoords);
@@ -106,7 +106,7 @@ const movepiece = (function(){
      * @param {number[]} endCoords - The destination of the piece moving
      */
     function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoords) {
-        delete gamefile.enpassant;
+        gamefile.enpassant = [];
         let key = math.getKeyFromCoords(startCoords);
         delete gamefile.specialRights[key] // We also delete its special move right for ANY piece moved
         key = math.getKeyFromCoords(endCoords);

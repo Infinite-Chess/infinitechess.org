@@ -522,6 +522,7 @@ const math = (function() {
         if (type.endsWith('W')) return "white"
         else if (type.endsWith('B')) return "black"
         else if (type.endsWith('N')) return "neutral"
+        else if(type.endsWith('R')) return "red";
         else if(type.endsWith('G')) return "green";
         else if(type.endsWith('U')) return "blue";
         else throw new Error(`Cannot get the color of piece with type ${pieceType}`)
@@ -531,6 +532,7 @@ const math = (function() {
         if (WorB === 'W') return 'white';
         else if (WorB === 'B') return 'black';
         else if (WorB === 'N') return 'neutral';
+        else if(WorB === 'R') return "red";
         else if(WorB === 'G') return "green";
         else if(WorB === 'U') return "blue";
         throw new Error(`Cannot return color when WorB is not W, B, or N! Received: "${WorB}"`)
@@ -549,16 +551,16 @@ const math = (function() {
 
     function getNextColor4p(color){
         if(color === "white") return "green";
-        if(color === "green") return "black";
-        if(color === "black") return "blue";
+        if(color === "green") return "red";
+        if(color === "red") return "blue";
         if(color === "blue") return "white";
         console.trace(`We should never get the next color of an invalid color ${color}!`)
     }
 
     function getPreviousColor4p(color){
         if(color === "green") return "white";
-        if(color === "black") return "green";
-        if(color === "blue") return "black";
+        if(color === "red") return "green";
+        if(color === "blue") return "red";
         if(color === "white") return "blue";
         console.trace(`We should never get the previous color of an invalid color ${color}!`)
     }
@@ -572,6 +574,7 @@ const math = (function() {
         if (color === 'white') return 'W';
         else if (color === 'black') return 'B';
         else if (color === 'neutral') return 'N';
+        else if (color === 'red') return 'R';
         else if (color === 'green') return 'G';
         else if(color === 'blue') return 'U';
         else throw new Error(`Cannot return WorB from strange color ${color}!`)
