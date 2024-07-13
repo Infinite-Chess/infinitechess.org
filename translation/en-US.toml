@@ -1,3 +1,11 @@
+[header]
+home = "Home"
+play = "Play"
+news = "News"
+login = "Login"
+createaccount = "Create Account"
+
+
 [index]
 secondary_title = "The official website for playing live!"
 what_is_it_title = "What is it?"

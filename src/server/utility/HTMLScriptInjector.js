@@ -11,6 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const ejs = require('ejs');
 
 /**
  * A cache object that has file paths for the keys, and for the values-
@@ -76,7 +77,7 @@ function injectScript(htmlFilePath, jsFilePath, injectAfterTag) {
 function sendCachedHTML(req, res, htmlFilePath) {
     const cachedHTML = getCachedHTML(htmlFilePath);
     if (cachedHTML === false) res.status(503).send('Content is still being prepared, please refresh!');
-    else res.send(cachedHTML);
+    else res.send(ejs.render(cachedHTML, {t: req.t}));
 }
 
 /**
