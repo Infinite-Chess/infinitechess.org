@@ -22,7 +22,8 @@
     "proper-lockfile": "^4.1.2",
     "smol-toml": "^1.2.2",
     "uuid": "^8.3.2",
-    "ws": "^8.16.0"
+    "ws": "^8.16.0",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
