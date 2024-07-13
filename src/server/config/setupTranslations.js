@@ -11,7 +11,7 @@ const translationsFolder = "./translation";
 function html_escape_array(array) {
   let escaped = [];
   for (const member of array) {
-    escaped.push(escape_switch(member));
+    escaped.push(html_escape(member));
   }
   return escaped;
 }
@@ -19,13 +19,13 @@ function html_escape_array(array) {
 function html_escape_object(object) {
   let escaped = {};
   for (const key of Object.keys(object)) {
-    escaped[key] = escape_switch(object[key]);
+    escaped[key] = html_escape(object[key]);
   }
   return escaped;
 }
 
 // Function to iterate over arrays and objects and html escape strings 
-function escape_html(value) {
+function html_escape(value) {
   switch (typeof value) {
     case "object":
       if (value.constructor.name == `Object`) {
@@ -53,7 +53,7 @@ function loadTranslationsFolder(folder) {
   const files = fs.readdirSync(folder);
   files.forEach((file) => {
     resources[file.replace(".toml", "")] = {
-      default: escape_html(
+      default: html_escape(
         parse(fs.readFileSync(path.join(folder, file)).toString()),
       ),
     };
