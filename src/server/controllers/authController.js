@@ -83,19 +83,22 @@ async function handleLogin(req, res) {
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
-        loginAttemptData[browserAgent].attempts += 1;
-        loginAttemptData[browserAgent].lastAttemptTime = new Date();
-        if(loginAttemptData[browserAgent].attempts === maxLoginAttempts) {
-            loginAttemptData[browserAgent].cooldownTimeSec += loginCooldownIncrementorSec;
-            logEvents(`${usernameLowercase} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSec} seconds`, "loginAttempts.txt", { print: true });
-        }
-        
         logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
         res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
+        
+        loginAttemptData[browserAgent].attempts += 1;
+        loginAttemptData[browserAgent].lastAttemptTime = new Date();
+        if(loginAttemptData[browserAgent].attempts > maxLoginAttempts) {
+            loginAttemptData[browserAgent].cooldownTimeSec += loginCooldownIncrementorSec;
+            logEvents(`${usernameCaseSensitive} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSec} seconds`, "loginAttempts.txt", { print: true });
+        }
+
         return;
     }
     
     delete loginAttemptData[browserAgent];
+
+    logEvents(`Successful login into ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
     
     // The payload can be an object with their username and their roles.
     const payload = { "username": usernameLowercase };
