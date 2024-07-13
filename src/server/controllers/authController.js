@@ -16,8 +16,26 @@ const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 
+/**
+ * Maximum consecutive login attempts allowed for each username and ip
+ */
 const maxLoginAttempts = 3;
+/**
+ * The amount of time in seconds the cooldown is incremented by
+ */
 const loginCooldownIncrementorSec = 5;
+/**
+ * A map that stores login attempts for each ip and user.
+ * {
+ *  "ip": {
+ *      "user1": {
+ *          attempts: 0,
+ *          cooldownTimeSec: 0,
+ *          lastAttemptTime: 0
+ *      }
+ *  }
+ * }
+ */
 let loginAttemptData = {};
 
 /**
@@ -39,30 +57,35 @@ async function handleLogin(req, res) {
 
     if (!usernameCaseSensitive || !hashedPassword) return res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
     
-    clientIP = getClientIP(req);
+    const clientIP = getClientIP(req);
     if(!(clientIP in loginAttemptData)) {
         loginAttemptData[clientIP] = {};
     }
 
     if(!(usernameLowercase in loginAttemptData[clientIP])) {
-        loginAttemptData[clientIP][usernameLowercase] = { attempts: 1, cooldownTimeSec: 0 };
+        loginAttemptData[clientIP][usernameLowercase] = { attempts: 1, cooldownTimeSec: 0, lastAttemptTime: new Date() };
     }
+
+    const now = new Date();
+    const timeSinceLastAttemptsMillis = now - loginAttemptData[clientIP][usernameLowercase].lastAttemptTime;
+    const timeSinceLastAttemptsSec = timeSinceLastAttemptsMillis / 1000;
 
     // Im not sure about all this case sensetive, I guess it's display name so I will use the lowercase one ;)
     if (loginAttemptData[clientIP][usernameLowercase].attempts > maxLoginAttempts) {
-        return res.status(401).json({ 'message': 'Failed to login many times, Please try again later.'});
+        if (timeSinceLastAttemptsSec <= loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec) {
+            console.log(`Login was blocked for ${usernameCaseSensitive} for being in cooldown!`)
+            return res.status(401).json({ 'message': `Failed to login, try again in ${Math.floor(loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec - timeSinceLastAttemptsSec)} seconds.`});
+        }
+        loginAttemptData[clientIP][usernameLowercase].attempts = 1
     }
 
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
-        
         loginAttemptData[clientIP][usernameLowercase].attempts += 1
+        loginAttemptData[clientIP][usernameLowercase].lastAttemptTime = new Date();
         if(loginAttemptData[clientIP][usernameLowercase].attempts === maxLoginAttempts) {
             loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec += loginCooldownIncrementorSec
-            setTimeout(() => {
-                loginAttemptData[clientIP][usernameLowercase].attempts = 1; 
-            }, loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec * 1000)
         }
         
         console.log(`Incorrect password for user ${usernameCaseSensitive}!`)
