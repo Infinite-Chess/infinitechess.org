@@ -58,34 +58,35 @@ async function handleLogin(req, res) {
     if (!usernameCaseSensitive || !hashedPassword) return res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
     
     const clientIP = getClientIP(req);
-    if(!(clientIP in loginAttemptData)) {
-        loginAttemptData[clientIP] = {};
-    }
-
-    if(!(usernameLowercase in loginAttemptData[clientIP])) {
-        loginAttemptData[clientIP][usernameLowercase] = { attempts: 1, cooldownTimeSec: 0, lastAttemptTime: new Date() };
+    const browserAgent = `${usernameLowercase}${clientIP}`;
+    if(!(browserAgent in loginAttemptData)) {
+        loginAttemptData[browserAgent] = {
+            attempts: 1,
+            cooldownTimeSec: 0,
+            lastAttemptTime: new Date()
+        };
     }
 
     const now = new Date();
-    const timeSinceLastAttemptsMillis = now - loginAttemptData[clientIP][usernameLowercase].lastAttemptTime;
+    const timeSinceLastAttemptsMillis = now - loginAttemptData[browserAgent].lastAttemptTime;
     const timeSinceLastAttemptsSec = timeSinceLastAttemptsMillis / 1000;
 
     // Im not sure about all this case sensetive, I guess it's display name so I will use the lowercase one ;)
-    if (loginAttemptData[clientIP][usernameLowercase].attempts > maxLoginAttempts) {
-        if (timeSinceLastAttemptsSec <= loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec) {
-            console.log(`Login was blocked for ${usernameCaseSensitive} for being in cooldown!`)
-            return res.status(401).json({ 'message': `Failed to login, try again in ${Math.floor(loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec - timeSinceLastAttemptsSec)} seconds.`});
+    if (loginAttemptData[browserAgent].attempts > maxLoginAttempts) {
+        if (timeSinceLastAttemptsSec <= loginAttemptData[browserAgent].cooldownTimeSec) {
+            console.log(`Login was blocked for ${usernameCaseSensitive} for being in cooldown!`);
+            return res.status(401).json({ 'message': `Failed to login, try again in ${Math.floor(loginAttemptData[browserAgent].cooldownTimeSec - timeSinceLastAttemptsSec)} seconds.`});
         }
-        loginAttemptData[clientIP][usernameLowercase].attempts = 1
+        loginAttemptData[browserAgent].attempts = 1;
     }
 
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
-        loginAttemptData[clientIP][usernameLowercase].attempts += 1
-        loginAttemptData[clientIP][usernameLowercase].lastAttemptTime = new Date();
-        if(loginAttemptData[clientIP][usernameLowercase].attempts === maxLoginAttempts) {
-            loginAttemptData[clientIP][usernameLowercase].cooldownTimeSec += loginCooldownIncrementorSec
+        loginAttemptData[browserAgent].attempts += 1;
+        loginAttemptData[browserAgent].lastAttemptTime = new Date();
+        if(loginAttemptData[browserAgent].attempts === maxLoginAttempts) {
+            loginAttemptData[browserAgent].cooldownTimeSec += loginCooldownIncrementorSec;
         }
         
         console.log(`Incorrect password for user ${usernameCaseSensitive}!`)
@@ -93,12 +94,7 @@ async function handleLogin(req, res) {
         return;
     }
     
-    delete loginAttemptData[clientIP][usernameLowercase];
-    
-    // We don't want to save the data forever
-    if (loginAttemptData[clientIP] == {}) {
-        delete loginAttemptData[clientIP];
-    }
+    delete loginAttemptData[browserAgent];
     
     // The payload can be an object with their username and their roles.
     const payload = { "username": usernameLowercase };
