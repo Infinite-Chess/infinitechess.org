@@ -175,6 +175,13 @@ const math = (function() {
         return step[0]*coords[1]-step[1]*coords[0]
     }
 
+    /**
+     * Gets a unique key from the line equation.
+     * Compatable with factorable steps like `[2,2]`.
+     * @param {Number[]} step Step in the form of `[deltax,deltay]`
+     * @param {Number[]} coords Coordinate in the form of `[x,y]`
+     * @returns {String} the key in the format of `id|intercept`
+     */
     function getKeyFromLine(step, coords) {
         const lineIsVertical = step[0]===0;
         const deltaAxis = lineIsVertical ? step[1] : step[0];
