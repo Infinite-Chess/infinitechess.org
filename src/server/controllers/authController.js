@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 
 const { getUsernameCaseSensitive, getHashedPassword, addRefreshToken, incrementLoginCount, updateLastSeen } = require('./members');
 const { getClientIP } = require('../middleware/IP');
+const { logEvents } = require('../middleware/logEvents');
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
@@ -74,7 +75,6 @@ async function handleLogin(req, res) {
     // Im not sure about all this case sensetive, I guess it's display name so I will use the lowercase one ;)
     if (loginAttemptData[browserAgent].attempts > maxLoginAttempts) {
         if (timeSinceLastAttemptsSec <= loginAttemptData[browserAgent].cooldownTimeSec) {
-            console.log(`Login was blocked for ${usernameCaseSensitive} for being in cooldown!`);
             return res.status(401).json({ 'message': `Failed to login, try again in ${Math.floor(loginAttemptData[browserAgent].cooldownTimeSec - timeSinceLastAttemptsSec)} seconds.`});
         }
         loginAttemptData[browserAgent].attempts = 1;
@@ -87,9 +87,10 @@ async function handleLogin(req, res) {
         loginAttemptData[browserAgent].lastAttemptTime = new Date();
         if(loginAttemptData[browserAgent].attempts === maxLoginAttempts) {
             loginAttemptData[browserAgent].cooldownTimeSec += loginCooldownIncrementorSec;
+            logEvents(`${usernameLowercase} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSec} seconds`, "loginAttempts.txt", { print: true });
         }
         
-        console.log(`Incorrect password for user ${usernameCaseSensitive}!`)
+        logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
         res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
         return;
     }
