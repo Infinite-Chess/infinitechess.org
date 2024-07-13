@@ -126,7 +126,7 @@ function showAccountInfo() {
 }
 
 function removeAccount() {
-    if (confirm("Are you sure you want to delete your account?")) {
+    if (confirm("Are you sure you want to delete your account? This CAN NOT be undone!")) {
         const config = { // Send with our access token
             method: 'DELETE',
             headers: {
