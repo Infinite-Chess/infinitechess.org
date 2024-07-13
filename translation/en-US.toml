@@ -66,8 +66,7 @@ argreement = "I agree to the <a href='/termsofservice' class='agreement' target=
 title = "Log In"
 username = "Username:"
 password = "Password:"
-forgot_password = "Forgot?"
-email_us = "Email us."
+forgot_password = "Forgot? <a href='mailto:infinitechess.org@gmail.com'>Email us.</a>"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
