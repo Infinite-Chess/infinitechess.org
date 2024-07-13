@@ -62,7 +62,7 @@ const variant = (function() {
         for (const tpiece of teamtypes) {
             rawtypes.add(math.trimWorBFromType(tpiece)); // Make a set wit the team colour trimmed
         }
-        const slides = new Set();
+        const slides = new Set([[1,0]]); // Always on for castling, If castling can be disabled, change this?
         for (const type of rawtypes) {
             let moveset = movesets[type];
             if (!moveset) continue;

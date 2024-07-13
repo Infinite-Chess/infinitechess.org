@@ -351,10 +351,9 @@ const checkdetection = (function(){
 
         function appendBlockPointIfLegal (blockPoint,line) {
             if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
-                !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) return; // Block is off grid so probably not valid
+                !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) {console.log("A"); return}; // Block is off grid so probably not valid
             blockPoint=[Math.round(blockPoint[0]), Math.round(blockPoint[1])]
-            if (!math.boxContainsSquare(box, blockPoint)) return;
-            if (math.getKeyFromLine(line,blockPoint)!==math.getKeyFromLine(line, coords)) return; // stop line multiples being annoying
+            if (math.getKeyFromLine(line,blockPoint)!==math.getKeyFromLine(line, coords)) {console.log("C"); return}; // stop line multiples being annoying
             // Can our piece legally move there?
             if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
         }
@@ -364,7 +363,7 @@ const checkdetection = (function(){
             const c1 = math.getLineFromCoords(line, coords)
             const c2 = math.getLineFromCoords(direction,square2)
             const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2)
-            appendBlockPointIfLegal(blockPoint)
+            appendBlockPointIfLegal(blockPoint, line)
         }
     }
 
