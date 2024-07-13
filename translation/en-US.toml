@@ -1,5 +1,4 @@
 [index]
-# home page
 secondary_title = "The official website for playing live!"
 what_is_it_title = "What is it?"
 what_is_it_pargaraphs = [
@@ -17,7 +16,6 @@ about_paragraphs = [
 patreon_title = "Patreon Supporters"
 
 [credits]
-# '/credits' page
 title = "Credits"
 copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
 variants_heading = "Variants"
@@ -57,7 +55,6 @@ code_credits = [
 
 
 [create-account]
-# '/createaccount' page used to create new account
 title = "Create Account"
 username = "Username:"
 email = "Email:"
@@ -72,8 +69,7 @@ password = "Password:"
 forgot_password = "Forgot?"
 email_us = "Email us."
 
-[error-pages]
-# Messages shown on some error pages explaining what went wrong
+[error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
 409_message = "There may have been a clashing username or email. Please <a href='/createaccount'>reload</a> the page."
 500_message = "This isn't supposed to happen. There is some debugging to be done!"
