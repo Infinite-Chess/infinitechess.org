@@ -31,20 +31,20 @@
         </header>
         <main>
             <div id="content">                  
-                <h1 class="center">Log In</h1>
+                <h1 class="center"><%=t('login.title')%></h1>
                 <form action="./login" method="POST" class="center" id="form">
                     <div class="formfield">
                         <div id="usernameinputline">
-                            <label for="username">Username:</label>
+                            <label for="username"><%=t('login.username')%></label>
                             <input id="username" type="text" name="username" required maxLength="40" autocomplete="off" autofocus>
                         </div>
                         <div id="passwordinputline">
-                            <label for="password">Password:</label>
+                            <label for="password"><%=t('login.password')%></label>
                             <input id="password" type="password" name="password" required maxLength="40">
                         </div>
                         <!-- This is where our script inserts an error division! -->
                     </div>
-                    <p id="forgot" class="forgothidden">Forgot? <a href="mailto:infinitechess.org@gmail.com">Email us.</a></p>
+                    <p id="forgot" class="forgothidden"><%=t('login.forgot_password')%> <a href="mailto:infinitechess.org@gmail.com"><%=t('login.email_us')%></a></p>
                     <input type="submit" value="Log In" class="unavailable" id="submit">
                 </form>
             </div>

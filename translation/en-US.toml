@@ -1,9 +1,26 @@
+[index]
+# home page
+secondary_title = "The official website for playing live!"
+what_is_it_title = "What is it?"
+what_is_it_pargaraphs = [
+"Infinite Chess is a variant of chess in which there are no borders, much larger than your familiar 8x8 board. The queen, rooks, and bishops have <em>no limit</em> to how far they can move per turn. Pick any natural number up to infinity!",
+"With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researches have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
+"As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
+]
+how_to_title = "How can I play?"
+how_to_paragraph = "The current version release is 1.3.2 on the <a href='/play'>Play</a> page!"
+about_title = "About the Project"
+about_paragraphs = [
+"I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
+"It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my <a target='_blank' href='https://www.patreon.com/Naviary'>Patreon</a>."
+]
+patreon_title = "Patreon Supporters"
+
 [credits]
 # '/credits' page
-title = "Variants"
+title = "Credits"
 copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
 variants_heading = "Variants"
-# UNESCAPED INSERT - Make sure to keep the '<a>' tags intact 
 variants_credits = [
 "Core designed by Andreas Tsevas.",
 "Space designed by Andreas Tsevas.",
@@ -21,7 +38,6 @@ variants_credits = [
 "<a href='https://math.colgate.edu/~integers/rg4/rg4.pdf' target='_blank'>Omega^4</a> designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
 ]
 textures_heading = "Textures"
-# UNESCAPED INSERT - Make sure to keep the '<a>' tags intact 
 textures_credits = [
 "<a target='_blank' href='https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces'>Cburnett</a> textures licensed under the <a target='_blank' href='https://creativecommons.org/licenses/by-sa/3.0/deed.en'>Creative Commons Attribution-Share Alike 3.0 Unported License</a>.",
 "<a target='_blank' href='https://greenchess.net/info.php?item=downloads'>Green Chess</a> textures licensed under the <a target='_blank' href='https://creativecommons.org/licenses/by-sa/3.0/deed.en'>Creative Commons Attribution-Share Alike 3.0</a>",
@@ -47,12 +63,17 @@ username = "Username:"
 email = "Email:"
 password = "Password:"
 create_button = "Create Account"
-# UNESCAPED INSERT - Make sure to keep the '<a>' tags intact 
 argreement = "I agree to the <a href='/termsofservice' class='agreement' target='_blank'>Terms of Service</a>"
+
+[login]
+title = "Log In"
+username = "Username:"
+password = "Password:"
+forgot_password = "Forgot?"
+email_us = "Email us."
 
 [error-pages]
 # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
-# UNESCAPED INSERT - Make sure to keep the '<a>' tags intact 
 409_message = "There may have been a clashing username or email. Please <a href='/createaccount'>reload</a> the page."
 500_message = "This isn't supposed to happen. There is some debugging to be done!"
