@@ -233,11 +233,12 @@ const checkProfanity = function (string) {
 }
 
 const doEmailFormatChecks = function (string, res) {
-    console.log();
+    if (string.length > 320) return res.status(400).json({ 'message': 'Your email is too looooooong.'}); // Max email length
     if (!isValidEmail(string)) return res.status(400).json({ 'message': 'This is not a valid email'});
     if(!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': 'This email is already in use'});
     if (isEmailBanned(string)) {
-        console.log(`Banned user with email ${string.toLowerCase()} tried to recreate their account!`)
+        const errMessage = `Banned user with email ${string.toLowerCase()} tried to recreate their account!`;
+        logEvents(errMessage, 'hackLog.txt', { print: true })
         return res.status(409).json({ 'conflict': 'You are banned.'});
     }
     return true;
@@ -251,7 +252,7 @@ const isValidEmail = function (string) {
 
 const doPasswordFormatChecks = function (password, res) {
     // First we check password length
-    if (password.length < 6 || password.length > 30) return res.status(400).json({ 'message': 'Password must be between 6-30 characters long'});
+    if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': 'Password must be 6-72 characters long'});
     if (!isValidPassword(password)) return res.status(400).json({ 'message': 'Password is in an incorrect format'});
     if (password.toLowerCase() === 'password') return res.status(400).json({ 'message': "Password must not be 'password'"});
     return true;
