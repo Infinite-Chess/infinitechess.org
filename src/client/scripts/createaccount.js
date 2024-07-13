@@ -144,12 +144,13 @@ passwordInputElement.addEventListener('input', (event) => { // When password fie
     
     let passwordError = document.getElementById("passworderror"); // Does an error already exist?
 
-    const lengthError = passwordInputElement.value.length < 6 || passwordInputElement.value.length > 72;
+    const shortError = passwordInputElement.value.length < 6;
+    const longError = passwordInputElement.value.length > 72;
     const formatError = !validPassword(passwordInputElement.value);
     const containsPasswordError = passwordInputElement.value.toLowerCase() === 'password';
 
     // If ANY error, make sure errorElement is created
-    if (lengthError || formatError || containsPasswordError) {
+    if (shortError || longError || formatError || containsPasswordError) {
         if (!passwordError) { // Create empty errorElement
             passwordHasError = true;
             createErrorElement('passworderror', 'passwordinputline');
@@ -166,8 +167,10 @@ passwordInputElement.addEventListener('input', (event) => { // When password fie
 
     if (formatError) {
         passwordError.textContent = 'Password is in an incorrect format';
-    } else if (lengthError) {
-        passwordError.textContent = 'Password must be 6-72 characters long';
+    } else if (shortError) {
+        passwordError.textContent = 'Password must be 6+ characters long';
+    } else if (longError) {
+        passwordError.textContent = "Password can't be over 72 characters long";
     } else if (containsPasswordError) {
         passwordError.textContent = "Password must not be 'password'";
     }
