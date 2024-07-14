@@ -1,3 +1,5 @@
+version = 1
+
 [header]
 home = "Home"
 play = "Play"

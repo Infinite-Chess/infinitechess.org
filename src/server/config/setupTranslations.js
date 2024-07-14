@@ -70,9 +70,63 @@ function html_escape(value) {
   }
 }
 
+/**
+* Removes keys from `object` based on string of format 'foo.bar'.
+* @param {key_string} String representing key that has to be deleted in format 'foo.bar'.s
+* @param {object} Object that is target of the removal.
+* @returns Copy of `object` with deleted values
+*/
+function remove_key(key_string, object) {
+  const keys = key_string.split('.');
+  
+  let currentObj = object;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (currentObj[keys[i]]) {
+      currentObj = currentObj[keys[i]];
+    }
+  }
+
+  if (currentObj[keys.at(-1)]) {
+    
+    delete currentObj[keys.at(-1)];
+  }
+  return object;
+}
+
+/**
+* Removes outdated translations.
+* @param {object} Object of translations.
+* @param {changelog} `changes.json` file. 
+* @returns 
+*/
+function removeOutdated(object, changelog) {
+  const version = object.version;
+  // Filter out versions that are older than version of current language
+  const filtered_keys = Object.keys(changelog).filter((function x(y) {
+    return version < parseInt(y);
+  }));
+  
+  let key_strings = [];
+  for (key of filtered_keys) {
+    key_strings = key_strings.concat(changelog[key]);
+  }
+  // Remove duplicate
+  key_strings = Array.from(new Set(key_strings));
+  
+  let object_copy = object;
+  for (let key_string of key_strings) {
+    object_copy = remove_key(key_string, object_copy);
+  }
+  
+  return object_copy;
+}
+
 function loadTranslationsFolder(folder) {
   const resources = {};
   const files = fs.readdirSync(folder);
+  const changelog = JSON.parse(
+    fs.readFileSync(path.join(folder, "changes.json")).toString(),
+  );
   files
     .filter(function y(x) {
       return x.endsWith(".toml");
@@ -80,10 +134,14 @@ function loadTranslationsFolder(folder) {
     .forEach((file) => {
       resources[file.replace(".toml", "")] = {
         default: html_escape(
+          removeOutdated(
           parse(fs.readFileSync(path.join(folder, file)).toString()),
+          changelog
+          ),
         ),
       };
     });
+  
   return resources;
 }
 
