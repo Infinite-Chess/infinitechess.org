@@ -228,6 +228,21 @@ const wincondition = (function() {
         return { victor, condition }
     }
 
+	/**
+	 * Returns the game result based on the victor.
+	 *
+	 * @param {string} victor - The victor of the game. Can be 'white', 'black', 'draw', or 'aborted'.
+	 * @returns {string} The result of the game in the format '1-0', '0-1', '0.5-0.5', or '0-0'.
+	 * @throws {Error} Throws an error if the victor is not recognized.
+	 */
+	function getResultFromVictor(victor) {
+	    if (victor === 'white') return '1-0';
+	    else if (victor === 'black') return '0-1';
+	    else if (victor === 'draw') return '0.5-0.5';
+	    else if (victor === 'aborted') return '0-0';
+	    throw new Error(`Cannot get game result from strange victor "${victor}"!`);
+	}
+
     return Object.freeze({
         validWinConditions,
         getGameConclusion,
@@ -236,7 +251,8 @@ const wincondition = (function() {
         doesColorHaveWinCondition,
         getWinConditionCountOfColor,
         isGameConclusionDecisive,
-        getVictorAndConditionFromGameConclusion
+        getVictorAndConditionFromGameConclusion,
+	getResultFromVictor
     })
 
 })();
