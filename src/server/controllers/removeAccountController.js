@@ -2,12 +2,25 @@
  * This module handles account deletion.
  */
 
-const { removeMember } = require('../controllers/members')
+const { removeMember, getAllUsernames, getVerified, getJoinDate } = require('../controllers/members')
 const { removeAllRoles } = require('../controllers/roles');
 const { logEvents } = require('../middleware/logEvents');
-const { members } = require('../controllers/members');
 
-const removeAccount = async (req, res) => {
+// Automatic deletion of accounts...
+
+/** The maximum time an account is allowed to remain unverified before the server will delete it from DataBase. */
+const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
+/** The interval for how frequent to check for unverified account that exists more than `maxExistenceTimeForUnverifiedAccount` */
+const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1; // 1 days
+
+
+
+/**
+ * Route that removes a user account if they request to delete it.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object.
+ */
+const removeAccount = (req, res) => {
     const usernameLowercase = req.params.member.toLowerCase();
 
     // Check to make sure they're logged in
@@ -23,6 +36,11 @@ const removeAccount = async (req, res) => {
     }
 }
 
+/**
+ * Remove a user account by username.
+ * @param {string} usernameLowercase - The username of the account to remove, in lowercase.
+ * @param {string} reason - The reason for account deletion.
+ */
 const removeAccountByUsername = async (usernameLowercase, reason) => {
     removeAllRoles(usernameLowercase);
     if (removeMember(usernameLowercase)) {
@@ -32,32 +50,36 @@ const removeAccountByUsername = async (usernameLowercase, reason) => {
     }
 }
 
-/**
- * The maximum time an account is allowed to remain unverified before the server will delete it from DataBase.
- */
-const maxExistenceTimeForUnverifiedAccount = 3 * 24 * 60 * 60 * 1000; // 3 days
-/**
- * The interval for how frequent to check for unverified account that exists more than `maxExistenceTimeForUnverifiedAccount`
- */
-const intervalForRemovalOfOldUnverifiedAccounts = 1 * 24 * 60 * 60 * 1000; // 1 days
+// Automatic deletion of old, unverified accounts...
 
 /**
- * This function is run every `intervalForRemovalOfOldUnverifiedAccounts`ms.
- * It checkes for old unverified account and removes them from the DataBase
+ * This function is run every {@link intervalForRemovalOfOldUnverifiedAccountsMillis}.
+ * It checkes for old unverified account and removes them from the database
  */
-function removeOldUnverifiedMembers() {    
+function removeOldUnverifiedMembers() {
     const now = new Date();
+    const millisecondsInADay = 1000 * 60 * 60 * 24;
 
-    for (username in members) {
-        if(members[username].verified[0] == undefined) continue;
+    const allUserNames = getAllUsernames(); // An array of all usernames
+
+    for (const username of allUserNames) {
+        if(getVerified(username) !== false) continue;  // Are verified, or they don't exist
+        // Are not verified...
         
-        if((now - new Date(members[username].joined)) > maxExistenceTimeForUnverifiedAccount && !members[username].verified[0]) {
-            removeAccountByUsername(username, `Unverified for more than ${maxExistenceTimeForUnverifiedAccount / (24 * 60 * 60 * 1000)} days`)
-        }
+        // Calculate the time since the user joined
+        const timeJoined = getJoinDate(username); // A date object
+        const timeSinceJoined = now - timeJoined; // Milliseconds (Date - Date = number)
+
+        if(timeSinceJoined < maxExistenceTimeForUnverifiedAccountMillis) continue; // Account isn't old enough.
+
+        // Delete account...
+        removeAccountByUsername(username, `Unverified for more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days`)
     }
 }
 
-setInterval(removeOldUnverifiedMembers, intervalForRemovalOfOldUnverifiedAccounts);
+removeOldUnverifiedMembers(); // Call once on startup.
+setInterval(removeOldUnverifiedMembers, intervalForRemovalOfOldUnverifiedAccountsMillis); // Repeatedly call once a day
+
 
 module.exports = {
     removeAccount,

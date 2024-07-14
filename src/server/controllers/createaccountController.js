@@ -12,11 +12,9 @@ const bcrypt = require('bcrypt');
 
 const { handleLogin } = require('./authController')
 const { sendEmailConfirmation } = require('./sendMail')
-const { addMember, getMemberData, constructEmailHash, doesMemberExist } = require('./members.js')
+const { addMember, getMemberData, doesMemberExist, isEmailAvailable } = require('./members.js')
 const { logEvents } = require('../middleware/logEvents');
 const { isEmailBanned } = require('../middleware/banned')
-
-const emailHash = constructEmailHash();
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
@@ -120,9 +118,6 @@ const createNewMember = async (req, res) => {
 async function generateAccount({ username, email, password, autoVerify }) {
     const usernameLowercase = username.toLowerCase();
 
-    // Update email list!
-    emailHash[email] = true;
-
     // Use bcrypt to hash & salt password
     const hashedPassword = await bcrypt.hash(password, 10); // Passes 10 salt rounds. (standard)
     const date = new Date();
@@ -181,11 +176,6 @@ const generateID = function (length) {
 const checkEmailAssociated = (req, res) => {
     if (isEmailAvailable(req.params.email.toLowerCase())) res.json([true]);
     else res.json([false]);
-}
-
-const isEmailAvailable = function (email) {
-    if (emailHash[email]) return false;
-    return true;
 }
 
 // Route
