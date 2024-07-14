@@ -18,7 +18,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
         <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource -->
         <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
-		
+
+        <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <script defer src="/scripts/game/app.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
 
         <!-- These can be used, in dev, to auto-inject into this html document before serving -->
@@ -89,9 +90,7 @@
         <script defer src="/scripts/game/chess/copypastegame.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <script defer src="/scripts/game/misc/invites.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <script defer src="/scripts/game/gui/statustext.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-        <script defer src="/scripts/game/chess/insufficientmaterial.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-        
-        <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script> -->
+        <script defer src="/scripts/game/chess/insufficientmaterial.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>  -->
     </head>
     <!-- The onload event listener to call main.start() is now within the htmlscript! -->
     <body>
