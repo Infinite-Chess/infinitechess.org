@@ -32,11 +32,11 @@ await remove("./dist", {
   force: true,
 });
 
-// copy all clientside files over to dist except for the game scripts
+// copy all clientside files over to dist
 await copy("./src/client", "./dist", {
   recursive: true,
   force: true,
-  filter: filename => { return !/game[^$]+/.test(filename)}
+  filter: filename => { return !/game\//.test(filename)}
 });
 
 // get all client scripts:
