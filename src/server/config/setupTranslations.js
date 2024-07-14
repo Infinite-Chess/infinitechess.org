@@ -2,7 +2,6 @@ const i18next = require("i18next");
 const { parse } = require("smol-toml");
 const fs = require("fs");
 const path = require("path");
-const { readFileSync } = require("fs");
 const middleware = require("i18next-http-middleware");
 const xss = require("xss");
 
@@ -66,7 +65,7 @@ function initTranslations() {
 
   i18next.use(middleware.LanguageDetector).init({
     // debug: true,
-    preload: Object.keys(translations), // List of languages to preload to make sure they are loadedbefore rendering views
+    preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
     resources: translations,
     defaultNS: "default",
     fallbackLng: "en-US",
