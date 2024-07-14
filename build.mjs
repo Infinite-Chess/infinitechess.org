@@ -56,12 +56,10 @@ let gamecode = ""; // string containing all code in /game except for htmlscript.
 for (const file of clientFiles) {
   // If the file is either a css file or htmlscript.js or not in /game, then copy it over in dev mode, or minify it in production mode:
   if (/\.css$/.test(file) || /\/htmlscript\.js$/.test(file) || !/\/game\//.test(file) ){
-    if (DEV_BUILD){
+    if (!DEV_BUILD){
       await copy(`./src/client/${file}`, `./dist/${file}` , {force: true} );
     } else {
       const code = await readFile(`./src/client/${file}`, 'utf8');
-      const minifyInput = {};
-      minifyInput[`/src/client/${file}`] = code;
       const minified = await minify(code, {
         mangle: true, // Disable variable name mangling
         compress: true, // Enable compression
@@ -77,7 +75,7 @@ for (const file of clientFiles) {
 }
 
 // Combine all gamecode files into app.js, and minify them in dev mode
-if (DEV_BUILD){
+if (!DEV_BUILD){
   filesToWrite.push(writeFile(`./dist/scripts/game/app.js`, gamecode, 'utf8'));
 } else{
   const minifiedgame = await minify(gamecode, {
