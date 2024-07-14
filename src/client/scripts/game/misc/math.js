@@ -620,6 +620,13 @@ const math = (function() {
         else throw new Error(`Cannot get the color of piece with type ${pieceType}`)
     }
 
+    function getColorFromWorB(WorB) {
+        if (WorB === 'W') return 'white';
+        else if (WorB === 'B') return 'black';
+        else if (WorB === 'N') return 'neutral';
+        throw new Error(`Cannot return color when WorB is not W, B, or N! Received: "${WorB}"`)
+    }
+
     /**
      * Returns the opposite color of the color provided.
      * @param {string} color - "White" / "Black"
@@ -934,6 +941,7 @@ const math = (function() {
         copyCoords,
         roundAwayFromZero,
         getPieceColorFromType,
+        getColorFromWorB,
         getOppositeColor,
         getWorBFromType,
         getWorBFromColor,
