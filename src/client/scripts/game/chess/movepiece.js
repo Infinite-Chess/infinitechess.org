@@ -63,7 +63,7 @@ const movepiece = (function(){
         updateInCheck(gamefile, recordMove)
         if (doGameOverChecks) {
             if(gamefile.playerNum === 4){
-                checkForDeadPlayers4p({ toRemoveDeadPlayers: concludeGameIfOver, simulated });
+                // checkForDeadPlayers4p({ toRemoveDeadPlayers: concludeGameIfOver, simulated });
             } else {
                 gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
             }

@@ -565,6 +565,15 @@ const math = (function() {
         console.trace(`We should never get the previous color of an invalid color ${color}!`)
     }
 
+    function getAllColorsExcept4p(color){
+        const cols = [];
+        if(color !== "white") cols.push("white");
+        if(color !== "green") cols.push("green");
+        if(color !== "red") cols.push("red");
+        if(color !== "blue") cols.push("blue");
+        return cols;
+    }
+
     // REQUIRES the type of piece to be valid, and have a W or B at the end!
     function getWorBFromType(type) {
         return type.charAt(type.length - 1);
@@ -875,5 +884,6 @@ const math = (function() {
         genUniqueID,
         getPreviousColor4p,
         getNextColor4p,
+        getAllColorsExcept4p
     });
 })();
