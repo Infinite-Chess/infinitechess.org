@@ -9,9 +9,9 @@ const xss = require("xss");
 const translationsFolder = "./translation";
 
 /**
-* Templates without any external data other than translations.
-* Don't insert names with file extensions.
-*/
+ * Templates without any external data other than translations.
+ * Don't insert names with file extensions.
+ */
 const staticTranslatedTemplates = [
   "createaccount",
   "credits",
@@ -73,20 +73,24 @@ function html_escape(value) {
 function loadTranslationsFolder(folder) {
   const resources = {};
   const files = fs.readdirSync(folder);
-  files.forEach((file) => {
-    resources[file.replace(".toml", "")] = {
-      default: html_escape(
-        parse(fs.readFileSync(path.join(folder, file)).toString()),
-      ),
-    };
-  });
+  files
+    .filter(function y(x) {
+      return x.endsWith(".toml");
+    })
+    .forEach((file) => {
+      resources[file.replace(".toml", "")] = {
+        default: html_escape(
+          parse(fs.readFileSync(path.join(folder, file)).toString()),
+        ),
+      };
+    });
   return resources;
 }
 
 /**
-* Creates file or directory if it doesn't exist
-* @param {filePath} Path to create. 
-*/
+ * Creates file or directory if it doesn't exist
+ * @param {filePath} Path to create.
+ */
 function createFileOrDir(filePath) {
   if (!fs.existsSync(filePath)) {
     if (path.extname(filePath) === "") {
@@ -143,7 +147,7 @@ function initTranslations() {
     defaultNS: "default",
     fallbackLng: "en-US",
   });
-  translateStaticTemplates(Object.keys(translations)); // Compiles static files 
+  translateStaticTemplates(Object.keys(translations)); // Compiles static files
 }
 
 module.exports = {
