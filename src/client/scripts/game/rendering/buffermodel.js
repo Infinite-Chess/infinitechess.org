@@ -72,14 +72,15 @@ const buffermodel = (function() {
      * @param {number} numPositionComponents - The number of floats for each vertice's position, either 2 or 3.
      * @param {string} mode - The primitive rendering mode to use (e.g. "TRIANGLES" / "POINTS"), see {@link validRenderModes}
      * @param {Object} texture - The texture to bind before rendering (this can be changed by calling changeTexture())
+     * @param {textureProgram} textureProgram - The program with which to tint the texture. Defailts to a white tint.
      * @returns {BufferModel} The buffer model
      */
-    function createModel_TintTextured(data, numPositionComponents, mode, texture) {
+    function createModel_TintTextured(data, numPositionComponents, mode, texture, textureProgram=shaders.programs.tintedTextureProgram) {
         if (numPositionComponents < 2 || numPositionComponents > 3) return console.error(`Unsupported numPositionComponents ${numPositionComponents}`)
         if (texture == null) return console.error("Cannot create a tinted textured buffer model without a texture!")
         const stride = numPositionComponents + 2;
-        const prepDrawFunc = getPrepDrawFunc(shaders.programs.tintedTextureProgram, numPositionComponents, true, false);
-        return new BufferModel(shaders.programs.tintedTextureProgram, data, stride, mode, texture, prepDrawFunc)
+        const prepDrawFunc = getPrepDrawFunc(textureProgram, numPositionComponents, true, false);
+        return new BufferModel(textureProgram, data, stride, mode, texture, prepDrawFunc)
     }
 
     /**

@@ -17,7 +17,7 @@ const checkdetection = (function(){
     function detectCheck(gamefile, color, attackers) {
         // Input validation
         if (!gamefile) throw new Error("Cannot detect check of an undefined game!")
-        if (color !== 'white' && color !== 'black') throw new Error(`Cannot detect check of the team of color ${color}!`)
+        if (color !== 'white' && color !== 'black' && color !== 'red' && color !== 'blue' && color !== 'green') throw new Error(`Cannot detect check of the team of color ${color}!`)
         if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`)
 
         // Coordinates of ALL royals of this color!
@@ -42,7 +42,7 @@ const checkdetection = (function(){
         // Input validation
         if (!gamefile) throw new Error("Cannot detect if a square of an undefined game is being attacked!")
         if (!coord) return false;
-        if (colorOfFriendly !== 'white' && colorOfFriendly !== 'black') throw new Error(`Cannot detect if an opponent is attacking the square of the team of color ${colorOfFriendly}!`)
+        if (colorOfFriendly !== 'white' && colorOfFriendly !== 'black' && colorOfFriendly !== 'red' && colorOfFriendly !== 'blue' && colorOfFriendly !== 'green') throw new Error(`Cannot detect if an opponent is attacking the square of the team of color ${colorOfFriendly}!`)
 
         let atleast1Attacker = false;
 
@@ -516,20 +516,39 @@ const checkdetection = (function(){
         // know the game is not over yet...
 
         const whosTurn = gamefile.whosTurn;
-        const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
-        for (let i = 0; i < whiteOrBlack.length; i++) {
-            const thisType = whiteOrBlack[i];
-            const thesePieces = gamefile.ourPieces[thisType]
-            for (let a = 0; a < thesePieces.length; a++) {
-                const coords = thesePieces[a];
-                if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-                const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords)
-                const thisPiece = { type: thisType, coords, index }; // { index, coords }
-                const moves = legalmoves.calculate(gamefile, thisPiece)
-                if (!legalmoves.hasAtleast1Move(moves)) continue;
-                return false;
+
+        if(gamefile.playerNum === 4){
+            const pieceTypes = pieces[gamefile.whosTurn];
+            for (let i = 0; i < pieceTypes.length; i++) {
+                const thisType = pieceTypes[i];
+                const thesePieces = gamefile.ourPieces[thisType];
+                for (let a = 0; a < thesePieces.length; a++) {
+                    const coords = thesePieces[a];
+                    if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
+                    const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords)
+                    const thisPiece = { type: thisType, coords, index }; // { index, coords }
+                    const moves = legalmoves.calculate(gamefile, thisPiece)
+                    if (!legalmoves.hasAtleast1Move(moves)) continue;
+                    return false;
+                }
+            }
+        } else {
+            const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
+            for (let i = 0; i < whiteOrBlack.length; i++) {
+                const thisType = whiteOrBlack[i];
+                const thesePieces = gamefile.ourPieces[thisType]
+                for (let a = 0; a < thesePieces.length; a++) {
+                    const coords = thesePieces[a];
+                    if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
+                    const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords)
+                    const thisPiece = { type: thisType, coords, index }; // { index, coords }
+                    const moves = legalmoves.calculate(gamefile, thisPiece)
+                    if (!legalmoves.hasAtleast1Move(moves)) continue;
+                    return false;
+                }
             }
         }
+        
 
         // We made it through every single piece without finding a single move.
         // So is this draw or checkmate? Depends on whether the current state is check!

@@ -267,7 +267,7 @@ const shaders = (function() {
      * with a bound texture AND with a global color tint applied to every point.
      * @returns {ShaderProgram}
     */
-    function createTintedTextureProgram() {
+    function createTintedTextureProgram(tintCol=[1,1,1,1]/*default: white*/) {
         // Vertex shader. For every vertex, applies matrix multiplication to find it's position on the canvas.
         // Attributes receive data from buffer. Uniforms are like global variables, they stay the same.
         const vsSource = `  
@@ -319,8 +319,7 @@ const shaders = (function() {
         // Otherwise, if we forget to set it when rendering, the pieces will be invisible,
         // and you will have no clue why and spend 30 minutes trying to figure it out.
         gl.useProgram(tintedTextureProgram.program);
-        const defaultColor = [1,1,1, 1]; // White
-        gl.uniform4fv(tintedTextureProgram.uniformLocations.uVertexColor, defaultColor)
+        gl.uniform4fv(tintedTextureProgram.uniformLocations.uVertexColor, tintCol)
 
         return tintedTextureProgram;
     }

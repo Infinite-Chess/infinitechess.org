@@ -1,18 +1,13 @@
 
-const formatconverter1 = require('./formatconverter1');
-const variantomega1 = require('./variantomega1');
-const math1 = require('./math1');
-const pieces1 = require('./pieces1');
-
 // This script stores our variants,
 // and prepares them when a game is generated
 
 "use strict";
 
-const variant1 = (function() {
+const variant = (function() {
 
     /** Variants names the game works with */
-    const validVariants = ["Classical","Core","Standarch","Space Classic","CoaIP","Pawn Horde","Space","Obstocean","Abundance","Amazon Chandelier","Containment","Classical - Limit 7","CoaIP - Limit 7","Chess","Classical - KOTH","CoaIP - KOTH","Omega","Omega^2","Omega^3","Omega^4","Classical+","Pawndard","Knightline","Knighted Chess"];
+    const validVariants = ["Classical","Core","Standarch","4 Player Classic","Space Classic","CoaIP","Pawn Horde","Space","Obstocean","Abundance","Amazon Chandelier","Containment","Classical - Limit 7","CoaIP - Limit 7","Chess","Classical - KOTH","CoaIP - KOTH","Omega","Omega^2","Omega^3","Omega^4","Classical+","Pawndard","Knightline","Knighted Chess"];
     /** A list of all variants where black moves first */
     const blackMovesFirstGames = ['Omega','Omega^2','Omega^3','Omega^4']
 
@@ -86,7 +81,7 @@ const variant1 = (function() {
             positionString = result.positionString;
             position = result.position;
             specialRights = result.specialRights;
-        } else positionString = formatconverter1.LongToShort_Position(options.startingPosition, options.specialRights);
+        } else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
 
         gamefile.startSnapshot = {
             position,
@@ -95,7 +90,7 @@ const variant1 = (function() {
             turn: options.turn || 'white',
             fullMove: options.fullMove || 1
         }
-        if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
+        if (options.enpassant && Array.isArray(options.enpassant)) gamefile.startSnapshot.enpassant = options.enpassant;
         if (options.moveRule) {
             const [state, max] = options.moveRule.split('/');
             gamefile.startSnapshot.moveRuleState = Number(state);
@@ -121,6 +116,9 @@ const variant1 = (function() {
                 break;
             case "Standarch":
                 initStandarch(gamefile, { Variant, Date });
+                break;
+            case "4 Player Classic":
+                initFourPlayer(gamefile, { Variant, Date });
                 break;
             case "Space Classic":
                 initSpaceClassic(gamefile, { Variant, Date });
@@ -175,16 +173,16 @@ const variant1 = (function() {
                 break;
             // Showcasings...
             case "Omega": // Joel & Cory's version
-                variantomega1.initOmega(gamefile, { Variant, Date });
+                variantomega.initOmega(gamefile, { Variant, Date });
                 break;
             case "Omega^2":
-                variantomega1.initOmegaSquared(gamefile, { Variant, Date });
+                variantomega.initOmegaSquared(gamefile, { Variant, Date });
                 break;
             case "Omega^3":
-                variantomega1.initOmegaCubed(gamefile, { Variant, Date });
+                variantomega.initOmegaCubed(gamefile, { Variant, Date });
                 break;
             case "Omega^4":
-                variantomega1.initOmegaFourth(gamefile, { Variant, Date });
+                variantomega.initOmegaFourth(gamefile, { Variant, Date });
                 break;
             // Removed...
             case "Standarch - 3 Check":
@@ -241,8 +239,7 @@ const variant1 = (function() {
      * @returns {Object} An object containing 3 properties: `position`, `positionString`, and `specialRights`.
      */
     function getStartingPositionOfVariant({ Variant, Date }) {
-        let positionString;
-        let startingPosition;
+        let positionString, startingPosition;
         switch (Variant) {
             case "Classical":
                 positionString = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+'
@@ -252,6 +249,9 @@ const variant1 = (function() {
                 return getStartSnapshotPosition({ positionString });
             case "Standarch":
                 positionString = 'p4,11+|p5,11+|p1,10+|p2,10+|p3,10+|p6,10+|p7,10+|p8,10+|p0,9+|ar4,9|ch5,9|p9,9+|p0,8+|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|p9,8+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P0,1+|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|P9,1+|P0,0+|AR4,0|CH5,0|P9,0+|P1,-1+|P2,-1+|P3,-1+|P6,-1+|P7,-1+|P8,-1+|P4,-2+|P5,-2+'
+                return getStartSnapshotPosition({ positionString });
+            case "4 Player Classic":
+                positionString = 'P1,-1+|P2,-1+|P3,-1+|P4,-1+|P5,-1+|P6,-1+|P7,-1+|P8,-1+|rp1,10+|rp2,10+|rp3,10+|rp4,10+|rp5,10+|rp6,10+|rp7,10+|rp8,10+|R1,-2+|R8,-2+|rr1,11+|rr8,11+|N2,-2|N7,-2|rn2,11|rn7,11|B3,-2|B6,-2|rb3,11|rb6,11|Q4,-2|req4,11|K5,-2+|rk5,11+|gk-2,5+|bk11,4+|gp-1,1+|gp-1,2+|gp-1,3+|gp-1,4+|gp-1,5+|gp-1,6+|gp-1,7+|gp-1,8+|bp10,1+|bp10,2+|bp10,3+|bp10,4+|bp10,5+|bp10,6+|bp10,7+|bp10,8+|gr-2,1|gr-2,8|br11,1|br11,8|gn-2,2|gn-2,7|bn11,7|bn11,2|gb-2,3|gb-2,6|bb11,6|bb11,3|gq-2,4|bq11,5';
                 return getStartSnapshotPosition({ positionString });
             case "Space Classic":
                 positionString = getPositionStringOfSpaceClassic(Date);
@@ -311,10 +311,10 @@ const variant1 = (function() {
                 positionString = 'K51,94|k46,80|Q30,148|Q32,148|Q29,3|q29,148|q24,98|q24,97|q24,92|q24,91|q24,86|q24,85|q24,80|q24,79|q46,78|q45,77|q46,77|q45,76|q46,76|q78,60|N15,84|n63,64|r53,96|r45,81|r46,81|r46,79|r47,79|r45,78|B27,152|B29,152|B27,151|B28,151|B30,151|B32,151|B27,150|B28,150|B29,150|B30,150|B31,150|B32,150|B32,149|B9,96|B11,96|B15,96|B20,96|B47,87|B43,86|B44,82|B50,82|B51,81|B8,79|B10,79|B8,78|B10,78|B14,78|B19,78|B49,77|B41,72|B43,72|B45,72|B47,72|B49,72|B51,72|B53,72|B68,72|B10,71|B14,71|B18,71|B20,71|B22,71|B24,71|B76,55|B78,55|B80,55|B82,55|B84,55|B27,20|B29,20|B29,4|b27,155|b29,155|b31,155|b32,154|b9,99|b11,99|b15,99|b20,97|b33,97|b24,96|b11,92|b13,92|b15,92|b19,92|b47,91|b48,91|b49,91|b50,91|b51,91|b24,90|b47,90|b49,90|b51,90|b48,89|b50,89|b51,89|b47,88|b49,88|b51,88|b37,87|b48,87|b50,87|b51,87|b19,86|b49,86|b51,86|b48,85|b50,85|b24,84|b49,84|b51,84|b9,83|b48,83|b50,83|b51,82|b18,80|b14,79|b24,78|b52,77|b53,77|b47,76|b49,76|b51,76|b52,76|b53,76|b66,76|b70,76|b45,75|b47,75|b49,75|b51,75|b53,75|b10,74|b14,74|b18,74|b20,74|b22,74|b24,74|b58,74|b75,71|b78,58|b80,58|b82,58|b84,58|b27,23|b29,23|P26,155|P28,155|P30,155|P32,155|P27,154|P29,154|P31,154|P33,154|P26,153|P28,153|P30,153|P32,153|P26,152|P28,152|P31,152|P33,152|P26,151|P29,151|P31,151|P33,151|P26,150|P33,150|P26,149|P27,149|P28,149|P29,149|P30,149|P31,149|P33,149|P31,148|P33,148|P26,147|P28,147|P30,147|P31,147|P32,147|P33,147|P15,146|P27,146|P29,146|P28,145|P25,111|P24,110|P23,109|P22,108|P21,107|P25,107|P20,106|P24,106|P19,105|P23,105|P20,104|P19,103|P25,103|P20,102|P24,102|P19,101|P23,101|P20,100|P4,99|P6,99|P8,99|P10,99|P12,99|P14,99|P16,99|P19,99|P3,98|P5,98|P7,98|P9,98|P11,98|P15,98|P20,98|P4,97|P6,97|P8,97|P10,97|P12,97|P14,97|P16,97|P19,97|P21,97|P32,97|P34,97|P3,96|P5,96|P8,96|P10,96|P12,96|P33,96|P35,96|P4,95|P6,95|P8,95|P9,95|P10,95|P11,95|P12,95|P14,95|P16,95|P19,95|P21,95|P32,95|P34,95|P36,95|P23,94|P33,94|P35,94|P37,94|P8,93|P9,93|P34,93|P36,93|P38,93|P4,92|P6,92|P8,92|P10,92|P12,92|P14,92|P16,92|P18,92|P20,92|P35,92|P37,92|P39,92|P3,91|P5,91|P7,91|P9,91|P11,91|P13,91|P15,91|P19,91|P21,91|P36,91|P38,91|P40,91|P4,90|P6,90|P8,90|P10,90|P12,90|P14,90|P16,90|P18,90|P20,90|P35,90|P39,90|P41,90|P3,89|P5,89|P7,89|P9,89|P11,89|P13,89|P15,89|P19,89|P21,89|P34,89|P40,89|P42,89|P4,88|P6,88|P8,88|P10,88|P12,88|P14,88|P16,88|P23,88|P33,88|P37,88|P41,88|P43,88|P46,88|P48,88|P3,87|P5,87|P7,87|P9,87|P11,87|P13,87|P15,87|P32,87|P36,87|P38,87|P42,87|P44,87|P4,86|P6,86|P8,86|P10,86|P12,86|P14,86|P18,86|P20,86|P31,86|P35,86|P37,86|P39,86|P42,86|P44,86|P46,86|P48,86|P3,85|P5,85|P7,85|P9,85|P11,85|P13,85|P15,85|P17,85|P19,85|P21,85|P32,85|P36,85|P38,85|P40,85|P42,85|P43,85|P44,85|P3,84|P5,84|P7,84|P9,84|P11,84|P13,84|P18,84|P20,84|P33,84|P37,84|P39,84|P42,84|P43,84|P44,84|P52,84|P4,83|P6,83|P8,83|P10,83|P12,83|P14,83|P16,83|P19,83|P21,83|P34,83|P38,83|P40,83|P42,83|P43,83|P44,83|P49,83|P51,83|P3,82|P5,82|P7,82|P9,82|P11,82|P13,82|P15,82|P23,82|P31,82|P35,82|P39,82|P42,82|P43,82|P52,82|P2,81|P4,81|P6,81|P8,81|P10,81|P12,81|P14,81|P32,81|P38,81|P40,81|P42,81|P43,81|P44,81|P49,81|P3,80|P5,80|P7,80|P9,80|P11,80|P17,80|P19,80|P21,80|P31,80|P33,80|P37,80|P39,80|P50,80|P52,80|P2,79|P4,79|P7,79|P9,79|P11,79|P13,79|P15,79|P18,79|P20,79|P32,79|P34,79|P36,79|P38,79|P40,79|P44,79|P3,78|P5,78|P7,78|P9,78|P11,78|P17,78|P21,78|P33,78|P35,78|P37,78|P39,78|P41,78|P43,78|P2,77|P4,77|P7,77|P8,77|P9,77|P10,77|P11,77|P13,77|P15,77|P18,77|P20,77|P34,77|P36,77|P38,77|P40,77|P42,77|P23,76|P35,76|P37,76|P39,76|P41,76|P65,76|P67,76|P69,76|P71,76|P7,75|P8,75|P36,75|P38,75|P40,75|P42,75|P64,75|P66,75|P70,75|P3,74|P5,74|P7,74|P9,74|P11,74|P13,74|P15,74|P17,74|P19,74|P21,74|P23,74|P25,74|P37,74|P39,74|P41,74|P57,74|P59,74|P63,74|P65,74|P67,74|P69,74|P71,74|P2,73|P4,73|P6,73|P8,73|P10,73|P14,73|P18,73|P20,73|P22,73|P24,73|P38,73|P40,73|P42,73|P44,73|P46,73|P48,73|P50,73|P52,73|P54,73|P58,73|P62,73|P64,73|P66,73|P70,73|P72,73|P3,72|P5,72|P7,72|P9,72|P11,72|P13,72|P15,72|P17,72|P19,72|P21,72|P23,72|P25,72|P39,72|P57,72|P59,72|P61,72|P63,72|P65,72|P71,72|P2,71|P4,71|P6,71|P8,71|P40,71|P42,71|P44,71|P46,71|P48,71|P50,71|P52,71|P54,71|P58,71|P62,71|P64,71|P66,71|P70,71|P72,71|P74,71|P76,71|P3,70|P5,70|P7,70|P9,70|P11,70|P13,70|P15,70|P17,70|P19,70|P21,70|P23,70|P25,70|P57,70|P59,70|P61,70|P63,70|P65,70|P71,70|P75,70|P77,70|P56,69|P58,69|P62,69|P64,69|P72,69|P74,69|P76,69|P78,69|P57,68|P59,68|P61,68|P63,68|P67,68|P69,68|P75,68|P77,68|P79,68|P56,67|P58,67|P62,67|P66,67|P70,67|P74,67|P76,67|P78,67|P80,67|P57,66|P59,66|P64,66|P67,66|P69,66|P71,66|P75,66|P77,66|P79,66|P81,66|P56,65|P59,65|P63,65|P66,65|P70,65|P76,65|P78,65|P80,65|P82,65|P57,64|P59,64|P62,64|P65,64|P67,64|P69,64|P71,64|P73,64|P77,64|P79,64|P81,64|P83,64|P56,63|P58,63|P66,63|P70,63|P74,63|P78,63|P80,63|P82,63|P84,63|P57,62|P59,62|P61,62|P63,62|P65,62|P67,62|P69,62|P71,62|P73,62|P75,62|P79,62|P81,62|P83,62|P85,62|P56,61|P58,61|P60,61|P62,61|P64,61|P66,61|P70,61|P74,61|P76,61|P82,61|P84,61|P57,60|P59,60|P61,60|P63,60|P65,60|P67,60|P69,60|P71,60|P73,60|P75,60|P80,60|P82,60|P56,59|P58,59|P60,59|P62,59|P64,59|P66,59|P70,59|P74,59|P57,58|P59,58|P61,58|P63,58|P65,58|P73,58|P75,58|P58,57|P60,57|P62,57|P64,57|P74,57|P73,56|P75,56|P77,56|P79,56|P81,56|P83,56|P85,56|P74,55|P75,54|P77,54|P79,54|P81,54|P83,54|P85,54|P26,23|P28,23|P30,23|P27,22|P29,22|P26,21|P28,21|P30,21|P26,19|P28,19|P30,19|P26,18|P30,18|P26,17|P30,17|P26,16|P28,16|P30,16|P26,15|P28,15|P30,15|P26,14|P28,14|P30,14|P26,13|P28,13|P30,13|P26,12|P28,12|P30,12|P26,11|P28,11|P30,11|P26,10|P28,10|P30,10|P26,9|P28,9|P30,9|P26,8|P28,8|P30,8|P26,7|P28,7|P30,7|P26,6|P28,6|P30,6|P26,5|P28,5|P30,5|P26,4|P28,4|P30,4|P26,3|P28,3|P30,3|P26,2|P27,2|P28,2|P29,2|P30,2|p26,156|p28,156|p30,156|p32,156|p33,155|p26,154|p28,154|p30,154|p31,153|p33,153|p15,147|p25,112|p24,111|p23,110|p22,109|p25,109|p21,108|p25,108|p20,107|p24,107|p19,106|p23,106|p20,105|p25,105|p19,104|p25,104|p20,103|p24,103|p19,102|p23,102|p20,101|p25,101|p4,100|p6,100|p8,100|p10,100|p12,100|p14,100|p16,100|p19,100|p24,100|p25,100|p3,99|p5,99|p7,99|p20,99|p23,99|p24,99|p25,99|p4,98|p6,98|p8,98|p10,98|p12,98|p14,98|p16,98|p19,98|p21,98|p23,98|p25,98|p32,98|p34,98|p3,97|p5,97|p15,97|p23,97|p25,97|p35,97|p4,96|p6,96|p14,96|p16,96|p19,96|p21,96|p23,96|p25,96|p32,96|p34,96|p36,96|p18,95|p23,95|p25,95|p33,95|p35,95|p37,95|p25,94|p34,94|p36,94|p38,94|p4,93|p6,93|p10,93|p12,93|p14,93|p16,93|p18,93|p20,93|p23,93|p24,93|p25,93|p35,93|p37,93|p39,93|p3,92|p5,92|p7,92|p9,92|p21,92|p23,92|p25,92|p36,92|p38,92|p40,92|p46,92|p47,92|p48,92|p49,92|p50,92|p51,92|p52,92|p4,91|p6,91|p8,91|p10,91|p12,91|p14,91|p16,91|p18,91|p20,91|p23,91|p25,91|p35,91|p39,91|p41,91|p46,91|p52,91|p3,90|p5,90|p7,90|p9,90|p11,90|p13,90|p15,90|p19,90|p21,90|p23,90|p25,90|p34,90|p40,90|p42,90|p46,90|p48,90|p50,90|p52,90|p4,89|p6,89|p8,89|p10,89|p12,89|p14,89|p16,89|p23,89|p25,89|p33,89|p37,89|p41,89|p43,89|p46,89|p52,89|p3,88|p5,88|p7,88|p9,88|p11,88|p13,88|p15,88|p25,88|p32,88|p36,88|p38,88|p42,88|p44,88|p50,88|p52,88|p4,87|p6,87|p8,87|p10,87|p12,87|p14,87|p18,87|p20,87|p23,87|p24,87|p25,87|p31,87|p35,87|p39,87|p46,87|p52,87|p3,86|p5,86|p7,86|p9,86|p11,86|p13,86|p15,86|p17,86|p21,86|p23,86|p25,86|p32,86|p36,86|p38,86|p40,86|p47,86|p50,86|p52,86|p18,85|p20,85|p23,85|p25,85|p33,85|p37,85|p39,85|p46,85|p47,85|p49,85|p52,85|p4,84|p6,84|p8,84|p10,84|p12,84|p14,84|p16,84|p19,84|p21,84|p23,84|p25,84|p34,84|p38,84|p40,84|p46,84|p47,84|p3,83|p5,83|p7,83|p11,83|p13,83|p15,83|p23,83|p25,83|p31,83|p35,83|p39,83|p46,83|p47,83|p52,83|p2,82|p4,82|p6,82|p8,82|p10,82|p12,82|p14,82|p25,82|p32,82|p38,82|p40,82|p46,82|p47,82|p49,82|p3,81|p5,81|p7,81|p9,81|p11,81|p13,81|p15,81|p17,81|p19,81|p21,81|p23,81|p24,81|p25,81|p31,81|p33,81|p37,81|p39,81|p47,81|p50,81|p52,81|p2,80|p4,80|p13,80|p15,80|p20,80|p23,80|p25,80|p32,80|p34,80|p36,80|p38,80|p40,80|p44,80|p47,80|p3,79|p5,79|p17,79|p19,79|p21,79|p23,79|p25,79|p33,79|p35,79|p37,79|p39,79|p41,79|p43,79|p45,79|p2,78|p4,78|p13,78|p15,78|p18,78|p20,78|p23,78|p25,78|p34,78|p36,78|p38,78|p40,78|p42,78|p44,78|p47,78|p49,78|p51,78|p52,78|p53,78|p54,78|p17,77|p23,77|p25,77|p35,77|p37,77|p39,77|p41,77|p44,77|p47,77|p48,77|p50,77|p51,77|p54,77|p65,77|p67,77|p69,77|p71,77|p25,76|p36,76|p38,76|p40,76|p42,76|p44,76|p48,76|p50,76|p54,76|p64,76|p3,75|p5,75|p9,75|p11,75|p13,75|p15,75|p17,75|p19,75|p21,75|p23,75|p25,75|p37,75|p39,75|p41,75|p44,75|p46,75|p48,75|p50,75|p52,75|p54,75|p57,75|p59,75|p63,75|p65,75|p67,75|p69,75|p71,75|p2,74|p4,74|p6,74|p8,74|p38,74|p40,74|p42,74|p44,74|p46,74|p48,74|p50,74|p52,74|p54,74|p62,74|p64,74|p66,74|p70,74|p72,74|p3,73|p5,73|p7,73|p9,73|p11,73|p13,73|p15,73|p17,73|p19,73|p21,73|p23,73|p25,73|p39,73|p41,73|p43,73|p45,73|p47,73|p49,73|p51,73|p53,73|p57,73|p59,73|p61,73|p63,73|p65,73|p71,73|p2,72|p4,72|p6,72|p8,72|p10,72|p14,72|p18,72|p20,72|p22,72|p24,72|p40,72|p42,72|p44,72|p46,72|p48,72|p50,72|p52,72|p54,72|p58,72|p62,72|p64,72|p66,72|p70,72|p72,72|p74,72|p76,72|p3,71|p5,71|p7,71|p9,71|p11,71|p13,71|p15,71|p17,71|p19,71|p21,71|p23,71|p25,71|p53,71|p57,71|p59,71|p61,71|p63,71|p65,71|p71,71|p77,71|p56,70|p58,70|p62,70|p64,70|p67,70|p69,70|p72,70|p74,70|p76,70|p78,70|p57,69|p59,69|p61,69|p63,69|p67,69|p69,69|p75,69|p77,69|p79,69|p56,68|p58,68|p62,68|p66,68|p70,68|p74,68|p76,68|p78,68|p80,68|p57,67|p59,67|p64,67|p67,67|p69,67|p71,67|p75,67|p77,67|p79,67|p81,67|p56,66|p63,66|p66,66|p70,66|p73,66|p76,66|p78,66|p80,66|p82,66|p57,65|p62,65|p65,65|p67,65|p69,65|p71,65|p73,65|p77,65|p79,65|p81,65|p83,65|p56,64|p58,64|p61,64|p66,64|p70,64|p74,64|p78,64|p80,64|p82,64|p84,64|p57,63|p59,63|p61,63|p63,63|p65,63|p67,63|p69,63|p71,63|p73,63|p75,63|p79,63|p81,63|p83,63|p85,63|p56,62|p58,62|p60,62|p62,62|p64,62|p66,62|p70,62|p74,62|p76,62|p80,62|p82,62|p84,62|p57,61|p59,61|p61,61|p63,61|p65,61|p67,61|p69,61|p71,61|p73,61|p75,61|p77,61|p78,61|p80,61|p56,60|p58,60|p60,60|p62,60|p64,60|p66,60|p70,60|p74,60|p77,60|p79,60|p57,59|p59,59|p61,59|p63,59|p65,59|p73,59|p75,59|p77,59|p78,59|p79,59|p80,59|p81,59|p82,59|p83,59|p84,59|p85,59|p58,58|p60,58|p62,58|p64,58|p74,58|p77,58|p79,58|p81,58|p83,58|p85,58|p73,57|p75,57|p77,57|p79,57|p81,57|p83,57|p85,57|p74,56|p76,56|p78,56|p80,56|p82,56|p84,56|p75,55|p77,55|p79,55|p81,55|p83,55|p85,55|p26,24|p28,24|p30,24|p26,22|p28,22|p30,22|p27,21|p29,21|p26,20|p28,20|p30,20|p28,17'
                 return getStartSnapshotPosition({ positionString })
             case "Omega^3":
-                startingPosition = variantomega1.genPositionOfOmegaCubed()
+                startingPosition = variantomega.genPositionOfOmegaCubed()
                 return getStartSnapshotPosition({ startingPosition, pawnDoublePush: false, castleWith: null })
             case "Omega^4":
-                startingPosition = variantomega1.genPositionOfOmegaFourth()
+                startingPosition = variantomega.genPositionOfOmegaFourth()
                 return getStartSnapshotPosition({ startingPosition, pawnDoublePush: false, castleWith: null })
             // Removed...
             case "Standarch - 3 Check":
@@ -334,7 +334,7 @@ const variant1 = (function() {
      * @returns {string} The position in compressed short form
      */
     function getPositionStringOfSpaceClassic(Date) {
-        const UTCTimeStamp = Date ? math1.getUTCTimestamp(Date) : Date.now();
+        const UTCTimeStamp = Date ? math.getUTCTimestamp(Date) : Date.now();
         // UTC timestamp for Feb 27, 2024, 7:00
         // Original, oldest version.
         if (UTCTimeStamp < 1709017200000) return "p-3,15+|q4,15|p11,15+|p-4,14+|b4,14|p12,14+|p-5,13+|r2,13|b4,13|r6,13|p13,13+|p3,5+|p4,5+|p5,5+|n3,4|k4,4|n5,4|p-6,3+|p1,3+|p2,3+|p3,3+|p4,3+|p5,3+|p6,3+|p7,3+|p-8,2+|p-7,2+|p15,2+|p16,2+|p-9,1+|p17,1+|P-9,0+|P17,0+|P-8,-1+|P-7,-1+|P15,-1+|P16,-1+|P1,-2+|P2,-2+|P3,-2+|P4,-2+|P5,-2+|P6,-2+|P7,-2+|P14,-2+|N3,-3|K4,-3|N5,-3|P3,-4+|P4,-4+|P5,-4+|P-5,-12+|R2,-12|B4,-12|R6,-12|P13,-12+|P-4,-13+|B4,-13|P12,-13+|P-3,-14+|Q4,-14|P11,-14+"
@@ -354,15 +354,15 @@ const variant1 = (function() {
     function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush, castleWith }) {
         if (positionString) {
             if (!startingPosition) {
-                const positionAndRights = formatconverter1.getStartingPositionAndSpecialRightsFromShortPosition(positionString);
+                const positionAndRights = formatconverter.getStartingPositionAndSpecialRightsFromShortPosition(positionString);
                 startingPosition = positionAndRights.startingPosition;
                 specialRights = positionAndRights.specialRights;
             }
         } else if (startingPosition && specialRights) {
-            positionString = formatconverter1.LongToShort_Position(startingPosition, specialRights);
+            positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
         } else if (startingPosition) {
-            specialRights = formatconverter1.generateSpecialRights(startingPosition, pawnDoublePush, castleWith)
-            positionString = formatconverter1.LongToShort_Position(startingPosition, specialRights);
+            specialRights = formatconverter.generateSpecialRights(startingPosition, pawnDoublePush, castleWith)
+            positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
         } else {
             return console.error("Not enough information to calculate the positionString, position, and specialRights of variant.")
         }
@@ -378,7 +378,7 @@ const variant1 = (function() {
      * @param {Object} [position] - The starting position of the game, organized by key `{ '1,2': 'queensB' }`, if it's already known. If not provided, it will be calculated.
      * @returns {Object} The gamerules object for the variant.
      */
-    function getGameRulesOfVariant({ Variant, Date = math1.getUTCDateTime() }, position) {
+    function getGameRulesOfVariant({ Variant, Date = math.getUTCDateTime() }, position) {
         if (!position) position = getStartingPositionOfVariant({ Variant }).position
         
         switch (Variant) {
@@ -388,8 +388,12 @@ const variant1 = (function() {
                 return getGameRules({ position })
             case "Standarch":
                 return getGameRules({ position })
+            case "4 Player Classic":
+                const gameRules = getGameRules({ position });
+                gameRules.winConditions = {white: ['checkmate'], black: ['checkmate'], green: ['checkmate'], blue: ['checkmate'], red: ['checkmate']};
+                return gameRules;
             case "Space Classic":
-                const UTCTimeStamp = math1.getUTCTimestamp(Date);
+                const UTCTimeStamp = math.getUTCTimestamp(Date);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
                 const promotionRanks = UTCTimeStamp < 1709017200000 ? [4,-3] : undefined; // undefined will use default [8,1]
                 getGameRules({ promotionRanks, position })
@@ -452,7 +456,7 @@ const variant1 = (function() {
      */
     function getPromotionsAllowed(position, promotionRanks) {
         // We can't promote to royals or pawns, whether we started the game with them.
-        const unallowedPromotes = math1.deepCopyObject(pieces1.royals); // ['kings', 'royalQueens', 'royalCentaurs']
+        const unallowedPromotes = math.deepCopyObject(pieces.royals); // ['kings', 'royalQueens', 'royalCentaurs']
         unallowedPromotes.push('pawns') // ['kings', 'royalQueens', 'royalCentaurs', 'pawns']
 
         const white = []
@@ -463,7 +467,7 @@ const variant1 = (function() {
         for (const key in position) {
             const thisPieceType = position[key];
             if (thisPieceType.endsWith('N')) continue; // Skip
-            const trimmedType = math1.trimWorBFromType(thisPieceType) // Slices off W/B at the end
+            const trimmedType = math.trimWorBFromType(thisPieceType) // Slices off W/B at the end
             if (unallowedPromotes.includes(trimmedType)) continue; // Not allowed
             if (white.includes(trimmedType)) continue; // Already added
             // Only add if the color's promotion rank is defined
@@ -525,6 +529,25 @@ const variant1 = (function() {
             specialRights,
             turn: 'white'
         }
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+    }
+
+    /**
+     * Inits the gamefile for Standarch. Sets the startSnapshot and gameRules properties.
+     * @param {gamefile} gamefile - The gamefile
+     * @param {Object} metadata - The metadata of the variant, with the following properties:
+     * @param {string} metadata.Variant - Required. The name of the variant.
+     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     */
+    function initFourPlayer(gamefile, { Variant, Date }) {
+        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: '4 Player Classic' })
+        gamefile.startSnapshot = {
+            position,
+            positionString,
+            specialRights,
+            turn: 'white'
+        }
+        
         gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
     }
 
@@ -827,4 +850,4 @@ const variant1 = (function() {
 
 })();
 
-module.exports = variant1;
+module.exports = variant;

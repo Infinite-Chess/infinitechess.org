@@ -65,14 +65,16 @@ const specialmove = {
 
         // If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
         if (updateProperties && specialmove.isPawnMoveADoublePush(piece.coords, move.endCoords)) {
-            gamefile.enpassant = specialmove.getEnPassantSquare(piece.coords, move.endCoords);
+            const [captureSquareX, captureSquareY] = specialmove.getEnPassantSquare(piece.coords, move.endCoords, piece.type.endsWith('U') || piece.type.endsWith('G'))
+            gamefile.enpassant.push(captureSquareX, captureSquareY, move.endCoords[0], move.endCoords[1], {'white':0,'green':1,'red':2,'blue':3}[gamefile.whosTurn]);
         }
 
-        const enpassantTag = move.enpassant; // -1/1
+        const enPassantData = move.enpassant; // format: [captureSquare.x,captureSquare.y]
         const promotionTag = move.promotion; // promote type
-        if (!enpassantTag && !promotionTag) return false;; // No special move to execute, return false to signify we didn't move the piece.
+        if (!enPassantData && !promotionTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
-        let captureCoords = enpassantTag ? specialmove.getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
+        const captureCoords = enPassantData == null ? move.endCoords : enPassantData;
+        
         let capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords)
 
         if (capturedPiece) move.captured = capturedPiece.type;
@@ -98,7 +100,7 @@ const specialmove = {
         return true;
     },
 
-    isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2 },
+    isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2 || Math.abs(pawnCoords[0] - endCoords[0]) === 2 },
 
     /**
      * Returns the en passant square of a pawn double push move
@@ -106,11 +108,24 @@ const specialmove = {
      * @param {number[]} moveEndCoords - The end coordinates of the move
      * @returns {number[]} The coordinates en passant is allowed
      */
-    getEnPassantSquare(moveStartCoords, moveEndCoords) {
+    getEnPassantSquare(moveStartCoords, moveEndCoords, isHorizontalColor=false) {
+        if(isHorizontalColor === true){
+            const x = (moveStartCoords[0] + moveEndCoords[0]) / 2;
+            return [x, moveStartCoords[1]];
+        }
         const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
         return [moveStartCoords[0], y]
     },
 
-    // MUST require there be an enpassant tag!
-    getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag] },
+    // Obselete - coordinates are stored in the enPassant directly.
+    // // MUST require there be an enpassant tag!
+    // getEnpassantCaptureCoords(endCoords, enpassantTag, isHorizontalColor=false) {
+    //     if(isHorizontalColor === true){
+    //         // enPassantTag = 1 means we moved down, need to move back up
+    //         return [endCoords[0], endCoords[1] - enpassantTag]
+    //     } else {
+    //         return [endCoords[0], endCoords[1] + enpassantTag];
+    //     }
+        
+    // },
 };

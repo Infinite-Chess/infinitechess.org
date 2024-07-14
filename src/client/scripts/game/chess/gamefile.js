@@ -36,7 +36,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         position: undefined,
         positionString: undefined,
         specialRights: undefined,
-        /** What square coords, if legal, enpassant capture is possible in the starting position of the game. */
+        /** Array of what square coords, if legal, enpassant capture is possible in the starting position of the game. */
         enpassant: undefined,
         /** The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push) */
         moveRuleState: undefined,
@@ -49,6 +49,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         /** The bounding box surrounding the starting position, without padding.
          * @type {BoundingBox} */
         box: undefined,
+        /** The number of players in the game */
+        numPlayers: undefined
     }
     
     this.gameRules = {
@@ -168,6 +170,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.enpassant = math.deepCopyObject(this.startSnapshot.enpassant);
     /** An object containing the information if each individual piece has its special move rights. */
     this.specialRights = math.deepCopyObject(this.startSnapshot.specialRights);
+    /** The amount of players playing the game. Almost always 2, except for 4 player chess. */
+    this.playerNum = this.startSnapshot.playerNum ?? 2;
     /** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
      * which is whos turn it was at the *beginning* of the game. */
@@ -181,7 +185,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.attackers = undefined;
     /** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
     this.checksGiven = undefined;
-
+    
     this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
     this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)
     

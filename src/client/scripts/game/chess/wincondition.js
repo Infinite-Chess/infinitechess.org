@@ -45,13 +45,12 @@ const wincondition = (function() {
     }
 
     function detectRoyalCapture(gamefile) {
-        if (!isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule
+        if (!isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule. For 4p chess winConditions between opponents should always be the same.
 
         // Was the last move capturing a royal piece?
         if (wasLastMoveARoyalCapture(gamefile)) {
-            if      (gamefile.whosTurn === 'white') return 'black royalcapture'
-            else if (gamefile.whosTurn === 'black') return 'white royalcapture'
-            else throw new Error("Cannot determine winning color by wincondition royalcapture!")
+            if(!['white','black','green','red','blue'].includes(gamefile.whosTurn)) throw new Error("Cannot determine winning color by wincondition royalcapture!")
+            return `${gamefile.whosTurn} royalcapture`;
         }
 
         return false;
@@ -151,14 +150,22 @@ const wincondition = (function() {
     }
 
     /**
-     * Tests if the player who JUST played a move can win from the specified win condition.
+     * Tests if all other opponent(s) can win from the specified win condition.
      * @param {gamefile} gamefile - The gamefile containing game data.
      * @param {string} winCondition - The win condition to check against.
      * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
      */
     function isOpponentUsingWinCondition(gamefile, winCondition) {
-        const oppositeColor = math.getOppositeColor(gamefile.whosTurn);
-        return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
+        if(gamefile.playerNum === 2){
+            const oppositeColor = math.getOppositeColor(gamefile.whosTurn);
+            return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
+        } else {
+            const allColorsExceptMe = math.getAllColorsExcept4p(gamefile.whosTurn);
+            for(let i = 0; i < allColorsExceptMe; i++){
+                if(gamefile.gameRules.winConditions[allColorsExceptMe[i]].includes(winCondition) === false) return false;
+            }
+            return true;
+        }
     }
 
     /**

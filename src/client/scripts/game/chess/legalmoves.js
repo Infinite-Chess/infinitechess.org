@@ -52,6 +52,26 @@ const legalmoves = (function(){
                 if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat)
             }
         }
+        for (let i = 0; i < pieces.green.length; i++) {
+            const thisPieceType = pieces.green[i];
+            const thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
+
+            // For each individual move...
+            for (let a = 0; a < thisPieceIndividualMoveset.length; a++) {
+                const thisIndividualMove = thisPieceIndividualMoveset[a]
+                
+                // Convert the move into a key
+                const key = math.getKeyFromCoords(thisIndividualMove)
+
+                // Make sure the key's already initialized
+                if (!vicinity[key]) vicinity[key] = [];
+
+                const pieceTypeConcat = math.trimWorBFromType(thisPieceType) // Remove the 'R'/'U'/'G' from end of type
+
+                // Make sure the key contains the piece type that can capture from that distance
+                if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat)
+            }
+        }
         return vicinity;
     }
 

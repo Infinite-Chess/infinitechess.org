@@ -14,6 +14,10 @@ const pieces = (function () {
     const black = ['kingsB', 'giraffesB', 'camelsB', 'zebrasB', 'amazonsB', 'queensB', 'royalQueensB', 'hawksB', 'chancellorsB', 'archbishopsB', 'centaursB', 'royalCentaursB', 'knightsB', 'guardsB', 'rooksB', 'bishopsB', 'pawnsB'];
     const neutral = ['obstaclesN', 'voidsN'];
 
+    const red = ['kingsR', 'queensR', 'rooksR', 'bishopsR', 'pawnsR', 'knightsR', 'royalQueensR', 'royalCentaursR'];
+    const green = ['kingsG', 'queensG', 'rooksG', 'bishopsG', 'pawnsG', 'knightsG', 'royalQueensG', 'royalCentaursG'];
+    const blue = ['kingsU', 'queensU', 'rooksU', 'bishopsU', 'pawnsU', 'knightsU', 'royalQueensU', 'royalCentaursU'];
+
     /** A list of the royal pieces, without the color appended. */
     const royals = ['kings', 'royalQueens', 'royalCentaurs'];
     /** A list of the royals that are compatible with checkmate. */
@@ -54,12 +58,11 @@ const pieces = (function () {
         const scale = [boardScale, boardScale, 1]
 
         let modelToUse;
-        if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
-        else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model
 
+        let viewingOurPerspective = perspective.getIsViewingBlackPerspective();
+        if(onlinegame.areWeColor('black')) viewingOurPerspective = !viewingOurPerspective;
+        modelToUse = perspective.getEnabled() && viewingOurPerspective && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
         modelToUse.render(position, scale);
-        // Use this line when rendering with the tinted texture shader program.
-        // modelToUse.render(position, scale, { uVertexColor: [1,0,0, 1] }); // Specifies the tint uniform value before rendering
     }
 
     /** Renders a semi-transparent piece at the specified coordinates. */
@@ -75,12 +78,20 @@ const pieces = (function () {
      * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
      * @param {Object} [options] An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
      */
-    function forEachPieceType(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
+    function forEachPieceType(callback, { ignoreNeutrals = false, ignoreRGB=false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
+        if(!ignoreRGB){
+            for(let i = 0; i < green.length; i++){
+                callback(red[i]);
+                callback(green[i]);
+                callback(blue[i]);
+            }
+        }
         for (let i = 0; i < white.length; i++) {
             // We iterate through black types first so that the white icons render on top!
             callback(black[i])
             callback(white[i])
         }
+        
         if (ignoreNeutrals) return;
         for (let i = 0; i < neutral.length; i++) {
             const type = neutral[i];
@@ -96,7 +107,14 @@ const pieces = (function () {
      * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
      * @param {Object} [options] An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
      */
-    async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
+    async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreRGB = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
+        if(!ignoreRGB){
+            for(let i = 0; i < green.length; i++){
+                await callback(red[i]);
+                await callback(green[i]);
+                await callback(blue[i]);
+            }
+        }
         for (let i = 0; i < white.length; i++) {
             // We iterate through black types first so that the white icons render on top!
             await callback(black[i])
@@ -113,7 +131,11 @@ const pieces = (function () {
     // Iterates through every single piece TYPE in the game state of specified COLOR,
     // and performs specified function on the type
     function forEachPieceTypeOfColor(color, callback) {
-        if (color !== 'white' && color !== 'black') throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`)
+        if (['white', 'black', 'red', 'green', 'blue'].includes(color) === false) throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`)
+        if(color === 'blue' || color === 'green' || color === 'red'){
+            for (let i = 0; i < green.length; i++) callback(pieces[color][i]);
+            return;
+        }
         for (let i = 0; i < white.length; i++) callback(pieces[color][i]);
     }
 
@@ -195,7 +217,33 @@ const pieces = (function () {
             obstaclesN: getSpriteCoords(pieceWidth, 4,7),
 
             // Miscellaneous
-            yellow: getSpriteCoords(pieceWidth, 5,7) // COIN
+            yellow: getSpriteCoords(pieceWidth, 5,7), // COIN
+
+            // 4 player
+            kingsG: getSpriteCoords(pieceWidth, 3,2),
+            kingsU: getSpriteCoords(pieceWidth, 3,2),
+            kingsR: getSpriteCoords(pieceWidth, 3,2),
+            pawnsG: getSpriteCoords(pieceWidth, 1,1),
+            pawnsU: getSpriteCoords(pieceWidth, 1,1),
+            pawnsR: getSpriteCoords(pieceWidth, 1,1),
+            knightsG: getSpriteCoords(pieceWidth, 3,1),
+            knightsU: getSpriteCoords(pieceWidth, 3,1),
+            knightsR: getSpriteCoords(pieceWidth, 3,1),
+            bishopsG: getSpriteCoords(pieceWidth, 5,1),
+            bishopsU: getSpriteCoords(pieceWidth, 5,1),
+            bishopsR: getSpriteCoords(pieceWidth, 5,1),
+            rooksG: getSpriteCoords(pieceWidth, 7,1),
+            rooksU: getSpriteCoords(pieceWidth, 7,1),
+            rooksR: getSpriteCoords(pieceWidth, 7,1),
+            queensG: getSpriteCoords(pieceWidth, 1,2),
+            queensU: getSpriteCoords(pieceWidth, 1,2),
+            queensR: getSpriteCoords(pieceWidth, 1,2),
+            royalQueensG: getSpriteCoords(pieceWidth, 3,6),
+            royalQueensU: getSpriteCoords(pieceWidth, 3,6),
+            royalQueensR: getSpriteCoords(pieceWidth, 3,6),
+            royalCentaursG: getSpriteCoords(pieceWidth, 1,6),
+            royalCentaursU: getSpriteCoords(pieceWidth, 1,6),
+            royalCentaursR: getSpriteCoords(pieceWidth, 3,6),
         }
 
         // pieceWidth is how many textures in 1 row.  yColumn starts from the top. 
@@ -217,6 +265,9 @@ const pieces = (function () {
     return Object.freeze({
         white,
         black,
+        red,
+        green,
+        blue,
         neutral,
         royals,
         jumpingRoyals,

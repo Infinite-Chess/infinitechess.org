@@ -66,10 +66,10 @@ const specialundo = {
     // pawnIndex should be specified if it's a promotion move we're undoing
     pawns(gamefile, move, { updateData = true, animate = true } = {}) {
 
-        const enpassantTag = move.enpassant; // -1/1
+        const enPassantData = move.enpassant;
         const promotionTag = move.promotion; // promote type
-        const isDoublePush = Math.abs(move.endCoords[1] - move.startCoords[1]) === 2
-        if (!enpassantTag && !promotionTag && !isDoublePush) return false; // No special move to execute, return false to signify we didn't move the piece.
+        const isDoublePush = Math.abs(move.endCoords[1] - move.startCoords[1]) === 2 || Math.abs(move.endCoords[0] - move.startCoords[0]) === 2
+        if (!enPassantData && !promotionTag && !isDoublePush) return false; // No special move to execute, return false to signify we didn't move the piece.
 
         
         // First move piece back
@@ -88,16 +88,18 @@ const specialundo = {
             movepiece.movePiece(gamefile, movedPiece, move.startCoords, { updateData }) // Changes the pieces coords and data in the organized lists without making any captures.
             // Remove the gamefile's enpassant flag ONLY if this is a simulated move!
             if (!updateData && isDoublePush) {
-                delete gamefile.enpassant;
+                for(let i = 0; i < 5; i++){
+                    gamefile.enpassant.pop();
+                }
             }
         }
 
         // Next replace piece captured
 
         // Detect en passant
-        if (move.enpassant) { // Was an an passant capture
+        if (move.enpassant !== undefined) { // Was an en passant capture
             const type = move.captured;
-            const captureCoords = [ move.endCoords[0], move.endCoords[1] + move.enpassant ]
+            const captureCoords = enPassantData;
             movepiece.addPiece(gamefile, type, captureCoords, move.rewindInfo.capturedIndex, { updateData })
 
         } else if (move.captured) { // Was NOT an passant, BUT there was a capture

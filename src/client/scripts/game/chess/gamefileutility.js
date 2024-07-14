@@ -51,6 +51,20 @@ const gamefileutility = (function(){
             if (theseWhitePieces) for (let a = 0; a < theseWhitePieces.length; a++) callback(thisWhiteType, theseWhitePieces[a], gamefile) 
             if (theseBlackPieces) for (let a = 0; a < theseBlackPieces.length; a++) callback(thisBlackType, theseBlackPieces[a], gamefile) 
         }
+        for (let i = 0; i < pieces.green.length; i++){
+            const thisRedType = pieces.red[i];
+            const thisGreenType = pieces.green[i];
+            const thisBlueType = pieces.blue[i];
+
+            const theseRedPieces = typeList[thisRedType];
+            const theseGreenPieces = typeList[thisGreenType];
+            const theseBluePieces = typeList[thisBlueType];
+
+            // First it inserts the type of piece into the callback, then coords of piece 
+            if (theseRedPieces) for (let a = 0; a < theseRedPieces.length; a++) callback(thisRedType, theseRedPieces[a], gamefile) 
+            if (theseGreenPieces) for (let a = 0; a < theseGreenPieces.length; a++) callback(thisGreenType, theseGreenPieces[a], gamefile) 
+            if (theseBluePieces) for (let a = 0; a < theseBluePieces.length; a++) callback(thisBlueType, theseBluePieces[a], gamefile) 
+        }
         for (let i = 0; i < pieces.neutral.length; i++) {
 
             const thisNeutralType = pieces.neutral[i];
@@ -274,6 +288,33 @@ const gamefileutility = (function(){
         } else if (color === 'black') {
             for (let i = 0; i < jumpingRoyals.length; i++) {
                 const thisRoyalType = jumpingRoyals[i] + 'B';
+                if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
+                state[thisRoyalType].forEach(coords => { // [x,y]
+                    if (!coords) return;
+                    royalCoordsList.push(coords)
+                })
+            }
+        } else if (color === 'red') {
+            for (let i = 0; i < jumpingRoyals.length; i++) {
+                const thisRoyalType = jumpingRoyals[i] + 'R';
+                if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
+                state[thisRoyalType].forEach(coords => { // [x,y]
+                    if (!coords) return;
+                    royalCoordsList.push(coords)
+                })
+            }
+        } else if (color === 'green') {
+            for (let i = 0; i < jumpingRoyals.length; i++) {
+                const thisRoyalType = jumpingRoyals[i] + 'G';
+                if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
+                state[thisRoyalType].forEach(coords => { // [x,y]
+                    if (!coords) return;
+                    royalCoordsList.push(coords)
+                })
+            }
+        } else if (color === 'blue') {
+            for (let i = 0; i < jumpingRoyals.length; i++) {
+                const thisRoyalType = jumpingRoyals[i] + 'U';
                 if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
                 state[thisRoyalType].forEach(coords => { // [x,y]
                     if (!coords) return;

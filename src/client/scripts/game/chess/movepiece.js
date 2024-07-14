@@ -53,18 +53,45 @@ const movepiece = (function(){
 
         if (updateProperties) incrementMoveRule(gamefile, piece.type, wasACapture);
 
-        if (flipTurn) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
+        if(flipTurn){
+            if(gamefile.playerNum === 2) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
+            else nextPlayerTurn4Player(gamefile, { pushClock, doGameOverChecks });
+        }
 
         // if (doGameOverChecks || animate || updateProperties) updateInCheck(gamefile, recordMove)
         // ALWAYS DO THIS NOW, no matter what. 
         updateInCheck(gamefile, recordMove)
-        if (doGameOverChecks) gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
+        if (doGameOverChecks) {
+            if(gamefile.playerNum === 4){
+                // checkForDeadPlayers4p({ toRemoveDeadPlayers: concludeGameIfOver, simulated });
+            } else {
+                gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
+            }
+        }
         else if (updateProperties) wincondition.detectThreecheck(gamefile); // This updates our check counters
 
         if (updateData) {
             guinavigation.update_MoveButtons()
             main.renderThisFrame();
         }
+    }
+
+    /**
+     * Checks for dead players in the 4 player variant.
+     * * @param {Object} options - An object that may contain the following options:
+     * - `toRemoveDeadPlayers`: Whether dead players will be removed upon detection.
+     * * @returns {boolean} whether there are any dead players
+     */
+    function checkForDeadPlayers4p({ toRemoveDeadPlayers=true, simulated }){
+        gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver: false, simulated })
+        const areDeadPlayers = gamefile.gameConclusion !== undefined;
+        if(areDeadPlayers) {
+            if(toRemoveDeadPlayers === true){
+
+            }
+            delete gamefile.gameConclusion;
+        }
+        return areDeadPlayers;
     }
 
     /**
@@ -83,7 +110,7 @@ const movepiece = (function(){
         if (!rewindInfoAlreadyPresent) {
             rewindInfo.inCheck = math.deepCopyObject(gamefile.inCheck);
             if (gamefile.attackers)             rewindInfo.attackers = math.deepCopyObject(gamefile.attackers);
-            if (gamefile.enpassant)             rewindInfo.enpassant =     gamefile.enpassant;
+            rewindInfo.enpassant =     math.deepCopyObject(gamefile.enpassant);
             if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
             if (gamefile.checksGiven)           rewindInfo.checksGiven =   gamefile.checksGiven;
             let key = math.getKeyFromCoords(move.startCoords);
@@ -103,7 +130,16 @@ const movepiece = (function(){
      * @param {number[]} endCoords - The destination of the piece moving
      */
     function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoords) {
-        delete gamefile.enpassant;
+        const whosTurnNumber = {white:0,green:1,red:2,blue:3}[gamefile.whosTurn];
+        for(let i = 0; i < gamefile.enpassant.length; i+=5){
+            if(gamefile.enpassant[i+4] === whosTurnNumber){
+                for(let j = 0; j < 5; j++){
+                    gamefile.enpassant[i+j] = undefined;
+                }
+            }
+        }
+        gamefile.enpassant = gamefile.enpassant.filter(f => f !== undefined);
+
         let key = math.getKeyFromCoords(startCoords);
         delete gamefile.specialRights[key] // We also delete its special move right for ANY piece moved
         key = math.getKeyFromCoords(endCoords);
@@ -167,7 +203,6 @@ const movepiece = (function(){
      * @param {Object} options - An object that may contain the property `updateData`, that when true will update the piece in the mesh.
      */
     function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = {}) { // desiredIndex optional
-
         const list = gamefile.ourPieces[type];
 
         // If no index specified, make the default the first undefined in the list!
@@ -248,6 +283,18 @@ const movepiece = (function(){
     function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
         gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
         if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile)
+        if (pushClock) clock.push()
+    }
+
+    function nextPlayerTurn4Player(gamefile, { pushClock = true, doGameOverChecks = true } = {}){
+        gamefile.whosTurn = math.getNextColor4p(gamefile.whosTurn);
+        if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile)
+        if (pushClock) clock.push()
+    }
+
+    function previousPlayerTurn4Player(gamefile, { pushClock = true, doGameOverChecks = true } = {}){
+        gamefile.whosTurn = math.getPreviousColor4p(gamefile.whosTurn);
+        if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
         if (pushClock) clock.push()
     }
 
@@ -425,7 +472,7 @@ const movepiece = (function(){
         gamefile.inCheck = move.rewindInfo.inCheck
         if (move.rewindInfo.attackers) gamefile.attackers = move.rewindInfo.attackers;
         if (removeMove) { // Restore original values
-            gamefile.enpassant = move.rewindInfo.enpassant;
+            gamefile.enpassant = move.rewindInfo.enpassant; 
             gamefile.moveRuleState = move.rewindInfo.moveRuleState;
             gamefile.checksGiven = move.rewindInfo.checksGiven;
             if (move.rewindInfo.specialRightStart) { // Restore their special right
@@ -447,7 +494,10 @@ const movepiece = (function(){
         if (removeMove) movesscript.deleteLastMove(gamefile.moves);
         gamefile.moveIndex--;
 
-        if (removeMove) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false })
+        if(removeMove){
+            if(gamefile.playerNum === 2) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false })
+            else previousPlayerTurn4Player(gamefile, { pushClock: false, doGameOverChecks: false });
+        }
 
         // if (animate) updateInCheck(gamefile, false)
         // No longer needed, as rewinding the move restores the inCheck property.
