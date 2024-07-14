@@ -390,7 +390,7 @@ const math = (function() {
         return corner;
     }
 
-    function getLineIntersectionEntryTile (ax, by, c, boundingBox, corner) {
+    function getLineIntersectionEntryTile (dx, dy, c, boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
         let xIntersectBottom = undefined;
         let xIntersectTop = undefined;
@@ -398,25 +398,25 @@ const math = (function() {
         let yIntersectRight = undefined;
         // Check for intersection with left side of rectangle
         if (corner.endsWith('left')) {
-            yIntersectLeft = ((left * ax) + c) / by;
+            yIntersectLeft = ((left * dy) + c) / dx;
             if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft]
         }
         
         // Check for intersection with bottom side of rectangle
         if (corner.startsWith('bottom')) {
-            xIntersectBottom = (c - (bottom * by)) / ax;
+            xIntersectBottom = ((bottom * dx) - c) / dy;
             if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom]
         }
 
         // Check for intersection with right side of rectangle
         if (corner.endsWith('right')) {
-            yIntersectRight = ((right * ax) + c) / by;
+            yIntersectRight = ((right * dy) + c) / dx;
             if (yIntersectRight >= bottom && yIntersectRight <= top) return [right, yIntersectRight];
         }
 
         // Check for intersection with top side of rectangle
         if (corner.startsWith('top')) {
-            xIntersectTop = (c - (top * by)) / ax;
+            xIntersectTop = ((top * dx) - c) / dy;
             if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
         }
         console.log(corner)
