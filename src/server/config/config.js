@@ -5,7 +5,7 @@
  * and a few other minor adjustments.
  * Disable in production.
  */
-const DEV_BUILD = true;
+const DEV_BUILD = false;
 
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
