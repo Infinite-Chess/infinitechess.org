@@ -78,8 +78,8 @@ const pieces = (function () {
      * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
      * @param {Object} [options] An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
      */
-    function forEachPieceType(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
-        if(onlinegame.getNumPlayers() === 4){
+    function forEachPieceType(callback, { ignoreNeutrals = false, ignoreRGB=false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
+        if(!ignoreRGB){
             for(let i = 0; i < green.length; i++){
                 callback(red[i]);
                 callback(green[i]);
@@ -107,8 +107,8 @@ const pieces = (function () {
      * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
      * @param {Object} [options] An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
      */
-    async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
-        if(onlinegame.getNumPlayers() === 4){
+    async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreRGB = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
+        if(!ignoreRGB){
             for(let i = 0; i < green.length; i++){
                 await callback(red[i]);
                 await callback(green[i]);

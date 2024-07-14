@@ -45,7 +45,7 @@ const wincondition = (function() {
     }
 
     function detectRoyalCapture(gamefile) {
-        if (!isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule
+        if (!isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule. For 4p chess winConditions between opponents should always be the same.
 
         // Was the last move capturing a royal piece?
         if (wasLastMoveARoyalCapture(gamefile)) {
@@ -156,7 +156,7 @@ const wincondition = (function() {
      * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
      */
     function isOpponentUsingWinCondition(gamefile, winCondition) {
-        const oppositeColor = onlinegame.getNumPlayers() === 2 ? math.getOppositeColor(gamefile.whosTurn) : math.getPreviousColor4p(gamefile.whosTurn);
+        const oppositeColor = gamefile.playerNum === 2 ? math.getOppositeColor(gamefile.whosTurn) : math.getPreviousColor4p(gamefile.whosTurn);
         return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
     }
 

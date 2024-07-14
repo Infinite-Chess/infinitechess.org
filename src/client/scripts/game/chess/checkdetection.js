@@ -517,7 +517,7 @@ const checkdetection = (function(){
 
         const whosTurn = gamefile.whosTurn;
 
-        if(onlinegame.getNumPlayers() === 4){
+        if(gamefile.playerNum === 4){
             const pieceTypes = pieces[gamefile.whosTurn];
             for (let i = 0; i < pieceTypes.length; i++) {
                 const thisType = pieceTypes[i];

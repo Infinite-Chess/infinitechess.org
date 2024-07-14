@@ -54,7 +54,7 @@ const movepiece = (function(){
         if (updateProperties) incrementMoveRule(gamefile, piece.type, wasACapture);
 
         if(flipTurn){
-            if(onlinegame.getNumPlayers() === 2) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
+            if(gamefile.playerNum === 2) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
             else nextPlayerTurn4Player(gamefile, { pushClock, doGameOverChecks });
         }
 
@@ -62,8 +62,8 @@ const movepiece = (function(){
         // ALWAYS DO THIS NOW, no matter what. 
         updateInCheck(gamefile, recordMove)
         if (doGameOverChecks) {
-            if(onlinegame.getNumPlayers() === 4){
-                checkForDeadPlayers4p({ toRemoveDeadPlayers: concludeGameIfOver });
+            if(gamefile.playerNum === 4){
+                checkForDeadPlayers4p({ toRemoveDeadPlayers: concludeGameIfOver, simulated });
             } else {
                 gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
             }
@@ -80,8 +80,9 @@ const movepiece = (function(){
      * Checks for dead players in the 4 player variant.
      * * @param {Object} options - An object that may contain the following options:
      * - `toRemoveDeadPlayers`: Whether dead players will be removed upon detection.
+     * * @returns {boolean} whether there are any dead players
      */
-    function checkForDeadPlayers4p({ toRemoveDeadPlayers=true }){
+    function checkForDeadPlayers4p({ toRemoveDeadPlayers=true, simulated }){
         gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver: false, simulated })
         const areDeadPlayers = gamefile.gameConclusion !== undefined;
         if(areDeadPlayers) {
@@ -494,7 +495,7 @@ const movepiece = (function(){
         gamefile.moveIndex--;
 
         if(removeMove){
-            if(onlinegame.getNumPlayers() === 2) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false })
+            if(gamefile.playerNum === 2) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false })
             else previousPlayerTurn4Player(gamefile, { pushClock: false, doGameOverChecks: false });
         }
 

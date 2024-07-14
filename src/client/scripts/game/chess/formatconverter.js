@@ -862,15 +862,6 @@ const formatconverter = (function() {
         const MAX_INDEX = shortposition.length - 1;
         let index = 0;
         let end_index = 0;
-        if(shortposition.startsWith('4p!') === true){
-            index=3;
-            specialRights['players'] = 4;// not using existing system bc
-            // I want "players" to be extensible and allow player count
-            // other than 2 or 4 in future
-            onlinegame.setNumPlayers(4);
-        } else {
-            onlinegame.setNumPlayers(2);
-        }
         while(index < MAX_INDEX){
             let shortpiece = shortposition[index];
             let piecelength = 1;

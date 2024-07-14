@@ -199,6 +199,7 @@ const specialdetect = (function() {
         const forwardDirection = {
             'blue': [-1,0],
             'red': [0,-1],
+            'black': [0,-1],
             'green': [1,0],
             'white': [0,1]
         }[color];
@@ -207,6 +208,7 @@ const specialdetect = (function() {
             'blue': [0,1],
             'green': [0,1],
             'red': [1,0],
+            'black': [1,0],
             'white': [1,0]
         }[color];
 
