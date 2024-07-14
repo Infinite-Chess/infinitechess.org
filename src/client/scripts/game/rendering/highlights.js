@@ -296,18 +296,18 @@ const highlights = (function(){
     function concatData_HighlightedMoves_Diagonals (coords, renderBoundingBox, r, g, b, a) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
         for (var strline in legalMoves.slides) {
-            const line = math.getCoordsFromKey(strline)
-            if (line[1] == 0 || line[0] == 0) {continue;}
-            const lineEqua = math.getLineFromCoords(line, coords)
-            const lineGrad = line[1]/line[0]
+            const line = math.getCoordsFromKey(strline);
+            if (line[1] == 0 || line[0] == 0) {continue;};
+            const lineEqua = math.getLineFromCoords(line, coords);
+            const lineGrad = line[1]/line[0];
 
-            const corner1 = math.getAABBCornerOfLine(line, true)
-            const corner2 = math.getAABBCornerOfLine(line, false)
-            const intsect1Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner1)
-            const intsect2Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner2)
+            const corner1 = math.getAABBCornerOfLine(line, true);
+            const corner2 = math.getAABBCornerOfLine(line, false);
+            const intsect1Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner1);
+            const intsect2Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner2);
             
-            if (!intsect1Tile && !intsect2Tile) {console.log(intsect1Tile, intsect2Tile); continue;} // If there's no intersection point, it's off the screen, don't bother rendering.
-            if (!intsect1Tile || !intsect2Tile) {console.log(intsect1Tile, intsect2Tile); continue;} // FIXME: This should not happen
+            if (!intsect1Tile && !intsect2Tile) {continue;} // If there's no intersection point, it's off the screen, don't bother rendering.
+            if (!intsect1Tile || !intsect2Tile) {console.error(`Line only has one intersect with square.`); continue;} // FIXME: This should not happen
             if (lineGrad > 0) concatData_HighlightedMoves_Diagonal_Up(coords, intsect1Tile, intsect2Tile, legalMoves.slides[line], line, r, g, b, a);
             else concatData_HighlightedMoves_Diagonal_Down(coords, intsect1Tile, intsect2Tile, legalMoves.slides[line], line, r, g, b, a)
         }

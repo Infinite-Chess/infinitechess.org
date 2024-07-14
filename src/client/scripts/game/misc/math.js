@@ -419,9 +419,6 @@ const math = (function() {
             xIntersectTop = ((top * dx) - c) / dy;
             if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
         }
-        console.log(corner)
-        console.log(boundingBox)
-        console.log(xIntersectBottom, xIntersectTop, yIntersectLeft, yIntersectRight)
     }
 
     // Returns point, if there is one, of a line with specified slope "b" intersection screen edge on desired corner

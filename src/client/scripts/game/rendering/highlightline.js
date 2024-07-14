@@ -41,7 +41,7 @@ const highlightline = (function(){
         
         const mouseLocation = input.getMouseWorldLocation()
 
-        let closestDistance = -1;
+        let closestDistance;
         let closestPoint;
         for (var strline in legalmoves.slides) {
             const line = math.getCoordsFromKey(strline);
@@ -67,8 +67,8 @@ const highlightline = (function(){
             appendLineToData(dataLines, point1, point2, color);
             
             const snapPoint = math.closestPointOnLine(point1, point2, mouseLocation)
-            if (closestDistance<0) if (snapPoint.distance>snapDist) continue;
-            else if (snapPoint.distance>closestDistance) continue;
+            if (!closestDistance) {if (snapPoint.distance>snapDist) continue;}
+            else if (snapPoint.distance>closestDistance) {continue;}
             closestDistance = snapPoint.distance
             snapPoint.moveset = legalmoves.slides[strline]
             snapPoint.line = line
@@ -86,7 +86,6 @@ const highlightline = (function(){
         if (miniimage.isHovering()) return;
 
         if (!closestPoint) return; // There were no snapping points, the mouse is not next to a line.
-
         // Generate the ghost image model
 
         const dataGhost = []
@@ -122,43 +121,22 @@ const highlightline = (function(){
 
         boundingBox = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
 
-        if (closestPoint.direction === 'horizontal') {
-            if (moveset[0] === -Infinity) moveset[0] = boundingBox.left;
-            if (moveset[1] === Infinity)  moveset[1] = boundingBox.right;
-            point1 = [moveset[0], pieceCoords[1]]
-            point2 = [moveset[1], pieceCoords[1]]
-        }
+        const line = closestPoint.line
+        const diag = math.getLineFromCoords(line, pieceCoords)
+        const lineIsVertical = line[0]===0
 
-        else if (closestPoint.direction === 'vertical') {
-            if (moveset[0] === -Infinity) moveset[0] = boundingBox.bottom;
-            if (moveset[1] === Infinity)  moveset[1] = boundingBox.top;
-            point1 = [pieceCoords[0], moveset[0]]
-            point2 = [pieceCoords[0], moveset[1]]
-        }
+        const corner1 = math.getAABBCornerOfLine(line, true);
 
-        /** 
-        else if (closestPoint.direction === 'diagonalup') {
+        point1 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
+        const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, false);
+        point1 = capPointAtSlideLimit(point1, leftLimitPointCoord, false, lineIsVertical);
 
-            // Calculate the intersection tile of this diagonal with the left/bottom and right/top sides of the screen.
-            const diag = math.getUpDiagonalFromCoords(pieceCoords) // mx + b
-            const intsect1Tile = math.getIntersectionEntryTile(1, diag, boundingBox, 'bottomleft')
-            const intsect2Tile = math.getIntersectionEntryTile(1, diag, boundingBox, 'topright')
+        const corner2 = math.getAABBCornerOfLine(line, false);
 
-            point1 = moveset[0] === -Infinity ? intsect1Tile : [moveset[0], pieceCoords[1] - (pieceCoords[0] - moveset[0])]
-            point2 = moveset[1] ===  Infinity ? intsect2Tile : [moveset[1], pieceCoords[1] + moveset[1] - pieceCoords[0]]
-        }
+        point2 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner2);
+        const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, true);
+        point2 = capPointAtSlideLimit(point2, rightLimitPointCoord, true, lineIsVertical);
 
-        else { // closestPoint.direction === 'diagonaldown'
-
-            // Calculate the intersection tile of this diagonal with the left/bottom and right/top sides of the screen.
-            const diag = math.getDownDiagonalFromCoords(pieceCoords) // mx + b
-            const intsect1Tile = math.getIntersectionEntryTile(-1, diag, boundingBox, 'topleft')
-            const intsect2Tile = math.getIntersectionEntryTile(-1, diag, boundingBox, 'bottomright')
-
-            point1 = moveset[0] === -Infinity ? intsect1Tile : [moveset[0], pieceCoords[1] + pieceCoords[0] - moveset[0]]
-            point2 = moveset[1] ===  Infinity ? intsect2Tile : [moveset[1], pieceCoords[1] - (moveset[1] - pieceCoords[0])]
-        } 
-        */
         let tileMouseFingerOver;
         if (input.getTouchClicked()) { // Set to what the finger tapped above
             // let touchClickedTile = input.getTouchClickedTile() // { id, x, y }
