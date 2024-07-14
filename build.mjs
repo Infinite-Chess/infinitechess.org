@@ -36,7 +36,11 @@ await remove("./dist", {
 await copy("./src/client", "./dist", {
   recursive: true,
   force: true,
-  filter: filename => { return !/game\//.test(filename)}
+  filter: filename => { 
+    return true;
+    // exclude certain files in the future?
+    // return !/game\//.test(filename)
+  }
 });
 
 // get all client scripts:
