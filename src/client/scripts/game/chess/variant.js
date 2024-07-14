@@ -90,7 +90,7 @@ const variant = (function() {
             turn: options.turn || 'white',
             fullMove: options.fullMove || 1
         }
-        // if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant; // Broken by 4 player chess. If uncommented, can still be used, although an array is needed instead of a single number
+        if (options.enpassant && Array.isArray(options.enpassant)) gamefile.startSnapshot.enpassant = options.enpassant;
         if (options.moveRule) {
             const [state, max] = options.moveRule.split('/');
             gamefile.startSnapshot.moveRuleState = Number(state);
@@ -198,6 +198,7 @@ const variant = (function() {
         // Every variant has the exact same initial moveRuleState value.
         if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0
         gamefile.startSnapshot.fullMove = 1; // Every variant has the exact same fullMove value.
+        if(gamefile.startSnapshot.enpassant === undefined) gamefile.startSnapshot.enpassant = [];
     }
 
     /**
@@ -223,6 +224,7 @@ const variant = (function() {
     function getWinConditionsOfThreeCheck() { return { white: ['checkmate','threecheck'], black: ['checkmate','threecheck'] } }
     function getWinConditionsOfKOTH() { return { white: ['checkmate','koth'], black: ['checkmate','koth'] } }
     function getDefaultPromotionsAllowed() { return { white: ['knights','bishops','rooks','queens'], black: ['knights','bishops','rooks','queens'] } }
+    function getFourPlayerWinConditions() { return {white: ['royalcapture'], black: ['royalcapture'], green: ['royalcapture'], blue: ['royalcapture'], red: ['royalcapture']} }
 
     /**
      * Returns the bare-minimum gamerules a pasted game needs to function.
@@ -389,9 +391,7 @@ const variant = (function() {
             case "Standarch":
                 return getGameRules({ position })
             case "4 Player Classic":
-                const gameRules = getGameRules({ position });
-                gameRules.winConditions = {white: ['checkmate'], black: ['checkmate'], green: ['checkmate'], blue: ['checkmate'], red: ['checkmate']};
-                return gameRules;
+                return getGameRules({ position, winConditions: getFourPlayerWinConditions() });
             case "Space Classic":
                 const UTCTimeStamp = math.getUTCTimestamp(Date);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)

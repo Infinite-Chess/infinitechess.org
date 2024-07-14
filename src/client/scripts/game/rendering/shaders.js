@@ -69,8 +69,6 @@ const shaders = (function() {
         programs.textureProgram = createTextureProgram();
         programs.coloredTextureProgram = createColoredTextureProgram();
         programs.tintedTextureProgram = createTintedTextureProgram();
-        programs.blueTintedTextureProgram = createTintedTextureProgram([0.1, 0.1, 1, 1]);
-        programs.greenTintedTextureProgram = createTintedTextureProgram([0.1, 1, 0.1, 1]);
     }
 
     /**

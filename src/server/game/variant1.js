@@ -90,7 +90,7 @@ const variant = (function() {
             turn: options.turn || 'white',
             fullMove: options.fullMove || 1
         }
-        // if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
+        if (options.enpassant && Array.isArray(options.enpassant)) gamefile.startSnapshot.enpassant = options.enpassant;
         if (options.moveRule) {
             const [state, max] = options.moveRule.split('/');
             gamefile.startSnapshot.moveRuleState = Number(state);
@@ -119,6 +119,7 @@ const variant = (function() {
                 break;
             case "4 Player Classic":
                 initFourPlayer(gamefile, { Variant, Date });
+                break;
             case "Space Classic":
                 initSpaceClassic(gamefile, { Variant, Date });
                 break;
@@ -250,7 +251,7 @@ const variant = (function() {
                 positionString = 'p4,11+|p5,11+|p1,10+|p2,10+|p3,10+|p6,10+|p7,10+|p8,10+|p0,9+|ar4,9|ch5,9|p9,9+|p0,8+|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|p9,8+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P0,1+|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|P9,1+|P0,0+|AR4,0|CH5,0|P9,0+|P1,-1+|P2,-1+|P3,-1+|P6,-1+|P7,-1+|P8,-1+|P4,-2+|P5,-2+'
                 return getStartSnapshotPosition({ positionString });
             case "4 Player Classic":
-                positionString = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+'
+                positionString = '4p!P1,-1+|P2,-1+|P3,-1+|P4,-1+|P5,-1+|P6,-1+|P7,-1+|P8,-1+|rp1,10+|rp2,10+|rp3,10+|rp4,10+|rp5,10+|rp6,10+|rp7,10+|rp8,10+|R1,-2+|R8,-2+|rr1,11+|rr8,11+|N2,-2|N7,-2|rn2,11|rn7,11|B3,-2|B6,-2|rb3,11|rb6,11|Q4,-2|req4,11|K5,-2+|rk5,11+|gk-2,5+|bk11,4+|gp-1,1+|gp-1,2+|gp-1,3+|gp-1,4+|gp-1,5+|gp-1,6+|gp-1,7+|gp-1,8+|bp10,1+|bp10,2+|bp10,3+|bp10,4+|bp10,5+|bp10,6+|bp10,7+|bp10,8+|gr-2,1|gr-2,8|br11,1|br11,8|gn-2,2|gn-2,7|bn11,7|bn11,2|gb-2,3|gb-2,6|bb11,6|bb11,3|gq-2,4|bq11,5';
                 return getStartSnapshotPosition({ positionString });
             case "Space Classic":
                 positionString = getPositionStringOfSpaceClassic(Date);
@@ -388,7 +389,9 @@ const variant = (function() {
             case "Standarch":
                 return getGameRules({ position })
             case "4 Player Classic":
-                return getGameRules({ position });// TODO: 4p rules
+                const gameRules = getGameRules({ position });
+                gameRules.winConditions = {white: ['checkmate'], black: ['checkmate'], green: ['checkmate'], blue: ['checkmate'], red: ['checkmate']};
+                return gameRules;
             case "Space Classic":
                 const UTCTimeStamp = math.getUTCTimestamp(Date);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
@@ -544,6 +547,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
+        
         gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
     }
 
@@ -845,3 +849,5 @@ const variant = (function() {
     });
 
 })();
+
+module.exports = variant;

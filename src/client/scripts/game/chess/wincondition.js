@@ -49,9 +49,8 @@ const wincondition = (function() {
 
         // Was the last move capturing a royal piece?
         if (wasLastMoveARoyalCapture(gamefile)) {
-            if      (gamefile.whosTurn === 'white') return 'black royalcapture'
-            else if (gamefile.whosTurn === 'black') return 'white royalcapture'
-            else throw new Error("Cannot determine winning color by wincondition royalcapture!")
+            if(!['white','black','green','red','blue'].includes(gamefile.whosTurn)) throw new Error("Cannot determine winning color by wincondition royalcapture!")
+            return `${gamefile.whosTurn} royalcapture`;
         }
 
         return false;

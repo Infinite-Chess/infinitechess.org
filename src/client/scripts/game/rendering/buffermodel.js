@@ -83,15 +83,6 @@ const buffermodel = (function() {
         return new BufferModel(textureProgram, data, stride, mode, texture, prepDrawFunc)
     }
 
-    // these two functions call the above function for the 4-player pieces.
-    function createModel_TintTextured_Blue(data, numPositionComponents, mode, texture) {
-        return createModel_TintTextured(data, numPositionComponents, mode, texture, shaders.programs.blueTintedTextureProgram)
-    }
-
-    function createModel_TintTextured_Green(data, numPositionComponents, mode, texture) {
-        return createModel_TintTextured(data, numPositionComponents, mode, texture, shaders.programs.greenTintedTextureProgram)
-    }
-
     /**
      * Returns the prepDraw function the buffer model can call right before rendering
      * to tell the gpu how it's going to extract the vertex data into the shader attributes.
@@ -277,8 +268,6 @@ const buffermodel = (function() {
         createModel_Colored,
         createModel_ColorTextured,
         createModel_TintTextured,
-        createModel_TintTextured_Green,
-        createModel_TintTextured_Blue,
         renderPreppedModel
     })
 

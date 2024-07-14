@@ -37,7 +37,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         positionString: undefined,
         specialRights: undefined,
         /** Array of what square coords, if legal, enpassant capture is possible in the starting position of the game. */
-        enpassant: [],
+        enpassant: undefined,
         /** The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push) */
         moveRuleState: undefined,
         /** This is the full-move number at the start of the game. Used for converting to ICN notation. */
@@ -165,7 +165,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
     this.moveIndex = -1;
     /** If enpassant is allowed at the front of the game, this defines the coordinates. */
-    this.startSnapshot.enpassant = [];
     this.enpassant = math.deepCopyObject(this.startSnapshot.enpassant);
     /** An object containing the information if each individual piece has its special move rights. */
     this.specialRights = math.deepCopyObject(this.startSnapshot.specialRights);

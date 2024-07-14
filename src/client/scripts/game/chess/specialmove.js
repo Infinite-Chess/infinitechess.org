@@ -67,7 +67,6 @@ const specialmove = {
         if (updateProperties && specialmove.isPawnMoveADoublePush(piece.coords, move.endCoords)) {
             const [captureSquareX, captureSquareY] = specialmove.getEnPassantSquare(piece.coords, move.endCoords, piece.type.endsWith('U') || piece.type.endsWith('G'))
             gamefile.enpassant.push(captureSquareX, captureSquareY, move.endCoords[0], move.endCoords[1], {'white':0,'green':1,'red':2,'blue':3}[gamefile.whosTurn]);
-            console.log('adding en passant!');
         }
 
         const enPassantData = move.enpassant; // format: [captureSquare.x,captureSquare.y]

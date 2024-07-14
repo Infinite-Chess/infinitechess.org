@@ -61,13 +61,36 @@ const movepiece = (function(){
         // if (doGameOverChecks || animate || updateProperties) updateInCheck(gamefile, recordMove)
         // ALWAYS DO THIS NOW, no matter what. 
         updateInCheck(gamefile, recordMove)
-        if (doGameOverChecks) gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
+        if (doGameOverChecks) {
+            if(onlinegame.getNumPlayers() === 4){
+                checkForDeadPlayers4p({ toRemoveDeadPlayers: concludeGameIfOver });
+            } else {
+                gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
+            }
+        }
         else if (updateProperties) wincondition.detectThreecheck(gamefile); // This updates our check counters
 
         if (updateData) {
             guinavigation.update_MoveButtons()
             main.renderThisFrame();
         }
+    }
+
+    /**
+     * Checks for dead players in the 4 player variant.
+     * * @param {Object} options - An object that may contain the following options:
+     * - `toRemoveDeadPlayers`: Whether dead players will be removed upon detection.
+     */
+    function checkForDeadPlayers4p({ toRemoveDeadPlayers=true }){
+        gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver: false, simulated })
+        const areDeadPlayers = gamefile.gameConclusion !== undefined;
+        if(areDeadPlayers) {
+            if(toRemoveDeadPlayers === true){
+
+            }
+            delete gamefile.gameConclusion;
+        }
+        return areDeadPlayers;
     }
 
     /**
