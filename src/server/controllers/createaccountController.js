@@ -238,7 +238,7 @@ const doEmailFormatChecks = function (string, res) {
     if(!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': 'This email is already in use'});
     if (isEmailBanned(string)) {
         const errMessage = `Banned user with email ${string.toLowerCase()} tried to recreate their account!`;
-        logEvents(errMessage, 'hackLog.txt', { print: true })
+        logEvents(errMessage, 'bannedIPLog.txt', { print: true })
         return res.status(409).json({ 'conflict': 'You are banned.'});
     }
     return true;
