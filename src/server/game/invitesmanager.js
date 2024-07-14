@@ -204,7 +204,7 @@ async function readAllowInvites() {
     // If this is not called with 'await', it returns a promise.
     const nameOfFile = 'allowinvites.json'
     const newAllowInvitesValue = await readFile(
-        path.join(__dirname, '..', 'database', nameOfFile),
+        path.join(__dirname, '..', '..', '..', 'database', nameOfFile),
         `Error locking & reading file ${nameOfFile} after receiving a created invite!`
     )
 
