@@ -58,21 +58,21 @@ const guigameinfo = (function(){
         element_whosturn.textContent = textContent;
 
         style.revealElement(element_dot)
+
+        element_dot.classList.remove('dotwhite')
+        element_dot.classList.remove('dotblack')
+        element_dot.classList.remove('dotred')
+        element_dot.classList.remove('dotgreen')
+        element_dot.classList.remove('dotblue')
         if (color === 'white') {
-            element_dot.classList.remove('dotblack')
-            element_dot.classList.remove('dotblue')
             element_dot.classList.add('dotwhite')
         } else if (color === 'black'){
-            element_dot.classList.remove('dotwhite')
             element_dot.classList.add('dotblack')
-        } else if (color === 'green'){// 4p is always in ccw order
-            element_dot.classList.remove('dotwhite')
-            element_dot.classList.add('dotgreen')
         } else if (color === 'red'){
-            element_dot.classList.remove('dotgreen')
             element_dot.classList.add('dotred')
-        } else {
-            element_dot.classList.remove('dotred')
+        } else if (color === 'green'){
+            element_dot.classList.add('dotgreen')
+        } else if (color === 'blue') {
             element_dot.classList.add('dotblue');
         }
     }
@@ -120,8 +120,7 @@ const guigameinfo = (function(){
             else if (condition === 'time') element_whosturn.textContent = victor === 'white' ? "White wins on time!"
                                                                        : victor === 'black' ? "Black wins on time!"
                                                                        : 'This is a bug, please report. Game ended on time.'
-            else if (condition === 'royalcapture') element_whosturn.textContent = victor === 'white' ? "White wins by royal capture!"
-                                                                               : victor === 'black' ? "Black wins by royal capture!"
+            else if (condition === 'royalcapture') element_whosturn.textContent = ['white','black','red','green','blue'].includes(victor) ? `${victor[0].toUpperCase()+victor.slice(1)} wins by royal capture!`
                                                                                : 'This is a bug, please report. Game ended by royal capture.'
             else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === 'white' ? "White wins by all royals captured!"
                                                                                     : victor === 'black' ? "Black wins by all royals captured!"

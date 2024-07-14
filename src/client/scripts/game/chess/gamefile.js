@@ -50,7 +50,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
          * @type {BoundingBox} */
         box: undefined,
         /** The number of players in the game */
-        numPlayers: undefined
+        playerNum: undefined,
+        /** In a 4 player game, the colors of players that have been checkmated. */
+        colorsOut: undefined
     }
     
     this.gameRules = {
@@ -172,6 +174,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.specialRights = math.deepCopyObject(this.startSnapshot.specialRights);
     /** The amount of players playing the game. Almost always 2, except for 4 player chess. */
     this.playerNum = this.startSnapshot.playerNum ?? 2;
+    /** In a 4 player game, the colors that have been checkmated. */
+    if(this.playerNum === 4) this.startSnapshot.colorsOut = [];
+    this.colorsOut = this.startSnapshot.colorsOut;
     /** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
      * which is whos turn it was at the *beginning* of the game. */

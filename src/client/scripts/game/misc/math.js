@@ -549,29 +549,41 @@ const math = (function() {
         else throw new Error(`Cannot return the opposite color of color ${color}!`)
     }
 
-    function getNextColor4p(color){
-        if(color === "white") return "green";
-        if(color === "green") return "red";
-        if(color === "red") return "blue";
-        if(color === "blue") return "white";
-        console.trace(`We should never get the next color of an invalid color ${color}!`)
+    function getNextColor4p(color, colorsOut){
+        if(colorsOut.length > 2) console.trace(`We should never have more than two dead colors!, ${colorsOut}`);
+        let nextCol;
+        if(color === "white") nextCol = "green";
+        if(color === "green") nextCol = "red";
+        if(color === "red") nextCol = "blue";
+        if(color === "blue") nextCol = "white";
+
+        if(nextCol == null)console.trace(`We should never get the next color of an invalid color ${color}!`)
+
+        if(colorsOut.includes(nextCol)) return getNextColor4p(nextCol, colorsOut);
+        else return nextCol;
     }
 
-    function getPreviousColor4p(color){
-        if(color === "green") return "white";
-        if(color === "red") return "green";
-        if(color === "blue") return "red";
-        if(color === "white") return "blue";
-        console.trace(`We should never get the previous color of an invalid color ${color}!`)
+    function getPreviousColor4p(color, colorsOut){
+        if(colorsOut.length > 2) console.trace(`We should never have more than two dead colors!, ${colorsOut}`);
+        let prevCol;
+        if(color === "green") prevCol = "white";
+        if(color === "red") prevCol = "green";
+        if(color === "blue") prevCol = "red";
+        if(color === "white") prevCol = "blue";
+
+        if(prevCol == null)console.trace(`We should never get the next color of an invalid color ${color}!`)
+        
+        if(colorsOut.includes(prevCol)) return getPreviousColor4p(prevCol, colorsOut);
+        else return prevCol;
     }
 
-    function getAllColorsExcept4p(color){
+    function getAllColorsExcept4p(color, colorsOut){
         const cols = [];
         if(color !== "white") cols.push("white");
         if(color !== "green") cols.push("green");
         if(color !== "red") cols.push("red");
         if(color !== "blue") cols.push("blue");
-        return cols;
+        return cols.filter(c => !colorsOut.includes(c));
     }
 
     // REQUIRES the type of piece to be valid, and have a W or B at the end!

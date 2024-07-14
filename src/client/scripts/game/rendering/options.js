@@ -206,13 +206,17 @@ const options = (function() {
     function getPieceRegenColorArgs() {
         // if (!themes[theme].useColoredPieces) return; // Not using colored pieces
         
+        const gamefile = game.getGamefile();
+        const colorsOut = gamefile.colorsOut;
+        const deadColor = themes[theme].deadPiecesColor ?? [0.5,0.5,0.5,1];
+
         return {
             white: themes[theme].whitePiecesColor, // [r,g,b,a]
             black: themes[theme].blackPiecesColor,
             neutral: themes[theme].neutralPiecesColor,
-            red: themes[theme].redPiecesColor ?? [1, 0.1, 0.1, 1],
-            green: themes[theme].greenPiecesColor ?? [0.1, 1, 0.1, 1],
-            blue: themes[theme].bluePiecesColor ?? [0.1, 0.1, 1, 1]
+            red: colorsOut.includes('red') ? deadColor : (themes[theme].redPiecesColor ?? [1, 0.1, 0.1, 1]),
+            green: colorsOut.includes('green') ? deadColor : (themes[theme].greenPiecesColor ?? [0.1, 1, 0.1, 1]),
+            blue: colorsOut.includes('blue') ? deadColor : (themes[theme].bluePiecesColor ?? [0.1, 0.1, 1, 1])
         }
     }
 

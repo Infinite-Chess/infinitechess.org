@@ -45,12 +45,27 @@ const wincondition = (function() {
     }
 
     function detectRoyalCapture(gamefile) {
-        if (!isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule. For 4p chess winConditions between opponents should always be the same.
+        if (!isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not all using this gamerule. For 4p chess winConditions between opponents should always be the same.
 
         // Was the last move capturing a royal piece?
         if (wasLastMoveARoyalCapture(gamefile)) {
-            if(!['white','black','green','red','blue'].includes(gamefile.whosTurn)) throw new Error("Cannot determine winning color by wincondition royalcapture!")
-            return `${gamefile.whosTurn} royalcapture`;
+            if(gamefile.playerNum === 4){
+                // if this capture ends the game, encode the color that won
+                if(gamefile.colorsOut.length === 2){
+                    const colorsToFilterOut = [...gamefile.colorsOut, gamefile.whosTurn];
+                    const remaining = ['white','red','green','blue'].filter(p => !colorsToFilterOut.includes(p));
+                    return `${remaining[0]} royalcapture`;
+                } else {
+                    // otherwise, encode the player who lost so that the information can be used elsewhere.
+                    if(!['white','black','green','red','blue'].includes(gamefile.whosTurn)) throw new Error("Cannot determine winning color by wincondition royalcapture!")
+                    return `${gamefile.whosTurn} royalcapture`;
+                }
+            } else if(gamefile.playerNum === 2) {
+                if      (gamefile.whosTurn === 'white') return 'black royalcapture'
+                else if (gamefile.whosTurn === 'black') return 'white royalcapture'
+                else throw new Error("Cannot determine winning color by wincondition royalcapture!")
+            }
+            
         }
 
         return false;
@@ -160,8 +175,8 @@ const wincondition = (function() {
             const oppositeColor = math.getOppositeColor(gamefile.whosTurn);
             return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
         } else {
-            const allColorsExceptMe = math.getAllColorsExcept4p(gamefile.whosTurn);
-            for(let i = 0; i < allColorsExceptMe; i++){
+            const allColorsExceptMe = math.getAllColorsExcept4p(gamefile.whosTurn, gamefile.colorsOut);
+            for(let i = 0; i < allColorsExceptMe.length; i++){
                 if(gamefile.gameRules.winConditions[allColorsExceptMe[i]].includes(winCondition) === false) return false;
             }
             return true;
@@ -259,7 +274,7 @@ const wincondition = (function() {
         getWinConditionCountOfColor,
         isGameConclusionDecisive,
         getVictorAndConditionFromGameConclusion,
-	getResultFromVictor
+	    getResultFromVictor,
     })
 
 })();

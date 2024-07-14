@@ -63,7 +63,17 @@ const movepiece = (function(){
         updateInCheck(gamefile, recordMove)
         if (doGameOverChecks) {
             if(gamefile.playerNum === 4){
-                // checkForDeadPlayers4p({ toRemoveDeadPlayers: concludeGameIfOver, simulated });
+                const gameConclusion = checkForDeadPlayers4p(gamefile, { toRemoveDeadPlayers: concludeGameIfOver, simulated });
+                const playerDied = !!gameConclusion;
+                if(playerDied){
+                    if(gamefile.colorsOut.length === 3){
+                        // game should end, remaining player should be declared the winner.
+                        gamefileutility.concludeGame(gamefile, gameConclusion);
+                    } else {
+                        // game is still going, just one player died. We need to regenerate player that moves
+                        regenerateTurnOnDeath(gamefile, move, { pushClock, doGameOverChecks });
+                    }
+                }
             } else {
                 gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
             }
@@ -82,16 +92,36 @@ const movepiece = (function(){
      * - `toRemoveDeadPlayers`: Whether dead players will be removed upon detection.
      * * @returns {boolean} whether there are any dead players
      */
-    function checkForDeadPlayers4p({ toRemoveDeadPlayers=true, simulated }){
+    function checkForDeadPlayers4p(gamefile, { toRemoveDeadPlayers=true, simulated }){
         gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver: false, simulated })
-        const areDeadPlayers = gamefile.gameConclusion !== undefined;
-        if(areDeadPlayers) {
+        if(gamefile.gameConclusion) {
             if(toRemoveDeadPlayers === true){
+                const checkmatedColor = gamefile.gameConclusion.split(' ')[0];
 
+                // The checkmatedColor is now out of the game. Render all of their pieces as grey.
+                gamefile.colorsOut.push(checkmatedColor);
+                piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
             }
-            delete gamefile.gameConclusion;
         }
-        return areDeadPlayers;
+        const returnVal = gamefile.gameConclusion;
+        delete gamefile.gameConclusion;
+        return returnVal;
+    }
+
+    /**
+     * Regenerates the turn, so that it isn't marked as their turn after a given player has died.
+     * * @param {gamefile} gamefile - The gamefile
+     * * @param {move} move - The previous move made, to reset the turn to.
+     * * @param {Object} options - An object that may contain the following options:
+     * - `pushClock`: Whether to push the clock.
+     * - `doGameOverChecks`: Whether to perform game over checks.
+     */
+    function regenerateTurnOnDeath(gamefile, move, { pushClock, doGameOverChecks }){
+        // reset back to previous turn of move
+        gamefile.whosTurn = math.getPieceColorFromType(move.type);
+
+        // switch to the next player's turn, after gamefile.colorsOut has been updated
+        nextPlayerTurn4Player(gamefile, { pushClock, doGameOverChecks });
     }
 
     /**
@@ -109,6 +139,7 @@ const movepiece = (function(){
         if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
         if (!rewindInfoAlreadyPresent) {
             rewindInfo.inCheck = math.deepCopyObject(gamefile.inCheck);
+            rewindInfo.colorsOut = math.deepCopyObject(gamefile.colorsOut);
             if (gamefile.attackers)             rewindInfo.attackers = math.deepCopyObject(gamefile.attackers);
             rewindInfo.enpassant =     math.deepCopyObject(gamefile.enpassant);
             if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
@@ -287,13 +318,13 @@ const movepiece = (function(){
     }
 
     function nextPlayerTurn4Player(gamefile, { pushClock = true, doGameOverChecks = true } = {}){
-        gamefile.whosTurn = math.getNextColor4p(gamefile.whosTurn);
+        gamefile.whosTurn = math.getNextColor4p(gamefile.whosTurn, gamefile.colorsOut);
         if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile)
         if (pushClock) clock.push()
     }
 
     function previousPlayerTurn4Player(gamefile, { pushClock = true, doGameOverChecks = true } = {}){
-        gamefile.whosTurn = math.getPreviousColor4p(gamefile.whosTurn);
+        gamefile.whosTurn = math.getPreviousColor4p(gamefile.whosTurn, gamefile.colorsOut);
         if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
         if (pushClock) clock.push()
     }
@@ -475,6 +506,7 @@ const movepiece = (function(){
             gamefile.enpassant = move.rewindInfo.enpassant; 
             gamefile.moveRuleState = move.rewindInfo.moveRuleState;
             gamefile.checksGiven = move.rewindInfo.checksGiven;
+            gamefile.colorsOut = move.rewindInfo.colorsOut;
             if (move.rewindInfo.specialRightStart) { // Restore their special right
                 const key = math.getKeyFromCoords(move.startCoords);
                 gamefile.specialRights[key] = true;
