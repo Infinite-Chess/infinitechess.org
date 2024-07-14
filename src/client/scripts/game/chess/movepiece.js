@@ -86,7 +86,7 @@ const movepiece = (function(){
         if (!rewindInfoAlreadyPresent) {
             rewindInfo.inCheck = math.deepCopyObject(gamefile.inCheck);
             if (gamefile.attackers)             rewindInfo.attackers = math.deepCopyObject(gamefile.attackers);
-            if (gamefile.enpassant)             rewindInfo.enpassant =     math.deepCopyObject(gamefile.enpassant);
+            rewindInfo.enpassant =     math.deepCopyObject(gamefile.enpassant);
             if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
             if (gamefile.checksGiven)           rewindInfo.checksGiven =   gamefile.checksGiven;
             let key = math.getKeyFromCoords(move.startCoords);
@@ -106,7 +106,16 @@ const movepiece = (function(){
      * @param {number[]} endCoords - The destination of the piece moving
      */
     function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoords) {
-        gamefile.enpassant = [];
+        const whosTurnNumber = {white:0,green:1,red:2,blue:3}[gamefile.whosTurn];
+        for(let i = 0; i < gamefile.enpassant.length; i+=5){
+            if(gamefile.enpassant[i+4] === whosTurnNumber){
+                for(let j = 0; j < 5; j++){
+                    gamefile.enpassant[i+j] = undefined;
+                }
+            }
+        }
+        gamefile.enpassant = gamefile.enpassant.filter(f => f !== undefined);
+
         let key = math.getKeyFromCoords(startCoords);
         delete gamefile.specialRights[key] // We also delete its special move right for ANY piece moved
         key = math.getKeyFromCoords(endCoords);
@@ -439,7 +448,7 @@ const movepiece = (function(){
         gamefile.inCheck = move.rewindInfo.inCheck
         if (move.rewindInfo.attackers) gamefile.attackers = move.rewindInfo.attackers;
         if (removeMove) { // Restore original values
-            gamefile.enpassant = move.rewindInfo.enpassant;
+            gamefile.enpassant = move.rewindInfo.enpassant; 
             gamefile.moveRuleState = move.rewindInfo.moveRuleState;
             gamefile.checksGiven = move.rewindInfo.checksGiven;
             if (move.rewindInfo.specialRightStart) { // Restore their special right

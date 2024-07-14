@@ -90,7 +90,7 @@ const variant = (function() {
             turn: options.turn || 'white',
             fullMove: options.fullMove || 1
         }
-        if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
+        // if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant; // Broken by 4 player chess. If uncommented, can still be used, although an array is needed instead of a single number
         if (options.moveRule) {
             const [state, max] = options.moveRule.split('/');
             gamefile.startSnapshot.moveRuleState = Number(state);

@@ -65,32 +65,16 @@ const specialmove = {
 
         // If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
         if (updateProperties && specialmove.isPawnMoveADoublePush(piece.coords, move.endCoords)) {
-            gamefile.enpassant = specialmove.getEnPassantSquare(piece.coords, move.endCoords, piece.type.endsWith('U') || piece.type.endsWith('G'));
+            const [captureSquareX, captureSquareY] = specialmove.getEnPassantSquare(piece.coords, move.endCoords, piece.type.endsWith('U') || piece.type.endsWith('G'))
+            gamefile.enpassant.push(captureSquareX, captureSquareY, move.endCoords[0], move.endCoords[1], {'white':0,'green':1,'red':2,'blue':3}[gamefile.whosTurn]);
+            console.log('adding en passant!');
         }
 
-        const enPassantData = move.enpassant; // true if the move is an en passant
+        const enPassantData = move.enpassant; // format: [captureSquare.x,captureSquare.y]
         const promotionTag = move.promotion; // promote type
         if (!enPassantData && !promotionTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
-        let captureCoords;
-        if(enPassantData == null){
-            captureCoords = move.endCoords;
-        } else {
-            let [originalX, originalY, captureX, captureY] = enPassantData;
-
-            // we know that the captured piece is a pawn and that the en passant square is directly behind it
-            // additionally, the attacker will be on the same axis perpendicular to the movement. 
-
-            let forwardVector;
-            if(color === 'red') forwardVector = [0,-1]
-            else if(color === 'green') forwardVector = [1,0];
-            else if(color === 'blue') forwardVector = [-1,0];
-            else if(color === 'white') forwardVector = [0,1];
-            else throw new Error('Invalid color stored in enPassantData!', {enPassantData});
-
-            
-            //[coords[0], coords[1], color, oneOrNegOne]
-        }
+        const captureCoords = enPassantData == null ? move.endCoords : enPassantData;
         
         let capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords)
 
@@ -117,7 +101,7 @@ const specialmove = {
         return true;
     },
 
-    isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2 },
+    isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2 || Math.abs(pawnCoords[0] - endCoords[0]) === 2 },
 
     /**
      * Returns the en passant square of a pawn double push move

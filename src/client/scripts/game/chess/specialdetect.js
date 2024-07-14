@@ -184,61 +184,63 @@ const specialdetect = (function() {
         }
     
         // 3. It can capture en passant if a pawn next to it just pushed twice.
-        addAllPossibleEnPassants(gamefile, individualMoves, coords, color)
-    }
-
-    function addAllPossibleEnPassants (gamefile, individualMoves, coords, color){
-        // en passant array format: [captureSquare.x, captureSquare.y, pieceSquare.x, pieceSquare.y, ...repeated for each en passant]
-        for(let i = 0; i < gamefile.enpassant.length; i += 4){
-            addPossibleEnPassant(gamefile, [gamefile.enpassant[i], gamefile.enpassant[i+1]], individualMoves, coords, color);
-        }
+        addPossibleEnPassant(gamefile, individualMoves, coords, color)
     }
 
     /**
      * Appends legal enpassant capture to the selected pawn's provided individual moves.
      * @param {gamefile} gamefile - The gamefile
      * @param {array[]} individualMoves - The running list of legal individual moves
-     * @param {number[]} enPassantSquare - The coordinates that the pawn will move to when completing the capture, [x,y]
      * @param {number[]} coords - The coordinates of the pawn selected, [x,y]
      * @param {string} color - The color of the pawn selected
      */
     // If it can capture en passant, the move is appended to  legalmoves
-    function addPossibleEnPassant (gamefile, enPassantSquare, individualMoves, coords, color) {
-        // if(color === 'blue' || color === 'green'){
-        //     const yLandDiff = enPassantSquare[1] - coords[1];
-        //     const oneOrNegOne = color === 'green' ? 1 : -1;
-        //     if (Math.abs(yLandDiff) !== 1) return; // Not immediately left or right of us
-        //     if (coords[0] + oneOrNegOne !== enPassantSquare[0]) return; // Not one in front of us
+    function addPossibleEnPassant (gamefile, individualMoves, coords, color) {
+        const forwardDirection = {
+            'blue': [-1,0],
+            'red': [0,-1],
+            'green': [1,0],
+            'white': [0,1]
+        }[color];
 
-        //     // It is capturable en passant!
-        //     const captureSquare = [coords[0] + oneOrNegOne, coords[1] + yLandDiff]
+        const otherAxis = {
+            'blue': [0,1],
+            'green': [0,1],
+            'red': [1,0],
+            'white': [1,0]
+        }[color];
 
-        //     // Extra check to make sure there's no piece (bug if so)
-        //     if (gamefileutility.getPieceTypeAtCoords(gamefile, captureSquare)) return console.error("We cannot capture onpassant onto a square with an existing piece! " + captureSquare)
+        const captureSquares = [
+            [
+                coords[0] + forwardDirection[0] + otherAxis[0],
+                coords[1] + forwardDirection[1] + otherAxis[1]
+            ],
+            [
+                coords[0] + forwardDirection[0] - otherAxis[0],
+                coords[1] + forwardDirection[1] - otherAxis[1]
+            ],
+        ]
 
-        //     // TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
-        //     // on the individual move to detect en passant captures and to know what piece to delete
+        const colorNumber = {white:0,green:1,red:2,blue:3}[color];
 
-        //     captureSquare.enpassant = [coords[0], coords[1], enPassantSquare[0], enPassantSquare[1]];
-        //     individualMoves.push(captureSquare);
-        //     return;
-        // }
+        // format: array of a multiple of 4 numbers. Each 4 numbers are [... captureSquare.x, captureSquare.y, pieceToCaptureSquare.x, pieceToCaptureSquare.y]
+        for(let i = 0; i < gamefile.enpassant.length; i += 5){
+            if(colorNumber === gamefile.enpassant[i+4]) continue; // we don't want pieces of the same color to be able to en passant each other
+            const possibleSquare = [
+                gamefile.enpassant[i],
+                gamefile.enpassant[i+1]
+            ];
 
-        const xLandDiff = enPassantSquare[0] - coords[0];
-        const oneOrNegOne = color === 'white' ? 1 : -1;
-        if (Math.abs(xLandDiff) !== 1) return; // Not immediately left or right of us
-        if (coords[1] + oneOrNegOne !== enPassantSquare[1]) return; // Not one in front of us
+            // Extra check to make sure there's no piece (bug if so)
+            if (gamefileutility.getPieceTypeAtCoords(gamefile, possibleSquare)) return console.error("We cannot capture onpassant onto a square with an existing piece! " + captureSquare);
 
-        // It is capturable en passant!
-        const captureSquare = [coords[0] + xLandDiff, coords[1] + oneOrNegOne]
-
-        // Extra check to make sure there's no piece (bug if so)
-        if (gamefileutility.getPieceTypeAtCoords(gamefile, captureSquare)) return console.error("We cannot capture onpassant onto a square with an existing piece! " + captureSquare)
-
-        // TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
-        // on the individual move to detect en passant captures and to know what piece to delete
-        captureSquare.enpassant = [coords[0], coords[1], enPassantSquare[0], enPassantSquare[1]];
-        individualMoves.push(captureSquare)
+            for(let j = 0; j < 2; j++){
+                if(captureSquares[j][0] === possibleSquare[0] && captureSquares[j][1] === possibleSquare[1]){
+                    possibleSquare.enpassant = [gamefile.enpassant[i+2], gamefile.enpassant[i+3]];
+                    individualMoves.push(possibleSquare);
+                }
+            }
+        }
     }
 
     /**

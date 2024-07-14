@@ -66,9 +66,9 @@ const specialundo = {
     // pawnIndex should be specified if it's a promotion move we're undoing
     pawns(gamefile, move, { updateData = true, animate = true } = {}) {
 
-        const enPassantData = move.enpassant; // [undo.x, undo.y]
+        const enPassantData = move.enpassant;
         const promotionTag = move.promotion; // promote type
-        const isDoublePush = Math.abs(move.endCoords[1] - move.startCoords[1]) === 2
+        const isDoublePush = Math.abs(move.endCoords[1] - move.startCoords[1]) === 2 || Math.abs(move.endCoords[0] - move.startCoords[0]) === 2
         if (!enPassantData && !promotionTag && !isDoublePush) return false; // No special move to execute, return false to signify we didn't move the piece.
 
         
@@ -88,7 +88,9 @@ const specialundo = {
             movepiece.movePiece(gamefile, movedPiece, move.startCoords, { updateData }) // Changes the pieces coords and data in the organized lists without making any captures.
             // Remove the gamefile's enpassant flag ONLY if this is a simulated move!
             if (!updateData && isDoublePush) {
-                delete gamefile.enpassant;
+                for(let i = 0; i < 5; i++){
+                    gamefile.enpassant.pop();
+                }
             }
         }
 
