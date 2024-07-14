@@ -178,9 +178,9 @@ const math = (function() {
     /**
      * Gets a unique key from the line equation.
      * Compatable with factorable steps like `[2,2]`.
-     * @param {Number[]} step Step in the form of `[deltax,deltay]`
-     * @param {Number[]} coords Coordinate in the form of `[x,y]`
-     * @returns {String} the key in the format of `id|intercept`
+     * @param {Number[]} step Line step `[deltax,deltay]`
+     * @param {Number[]} coords `[x,y]`
+     * @returns {String} the key `id|intercept`
      */
     function getKeyFromLine(step, coords) {
         const lineIsVertical = step[0]===0;
@@ -330,6 +330,13 @@ const math = (function() {
         return [worldX, worldY]
     }
 
+    // fast clampfunc
+    function clamp(min,max,value) {
+        if (min>value) return min;
+        if (max<value) return max;
+        return value
+    }
+
     // Returns the point on the line segment that is nearest/perpendicular to the given point.
     function closestPointOnLine (lineStart, lineEnd, point) {
 
@@ -340,28 +347,25 @@ const math = (function() {
         const dy = lineEnd[1] - lineStart[1];
 
         if (dx === 0) {
-            let closestPointY = point[1];
-                 if (closestPointY < lineStart[1]) closestPointY = lineStart[1]
-            else if (closestPointY > lineEnd[1]) closestPointY = lineEnd[1]
-
-            closestPoint = [lineStart[0], closestPointY]
+            closestPoint = [lineStart[0], clamp(lineStart[1], lineEnd[1], point[1])]
         } else {
 
             const m = dy / dx;
             const b = lineStart[1] - m * lineStart[0];
         
             // Calculate x and y coordinates of closest point on line
-            const x = (m * (point[1] - b) + point[0]) / (m * m + 1);
+            let x = (m * (point[1] - b) + point[0]) / (m * m + 1);
+            x = clamp(lineStart[0],lineEnd[0],x)
             const y = m * x + b;
 
-            closestPoint = (x < lineStart[0]) ? lineStart : (x > lineEnd[0]) ? lineEnd : [x, y];
+            closestPoint = [x,y];
         }
 
         distance = euclideanDistance(closestPoint, point)
 
         return {
-          coords: closestPoint,
-          distance: distance
+            coords: closestPoint,
+            distance: distance
         }
     }
 
@@ -373,32 +377,51 @@ const math = (function() {
         return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels()
     }
 
+    function getAABBCornerOfLine(line, leftSide) {
+        let corner = "";
+        v: {
+            if (line[0]==0) break v; // Horizontal so parallel with top/bottom lines
+            corner += ((line[0]>0==line[1]>0)==leftSide) ? "bottom" : "top"
+        }
+        h: {
+            if (line[1]==0) break h; // Vertical so parallel with left/right lines
+            corner += leftSide ? "left" : "right"
+        }
+        return corner;
+    }
+
     function getLineIntersectionEntryTile (ax, by, c, boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
-        
+        let xIntersectBottom = undefined;
+        let xIntersectTop = undefined;
+        let yIntersectLeft = undefined;
+        let yIntersectRight = undefined;
         // Check for intersection with left side of rectangle
         if (corner.endsWith('left')) {
-            const yIntersectLeft = ((left * ax) + c) / by;
+            yIntersectLeft = ((left * ax) + c) / by;
             if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft]
         }
         
         // Check for intersection with bottom side of rectangle
         if (corner.startsWith('bottom')) {
-            const xIntersectBottom = (c - (bottom * by)) / ax;
+            xIntersectBottom = (c - (bottom * by)) / ax;
             if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom]
         }
 
         // Check for intersection with right side of rectangle
         if (corner.endsWith('right')) {
-            const yIntersectRight = ((right * ax) + c) / by;
+            yIntersectRight = ((right * ax) + c) / by;
             if (yIntersectRight >= bottom && yIntersectRight <= top) return [right, yIntersectRight];
         }
 
         // Check for intersection with top side of rectangle
         if (corner.startsWith('top')) {
-            const xIntersectTop = (c - (top * by)) / ax;
+            xIntersectTop = (c - (top * by)) / ax;
             if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
         }
+        console.log(corner)
+        console.log(boundingBox)
+        console.log(xIntersectBottom, xIntersectTop, yIntersectLeft, yIntersectRight)
     }
 
     // Returns point, if there is one, of a line with specified slope "b" intersection screen edge on desired corner
@@ -892,6 +915,7 @@ const math = (function() {
         getBoundingBoxOfBoard,
         convertPixelsToWorldSpace_Virtual,
         convertWorldSpaceToPixels_Virtual,
+        getAABBCornerOfLine,
         getLineIntersectionEntryTile,
         getIntersectionEntryTile,
         convertWorldSpaceToGrid,
