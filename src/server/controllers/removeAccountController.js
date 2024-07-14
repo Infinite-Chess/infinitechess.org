@@ -45,11 +45,13 @@ const intervalForRemovalOfOldUnverifiedAccounts = 1 * 24 * 60 * 60 * 1000; // 1 
  * This function is run every `intervalForRemovalOfOldUnverifiedAccounts`ms.
  * It checkes for old unverified account and removes them from the DataBase
  */
-function removeOldUnverifiedMembers() {
+function removeOldUnverifiedMembers() {    
     const now = new Date();
 
     for (username in members) {
-        if((now - new Date(members[username].joined)) > maxExistenceTimeForUnverifiedAccount) {
+        if(members[username].verified[0] == undefined) continue;
+        
+        if((now - new Date(members[username].joined)) > maxExistenceTimeForUnverifiedAccount && !members[username].verified[0]) {
             removeAccountByUsername(username, `Unverified for more than ${maxExistenceTimeForUnverifiedAccount / (24 * 60 * 60 * 1000)} days`)
         }
     }
