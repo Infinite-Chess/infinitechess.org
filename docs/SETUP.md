@@ -4,7 +4,7 @@ This guide walks you through the initial setup phase of the infinitechess.org se
 
 **This is a team project!!** Join [the discord](https://discord.gg/NFWFGZeNh5) server to work with others, discuss how to improve the website, and ask questions! If you have trouble during this setup process, request help in the [#help](https://discord.com/channels/1114425729569017918/1257506171376504916) channel!
 
-**Summary of the setup process below for experienced users:** Install VSCode and Node.js. Fork the repository and install the project dependencies via `npm install`. Now you can run `nodemon` to launch a live infinite chess server at `https://localhost:3443`. Optionally, you can also set up an email serivce now. You are now ready to test changes and contribute to the main project after reading the [Navigation Guide](./NAVIGATING.md)! **All these steps are explained in great detail below:**
+**Summary of the setup process below for experienced users:** Install VSCode and Node.js. Fork the repository and install the project dependencies via `npm install`. Now you can run `npx nodemon` to launch a live infinite chess server at `https://localhost:3443`. Optionally, you can also set up an email serivce now. You are now ready to test changes and contribute to the main project after reading the [Navigation Guide](./NAVIGATING.md)! **All these steps are explained in great detail below:**
 
 ## Step 1: Download VSCode ##
 
@@ -48,7 +48,7 @@ Choose a location on your machine to store the repository. Then when prompted wh
 
 
 
-## Step 4: Install project dependancies ##
+## Step 4: Install project dependencies ##
 
 Inside the opened VSCode project, open a terminal window within it by going to Terminal > New Terminal.
 
@@ -59,7 +59,7 @@ npm install
 
 To test run the server, and start it up from now on, enter the command:
 ```
-nodemon
+npx nodemon
 ```
 
 The first time you run this, you should see something like:
