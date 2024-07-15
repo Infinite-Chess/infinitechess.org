@@ -1224,7 +1224,7 @@ const gamemanager = (function() {
         // Game conclusion is decisive...
         // We can't submit a move where our opponent wins
         const oppositeColor = math1.getOppositeColor(color);
-        return !(victor === oppositeColor);
+        return victor !== oppositeColor;
     }
 
     /**
