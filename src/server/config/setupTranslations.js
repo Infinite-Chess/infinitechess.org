@@ -28,6 +28,68 @@ const staticTranslatedTemplates = [
   "errors/500",
 ];
 
+const link_white_list = [
+  "/",
+  "/login",
+  "/news",
+  "/play",
+  "/credits",
+  "/termsofservice",
+  "/createaccount",
+  "https://github.com/pychess/pychess/blob/master/LICENSE",
+  "mailto:infinitechess.org@gmail.com",
+  "https://www.patreon.com/Naviary",
+  "https://math.colgate.edu/~integers/og2/og2.pdf",
+  "https://chess.stackexchange.com/questions/42480/checkmate-in-%cf%89%c2%b2-moves-with-finitely-many-pieces",
+  "https://math.colgate.edu/~integers/og2/og2.pdf",
+  "https://math.colgate.edu/~integers/rg4/rg4.pdf",
+  "https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces",
+  "https://creativecommons.org/licenses/by-sa/3.0/deed.en",
+  "https://www.gnu.org/licenses/gpl-3.0.en.html",
+  "https://greenchess.net/info.php?item=downloads",
+  "https://github.com/lichess-org/lila/blob/master/COPYING.md",
+  "https://www.gnu.org/licenses/agpl-3.0.en.html",
+  "https://www.lcg.ufrj.br/WebGL/hws.edu-examples/doc-bump/gl-matrix.js.html",
+  "https://github.com/tsevasa/infinite-chess-notation",
+];
+
+const xss_options = {
+  whiteList: {
+    a: ["href", "target"],
+    b: [],
+    strong: [],
+    i: [],
+    em: [],
+    mark: [],
+    small: [],
+    del: [],
+    ins: [],
+    sub: [],
+    sup: [],
+  },
+  onTagAttr: function (tag, name, value, isWhiteAttr) {
+    if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
+      console.warn(
+        `Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
+      );
+    }
+  },
+  safeAttrValue: function (tag, name, value) {
+    if (
+      tag === "a" &&
+        name === "href" &&
+        link_white_list.includes(value.trim())
+    ) {
+      return value;
+    } else if (name === "href") {
+      console.warn(
+        `Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
+      );
+    }
+  },
+};
+const custom_xss = new xss.FilterXSS(xss_options);
+
 function html_escape_array(array) {
   let escaped = [];
   for (const member of array) {
@@ -59,7 +121,7 @@ function html_escape(value) {
       }
       break;
     case "string":
-      return xss(value); // Html escape strings
+      return custom_xss.process(value); // Html escape strings
       break;
     case "number":
       return value;
@@ -71,14 +133,14 @@ function html_escape(value) {
 }
 
 /**
-* Removes keys from `object` based on string of format 'foo.bar'.
-* @param {key_string} String representing key that has to be deleted in format 'foo.bar'.s
-* @param {object} Object that is target of the removal.
-* @returns Copy of `object` with deleted values
-*/
+ * Removes keys from `object` based on string of format 'foo.bar'.
+ * @param {key_string} String representing key that has to be deleted in format 'foo.bar'.s
+ * @param {object} Object that is target of the removal.
+ * @returns Copy of `object` with deleted values
+ */
 function remove_key(key_string, object) {
-  const keys = key_string.split('.');
-  
+  const keys = key_string.split(".");
+
   let currentObj = object;
   for (let i = 0; i < keys.length - 1; i++) {
     if (currentObj[keys[i]]) {
@@ -87,37 +149,36 @@ function remove_key(key_string, object) {
   }
 
   if (currentObj[keys.at(-1)]) {
-    
     delete currentObj[keys.at(-1)];
   }
   return object;
 }
 
 /**
-* Removes outdated translations.
-* @param {object} Object of translations.
-* @param {changelog} `changes.json` file. 
-* @returns 
-*/
+ * Removes outdated translations.
+ * @param {object} Object of translations.
+ * @param {changelog} `changes.json` file.
+ * @returns
+ */
 function removeOutdated(object, changelog) {
   const version = object.version;
   // Filter out versions that are older than version of current language
-  const filtered_keys = Object.keys(changelog).filter((function x(y) {
+  const filtered_keys = Object.keys(changelog).filter(function x(y) {
     return version < parseInt(y);
-  }));
-  
+  });
+
   let key_strings = [];
   for (key of filtered_keys) {
     key_strings = key_strings.concat(changelog[key]);
   }
   // Remove duplicate
   key_strings = Array.from(new Set(key_strings));
-  
+
   let object_copy = object;
   for (let key_string of key_strings) {
     object_copy = remove_key(key_string, object_copy);
   }
-  
+
   return object_copy;
 }
 
@@ -135,13 +196,13 @@ function loadTranslationsFolder(folder) {
       resources[file.replace(".toml", "")] = {
         default: html_escape(
           removeOutdated(
-          parse(fs.readFileSync(path.join(folder, file)).toString()),
-          changelog
+            parse(fs.readFileSync(path.join(folder, file)).toString()),
+            changelog,
           ),
         ),
       };
     });
-  
+
   return resources;
 }
 

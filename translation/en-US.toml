@@ -70,7 +70,7 @@ username = "Username:"
 email = "Email:"
 password = "Password:"
 create_button = "Create Account"
-argreement = "I agree to the <a href='/termsofservice' class='agreement' target='_blank'>Terms of Service</a>"
+argreement = "I agree to the <a href='/termsofservice' target='_blank'>Terms of Service</a>"
 
 [login]
 title = "Log In"
