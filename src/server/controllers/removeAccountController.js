@@ -20,7 +20,7 @@ const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1;
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  */
-const removeAccount = (req, res) => {
+function removeAccount(req, res) {
     const usernameLowercase = req.params.member.toLowerCase();
 
     // Check to make sure they're logged in
@@ -41,7 +41,7 @@ const removeAccount = (req, res) => {
  * @param {string} usernameLowercase - The username of the account to remove, in lowercase.
  * @param {string} reason - The reason for account deletion.
  */
-const removeAccountByUsername = async (usernameLowercase, reason) => {
+function removeAccountByUsername(usernameLowercase, reason) {
     removeAllRoles(usernameLowercase);
     if (removeMember(usernameLowercase)) {
         logEvents(`User ${usernameLowercase} was deleted for '${reason}'`, "deletedAccounts.txt", { print: true })
