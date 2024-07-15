@@ -7,6 +7,7 @@
 
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
 import { minify } from "terser";
+import { injectHtmlscript } from "./src/server/utility/HTMLScriptInjector.js"
 import { DEV_BUILD } from "./src/server/config/config.js";
 
 /**
@@ -45,6 +46,7 @@ if (DEV_BUILD){
     recursive: true,
     force: true
   });
+  await writeFile(`./dist/views/play.ejs`, injectHtmlscript(), 'utf8');
 } else{
   // in prod mode, copy all clientside files over to dist, except for those contained in scripts
   await copy("./src/client", "./dist", {
@@ -87,6 +89,9 @@ if (DEV_BUILD){
     sourceMap: false
   });
   filesToWrite.push(writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8'));
+  
+  // Inject htmlscript.js into play.ejs
+  filesToWrite.push(writeFile(`./dist/views/play.ejs`, injectHtmlscript(), 'utf8'));
 
   // finally, write to the needed files
   await Promise.all(filesToWrite);

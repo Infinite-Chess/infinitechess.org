@@ -17,10 +17,6 @@ const { DEV_BUILD } = require('./config/config');
 const { saveMembersIfChangesMade } = require('./controllers/members');
 const { saveRolesIfChangesMade } = require('./controllers/roles');
 const { initTranslations } = require('./config/setupTranslations');
-const { injectHtmlscript } = require('./utility/HTMLScriptInjector')
-
-// Inject htmlscript.js into play.ejs
-injectHtmlscript();
 
 // Initiate translations
 initTranslations();
