@@ -1,3 +1,10 @@
+// This script deploys all files from /src/client to /dist in order to run the website.
+// Depending on the value of DEV_BUILD in /src/server/config/config.js, this happens either in development mode or in production mode.
+// Development mode: All files are simply copied over unmodified.
+// Production mode: All non-script assets are copied over unmodified,
+//                  but all game scripts in /src/client/scripts/game are concatenated into app.js.
+//                  Further, all scripts are minified with the use of terser.
+
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
 import { minify } from "terser";
 import { DEV_BUILD } from "./src/server/config/config.js";

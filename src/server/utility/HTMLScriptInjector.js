@@ -1,8 +1,10 @@
 
 /**
  * This module, at runtime, creates a list of a few
- * of our htmls in which we want to manually injected
- * some javascript into before sharing to the client.
+ * of our htmls into which we want to manually inject
+ * some javascript before sharing to the client.
+ * (Currently, htmlscript.js is injected in full into play.html.
+ * Also, calls to the game scripts in /src/client/scripts/game are injected into play.html)
  * 
  * We keep the javascript separate in development, so as
  * to not break Intellisense's sense of the javascript project.
@@ -100,7 +102,6 @@ function getCachedHTML(htmlFilePath) {
 }
 
 // Inject the scripts we want...
-
 { 
     // Prepare the injection of our (potentially minified) htmlscript.js script into play.html
     const htmlFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'views', 'play.html');
@@ -111,17 +112,16 @@ function getCachedHTML(htmlFilePath) {
     const HMTL_scriptcall_p2 = `" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>`
     const injectafter_string = `${HMTL_scriptcall_p1}validation.js${HMTL_scriptcall_p2}` // we will insert the other game scripts after this exact place in the HTML code
 
-    // Automatically build the list of scripts to be injected by including everything in scripts/game except for htmlscripts.js
+    // Automatically build the list of scripts to be injected into play.html by including everything in scripts/game except for htmlscripts.js
     let HTML_callGame_JS_string = "";
     const game_JSscripts = glob.sync(`./dist/scripts/game/**/*.js`).filter(file => {return !/htmlscript\.js/.test(file)});
-
     // Convert the list of scripts into an explicit HTML string that imports them all
     for (file of game_JSscripts){
         const js_filename = file.split(/(\\|\/)+/).slice(4).join(""); // discard "dist/scripts/"
         HTML_callGame_JS_string += `\n\t\t${HMTL_scriptcall_p1}${js_filename}${HMTL_scriptcall_p2}`;
     }
 
-    // Finally, perform the injection
+    // Finally, perform the injection into play.html
     prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>', {string: HTML_callGame_JS_string, injectafter: injectafter_string});
 }
 
