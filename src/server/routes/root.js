@@ -79,4 +79,9 @@ router.get("/500(.html)?", (req, res) => {
   res.sendFile(path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "500.html"));
 });
 
+router.post("/setlanguage", (req, res) => {
+  res.cookie("i18next", req.i18n.resolvedLanguage);
+  res.send(''); // Doesn't work without this for some reason
+});
+
 module.exports = router;

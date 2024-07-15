@@ -1,3 +1,4 @@
+name = "English" # Name of language
 version = 1
 
 [header]
@@ -7,6 +8,11 @@ news = "News"
 login = "Login"
 createaccount = "Create Account"
 
+[footer]
+contact = "Contact us"
+terms_of_service = "Terms of Service"
+source_code = "Source Code"
+language = "Language"
 
 [index]
 secondary_title = "The official website for playing live!"

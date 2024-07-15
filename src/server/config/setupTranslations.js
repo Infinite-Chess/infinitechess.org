@@ -227,7 +227,14 @@ function createFileOrDir(filePath) {
 /**
  * Generates translated versions of templates in staticTranslatedTemplates
  */
-function translateStaticTemplates(languages) {
+function translateStaticTemplates(translations) {
+  const languages = Object.keys(translations);
+  
+  const languages_list = [];
+  for (let language of languages) {
+    languages_list.push({ code: language, name: translations[language]['default'].name });
+  }
+  
   const templatesPath = path.join(__dirname, "..", "..", "..", "dist", "views");
   for (let language of languages) {
     for (let template of staticTranslatedTemplates) {
@@ -245,6 +252,8 @@ function translateStaticTemplates(languages) {
               options.lng = language; // Make sure language is correct
               return i18next.t(key, options);
             },
+            languages: languages_list,
+            viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views')
           },
         ),
       );
@@ -266,7 +275,7 @@ function initTranslations() {
     defaultNS: "default",
     fallbackLng: "en-US",
   });
-  translateStaticTemplates(Object.keys(translations)); // Compiles static files
+  translateStaticTemplates(translations); // Compiles static files
 }
 
 module.exports = {

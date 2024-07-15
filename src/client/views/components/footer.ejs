@@ -1,0 +1,13 @@
+<footer>
+    <a href="mailto:infinitechess.org@gmail.com"><%=t('footer.contact')%></a>
+    <a href="/termsofservice"><%=t('footer.terms_of_service')%></a>
+    <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank"><%=t('footer.source_code')%></a>
+    <label for="language-picker"><span><%=t('footer.language')%></span>:
+        <select id="language-picker">
+            <% for(let i=0; i<languages.length; i++) {%>
+               <option value="<%= languages[i].code %>"><%= languages[i].name %></option>
+            <% } %>
+        </select>
+    </label>
+</footer>
+<script src="/scripts/languagepicker.js"></script>

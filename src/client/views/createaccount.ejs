@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Create Account</title>
         <link rel='stylesheet' href='/css/createaccount.css'>
+        <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" type="image/png" href="/img/favicon.png">
         <script defer src="/scripts/createaccount.js"></script>
     </head>
@@ -58,10 +59,6 @@
                 </form>
             </div>
         </main>
-        <footer>
-            <a href="mailto:infinitechess.org@gmail.com">Contact us.</a>
-            <a href="/termsofservice">Terms of Service</a>
-            <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank">Source Code</a>
-        </footer>
+        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages}) %>
     </body>
 </html>
