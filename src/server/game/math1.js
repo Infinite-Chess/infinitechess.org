@@ -21,7 +21,7 @@
  * @property {number} top - The y-coordinate of the top side of the box.
  */
 
-const math1 = (function() {
+const math = (function() {
 
     function isPowerOfTwo(value) {
         return (value & (value - 1)) === 0;
@@ -903,4 +903,4 @@ const math1 = (function() {
     });
 })();
 
-module.exports = math1;
+module.exports = math;

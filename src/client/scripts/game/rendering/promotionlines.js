@@ -81,7 +81,7 @@ const promotionlines = {
         const columns = gamefile.gameRules.promotionColumns;
 
         const modelCoordinates = this.generateModelCoordinates(columns);
-        for(let i = 0; i < modelCoordinates; i += 6){
+        for(let i = 0; i < modelCoordinates.length; i += 6){
             // x, y, r,g,b,a
             modelCoordinates[i] += board.gsquareCenter();
             modelCoordinates[i+1] += board.gsquareCenter();
@@ -89,7 +89,7 @@ const promotionlines = {
             // swapping [x,y]->[y,-x] for a 90 degree rotation
             const tmp = modelCoordinates[i];
             modelCoordinates[i] = modelCoordinates[i+1];
-            modelCoordinates[i+1] = -tmp;
+            modelCoordinates[i+1] = tmp;
 
             modelCoordinates[i] -= board.gsquareCenter();
             modelCoordinates[i+1] -= board.gsquareCenter();

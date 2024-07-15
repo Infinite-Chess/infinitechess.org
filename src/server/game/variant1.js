@@ -88,7 +88,8 @@ const variant = (function() {
             positionString,
             specialRights,
             turn: options.turn || 'white',
-            fullMove: options.fullMove || 1
+            fullMove: options.fullMove || 1,
+            playerNum: options.playerNum || 2
         }
         if (options.enpassant && Array.isArray(options.enpassant)) gamefile.startSnapshot.enpassant = options.enpassant;
         if (options.moveRule) {
@@ -198,6 +199,7 @@ const variant = (function() {
         // Every variant has the exact same initial moveRuleState value.
         if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0
         gamefile.startSnapshot.fullMove = 1; // Every variant has the exact same fullMove value.
+        if(gamefile.startSnapshot.enpassant === undefined) gamefile.startSnapshot.enpassant = [];
     }
 
     /**
@@ -207,9 +209,11 @@ const variant = (function() {
      */
     function getGameRules(modifications = {}) { // { slideLimit, promotionRanks, position }
         const promotionRanks = modifications.promotionRanks || (modifications.promotionRanks === null ? null : [8,1])
+        const promotionColumns = modifications.promotionColumns || (modifications.promotionColumns === null ? null : [8,1])
         const gameRules = {
+            promotionColumns,
             promotionRanks,
-            promotionsAllowed: modifications.promotionsAllowed || getPromotionsAllowed(modifications.position, promotionRanks),
+            promotionsAllowed: modifications.promotionsAllowed || getPromotionsAllowed(modifications.position, promotionRanks, promotionColumns),
             winConditions: modifications.winConditions || getDefaultWinConditions(),
             moveRule: modifications.moveRule || 100
         }
@@ -223,6 +227,7 @@ const variant = (function() {
     function getWinConditionsOfThreeCheck() { return { white: ['checkmate','threecheck'], black: ['checkmate','threecheck'] } }
     function getWinConditionsOfKOTH() { return { white: ['checkmate','koth'], black: ['checkmate','koth'] } }
     function getDefaultPromotionsAllowed() { return { white: ['knights','bishops','rooks','queens'], black: ['knights','bishops','rooks','queens'] } }
+    function getFourPlayerWinConditions() { return {yellow: ['royalcapture'], white: ['royalcapture'], black: ['royalcapture'], green: ['royalcapture'], blue: ['royalcapture'], red: ['royalcapture']} }
 
     /**
      * Returns the bare-minimum gamerules a pasted game needs to function.
@@ -251,7 +256,7 @@ const variant = (function() {
                 positionString = 'p4,11+|p5,11+|p1,10+|p2,10+|p3,10+|p6,10+|p7,10+|p8,10+|p0,9+|ar4,9|ch5,9|p9,9+|p0,8+|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|p9,8+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P0,1+|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|P9,1+|P0,0+|AR4,0|CH5,0|P9,0+|P1,-1+|P2,-1+|P3,-1+|P6,-1+|P7,-1+|P8,-1+|P4,-2+|P5,-2+'
                 return getStartSnapshotPosition({ positionString });
             case "4 Player Classic":
-                positionString = 'P1,-1+|P2,-1+|P3,-1+|P4,-1+|P5,-1+|P6,-1+|P7,-1+|P8,-1+|rp1,10+|rp2,10+|rp3,10+|rp4,10+|rp5,10+|rp6,10+|rp7,10+|rp8,10+|R1,-2+|R8,-2+|rr1,11+|rr8,11+|N2,-2|N7,-2|rn2,11|rn7,11|B3,-2|B6,-2|rb3,11|rb6,11|Q4,-2|req4,11|K5,-2+|rk5,11+|gk-2,5+|bk11,4+|gp-1,1+|gp-1,2+|gp-1,3+|gp-1,4+|gp-1,5+|gp-1,6+|gp-1,7+|gp-1,8+|bp10,1+|bp10,2+|bp10,3+|bp10,4+|bp10,5+|bp10,6+|bp10,7+|bp10,8+|gr-2,1|gr-2,8|br11,1|br11,8|gn-2,2|gn-2,7|bn11,7|bn11,2|gb-2,3|gb-2,6|bb11,6|bb11,3|gq-2,4|bq11,5';
+                positionString = 'yp1,-1+|yp2,-1+|yp3,-1+|yp4,-1+|yp5,-1+|yp6,-1+|yp7,-1+|yp8,-1+|rp1,10+|rp2,10+|rp3,10+|rp4,10+|rp5,10+|rp6,10+|rp7,10+|rp8,10+|yr1,-2+|yr8,-2+|rr1,11+|rr8,11+|yn2,-2|yn7,-2|rn2,11|rn7,11|yb3,-2|yb6,-2|rb3,11|rb6,11|yq4,-2|req4,11|yk5,-2+|rk5,11+|gk-2,5+|bk11,4+|gp-1,1+|gp-1,2+|gp-1,3+|gp-1,4+|gp-1,5+|gp-1,6+|gp-1,7+|gp-1,8+|bp10,1+|bp10,2+|bp10,3+|bp10,4+|bp10,5+|bp10,6+|bp10,7+|bp10,8+|gr-2,1|gr-2,8|br11,1|br11,8|gn-2,2|gn-2,7|bn11,7|bn11,2|gb-2,3|gb-2,6|bb11,6|bb11,3|gq-2,4|bq11,5';
                 return getStartSnapshotPosition({ positionString });
             case "Space Classic":
                 positionString = getPositionStringOfSpaceClassic(Date);
@@ -389,9 +394,7 @@ const variant = (function() {
             case "Standarch":
                 return getGameRules({ position })
             case "4 Player Classic":
-                const gameRules = getGameRules({ position });
-                gameRules.winConditions = {white: ['checkmate'], black: ['checkmate'], green: ['checkmate'], blue: ['checkmate'], red: ['checkmate']};
-                return gameRules;
+                return getGameRules({ position, winConditions: getFourPlayerWinConditions(), promotionRanks: [5,4], promotionColumns: [5,4] });
             case "Space Classic":
                 const UTCTimeStamp = math.getUTCTimestamp(Date);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
@@ -452,17 +455,22 @@ const variant = (function() {
      * You can promote to whatever pieces the game starts with.
      * @param {Object} position - The starting position of the game, organized by key `{ '1,2': 'queensB' }`
      * @param {number[]} promotionRanks - The `promotionRanks` gamerule of the variant. If one side's promotion rank is `null`, then we won't add legal promotions for them.
+     * @param {number[]} promotionColumns - The `promotionColumns` gamerule of the variant. For 4 player chess.
      * @returns {Object} The gamefile's `promotionsAllowed` gamerule.
      */
-    function getPromotionsAllowed(position, promotionRanks) {
+    function getPromotionsAllowed(position, promotionRanks, promotionColumns) {
         // We can't promote to royals or pawns, whether we started the game with them.
         const unallowedPromotes = math.deepCopyObject(pieces.royals); // ['kings', 'royalQueens', 'royalCentaurs']
         unallowedPromotes.push('pawns') // ['kings', 'royalQueens', 'royalCentaurs', 'pawns']
 
         const white = []
         const black = []
+        const red = []
+        const yellow = []
+        const green = []
+        const blue = []
 
-        if (!promotionRanks) return { white, black }
+        if (!promotionRanks && !promotionColumns) return { white, black }
 
         for (const key in position) {
             const thisPieceType = position[key];
@@ -471,11 +479,14 @@ const variant = (function() {
             if (unallowedPromotes.includes(trimmedType)) continue; // Not allowed
             if (white.includes(trimmedType)) continue; // Already added
             // Only add if the color's promotion rank is defined
-            if (promotionRanks[0] != null) white.push(trimmedType)
-            if (promotionRanks[1] != null) black.push(trimmedType)
+            if (promotionRanks[0] != null) {white.push(trimmedType); yellow.push(trimmedType)}
+            if (promotionRanks[1] != null) {black.push(trimmedType); red.push(trimmedType)}
+            if (promotionColumns[0] != null) green.push(trimmedType)
+            if (promotionColumns[1] != null) blue.push(trimmedType)
         }
 
-        return { white, black }
+        if(green.length === 0 && blue.length === 0) return { white, black }
+        return { white, black, yellow, red, green, blue }
     }
 
     /**
@@ -545,7 +556,8 @@ const variant = (function() {
             position,
             positionString,
             specialRights,
-            turn: 'white'
+            turn: 'yellow',
+            playerNum: 4
         }
         
         gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)

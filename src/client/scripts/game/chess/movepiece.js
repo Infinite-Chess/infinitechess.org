@@ -100,11 +100,12 @@ const movepiece = (function(){
 
                 // The checkmatedColor is now out of the game. Render all of their pieces as grey.
                 gamefile.colorsOut.push(checkmatedColor);
+                if(onlinegame.areInOnlineGame() === true && checkmatedColor === onlinegame.getOurColor()) websocket.sendmessage('game', 'removePlayer4p', true, false);
                 piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
             }
         }
         const returnVal = gamefile.gameConclusion;
-        delete gamefile.gameConclusion;
+        gamefile.gameConclusion = false;
         return returnVal;
     }
 

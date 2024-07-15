@@ -52,11 +52,10 @@ const gamemanager = (function() {
     /**
      * Game constructor. Descriptions for each property can be found in the {@link Game} type definition.
      * @param {Object} inviteOptions - The invite options that contain the properties `variant`, `publicity`, `clock`, `rated`.
-     * @param {Object} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
-     * @param {Object} player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+     * @param {Array} sockets - An array of sockets, one for each of the players. These may not alwayas be defined. 
      * @returns {Game} The game
      */
-    function NewGame(inviteOptions, player1Socket, player2Socket) {
+    function NewGame(inviteOptions, sockets/*player1Socket, player2Socket*/) {
         /** @type {Game} */
         const newGame = {
             id: math1.genUniqueID(5, activeGames),
@@ -67,6 +66,7 @@ const gamemanager = (function() {
             rated: inviteOptions.rated === "Rated" ? "Yes" : "No",
             moves: [],
             blackGoesFirst: variant1.isVariantAVariantWhereBlackStarts(inviteOptions.variant),
+            isFourPlayer: false,
             gameConclusion: false,
             timeRemainAtTurnStart: undefined,
             timeAtTurnStart: undefined,
@@ -86,36 +86,85 @@ const gamemanager = (function() {
             }
         }
 
+        const isFourPlayer = inviteOptions.variant.startsWith('4 Player');
+        if(isFourPlayer) inviteOptions.clock = '0';// no clock for 4p, yet. TODO: 4p clock.
+
         const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
         newGame.startTimeMillis = math1.minutesToMillis(minutes);
         newGame.incrementMillis = math1.secondsToMillis(increment);
 
-        const player1 = inviteOptions.owner; // { member/browser }  The invite owner
-        const player2 = wsfunctions.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
-        const { white, black, player1Color, player2Color } = assignWhiteBlackPlayersFromInvite(inviteOptions.color, player1, player2);
-        newGame.white = white;
-        newGame.black = black;
+        const players = [];
 
-        newGame.whosTurn = newGame.blackGoesFirst ? 'black' : 'white';
-
-        if (!clockweb.isClockValueInfinite(inviteOptions.clock)) {
-            newGame.timerWhite = newGame.startTimeMillis;
-            newGame.timerBlack = newGame.startTimeMillis;
+        for(let i = 0/*skip first player*/; i < sockets.length; i++){
+            players.push(wsfunctions.getOwnerFromSocket(sockets[i]));
         }
 
-        // Auto-subscribe the players to this game!
-        // This will link their socket to this game, modify their
-        // metadata.subscriptions, and send them the game info!
-        subscribeClientToGame(newGame, player2Socket, player2Color);
-        if (player1Socket) subscribeClientToGame(newGame, player1Socket, player1Color);
-        else {
-            // Player 1 (invite owner)'s socket closed before their invite was deleted.
-            // Immediately start the auto-resign by disconnection timer
-            startDisconnectTimer(newGame, player1Color, false)
-        }
+        if(isFourPlayer === false){
+            const player1Socket = players[0];
+            const player2Socket = players[1];
 
-        addUserToActiveGames(newGame.white, newGame.id)
-        addUserToActiveGames(newGame.black, newGame.id)
+            const player1 = inviteOptions.owner; // { member/browser }  The invite owner
+            const player2 = wsfunctions.getOwnerFromSocket(sockets[1]); // { member/browser }  The invite accepter
+
+            const { white, black, player1Color, player2Color } = assignWhiteBlackPlayersFromInvite(inviteOptions.color, player1, player2);
+            newGame.white = white;
+            newGame.black = black;
+
+            newGame.whosTurn = newGame.blackGoesFirst ? 'black' : 'white';
+
+            if (!clockweb.isClockValueInfinite(inviteOptions.clock)) {
+                newGame.timerWhite = newGame.startTimeMillis;
+                newGame.timerBlack = newGame.startTimeMillis;
+            }
+
+            // Auto-subscribe the players to this game!
+            // This will link their socket to this game, modify their
+            // metadata.subscriptions, and send them the game info!
+            subscribeClientToGame(newGame, player2Socket, player2Color);
+            if (player1Socket) subscribeClientToGame(newGame, player1Socket, player1Color);
+            else {
+                // Player 1 (invite owner)'s socket closed before their invite was deleted.
+                // Immediately start the auto-resign by disconnection timer
+                startDisconnectTimer(newGame, player1Color, false)
+            }
+
+            addUserToActiveGames(newGame.white, newGame.id)
+            addUserToActiveGames(newGame.black, newGame.id)
+        } else {
+            newGame.colorsOut = [];
+            newGame.isFourPlayer = true;
+            const playerColors = assignNColorsPlayersFromInvite(['yellow','green','red','blue']);
+            for(let i = 0; i < playerColors.length; i++){
+                newGame[playerColors[i]] = players[i];// e.g. newGame['yellow'] = players[2]
+            }
+            newGame.whosTurn = 'yellow';
+
+            // TODO: 4p chess clock!
+
+            for(let i = 0; i < sockets.length; i++){
+                if (sockets[i]) subscribeClientToGame(newGame, sockets[i], playerColors[i]);
+                else {
+                    // Player's socket closed before their invite was deleted.
+                    // Immediately start the auto-resign by disconnection timer
+                    startDisconnectTimer(newGame, playerColors[i], false);
+                }
+            }
+            newGame.sockets = sockets;
+            newGame.disconnect = {
+                startTimer: {
+                    yellow: undefined,
+                    red: undefined,
+                    green: undefined,
+                    blue: undefined
+                },
+                autoResign: {
+                    yellow: {},
+                    red: {},
+                    green: {},
+                    blue: {}
+                }
+            }
+        }
 
         return newGame;
     }
@@ -124,11 +173,10 @@ const gamemanager = (function() {
      * Creates a new game when an invite is accepted.
      * Prints the game info and prints the active game count.
      * @param {Object} invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`, `publicity`.
-     * @param {Object} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
-     * @param {Object} player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+     * @param {Array} socketes - An array of sockets, one for each player. These may not always be defined.
      */
-    function createGame(invite, player1Socket, player2Socket) { // Player 1 is the invite owner.
-        const game = NewGame(invite, player1Socket, player2Socket)
+    function createGame(invite, sockets) { // Player 1 is the invite owner.
+        const game = NewGame(invite, sockets);
         addGameToActiveGames(game);
 
         console.log("Starting new game:")
@@ -153,6 +201,7 @@ const gamemanager = (function() {
      * @param {string} id - The id of the game.
      */
     async function deleteGame(id) {
+        console.log('DELETING GAME');
         const game = getGameByID(id);
         if (!game) return console.error(`Unable to delete game because there is no game of id ${id}!`)
 
@@ -257,6 +306,23 @@ const gamemanager = (function() {
     }
 
     /**
+     * Assigns which player is what color, randomly
+     * @param {Array} colorNames - A name of possible colors to choose from
+     * @returns {Array} the colorNames, randomly shuffled
+    */
+    function assignNColorsPlayersFromInvite(colorNames=['yellow','green','red','blue']){
+        const colorAmount = colorNames.length;
+        const playerColors = [];
+        let remainingColors = structuredClone(colorNames);
+        for(let i = 0; i < colorAmount; i++){
+            const randomIndex = Math.floor(Math.random() * (remainingColors.length));
+            playerColors.push(remainingColors[randomIndex]);
+            remainingColors.splice(randomIndex,1);
+        }
+        return playerColors
+    }
+
+    /**
      * Assigns which player is what color, depending on the `color` property of the invite.
      * @param {string} color - The color property of the invite. "Random" / "White" / "Black"
      * @param {Object} player1 - An object with either the `member` or `browser` property.
@@ -317,13 +383,20 @@ const gamemanager = (function() {
                 unsubClientFromGame(game.whiteSocket, { sendMessage: false })
             }
             game.whiteSocket = playerSocket
-        } else { // 'black'
+        } else if(playerColor === 'black'){ // 'black'
             // Tell the currently connected window that another window opened
             if (game.blackSocket) {
                 game.blackSocket.metadata.sendmessage(game.blackSocket, 'game','leavegame')
                 unsubClientFromGame(game.blackSocket, { sendMessage: false })
             }
             game.blackSocket = playerSocket
+        } else {// some 4p color
+            for(let i = 0; i < game.sockets; i++){
+                if(game.sockets[i]?.metadata?.subscriptions?.game?.color === playerColor){
+                    game.sockets[i].metadata.sendmessage(game.sockets[i], 'game','leavegame')
+                    unsubClientFromGame(game.sockets[i], { sendMessage: false })
+                }
+            }
         }
 
         // 2. Modify their socket metadata to add the 'game', subscription,
@@ -630,11 +703,25 @@ const gamemanager = (function() {
         if (activeGame.autoAFKResignTime != null) gameOptions.autoAFKResignTime = activeGame.autoAFKResignTime
 
         // If their opponent has disconnected, send them that info too.
-        const opponentColor = math1.getOppositeColor(playerColor)
-        if (activeGame.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
-            gameOptions.disconnect = {
-                autoDisconnectResignTime: activeGame.disconnect.autoResign[opponentColor].timeToAutoLoss,
-                wasByChoice: activeGame.disconnect.autoResign[opponentColor].wasByChoice
+        if(activeGame.isFourPlayer === true){
+            // // TODO
+            // const opponentColors = math1.getAllColorsExcept4p(playerColor, []);
+            // for(let i = 0; i < opponentColors.length; i++){
+            //     const opponentColor = opponentColors[i];
+            //     if (activeGame.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
+            //         gameOptions.disconnect = {
+            //             autoDisconnectResignTime: activeGame.disconnect.autoResign[opponentColor].timeToAutoLoss,
+            //             wasByChoice: activeGame.disconnect.autoResign[opponentColor].wasByChoice
+            //         }
+            //     }
+            // }
+        } else {
+            const opponentColor = math1.getOppositeColor(playerColor)
+            if (activeGame.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
+                gameOptions.disconnect = {
+                    autoDisconnectResignTime: activeGame.disconnect.autoResign[opponentColor].timeToAutoLoss,
+                    wasByChoice: activeGame.disconnect.autoResign[opponentColor].wasByChoice
+                }
             }
         }
 
@@ -792,6 +879,26 @@ const gamemanager = (function() {
         sendGameUpdateToColor(game, opponentColor);
     }
 
+    function removeSelfFrom4PlayerGame(ws) {
+        const game = getGameBySocket(ws)
+
+        if (!game) return console.error("Can't remove a player from a nonexistant game.")
+
+        // Is it legal?...
+
+        if (isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
+            console.error("Player tried to remove self from game when the game is already over!")
+            ws.metadata.sendmessage(ws, 'general', 'notify', "Can't resign game, it's already over.")
+            const colorPlayingAs = doesSocketBelongToGame_ReturnColor(game, ws);
+            subscribeClientToGame(game, ws, colorPlayingAs);
+            return;
+        }
+
+        const ourColor = ws.metadata.subscriptions.game?.color || doesSocketBelongToGame_ReturnColor(game, ws);
+        
+        if(!game.colorsOut.includes(ourColor)) game.colorsOut.push(ourColor);
+    }
+
     /**
      * Called when a client alerts us they have gone AFK.
      * Alerts their opponent, and starts a timer to auto-resign.
@@ -899,12 +1006,19 @@ const gamemanager = (function() {
             rated: game.rated,
             variant: game.variant,
             moves: game.moves,
-            playerWhite: getDisplayNameOfPlayer(game.white),
-            playerBlack: getDisplayNameOfPlayer(game.black),
+            playerWhite: game.isFourPlayer ? undefined : getDisplayNameOfPlayer(game.white),
+            playerBlack: game.isFourPlayer ? undefined : getDisplayNameOfPlayer(game.black),
+            isFourPlayer: game.isFourPlayer,
             youAreColor,
             moves: game.moves,
             clock: game.clock,
             gameConclusion: game.gameConclusion
+        }
+        if(game.isFourPlayer){
+            safeGame.yellow = getDisplayNameOfPlayer(game.yellow);
+            safeGame.red = getDisplayNameOfPlayer(game.red);
+            safeGame.green = getDisplayNameOfPlayer(game.green);
+            safeGame.blue = getDisplayNameOfPlayer(game.blue);
         }
         if (!clockweb.isClockValueInfinite(game.clock)) {
             safeGame.timerWhite = game.timerWhite;
@@ -921,6 +1035,7 @@ const gamemanager = (function() {
      * @returns {string} The display name of the player.
      */
     function getDisplayNameOfPlayer(player) { // { member/browser }
+        if(player == null) return "(Guest)";
         return player.member ? getUsernameCaseSensitive(player.member) : "(Guest)"
     }
 
@@ -967,8 +1082,23 @@ const gamemanager = (function() {
      * @returns {string | false} The color they are, if they belong, otherwise *false*.
      */
     function doesPlayerBelongToGame_ReturnColor(game, player) {
-        if (player.member && game.white.member === player.member || player.browser && game.white.browser === player.browser) return 'white';
-        if (player.member && game.black.member === player.member || player.browser && game.black.browser === player.browser) return 'black';
+        if(game.isFourPlayer){
+            const fourPlayerColors = ['yellow','green','red','blue']
+            if(player.member){
+                for(let i = 0; i < fourPlayerColors.length; i++){
+                    if(game[fourPlayerColors[i]].member === player.member) return fourPlayerColors[i];
+                }
+            }
+            if(player.browser){
+                for(let i = 0; i < fourPlayerColors.length; i++){
+                    if(game[fourPlayerColors[i]].browser === player.browser) return fourPlayerColors[i];
+                }
+            }
+        } else {
+            if (player.member && game.white.member === player.member || player.browser && game.white.browser === player.browser) return 'white';
+            if (player.member && game.black.member === player.member || player.browser && game.black.browser === player.browser) return 'black';
+        }
+        
         return false;
     }
 
@@ -1096,6 +1226,9 @@ const gamemanager = (function() {
             case 'resign':
                 resignGame(ws)
                 break;
+            case 'removePlayer4p':
+                removeSelfFrom4PlayerGame(ws, message.value);
+                break;
             case 'offerdraw':
                 console.error("Don't know how to offer draw yet.")
                 break;
@@ -1130,7 +1263,9 @@ const gamemanager = (function() {
 
         // Their subscription info should tell us what game they're in, including the color they are.
         const { id, color } = ws.metadata.subscriptions.game;
-        const opponentColor = math1.getOppositeColor(color);
+        const fourPlayerColors = ['yellow','red','green','blue'];
+        const is4Player = fourPlayerColors.includes(color);
+        const opponentColor = is4Player ? null : math1.getOppositeColor(color);
         const game = getGameByID(id);
         if (!game) {
             console.error('They should not be submitting a move when the game their subscribed to is deleted! Server error. We should ALWAYS unsubscribe them when we delete the game.');
@@ -1181,7 +1316,14 @@ const gamemanager = (function() {
 
         if (isGameOver(game)) sendGameUpdateToColor(game, color)
         else sendUpdatedClockToColor(game, color);
-        sendMoveToColor(game, opponentColor); // Send their move to their opponent.
+
+        if(is4Player){
+            for(let i = 0; i < fourPlayerColors.length; i++){
+                if(fourPlayerColors[i] !== color) sendMoveToColor(game, fourPlayerColors[i]);
+            }
+        } else {
+            sendMoveToColor(game, opponentColor); // Send their move to their opponent.
+        }
     }
 
     /**
@@ -1252,7 +1394,12 @@ const gamemanager = (function() {
      * @param {string} color - The color of the player to send the latest move to
      */
     function sendMoveToColor(game, color) {
-        if (color !== 'white' && color !== 'black') return console.error(`colorJustMoved must be white or black! ${color}`)
+        if(game.isFourPlayer){
+            if (color !== 'yellow' && color !== 'red' && color !== 'green' && color !== 'blue') return console.error(`colorJustMoved must be a valid 4 player color! ${color}`)
+        } else {
+            if (color !== 'white' && color !== 'black') return console.error(`colorJustMoved must be white or black! ${color}`)
+        }
+        
         
         const message = {
             move: movesscript1.getLastMove(game.moves),
@@ -1262,9 +1409,20 @@ const gamemanager = (function() {
             timerBlack: game.timerBlack,
             timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
         }
-        const sendToSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
-        if (!sendToSocket) return; // They are not connected, can't send message
-        sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message)
+
+        if(game.isFourPlayer){
+            const sockets = game.sockets;
+            for(let i = 0; i < sockets.length; i++){
+                if(!sockets[i]) continue;
+                if(sockets[i].metadata.subscriptions.game.color === color) continue;
+                sockets[i].metadata.sendmessage(sockets[i], "game", "move", message)
+            }
+        } else {
+            const sendToSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
+            if (!sendToSocket) return; // They are not connected, can't send message
+            sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message)
+        }
+        
     }
 
     /**
@@ -1282,7 +1440,8 @@ const gamemanager = (function() {
     function pushGameClock(game) {
         // if (!game.whosTurn) return; // Game is over
         const colorWhoJustMoved = game.whosTurn; // white/black
-        game.whosTurn = math1.getOppositeColor(game.whosTurn);
+        if(game.isFourPlayer) game.whosTurn = math1.getNextColor4p(game.whosTurn, game.colorsOut);
+        else game.whosTurn = math1.getOppositeColor(game.whosTurn);
         if (isGameUntimed(game)) return; // Don't adjust the times if the game isn't timed.
 
         if (!movesscript1.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
@@ -1465,7 +1624,7 @@ const gamemanager = (function() {
      * @returns {Object} An object with either the `member` or `browser` property.
      */
     function getMemberOrBrowserFromSocket(ws) {
-        return { member: ws.metadata.user, browser: ws.metadata['browser-id'] }
+        return { member: ws.metadata.user + Math.random().toString(), browser: ws.metadata['browser-id'] }
     }
 
     /**

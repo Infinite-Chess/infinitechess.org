@@ -1,6 +1,17 @@
+
+/*
+ * Universal Infinite Chess Notation [Converter] and Interface
+ * by Andreas Tsevasa and Naviary
+ * https://github.com/tsevasa/infinite-chess-notation
+ * 
+ * This script converts primed gamefiles from JSON notation to a
+ * compact ICN (Infinite Chess Noation) and back, still human-readable,
+ * but taking less space to describe positions.
+ */
+
 'use strict';
 
-const formatconverter1 = (function() {
+const formatconverter = (function() {
     
     const pieceDictionary = {
         "kingsW": "K", "kingsB": "k",
@@ -21,7 +32,17 @@ const formatconverter1 = (function() {
         "royalQueensW": "RQ", "royalQueensB": "rq",
         "royalCentaursW": "RC", "royalCentaursB": "rc",
         "obstaclesN": "ob",
-        "voidsN": "vo"
+        "voidsN": "vo",
+
+        // 4 player!          U = blue because B is taken
+        "kingsG": 'gk', "kingsU": "bk", "kingsR": 'rk', "kingsY": 'yk',
+        "pawnsG": "gp", "pawnsU": "bp", "pawnsR": 'rp', "pawnsY": 'yp',
+        "knightsG": "gn", "knightsU": "bn", "knightsR": 'rn', "knightsY": 'yn',
+        "bishopsG": "gb", "bishopsU": "bb", "bishopsR": 'rb', "bishopsY": 'yb',
+        "rooksG": "gr", "rooksU": "br", "rooksR": 'rr', "rooksY": 'yr',
+        "queensG": "gq", "queensU": "bq", 'queensR': 'req', "queensY": 'yq',
+        "royalQueensG": "rgq", "royalQueensU": "rbq", "royalQueensR": 'rrq', "royalQueensY": 'ryq',
+        "royalCentaursG": "rgc", "royalCentaursU": "rbc", "royalCentuarsR": 'rrc', "royalCentaursY": 'ryc'
     };
 
     function invertDictionary(json){
@@ -825,6 +846,7 @@ const formatconverter1 = (function() {
         else if (type.endsWith('N')) return "neutral"
         else if(type.endsWith('R')) return "red";
         else if(type.endsWith('G')) return "green";
+        else if(type.endsWith('Y')) return "yellow";
         else if(type.endsWith('U')) return "blue";
         else throw new Error(`Cannot get color of piece with type "${type}"!`)
     }
@@ -899,7 +921,7 @@ const formatconverter1 = (function() {
      * @returns {Object | string | number | bigint | boolean} The copied object
      */
     function deepCopyObject(src) {
-        if (typeof src !== "object" || src === null) return src;
+        if (typeof src !== "object") return src;
         
         let copy = Array.isArray(src) ? [] : {}; // Create an empty array or object
         
@@ -957,7 +979,7 @@ const formatconverter1 = (function() {
     //     console.log(`\n\nCompressing of a variant's starting position example:\n\n${JSON.stringify(b)}`)
 
     //     // Speed test, put large position in "longposition.txt"
-    //     const fs = require('fs'); // supported in NodeJS
+    //     const fs = require('fs'); // supported in Node.js
     //     fs.readFile("longposition.txt", (err, data) => {
     //         if (err) return;
     //         const gameExampleLong = JSON.parse(data);
@@ -990,4 +1012,4 @@ const formatconverter1 = (function() {
     
 })();
 
-module.exports = formatconverter1;
+module.exports = formatconverter;

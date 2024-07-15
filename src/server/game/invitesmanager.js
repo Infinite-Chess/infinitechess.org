@@ -59,7 +59,7 @@ const timersBrowser = {};
 // Get public invites with sensitive information REMOVED (such as browser-id)
 // DOES NOT include private invites, not even your own--add that separately.
 function getPublicInvitesListSafe() {
-    const deepCopiedInvites = math1.deepCopyObject(invites)
+    const deepCopiedInvites = deepCopyInvites()
     // Remove private invites, UNLESS it's ours
     for (let i = deepCopiedInvites.length - 1; i >= 0; i--) {
         const thisInvite = deepCopiedInvites[i]
@@ -68,6 +68,22 @@ function getPublicInvitesListSafe() {
     }
     // Remove sensitive information
     return removeSensitiveInfoFromInvitesList(deepCopiedInvites);
+}
+
+function deepCopyInvites(){
+    // remove waiting sockets from deep copy.
+    const waitingSockets = [];
+    for(let i = 0; i < invites.length; i++){
+        waitingSockets[i] = invites[i].waitingSockets;
+        delete invites[i].waitingSockets;
+    }
+    const returnVal = math1.deepCopyObject(invites);
+    for(let i = 0; i < invites.length; i++){
+        if(waitingSockets[i] != null){
+            invites[i].waitingSockets = waitingSockets[i];
+        }
+    }
+    return returnVal;
 }
 
 // Removes guests' browser-id's, and makes members' usernames case-sensitive.
@@ -88,7 +104,7 @@ function makeInviteSafe(invite) {
 
 // Makes a deep copy of provided invite, and removes sensitive data such as their browser-id!
 function safelyCopyInvite(invite) {
-    const inviteDeepCopy = math1.deepCopyObject(invite);
+    const inviteDeepCopy = deepCopyInvites()
     return makeInviteSafe(inviteDeepCopy);
 }
 
@@ -384,7 +400,7 @@ function acceptInvite(ws, inviteinfo) { // { id, isPrivate }
     const invite = inviteAndIndex.invite;
 
     // Make sure they are not accepting their own.
-    if (isInviteOurs(ws, invite)) {
+    if (isInviteOurs(ws, invite) || (invite.waitingSockets != null && invite.waitingSockets.includes(ws))) {
         const errString = `Player tried to accept their own invite! Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
         console.error(errString);
         logEvents(errString, 'hackLog.txt') // Log the exploit to the hackLog!
@@ -395,23 +411,46 @@ function acceptInvite(ws, inviteinfo) { // { id, isPrivate }
     // Make sure it's legal for them to accept. (Not legal if they are a guest and the invite is RATED)
     // ...
 
+    // if 4 player chess, add them to the invites queue
+    const isFourPlayer = invite.variant.startsWith('4 Player')
+
+    let socketArray = [];
+    if(isFourPlayer){
+        if(invite.waitingSockets === undefined) invite.waitingSockets = [];
+        if(invite.waitingSockets.length < 2) {
+            invite.waitingSockets.push(ws);
+            return;
+        }
+        // add first and last player as well
+        invite.waitingSockets.push(ws);
+        invite.waitingSockets.push(findSocketFromOwner(invite.owner));
+
+        socketArray = invite.waitingSockets;
+    } else {
+        socketArray = [findSocketFromOwner(invite.owner), ws];
+    }
+
     // Accept the invite!
 
     // Delete the invite accepted.
     invites.splice(inviteAndIndex.index, 1)
 
     // Delete their existing invites
-    const hadPublicInvite = deleteUsersExistingInvite(ws)
+    let hadPublicInvite = false;
+    for(let i = 0; i < socketArray.length; i++){
+        hadPublicInvite = hadPublicInvite || deleteUsersExistingInvite(socketArray[i]);
+    }
 
     // Start the game! Notify both players and tell them they've been subscribed to a game!
 
-    const player1Socket = findSocketFromOwner(invite.owner); // Could be undefined occasionally
-    const player2Socket = ws;
-    gamemanager.createGame(invite, player1Socket, player2Socket)
+    // const player1Socket = findSocketFromOwner(invite.owner); // Could be undefined occasionally
+    // const player2Socket = ws;
+    gamemanager.createGame(invite, socketArray)
 
     // Unsubscribe them both from the invites subscription list.
-    unsubClientFromListNoInvite(player1Socket);
-    unsubClientFromListNoInvite(player2Socket);
+    for(let i = 0; i < socketArray.length; i++){
+        unsubClientFromListNoInvite(socketArray[i]);
+    }
 
     // Broadcast the invites list change after creating the game,
     // because the new game ups the game count.

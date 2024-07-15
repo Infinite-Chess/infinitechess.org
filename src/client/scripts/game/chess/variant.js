@@ -394,7 +394,7 @@ const variant = (function() {
             case "Standarch":
                 return getGameRules({ position })
             case "4 Player Classic":
-                return getGameRules({ position, winConditions: getFourPlayerWinConditions(), promotionRanks: [4,5], promotionColumns: [4,5] });
+                return getGameRules({ position, winConditions: getFourPlayerWinConditions(), promotionRanks: [5,4], promotionColumns: [5,4] });
             case "Space Classic":
                 const UTCTimeStamp = math.getUTCTimestamp(Date);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
