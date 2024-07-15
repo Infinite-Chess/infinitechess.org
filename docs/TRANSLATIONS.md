@@ -14,7 +14,7 @@ Each file is named after its language [BCP 47 language tag](https://en.wikipedia
 
 `lng-(script)-REGION-(extensions)`
 
-For example `en-US` for American Enligsh, `sv` for Sweedish, `zh-Hant-HK` for Chinese spoken in Hong Kong written in traditional script.
+For example `en-US` for American English, `sv` for Swedish, `zh-Hant-HK` for Chinese spoken in Hong Kong written in traditional script.
 
 You should name your file this way and only this way otherwise it won't be correctly detected.
 
