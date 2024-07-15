@@ -44,7 +44,7 @@ Then you start test server with `npx nodemon` and start translating. If you head
 In case you are updating existing language and you aren't sure what has changed since the last update you can view changes of `en-US.toml` [here](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml).
 
 > [!IMPORTANT]
-> If there is a HTML tag in field you should translate, do not touch it!
+> If there is a HTML tag in value you want to translate, do not touch it!
 > 
 > Example of html tag:
 > ```html
