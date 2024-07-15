@@ -382,7 +382,8 @@ const math = (function() {
         let corner = "";
         v: {
             if (line[1]==0) break v; // Horizontal so parallel with top/bottom lines
-            corner += ((line[0]>0==line[1]>0)==leftSide) ? "bottom" : "top"
+            corner += ((line[0]>0==line[1]>0)==leftSide==(line[0]!=0)) ? "bottom" : "top" 
+            // Gonna be honest I have no idea how this works but it does sooooooo its staying
         }
         h: {
             if (line[0]==0) break h; // Vertical so parallel with left/right lines
