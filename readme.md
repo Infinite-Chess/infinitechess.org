@@ -8,6 +8,8 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 
 This project is open source! If you have a feature idea you want to try implementing, or you have skills in html, css, javascript, or Node, we welcome contributions! To get started collaborating, please read the [Setup Guide](./docs/SETUP.md)!
 
+In case you want to help us with translations you can get started with [Translation guide](./docs/TRANSLATIONS.md).
+
 We are still far off from our vision. We refuse to stop until many crucial features of this universe are built:
 - Truly infinite move distance
 - Board Editor
