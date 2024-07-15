@@ -115,7 +115,7 @@ function getCachedHTML(htmlFilePath) {
     let HTML_callGame_JS_string = "";
     const game_JSscripts = glob.sync(`./dist/scripts/game/**/*.js`).filter(file => {return !/htmlscript\.js/.test(file)});
     for (file of game_JSscripts){
-        const js_filename = file.split(/(\\|\/)/).slice(4).join(""); // discard "dist/scripts/"
+        const js_filename = file.split(/(\\|\/)+/).slice(4).join(""); // discard "dist/scripts/"
         HTML_callGame_JS_string += `\n${HMTL_scriptcall_p1}${js_filename}${HMTL_scriptcall_p2}`;
     }
 
