@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+	Közember (fehér)
+	Készült: a king-w.svg felhasználásával
+	Felhasználási feltételek: Nevezd meg! - Így add tovább! (Creative Commons)
+	Uray M. János
+	2014-2018
+-->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="128" height="128" viewBox="0 0 45 45">
+	<!-- alap -->
+	<g fill="#FFF" stroke="#000" stroke-width="1.5" stroke-linejoin="round">
+		<!-- bojt -->
+		<circle cx="22.5" cy="13.5" r="2.5"/>
+		<!-- test -->
+		<path d="M 11.5,37 C 17,40.5 27,40.5 32.5,37 L 32.5,30 C 32.5,30 41.5,25.5 38.5,19 C 33,12 12,12 6.5,19 C 3.5,25.5 11.5,29.5 11.5,29.5 Z"/>
+	</g>
+	<!-- vonalak -->
+	<g fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round">
+		<!-- talp -->
+		<path d="M 11.5,30 C 17,27 27,27 32.5,30"/>
+		<path d="M 11.5,33.5 C 17,30.5 27,30.5 32.5,33.5"/>
+		<path d="M 11.5,37 C 17,34 27,34 32.5,37"/>
+	</g>
+</svg>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+	Rövid bástya (fekete)
+	Készült: a rook-b.svg felhasználásával
+	Felhasználási feltételek: Nevezd meg! - Így add tovább! (Creative Commons)
+	Uray M. János
+	2014-2018
+-->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="128" height="128" viewBox="0 0 45 45">
+	<!-- alap -->
+	<g fill="#000" stroke="#000" stroke-width="1.5" stroke-linejoin="round">
+		<!-- test -->
+		<path d="
+			M 11,20 L 11,15 L 17,15 L 17,17 L 28,17 L 28,15 L 34,15 L 34,20
+			L 31,22 L 31,31.5 L 33,33 L 33,36 L 12,36 L 12,33 L 14,31.5 L 14,22 Z
+		"/>
+		<!-- talp -->
+		<path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z"/>
+	</g>
+	<!-- vonalak -->
+	<g fill="none" stroke="#FFF" stroke-linecap="round">
+		<line stroke-width="1.2" x1="11" y1="20.0" x2="34" y2="20.0"/>
+		<line stroke-width="0.8" x1="14" y1="22.0" x2="31" y2="22.0"/>
+		<line stroke-width="0.8" x1="14" y1="31.5" x2="31" y2="31.5"/>
+		<line stroke-width="1.2" x1="12" y1="33.0" x2="33" y2="33.0"/>
+		<line stroke-width="1.2" x1="12" y1="35.5" x2="33" y2="35.5"/>
+	</g>
+</svg>
