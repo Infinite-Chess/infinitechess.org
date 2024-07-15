@@ -61,7 +61,7 @@ if (DEV_BUILD){
     if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ){
       const code = await readFile(`./src/client/${file}`, 'utf8');
       const minified = await minify(code, {
-        mangle: true, // Disable variable name mangling
+        mangle: true, // Enable variable name mangling
         compress: true, // Enable compression
         sourceMap: false
       });
