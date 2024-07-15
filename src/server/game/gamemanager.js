@@ -184,7 +184,7 @@ const gamemanager = (function() {
      * @returns 
      */
     async function logGame(game) {
-        if (game.moves.length  0) return; // Don't log
+        if (game.moves.length === 0) return; // Don't log
 
         // First line of log...
 
