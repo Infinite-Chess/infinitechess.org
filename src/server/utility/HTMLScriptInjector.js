@@ -27,10 +27,10 @@ let htmlCache = {};
  * @param {string} htmlFilePath - The path of the html document in the project
  * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
  * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
- * @param {Object} stringInjection - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
- *                                   The string will be insterted after the specified tags into the html doc
+ * @param {Object} [stringInjection] - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
+ *                                     The string will be insterted after the specified tags into the html doc
  */
-function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, stringInjection) {
+function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, stringInjection = {}) {
     injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection)
         .then(modifiedHTML => {
             htmlCache[htmlFilePath] = modifiedHTML;
@@ -44,11 +44,11 @@ function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, stringInj
  * @param {string} htmlFilePath - The path of the html document in the project
  * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
  * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
- * @param {Object} stringInjection - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
- *                                   The string will be insterted after the specified tags into the html doc
+ * @param {Object} [stringInjection] - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
+ *                                     The string will be insterted after the specified tags into the html doc
  * @returns {Promise<string>} - A promise that resolves with the modified HTML content, or rejects with an error message.
  */
-function injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection) {
+function injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection = {}) {
     return new Promise((resolve, reject) => {
         // Read the JavaScript file
         fs.readFile(jsFilePath, 'utf8', (jsErr, jsData) => {
