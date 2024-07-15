@@ -102,19 +102,10 @@ const legalmoves = (function(){
                     const line = lines[i];
                     if (!thisPieceMoveset.slideMoves[line]) continue;
                     const key = math.getKeyFromLine(line,coords);
-                    legalSlideMoves[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line[0]===0, thisPieceMoveset.slideMoves[line], coords, color);
+                    legalSlideMoves[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line, thisPieceMoveset.slideMoves[line], coords, color);
                 };
             };
-            /**
-            let key = coords[1]; // Key is y level for horizontal slide
-            legalHorizontalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByRow[key], false, thisPieceMoveset.horizontal, coords, color)
-            key = coords[0] // Key is x for vertical slide
-            legalVerticalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByColumn[key], true, thisPieceMoveset.vertical, coords, color)
-            key = math.getUpDiagonalFromCoords(coords) // Key is -x + y for up-diagonal slide
-            legalUpDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByUpDiagonal[key], false, thisPieceMoveset.diagonalUp, coords, color)
-            key = math.getDownDiagonalFromCoords(coords) // Key is x + y for down-diagonal slide
-            legalDownDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByDownDiagonal[key], false, thisPieceMoveset.diagonalDown, coords, color)
-            */
+
         }
         
         // Add any special moves!
@@ -169,45 +160,40 @@ const legalmoves = (function(){
 
     // Takes in specified organized list, direction of the slide, the current moveset...
     // Shortens the moveset by pieces that block it's path.
-    function slide_CalcLegalLimit (organizedLine, lineIsVertical, slideMoveset, coords, color) {
+    function slide_CalcLegalLimit (organizedLine, line, slideMoveset, coords, color) {
 
         if (!slideMoveset) return // Return undefined if there is no slide moveset
 
         // The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
         // For most we'll be comparing the x values, only exception is the columns.
-        const zeroOrOne = lineIsVertical ? 1 : 0 
-        const limit = [slideMoveset[0] + coords[zeroOrOne], slideMoveset[1] + coords[zeroOrOne]]
-
+        const zeroOrOne = line[0] == 0 ? 1 : 0 
+        const limit = [slideMoveset[0], slideMoveset[1]]
         // Iterate through all pieces on same line
         for (let i = 0; i < organizedLine.length; i++) {
             // What are the coords of this piece?
             const thisPiece = organizedLine[i] // { type, coords }
-            const thisPieceXorY = thisPiece.coords[zeroOrOne]
+            const thisPieceSteps = Math.floor((thisPiece.coords[zeroOrOne]-coords[zeroOrOne])/line[zeroOrOne])
             const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
             const isFriendlyPiece = color === thisPieceColor
             const isVoid = thisPiece.type === 'voidsN';
-
             // Is the piece to the left of us or right of us?
-            if (thisPieceXorY < coords[zeroOrOne]) { // To our left
+            if (thisPieceSteps < 0) { // To our left
 
                 // What would our new left slide limit be? If it's an opponent, it's legal to capture it.
-                const newLeftSlideLimit = isFriendlyPiece || isVoid ? thisPieceXorY + 1 : thisPieceXorY
-
+                const newLeftSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps + 1 : thisPieceSteps
                 // If the piece x is closer to us than our current left slide limit, update it
                 if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit
 
-            } else if (thisPieceXorY > coords[zeroOrOne]) { // To our right
+            } else if (thisPieceSteps > 0) { // To our right
 
                 // What would our new right slide limit be? If it's an opponent, it's legal to capture it.
-                const newRightSlideLimit = isFriendlyPiece || isVoid ? thisPieceXorY - 1 : thisPieceXorY
-
+                const newRightSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps - 1 : thisPieceSteps
                 // If the piece x is closer to us than our current left slide limit, update it
                 if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit
 
             } // else this is us, don't do anything.
         }
-
         return limit;
     }
 
@@ -243,12 +229,13 @@ const legalmoves = (function(){
         for (var strline in legalMoves.slides) {
             let line=math.getCoordsFromKey(strline);
             let limits = legalMoves.slides[strline];
+
             let selectedPieceLine = math.getKeyFromLine(line,startCoords);
             let clickedCoordsLine = math.getKeyFromLine(line,endCoords);
-            if (limits && selectedPieceLine==clickedCoordsLine) {
-                if (endCoords[0]>=limits[0] && endCoords[0]<=limits[1] && line[0]!=0) return true;
-                else if (endCoords[1]>=limits[0] && endCoords[1]<=limits[1] && line[0]==0) return true;
-            }
+            if (!limits||selectedPieceLine!=clickedCoordsLine) continue;
+
+            if (!doesSlideMovesetContainSquare(limits, line, startCoords, endCoords)) continue;
+            return true;
         }
         return false;
     }
@@ -351,13 +338,17 @@ const legalmoves = (function(){
         }
     }
 
+    // TODO: moveset changes
     // This requires coords be on the same line as the sliding moveset.
-    function doesSlideMovesetContainSquare (slideMoveset, lineIsVertical, coords) {
+    function doesSlideMovesetContainSquare (slideMoveset, line, pieceCoords, coords) {
 
-        const xOrY = lineIsVertical ? coords[1] : coords[0];
+        const axis = line[0]===0 ? 1 : 0
+        const coordMag = coords[axis];
+        const min = slideMoveset[0] * line[axis] + pieceCoords[axis]
+        const max = slideMoveset[1] * line[axis] + pieceCoords[axis]
 
-        if (xOrY < slideMoveset[0]) return false;
-        if (xOrY > slideMoveset[1]) return false;
+        if (coordMag < min) return false;
+        if (coordMag > max) return false;
 
         return true;
     }
@@ -371,12 +362,6 @@ const legalmoves = (function(){
         if (moves.individual.length > 0) return true;
         for (var line in moves.slides)
             if (doesSlideHaveWidth(moves.slides[line])) return true;
-        /** 
-        if (doesSlideHaveWidth(moves.horizontal)) return true;
-        if (doesSlideHaveWidth(moves.vertical)) return true;
-        if (doesSlideHaveWidth(moves.diagonalUp)) return true;
-        if (doesSlideHaveWidth(moves.diagonalDown)) return true;
-        */
 
         function doesSlideHaveWidth(slide) { // [-Infinity, Infinity]
             if (!slide) return false;

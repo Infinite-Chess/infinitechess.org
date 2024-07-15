@@ -189,10 +189,11 @@ const math = (function() {
         return `${getLineFromCoords(step,coords)}|${coordAxis - (Math.floor(coordAxis / deltaAxis) * deltaAxis)}`
     }
 
+    // TODO: implement this
     /**
-     * TODO: implement this
-     * @param {Number[][]} lines 
-     * @returns {Boolean}
+     * Checks if all lines are colinear aka `[[1,0],[2,0]]` would be as they are both the same direction
+     * @param {Number[][]} lines Array of vectors `[[1,0],[2,0]]`
+     * @returns {Boolean} 
      */
 
     function areLinesCollinear(lines) {

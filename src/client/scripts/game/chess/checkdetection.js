@@ -149,12 +149,12 @@ const checkdetection = (function(){
             if (!thisPieceMoveset.slideMoves) {continue};
             const moveset = thisPieceMoveset.slideMoves[math.getKeyFromCoords(direction)];
             if (!moveset) {continue};
-            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, lineIsVertical, moveset, thisPiece.coords, thisPieceColor)
+            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor)
             if (!thisPieceLegalSlide) continue; // This piece has no horizontal moveset, NEXT piece on this line!
 
             // const rectangle = {left: thisPieceLegalSlide[0], right: thisPieceLegalSlide[1], bottom: coords[1], top: coords[1]}
             // const isWithinMoveset = math.boxContainsSquare(rectangle, coords)
-            const isWithinMoveset = legalmoves.doesSlideMovesetContainSquare(thisPieceLegalSlide, lineIsVertical, coords)
+            const isWithinMoveset = legalmoves.doesSlideMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)
 
             if (isWithinMoveset) {
                 if (attackers) appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
@@ -317,19 +317,26 @@ const checkdetection = (function(){
             checklines.push(line);
         }
         const tempslides = {}
-        if (checklines.length > 1) {
-            if (math.areLinesCollinear(checklines)) {
-                for (const line of checklines) {
-                    const strline = math.getKeyFromCoords(line)
-                    tempslides[strline] = moves.slideMoves[strline]
+        r : {
+            if (checklines.length > 1) {
+                if (math.areLinesCollinear(checklines)) {
+                    // FIXME: this is not correct as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
+                    // For now lets just blank slides
+                    /**
+                    for (const line of checklines) {
+                        const strline = math.getKeyFromCoords(line)
+                        if (!moves.slideMoves[strline]) break r;
+                        tempslides[strline] = moves.slideMoves[strline]
+                    */ 
+                    } else {
+                    // Cannot slide to block all attack lines so blank the slides
+                    // Could probably blank regular attacks too
                 }
-            } else {
-                // Cannot slide to block all attack lines so blank the slides
-                // Could probably blank regular attacks too
+            } else if (checklines.length === 1) {
+                const strline = math.getKeyFromCoords(checklines[0])
+                if (!moves.slideMoves[strline]) break r;
+                tempslides[strline] = moves.slideMoves[strline] 
             }
-        } else if (checklines.length === 1) {
-            const strline = math.getKeyFromCoords(checklines[0])
-            tempslides[strline] = moves.slideMoves[strline] 
         }
 
         // Add the piece back with the EXACT SAME index it had before!!
