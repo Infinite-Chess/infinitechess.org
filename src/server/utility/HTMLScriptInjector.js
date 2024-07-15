@@ -25,11 +25,11 @@ let htmlCache = {};
  * @param {string} htmlFilePath - The path of the html document in the project
  * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
  * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
- * @param {Object} srcScriptInjections - Optinional argument: An object of the form {string: "htmlcode", injectafter: "tags"}.
- *                                       The string will be insterted after the specified tags into the html doc
+ * @param {Object} stringInjection - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
+ *                                   The string will be insterted after the specified tags into the html doc
  */
-function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, srcScriptInjections) {
-    injectScript(htmlFilePath, jsFilePath, injectAfterTag, srcScriptInjections)
+function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, stringInjection) {
+    injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection)
         .then(modifiedHTML => {
             htmlCache[htmlFilePath] = modifiedHTML;
         })
@@ -42,11 +42,11 @@ function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, srcScript
  * @param {string} htmlFilePath - The path of the html document in the project
  * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
  * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
- * @param {Object} srcScriptInjections - Optinional argument: An object of the form {string: "htmlcode", injectafter: "tags"}.
- *                                       The string will be insterted after the specified tags into the html doc
+ * @param {Object} stringInjection - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
+ *                                   The string will be insterted after the specified tags into the html doc
  * @returns {Promise<string>} - A promise that resolves with the modified HTML content, or rejects with an error message.
  */
-function injectScript(htmlFilePath, jsFilePath, injectAfterTag, srcScriptInjections) {
+function injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection) {
     return new Promise((resolve, reject) => {
         // Read the JavaScript file
         fs.readFile(jsFilePath, 'utf8', (jsErr, jsData) => {
@@ -65,9 +65,9 @@ function injectScript(htmlFilePath, jsFilePath, injectAfterTag, srcScriptInjecti
                 }
                 // Inject the script tag before the specified closing tag
                 let modifiedHTML = htmlData.replace(injectAfterTag, `${injectAfterTag}${scriptTag}`);
-                // Inject the code of the optional argument
-                if (Object.keys(srcScriptInjections).length != 0){
-                    modifiedHTML = modifiedHTML.replace(srcScriptInjections.injectafter, `${srcScriptInjections.injectafter}${srcScriptInjections.string}`);
+                // Inject the string of the optional argument "stringInjection" into the HTML file, if applicable
+                if (Object.keys(stringInjection).length != 0){
+                    modifiedHTML = modifiedHTML.replace(stringInjection.injectafter, `${stringInjection.injectafter}${stringInjection.string}`);
                 }
                 resolve(modifiedHTML);
             });
@@ -114,9 +114,11 @@ function getCachedHTML(htmlFilePath) {
     // Automatically build the list of scripts to be injected by including everything in scripts/game except for htmlscripts.js
     let HTML_callGame_JS_string = "";
     const game_JSscripts = glob.sync(`./dist/scripts/game/**/*.js`).filter(file => {return !/htmlscript\.js/.test(file)});
+
+    // Convert the list of scripts into an explicit HTML string that imports them all
     for (file of game_JSscripts){
         const js_filename = file.split(/(\\|\/)+/).slice(4).join(""); // discard "dist/scripts/"
-        HTML_callGame_JS_string += `\n${HMTL_scriptcall_p1}${js_filename}${HMTL_scriptcall_p2}`;
+        HTML_callGame_JS_string += `\n\t\t${HMTL_scriptcall_p1}${js_filename}${HMTL_scriptcall_p2}`;
     }
 
     // Finally, perform the injection
