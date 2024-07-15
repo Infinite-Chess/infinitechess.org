@@ -325,7 +325,7 @@ const variant = (function() {
                 positionString = 'k5,8+|n3,8|n4,8|n6,8|n7,8|p-5,7+|p-4,7+|p-3,7+|p-2,7+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,7+|p12,7+|p13,7+|p14,7+|p15,7+|K5,1+|N3,1|N4,1|N6,1|N7,1|P-5,2+|P-4,2+|P-3,2+|P-2,2+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,2+|P12,2+|P13,2+|P14,2+|P15,2+';
                 return getStartSnapshotPosition({ positionString })
             case "Knighted Chess":
-                positionString = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+';
+                positionString = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|NR2,1|NR7,1|nr2,8|nr7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+';
                 return getStartSnapshotPosition({ positionString })
             case "Omega": // Joel & Cory's version
                 positionString = 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3|Q-1,-3|P2,-3|K0,-4'
