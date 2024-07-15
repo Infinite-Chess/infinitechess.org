@@ -184,7 +184,7 @@ const gamemanager = (function() {
      * @returns 
      */
     async function logGame(game) {
-        if (game.moves.length === 0) return; // Don't log
+        if (game.moves.length  0) return; // Don't log
 
         // First line of log...
 
@@ -1224,9 +1224,7 @@ const gamemanager = (function() {
         // Game conclusion is decisive...
         // We can't submit a move where our opponent wins
         const oppositeColor = math1.getOppositeColor(color);
-        if (victor === oppositeColor) return false;
-
-        return true;
+        return !(victor === oppositeColor);
     }
 
     /**
