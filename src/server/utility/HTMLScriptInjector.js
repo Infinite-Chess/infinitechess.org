@@ -1,8 +1,10 @@
 
 /**
  * This module, at runtime, creates a list of a few
- * of our htmls in which we want to manually injected
- * some javascript into before sharing to the client.
+ * of our htmls into which we want to manually inject
+ * some javascript before sharing to the client.
+ * (Currently, htmlscript.js is injected in full into play.html.
+ * Also, calls to the game scripts in /src/client/scripts/game are injected into play.html)
  * 
  * We keep the javascript separate in development, so as
  * to not break Intellisense's sense of the javascript project.
@@ -11,6 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const glob = require('glob');
 
 /**
  * A cache object that has file paths for the keys, and for the values-
@@ -24,9 +27,11 @@ let htmlCache = {};
  * @param {string} htmlFilePath - The path of the html document in the project
  * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
  * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
+ * @param {Object} [stringInjection] - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
+ *                                     The string will be insterted after the specified tags into the html doc
  */
-function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag) {
-    injectScript(htmlFilePath, jsFilePath, injectAfterTag)
+function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, stringInjection = {}) {
+    injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection)
         .then(modifiedHTML => {
             htmlCache[htmlFilePath] = modifiedHTML;
         })
@@ -39,9 +44,11 @@ function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag) {
  * @param {string} htmlFilePath - The path of the html document in the project
  * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
  * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
+ * @param {Object} [stringInjection] - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
+ *                                     The string will be insterted after the specified tags into the html doc
  * @returns {Promise<string>} - A promise that resolves with the modified HTML content, or rejects with an error message.
  */
-function injectScript(htmlFilePath, jsFilePath, injectAfterTag) {
+function injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection = {}) {
     return new Promise((resolve, reject) => {
         // Read the JavaScript file
         fs.readFile(jsFilePath, 'utf8', (jsErr, jsData) => {
@@ -59,7 +66,11 @@ function injectScript(htmlFilePath, jsFilePath, injectAfterTag) {
                     return;
                 }
                 // Inject the script tag before the specified closing tag
-                const modifiedHTML = htmlData.replace(injectAfterTag, `${injectAfterTag}${scriptTag}`);
+                let modifiedHTML = htmlData.replace(injectAfterTag, `${injectAfterTag}${scriptTag}`);
+                // Inject the string of the optional argument "stringInjection" into the HTML file, if applicable
+                if (Object.keys(stringInjection).length != 0){
+                    modifiedHTML = modifiedHTML.replace(stringInjection.injectafter, `${stringInjection.injectafter}${stringInjection.string}`);
+                }
                 resolve(modifiedHTML);
             });
         });
@@ -91,11 +102,27 @@ function getCachedHTML(htmlFilePath) {
 }
 
 // Inject the scripts we want...
-
-{ // Inject into play.html, our OBFUSCATED htmlscript.js script.
+{ 
+    // Prepare the injection of our (potentially minified) htmlscript.js script into play.html
     const htmlFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'views', 'play.html');
     const jsFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'game', 'htmlscript.js');
-    prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>');
+
+    //  Prepare the injection of references to all other game scripts into play.html
+    const HMTL_scriptcall_p1 = `<script defer src="/scripts/`;
+    const HMTL_scriptcall_p2 = `" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>`
+    const injectafter_string = `${HMTL_scriptcall_p1}validation.js${HMTL_scriptcall_p2}` // we will insert the other game scripts after this exact place in the HTML code
+
+    // Automatically build the list of scripts to be injected into play.html by including everything in scripts/game except for htmlscripts.js
+    let HTML_callGame_JS_string = "";
+    const game_JSscripts = glob.sync(`./dist/scripts/game/**/*.js`).filter(file => {return !/htmlscript\.js/.test(file)});
+    // Convert the list of scripts into an explicit HTML string that imports them all
+    for (file of game_JSscripts){
+        const js_filename = file.split(/(\\|\/)+/).slice(4).join(""); // discard "dist/scripts/"
+        HTML_callGame_JS_string += `\n\t\t${HMTL_scriptcall_p1}${js_filename}${HMTL_scriptcall_p2}`;
+    }
+
+    // Finally, perform the injection into play.html
+    prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>', {string: HTML_callGame_JS_string, injectafter: injectafter_string});
 }
 
 module.exports = {
