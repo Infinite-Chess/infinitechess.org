@@ -46,6 +46,10 @@ const guipromotion = (function(){
     const element_centaursB = document.getElementById('centaursB')
     const element_knightsB = document.getElementById('knightsB')
     const element_guardsB = document.getElementById('guardsB')
+    
+    let tintSuffix = 'W';// If we've tinted the images. Important for callback
+
+    const tintedImages = {};
 
     let selectionOpen = false // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
@@ -56,10 +60,60 @@ const guipromotion = (function(){
     function open(color) {
         selectionOpen = true;
         style.revealElement(element_Promote)
-        if (color === 'white') {
+        if (['white','red','yellow','green','blue'].includes(color)) {
             style.hideElement(element_PromoteBlack)
             style.revealElement(element_PromoteWhite)
+
+            if(color === 'white'){
+                element_Promote.style.backgroundImage = 'url("/img/game/promotions.png")';
+                tintSuffix = 'W';
+            } else {
+                if(tintedImages[color] == null){
+                    // Generate tinted image
+                    const tintColorRgb = {
+                        red: [1,0,0],
+                        green: [0,1,0],
+                        blue: [0,0,1],
+                        yellow: [1,1,0]
+                    }[color];
+                    const img = new Image();
+                    img.src = '/img/game/promotions.png';
+
+                    const ca = document.createElement('canvas');
+                    ca.imageSmoothingEnabled = false;
+                    const c = ca.getContext('2d');
+
+                    img.onload = () => { 
+                        ca.width = img.width;
+                        ca.height = img.height;
+
+                        c.drawImage(img, 0,0);
+
+                        const data = c.getImageData(0,0,ca.width,ca.height);
+                        const d = data.data;
+
+                        for(let i = 0; i < d.length; i+=4){
+                            d[i] *= tintColorRgb[0];
+                            d[i+1] *= tintColorRgb[1];
+                            d[i+2] *= tintColorRgb[2];
+                        }
+
+                        c.putImageData(data, 0,0);
+
+                        const dataUrl = ca.toDataURL();
+
+                        tintedImages[color] = 'url(' + dataUrl + ')';
+
+                        tintSuffix = math.getWorBFromColor(color);
+                        element_Promote.style.backgroundImage = tintedImages[color];
+                    }
+                } else {
+                    tintSuffix = math.getWorBFromColor(color);
+                    element_Promote.style.backgroundImage = tintedImages[color];
+                }
+            }
         } else {
+            tintSuffix = 'B'
             style.hideElement(element_PromoteWhite)
             style.revealElement(element_PromoteBlack)
         }
@@ -187,7 +241,10 @@ const guipromotion = (function(){
     function callback_promote (event) {
         event = event || window.event;
 
-        const type = event.srcElement.classList[1]
+        let type = event.srcElement.classList[1]
+        if(tintSuffix != null) type = math.trimWorBFromType(type);
+        type += tintSuffix;
+
         selection.promoteToType(type);
         close()
     }

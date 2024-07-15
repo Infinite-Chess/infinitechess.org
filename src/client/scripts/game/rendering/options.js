@@ -216,7 +216,8 @@ const options = (function() {
             neutral: themes[theme].neutralPiecesColor,
             red: colorsOut.includes('red') ? deadColor : (themes[theme].redPiecesColor ?? [1, 0.1, 0.1, 1]),
             green: colorsOut.includes('green') ? deadColor : (themes[theme].greenPiecesColor ?? [0.1, 1, 0.1, 1]),
-            blue: colorsOut.includes('blue') ? deadColor : (themes[theme].bluePiecesColor ?? [0.1, 0.1, 1, 1])
+            blue: colorsOut.includes('blue') ? deadColor : (themes[theme].bluePiecesColor ?? [0.1, 0.1, 1, 1]),
+            yellow: colorsOut.includes('yellow') ? deadColor : (themes[theme].yellowPiecesColor ?? [1, 1, 0.1, 1]),
         }
     }
 

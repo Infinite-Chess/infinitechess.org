@@ -46,8 +46,8 @@ const guigameinfo = (function(){
     function updateWhosTurn(gamefile) {
         const color = gamefile.whosTurn;
 
-        if (color !== 'white' && color !== 'black' && color !== 'blue' && color !== 'green' && color !== 'red')
-            throw new Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black nor red nor blue nor green! ${color}`)
+        if (color !== 'white' && color !== 'black' && color !== 'blue' && color !== 'green' && color !== 'red' && color !== 'yellow')
+            throw new Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black nor red nor blue nor yellow nor green! ${color}`)
 
         let textContent = "";
         if (onlinegame.areInOnlineGame()) {
@@ -64,10 +64,13 @@ const guigameinfo = (function(){
         element_dot.classList.remove('dotred')
         element_dot.classList.remove('dotgreen')
         element_dot.classList.remove('dotblue')
+        element_dot.classList.remove('dotyellow');
         if (color === 'white') {
             element_dot.classList.add('dotwhite')
         } else if (color === 'black'){
             element_dot.classList.add('dotblack')
+        } else if (color === 'yellow') {
+            element_dot.classList.add('dotyellow')
         } else if (color === 'red'){
             element_dot.classList.add('dotred')
         } else if (color === 'green'){
@@ -120,7 +123,7 @@ const guigameinfo = (function(){
             else if (condition === 'time') element_whosturn.textContent = victor === 'white' ? "White wins on time!"
                                                                        : victor === 'black' ? "Black wins on time!"
                                                                        : 'This is a bug, please report. Game ended on time.'
-            else if (condition === 'royalcapture') element_whosturn.textContent = ['white','black','red','green','blue'].includes(victor) ? `${victor[0].toUpperCase()+victor.slice(1)} wins by royal capture!`
+            else if (condition === 'royalcapture') element_whosturn.textContent = ['white','black','red','green','blue','yellow'].includes(victor) ? `${victor[0].toUpperCase()+victor.slice(1)} wins by royal capture!`
                                                                                : 'This is a bug, please report. Game ended by royal capture.'
             else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === 'white' ? "White wins by all royals captured!"
                                                                                     : victor === 'black' ? "Black wins by all royals captured!"

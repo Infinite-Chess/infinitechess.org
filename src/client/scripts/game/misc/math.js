@@ -524,6 +524,7 @@ const math = (function() {
         else if (type.endsWith('N')) return "neutral"
         else if(type.endsWith('R')) return "red";
         else if(type.endsWith('G')) return "green";
+        else if(type.endsWith('Y')) return "yellow";
         else if(type.endsWith('U')) return "blue";
         else throw new Error(`Cannot get the color of piece with type ${pieceType}`)
     }
@@ -534,6 +535,7 @@ const math = (function() {
         else if (WorB === 'N') return 'neutral';
         else if(WorB === 'R') return "red";
         else if(WorB === 'G') return "green";
+        else if(WorB === 'Y') return "yellow";
         else if(WorB === 'U') return "blue";
         throw new Error(`Cannot return color when WorB is not W, B, or N! Received: "${WorB}"`)
     }
@@ -552,10 +554,10 @@ const math = (function() {
     function getNextColor4p(color, colorsOut){
         if(colorsOut.length > 2) console.trace(`We should never have more than two dead colors!, ${colorsOut}`);
         let nextCol;
-        if(color === "white") nextCol = "green";
+        if(color === "yellow") nextCol = "green";
         if(color === "green") nextCol = "red";
         if(color === "red") nextCol = "blue";
-        if(color === "blue") nextCol = "white";
+        if(color === "blue") nextCol = "yellow";
 
         if(nextCol == null)console.trace(`We should never get the next color of an invalid color ${color}!`)
 
@@ -566,10 +568,10 @@ const math = (function() {
     function getPreviousColor4p(color, colorsOut){
         if(colorsOut.length > 2) console.trace(`We should never have more than two dead colors!, ${colorsOut}`);
         let prevCol;
-        if(color === "green") prevCol = "white";
+        if(color === "green") prevCol = "yellow";
         if(color === "red") prevCol = "green";
         if(color === "blue") prevCol = "red";
-        if(color === "white") prevCol = "blue";
+        if(color === "yellow") prevCol = "blue";
 
         if(prevCol == null)console.trace(`We should never get the next color of an invalid color ${color}!`)
         
@@ -579,7 +581,7 @@ const math = (function() {
 
     function getAllColorsExcept4p(color, colorsOut){
         const cols = [];
-        if(color !== "white") cols.push("white");
+        if(color !== "yellow") cols.push("yellow");
         if(color !== "green") cols.push("green");
         if(color !== "red") cols.push("red");
         if(color !== "blue") cols.push("blue");
@@ -597,6 +599,7 @@ const math = (function() {
         else if (color === 'neutral') return 'N';
         else if (color === 'red') return 'R';
         else if (color === 'green') return 'G';
+        else if (color === 'yellow') return 'Y';
         else if(color === 'blue') return 'U';
         else throw new Error(`Cannot return WorB from strange color ${color}!`)
     }

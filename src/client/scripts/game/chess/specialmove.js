@@ -66,7 +66,7 @@ const specialmove = {
         // If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
         if (updateProperties && specialmove.isPawnMoveADoublePush(piece.coords, move.endCoords)) {
             const [captureSquareX, captureSquareY] = specialmove.getEnPassantSquare(piece.coords, move.endCoords, piece.type.endsWith('U') || piece.type.endsWith('G'))
-            gamefile.enpassant.push(captureSquareX, captureSquareY, move.endCoords[0], move.endCoords[1], {'white':0,'green':1,'red':2,'blue':3}[gamefile.whosTurn]);
+            gamefile.enpassant.push(captureSquareX, captureSquareY, move.endCoords[0], move.endCoords[1], {'white':0,'yellow':0,'black':2,'green':1,'red':2,'blue':3}[gamefile.whosTurn]);
         }
 
         const enPassantData = move.enpassant; // format: [captureSquare.x,captureSquare.y]

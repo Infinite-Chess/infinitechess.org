@@ -17,7 +17,7 @@ const checkdetection = (function(){
     function detectCheck(gamefile, color, attackers) {
         // Input validation
         if (!gamefile) throw new Error("Cannot detect check of an undefined game!")
-        if (color !== 'white' && color !== 'black' && color !== 'red' && color !== 'blue' && color !== 'green') throw new Error(`Cannot detect check of the team of color ${color}!`)
+        if (color !== 'white' && color !== 'black' && color !== 'red' && color !== 'blue' && color !== 'green' && color !== 'yellow') throw new Error(`Cannot detect check of the team of color ${color}!`)
         if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`)
 
         // Coordinates of ALL royals of this color!
@@ -42,7 +42,7 @@ const checkdetection = (function(){
         // Input validation
         if (!gamefile) throw new Error("Cannot detect if a square of an undefined game is being attacked!")
         if (!coord) return false;
-        if (colorOfFriendly !== 'white' && colorOfFriendly !== 'black' && colorOfFriendly !== 'red' && colorOfFriendly !== 'blue' && colorOfFriendly !== 'green') throw new Error(`Cannot detect if an opponent is attacking the square of the team of color ${colorOfFriendly}!`)
+        if (colorOfFriendly !== 'white' && colorOfFriendly !== 'black' && colorOfFriendly !== 'red' && colorOfFriendly !== 'blue' && colorOfFriendly !== 'green' && color !== 'yellow') throw new Error(`Cannot detect if an opponent is attacking the square of the team of color ${colorOfFriendly}!`)
 
         let atleast1Attacker = false;
 

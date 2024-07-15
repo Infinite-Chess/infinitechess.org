@@ -161,7 +161,7 @@ const movepiece = (function(){
      * @param {number[]} endCoords - The destination of the piece moving
      */
     function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoords) {
-        const whosTurnNumber = {white:0,green:1,red:2,blue:3}[gamefile.whosTurn];
+        const whosTurnNumber = {yellow:0,white:0,black:2,green:1,red:2,blue:3}[gamefile.whosTurn];
         for(let i = 0; i < gamefile.enpassant.length; i+=5){
             if(gamefile.enpassant[i+4] === whosTurnNumber){
                 for(let j = 0; j < 5; j++){

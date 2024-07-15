@@ -123,8 +123,8 @@ const specialdetect = (function() {
     function pawns(gamefile, coords, color, individualMoves) {
         // White and black pawns move and capture in opposite directions.
         let posOneorNegOne;
-        if(color === 'white' || color === 'black' || color === 'red'){
-            posOneorNegOne = color === 'white' ? 1 : -1 
+        if(color === 'yellow' || color === 'black' || color === 'red'){
+            posOneorNegOne = color === 'yellow' ? 1 : -1 
         } else /*if(color === 'green' || color === 'blue')*/{
             posOneorNegOne = color === 'green' ? 1 : -1;
         }
@@ -136,7 +136,7 @@ const specialdetect = (function() {
     
         // Is there a piece in front of it?
         let coordsInFront;
-        if(color === 'white' || color === 'black' || color === 'red'){
+        if(color === 'white' || color === 'yellow' || color === 'black' || color === 'red'){
             coordsInFront = [coords[0], coords[1] + posOneorNegOne];
         } else /*if(color === 'green' || color === 'blue')*/{
             coordsInFront = [coords[0] + posOneorNegOne, coords[1]];
@@ -147,7 +147,7 @@ const specialdetect = (function() {
 
             // Is the double push legal?
             let doublePushCoord;
-            if(color === 'white' || color === 'black' || color === 'red'){
+            if(color === 'white' || color === 'yellow' || color === 'black' || color === 'red'){
                 doublePushCoord = [coordsInFront[0], coordsInFront[1] + posOneorNegOne]
             } else /*if(color === 'green' || color === 'blue')*/{
                 doublePushCoord = [coordsInFront[0] + posOneorNegOne, coordsInFront[1]];
@@ -159,7 +159,7 @@ const specialdetect = (function() {
     
         // 2. It can capture diagonally if there are opponent pieces there
     
-        const coordsToCapture = (color === 'white' || color === 'black') ? [
+        const coordsToCapture = (color === 'white' || color === 'black' || color === 'yellow' || color === 'red') ? [
             [coords[0] - 1, coords[1] + posOneorNegOne],
             [coords[0] + 1, coords[1] + posOneorNegOne]
         ] : [
@@ -219,7 +219,8 @@ const specialdetect = (function() {
             'red': [0,-1],
             'black': [0,-1],
             'green': [1,0],
-            'white': [0,1]
+            'white': [0,1],
+            'yellow': [0,1]
         }[color];
 
         const otherAxis = {
@@ -227,7 +228,8 @@ const specialdetect = (function() {
             'green': [0,1],
             'red': [1,0],
             'black': [1,0],
-            'white': [1,0]
+            'white': [1,0],
+            'yellow': [1,0]
         }[color];
 
         const captureSquares = [
@@ -241,7 +243,7 @@ const specialdetect = (function() {
             ],
         ]
 
-        const colorNumber = {white:0,green:1,red:2,blue:3}[color];
+        const colorNumber = {black:2,white:0,yellow:0,green:1,red:2,blue:3}[color];
 
         // format: array of a multiple of 4 numbers. Each 4 numbers are [... captureSquare.x, captureSquare.y, pieceToCaptureSquare.x, pieceToCaptureSquare.y]
         for(let i = 0; i < gamefile.enpassant.length; i += 5){
@@ -284,14 +286,25 @@ const specialdetect = (function() {
      */
     function isPawnPromotion(gamefile, type, coordsClicked) {
         if (!type.startsWith('pawns')) return false;
-        if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
+        if (!gamefile.gameRules.promotionRanks && !gamefile.gameRules.promotionColumns) return false; // This game doesn't have promotion.
 
-        const color = math.getPieceColorFromType(type);
-        const promotionRank = color === 'white' ? gamefile.gameRules.promotionRanks[0]
-                            : color === 'black' ? gamefile.gameRules.promotionRanks[1]
-                            : undefined; // Can neutral pawns promote???
-
-        if (coordsClicked[1] === promotionRank) return true;
+        if(gamefile.gameRules.promotionRanks){
+            const color = math.getPieceColorFromType(type);
+            const promotionRank = (color === 'white' || color === 'yellow') ? gamefile.gameRules.promotionRanks[0]
+                : (color === 'black' || color === 'red') ? gamefile.gameRules.promotionRanks[1]
+                : undefined; // Can neutral pawns promote???
+            
+            if (coordsClicked[1] === promotionRank) return true;
+        }
+        
+        if(gamefile.gameRules.promotionColumns) {
+            const color = math.getPieceColorFromType(type);
+            const promotionRank = color === 'green' ? gamefile.gameRules.promotionColumns[0]
+                : color === 'blue' ? gamefile.gameRules.promotionColumns[1]
+                : undefined; // Can neutral pawns promote???
+            
+            if (coordsClicked[0] === promotionRank) return true;
+        }
 
         return false;
     }

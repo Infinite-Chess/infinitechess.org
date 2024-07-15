@@ -35,14 +35,14 @@ const formatconverter = (function() {
         "voidsN": "vo",
 
         // 4 player!          U = blue because B is taken
-        "kingsG": 'gk', "kingsU": "bk", "kingsR": 'rk',
-        "pawnsG": "gp", "pawnsU": "bp", "pawnsR": 'rp',
-        "knightsG": "gn", "knightsU": "bn", "knightsR": 'rn',
-        "bishopsG": "gb", "bishopsU": "bb", "bishopsR": 'rb',
-        "rooksG": "gr", "rooksU": "br", "rooksR": 'rr',
-        "queensG": "gq", "queensU": "bq", 'queensR': 'req',
-        "royalQueensG": "rgq", "royalQueensU": "rbq", "royalQueensR": 'rrq',
-        "royalCentaursG": "rgc", "royalCentaursU": "rbc", "royalCentuarsR": 'rrc',
+        "kingsG": 'gk', "kingsU": "bk", "kingsR": 'rk', "kingsY": 'yk',
+        "pawnsG": "gp", "pawnsU": "bp", "pawnsR": 'rp', "pawnsY": 'yp',
+        "knightsG": "gn", "knightsU": "bn", "knightsR": 'rn', "knightsY": 'yn',
+        "bishopsG": "gb", "bishopsU": "bb", "bishopsR": 'rb', "bishopsY": 'yb',
+        "rooksG": "gr", "rooksU": "br", "rooksR": 'rr', "rooksY": 'yr',
+        "queensG": "gq", "queensU": "bq", 'queensR': 'req', "queensY": 'yq',
+        "royalQueensG": "rgq", "royalQueensU": "rbq", "royalQueensR": 'rrq', "royalQueensY": 'ryq',
+        "royalCentaursG": "rgc", "royalCentaursU": "rbc", "royalCentuarsR": 'rrc', "royalCentaursY": 'ryc'
     };
 
     function invertDictionary(json){
@@ -846,6 +846,7 @@ const formatconverter = (function() {
         else if (type.endsWith('N')) return "neutral"
         else if(type.endsWith('R')) return "red";
         else if(type.endsWith('G')) return "green";
+        else if(type.endsWith('Y')) return "yellow";
         else if(type.endsWith('U')) return "blue";
         else throw new Error(`Cannot get color of piece with type "${type}"!`)
     }

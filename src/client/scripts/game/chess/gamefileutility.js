@@ -55,15 +55,18 @@ const gamefileutility = (function(){
             const thisRedType = pieces.red[i];
             const thisGreenType = pieces.green[i];
             const thisBlueType = pieces.blue[i];
+            const thisYellowType = pieces.yellow[i];
 
             const theseRedPieces = typeList[thisRedType];
             const theseGreenPieces = typeList[thisGreenType];
             const theseBluePieces = typeList[thisBlueType];
+            const theseYellowPieces = typeList[thisYellowType];
 
             // First it inserts the type of piece into the callback, then coords of piece 
             if (theseRedPieces) for (let a = 0; a < theseRedPieces.length; a++) callback(thisRedType, theseRedPieces[a], gamefile) 
             if (theseGreenPieces) for (let a = 0; a < theseGreenPieces.length; a++) callback(thisGreenType, theseGreenPieces[a], gamefile) 
             if (theseBluePieces) for (let a = 0; a < theseBluePieces.length; a++) callback(thisBlueType, theseBluePieces[a], gamefile) 
+            if (theseYellowPieces) for (let a = 0; a < theseYellowPieces.length; a++) callback(thisYellowType, theseYellowPieces[a], gamefile) 
         }
         for (let i = 0; i < pieces.neutral.length; i++) {
 
@@ -306,6 +309,15 @@ const gamefileutility = (function(){
         } else if (color === 'green') {
             for (let i = 0; i < jumpingRoyals.length; i++) {
                 const thisRoyalType = jumpingRoyals[i] + 'G';
+                if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
+                state[thisRoyalType].forEach(coords => { // [x,y]
+                    if (!coords) return;
+                    royalCoordsList.push(coords)
+                })
+            }
+        } else if (color === 'yellow') {
+            for (let i = 0; i < jumpingRoyals.length; i++) {
+                const thisRoyalType = jumpingRoyals[i] + 'Y';
                 if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
                 state[thisRoyalType].forEach(coords => { // [x,y]
                     if (!coords) return;

@@ -64,6 +64,10 @@ const backcompatible = (function() {
             if (!longformat.gameRules) longformat.gameRules = { promotionRanks: longformat.promotionRanks }
             else longformat.gameRules.promotionRanks = longformat.promotionRanks;
         }
+        if (longformat.promotionColumns) {
+            if (!longformat.gameRules) longformat.gameRules = { promotionRanks: longformat.promotionColumns }
+            else longformat.gameRules.promotionColumns = longformat.promotionColumns;
+        }
         if (longformat.gameRules) {
             // Example of old gameRules format:
             // {
@@ -95,6 +99,11 @@ const backcompatible = (function() {
                 // The old gamefiles did not specify promotions allowed, because it's determined by the pieces the game starts with
                 newGameRules.promotionsAllowed = variant.getPromotionsAllowed(longformat.startingPosition, newGameRules.promotionRanks)
             }
+            if (longformat.promotionColumns) {
+                newGameRules.promotionColumns = [longformat.promotionColumns[1], longformat.promotionColumns[0]];
+                // The old gamefiles did not specify promotions allowed, because it's determined by the pieces the game starts with
+                newGameRules.promotionsAllowed = newGameRules.promotionsAllowed || variant.getPromotionsAllowed(longformat.startingPosition, newGameRules.promotionColumns)
+            }
             converted.gameRules = newGameRules;
         }
 
@@ -107,7 +116,7 @@ const backcompatible = (function() {
     function isLongformatInOldNotation(longformat) {
         // An example of an old gamefile:
         // {"variant":"Classical","promotionRanks":[1,8],"moves":[[{"type":"pawnsW","startCoords":[4,2],"endCoords":[4,4]},{"type":"pawnsB","startCoords":[4,7],"endCoords":[4,5]}],[{"type":"pawnsW","startCoords":[3,2],"endCoords":[3,3]},{"type":"knightsB","startCoords":[7,8],"endCoords":[6,6]}],[{"type":"knightsW","startCoords":[7,1],"endCoords":[6,3]},{"type":"bishopsB","startCoords":[3,8],"endCoords":[85,-74]}],[{"type":"bishopsW","startCoords":[6,1],"endCoords":[-4496198,-4496203]},{"type":"bishopsB","startCoords":[85,-74],"endCoords":[82,-77]}],[{"type":"bishopsW","startCoords":[3,1],"endCoords":[9,7]},{"type":"bishopsB","startCoords":[82,-77],"endCoords":[4,1],"captured":"queensW"}],[{"type":"kingsW","startCoords":[5,1],"endCoords":[4,1],"captured":"bishopsB"},{"type":"rooksB","startCoords":[8,8],"endCoords":[611,8]}],[{"type":"pawnsW","startCoords":[1,2],"endCoords":[1,4]},{"type":"queensB","startCoords":[4,8],"endCoords":[4,7]}],[{"type":"rooksW","startCoords":[8,1],"endCoords":[57,1]},{"type":"queensB","startCoords":[4,7],"endCoords":[9,2]}],[{"type":"bishopsW","startCoords":[9,7],"endCoords":[5,3]},{"type":"queensB","startCoords":[9,2],"endCoords":[9,-998535]}],[{"type":"rooksW","startCoords":[1,1],"endCoords":[-11009,1]},{"type":"queensB","startCoords":[9,-998535],"endCoords":[4,-998535]}],[{"type":"knightsW","startCoords":[2,1],"endCoords":[4,0]}]]}
-        return longformat.variant || longformat.promotionRanks || longformat.moves && movesscript.areMovesIn2DFormat(longformat.moves)
+        return longformat.variant || longformat.promotionRanks || longformat.promotionColumns || longformat.moves && movesscript.areMovesIn2DFormat(longformat.moves)
     }
 
     return Object.freeze({

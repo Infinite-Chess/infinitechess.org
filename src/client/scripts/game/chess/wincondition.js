@@ -53,11 +53,11 @@ const wincondition = (function() {
                 // if this capture ends the game, encode the color that won
                 if(gamefile.colorsOut.length === 2){
                     const colorsToFilterOut = [...gamefile.colorsOut, gamefile.whosTurn];
-                    const remaining = ['white','red','green','blue'].filter(p => !colorsToFilterOut.includes(p));
+                    const remaining = ['yellow','red','green','blue'].filter(p => !colorsToFilterOut.includes(p));
                     return `${remaining[0]} royalcapture`;
                 } else {
                     // otherwise, encode the player who lost so that the information can be used elsewhere.
-                    if(!['white','black','green','red','blue'].includes(gamefile.whosTurn)) throw new Error("Cannot determine winning color by wincondition royalcapture!")
+                    if(!['white','black','yellow','green','red','blue'].includes(gamefile.whosTurn)) throw new Error("Cannot determine winning color by wincondition royalcapture!")
                     return `${gamefile.whosTurn} royalcapture`;
                 }
             } else if(gamefile.playerNum === 2) {

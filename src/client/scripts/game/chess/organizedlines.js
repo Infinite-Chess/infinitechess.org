@@ -277,6 +277,7 @@ const organizedlines = {
             state[pieces.green[i]] = [];
             state[pieces.blue[i]] = [];
             state[pieces.red[i]] = [];
+            state[pieces.yellow[i]] = [];
         }
         // Neutral
         for (let i = 0; i < pieces.neutral.length; i++) {

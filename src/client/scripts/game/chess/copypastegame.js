@@ -146,7 +146,8 @@ const copypastegame = (function(){
         longformat.gameRules.winConditions = longformat.gameRules.winConditions || variant.getDefaultWinConditions();
         if (!verifyWinConditions(longformat.gameRules.winConditions)) return false;
         longformat.gameRules.promotionRanks = longformat.gameRules.promotionRanks || null
-        longformat.gameRules.promotionsAllowed = longformat.gameRules.promotionsAllowed || { white: [], black: [] }
+        longformat.gameRules.promotionsAllowed = longformat.gameRules.promotionsAllowed || { white: [], black: [], red: [], green: [], blue: [], yellow: [] }
+        longformat.gameRules.promotionColumns = longformat.gameRules.promotionColumns || null
 
         return true;
     }

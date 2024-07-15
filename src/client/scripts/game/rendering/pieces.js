@@ -17,6 +17,7 @@ const pieces = (function () {
     const red = ['kingsR', 'queensR', 'rooksR', 'bishopsR', 'pawnsR', 'knightsR', 'royalQueensR', 'royalCentaursR'];
     const green = ['kingsG', 'queensG', 'rooksG', 'bishopsG', 'pawnsG', 'knightsG', 'royalQueensG', 'royalCentaursG'];
     const blue = ['kingsU', 'queensU', 'rooksU', 'bishopsU', 'pawnsU', 'knightsU', 'royalQueensU', 'royalCentaursU'];
+    const yellow = ['kingsY', 'queensY', 'rooksY', 'bishopsY', 'pawnsY', 'knightsY', 'royalQueensY', 'royalCentaursY'];
 
     /** A list of the royal pieces, without the color appended. */
     const royals = ['kings', 'royalQueens', 'royalCentaurs'];
@@ -84,6 +85,7 @@ const pieces = (function () {
                 callback(red[i]);
                 callback(green[i]);
                 callback(blue[i]);
+                callback(yellow[i]);
             }
         }
         for (let i = 0; i < white.length; i++) {
@@ -113,6 +115,7 @@ const pieces = (function () {
                 await callback(red[i]);
                 await callback(green[i]);
                 await callback(blue[i]);
+                await callback(yellow[i]);
             }
         }
         for (let i = 0; i < white.length; i++) {
@@ -131,8 +134,8 @@ const pieces = (function () {
     // Iterates through every single piece TYPE in the game state of specified COLOR,
     // and performs specified function on the type
     function forEachPieceTypeOfColor(color, callback) {
-        if (['white', 'black', 'red', 'green', 'blue'].includes(color) === false) throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`)
-        if(color === 'blue' || color === 'green' || color === 'red'){
+        if (['white', 'black', 'red', 'yellow', 'green', 'blue'].includes(color) === false) throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`)
+        if(color === 'blue' || color === 'green' || color === 'red' || color === 'yellow'){
             for (let i = 0; i < green.length; i++) callback(pieces[color][i]);
             return;
         }
@@ -219,31 +222,31 @@ const pieces = (function () {
             // Miscellaneous
             yellow: getSpriteCoords(pieceWidth, 5,7), // COIN
 
-            // 4 player
-            kingsG: getSpriteCoords(pieceWidth, 3,2),
-            kingsU: getSpriteCoords(pieceWidth, 3,2),
-            kingsR: getSpriteCoords(pieceWidth, 3,2),
-            pawnsG: getSpriteCoords(pieceWidth, 1,1),
-            pawnsU: getSpriteCoords(pieceWidth, 1,1),
-            pawnsR: getSpriteCoords(pieceWidth, 1,1),
-            knightsG: getSpriteCoords(pieceWidth, 3,1),
-            knightsU: getSpriteCoords(pieceWidth, 3,1),
-            knightsR: getSpriteCoords(pieceWidth, 3,1),
-            bishopsG: getSpriteCoords(pieceWidth, 5,1),
-            bishopsU: getSpriteCoords(pieceWidth, 5,1),
-            bishopsR: getSpriteCoords(pieceWidth, 5,1),
-            rooksG: getSpriteCoords(pieceWidth, 7,1),
-            rooksU: getSpriteCoords(pieceWidth, 7,1),
-            rooksR: getSpriteCoords(pieceWidth, 7,1),
-            queensG: getSpriteCoords(pieceWidth, 1,2),
-            queensU: getSpriteCoords(pieceWidth, 1,2),
-            queensR: getSpriteCoords(pieceWidth, 1,2),
-            royalQueensG: getSpriteCoords(pieceWidth, 3,6),
-            royalQueensU: getSpriteCoords(pieceWidth, 3,6),
-            royalQueensR: getSpriteCoords(pieceWidth, 3,6),
-            royalCentaursG: getSpriteCoords(pieceWidth, 1,6),
-            royalCentaursU: getSpriteCoords(pieceWidth, 1,6),
-            royalCentaursR: getSpriteCoords(pieceWidth, 3,6),
+            // // 4 player
+            // kingsG: getSpriteCoords(pieceWidth, 3,2),
+            // kingsU: getSpriteCoords(pieceWidth, 3,2),
+            // kingsR: getSpriteCoords(pieceWidth, 3,2),
+            // pawnsG: getSpriteCoords(pieceWidth, 1,1),
+            // pawnsU: getSpriteCoords(pieceWidth, 1,1),
+            // pawnsR: getSpriteCoords(pieceWidth, 1,1),
+            // knightsG: getSpriteCoords(pieceWidth, 3,1),
+            // knightsU: getSpriteCoords(pieceWidth, 3,1),
+            // knightsR: getSpriteCoords(pieceWidth, 3,1),
+            // bishopsG: getSpriteCoords(pieceWidth, 5,1),
+            // bishopsU: getSpriteCoords(pieceWidth, 5,1),
+            // bishopsR: getSpriteCoords(pieceWidth, 5,1),
+            // rooksG: getSpriteCoords(pieceWidth, 7,1),
+            // rooksU: getSpriteCoords(pieceWidth, 7,1),
+            // rooksR: getSpriteCoords(pieceWidth, 7,1),
+            // queensG: getSpriteCoords(pieceWidth, 1,2),
+            // queensU: getSpriteCoords(pieceWidth, 1,2),
+            // queensR: getSpriteCoords(pieceWidth, 1,2),
+            // royalQueensG: getSpriteCoords(pieceWidth, 3,6),
+            // royalQueensU: getSpriteCoords(pieceWidth, 3,6),
+            // royalQueensR: getSpriteCoords(pieceWidth, 3,6),
+            // royalCentaursG: getSpriteCoords(pieceWidth, 1,6),
+            // royalCentaursU: getSpriteCoords(pieceWidth, 1,6),
+            // royalCentaursR: getSpriteCoords(pieceWidth, 3,6),
         }
 
         // pieceWidth is how many textures in 1 row.  yColumn starts from the top. 
@@ -259,7 +262,12 @@ const pieces = (function () {
     }
 
     function getSpritesheetDataTexLocation(type) {
-        return spritesheetData[type];
+        let WorB = math.getWorBFromType(type); // W/B/R/G/Y/U
+        const trimmedType = math.trimWorBFromType(type); // "pawnsW" => "pawns"
+        if(['W','R','G','U','Y'].includes(WorB)) WorB = 'W'
+        // else if(['B',...].includes(WorB)) WorB = 'B'
+        const newType = trimmedType + WorB;
+        return spritesheetData[newType];
     }
 
     return Object.freeze({
@@ -268,6 +276,7 @@ const pieces = (function () {
         red,
         green,
         blue,
+        yellow,
         neutral,
         royals,
         jumpingRoyals,
