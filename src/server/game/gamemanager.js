@@ -18,6 +18,7 @@ const formatconverter1 = require('./formatconverter1');
 const statlogger = require('./statlogger');
 const { executeSafely_async } = require('../utility/errorGuard');
 const { ensureJSONString } = require('../utility/JSONUtils');
+const config = require('../config/config');
 
 const gamemanager = (function() {
 
@@ -798,6 +799,9 @@ const gamemanager = (function() {
      * @param {Socket} ws - The socket
      */
     function onAFK(ws) {
+        if(!config.AUTO_AFK_RESIGN)
+            return;
+
         // console.log("Client alerted us they are AFK.")
 
         const game = getGameBySocket(ws);
@@ -814,7 +818,7 @@ const gamemanager = (function() {
         // Start a 20s timer to auto terminate the game by abandonment.
         game.autoAFKResignTimeoutID = setTimeout(onPlayerLostByAbandonment, 20000, game, color)
         game.autoAFKResignTime = Date.now() + 20000;
-
+        
         // Alert their opponent
         const opponentColor = math1.getOppositeColor(color);
         const value = { autoAFKResignTime: game.autoAFKResignTime }
