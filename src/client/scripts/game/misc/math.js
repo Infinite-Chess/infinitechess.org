@@ -167,8 +167,8 @@ const math = (function() {
      * c=b*y-intercept so is unique for each line
      * Not unique when step can be factored
      * eg [2,2]
-     * @param {number[]} step The gradient
-     * @param {number[]} coords 
+     * @param {number[]} step `[deltax, deltay]`
+     * @param {number[]} coords `[x,y]`
      * @returns {number} integer c
      */
     function getLineFromCoords(step, coords) {

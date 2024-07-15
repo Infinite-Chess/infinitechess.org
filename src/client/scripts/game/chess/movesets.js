@@ -26,15 +26,9 @@ const movesets = (function() {
             knights: function () {
                 return {
                     individual: [
-                        //[-2,1],[-1,2],[1,2],[2,1],
-                        //[-2,-1],[-1,-2],[1,-2],[2,-1]
-                    ],
-                    slideMoves: {
-                        '2,1': [-slideLimit, slideLimit],
-                        '2,-1': [-slideLimit, slideLimit],
-                        '1,2': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding
-                        '1,-2': [-slideLimit, slideLimit]
-                    }
+                        [-2,1],[-1,2],[1,2],[2,1],
+                        [-2,-1],[-1,-2],[1,-2],[2,-1]
+                    ]
                 }
             },
             hawks: function () {
@@ -162,6 +156,17 @@ const movesets = (function() {
                         [-3,2],[-2,3],[2,3],[3,2],
                         [-3,-2],[-2,-3],[2,-3],[3,-2]
                     ]
+                }
+            },
+            knightriders: function () {
+                return {
+                    individual: [],
+                    slideMoves: {
+                        '1,2' : [-slideLimit, slideLimit],
+                        '1,-2' : [-slideLimit,slideLimit],
+                        '2,1' : [-slideLimit,slideLimit],
+                        '2,-1' : [-slideLimit,slideLimit],
+                    }
                 }
             },
             centaurs: function () {
