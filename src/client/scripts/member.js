@@ -125,28 +125,31 @@ function showAccountInfo() {
     revealElement(element_accountInfo)
 }
 
-function removeAccount() {
-    if (confirm("Are you sure you want to delete your account? This CAN NOT be undone!")) {
+async function removeAccount(confirmation) {
+    if (!confirmation || confirm("Are you sure you want to delete your account? This CAN NOT be undone!")) {
         const config = { // Send with our access token
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
+						body: JSON.stringify({ password: prompt("Enter your password to confirm that this is you trying to delete your account: ") }),
             credentials: 'same-origin', // Allows cookie to be set from this request
         };
 
-        fetch(`/member/${member}/delete`, config).then(response => {
-            if (response.status !== 301) {
-                console.error(response);
-                window.location = '/404';
-            }
-            
-            // Accept redirect
-            if (response.redirected) {
-                window.location.href = response.url;
-            }
-        });
+        const response = await fetch(`/member/${member}/delete`, config)
+				if (response.status === 401) {
+					alert("Password Incorrect");
+					removeAccount(false);
+				} else if (response.status !== 301) {
+						console.error(response);
+						window.location = '/404';
+				}
+				
+				// Accept redirect
+				if (response.redirected) {
+						window.location.href = response.url;
+				}
     }
 }
 
