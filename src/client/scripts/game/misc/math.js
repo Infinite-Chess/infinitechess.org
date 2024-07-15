@@ -381,11 +381,11 @@ const math = (function() {
     function getAABBCornerOfLine(line, leftSide) {
         let corner = "";
         v: {
-            if (line[0]==0) break v; // Horizontal so parallel with top/bottom lines
+            if (line[1]==0) break v; // Horizontal so parallel with top/bottom lines
             corner += ((line[0]>0==line[1]>0)==leftSide) ? "bottom" : "top"
         }
         h: {
-            if (line[1]==0) break h; // Vertical so parallel with left/right lines
+            if (line[0]==0) break h; // Vertical so parallel with left/right lines
             corner += leftSide ? "left" : "right"
         }
         return corner;

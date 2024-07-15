@@ -49,9 +49,9 @@ const highlightline = (function(){
             const lineIsVertical = line[0]===0
             
             const corner1 = math.getAABBCornerOfLine(line, true);
-
+            
             let point1 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
-            if (!point1) continue;
+            if (!point1) {continue};
             const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.slides[strline], line, false);
             const leftLimitPointWorld = math.convertCoordToWorldSpace(leftLimitPointCoord);
             point1 = capPointAtSlideLimit(point1, leftLimitPointWorld, false, lineIsVertical);
@@ -172,17 +172,9 @@ const highlightline = (function(){
     }
 
     function getPointOfDiagSlideLimit (pieceCoords, moveset, line, positive) { // positive is true if it's the right/top
-        let yDiff;
-        let xDiff;
-        if (line[0]!==0) {
-            const targetX = positive ? moveset[1] : moveset[0];
-            xDiff = targetX - pieceCoords[0];
-            yDiff = (line[1]*xDiff)/line[0];
-        } else {
-            const targetY = positive ? moveset[1] : moveset[0];
-            yDiff = targetY - pieceCoords[1];
-            xDiff = 0;
-        }
+        const steps = positive ? moveset[1] : moveset[0]
+        let yDiff = line[1]*steps
+        let xDiff = line[0]*steps
         return [pieceCoords[0]+xDiff, pieceCoords[1]+yDiff]
     }
 
