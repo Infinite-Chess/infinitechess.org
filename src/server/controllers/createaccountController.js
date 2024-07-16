@@ -149,7 +149,6 @@ async function generateAccount({ username, email, password, autoVerify }) {
 // into the createaccount html instead.
 function getRegisterData(req, res) {
     res.json({
-        reservedUsernames,
         profainWords
     });
 }
@@ -178,15 +177,27 @@ const checkEmailAssociated = (req, res) => {
     else res.json([false]);
 }
 
-// Route
-// Returns true if username is available
-const checkUsernameAssociated = (req, res) => {
-    if (isUsernameAvailable(req.params.username.toLowerCase())) return res.json([true]);
-    else return res.json([false]);
-}
+/**
+ * Route handler to check if a username is available to use (not taken, reserved, or baaaad word).
+ * The request parameters MUST contain the username to test! (different from the body)
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Object} An object containing the properties `allowed` and `reason`.
+ */
+function checkUsernameAvailable(req, res) {
+    const usernameLowercase = req.params.username.toLowerCase();
 
-const isUsernameAvailable = function (string) { // string is in lowercase
-    return !doesMemberExist(string);
+    let allowed = true;
+    let reason = '';
+
+    if (doesMemberExist(usernameLowercase)) { allowed = false; reason = 'That username is taken'; }
+    if (checkProfanity(usernameLowercase)) { allowed = false; reason = 'That username contains a word that is not allowed'; }
+    if (reservedUsernames.includes(usernameLowercase)) { allowed = false; reason = 'That username is taken'; } // Code for reserved (but the users don't know that!)
+
+    return res.json({
+        allowed,
+        reason
+    });
 }
 
 const doUsernameFormatChecks = function (username, res) {
@@ -202,7 +213,7 @@ const doUsernameFormatChecks = function (username, res) {
     if (doesMemberExist(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username is taken'});
     
     // Then check if the name's reserved
-    if (reservedUsernames.indexOf(usernameLowercase) !== -1) return res.status(409).json({ 'conflict': 'That username is reserved'});
+    if (reservedUsernames.includes(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username is taken'}); // Code for reserved (but the users don't know that!)
     // Lastly check for profain words
     if (checkProfanity(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username contains a word that is not allowed'});
     return true; // Everything's good, no conflicts!
@@ -258,7 +269,7 @@ module.exports = {
     createNewMember,
     getRegisterData,
     checkEmailAssociated,
-    checkUsernameAssociated,
+    checkUsernameAvailable,
     generateID,
     generateAccount
 };
