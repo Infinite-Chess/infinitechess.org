@@ -1,34 +1,41 @@
 
-const usernameInputElement = document.getElementById('username');
-const passwordInputElement = document.getElementById('password');
-const submitButton = document.getElementById('submit');
+const element_usernameInput = document.getElementById('username');
+const element_passwordInput = document.getElementById('password');
+const element_submitButton = document.getElementById('submit');
+const element_forgot = document.getElementById('forgot');
 let loginErrorElement = undefined;
-const forgotElement = document.getElementById('forgot');
 
-usernameInputElement.addEventListener('input', (event) => { // When username field changes...
-    loginErrorElement?.remove();
-    loginErrorElement = undefined;
-    updateSubmitButton();
-    // Make forgot password message hidden
-    forgotElement.className = 'forgothidden';
+
+//Event Listeners
+element_usernameInput.addEventListener('input', handleInput); // When username field changes...
+element_passwordInput.addEventListener('input', handleInput); // When username field changes...
+
+//Checks for autofilled inputs on load
+window.addEventListener('load', (event) => {
+    if (element_usernameInput.value && element_passwordInput.value) {
+        updateSubmitButton();
+    }
 });
 
-passwordInputElement.addEventListener('input', (event) => { // When username field changes...
-    loginErrorElement?.remove();
-    loginErrorElement = undefined;
-    updateSubmitButton();
-    // Make forgot password message hidden
-    forgotElement.className = 'forgothidden';
-});
-
-submitButton.addEventListener('click', (event) => {
+element_submitButton.addEventListener('click', (event) => {
     event.preventDefault();
 
-    if (usernameInputElement.value && passwordInputElement.value && !loginErrorElement) sendLogin(usernameInputElement.value, passwordInputElement.value);
+    if (element_usernameInput.value && element_passwordInput.value && !loginErrorElement) sendLogin(element_usernameInput.value, element_passwordInput.value);
 });
 
+function handleInput(event) {
+    if (loginErrorElement) {
+        loginErrorElement.remove();
+        loginErrorElement = undefined;
+    }
+
+    updateSubmitButton();
+    // Make forgot password message hidden
+    element_forgot.className = 'forgothidden';
+}
+
 const sendLogin = (username, password) => {
-    submitButton.disabled = true;
+    element_submitButton.disabled = true;
 
     let OK = false;
     let config = {
@@ -45,7 +52,7 @@ const sendLogin = (username, password) => {
     .then((result) => {
         if (OK) { // Username & password accepted! Handle our access token
             // const token = getCookieValue('token')
-            
+
             // Check for a redirectTo query parameter, and if it exists, use it
             const redirectTo = getQueryParam('redirectTo');
             if (redirectTo) window.location.href = redirectTo;
@@ -57,11 +64,11 @@ const sendLogin = (username, password) => {
                 // Set variable because it now exists.
                 loginErrorElement = document.getElementById("loginerror");
                 // Make forgot password message visible
-                forgotElement.className = 'forgotvisible';
+                element_forgot.className = 'forgotvisible';
             }
             updateSubmitButton();
             loginErrorElement.textContent = result['message'];
-            submitButton.disabled = false;
+            element_submitButton.disabled = false;
         }
     });
 }
@@ -69,14 +76,14 @@ const sendLogin = (username, password) => {
 // Greys-out submit button if there's any errors.
 // The click-prevention is taken care of in the submit event listener.
 const updateSubmitButton = function() {
-    if (!usernameInputElement.value || !passwordInputElement.value || loginErrorElement) {
-        submitButton.className = 'unavailable';
+    if (!element_usernameInput.value || !element_passwordInput.value || loginErrorElement) {
+        element_submitButton.className = 'unavailable';
     } else { // No Errors
-        submitButton.className = 'ready';
+        element_submitButton.className = 'ready';
     }
 }
 
-createErrorElement = function (id, insertAfter) {
+function createErrorElement(id, insertAfter) {
     const errElement = document.createElement('div');
     errElement.className = 'error';
     errElement.id = id;
@@ -87,10 +94,10 @@ createErrorElement = function (id, insertAfter) {
 
 function getCookieValue(cookieName) {
     const cookieArray = document.cookie.split("; ");
-    
+
     for (let i = 0; i < cookieArray.length; i++) {
         const cookiePair = cookieArray[i].split("=");
-  
+
         if (cookiePair[0] === cookieName) {
             return cookiePair[1];
         }
