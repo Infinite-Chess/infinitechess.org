@@ -126,7 +126,7 @@ function showAccountInfo() {
 }
 
 async function removeAccount(confirmation) {
-    if (!confirmation || confirm("Are you sure you want to delete your account? This CAN NOT be undone!")) {
+    if (!confirmation || confirm("Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password.")) {
         const password = prompt("Enter your password to PERMANENTLY delete your account: ");
         const config = { // Send with our access token
             method: 'DELETE',
