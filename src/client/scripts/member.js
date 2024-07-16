@@ -110,6 +110,7 @@ function loadMemberData (loggedInAs) {
             revealElement(element_showAccountInfo)
             // Display remove button
             revealElement(element_deleteAccount)
+						element_deleteAccount.addEventListener("click", () => removeAccount(true));
             // revealElement(element_accountInfo)
             revealElement(element_change)
             element_email.textContent = result.email;
