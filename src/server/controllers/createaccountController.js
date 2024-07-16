@@ -72,6 +72,10 @@ const profainWords = [
     'poop'
 ];
 
+function getReservedUsernames() {
+    return reservedUsernames;
+}
+
 // Called when create account form submitted
 const createNewMember = async (req, res) => {
     if (!req.body) {
@@ -260,5 +264,6 @@ module.exports = {
     checkEmailAssociated,
     checkUsernameAssociated,
     generateID,
-    generateAccount
+    generateAccount,
+    getReservedUsernames
 };
