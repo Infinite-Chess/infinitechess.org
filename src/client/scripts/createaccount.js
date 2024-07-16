@@ -187,7 +187,7 @@ submitButton.addEventListener('click', (event) => {
         && passwordInputElement.value) sendForm(usernameInputElement.value, emailInputElement.value, passwordInputElement.value);
 })
 
-sendForm = function (username, email, password) {
+function sendForm(username, email, password) {
     let OK = false;
     let config = {
         method: 'POST',
@@ -211,7 +211,7 @@ sendForm = function (username, email, password) {
     });
 }
 
-createErrorElement = function (id, insertAfter) {
+function createErrorElement(id, insertAfter) {
     const errElement = document.createElement('div');
     errElement.className = 'error';
     errElement.id = id;
@@ -222,7 +222,7 @@ createErrorElement = function (id, insertAfter) {
 
 // Greys-out submit button if there's any errors.
 // The click-prevention is taken care of in the submit event listener.
-const updateSubmitButton = function() {
+function updateSubmitButton() {
     if (usernameHasError || emailHasError || passwordHasError
         || !usernameInputElement.value
         || !emailInputElement.value
@@ -233,13 +233,13 @@ const updateSubmitButton = function() {
     }
 }
 
-onlyLettersAndNumbers = function(string) {
+function onlyLettersAndNumbers(string) {
     if (!string) return true;
     return /^[a-zA-Z0-9]+$/.test(string);
 }
 
 // Returns true if bad word is found
-checkProfanity = function(string) {
+function checkProfanity(string) {
     for (let i = 0; i < data.profainWords.length; i++) {
         profanity = data.profainWords[i];
         if (string.toLowerCase().includes(profanity)) return true;
@@ -247,14 +247,14 @@ checkProfanity = function(string) {
     return false;
 }
 
-validEmail = function(string) {
+function validEmail(string) {
     // Credit for the regex: https://stackoverflow.com/a/201378
     const regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
     if (regex.test(string) === true) return true;
     return false;
 }
 
-validPassword = function(string) {
+function validPassword(string) {
     const regex = /^[a-zA-Z0-9!@#$%^&*\?]+$/;
 
     if (regex.test(string) === true) return true;
