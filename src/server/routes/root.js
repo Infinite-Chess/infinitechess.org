@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router(); // Here we define router instead of an app
 const path = require("path");
 const fs = require("fs");
+const i18next = require("i18next");
 
 const { handleLogin } = require("../controllers/authController");
 const { handleRefreshToken } = require("../controllers/refreshTokenController");
@@ -54,9 +55,23 @@ router.get("/refresh", handleRefreshToken);
 router.get("/logout", handleLogout);
 
 router.get("/termsofservice(.html)?", (req, res) => {
+  // Disabled translations of legal documents
+  res.render(
+    path.join(htmlDirectory, "termsofservice.ejs"),
+    {
+      t: (function (key, options = {}) {
+        options.lng = "en-US"; // Make sure language is correct
+        return i18next.t(key, options);
+      }),
+      viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
+      languages: [],
+    }
+  );
+  /*
   res.sendFile(
     path.join(htmlDirectory, req.i18n.resolvedLanguage, "termsofservice.html"),
-  );
+    );
+  */
 });
 
 router.get("/verify/:member/:id", verifyAccount);
@@ -64,24 +79,34 @@ router.get("/verify/:member/:id", verifyAccount);
 const errorDirectory = path.join(htmlDirectory, "errors");
 
 router.get("/400(.html)?", (req, res) => {
-  res.sendFile(path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "400.html"));
+  res.sendFile(
+    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "400.html"),
+  );
 });
 router.get("/401(.html)?", (req, res) => {
-  res.sendFile(path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "401.html"));
+  res.sendFile(
+    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "401.html"),
+  );
 });
 router.get("/404(.html)?", (req, res) => {
-  res.sendFile(path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "404.html"));
+  res.sendFile(
+    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "404.html"),
+  );
 });
 router.get("/409(.html)?", (req, res) => {
-  res.sendFile(path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "409.html"));
+  res.sendFile(
+    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "409.html"),
+  );
 });
 router.get("/500(.html)?", (req, res) => {
-  res.sendFile(path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "500.html"));
+  res.sendFile(
+    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "500.html"),
+  );
 });
 
 router.post("/setlanguage", (req, res) => {
   res.cookie("i18next", req.i18n.resolvedLanguage);
-  res.send(''); // Doesn't work without this for some reason
+  res.send(""); // Doesn't work without this for some reason
 });
 
 module.exports = router;

@@ -20,7 +20,7 @@ const staticTranslatedTemplates = [
   "member",
   "news",
   "play",
-  "termsofservice",
+  /*"termsofservice",*/
   "errors/400",
   "errors/401",
   "errors/404",
@@ -51,6 +51,7 @@ const link_white_list = [
   "https://www.gnu.org/licenses/agpl-3.0.en.html",
   "https://www.lcg.ufrj.br/WebGL/hws.edu-examples/doc-bump/gl-matrix.js.html",
   "https://github.com/tsevasa/infinite-chess-notation",
+  "https://github.com/Infinite-Chess/infinitechess.org/blob/main/docs/COPYING.md"
 ];
 
 const xss_options = {

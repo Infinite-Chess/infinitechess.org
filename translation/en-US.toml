@@ -82,8 +82,6 @@ email = "Email:"
 delete_account = "Delete account"
 password_reset_message = ["To change your username, email or password, ", "contact us."]
 
-
-
 [create-account]
 title = "Create Account"
 username = "Username:"
@@ -91,6 +89,55 @@ email = "Email:"
 password = "Password:"
 create_button = "Create Account"
 argreement = ["I agree to the ", "Terms of Service"]
+
+[terms] # Translations are disabled for now
+title = "Terms of Service"
+consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site."
+guardian_consent = "If you are under 18, you must receive consent from a parent or legal guardian to use this site and to create an account."
+parents_header = "Parents"
+parents_paragraphs = [
+"There is an algorithm in place for prohibiting users setting their name to common cuss words. At this time there is no method of communication between members on the site.",
+"Currently, members cannot set their own profile picture. There is a plan to allow this feature. At that time we will do our best to prevent innapropriate profile pictures.",
+]
+fair_play_header = "Fair Play"
+fair_play_paragraph1 = ["You cannot create more than 1 account. If you would like to change the email address associated with your account, ", "contact us."]
+fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
+fair_play_rules = [
+"Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, etc. This can be done to intentionally break the game, or to give you an advantage.",
+"In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated games)",
+"Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
+]
+cleanliness_header = "Cleanliness"
+cleanliness_rules = [
+"In all your language on the site, you must remain clean, no vulgarity or cursing. You cannot bully, harass, or threaten anyone, or do anything that is illegal. You cannot spam other users or forums.",
+"You cannot not upload imagery to your profile that is innapropriate, suggestive, or gory. Doing so may result in a ban or termination of your account."
+]
+privacy_header = "Privacy"
+privacy_rules = [
+"Currently, the only personal information we collect is email. This is with intent to verify users' accounts, and provide a means of proving who they are when they request a password reset or account termination. We do not send any promotional emails or offers. We do not share any user's email address with anyone else.",
+"InfiniteChess.org may collect data about your usage on the site, including your ip address. This is intended to help prevent attacks from bots and other unwanted entities, and to keep accurate statistics in the database. This is NOT your home address.",
+"All games you play on this website become public information. If you wish to remain anonymous, do not share your username with friends or family. If this is your desire, it is your responsibility to make sure no one finds out your username is associated with your human identity.",
+"Your account online status, and the approximate last time you were active on the website, is also public information.",
+"While InfiniteChess.org will strive to keep everyone's account and personal information safe to the best of our ability, in the event of a hack or data leak, you may not press charges on us. If a data leak ever happens, users will be notified on the <a href='/news'>News</a> page.",
+"There is no content available on the site for purchase. Any other personal information is not collected.",
+"To have your private information deleted from our servers, you may delete your account through your profile page. The only thing with ties to your username that we will NOT delete, is your game history, because all games are public information.",
+]
+cookie_header = "Cookie Policy"
+cookie_paragraphs = [
+"This site uses cookies, which are small text files that are stored in your browser, and sent to the server when connections are made. The purpose of these cookies are to: Validate your login session, validate your browser belongs to the chess game it says it's in, and to store user game preferences so they can keep their preferences when they re-visit the site. The site does not use 3rd-party cookies, cookies are not shared with external parties.",
+"Cookies are required for this site and game to function correctly. If you do not want the site to store cookies, you must stop using the site. You can navigate to your browsers preferences to delete existing cookies. By continuing to use this site, you are consenting to the use of cookies."
+]
+conclusion_header = "Conclusion"
+conclusion_paragraphs = [
+"Any violations of these terms may result in a ban or termination of your account. InfiniteChess.org wants to be able to give everyone the opportunity to play and have fun! But, we reserve the right to, at any time, ban or terminate the accounts of any users, for reasons that need not to be disclosed. Charges may not be pressed against us.",
+"These terms of service may be modified at any point. It is YOUR responsibility to make sure you stay updated on the latest changes! When these terms of service receive an update, that information will be posted on the <a href='/news'>News</a> page. If, at the time of a terms-of-service update, you do not agree with the new terms, you must immediately stop using the website. You may delete your account from your profile page. If you delete your account, all your private information and account data will be deleted, EXCEPT we do not delete your game history associated with your username, that is public information.",
+"This site is open source. You may copy or distribute anything on this website as long as you follow the conditions outlined in <a href='https://github.com/Infinite-Chess/infinitechess.org/blob/main/docs/COPYING.md' target='_blank'>the license terms</a>! If this link is broken, it is your responsibility to find the terms.",
+"We cannot guarantee the site will be running 100% of the time. We also cannot guarantee that data will never be corrupted.",
+"You may not perform any illegal activity on the site.",
+"If you have any questions regarding these terms, or any other question about the site, <a href='mailto:infinitechess.org@gmail.com'>email us!</a>"
+]
+update = "(Last updated: 7/13/24. Added warning that all games played becomes public information, including your account approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
+thanks = "Thank you!"
 
 [login]
 title = "Log In"
