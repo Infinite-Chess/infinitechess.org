@@ -117,7 +117,7 @@ function sendCachedHTML(req, res, htmlFilePath) {
  * @returns {string | false} - The injected html, or *false* if it's not ready or doesn't exist.
  */
 function getCachedHTML(htmlFilePath) {
-	console.log(Object.keys(htmlCache))
+	// console.log(Object.keys(htmlCache))
     return htmlCache[htmlFilePath] || false;
 }
 
@@ -143,31 +143,6 @@ function getCachedHTML(htmlFilePath) {
 
     // Finally, perform the injection into play.html
     prepareAndCacheHTML(htmlFilePath, jsFilePath, {string: HTML_callGame_JS_string, injectafter: injectafter_string});
-}
-
-// Inject the reserved usernames, and profain words, into createaccount.js script, then SAVE it in /dist!
-// Does using synchronious read and write methods slow down startup???? Should asynchronious be used????
-{
-    // Retrieve the reserved usernames
-    const reservedUsernames = getReservedUsernames();
-    const reservedUsernamesJS = `const reservedUsernames = ${JSON.stringify(reservedUsernames)};`
-    const profainWords = getProfainWords();
-    const profainWordsJS = `const profainWords = ${JSON.stringify(profainWords)};`
-
-    // Read the HTML file and inject the script tag
-    const createAccountScriptFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'createaccount.js');
-    let createAccountScript;
-    try {
-        createAccountScript = fs.readFileSync(createAccountScriptFilePath, 'utf8')
-    } catch (e) {
-        console.log("Error reading createaccount.js script in HTMLScriptInjector: " + e.stack);
-        return;
-    }
-
-    const modifiedScript = `// Injected by HTMLScriptInjector\n${reservedUsernamesJS}\n${profainWordsJS}\n\n${createAccountScript}`;
-
-    // Write new script to /dist
-    fs.writeFileSync(createAccountScriptFilePath, modifiedScript);
 }
 
 module.exports = {

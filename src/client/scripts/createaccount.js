@@ -27,16 +27,9 @@ element_usernameInput.addEventListener('input', (event) => { // When username fi
 
     const lengthError = element_usernameInput.value.length < 3;
     const formatError = !onlyLettersAndNumbers(element_usernameInput.value);
-    // If data is still uninitiated (late fetch call), just assume there's no error.
-    const usernameReservedError = 
-        data ? !lengthError && reservedUsernames.includes(element_usernameInput.value.toLowerCase())
-        : false;
-    const profainError = 
-        data ? !lengthError && checkProfanity(element_usernameInput.value)
-        : false;
 
     // If ANY error, make sure errorElement is created
-    if (lengthError || formatError || usernameReservedError || profainError) {
+    if (lengthError || formatError) {
         if (!usernameError) { // Create empty errorElement
             usernameHasError = true;
             createErrorElement('usernameerror', "usernameinputline");
@@ -57,10 +50,6 @@ element_usernameInput.addEventListener('input', (event) => { // When username fi
         usernameError.textContent = 'Username must be atleast 3 characters long';
     } else if (formatError) {
         usernameError.textContent = 'Username must only contain letters A-Z and numbers 0-9';
-    } else if (usernameReservedError) {
-        usernameError.textContent = 'That username is reserved'
-    } else if (profainError) {
-        usernameError.textContent = 'That username contains a word that is not allowed'
     }
 
     updateSubmitButton();
@@ -70,10 +59,10 @@ element_usernameInput.addEventListener('focusout', (event) => { // Check usernam
 
     fetch(`/createaccount/username/${element_usernameInput.value}`)
     .then((response) => response.json())
-    .then((result) => {
+    .then((result) => { // { allowed, reason }
         // We've got the result back from the server,
         // Is this username available to use?
-        if (result[0] === true) return; // Not in use
+        if (result.allowed === true) return; // Not in use
 
         // ERROR! In use!
         usernameHasError = true;
@@ -83,7 +72,7 @@ element_usernameInput.addEventListener('focusout', (event) => { // Check usernam
         // Reset variable because it now exists.
         usernameError = document.getElementById("usernameerror");
 
-        usernameError.textContent = 'That username is taken';
+        usernameError.textContent = result.reason;
         updateSubmitButton();
     });
 })
