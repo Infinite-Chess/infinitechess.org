@@ -6,17 +6,17 @@ Infinite Chess is free software; you can redistribute and/or modify it under the
 
 Infinite Chess is distributed WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.en.html) for more details.
 
-See [LICENSE](./LICENSE) for a copy of the GNU Affero General Public License.
+See [LICENSE](../LICENSE) for a copy of the GNU Affero General Public License.
 
 ## Exceptions (free)
 
 Files | Author(s) | License
 --- | --- | ---
-resources/images/pieces/cburnett | [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett) | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
-resources/images/pieces/green_chess | [Green Chess](https://greenchess.net/index.php) | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
-resources/images/pieces/stockfish | [Stockfish](https://github.com/official-stockfish/Stockfish) | [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
-resources/images/pieces/pychess | [Pychess](https://github.com/pychess/pychess) | [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
-resources/sounds/lichess | [Lichess](https://github.com/lichess-org/lila) | [AGPL v3.0](https://www.gnu.org/licenses/#AGPL)
-resources/sounds/fesliyan_studios | [Fesliyan Studios](https://www.fesliyanstudios.com/) | No credit required, but cannot be reposted elsewhere for download
-resources/scripts/gl-matrix.js | Brandon Jones and Colin MacKenzie IV | [MIT](https://opensource.org/license/mit)
-protected-owner/scripts/game/formatconverter.js | [Andreas Tsevasa](https://github.com/tsevasa) and [Naviary](https://github.com/Naviary2) | [Unlicense](https://en.wikipedia.org/wiki/Unlicense)
+dev-utils/images/pieces/cburnett | [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett) | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
+dev-utils/images/pieces/green_chess | [Green Chess](https://greenchess.net/index.php) | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
+dev-utils/images/pieces/stockfish | [Stockfish](https://github.com/official-stockfish/Stockfish) | [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+dev-utils/images/pieces/pychess | [Pychess](https://github.com/pychess/pychess) | [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+dev-utils/sounds/lichess | [Lichess](https://github.com/lichess-org/lila) | [AGPL v3.0](https://www.gnu.org/licenses/#AGPL)
+dev-utils/sounds/fesliyan_studios | [Fesliyan Studios](https://www.fesliyanstudios.com/) | No credit required, but cannot be reposted elsewhere for download
+dev-utils/scripts/gl-matrix.js | Brandon Jones and Colin MacKenzie IV | [MIT](https://opensource.org/license/mit)
+src/client/scripts/game/chess/formatconverter.js | [Andreas Tsevas](https://github.com/tsevasa) and [Naviary](https://github.com/Naviary2) | [Unlicense](https://en.wikipedia.org/wiki/Unlicense)
