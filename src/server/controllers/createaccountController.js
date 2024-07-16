@@ -157,7 +157,6 @@ async function generateAccount({ username, email, password, autoVerify }) {
 // into the createaccount html instead.
 function getRegisterData(req, res) {
     res.json({
-        reservedUsernames,
         profainWords
     });
 }

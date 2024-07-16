@@ -1,10 +1,13 @@
 
+// THIS LINE WILL BE INJECTED by HTMLScriptInjector!
+// const reservedUsernames = [...];
+
 const element_usernameInput = document.getElementById('username');
 const element_emailInput = document.getElementById('email');
 const element_passwordInput = document.getElementById('password');
 const element_submitButton = document.getElementById('submit');
 
-// This will be an object with 3 arrays: memberList, reservedUsernames, profainWords
+// This will be an object with 1 array: profainWords
 let data;
 fetch('/createaccount/data')
     .then((response) => response.json())
@@ -26,7 +29,7 @@ element_usernameInput.addEventListener('input', (event) => { // When username fi
     const formatError = !onlyLettersAndNumbers(element_usernameInput.value);
     // If data is still uninitiated (late fetch call), just assume there's no error.
     const usernameReservedError = 
-        data ? !lengthError && data.reservedUsernames.indexOf(element_usernameInput.value.toLowerCase()) !== -1
+        data ? !lengthError && reservedUsernames.includes(element_usernameInput.value.toLowerCase())
         : false;
     const profainError = 
         data ? !lengthError && checkProfanity(element_usernameInput.value)

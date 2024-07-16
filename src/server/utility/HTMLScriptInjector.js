@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
+const { getReservedUsernames } = require('../controllers/createaccountController');
 
 /**
  * A cache object that has file paths for the keys, and for the values-
@@ -26,14 +27,13 @@ let htmlCache = {};
  * a specified tag, then cache's that content into {@link htmlCache}
  * @param {string} htmlFilePath - The path of the html document in the project
  * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
- * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
  * @param {Object} [stringInjection] - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
  *                                     The string will be insterted after the specified tags into the html doc
  */
-function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, stringInjection = {}) {
-    injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection)
+function prepareAndCacheHTML(htmlFilePath, jsFilePath, stringInjection = {}) {
+    injectScriptIntoHeadFromPaths(htmlFilePath, jsFilePath, stringInjection)
         .then(modifiedHTML => {
-            htmlCache[htmlFilePath] = modifiedHTML;
+            addHTMLToCache(htmlFilePath, modifiedHTML)
         })
         .catch(error => console.error("Failed to inject script: ", error));
 }
@@ -41,14 +41,14 @@ function prepareAndCacheHTML(htmlFilePath, jsFilePath, injectAfterTag, stringInj
 /**
  * Injects a JavaScript file's content into an HTML file
  * after a specified tag, returning the new content.
+ * RECEIVES file paths, not raw data.
  * @param {string} htmlFilePath - The path of the html document in the project
  * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
- * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
  * @param {Object} [stringInjection] - Optional argument: An object of the form {string: "htmlstring", injectafter: "tags"}.
  *                                     The string will be insterted after the specified tags into the html doc
  * @returns {Promise<string>} - A promise that resolves with the modified HTML content, or rejects with an error message.
  */
-function injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection = {}) {
+function injectScriptIntoHeadFromPaths(htmlFilePath, jsFilePath, stringInjection = {}) {
     return new Promise((resolve, reject) => {
         // Read the JavaScript file
         fs.readFile(jsFilePath, 'utf8', (jsErr, jsData) => {
@@ -56,17 +56,15 @@ function injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection 
                 reject("Error reading the JavaScript file: " + jsErr);
                 return;
             }
-            // Create a script tag with the JavaScript content
-            const scriptTag = `<script>${jsData}</script>`;
-
             // Read the HTML file and inject the script tag
             fs.readFile(htmlFilePath, 'utf8', (htmlErr, htmlData) => {
                 if (htmlErr) {
                     reject("Error reading the HTML file: " + htmlErr);
                     return;
                 }
-                // Inject the script tag before the specified closing tag
-                let modifiedHTML = htmlData.replace(injectAfterTag, `${injectAfterTag}${scriptTag}`);
+
+                let modifiedHTML = insertScriptInHead(htmlData, jsData)
+
                 // Inject the string of the optional argument "stringInjection" into the HTML file, if applicable
                 if (Object.keys(stringInjection).length != 0){
                     modifiedHTML = modifiedHTML.replace(stringInjection.injectafter, `${stringInjection.injectafter}${stringInjection.string}`);
@@ -75,6 +73,28 @@ function injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection 
             });
         });
     });
+}
+
+/**
+ * Inserts the given javascript code into a script tag in the html header.
+ * Receives RAW, pre-read data.
+ * @param {string} html - The preloaded html file
+ * @param {string} js - The javascript code
+ */
+function insertScriptInHead(html, js) {
+    // Create a script tag with the JavaScript content
+    const scriptTag = `<script>${js}</script>`;
+    // Inject the script tag before the specified closing tag
+    return html.replace('<head>', `<head>${scriptTag}`);
+}
+
+/**
+ * Adds the modified html to the cache.
+ * @param {string} path - The path of the html (typically inside /dist)
+ * @param {string} contents - The modified contents of the html.
+ */
+function addHTMLToCache(path, contents) {
+    htmlCache[path] = contents;
 }
 
 /**
@@ -104,7 +124,7 @@ function getCachedHTML(htmlFilePath) {
 // Inject the scripts we want...
 { 
     // Prepare the injection of our (potentially minified) htmlscript.js script into play.html
-    const htmlFilePath = path.join(__dirname, '..', '..', "..", 'dist', 'views', 'play.html');
+    const htmlFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'views', 'play.html');
     const jsFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'game', 'htmlscript.js');
 
     //  Prepare the injection of references to all other game scripts into play.html
@@ -122,7 +142,30 @@ function getCachedHTML(htmlFilePath) {
     }
 
     // Finally, perform the injection into play.html
-    prepareAndCacheHTML(htmlFilePath, jsFilePath, '<head>', {string: HTML_callGame_JS_string, injectafter: injectafter_string});
+    prepareAndCacheHTML(htmlFilePath, jsFilePath, {string: HTML_callGame_JS_string, injectafter: injectafter_string});
+}
+
+// Inject the reserved usernames into createaccount.html, then SAVE it in /dist!
+// Does using synchronious read and write methods slow down startup?
+{
+    // Retrieve the reserved usernames
+    const reservedUsernames = getReservedUsernames();
+    const reservedUsernamesJS = `const reservedUsernames = ${JSON.stringify(reservedUsernames)};`
+
+    // Read the HTML file and inject the script tag
+    const createAccountScriptFilePath = path.join(__dirname, '..', '..', '..', 'dist', 'scripts', 'createaccount.js');
+    let createAccountScript;
+    try {
+        createAccountScript = fs.readFileSync(createAccountScriptFilePath, 'utf8')
+    } catch (e) {
+        console.log("Error reading createaccount.js script in HTMLScriptInjector: " + e.stack);
+        return;
+    }
+
+    const modifiedScript = `// Injected by HTMLScriptInjector\n${reservedUsernamesJS}\n\n${createAccountScript}`;
+
+    // Write new script to /dist
+    fs.writeFileSync(createAccountScriptFilePath, modifiedScript);
 }
 
 module.exports = {
