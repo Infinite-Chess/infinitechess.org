@@ -80,6 +80,14 @@ function getReservedUsernames() {
     return reservedUsernames;
 }
 
+/**
+ * Returns the server list of profain words, that aren't allowed to be in usernames.
+ * @returns {string[]} The list of profain words
+ */
+function getProfainWords() {
+    return profainWords;
+}
+
 // Called when create account form submitted
 const createNewMember = async (req, res) => {
     if (!req.body) {
@@ -268,5 +276,6 @@ module.exports = {
     checkUsernameAssociated,
     generateID,
     generateAccount,
-    getReservedUsernames
+    getReservedUsernames,
+    getProfainWords
 };

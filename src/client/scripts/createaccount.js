@@ -1,6 +1,6 @@
-
-// THIS LINE WILL BE INJECTED by HTMLScriptInjector!
+// THESE LINES WILL BE INJECTED by the HTMLScriptInjector!
 // const reservedUsernames = [...];
+// const profainWords = [...];
 
 const element_usernameInput = document.getElementById('username');
 const element_emailInput = document.getElementById('email');
@@ -249,8 +249,8 @@ function onlyLettersAndNumbers(string) {
 
 // Returns true if bad word is found
 function checkProfanity(string) {
-    for (let i = 0; i < data.profainWords.length; i++) {
-        profanity = data.profainWords[i];
+    for (let i = 0; i < profainWords.length; i++) {
+        profanity = profainWords[i];
         if (string.toLowerCase().includes(profanity)) return true;
     }
     return false;
