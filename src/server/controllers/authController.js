@@ -9,11 +9,36 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const { getUsernameCaseSensitive, getHashedPassword, addRefreshToken, incrementLoginCount, updateLastSeen } = require('./members');
+const { getClientIP } = require('../middleware/IP');
+const { logEvents } = require('../middleware/logEvents');
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
+
+// Rate limiting stuff...
+
+/** Maximum consecutive login attempts allowed for each username-IP
+ * combination before they will be locked out temporarily. */
+const maxLoginAttempts = 3;
+/** The amount of time the cooldown is incremented by, after failing by {@link maxLoginAttempts} *again*... */
+const loginCooldownIncrementorSecs = 5;
+/**
+ * A hash that stores login attempts for each ip and user.
+ * `{
+ *  "username_IP": {
+*      attempts: 0,
+*      cooldownTimeSecs: 0,
+*      lastAttemptTime: 0,
+       deleteTimeoutID,
+ *  }
+ * }`
+ */
+const loginAttemptData = {};
+/** The time, in milliseconds, to delete a browser agent from the
+ * login attempt data, if they have stopped trying to login. */
+const timeToDeleteBrowserAgentAfterNoAttemptsMillis = 1000 * 60 * 5; // 5 minutes
 
 /**
  * Called when the login page submits login form data.
@@ -25,38 +50,44 @@ const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
  */
 async function handleLogin(req, res) {
     if (!verifyBodyHasLoginFormData(req)) return; // If false, it will have already sent a response.
-
+    
     let { username, password } = req.body;
     const usernameLowercase = username.toLowerCase();
     const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
     const hashedPassword = getHashedPassword(usernameLowercase);
 
     if (!usernameCaseSensitive || !hashedPassword) return res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
+    
+    const browserAgent = getBrowserAgent(req, usernameLowercase);
+    if (!rateLimitLogin(res, browserAgent)) return; // They are being rate limited from enterring incorrectly too many times
 
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
-        console.log(`Incorrect password for user ${usernameCaseSensitive}!`)
+        logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
         res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
+        onIncorrectPassword(browserAgent, usernameCaseSensitive);
         return;
     }
- 
+
+    onCorrectPassword(browserAgent);
+
     // The payload can be an object with their username and their roles.
     const payload = { "username": usernameLowercase };
     const { accessToken, refreshToken } = signTokens(payload);
-
+    
     // Save the refresh token with current user so later when they log out we can invalidate it.
     addRefreshToken(usernameLowercase, refreshToken);
-
+    
     createRefreshTokenCookie(res, refreshToken)
-
+    
     // Update our member's statistics in their data file!
     updateMembersInfo(usernameLowercase);
-
+    
     // Finally, send the access token! On front-end, don't store it anywhere except memory.
     res.json({ accessToken });
 
-    console.log("Logged in member " + usernameCaseSensitive);
+    logEvents(`Logged in member ${usernameCaseSensitive}`, "loginAttempts.txt", { print: true });
 }
 
 /**
@@ -132,6 +163,133 @@ function createRefreshTokenCookie(res, refreshToken) {
 function updateMembersInfo(usernameLowercase) {
     incrementLoginCount(usernameLowercase);
     updateLastSeen(usernameLowercase);
+}
+
+// Rate limiting stuff...
+
+/**
+ * Prevents a user-IP combination from entering login attempts too fast.
+ * @returns {boolean} true if the attempt is allowed
+ */
+function rateLimitLogin(res, browserAgent) {
+    const now = new Date();
+    loginAttemptData[browserAgent] = loginAttemptData[browserAgent] || {
+        attempts: 0,
+        cooldownTimeSecs: 0,
+        lastAttemptTime: now
+    }
+    
+    const timeSinceLastAttemptsSecs = (now - loginAttemptData[browserAgent].lastAttemptTime) / 1000;
+
+    if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) {
+        incrementBrowserAgentLoginAttemptCounter(browserAgent, now);
+        return true; // Attempt allowed
+    }
+
+    // Too many attempts!
+
+    if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) { // Still on cooldown
+        res.status(401).json({ 'message': `Failed to login, try again in ${Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs)} seconds.`});
+        // Reset the timer to auto-delete them from the login attempt data
+        // if they haven't tried in a while.
+        // This is so it doesn't get cluttered over time
+        // as more and more people try to login and fail.
+        resetTimerToDeleteBrowserAgent(browserAgent);
+        return false; // Attempt not allowed
+    }
+
+    // No longer on cooldown
+    resetBrowserAgentLoginAttemptCounter(browserAgent);
+    incrementBrowserAgentLoginAttemptCounter(browserAgent, now);
+    return true; // Attempt allowed
+}
+
+/**
+ * Generates a unique browser agent string using the request object and username.
+ * @param {Object} req - The request object.
+ * @param {string} usernameLowercase - The lowercase username.
+ * @returns {string} - The browser agent string, `${usernameLowercase}${clientIP}`
+ */
+function getBrowserAgent(req, usernameLowercase) {
+    const clientIP = getClientIP(req);
+    return `${usernameLowercase}${clientIP}`;
+}
+
+/**
+ * Increments the login attempt counter in the login attempt data for a browser agent.
+ * @param {string} browserAgent - The browser agent string.
+ * @param {Date} now - The current date and time.
+ */
+function incrementBrowserAgentLoginAttemptCounter(browserAgent, now) {
+    loginAttemptData[browserAgent].attempts += 1;
+    loginAttemptData[browserAgent].lastAttemptTime = now;
+    // Reset the timer to auto-delete them from the login attempt data
+    // if they haven't tried in a while.
+    // This is so it doesn't get cluttered over time
+    // as more and more people try to login and fail.
+    resetTimerToDeleteBrowserAgent(browserAgent);
+}
+
+/**
+ * Resets the login attempt counter in the login attempt data for a browser agent.
+ * @param {string} browserAgent - The browser agent string.
+ */
+function resetBrowserAgentLoginAttemptCounter(browserAgent) {
+    loginAttemptData[browserAgent].attempts = 0;
+}
+
+/**
+ * Resets the timer to delete a browser agent from the login attempt data.
+ * @param {string} browserAgent - The browser agent string.
+ */
+function resetTimerToDeleteBrowserAgent(browserAgent) {
+    cancelTimerToDeleteBrowserAgent(browserAgent);
+    startTimerToDeleteBrowserAgent(browserAgent);
+}
+
+/**
+ * Cancels the timer to delete a browser agent from the login attempt data.
+ * @param {string} browserAgent - The browser agent string.
+ */
+function cancelTimerToDeleteBrowserAgent(browserAgent) {
+    clearTimeout(loginAttemptData[browserAgent].deleteTimeoutID);
+    delete loginAttemptData[browserAgent].deleteTimeoutID;
+}
+
+/**
+ * Starts the timer that will delete a browser agent from the login attempt data
+ * after they have given up on trying passwords.
+ * @param {string} browserAgent - The browser agent string.
+ */
+function startTimerToDeleteBrowserAgent(browserAgent) {
+    loginAttemptData[browserAgent].deleteTimeoutID = setTimeout(() => {
+        delete loginAttemptData[browserAgent];
+        console.log(`Allowing browser agent "${browserAgent}" to login without cooldown again!`)
+    }, timeToDeleteBrowserAgentAfterNoAttemptsMillis)
+}
+
+/**
+ * Handles the rate limiting scenario when an incorrect password is entered.
+ * Temporarily locks them out if they've entered too many incorrect passwords.
+ * @param {string} browserAgent - The browser agent string.
+ * @param {string} usernameCaseSensitive - The case-sensitive username.
+ */
+function onIncorrectPassword(browserAgent, usernameCaseSensitive) {
+    if(loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
+    // Lock them!
+    loginAttemptData[browserAgent].cooldownTimeSecs += loginCooldownIncrementorSecs;
+    logEvents(`${usernameCaseSensitive} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt", { print: true });
+}
+
+/**
+ * Handles the rate limiting scenario when a correct password is entered.
+ * Deletes their browser agent from the login attempt data.
+ * @param {string} browserAgent - The browser agent string.
+ */
+function onCorrectPassword(browserAgent) {
+    cancelTimerToDeleteBrowserAgent(browserAgent)
+    // Delete now
+    delete loginAttemptData[browserAgent];
 }
 
 module.exports = { handleLogin };

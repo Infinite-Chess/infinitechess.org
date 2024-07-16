@@ -81,7 +81,7 @@ const specialdetect = (function() {
         // The square the king lands on will be tested later, within  legalmoves.calculate()
 
         const oppositeColor = math.getOppositeColor(color)
-        if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) {
+        if (wincondition.doesColorHaveWinCondition(gamefile, oppositeColor, 'checkmate')) {
             if (gamefile.inCheck) return; // Not legal if in check
 
             // Simulate the space in-between
@@ -167,6 +167,24 @@ const specialdetect = (function() {
         addPossibleEnPassant(gamefile, individualMoves, coords, color)
     }
 
+    // Use as inspiration for generating the rose piece's legal moves.
+    // function roses(startCol, startRow) {
+    //     let allAvailableSquares = []
+    //     let movements = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]
+        
+    //     for(let i = 0; i < movements.length; i++) {
+    //         let last = [getSquareFromCords(startCol, startRow)]
+    //         for(let j = i; j < movements.length + i; j++) {
+    //             last = universal(...getCordsOfSquare(last[0]), ...movements[j % movements.length], 1)
+    //             allAvailableSquares.push(last)
+    //             if(last.length == 0 || getPieceFromSquare(last[last.length-1]) != undefined) break
+    //         }
+    //     }
+    
+    //     allAvailableSquares = [].concat(...allAvailableSquares)
+    //     return allAvailableSquares
+    // }
+
     /**
      * Appends legal enpassant capture to the selected pawn's provided individual moves.
      * @param {gamefile} gamefile - The gamefile
@@ -197,7 +215,7 @@ const specialdetect = (function() {
 
     /**
      * Tests if the piece at the given coordinates has it's special move rights.
-     * @param {gamefile} - The gamefile
+     * @param {gamefile} gamefile - The gamefile
      * @param {number[]} coords - The coordinates of the piece
      * @returns {boolean} *true* if it has it's special move rights.
      */

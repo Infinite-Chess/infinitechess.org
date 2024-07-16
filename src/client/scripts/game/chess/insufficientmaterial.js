@@ -26,6 +26,8 @@ const insufficientmaterial = (function(){
 		[['bishops', 3]],
 		[['knights', 3]],
 		[['hawks', 2]],
+		[['rooks', 1], ['knights', 1]],
+		[['rooks', 1], ['bishops', 1]],
 		[['archbishops', 1],['bishops',1]],
 		[['archbishops', 1],['knights',1]],
 		[['bishops', 2], ['knights', 1]],

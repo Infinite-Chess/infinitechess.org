@@ -26,7 +26,7 @@ const variantomega1 = (function(){
     }
 
     /**
-     * Inits the gamefile for Andreas Tsevasa's "Omega^2". Sets the startSnapshot and gameRules properties.
+     * Inits the gamefile for Andreas Tsevas's "Omega^2". Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmegaSquared(gamefile, { Variant, Date }) {

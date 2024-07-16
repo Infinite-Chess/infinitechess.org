@@ -12,10 +12,10 @@ See [LICENSE](../LICENSE) for a copy of the GNU Affero General Public License.
 
 Files | Author(s) | License
 --- | --- | ---
-dev-utils/images/pieces/cburnett | [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett) | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
-dev-utils/images/pieces/green_chess | [Green Chess](https://greenchess.net/index.php) | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
-dev-utils/images/pieces/stockfish | [Stockfish](https://github.com/official-stockfish/Stockfish) | [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
-dev-utils/images/pieces/pychess | [Pychess](https://github.com/pychess/pychess) | [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+dev-utils/pieces/themes/cburnett | [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett) | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
+dev-utils/pieces/themes/green_chess | [Green Chess](https://greenchess.net/index.php) | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
+dev-utils/pieces/themes/stockfish | [Stockfish](https://github.com/official-stockfish/Stockfish) | [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+dev-utils/pieces/themes/pychess | [Pychess](https://github.com/pychess/pychess) | [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 dev-utils/sounds/lichess | [Lichess](https://github.com/lichess-org/lila) | [AGPL v3.0](https://www.gnu.org/licenses/#AGPL)
 dev-utils/sounds/fesliyan_studios | [Fesliyan Studios](https://www.fesliyanstudios.com/) | No credit required, but cannot be reposted elsewhere for download
 dev-utils/scripts/gl-matrix.js | Brandon Jones and Colin MacKenzie IV | [MIT](https://opensource.org/license/mit)
