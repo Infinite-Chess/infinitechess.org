@@ -145,7 +145,7 @@ function getCachedHTML(htmlFilePath) {
     prepareAndCacheHTML(htmlFilePath, jsFilePath, {string: HTML_callGame_JS_string, injectafter: injectafter_string});
 }
 
-// Inject the reserved usernames, and profain words, into createaccount.html, then SAVE it in /dist!
+// Inject the reserved usernames, and profain words, into createaccount.js script, then SAVE it in /dist!
 // Does using synchronious read and write methods slow down startup???? Should asynchronious be used????
 {
     // Retrieve the reserved usernames
