@@ -49,28 +49,12 @@ const timeToDeleteBrowserAgentAfterNoAttemptsMillis = 1000 * 60 * 5; // 5 minute
  * @param {Object} res - The response object
  */
 async function handleLogin(req, res) {
-    if (!verifyBodyHasLoginFormData(req)) return; // If false, it will have already sent a response.
-    
-    let { username, password } = req.body;
+    if (!(await testPasswordForRequest(req, res))) return; // Incorrect password, it will have already sent a response.
+    // Correct password...
+
+    let username = req.body.username; // We already know this property is present on the request
     const usernameLowercase = username.toLowerCase();
     const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
-    const hashedPassword = getHashedPassword(usernameLowercase);
-
-    if (!usernameCaseSensitive || !hashedPassword) return res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
-    
-    const browserAgent = getBrowserAgent(req, usernameLowercase);
-    if (!rateLimitLogin(res, browserAgent)) return; // They are being rate limited from enterring incorrectly too many times
-
-    // Test the password
-    const match = await bcrypt.compare(password, hashedPassword);
-    if (!match) {
-        logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
-        res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
-        onIncorrectPassword(browserAgent, usernameCaseSensitive);
-        return;
-    }
-
-    onCorrectPassword(browserAgent);
 
     // The payload can be an object with their username and their roles.
     const payload = { "username": usernameLowercase };
@@ -88,6 +72,47 @@ async function handleLogin(req, res) {
     res.json({ accessToken });
 
     logEvents(`Logged in member ${usernameCaseSensitive}`, "loginAttempts.txt", { print: true });
+}
+
+/**
+ * Called when any fetch request submits login form data.
+ * The req body needs to have the `username` and `password` properties.
+ * If the password is correct, this returns true.
+ * Otherwise this sends a response to the client saying it was incorrect.
+ * This is also rate limited.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @returns {boolean} true if the password was correct
+ */
+async function testPasswordForRequest(req, res) {
+    if (!verifyBodyHasLoginFormData(req)) return false; // If false, it will have already sent a response.
+    
+    let { username, password } = req.body;
+    const usernameLowercase = username.toLowerCase();
+    const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
+    const hashedPassword = getHashedPassword(usernameLowercase);
+
+    if (!usernameCaseSensitive || !hashedPassword) {
+        res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
+        return false;
+    }
+    
+    const browserAgent = getBrowserAgent(req, usernameLowercase);
+    if (!rateLimitLogin(res, browserAgent)) {
+        return false; // They are being rate limited from enterring incorrectly too many times
+    }
+
+    // Test the password
+    const match = await bcrypt.compare(password, hashedPassword);
+    if (!match) {
+        logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
+        res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
+        onIncorrectPassword(browserAgent, usernameCaseSensitive);
+        return false;
+    }
+
+    onCorrectPassword(browserAgent);
+    return true;
 }
 
 /**
@@ -292,4 +317,7 @@ function onCorrectPassword(browserAgent) {
     delete loginAttemptData[browserAgent];
 }
 
-module.exports = { handleLogin };
+module.exports = {
+    handleLogin,
+    testPasswordForRequest
+};
