@@ -110,11 +110,11 @@ const isEmailAvailable = function (email) {
 }
 
 function getJoinDate(username) {
-    return new Date(members[username].joined);
+    return new Date(members[username]?.joined);
 }
 
 function getLastSeen(username) {
-    return new Date(members[username].seen);
+    return new Date(members[username]?.seen);
 }
 
 function getElo(username) {
