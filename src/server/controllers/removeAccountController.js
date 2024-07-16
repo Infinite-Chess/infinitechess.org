@@ -2,7 +2,8 @@
  * This module handles account deletion.
  */
 
-const { removeMember, getAllUsernames, getVerified, getJoinDate, getHashedPassword, getUsernameCaseSensitive } = require('../controllers/members');
+const { removeMember, getAllUsernames, getVerified, getJoinDate, getUsernameCaseSensitive } = require('../controllers/members');
+const { testPasswordForRequest } = require('../controllers/authController');
 const { removeAllRoles } = require('../controllers/roles');
 const { logEvents } = require('../middleware/logEvents');
 const bcrypt = require('bcrypt');
@@ -23,16 +24,13 @@ const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1;
  */
 async function removeAccount(req, res) {
     const usernameLowercase = req.params.member.toLowerCase();
-    const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
 
     // Check to make sure they're logged in
     if (req.user !== usernameLowercase) return res.status(403).json({'message' : 'Forbidden. This is not your account.'});
 
-		// Check that the password is correct
-		const hashedPassword = getHashedPassword(usernameLowercase);
-		const match = await bcrypt.compare(req.body.password, hashedPassword);
-		if (!match) {
-        logEvents(`Incorrect password for user ${usernameCaseSensitive} attempting to remove account!`, "loginAttempts.txt", { print: true });
+	
+		if (!(await testPasswordForRequest(req, res, false, false))) {
+        logEvents(`Incorrect password for user ${getUsernameCaseSensitive(usernameLowercase)} attempting to remove account!`, "loginAttempts.txt", { print: true });
         return res.status(401).json({'message' : 'Incorrect password.'});
 		}
 
