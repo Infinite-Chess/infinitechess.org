@@ -127,13 +127,19 @@ function showAccountInfo() {
 
 async function removeAccount(confirmation) {
     if (!confirmation || confirm("Are you sure you want to delete your account? This CAN NOT be undone!")) {
+				const password = prompt("Enter your password to confirm that this is you trying to delete your account: ");
+				if (password.length < 6) {
+					alert("Password Incorrect");
+					removeAccount(false);
+					return;
+				}
         const config = { // Send with our access token
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-						body: JSON.stringify({ password: prompt("Enter your password to confirm that this is you trying to delete your account: ") }),
+						body: JSON.stringify({ password }),
             credentials: 'same-origin', // Allows cookie to be set from this request
         };
 
