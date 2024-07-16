@@ -83,11 +83,10 @@ async function handleLogin(req, res) {
  * This is also rate limited.
  * @param {Object} req - The request object
  * @param {Object} res - The response object
- * @param {boolean} autoRespond - `true` to handle the responds
  * @param {boolean} log - `true` to log
  * @returns {boolean} true if the password was correct
  */
-async function testPasswordForRequest(req, res, autoRespond, log) {
+async function testPasswordForRequest(req, res, log) {
     if (!verifyBodyHasLoginFormData(req)) return false; // If false, it will have already sent a response.
     
     let { username, password } = req.body;
@@ -97,7 +96,7 @@ async function testPasswordForRequest(req, res, autoRespond, log) {
     const hashedPassword = getHashedPassword(usernameLowercase);
 
     if (!usernameCaseSensitive || !hashedPassword) {
-        if (autoRespond) res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, username not found
+        res.status(401).json({ 'message': 'Username is invalid'}); // Unauthorized, username not found
 			
         return false;
     }
@@ -111,13 +110,13 @@ async function testPasswordForRequest(req, res, autoRespond, log) {
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
         if (log) logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
-        if (autoRespond) res.status(401).json({ 'message': 'Username or password is incorrect'}); // Unauthorized, password not found
+        res.status(401).json({ 'message': 'Password is incorrect'}); // Unauthorized, password not found
         if (autoRespond) onIncorrectPassword(browserAgent, usernameCaseSensitive);
 
         return false;
     }
 
-    if (autoRespond) onCorrectPassword(browserAgent);
+    onCorrectPassword(browserAgent);
 
     return true;
 }
