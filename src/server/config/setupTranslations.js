@@ -20,7 +20,7 @@ const staticTranslatedTemplates = [
   "member",
   "news",
   "play",
-  /*"termsofservice",*/
+  "termsofservice",
   "errors/400",
   "errors/401",
   "errors/404",

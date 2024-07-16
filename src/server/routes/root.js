@@ -55,23 +55,9 @@ router.get("/refresh", handleRefreshToken);
 router.get("/logout", handleLogout);
 
 router.get("/termsofservice(.html)?", (req, res) => {
-  // Disabled translations of legal documents
-  res.render(
-    path.join(htmlDirectory, "termsofservice.ejs"),
-    {
-      t: (function (key, options = {}) {
-        options.lng = "en-US"; // Make sure language is correct
-        return i18next.t(key, options);
-      }),
-      viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
-      languages: [],
-    }
-  );
-  /*
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "termsofservice.html"),
+    path.join(htmlDirectory, "en-US"/*req.i18n.resolvedLanguage*/, "termsofservice.html"),
     );
-  */
 });
 
 router.get("/verify/:member/:id", verifyAccount);
