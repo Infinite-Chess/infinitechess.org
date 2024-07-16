@@ -72,6 +72,10 @@ const profainWords = [
     'poop'
 ];
 
+/**
+ * Returns the server list of reserved usernames
+ * @returns {string[]} The reserved usernames
+ */
 function getReservedUsernames() {
     return reservedUsernames;
 }
