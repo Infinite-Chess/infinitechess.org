@@ -182,7 +182,7 @@ const checkEmailAssociated = (req, res) => {
  * The request parameters MUST contain the username to test! (different from the body)
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
- * @returns {Object} - A JSON response indicating whether the username is available.
+ * @returns {Object} - An object containing the properties `allowed` and `reason`.
  */
 function checkUsernameAvailable(req, res) {
     const usernameLowercase = req.params.username.toLowerCase();
