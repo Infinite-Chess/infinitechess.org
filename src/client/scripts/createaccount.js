@@ -1,17 +1,9 @@
-// THESE LINES WILL BE INJECTED by the HTMLScriptInjector!
-// const reservedUsernames = [...];
-// const profainWords = [...];
-
 const element_usernameInput = document.getElementById('username');
 const element_emailInput = document.getElementById('email');
 const element_passwordInput = document.getElementById('password');
 const element_submitButton = document.getElementById('submit');
 
-// This will be an object with 1 array: profainWords
-let data;
-fetch('/createaccount/data')
-    .then((response) => response.json())
-    .then((result) => {data = result});
+
 
 let usernameHasError = false;
 element_usernameInput.addEventListener('input', (event) => { // When username field changes...
@@ -234,15 +226,6 @@ function updateSubmitButton() {
 function onlyLettersAndNumbers(string) {
     if (!string) return true;
     return /^[a-zA-Z0-9]+$/.test(string);
-}
-
-// Returns true if bad word is found
-function checkProfanity(string) {
-    for (let i = 0; i < profainWords.length; i++) {
-        profanity = profainWords[i];
-        if (string.toLowerCase().includes(profanity)) return true;
-    }
-    return false;
 }
 
 function validEmail(string) {
