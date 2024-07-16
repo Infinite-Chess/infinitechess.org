@@ -45,15 +45,15 @@ const variant = (function() {
 
         initPieceMovesets(gamefile)
 
-        initSlideMoves(gamefile)
+        initsliding(gamefile)
     }
 
     /**
      * 
      * @param {gamefile} gamefile 
      */
-    function initSlideMoves(gamefile) {
-        gamefile.startSnapshot.slideMovesPossible = getPossibleSlides(gamefile.pieceMovesets, gamefile.startSnapshot.position)
+    function initsliding(gamefile) {
+        gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile.pieceMovesets, gamefile.startSnapshot.position)
     }
 
     function getPossibleSlides(movesets, position) {
@@ -67,8 +67,8 @@ const variant = (function() {
             let moveset = movesets[type];
             if (!moveset) continue;
             moveset = moveset();
-            if (!moveset.slideMoves) continue;
-            Object.keys(moveset.slideMoves).forEach(slide => {slides.add(slide)});
+            if (!moveset.sliding) continue;
+            Object.keys(moveset.sliding).forEach(slide => {slides.add(slide)});
         }
         let temp = [];
         slides.forEach(slideline => {temp.push(math.getCoordsFromKey(slideline))})

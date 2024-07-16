@@ -233,13 +233,13 @@ const highlights = (function(){
 
     function concatData_HighlightedMoves_Sliding_Horz(coords, left, right) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
-        if (!legalMoves.slides['1,0']) return; // Break if no legal horizontal slide
+        if (!legalMoves.sliding['1,0']) return; // Break if no legal horizontal slide
 
         const [r,g,b,a] = options.getDefaultLegalMoveHighlight();
 
         // Left
 
-        let startXWithoutOffset = legalMoves.slides['1,0'][0] - board.gsquareCenter()
+        let startXWithoutOffset = legalMoves.sliding['1,0'][0] - board.gsquareCenter()
         if (startXWithoutOffset < left - board.gsquareCenter()) startXWithoutOffset = left - board.gsquareCenter()
 
         let startX = startXWithoutOffset - model_Offset[0];
@@ -251,7 +251,7 @@ const highlights = (function(){
 
         // Right
 
-        startXWithoutOffset = legalMoves.slides['1,0'][1] + 1 - board.gsquareCenter()
+        startXWithoutOffset = legalMoves.sliding['1,0'][1] + 1 - board.gsquareCenter()
         if (startXWithoutOffset > right + 1 - board.gsquareCenter()) startXWithoutOffset = right + 1 - board.gsquareCenter()
 
         startX = startXWithoutOffset - model_Offset[0];
@@ -264,13 +264,13 @@ const highlights = (function(){
 
     function concatData_HighlightedMoves_Sliding_Vert (coords, bottom, top) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
-        if (!legalMoves.slides['0,1'])  return; // Break if there no legal vertical slide
+        if (!legalMoves.sliding['0,1'])  return; // Break if there no legal vertical slide
 
         const [r,g,b,a] = options.getDefaultLegalMoveHighlight();
 
         // Bottom
 
-        let startYWithoutOffset = legalMoves.slides['0,1'][0] - board.gsquareCenter()
+        let startYWithoutOffset = legalMoves.sliding['0,1'][0] - board.gsquareCenter()
         if (startYWithoutOffset < bottom - board.gsquareCenter()) startYWithoutOffset = bottom - board.gsquareCenter()
 
         let startY = startYWithoutOffset - model_Offset[1];
@@ -282,7 +282,7 @@ const highlights = (function(){
 
         // Top
 
-        startYWithoutOffset = legalMoves.slides['0,1'][1] + 1 - board.gsquareCenter()
+        startYWithoutOffset = legalMoves.sliding['0,1'][1] + 1 - board.gsquareCenter()
         if (startYWithoutOffset > top + 1 - board.gsquareCenter()) startYWithoutOffset = top + 1 - board.gsquareCenter()
 
         startY = startYWithoutOffset - model_Offset[1];
@@ -295,7 +295,7 @@ const highlights = (function(){
 
     function concatData_HighlightedMoves_Diagonals (coords, renderBoundingBox, r, g, b, a) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
-        for (var strline in legalMoves.slides) {
+        for (var strline in legalMoves.sliding) {
             const line = math.getCoordsFromKey(strline);
             if (line[1] == 0 || line[0] == 0) {continue;};
             const lineEqua = math.getLineFromCoords(line, coords);
@@ -307,9 +307,9 @@ const highlights = (function(){
             const intsect2Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner2);
             
             if (!intsect1Tile && !intsect2Tile) {continue;} // If there's no intersection point, it's off the screen, don't bother rendering.
-            if (!intsect1Tile || !intsect2Tile) {console.error(`Line only has one intersect with square.`); continue;} // FIXME: This should not happen
-            if (lineGrad > 0) concatData_HighlightedMoves_Diagonal_Up(coords, intsect1Tile, intsect2Tile, legalMoves.slides[line], line, r, g, b, a);
-            else concatData_HighlightedMoves_Diagonal_Down(coords, intsect1Tile, intsect2Tile, legalMoves.slides[line], line, r, g, b, a)
+            if (!intsect1Tile || !intsect2Tile) {console.error(`Line only has one intersect with square.`); continue;}
+            if (lineGrad > 0) concatData_HighlightedMoves_Diagonal_Up(coords, intsect1Tile, intsect2Tile, legalMoves.sliding[line], line, r, g, b, a);
+            else concatData_HighlightedMoves_Diagonal_Down(coords, intsect1Tile, intsect2Tile, legalMoves.sliding[line], line, r, g, b, a)
         }
     }
 
@@ -333,10 +333,10 @@ const highlights = (function(){
             if (iterateCount < 0) iterateCount = 0
 
             // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() -step[0] + 2 - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() -step[1] + 2 - model_Offset[1]
+            let currentX = startTile[0] - board.gsquareCenter() - step[0] + 1 - model_Offset[0]
+            let currentY = startTile[1] - board.gsquareCenter() - step[1] + 1 - model_Offset[1]
             // Generate data of each highlighted square
-            addDataDiagonalVariant(iterateCount, currentX, currentY, -1, -1, [-step[0], -step[1]], r, g, b, a)
+            addDataDiagonalVariant(iterateCount, currentX, currentY, +1, +1, [-step[0], -step[1]], r, g, b, a)
         }
 
         { // Up Right moveset

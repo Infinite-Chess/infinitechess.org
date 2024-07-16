@@ -392,6 +392,14 @@ const math = (function() {
         return corner;
     }
 
+    // Top left as failsafe
+    function getCornerOfBoundingBox(boundingBox, corner) {
+        const { left, right, top, bottom } = boundingBox;
+        let yval = corner.startsWith('bottom') ? bottom : top;
+        let xval = corner.endsWith('right') ? right : left
+        return [xval, yval]
+    }
+
     function getLineIntersectionEntryTile (dx, dy, c, boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
         let xIntersectBottom = undefined;
@@ -922,6 +930,7 @@ const math = (function() {
         convertPixelsToWorldSpace_Virtual,
         convertWorldSpaceToPixels_Virtual,
         getAABBCornerOfLine,
+        getCornerOfBoundingBox,
         getLineIntersectionEntryTile,
         getIntersectionEntryTile,
         convertWorldSpaceToGrid,

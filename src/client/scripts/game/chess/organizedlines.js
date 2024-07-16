@@ -44,7 +44,7 @@ const organizedlines = {
         gamefile.piecesOrganizedByKey = {}
         gamefile.piecesOrganizedByLines = {}
 
-        let lines = gamefile.startSnapshot.slideMovesPossible
+        let lines = gamefile.startSnapshot.slidingPossible
         for (let i = 0; i<lines.length; i++) {
             gamefile.piecesOrganizedByLines[math.getKeyFromCoords(lines[i])] = {}
         }
@@ -64,7 +64,7 @@ const organizedlines = {
         gamefile.piecesOrganizedByKey[key] = type;
         
         // Organize by line
-        let lines = gamefile.startSnapshot.slideMovesPossible
+        let lines = gamefile.startSnapshot.slidingPossible
         for (let i = 0; i<lines.length; i++) {
             const line = lines[i]
             key = math.getKeyFromLine(line,coords)
@@ -85,7 +85,7 @@ const organizedlines = {
         // Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
         delete gamefile.piecesOrganizedByKey[key] 
 
-        let lines = gamefile.startSnapshot.slideMovesPossible
+        let lines = gamefile.startSnapshot.slidingPossible
         for (let i = 0; i<lines.length; i++) {
             const line = lines[i]
             key = math.getKeyFromLine(line,coords)

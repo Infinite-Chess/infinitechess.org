@@ -122,7 +122,7 @@ const checkdetection = (function(){
      * @returns 
      */
     function doesSlideAttackSquare (gamefile, coords, color, attackers) {
-        for (const line of gamefile.startSnapshot.slideMovesPossible) {
+        for (const line of gamefile.startSnapshot.slidingPossible) {
             const strline = math.getKeyFromCoords(line)
             const key = math.getKeyFromLine(line, coords)
             if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[strline][key], line, coords, color, attackers)) return true;
@@ -146,15 +146,15 @@ const checkdetection = (function(){
 
             const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type)
 
-            if (!thisPieceMoveset.slideMoves) {continue};
-            const moveset = thisPieceMoveset.slideMoves[math.getKeyFromCoords(direction)];
+            if (!thisPieceMoveset.sliding) {continue};
+            const moveset = thisPieceMoveset.sliding[math.getKeyFromCoords(direction)];
             if (!moveset) {continue};
             const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor)
             if (!thisPieceLegalSlide) continue; // This piece has no horizontal moveset, NEXT piece on this line!
 
             // const rectangle = {left: thisPieceLegalSlide[0], right: thisPieceLegalSlide[1], bottom: coords[1], top: coords[1]}
             // const isWithinMoveset = math.boxContainsSquare(rectangle, coords)
-            const isWithinMoveset = legalmoves.doesSlideMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)
+            const isWithinMoveset = legalmoves.doesslidingetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)
 
             if (isWithinMoveset) {
                 if (attackers) appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
@@ -223,7 +223,7 @@ const checkdetection = (function(){
     // Time complexity: O(slides) basically O(1) unless you add a ton of slides to a single piece
     function removeSlidingMovesThatPutYouInCheck (gamefile, moves, pieceSelected, color) {
 
-        if (math.isEmpty(moves.slides)) return;
+        if (math.isEmpty(moves.sliding)) return;
 
         const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color); // List of coordinates of all our royal jumping pieces
 
@@ -287,7 +287,7 @@ const checkdetection = (function(){
         return true;
 
         function eraseAllSlidingMoves() {
-            legalMoves.slides = {}
+            legalMoves.sliding = {}
         }
     }
 
@@ -295,7 +295,7 @@ const checkdetection = (function(){
 
         const selectedPieceCoords = pieceSelected.coords;
         let sameLines = [];
-        for (const line of gamefile.startSnapshot.slideMovesPossible) { // Only check current possible slides
+        for (const line of gamefile.startSnapshot.slidingPossible) { // Only check current possible slides
             if (math.getKeyFromLine(line, kingCoords) !== math.getKeyFromLine(line, selectedPieceCoords)) continue;
             sameLines.push(line);
         };
@@ -320,22 +320,17 @@ const checkdetection = (function(){
         r : {
             if (checklines.length > 1) {
                 if (math.areLinesCollinear(checklines)) {
-                    // FIXME: this is not correct as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
-                    // For now lets just blank slides
-                    /**
-                    for (const line of checklines) {
-                        const strline = math.getKeyFromCoords(line)
-                        if (!moves.slideMoves[strline]) break r;
-                        tempslides[strline] = moves.slideMoves[strline]
-                    */ 
+                    // FIXME: this is a problem as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
+                    // Discuss before implementing a proper solution
+                    // For now lets just blank sliding
                     } else {
-                    // Cannot slide to block all attack lines so blank the slides
+                    // Cannot slide to block all attack lines so blank the sliding
                     // Could probably blank regular attacks too
                 }
             } else if (checklines.length === 1) {
                 const strline = math.getKeyFromCoords(checklines[0])
-                if (!moves.slideMoves[strline]) break r;
-                tempslides[strline] = moves.slideMoves[strline] 
+                if (!moves.sliding[strline]) break r;
+                tempslides[strline] = moves.sliding[strline] 
             }
         }
 
@@ -365,7 +360,7 @@ const checkdetection = (function(){
             if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
         }
 
-        for (const linestr in moves.slides) {
+        for (const linestr in moves.sliding) {
             const line = math.getCoordsFromKey(linestr)
             const c1 = math.getLineFromCoords(line, coords)
             const c2 = math.getLineFromCoords(direction,square2)

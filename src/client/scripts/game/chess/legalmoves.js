@@ -10,7 +10,7 @@
 /** An object containing all the legal moves of a piece.
  * @typedef {Object} LegalMoves
  * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
- * @property {Object} slides - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
+ * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
  */
 
 const legalmoves = (function(){
@@ -86,7 +86,7 @@ const legalmoves = (function(){
         const thisPieceMoveset = getPieceMoveset(gamefile, type) // Default piece moveset
 
         let legalIndividualMoves = [];
-        let legalSlideMoves = {};
+        let legalSliding = {};
 
         if (!onlyCalcSpecials) {
 
@@ -96,13 +96,13 @@ const legalmoves = (function(){
             legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color)
             
             // Legal sliding moves
-            if (thisPieceMoveset.slideMoves) {
-                let lines = gamefile.startSnapshot.slideMovesPossible;
+            if (thisPieceMoveset.sliding) {
+                let lines = gamefile.startSnapshot.slidingPossible;
                 for (let i=0; i<lines.length; i++) {
                     const line = lines[i];
-                    if (!thisPieceMoveset.slideMoves[line]) continue;
+                    if (!thisPieceMoveset.sliding[line]) continue;
                     const key = math.getKeyFromLine(line,coords);
-                    legalSlideMoves[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line, thisPieceMoveset.slideMoves[line], coords, color);
+                    legalSliding[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line, thisPieceMoveset.sliding[line], coords, color);
                 };
             };
 
@@ -113,7 +113,7 @@ const legalmoves = (function(){
 
         let moves = {
             individual: legalIndividualMoves,
-            slides: legalSlideMoves
+            sliding: legalSliding
         }
         
         // Skip if we've selected the opposite side's piece (edit mode)
@@ -160,15 +160,15 @@ const legalmoves = (function(){
 
     // Takes in specified organized list, direction of the slide, the current moveset...
     // Shortens the moveset by pieces that block it's path.
-    function slide_CalcLegalLimit (organizedLine, line, slideMoveset, coords, color) {
+    function slide_CalcLegalLimit (organizedLine, line, slidinget, coords, color) {
 
-        if (!slideMoveset) return // Return undefined if there is no slide moveset
+        if (!slidinget) return // Return undefined if there is no slide moveset
 
         // The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
         // For most we'll be comparing the x values, only exception is the columns.
         const zeroOrOne = line[0] == 0 ? 1 : 0 
-        const limit = [slideMoveset[0], slideMoveset[1]]
+        const limit = [slidinget[0], slidinget[1]]
         // Iterate through all pieces on same line
         for (let i = 0; i < organizedLine.length; i++) {
             // What are the coords of this piece?
@@ -226,15 +226,15 @@ const legalmoves = (function(){
             }
         }
 
-        for (var strline in legalMoves.slides) {
+        for (var strline in legalMoves.sliding) {
             let line=math.getCoordsFromKey(strline);
-            let limits = legalMoves.slides[strline];
+            let limits = legalMoves.sliding[strline];
 
             let selectedPieceLine = math.getKeyFromLine(line,startCoords);
             let clickedCoordsLine = math.getKeyFromLine(line,endCoords);
             if (!limits||selectedPieceLine!=clickedCoordsLine) continue;
 
-            if (!doesSlideMovesetContainSquare(limits, line, startCoords, endCoords)) continue;
+            if (!doesslidingetContainSquare(limits, line, startCoords, endCoords)) continue;
             return true;
         }
         return false;
@@ -340,12 +340,12 @@ const legalmoves = (function(){
 
     // TODO: moveset changes
     // This requires coords be on the same line as the sliding moveset.
-    function doesSlideMovesetContainSquare (slideMoveset, line, pieceCoords, coords) {
+    function doesslidingetContainSquare (slidinget, line, pieceCoords, coords) {
 
         const axis = line[0]===0 ? 1 : 0
         const coordMag = coords[axis];
-        const min = slideMoveset[0] * line[axis] + pieceCoords[axis]
-        const max = slideMoveset[1] * line[axis] + pieceCoords[axis]
+        const min = slidinget[0] * line[axis] + pieceCoords[axis]
+        const max = slidinget[1] * line[axis] + pieceCoords[axis]
 
         if (coordMag < min) return false;
         if (coordMag > max) return false;
@@ -360,8 +360,8 @@ const legalmoves = (function(){
     function hasAtleast1Move (moves) { // { individual, horizontal, vertical, ... }
         
         if (moves.individual.length > 0) return true;
-        for (var line in moves.slides)
-            if (doesSlideHaveWidth(moves.slides[line])) return true;
+        for (var line in moves.sliding)
+            if (doesSlideHaveWidth(moves.sliding[line])) return true;
 
         function doesSlideHaveWidth(slide) { // [-Infinity, Infinity]
             if (!slide) return false;
@@ -376,7 +376,7 @@ const legalmoves = (function(){
         getPieceMoveset,
         calculate,
         checkIfMoveLegal,
-        doesSlideMovesetContainSquare,
+        doesslidingetContainSquare,
         hasAtleast1Move,
         slide_CalcLegalLimit,
         isOpponentsMoveLegal

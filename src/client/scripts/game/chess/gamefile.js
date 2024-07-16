@@ -50,7 +50,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
          * @type {BoundingBox} */
         box: undefined,
         /** Possible slide mopves*/
-        slideMovesPossible: [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]],
+        slidingPossible: [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]],
     
     }
     

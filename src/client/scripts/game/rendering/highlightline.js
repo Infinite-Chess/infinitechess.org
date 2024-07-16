@@ -43,7 +43,7 @@ const highlightline = (function(){
 
         let closestDistance;
         let closestPoint;
-        for (var strline in legalmoves.slides) {
+        for (var strline in legalmoves.sliding) {
             const line = math.getCoordsFromKey(strline);
             const diag = math.getLineFromCoords(line, worldSpaceCoords);
             const lineIsVertical = line[0]===0
@@ -52,7 +52,7 @@ const highlightline = (function(){
             
             let point1 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
             if (!point1) {continue};
-            const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.slides[strline], line, false);
+            const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
             const leftLimitPointWorld = math.convertCoordToWorldSpace(leftLimitPointCoord);
             point1 = capPointAtSlideLimit(point1, leftLimitPointWorld, false, lineIsVertical);
 
@@ -60,7 +60,7 @@ const highlightline = (function(){
 
             let point2 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner2);
             if (!point2) continue; // I hate this
-            const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.slides[strline], line, true);
+            const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, true);
             const rightLimitPointWorld = math.convertCoordToWorldSpace(rightLimitPointCoord);
             point2 = capPointAtSlideLimit(point2, rightLimitPointWorld, true, lineIsVertical);
 
@@ -70,7 +70,7 @@ const highlightline = (function(){
             if (!closestDistance) {if (snapPoint.distance>snapDist) continue;}
             else if (snapPoint.distance>closestDistance) {continue;}
             closestDistance = snapPoint.distance
-            snapPoint.moveset = legalmoves.slides[strline]
+            snapPoint.moveset = legalmoves.sliding[strline]
             snapPoint.line = line
             closestPoint = snapPoint
         };
