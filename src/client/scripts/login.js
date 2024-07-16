@@ -76,7 +76,7 @@ const updateSubmitButton = function() {
     }
 }
 
-createErrorElement = function (id, insertAfter) {
+function createErrorElement(id, insertAfter) {
     const errElement = document.createElement('div');
     errElement.className = 'error';
     errElement.id = id;
