@@ -2,23 +2,19 @@
 const usernameInputElement = document.getElementById('username');
 const passwordInputElement = document.getElementById('password');
 const submitButton = document.getElementById('submit');
-let loginErrorElement = undefined;
 const forgotElement = document.getElementById('forgot');
+let loginErrorElement = undefined;
 
-usernameInputElement.addEventListener('input', (event) => { // When username field changes...
-    loginErrorElement?.remove();
-    loginErrorElement = undefined;
-    updateSubmitButton();
-    // Make forgot password message hidden
-    forgotElement.className = 'forgothidden';
-});
 
-passwordInputElement.addEventListener('input', (event) => { // When username field changes...
-    loginErrorElement?.remove();
-    loginErrorElement = undefined;
-    updateSubmitButton();
-    // Make forgot password message hidden
-    forgotElement.className = 'forgothidden';
+//Event Listeners
+usernameInputElement.addEventListener('input', handleInput); // When username field changes...
+passwordInputElement.addEventListener('input', handleInput); // When username field changes...
+
+//Checks for autofilled inputs on load
+window.addEventListener('load', (event) => {
+    if (usernameInputElement.value && passwordInputElement.value) {
+        updateSubmitButton();
+    }
 });
 
 submitButton.addEventListener('click', (event) => {
@@ -26,6 +22,17 @@ submitButton.addEventListener('click', (event) => {
 
     if (usernameInputElement.value && passwordInputElement.value && !loginErrorElement) sendLogin(usernameInputElement.value, passwordInputElement.value);
 });
+
+function handleInput(event) {
+    if (loginErrorElement) {
+        loginErrorElement.remove();
+        loginErrorElement = undefined;
+    }
+
+    updateSubmitButton();
+    // Make forgot password message hidden
+    forgotElement.className = 'forgothidden';
+}
 
 const sendLogin = (username, password) => {
     submitButton.disabled = true;
@@ -45,7 +52,7 @@ const sendLogin = (username, password) => {
     .then((result) => {
         if (OK) { // Username & password accepted! Handle our access token
             // const token = getCookieValue('token')
-            
+
             // Check for a redirectTo query parameter, and if it exists, use it
             const redirectTo = getQueryParam('redirectTo');
             if (redirectTo) window.location.href = redirectTo;
@@ -87,10 +94,10 @@ createErrorElement = function (id, insertAfter) {
 
 function getCookieValue(cookieName) {
     const cookieArray = document.cookie.split("; ");
-    
+
     for (let i = 0; i < cookieArray.length; i++) {
         const cookiePair = cookieArray[i].split("=");
-  
+
         if (cookiePair[0] === cookieName) {
             return cookiePair[1];
         }
