@@ -11,6 +11,7 @@ footer a {
 }
 
 footer label {
+    font-size: 16px;
     color: rgb(207, 207, 207);
     margin: 10px 2px 10px 10px;
 }
