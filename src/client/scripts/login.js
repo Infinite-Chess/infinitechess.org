@@ -1,8 +1,8 @@
 
-const usernameInputElement = document.getElementById('username');
-const passwordInputElement = document.getElementById('password');
-const submitButton = document.getElementById('submit');
-const forgotElement = document.getElementById('forgot');
+const element_usernameInput = document.getElementById('username');
+const element_passwordInput = document.getElementById('password');
+const element_submitButton = document.getElementById('submit');
+const element_forgot = document.getElementById('forgot');
 let loginErrorElement = undefined;
 
 
@@ -31,7 +31,7 @@ function handleInput(event) {
 
     updateSubmitButton();
     // Make forgot password message hidden
-    forgotElement.className = 'forgothidden';
+    element_forgot.className = 'forgothidden';
 }
 
 const sendLogin = (username, password) => {
@@ -64,7 +64,7 @@ const sendLogin = (username, password) => {
                 // Set variable because it now exists.
                 loginErrorElement = document.getElementById("loginerror");
                 // Make forgot password message visible
-                forgotElement.className = 'forgotvisible';
+                element_forgot.className = 'forgotvisible';
             }
             updateSubmitButton();
             loginErrorElement.textContent = result['message'];
