@@ -1,8 +1,8 @@
 
-const usernameInputElement = document.getElementById('username');
-const emailInputElement = document.getElementById('email');
-const passwordInputElement = document.getElementById('password');
-const submitButton = document.getElementById('submit');
+const element_usernameInput = document.getElementById('username');
+const element_emailInput = document.getElementById('email');
+const element_passwordInput = document.getElementById('password');
+const element_submitButton = document.getElementById('submit');
 
 // This will be an object with 3 arrays: memberList, reservedUsernames, profainWords
 let data;
@@ -11,7 +11,7 @@ fetch('/createaccount/data')
     .then((result) => {data = result});
 
 let usernameHasError = false;
-usernameInputElement.addEventListener('input', (event) => { // When username field changes...
+element_usernameInput.addEventListener('input', (event) => { // When username field changes...
     
     // Test if the value of the username input field won't be accepted.
 
@@ -22,14 +22,14 @@ usernameInputElement.addEventListener('input', (event) => { // When username fie
 
     let usernameError = document.getElementById("usernameerror"); // Does an error already exist?
 
-    const lengthError = usernameInputElement.value.length < 3;
-    const formatError = !onlyLettersAndNumbers(usernameInputElement.value);
+    const lengthError = element_usernameInput.value.length < 3;
+    const formatError = !onlyLettersAndNumbers(element_usernameInput.value);
     // If data is still uninitiated (late fetch call), just assume there's no error.
     const usernameReservedError = 
-        data ? !lengthError && data.reservedUsernames.indexOf(usernameInputElement.value.toLowerCase()) !== -1
+        data ? !lengthError && data.reservedUsernames.indexOf(element_usernameInput.value.toLowerCase()) !== -1
         : false;
     const profainError = 
-        data ? !lengthError && checkProfanity(usernameInputElement.value)
+        data ? !lengthError && checkProfanity(element_usernameInput.value)
         : false;
 
     // If ANY error, make sure errorElement is created
@@ -38,19 +38,19 @@ usernameInputElement.addEventListener('input', (event) => { // When username fie
             usernameHasError = true;
             createErrorElement('usernameerror', "usernameinputline");
             // Change input box to red outline
-            usernameInputElement.style.outline = 'solid 1px red';
+            element_usernameInput.style.outline = 'solid 1px red';
             // Reset variable because it now exists.
             usernameError = document.getElementById("usernameerror");
         }
     } else if (usernameError) { // No errors, delete that error element if it exists
         usernameHasError = false;
         usernameError.remove();
-        usernameInputElement.removeAttribute('style');
+        element_usernameInput.removeAttribute('style');
     }
     
-    if (lengthError && formatError) {
+    if (lengthError && formatError) { // Change error message
         usernameError.textContent = 'Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9';
-    } else if (lengthError) { // Change error message
+    } else if (lengthError) {
         usernameError.textContent = 'Username must be atleast 3 characters long';
     } else if (formatError) {
         usernameError.textContent = 'Username must only contain letters A-Z and numbers 0-9';
@@ -62,10 +62,10 @@ usernameInputElement.addEventListener('input', (event) => { // When username fie
 
     updateSubmitButton();
 })
-usernameInputElement.addEventListener('focusout', (event) => { // Check username availability...
-    if (usernameInputElement.value.length === 0 || usernameHasError) return;
+element_usernameInput.addEventListener('focusout', (event) => { // Check username availability...
+    if (element_usernameInput.value.length === 0 || usernameHasError) return;
 
-    fetch(`/createaccount/username/${usernameInputElement.value}`)
+    fetch(`/createaccount/username/${element_usernameInput.value}`)
     .then((response) => response.json())
     .then((result) => {
         // We've got the result back from the server,
@@ -76,7 +76,7 @@ usernameInputElement.addEventListener('focusout', (event) => { // Check username
         usernameHasError = true;
         createErrorElement('usernameerror', "usernameinputline");
         // Change input box to red outline
-        usernameInputElement.style.outline = 'solid 1px red';
+        element_usernameInput.style.outline = 'solid 1px red';
         // Reset variable because it now exists.
         usernameError = document.getElementById("usernameerror");
 
@@ -86,13 +86,13 @@ usernameInputElement.addEventListener('focusout', (event) => { // Check username
 })
 
 let emailHasError = false;
-emailInputElement.addEventListener('input', (event) => { // When email field changes...
+element_emailInput.addEventListener('input', (event) => { // When email field changes...
     
     // Test if the email is a valid email format
 
     let emailError = document.getElementById("emailerror"); // Does an error already exist?
 
-    const error = !validEmail(emailInputElement.value);
+    const error = !validEmail(element_emailInput.value);
 
     // If ANY error, make sure errorElement is created
     if (error) {
@@ -100,14 +100,14 @@ emailInputElement.addEventListener('input', (event) => { // When email field cha
             emailHasError = true;
             createErrorElement('emailerror', 'emailinputline')
             // Change input box to red outline
-            emailInputElement.style.outline = 'solid 1px red';
+            element_emailInput.style.outline = 'solid 1px red';
             // Reset variable because it now exists.
             emailError = document.getElementById("emailerror");
         }
     } else if (emailError) { // No errors, delete that error element if it exists
         emailHasError = false;
         emailError.remove();
-        emailInputElement.removeAttribute('style');
+        element_emailInput.removeAttribute('style');
     }
     
     if (error) {
@@ -116,10 +116,10 @@ emailInputElement.addEventListener('input', (event) => { // When email field cha
 
     updateSubmitButton();
 })
-emailInputElement.addEventListener('focusout', (event) => { // Check email availability...
+element_emailInput.addEventListener('focusout', (event) => { // Check email availability...
     // If it's blank, all the server would send back is the createaccount.html again..
-    if (emailInputElement.value.length > 1 && !emailHasError) { 
-        fetch(`/createaccount/email/${emailInputElement.value}`)
+    if (element_emailInput.value.length > 1 && !emailHasError) { 
+        fetch(`/createaccount/email/${element_emailInput.value}`)
         .then((response) => response.json())
         .then((result) => {
             // We've got the result back from the server,
@@ -128,7 +128,7 @@ emailInputElement.addEventListener('focusout', (event) => { // Check email avail
                 emailHasError = true;
                 createErrorElement('emailerror', 'emailinputline')
                 // Change input box to red outline
-                emailInputElement.style.outline = 'solid 1px red';
+                element_emailInput.style.outline = 'solid 1px red';
                 // Reset variable because it now exists.
                 const emailError = document.getElementById("emailerror");
 
@@ -140,14 +140,14 @@ emailInputElement.addEventListener('focusout', (event) => { // Check email avail
 })
 
 let passwordHasError = false;
-passwordInputElement.addEventListener('input', (event) => { // When password field changes...
+element_passwordInput.addEventListener('input', (event) => { // When password field changes...
     
     let passwordError = document.getElementById("passworderror"); // Does an error already exist?
 
-    const shortError = passwordInputElement.value.length < 6;
-    const longError = passwordInputElement.value.length > 72;
-    const formatError = !validPassword(passwordInputElement.value);
-    const containsPasswordError = passwordInputElement.value.toLowerCase() === 'password';
+    const shortError = element_passwordInput.value.length < 6;
+    const longError = element_passwordInput.value.length > 72;
+    const formatError = !validPassword(element_passwordInput.value);
+    const containsPasswordError = element_passwordInput.value.toLowerCase() === 'password';
 
     // If ANY error, make sure errorElement is created
     if (shortError || longError || formatError || containsPasswordError) {
@@ -155,14 +155,14 @@ passwordInputElement.addEventListener('input', (event) => { // When password fie
             passwordHasError = true;
             createErrorElement('passworderror', 'passwordinputline');
             // Change input box to red outline
-            passwordInputElement.style.outline = 'solid 1px red';
+            element_passwordInput.style.outline = 'solid 1px red';
             // Reset variable because it now exists.
             passwordError = document.getElementById("passworderror");
         }
     } else if (passwordError) { // No errors, delete that error element if it exists
         passwordHasError = false;
         passwordError.remove();
-        passwordInputElement.removeAttribute('style');
+        element_passwordInput.removeAttribute('style');
     }
 
     if (formatError) {
@@ -178,15 +178,21 @@ passwordInputElement.addEventListener('input', (event) => { // When password fie
     updateSubmitButton();
 })
 
-submitButton.addEventListener('click', (event) => {
+element_submitButton.addEventListener('click', (event) => {
     event.preventDefault();
 
     if (!usernameHasError && !emailHasError && !passwordHasError
-        && usernameInputElement.value
-        && emailInputElement.value
-        && passwordInputElement.value) sendForm(usernameInputElement.value, emailInputElement.value, passwordInputElement.value);
+        && element_usernameInput.value
+        && element_emailInput.value
+        && element_passwordInput.value) sendForm(element_usernameInput.value, element_emailInput.value, element_passwordInput.value);
 })
 
+/**
+ * Sends our form data to the createaccount route.
+ * @param {string} username 
+ * @param {string} email 
+ * @param {string} password 
+ */
 function sendForm(username, email, password) {
     let OK = false;
     let config = {
@@ -224,12 +230,12 @@ function createErrorElement(id, insertAfter) {
 // The click-prevention is taken care of in the submit event listener.
 function updateSubmitButton() {
     if (usernameHasError || emailHasError || passwordHasError
-        || !usernameInputElement.value
-        || !emailInputElement.value
-        || !passwordInputElement.value) {
-        submitButton.className = 'unavailable';
+        || !element_usernameInput.value
+        || !element_emailInput.value
+        || !element_passwordInput.value) {
+        element_submitButton.className = 'unavailable';
     } else { // No Errors
-        submitButton.className = 'ready';
+        element_submitButton.className = 'ready';
     }
 }
 

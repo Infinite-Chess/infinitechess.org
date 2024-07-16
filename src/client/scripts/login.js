@@ -7,20 +7,20 @@ let loginErrorElement = undefined;
 
 
 //Event Listeners
-usernameInputElement.addEventListener('input', handleInput); // When username field changes...
-passwordInputElement.addEventListener('input', handleInput); // When username field changes...
+element_usernameInput.addEventListener('input', handleInput); // When username field changes...
+element_passwordInput.addEventListener('input', handleInput); // When username field changes...
 
 //Checks for autofilled inputs on load
 window.addEventListener('load', (event) => {
-    if (usernameInputElement.value && passwordInputElement.value) {
+    if (element_usernameInput.value && element_passwordInput.value) {
         updateSubmitButton();
     }
 });
 
-submitButton.addEventListener('click', (event) => {
+element_submitButton.addEventListener('click', (event) => {
     event.preventDefault();
 
-    if (usernameInputElement.value && passwordInputElement.value && !loginErrorElement) sendLogin(usernameInputElement.value, passwordInputElement.value);
+    if (element_usernameInput.value && element_passwordInput.value && !loginErrorElement) sendLogin(element_usernameInput.value, element_passwordInput.value);
 });
 
 function handleInput(event) {
@@ -35,7 +35,7 @@ function handleInput(event) {
 }
 
 const sendLogin = (username, password) => {
-    submitButton.disabled = true;
+    element_submitButton.disabled = true;
 
     let OK = false;
     let config = {
@@ -68,7 +68,7 @@ const sendLogin = (username, password) => {
             }
             updateSubmitButton();
             loginErrorElement.textContent = result['message'];
-            submitButton.disabled = false;
+            element_submitButton.disabled = false;
         }
     });
 }
@@ -76,10 +76,10 @@ const sendLogin = (username, password) => {
 // Greys-out submit button if there's any errors.
 // The click-prevention is taken care of in the submit event listener.
 const updateSubmitButton = function() {
-    if (!usernameInputElement.value || !passwordInputElement.value || loginErrorElement) {
-        submitButton.className = 'unavailable';
+    if (!element_usernameInput.value || !element_passwordInput.value || loginErrorElement) {
+        element_submitButton.className = 'unavailable';
     } else { // No Errors
-        submitButton.className = 'ready';
+        element_submitButton.className = 'ready';
     }
 }
 
