@@ -32,32 +32,32 @@
         <main>
             <div id="content">                  
                 <div id="verifyerror" class="hidden">
-                    <h2 class="red center">Please check your email to verify your account.</h2>
-                    <p class="center">Didn't get one? Check your <strong>spam</strong> folder. Also, <spam id="sendemail" class="underline">send it again.</spam> If you still can't find it, <a href="mailto:infinitechess.org@gmail.com">message me.</a></p>
+                    <h2 class="red center"><%=t('member.verify_message')%></h2>
+                    <p class="center"><%=t('member.resend_message.0')%><span id="sendemail" class="underline"><%=t('member.resend_message.1')%></spam> <%=t('member.resend_message.2')%></p>
                 </div>
-                <h2 id="verifyconfirm" class="hidden green center">Thank you! Your account has been verified.</h2>
+                <h2 id="verifyconfirm" class="hidden green center"><%=t('member.verify_confirm')%></h2>
                 <div class="member">
                     <img src="/img/member_default.png" alt="Blank profile image">
                     <h1 id="membername"></h1>
                 </div>
                 <section id="stats" class="center">
-                    <p><strong>Elo rating: </strong><spam id="elo"></spam></p>
-                    <p><strong>Joined: </strong><spam id="joined"></spam></p>
-                    <p><strong>Seen: </strong><spam id="seen"></spam> ago</p>
+                    <p><strong><%=t('member.rating')%> </strong><spam id="elo"></spam></p>
+                    <p><strong><%=t('member.joined')%> </strong><spam id="joined"></spam></p>
+                    <p><strong><%=t('member.seen.0')%> </strong><spam id="seen"></spam><%=t('member.seen.1')%></p>
                 </section>
                 <div id="content-container">
                     <div style="flex-grow: 1;">
-                        <button id="show-account-info" class="hidden action-button" onclick="showAccountInfo()">Show Account Info</button>
+                        <button id="show-account-info" class="hidden action-button" onclick="showAccountInfo()"><%=t('member.reveal_info')%></button>
                         <section id="accountinfo" class="hidden">
-                            <h6 class="center">Account Info</h6>
-                            <p><strong>Email: </strong><spam id="email">insert email here</spam></p>
+                            <h6 class="center"><%=t('member.account_info_heading')%></h6>
+                            <p><strong><%=t('member.email')%> </strong><spam id="email"> - </spam></p>
                         </section>
                     </div>
                     <div style="flex-grow: 0;">
-                        <button id="delete-account" class="hidden action-button" onclick="removeAccount()">Delete account</button>
+                        <button id="delete-account" class="hidden action-button" onclick="removeAccount()"><%=t('member.delete_account')%></button>
                     </div>
                 </div>
-                <p id="change" class="hidden center">To change your username, email or password, <a href="mailto:infinitechess.org@gmail.com">contact us.</a></p>
+                <p id="change" class="hidden center"><%=t('member.password_reset_message.0')%><a href="mailto:infinitechess.org@gmail.com"><%=t('member.password_reset_message.1')%></a></p>
             </div>
             <script src="/scripts/member.js"></script>
         </main>
