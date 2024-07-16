@@ -97,6 +97,7 @@ const arrows = (function() {
         const slides = gamefile.startSnapshot.slidingPossible
 
         for (const line of slides) {
+            const axis = line[0] == 0 ? 1 : 0;
             const perpendicular = [-line[1], line[0]];
             const linestr = math.getKeyFromCoords(line);
             
@@ -113,7 +114,7 @@ const arrows = (function() {
             const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
 
             for (let i=Math.ceil(boardSlidesStart); i<=Math.floor(boardSlidesEnd); i++) {
-                for (let x=0; x<line[0]; x++){
+                for (let x=0; x<line[axis]; x++){
                     let key = `${i}|${x}`
                     if (!gamefile.piecesOrganizedByLines[linestr][key]) {continue;}
                     const pieces = calcPiecesOffScreen(line, gamefile.piecesOrganizedByLines[linestr][key])
@@ -129,21 +130,21 @@ const arrows = (function() {
 
         function calcPiecesOffScreen(line, organizedline) {
 
+            const rightCorner = math.getCornerOfBoundingBox(paddedBoundingBox, math.getAABBCornerOfLine(line,false));
+
             let left;
             let right;
             for (var piece of organizedline) {
                 if (!piece.coords) continue;
                 
                 // Is the piece off-screen?
-                if (math.boxContainsSquare(boundingBox, piece.coords)) return;
+                if (math.boxContainsSquare(boundingBox, piece.coords)) continue;
                 
                 const x = piece.coords[0];
                 const y = piece.coords[1];
-                const axis = line == 0 ? 1 : 0;
+                const axis = line[0] == 0 ? 1 : 0;
 
-                const rightCorner = math.getCornerOfBoundingBox(paddedBoundingBox, math.getAABBCornerOfLine(line,false));
                 const rightSide = x > paddedBoundingBox.right || y > rightCorner[1] == (rightCorner[1]==paddedBoundingBox.top);
-
                 if (rightSide) {
                     if (!right) right = piece;
                     else if (piece.coords[axis]<right.coords[axis]) right = piece;
@@ -169,7 +170,6 @@ const arrows = (function() {
         const worldWidth = width * boardScale;
         let padding = (worldWidth/2) + sidePadding * boardScale;
         if (perspective.getEnabled()) padding = 0;
-
         for (const strline in slideArrows) {
             const line = math.getCoordsFromKey(strline)
             iterateThroughDiagLine(slideArrows[strline], line)
@@ -185,7 +185,7 @@ const arrows = (function() {
                     const corner = math.getAABBCornerOfLine(direction, isLeft)
                     const renderCoords = math.getLineIntersectionEntryTile(direction[0], direction[1], intersect, paddedBoundingBox, corner)
                     const arrowDirection = isLeft ? [-direction[0],-direction[1]] : direction
-                    concatData(renderCoords, piece.type, corner, worldWidth, padding, headerPad, footerPad, piece.coords, arrowDirection, !isLeft)
+                    concatData(renderCoords, piece.type, corner, worldWidth, padding, piece.coords, arrowDirection, !isLeft)
                 }
             }
         }
@@ -197,11 +197,18 @@ const arrows = (function() {
     }
 
     function removeTypesWithIncorrectMoveset(arrows) {
-        if (mode !== 1) return;
+        if (mode === 0) return;
 
         const gamefile = game.getGamefile();
-
+        let attacklines = []
+        attack: {
+            if (mode!==2) break attack;
+            const piece = selection.getPieceSelected()
+            if (!piece) break attack;
+            attacklines = Object.keys(legalmoves.getPieceMoveset(gamefile, piece.type).sliding)
+        }
         for (const strline in arrows) {
+            if (attacklines.includes(strline)) {continue;}
             removeTypesWithIncorrectMoveset_2(arrows[strline],strline)
             if (math.isEmpty(arrows[strline])) delete arrows[strline];
         }
@@ -219,12 +226,12 @@ const arrows = (function() {
 
         function doesTypeHaveMoveset(gamefile, type, direction) {
             const moveset = legalmoves.getPieceMoveset(gamefile, type)
-            if (!moveset.sliding) {if (['rooks','knightriders','queens'].includes(type)) console.error(`${type} should have sliding moves wtf`); return false}
+            if (!moveset.sliding) {return false;}
             return moveset.sliding[direction] != null;
         }
     }
 
-    function concatData(renderCoords, type, paddingDir, worldWidth, padding, headerPad, footerPad, pieceCoords, direction) {
+    function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCoords, direction) {
         const worldHalfWidth = worldWidth/2
 
         // Convert to world-space
@@ -237,11 +244,8 @@ const arrows = (function() {
                    : paddingDir.includes('left')  ?  padding
                    : 0;
 
-        const yPad = paddingDir === 'top'          ? -padding - headerPad
-                   : paddingDir === 'bottom'       ?  padding + footerPad
-                   : paddingDir === 'topright'     ? -padding
-                   : paddingDir.includes('bottom') ?  padding
-                   : paddingDir === 'topleft'      ? -padding
+        const yPad = paddingDir.includes('top')          ? -padding
+                   : paddingDir.includes('bottom')       ?  padding
                    : 0;
 
         worldCoords[0] += xPad;
