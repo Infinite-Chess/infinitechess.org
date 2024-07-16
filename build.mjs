@@ -40,7 +40,7 @@ await remove("./dist", {
 });
 
 if (DEV_BUILD){
-  // in dev mode, copy all clientside files over to dist and exit
+  // in dev mode, copy all clientside files over to dist and exitjnjnjn
   await copy("./src/client", "./dist", {
     recursive: true,
     force: true
