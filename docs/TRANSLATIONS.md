@@ -39,7 +39,7 @@ In case you are translating language that is currently not present in the projec
 > [!IMPORTANT]
 > You should always use [en-US.toml](../translation/en-US.toml) as a reference. It is the only file that is up to date and comes straight from the developers. Do not use any other files!
 
-Then you start test server with `npx nodemon` and start translating. If you head to your browser at adress `localhost:3443` the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure you have selected the language that you are editing in the websites UI.
+Then you start test server with `npx nodemon` and start translating. If you head to your browser at adress `localhost:3443` the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure you have selected the language that you are editing in the websites UI (at almost every page when you scroll down there is a footer with dropdown).
 
 In case you are updating existing language and you aren't sure what has changed since the last update you can view changes of `en-US.toml` [here](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml).
 
