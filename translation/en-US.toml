@@ -90,7 +90,134 @@ password = "Password:"
 create_button = "Create Account"
 argreement = ["I agree to the ", "Terms of Service"]
 
-[terms] # Translations are disabled for now
+[play.main-menu]
+credits = "Credits"
+play = "Play"
+guide = "Guide"
+editor = "Board Editor"
+loading = "LOADING"
+error = "ERROR"
+
+[play.guide]
+title = "Guide"
+rules = "Rules"
+rules_paragraphs = [
+"The rules to Infinite Chess are almost identical to classical chess, except the board is infinite in all directions! These are the only notes and changes you need to be aware of:",
+"Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions!",
+["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines, they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
+"Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
+"All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
+]
+careful_heading = "Be Careful!"
+careful_paragraphs = [
+"The openness of the infinite board means it is very easy to exploit forks, pins, and skewers. Your backside is often very vulnerable. Watch out for tactics like this! Be creative about forming protection for your king and rooks! Opening strategy is very different from classical chess.",
+"Many other variants have been created with the aim of strengthening your backside."
+]
+controls_heading = "Controls"
+controls_paragraph = "A lot of controls are intuitive, such as clicking and dragging the board to move around, and scrolling to zoom in and out, but let's take a look at the other controls you have at your disposal!"
+keybinds = [
+" to move around.",
+["Space", " and ", "Shift", " to zoom in and out."],
+["Escape", " to pause the game."],
+["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu."],
+" will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
+]
+controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
+keybinds_extra = [
+" will reset the rendering of the pieces. This is useful if they turn invisible. This glitch can happen if you move extreme distances (like 1e21).",
+" will toggle the rendering of the navigation and game info bars, which can be useful for recording. Streaming and making videos on the game is welcome!",
+" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed, to save compute.",
+" will toggle icon-rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throddler, but they can be toggled back on with ",
+[" (backtick, or the same key as ", ") will toggle Debug mode."],
+]
+fairy_heading = "Fairy Pieces"
+fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!"
+editing_heading = "Board Editing"
+editing_paragraphs = [
+["There is an external ", "board editor", " currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
+"To play a custom position with a friend, have them join a private invite, then both of you paste the game code before you start playing!",
+"An in-game board editor is still planned.",
+]
+back = "Back"
+
+[play.guide.pieces]
+chancellor = {name="Chancellor", description="Moves like a rook and a knight combined."},
+archbishop = {name="Archbishop", description="Moves like a bishop and a knight combined."},
+amazon = {name="Amazon", description="Moves like a queen and a knight combined. This is the strongest piece in the game!"},
+guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."},
+hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."},
+centaur = {name="Hawk", description="Moves like a knight and a guard combined."},
+obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."},
+void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."},
+
+
+[play.play-menu]
+title = "Play - Online"
+colors = "Colors"
+online = "Online"
+local = "Local"
+computer = "Computer"
+variant = "Variant"
+variants = [
+"Classical",
+"Classical+",
+"Chess on an Infinite Plane",
+"Pawndard",
+"Knighted Chess",
+"Knightline",
+"Core",
+"Standarch",
+"Pawn Horde",
+"Space Classic",
+"Space",
+"Obstocean",
+"Abundance",
+"Amazon Chandelier",
+"Containment",
+"Classical - Limit 7",
+"Coaip - Limit 7",
+"Chess",
+"Experimental: Classical - KOTH",
+"Experimental: Coaip - KOTH",
+"Showcase: Omega",
+"Showcase: Omega^2",
+"Showcase: Omega^3",
+"Showcase: Omega^4",
+]
+clock = "Clock"
+minutes = "m"
+seconds = "s"
+infinite_time = "Infinite Time"
+color = "Color"
+piece_colors = ["Random", "White", "Black"]
+private = "Private"
+no = "No"
+yes = "Yes"
+rated = "Rated"
+join_games = "Join Existing - Active Games:"
+private_invite = "Private Invite:"
+your_invite = "Your Invite Code:"
+create_invite = "Create Invite"
+join = "Join"
+copy = "Copy"
+back = "Back"
+code = "Code"
+
+[play.footer]
+white_to_move = "White to move"
+player_white = "Player white"
+player_black = "Player black"
+
+[play.pause]
+title = "Paused"
+resume = "Resume"
+arrows = "Arrows: Defense" # TODO
+perspective = "Prespective: Off" # TODO
+copy = "Copy Game"
+paste = "Paste Game"
+main_menu = "Main Menu"
+
+[terms] # Translations are disabled for now, only language is en-US
 title = "Terms of Service"
 consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site."
 guardian_consent = "If you are under 18, you must receive consent from a parent or legal guardian to use this site and to create an account."

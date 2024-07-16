@@ -11,7 +11,6 @@
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
         <title>Infinite Chess - Play</title>
-
         <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
         <link rel="icon" type="image/png" href="/img/favicon.png">
         <!-- Custom fonts: Merriweather, Open Sans -->
@@ -50,9 +49,9 @@
 
             <div id="loading-animation" class="animation-container">
                 <div id="loading-glow" class="loading-glow loadingGlowAnimation"></div>
-                <span id="loading-text" class="loading-text pulsing">LOADING</span>
+                <span id="loading-text" class="loading-text pulsing"><%=t('play.main-menu.loading')%></span>
                 <div id="loading-error" class="loading-error hidden">
-                    <h1>ERROR</h1>
+                    <h1><%=t('play.main-menu.error')%></h1>
                     <p id="loading-error-text"></p>
                 </div>
                 <div class="checkerboard"></div>
@@ -74,65 +73,65 @@
                         <svg viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g> <g> <path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" fill="#000"></path></g></g> </svg>     
                     </a>
 
-                    <a href="/credits" class="credits">Credits</a>
+                    <a href="/credits" class="credits"><%=t('play.main-menu.credits')%></a>
                 </div>
 
                 <!-- Menu screen UI -->
                 <div id="title" class="title hidden">
                     <h1>Infinite Chess</h1>
-                    <button id="play" class="play titlebubble button">Play</button>
-                    <button id="rules" class="rules titlebubble button">Guide</button>
-                    <button id="board-editor" class="board-editor titlebubble button opacity-0_5">Board Editor</button>
+                    <button id="play" class="play titlebubble button"><%=t('play.main-menu.play')%></button>
+                    <button id="rules" class="rules titlebubble button"><%=t('play.main-menu.guide')%></button>
+                    <button id="board-editor" class="board-editor titlebubble button opacity-0_5"><%=t('play.main-menu.editor')%></button>
                 </div>
 
                 <!-- Guide -->
                 <div id="guide" class="guide hidden">
                     <div class="guide-contents titlebubble">
-                        <h1 class="center">Guide</h1>
+                        <h1 class="center"><%=t('play.guide.title')%></h1>
 
-                        <h2>Rules</h2>
+                        <h2><%=t('play.guide.rules')%></h2>
                         <hr class="line-break">
-                        <p>The rules to Infinite Chess are almost identical to classical chess, except the board is infinite in all directions! These are the only notes and changes you need to be aware of:</p>
+                        <p><%=t('play.guide.rules_paragraphs.0')%></p>
                         <img data-src="/img/game/guide/promotionlines.png" class="img-promotionlines">
                         <ul>
-                            <li>Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions!</li>
-                            <li>In the "Classical" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines, they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, <em>not</em> cross it.</li>
+                            <li><%=t('play.guide.rules_paragraphs.1')%></li>
+                            <li><%=t('play.guide.rules_paragraphs.2.0')%><em><%=t('play.guide.rules_paragraphs.2.1')%></em><%=t('play.guide.rules_paragraphs.2.2')%></li>
                         </ul>
-                        <p>Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.</p>
-                        <p>All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!</p>
+                        <p><%=t('play.guide.rules_paragraphs.3')%></p>
+                        <p><%=t('play.guide.rules_paragraphs.4')%></p>
                         <div class="clear-float"></div>
                         
-                        <h2>Be Careful!</h2>
+                        <h2><%=t('play.guide.careful_heading')%></h2>
                         <hr class="line-break">
                         <img data-src="/img/game/guide/kingrookfork.png" class="img-kingrookfork">
-                        <p>The openness of the infinite board means it is very easy to exploit forks, pins, and skewers. Your backside is often very vulnerable. Watch out for tactics like this! Be creative about forming protection for your king and rooks! Opening strategy is very different from classical chess.</p>
-                        <p>Many other variants have been created with the aim of strengthening your backside.</p>
+                        <p><%=t('play.guide.careful_paragraphs.0')%></p>
+                        <p><%=t('play.guide.careful_paragraphs.1')%></p>
                         <div class="clear-float"></div>
 
-                        <h2>Controls</h2>
+                        <h2><%=t('play.guide.controls_heading')%></h2>
                         <hr class="line-break">
-                        <p>A lot of controls are intuitive, such as clicking and dragging the board to move around, and scrolling to zoom in and out, but let's take a look at the other controls you have at your disposal!</p>
+                        <p><%=t('play.guide.controls_paragraph')%></p>
                         <ul>
-                            <li><strong>WASD</strong> to move around.</li>
-                            <li><strong>Space</strong> and <strong>Shift</strong> to zoom in and out.</li>
-                            <li><strong>Escape</strong> to pause the game.</li>
+                            <li><strong>WASD</strong><%=t('play.guide.keybinds.0')%></li>
+                            <li><strong><%=t('play.guide.keybinds.1.0')%></strong><%=t('play.guide.keybinds.1.1')%><strong><%=t('play.guide.keybinds.1.2')%></strong><%=t('play.guide.keybinds.1.3')%></li>
+                            <li><strong><%=t('play.guide.keybinds.2.0')%></strong><%=t('play.guide.keybinds.2.1')%></li>
                             <img data-src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
-                            <li><strong>Tab</strong> toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to "Defense", which shows an arrow for pieces that can move to your location from where they're at. But <strong>tab</strong> can switch this to mode "All", or "Off", of which "All" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu.
-                            <li><strong>1</strong> will toggle "Edit Mode" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing.</li>
+                            <li><strong><%=t('play.guide.keybinds.3.0')%></strong><%=t('play.guide.keybinds.3.1')%><strong><%=t('play.guide.keybinds.3.2')%></strong><%=t('play.guide.keybinds.3.3')%></li>
+                            <li><strong>1</strong><%=t('play.guide.keybinds.4')%></li>
                         </ul>
-                        <p>Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!</p>
+                        <p><%=t('play.guide.controls_paragraph2')%></p>
                         <ul>
-                            <li><strong>R</strong> will reset the rendering of the pieces. This is useful if they turn invisible. This glitch can happen if you move extreme distances (like 1e21).</li>
-                            <li><strong>N</strong> will toggle the rendering of the navigation and game info bars, which can be useful for recording. Streaming and making videos on the game is welcome!</li>
-                            <li><strong>M</strong> will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed, to save compute.</li>
-                            <li><strong>P</strong> will toggle icon-rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throddler, but they can be toggled back on with <strong>P</strong>.</li>
-                            <li><strong>`</strong>(backtick, or the same key as <strong>~</strong>) will toggle Debug mode.</li>
+                            <li><strong>R</strong><%=t('play.guide.keybinds_extra.0')%></li>
+                            <li><strong>N</strong><%=t('play.guide.keybinds_extra.1')%></li>
+                            <li><strong>M</strong><%=t('play.guide.keybinds_extra.2')%></li>
+                            <li><strong>P</strong><%=t('play.guide.keybinds_extra.3')%><strong>P</strong>.</li>
+                            <li><strong>`</strong><%=t('play.guide.keybinds_extra.4.0')%><strong>~</strong><%=t('play.guide.keybinds_extra.4.1')%></li>
                         </ul>
                         <div class="clear-float"></div>
 
-                        <h2>Fairy Pieces</h2>
+                        <h2><%=t('play.guide.fairy_heading')%></h2>
                         <hr class="line-break">
-                        <p>You already know what you need to know to play the default "Classical" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!</p>
+                        <p><%=t('play.guide.fairy_paragraph')%></p>
                         <div id="fairy-pieces" class="fairy-pieces">
                             <img data-src="/img/game/guide/fairy/chancellor.png" id="ch-img" class="img-fairymoveset">
                             <img data-src="/img/game/guide/fairy/archbishop.png" id="ar-img" class="img-fairymoveset hidden">
@@ -149,36 +148,36 @@
                                 <div id="fairy-card" class="fairy-card">
                                     <div class="space-1"></div>
                                     <div id="ch-desc" class="fairy-card-desc">
-                                        <p class="fairy-card-title">Chancellor</p>
-                                        <p class="fairy-card-description">Moves like a rook and a knight combined.</p>
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.chancellor.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.chancellor.description')%></p>
                                     </div>
                                     <div id="ar-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title">Archbishop</p>
-                                        <p class="fairy-card-description">Moves like a bishop and a knight combined.</p>
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.archbishop.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.archbishop.description')%></p>
                                     </div>
                                     <div id="am-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title">Amazon</p>
-                                        <p class="fairy-card-description">Moves like a queen and a knight combined. This is the strongest piece in the game!</p>
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.amazon.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.amazon.description')%></p>
                                     </div>
                                     <div id="gu-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title">Guard</p>
-                                        <p class="fairy-card-description">Moves like a king, except it is not susceptible to check or checkmate.</p>
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.guard.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.guard.description')%></p>
                                     </div>
                                     <div id="ha-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title">Hawk</p>
-                                        <p class="fairy-card-description">Leaps exactly 2 or 3 squares in any direction.</p>
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.hawk.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.hawk.description')%></p>
                                     </div>
                                     <div id="ce-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title">Centaur</p>
-                                        <p class="fairy-card-description">Moves like a knight and a guard combined.</p>
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.centaur.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.centaur.description')%></p>
                                     </div>
                                     <div id="ob-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title">Obstacle</p>
-                                        <p class="fairy-card-description">A neutral piece (not controlled by either player) that blocks movement, but can be captured.</p>
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.obstacle.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.obstacle.description')%></p>
                                     </div>
                                     <div id="vo-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title">Void</p>
-                                        <p class="fairy-card-description">A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it.</p>
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.void.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.void.description')%></p>
                                     </div>
                                     <div class="space-2"></div>
                                 </div>
@@ -188,106 +187,106 @@
                             </div>
                         </div>
 
-                        <h2>Board Editing</h2>
+                        <h2><%=t('play.guide.editing_heading')%></h2>
                         <hr class="line-break">
-                        <p>There is an external <a href="https://docs.google.com/spreadsheets/d/1Eo1SIo2esUijZ3LQzGy8QLKTOVh77DdDQuqEBILec9I/edit?usp=sharing" target="_blank">board editor</a> currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the "Paste Game" button in the options menu!</p>
-                        <p>To play a custom position with a friend, have them join a private invite, then both of you paste the game code before you start playing!</p>
-                        <p>An in-game board editor is still planned.</p>
+                        <p><%=t('play.guide.editing_paragraphs.0.0')%><a href="https://docs.google.com/spreadsheets/d/1Eo1SIo2esUijZ3LQzGy8QLKTOVh77DdDQuqEBILec9I/edit?usp=sharing" target="_blank"><%=t('play.guide.editing_paragraphs.0.1')%></a><%=t('play.guide.editing_paragraphs.0.2')%></p>
+                        <p><%=t('play.guide.editing_paragraphs.1')%></p>
+                        <p><%=t('play.guide.editing_paragraphs.2')%></p>
                     </div>
-                    <button id="guide-back" class="guide-back titlebubble button">Back</button>
+                    <button id="guide-back" class="guide-back titlebubble button"><%=t('play.guide.back')%></button>
                 </div>
 
                 <!-- Play selection -->
                 <div id="play-selection" class="play-selection hidden">
-                    <p id="play-name" class="play-name">Play - Online</p>
-                    <button id="online" class="online titlebubble button">Online</button>
-                    <button id="local" class="local titlebubble button">Local</button>
-                    <button id="computer" class="computer titlebubble opacity-0_5 button">Computer</button>
+                    <p id="play-name" class="play-name"><%=t('play.play-menu.title')%></p>
+                    <button id="online" class="online titlebubble button"><%=t('play.play-menu.online')%></button>
+                    <button id="local" class="local titlebubble button"><%=t('play.play-menu.local')%></button>
+                    <button id="computer" class="computer titlebubble opacity-0_5 button"><%=t('play.play-menu.computer')%></button>
                     <div class="game-options titlebubble">
                         <div class="options">
                             <div class="option-card">
-                                <p>Variant</p>
+                                <p><%=t('play.play-menu.variant')%></p>
                                 <div class="option">
                                     <select id="option-variant" class="button">
-                                        <option value="Classical">Classical</option>
-                                        <option value="Classical+">Classical+</option>
-                                        <option value="CoaIP">Chess on an Infinite Plane</option>
-                                        <option value="Pawndard">Pawndard</option>
-                                        <option value="Knighted Chess">Knighted Chess</option>
-                                        <option value="Knightline">Knightline</option>
-                                        <option value="Core">Core</option>
-                                        <option value="Standarch">Standarch</option>
-                                        <option value="Pawn Horde">Pawn Horde</option>
-                                        <option value="Space Classic">Space Classic</option>
-                                        <option value="Space">Space</option>
-                                        <option value="Obstocean">Obstocean</option>
-                                        <option value="Abundance">Abundance</option>
-                                        <option value="Amazon Chandelier">Amazon Chandelier</option>
-                                        <option value="Containment">Containment</option>
+                                        <option value="Classical"><%=t('play.play-menu.variants.0')%></option>
+                                        <option value="Classical+"><%=t('play.play-menu.variants.1')%></option>
+                                        <option value="CoaIP"><%=t('play.play-menu.variants.2')%></option>
+                                        <option value="Pawndard"><%=t('play.play-menu.variants.3')%></option>
+                                        <option value="Knighted Chess"><%=t('play.play-menu.variants.4')%></option>
+                                        <option value="Knightline"><%=t('play.play-menu.variants.5')%></option>
+                                        <option value="Core"><%=t('play.play-menu.variants.6')%></option>
+                                        <option value="Standarch"><%=t('play.play-menu.variants.7')%></option>
+                                        <option value="Pawn Horde"><%=t('play.play-menu.variants.8')%></option>
+                                        <option value="Space Classic"><%=t('play.play-menu.variants.9')%></option>
+                                        <option value="Space"><%=t('play.play-menu.variants.10')%></option>
+                                        <option value="Obstocean"><%=t('play.play-menu.variants.11')%></option>
+                                        <option value="Abundance"><%=t('play.play-menu.variants.12')%></option>
+                                        <option value="Amazon Chandelier"><%=t('play.play-menu.variants.13')%></option>
+                                        <option value="Containment"><%=t('play.play-menu.variants.14')%></option>
                                         <!-- <option value="Standarch - 3 Check">Standarch - 3 Check</option>
                                         <option value="CoaIP - 3 Check">Coaip - 3 Check</option> -->
-                                        <option value="Classical - Limit 7">Classical - Limit 7</option>
-                                        <option value="CoaIP - Limit 7">Coaip - Limit 7</option>
-                                        <option value="Chess">Chess</option>
-                                        <option value="Classical - KOTH">Experimental: Classical - KOTH</option>
-                                        <option value="CoaIP - KOTH">Experimental: Coaip - KOTH</option>
-                                        <option value="Omega">Showcase: Omega</option>
-                                        <option value="Omega^2">Showcase: Omega^2</option>
-                                        <option value="Omega^3">Showcase: Omega^3</option>
-                                        <option value="Omega^4">Showcase: Omega^4</option>
+                                        <option value="Classical - Limit 7"><%=t('play.play-menu.variants.15')%></option>
+                                        <option value="CoaIP - Limit 7"><%=t('play.play-menu.variants.16')%></option>
+                                        <option value="Chess"><%=t('play.play-menu.variants.17')%></option>
+                                        <option value="Classical - KOTH"><%=t('play.play-menu.variants.18')%></option>
+                                        <option value="CoaIP - KOTH"><%=t('play.play-menu.variants.19')%></option>
+                                        <option value="Omega"><%=t('play.play-menu.variants.20')%></option>
+                                        <option value="Omega^2"><%=t('play.play-menu.variants.21')%></option>
+                                        <option value="Omega^3"><%=t('play.play-menu.variants.22')%></option>
+                                        <option value="Omega^4"><%=t('play.play-menu.variants.23')%></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="option-card">
-                                <p>Clock</p>
+                                <p><%=t('play.play-menu.clock')%></p>
                                 <div class="option">
                                     <select id="option-clock" class="button">
-                                        <option value="1+2">1m+2s</option>
-                                        <option value="2+2">2m+2s</option>
-                                        <option value="3+2">3m+2s</option>
-                                        <option value="5+2">5m+2s</option>
-                                        <option value="8+3">8m+3s</option>
-                                        <option value="10+4" selected>10m+4s</option>
-                                        <option value="12+5">12m+5s</option>
-                                        <option value="15+6">15m+6s</option>
-                                        <option value="20+8">20m+8s</option>
-                                        <option value="25+10">25m+10s</option>
-                                        <option value="30+15">30m+15s</option>
-                                        <option value="40+20">40m+20s</option>
-                                        <option value="0">Infinite Time</option>
+                                        <option value="1+2">1<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
+                                        <option value="2+2">2<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
+                                        <option value="3+2">3<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
+                                        <option value="5+2">5<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
+                                        <option value="8+3">8<%=t('play.play-menu.minutes')%>+3<%=t('play.play-menu.seconds')%></option>
+                                        <option value="10+4" selected>10<%=t('play.play-menu.minutes')%>+4<%=t('play.play-menu.seconds')%></option>
+                                        <option value="12+5">12<%=t('play.play-menu.minutes')%>+5<%=t('play.play-menu.seconds')%></option>
+                                        <option value="15+6">15<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
+                                        <option value="20+8">20<%=t('play.play-menu.minutes')%>+8<%=t('play.play-menu.seconds')%></option>
+                                        <option value="25+10">25<%=t('play.play-menu.minutes')%>+10<%=t('play.play-menu.seconds')%></option>
+                                        <option value="30+15">30<%=t('play.play-menu.minutes')%>+15<%=t('play.play-menu.seconds')%></option>
+                                        <option value="40+20">40<%=t('play.play-menu.minutes')%>+20<%=t('play.play-menu.seconds')%></option>
+                                        <option value="0"><%=t('play.play-menu.infinite_time')%></option>
                                     </select>
                                 </div>
                             </div>
                             <div id="option-card-color" class="option-card">
-                                <p>Color</p>
+                                <p><%=t('play.play-menu.color')%></p>
                                 <div class="option">
                                     <select id="option-color" class="button">
-                                        <option value="Random">Random</option>
-                                        <option value="White">White</option>
-                                        <option value="Black">Black</option>
+                                        <option value="Random"><%=t('play.play-menu.piece_colors.0')%></option>
+                                        <option value="White"><%=t('play.play-menu.piece_colors.1')%></option>
+                                        <option value="Black"><%=t('play.play-menu.piece_colors.2')%></option>
                                     </select>
                                 </div>
                             </div>
                             <div id="option-card-private" class="option-card">
-                                <p>Private</p>
+                                <p><%=t('play.play-menu.private')%></p>
                                 <div class="option">
                                     <select id="option-private" class="button">
-                                        <option value="public">No</option>
-                                        <option value="private">Yes</option>
+                                        <option value="public"><%=t('play.play-menu.no')%></option>
+                                        <option value="private"><%=t('play.play-menu.yes')%></option>
                                     </select>
                                 </div>
                             </div>
                             <div id="option-card-rated" class="option-card">
-                                <p>Rated</p>
+                                <p><%=t('play.play-menu.rated')%></p>
                                 <div class="option">
                                     <select id="option-rated" class="button">
-                                        <option value="Unrated">No</option>
+                                        <option value="Unrated"><%=t('play.play-menu.no')%></option>
                                     </select>
                                 </div>
                             </div>
                         </div>
                         <div class="invite-list">
-                            <p id="join-existing" class="join-existing">Join Existing - Active Games: </p>
+                            <p id="join-existing" class="join-existing"><%=t('play.play-menu.join_games')%> </p>
                             <div id="our-invite"></div>
                             <div id="invites">
                                 <!-- Example invite -->
@@ -302,18 +301,18 @@
                             </div>
                         </div>
                         <div id="join-private" class="join-private hidden">
-                            <p>Private Invite:</p>
-                            <input type="text" id="textbox-private" class="textbox-private" placeholder="Code" maxlength="5">
-                            <button id="join-button" class="join-button">Join</button>
+                            <p><%=t('play.play-menu.private_invite')%></p>
+                            <input type="text" id="textbox-private" class="textbox-private" placeholder="<%=t('play.play-menu.code')%>" maxlength="5">
+                            <button id="join-button" class="join-button"><%=t('play.play-menu.join')%></button>
                         </div>
                         <div id="invite-code" class="invite-code hidden">
-                            <p>Your Invite Code:</p>
+                            <p><%=t('play.play-menu.your_invite')%></p>
                             <p id="invite-code-code" class="invite-code-code"></p>
-                            <button id="copy-button" class="copy-button">Copy</button>
+                            <button id="copy-button" class="copy-button"><%=t('play.play-menu.copy')%></button>
                         </div>
                     </div>
-                    <button id="create-invite" class="create-invite titlebubble button">Create Invite</button>
-                    <button id="play-back" class="play-back titlebubble button">Back</button>
+                    <button id="create-invite" class="create-invite titlebubble button"><%=t('play.play-menu.create_invite')%></button>
+                    <button id="play-back" class="play-back titlebubble button"><%=t('play.play-menu.back')%></button>
                 </div>
 
                 <!-- Stats below navigation bar -->
@@ -382,12 +381,12 @@
                         <div id="timer-container-white" class="timerwhitecontainer">
                             <div id="timer-white" class="timerwhite">10:00</div>
                         </div>
-                        <div id="playerwhite" class="playerwhite">Player white</div>
+                        <div id="playerwhite" class="playerwhite"><%=t('play.footer.player_white')%></div>
                         <div class="whosturn">
                             <div id="dot" class="dotwhite"></div>
-                            <div id="whosturn">White to move</div>
+                            <div id="whosturn"><%=t('play.footer.white_to_move')%></div>
                         </div>
-                        <div id="playerblack" class="playerblack">Player black</div>
+                        <div id="playerblack" class="playerblack"><%=t('play.footer.player_black')%></div>
                         <div id="timer-container-black" class="timerblackcontainer">
                             <div id="timer-black" class="timerblack">10:00</div>
                         </div>
@@ -435,13 +434,13 @@
 
                 <!-- Pause UI -->
                 <div id="pauseUI" class="pauseUI hidden">
-                    <p class="paused">Paused</p>
-                    <button id="resume" class="resume button">Resume</button>
-                    <button id="togglepointers" class="togglepointers button">Arrows: Defense</button>
-                    <button id="toggleperspective" class="toggleperspective button">Perspective: Off</button>
-                    <button id="copygame" class="copygame button">Copy Game</button>
-                    <button id="pastegame" class="pastegame button">Paste Game</button>
-                    <button id="mainmenu" class="mainmenu button">Main Menu</button>
+                    <p class="paused"><%=t('play.pause.title')%></p>
+                    <button id="resume" class="resume button"><%=t('play.pause.resume')%></button>
+                    <button id="togglepointers" class="togglepointers button"><%=t('play.pause.arrows')%></button>
+                    <button id="toggleperspective" class="toggleperspective button"><%=t('play.pause.perspective')%></button>
+                    <button id="copygame" class="copygame button"><%=t('play.pause.copy')%></button>
+                    <button id="pastegame" class="pastegame button"><%=t('play.pause.paste')%></button>
+                    <button id="mainmenu" class="mainmenu button"><%=t('play.pause.main_menu')%></button>
                 </div>
 
                 <!-- Status message -->
