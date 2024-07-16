@@ -126,8 +126,8 @@ function showAccountInfo() {
 }
 
 async function removeAccount(confirmation) {
-    if (!confirmation || confirm("Are you sure you want to delete your account? This CAN NOT be undone!")) {
-				const password = prompt("Enter your password to confirm that this is you trying to delete your account: ");
+    if (!confirmation || confirm("Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password.")) {
+				const password = prompt("Enter your password to PERMANENTLY delete your account: ");
 				if (password.length < 6) {
 					alert("Password Incorrect");
 					removeAccount(false);
