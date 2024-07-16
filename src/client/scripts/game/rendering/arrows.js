@@ -161,7 +161,7 @@ const arrows = (function() {
         }
 
         // If we are in only-show-attackers mode
-        removeTypesWithIncorrectMoveset(slideArrows)
+        removeUnnecessaryArrows(slideArrows)
 
         // Calc the model data...
 
@@ -196,7 +196,14 @@ const arrows = (function() {
         modelArrows = buffermodel.createModel_Colored(new Float32Array(dataArrows), 2, "TRIANGLES")
     }
 
-    function removeTypesWithIncorrectMoveset(arrows) {
+    /**
+     * Removes asrrows based on the mode.
+     * mode == 1 Removes arrows to pieces that cant slide in that direction
+     * mode == 2 Like mode 1 but will keep any arrows in directions that a selected piece can move
+     * Will not return anything as it alters the object it is given.
+     * @param {Object} arrows 
+     */
+    function removeUnnecessaryArrows(arrows) {
         if (mode === 0) return;
 
         const gamefile = game.getGamefile();
@@ -209,11 +216,11 @@ const arrows = (function() {
         }
         for (const strline in arrows) {
             if (attacklines.includes(strline)) {continue;}
-            removeTypesWithIncorrectMoveset_2(arrows[strline],strline)
+            removeTypesWithIncorrectMoveset(arrows[strline],strline)
             if (math.isEmpty(arrows[strline])) delete arrows[strline];
         }
 
-        function removeTypesWithIncorrectMoveset_2(object, direction) { // horzRight, vertical/diagonalUp
+        function removeTypesWithIncorrectMoveset(object, direction) { // horzRight, vertical/diagonalUp
             for (const key in object) {
                  // { type, coords }
                 for (const side in object[key]) {
