@@ -95,6 +95,43 @@ main {
     font-size: 18px;
 }
 
+.video-thumbnail {
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+}
+
+.video-thumbnail .play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    background: url('/img/play-button.png') no-repeat center center;
+    background-size: 50% 50%;
+}
+
+.video-thumbnail img, .video-iframe {
+    width: var(--videoWidth);
+    height: calc(var(--videoWidth) * 9/16);
+}
+
+.video-thumbnail, .video-iframe {
+    --videoWidth: 38vw;
+}
+@media (max-width: 1200px) {
+    .video-thumbnail, .video-iframe {
+        --videoWidth: 60vw;
+    }
+}
+
+@media (max-width: 900px) {
+    .video-thumbnail, .video-iframe {
+        --videoWidth: 83vw;
+    }
+}
+
 
 
 

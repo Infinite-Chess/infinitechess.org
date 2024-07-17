@@ -95,16 +95,33 @@ main {
 
 .video-thumbnail {
     position: relative;
-    display: inline-block;
     cursor: pointer;
     text-align: center;
 }
 
-.video-thumbnail img {
-    width: 100%;
-    height: auto;
-    display: block;
+
+.video-thumbnail img, .video-iframe {
+    width: var(--videoWidth);
+    height: calc(var(--videoWidth) * 9/16);
 }
+
+.video-thumbnail, .video-iframe {
+    --videoWidth: 38vw;
+}
+@media (max-width: 1200px) {
+    .video-thumbnail, .video-iframe {
+        --videoWidth: 60vw;
+    }
+}
+
+@media (max-width: 900px) {
+    .video-thumbnail, .video-iframe {
+        --videoWidth: 83vw;
+    }
+}
+
+
+
 
 .video-thumbnail .play-button {
     position: absolute;
@@ -116,12 +133,6 @@ main {
     background: url('/img/play-button.png') no-repeat center center;
     background-size: 50% 50%;
 }
-
-.video-iframe {
-
-}
-
-
 
 #content h2 {
     font-size: 30px;

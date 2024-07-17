@@ -7,6 +7,7 @@
         <title>News</title>
         <link rel='stylesheet' href='/css/news.css'>
         <link rel="icon" type="image/png" href="/img/favicon.png">
+        <script src="/scripts/news.js"></script>
     </head>
     <body>
         <header>
@@ -30,7 +31,7 @@
             </nav>
         </header>
         <main>
-            <div id="content">                  
+            <div id="content">
                 <h1 class="center">News</h1>
 
                 <p class="date">July 13, 2024:</p>
@@ -44,7 +45,10 @@
                 <br>
                 <p class="body">Infinite Chess is Now Open Source! See, and contribute, to the project <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank">on GitHub!</a></p>
                 <br>
-                <iframe width="350" height="197" src="https://www.youtube.com/embed/fSUEKosgyt0?si=L-blqfVEpPBmQLMn" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                <div id="now-open-source-thumbnail" class="video-thumbnail" video-id="fSUEKosgyt0">
+                    <img src="../img/now-open-source-thumbnail.webp" alt="Thumbnail">
+                    <div class="play-button"></div>
+                </div>
 
                 <p class="date">May 27, 2024:</p>
                 <br>
@@ -67,10 +71,14 @@
                 <p class="body">An auto-resignation timer will start if you're opponent goes AFK (with an audible warning).</p>
                 <br>
                 <p class="body">And many others! For the full list, check out <a href="https://discord.com/channels/1114425729569017918/1114427288776364132/1240014519061712997" target="_blank">the discord</a>!</p>
-                
+
                 <p class="date">Jan 29, 2024:</p>
                 <p class="body">New video released today!</p>
-                <iframe width="350" height="197" src="https://www.youtube.com/embed/b-Bb_TyhC1A?si=NmCm-RS21E61sA-O" title="YouTube video: The Search for the Longest Infinite Chess Game" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>   
+                <div id="longest-chess-game-thumbnail" class="video-thumbnail" video-id="b-Bb_TyhC1A">
+                    <img src="../img/search-for-longest-chess-thumbnail.webp" alt="Thumbnail">
+                    <div class="play-button"></div>
+                </div>
+
 
 
                 <p class="date">Aug 26, 2023:</p>
