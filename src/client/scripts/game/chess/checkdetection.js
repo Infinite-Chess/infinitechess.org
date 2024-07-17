@@ -321,6 +321,7 @@ const checkdetection = (function(){
             if (checklines.length > 1) {
                 if (math.areLinesCollinear(checklines)) {
                     // FIXME: this is a problem as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
+                    // Another case (3,0) (2,0) correct blocks are along (6,0) but thats not an organized line
                     // Discuss before implementing a proper solution
                     // For now lets just blank sliding
                     } else {

@@ -239,7 +239,7 @@ const highlights = (function(){
 
         // Left
 
-        let startXWithoutOffset = legalMoves.sliding['1,0'][0] - board.gsquareCenter()
+        let startXWithoutOffset = legalMoves.sliding['1,0'][0] + coords[0] - board.gsquareCenter()
         if (startXWithoutOffset < left - board.gsquareCenter()) startXWithoutOffset = left - board.gsquareCenter()
 
         let startX = startXWithoutOffset - model_Offset[0];
@@ -251,7 +251,7 @@ const highlights = (function(){
 
         // Right
 
-        startXWithoutOffset = legalMoves.sliding['1,0'][1] + 1 - board.gsquareCenter()
+        startXWithoutOffset = legalMoves.sliding['1,0'][1] + coords[0] + 1 - board.gsquareCenter()
         if (startXWithoutOffset > right + 1 - board.gsquareCenter()) startXWithoutOffset = right + 1 - board.gsquareCenter()
 
         startX = startXWithoutOffset - model_Offset[0];
@@ -270,7 +270,7 @@ const highlights = (function(){
 
         // Bottom
 
-        let startYWithoutOffset = legalMoves.sliding['0,1'][0] - board.gsquareCenter()
+        let startYWithoutOffset = legalMoves.sliding['0,1'][0] + coords[1] - board.gsquareCenter()
         if (startYWithoutOffset < bottom - board.gsquareCenter()) startYWithoutOffset = bottom - board.gsquareCenter()
 
         let startY = startYWithoutOffset - model_Offset[1];
@@ -282,7 +282,7 @@ const highlights = (function(){
 
         // Top
 
-        startYWithoutOffset = legalMoves.sliding['0,1'][1] + 1 - board.gsquareCenter()
+        startYWithoutOffset = legalMoves.sliding['0,1'][1] + coords[1] + 1 - board.gsquareCenter()
         if (startYWithoutOffset > top + 1 - board.gsquareCenter()) startYWithoutOffset = top + 1 - board.gsquareCenter()
 
         startY = startYWithoutOffset - model_Offset[1];
@@ -295,129 +295,74 @@ const highlights = (function(){
 
     function concatData_HighlightedMoves_Diagonals (coords, renderBoundingBox, r, g, b, a) {
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
-        for (var strline in legalMoves.sliding) {
+        const lineSet = new Set(Object.keys(legalMoves.sliding))
+        lineSet.delete('1,0')
+        lineSet.delete('0,1')
+        for (const strline of lineSet) {
             const line = math.getCoordsFromKey(strline);
-            if (line[1] == 0 || line[0] == 0) {continue;};
             const lineEqua = math.getLineFromCoords(line, coords);
-            const lineGrad = line[1]/line[0];
 
             const corner1 = math.getAABBCornerOfLine(line, true);
             const corner2 = math.getAABBCornerOfLine(line, false);
             const intsect1Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner1);
             const intsect2Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner2);
-            
+
             if (!intsect1Tile && !intsect2Tile) {continue;} // If there's no intersection point, it's off the screen, don't bother rendering.
             if (!intsect1Tile || !intsect2Tile) {console.error(`Line only has one intersect with square.`); continue;}
-            if (lineGrad > 0) concatData_HighlightedMoves_Diagonal_Up(coords, intsect1Tile, intsect2Tile, legalMoves.sliding[line], line, r, g, b, a);
-            else concatData_HighlightedMoves_Diagonal_Down(coords, intsect1Tile, intsect2Tile, legalMoves.sliding[line], line, r, g, b, a)
+
+            const intsect1Step = math.getLineSteps(line, coords, intsect1Tile)
+            const intsect2Step = math.getLineSteps(line, coords, intsect2Tile)
+            
+            concatData_HighlightedMoves_Diagonal(coords, intsect1Step, intsect2Step, legalMoves.sliding[line], line, r, g, b, a);
         }
     }
 
-    function concatData_HighlightedMoves_Diagonal_Up (coords, intsect1Tile, intsect2Tile, limits, step, r, g, b, a) {
-        { // Down Left moveset
-            let startTile = intsect2Tile
-            let endTile = intsect1Tile
+    function concatData_HighlightedMoves_Diagonal (coords, intsect1Step, intsect2Step, limits, step, r, g, b, a) {
+        { // Left moveset
+            let startStep = intsect1Step
+            let endStep = intsect2Step
 
-            // Make sure it doesn't start before the tile right in front of us
-            if (startTile[0] > coords[0] - 1) startTile = [coords[0] - 1, coords[1] - 1]
-            let diagonalUpLimit = limits[0]
+            // Make sure it doesn't end before the tile right in front of us
+            if (endStep >= 0) endStep = -1
+            let leftLimit = limits[0]
 
             // Make sure it doesn't phase through our move limit
-            if (endTile[0] < diagonalUpLimit) {
-                endTile[0] = diagonalUpLimit
-                endTile[1] = startTile[1] + diagonalUpLimit - startTile[0]
+            if (startStep < leftLimit) {
+                startStep = leftLimit
             }
 
             // How many times will we iterate?
-            let iterateCount = startTile[0] - endTile[0] + 1
+            let iterateCount = endStep - startStep + 1
             if (iterateCount < 0) iterateCount = 0
 
             // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() - step[0] + 1 - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() - step[1] + 1 - model_Offset[1]
+            let currentX = startStep * step[0] - board.gsquareCenter() - model_Offset[0] + coords[0]
+            let currentY = startStep * step[1] - board.gsquareCenter() - model_Offset[1] + coords[1]
             // Generate data of each highlighted square
-            addDataDiagonalVariant(iterateCount, currentX, currentY, +1, +1, [-step[0], -step[1]], r, g, b, a)
+            addDataDiagonalVariant(iterateCount, currentX, currentY, +1, +1, [step[0], step[1]], r, g, b, a)
         }
-
-        { // Up Right moveset
-            let startTile = intsect1Tile
-            let endTile = intsect2Tile
+        { // Right moveset
+            let startStep = intsect1Step
+            let endStep = intsect2Step
 
             // Make sure it doesn't start before the tile right in front of us
-            if (startTile[0] < coords[0] + 1) startTile = [coords[0] + 1, coords[1] + 1]
-            let diagonalUpLimit = limits[1]
+            if (startStep <= 0) startStep = 1
+            let rightLimit = limits[1]
 
             // Make sure it doesn't phase through our move limit
-            if (endTile[0] > diagonalUpLimit) {
-                endTile[0] = diagonalUpLimit
-                endTile[1] = startTile[1] + diagonalUpLimit - startTile[0]
+            if (endStep > rightLimit) {
+                endStep = rightLimit
             }
 
             // How many times will we iterate?
-            let iterateCount = endTile[0] - startTile[0] + 1
+            let iterateCount = endStep - startStep + 1
             if (iterateCount < 0) iterateCount = 0
 
             // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() + step[0] - 1 - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() + step[1] - 1 - model_Offset[1]
-            
+            let currentX = startStep * step[0] - board.gsquareCenter() - model_Offset[0] + coords[0]
+            let currentY = startStep * step[1] - board.gsquareCenter() - model_Offset[1] + coords[1]
             // Generate data of each highlighted square
-            addDataDiagonalVariant(iterateCount, currentX, currentY, +1, +1, step, r, g, b, a)
-        }
-    }
-
-    function concatData_HighlightedMoves_Diagonal_Down (coords, intsect1Tile, intsect2Tile, limits, step , r, g, b, a) {
-        { // Up Left moveset
-            let startTile = intsect2Tile
-            let endTile = intsect1Tile
-            
-            // Make sure it doesn't start before the tile right in front of us
-            if (startTile[0] > coords[0] - 1) startTile = [coords[0] - 1, coords[1] + 1]
-            let diagonalDownLimit = limits[0]
-
-            // Make sure it doesn't phase through our move limit
-            if (endTile[0] < diagonalDownLimit) {
-                endTile[0] = diagonalDownLimit
-                endTile[1] = startTile[1] + startTile[0] - diagonalDownLimit
-            }
-
-            // How many times will we iterate?
-            let iterateCount = startTile[0] - endTile[0] + 1
-            if (iterateCount < 0) iterateCount = 0
-
-            // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() - step[0] + 2 - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() - step[1] - 1 - model_Offset[1]
-            
-            // Generate data of each highlighted square
-            addDataDiagonalVariant(iterateCount, currentX, currentY, -1, +1, [-step[0], -step[1]], r, g, b, a)
-        }
-
-        { // Down Right moveset
-
-            let startTile = intsect1Tile
-            let endTile = intsect2Tile
-
-            // Make sure it doesn't start before the tile right in front of us
-            if (startTile[0] < coords[0] + 1) startTile = [coords[0] + 1, coords[1] - 1]
-            let diagonalDownLimit = limits[1]
-
-            // Make sure it doesn't phase through our move limit
-            if (endTile[0] > diagonalDownLimit) {
-                endTile[0] = diagonalDownLimit
-                endTile[1] = startTile[1] + diagonalDownLimit - startTile[0]
-            }
-
-            // How many times will we iterate?
-            let iterateCount = endTile[0] - startTile[0] + 1
-            if (iterateCount < 0) iterateCount = 0
-
-            // Init starting coords of the data, this will increment by 1 every iteration
-            let currentX = startTile[0] - board.gsquareCenter() + step[0] - 1 - model_Offset[0]
-            let currentY = startTile[1] - board.gsquareCenter() + step[1] + 2 - model_Offset[1]
-            
-            // Generate data of each highlighted square
-            addDataDiagonalVariant(iterateCount, currentX, currentY, +1, -1, step, r, g, b, a)
+            addDataDiagonalVariant(iterateCount, currentX, currentY, +1, +1, [step[0], step[1]], r, g, b, a)
         }
     }
 
