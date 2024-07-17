@@ -222,13 +222,6 @@ const highlights = (function(){
         concatData_HighlightedMoves_Sliding_Vert(coords, boundingBoxOfRenderRange.bottom, boundingBoxOfRenderRange.top)
         // Calculate the data of the diagonals
         concatData_HighlightedMoves_Diagonals(coords, boundingBoxOfRenderRange, r, g, b, a)
-        /**
-        // Calculate the data of the up diagonal
-        concatData_HighlightedMoves_Diagonal_Up(coords, boundingBoxOfRenderRange, r, g, b, a)
-
-        // Calculate the data of the down diagonal
-        concatData_HighlightedMoves_Diagonal_Down(coords, boundingBoxOfRenderRange, r, g, b, a)
-        */
     }
 
     function concatData_HighlightedMoves_Sliding_Horz(coords, left, right) {
