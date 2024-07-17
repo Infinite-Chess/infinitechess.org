@@ -381,6 +381,14 @@ const onlinegame = (function(){
      * Otherwise deletes the queue.
      */
     function handlePremove() {
+        /**
+         * If the promotion GUI is open when the opponent makes a move, the promotion might not be legal anymore.
+         * Ideally, we should check if the promotion is still legal and only close the UI if its not, but as a quick fix to prevent illegal promotions, unselect the piece when the opponent makes a move.
+         * The piece also needs to be unselected if it has been captured.
+         */
+        selection.unselectPiece();
+
+
         if(!premoves.length || !options.arePremovesEnabled())
             return; //The user has not made a premove.
         let premove = premoves.shift();
