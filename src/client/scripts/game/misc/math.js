@@ -915,10 +915,6 @@ const math = (function() {
         return totalMilliseconds;
     }
 
-    function orderSwap(a,b) {
-        return [Math.min(a,b), Math.max(a,b)]
-    }
-
     /**
      * Get the GCD of two numbers
      * Copied from https://www.geeksforgeeks.org/gcd-greatest-common-divisor-practice-problems-for-competitive-programming/
@@ -927,11 +923,10 @@ const math = (function() {
      * @returns {Number} 
      */
     function GCD(a, b) {
-        [a,b] = orderSwap(a,b)
         if (b === 0) {
             return a;
         } else {
-            return gcd(b, a % b);
+            return GCD(b, a % b);
         }
     }
 
@@ -948,7 +943,7 @@ const math = (function() {
         // after i'th iteration, 
         for (let i = 1; i < arr.length; i++) 
             ans = (((arr[i] * ans)) / 
-                    (gcd(arr[i], ans))); 
+                    (GCD(arr[i], ans))); 
 
         return ans; 
     }
