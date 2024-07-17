@@ -169,6 +169,14 @@ const arrows = (function() {
         const boardScale = movement.getBoardScale();
         const worldWidth = width * boardScale;
         let padding = (worldWidth/2) + sidePadding * boardScale;
+        let cpadding=padding/boardScale
+        {
+            paddedBoundingBox.top-=cpadding;
+            paddedBoundingBox.right-=cpadding;
+            paddedBoundingBox.bottom+=cpadding;
+            paddedBoundingBox.left+=cpadding
+        }
+        console.log(cpadding)
         if (perspective.getEnabled()) padding = 0;
         for (const strline in slideArrows) {
             const line = math.getCoordsFromKey(strline)
@@ -184,8 +192,9 @@ const arrows = (function() {
                     const isLeft = side==="l"
                     const corner = math.getAABBCornerOfLine(direction, isLeft)
                     const renderCoords = math.getLineIntersectionEntryTile(direction[0], direction[1], intersect, paddedBoundingBox, corner)
+                    if (!renderCoords) continue;
                     const arrowDirection = isLeft ? [-direction[0],-direction[1]] : direction
-                    concatData(renderCoords, piece.type, corner, worldWidth, padding, piece.coords, arrowDirection, !isLeft)
+                    concatData(renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, !isLeft)
                 }
             }
         }
