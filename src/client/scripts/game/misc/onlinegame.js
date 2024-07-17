@@ -10,6 +10,8 @@ const onlinegame = (function(){
     let gameID;
     let isPrivate;
     let ourColor; // white/black
+
+    /** @type {Move[]} */
     let premoves = [];
 
     /**
@@ -379,10 +381,16 @@ const onlinegame = (function(){
      * Otherwise deletes the queue.
      */
     function handlePremove() {
-        if(!premoves || !options.arePremovesEnabled())
+        if(!premoves.length || !options.arePremovesEnabled())
             return; //The user has not made a premove.
         let premove = premoves.shift();
-        let premoveLegal = true; //to do: check if premove is legal
+        
+        //check if the premove is legal
+        let gamefile = game.getGamefile();
+        let piece = gamefileutility.getPieceAtCoords(gamefile, premove.startCoords);
+        let legalMoves = legalmoves.calculate(gamefile, piece);
+        let premoveLegal = legalmoves.checkIfMoveLegal(legalMoves, premove.startCoords, premove.endCoords);
+        
         if(!premoveLegal)
         {
             //If this premove was innvalid all subsequent premoves are also invalid.
