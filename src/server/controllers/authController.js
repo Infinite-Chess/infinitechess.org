@@ -49,7 +49,7 @@ const timeToDeleteBrowserAgentAfterNoAttemptsMillis = 1000 * 60 * 5; // 5 minute
  * @param {Object} res - The response object
  */
 async function handleLogin(req, res) {
-    if (!(await testPasswordForRequest(req, res, true))) return; // Incorrect password, it will have already sent a response.
+    if (!(await testPasswordForRequest(req, res))) return; // Incorrect password, it will have already sent a response.
     // Correct password...
 
     let username = req.body.username; // We already know this property is present on the request
@@ -83,11 +83,10 @@ async function handleLogin(req, res) {
  * This is also rate limited.
  * @param {Object} req - The request object
  * @param {Object} res - The response object
- * @param {boolean} log - `true` to log
  * @returns {boolean} true if the password was correct
  */
-async function testPasswordForRequest(req, res, log) {
-    if (!verifyBodyHasLoginFormData(req)) return false; // If false, it will have already sent a response.
+async function testPasswordForRequest(req, res) {
+    if (!verifyBodyHasLoginFormData(req, res)) return false; // If false, it will have already sent a response.
     
     let { username, password } = req.body;
     if (!username) username = req.params.member;
@@ -108,9 +107,9 @@ async function testPasswordForRequest(req, res, log) {
     // Test the password
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
-        if (log) logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
+        logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
         res.status(401).json({ 'message': 'Password is incorrect'}); // Unauthorized, password not found
-        if (autoRespond) onIncorrectPassword(browserAgent, usernameCaseSensitive);
+        onIncorrectPassword(browserAgent, usernameCaseSensitive);
         return false;
     }
 
@@ -134,7 +133,6 @@ function verifyBodyHasLoginFormData(req, res) {
     }
 
     let { username, password } = req.body;
-	if (!username) username = req.params.member;
     
     if (!username || !password) {
         console.log(`User ${username} sent a bad login request missing either username or password!`)

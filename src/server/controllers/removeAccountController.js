@@ -25,20 +25,25 @@ async function removeAccount(req, res) {
     const usernameLowercase = req.params.member.toLowerCase();
 
     // Check to make sure they're logged in
-    if (req.user !== usernameLowercase) return res.status(403).json({'message' : 'Forbidden. This is not your account.'});
+    if (req.user !== usernameLowercase) {
+        logEvents(`User ${req.user} tried to delete account of ${usernameLowercase}!!`, 'hackLog.txt', { print: true })
+        return res.status(403).json({'message' : 'Forbidden. This is not your account.'});
+    }
 
-	
-    if (!(await testPasswordForRequest(req, res, false, false))) {
+    // The delete account request doesn't come with the username
+    // already in the body, so we set that here.
+	req.body.username = req.params.member;
+    if (!(await testPasswordForRequest(req, res))) {
         logEvents(`Incorrect password for user ${getUsernameCaseSensitive(usernameLowercase)} attempting to remove account!`, "loginAttempts.txt", { print: true });
-        return res.status(401).json({'message' : 'Incorrect password.'});
+        return; // It will have already sent a response
     }
 
     removeAllRoles(req.user); // Remove roles
     if (removeMember(req.user)) {
         logEvents(`User ${usernameLowercase} deleted their account.`, "deletedAccounts.txt", { print: true })
-        return res.status(301).redirect('/createaccount');
+        return res.send('OK'); // 200 is default code
     } else {
-        logEvents(`User ${req.user} attempted to delete '${usernameLowercase}'s account!`, 'hackLog.txt', { print: true });
+        logEvents(`Can't delete ${usernameLowercase}'s account. They do not exist.`, 'hackLog.txt', { print: true });
         return res.status(404).json({'message' : 'Failed to delete account. Account not found.'});
     }
 }

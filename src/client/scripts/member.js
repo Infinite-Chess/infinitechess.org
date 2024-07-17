@@ -128,7 +128,10 @@ function showAccountInfo() {
 
 async function removeAccount(confirmation) {
     if (!confirmation || confirm("Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password.")) {
-        const password = prompt("Enter your password to PERMANENTLY delete your account: ");
+        const password = prompt("Enter your password to PERMANENTLY delete your account:");
+        const cancelWasPressed = password === null;
+        if (cancelWasPressed) return; // Don't delete account
+
         const config = { // Send with our access token
             method: 'DELETE',
             headers: {
@@ -140,17 +143,12 @@ async function removeAccount(confirmation) {
         };
 
         const response = await fetch(`/member/${member}/delete`, config)
-        if (response.status === 401) {
-            alert("Password Incorrect");
+        if (!response.ok) {
+            const result = await response.json();
+            alert(result.message);
             removeAccount(false);
-        } else if (response.status !== 301) {
-            console.error(response);
-            window.location = '/404';
-        }
-        
-        // Accept redirect
-        if (response.redirected) {
-            window.location.href = response.url;
+        } else {
+            window.location.href = '/';
         }
     }
 }
