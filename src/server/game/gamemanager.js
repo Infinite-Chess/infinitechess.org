@@ -18,7 +18,6 @@ const formatconverter1 = require('./formatconverter1');
 const statlogger = require('./statlogger');
 const { executeSafely_async } = require('../utility/errorGuard');
 const { ensureJSONString } = require('../utility/JSONUtils');
-const config = require('../config/config');
 
 const gamemanager = (function() {
 
