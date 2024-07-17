@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <!-- Our in-document javascript htmlscript.js is injected here by HTMLScriptInjector.js before the server sends this html out -->
-        <!-- <script> ... </script> -->
+        <script>
+            const translations = <%-JSON.stringify(t('play.javascript', {returnObjects: true}))%>;
+        </script>
+        <!-- htmlscript.js inject here -->
 
         <!-- Javascript will add future styles in here -->
         <style id="style"></style>

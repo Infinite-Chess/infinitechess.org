@@ -28,10 +28,9 @@ const { writeFile } = require("node:fs/promises");
 function injectScript(
   htmlFilePath,
   jsFilePath,
+  injectAfterTag,
   stringInjection = {},
 ) {
-  // Tag to inject JavaScript after
-  const injectAfterTag = "<head>";
   // Read the JavaScript file
   const jsData = fs.readFileSync(jsFilePath, "utf8");
   // Create a script tag with the JavaScript content
@@ -99,7 +98,7 @@ function injectHtmlscript() {
   }
 
   // Return html with injected javascript
-  return injectScript(htmlFilePath, jsFilePath, {
+  return injectScript(htmlFilePath, jsFilePath, " <!-- htmlscript.js inject here -->", {
     string: HTML_callGame_JS_string,
     injectafter: injectafter_string,
   });

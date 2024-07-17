@@ -71,12 +71,12 @@ const statustext = (function(){
     }
 
     function lostConnection() {
-        showStatus(`Lost connection.`);
+        showStatus(translations["lost_connection"]);
     }
 
     /** Shows a status message stating to please wait to perform this task. */
     function pleaseWaitForTask() {
-        showStatus(`Please wait a moment to perform this task.`, false, 0.5)
+        showStatus(translations["please_wait"], false, 0.5)
     }
 
     // Dev purposes
