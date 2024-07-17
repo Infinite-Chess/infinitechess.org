@@ -27,7 +27,7 @@ how_to_paragraph = ["The current version release is 1.3.2 on the ","Play"," page
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
-"It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my <a target='_blank' href='https://www.patreon.com/Naviary'>Patreon</a>."
+["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
 ]
 patreon_title = "Patreon Supporters"
 
@@ -46,27 +46,25 @@ variants_credits = [
 "Classical+ by SexiLexi.",
 "Knightline by Inaccessible Cardinal.",
 "Knighted Chess by cycy98.",
-"<a href='https://math.colgate.edu/~integers/og2/og2.pdf' target='_blank'>Omega</a> designed by Cory Evans and Joel Hamkins.",
-"<a href='https://chess.stackexchange.com/questions/42480/checkmate-in-%cf%89%c2%b2-moves-with-finitely-many-pieces' target='_blank'>Omega^2</a> designed by Andreas Tsevas.",
-"<a href='https://math.colgate.edu/~integers/og2/og2.pdf' target='_blank'>Omega^3</a> designed by Cory Evans and Joel Hamkins.",
-"<a href='https://math.colgate.edu/~integers/rg4/rg4.pdf' target='_blank'>Omega^4</a> designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
+"designed by Cory Evans and Joel Hamkins.",
+"designed by Andreas Tsevas.",
+"designed by Cory Evans and Joel Hamkins.",
+"designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
 ]
 textures_heading = "Textures"
+textures_licensed_under = "textures licensed under the"
 textures_credits = [
-"<a target='_blank' href='https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces'>Cburnett</a> textures licensed under the <a target='_blank' href='https://creativecommons.org/licenses/by-sa/3.0/deed.en'>Creative Commons Attribution-Share Alike 3.0 Unported License</a>.",
-"<a target='_blank' href='https://greenchess.net/info.php?item=downloads'>Green Chess</a> textures licensed under the <a target='_blank' href='https://creativecommons.org/licenses/by-sa/3.0/deed.en'>Creative Commons Attribution-Share Alike 3.0</a>",
-"<a target='_blank' href='https://github.com/pychess/pychess/blob/master/LICENSE'>Pychess</a> textures licensed under the <a target='_blank' href='https://www.gnu.org/licenses/gpl-3.0.en.html'>GNU General Public License</a>",
 "Gold coin by Quolte.",
 ]
 sounds_heading = "Sounds"
 sounds_credits = [
-"<p>Some sounds are provided by the <a href='https://github.com/lichess-org/lila/blob/master/COPYING.md' target='_blank'>Lichess-org Lila</a> project under the <a href='https://www.gnu.org/licenses/agpl-3.0.en.html' target='_blank'>GNU Affero General Public License</a>.</p>",
-"<p>Other sounds created by Naviary.</p>",
+["Some sounds are provided by the", "project under the"],
+"Other sounds created by Naviary.",
 ]
 code_heading = "Code"
 code_credits = [
-"<a target='_blank' href='https://www.lcg.ufrj.br/WebGL/hws.edu-examples/doc-bump/gl-matrix.js.html'>High Performance Matrix & Vector Operations</a> by Brandon Jones and Colin MacKenzie IV.",
-"<a target='_blank' href='https://github.com/tsevasa/infinite-chess-notation'>Infinite Chess Notation Converter</a> by Andreas Tsevas and Naviary.</p>",
+"by Brandon Jones and Colin MacKenzie IV.",
+"by Andreas Tsevas and Naviary.",
 ]
 
 [member]
@@ -245,7 +243,7 @@ privacy_rules = [
 "InfiniteChess.org may collect data about your usage on the site, including your ip address. This is intended to help prevent attacks from bots and other unwanted entities, and to keep accurate statistics in the database. This is NOT your home address.",
 "All games you play on this website become public information. If you wish to remain anonymous, do not share your username with friends or family. If this is your desire, it is your responsibility to make sure no one finds out your username is associated with your human identity.",
 "Your account online status, and the approximate last time you were active on the website, is also public information.",
-"While InfiniteChess.org will strive to keep everyone's account and personal information safe to the best of our ability, in the event of a hack or data leak, you may not press charges on us. If a data leak ever happens, users will be notified on the <a href='/news'>News</a> page.",
+["While InfiniteChess.org will strive to keep everyone's account and personal information safe to the best of our ability, in the event of a hack or data leak, you may not press charges on us. If a data leak ever happens, users will be notified on the ", "News", "page."],
 "There is no content available on the site for purchase. Any other personal information is not collected.",
 "To have your private information deleted from our servers, you may delete your account through your profile page. The only thing with ties to your username that we will NOT delete, is your game history, because all games are public information.",
 ]
@@ -257,11 +255,11 @@ cookie_paragraphs = [
 conclusion_header = "Conclusion"
 conclusion_paragraphs = [
 "Any violations of these terms may result in a ban or termination of your account. InfiniteChess.org wants to be able to give everyone the opportunity to play and have fun! But, we reserve the right to, at any time, ban or terminate the accounts of any users, for reasons that need not to be disclosed. Charges may not be pressed against us.",
-"These terms of service may be modified at any point. It is YOUR responsibility to make sure you stay updated on the latest changes! When these terms of service receive an update, that information will be posted on the <a href='/news'>News</a> page. If, at the time of a terms-of-service update, you do not agree with the new terms, you must immediately stop using the website. You may delete your account from your profile page. If you delete your account, all your private information and account data will be deleted, EXCEPT we do not delete your game history associated with your username, that is public information.",
-"This site is open source. You may copy or distribute anything on this website as long as you follow the conditions outlined in <a href='https://github.com/Infinite-Chess/infinitechess.org/blob/main/docs/COPYING.md' target='_blank'>the license terms</a>! If this link is broken, it is your responsibility to find the terms.",
+["These terms of service may be modified at any point. It is YOUR responsibility to make sure you stay updated on the latest changes! When these terms of service receive an update, that information will be posted on the", "News", "page. If, at the time of a terms-of-service update, you do not agree with the new terms, you must immediately stop using the website. You may delete your account from your profile page. If you delete your account, all your private information and account data will be deleted, EXCEPT we do not delete your game history associated with your username, that is public information."],
+["This site is open source. You may copy or distribute anything on this website as long as you follow the conditions outlined in", "the license terms", "! If this link is broken, it is your responsibility to find the terms."],
 "We cannot guarantee the site will be running 100% of the time. We also cannot guarantee that data will never be corrupted.",
 "You may not perform any illegal activity on the site.",
-"If you have any questions regarding these terms, or any other question about the site, <a href='mailto:infinitechess.org@gmail.com'>email us!</a>"
+["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
 ]
 update = "(Last updated: 7/13/24. Added warning that all games played becomes public information, including your account approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
 thanks = "Thank you!"
@@ -277,16 +275,20 @@ forgot_password = ["Forgot? ", "Email us."]
 409_message = ["There may have been a clashing username or email. Please ", "reload", ", the page."]
 500_message = "This isn't supposed to happen. There is some debugging to be done!"
 
+########### NEWS ###########
+
 [news]
 title = "News"
+more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+
+[news.july13-2024]
 date = "July 13, 2024:"
-tos_update = "The <a href='/termsofservice'>Terms of Service</a> have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."
+tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."]
 game_history_warning = "Your game history may become available on your profile at a future time."
-more_dev_logs = "More dev logs are posted on the <a target='_blank' href='https://discord.gg/NFWFGZeNh5'>official discord</a>, and on the <a href='https://www.chess.com/forum/view/chess-variants/infinite-chess-app-devlogs-and-more' target='_blank'>chess.com forums</a>!"
 
 [news.july9-2024]
 date = "July 9, 2024:"
-text = "Infinite Chess is Now Open Source! See, and contribute, to the project <a href='https://github.com/Infinite-Chess/infinitechess.org' target='_blank'>on GitHub!"
+text = ["Infinite Chess is Now Open Source! See, and contribute, to the project ", "on GitHub!"]
 
 [news.may27-2024]
 date = "May 27, 2024:"
@@ -307,7 +309,7 @@ update_list = [
 "A drum countdown effect is now played at 10 seconds left on the clock.",
 "An auto-resignation timer will start if you're opponent goes AFK (with an audible warning)."
 ]
-text_bot = "And many others! For the full list, check out <a href='https://discord.com/channels/1114425729569017918/1114427288776364132/1240014519061712997' target='_blank'>the discord</a>!"
+text_box = ["And many others! For the full list, check out ", "the discord!"]
 
 [news.jan29-2024]
 date = "Jan 29, 2024:"
@@ -316,4 +318,4 @@ text = "New video released today!"
 [news.aug26-2023]
 date = "Aug 26, 2023:"
 text_top = "Infinite Chess v1.2 has been released! Introducing Move History. Use the left & right arrow keys to rewind and fast forward the game!"
-text_bot = "The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!"
+text_box = "The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!"

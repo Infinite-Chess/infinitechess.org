@@ -60,7 +60,7 @@ const link_white_list = [
 
 const xss_options = {
   whiteList: {
-    a: ["href", "target"],
+ // a: ["href", "target"],
     b: [],
     strong: [],
     i: [],
@@ -73,14 +73,14 @@ const xss_options = {
     sup: [],
   },
   onTagAttr: function (tag, name, value, isWhiteAttr) {
-    if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
+    /*if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
       console.warn(
         `Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
       );
-    }
+    }*/
   },
   safeAttrValue: function (tag, name, value) {
-    if (
+    /*if (
       tag === "a" &&
         name === "href" &&
         link_white_list.includes(value.trim())
@@ -90,7 +90,7 @@ const xss_options = {
       console.warn(
         `Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
       );
-    }
+    }*/
   },
 };
 const custom_xss = new xss.FilterXSS(xss_options);

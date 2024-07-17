@@ -36,16 +36,33 @@
                 <p class="center" style="margin-bottom:3em"><%=t('credits.copyright')%></p>
                 
                 <h2><%=t('credits.variants_heading')%></h2>
-                <p><%-t('credits.variants_credits', { joinArrays: '</p><p>' })%></p>
-
+                <p><%=t('credits.variants_credits.0')%></p>
+                <p><%=t('credits.variants_credits.1')%></p>
+                <p><%=t('credits.variants_credits.2')%></p>
+                <p><%=t('credits.variants_credits.3')%></p>
+                <p><%=t('credits.variants_credits.4')%></p>
+                <p><%=t('credits.variants_credits.5')%></p>
+                <p><%=t('credits.variants_credits.6')%></p>
+                <p><%=t('credits.variants_credits.7')%></p>
+                <p><%=t('credits.variants_credits.8')%></p>
+                <p><%=t('credits.variants_credits.9')%></p>
+                <p><a href='https://math.colgate.edu/~integers/og2/og2.pdf' target='_blank'>Omega</a> <%=t('credits.variants_credits.10')%></p>
+                <p><a href='https://chess.stackexchange.com/questions/42480/checkmate-in-%cf%89%c2%b2-moves-with-finitely-many-pieces' target='_blank'>Omega^2</a> <%=t('credits.variants_credits.11')%></p>
+                <p><a href='https://math.colgate.edu/~integers/og2/og2.pdf' target='_blank'>Omega^3</a> <%=t('credits.variants_credits.12')%></p>
+                <p><a href='https://math.colgate.edu/~integers/rg4/rg4.pdf' target='_blank'>Omega^4</a> <%=t('credits.variants_credits.13')%></p>
                 <h2><%=t('credits.textures_heading')%></h2>
-                <p><%-t('credits.textures_credits', { joinArrays: '</p><p>' })%></p>
+                <p><a target='_blank' href='https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces'>Cburnett</a> <%=t('credits.textures_licensed_under')%> <a target='_blank' href='https://creativecommons.org/licenses/by-sa/3.0/deed.en'>Creative Commons Attribution-Share Alike 3.0 Unported License</a>.</p>
+                <p><a target='_blank' href='https://greenchess.net/info.php?item=downloads'>Green Chess</a> <%=t('credits.textures_licensed_under')%> <a target='_blank' href='https://creativecommons.org/licenses/by-sa/3.0/deed.en'>Creative Commons Attribution-Share Alike 3.0</a></p>
+                <p><a target='_blank' href='https://github.com/pychess/pychess/blob/master/LICENSE'>Pychess</a> <%=t('credits.textures_licensed_under')%> <a target='_blank' href='https://www.gnu.org/licenses/gpl-3.0.en.html'>GNU General Public License</a></p>
+                <p><%=t('credits.textures_credits.0')%></p>
 
                 <h2><%=t('credits.sounds_heading')%></h2>
-                <p><%-t('credits.sounds_credits', { joinArrays: '</p><p>' })%></p>
+                <p><%=t('credits.sounds_credits.0.0')%> <a href='https://github.com/lichess-org/lila/blob/master/COPYING.md' target='_blank'>Lichess-org Lila</a> <%=t('credits.sounds_credits.0.1')%> <a href='https://www.gnu.org/licenses/agpl-3.0.en.html' target='_blank'>GNU Affero General Public License</a></p>
+                <p><%=t('credits.sounds_credits.1')%></p>
 
                 <h2><%=t('credits.code_heading')%></h2>
-                <p><%-t('credits.code_credits', { joinArrays: '</p><p>' })%></p>
+                <p><a target='_blank' href='https://www.lcg.ufrj.br/WebGL/hws.edu-examples/doc-bump/gl-matrix.js.html'>High Performance Matrix & Vector Operations</a> <%=t('credits.code_credits.0')%></p>
+                <p><a target='_blank' href='https://github.com/tsevasa/infinite-chess-notation'>Infinite Chess Notation Converter</a> <%=t('credits.code_credits.1')%></p>
             </div>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages}) %>
