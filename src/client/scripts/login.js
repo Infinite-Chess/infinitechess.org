@@ -1,26 +1,26 @@
 
-const usernameInputElement = document.getElementById('username');
-const passwordInputElement = document.getElementById('password');
-const submitButton = document.getElementById('submit');
-const forgotElement = document.getElementById('forgot');
+const element_usernameInput = document.getElementById('username');
+const element_passwordInput = document.getElementById('password');
+const element_submitButton = document.getElementById('submit');
+const element_forgot = document.getElementById('forgot');
 let loginErrorElement = undefined;
 
 
 //Event Listeners
-usernameInputElement.addEventListener('input', handleInput); // When username field changes...
-passwordInputElement.addEventListener('input', handleInput); // When username field changes...
+element_usernameInput.addEventListener('input', handleInput); // When username field changes...
+element_passwordInput.addEventListener('input', handleInput); // When username field changes...
 
 //Checks for autofilled inputs on load
 window.addEventListener('load', (event) => {
-    if (usernameInputElement.value && passwordInputElement.value) {
+    if (element_usernameInput.value && element_passwordInput.value) {
         updateSubmitButton();
     }
 });
 
-submitButton.addEventListener('click', (event) => {
+element_submitButton.addEventListener('click', (event) => {
     event.preventDefault();
 
-    if (usernameInputElement.value && passwordInputElement.value && !loginErrorElement) sendLogin(usernameInputElement.value, passwordInputElement.value);
+    if (element_usernameInput.value && element_passwordInput.value && !loginErrorElement) sendLogin(element_usernameInput.value, element_passwordInput.value);
 });
 
 function handleInput(event) {
@@ -31,11 +31,11 @@ function handleInput(event) {
 
     updateSubmitButton();
     // Make forgot password message hidden
-    forgotElement.className = 'forgothidden';
+    element_forgot.className = 'forgothidden';
 }
 
 const sendLogin = (username, password) => {
-    submitButton.disabled = true;
+    element_submitButton.disabled = true;
 
     let OK = false;
     let config = {
@@ -64,11 +64,11 @@ const sendLogin = (username, password) => {
                 // Set variable because it now exists.
                 loginErrorElement = document.getElementById("loginerror");
                 // Make forgot password message visible
-                forgotElement.className = 'forgotvisible';
+                element_forgot.className = 'forgotvisible';
             }
             updateSubmitButton();
             loginErrorElement.textContent = result['message'];
-            submitButton.disabled = false;
+            element_submitButton.disabled = false;
         }
     });
 }
@@ -76,14 +76,14 @@ const sendLogin = (username, password) => {
 // Greys-out submit button if there's any errors.
 // The click-prevention is taken care of in the submit event listener.
 const updateSubmitButton = function() {
-    if (!usernameInputElement.value || !passwordInputElement.value || loginErrorElement) {
-        submitButton.className = 'unavailable';
+    if (!element_usernameInput.value || !element_passwordInput.value || loginErrorElement) {
+        element_submitButton.className = 'unavailable';
     } else { // No Errors
-        submitButton.className = 'ready';
+        element_submitButton.className = 'ready';
     }
 }
 
-createErrorElement = function (id, insertAfter) {
+function createErrorElement(id, insertAfter) {
     const errElement = document.createElement('div');
     errElement.className = 'error';
     errElement.id = id;
