@@ -90,14 +90,13 @@ async function testPasswordForRequest(req, res, log) {
     if (!verifyBodyHasLoginFormData(req)) return false; // If false, it will have already sent a response.
     
     let { username, password } = req.body;
-		if (!username) username = req.params.member;
+    if (!username) username = req.params.member;
     const usernameLowercase = username.toLowerCase();
     const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
     const hashedPassword = getHashedPassword(usernameLowercase);
 
     if (!usernameCaseSensitive || !hashedPassword) {
         res.status(401).json({ 'message': 'Username is invalid'}); // Unauthorized, username not found
-			
         return false;
     }
     
@@ -112,7 +111,6 @@ async function testPasswordForRequest(req, res, log) {
         if (log) logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
         res.status(401).json({ 'message': 'Password is incorrect'}); // Unauthorized, password not found
         if (autoRespond) onIncorrectPassword(browserAgent, usernameCaseSensitive);
-
         return false;
     }
 
@@ -136,7 +134,7 @@ function verifyBodyHasLoginFormData(req, res) {
     }
 
     let { username, password } = req.body;
-		if (!username) username = req.params.member;
+	if (!username) username = req.params.member;
     
     if (!username || !password) {
         console.log(`User ${username} sent a bad login request missing either username or password!`)

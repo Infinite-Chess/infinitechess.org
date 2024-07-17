@@ -110,7 +110,7 @@ function loadMemberData (loggedInAs) {
             revealElement(element_showAccountInfo)
             // Display remove button
             revealElement(element_deleteAccount)
-						element_deleteAccount.addEventListener("click", () => removeAccount(true));
+			element_deleteAccount.addEventListener("click", () => removeAccount(true));
             // revealElement(element_accountInfo)
             revealElement(element_change)
             element_email.textContent = result.email;
@@ -140,18 +140,18 @@ async function removeAccount(confirmation) {
         };
 
         const response = await fetch(`/member/${member}/delete`, config)
-				if (response.status === 401) {
-					alert("Password Incorrect");
-					removeAccount(false);
-				} else if (response.status !== 301) {
-						console.error(response);
-						window.location = '/404';
-				}
-				
-				// Accept redirect
-				if (response.redirected) {
-						window.location.href = response.url;
-				}
+        if (response.status === 401) {
+            alert("Password Incorrect");
+            removeAccount(false);
+        } else if (response.status !== 301) {
+            console.error(response);
+            window.location = '/404';
+        }
+        
+        // Accept redirect
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
     }
 }
 

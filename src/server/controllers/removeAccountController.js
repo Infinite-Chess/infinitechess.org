@@ -6,7 +6,6 @@ const { removeMember, getAllUsernames, getVerified, getJoinDate, getUsernameCase
 const { testPasswordForRequest } = require('../controllers/authController');
 const { removeAllRoles } = require('../controllers/roles');
 const { logEvents } = require('../middleware/logEvents');
-const bcrypt = require('bcrypt');
 
 // Automatic deletion of accounts...
 
@@ -29,10 +28,10 @@ async function removeAccount(req, res) {
     if (req.user !== usernameLowercase) return res.status(403).json({'message' : 'Forbidden. This is not your account.'});
 
 	
-		if (!(await testPasswordForRequest(req, res, false, false))) {
+    if (!(await testPasswordForRequest(req, res, false, false))) {
         logEvents(`Incorrect password for user ${getUsernameCaseSensitive(usernameLowercase)} attempting to remove account!`, "loginAttempts.txt", { print: true });
         return res.status(401).json({'message' : 'Incorrect password.'});
-		}
+    }
 
     removeAllRoles(req.user); // Remove roles
     if (removeMember(req.user)) {
