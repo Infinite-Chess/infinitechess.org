@@ -36,6 +36,7 @@ const highlightline = (function(){
 
         const snapDist = miniimage.gwidthWorld() / 2;
         
+        const a = perspective.distToRenderBoard
         /** @type {BoundingBox} */
         let boundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false)
         

@@ -176,7 +176,7 @@ const arrows = (function() {
             paddedBoundingBox.bottom+=cpadding;
             paddedBoundingBox.left+=cpadding
         }
-        console.log(cpadding)
+
         if (perspective.getEnabled()) padding = 0;
         for (const strline in slideArrows) {
             const line = math.getCoordsFromKey(strline)
