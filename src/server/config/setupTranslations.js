@@ -51,7 +51,11 @@ const link_white_list = [
   "https://www.gnu.org/licenses/agpl-3.0.en.html",
   "https://www.lcg.ufrj.br/WebGL/hws.edu-examples/doc-bump/gl-matrix.js.html",
   "https://github.com/tsevasa/infinite-chess-notation",
-  "https://github.com/Infinite-Chess/infinitechess.org/blob/main/docs/COPYING.md"
+  "https://github.com/Infinite-Chess/infinitechess.org/blob/main/docs/COPYING.md",
+  "https://discord.gg/NFWFGZeNh5",
+  "https://www.chess.com/forum/view/chess-variants/infinite-chess-app-devlogs-and-more",
+  "https://github.com/Infinite-Chess/infinitechess.org",
+  "https://discord.com/channels/1114425729569017918/1114427288776364132/1240014519061712997"
 ];
 
 const xss_options = {
