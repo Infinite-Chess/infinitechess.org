@@ -375,9 +375,13 @@ const math = (function() {
     }
 
     function getLineSteps(step, origin, coord) {
-        let x = Math.floor((coord[0]-origin[0])/step[0])
+        let x = (coord[0]-origin[0])/step[0]
+        if (x>0) x = Math.floor(x)
+        else x = Math.ceil(x)
         if (step[0]!==0) return x;
         let y = Math.floor((coord[1]-origin[1])/step[1])
+        if (x>0) x = Math.floor(x)
+        else x = Math.ceil(x)
         return y
     }
 
