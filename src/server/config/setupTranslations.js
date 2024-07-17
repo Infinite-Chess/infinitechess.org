@@ -258,7 +258,8 @@ function translateStaticTemplates(translations) {
               return i18next.t(key, options);
             },
             languages: languages_list,
-            viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views')
+            language: language,
+            viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
           },
         ),
       );
