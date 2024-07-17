@@ -86,6 +86,8 @@ const options = (function() {
 
     let fps = false
 
+    let premovesEnabled = true; //alows the user to make premoves.
+
 
     // Function
 
@@ -120,6 +122,14 @@ const options = (function() {
 
     function isFPSOn() {
         return fps;
+    }
+
+    function allowPremoves(value) {
+        premovesEnabled = value;
+    }
+
+    function arePremovesEnabled() {
+        return premovesEnabled;
     }
 
     // Toggles EDIT MODE! editMode
@@ -265,6 +275,8 @@ const options = (function() {
         getColorOfType,
         areUsingColoredPieces,
         getEM,
+        arePremovesEnabled,
+        allowPremoves,
         toggleFPS,
         isThemeDefault,
         disableEM,

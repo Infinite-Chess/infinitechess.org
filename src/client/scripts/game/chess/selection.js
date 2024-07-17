@@ -59,7 +59,7 @@ const selection = (function() {
     function update() {
         // Guard clauses...
         const gamefile = game.getGamefile();
-        if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn
+        if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)  && !options.arePremovesEnabled()) return; // Not our turn
         if (pawnIsPromoting) { // Do nothing else this frame but wait for a promotion piece to be selected
             if (promoteTo) makePromotionMove()
             return;
@@ -116,7 +116,7 @@ const selection = (function() {
         }
 
         // If we haven't return'ed at this point, check if the move is legal.
-        if (!hoverSquareLegal) return; // Illegal
+        if (!hoverSquareLegal && (!onlinegame.areInOnlineGame() || onlinegame.isItOurTurn() || !options.arePremovesEnabled())) return; // Illegal
 
         // Don't move the piece if the mesh is locked, because it will mess up either
         // the mesh generation algorithm or checkmate algorithm.
@@ -154,7 +154,7 @@ const selection = (function() {
 
         // If it's your turn, select that piece.
 
-        if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
+        if (clickedPieceColor !== (onlinegame.areInOnlineGame()? onlinegame.getOurColor():gamefile.whosTurn) && !options.getEM()) return; // Don't select opposite color
         if (options.getEM() && pieceClickedType === 'voidsN') return; // Don't select voids.
 
         const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare)
@@ -202,8 +202,12 @@ const selection = (function() {
         const compact = formatconverter.LongToShort_CompactMove(move);
         move.compact = compact;
 
-        movepiece.makeMove(game.getGamefile(), move)
-        onlinegame.sendMove();
+        if (!onlinegame.areInOnlineGame() || onlinegame.isItOurTurn(gamefile)) {
+            movepiece.makeMove(game.getGamefile(), move)
+            onlinegame.sendMove();
+        } else {
+            onlinegame.makePremove(move);
+        }
 
         unselectPiece()
     }

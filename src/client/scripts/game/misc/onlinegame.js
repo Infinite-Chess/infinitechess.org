@@ -10,6 +10,7 @@ const onlinegame = (function(){
     let gameID;
     let isPrivate;
     let ourColor; // white/black
+    let premoves = [];
 
     /**
      * Whether we are in sync with the game on the server.
@@ -370,6 +371,26 @@ const onlinegame = (function(){
         stopOpponentAFKCountdown(); // The opponent is no longer AFK if they were
         flashTabNameYOUR_MOVE(true);
         scheduleMoveSound_timeoutID();
+
+        handlePremove();
+    }
+    /**
+     * Submits the next premove to the server if it is legal.
+     * Otherwise deletes the queue.
+     */
+    function handlePremove() {
+        if(!premoves || !options.arePremovesEnabled())
+            return; //The user has not made a premove.
+        let premove = premoves.shift();
+        let premoveLegal = true; //to do: check if premove is legal
+        if(!premoveLegal)
+        {
+            //If this premove was innvalid all subsequent premoves are also invalid.
+            premoves = [];
+            return;
+        }
+        movepiece.makeMove(game.getGamefile(), premove)
+        onlinegame.sendMove();
     }
 
     function flashTabNameYOUR_MOVE(on) {
@@ -629,6 +650,13 @@ const onlinegame = (function(){
         rescheduleAlertServerWeAFK();
     }
 
+    function makePremove(move) {
+        if(!options.arePremovesEnabled())
+            return;
+        if (main.devBuild) console.log("A premove was made.");
+        premoves.push(move);
+    }
+
     // Aborts / Resigns
     function onMainMenuPress() {
         if (!inOnlineGame) return;
@@ -744,6 +772,7 @@ const onlinegame = (function(){
         isItOurTurn,
         areWeColor,
         sendMove,
+        makePremove,
         onMainMenuPress,
         getGameID,
         askServerIfWeAreInGame,
