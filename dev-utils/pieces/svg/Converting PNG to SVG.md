@@ -1,6 +1,6 @@
 # Steps to converting a PNG to SVG #
 
-While retaining high quality, yet highly compacted!
+This is the best method I've found, to retain high quality, yet remain highly compact!
 
 1. Go to [SVG Trace](https://svgtrace.com/png-to-svg)
 
