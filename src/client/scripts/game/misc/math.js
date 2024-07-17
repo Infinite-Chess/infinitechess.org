@@ -189,7 +189,6 @@ const math = (function() {
         return `${getLineFromCoords(step,coords)}|${coordAxis - (Math.floor(coordAxis / deltaAxis) * deltaAxis)}`
     }
 
-    // TODO: implement this
     /**
      * Checks if all lines are colinear aka `[[1,0],[2,0]]` would be as they are both the same direction
      * @param {Number[][]} lines Array of vectors `[[1,0],[2,0]]`
@@ -197,7 +196,12 @@ const math = (function() {
      */
 
     function areLinesCollinear(lines) {
-        return false
+        let gradient
+        for (line of lines) {
+            if (!gradient) gradient = line[0]/line[1]
+            if (!isAproxEqual(line[0]/line[1], gradient)) return false;
+        }
+        return true
     }
 
     /**
@@ -911,6 +915,44 @@ const math = (function() {
         return totalMilliseconds;
     }
 
+    function orderSwap(a,b) {
+        return [Math.min(a,b), Math.max(a,b)]
+    }
+
+    /**
+     * Get the GCD of two numbers
+     * Copied from https://www.geeksforgeeks.org/gcd-greatest-common-divisor-practice-problems-for-competitive-programming/
+     * @param {Number} a 
+     * @param {Number} b
+     * @returns {Number} 
+     */
+    function GCD(a, b) {
+        [a,b] = orderSwap(a,b)
+        if (b === 0) {
+            return a;
+        } else {
+            return gcd(b, a % b);
+        }
+    }
+
+    /**
+     * Get the LCM of an array
+     * Copied from https://www.geeksforgeeks.org/lcm-of-given-array-elements/
+     * @param {Number[]} arr
+     */
+    function LCM(arr) {
+        // Initialize result 
+        let ans = arr[0]; 
+
+        // ans contains LCM of arr[0], ..arr[i] 
+        // after i'th iteration, 
+        for (let i = 1; i < arr.length; i++) 
+            ans = (((arr[i] * ans)) / 
+                    (gcd(arr[i], ans))); 
+
+        return ans; 
+    }
+
     return Object.freeze({
         isPowerOfTwo,
         isAproxEqual,
@@ -980,6 +1022,8 @@ const math = (function() {
         minutesToMillis,
         secondsToMillis,
         getTotalMilliseconds,
-        genUniqueID
+        genUniqueID,
+        GCD,
+        LCM
     });
 })();

@@ -322,8 +322,40 @@ const checkdetection = (function(){
                 if (math.areLinesCollinear(checklines)) {
                     // FIXME: this is a problem as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
                     // Another case (3,0) (2,0) correct blocks are along (6,0) but thats not an organized line
-                    // Discuss before implementing a proper solution
-                    // For now lets just blank sliding
+
+                    // Please can someone optimize this
+
+                    let fline = checklines[0];
+                    let fGcd = math.GCD(fline[0],fline[1]);
+
+                    const baseLine = [fline[0]/fGcd, fline[1]/fGcd];
+
+                    let mult = [];
+                    checklines.forEach((line) => {mult.push(math.GCD(line[0],line[1]))});
+                    const lcm = math.LCM(Object.values(mult));
+
+                    const steps = [0,0]
+                    for (const strline in moves.sliding) {
+                        const line = math.getCoordsFromKey(strline);
+                        if (!math.areLinesCollinear([line, baseLine])) continue;
+                        const gcd = math.GCD(line[0], line[1]);
+                        let rslides = [Math.floor(moves.sliding[strline][0]/lcm*gcd),Math.floor(moves.sliding[strline][1]/lcm*gcd)];
+                        if (rslides[0]<steps[0]) steps[0] = rslides[0];
+                        if (rslides[1]>steps[1]) steps[1] = rslides[1];
+                    }
+
+                    const line = [baseLine[0]*lcm,baseLine[1]*lcm]
+
+                    if (!gamefile.startSnapshot.slidingPossible.includes(line)) {
+                        const strline = math.getKeyFromCoords(line) 
+                        tempslides[strline] = steps
+                    } else {
+                        for (i=steps[0]; i<=steps[1]; i++) {
+                            if (i==0) continue;
+                            moves.individual.push([line[0]*i,line[1]*i])
+                        }
+                    }
+
                     } else {
                     // Cannot slide to block all attack lines so blank the sliding
                     // Could probably blank regular attacks too
