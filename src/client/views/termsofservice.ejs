@@ -33,6 +33,9 @@
         <main>
             <div id="content">
                 <h1 class="center"><%=t('terms.title')%></h1>
+                <% if (language !== "en-US") { %>
+                    <p style="font-weight: bold; color: red; background-color: #feccc9; padding: 5px;"><%=t('terms.warning.0')%><a style="color: red" href="/termsofservice?lng=en"><%=t('terms.warning.1')%></a><%=t('terms.warning.2')%><p>
+                <% } %>
                 <p class="center" style="margin-bottom:3em"><%=t('terms.consent')%></p>
                 <p><%=t('terms.guardian_consent')%></p>
                 <h2><%=t('terms.parents_header')%></h2>

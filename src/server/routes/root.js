@@ -56,7 +56,7 @@ router.get("/logout", handleLogout);
 
 router.get("/termsofservice(.html)?", (req, res) => {
   res.sendFile(
-    path.join(htmlDirectory, "en-US"/*req.i18n.resolvedLanguage*/, "termsofservice.html"),
+    path.join(htmlDirectory, req.i18n.resolvedLanguage, "termsofservice.html"),
     );
 });
 
