@@ -192,7 +192,6 @@ const math = (function() {
      * @returns {number} integer c
      */
     function getCFromLineInGeneralForm(step, coords) {
-        // Idon us's old equation
         return step[0]*coords[1]-step[1]*coords[0]
     }
 
@@ -204,7 +203,6 @@ const math = (function() {
      * @returns {number}
      */
     function getYIntceptOfLine(step, coords) {
-        // Naviary's new equation
         const lineIsVertical = step[0] === 0;
         const xLine = lineIsVertical ? coords[1] % step[1] : coords[0] % step[0];
         const slope = lineIsVertical ? step[0] / step[1] : step[1] / step[0];
@@ -217,7 +215,7 @@ const math = (function() {
      * Compatable with factorable steps like `[2,2]`.
      * @param {Number[]} step Line step `[deltax,deltay]`
      * @param {Number[]} coords `[x,y]`
-     * @returns {String} the key `id|intercept`
+     * @returns {String} the key `yIntcept|smallest_x_line_intcepts`
      */
     function getKeyFromLine(step, coords) {
         // See these desmos graphs for inspiration for finding what line the coords are on:
