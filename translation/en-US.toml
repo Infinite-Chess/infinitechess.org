@@ -371,7 +371,7 @@ bug_generic = "This is a bug, please report!"
 
 [terms] # Translations are disabled for now, only language is en-US
 title = "Terms of Service"
-warning = ["THIS IS NOT A VALID LEGAL DOCUMENT, WE ARE NOT LEGALLY LIABLE FOR IT IN ANY WAY. We are only legally liable for the english version of this document. This version may be used only to get a general idea of what does the english version say. You can find the valid version ", "here", "."]
+warning = ["THIS DOCUMENT IS NOT LEGALLY BINDING. We are only accountable for the English version of this document. This translation is provided solely for general informational purposes. You can access the official English version ", "here", "."]
 consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site."
 guardian_consent = "If you are under 18, you must receive consent from a parent or legal guardian to use this site and to create an account."
 parents_header = "Parents"
