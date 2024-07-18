@@ -264,8 +264,6 @@ const options = (function() {
         getColorOfType,
         areUsingColoredPieces,
         getEM,
-        arePremovesEnabled,
-        allowPremoves,
         toggleFPS,
         isThemeDefault,
         disableEM,
