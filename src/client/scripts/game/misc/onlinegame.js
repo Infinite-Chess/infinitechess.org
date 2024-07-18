@@ -129,8 +129,8 @@ const onlinegame = (function(){
     }
 
     function displayWeAFK(secsRemaining) {
-        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["resigning"] : translations["onlinegame"]["aborting"];
-        statustext.showStatusForDuration(`${translations["onlinegame"]["afk_warning"]}${resigningOrAborting} ${translations["onlinegame"]["in"]} ${secsRemaining}...`, 1000);
+        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["auto_resigning_in"] : translations["onlinegame"]["auto_aborting_in"];
+        statustext.showStatusForDuration(`${translations["onlinegame"]["afk_warning"]} ${resigningOrAborting} ${secsRemaining}...`, 1000);
         const nextSecsRemaining = secsRemaining - 1;
         if (nextSecsRemaining === 0) return; // Stop
         const timeRemainUntilAFKLoss = afk.timeWeLoseFromAFK - Date.now();
@@ -252,8 +252,8 @@ const onlinegame = (function(){
     }
 
     function displayOpponentAFK(secsRemaining) {
-        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["resigning"] : translations["onlinegame"]["aborting"];
-        statustext.showStatusForDuration(`${translations["onlinegame"]["afk_warning"]}${resigningOrAborting} ${translations["onlinegame"]["in"]} ${secsRemaining}...`, 1000);
+        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["auto_resigning_in"] : translations["onlinegame"]["auto_aborting_in"];
+        statustext.showStatusForDuration(`${translations["onlinegame"]["opponent_afk"]} ${resigningOrAborting} ${secsRemaining}...`, 1000);
         const nextSecsRemaining = secsRemaining - 1;
         if (nextSecsRemaining === 0) return; // Stop
         const timeRemainUntilAFKLoss = afk.timeOpponentLoseFromAFK - Date.now();
@@ -281,11 +281,11 @@ const onlinegame = (function(){
     }
 
     function displayOpponentDisconnect(secsRemaining, wasByChoice) {
-        const disconnectedOrLostConnection = wasByChoice ? translations["onlinegame"]["disconnected"] : translations["onlinegame"]["lost_connection"]
-        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["resigning"] : translations["onlinegame"]["aborting"];
+        const opponent_disconnectedOrLostConnection = wasByChoice ? translations["onlinegame"]["opponent_disconnected"] : translations["onlinegame"]["opponent_lost_connection"]
+        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["auto_resigning_in"] : translations["onlinegame"]["auto_aborting_in"];
         // The "You are AFK" message should overwrite, be on top of, this message,
         // so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
-        if (!afk.timeWeLoseFromAFK) statustext.showStatusForDuration(`${translations["onlinegame"]["opponent_has"]} ${disconnectedOrLostConnection}. ${translations["onlinegame"]["auto"]}${resigningOrAborting} ${translations["onlinegame"]["in"]} ${secsRemaining}...`, 1000);
+        if (!afk.timeWeLoseFromAFK) statustext.showStatusForDuration(`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`, 1000);
         const nextSecsRemaining = secsRemaining - 1;
         if (nextSecsRemaining === 0) return; // Stop
         const timeRemainUntilDisconnectLoss = disconnect.timeOpponentLoseFromDisconnect - Date.now();
