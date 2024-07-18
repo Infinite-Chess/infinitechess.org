@@ -170,7 +170,7 @@ const selection = (function() {
      * @param {*} coords - The coordinates of the piece.
      */
     function selectPiece(type, index, coords) {
-        main.renderThisFrame()
+        main.renderThisFrame();
         pieceSelected = { type, index, coords }
         // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
         legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected)
@@ -185,7 +185,7 @@ const selection = (function() {
         legalMoves = undefined;
         pawnIsPromoting = false;
         promoteTo = undefined;
-        guipromotion.close() // Close the promotion UI
+        guipromotion.close(); // Close the promotion UI
         main.renderThisFrame();
     }
 
@@ -198,7 +198,7 @@ const selection = (function() {
         const strippedCoords = movepiece.stripSpecialMoveTagsFromCoords(coords);
         /** @type {Move} */
         const move = { type: pieceSelected.type, startCoords: pieceSelected.coords, endCoords: strippedCoords }
-        specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move)
+        specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move);
         const compact = formatconverter.LongToShort_CompactMove(move);
         move.compact = compact;
 
@@ -209,15 +209,15 @@ const selection = (function() {
             onlinegame.makePremove(move);
         }
 
-        unselectPiece()
+        unselectPiece();
     }
 
     /** Adds the promotion flag to the destination coordinates before making the move. */
     function makePromotionMove() {
         const coords = pawnIsPromoting;
         coords.promotion = promoteTo; // Add a tag on the coords of what piece we're promoting to
-        moveGamefilePiece(coords)
-        perspective.relockMouse()
+        moveGamefilePiece(coords);
+        perspective.relockMouse();
     }
 
     /**
@@ -236,13 +236,13 @@ const selection = (function() {
         const hoverSquareIsSameColor = typeAtHoverCoords && math.getPieceColorFromType(pieceSelected.type) === math.getPieceColorFromType(typeAtHoverCoords);
         const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
         // This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
-        hoverSquareLegal = legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
+        hoverSquareLegal = legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor);
     }
 
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
     function renderGhostPiece() {
         if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || main.videoMode) return;
-        pieces.renderGhostPiece(pieceSelected.type, hoverSquare)
+        pieces.renderGhostPiece(pieceSelected.type, hoverSquare);
     }
 
     return Object.freeze({
@@ -254,5 +254,5 @@ const selection = (function() {
         promoteToType,
         update,
         renderGhostPiece
-    })
+    });
 })();
