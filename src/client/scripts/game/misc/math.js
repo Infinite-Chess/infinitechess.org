@@ -182,6 +182,10 @@ const math = (function() {
         return { left, right, bottom, top }
     }
 
+    function posMod(a,b) {
+        return a - (Math.floor(a / b) * b)
+    }
+
     /**
      * Uses the calculation of ax + by = c
      * c=b*y-intercept so is unique for each line
@@ -204,8 +208,8 @@ const math = (function() {
      */
     function getYIntceptOfLine(step, coords) {
         const lineIsVertical = step[0] === 0;
-        const xLine = lineIsVertical ? coords[1] % step[1] : coords[0] % step[0];
-        const slope = lineIsVertical ? step[0] / step[1] : step[1] / step[0];
+        const xLine = lineIsVertical ? posMod(coords[1], step[1]) : posMod(coords[0], step[0]);
+        const slope = lineIsVertical ? 0 /**step[0] / step[1]*/ : step[1] / step[0];
         // console.log(step, coords, lineIsVertical ? coords[0] + slope * (xLine - coords[1]) : coords[1] + slope * (xLine - coords[0]))
         return lineIsVertical ? coords[0] + slope * (xLine - coords[1]) : coords[1] + slope * (xLine - coords[0]);
     }
@@ -223,14 +227,15 @@ const math = (function() {
         // https://www.desmos.com/calculator/t9wkt3kbfo
 
         // Idon us's old equation
-        // const lineIsVertical = step[0] === 0;
-        // const deltaAxis = lineIsVertical ? step[0] : step[1];
-        // const coordAxis = lineIsVertical ? coords[0] : coords[1];
-        // return `${getCFromLineInGeneralForm(step,coords)}|${coordAxis - (Math.floor(coordAxis / deltaAxis) * deltaAxis)}`
+        const lineIsVertical = step[0] === 0;
+        const deltaAxis = lineIsVertical ? step[1] : step[0];
+        const coordAxis = lineIsVertical ? coords[1] : coords[0];
+        const xLine = posMod(coordAxis, deltaAxis)
+        //return `${getCFromLineInGeneralForm(step,coords)}|${xLine}`
 
         // Naviary's new equation
-        const lineIsVertical = step[0] === 0;
-        const xLine = lineIsVertical ? coords[1] % step[1] : coords[0] % step[0];
+        //const lineIsVertical = step[0] === 0;
+        //const xLine = lineIsVertical ? coords[1] % step[1] : coords[0] % step[0];
         const yIntcept = getYIntceptOfLine(step, coords);
         return `${yIntcept}|${xLine}`;
     }
@@ -265,9 +270,12 @@ const math = (function() {
 
     function areLinesCollinear(lines) {
         let gradient
-        for (line of lines) {
-            if (!gradient) gradient = line[0]/line[1]
-            if (!isAproxEqual(line[0]/line[1], gradient)) return false;
+        for (const line of lines) {
+            console.log(line)
+            const lgradient = line[1]/line[0]
+            if (!gradient) gradient = lgradient
+            if (!Number.isFinite(gradient)&&!Number.isFinite(lgradient)) {console.log(lgradient,gradient);continue};
+            if (!isAproxEqual(lgradient, gradient)) return false;
         }
         return true
     }
@@ -1029,6 +1037,7 @@ const math = (function() {
         roundPointToNearestGridpoint,
         boxContainsBox,
         boxContainsSquare,
+        posMod,
         getCFromLineInGeneralForm,
         getYIntceptOfLine,
         getKeyFromLine,
