@@ -72,32 +72,38 @@ const legalmoves = (function(){
      * Calculates the legal moves of the provided piece in the provided gamefile.
      * @param {gamefile} gamefile - The gamefile
      * @param {Piece} piece - The piece: `{ type, coords, index }`
-     * @param {Object} options - An object that may contain the `onlyCalcSpecials` option, that when *true*, will only calculate the legal special moves of the piece. Default: *false*
+     * @param {Object} options - An object that may contains options.
+     * - `onlyCalcSpecials`: When *true*, will only calculate the legal special moves of the piece. Default: *false*
+     * - `isPremove`: Allows pieces to move through and into others. Used when premoving.
      * @returns {LegalMoves} The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
      */
-    function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piece: { type, coords }
+    function calculate(gamefile, piece, { onlyCalcSpecials = false, isPremove = false } = {}) { // piece: { type, coords }
         if (piece.index == null) throw new Error("To calculate a piece's legal moves, we must have the index property.")
         const coords = piece.coords
         const type = piece.type;
         const trimmedType = math.trimWorBFromType(type);
         const color = math.getPieceColorFromType(type) // Color of piece calculating legal moves of
 
-        if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
+        if (color !== gamefile.whosTurn && !options.getEM() && !isPremove) return { individual: [] } // No legal moves if its not their turn!!
 
         const thisPieceMoveset = getPieceMoveset(gamefile, type) // Default piece moveset
 
-        let legalIndividualMoves = [];
-        let legalHorizontalMoves;
-        let legalVerticalMoves;
-        let legalUpDiagonalMoves;
-        let legalDownDiagonalMoves;
+        let legalIndividualMoves = thisPieceMoveset.individual;
+        let legalHorizontalMoves = thisPieceMoveset.horizontal;
+        let legalVerticalMoves = thisPieceMoveset.vertical;
+        let legalUpDiagonalMoves = thisPieceMoveset.diagonalUp;
+        let legalDownDiagonalMoves = thisPieceMoveset.diagonalDown;
 
-        if (!onlyCalcSpecials) {
+        tag: if (!onlyCalcSpecials) {
 
             // Legal jumping/individual moves
     
             shiftIndividualMovesetByCoords(thisPieceMoveset.individual, coords)
-            legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color)
+
+            //Skip legality checks for now as we can't check until the opponent moves.
+            if(isPremove) break tag;
+
+            moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, legalIndividualMoves, color)
     
             // Legal sliding moves
     

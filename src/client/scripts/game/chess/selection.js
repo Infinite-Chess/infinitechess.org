@@ -116,7 +116,7 @@ const selection = (function() {
         }
 
         // If we haven't return'ed at this point, check if the move is legal.
-        if (!hoverSquareLegal && (!onlinegame.areInOnlineGame() || onlinegame.isItOurTurn() || !options.arePremovesEnabled())) return; // Illegal
+        if (!hoverSquareLegal) return; // Illegal
 
         // Don't move the piece if the mesh is locked, because it will mess up either
         // the mesh generation algorithm or checkmate algorithm.
@@ -173,8 +173,8 @@ const selection = (function() {
         main.renderThisFrame();
         pieceSelected = { type, index, coords }
         // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-        legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected)
-        highlights.regenModel() // Generate the buffer model for the blue legal move fields.
+        legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected, {isPremove: onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn()});
+        highlights.regenModel(); // Generate the buffer model for the blue legal move fields.
     }
 
     /**
@@ -201,9 +201,9 @@ const selection = (function() {
         specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move);
         const compact = formatconverter.LongToShort_CompactMove(move);
         move.compact = compact;
-
+        let gameFile = game.getGamefile();
         if (!onlinegame.areInOnlineGame() || onlinegame.isItOurTurn(gamefile)) {
-            movepiece.makeMove(game.getGamefile(), move)
+            movepiece.makeMove(gameFile, move);
             onlinegame.sendMove();
         } else {
             onlinegame.makePremove(move);

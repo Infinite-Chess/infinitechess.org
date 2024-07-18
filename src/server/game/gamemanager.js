@@ -18,6 +18,7 @@ const formatconverter1 = require('./formatconverter1');
 const statlogger = require('./statlogger');
 const { executeSafely_async } = require('../utility/errorGuard');
 const { ensureJSONString } = require('../utility/JSONUtils');
+const {AUTO_AFK_RESIGN} = require('../config/config');
 
 const gamemanager = (function() {
 
@@ -798,7 +799,7 @@ const gamemanager = (function() {
      * @param {Socket} ws - The socket
      */
     function onAFK(ws) {
-        if(!config.AUTO_AFK_RESIGN)
+        if(!AUTO_AFK_RESIGN)
             return;
 
         // console.log("Client alerted us they are AFK.")

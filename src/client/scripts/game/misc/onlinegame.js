@@ -14,7 +14,7 @@ const onlinegame = (function(){
     /** @type {Move[]} */
     let premoves = [];
 
-    /**
+    /** 
      * Whether we are in sync with the game on the server.
      * If false, we do not submit our move. (move auto-submitted upon resyncing)
      * Set to false whenever the socket closes, or we unsub from the game.
@@ -382,9 +382,11 @@ const onlinegame = (function(){
      */
     function handlePremove() {
         /**
-         * If the promotion GUI is open when the opponent makes a move, the promotion might not be legal anymore.
-         * Ideally, we should check if the promotion is still legal and only close the UI if its not, but as a quick fix to prevent illegal promotions, unselect the piece when the opponent makes a move.
-         * The piece also needs to be unselected if it has been captured.
+         * The piece is unselected to prevent bugs where the player selects a moves that is no longer legal but was still displayed.
+         * Ideally the following should be done instead:
+         *      Unselect the piece if it no longer exists.
+         *      Recalculate legal moves and new display options.
+         *      Close the promotion GUI if promotion is no longer legal.
          */
         selection.unselectPiece();
 
@@ -407,6 +409,11 @@ const onlinegame = (function(){
         }
         movepiece.makeMove(game.getGamefile(), premove)
         onlinegame.sendMove();
+    }
+
+    function getPremoveCount()
+    {
+        return options.arePremovesEnabled()? premoves.length : 0;
     }
 
     function flashTabNameYOUR_MOVE(on) {
@@ -789,6 +796,7 @@ const onlinegame = (function(){
         areWeColor,
         sendMove,
         makePremove,
+        getPremoveCount,
         onMainMenuPress,
         getGameID,
         askServerIfWeAreInGame,
