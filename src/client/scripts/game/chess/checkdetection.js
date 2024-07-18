@@ -326,11 +326,12 @@ const checkdetection = (function(){
             if (!opensDiscovered) continue;
             // checklines.push(line);
             // Delete all lines except this one (because if we move off of it we would be in check!)
-            for (const direction of moves) { // [2,1]
-                if (math.areCoordsEqual(direction, line)) continue; // Same line
-                const key = math.getKeyFromCoords(line);
-                delete moves.sliding[key]
+            for (const direction of Object.keys(moves.sliding)) { // 'dx,dy'
+                const directionNumbArray = direction.split(',').map(Number); // [dx,dy]
+                if (math.areCoordsEqual(directionNumbArray, line)) continue; // Same line
+                delete moves.sliding[direction];
             }
+
         }
         // const tempslides = {}
         // r : {
