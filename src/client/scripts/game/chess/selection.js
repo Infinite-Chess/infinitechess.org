@@ -59,7 +59,7 @@ const selection = (function() {
     function update() {
         // Guard clauses...
         const gamefile = game.getGamefile();
-        if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)  && !options.arePremovesEnabled()) return; // Not our turn
+        if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)  && !premove.arePremovesEnabled()) return; // Not our turn
         if (pawnIsPromoting) { // Do nothing else this frame but wait for a promotion piece to be selected
             if (promoteTo) makePromotionMove()
             return;

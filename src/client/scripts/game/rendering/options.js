@@ -86,9 +86,6 @@ const options = (function() {
 
     let fps = false
 
-    let premovesEnabled = true; //alows the user to make premoves.
-
-
     // Function
 
     function isDebugModeOn() {
@@ -122,14 +119,6 @@ const options = (function() {
 
     function isFPSOn() {
         return fps;
-    }
-
-    function allowPremoves(value) {
-        premovesEnabled = value;
-    }
-
-    function arePremovesEnabled() {
-        return premovesEnabled;
     }
 
     // Toggles EDIT MODE! editMode

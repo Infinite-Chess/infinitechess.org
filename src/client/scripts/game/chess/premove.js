@@ -3,6 +3,17 @@
 "use strinct";
 
 const premove = (function(){
+
+    let premovesEnabled = true; //alows the user to make premoves.
+
+    function allowPremoves(value) {
+        premovesEnabled = value;
+    }
+
+    function arePremovesEnabled() {
+        return premovesEnabled;
+    }
+
     /** @type {Move[]} */
     let premoves = [];
 
@@ -21,7 +32,7 @@ const premove = (function(){
         selection.unselectPiece();
 
 
-        if(!premoves.length || !options.arePremovesEnabled())
+        if(!premoves.length || !premovesEnabled)
             return; //The user has not made a premove.
         let premove = premoves.shift();
         
@@ -42,7 +53,7 @@ const premove = (function(){
     }
 
     function makePremove(move) {
-        if(!options.arePremovesEnabled())
+        if(!premovesEnabled)
             return;
         if (main.devBuild) console.log("A premove was made.");
         premoves.push(move);
@@ -50,10 +61,11 @@ const premove = (function(){
 
     function getPremoveCount()
     {
-        return options.arePremovesEnabled()? premoves.length : 0;
+        return premovesEnabled? premoves.length : 0;
     }
     return Object.freeze({
         makePremove,
-        submitPremove
+        submitPremove,
+        arePremovesEnabled
     });
 })();
