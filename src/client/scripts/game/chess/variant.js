@@ -43,35 +43,54 @@ const variant = (function() {
         if (options) initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options) // Ignores the "Variant" metadata, and just uses the specified startingPosition
         else initStartSnapshotAndGamerules(gamefile, metadata) // Default (built-in variant, not pasted)
 
+        initExistingTypes(gamefile);
         initPieceMovesets(gamefile)
-
-        initsliding(gamefile)
+        initSlidingMoves(gamefile)
     }
 
     /**
-     * 
+     * Sets the `existingTypes` property of the `startSnapshot` of the gamefile,
+     * which contains all types of pieces in the game, without their color extension.
      * @param {gamefile} gamefile 
      */
-    function initsliding(gamefile) {
-        gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile.pieceMovesets, gamefile.startSnapshot.position)
-    }
-
-    function getPossibleSlides(movesets, position) {
-        const teamtypes = new Set(Object.values(position)); // Make a set of all pieces in game
+    function initExistingTypes(gamefile) {
+        const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
         const rawtypes = new Set();
         for (const tpiece of teamtypes) {
             rawtypes.add(math.trimWorBFromType(tpiece)); // Make a set wit the team colour trimmed
         }
-        const slides = new Set(['1,0']); // Always on for castling, If castling can be disabled, change this?
+        gamefile.startSnapshot.existingTypes = rawtypes;
+    }
+
+    /**
+     * Inits the `slidingMoves` property of the `startSnapshot` of the gamefile.
+     * This contains the information of what slides are possible, according to
+     * what piece types are in this game.
+     * @param {gamefile} gamefile 
+     */
+    function initSlidingMoves(gamefile) {
+        gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile)
+    }
+
+    /**
+     * Calculates all possible slides that should be possible in the provided game,
+     * excluding pieces that aren't in the provided position.
+     * @param {gamefile} gamefile
+     */
+    function getPossibleSlides(gamefile) {
+        const rawtypes = gamefile.startSnapshot.existingTypes;
+        const movesets = gamefile.pieceMovesets;
+        // '1,0' is required if castling is enabled. The other default ones are so that arrows mode 'all' has atleast use to you.
+        const slides = new Set(['1,0','0,1','1,1','1,-1']);
         for (const type of rawtypes) {
             let moveset = movesets[type];
             if (!moveset) continue;
             moveset = moveset();
             if (!moveset.sliding) continue;
-            Object.keys(moveset.sliding).forEach(slide => {slides.add(slide)});
+            Object.keys(moveset.sliding).forEach( slide => { slides.add(slide) });
         }
         let temp = [];
-        slides.forEach(slideline => {temp.push(math.getCoordsFromKey(slideline))})
+        slides.forEach(slideline => { temp.push(math.getCoordsFromKey(slideline)) })
         return temp;
     }
 

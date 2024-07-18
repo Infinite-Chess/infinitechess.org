@@ -49,9 +49,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         /** The bounding box surrounding the starting position, without padding.
          * @type {BoundingBox} */
         box: undefined,
-        /** Possible slide mopves*/
-        slidingPossible: [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]],
-    
+        /** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
+        existingTypes: undefined,
+        /** Possible sliding moves in this game, dependant on what pieces there are. */
+        slidingPossible: [[1,1],[1,-1],[1,0],[0,1],[1,2],[1,-2],[2,1],[2,-1]]
     }
     
     this.gameRules = {
