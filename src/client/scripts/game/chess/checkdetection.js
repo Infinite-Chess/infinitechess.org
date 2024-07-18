@@ -327,7 +327,7 @@ const checkdetection = (function(){
             // checklines.push(line);
             // Delete all lines except this one (because if we move off of it we would be in check!)
             for (const direction of Object.keys(moves.sliding)) { // 'dx,dy'
-                const directionNumbArray = direction.split(',').map(Number); // [dx,dy]
+                const directionNumbArray = math.getCoordsFromKey(direction) // [dx,dy]
                 if (math.areCoordsEqual(directionNumbArray, line)) continue; // Same line
                 delete moves.sliding[direction];
             }
