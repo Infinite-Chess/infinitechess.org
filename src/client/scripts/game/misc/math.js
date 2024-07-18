@@ -34,13 +34,34 @@ const math = (function() {
         return Math.abs(a-b)<epsilon
     }
 
+    /**
+     * Finds the intersection point of two lines given in the form dx * x + dy * y = c.
+     * @param {number} dx1 - The coefficient of x for the first line.
+     * @param {number} dy1 - The coefficient of y for the first line.
+     * @param {number} c1 - The constant term for the first line.
+     * @param {number} dx2 - The coefficient of x for the second line.
+     * @param {number} dy2 - The coefficient of y for the second line.
+     * @param {number} c2 - The constant term for the second line.
+     * @returns {number[] | null} - The intersection point [x, y], or null if there isn't one, or if there's infinite.
+     */
+    function getLineIntersection(dx1, dy1, c1, dx2, dy2, c2) {
+        // Idon us's old code
+        // return [
+        //     ((dx2*c1)-(dx1*c2))/((dx1*dy2)-(dx2*dy1)),
+        //     ((dy2*c1)-(dy1*c2))/((dx1*dy2)-(dx2*dy1))
+        // ]
 
-    function getLineIntersection(dx1,dy1,c1,dx2,dy2,c2) {
-        return [
-            ((dx2*c1)-(dx1*c2))/((dx1*dy2)-(dx2*dy1)),
-            ((dy2*c1)-(dy1*c2))/((dx1*dy2)-(dx2*dy1))
-        ]
-
+        // Naviary's new code
+        const denominator = (dx1 * dy2) - (dx2 * dy1);
+        if (denominator === 0) {
+            // The lines are parallel or coincident (no single intersection point)
+            return null;
+        }
+        
+        const x = ((dx2 * c1) - (dx1 * c2)) / denominator;
+        const y = ((dy2 * c1) - (dy1 * c2)) / denominator;
+        
+        return [x, y];
     }
 
     // Receives theta in RADIANS
@@ -76,7 +97,6 @@ const math = (function() {
     function boxContainsSquare(box, square) { // box: { left, right, bottom, top }  square: [x,y]
         if (!square) console.log("We need a square to test if it's within this box!")
         if (typeof square[0] !== 'number') console.log("Square is of the wrong data type!")
-
         if (square[0] < box.left) return false;
         if (square[0] > box.right) return false;
         if (square[1] < box.bottom) return false;
@@ -167,12 +187,29 @@ const math = (function() {
      * c=b*y-intercept so is unique for each line
      * Not unique when step can be factored
      * eg [2,2]
-     * @param {number[]} step `[deltax, deltay]`
-     * @param {number[]} coords `[x,y]`
+     * @param {number[]} step - The x-step and y-step of the line: `[deltax, deltay]`
+     * @param {number[]} coords - A point the line intersects: `[x,y]`
      * @returns {number} integer c
      */
-    function getLineFromCoords(step, coords) {
+    function getCFromLineInGeneralForm(step, coords) {
+        // Idon us's old equation
         return step[0]*coords[1]-step[1]*coords[0]
+    }
+
+    /**
+     * Returns the y interscept of the line with step dx and dy that intersects the coordinates.
+     * If the line is vertical, this returns the x intercept instead.
+     * @param {*} step 
+     * @param {*} coords 
+     * @returns {number}
+     */
+    function getYIntceptOfLine(step, coords) {
+        // Naviary's new equation
+        const lineIsVertical = step[0] === 0;
+        const xLine = lineIsVertical ? coords[1] % step[1] : coords[0] % step[0];
+        const slope = lineIsVertical ? step[0] / step[1] : step[1] / step[0];
+        // console.log(step, coords, lineIsVertical ? coords[0] + slope * (xLine - coords[1]) : coords[1] + slope * (xLine - coords[0]))
+        return lineIsVertical ? coords[0] + slope * (xLine - coords[1]) : coords[1] + slope * (xLine - coords[0]);
     }
 
     /**
@@ -183,11 +220,44 @@ const math = (function() {
      * @returns {String} the key `id|intercept`
      */
     function getKeyFromLine(step, coords) {
-        const lineIsVertical = step[0]===0;
-        const deltaAxis = lineIsVertical ? step[1] : step[0];
-        const coordAxis = lineIsVertical ? coords[1] : coords[0];
-        return `${getLineFromCoords(step,coords)}|${coordAxis - (Math.floor(coordAxis / deltaAxis) * deltaAxis)}`
+        // See these desmos graphs for inspiration for finding what line the coords are on:
+        // https://www.desmos.com/calculator/d0uf1sqipn
+        // https://www.desmos.com/calculator/t9wkt3kbfo
+
+        // Idon us's old equation
+        // const lineIsVertical = step[0] === 0;
+        // const deltaAxis = lineIsVertical ? step[0] : step[1];
+        // const coordAxis = lineIsVertical ? coords[0] : coords[1];
+        // return `${getCFromLineInGeneralForm(step,coords)}|${coordAxis - (Math.floor(coordAxis / deltaAxis) * deltaAxis)}`
+
+        // Naviary's new equation
+        const lineIsVertical = step[0] === 0;
+        const xLine = lineIsVertical ? coords[1] % step[1] : coords[0] % step[0];
+        const yIntcept = getYIntceptOfLine(step, coords);
+        return `${yIntcept}|${xLine}`;
     }
+    
+    /**
+     * Checks if both the x-coordinate and the y-coordinate of a point are integers.
+     * @param {number} x - The x-coordinate of the point.
+     * @param {number} y - The y-coordinate of the point.
+     * @returns {boolean} - Returns true if both coordinates are integers, otherwise false.
+     */
+    function areCoordsIntegers(coords) {
+        return Number.isInteger(coords[0]) && Number.isInteger(coords[1]);
+    }
+
+    // /**
+    //  * ALTERNATIVE to {@link areCoordsIntegers}, if we end up having floating point imprecision problems!
+    //  *
+    //  * Checks if a number is effectively an integer considering floating point imprecision.
+    //  * @param {number} num - The number to check.
+    //  * @param {number} [epsilon=Number.EPSILON] - The tolerance for floating point imprecision.
+    //  * @returns {boolean} - Returns true if the number is effectively an integer, otherwise false.
+    //  */
+    // function isEffectivelyInteger(num, epsilon = Number.EPSILON) {
+    //     return Math.abs(num - Math.round(num)) < epsilon;
+    // }
 
     /**
      * Checks if all lines are colinear aka `[[1,0],[2,0]]` would be as they are both the same direction
@@ -961,8 +1031,10 @@ const math = (function() {
         roundPointToNearestGridpoint,
         boxContainsBox,
         boxContainsSquare,
-        getLineFromCoords,
+        getCFromLineInGeneralForm,
+        getYIntceptOfLine,
         getKeyFromLine,
+        areCoordsIntegers,
         areLinesCollinear,
         deepCopyObject,
         getKeyFromCoords,

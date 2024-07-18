@@ -215,6 +215,8 @@ const highlights = (function(){
         // We COULD minimize how often we regenerate the buffer model by extending these lines beyond our field of view.
         // BUT currently we're regenerating every frame so let's just render to screen edge!
 
+        if (!selection.getLegalMovesOfSelectedPiece().sliding) return; // No sliding moves
+
         // First we need to calculate the data of the horizontal slide
         concatData_HighlightedMoves_Sliding_Horz(coords, boundingBoxOfRenderRange.left, boundingBoxOfRenderRange.right)
 
@@ -293,7 +295,7 @@ const highlights = (function(){
         lineSet.delete('0,1')
         for (const strline of lineSet) {
             const line = math.getCoordsFromKey(strline);
-            const lineEqua = math.getLineFromCoords(line, coords);
+            const lineEqua = math.getCFromLineInGeneralForm(line, coords);
 
             const corner1 = math.getAABBCornerOfLine(line, true);
             const corner2 = math.getAABBCornerOfLine(line, false);

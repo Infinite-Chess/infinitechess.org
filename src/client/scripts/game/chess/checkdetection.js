@@ -44,18 +44,20 @@ const checkdetection = (function(){
         if (!coord) return false;
         if (colorOfFriendly !== 'white' && colorOfFriendly !== 'black') throw new Error(`Cannot detect if an opponent is attacking the square of the team of color ${colorOfFriendly}!`)
 
+        let atleast1Attacker = false;
+
         // How do we find out if this square is attacked?
 
         // 1. We check every square within a 3 block radius to see if there's any attacking pieces.
 
-        if (doesVicinityAttackSquare(gamefile, coord, colorOfFriendly, attackers)) return true;
+        if (doesVicinityAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
         // What about pawns? Could they capture us?
-        if (doesPawnAttackSquare(gamefile, coord, colorOfFriendly, attackers)) return true;
+        if (doesPawnAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
 
         // 2. We check every orthogonal and diagonal to see if there's any attacking pieces.
-        if (doesSlideAttackSquare(gamefile, coord, colorOfFriendly, attackers)) return true;
+        if (doesSlideAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
 
-        return false; // Being attacked if true
+        return atleast1Attacker; // Being attacked if true
     }
 
     // Checks to see if any piece within a 3-block radius can capture. Ignores sliding movesets.
@@ -113,22 +115,17 @@ const checkdetection = (function(){
     }
 
     // Returns true if there's any sliding piece that can capture on that square
-    /**
-     * 
-     * @param {gamefile} gamefile 
-     * @param {number[][]} coords 
-     * @param {string} color 
-     * @param {Array} attackers 
-     * @returns 
-     */
     function doesSlideAttackSquare (gamefile, coords, color, attackers) {
+
+        let atleast1Attacker = false;
+
         for (const line of gamefile.startSnapshot.slidingPossible) {
             const strline = math.getKeyFromCoords(line)
             const key = math.getKeyFromLine(line, coords)
-            if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[strline][key], line, coords, color, attackers)) return true;
+            if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[strline][key], line, coords, color, attackers)) atleast1Attacker = true;
         }
 
-        return false;
+        return atleast1Attacker;
     }
 
     // Returns true if a piece on the specified line can capture on that square
@@ -136,7 +133,9 @@ const checkdetection = (function(){
     function doesLineAttackSquare(gamefile, line, direction, coords, colorOfFriendlys, attackers) {
 
         if (!line) return false; // No line, no pieces to attack
-        const lineIsVertical = direction[0]==0
+
+        let foundCheckersCount = 0;
+
         for (let a = 0; a < line.length; a++) { // { coords, type }
             const thisPiece = line[a];
 
@@ -146,24 +145,26 @@ const checkdetection = (function(){
 
             const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type)
 
-            if (!thisPieceMoveset.sliding) {continue};
+            if (!thisPieceMoveset.sliding) continue; // Piece has no sliding movesets.
             const moveset = thisPieceMoveset.sliding[math.getKeyFromCoords(direction)];
-            if (!moveset) {continue};
+            if (!moveset) continue; // Piece can't slide in the direction we're looking in
             const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor)
-            if (!thisPieceLegalSlide) continue; // This piece has no horizontal moveset, NEXT piece on this line!
+            if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
             // const rectangle = {left: thisPieceLegalSlide[0], right: thisPieceLegalSlide[1], bottom: coords[1], top: coords[1]}
             // const isWithinMoveset = math.boxContainsSquare(rectangle, coords)
-            const isWithinMoveset = legalmoves.doesslidingetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)
+            const isWithinMoveset = legalmoves.doesSlidingNetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)
 
-            if (isWithinMoveset) {
-                if (attackers) appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
-                return true; // There'll never be more than 1 checker on the same line
-                // There are 2 sides? s<-k->s
-            }
+            if (!isWithinMoveset) continue; // This piece can't slide so far as to reach us, NEXT piece!
+
+            // This piece is checking us!!
+
+            foundCheckersCount++;
+            appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
+            if (foundCheckersCount >= 2) return true; // There'll never be more than 2 checkers on the same line (until witches become a thing)
         }
 
-        return false;
+        return foundCheckersCount > 0;
     }
 
     /**
@@ -223,7 +224,7 @@ const checkdetection = (function(){
     // Time complexity: O(slides) basically O(1) unless you add a ton of slides to a single piece
     function removeSlidingMovesThatPutYouInCheck (gamefile, moves, pieceSelected, color) {
 
-        if (math.isEmpty(moves.sliding)) return;
+        if (!moves.sliding) return; // No sliding moves to remove
 
         const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color); // List of coordinates of all our royal jumping pieces
 
@@ -287,85 +288,100 @@ const checkdetection = (function(){
         return true;
 
         function eraseAllSlidingMoves() {
-            legalMoves.sliding = {}
+            delete legalMoves.sliding;
         }
     }
 
+    /**
+     * 
+     * @param {*} gamefile 
+     * @param {LegalMoves} moves 
+     * @param {*} kingCoords 
+     * @param {*} pieceSelected 
+     * @param {*} color 
+     * @returns 
+     */
     function removeSlidingMovesThatOpenDiscovered (gamefile, moves, kingCoords, pieceSelected, color) {
-
+        
         const selectedPieceCoords = pieceSelected.coords;
         let sameLines = [];
         for (const line of gamefile.startSnapshot.slidingPossible) { // Only check current possible slides
             if (math.getKeyFromLine(line, kingCoords) !== math.getKeyFromLine(line, selectedPieceCoords)) continue;
-            sameLines.push(line);
+            sameLines.push(line); // The piece is on the same line as the king!
         };
 
 
         // If not sharing any common line, there's no way we can open a discovered
-        if (sameLines.length===0) return;
+        if (sameLines.length === 0) return;
 
         // Delete the piece, and add it back when we're done!
         const deletedPiece = math.deepCopyObject(pieceSelected);
         movepiece.deletePiece(gamefile, pieceSelected, { updateData: false });
         
-        let checklines = [];
+        // let checklines = [];
         for (const line of sameLines) {
             const strline = math.getKeyFromCoords(line);
             const key = math.getKeyFromLine(line,kingCoords);
-            const opensDiscovered = doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[strline][key], 'horizontal', kingCoords, color, [])
+            const opensDiscovered = doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[strline][key], line, kingCoords, color, [])
             if (!opensDiscovered) continue;
-            checklines.push(line);
-        }
-        const tempslides = {}
-        r : {
-            if (checklines.length > 1) {
-                if (math.areLinesCollinear(checklines)) {
-                    // FIXME: this is a problem as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
-                    // Another case (3,0) (2,0) correct blocks are along (6,0) but thats not an organized line
-
-                    // Please can someone optimize this
-
-                    let fline = checklines[0];
-                    let fGcd = math.GCD(fline[0],fline[1]);
-
-                    const baseLine = [fline[0]/fGcd, fline[1]/fGcd];
-
-                    let mult = [];
-                    checklines.forEach((line) => {mult.push(math.GCD(line[0],line[1]))});
-                    const lcm = math.LCM(Object.values(mult));
-
-                    const steps = [0,0]
-                    for (const strline in moves.sliding) {
-                        const line = math.getCoordsFromKey(strline);
-                        if (!math.areLinesCollinear([line, baseLine])) continue;
-                        const gcd = math.GCD(line[0], line[1]);
-                        let rslides = [Math.floor(moves.sliding[strline][0]/lcm*gcd),Math.floor(moves.sliding[strline][1]/lcm*gcd)];
-                        if (rslides[0]<steps[0]) steps[0] = rslides[0];
-                        if (rslides[1]>steps[1]) steps[1] = rslides[1];
-                    }
-
-                    const line = [baseLine[0]*lcm,baseLine[1]*lcm]
-
-                    if (!gamefile.startSnapshot.slidingPossible.includes(line)) {
-                        const strline = math.getKeyFromCoords(line) 
-                        tempslides[strline] = steps
-                    } else {
-                        for (i=steps[0]; i<=steps[1]; i++) {
-                            if (i==0) continue;
-                            moves.individual.push([line[0]*i,line[1]*i])
-                        }
-                    }
-
-                    } else {
-                    // Cannot slide to block all attack lines so blank the sliding
-                    // Could probably blank regular attacks too
-                }
-            } else if (checklines.length === 1) {
-                const strline = math.getKeyFromCoords(checklines[0])
-                if (!moves.sliding[strline]) break r;
-                tempslides[strline] = moves.sliding[strline] 
+            // checklines.push(line);
+            // Delete all lines except this one (because if we move off of it we would be in check!)
+            for (const direction of moves) { // [2,1]
+                if (math.areCoordsEqual(direction, line)) continue; // Same line
+                const key = math.getKeyFromCoords(line);
+                delete moves.sliding[key]
             }
         }
+        // const tempslides = {}
+        // r : {
+        //     if (checklines.length > 1) {
+        //         if (math.areLinesCollinear(checklines)) {
+        //             // FIXME: this is a problem as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
+        //             // Another case (3,0) (2,0) correct blocks are along (6,0) but thats not an organized line
+
+        //             // Please can someone optimize this
+
+        //             let fline = checklines[0];
+        //             let fGcd = math.GCD(fline[0],fline[1]);
+
+        //             const baseLine = [fline[0]/fGcd, fline[1]/fGcd];
+
+        //             let mult = [];
+        //             checklines.forEach((line) => {mult.push(math.GCD(line[0],line[1]))});
+        //             const lcm = math.LCM(Object.values(mult));
+
+        //             const steps = [0,0]
+        //             for (const strline in moves.sliding) {
+        //                 const line = math.getCoordsFromKey(strline);
+        //                 if (!math.areLinesCollinear([line, baseLine])) continue;
+        //                 const gcd = math.GCD(line[0], line[1]);
+        //                 let rslides = [Math.floor(moves.sliding[strline][0]/lcm*gcd),Math.floor(moves.sliding[strline][1]/lcm*gcd)];
+        //                 if (rslides[0]<steps[0]) steps[0] = rslides[0];
+        //                 if (rslides[1]>steps[1]) steps[1] = rslides[1];
+        //             }
+
+        //             const line = [baseLine[0]*lcm,baseLine[1]*lcm]
+
+        //             if (!gamefile.startSnapshot.slidingPossible.includes(line)) {
+        //                 const strline = math.getKeyFromCoords(line) 
+        //                 tempslides[strline] = steps
+        //             } else {
+        //                 for (i=steps[0]; i<=steps[1]; i++) {
+        //                     if (i==0) continue;
+        //                     moves.individual.push([line[0]*i,line[1]*i])
+        //                 }
+        //             }
+
+        //             } else {
+        //             // Cannot slide to block all attack lines so blank the sliding
+        //             // Could probably blank regular attacks too
+        //         }
+        //     } else if (checklines.length === 1) {
+        //         const strline = math.getKeyFromCoords(checklines[0])
+        //         if (!moves.sliding[strline]) break r;
+        //         tempslides[strline] = moves.sliding[strline] 
+        //     }
+        // }
 
         // Add the piece back with the EXACT SAME index it had before!!
         movepiece.addPiece(gamefile, deletedPiece.type, deletedPiece.coords, deletedPiece.index, { updateData: false })
@@ -373,30 +389,39 @@ const checkdetection = (function(){
 
     // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2
     function appendBlockingMoves (square1, square2, moves, coords) { // coords is of the selected piece
-        
         // What is the line between our king and the attacking piece?
         let direction = [square1[0] - square2[0], square1[1] - square2[1]];
 
+        /** @type {BoundingBox} */
         const box = {
             left: Math.min(square1[0],square2[0]),
             right: Math.max(square1[0],square2[0]),
-            top: Math.min(square1[1],square2[1]),
-            bottom: Math.max(square1[1],square2[1])
+            top: Math.max(square1[1],square2[1]),
+            bottom: Math.min(square1[1],square2[1])
         }
 
-        function appendBlockPointIfLegal (blockPoint,line) {
-            if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
-                !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) {console.log("A"); return}; // Block is off grid so probably not valid
-            blockPoint=[Math.round(blockPoint[0]), Math.round(blockPoint[1])]
-            if (math.getKeyFromLine(line,blockPoint)!==math.getKeyFromLine(line, coords)) {console.log("C"); return}; // stop line multiples being annoying
+        function appendBlockPointIfLegal (blockPoint) {
+            // Idon us's old code
+            // if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
+            //     !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) {console.log("A"); return}; // Block is off grid so probably not valid
+            // blockPoint=[Math.round(blockPoint[0]), Math.round(blockPoint[1])]
+            // if (math.getKeyFromLine(line,blockPoint)!==math.getKeyFromLine(line, coords)) {console.log("C"); return}; // stop line multiples being annoying
+
+            // Naviary's new code
+            if (blockPoint === null) return; // None (or infinite) intersection points!
+            if (!math.boxContainsSquare(box, blockPoint)) return; // Intersection point not between our 2 points, but outside of them.
+            if (!math.areCoordsIntegers(blockPoint)) return; // It doesn't intersect at a whole number, impossible for our piece to move here!
+            if (math.areCoordsEqual(blockPoint, square1)) return; // Can't move onto our piece that's in check..
+            if (math.areCoordsEqual(blockPoint, square2)) return; // nor to the piece that is checking us (those are added prior to this if it's legal)!
+            
             // Can our piece legally move there?
             if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
-        }
+       }
 
         for (const linestr in moves.sliding) {
             const line = math.getCoordsFromKey(linestr)
-            const c1 = math.getLineFromCoords(line, coords)
-            const c2 = math.getLineFromCoords(direction,square2)
+            const c1 = math.getCFromLineInGeneralForm(line, coords); // Line of our selected piece
+            const c2 = math.getCFromLineInGeneralForm(direction,square2) // Line between our 2 squares
             const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2)
             appendBlockPointIfLegal(blockPoint, line)
         }

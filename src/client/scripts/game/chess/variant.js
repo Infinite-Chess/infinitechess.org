@@ -80,8 +80,7 @@ const variant = (function() {
     function getPossibleSlides(gamefile) {
         const rawtypes = gamefile.startSnapshot.existingTypes;
         const movesets = gamefile.pieceMovesets;
-        // '1,0' is required if castling is enabled. The other default ones are so that arrows mode 'all' has atleast use to you.
-        const slides = new Set(['1,0','0,1','1,1','1,-1']);
+        const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
         for (const type of rawtypes) {
             let moveset = movesets[type];
             if (!moveset) continue;

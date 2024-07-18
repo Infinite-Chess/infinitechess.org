@@ -158,11 +158,19 @@ const legalmoves = (function(){
         return individualMoves;
     }
 
-    // Takes in specified organized list, direction of the slide, the current moveset...
-    // Shortens the moveset by pieces that block it's path.
+    /**
+     * Takes in specified organized list, direction of the slide, the current moveset...
+     * Shortens the moveset by pieces that block it's path.
+     * @param {*} organizedLine 
+     * @param {*} line 
+     * @param {*} slidinget 
+     * @param {*} coords 
+     * @param {*} color 
+     * @returns 
+     */
     function slide_CalcLegalLimit (organizedLine, line, slidinget, coords, color) {
 
-        if (!slidinget) return // Return undefined if there is no slide moveset
+        if (!slidinget) return; // Return undefined if there is no slide moveset
 
         // The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
@@ -234,7 +242,7 @@ const legalmoves = (function(){
             let clickedCoordsLine = math.getKeyFromLine(line,endCoords);
             if (!limits||selectedPieceLine!=clickedCoordsLine) continue;
 
-            if (!doesslidingetContainSquare(limits, line, startCoords, endCoords)) continue;
+            if (!doesSlidingNetContainSquare(limits, line, startCoords, endCoords)) continue;
             return true;
         }
         return false;
@@ -340,7 +348,7 @@ const legalmoves = (function(){
 
     // TODO: moveset changes
     // This requires coords be on the same line as the sliding moveset.
-    function doesslidingetContainSquare (slidinget, line, pieceCoords, coords) {
+    function doesSlidingNetContainSquare(slidinget, line, pieceCoords, coords) {
 
         const axis = line[0]===0 ? 1 : 0
         const coordMag = coords[axis];
@@ -352,6 +360,7 @@ const legalmoves = (function(){
 
         return true;
     }
+
     /**
      * Accepts the calculated legal moves, tests to see if there are any
      * @param {LegalMoves} moves 
@@ -376,7 +385,7 @@ const legalmoves = (function(){
         getPieceMoveset,
         calculate,
         checkIfMoveLegal,
-        doesslidingetContainSquare,
+        doesSlidingNetContainSquare,
         hasAtleast1Move,
         slide_CalcLegalLimit,
         isOpponentsMoveLegal
