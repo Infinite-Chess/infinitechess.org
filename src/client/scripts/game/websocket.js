@@ -96,14 +96,14 @@ const websocket = (function(){
         while(!success && !zeroSubs()) {
             // Request came back with an error
             noConnection = true;
-            statustext.showStatusForDuration("No connection.", timeToResubAfterNetworkLossMillis)
+            statustext.showStatusForDuration(translations["websocket"]["no_connection"], timeToResubAfterNetworkLossMillis)
             onlinegame.onLostConnection();
             invites.clearIfOnPlayPage() // Erase on-screen invites.
             await main.sleep(timeToResubAfterNetworkLossMillis)
             success = await openSocket();
         }
         // This is the only instance where we've reconnected.
-        if (success && noConnection) statustext.showStatusForDuration("Reconnected.", 1000)
+        if (success && noConnection) statustext.showStatusForDuration(translations["websocket"]["reconnected"], 1000)
         noConnection = false;
         cancelAllTimerIDsToCancelOnNewSocket();
 
@@ -153,7 +153,7 @@ const websocket = (function(){
      * and keeps stating that until we successfully open a websocket. */
     function httpLostConnection() {
         noConnection = true;
-        statustext.showStatusForDuration("No connection.", timeToWaitForHTTPMillis);
+        statustext.showStatusForDuration(translations["websocket"]["no_connection"], timeToWaitForHTTPMillis);
         reqOut = setTimeout(httpLostConnection, timeToWaitForHTTPMillis); // Keep saying we lost connection if we haven't heard back yet
         //console.log("Reset http timer")
     }
@@ -190,7 +190,7 @@ const websocket = (function(){
         if (!socket) return;
         console.log(`Renewing connection after we haven't received an echo for ${timeToWaitForEchoMillis} milliseconds...`)
         noConnection = true;
-        statustext.showStatusForDuration("No connection.", timeToWaitForHTTPMillis)
+        statustext.showStatusForDuration(translations["websocket"]["no_connection"], timeToWaitForHTTPMillis)
         socket.close(1000, "Connection closed by client. Renew.");
     }
 
@@ -384,12 +384,12 @@ const websocket = (function(){
                 resubAll(); // Instantly reconnects.
                 break;
             case "Unable to identify client IP address":
-                statustext.showStatus("Unable to identify IP. Report this bug to Naviary!", true, 100)
+                statustext.showStatus(`${translations["websocket"]["unable_to_identify_ip"]} ${translations["websocket"]["please_report_bug"]}`, true, 100)
                 invites.clearIfOnPlayPage() // Erase on-screen invites.
                 break; // Don't resub
             case "Authentication needed":
                 // Alert the user they don't have authentication
-                statustext.showStatus("Online play disabled. Cookies not supported. Try a different browser.")
+                statustext.showStatus(translations["websocket"]["online_play_disabled"])
                 invites.clearIfOnPlayPage() // Erase on-screen invites.
                 // Perhaps tell the play page to not try to open another socket?
                 // Because this error will repeatedly pop up.
@@ -400,30 +400,30 @@ const websocket = (function(){
                 resubAll(); // Instantly reconnects.
                 break;
             case "Too Many Requests. Try again soon.":
-                statustext.showStatusForDuration("Too many requests. Try again soon.", timeToResubAfterTooManyRequestsMillis)
+                statustext.showStatusForDuration(translations["websocket"]["too_many_requests"], timeToResubAfterTooManyRequestsMillis)
                 enterTimeout(timeToResubAfterTooManyRequestsMillis); // After timeout is over, we then resubscribe!
                 break;
             case "Message Too Big":
-                statustext.showStatus("Message too big. This should never happen, please report this bug to Naviary!", true, 3)
+                statustext.showStatus(`${translations["websocket"]["message_too_big"]} ${translations["websocket"]["please_report_bug"]}`, true, 3)
                 enterTimeout(timeToResubAfterMessageTooBigMillis)
                 break;
             case "Too Many Sockets":
-                statustext.showStatus("Too many sockets. This should never happen, please report this bug to Naviary!", true, 3)
+                statustext.showStatus(`${translations["websocket"]["too_many_sockets"]} ${translations["websocket"]["please_report_bug"]}`, true, 3)
                 setTimeout(resubAll, timeToResubAfterTooManyRequestsMillis);
                 break;
             case "Origin Error":
-                statustext.showStatus("Origin error. This should never happen, please report this bug to Naviary!", true, 3)
+                statustext.showStatus(`${translations["websocket"]["origin_error"]} ${translations["websocket"]["please_report_bug"]}`, true, 3)
                 invites.clearIfOnPlayPage() // Erase on-screen invites.
                 enterTimeout(timeToResubAfterTooManyRequestsMillis); // After timeout is over, we then resubscribe!
                 break;
             case "No echo heard": // Client took too long to respond, assumed connection is broken
                 // statustext.showStatus("No echo. If this keeps appearing, report this bug to Naviary!")
                 noConnection = true;
-                statustext.showStatusForDuration("No connection.", timeToWaitForHTTPMillis)
+                statustext.showStatusForDuration(translations["websocket"]["no_connection"], timeToWaitForHTTPMillis)
                 resubAll(); // Instantly reconnects.
                 break;
             default:
-                statustext.showStatus(`Connection closed unexpectedly. Server message: "${trimmedReason}" Please report this to Naviary!`, true, 100)
+                statustext.showStatus(`${translations["websocket"]["connection_closed"]} "${trimmedReason}" ${translations["websocket"]["please_report_bug"]}`, true, 100)
                 console.error("Unknown reason why the WebSocket connection was closed. Not reopening or resubscribing.");
         }
     }
@@ -458,7 +458,7 @@ const websocket = (function(){
      */
     async function sendmessage(route, action, value, isUserAction, onreplyFunc) { // invites, createinvite, inviteinfo
         if (!await establishSocket()) {
-            // if (isUserAction) statustext.showStatus("Too many requests. Try again soon.")
+            // if (isUserAction) statustext.showStatus(translations["websocket"]["too_many_requests"])
             if (onreplyFunc) onreplyFunc(); // Execute this now
             return false;
         }
