@@ -26,6 +26,26 @@ html {
 
 /* Header along the very top of the page */
 
+.flex-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#settingsbutton {
+    height: 40px;
+    background-color: #ffffff;
+}
+
+#settingsbutton:hover {
+    background-color: rgb(211, 235, 255);
+}
+
+#settingsbutton img {
+    height: 20px;
+    margin: 10px;
+}
+
 header {
     position: fixed;
     left: 0;
