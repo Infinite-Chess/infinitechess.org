@@ -53,10 +53,10 @@ function refreshAndUpdateNav () {
             // Change navigation links...
             element_loginLink.setAttribute('href', `/member/${result.member.toLowerCase()}`);
             // element_loginText.textContent = result.member;
-            element_loginText.textContent = 'Profile';
+            element_loginText.textContent = translations["profile"];
 
             element_createaccountLink.setAttribute('href', '/logout');
-            element_createaccountText.textContent = 'Log Out';
+            element_createaccountText.textContent = translations["logout"];
 
         } else { // Unauthorized, don't change any navigation links
             console.log(result['message']);

@@ -2,7 +2,7 @@
 <html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
         <script>
-            const translations = <%-JSON.stringify(t('play.javascript', {returnObjects: true}))%>;
+            const translations = <%-JSON.stringify({...t('play.javascript', {returnObjects: true}), ...t('header.javascript', {returnObjects: true})})%>;
         </script>
         <!-- htmlscript.js inject here -->
 

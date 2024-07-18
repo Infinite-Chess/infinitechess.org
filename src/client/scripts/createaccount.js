@@ -37,11 +37,11 @@ element_usernameInput.addEventListener('input', (event) => { // When username fi
     }
     
     if (lengthError && formatError) { // Change error message
-        usernameError.textContent = 'Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9';
+        usernameError.textContent = translations["username_specs"];
     } else if (lengthError) {
-        usernameError.textContent = 'Username must be atleast 3 characters long';
+        usernameError.textContent = translations["username_tooshort"];
     } else if (formatError) {
-        usernameError.textContent = 'Username must only contain letters A-Z and numbers 0-9';
+        usernameError.textContent = translations["username_wrongenc"];
     }
 
     updateSubmitButton();
@@ -95,7 +95,7 @@ element_emailInput.addEventListener('input', (event) => { // When email field ch
     }
     
     if (error) {
-        emailError.textContent = 'This is not a valid email';
+        emailError.textContent = translations["email_invalid"];
     }
 
     updateSubmitButton();
@@ -116,7 +116,7 @@ element_emailInput.addEventListener('focusout', (event) => { // Check email avai
                 // Reset variable because it now exists.
                 const emailError = document.getElementById("emailerror");
 
-                emailError.textContent = 'This email is already in use';
+                emailError.textContent = translations["email_inuse"];
                 updateSubmitButton();
             }
         });
@@ -150,13 +150,13 @@ element_passwordInput.addEventListener('input', (event) => { // When password fi
     }
 
     if (formatError) {
-        passwordError.textContent = 'Password is in an incorrect format';
+        passwordError.textContent = translations["pwd_incorrect_format"];
     } else if (shortError) {
-        passwordError.textContent = 'Password must be 6+ characters long';
+        passwordError.textContent = translations["pwd_too_short"];
     } else if (longError) {
-        passwordError.textContent = "Password can't be over 72 characters long";
+        passwordError.textContent = translations["pwd_too_long"];
     } else if (containsPasswordError) {
-        passwordError.textContent = "Password must not be 'password'";
+        passwordError.textContent = translations["pwd_not_pwd"];
     }
 
     updateSubmitButton();

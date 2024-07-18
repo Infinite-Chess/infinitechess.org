@@ -15,6 +15,12 @@ terms_of_service = "Terms of Service"
 source_code = "Source Code"
 language = "Language"
 
+[header.javascript]
+profile = "Profile"
+logout = "Log Out"
+login = "Log In"
+createaccount = "Create Account"
+
 [index]
 secondary_title = "The official website for playing live!"
 what_is_it_title = "What is it?"
@@ -88,6 +94,17 @@ email = "Email:"
 password = "Password:"
 create_button = "Create Account"
 argreement = ["I agree to the ", "Terms of Service"]
+
+[create-account.javascript]
+username_specs = "Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9"
+username_tooshort = "Username must be atleast 3 characters long"
+username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
+email_invalid = "This is not a valid email"
+email_inuse = "This email is already in use"
+pwd_incorrect_format = "Password is in an incorrect format"
+pwd_too_short = "Password must be 6+ characters long"
+pwd_too_long = "Password can't be over 72 characters long"
+pwd_not_pwd = "Password must not be 'password'"
 
 [play.main-menu]
 credits = "Credits"
