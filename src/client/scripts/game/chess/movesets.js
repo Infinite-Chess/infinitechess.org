@@ -62,8 +62,8 @@ const movesets = (function() {
                 return {
                     individual: [],
                     sliding: {
-                    '1,0': [-slideLimit, slideLimit],
-                    '0,1': [-slideLimit, slideLimit]
+                        '1,0': [-slideLimit, slideLimit],
+                        '0,1': [-slideLimit, slideLimit]
                     }
                 }
             },
@@ -116,8 +116,10 @@ const movesets = (function() {
                         [-2,1],[-1,2],[1,2],[2,1],
                         [-2,-1],[-1,-2],[1,-2],[2,-1]
                     ],
-                    '1,1': [-slideLimit, slideLimit],
-                    '1,-1': [-slideLimit, slideLimit]
+                    sliding: {
+                        '1,1': [-slideLimit, slideLimit],
+                        '1,-1': [-slideLimit, slideLimit]
+                    }
                 }
             },
             amazons: function () {
