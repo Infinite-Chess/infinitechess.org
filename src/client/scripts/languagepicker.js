@@ -28,11 +28,7 @@
     fetch("/setlanguage", {
       method: "POST",
       credentials: "same-origin",
-    }).then((res) => {
-      language_picker.value = getCookieValue("i18next");
-    });
-  } else {
-    language_picker.value = getCookieValue("i18next");
+    })
   }
 
   language_picker.addEventListener("change", () => {

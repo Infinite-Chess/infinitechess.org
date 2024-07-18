@@ -5,7 +5,11 @@
     <label for="language-picker"><span><%=t('footer.language')%></span>:
         <select id="language-picker">
             <% for(let i=0; i<languages.length; i++) {%>
-               <option value="<%= languages[i].code %>"><%= languages[i].name %></option>
+                <% if (languages[i].code === language) { %>
+                    <option value="<%= languages[i].code %>" selected><%= languages[i].name %></option>
+                <% } else { %>
+                    <option value="<%= languages[i].code %>"><%= languages[i].name %></option>
+                <% } %>
             <% } %>
         </select>
     </label>
