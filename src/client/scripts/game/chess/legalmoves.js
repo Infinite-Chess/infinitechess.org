@@ -235,12 +235,12 @@ const legalmoves = (function(){
         }
 
         for (var strline in legalMoves.sliding) {
-            let line=math.getCoordsFromKey(strline);
+            let line = math.getCoordsFromKey(strline);
             let limits = legalMoves.sliding[strline];
 
             let selectedPieceLine = math.getKeyFromLine(line,startCoords);
             let clickedCoordsLine = math.getKeyFromLine(line,endCoords);
-            if (!limits||selectedPieceLine!=clickedCoordsLine) continue;
+            if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
             if (!doesSlidingNetContainSquare(limits, line, startCoords, endCoords)) continue;
             return true;
@@ -350,7 +350,7 @@ const legalmoves = (function(){
     // This requires coords be on the same line as the sliding moveset.
     function doesSlidingNetContainSquare(slidinget, line, pieceCoords, coords) {
 
-        const axis = line[0]===0 ? 1 : 0
+        const axis = line[0] === 0 ? 1 : 0
         const coordMag = coords[axis];
         const min = slidinget[0] * line[axis] + pieceCoords[axis]
         const max = slidinget[1] * line[axis] + pieceCoords[axis]
