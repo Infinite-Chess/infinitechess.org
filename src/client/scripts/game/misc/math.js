@@ -217,9 +217,10 @@ const math = (function() {
     /**
      * Gets a unique key from the line equation.
      * Compatable with factorable steps like `[2,2]`.
+     * Discuss before changing func please as this may have unintended side-effects.
      * @param {Number[]} step Line step `[deltax,deltay]`
      * @param {Number[]} coords `[x,y]`
-     * @returns {String} the key `yIntcept|smallest_x_line_intcepts`
+     * @returns {String} the key `c|smallest_x_line_intcepts`
      */
     function getKeyFromLine(step, coords) {
         // See these desmos graphs for inspiration for finding what line the coords are on:
@@ -231,13 +232,13 @@ const math = (function() {
         const deltaAxis = lineIsVertical ? step[1] : step[0];
         const coordAxis = lineIsVertical ? coords[1] : coords[0];
         const xLine = posMod(coordAxis, deltaAxis)
-        //return `${getCFromLineInGeneralForm(step,coords)}|${xLine}`
+        return `${getCFromLineInGeneralForm(step,coords)}|${xLine}`
 
         // Naviary's new equation
         //const lineIsVertical = step[0] === 0;
         //const xLine = lineIsVertical ? coords[1] % step[1] : coords[0] % step[0];
-        const yIntcept = getYIntceptOfLine(step, coords);
-        return `${yIntcept}|${xLine}`;
+        //const yIntcept = getYIntceptOfLine(step, coords);
+        //return `${yIntcept}|${xLine}`;
     }
     
     /**
