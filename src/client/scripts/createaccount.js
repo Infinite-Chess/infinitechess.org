@@ -37,11 +37,11 @@ element_usernameInput.addEventListener('input', (event) => { // When username fi
     }
     
     if (lengthError && formatError) { // Change error message
-        usernameError.textContent = translations["username_specs"];
+        usernameError.textContent = translations["js-username_specs"];
     } else if (lengthError) {
-        usernameError.textContent = translations["username_tooshort"];
+        usernameError.textContent = translations["js-username_tooshort"];
     } else if (formatError) {
-        usernameError.textContent = translations["username_wrongenc"];
+        usernameError.textContent = translations["js-username_wrongenc"];
     }
 
     updateSubmitButton();
@@ -64,7 +64,10 @@ element_usernameInput.addEventListener('focusout', (event) => { // Check usernam
         // Reset variable because it now exists.
         usernameError = document.getElementById("usernameerror");
 
-        usernameError.textContent = result.reason;
+        let result_message = result.reason;
+        // translate the message from the server if a translation is available
+        if (translations["server-websocket"][result_message]) result_message = translations["server-websocket"][result_message];
+        usernameError.textContent = result_message;
         updateSubmitButton();
     });
 })
@@ -95,7 +98,7 @@ element_emailInput.addEventListener('input', (event) => { // When email field ch
     }
     
     if (error) {
-        emailError.textContent = translations["email_invalid"];
+        emailError.textContent = translations["js-email_invalid"];
     }
 
     updateSubmitButton();
@@ -116,7 +119,7 @@ element_emailInput.addEventListener('focusout', (event) => { // Check email avai
                 // Reset variable because it now exists.
                 const emailError = document.getElementById("emailerror");
 
-                emailError.textContent = translations["email_inuse"];
+                emailError.textContent = translations["js-email_inuse"];
                 updateSubmitButton();
             }
         });
@@ -150,13 +153,13 @@ element_passwordInput.addEventListener('input', (event) => { // When password fi
     }
 
     if (formatError) {
-        passwordError.textContent = translations["pwd_incorrect_format"];
+        passwordError.textContent = translations["js-pwd_incorrect_format"];
     } else if (shortError) {
-        passwordError.textContent = translations["pwd_too_short"];
+        passwordError.textContent = translations["js-pwd_too_short"];
     } else if (longError) {
-        passwordError.textContent = translations["pwd_too_long"];
+        passwordError.textContent = translations["js-pwd_too_long"];
     } else if (containsPasswordError) {
-        passwordError.textContent = translations["pwd_not_pwd"];
+        passwordError.textContent = translations["js-pwd_not_pwd"];
     }
 
     updateSubmitButton();

@@ -6,7 +6,7 @@ function errorHandler(err, req, res, next) {
     logEvents(errMessage, 'errLog.txt', { print: true });
     
     // This sends back to the browser the error, instead of the ENTIRE stack which is PRIVATE.
-    const messageForClient = "Sorry, there was a server error! Please go back."
+    const messageForClient = "server_error"
     res.status(500).send(messageForClient); // 500: Server error
 }
 

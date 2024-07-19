@@ -130,16 +130,16 @@ const validation = (function(){
     function updateNavigationLinks() {
         if (areLoggedIn) {
             loginLink.setAttribute('href', `/member/${member.toLowerCase()}`);
-            loginText.textContent = translations["profile"];
+            loginText.textContent = translations["js-profile"];
 
             createaccountLink.setAttribute('href', '/logout');
-            createaccountText.textContent = translations["logout"];
+            createaccountText.textContent = translations["js-logout"];
         } else {
             loginLink.setAttribute('href', `/login`);
-            loginText.textContent = translations["login"];
+            loginText.textContent = translations["js-login"];
 
             createaccountLink.setAttribute('href', '/createaccount');
-            createaccountText.textContent = translations["createaccount"];
+            createaccountText.textContent = translations["js-createaccount"];
         }
     }
 
