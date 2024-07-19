@@ -22,6 +22,7 @@ js-login = "Log In"
 js-createaccount = "Create Account"
 
 [member.javascript]
+incorrect_password = "Password is incorrect"
 confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
 enter_password = "Enter your password to PERMANENTLY delete your account:"
 
@@ -80,7 +81,7 @@ code_credits = [
 
 [member]
 verify_message = "Please check your email to verify your account."
-resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", "If you still can't find it, <a href='mailto:infinitechess.org@gmail.com'>message me.</a>"]
+resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message me."]
 verify_confirm = "Thank you! Your account has been verified."
 rating = "Elo rating:"
 joined = "Joined:"
@@ -437,7 +438,7 @@ conclusion_paragraphs = [
 "You may not perform any illegal activity on the site.",
 ["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
 ]
-update = "(Last updated: 7/13/24. Added warning that all games played becomes public information, including your account approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
+update = "(Last updated: 7/13/24. Added warning that all games played may become public information, including your account's approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
 thanks = "Thank you!"
 
 [login]
