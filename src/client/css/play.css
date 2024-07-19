@@ -1319,6 +1319,7 @@ button.join-button, button.copy-button {
 	top: 0px;
 }
 
+/* The accept draw button is naturally smaller */
 .acceptdraw > .icon {
 	height: 95%;
 }
