@@ -217,7 +217,10 @@ function rateLimitLogin(res, browserAgent) {
     // Too many attempts!
 
     if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) { // Still on cooldown
-        res.status(401).json({ 'message': "login_failure_retry_soon"});
+        res.status(401).json({
+            'message': "login_failure_retry_soon",
+            'login_cooldown': Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs)
+        });
         // res.status(401).json({ 'message': `Failed to login, try again in ${Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs)} seconds.`});
         
         // Reset the timer to auto-delete them from the login attempt data

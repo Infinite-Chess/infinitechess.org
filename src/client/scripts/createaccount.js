@@ -64,8 +64,8 @@ element_usernameInput.addEventListener('focusout', (event) => { // Check usernam
         // Reset variable because it now exists.
         usernameError = document.getElementById("usernameerror");
 
-        let result_message = result.reason;
         // translate the message from the server if a translation is available
+        let result_message = result.reason;
         if (translations["server-websocket"][result_message]) result_message = translations["server-websocket"][result_message];
         usernameError.textContent = result_message;
         updateSubmitButton();
