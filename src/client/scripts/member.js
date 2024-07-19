@@ -127,8 +127,9 @@ function showAccountInfo() {
 }
 
 async function removeAccount(confirmation) {
-    if (!confirmation || confirm(translations["confirm_delete"])) {
-        const password = prompt(translations["enter_password"]);
+  console.log(translations);
+    if (!confirmation || confirm(translations["server-websocket"]["confirm_delete"])) {
+        const password = prompt(translations["server-websocket"]["enter_password"]);
         const cancelWasPressed = password === null;
         if (cancelWasPressed) return; // Don't delete account
 
@@ -145,7 +146,7 @@ async function removeAccount(confirmation) {
         const response = await fetch(`/member/${member}/delete`, config)
         if (!response.ok) {
             const result = await response.json();
-            alert(translations[result.message]);
+            alert(translations["server-websocket"][result.message]);
             removeAccount(false);
         } else {
             window.location.href = '/';
