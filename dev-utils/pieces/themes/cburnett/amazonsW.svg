@@ -1,0 +1,25 @@
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="26" width="26" version="1.0" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/">
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g transform="matrix(0.75757574,0,0,0.75757574,2.8791515,-7.9393932)">
+  <path stroke-linejoin="miter" d="m14.44,29.5c0.222,1.68-3.09,4.06-4.5,5-1.73,1.16-1.74,2.7-3,2.5-0.602-0.545,0.817-2.02,0-2-0.58,0,0.19,1.1-0.5,1.5-0.58,0-2.5,0.4-2.5-2.5,0-1.2,3.5-6.5,3.5-6.5s0.934-1.08,1-2c-0.419-0.575-0.258-1.48,0-2,0.365-0.731,1.5,1.5,1.5,1.5h1s0.5-1.5,1.5-2c0.517-0.258,0.5,2,0.5,2,6.07,0.578,9.29,4.37,9,16.5h-12.5c0-4.9,4.8-3.7,4.5-10.5" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="1.31999993" fill="#FFF"/>
+  <path fill="#000" d="m9,23.5a0.5,0.5,0,1,1,-1,0,0.5,0.5,0,1,1,1,0z" transform="translate(-3.4999999,10)"/>
+  <path fill="#000" d="m9.6058,30.28a1.0281,1.4729,30,0,1,-1.7807,-1.028,1.0281,1.4729,30,0,1,1.7807,1.028z"/>
+ </g>
+ <g transform="translate(0,-4)">
+  <path stroke-linejoin="round" d="m18,18,4-8-4,4,0-6-3,5.125-2-5-2,5l-3-5.125v6l-4-4,3,8s2.0349-2.5,6-2.5,5,2.5,5,2.5z" fill-rule="evenodd" stroke="#000" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="0.80000001" fill="#FFF"/>
+  <path id="path3804" stroke-linejoin="miter" d="m5.5,10a1.5,1.5,0,0,1,-3,0,1.5,1.5,0,1,1,3,0z" stroke-dashoffset="0" stroke="#000" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="0.75" fill="#FFF"/>
+  <use xlink:href="#path3804" transform="translate(4,-2)" height="26" width="26" y="0" x="0"/>
+  <use xlink:href="#path3804" transform="translate(9,-2)" height="26" width="26" y="0" x="0"/>
+  <use xlink:href="#path3804" transform="matrix(-1,0,0,1,26,0)" height="26" width="26" y="0" x="0"/>
+  <use xlink:href="#path3804" transform="matrix(-1,0,0,1,22,-2)" height="26" width="26" y="0" x="0"/>
+ </g>
+</svg>

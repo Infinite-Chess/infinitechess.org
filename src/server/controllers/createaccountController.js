@@ -12,11 +12,9 @@ const bcrypt = require('bcrypt');
 
 const { handleLogin } = require('./authController')
 const { sendEmailConfirmation } = require('./sendMail')
-const { addMember, getMemberData, constructEmailHash, doesMemberExist } = require('./members.js')
+const { addMember, getMemberData, doesMemberExist, isEmailAvailable } = require('./members.js')
 const { logEvents } = require('../middleware/logEvents');
 const { isEmailBanned } = require('../middleware/banned')
-
-const emailHash = constructEmailHash();
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
@@ -120,9 +118,6 @@ const createNewMember = async (req, res) => {
 async function generateAccount({ username, email, password, autoVerify }) {
     const usernameLowercase = username.toLowerCase();
 
-    // Update email list!
-    emailHash[email] = true;
-
     // Use bcrypt to hash & salt password
     const hashedPassword = await bcrypt.hash(password, 10); // Passes 10 salt rounds. (standard)
     const date = new Date();
@@ -154,7 +149,6 @@ async function generateAccount({ username, email, password, autoVerify }) {
 // into the createaccount html instead.
 function getRegisterData(req, res) {
     res.json({
-        reservedUsernames,
         profainWords
     });
 }
@@ -183,20 +177,27 @@ const checkEmailAssociated = (req, res) => {
     else res.json([false]);
 }
 
-const isEmailAvailable = function (email) {
-    if (emailHash[email]) return false;
-    return true;
-}
+/**
+ * Route handler to check if a username is available to use (not taken, reserved, or baaaad word).
+ * The request parameters MUST contain the username to test! (different from the body)
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Object} An object containing the properties `allowed` and `reason`.
+ */
+function checkUsernameAvailable(req, res) {
+    const usernameLowercase = req.params.username.toLowerCase();
 
-// Route
-// Returns true if username is available
-const checkUsernameAssociated = (req, res) => {
-    if (isUsernameAvailable(req.params.username.toLowerCase())) return res.json([true]);
-    else return res.json([false]);
-}
+    let allowed = true;
+    let reason = '';
 
-const isUsernameAvailable = function (string) { // string is in lowercase
-    return !doesMemberExist(string);
+    if (doesMemberExist(usernameLowercase)) { allowed = false; reason = 'That username is taken'; }
+    if (checkProfanity(usernameLowercase)) { allowed = false; reason = 'That username contains a word that is not allowed'; }
+    if (reservedUsernames.includes(usernameLowercase)) { allowed = false; reason = 'That username is taken'; } // Code for reserved (but the users don't know that!)
+
+    return res.json({
+        allowed,
+        reason
+    });
 }
 
 const doUsernameFormatChecks = function (username, res) {
@@ -212,7 +213,7 @@ const doUsernameFormatChecks = function (username, res) {
     if (doesMemberExist(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username is taken'});
     
     // Then check if the name's reserved
-    if (reservedUsernames.indexOf(usernameLowercase) !== -1) return res.status(409).json({ 'conflict': 'That username is reserved'});
+    if (reservedUsernames.includes(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username is taken'}); // Code for reserved (but the users don't know that!)
     // Lastly check for profain words
     if (checkProfanity(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username contains a word that is not allowed'});
     return true; // Everything's good, no conflicts!
@@ -233,11 +234,12 @@ const checkProfanity = function (string) {
 }
 
 const doEmailFormatChecks = function (string, res) {
-    console.log();
+    if (string.length > 320) return res.status(400).json({ 'message': 'Your email is too looooooong.'}); // Max email length
     if (!isValidEmail(string)) return res.status(400).json({ 'message': 'This is not a valid email'});
     if(!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': 'This email is already in use'});
     if (isEmailBanned(string)) {
-        console.log(`Banned user with email ${string.toLowerCase()} tried to recreate their account!`)
+        const errMessage = `Banned user with email ${string.toLowerCase()} tried to recreate their account!`;
+        logEvents(errMessage, 'bannedIPLog.txt', { print: true })
         return res.status(409).json({ 'conflict': 'You are banned.'});
     }
     return true;
@@ -251,7 +253,7 @@ const isValidEmail = function (string) {
 
 const doPasswordFormatChecks = function (password, res) {
     // First we check password length
-    if (password.length < 6 || password.length > 30) return res.status(400).json({ 'message': 'Password must be between 6-30 characters long'});
+    if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': 'Password must be 6-72 characters long'});
     if (!isValidPassword(password)) return res.status(400).json({ 'message': 'Password is in an incorrect format'});
     if (password.toLowerCase() === 'password') return res.status(400).json({ 'message': "Password must not be 'password'"});
     return true;
@@ -267,7 +269,7 @@ module.exports = {
     createNewMember,
     getRegisterData,
     checkEmailAssociated,
-    checkUsernameAssociated,
+    checkUsernameAvailable,
     generateID,
     generateAccount
 };

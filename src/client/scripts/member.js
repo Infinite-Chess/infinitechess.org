@@ -110,6 +110,7 @@ function loadMemberData (loggedInAs) {
             revealElement(element_showAccountInfo)
             // Display remove button
             revealElement(element_deleteAccount)
+			element_deleteAccount.addEventListener("click", () => removeAccount(true));
             // revealElement(element_accountInfo)
             revealElement(element_change)
             element_email.textContent = result.email;
@@ -125,28 +126,30 @@ function showAccountInfo() {
     revealElement(element_accountInfo)
 }
 
-function removeAccount() {
-    if (confirm("Are you sure you want to delete your account?")) {
+async function removeAccount(confirmation) {
+    if (!confirmation || confirm("Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password.")) {
+        const password = prompt("Enter your password to PERMANENTLY delete your account:");
+        const cancelWasPressed = password === null;
+        if (cancelWasPressed) return; // Don't delete account
+
         const config = { // Send with our access token
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
+			body: JSON.stringify({ password }),
             credentials: 'same-origin', // Allows cookie to be set from this request
         };
 
-        fetch(`/member/${member}/delete`, config).then(response => {
-            if (response.status !== 301) {
-                console.error(response);
-                window.location = '/404';
-            }
-            
-            // Accept redirect
-            if (response.redirected) {
-                window.location.href = response.url;
-            }
-        });
+        const response = await fetch(`/member/${member}/delete`, config)
+        if (!response.ok) {
+            const result = await response.json();
+            alert(result.message);
+            removeAccount(false);
+        } else {
+            window.location.href = '/';
+        }
     }
 }
 
