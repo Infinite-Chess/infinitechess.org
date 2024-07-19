@@ -206,7 +206,7 @@ const selection = (function() {
             movepiece.makeMove(gameFile, move);
             onlinegame.sendMove();
         } else {
-            premove.makePremove(move);
+            premove.makePremove(pieceSelected, move);
         }
 
         unselectPiece();

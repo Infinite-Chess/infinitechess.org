@@ -377,7 +377,10 @@ const movepiece = (function(){
         if (!simulated) guigameinfo.updateWhosTurn(gamefile)
 
         // If updateData is true, lock the rewind/forward buttons for a brief moment.
-        if (updateData) guinavigation.lockRewind();
+        if (updateData) {
+            premove.showPremoves();
+            guinavigation.lockRewind();
+        }
         // CREATES BUGS with sometimes games being aborted from illegal play because
         // the game thinks the position is in check when its not.
         // This rarely happens when you make a move when the other player is viewing history.
