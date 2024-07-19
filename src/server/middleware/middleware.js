@@ -17,6 +17,10 @@ const { verifyJWT } = require('./verifyJWT');
 const { rateLimit } = require('./rateLimit')
 const { protectedStatic } = require('./protectedStatic')
 
+// External translation middleware
+const i18next = require('i18next');
+const middleware = require('i18next-http-middleware');
+
 // Other imports
 const { useOriginWhitelist } = require('../config/config');
 
@@ -43,6 +47,12 @@ function configureMiddleware(app) {
     app.use(secureRedirect); // Redirects http to secure https
 
     app.use(credentials); // Handle credentials check. Must be before CORS.
+
+    app.use(
+      middleware.handle(i18next, {
+        removeLngFromUrl: false
+      })
+    )
 
     /**
      * Cross Origin Resource Sharing

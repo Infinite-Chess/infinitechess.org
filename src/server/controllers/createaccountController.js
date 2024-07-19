@@ -76,7 +76,7 @@ const profainWords = [
 const createNewMember = async (req, res) => {
     if (!req.body) {
         console.log(`User sent a bad create account request missing the whole body!`)
-        return res.status(400).send('Bad Request'); // 400 Bad request
+        return res.status(400).send("ws-bad_request"); // 400 Bad request
     }
     // First make sure we have all 3 variables.
     let { username, email, password } = req.body;
@@ -202,20 +202,20 @@ function checkUsernameAvailable(req, res) {
 
 const doUsernameFormatChecks = function (username, res) {
     // First we check the username's length
-    if (username.length < 3 || username.length > 20) return res.status(400).json({ 'message': 'Username must be between 3-20 characters'});
+    if (username.length < 3 || username.length > 20) return res.status(400).json({ 'message': "ws-username_length"});
     // Then the format
-    if (!onlyLettersAndNumbers(username)) return res.status(400).json({ 'message': 'Username must only contain letters A-Z and numbers 0-9'});
+    if (!onlyLettersAndNumbers(username)) return res.status(400).json({ 'message': "ws-username_letters"});
     // Then check if the name's taken
     const usernameLowercase = username.toLowerCase();
 
     // Make sure the username isn't taken!!
 
-    if (doesMemberExist(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username is taken'});
+    if (doesMemberExist(usernameLowercase)) return res.status(409).json({ 'conflict': "ws-username_taken"});
     
     // Then check if the name's reserved
-    if (reservedUsernames.includes(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username is taken'}); // Code for reserved (but the users don't know that!)
+    if (reservedUsernames.includes(usernameLowercase)) return res.status(409).json({ 'conflict': "ws-username_taken"}); // Code for reserved (but the users don't know that!)
     // Lastly check for profain words
-    if (checkProfanity(usernameLowercase)) return res.status(409).json({ 'conflict': 'That username contains a word that is not allowed'});
+    if (checkProfanity(usernameLowercase)) return res.status(409).json({ 'conflict': "ws-username_bad_word"});
     return true; // Everything's good, no conflicts!
 }
 
@@ -234,13 +234,13 @@ const checkProfanity = function (string) {
 }
 
 const doEmailFormatChecks = function (string, res) {
-    if (string.length > 320) return res.status(400).json({ 'message': 'Your email is too looooooong.'}); // Max email length
-    if (!isValidEmail(string)) return res.status(400).json({ 'message': 'This is not a valid email'});
-    if(!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': 'This email is already in use'});
+    if (string.length > 320) return res.status(400).json({ 'message': "ws-email_too_long"}); // Max email length
+    if (!isValidEmail(string)) return res.status(400).json({ 'message': "ws-email_invalid"});
+    if(!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': "ws-email_in_use"});
     if (isEmailBanned(string)) {
         const errMessage = `Banned user with email ${string.toLowerCase()} tried to recreate their account!`;
         logEvents(errMessage, 'bannedIPLog.txt', { print: true })
-        return res.status(409).json({ 'conflict': 'You are banned.'});
+        return res.status(409).json({ 'conflict': "ws-you_are_banned"});
     }
     return true;
 }
@@ -253,9 +253,9 @@ const isValidEmail = function (string) {
 
 const doPasswordFormatChecks = function (password, res) {
     // First we check password length
-    if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': 'Password must be 6-72 characters long'});
-    if (!isValidPassword(password)) return res.status(400).json({ 'message': 'Password is in an incorrect format'});
-    if (password.toLowerCase() === 'password') return res.status(400).json({ 'message': "Password must not be 'password'"});
+    if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': "ws-password_length"});
+    if (!isValidPassword(password)) return res.status(400).json({ 'message': "ws-password_format"});
+    if (password.toLowerCase() === 'password') return res.status(400).json({ 'message': "ws-password_password"});
     return true;
 }
 

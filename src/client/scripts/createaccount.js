@@ -37,11 +37,11 @@ element_usernameInput.addEventListener('input', (event) => { // When username fi
     }
     
     if (lengthError && formatError) { // Change error message
-        usernameError.textContent = 'Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9';
+        usernameError.textContent = translations["js-username_specs"];
     } else if (lengthError) {
-        usernameError.textContent = 'Username must be atleast 3 characters long';
+        usernameError.textContent = translations["js-username_tooshort"];
     } else if (formatError) {
-        usernameError.textContent = 'Username must only contain letters A-Z and numbers 0-9';
+        usernameError.textContent = translations["js-username_wrongenc"];
     }
 
     updateSubmitButton();
@@ -64,7 +64,10 @@ element_usernameInput.addEventListener('focusout', (event) => { // Check usernam
         // Reset variable because it now exists.
         usernameError = document.getElementById("usernameerror");
 
-        usernameError.textContent = result.reason;
+        // translate the message from the server if a translation is available
+        let result_message = result.reason;
+        if (translations[result_message]) result_message = translations[result_message];
+        usernameError.textContent = result_message;
         updateSubmitButton();
     });
 })
@@ -95,7 +98,7 @@ element_emailInput.addEventListener('input', (event) => { // When email field ch
     }
     
     if (error) {
-        emailError.textContent = 'This is not a valid email';
+        emailError.textContent = translations["js-email_invalid"];
     }
 
     updateSubmitButton();
@@ -116,7 +119,7 @@ element_emailInput.addEventListener('focusout', (event) => { // Check email avai
                 // Reset variable because it now exists.
                 const emailError = document.getElementById("emailerror");
 
-                emailError.textContent = 'This email is already in use';
+                emailError.textContent = translations["js-email_inuse"];
                 updateSubmitButton();
             }
         });
@@ -150,13 +153,13 @@ element_passwordInput.addEventListener('input', (event) => { // When password fi
     }
 
     if (formatError) {
-        passwordError.textContent = 'Password is in an incorrect format';
+        passwordError.textContent = translations["js-pwd_incorrect_format"];
     } else if (shortError) {
-        passwordError.textContent = 'Password must be 6+ characters long';
+        passwordError.textContent = translations["js-pwd_too_short"];
     } else if (longError) {
-        passwordError.textContent = "Password can't be over 72 characters long";
+        passwordError.textContent = translations["js-pwd_too_long"];
     } else if (containsPasswordError) {
-        passwordError.textContent = "Password must not be 'password'";
+        passwordError.textContent = translations["js-pwd_not_pwd"];
     }
 
     updateSubmitButton();

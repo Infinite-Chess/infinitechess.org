@@ -30,7 +30,7 @@ const copypastegame = (function(){
         const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
           
         main.copyToClipboard(shortformat)
-        statustext.showStatus('Copied game to clipboard!')
+        statustext.showStatus(translations["copypaste"]["copied_game"])
     }
 
     /**
@@ -83,17 +83,17 @@ const copypastegame = (function(){
         event = event || window.event;
 
         // Make sure we're not in a public match
-        if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus('Cannot paste game in a public match!')
+        if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations["copypaste"]["cannot_paste_in_public"])
 
         // Make sure it's legal in a private match
-        if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && game.getGamefile().moves.length > 0) return statustext.showStatus('Cannot paste game after moves are made!')
+        if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && game.getGamefile().moves.length > 0) return statustext.showStatus(translations["copypaste"]["cannot_paste_after_moves"])
 
         // Do we have clipboard permission?
         let clipboard;
         try {
             clipboard = await navigator.clipboard.readText()
         } catch (error) {
-            const message = "Clipboard permission denied. This might be your browser."
+            const message = translations["copypaste"]["clipboard_denied"]
             return statustext.showStatus((message + "\n" + error), true)
         }
 
@@ -106,7 +106,7 @@ const copypastegame = (function(){
                 longformat = formatconverter.ShortToLong_Format(clipboard, true, true)
             } catch(e) {
                 console.error(e);
-                statustext.showStatus("Clipboard is not in valid ICN notation.", true)
+                statustext.showStatus(translations["copypaste"]["clipboard_invalid"], true)
                 return;
             }
         }
@@ -140,7 +140,7 @@ const copypastegame = (function(){
         if (!longformat.metadata) longformat.metadata = {};
         if (!longformat.turn) longformat.turn = 'white';
         if (!longformat.fullMove) longformat.fullMove = 1;
-        if (!longformat.startingPosition && !longformat.metadata.Variant) { statustext.showStatus("Game needs to specify either the 'Variant' metadata, or 'startingPosition' property.", true); return false; }
+        if (!longformat.startingPosition && !longformat.metadata.Variant) { statustext.showStatus(translations["copypaste"]["game_needs_to_specify"], true); return false; }
         if (longformat.startingPosition && !longformat.specialRights) longformat.specialRights = {};
         if (!longformat.gameRules) longformat.gameRules = variant.getBareMinimumGameRules();
         longformat.gameRules.winConditions = longformat.gameRules.winConditions || variant.getDefaultWinConditions();
@@ -157,7 +157,7 @@ const copypastegame = (function(){
             const winCondition = winConditions.white[i];
             if (wincondition.validWinConditions.includes(winCondition)) continue;
             // Not valid
-            statustext.showStatus(`White has an invalid win condition "${winCondition}".`, true)
+            statustext.showStatus(`${translations["copypaste"]["invalid_wincon_white"]} "${winCondition}".`, true)
             return false;
         }
 
@@ -165,7 +165,7 @@ const copypastegame = (function(){
             const winCondition = winConditions.black[i];
             if (wincondition.validWinConditions.includes(winCondition)) continue;
             // Not valid
-            statustext.showStatus(`Black has an invalid win condition "${winCondition}".`, true)
+            statustext.showStatus(`${translations["copypaste"]["invalid_wincon_black"]} "${winCondition}".`, true)
             return false;
         }
 
@@ -177,7 +177,7 @@ const copypastegame = (function(){
      * @param {Object} longformat - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
      */
     function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
-        console.log("Pasting game...")
+        console.log(translations["copypaste"]["pasting_game"])
 
         /** longformat properties:
          * metadata
@@ -233,13 +233,13 @@ const copypastegame = (function(){
         const newGamefile = new gamefile(longformat.metadata, { moves: longformat.moves, variantOptions })
 
         // What is the warning message if pasting in a private match?
-        const privateMatchWarning = onlinegame.getIsPrivate() ? ` Pasting a game in a private match will cause a desync if your opponent doesn't do the same!` : "";
+        const privateMatchWarning = onlinegame.getIsPrivate() ? ` ${translations["copypaste"]["pasting_in_private"]}` : "";
 
         // Change win condition of there's too many pieces!
         let tooManyPieces = false;
         if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) { // TOO MANY pieces!
             tooManyPieces = true;
-            statustext.showStatus(`Piece count ${newGamefile.startSnapshot.pieceCount} exceeded ${gamefileutility.pieceCountToDisableCheckmate}! Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended).${privateMatchWarning}`, false, 1.5)
+            statustext.showStatus(`${translations["copypaste"]["piece_count"]} ${newGamefile.startSnapshot.pieceCount} ${translations["copypaste"]["exceeded"]} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations["copypaste"]["changed_wincon"]}${privateMatchWarning}`, false, 1.5)
 
             // Make win condition from checkmate to royal capture
             const whiteHasCheckmate = newGamefile.gameRules.winConditions.white.includes('checkmate');
@@ -256,14 +256,14 @@ const copypastegame = (function(){
 
         // Only print "Loaded game!" if we haven't already shown a different status message cause of too many pieces
         if (!tooManyPieces) {
-            const message = `Loaded game from clipboard!${privateMatchWarning}`
+            const message = `${translations["copypaste"]["loaded_from_clipboard"]}${privateMatchWarning}`
             statustext.showStatus(message)
         }
 
         game.unloadGame();
         game.loadGamefile(newGamefile);
 
-        console.log("Loaded game!")
+        console.log(translations["copypaste"]["loaded"])
     }
 
     /**
@@ -273,7 +273,7 @@ const copypastegame = (function(){
      */
     function verifyGamerules(gameRules) {
         if (gameRules.slideLimit !== undefined && typeof gameRules.slideLimit !== 'number') {
-            statustext.showStatus(`slideLimit gamerule must be a number. Received "${gameRules.slideLimit}"`, true)
+            statustext.showStatus(`${translations["copypaste"]["slidelimit_not_number"]} "${gameRules.slideLimit}"`, true)
             return false;
         }
         return true;
