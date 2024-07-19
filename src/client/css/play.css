@@ -1270,6 +1270,11 @@ button.join-button, button.copy-button {
     gap: 15px;
     border-radius: 5px;
     box-sizing: border-box;
+
+    /* Make it not a popup / tsevasa's suggestion */
+    border-color: transparent;
+    background-color: transparent;
+    box-shadow: none;
 }
 
 @media only screen and (max-width: 1520px) {  /* Mobile screens: make smaller in order to not obscure names */
