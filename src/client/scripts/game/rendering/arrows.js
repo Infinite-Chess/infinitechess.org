@@ -97,7 +97,6 @@ const arrows = (function() {
         const slides = gamefile.startSnapshot.slidingPossible
 
         for (const line of slides) {
-            const axis = line[0] == 0 ? 1 : 0;
             const perpendicular = [-line[1], line[0]];
             const linestr = math.getKeyFromCoords(line);
             
@@ -112,19 +111,16 @@ const arrows = (function() {
 
             const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
             const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
+            for (const key in gamefile.piecesOrganizedByLines[linestr]) {
+                const intsects = key.split("|").map(Number)
+                if (boardSlidesStart > intsects || boardSlidesEnd < intsects) continue;
+                const pieces = calcPiecesOffScreen(line, gamefile.piecesOrganizedByLines[linestr][key])
 
-            for (let i=Math.ceil(boardSlidesStart); i<=Math.floor(boardSlidesEnd); i++) {
-                for (let x=0; x<line[axis]; x++){
-                    let key = `${i}|${x}`
-                    if (!gamefile.piecesOrganizedByLines[linestr][key]) {continue;}
-                    const pieces = calcPiecesOffScreen(line, gamefile.piecesOrganizedByLines[linestr][key])
+                if (math.isEmpty(pieces)) continue;
 
-                    if (math.isEmpty(pieces)) continue;
-
-                    if (!slideArrows[linestr]) slideArrows[linestr] = {};
-                    
-                    slideArrows[linestr][key] = pieces
-                }
+                if (!slideArrows[linestr]) slideArrows[linestr] = {};
+                
+                slideArrows[linestr][key] = pieces
             }
         }
 
