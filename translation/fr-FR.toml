@@ -398,7 +398,7 @@ guardian_consent = "Si vous avez moins de 18 ans vous devez recervoir l'accord d
 parents_header = "Parents"
 parents_paragraphs = [
 "Il y a un système qui empêche les utilisateur de mettre des certaines insultes en nom d'utilisateur. Pour l'instant il n'y pas de possibilité de communication entre les membres du site.",
-"Actuellement, les membres ne peuvent pas mettre de photos de profile personalisées, c'est prévu cependant. Au moment où cette fonctionnalité arrivera nous ferons de notre mieux pour empêcher les photos inapropriées.",
+"Actuellement, les membres ne peuvent pas mettre de photos de profil personalisées, c'est prévu cependant. Au moment où cette fonctionnalité arrivera nous ferons de notre mieux pour empêcher les photos inapropriées.",
 ]
 fair_play_header = "Fairplay"
 fair_play_paragraph1 = ["Vous ne pouvez pas créer plus d'un compte. Si vous voulez changer l'adresse email associée à votre compte, ", "contactez nous."]
@@ -411,7 +411,7 @@ fair_play_rules = [
 cleanliness_header = "Respect"
 cleanliness_rules = [
 "Vous devez rester respecteux à travers tout le site, pas de vulgarité ou d'injures. Vous n'êtes pas autorisés à insulter, à harceler ou à menacer quiconque, ou à commettre un quelconque acte illégal. Vous n'êtes pas autorisé à spammer d'autres utilisateurs ou d'autres forums.",
-"Vous n'êtes pas autorisé à uploader des images qui peuvent être inappropriés, suggestives ou gores sur votre profile. Le faire pourrait résulter en un bannissement ou en une suppression de votre compte."
+"Vous n'êtes pas autorisé à uploader des images qui peuvent être inappropriés, suggestives ou gores sur votre profil. Le faire pourrait résulter en un bannissement ou en une suppression de votre compte."
 ]
 privacy_header = "Confidentialité"
 privacy_rules = [
@@ -421,7 +421,7 @@ privacy_rules = [
 "Le status d'activité de votre compte et la durée approximative depuis votre dernière connexion sur le site est aussi une information publique.",
 ["Malgré que InfiniteChess.org fasse tout son possible pour garder toutes les données personnelles et les comptes sécurisés, dans le cas d'un hack ou d'unne fuite de donnée, vous ne pourrez pas nous en tenir responsable. Si une fuite de donnée a lieu, les utilisateurs en seront informés sur la page ", "Actualités", ""],
 "Il n'y pas d'achats intégrés au site. Tout autre information personelle n'est pas collectée.",
-"Pour avoir toutes vos informations personnelles supprimées de nos serveurs, vous pouvez supprimer votre compte depuis votre page de profile. La seule chose en lien avec votre nom d'utilisateur que nous ne supprimerons PAS, est votre historique de parties, car toutes les parties jouées sont des informations publiques.",
+"Pour avoir toutes vos informations personnelles supprimées de nos serveurs, vous pouvez supprimer votre compte depuis votre page de profil. La seule chose en lien avec votre nom d'utilisateur que nous ne supprimerons PAS, est votre historique de parties, car toutes les parties jouées sont des informations publiques.",
 ]
 cookie_header = "Utilisation de Cookies"
 cookie_paragraphs = [
@@ -460,7 +460,7 @@ more_dev_logs = ["Plus de dev logs sont publiés sur le ", "discord officiel", "
 [news.july13-2024]
 date = "13 Juillet 2024:"
 tos_update = ["Les ", "Condition d'Utisation", " ont été mises à jour. Changements: Toutes les parties que vous jouez sur le site peuvent devenir publiques, ainsi que la durée approximative depuis votre dernière activité. Les conditions d'utilisations peuvent être modifiées à tout moment, et il est de votre responsabilité de vous assurez que vous êtes à jour sur ces dernières."]
-game_history_warning = "L'historique de vos parties pourrait être accessible depuis votre profile dans le futur ."
+game_history_warning = "L'historique de vos parties pourrait être accessible depuis votre profil dans le futur ."
 
 [news.july9-2024]
 date = "9 Juillet 2024:"
