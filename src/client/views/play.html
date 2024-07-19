@@ -26,25 +26,45 @@
     <!-- The onload event listener to call main.start() is now within the htmlscript! -->
     <body>
         <header>
-            <nav class="flex-container">
-                <a href="/">
-                    <p>Home</p>
-                </a>
-                <a href="/play">
-                    <p class="currPage">Play</p>
-                </a>
-                <a href="/news">
-                    <p>News</p>
-                </a>
-                <a href="/login" id="loginlink">
-                    <p id="logintext">Log In</p>
-                </a>
-                <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext">Create Account</p>
-                </a>
-                <button id="settingsbutton">
-                    <img src="/img/settings_icon.png"></img>
-                </button>
+            <script>
+                /* When the user clicks on the button, 
+                toggle between hiding and showing the dropdown content */
+                function ToggleDropdown() {
+                  document.getElementById("settingscontainer").classList.toggle("show");
+                }
+            </script>
+            <nav>
+                <div id="topnavcontainer">
+                    <div class="topnavsection" id="navpages">
+                        <a class="topnavitem" href="/">
+                            <p>Home</p>
+                        </a>
+                        <a class="topnavitem" href="/play">
+                            <p class="currPage">Play</p>
+                        </a>
+                        <a class="topnavitem" href="/news">
+                            <p>News</p>
+                        </a>
+                    </div>
+                    <div class="topnavsection" id="accountsettings">
+                        <a class="topnavitem" href="/login" id="loginlink">
+                            <p id="logintext">Log In</p>
+                        </a>
+                        <a class="topnavitem" href="/createaccount" id="createaccountlink">
+                            <p id="createaccounttext">Create Account</p>
+                        </a>
+                        <div class="dropdown topnavitem" id="settingsdropdown">
+                            <button onclick="ToggleDropdown()" id="settingsbutton" class="dropdownbutton">
+                                <img src="/img/settings_icon.png"></img>
+                            </button>
+                            <div class="dropdowncontent" id="settingscontainer">
+                                <div class="dropdownitem settingsitem">
+                                    <a>Test</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </nav>
         </header>
         <main>
