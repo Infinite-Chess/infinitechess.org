@@ -1,3 +1,7 @@
+// This script is used for the translation process of the website into different languages.
+// It is inserted into the footer of every EJS page.
+// The currently selected language by the user is stored as a cookie in the user's browser.
+
 {
   const language_picker = document.getElementById("language-picker");
 
