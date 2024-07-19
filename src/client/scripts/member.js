@@ -127,8 +127,8 @@ function showAccountInfo() {
 }
 
 async function removeAccount(confirmation) {
-    if (!confirmation || confirm(translations["confirm_delete"])) {
-        const password = prompt(translations["enter_password"]);
+    if (!confirmation || confirm(translations["js-confirm_delete"])) {
+        const password = prompt(translations["js-enter_password"]);
         const cancelWasPressed = password === null;
         if (cancelWasPressed) return; // Don't delete account
 
