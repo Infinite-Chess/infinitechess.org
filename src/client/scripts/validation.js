@@ -81,7 +81,7 @@ const validation = (function(){
 
     /**
      * Inits our token, and, if we're logged in, inits member, and changes navigation links if we're logged in.
-     * 
+     *
      * If we're not signed in, the server will give/renew us a browser-id cookie for validation.
      */
     function refreshToken() {
@@ -131,13 +131,13 @@ const validation = (function(){
         if (areLoggedIn) {
             loginLink.setAttribute('href', `/member/${member.toLowerCase()}`);
             loginText.textContent = 'Profile';
-    
+
             createaccountLink.setAttribute('href', '/logout');
             createaccountText.textContent = 'Log Out';
         } else {
             loginLink.setAttribute('href', `/login`);
             loginText.textContent = 'Log In';
-    
+
             createaccountLink.setAttribute('href', '/createaccount');
             createaccountText.textContent = 'Create Account';
         }
@@ -150,7 +150,7 @@ const validation = (function(){
      */
     function getCookieValue(cookieName) {
         const cookieArray = document.cookie.split("; ");
-        
+
         for (let i = 0; i < cookieArray.length; i++) {
             const cookiePair = cookieArray[i].split("=");
             if (cookiePair[0] === cookieName) return cookiePair[1];

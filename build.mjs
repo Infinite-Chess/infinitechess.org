@@ -1,10 +1,13 @@
+// This script deploys all files from /src/client to /dist in order to run the website.
+// Depending on the value of DEV_BUILD in /src/server/config/config.js, this happens either in development mode or in production mode.
+// Development mode: All files are simply copied over unmodified.
+// Production mode: All non-script assets are copied over unmodified,
+//                  but all game scripts in /src/client/scripts/game are concatenated into app.js.
+//                  Further, all scripts are minified with the use of terser.
+
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
 import { minify } from "terser";
 import { DEV_BUILD } from "./src/server/config/config.js";
-import { exit } from "node:process";
-
-/** Whether to generate source maps in production */
-const generateSourceMapsInProduction = false;
 
 /**
  * 
@@ -30,57 +33,61 @@ async function getExtFiles(path, ext) {
   return files;
 }
 
-/**
- * @param {string} path 
- * @returns {string}
- */
-function getFilenamePath(path) {
-  const places = path.split("/");
-  return places[places.length-1];
-}
-
+// remove dist
 await remove("./dist", {
   recursive: true,
   force: true,
 });
 
-await copy("./src/client", "./dist", {
-  recursive: true,
-  force: true,
-});
-
-if (DEV_BUILD) exit();
-
-const clientScript = await getExtFiles("./src/client/scripts", ".js");
-const clientStyle = []; // await getExtFiles("./src/client/css", ".css");
-
-const clientFiles = [];
-clientFiles.push(
-  ...clientScript.map(v => `scripts/${v}`),
-  ...clientStyle.map(v => `css/${v}`)
-);
-
-const filesToWrite = [];
-
-for (const file of clientFiles) {
-  const code = await readFile(`./src/client/${file}`, 'utf8');
-
-  const minifyInput = {};
-  minifyInput[`/src/client/${file}`] = code;
-
-  const minified = await minify(minifyInput, {
-    mangle: true, // Disable variable name mangling
-    compress: true, // Enable compression
-    sourceMap: generateSourceMapsInProduction ? {
-      includeSources: true,
-      url: `${getFilenamePath(file)}.map`,
-    } : false
+if (DEV_BUILD){
+  // in dev mode, copy all clientside files over to dist and exit
+  await copy("./src/client", "./dist", {
+    recursive: true,
+    force: true
+  });
+} else{
+  // in prod mode, copy all clientside files over to dist, except for those contained in scripts
+  await copy("./src/client", "./dist", {
+    recursive: true,
+    force: true,
+    filter: filename => { 
+      return !/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) // make sure to create the scripts/game/folder
+    }
   });
 
-  filesToWrite.push(writeFile(`./dist/${file}`, minified.code, 'utf8'));
-  if (generateSourceMapsInProduction) {
-    filesToWrite.push(writeFile(`./dist/${file}.map`, minified.map, 'utf8') )
-  }
-}
+  // make a list of all client scripts:
+  const clientFiles = [];
+  const clientScripts = await getExtFiles("./src/client/scripts", ".js");
+  clientFiles.push(...clientScripts.map(v => `scripts/${v}`));
 
-await Promise.all(filesToWrite);
+  const filesToWrite = []; // array of output files that will need to be written
+  let gamecode = ""; // string containing all code in /game except for htmlscript.js
+
+  for (const file of clientFiles) {
+    // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
+    if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ){
+      const code = await readFile(`./src/client/${file}`, 'utf8');
+      const minified = await minify(code, {
+        mangle: true, // Enable variable name mangling
+        compress: true, // Enable compression
+        sourceMap: false
+      });
+      filesToWrite.push(writeFile(`./dist/${file}`, minified.code, 'utf8'));
+    }
+    // Collect the code of all js files in /game except for htmlscript.js:
+    else{
+      gamecode += await readFile(`./src/client/${file}`, 'utf8');
+    }
+  }
+
+  // Combine all gamecode files into app.js
+  const minifiedgame = await minify(gamecode, {
+    mangle: true,
+    compress: true,
+    sourceMap: false
+  });
+  filesToWrite.push(writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8'));
+
+  // finally, write to the needed files
+  await Promise.all(filesToWrite);
+}

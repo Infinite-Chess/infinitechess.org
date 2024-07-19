@@ -13,7 +13,7 @@ const certs = {
     cert: readFileIfExists(path.join(pathToCertFolder, 'fullchain.pem')),
     key: readFileIfExists(path.join(pathToCertFolder, 'privkey.pem')),
     cert_SelfSigned: readFileIfExists(path.join(pathToCertFolder, 'cert.pem')),
-    key_SelfSigned: readFileIfExists(path.join(pathToCertFolder, 'cert.key')),
+    key_SelfSigned: readFileIfExists(path.join(pathToCertFolder, 'cert.key'))
 }
 
 /**

@@ -1227,9 +1227,8 @@ const gamemanager = (function() {
         if (!wincondition1.isGameConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
         // Game conclusion is decisive...
         // We can't submit a move where our opponent wins
-        if (victor === color || victor === 'draw') false;
-
-        return true;
+        const oppositeColor = math1.getOppositeColor(color);
+        return victor !== oppositeColor;
     }
 
     /**
