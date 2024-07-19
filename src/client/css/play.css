@@ -41,68 +41,23 @@ header {
     z-index: 1;
 }
 
-#topnavcontainer {
-    height: var(--nav-bar-height);
-}
-
-.topnavsection {
+header a {
     display: inline-block;
-}
-
-.topnavitem {
-    display: inline;
     text-decoration: none;
     line-height: var(--nav-bar-height);
     margin-left: 4px;
     min-width: 70px;
     font-size: 16px;
     color: black;
-    height: var(--nav-bar-height);
 }
 
-.topnavitem a {
-    display: inline;
-    text-decoration: none;
-    line-height: var(--nav-bar-height);
-    margin-left: 4px;
-    min-width: 70px;
-    font-size: 16px;
-    color: black;
-    height: var(--nav-bar-height);
-}
-
-.topnavitem a:hover {
+header a:hover {
     background-color: rgb(211, 235, 255);
-    height: var(--nav-bar-height);
 }
 
-.topnavitem p {
-    font-size: 16px;
+header p {
     padding: 0 10px;
-    height: var(--nav-bar-height);
 }
-
-.flex-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-#settingsbutton {
-    height: 40px;
-    background-color: #ffffff;
-}
-
-#settingsbutton:hover {
-    background-color: rgb(211, 235, 255);
-}
-
-#settingsbutton img {
-    height: 20px;
-    margin: 10px;
-}
-
-
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
@@ -115,8 +70,6 @@ header {
         min-width: calc(70px + (100vw - 450px) * 0.15);
     }
 }
-
-
 
 /* Stop increasing header links width */
 @media only screen and (min-width: 715px) {
