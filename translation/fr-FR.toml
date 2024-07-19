@@ -1,6 +1,6 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = 1
+version = "1.0.1"
 
 [header]
 home = "Accueil"
@@ -29,8 +29,8 @@ js-enter_password = "Entrez votre mot de passe pour supprimer votre compte DÉFI
 secondary_title = "Le site officiel pour jouer en direct!"
 what_is_it_title = "Qu'est ce que c'est?"
 what_is_it_pargaraphs = [
-"Infinite Chess est une variante des échecs dans laquelle il n'y pas de bordures, bien plus grand que le plateau 8x8 classique. La reine, les tours et les fous n'ont <em>pas de limites</em> à leur distance de déplacement. Choissisez n'importe quel nombre de 0 à l'infini!",
-"Sans limite à la distance que vous pouvez parcourir, il y a des positions dans lesquelles l'horloge de la mort, ou le nombre de coups avant le mat est représenté par le premier ordinal infini: <strong>omega ω</strong>. En fait, les recherches ont prouvé que le nombre de coups avant un mat peut être représenté par <strong>tout</strong> ordinal dénombrable!",
+"Infinite Chess est une variante des échecs dans laquelle il n'y pas de bordures, on est bien loin du plateau de 8x8 cases classique. La reine, les tours et les fous n'ont <em>pas de limites</em> à leur distance de déplacement. Vous pouvez vous déplacez sur n'importe quel case, de 0 à l'infini!",
+"Sans limite à la distance que vous pouvez parcourir, il y a des positions dans lesquelles l'horloge de la mort, ou le nombre de coups avant le mat, est représenté par le premier ordinal infini: <strong>omega ω</strong>. En fait, les recherches ont prouvé que le nombre de coups avant un mat peut être représenté par <strong>tout</strong> ordinal dénombrable!",
 "Comme vous pouvez l'imaginer, il y a une infinité de positions de départ possibles dont beaucoup que vous pouvez jouer de façon compétitive! Le but final reste de faire un échec et mat, il est donc nécessaire de développer des nouvelles techniques vu qu'il n'y pas de murs pour coincer le roi ennemi. Normalement, les parties ne durent pas plus longtemps que dans un jeu d'échec classique. Les pions font leur promotions sur les lignes 1 et 8 respectivement!",
 ]
 how_to_title = "Comment Jouer ?"
@@ -169,6 +169,7 @@ hawk = {name="Faucon", description="Se déplace d'exactement 2 ou 3 cases dans c
 obstacle = {name="Obstacle", description="Une pièce neutre (controlés par aucun des joueurs) qui bloque les mouvements mais peut être capturé."},
 centaur = {name="Centaure", description="Se déplace comme un cavalier et un garde combinés."}
 void = {name="Vide", description="Une pièce neutre (controlés par aucun des joueurs) qui represente l'absence de cases sur le plateau. Les pièces ne peuvent pas se déplacer par dessus ou à travers."}
+
 
 [play.play-menu]
 title = "Jouer - En Ligne"
@@ -443,7 +444,8 @@ thanks = "Merci!"
 title = "Se Connecter"
 username = "Nom d'Utilisateur:"
 password = "Mot de Passe:"
-forgot_password = ["J'ai oublié mon mot de passe ", "Envoyez nous un mail."]
+forgot_password = ["Mot de passe oublié ? ", "Envoyez nous un mail."]
+login_button = "Se connecter"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Des paramètres invalides ont été reçus."
