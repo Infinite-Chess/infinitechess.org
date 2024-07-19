@@ -13,7 +13,7 @@ const handleLogout = async (req, res) => {
 
     // Is refreshToken in db?
     const foundMemberKey = findMemberFromRefreshToken(refreshToken)
-    if (!foundMemberKey) return res.status(409).json({'message':"refresh_token_not_found"}); // Forbidden
+    if (!foundMemberKey) return res.status(409).json({'message':"ws-refresh_token_not_found"}); // Forbidden
 
     // Delete refreshToken in db.
     // This also saves the members file.
