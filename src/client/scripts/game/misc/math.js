@@ -420,6 +420,15 @@ const math = (function() {
         };
     }
 
+    /**
+     * 
+     * This assumes the coord is on the same line as origin
+     * @param {Number[]} step Slide step `[dx,dy]`
+     * @param {Number[]} origin Coordinate of move origin `[x,y]`
+     * @param {Number[]} coord Coordinate `[x,y]`
+     * @param {boolean} isLeft 
+     * @returns {Number} The steps from origin 
+     */
     function getLineSteps(step, origin, coord, isLeft) {
         let x = (coord[0]-origin[0])/step[0]
         if (!isLeft) x = Math.floor(x)
