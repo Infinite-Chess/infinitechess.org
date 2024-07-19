@@ -180,7 +180,7 @@ const legalmoves = (function(){
         for (let i = 0; i < line.length; i++) {
             // What are the coords of this piece?
             const thisPiece = line[i] // { type, coords }
-            const thisPieceSteps = Math.floor((thisPiece.coords[axis]-coords[axis])/direction[axis])
+            const thisPieceSteps = math.getLineSteps(direction, coords, thisPiece.coords)
             const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
             const isFriendlyPiece = color === thisPieceColor
             const isVoid = thisPiece.type === 'voidsN';
@@ -241,7 +241,7 @@ const legalmoves = (function(){
             let clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
             if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
-            if (!doesSlidingNetContainSquare(limits, line, startCoords, endCoords)) continue;
+            if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords)) continue;
             return true;
         }
         return false;
@@ -357,13 +357,10 @@ const legalmoves = (function(){
      * @param {number[]} coords - The coordinates we want to know if they can reach.
      * @returns {boolean} true if the piece is able to slide to the coordinates
      */
-    function doesSlidingNetContainSquare(slideMoveset, direction, pieceCoords, coords) {
-        const axis = direction[0] === 0 ? 1 : 0
-        const coordMag = coords[axis];
-        const min = slideMoveset[0] * direction[axis] + pieceCoords[axis]
-        const max = slideMoveset[1] * direction[axis] + pieceCoords[axis]
+    function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords) {
+        const step = math.getLineSteps(direction, pieceCoords, coords)
 
-        return coordMag >= min && coordMag <= max;
+        return step >= slideMoveset[0] && step <= slideMoveset[1];
     }
 
     /**
@@ -390,7 +387,7 @@ const legalmoves = (function(){
         getPieceMoveset,
         calculate,
         checkIfMoveLegal,
-        doesSlidingNetContainSquare,
+        doesSlidingMovesetContainSquare,
         hasAtleast1Move,
         slide_CalcLegalLimit,
         isOpponentsMoveLegal

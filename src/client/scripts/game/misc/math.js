@@ -420,7 +420,7 @@ const math = (function() {
     }
 
     /**
-     * 
+     * Gets the amount of steps from the origin point to the coord.
      * This assumes the coord is on the same line as origin
      * @param {Number[]} step Slide step `[dx,dy]`
      * @param {Number[]} origin Coordinate of move origin `[x,y]`
