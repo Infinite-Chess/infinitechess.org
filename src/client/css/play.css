@@ -1300,8 +1300,8 @@ button.join-button, button.copy-button {
 }
 
 .drawOfferUI button {
-    background-color: rgb(228, 228, 228);
-    box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.27);
+    background-color: rgb(255, 255, 255) !important;
+    box-shadow: 0px 0px 7px 1px #727272 !important;
     border-radius: min(0.9vw, 10px);
     color: rgb(0, 0, 0);
     height: 100%;
@@ -1314,9 +1314,13 @@ button.join-button, button.copy-button {
 
 .drawOfferUI img {
     position: relative;
-	height: 70%;
+	height: 85%;
 	margin:1px;
 	top: 0px;
+}
+
+.acceptdraw > .icon {
+	height: 95%;
 }
 
 .drawOfferUI button:hover {
