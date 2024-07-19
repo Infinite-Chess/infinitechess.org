@@ -22,9 +22,8 @@ js-login = "Log In"
 js-createaccount = "Create Account"
 
 [member.javascript]
-incorrect_password = "Password is incorrect"
-confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
-enter_password = "Enter your password to PERMANENTLY delete your account:"
+js-confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
+js-enter_password = "Enter your password to PERMANENTLY delete your account:"
 
 [index]
 secondary_title = "The official website for playing live!"
