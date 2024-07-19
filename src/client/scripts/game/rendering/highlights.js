@@ -305,15 +305,16 @@ const highlights = (function(){
             if (!intsect1Tile && !intsect2Tile) {continue;} // If there's no intersection point, it's off the screen, don't bother rendering.
             if (!intsect1Tile || !intsect2Tile) {console.error(`Line only has one intersect with square.`); continue;}
 
-            const intsect1Step = math.getLineSteps(line, coords, intsect1Tile)
-            const intsect2Step = math.getLineSteps(line, coords, intsect2Tile)
-            
-            concatData_HighlightedMoves_Diagonal(coords, intsect1Step, intsect2Step, legalMoves.sliding[line], line, r, g, b, a);
+            const intsect1Step = math.getLineSteps(line, coords, intsect1Tile, true)
+            const intsect2Step = math.getLineSteps(line, coords, intsect2Tile, false)
+
+            concatData_HighlightedMoves_Diagonal(coords, intsect1Step, intsect2Step, legalMoves.sliding[strline], renderBoundingBox, line, r, g, b, a, intsect1Tile, intsect2Tile);
         }
     }
 
-    function concatData_HighlightedMoves_Diagonal (coords, intsect1Step, intsect2Step, limits, step, r, g, b, a) {
-        { // Left moveset
+    function concatData_HighlightedMoves_Diagonal (coords, intsect1Step, intsect2Step, limits, boundingBox, step, r, g, b, a, Tile1, Tile2) {
+        boundingBox = math.deepCopyObject(boundingBox)
+        left : { // Left moveset
             let startStep = intsect1Step
             let endStep = intsect2Step
 
@@ -328,15 +329,27 @@ const highlights = (function(){
 
             // How many times will we iterate?
             let iterateCount = endStep - startStep + 1
-            if (iterateCount < 0) iterateCount = 0
+            if (iterateCount < 0) break left;
 
             // Init starting coords of the data, this will increment by 1 every iteration
             let currentX = startStep * step[0] - board.gsquareCenter() - model_Offset[0] + coords[0]
             let currentY = startStep * step[1] - board.gsquareCenter() - model_Offset[1] + coords[1]
+            
+            let start = [startStep*step[0]+coords[0],startStep*step[1]+coords[1]]
+            if (!math.boxContainsSquare(boundingBox,start)) {
+                console.warn(`Line starts out of bounds at ${start}`);
+                debugger;
+            }
+            let end = [endStep*step[0]+coords[0],endStep*step[1]+coords[1]]
+            if (!math.boxContainsSquare(boundingBox, end)) {
+                console.warn(`Line ends out of bounds at ${end}`);
+                debugger;
+            }
+            
             // Generate data of each highlighted square
-            addDataDiagonalVariant(iterateCount, currentX, currentY, +1, +1, [step[0], step[1]], r, g, b, a)
+            addDataDiagonalVariant(iterateCount, currentX, currentY, step, r, g, b, a)
         }
-        { // Right moveset
+        right : { // Right moveset
             let startStep = intsect1Step
             let endStep = intsect2Step
 
@@ -351,22 +364,34 @@ const highlights = (function(){
 
             // How many times will we iterate?
             let iterateCount = endStep - startStep + 1
-            if (iterateCount < 0) iterateCount = 0
+            if (iterateCount < 0) break right;
 
             // Init starting coords of the data, this will increment by 1 every iteration
             let currentX = startStep * step[0] - board.gsquareCenter() - model_Offset[0] + coords[0]
             let currentY = startStep * step[1] - board.gsquareCenter() - model_Offset[1] + coords[1]
+
+            let start = [startStep*step[0]+coords[0],startStep*step[1]+coords[1]]
+            if (!math.boxContainsSquare(boundingBox,start)) {
+                console.warn(`Line starts out of bounds at ${start}`);
+                debugger;
+            }
+            let end = [endStep*step[0]+coords[0],endStep*step[1]+coords[1]]
+            if (!math.boxContainsSquare(boundingBox, end)) {
+                console.warn(`Line ends out of bounds at ${end}`);
+                debugger;
+            }
+
             // Generate data of each highlighted square
-            addDataDiagonalVariant(iterateCount, currentX, currentY, +1, +1, [step[0], step[1]], r, g, b, a)
+            addDataDiagonalVariant(iterateCount, currentX, currentY, step, r, g, b, a)
         }
     }
 
     // Calculates the vertex data of a single diagonal direction eminating from piece. Current x & y is the starting values, followed by the hop values which are -1 or +1 dependant on the direction we're rendering
-    function addDataDiagonalVariant (iterateCount, currentX, currentY, xHop, yHop, step, r, g, b, a) {
-        if (Number.isNaN(currentX) || Number.isNaN(currentY)) throw new Error(`CurrentX or CurrentY (${CurrentX},${CurrentY}) are NaN`)
-        for (let i = 0; i < iterateCount; i++) { 
-            const endX = currentX + xHop
-            const endY = currentY + yHop
+    function addDataDiagonalVariant (iterateCount, currentX, currentY, step, r, g, b, a) {
+        if (Number.isNaN(currentX) || Number.isNaN(currentY)) throw new Error(`CurrentX or CurrentY (${currentX},${currentY}) are NaN`)
+        for (let i = 0; i < iterateCount; i++) {
+            const endX = currentX + 1
+            const endY = currentY + 1
             data.push(...bufferdata.getDataQuad_Color3D(currentX, currentY, endX, endY, z, r, g, b, a))
             // Prepare for next iteration
             currentX += step[0]

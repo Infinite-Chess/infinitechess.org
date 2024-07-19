@@ -431,12 +431,13 @@ const math = (function() {
      */
     function getLineSteps(step, origin, coord, isLeft) {
         let x = (coord[0]-origin[0])/step[0]
+        console.log(x)
         if (!isLeft) x = Math.floor(x)
         else x = Math.ceil(x)
         if (step[0]!==0) return x;
         let y = Math.floor((coord[1]-origin[1])/step[1])
-        if (!isLeft) x = Math.floor(x)
-        else x = Math.ceil(x)
+        if (!isLeft) y = Math.floor(y)
+        else y = Math.ceil(y)
         return y
     }
 
