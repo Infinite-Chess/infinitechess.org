@@ -97,7 +97,7 @@ username = "Nom d'utilisateur:"
 email = "Email:"
 password = "Mot de Passe:"
 create_button = "Créer un compte"
-argreement = ["J'accepte les", "Conditions d'utilisation"]
+argreement = ["J'accepte les ", "Conditions d'utilisation"]
 
 [create-account.javascript]
 js-username_specs = "Le nom d'utilisateur doit être d'au moins 3 caractères et ne doit contenir que des lettres ou des chiffres"
