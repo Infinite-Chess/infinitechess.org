@@ -1,6 +1,6 @@
 //Records premoves made by the player and submits them to the server
 
-"use strinct";
+"use strict";
 
 const premove = (function(){
 
