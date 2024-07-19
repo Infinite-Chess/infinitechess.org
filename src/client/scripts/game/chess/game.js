@@ -143,7 +143,11 @@ const game = (function(){
         if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
             miniimage.disable();
             arrows.setMode(0); // Disables arrows
+            wincondition.swapCheckmateForRoyalCapture(gamefile); // Checkmate alg too slow, use royalcapture instead!
         } else miniimage.enable();
+
+        // If there are so many hippogonals so as to create issues with discovered attacks, let's use royal capture instead!
+        if (organizedlines.areColinearLinesPresentInGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
 
         guipromotion.initUI(gamefile.gameRules.promotionsAllowed)
 

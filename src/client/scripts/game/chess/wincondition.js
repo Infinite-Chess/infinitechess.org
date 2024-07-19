@@ -242,6 +242,24 @@ const wincondition = (function() {
 	    else if (victor === 'aborted') return '0-0';
 	    throw new Error(`Cannot get game result from strange victor "${victor}"!`);
 	}
+    
+    /**
+     * Swaps the "checkmate" win condition for "royalcapture" in the gamefile if applicable.
+     *
+     * @param {gamefile} gamefile - The gamefile containing game data.
+     */
+    function swapCheckmateForRoyalCapture(gamefile) {
+        // Check if the game is using the "royalcapture" win condition
+        if (doesColorHaveWinCondition(gamefile, 'white', 'checkmate')) {
+            math.removeObjectFromArray(gamefile.gameRules.winConditions.white, 'checkmate');
+            gamefile.gameRules.winConditions.white.push('royalcapture');
+        }
+        if (doesColorHaveWinCondition(gamefile, 'black', 'checkmate')) {
+            math.removeObjectFromArray(gamefile.gameRules.winConditions.black, 'checkmate');
+            gamefile.gameRules.winConditions.black.push('royalcapture');
+        }
+        console.log("Swapped checkmate wincondition for royalcapture.")
+    }
 
     return Object.freeze({
         validWinConditions,
@@ -252,7 +270,8 @@ const wincondition = (function() {
         getWinConditionCountOfColor,
         isGameConclusionDecisive,
         getVictorAndConditionFromGameConclusion,
-	getResultFromVictor
+	    getResultFromVictor,
+        swapCheckmateForRoyalCapture
     })
 
 })();

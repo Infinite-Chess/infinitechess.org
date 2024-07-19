@@ -301,5 +301,37 @@ const organizedlines = {
         const deltaAxis = lineIsVertical ? step[1] : step[0];
         const coordAxis = lineIsVertical ? coords[1] : coords[0];
         return math.posMod(coordAxis, deltaAxis)
+    },
+
+    /**
+     * Tests if the provided gamefile has colinear organized lines present in the game.
+     * This can occur if there are sliders that can move in the same exact direction as others.
+     * For example, [2,0] and [3,0]. We typically like to know this information because
+     * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
+     * by using royalcapture instead of checkmate.
+     * @param {gamefile} gamefile 
+     */
+    areColinearLinesPresentInGame(gamefile) {
+        const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
+
+        // How to know if 2 lines are colinear?
+        // They will have the exact same slope!
+
+        // Iterate through each line, comparing its slope with every other line
+        for (let a = 0; a < slidingPossible.length - 1; a++) {
+            const line1 = slidingPossible[a]; // [dx,dy]
+            const slope1 = line1[1] / line1[0]; // Rise/Run
+            const line1IsVertical = isNaN(slope1);
+            
+            for (let b = a+1; b < slidingPossible.length; b++) {
+                const line2 = slidingPossible[b]; // [dx,dy]
+                const slope2 = line2[1] / line2[0]; // Rise/Run
+                const line2IsVertical = isNaN(slope2);
+
+                if (line1IsVertical && line2IsVertical) return true; // Colinear!
+                if (slope1 === slope2) return true; // Colinear!
+            }
+        }
+        return false;
     }
 };
