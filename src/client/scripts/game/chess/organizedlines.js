@@ -311,7 +311,7 @@ const organizedlines = {
      * by using royalcapture instead of checkmate.
      * @param {gamefile} gamefile 
      */
-    areColinearLinesPresentInGame(gamefile) {
+    areColinearSlidesPresentInGame(gamefile) {
         const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
 
         // How to know if 2 lines are colinear?

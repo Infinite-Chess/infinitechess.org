@@ -147,7 +147,7 @@ const game = (function(){
         } else miniimage.enable();
 
         // If there are so many hippogonals so as to create issues with discovered attacks, let's use royal capture instead!
-        if (organizedlines.areColinearLinesPresentInGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
+        if (organizedlines.areColinearSlidesPresentInGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
 
         guipromotion.initUI(gamefile.gameRules.promotionsAllowed)
 
