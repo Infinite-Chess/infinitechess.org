@@ -95,7 +95,7 @@ async function testPasswordForRequest(req, res) {
     const hashedPassword = getHashedPassword(usernameLowercase);
 
     if (!usernameCaseSensitive || !hashedPassword) {
-        res.status(401).json({ 'message': "invalid_username"}); // Unauthorized, username not found
+        res.status(401).json({ 'message': "ws-invalid_username"}); // Unauthorized, username not found
         return false;
     }
     
@@ -108,7 +108,7 @@ async function testPasswordForRequest(req, res) {
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
         logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
-        res.status(401).json({ 'message': "incorrect_password"}); // Unauthorized, password not found
+        res.status(401).json({ 'message': "ws-incorrect_password"}); // Unauthorized, password not found
         onIncorrectPassword(browserAgent, usernameCaseSensitive);
         return false;
     }
@@ -128,7 +128,7 @@ async function testPasswordForRequest(req, res) {
 function verifyBodyHasLoginFormData(req, res) {
     if (!req.body) { // Missing body
         console.log(`User sent a bad login request missing the body!`)
-        res.status(400).send("bad_request"); // 400 Bad request
+        res.status(400).send("ws-bad_request"); // 400 Bad request
         return false;
     }
 
@@ -136,13 +136,13 @@ function verifyBodyHasLoginFormData(req, res) {
     
     if (!username || !password) {
         console.log(`User ${username} sent a bad login request missing either username or password!`)
-        res.status(400).json({ 'message': "username_and_password_required"}); // 400 Bad request
+        res.status(400).json({ 'message': "ws-username_and_password_required"}); // 400 Bad request
         return false;
     }
 
     if (typeof username !== "string" || typeof password !== "string") {
         console.log(`User ${username} sent a bad login request with either username or password not a string!`)
-        res.status(400).json({ 'message': "username_and_password_string"}); // 400 Bad request
+        res.status(400).json({ 'message': "ws-username_and_password_string"}); // 400 Bad request
         return false;
     }
 
@@ -218,7 +218,7 @@ function rateLimitLogin(res, browserAgent) {
 
     if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) { // Still on cooldown
         res.status(401).json({
-            'message': "login_failure_retry_soon",
+            'message': "ws-login_failure_retry_in",
             'login_cooldown': Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs)
         });
         // res.status(401).json({ 'message': `Failed to login, try again in ${Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs)} seconds.`});

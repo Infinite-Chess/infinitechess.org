@@ -127,9 +127,8 @@ function showAccountInfo() {
 }
 
 async function removeAccount(confirmation) {
-  console.log(translations);
-    if (!confirmation || confirm(translations["server-websocket"]["confirm_delete"])) {
-        const password = prompt(translations["server-websocket"]["enter_password"]);
+    if (!confirmation || confirm(translations["confirm_delete"])) {
+        const password = prompt(translations["enter_password"]);
         const cancelWasPressed = password === null;
         if (cancelWasPressed) return; // Don't delete account
 
@@ -145,8 +144,18 @@ async function removeAccount(confirmation) {
 
         const response = await fetch(`/member/${member}/delete`, config)
         if (!response.ok) {
+            // translate the message from the server if a translation is available
             const result = await response.json();
-            alert(translations["server-websocket"][result.message]);
+            let message = result.message;
+            if (translations[message]) message = translations[message];
+
+            // append the login cooldown if it exists
+            let login_cooldown = ("login_cooldown" in result ? result["login_cooldown"] : undefined);
+            if (login_cooldown !== undefined){
+                const seconds_plurality = login_cooldown == 1 ? translations["ws-second"] : translations["ws-seconds"];
+                message += ` ${login_cooldown} ${seconds_plurality}.`
+            }
+            alert(message);
             removeAccount(false);
         } else {
             window.location.href = '/';
