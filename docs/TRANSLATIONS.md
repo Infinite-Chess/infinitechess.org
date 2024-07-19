@@ -14,13 +14,13 @@ Each file is named after its language [BCP 47 language tag](https://en.wikipedia
 
 `lng-(script)-REGION-(extensions)`
 
-For example `en-US` for American English, `sv` for Swedish, `zh-Hant-HK` for Chinese spoken in Hong Kong written in traditional script.
+For example, `en-US` for American English, `sv` for Swedish, `zh-Hant-HK` for Chinese spoken in Hong Kong written in traditional script.
 
 You should name your file this way and only this way, otherwise it won't be correctly detected.
 
 ### Content ###
 
-As stated before, translation files in TOML format consist of keys and values, table headers and comments, like this:
+Translation files in TOML format consist of keys and values, table headers and comments, like this:
 
 ```toml
 [table-header]
@@ -30,7 +30,7 @@ key2 = "value2"
 ```
 
 > [!IMPORTANT]
-> **You should only change values and comments**.
+> **You should only change values and comments. You can and should leave everything else unmodified when translating!**.
 
 ## Translation process ##
 
