@@ -127,8 +127,8 @@ function showAccountInfo() {
 }
 
 async function removeAccount(confirmation) {
-    if (!confirmation || confirm("Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password.")) {
-        const password = prompt("Enter your password to PERMANENTLY delete your account:");
+    if (!confirmation || confirm(translations["confirm_delete"])) {
+        const password = prompt(translations["enter_password"]);
         const cancelWasPressed = password === null;
         if (cancelWasPressed) return; // Don't delete account
 
@@ -145,7 +145,7 @@ async function removeAccount(confirmation) {
         const response = await fetch(`/member/${member}/delete`, config)
         if (!response.ok) {
             const result = await response.json();
-            alert(result.message);
+            alert(translations[result.message]);
             removeAccount(false);
         } else {
             window.location.href = '/';

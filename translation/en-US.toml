@@ -21,6 +21,10 @@ js-logout = "Log Out"
 js-login = "Log In"
 js-createaccount = "Create Account"
 
+[member.javascript]
+confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
+enter_password = "Enter your password to PERMANENTLY delete your account:"
+
 [index]
 secondary_title = "The official website for playing live!"
 what_is_it_title = "What is it?"
@@ -259,6 +263,10 @@ constructing_mesh = "Constructing mesh"
 rotating_mesh = "Rotating mesh"
 lost_connection = "Lost connection."
 please_wait = "Please wait a moment to perform this task."
+webgl_unsupported = "Your browser does not support WebGL. This game requires that to function. Please update your browser."
+bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
+shaders_failed = "Unable to initialize the shader program:"
+failed_compiling_shaders = "An error occurred compiling the shaders:"
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"

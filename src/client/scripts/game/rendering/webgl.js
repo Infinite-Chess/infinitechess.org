@@ -79,7 +79,7 @@ const webgl = (function() {
             gl = canvas.getContext('experimental-webgl', { alpha: false});
         }
         if (!gl) { // Experimental also failed to init
-            alert("Your browser does not support WebGL. This game requires that to function. Please update your browser.")
+            alert(translations["webgl_unsupported"])
             throw new Error("WebGL not supported.")
         }
     

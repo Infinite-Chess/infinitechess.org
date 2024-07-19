@@ -3,7 +3,8 @@
     <head>
         <script>
             const translations = <%-JSON.stringify({
-                ...t('header.javascript', {returnObjects: true})
+                ...t('header.javascript', {returnObjects: true}),
+                ...t('member.javascript', {returnObjects: true}),
             })%>;
         </script>
         <meta charset="utf-8" />
