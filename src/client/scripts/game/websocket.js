@@ -205,13 +205,7 @@ const websocket = (function(){
         try {
             // Parse the stringified JSON message and translate the message from the server if a translation is available
             message = JSON.parse(serverMessage.data); // { sub, action, value, id }
-            let login_cooldown = ("login_cooldown" in result ? result["login_cooldown"] : undefined);
-            // translate the message from the server if a translation is available
             if (translations["server-websocket"][result_message]) result_message = translations["server-websocket"][result_message];
-            if (login_cooldown !== undefined){
-                const seconds_plurality = login_cooldown == 1 ? translations["server-websocket"]["second"] : translations["server-websocket"]["seconds"];
-                message += ` ${login_cooldown} ${seconds_plurality}.`
-            }
         } catch (error) {
             return console.error('Error parsing incoming message as JSON:', error);
         }

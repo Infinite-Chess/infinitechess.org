@@ -70,8 +70,10 @@ const sendLogin = (username, password) => {
 
             // translate the message from the server if a translation is available
             let result_message = result['message'];
-            let login_cooldown = ("login_cooldown" in result ? result["login_cooldown"] : undefined);
             if (translations["server-websocket"][result_message]) result_message = translations["server-websocket"][result_message];
+
+            // append the login cooldown if it exists
+            let login_cooldown = ("login_cooldown" in result ? result["login_cooldown"] : undefined);
             if (login_cooldown !== undefined){
                 const seconds_plurality = login_cooldown == 1 ? translations["server-websocket"]["second"] : translations["server-websocket"]["seconds"];
                 result_message += ` ${login_cooldown} ${seconds_plurality}.`
