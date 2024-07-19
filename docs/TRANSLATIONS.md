@@ -30,7 +30,7 @@ key2 = "value2"
 ```
 
 > [!IMPORTANT]
-> **You should only change values and comments. You can and should leave everything else unmodified when translating!**.
+> **You should only change values and comments. Please, leave everything else unmodified when translating!**.
 
 ## Translation process ##
 
@@ -39,7 +39,7 @@ In case you are translating a language that is currently not present in the proj
 > [!IMPORTANT]
 > You should always use [en-US.toml](../translation/en-US.toml) as a reference. It is the only file that is up to date and comes straight from the developers. Do not use any other files!
 
-Then you can start a test server with `npx nodemon` and start translating. If you head to your browser at address `https://localhost:3443` the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure you have selected the language that you are editing in the website's UI. To that end, there is a footer with a language selection dropdown menu at the bottom of almost every page.
+Then you can start a test server with `npx nodemon` and start translating. If you head to your browser at address `https://localhost:3443` the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure you have selected the language that you are editing in the website's UI. At the bottom, there is a footer with a language selection dropdown menu at the bottom of almost every page.
 
 In case you are updating an existing language and you aren't sure what has changed since the last update, you can view changes of `en-US.toml` [here](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml).
 
