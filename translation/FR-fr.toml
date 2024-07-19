@@ -22,8 +22,8 @@ js-login = "Connexion"
 js-createaccount = "Créer un compte"
 
 [member.javascript]
-js-confirm_delete = "Êtes vous sur de vouloir supprimer votre compte? Cette action est DÉFINITIVE! Cliquez sur "OK" pour rentrer votre mot de passe."
-js-enter_password = "Enter your password to PERMANENTLY delete your account:"
+js-confirm_delete = "Êtes vous sur de vouloir supprimer votre compte? Cette action est DÉFINITIVE! Cliquez sur 'OK' pour rentrer votre mot de passe."
+js-enter_password = "Entrez votre mot de passe pour supprimer votre compte DÉFINITIVEMENT:"
 
 [index]
 secondary_title = "Le site officiel pour jouer en direct!"
