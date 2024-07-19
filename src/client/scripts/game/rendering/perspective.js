@@ -47,7 +47,7 @@ const perspective = (function() {
         if (enabled) return console.error("Should not be enabling perspective when it is already enabled.");
         enabled = true;
 
-        guipause.gelement_perspective().textContent = "Perspective: On"
+        guipause.getelement_perspective().textContent = "Perspective: On"
 
         guipause.callback_Resume()
 
@@ -69,7 +69,7 @@ const perspective = (function() {
         // document.exitPointerLock()
         guipause.callback_Resume()
 
-        guipause.gelement_perspective().textContent = "Perspective: Off"
+        guipause.getelement_perspective().textContent = "Perspective: Off"
         
         resetRotations()
         

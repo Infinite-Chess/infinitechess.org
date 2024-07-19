@@ -43,7 +43,7 @@ const guipause = (function(){
      */
     function areWeAcceptingDraw() { return isAcceptingDraw; }
 
-    function gelement_perspective() {
+    function getelement_perspective() {
         return element_perspective;
     }
 
@@ -222,7 +222,7 @@ const guipause = (function(){
     return Object.freeze({
         areWePaused,
         areWeAcceptingDraw,
-        gelement_perspective,
+        getelement_perspective,
         open,
         openDrawOffer,
         closeDrawOffer,
