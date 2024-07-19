@@ -4,7 +4,7 @@ This guide will walk you through the process of creating translations for [Infin
 
 ## Navigaton ##
 
-Anything that matters to you as a translator should be located in the [translation](../translation/) directory. Translation files are stored in TOML format (you can read more about its syntax [here](https://toml.io/)). Generally it is a very aproachable format and you should be able to get hang of it pretty quickly.
+Anything that matters to you as a translator should be located in the [translation](../translation/) directory. Translation files are stored in TOML format (you can read more about its syntax [here](https://toml.io/)). Generally, it is a very aproachable format, and you only need to understand the absolute basics of it, which are explained below.
 
 ## Translation files ##
 
@@ -34,19 +34,19 @@ key2 = "value2"
 
 ## Translation process ##
 
-In case you are translating language that is currently not present in the project, you can start the process by copying [en-US.toml](../translation/en-US.toml) and renaming it as described above. If you are updating an existing language, the only thing you need to do is to update the `version` variable on top of your TOML document to the value of the `version` variable in [en-US.toml](../translation/en-US.toml).
+In case you are translating a language that is currently not present in the project, you can start the process by copying [en-US.toml](../translation/en-US.toml) and renaming it as described above. If you are updating an existing language, the only thing you need to do is to update the `version` variable on top of your TOML document to the value of the `version` variable in [en-US.toml](../translation/en-US.toml).
 
 > [!IMPORTANT]
 > You should always use [en-US.toml](../translation/en-US.toml) as a reference. It is the only file that is up to date and comes straight from the developers. Do not use any other files!
 
-Then you start a test server with `npx nodemon` and start translating. If you head to your browser at address `https://localhost:3443` the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure you have selected the language that you are editing in the websites UI. To that end, there is a footer with a language selection dropdown menu at the bottom of almost every page.
+Then you can start a test server with `npx nodemon` and start translating. If you head to your browser at address `https://localhost:3443` the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure you have selected the language that you are editing in the website's UI. To that end, there is a footer with a language selection dropdown menu at the bottom of almost every page.
 
 In case you are updating an existing language and you aren't sure what has changed since the last update, you can view changes of `en-US.toml` [here](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml).
 
 > [!IMPORTANT]
 > If there is an HTML tag in the value you want to translate, do not modify it!
 > 
-> Example of an html tag:
+> Example of an HTML tag:
 > ```html
 > <a href="https://www.google.com"> Hello World </a>
 > ```
