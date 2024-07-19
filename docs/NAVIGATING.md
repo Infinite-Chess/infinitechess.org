@@ -24,11 +24,11 @@ The websocket server code is located [here](../src/server/wsserver.js).
 
 [src/client](../src/client/) contains all clientside files of the website.
 
-It has subfolders for all the HTML, CSS, JavaScript, sound and image files of the website.
+It has subfolders for all the EJS, CSS, JavaScript, sound and image files of the website.
 
-[src/client/views](../src/client/views) contains all our HTML documents.
+[src/client/views](../src/client/views) contains all our EJS documents.
 
-The routers that actually send these htmls to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
+The routers that actually send these as htmls to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
 [src/client/scripts/game/](../src/client/scripts/game/) contains all our javascipt code for running the game in the `/play` page in the user's browser.
 
@@ -72,4 +72,4 @@ Connecting more devices to the web server, other than the machine that is hostin
 
 ## Conclusion ##
 
-Those are the basics! [Feel free to ask](https://discord.com/channels/1114425729569017918/1115358966642393190) in the discord for more pointers on where you can find certain implementations, or what the purpose of a script does!
+Those are the basics! [Feel free to ask](https://discord.com/channels/1114425729569017918/1115358966642393190) in the discord for more pointers on where you can find certain implementations, or what the purpose of a script is!
