@@ -28,6 +28,8 @@ const staticTranslatedTemplates = [
   "errors/500",
 ];
 
+// Removed because <a> tags are no longer in whitelist
+/*
 const link_white_list = [
   "/",
   "/login",
@@ -57,6 +59,7 @@ const link_white_list = [
   "https://github.com/Infinite-Chess/infinitechess.org",
   "https://discord.com/channels/1114425729569017918/1114427288776364132/1240014519061712997"
 ];
+*/
 
 const xss_options = {
   whiteList: {
