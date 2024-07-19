@@ -2,7 +2,10 @@
 <html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
         <script>
-            const translations = <%-JSON.stringify(t('header.javascript', {returnObjects: true}))%>;
+            const translations = <%-JSON.stringify({
+                ...t('header.javascript', {returnObjects: true}),
+                ...t('server.javascript', {returnObjects: true})
+            })%>;
         </script>
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />

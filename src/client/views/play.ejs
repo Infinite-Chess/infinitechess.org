@@ -2,8 +2,13 @@
 <html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
         <script>
-            const translations = <%-JSON.stringify({...t('play.javascript', {returnObjects: true}), ...t('header.javascript', {returnObjects: true})})%>;
+            const translations = <%-JSON.stringify({
+                ...t('play.javascript', {returnObjects: true}),
+                ...t('header.javascript', {returnObjects: true}),
+                ...t('server.javascript', {returnObjects: true})
+            })%>;
         </script>
+        <!-- Do not modify the next line under any circumstances. It is used by HTMLScriptInjector.js as a reference point of where to inject htmlscript.js -->
         <!-- htmlscript.js inject here -->
 
         <!-- Javascript will add future styles in here -->
@@ -20,9 +25,10 @@
         <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource -->
         <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
 
-        <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
         <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-        <!-- Our gamecode javascript references are injected here by HTMLScriptInjector.js before the server sends this html out -->
+        <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
+        <!-- All clientside game scripts are inject here -->
+
     </head>
     <!-- The onload event listener to call main.start() is now within the htmlscript! -->
     <body>

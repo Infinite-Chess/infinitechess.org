@@ -29,7 +29,7 @@ const verifyAccount = async function (req, res) {
     if (req.user !== usernameLowercase) { // Forbid them if they are logged in and NOT who they're wanting to verify!
         const errText = `User ${req.user} attempted to verify ${usernameLowercase}!`
         logEvents(errText, 'hackLog.txt', { print: true });
-        res.status(403).send("Forbidden. This is not your account.");
+        res.status(403).send("forbidden_wrong_account");
         return;
     }
 

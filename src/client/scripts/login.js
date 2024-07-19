@@ -67,7 +67,10 @@ const sendLogin = (username, password) => {
                 element_forgot.className = 'forgotvisible';
             }
             updateSubmitButton();
-            loginErrorElement.textContent = result['message'];
+            let result_message = result['message'];
+            // translate the message from the server if a translation is available
+            if (translations["server-websocket"][result_message]) result_message = translations["server-websocket"][result_message];
+            loginErrorElement.textContent = result_message;
             element_submitButton.disabled = false;
         }
     });

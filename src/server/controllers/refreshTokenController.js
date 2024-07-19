@@ -22,7 +22,7 @@ const handleRefreshToken = (req, res) => {
     // If we have cookies AND there's a jwt property..
     if (!cookies?.jwt) {
         assignOrRenewBrowserID(req, res);
-        return res.status(401).json({'message' : 'No refresh token found (expired session)'});
+        return res.status(401).json({'message' : "refresh_token_expired"});
     }
     const refreshToken = cookies.jwt;
     const foundMemberKey = findMemberFromRefreshToken(refreshToken);
@@ -30,7 +30,7 @@ const handleRefreshToken = (req, res) => {
     // As soon as they log out, we will have removed the token from the database.
     if (!foundMemberKey) {
         assignOrRenewBrowserID(req, res);
-        return res.status(403).json({'message':'No member has that refresh token'}); // Forbidden
+        return res.status(403).json({'message': "refresh_token_not_found_logged_out"}); // Forbidden
     }
 
     // Evaluate jwt
@@ -41,7 +41,7 @@ const handleRefreshToken = (req, res) => {
             // If the token is expired/wrong, or the payload is different
             if (err || foundMemberKey !== decoded.username) {
                 assignOrRenewBrowserID(req, res);
-                return res.status(403).json({'message' : 'Refresh token expired or tampered'});
+                return res.status(403).json({'message' : "refresh_token_invalid"});
             }
             // Else verified. Send them new access token!
             const accessToken = jwt.sign(

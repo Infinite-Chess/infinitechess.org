@@ -25,7 +25,7 @@ const getMemberData = async (req, res) => {
 
     // Load their case sensitive username
     const username = getUsernameCaseSensitive(usernameLowercase);
-    if (!username) return res.status(404).json({message: 'Member not found'})
+    if (!username) return res.status(404).json({message: "member_not_found"})
 
     // Load their data
     const joinDate = getJoinDate(usernameLowercase);
