@@ -88,33 +88,40 @@ const legalmoves = (function(){
 
         const thisPieceMoveset = getPieceMoveset(gamefile, type) // Default piece moveset
 
-        let legalIndividualMoves = thisPieceMoveset.individual;
-        let legalHorizontalMoves = thisPieceMoveset.horizontal;
-        let legalVerticalMoves = thisPieceMoveset.vertical;
-        let legalUpDiagonalMoves = thisPieceMoveset.diagonalUp;
-        let legalDownDiagonalMoves = thisPieceMoveset.diagonalDown;
+        let legalIndividualMoves = [];
+        let legalHorizontalMoves;
+        let legalVerticalMoves;
+        let legalUpDiagonalMoves;
+        let legalDownDiagonalMoves;
 
-        tag: if (!onlyCalcSpecials) {
+        if (!onlyCalcSpecials) {
 
             // Legal jumping/individual moves
     
             shiftIndividualMovesetByCoords(thisPieceMoveset.individual, coords)
 
-            //Skip legality checks for now as we can't check until the opponent moves.
-            if(isPremove) break tag;
+            if(isPremove) {
+                //Skip legality checks for now as we can't check until the opponent moves.
+                legalIndividualMoves = thisPieceMoveset.individual;
+                legalHorizontalMoves = thisPieceMoveset.horizontal;
+                legalVerticalMoves = thisPieceMoveset.vertical;
+                legalUpDiagonalMoves = thisPieceMoveset.diagonalUp;
+                legalDownDiagonalMoves = thisPieceMoveset.diagonalDown;
+            } else {
 
-            moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, legalIndividualMoves, color)
-    
-            // Legal sliding moves
-    
-            let key = coords[1]; // Key is y level for horizontal slide
-            legalHorizontalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByRow[key], false, thisPieceMoveset.horizontal, coords, color)
-            key = coords[0] // Key is x for vertical slide
-            legalVerticalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByColumn[key], true, thisPieceMoveset.vertical, coords, color)
-            key = math.getUpDiagonalFromCoords(coords) // Key is -x + y for up-diagonal slide
-            legalUpDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByUpDiagonal[key], false, thisPieceMoveset.diagonalUp, coords, color)
-            key = math.getDownDiagonalFromCoords(coords) // Key is x + y for down-diagonal slide
-            legalDownDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByDownDiagonal[key], false, thisPieceMoveset.diagonalDown, coords, color)
+                legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color)
+                
+                // Legal sliding moves
+                
+                let key = coords[1]; // Key is y level for horizontal slide
+                legalHorizontalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByRow[key], false, thisPieceMoveset.horizontal, coords, color)
+                key = coords[0] // Key is x for vertical slide
+                legalVerticalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByColumn[key], true, thisPieceMoveset.vertical, coords, color)
+                key = math.getUpDiagonalFromCoords(coords) // Key is -x + y for up-diagonal slide
+                legalUpDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByUpDiagonal[key], false, thisPieceMoveset.diagonalUp, coords, color)
+                key = math.getDownDiagonalFromCoords(coords) // Key is x + y for down-diagonal slide
+                legalDownDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByDownDiagonal[key], false, thisPieceMoveset.diagonalDown, coords, color)
+            }
         }
         
         // Add any special moves!
