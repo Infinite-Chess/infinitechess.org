@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = 1
+version = "1.0.1"
 
 [header]
 home = "Home"
@@ -445,6 +445,7 @@ title = "Log In"
 username = "Username:"
 password = "Password:"
 forgot_password = ["Forgot? ", "Email us."]
+login_button = "Log In"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
