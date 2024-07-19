@@ -514,26 +514,17 @@
 
                     <!-- Game info, clocks, player names, whos turn -->
                     <div id="footer" class="footer">
-                        <div class="gameinfo">
-                            <div id="timer-container-white" class="timerwhitecontainer">
-                                <div id="timer-white" class="timerwhite">10:00</div>
-                            </div>
-                            <div id="playerwhite" class="playerwhite">Player white</div>
-                            <div class="whosturn">
-                                <div id="dot" class="dotwhite"></div>
-                                <div id="whosturn">White to move</div>
-                            </div>
-                            <div id="playerblack" class="playerblack">Player black</div>
-                            <div id="timer-container-black" class="timerblackcontainer">
-                                <div id="timer-black" class="timerblack">10:00</div>
-                            </div>
+                        <div id="timer-container-white" class="timerwhitecontainer">
+                            <div id="timer-white" class="timerwhite">10:00</div>
                         </div>
-
-                        <!-- Draw Offer UI -->
-                        <div id="drawOfferUI" class="drawOfferUI hidden footer">
-                            <p class="offertitle">Accept draw offer?</p>
-                            <button id="acceptdraw" class="acceptdraw button"><img src="/img/checkmark.svg" alt="accept" class="icon"></button>
-                            <button id="declinedraw" class="acceptdraw button"><img src="/img/xmark.svg" alt="decline" class="icon"></button>
+                        <div id="playerwhite" class="playerwhite">Player white</div>
+                        <div class="whosturn">
+                            <div id="dot" class="dotwhite"></div>
+                            <div id="whosturn">White to move</div>
+                        </div>
+                        <div id="playerblack" class="playerblack">Player black</div>
+                        <div id="timer-container-black" class="timerblackcontainer">
+                            <div id="timer-black" class="timerblack">10:00</div>
                         </div>
                     </div>
                 </div>
@@ -587,6 +578,13 @@
                     <button id="pastegame" class="pastegame button">Paste Game</button>
                     <button id="offerdraw" class="offerdraw button opacity-0_5">Offer a Draw</button>
                     <button id="mainmenu" class="mainmenu button">Main Menu</button>
+                </div>
+
+                <!-- Draw Offer UI -->
+                <div id="drawOfferUI" class="drawOfferUI footer hidden">
+                    <p class="offertitle">Accept draw offer?</p>
+                    <button id="acceptdraw" class="acceptdraw button"><img src="/img/checkmark.svg" alt="accept" class="icon"></button>
+                    <button id="declinedraw" class="acceptdraw button"><img src="/img/xmark.svg" alt="decline" class="icon"></button>
                 </div>
 
                 <!-- Status message -->

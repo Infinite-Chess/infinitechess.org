@@ -906,12 +906,6 @@ button.join-button, button.copy-button {
     -webkit-backdrop-filter: blur(5px); /* Fixes blur for Safari */
 }
 
-.gameinfo {
-    z-index: 9;
-    width: 100%;
-    height: 100%;
-}
-
 .timerwhitecontainer, .timerblackcontainer {
     display: flex;
     align-items: center;
@@ -1269,10 +1263,9 @@ button.join-button, button.copy-button {
     font-size: 30px;
     font-family: "Open Sans";
     font-weight: bold;
-    /*padding: 15px;*/
+    padding: 15px;
     gap: 15px;
-    height: 100%;
-    z-index: 1;
+    transition: display 2s;
 }
 
 .drawOfferUI p.offertitle, .drawOfferUI button {
@@ -1302,7 +1295,8 @@ button.join-button, button.copy-button {
 .drawOfferUI img {
     position: relative;
 	height: 70%;
-	margin:15px;
+	margin:1px;
+	top: 0px;
 }
 
 .drawOfferUI button:hover {
