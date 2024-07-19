@@ -7,7 +7,7 @@
 
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
 import { minify } from "terser";
-import { injectHtmlscript } from "./src/server/utility/HTMLScriptInjector.js"
+import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js"
 import { DEV_BUILD } from "./src/server/config/config.js";
 
 /**
@@ -46,7 +46,8 @@ if (DEV_BUILD){
     recursive: true,
     force: true
   });
-  await writeFile(`./dist/views/play.ejs`, injectHtmlscript(), 'utf8');
+  // overwrite play.ejs by injecting all needed scripts into it:
+  await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
 } else{
   // in prod mode, copy all clientside files over to dist, except for those contained in scripts
   await copy("./src/client", "./dist", {
@@ -62,8 +63,8 @@ if (DEV_BUILD){
   const clientScripts = await getExtFiles("./src/client/scripts", ".js");
   clientFiles.push(...clientScripts.map(v => `scripts/${v}`));
 
-  const filesToWrite = []; // array of output files that will need to be written
-  let gamecode = ""; // string containing all code in /game except for htmlscript.js
+  // string containing all code in /game except for htmlscript.js:
+  let gamecode = ""; 
 
   for (const file of clientFiles) {
     // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
@@ -74,7 +75,7 @@ if (DEV_BUILD){
         compress: true, // Enable compression
         sourceMap: false
       });
-      filesToWrite.push(writeFile(`./dist/${file}`, minified.code, 'utf8'));
+      await writeFile(`./dist/${file}`, minified.code, 'utf8');
     }
     // Collect the code of all js files in /game except for htmlscript.js:
     else{
@@ -88,11 +89,8 @@ if (DEV_BUILD){
     compress: true,
     sourceMap: false
   });
-  filesToWrite.push(writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8'));
+  await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
   
-  // Inject htmlscript.js into play.ejs
-  filesToWrite.push(writeFile(`./dist/views/play.ejs`, injectHtmlscript(), 'utf8'));
-
-  // finally, write to the needed files
-  await Promise.all(filesToWrite);
+  // overwrite play.ejs by injecting all needed scripts into it:
+  await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
 }
