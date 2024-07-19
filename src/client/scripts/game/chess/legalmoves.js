@@ -101,7 +101,7 @@ const legalmoves = (function(){
                 for (let i=0; i<lines.length; i++) {
                     const line = lines[i];
                     if (!thisPieceMoveset.sliding[line]) continue;
-                    const key = math.getKeyFromLine(line,coords);
+                    const key = organizedlines.getKeyFromLine(line,coords);
                     legalSliding[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line, thisPieceMoveset.sliding[line], coords, color);
                 };
             };
@@ -161,27 +161,26 @@ const legalmoves = (function(){
     /**
      * Takes in specified organized list, direction of the slide, the current moveset...
      * Shortens the moveset by pieces that block it's path.
-     * @param {*} organizedLine 
-     * @param {*} line 
-     * @param {*} slidinget 
-     * @param {*} coords 
-     * @param {*} color 
-     * @returns 
+     * @param {Piece[]} line - The list of pieces on this line 
+     * @param {number[]} direction - The direction of the line: `[dx,dy]` 
+     * @param {number[]} slidinget - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
+     * @param {number[]} coords - The coordinates of the piece with the specified slidinget.
+     * @param {string} color - The color of friendlies
      */
-    function slide_CalcLegalLimit (organizedLine, line, slidinget, coords, color) {
+    function slide_CalcLegalLimit (line, direction, slidinget, coords, color) {
 
         if (!slidinget) return; // Return undefined if there is no slide moveset
 
         // The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
-        // For most we'll be comparing the x values, only exception is the columns.
-        const zeroOrOne = line[0] == 0 ? 1 : 0 
-        const limit = [slidinget[0], slidinget[1]]
+        // For most we'll be comparing the x values, only exception is the vertical lines.
+        const axis = direction[0] == 0 ? 1 : 0 
+        const limit = math.copyCoords(slidinget);
         // Iterate through all pieces on same line
-        for (let i = 0; i < organizedLine.length; i++) {
+        for (let i = 0; i < line.length; i++) {
             // What are the coords of this piece?
-            const thisPiece = organizedLine[i] // { type, coords }
-            const thisPieceSteps = Math.floor((thisPiece.coords[zeroOrOne]-coords[zeroOrOne])/line[zeroOrOne])
+            const thisPiece = line[i] // { type, coords }
+            const thisPieceSteps = Math.floor((thisPiece.coords[axis]-coords[axis])/direction[axis])
             const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
             const isFriendlyPiece = color === thisPieceColor
             const isVoid = thisPiece.type === 'voidsN';
@@ -235,11 +234,11 @@ const legalmoves = (function(){
         }
 
         for (var strline in legalMoves.sliding) {
-            let line = math.getCoordsFromKey(strline);
-            let limits = legalMoves.sliding[strline];
+            let line = math.getCoordsFromKey(strline); // 'dx,dy'
+            let limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
 
-            let selectedPieceLine = math.getKeyFromLine(line,startCoords);
-            let clickedCoordsLine = math.getKeyFromLine(line,endCoords);
+            let selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);
+            let clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
             if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
             if (!doesSlidingNetContainSquare(limits, line, startCoords, endCoords)) continue;
@@ -310,7 +309,7 @@ const legalmoves = (function(){
         // Test if that piece's legal moves contain the destinationCoords.
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
         // This should pass on any special moves tags at the same time.
-        if (!legalmoves.checkIfMoveLegal(gamefile, legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
+        if (!legalmoves.checkIfMoveLegal(legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
             console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveCopy)}`)
             return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
         }
@@ -348,17 +347,23 @@ const legalmoves = (function(){
 
     // TODO: moveset changes
     // This requires coords be on the same line as the sliding moveset.
-    function doesSlidingNetContainSquare(slidinget, line, pieceCoords, coords) {
 
-        const axis = line[0] === 0 ? 1 : 0
+    /**
+     * Tests if the piece's precalculated slidinget is able to reach the provided coords.
+     * ASSUMES the coords are on the direction of travel!!!
+     * @param {number[]} slidinget - The distance the piece can move along this line: `[left,right]`. If the line is vertical, this will be `[bottom,top]`.
+     * @param {number[]} direction - The direction of the line: `[dx,dy]`
+     * @param {number[]} pieceCoords - The coordinates of the piece with the provided sliding net
+     * @param {number[]} coords - The coordinates we want to know if they can reach.
+     * @returns {boolean} true if the piece is able to slide to the coordinates
+     */
+    function doesSlidingNetContainSquare(slidinget, direction, pieceCoords, coords) {
+        const axis = direction[0] === 0 ? 1 : 0
         const coordMag = coords[axis];
-        const min = slidinget[0] * line[axis] + pieceCoords[axis]
-        const max = slidinget[1] * line[axis] + pieceCoords[axis]
+        const min = slidinget[0] * direction[axis] + pieceCoords[axis]
+        const max = slidinget[1] * direction[axis] + pieceCoords[axis]
 
-        if (coordMag < min) return false;
-        if (coordMag > max) return false;
-
-        return true;
+        return coordMag >= min && coordMag <= max;
     }
 
     /**

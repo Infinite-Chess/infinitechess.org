@@ -23,19 +23,31 @@
 
 const math = (function() {
 
+    /**
+     * Tests if the provided value is a power of 2.
+     * It does this efficiently by using bitwise operations.
+     * @param {number} value 
+     * @returns {boolean} true if the value is a power of 2.
+     */
     function isPowerOfTwo(value) {
         return (value & (value - 1)) === 0;
     }
 
-    function isAproxEqual(a, b, epsilon) {
-        if (epsilon == null) {
-            epsilon = 0.001;
-        }
-        return Math.abs(a-b)<epsilon
+    /**
+     * Returns true if the given values are approximately equal, with the most amount
+     * of difference allowed being the provided epsilon value.
+     * @param {number} a - Value 1
+     * @param {number} b - Value 2
+     * @param {number} [epsilon] The custom epsilon value. Default: Number.EPSILON (~2.2 x 10^-16). Idon us's old epsilon default value: 0.001
+     * @returns {boolean} true if the values are approximately equal, within the threshold.
+     */
+    function isAproxEqual(a, b, epsilon = Number.EPSILON) { // Idon us's old epsilon default value: 0.001
+        return Math.abs(a - b) < epsilon;
     }
 
     /**
      * Finds the intersection point of two lines given in the form dx * x + dy * y = c.
+     * This will return `null` if there isn't one, or if there's infinite (colinear).
      * @param {number} dx1 - The coefficient of x for the first line.
      * @param {number} dy1 - The coefficient of y for the first line.
      * @param {number} c1 - The constant term for the first line.
@@ -182,63 +194,14 @@ const math = (function() {
         return { left, right, bottom, top }
     }
 
-    function posMod(a,b) {
-        return a - (Math.floor(a / b) * b)
-    }
-
     /**
-     * Uses the calculation of ax + by = c
-     * c=b*y-intercept so is unique for each line
-     * Not unique when step can be factored
-     * eg [2,2]
-     * @param {number[]} step - The x-step and y-step of the line: `[deltax, deltay]`
-     * @param {number[]} coords - A point the line intersects: `[x,y]`
-     * @returns {number} integer c
+     * Computes the positive modulus of two numbers.
+     * @param {number} a - The dividend.
+     * @param {number} b - The divisor.
+     * @returns {number} The positive remainder of the division.
      */
-    function getCFromLineInGeneralForm(step, coords) {
-        return step[0]*coords[1]-step[1]*coords[0]
-    }
-
-    /**
-     * Returns the y interscept of the line with step dx and dy that intersects the coordinates.
-     * If the line is vertical, this returns the x intercept instead.
-     * @param {*} step 
-     * @param {*} coords 
-     * @returns {number}
-     */
-    function getYIntceptOfLine(step, coords) {
-        const lineIsVertical = step[0] === 0;
-        const xLine = lineIsVertical ? posMod(coords[1], step[1]) : posMod(coords[0], step[0]);
-        const slope = lineIsVertical ? 0 /**step[0] / step[1]*/ : step[1] / step[0];
-        // console.log(step, coords, lineIsVertical ? coords[0] + slope * (xLine - coords[1]) : coords[1] + slope * (xLine - coords[0]))
-        return lineIsVertical ? coords[0] + slope * (xLine - coords[1]) : coords[1] + slope * (xLine - coords[0]);
-    }
-
-    /**
-     * Gets a unique key from the line equation.
-     * Compatable with factorable steps like `[2,2]`.
-     * Discuss before changing func please as this may have unintended side-effects.
-     * @param {Number[]} step Line step `[deltax,deltay]`
-     * @param {Number[]} coords `[x,y]`
-     * @returns {String} the key `c|smallest_x_line_intcepts`
-     */
-    function getKeyFromLine(step, coords) {
-        // See these desmos graphs for inspiration for finding what line the coords are on:
-        // https://www.desmos.com/calculator/d0uf1sqipn
-        // https://www.desmos.com/calculator/t9wkt3kbfo
-
-        // Idon us's old equation
-        const lineIsVertical = step[0] === 0;
-        const deltaAxis = lineIsVertical ? step[1] : step[0];
-        const coordAxis = lineIsVertical ? coords[1] : coords[0];
-        const xLine = posMod(coordAxis, deltaAxis)
-        return `${getCFromLineInGeneralForm(step,coords)}|${xLine}`
-
-        // Naviary's new equation
-        //const lineIsVertical = step[0] === 0;
-        //const xLine = lineIsVertical ? coords[1] % step[1] : coords[0] % step[0];
-        //const yIntcept = getYIntceptOfLine(step, coords);
-        //return `${yIntcept}|${xLine}`;
+    function posMod(a, b) {
+        return a - (Math.floor(a / b) * b);
     }
     
     /**
@@ -265,10 +228,9 @@ const math = (function() {
 
     /**
      * Checks if all lines are colinear aka `[[1,0],[2,0]]` would be as they are both the same direction
-     * @param {Number[][]} lines Array of vectors `[[1,0],[2,0]]`
-     * @returns {Boolean} 
+     * @param {number[][]} lines Array of vectors `[[1,0],[2,0]]`
+     * @returns {boolean} 
      */
-
     function areLinesCollinear(lines) {
         let gradient
         for (const line of lines) {
@@ -412,43 +374,50 @@ const math = (function() {
         return [worldX, worldY]
     }
 
-    // fast clampfunc
+    /**
+     * Clamps a value between a minimum and a maximum value.
+     * @param {number} min - The minimum value.
+     * @param {number} max - The maximum value.
+     * @param {number} value - The value to clamp.
+     * @returns {number} The clamped value.
+     */
     function clamp(min,max,value) {
         if (min>value) return min;
         if (max<value) return max;
-        return value
+        return value;
     }
 
-    // Returns the point on the line segment that is nearest/perpendicular to the given point.
-    function closestPointOnLine (lineStart, lineEnd, point) {
-
+    /**
+     * Returns the point on the line segment that is nearest/perpendicular to the given point.
+     * @param {number[]} lineStart - The starting point of the line segment as [x, y].
+     * @param {number[]} lineEnd - The ending point of the line segment as [x, y].
+     * @param {number[]} point - The point to find the nearest point on the line to as [x, y].
+     * @returns {Object} An object containing the proeprties `coords`, which is the closest point on our segment to our point, and the `distance` to it.
+     */
+    function closestPointOnLine(lineStart, lineEnd, point) {
         let closestPoint;
-        let distance;
 
         const dx = lineEnd[0] - lineStart[0];
         const dy = lineEnd[1] - lineStart[1];
 
-        if (dx === 0) {
-            closestPoint = [lineStart[0], clamp(lineStart[1], lineEnd[1], point[1])]
-        } else {
-
+        if (dx === 0) { // Vertical line
+            closestPoint = [lineStart[0], clamp(lineStart[1], lineEnd[1], point[1])];
+        } else { // Not vertical
             const m = dy / dx;
             const b = lineStart[1] - m * lineStart[0];
-        
+            
             // Calculate x and y coordinates of closest point on line
             let x = (m * (point[1] - b) + point[0]) / (m * m + 1);
-            x = clamp(lineStart[0],lineEnd[0],x)
+            x = clamp(lineStart[0], lineEnd[0], x);
             const y = m * x + b;
 
-            closestPoint = [x,y];
+            closestPoint = [x, y];
         }
-
-        distance = euclideanDistance(closestPoint, point)
 
         return {
             coords: closestPoint,
-            distance: distance
-        }
+            distance: euclideanDistance(closestPoint, point)
+        };
     }
 
     function getLineSteps(step, origin, coord, isLeft) {
@@ -1039,9 +1008,6 @@ const math = (function() {
         boxContainsBox,
         boxContainsSquare,
         posMod,
-        getCFromLineInGeneralForm,
-        getYIntceptOfLine,
-        getKeyFromLine,
         areCoordsIntegers,
         areLinesCollinear,
         deepCopyObject,

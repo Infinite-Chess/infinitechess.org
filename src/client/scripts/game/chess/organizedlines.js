@@ -67,7 +67,7 @@ const organizedlines = {
         let lines = gamefile.startSnapshot.slidingPossible
         for (let i = 0; i<lines.length; i++) {
             const line = lines[i]
-            key = math.getKeyFromLine(line,coords)
+            key = organizedlines.getKeyFromLine(line,coords)
             const strline = math.getKeyFromCoords(line)
             // Is line initialized
             if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = []
@@ -88,7 +88,7 @@ const organizedlines = {
         let lines = gamefile.startSnapshot.slidingPossible
         for (let i = 0; i<lines.length; i++) {
             const line = lines[i]
-            key = math.getKeyFromLine(line,coords)
+            key = organizedlines.getKeyFromLine(line,coords)
             removePieceFromLine(gamefile.piecesOrganizedByLines[line],key)
         }
 
@@ -256,5 +256,50 @@ const organizedlines = {
         }
 
         return state;
+    },
+
+    /**
+     * Gets a unique key from the line equation.
+     * Compatable with factorable steps like `[2,2]`.
+     * Discuss before changing func please as this may have unintended side-effects.
+     * @param {Number[]} step Line step `[deltax,deltay]`
+     * @param {Number[]} coords `[x,y]`
+     * @returns {String} the key `c|smallest_x_line_intcepts`
+     */
+    getKeyFromLine(step, coords) {
+        const C = organizedlines.getCFromLine(step, coords);
+        const X = organizedlines.getXFromLine(step, coords);
+        return `${C}|${X}`
+    },
+
+    /**
+     * Uses the calculation of ax + by = c
+     * c=b*y-intercept so is unique for each line
+     * Not unique when step can be factored
+     * eg [2,2]
+     * @param {number[]} step - The x-step and y-step of the line: `[deltax, deltay]`
+     * @param {number[]} coords - A point the line intersects: `[x,y]`
+     * @returns {number} integer c
+     */
+    getCFromLine(step, coords) {
+        return step[0]*coords[1]-step[1]*coords[0]
+    },
+
+    /**
+     * Calculates the X value of the line's key from the provided step direction and coordinates.
+     * This is also the nearest x value the line intersects on or after the y axis.
+     * @param {number[]} step - [dx,dy]
+     * @param {number[]} coords - Coordinates that are on the line
+     * @returns {number} The X in the line's key: `C|X`
+     */
+    getXFromLine(step, coords) {
+        // See these desmos graphs for inspiration for finding what line the coords are on:
+        // https://www.desmos.com/calculator/d0uf1sqipn
+        // https://www.desmos.com/calculator/t9wkt3kbfo
+
+        const lineIsVertical = step[0] === 0;
+        const deltaAxis = lineIsVertical ? step[1] : step[0];
+        const coordAxis = lineIsVertical ? coords[1] : coords[0];
+        return math.posMod(coordAxis, deltaAxis)
     }
 };

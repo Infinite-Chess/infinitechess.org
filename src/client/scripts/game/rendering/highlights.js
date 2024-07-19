@@ -295,7 +295,7 @@ const highlights = (function(){
         lineSet.delete('0,1')
         for (const strline of lineSet) {
             const line = math.getCoordsFromKey(strline);
-            const lineEqua = math.getCFromLineInGeneralForm(line, coords);
+            const lineEqua = organizedlines.getCFromLine(line, coords);
 
             const corner1 = math.getAABBCornerOfLine(line, true);
             const corner2 = math.getAABBCornerOfLine(line, false);

@@ -107,8 +107,8 @@ const arrows = (function() {
             boardCornerLeft = math.getCornerOfBoundingBox(paddedBoundingBox,boardCornerLeft);
             boardCornerRight = math.getCornerOfBoundingBox(paddedBoundingBox,boardCornerRight);
 
-            const boardSlidesRight = math.getCFromLineInGeneralForm(line, boardCornerLeft);
-            const boardSlidesLeft = math.getCFromLineInGeneralForm(line, boardCornerRight);
+            const boardSlidesRight = organizedlines.getCFromLine(line, boardCornerLeft);
+            const boardSlidesLeft = organizedlines.getCFromLine(line, boardCornerRight);
 
             const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
             const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);

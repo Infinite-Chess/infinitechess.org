@@ -42,7 +42,7 @@ const specialdetect = (function() {
 
         const x = coords[0];
         const y = coords[1];
-        const key = math.getKeyFromLine([1,0],coords)
+        const key = organizedlines.getKeyFromLine([1,0],coords)
         const row = gamefile.piecesOrganizedByLines['1,0'][key];
 
 

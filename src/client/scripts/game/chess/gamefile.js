@@ -51,7 +51,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         box: undefined,
         /** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
         existingTypes: undefined,
-        /** Possible sliding moves in this game, dependant on what pieces there are. */
+        /** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {number[][]}*/
         slidingPossible: undefined
     }
     

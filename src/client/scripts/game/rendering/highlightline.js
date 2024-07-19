@@ -46,7 +46,7 @@ const highlightline = (function(){
         let closestPoint;
         for (var strline in legalmoves.sliding) {
             const line = math.getCoordsFromKey(strline);
-            const diag = math.getCFromLineInGeneralForm(line, worldSpaceCoords);
+            const diag = organizedlines.getCFromLine(line, worldSpaceCoords);
             const lineIsVertical = line[0]===0
             
             const corner1 = math.getAABBCornerOfLine(line, true);
@@ -123,7 +123,7 @@ const highlightline = (function(){
         boundingBox = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
 
         const line = closestPoint.line
-        const diag = math.getCFromLineInGeneralForm(line, pieceCoords)
+        const diag = organizedlines.getCFromLine(line, pieceCoords)
         const lineIsVertical = line[0]===0
 
         const corner1 = math.getAABBCornerOfLine(line, true);
