@@ -299,11 +299,11 @@ const highlights = (function(){
 
             const corner1 = math.getAABBCornerOfLine(line, true);
             const corner2 = math.getAABBCornerOfLine(line, false);
-            const intsect1Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner1);
-            const intsect2Tile = math.getLineIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner2);
+            const intsect1Tile = math.getIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner1);
+            const intsect2Tile = math.getIntersectionEntryTile(line[0], line[1], lineEqua, renderBoundingBox, corner2);
 
             if (!intsect1Tile && !intsect2Tile) {continue;} // If there's no intersection point, it's off the screen, don't bother rendering.
-            if (!intsect1Tile || !intsect2Tile) {console.error(`Line only has one intersect with square.`); continue;}
+            if (!intsect1Tile || !intsect2Tile) {console.error(`Line only has one intersect with bounding box.`); continue;}
 
             const intsect1Step = math.getLineSteps(line, coords, intsect1Tile, true)
             const intsect2Step = math.getLineSteps(line, coords, intsect2Tile, false)

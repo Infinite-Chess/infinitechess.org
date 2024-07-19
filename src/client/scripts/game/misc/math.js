@@ -234,10 +234,9 @@ const math = (function() {
     function areLinesCollinear(lines) {
         let gradient
         for (const line of lines) {
-            console.log(line)
             const lgradient = line[1]/line[0]
             if (!gradient) gradient = lgradient
-            if (!Number.isFinite(gradient)&&!Number.isFinite(lgradient)) {console.log(lgradient,gradient);continue};
+            if (!Number.isFinite(gradient)&&!Number.isFinite(lgradient)) {continue};
             if (!isAproxEqual(lgradient, gradient)) return false;
         }
         return true
@@ -431,11 +430,10 @@ const math = (function() {
      */
     function getLineSteps(step, origin, coord, isLeft) {
         let x = (coord[0]-origin[0])/step[0]
-        console.log(x)
         if (!isLeft) x = Math.floor(x)
         else x = Math.ceil(x)
         if (step[0]!==0) return x;
-        let y = Math.floor((coord[1]-origin[1])/step[1])
+        let y = (coord[1]-origin[1])/step[1]
         if (!isLeft) y = Math.floor(y)
         else y = Math.ceil(y)
         return y
@@ -449,6 +447,13 @@ const math = (function() {
         return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels()
     }
 
+    /**
+     * Gets the corner/side that the line can intersect with.
+     * Used for `getCornerOfBoundingBox` and `getIntersectionEntryTile`
+     * @param {Number[]} line 
+     * @param {boolean} leftSide 
+     * @returns {String} The string repr of a corner/side
+     */
     function getAABBCornerOfLine(line, leftSide) {
         let corner = "";
         v: {
@@ -463,7 +468,13 @@ const math = (function() {
         return corner;
     }
 
-    // Top left as failsafe
+    /**
+     * Get the corner coordinate of the bounding box.
+     * Will revert to top left if the corners sides aren't provided.
+     * @param {BoundingBox} boundingBox 
+     * @param {String} corner 
+     * @returns {Number[]}
+     */
     function getCornerOfBoundingBox(boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
         let yval = corner.startsWith('bottom') ? bottom : top;
@@ -471,37 +482,42 @@ const math = (function() {
         return [xval, yval]
     }
 
-    function getLineIntersectionEntryTile (dx, dy, c, boundingBox, corner) {
+    /**
+     * Returns point, if there is one, of a line with specified slope intersection with the screen edge on desired corner
+     * @param {Number} dx X step of line
+     * @param {Number} dy Y step of line
+     * @param {Number} c C of line
+     * @param {BoundingBox} boundingBox 
+     * @param {String} corner 
+     * @returns {?Number[]}
+     */
+    function getIntersectionEntryTile (dx, dy, c, boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
-        let xIntersectBottom = undefined;
-        let xIntersectTop = undefined;
-        let yIntersectLeft = undefined;
-        let yIntersectRight = undefined;
         // Check for intersection with left side of rectangle
         if (corner.endsWith('left')) {
-            yIntersectLeft = ((left * dy) + c) / dx;
+            const yIntersectLeft = ((left * dy) + c) / dx;
             if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft]
         }
         
         // Check for intersection with bottom side of rectangle
         if (corner.startsWith('bottom')) {
-            xIntersectBottom = ((bottom * dx) - c) / dy;
+            const xIntersectBottom = ((bottom * dx) - c) / dy;
             if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom]
         }
 
         // Check for intersection with right side of rectangle
         if (corner.endsWith('right')) {
-            yIntersectRight = ((right * dy) + c) / dx;
+            const yIntersectRight = ((right * dy) + c) / dx;
             if (yIntersectRight >= bottom && yIntersectRight <= top) return [right, yIntersectRight];
         }
 
         // Check for intersection with top side of rectangle
         if (corner.startsWith('top')) {
-            xIntersectTop = ((top * dx) - c) / dy;
+            const xIntersectTop = ((top * dx) - c) / dy;
             if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
         }
     }
-
+    /*
     // Returns point, if there is one, of a line with specified slope "b" intersection screen edge on desired corner
     function getIntersectionEntryTile (slope, b, boundingBox, corner) { // corner: "topright"/"bottomright"...
         const { left, right, top, bottom } = boundingBox;
@@ -529,7 +545,7 @@ const math = (function() {
             const xIntersectTop = (top - b) * slope;
             if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
         }
-    }
+    }*/
 
     function convertWorldSpaceToGrid(value) {
         return value / movement.getBoardScale()
@@ -1037,7 +1053,6 @@ const math = (function() {
         convertWorldSpaceToPixels_Virtual,
         getAABBCornerOfLine,
         getCornerOfBoundingBox,
-        getLineIntersectionEntryTile,
         getIntersectionEntryTile,
         convertWorldSpaceToGrid,
         euclideanDistance,
