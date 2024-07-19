@@ -170,7 +170,6 @@ obstacle = {name="Obstacle", description="Une pièce neutre (controlés par aucu
 centaur = {name="Centaure", description="Se déplace comme un cavalier et un garde combinés."}
 void = {name="Vide", description="Une pièce neutre (controlés par aucun des joueurs) qui represente l'absence de cases sur le plateau. Les pièces ne peuvent pas se déplacer par dessus ou à travers."}
 
-
 [play.play-menu]
 title = "Jouer - En Ligne"
 colors = "Couleurs"
