@@ -1,4 +1,11 @@
 
+/**
+ * This script contains our checkmate algorithm,
+ * and 3-fold repetition algorithm.
+ */
+
+"use strict";
+
 const checkmate = (function() {
 
     /**
