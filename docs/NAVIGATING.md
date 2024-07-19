@@ -13,7 +13,7 @@ Everything starts running from [server.js](../src/server/server.js)!
 
 This configures and starts our http, https, and websocket servers, and it cleans up on closing.
 
-[src/server/game/](../src/server/game/) contains the server-side code for running online play, including the [invites-manager](../src/server/game/invitesmanager.js) and the [game-manager](../src/server/game/gamemanager.js).
+[src/server/game](../src/server/game/) contains the server-side code for running online play, including the [invites-manager](../src/server/game/invitesmanager.js) and the [game-manager](../src/server/game/gamemanager.js).
 
 Both of these managers use websockets to broadcast changes out to the clients in real-time.
 
@@ -30,7 +30,22 @@ It has subfolders for all the EJS, CSS, JavaScript, sound and image files of the
 
 The routers that actually send these as htmls to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
-[src/client/scripts/game/](../src/client/scripts/game/) contains all our javascipt code for running the game in the `/play` page in the user's browser.
+[src/client/scripts/game](../src/client/scripts/game/) contains all our javascipt code for running the game in the `/play` page in the user's browser.
+
+The main script is [main.js](../src/client/scripts/game/main.js), which initiates the WebGL context and input listeners, and runs the main game loop.
+
+
+## Translations ##
+
+This repository uses [i18next](https://www.npmjs.com/package/i18next) to provide translations of the website into different languages.
+
+[translation](../translation) contains a [TOML](https://toml.io/) file with translated text for each supported language - read more in the [translation guide](./TRANSLATIONS.md).
+
+The EJS files in [src/client/views](../src/client/views) get converted into html files for each supported language during deployment to `dist`.
+
+The translated text in each EJS file is directly inserted into the corresponding html file during deployment.
+
+The translated text in each clientside javacript file is stored in the `translations` object, which is inserted directly below the head tag of each EJS file.
 
 
 ## Accounts ##
