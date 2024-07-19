@@ -1,4 +1,5 @@
 name = "Français" # Name of language
+direction = "ltr"
 version = 1
 
 [header]
@@ -13,6 +14,20 @@ contact = "Contactez nous"
 terms_of_service = "Terms of Service"
 source_code = "Code Source"
 language = "Langue"
+
+[header.javascript]
+js-profile = "Profil"
+js-logout = "Déconnexion"
+js-login = "Connexion"
+js-createaccount = "Créer un compte"
+
+[member.javascript]
+incorrect_password = "Le mot de passe est incorrect"
+confirm_delete = "Êtes vous sur de vouloir supprimer votre compte? Cette action est DÉFINITIVE! Cliquez sur "OK" pour rentrer votre mot de passe."
+enter_password = "Enter your password to PERMANENTLY delete your account:"
+forbidden_wrong_account = "Interdit. Ceci n'est pas votre compte."
+invalid_username = "Le nom d'utilisateur est invalide"
+deleting_account_not_found = "La suppresion du compte a échoué. Le compte n'a pas été trouvé."
 
 [index]
 secondary_title = "Le site officiel pour jouer en direct!"
@@ -87,6 +102,17 @@ email = "Email:"
 password = "Mot de Passe:"
 create_button = "Créer un compte"
 argreement = ["J'accepte les", "Conditions d'utilisation"]
+
+[create-account.javascript]
+js-username_specs = "Le nom d'utilisateur doit être d'au moins 3 caractères et ne doit contenir que des lettres ou des chiffres"
+js-username_tooshort = "Le nom d'utilisateur doit faire au moins caractères"
+js-username_wrongenc = "Le nom d'utilisateur ne peut contenir que des lettres ou des chiffres"
+js-email_invalid = "Cette adresse mail est invalide"
+js-email_inuse = "Cette adresse mail est déjà utilisée"
+js-pwd_incorrect_format = "Le mot de passe est dans un format incorrect"
+js-pwd_too_short = "Le mot de passe doit contenir au moins 6 caractères"
+js-pwd_too_long = "Le mot de passe doit contenir moins de 72 caractères"
+js-pwd_not_pwd = "Le mot de passe ne doit pas être 'password'"
 
 [play.main-menu]
 credits = "Credits"
@@ -241,6 +267,82 @@ constructing_mesh = "Construction du mesh"
 rotating_mesh = "Rotation du mesh"
 lost_connection = "Connexion perdue."
 please_wait = "Attendez un moment s'il vous plaît."
+webgl_unsupported = "Votre navigateur ne supporte pas WebGL. Ce jeu ne peut pas fonctionner sans. Mettez à jour votre navigateur s'il vous plaît."
+bigints_unsupported = "Votre navigateur ne supporte pas les BigInts. Mettez à jour votre navigateur.\nLes BigInts sont nécessaire pour rendre le plateau infini."
+shaders_failed = "Les shaders n'ont pas pu être initialisés:"
+failed_compiling_shaders = "Une erreur s'est produite lors de la compilation des shaders:"
+
+[play.javascript.copypaste]
+copied_game = "La position a été copiée dans le presse-papier!"
+cannot_paste_in_public = "Vous ne pouvez pas coller une position dans une partie publique!"
+cannot_paste_after_moves = "Vous ne pouvez pas coller une position après que des coups aient été joués!"
+clipboard_denied = "Erreur de permission avec le presse-papier. Ceci pourrait être du à votre navigateur."
+clipboard_invalid = "Le presse-papier ne contient pas de notation ICN valide."
+game_needs_to_specify = "La partie doit spécifier la metadata 'Variant' ou la propriété 'startingPosition'."
+invalid_wincon_white = "Les Blancs ont une condition de victoire invalide"
+invalid_wincon_black = "Les Noirs ont une condition de victoire invalide"
+pasting_game = "Collage de la position..."
+pasting_in_private = "Coller une position dans une partie privée causera une désynchronisation si votre adversaire ne fait pas de même!"
+piece_count = "Nombre de pièces"
+exceeded = "dépassé"
+changed_wincon = "Les condition de victoire par mat ont étés passé à 'capture royale', et l'affichage des icones a été désactivé. Appuyez sur 'P' pour les réactiver (déconseillé)."
+loaded_from_clipboard = "La position a été chargée depuis le presse-papier!"
+loaded = "Position chargée!"
+slidelimit_not_number = "La gamerule 'slideLimit' doit être un nombre."
+
+[play.javascript.rendering]
+on = "On"
+off = "Off"
+icon_rendering_off = "L'affichage des icones a été désactivé."
+icon_rendering_on = "L'affichage des icones a été activé."
+toggled_debug = "Le debug mode a été activé:"
+toggled_edit = "Le mode d'édition a été activé:"
+perspective = "Perspective"
+perspective_mode_on_desktop = "Le mode perspective n'est pas disponible sur téléphone!"
+movement_tutorial = "WASD pour se déplacer. Espace et maj pour zoomer."
+regenerated_pieces = "Les pièces ont été régénérés."
+
+[play.javascript.invites]
+move_mouse = "Déplacez votre souris pour vous reconnecter."
+unknown_action_received_1 = "Action inconnue"
+unknown_action_received_2 = "reçu par le serveur dans l'abonnement d'invitations!"
+cannot_cancel = "Impossible d'annuler l'invitation ou identifiant non défini."
+you_indicator = "(Vous)"
+you_are_white = "Vous êtes: Les blancs"
+you_are_black = "Vous êtes: Les noirs"
+random = "Aléatoire"
+accept = "Accepter"
+cancel = "Annuler"
+create_invite = "Créer une invitation"
+cancel_invite = "Annuler l'invitation"
+join_existing_active_games = "Rejoindre des parties existantes - actives:"
+
+[play.javascript.onlinegame]
+afk_warning = "Vous êtes AFK."
+opponent_afk = "Votre adversaire est AFK."
+opponent_disconnected = "Votre adversaire s'est déconnecté."
+opponent_lost_connection = "Votre adversaire est hors ligne."
+auto_resigning_in = "Abandon automatique dans"
+auto_aborting_in = "Abandon automatique dans"
+not_logged_in = "Vous n'êtes plus connecté. Reconnectez vous pour pouvoir retourner dans cette partie s'il vous plaît."
+game_no_longer_exists = "Cette partie n'existe plus."
+another_window_connected = "Une autre fenêtre a établi une connexion."
+server_restarting = "Le serveur redémarre bientôt..."
+server_restarting_in = "Le serveur redémarrera dans"
+minute = "minute"
+minutes = "minutes"
+
+[play.javascript.websocket]
+no_connection = "Pas de connexion."
+reconnected = "Reconnecté."
+unable_to_identify_ip = "L'IP n'a pas pu être identifiée."
+online_play_disabled = "Le jeu en ligne est désactivé. Les cookies ne sont pas supportés. Essayez avec un autre navigateur."
+too_many_requests = "Trop de requêtes. Réessayez dans quelques minutes."
+message_too_big = "Message trop gros."
+too_many_sockets = "Too many sockets"
+origin_error = "Origin error."
+connection_closed = "La connection a été fermé de façon imprévue. Message du serveur:"
+please_report_bug = "Ceci ne devrait jamais arriver, reportez ce bug s'il vous plaît!"
 
 [play.javascript.results]
 you_checkmate = "Victoire par échec-et-mat!"
@@ -292,9 +394,9 @@ black_koth = "Les noirs gagnent par KOTH!"
 bug_koth = "Ceci est un bug, reportez le s'il vous plaît. La partie s'est finie par un KOTH."
 bug_generic = "Ceci est un bug, reportez le s'il vous plaît."
 
-
 [terms]
 title = "Conditions d'Utilisation"
+warning = ["CE DOCUMENT N'A PAS DE VALEUR LÉGALE. Notre responsabilité n'est engagé que par la version anglaise de ce texte. Cette traduction n'a qu'une valeur informationelle et peut contenir des erreurs ou inexactitudes. Vous pouvez accèder à la version Anglaise", "ici", "."]
 consent = "En utilisant ce site, vous vous engager à respecter les conditions suivantes. Si vous ne les acceptez pas, vous devez immédiatement arrêter d'utiliser ce site."
 guardian_consent = "Si vous avez moins de 18 ans vous devez recervoir l'accord de vos responsables légaux pour utiliser ce site ou vous créer un compte."
 parents_header = "Parents"
@@ -317,8 +419,8 @@ cleanliness_rules = [
 ]
 privacy_header = "Confidentialité"
 privacy_rules = [
-"Pour l'instant la seule information personelle que nous collectons est l'adresse email. Elle nous permet de vérifier les comptes des utilisateurs et nous donne un moyen de prouver qui ils sont lorsqu'ils font une demande de changement de mot de passe ou de suppression de compte.Nous n'envoyons pas de mails ou d'offres promotionels. Nous ne partageons pas vos adresses maiul avec des tiers.",
-"InfiniteChess.org peut collecter des données sur votre utilisation du site comme votre adresse IP. Cette collecte nous aide à empêcher les attaques de robots et d'autres entités néfastes, et de garder des statistiques précises sur l'utilisation du site. Votre adresse IP N'est PAS votre adresse réelle.",
+"Pour l'instant la seule information personelle que nous collectons est l'adresse email. Elle nous permet de vérifier les comptes des utilisateurs et nous donne un moyen de prouver qui ils sont lorsqu'ils font une demande de changement de mot de passe. Nous n'envoyons pas de mails ou d'offres promotionelles. Nous ne partageons pas vos adresses email avec des tiers.",
+"InfiniteChess.org peut collecter des données sur votre utilisation du site comme votre adresse IP. Cette collecte nous aide à empêcher les attaques automatisées ou les connexions néfastes, et nous aide à collecter des statistiques précises sur l'utilisation du site. Votre adresse IP n'est PAS votre adresse réelle.",
 "Toutes les parties que vous jouez sur le site sont des informations publiques. Si vous souhaitez rester anynome, ne partagez pas votre nom d'utilisateur avec vos amis ou votre famille. Si c'est ce que vous souhaitez, il est de votre  responsabilité de vous assurer que personne ne trouve de lien entre votre nom d'utilisateur et votre identité réelle.",
 "Le status d'activité de votre compte et la durée approximative depuis votre dernière connexion sur le site est aussi une information publique.",
 ["Malgré que InfiniteChess.org fasse tout son possible pour garder toutes les données personnelles et les comptes sécurisés, dans le cas d'un hack ou d'unne fuite de donnée, vous ne pourrez pas nous en tenir responsable. Si une fuite de donnée a lieu, les utilisateurs en seront informés sur la page ", "Actualités", ""],
@@ -397,3 +499,35 @@ text = "Nouvelle vidéo sortie aujourd'hui !"
 date = "26 Août 2023:"
 text_top = "La version 1.2 d'Infinite-Chess a été publiée! Elle amène l'historique de coups. Utilisez les flèches gauches et droites pour rembobiner ou accèlerer la partie!"
 text_box = "Le système de vérification de comptes a été mis-à-jour pour être plus fiable! Si votre compte n'est pas vérifié et que vous aviez des problèmes avec le lien de vérification, réessayez de vous vérifier!"
+
+[server.javascript.server-websocket]
+forbidden_wrong_account = "Interdit. Ceci n'est pas votre  compte."
+username_and_password_required = "Le nom d'utilisateur et le mot de passe sont requis."
+username_and_password_string = "Le nom d'utilisateur et le mot de passe doivent être des chaines de caractères."
+login_failure_retry_soon = "Authentification impossible, réessayez dans"
+seconds = "secondes"
+second = "seconde"
+username_length = "Le nom d'utilisateur doit faire entre 3 et 20 caractères"
+username_letters = "Le nom d'utilisateur ne doit contenir que des lettres et des chiffres"
+username_taken = "Ce nom d'utilisateur est déjà pris"
+username_bad_word = "Ce nom d'utilisateur contient un mot interdit"
+email_too_long = "Votre email est trop looooong."
+email_invalid = "Votre email n'est pas valide"
+email_in_use = "Cette adresse est déjà utilisée"
+you_are_banned = "Vous êtes banni."
+password_length = "Le mot de passe doit fair entre 6 et 72 caractères"
+password_format = "Le mot de passe n'est pas dans le bon format"
+password_password = "Le mot de passe doit être différent de 'password'"
+refresh_token_not_found_logged_out = "Aucun utilisateur n'a ce token de rafraichissement (déjà déconnecté)"
+refresh_token_not_found = "Aucun utilisateur n'a ce token de rafraichissement"
+refresh_token_expired = "Pas de token de rafraichissement trouvé (session expirée)"
+refresh_token_invalid = "Le token de rafraichissement a expiré ou a été altéré"
+member_not_found = "Utilisateur introuvable"
+server_error = "Désolé, une erreur de serveur s'est produite! Revenez en arrière s'il vous plaît."
+unable_to_identify_client_ip = "L'adresse ip du  client n'a pas pu être identifiée"
+you_are_banned_by_server = "Vous êtes banni"
+too_many_requests_to_server = "Trop de requêtes. Réessayez dans quelques minutes."
+bad_request = "Mauvaise Requête"
+not_found = "404 Introuvable"
+forbidden = "Interdit."
+unauthorized_patron_page = "Non autorisé. Cette page est réservé aux patreons."
