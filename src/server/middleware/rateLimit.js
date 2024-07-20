@@ -82,18 +82,18 @@ function rateLimit(req, res, next) {
     const clientIP = getClientIP(req);
     if (!clientIP) {
         console.log('Unable to identify client IP address')
-        return res.status(500).json({ message: 'Unable to identify client IP address' });
+        return res.status(500).json({ message: "ws-unable_to_identify_client_ip" });
     }
 
     if (isIPBanned(clientIP)) {
         const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
         logEvents(logThis, 'bannedIPLog.txt', { print: true });
-        return res.status(403).json({ message: 'You are banned' });
+        return res.status(403).json({ message: "ws-you_are_banned_by_server" });
     }
 
     if (rateLimitHash[clientIP] > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
         console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
-        return res.status(429).json({ message: 'Too Many Requests. Try again soon.' });
+        return res.status(429).json({ message: "ws-too_many_requests_to_server" });
     }
 
     // Increment their recent connection count,

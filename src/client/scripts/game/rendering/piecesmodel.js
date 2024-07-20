@@ -173,7 +173,7 @@ const piecesmodel = {
 
         voids.regenModel(gamefile);
 
-        if (giveStatus) statustext.showStatus("Regenerated pieces.", false, 0.5)
+        if (giveStatus) statustext.showStatus(translations["rendering"]["regenerated_pieces"], false, 0.5)
         
         main.renderThisFrame()
         main.enableForceRender(); // Renders the screen EVEN in a local-pause
