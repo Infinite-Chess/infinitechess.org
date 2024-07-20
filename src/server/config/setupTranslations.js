@@ -177,7 +177,7 @@ function removeOutdated(object, changelog) {
 
   let key_strings = [];
   for (key of filtered_keys) {
-    key_strings = key_strings.concat(changelog[key]);
+    key_strings = key_strings.concat(changelog[key]["changes"]);
   }
   // Remove duplicate
   key_strings = Array.from(new Set(key_strings));
