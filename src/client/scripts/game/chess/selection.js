@@ -78,10 +78,10 @@ const selection = (function() {
 
         if (!input.getMouseClicked() && !input.getTouchClicked()) return; // Exit, we did not click
 
-        const pieceClickedType = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare)
+        const pieceClicked = premove.getPieceAtCoords(hoverSquare);
 
-        if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClickedType) // A piece is already selected. Test if it was moved.
-        else if (pieceClickedType) handleSelectingPiece(pieceClickedType);
+        if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClicked) // A piece is already selected. Test if it was moved.
+        else if (pieceClicked) handleSelectingPiece(pieceClicked);
         // Else we clicked, but there was no piece to select, *shrugs*
     }
 
@@ -89,27 +89,25 @@ const selection = (function() {
      * A piece is already selected. This is called when you *click* somewhere.
      * This will execute the move if you clicked on a legal square to move to,
      * or it will select a different piece if you clicked another piece.
-     * @param {number[]} coordsClicked - The square clicked: `[x,y]`.
-     * @param {string} [pieceClickedType] - The type of piece clicked on, if there is one.
+     * @param {Piece} pieceClicked
      */
-    function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
+    function handleMovingSelectedPiece(coordsClicked, pieceClicked) {
         const gamefile = game.getGamefile();
 
-        tag: if (pieceClickedType) {
+        tag: if (pieceClicked) {
 
             // Did we click a friendly piece?
             const selectedPieceColor = math.getPieceColorFromType(pieceSelected.type)
-            const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
+            const clickedPieceColor = math.getPieceColorFromType(pieceClicked.type);
 
             if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
 
             // If it clicked iteself, deselect.
-            if (pieceClickedType && math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
+            if (pieceClicked.type && math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
                 main.renderThisFrame();
                 unselectPiece();
-            } else if (pieceClickedType !== 'voidsN') { // Select that other friendly piece instead. Prevents us from selecting a void after selecting an obstacle.
-                const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, coordsClicked)
-                selectPiece(pieceClickedType, clickedPieceIndex, coordsClicked)
+            } else if (pieceClicked.type !== 'voidsN') { // Select that other friendly piece instead. Prevents us from selecting a void after selecting an obstacle.
+                selectPiece(pieceClicked.type, pieceClicked.index, coordsClicked)
             }
 
             return;
@@ -137,17 +135,16 @@ const selection = (function() {
      * A piece is **not** already selected. This is called when you *click* a piece.
      * This will select the piece if it is a friendly, or forward
      * you to the game's front if your viewing past moves.
-     * @param {number[]} coordsClicked - The square clicked: `[x,y]`.
-     * @param {string} [pieceClickedType] - The type of piece clicked on, if there is one.
+     * @param {Piece} pieceClicked
      */
-    function handleSelectingPiece(pieceClickedType) {
+    function handleSelectingPiece(pieceClicked) {
         const gamefile = game.getGamefile();
-        const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
+        const clickedPieceColor = math.getPieceColorFromType(pieceClicked.type);
 
         // If we're viewing history, return. But also if we clicked a piece, forward moves.
         if (!movesscript.areWeViewingLatestMove(gamefile)) {
             if (clickedPieceColor === gamefile.whosTurn ||
-                options.getEM() && pieceClickedType !== 'voidsN') return movepiece.forwardToFront(gamefile, { flipTurn: false, updateProperties: false })
+                options.getEM() && pieceClicked.type !== 'voidsN') return movepiece.forwardToFront(gamefile, { flipTurn: false, updateProperties: false })
                 // ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
                 // it will still forward you to front!
         }
@@ -155,12 +152,10 @@ const selection = (function() {
         // If it's your turn, select that piece.
 
         if (clickedPieceColor !== (onlinegame.areInOnlineGame()? onlinegame.getOurColor():gamefile.whosTurn) && !options.getEM()) return; // Don't select opposite color
-        if (options.getEM() && pieceClickedType === 'voidsN') return; // Don't select voids.
-
-        const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare)
+        if (options.getEM() && pieceClicked.type === 'voidsN') return; // Don't select voids.
 
         // Select the piece
-        selectPiece(pieceClickedType, clickedPieceIndex, hoverSquare)
+        selectPiece(pieceClicked.type, pieceClicked.index, hoverSquare)
     }
 
     /**

@@ -1,4 +1,7 @@
-//Records premoves made by the player and submits them to the server
+/** 
+ * This script records premoves made by the player and submits them to the server on their next turn.
+ * The legality of the move is checked before submission.
+ */
 
 "use strict";
 
@@ -20,7 +23,10 @@ const premove = (function(){
         return premovesEnabled;
     }
 
-    /** @type {Move[]} */
+    /** 
+     * The queue of premoves waiting to be verified and submitted.
+     * @type {Move[]} 
+     */
     let premoves = [];
 
     /** A list of squares that pieces have premoved into or out of.
@@ -37,10 +43,14 @@ const premove = (function(){
     let movedPieces = {};
 
     /**
-     * Submits the next premove to the server if it is legal.
-     * Otherwise deletes the queue.
+     * Submits the next premove to the server if it is legal;
+     * otherwise, deletes the queue.
+     * 
+     * Only call function this when the legality of the premove can be verified(on our turn);
+     * otherwise the move is deemed illegal.
      */
     function submitPremove() {
+        
         /**
          * The piece is unselected to prevent bugs where the player selects a moves that is no longer legal but was still displayed.
          * Ideally the following should be done instead:
@@ -105,8 +115,8 @@ const premove = (function(){
     }
 
     /** Adds a premove to the queue.
-     * @param {Piece} piece
-     * @param {Move} move
+     * @param {Piece} piece - the piece that was moved
+     * @param {Move} move - the move the piece made
     */
     function makePremove(piece, move) {
         if (!premovesEnabled)
@@ -128,6 +138,7 @@ const premove = (function(){
         piecesmodel.movebufferdata(game.getGamefile(), piece, move.endCoords);
     }
 
+    /** Sends all premoved pieces back to their original positions then clears the queue of premoves. */
     function clearPremoves()
     {
         hidePremoves();
@@ -136,9 +147,7 @@ const premove = (function(){
         highlightedSquares = [];
     }
 
-    /**
-     * 
-     */
+    /** Displays premoved pieces in their new positions. */
     function showPremoves() {
         if(!premoves) return;
         for (const movement of Object.values(movedPieces)) {
@@ -155,23 +164,39 @@ const premove = (function(){
     }
 
     /**
-     * @param coords
+     * Returns piece that has been premoved to `coords`. 
+     * 
+     * If no piece has been premoved to `coords` forwards the request to `gamefile`
+     * @param {number[]} coords - The coordinates of the pieces: `[x,y]`
+     * @returns {Piece} The piece at `coords`
      */
     function getPieceAtCoords(coords) {
-        
+        for (let pieceMoved of Object.values(movedPieces)) {
+            if (math.areCoordsEqual(pieceMoved.endCoords, coords)) {
+                return pieceMoved.piece;
+            }
+        }
+        return gamefileutility.getPieceAtCoords(game.getGamefile(), coords);
     }
 
+    /**
+     * Returns the number of premoves that have been recorded.
+     * @returns {number} Number of premoves that have been recorded.
+     */
     function getPremoveCount() {
         return premovesEnabled? premoves.length : 0;
     }
 
     return Object.freeze({
         makePremove,
+        clearPremoves,
         hidePremoves,
         showPremoves,
         submitPremove,
         allowPremoves,
-        arePremovesEnabled
+        arePremovesEnabled,
+        getPremoveCount,
+        getPieceAtCoords
     });
 
 })();
