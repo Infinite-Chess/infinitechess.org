@@ -125,7 +125,7 @@ const legalmoves = (function(){
         }
         
         // Add any special moves!
-        if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves)
+        if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves, isPremove);
 
         let moves = {
             individual: legalIndividualMoves,
