@@ -56,11 +56,11 @@ const guipause = (function(){
     function changeTextOfMainMenuButton() {
         if (!isPaused) return;
 
-        if (!onlinegame.areInOnlineGame() || game.getGamefile().gameConclusion) return element_mainmenu.textContent = "Main Menu";
+        if (!onlinegame.areInOnlineGame() || game.getGamefile().gameConclusion) return element_mainmenu.textContent = translations["main_menu"];
 
-        if (movesscript.isGameResignable(game.getGamefile())) return element_mainmenu.textContent = "Resign Game";
+        if (movesscript.isGameResignable(game.getGamefile())) return element_mainmenu.textContent = translations["resign_game"];
 
-        return element_mainmenu.textContent = "Abort Game";
+        return element_mainmenu.textContent = translations["abort_game"];
     }
 
     function initListeners() {
@@ -108,11 +108,11 @@ const guipause = (function(){
         mode++;
         if (mode > 2) mode = 0;
         arrows.setMode(mode);
-        const text = mode === 0 ? "Arrows: Off"
-                        : mode === 1 ? "Arrows: Defense"
-                        : "Arrows: All";
+        const text = mode === 0 ? translations["arrows_off"]
+                        : mode === 1 ? translations["arrows_defense"]
+                        : translations["arrows_all"];
         element_pointers.textContent = text;
-        if (!isPaused) statustext.showStatus('Toggled ' + text)
+        if (!isPaused) statustext.showStatus(translations["toggled"] + " " + text)
     }
 
     function callback_Perspective(event) {

@@ -1,82 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
+        <script>
+            const translations = <%-JSON.stringify({
+                ...t('header.javascript', {returnObjects: true})
+            })%>;
+        </script>
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>News</title>
         <link rel='stylesheet' href='/css/news.css'>
+        <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" type="image/png" href="/img/favicon.png">
     </head>
     <body>
         <header>
             <nav>
                 <a href="/">
-                    <p>Home</p>
+                    <p><%=t('header.home')%></p>
                 </a>
                 <a href="/play">
-                    <p>Play</p>
+                    <p><%=t('header.play')%></p>
                 </a>
                 <a href="/news">
-                    <p class="currPage">News</p>
+                    <p class="currPage"><%=t('header.news')%></p>
                 </a>
                 <a href="/login" id="loginlink">
-                    <p id="logintext">Log In</p>
+                    <p id="logintext"><%=t('header.login')%></p>
                 </a>
                 <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext">Create Account</p>
+                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
                 </a>
                 <script src="/scripts/memberHeader.js"></script>
             </nav>
         </header>
         <main>
             <div id="content">                  
-                <h1 class="center">News</h1>
+                <h1 class="center"><%=t('news.title')%></h1>
 
-                <p class="date">July 13, 2024:</p>
+                <p class="date"><%=t('news.july13-2024.date')%></p>
                 <br>
-                <p class="body">The <a href="/termsofservice">Terms of Service</a> have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them.</p>
+                <p class="body"><%=t('news.july13-2024.tos_update.0')%><a href='/termsofservice'><%=t('news.july13-2024.tos_update.1')%></a><%=t('news.july13-2024.tos_update.2')%></p>
                 <br>
-                <p>Your game history may become available on your profile at a future time.</p>
+                <p class="body"><%=t('news.july13-2024.game_history_warning')%>
+                <br>
 
 
-                <p class="date">July 9, 2024:</p>
+                <p class="date"><%=t('news.july9-2024.date')%></p>
                 <br>
-                <p class="body">Infinite Chess is Now Open Source! See, and contribute, to the project <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank">on GitHub!</a></p>
+                <p class="body"><%=t('news.july9-2024.text.0')%><a href='https://github.com/Infinite-Chess/infinitechess.org' target='_blank'><%=t('news.july9-2024.text.1')%></a></p>
                 <br>
                 <iframe width="350" height="197" src="https://www.youtube.com/embed/fSUEKosgyt0?si=L-blqfVEpPBmQLMn" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-                <p class="date">May 27, 2024:</p>
+                <p class="date"><%=t('news.may27-2024.date')%></p>
                 <br>
-                <p class="body">1.3.2: Added showcase variants for Omega^3 and Omega^4 that were shown in my latest video. Also, the checkmate algorithm is now compatible with multiple kings per side.</p>
+                <p class="body"><%=t('news.may27-2024.text')%></p>
 
 
-                <p class="date">May 24, 2024:</p>
+                <p class="date"><%=t('news.may24-2024.date')%></p>
                 <br>
-                <p class="body">Update 1.3.1 released! This includes the guide, pop-up tooltips when hovering over the navigation buttons, and links to the discord and game credits on the title page!</p>
+                <p class="body"><%=t('news.may24-2024.text')%></p>
 
 
-                <p class="date">May 14, 2024:</p>
-                <p class="body">Update 1.3 released today! This includes MANY new speed and user experience improvements. Just a few are:</p>
+                <p class="date"><%=t('news.may14-2024.date')%></p>
+                <p class="body"><%=t('news.may14-2024.text_top')%></p>
                 <br>
-                <p class="body">The transition to websockets, decreasing the delay when your opponent moves.</p>
-                <p class="body">No longer getting disconnected when you switch tabs.</p>
-                <p class="body">Audible cues when you or someone else creates an invite, or makes a move.</p>
-                <p class="body">Added the 50-move rule.</p>
-                <p class="body">A drum countdown effect is now played at 10 seconds left on the clock.</p>
-                <p class="body">An auto-resignation timer will start if you're opponent goes AFK (with an audible warning).</p>
+                <p class="body"><%=t('news.may14-2024.update_list.0')%></p>
+                <p class="body"><%=t('news.may14-2024.update_list.1')%></p>
+                <p class="body"><%=t('news.may14-2024.update_list.2')%></p>
+                <p class="body"><%=t('news.may14-2024.update_list.3')%></p>
+                <p class="body"><%=t('news.may14-2024.update_list.4')%></p>
+                <p class="body"><%=t('news.may14-2024.update_list.5')%></p>
                 <br>
-                <p class="body">And many others! For the full list, check out <a href="https://discord.com/channels/1114425729569017918/1114427288776364132/1240014519061712997" target="_blank">the discord</a>!</p>
+                <p class="body"><%=t('news.may14-2024.text_box.0')%><a href='https://discord.com/channels/1114425729569017918/1114427288776364132/1240014519061712997' target='_blank'><%=t('news.may14-2024.text_box.1')%></a></p>
                 
-                <p class="date">Jan 29, 2024:</p>
-                <p class="body">New video released today!</p>
+                <p class="date"><%=t('news.jan29-2024.date')%></p>
+                <p class="body"><%=t('news.jan29-2024.text')%></p>
                 <iframe width="350" height="197" src="https://www.youtube.com/embed/b-Bb_TyhC1A?si=NmCm-RS21E61sA-O" title="YouTube video: The Search for the Longest Infinite Chess Game" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>   
 
 
-                <p class="date">Aug 26, 2023:</p>
-                <p class="body">Infinite Chess v1.2 has been released! Introducing Move History. Use the left & right arrow keys to rewind and fast forward the game!</p>
+                <p class="date"><%=t('news.aug26-2023.date')%></p>
+                <p class="body"><%=t('news.aug26-2023.text_top')%></p>
                 <br>
-                <p class="body">The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!</p>
+                <p class="body"><%=t('news.aug26-2023.text_box')%></p>
+                
+                <!-- Commented out sections are not in language-localizable format. -->
                 <!-- <p class="date">Aug 15, 2023:</p>
                 <p class="body">You can now design a position, and transfer it into the game to play custom local or private matches! Resources are in the <a target="_blank" href="https://discord.gg/NFWFGZeNh5">discord server</a>.</p> -->
                 <!-- <p class="date">Aug 9, 2023:</p>
@@ -89,17 +98,15 @@
                 <p class="date">May 17, 2023:</p>
                 <p class="body">Infinite Chess version 1.0.0 has now been released! 🎉 Play with other people online! Report any bugs to me on the #bugs channel of the <a target="_blank" href="https://discord.gg/NFWFGZeNh5">official discord</a>!</p> -->
                 <br> <br> <br>
-                <p class="body">More dev logs are posted on the <a target="_blank" href="https://discord.gg/NFWFGZeNh5">official discord</a>, and on the <a href="https://www.chess.com/forum/view/chess-variants/infinite-chess-app-devlogs-and-more" target="_blank" title="Chess.com Forums">chess.com forums</a>!</p>
+                <p class="body"><%=t('news.more_dev_logs.0')%><a target='_blank' href='https://discord.gg/NFWFGZeNh5'><%=t('news.more_dev_logs.1')%></a><%=t('news.more_dev_logs.2')%><a href='https://www.chess.com/forum/view/chess-variants/infinite-chess-app-devlogs-and-more' target='_blank'><%=t('news.more_dev_logs.3')%></a></p>
+                
+                <!-- Commented out sections are not in language-localizable format. -->
                 <!-- <p class="date">November 20, 2022:</p>
                 <p class="body">Account creation is complete! Users can now safely create an account.</p>
                 <p class="date">November 10, 2022:</p>
                 <p class="body">Obtained an SSL certificate. Connections to the site are now secure https.</p> -->
             </div>
         </main>
-        <footer>
-            <a href="mailto:infinitechess.org@gmail.com">Contact us.</a>
-            <a href="/termsofservice">Terms of Service</a>
-            <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank">Source Code</a>
-        </footer>
+        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
     </body>
 </html>

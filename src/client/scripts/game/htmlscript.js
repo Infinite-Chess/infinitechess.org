@@ -102,7 +102,7 @@ const htmlscript = (function() {
         const element_loadingError = document.getElementById('loading-error');
         const element_loadingErrorText = document.getElementById('loading-error-text');
         element_loadingError.classList.remove('hidden');
-        element_loadingErrorText.textContent = lostNetwork ? "Lost network." : "One or more resources failed to load. Please refresh.";
+        element_loadingErrorText.textContent = lostNetwork ? translations["lost_network"] : translations["failed_to_load"];
 
         // Remove the glowing in the background animation
         const element_loadingGlow = document.getElementById('loading-glow');

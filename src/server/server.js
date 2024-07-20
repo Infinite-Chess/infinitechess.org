@@ -7,6 +7,7 @@ initDevEnvironment();
 const express = require('express');
 const app = express();
 const https = require('https');
+const ejs = require('ejs');
 // Other imports
 const configureMiddleware = require('./middleware/middleware')
 const wsserver = require("./wsserver");
@@ -15,7 +16,14 @@ const getCertOptions = require('./config/certOptions');
 const { DEV_BUILD } = require('./config/config');
 const { saveMembersIfChangesMade } = require('./controllers/members');
 const { saveRolesIfChangesMade } = require('./controllers/roles');
+const { initTranslations } = require('./config/setupTranslations');
 
+// Initiate translations
+initTranslations();
+
+// Set EJS as the view engine
+app.engine("html", ejs.renderFile);
+app.set("view engine", "html");
 
 const httpsServer = https.createServer(getCertOptions(DEV_BUILD), app);
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.

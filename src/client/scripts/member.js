@@ -53,10 +53,10 @@ function refreshAndUpdateNav () {
             // Change navigation links...
             element_loginLink.setAttribute('href', `/member/${result.member.toLowerCase()}`);
             // element_loginText.textContent = result.member;
-            element_loginText.textContent = 'Profile';
+            element_loginText.textContent = translations["js-profile"];
 
             element_createaccountLink.setAttribute('href', '/logout');
-            element_createaccountText.textContent = 'Log Out';
+            element_createaccountText.textContent = translations["js-logout"];
 
         } else { // Unauthorized, don't change any navigation links
             console.log(result['message']);
@@ -127,8 +127,8 @@ function showAccountInfo() {
 }
 
 async function removeAccount(confirmation) {
-    if (!confirmation || confirm("Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password.")) {
-        const password = prompt("Enter your password to PERMANENTLY delete your account:");
+    if (!confirmation || confirm(translations["js-confirm_delete"])) {
+        const password = prompt(translations["js-enter_password"]);
         const cancelWasPressed = password === null;
         if (cancelWasPressed) return; // Don't delete account
 
@@ -144,8 +144,18 @@ async function removeAccount(confirmation) {
 
         const response = await fetch(`/member/${member}/delete`, config)
         if (!response.ok) {
+            // translate the message from the server if a translation is available
             const result = await response.json();
-            alert(result.message);
+            let message = result.message;
+            if (translations[message]) message = translations[message];
+
+            // append the login cooldown if it exists
+            let login_cooldown = ("login_cooldown" in result ? result["login_cooldown"] : undefined);
+            if (login_cooldown !== undefined){
+                const seconds_plurality = login_cooldown == 1 ? translations["ws-second"] : translations["ws-seconds"];
+                message += ` ${login_cooldown} ${seconds_plurality}.`
+            }
+            alert(message);
             removeAccount(false);
         } else {
             window.location.href = '/';
