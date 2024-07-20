@@ -1,4 +1,4 @@
-name = "Chinese" # Name of language
+name = "中文" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "1.0.1"
 
