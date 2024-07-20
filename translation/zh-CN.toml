@@ -5,7 +5,7 @@ version = "1.0.1"
 [header]
 home = "主页"
 play = "开始"
-news = "新闻"
+news = "消息"
 login = "登录"
 createaccount = "注册"
 
