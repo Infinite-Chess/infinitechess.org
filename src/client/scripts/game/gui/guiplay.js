@@ -122,7 +122,7 @@ const guiplay = (function(){
             element_local.classList.add('selected')
             element_online.classList.add('not-selected')
             element_local.classList.remove('not-selected')
-            element_createInvite.textContent = "Start Game"
+            element_createInvite.textContent = translations["invites"]["start_game"]
             element_optionCardColor.classList.add('hidden')
             element_optionCardRated.classList.add('hidden')
             element_optionCardPrivate.classList.add('hidden')
