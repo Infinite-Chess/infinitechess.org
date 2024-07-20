@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "1.0.1"
+version = "1.0.2"
 
 [header]
 home = "Home"
@@ -235,7 +235,11 @@ arrows = "Arrows: Defense"
 perspective = "Perspective: Off"
 copy = "Copy Game"
 paste = "Paste Game"
+offer_draw = "Offer a Draw"
 main_menu = "Main Menu"
+
+[play.drawoffer]
+title = "Accept draw offer?"
 
 [play.javascript]
 guest_indicator = "(Guest)"
@@ -355,6 +359,7 @@ draw_stalemate = "Draw by stalemate!"
 draw_repetition = "Draw by repetition!"
 draw_moverule = ["Draw by the ", "-move-rule!"]
 draw_insuffmat = "Draw by insufficient material!"
+draw_agreement = "Draw by argreement!"
 draw_generic = "Draw!"
 aborted = "Game aborted."
 opponent_checkmate = "You lose by checkmate!"

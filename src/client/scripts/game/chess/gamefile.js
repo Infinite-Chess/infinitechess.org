@@ -186,6 +186,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.LastDrawOfferMove = undefined;
     /** Is there a draw offer currentrly */
     this.drawOffers = false;
+    this.drawOfferWhite = false;
+    this.drawOfferBlack = false;
 
     this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
     this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)

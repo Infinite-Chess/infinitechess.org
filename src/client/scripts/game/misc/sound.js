@@ -23,7 +23,7 @@ const sound = (function(){
         marimba_c2: [40.82, 42.82],
         marimba_c2_soft: [42.82, 44.82],
         base_staccato_c2: [44.82, 46.82],
-        draw_offer: [46.82, 52.69]
+        draw_offer: [46.89, 48.526]
     }
 
     /** @type {AudioContext} */
