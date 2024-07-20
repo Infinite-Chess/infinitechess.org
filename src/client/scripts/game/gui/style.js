@@ -98,12 +98,45 @@ const style = (function() {
         element_style.innerHTML = navigationStyle /* + "\n\n" + otherStyle */; // Other styles can be appended here later
     }
 
+    /**
+     * Gets all children of an element and returns an array of their text contents.
+     * @param {HTMLElement} parentElement - The parent element.
+     * @returns {string[]} An array of text contents of the child elements.
+     */
+    function getChildrenTextContents(parentElement) {
+        // Get all child elements
+        const children = parentElement.children;
+        
+        // Create an array to hold the text contents
+        const textContents = [];
+
+        // Loop through the child elements and extract their text content
+        for (let i = 0; i < children.length; i++) {
+            textContents.push(children[i].textContent);
+        }
+
+        return textContents;
+    }
+    
+    /**
+     * Gets the value of a specified attribute from an element.
+     *
+     * @param {HTMLElement} element - The element from which to read the attribute.
+     * @param {string} attributeName - The name of the attribute to read.
+     * @returns {string | null} The value of the attribute, or null if the attribute does not exist.
+     */
+    function getAttributeValue(element, attributeName) {
+        return element.getAttribute(attributeName);
+    }
+
     return Object.freeze({
         hideElement,
         revealElement,
         setNavStyle,
         fadeIn1s,
-        fadeOut1s
+        fadeOut1s,
+        getChildrenTextContents,
+        getAttributeValue
     })
 
 })();

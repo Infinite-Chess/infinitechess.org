@@ -5,6 +5,18 @@
 
 "use strict";
 
+/**
+ * @typedef {Object} Invite - The invite object. NOT an HTML object.
+ * @property {string} name - Who owns the invite. If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
+ * @property {string} id - A unique identifier
+ * @property {string} tag - Used to verify if an invite is your own.
+ * @property {string} variant - The name of the variant
+ * @property {string} clock - The clock value
+ * @property {string} color - white/black
+ * @property {string} publicity - public/private
+ * @property {string} rated - No/Yes
+ */
+
 const invites = (function(){
 
     const invitesContainer = document.getElementById('invites')
@@ -106,9 +118,13 @@ const invites = (function(){
         localstorage.deleteItem('invite-tag')
     }
 
+    /**
+     * Updates the invite elements on the invite creation screen according to the new list provided.
+     * @param {Invite[]} list - The latest invite list
+     */
     function updateInviteList(list) { // { invitesList, currentGameCount }
         if (!list) return;
-
+        
         activeInvites = list
         const alreadySeenOurInvite = weHaveInvite;
         let alreadyPlayedSound = false;
@@ -120,7 +136,7 @@ const invites = (function(){
         let foundOurs = false;
         let privateInviteID = undefined;
         ourInviteID = undefined;
-        for (let i = 0; i < list.length; i++) {
+        for (let i = 0; i < list.length; i++) { // { name, variant, clock, color, publicity }
             const invite = list[i]
 
             // Is this our own invite?
@@ -239,20 +255,49 @@ const invites = (function(){
         updateCreateInviteButton()
     }
 
+    /**
+     * Tests if an invite belongs to us.
+     * @param {Invite} invite - The invite object, NOT HTML element.
+     * @returns {boolean} true if it is our
+     */
     function isInviteOurs(invite) {
         if (validation.getMember() === invite.name) return true;
 
-        // OLD cookie method.
-        // const cookieTag = validation.getCookieValue('invite-tag')
-        // if (!cookieTag) return false;
-        // if (invite.tag === cookieTag) return true;
-        // return false;
+        if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 
-        // NEW browser storage method!
+        // Compare the tag..
+
         const localStorageTag = localstorage.loadItem('invite-tag')
         if (!localStorageTag) return false;
         if (invite.tag === localStorageTag) return true;
         return false;
+    }
+
+    /**
+     * Creates an invite object from the given HTML element.
+     * @param {HTMLElement} inviteElement - The invite, as an element.
+     * @returns {Invite} The invite object, parsed from an HTML element.
+     */
+    function getInviteFromElement(inviteElement) {
+        /** @type {string[]} */
+        const childrenTextContent = style.getChildrenTextContents(inviteElement);
+        const id = style.getAttributeValue(inviteElement, 'id');
+        
+        /**
+         * Starting from the first child, the order goes:
+         * Name, Variant, Clock, Color, Publicity, Rated
+         * (see the {@link Invite} object)
+         */
+
+        return {
+            name: childrenTextContent[0],
+            variant: childrenTextContent[1],
+            clock: childrenTextContent[2],
+            color: childrenTextContent[3],
+            publicity: childrenTextContent[4],
+            rated: childrenTextContent[5],
+            id
+        }
     }
 
     function createDiv(classes, textContent, id) {
@@ -273,14 +318,11 @@ const invites = (function(){
 
     // A callback that gui fires when an invite document element is clicked!
     function click(element) {
-        // const invite = getInviteFromID(element.id)
+        const invite = getInviteFromElement(element);
+        const isOurs = isInviteOurs(invite);
 
-        // Are we doing an accept, or cancel command?
-        const command = element.querySelectorAll('.accept')[0].textContent
-
-        if      (command === 'Cancel') cancel(element.id, true)
-        else if (command === 'Accept') accept(element.id)
-        else return console.error(`Unknown command ${command} when clicking invite.`)
+        if (isOurs) cancel(invite.id, true)
+        else accept(invite.id, true)
     }
 
     function getInviteFromID(id) {
