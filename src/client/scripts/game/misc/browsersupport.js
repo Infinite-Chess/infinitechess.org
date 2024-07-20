@@ -17,7 +17,7 @@ const browsersupport = (function() {
             BigInt(123); // Try to initialize a BigInt
         } catch (e) {
             console.error('BigInts are not supported.')
-            alert("BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite.");
+            alert(translations["bigints_unsupported"]);
             throw new Error('Browser not supported.')
         }
     }

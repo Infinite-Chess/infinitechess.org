@@ -94,21 +94,6 @@ h3 { /* Thank you! */
 }
 
 
-
-footer {
-    text-align: center;
-    padding: 10px 0;
-}
-
-footer a {
-    display: inline-block;
-    color: rgb(207, 207, 207);
-    margin: 10px 10px;
-    text-decoration: underline;
-}
-
-
-
 a {
     color: black;
 }

@@ -37,7 +37,7 @@ const perspective = (function() {
     function getIsViewingBlackPerspective() { return isViewingBlackPerspective; }
 
     function toggle() {
-        if (!input.isMouseSupported()) return statustext.showStatus("Perspective mode is available on desktop!")
+        if (!input.isMouseSupported()) return statustext.showStatus(translations["rendering"]["perspective_mode_on_desktop"])
 
         if (!enabled) enable()
         else disable()
@@ -47,7 +47,7 @@ const perspective = (function() {
         if (enabled) return console.error("Should not be enabling perspective when it is already enabled.");
         enabled = true;
 
-        guipause.getelement_perspective().textContent = "Perspective: On"
+        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["on"]}`
 
         guipause.callback_Resume()
 
@@ -57,7 +57,7 @@ const perspective = (function() {
         initCrosshairModel();
         piecesmodel.initRotatedPiecesModel(game.getGamefile()) // Async
 
-        statustext.showStatus("WASD to move. Space & shift to zoom.")
+        statustext.showStatus(translations["rendering"]["movement_tutorial"])
     }
 
     function disable() {
@@ -69,7 +69,7 @@ const perspective = (function() {
         // document.exitPointerLock()
         guipause.callback_Resume()
 
-        guipause.getelement_perspective().textContent = "Perspective: Off"
+        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["off"]}`
         
         resetRotations()
         

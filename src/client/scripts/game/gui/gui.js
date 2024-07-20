@@ -40,7 +40,7 @@ const gui = (function(){
     function callback_featurePlanned(event) {
         event = event || window.event;
 
-        statustext.showStatus("This feature is planned!")
+        statustext.showStatus(translations["planned_feature"])
     }
 
     function makeOverlayUnselectable() {

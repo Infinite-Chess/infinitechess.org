@@ -160,21 +160,6 @@ input[type='submit'].ready:focus {
 }
 
 
-
-footer {
-    text-align: center;
-    padding: 10px 0;
-}
-
-footer a {
-    display: inline-block;
-    color: rgb(207, 207, 207);
-    margin: 10px 10px;
-    text-decoration: underline;
-}
-
-
-
 .currPage {
     background-color: rgb(236, 236, 236);
 }

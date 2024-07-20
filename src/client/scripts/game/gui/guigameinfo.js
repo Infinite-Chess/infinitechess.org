@@ -32,8 +32,8 @@ const guigameinfo = (function(){
         const white = gameOptions.metadata.White;
         const black = gameOptions.metadata.Black;
         // If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
-        element_playerWhite.textContent = onlinegame.areWeColor('white') && white === "(Guest)" ? "(You)" : white;
-        element_playerBlack.textContent = onlinegame.areWeColor('black') && black === "(Guest)" ? "(You)" : black;
+        element_playerWhite.textContent = onlinegame.areWeColor('white') && white === translations["guest_indicator"] ? translations["you_indicator"] : white;
+        element_playerBlack.textContent = onlinegame.areWeColor('black') && black === translations["guest_indicator"] ? translations["you_indicator"] : black;
         style.revealElement(element_playerWhite)
         style.revealElement(element_playerBlack)
     }
@@ -52,8 +52,8 @@ const guigameinfo = (function(){
         let textContent = "";
         if (onlinegame.areInOnlineGame()) {
             const ourTurn = onlinegame.isItOurTurn(gamefile)
-            textContent = ourTurn ? "Your move" : "Their move";
-        } else textContent = color === "white" ? "White to move" : "Black to move"
+            textContent = ourTurn ? translations["your_move"] : translations["their_move"];
+        } else textContent = color === "white" ? translations["white_to_move"] : translations["black_to_move"]
 
         element_whosturn.textContent = textContent;
 
@@ -77,61 +77,63 @@ const guigameinfo = (function(){
 
         if (onlinegame.areInOnlineGame()) {
 
-            if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? "You win by checkmate!"
-                                                                                : condition === 'time' ? "You win on time!"
-                                                                                : condition === 'resignation' ? "You win by resignation!"
-                                                                                : condition === 'disconnect' ? "You win by abandonment!"
-                                                                                : condition === 'royalcapture' ? "You win by royal capture!"
-                                                                                : condition === 'allroyalscaptured' ? "You win by all royals captured!"
-                                                                                : condition === 'allpiecescaptured' ? "You win by all pieces captured!"
-                                                                                : condition === 'threecheck' ? "You win by three-check!"
-                                                                                : condition === 'koth' ? "You win by king of the hill!"
-                                                                                : "You win!"
-            else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? "Draw by stalemate!"
-                                                                     : condition === 'repetition' ? "Draw by repetition!"
-                                                                     : condition === 'moverule' ? `Draw by the ${game.getGamefile().gameRules.moveRule / 2}-move-rule!`
-																	 : condition === 'insuffmat' ? "Draw by insufficient material!"
-																	 : condition === 'agreement' ? "Draw by agreement."
-                                                                     : "Draw!"
-            else if (condition === 'aborted') element_whosturn.textContent = "Game aborted."
-            else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? "You lose by checkmate!"
-                                                             : condition === 'time' ? "You lose on time!"
-                                                             : condition === 'resignation' ? "You lose by resignation!"
-                                                             : condition === 'disconnect' ? "You lose by abandonment!"
-                                                             : condition === 'royalcapture' ? "You lose by royal capture!"
-                                                             : condition === 'allroyalscaptured' ? "You lose by all royals captured!"
-                                                             : condition === 'allpiecescaptured' ? "You lose by all pieces captured!"
-                                                             : condition === 'threecheck' ? "You lose by three-check!"
-                                                             : condition === 'koth' ? "You lose by king of the hill!"
-                                                             : "You lose!"
+
+          if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? translations["results"]["you_checkmate"]
+                                                                                : condition === 'time' ? translations["results"]["you_time"]
+                                                                                : condition === 'resignation' ? translations["results"]["you_resignation"]
+                                                                                : condition === 'disconnect' ? translations["results"]["you_disconnect"]
+                                                                                : condition === 'royalcapture' ? translations["results"]["you_royalcapture"]
+                                                                                : condition === 'allroyalscaptured' ? translations["results"]["you_allroyalscaptured"]
+                                                                                : condition === 'allpiecescaptured' ? translations["results"]["you_allpiecescaptured"]
+                                                                                : condition === 'threecheck' ? translations["results"]["you_threecheck"]
+                                                                                : condition === 'koth' ? translations["results"]["you_koth"]
+                                                                                : translations["results"]["you_generic"]
+            else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? translations["results"]["draw_stalemate"]
+                                                                     : condition === 'repetition' ? translations["results"]["draw_repetition"]
+                                                                     : condition === 'moverule' ? `${translations["results"]["draw_moverule"][0]}${(game.getGamefile().gameRules.moveRule / 2)}${translations["results"]["draw_moverule"][1]}`
+																	 : condition === 'insuffmat' ? translations["results"]["draw_insuffmat"]
+                                                                     : condition === 'agreement' ? translations["results"]["draw_agreement"]
+                                                                     : translations["results"]["draw_generic"]
+            else if (condition === 'aborted') element_whosturn.textContent = translations["results"]["aborted"]
+            else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? translations["results"]["opponent_checkmate"]
+                                                             : condition === 'time' ? translations["results"]["opponent_time"]
+                                                             : condition === 'resignation' ? translations["results"]["opponen_resignation"]
+                                                             : condition === 'disconnect' ? translations["results"]["opponent_disconnect"]
+                                                             : condition === 'royalcapture' ? translations["results"]["opponent_royalcapture"]
+                                                             : condition === 'allroyalscaptured' ? translations["results"]["opponent_allroyalscaptured"]
+                                                             : condition === 'allpiecescaptured' ? translations["results"]["opponent_allpiecescaptured"]
+                                                             : condition === 'threecheck' ? translations["results"]["opponent_threecheck"]
+                                                             : condition === 'koth' ? translations["results"]["opponent_koth"]
+                                                             : translations["results"]["opponent_generic"]
+
         } else { // Local game
-            if (condition === 'checkmate') element_whosturn.textContent = victor === 'white' ? "White wins by checkmate!"
-                                                                       : victor === 'black' ? "Black wins by checkmate!"
-                                                                       : 'This is a bug, please report. Game ended by checkmate.'
-            else if (condition === 'time') element_whosturn.textContent = victor === 'white' ? "White wins on time!"
-                                                                       : victor === 'black' ? "Black wins on time!"
-                                                                       : 'This is a bug, please report. Game ended on time.'
-            else if (condition === 'royalcapture') element_whosturn.textContent = victor === 'white' ? "White wins by royal capture!"
-                                                                               : victor === 'black' ? "Black wins by royal capture!"
-                                                                               : 'This is a bug, please report. Game ended by royal capture.'
-            else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === 'white' ? "White wins by all royals captured!"
-                                                                                    : victor === 'black' ? "Black wins by all royals captured!"
-                                                                                    : 'This is a bug, please report. Game ended by all royals captured.'
-            else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === 'white' ? "White wins by all pieces captured!"
-                                                                                    : victor === 'black' ? "Black wins by all pieces captured!"
-                                                                                    : 'This is a bug, please report. Game ended by all pieces captured.'
-            else if (condition === 'threecheck') element_whosturn.textContent = victor === 'white' ? "White wins by three-check!"
-                                                                             : victor === 'black' ? "Black wins by three-check!"
-                                                                             : 'This is a bug, please report. Game ended by three-check.'
-            else if (condition === 'koth') element_whosturn.textContent = victor === 'white' ? "White wins by king of the hill!"
-                                                                       : victor === 'black' ? "Black wins by king of the hill!"
-                                                                       : 'This is a bug, please report. Game ended by king of the hill.'
-            else if (condition === 'stalemate') element_whosturn.textContent = "Draw by stalemate!"
-            else if (condition === 'repetition') element_whosturn.textContent = "Draw by repetition!"
-            else if (condition === 'moverule') element_whosturn.textContent = `Draw by the ${game.getGamefile().gameRules.moveRule / 2}-move-rule!`
-			else if (condition === 'insuffmat') element_whosturn.textContent = "Draw by insufficient material!"
+            if (condition === 'checkmate') element_whosturn.textContent = victor === 'white' ? translations["results"]["white_checkmate"]
+                                                                       : victor === 'black' ? translations["results"]["black_checkmate"]
+                                                                       : translations["results"]["bug_checkmate"]
+            else if (condition === 'time') element_whosturn.textContent = victor === 'white' ? translations["results"]["white_time"]
+                                                                       : victor === 'black' ? translations["results"]["black_time"]
+                                                                       : translations["results"]["bug_time"]
+            else if (condition === 'royalcapture') element_whosturn.textContent = victor === 'white' ? translations["results"]["white_royalcapture"]
+                                                                               : victor === 'black' ? translations["results"]["black_royalcapture"]
+                                                                               : translations["results"]["bug_royalcapture"]
+            else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === 'white' ? translations["results"]["white_allroyalscaptured"]
+                                                                                    : victor === 'black' ? translations["results"]["black_allroyalscaptured"]
+                                                                                    : translations["results"]["bug_allroyalscaptured"]
+            else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === 'white' ? translations["results"]["white_allpiecescaptured"]
+                                                                                    : victor === 'black' ? translations["results"]["black_allpiecescaptured"]
+                                                                                    : translations["results"]["bug_allpiecescaptured"]
+            else if (condition === 'threecheck') element_whosturn.textContent = victor === 'white' ? translations["results"]["white_threecheck"]
+                                                                             : victor === 'black' ? translations["results"]["black_threecheck"]
+                                                                             : translations["results"]["bug_threecheck"]
+            else if (condition === 'koth') element_whosturn.textContent = victor === 'white' ? translations["results"]["white_koth"]
+                                                                       : victor === 'black' ? translations["results"]["black_koth"]
+                                                                       : translations["results"]["bug_koth"]
+            else if (condition === 'stalemate') element_whosturn.textContent = translations["results"]["draw_stalemate"]
+            else if (condition === 'repetition') element_whosturn.textContent = translations["results"]["draw_repetition"]
+            else if (condition === 'moverule') element_whosturn.textContent = `${translations["results"]["draw_moverule"][0]}${(game.getGamefile().gameRules.moveRule / 2)}${translations["results"]["draw_moverule"][1]}`
+			else if (condition === 'insuffmat') element_whosturn.textContent = translations["results"]["draw_insuffmat"]
             else {
-                element_whosturn.textContent = "This is a bug, please report!"
+                element_whosturn.textContent = translations["results"]["bug_generic"]
                 console.error(`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`)
             }
         }

@@ -18,7 +18,7 @@ function ensureOwner(req, res, next) {
     if (isOwner(req)) return next(); // Valid, you may pass
     if (req.user) { // Logged in, but don't have the right permissions
         console.log(`Forbid user ${req.user} from accessing an owner-protected resource!`)
-        return res.status(403).send("Forbidden.");
+        return res.status(403).send("ws-forbidden");
     }
     // NOT logged in... Redirect them to the login page,
     // BUT add a query parameter that will bring them back here after logging in!
@@ -38,7 +38,7 @@ function ensurePatron(req, res, next) {
     if (isPatron(req)) return next(); // Pass
     if (req.user) { // Logged in, but don't have the right permissions
         console.log(`Stopped user ${req.user} from accessing a patron-protected resource.`)
-        return res.status(403).send("Unauthorized. This page is patron-exclusive.");
+        return res.status(403).send("ws-unauthorized_patron_page");
     }
     // NOT logged in... Redirect them to the login page,
     // BUT add a query parameter that will bring them back here after logging in!
