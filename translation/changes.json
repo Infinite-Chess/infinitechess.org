@@ -6,5 +6,9 @@
   "2": {
     "note": "added login.login_button on line 448",
     "changes": []
+  },
+  "3": {
+    "note": "added play.javascript.invites.start_game on line 314",
+    "changes": []
   }
 }

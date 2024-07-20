@@ -1,6 +1,6 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "2"
+version = "3"
 
 [header]
 home = "Accueil"
@@ -166,7 +166,7 @@ archbishop = {name="Archifou", description="Se déplace comme un fou et un caval
 amazon = {name="Amazone", description="Se déplace comme une reine et un cavalier combinés. C'est la pièce fée la plus forte!"}
 guard = {name="Garde", description="Se déplace comme le roi mais ne peut pas être mis en échec ou échec et mat."}
 hawk = {name="Faucon", description="Se déplace d'exactement 2 ou 3 cases dans chaque direction. Peut sauter au dessus d'autres pièces comme un cavalier."}
-obstacle = {name="Obstacle", description="Une pièce neutre (controlés par aucun des joueurs) qui bloque les mouvements mais peut être capturé."},
+obstacle = {name="Obstacle", description="Une pièce neutre (controlés par aucun des joueurs) qui bloque les mouvements mais peut être capturé."}
 centaur = {name="Centaure", description="Se déplace comme un cavalier et un garde combinés."}
 void = {name="Vide", description="Une pièce neutre (controlés par aucun des joueurs) qui represente l'absence de cases sur le plateau. Les pièces ne peuvent pas se déplacer par dessus ou à travers."}
 
@@ -311,6 +311,7 @@ accept = "Accepter"
 cancel = "Annuler"
 create_invite = "Créer une invitation"
 cancel_invite = "Annuler l'invitation"
+start_game = "Commencer"
 join_existing_active_games = "Rejoindre des parties existantes - actives:"
 
 [play.javascript.onlinegame]
