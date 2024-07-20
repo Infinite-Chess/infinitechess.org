@@ -34,12 +34,14 @@ const premove = (function(){
      */
     let highlightedSquares = [];
 
-    /** Stores the new position of peices after the premove
-     * @type {Object}
-     * - `startCoords`: where the piece was
-     * - `endCoords`: where it will be after premoves
-     * - `piece`: the piece that was moved
+    /** Stores the position of a piece before and after all premoves are applied.
+     * @typedef {Object} PieceTranslation
+     * @property {number[]} startCoords - Where was the piece before premoves?
+     * @property {number[]} [endCoords] - Where will the piece be after premoves? Undefined if the piece was destoyed.
+     * @property {Piece} piece - The piece is moved.
     */
+
+    /** @type {Object.<string, PieceTranslation>}*/
     let movedPieces = {};
 
     /**
@@ -86,15 +88,15 @@ const premove = (function(){
         }
 
         for(const key in movedPieces) {
-            const movement = movedPieces[key];
-            if(math.areCoordsEqual(movement.startCoords, premove.startCoords)) {
-                if (math.areCoordsEqual(movement.endCoords, premove.endCoords))
+            const pieceTranslation = movedPieces[key];
+            if(math.areCoordsEqual(pieceTranslation.startCoords, premove.startCoords)) {
+                if (math.areCoordsEqual(pieceTranslation.endCoords, premove.endCoords))
                 {
                     delete movedPieces[key];
                     //Un-highlight the square the piece moved to as the piece is in its final position
                     removeSquareHighlight(premove.endCoords);
                 } else {
-                    movement.startCoords = premove.endCoords;
+                    pieceTranslation.startCoords = premove.endCoords;
                 }
                 break;
             }
@@ -158,8 +160,8 @@ const premove = (function(){
     /** Sends all pieces back to their original positions. */
     function hidePremoves() {
         if(!premoves) return;
-        for (const movement of Object.values(movedPieces)) {
-            piecesmodel.movebufferdata(game.getGamefile(), movement.piece, movement.startCoords);
+        for (const pieceTranslation of Object.values(movedPieces)) {
+            piecesmodel.movebufferdata(game.getGamefile(), pieceTranslation.piece, movement.startCoords);
         }
     }
 
@@ -168,12 +170,15 @@ const premove = (function(){
      * 
      * If no piece has been premoved to `coords` forwards the request to `gamefile`
      * @param {number[]} coords - The coordinates of the pieces: `[x,y]`
-     * @returns {Piece} The piece at `coords`
+     * @returns {Piece | undefined} The piece at `coords` or *undifined* if there isn't one.
      */
     function getPieceAtCoords(coords) {
         for (let pieceMoved of Object.values(movedPieces)) {
             if (math.areCoordsEqual(pieceMoved.endCoords, coords)) {
                 return pieceMoved.piece;
+            }
+            if (math.areCoordsEqual(pieceMoved.startCoords, coords)) {
+                return undefined;
             }
         }
         return gamefileutility.getPieceAtCoords(game.getGamefile(), coords);
