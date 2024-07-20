@@ -22,8 +22,8 @@ js-login = "登录"
 js-createaccount = "注册"
 
 [member.javascript]
-js-confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
-js-enter_password = "Enter your password to PERMANENTLY delete your account:"
+js-confirm_delete = "您确定要删除账号吗？这无法撤销！要是你确定删除账号，点OK。"
+js-enter_password = "输入密码以永久删除您的账户:"
 
 [index]
 secondary_title = "The official website for playing live!"
@@ -89,7 +89,7 @@ reveal_info = "显示账号资料"
 account_info_heading = "账号资料"
 email = "电子邮箱:"
 delete_account = "删除账号"
-password_reset_message = ["To change your username, email or password, ", "contact us."]
+password_reset_message = ["要更改您的用户名、电子邮件或密码，请", "联系我们。"]
 
 [create-account]
 title = "注册"
@@ -105,7 +105,7 @@ js-username_tooshort = "用户名必须多于三个字母"
 js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
 js-email_invalid = "This is not a valid email"
 js-email_inuse = "这个电子邮箱已经被用了"
-js-pwd_incorrect_format = "Password is in an incorrect format"
+js-pwd_incorrect_format = "密码格式不正确"
 js-pwd_too_short = "密码必须多于六个字母"
 js-pwd_too_long = "密码禁止多于七十二个字母"
 js-pwd_not_pwd = "密码禁止是'password'"
@@ -441,9 +441,9 @@ update = "(Last updated: 7/13/24. Added warning that all games played may become
 thanks = "Thank you!"
 
 [login]
-title = "Log In"
-username = "Username:"
-password = "Password:"
+title = "登录"
+username = "用户名:"
+password = "密码:"
 forgot_password = ["忘记了? ", "给我们发邮件."]
 login_button = "登录"
 
@@ -501,7 +501,7 @@ text_box = "The system for verifying accounts has been updated to be more reliab
 ws-invalid_username = "用户名无效"
 ws-incorrect_password = "密码部队"
 ws-username_and_password_required = "需要用户名和密码"
-ws-username_and_password_string = "Username and password must be a string."
+ws-username_and_password_string = "用户名和密码必须是字符串"
 ws-login_failure_retry_in = "Failed to login, try again in"
 ws-seconds = "妙" # unit of time
 ws-second = "妙" # unit of time
@@ -513,7 +513,7 @@ ws-email_too_long = "您的电子有限太长。"
 ws-email_invalid = "这个邮箱无效。"
 ws-email_in_use = "这个邮箱已经被用了。"
 ws-you_are_banned = "You are banned."
-ws-password_length = "Password must be 6-72 characters long"
+ws-password_length = "密码必须多于6个字母和少于72个字母。"
 ws-password_format = "密码格式不正确"
 ws-password_password = "密码禁止是password"
 ws-refresh_token_not_found_logged_out = "No member has that refresh token (already logged out)"
