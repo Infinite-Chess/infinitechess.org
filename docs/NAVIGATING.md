@@ -28,7 +28,7 @@ It has subfolders for all the EJS, CSS, JavaScript, sound and image files of the
 
 [src/client/views](../src/client/views) contains all our EJS documents.
 
-The routers that actually send these as HTMLs to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
+The routers that actually send these as htmls to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
 [src/client/scripts/game](../src/client/scripts/game/) contains all our javascipt code for running the game in the `/play` page in the user's browser.
 
@@ -39,13 +39,13 @@ The main script is [main.js](../src/client/scripts/game/main.js), which initiate
 
 This repository uses [i18next](https://www.npmjs.com/package/i18next) to provide translations of the website into different languages.
 
-The [translation](../translation) directory contains a [TOML](https://toml.io/) file with translated text for each supported language - read more in the [translation guide](./TRANSLATIONS.md).
+[translation](../translation) contains a [TOML](https://toml.io/) file with translated text for each supported language - read more in the [translation guide](./TRANSLATIONS.md).
 
-The EJS files in [src/client/views](../src/client/views) get converted into HTML files for each supported language during deployment to `dist`.
+The EJS files in [src/client/views](../src/client/views) get converted into html files for each supported language during deployment to `dist`.
 
-The translation text in each EJS file is directly inserted into the corresponding HTML file during deployment.
+The translated text in each EJS file is directly inserted into the corresponding html file during deployment.
 
-The translation text in each clientside javacript file is stored in the `translations` object, which is initiated directly below the `<head>` tag of each EJS file.
+The translated text in each clientside javacript file is stored in the `translations` object, which is inserted directly below the head tag of each EJS file.
 
 
 ## Accounts ##
