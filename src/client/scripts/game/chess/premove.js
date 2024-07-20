@@ -152,8 +152,8 @@ const premove = (function(){
     /** Displays premoved pieces in their new positions. */
     function showPremoves() {
         if(!premoves) return;
-        for (const movement of Object.values(movedPieces)) {
-            piecesmodel.movebufferdata(game.getGamefile(), movement.piece, movement.endCoords);
+        for (const pieceTranslation of Object.values(movedPieces)) {
+            piecesmodel.movebufferdata(game.getGamefile(), pieceTranslation.piece, pieceTranslation.endCoords);
         }
     }
 
@@ -161,7 +161,7 @@ const premove = (function(){
     function hidePremoves() {
         if(!premoves) return;
         for (const pieceTranslation of Object.values(movedPieces)) {
-            piecesmodel.movebufferdata(game.getGamefile(), pieceTranslation.piece, movement.startCoords);
+            piecesmodel.movebufferdata(game.getGamefile(), pieceTranslation.piece, pieceTranslation.startCoords);
         }
     }
 
@@ -173,15 +173,16 @@ const premove = (function(){
      * @returns {Piece | undefined} The piece at `coords` or *undifined* if there isn't one.
      */
     function getPieceAtCoords(coords) {
+        let pieceGone = false; //Has the piece moved away or been captured?
         for (let pieceMoved of Object.values(movedPieces)) {
             if (math.areCoordsEqual(pieceMoved.endCoords, coords)) {
                 return pieceMoved.piece;
             }
             if (math.areCoordsEqual(pieceMoved.startCoords, coords)) {
-                return undefined;
+                pieceGone = true;
             }
         }
-        return gamefileutility.getPieceAtCoords(game.getGamefile(), coords);
+        return pieceGone?undefined:gamefileutility.getPieceAtCoords(game.getGamefile(), coords);
     }
 
     /**
