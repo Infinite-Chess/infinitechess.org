@@ -29,18 +29,18 @@ js-enter_password = "Entrez votre mot de passe pour supprimer votre compte DÉFI
 secondary_title = "Le site officiel pour jouer en direct!"
 what_is_it_title = "Qu'est ce que c'est?"
 what_is_it_pargaraphs = [
-"Infinite Chess est une variante des échecs dans laquelle il n'y pas de bordures, on est bien loin du plateau de 8x8 cases classique. La reine, les tours et les fous n'ont <em>pas de limites</em> à leur distance de déplacement. Vous pouvez vous déplacez sur n'importe quel case, de 0 à l'infini!",
+"Infinite Chess est une variante des échecs dans laquelle il n'y pas de bordures, on est bien loin du plateau de 8x8 cases classique. La dame, les tours et les fous n'ont <em>pas de limites</em> à leur distance de déplacement. Vous pouvez vous déplacez sur n'importe quel case, de 0 à l'infini!",
 "Sans limite à la distance que vous pouvez parcourir, il y a des positions dans lesquelles l'horloge de la mort, ou le nombre de coups avant le mat, est représenté par le premier ordinal infini: <strong>omega ω</strong>. En fait, les recherches ont prouvé que le nombre de coups avant un mat peut être représenté par <strong>tout</strong> ordinal dénombrable!",
 "Comme vous pouvez l'imaginer, il y a une infinité de positions de départ possibles dont beaucoup que vous pouvez jouer de façon compétitive! Le but final reste de faire un échec et mat, il est donc nécessaire de développer des nouvelles techniques vu qu'il n'y pas de murs pour coincer le roi ennemi. Normalement, les parties ne durent pas plus longtemps que dans un jeu d'échec classique. Les pions font leur promotions sur les lignes 1 et 8 respectivement!",
 ]
 how_to_title = "Comment Jouer ?"
-how_to_paragraph = ["Le jeu est actuellement en version 1.3.2 sur la page","Jouer","!"]
+how_to_paragraph = ["Le jeu est actuellement en version 1.3.2 sur la page ","Jouer","!"]
 about_title = "À Propos"
 about_paragraphs = [
-"Je m'apelle Naviary. Dès que j'ai découvert Infinite-Chess (le concept existait bien avant ce site), J'ai été très intrigué par celui ci et les possibilités qu'il débloque! Jusqu'à aujourd'hui, y jouer était plutôt difficile, les membres de chess.com devaient créer des images du plateau eux même et se les envoyer à chaque coup. À cause de ça, peu de gens connaissent cette variante.",
-["Mon objectif est de créer un site qui permettrait à tout le monde d'y jouer facilement, et de développer une communauté autour. J'ai passé un nombre incalculable d'heures de mon temps libre à faire ce site, à le maintenir et à developper le jeu. J'ai encore beaucoup d'idées qui vont m'occuper pendant pas mal de temps. Bien que je souhaite garder cette plateforme gratuite, la vie a un coût, pour aider à me supporter financiérement vous pouvez rejoindre mon", "Patreon"]
+"Je m'apelle Naviary. Dès que j'ai découvert Infinite Chess (le concept existait bien avant ce site), J'ai été très intrigué par ce jeu et par les possibilités qu'il débloque! Jusqu'à aujourd'hui, y jouer était plutôt difficile, les membres de chess.com devaient créer des images du plateau eux même et se les envoyer à chaque coup. À cause de ça, peu de gens connaissent cette variante.",
+["Mon objectif est de créer un site qui permettrait à tout le monde d'y jouer facilement, et de développer une communauté autour du jeu. J'ai passé un nombre incalculable d'heures de mon temps libre à faire ce site, à le maintenir et à developper le jeu et j'ai encore beaucoup d'idées qui vont m'occuper pendant pas mal de temps. Bien que je souhaite garder ce site gratuit, la vie a un coût et pour aider à me supporter financiérement vous pouvez rejoindre mon", "Patreon"]
 ]
-patreon_title = "Supporters Patreon"
+patreon_title = "Contributeurs Patreons"
 
 [credits]
 title = "Credits"
@@ -122,53 +122,53 @@ error = "ERREUR"
 title = "Guide"
 rules = "Règles"
 rules_paragraphs = [
-"Les règles de Infinite-Chess sont presques identiques à celles des échecs classiques, la seule différence étant que le plateau est infini dans toutes les directions ! Les seuls changements que vous devez prendre en compte sont listés ci-dessous:",
-"Les pièces with avec des déplacements coulissant, comme les tours, les fous et les dames, n'ont pas de limite à la distance qu'elles peuvent parcourir en un tour tant que leur chemin n'est pas obstrué, elles peuvent traverser des millions de cases!",
-["Dans la variante par défaut \"Classique\", les pions blancs font leur promotion ligne 8, et les pions noirs ligne 1. Sur cette image, ces lignes sont indiquées par les fines lignes noires, elles sont discrètes, Regardez si vous pouvez les voir! Les pions ont seulement besoin d'atteindre la ligne opposée à leur position de départ pour faire promotion, ", "pas", " de la dépasser."],
+"Les règles de Infinite Chess sont presques identiques à celles des échecs classiques, la seule différence étant que le plateau est infini dans toutes les directions ! Les seuls changements que vous devez prendre en compte sont listés ci-dessous:",
+"Les pièces with avec des déplacements coulissants, comme les tours, les fous et les dames, n'ont pas de limite à la distance qu'elles peuvent parcourir en un tour. Tant que leur chemin n'est pas obstrué, elles peuvent traverser des millions de cases!",
+["Dans la variante par défaut \"Classique\", les pions blancs font leur promotion ligne 8, et les pions noirs ligne 1. Sur cette image, ces lignes sont indiquées par les fines lignes noires. Elles sont discrètes, regardez si vous pouvez les voir ! Les pions ont seulement besoin d'atteindre la ligne opposée à leur position de départ pour faire promotion, ", "pas", " de la dépasser."],
 "Les cases ne sont plus décrites par leur lettre et leur numéro de ligne (ex: a1) mais plutôt comme une paire de coordonnées x et y. La case a1 devient (1,1), et la case h8 devient (8,8). Sur ordinateur, les coordonées de la case sur laquelle est votre souris sont affichées en haut au milieu de l'écran.",
-"Toutes les autres règles sont les mêmes que dans le jeu d'échec classique, comme les échecs-et-mat, les pats, les répétitions de positions, la règle des 50 coups, rocs, prise au passant, etc.!"
+"Toutes les autres règles sont les mêmes que dans le jeu d'échec classique, comme les échecs-et-mat, les pats, les répétitions de positions, la règle des 50 coups, rocs, prise au passant, etc.."
 ]
-careful_heading = "Faites Attention!"
+careful_heading = "Faites Attention !"
 careful_paragraphs = [
-"L'ouverture donnée par un plateau infini fait qu'il est très facile d'exploiter les fourchettes, les clouages et les enfilades. La partie du plateau derrière votre Roi est souvent très vulnérable. Faites attention aux tactiques qui l'exploite! Soyez créatif sur la protection que vous formez autour de votre roi et de vos tours! Les ouvertures sont drès différentes de celles des échecs classiques.",
+"L'ouverture donnée par un plateau infini fait qu'il est très facile d'exploiter les fourchettes, les clouages et les enfilades. La partie du plateau derrière votre Roi est souvent très vulnérable. Faites attention aux tactiques qui l'exploite! Soyez créatif sur la protection que vous formez autour de votre roi et de vos tours! Les ouvertures sont très différentes de celles des échecs classiques.",
 "Beaucoup d'autres variantes ont été crées avec pour but de renforcer l'arrière du roi."
 ]
-controls_heading = "Controles"
-controls_paragraph = "Beaucoup de controles sont intuitifs, comme cliquer et faire glisser le plateau pour se déplacer, ou scroller pour zoomer, mais regardons les autres controles que vous pouvez utiliser!"
+controls_heading = "Contrôles"
+controls_paragraph = "Beaucoup de contrôles sont intuitifs, comme cliquer et faire glisser le plateau pour se déplacer, ou scroller pour zoomer, mais regardons les autres contrôles que vous pouvez utiliser !"
 keybinds = [
 " pour se déplacer.",
 ["Espace", " et ", "Maj", " pour zoomer et dézoomer."],
 ["Échap", " pour mettre pause."],
-["Tab", " active et désactive les flèches pointant vers les pièces hors champ sur les bords de l'écran. Par défaut elles sont en mode \"Défense\", elle n'affiche une flèche que pour les pièces qui peuvent bouger de leur emplacement à une case sur l'écran. Mais, appuyer sur ", "tab", " permet de passer aux modes \"Tous\", ou \"Off\". Le mode \"Tous\" révèle toutes les pièces qui passent par les lignes et les diagonales visibles à l'écran, selon si elles se déplacent en ligne ou en diagonale. Ce mode peut également être changé depuis le menu pause."],
-" va activer/désativer le \"mode d'édition\" dans les parties locales. Le mode d'édition vous permet déplacer n'importe quelle pièce n'importe où sur le plateau. Très utile pour les analyses."
+["Tab", " pour activer et désactiver les flèches pointant vers les pièces hors champ sur les bords de l'écran. Par défaut elles sont en mode \"Défense\", une flèche n'est alors affichée que pour les pièces qui peuvent bouger de leur emplacement à une case visible sur l'écran. Mais, appuyer sur ", "tab", " permet de désactivé totalement ces flèches ou de les passer en mode \"Toutes\". Le mode \"Toutes\" révèle toutes les pièces qui passent par des lignes ou des diagonales visibles à l'écran, selon si ces pièces se déplacent en ligne ou en diagonale. Le mode choisit peut également être changé depuis le menu pause."],
+" va activer/désativer le \"mode d'édition\" dans les parties locales. Le mode d'édition vous permet déplacer n'importe quelle pièce n'importe où sur le plateau. Très utile pour faire des analyses."
 ]
-controls_paragraph2 = "Ce sont les principaux contrôles que vous devez connaître. Mais il y en a quelques uns en plus si vous en avez besoin!"
+controls_paragraph2 = "Ce sont les principaux contrôles que vous devez connaître. Mais il y en d'autres qui pourraient vous être utiles !"
 keybinds_extra = [
-" va reset l'affichage des pièces. C'est utile si elles deviennent invisibles. Ce qui peut arriver quand elles sont à des distances très éloignées (comme 10^21).",
-" va activer/désactiver l'affichage des barres de navigation et d'informations, ce qui peut être utile pour enregistrer. Les streams et les vidéos sur le jeu sont les bienvenus!",
-" va activer/désactiver le compte de FPS. Ce qui va afficher le nombre de mises à jour de la partie par seconde (ce qui ne correspond pas toujours au nombre de frames affichées), étant donné que l'écran n'est rafraichit que quand quelque chose de visible change, pour optimiser les performances.",
+" va rénitialiser l'affichage des pièces. C'est utile si elles deviennent invisibles. Ce qui peut arriver quand elles sont à des distances très éloignées (à partir de 10²¹ notamment).",
+" va activer/désactiver l'affichage des barres de navigation et d'informations, ce qui peut être utile pour record. Les streams et les vidéos sur le jeu sont les bienvenus!",
+" va activer/désactiver le compte de FPS. Ce qui va afficher le nombre de mises à jour de la partie par seconde (ce qui ne correspond pas toujours au nombre de frames affichées, étant donné que l'écran n'est rafraichit que quand quelque chose de visible change, pour optimiser les performances).",
 " va activer/désactiver l'affichage des icônes. Les icônes sont des petites images cliquables des pièces quand vous dézoomez suffisament. Dans les parties importées avec plus de 50 000 pièces, ce paramètre est automatiquement désactivé, étant donné qu'il prend beaucoup de performances, il peut cependant être réactivé.",
 [" (backtick, ou la même touche que ", ") va activer/désactiver le mode Debug."],
 ]
 fairy_heading = "Pièces fées"
-fairy_paragraph = "Vous savez déjà ce que vous devez savoir pour jouer à la variante par défaut \"Classique\". Les pièces fées ne sont pas utilisés dans les échecs conventionels, mais elles sont incorporées dans d'autres variantes! Si vous vous trouvez dans une variante avec des pièces que vous n'avez jamais vu avant vous pouvez apprendre comment elles marchent ici!"
-editing_heading = "Edition de Plateau"
+fairy_paragraph = "Vous savez déjà ce que vous devez savoir pour jouer à la variante par défaut \"Classique\". Les pièces fées ne sont pas utilisés dans les échecs conventionels, mais elles sont incorporées dans d'autres variantes de ce site ! Si vous vous trouvez dans une variante avec des pièces que vous n'avez jamais vu avant vous pouvez apprendre comment elles se déplacent ici !"
+editing_heading = "Editeur de Plateau"
 editing_paragraphs = [
-["Il y a un ", "éditeur de plateau", " externe, pour l'instant disponible dans un google sheet publique! Il contient toutes les instructions sur comment l'utiliser (en anglais) et demande un peu de connaissances du fonctionnement des tableurs. Après ça, vous serez capable de créer et d'importer des positions customs dans le jeu via le bouton \"Coller la Position\" dans le menu des options !"],
-"Pour jouer sur une position custom avec un ami vous devez le rejoindre via une invitation privée, puis vous devez tous les deux copier et coller le code de la partie avant de commencer à jouer !",
+["Il y a un ", "éditeur de plateau", " externe, pour l'instant disponible dans un google sheet publique! Il contient toutes les instructions sur comment l'utiliser (en anglais) et demande un peu de connaissances du fonctionnement des tableurs. Après ça, vous serez capable de créer et d'importer des positions personnalisées dans le jeu via le bouton \"Coller la Position\" dans le menu des options !"],
+"Pour jouer sur une position personnalisée avec un ami vous devez le rejoindre via une invitation privée, puis vous devez tous les deux copier et coller le code de la partie avant de commencer à jouer !",
 "Un editeur de plateau en jeu est toujours prévu.",
 ]
 back = "Retour"
 
 [play.guide.pieces]
-chancellor = {name="Chancellier", description="Se déplace comme une tour et un cavalier combinés."}
-archbishop = {name="Archifou", description="Se déplace comme un fou et un cavalier combinés."}
-amazon = {name="Amazone", description="Se déplace comme une reine et un cavalier combinés. C'est la pièce fée la plus forte!"}
-guard = {name="Garde", description="Se déplace comme le roi mais ne peut pas être mis en échec ou échec et mat."}
-hawk = {name="Faucon", description="Se déplace d'exactement 2 ou 3 cases dans chaque direction. Peut sauter au dessus d'autres pièces comme un cavalier."}
-obstacle = {name="Obstacle", description="Une pièce neutre (controlés par aucun des joueurs) qui bloque les mouvements mais peut être capturé."},
-centaur = {name="Centaure", description="Se déplace comme un cavalier et un garde combinés."}
-void = {name="Vide", description="Une pièce neutre (controlés par aucun des joueurs) qui represente l'absence de cases sur le plateau. Les pièces ne peuvent pas se déplacer par dessus ou à travers."}
+chancellor = {name="Le Chancellier", description="Il se déplace comme une tour et un cavalier combinés."}
+archbishop = {name="L'Archifou", description="Il se déplace comme un fou et un cavalier combinés."}
+amazon = {name="L'Amazone", description="Elle se déplace comme une dame et un cavalier combinés. C'est la pièce fée la plus forte du jeu !"}
+guard = {name="Le Garde", description="Il se déplace comme le roi mais ne peut pas être mis en échec ou en échec et mat."}
+hawk = {name="Le Faucon", description="Il se déplace d'exactement 2 ou 3 cases dans chaque direction. Il peut sauter au dessus d'autres pièces comme un cavalier."}
+obstacle = {name="Obstacle", description="Une pièce neutre (controlées par aucun des joueurs) qui bloque les mouvements mais peut être capturée."},
+centaur = {name="Le Centaure", description="Il se déplace comme un cavalier et un garde combinés."}
+void = {name="Vide", description="Une pièce neutre (controlées par aucun des joueurs) qui représente l'absence d'une case sur le plateau. Les pièces ne peuvent se déplacer ni au dessus ni à travers du vide."}
 
 
 [play.play-menu]
@@ -465,7 +465,7 @@ game_history_warning = "L'historique de vos parties pourrait être accessible de
 
 [news.july9-2024]
 date = "9 Juillet 2024:"
-text = ["Infinite-Chess est désormais Open Source! Regardez, et contribuez au projet sur ", "GitHub!"]
+text = ["Infinite Chess est désormais Open Source! Regardez, et contribuez au projet sur ", "GitHub!"]
 
 [news.may27-2024]
 date = "27 Mai 2024:"
@@ -494,7 +494,7 @@ text = "Nouvelle vidéo sortie aujourd'hui !"
 
 [news.aug26-2023]
 date = "26 Août 2023:"
-text_top = "La version 1.2 d'Infinite-Chess a été publiée! Elle amène l'historique de coups. Utilisez les flèches gauches et droites pour rembobiner ou accèlerer la partie!"
+text_top = "La version 1.2 d'Infinite Chess a été publiée! Elle amène l'historique de coups. Utilisez les flèches gauches et droites pour rembobiner ou accèlerer la partie!"
 text_box = "Le système de vérification de comptes a été mis-à-jour pour être plus fiable! Si votre compte n'est pas vérifié et que vous aviez des problèmes avec le lien de vérification, réessayez de vous vérifier!"
 
 [server.javascript]
