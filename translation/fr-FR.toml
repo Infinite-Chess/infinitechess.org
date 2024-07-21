@@ -147,15 +147,15 @@ keybinds_extra = [
 " va reset l'affichage des pièces. C'est utile si elles deviennent invisibles. Ce qui peut arriver quand elles sont à des distances très éloignées (comme 10^21).",
 " va activer/désactiver l'affichage des barres de navigation et d'informations, ce qui peut être utile pour enregistrer. Les streams et les vidéos sur le jeu sont les bienvenus!",
 " va activer/désactiver le compte de FPS. Ce qui va afficher le nombre de mises à jour de la partie par seconde (ce qui ne correspond pas toujours au nombre de frames affichées), étant donné que l'écran n'est rafraichit que quand quelque chose de visible change, pour optimiser les performances.",
-" va activer/désactiver l'affichage des icônes. Les icônes sont des petites images cliquables des pièces quand vous dézoomez suffisament. Dans les parties importées avec plus de 50 000 pièces, ce paramètre est automatiquement désactivé, étant donné qu'il prend beaucoup de performances, il peut cependant être réactivé.",
+" va activer/désactiver l'affichage des icônes. Les icônes sont des petites images cliquables des pièces quand vous dézoomez suffisament. Dans les parties importées avec plus de 50 000 pièces, ce paramètre est automatiquement désactivé, étant donné qu'il prend beaucoup de performances, il peut cependant être réactivé ",
 [" (backtick, ou la même touche que ", ") va activer/désactiver le mode Debug."],
 ]
 fairy_heading = "Pièces fées"
 fairy_paragraph = "Vous savez déjà ce que vous devez savoir pour jouer à la variante par défaut \"Classique\". Les pièces fées ne sont pas utilisés dans les échecs conventionels, mais elles sont incorporées dans d'autres variantes! Si vous vous trouvez dans une variante avec des pièces que vous n'avez jamais vu avant vous pouvez apprendre comment elles marchent ici!"
 editing_heading = "Edition de Plateau"
 editing_paragraphs = [
-["Il y a un ", "éditeur de plateau", " externe, pour l'instant disponible dans un google sheet publique! Il contient toutes les instructions sur comment l'utiliser (en anglais) et demande un peu de connaissances du fonctionnement des tableurs. Après ça, vous serez capable de créer et d'importer des positions customs dans le jeu via le bouton \"Coller la Position\" dans le menu des options !"],
-"Pour jouer sur une position custom avec un ami vous devez le rejoindre via une invitation privée, puis vous devez tous les deux copier et coller le code de la partie avant de commencer à jouer !",
+["Il y a un ", "éditeur de plateau", " externe, pour l'instant disponible dans un google sheet publique! Il contient toutes les instructions sur comment l'utiliser (en anglais) et demande un peu de connaissances du fonctionnement des tableurs. Après ça, vous serez capable de créer et d'importer des positions customs dans le jeu via le bouton \"Coller la Position\" dans le menu des options!"],
+"Pour jouer sur une position custom avec un ami vous devez le rejoindre via une invitation privée, puis vous devez tous les deux copier et coller le code de la partie avant de commencer à jouer!",
 "Un editeur de plateau en jeu est toujours prévu.",
 ]
 back = "Retour"
