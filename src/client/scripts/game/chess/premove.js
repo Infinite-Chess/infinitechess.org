@@ -185,6 +185,11 @@ const premove = (function(){
         return pieceGone?undefined:gamefileutility.getPieceAtCoords(game.getGamefile(), coords);
     }
 
+    /**Returns *true* if we are currently makeing a premove.*/
+    function isPremove() {
+        return premovesEnabled && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
+    }
+
     /**
      * Returns the number of premoves that have been recorded.
      * @returns {number} Number of premoves that have been recorded.
@@ -202,6 +207,7 @@ const premove = (function(){
         allowPremoves,
         arePremovesEnabled,
         getPremoveCount,
+        isPremove,
         getPieceAtCoords
     });
 

@@ -106,11 +106,12 @@ const selection = (function() {
             if (pieceClicked.type && math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
                 main.renderThisFrame();
                 unselectPiece();
-            } else if (pieceClicked.type !== 'voidsN') { // Select that other friendly piece instead. Prevents us from selecting a void after selecting an obstacle.
+                return;
+            } else if (pieceClicked.type !== 'voidsN' && !premove.isPremove()) { //Prevents us from selecting a void after selecting an obstacle.
+                // Select that other friendly piece instead, unless we are premoving.
                 selectPiece(pieceClicked.type, pieceClicked.index, coordsClicked)
+                return;
             }
-
-            return;
         }
 
         // If we haven't return'ed at this point, check if the move is legal.
@@ -168,7 +169,7 @@ const selection = (function() {
         main.renderThisFrame();
         pieceSelected = { type, index, coords }
         // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-        legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected, {isPremove: onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn()});
+        legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected, {isPremove: premove.isPremove()});
         highlights.regenModel(); // Generate the buffer model for the blue legal move fields.
     }
 
