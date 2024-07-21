@@ -56,11 +56,11 @@ const variantomega1 = (function(){
     }
 
     /**
-     * Inits the gamefile for the Omega_To_The_Fourth position. Sets the startSnapshot and gameRules properties.
+     * Inits the gamefile for the Omega_Fourth position. Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmegaFourth(gamefile, { Variant, Date }) {
-        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_To_The_Fourth' })
+        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Fourth' })
         gamefile.startSnapshot = {
             position,
             positionString,

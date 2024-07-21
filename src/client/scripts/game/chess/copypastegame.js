@@ -25,7 +25,7 @@ const copypastegame = (function(){
         const Variant = gamefile.metadata.Variant;
 
         const primedGamefile = primeGamefileForCopying(gamefile);
-        const largeGame = Variant === 'Omega_Squared' || Variant === 'Omega_Cubed' || Variant === 'Omega_To_The_Fourth';
+        const largeGame = Variant === 'Omega_Squared' || Variant === 'Omega_Cubed' || Variant === 'Omega_Fourth';
         const specifyPosition = !largeGame;
         const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
           

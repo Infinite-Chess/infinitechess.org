@@ -7,9 +7,9 @@
 const variant = (function() {
 
     /** Variants names the game works with */
-    const validVariants = ["Classical","Core","Standarch","Space_Classic","CoaIP","Pawn_Horde","Space","Obstocean","Abundance","Amazon_Chandelier","Containment","Classical_Limit_7","CoaIP_Limit_7","Chess","Classical_KOTH","CoaIP_KOTH","Omega","Omega_Squared","Omega_Cubed","Omega_To_The_Fourth","Classical_Plus","Pawndard","Knightline","Knighted_Chess"];
+    const validVariants = ["Classical","Core","Standarch","Space_Classic","CoaIP","Pawn_Horde","Space","Obstocean","Abundance","Amazon_Chandelier","Containment","Classical_Limit_7","CoaIP_Limit_7","Chess","Classical_KOTH","CoaIP_KOTH","Omega","Omega_Squared","Omega_Cubed","Omega_Fourth","Classical_Plus","Pawndard","Knightline","Knighted_Chess"];
     /** A list of all variants where black moves first */
-    const blackMovesFirstGames = ['Omega','Omega_Squared','Omega_Cubed','Omega_To_The_Fourth']
+    const blackMovesFirstGames = ['Omega','Omega_Squared','Omega_Cubed','Omega_Fourth']
 
     /**
      * Tests if the provided variant is a valid variant
@@ -178,7 +178,7 @@ const variant = (function() {
             case "Omega_Cubed":
                 variantomega.initOmegaCubed(gamefile, { Variant, Date });
                 break;
-            case "Omega_To_The_Fourth":
+            case "Omega_Fourth":
                 variantomega.initOmegaFourth(gamefile, { Variant, Date });
                 break;
             // Removed...
@@ -310,7 +310,7 @@ const variant = (function() {
             case "Omega_Cubed":
                 startingPosition = variantomega.genPositionOfOmegaCubed()
                 return getStartSnapshotPosition({ startingPosition, pawnDoublePush: false, castleWith: null })
-            case "Omega_To_The_Fourth":
+            case "Omega_Fourth":
                 startingPosition = variantomega.genPositionOfOmegaFourth()
                 return getStartSnapshotPosition({ startingPosition, pawnDoublePush: false, castleWith: null })
             // Removed...
@@ -430,7 +430,7 @@ const variant = (function() {
                 return getGameRules({ promotionRanks: null, moveRule: null, position })
             case "Omega_Cubed":
                 return getGameRules({ promotionRanks: null, moveRule: null, position })
-            case "Omega_To_The_Fourth":
+            case "Omega_Fourth":
                 return getGameRules({ promotionRanks: null, moveRule: null, winConditions: getRoyalCaptureWinConditions(), position })
             // Removed...
             /*
