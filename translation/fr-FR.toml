@@ -1,6 +1,6 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "3"
+version = "4"
 
 [header]
 home = "Accueil"
@@ -97,7 +97,7 @@ username = "Nom d'utilisateur:"
 email = "Email:"
 password = "Mot de Passe:"
 create_button = "Créer un compte"
-argreement = ["J'accepte les ", "Conditions d'utilisation"]
+agreement = ["J'accepte les ", "Conditions d'utilisation", "."] # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
 js-username_specs = "Le nom d'utilisateur doit être d'au moins 3 caractères et ne doit contenir que des lettres ou des chiffres"
@@ -178,32 +178,31 @@ online = "En Ligne"
 local = "Local"
 computer = "Ordinateur"
 variant = "Variante"
-variants = [
-"Classique",
-"Classique+",
-"Chess on an Infinite Plane",
-"Pawndard",
-"Knighted Chess",
-"Knightline",
-"Core",
-"Standarch",
-"Pawn Horde",
-"Space Classic",
-"Space",
-"Obstocean",
-"Abundance",
-"Amazon Chandelier",
-"Containment",
-"Classical - Limit 7",
-"Coaip - Limit 7",
-"Chess",
-"Experimental: Classical - KOTH",
-"Experimental: Coaip - KOTH",
-"Showcase: Omega",
-"Showcase: Omega^2",
-"Showcase: Omega^3",
-"Showcase: Omega^4",
-]
+Classical = "Classique"
+Classical_Plus = "Classique+"
+CoaIP = "Chess on an Infinite Plane"
+Pawndard = "Pawndard"
+Knighted_Chess = "Knighted Chess"
+Knightline = "Knightline"
+Core = "Core"
+Standarch = "Standarch"
+Pawn_Horde = "Pawn Horde"
+Space_Classic = "Space Classic"
+Space = "Space"
+Obstocean = "Obstocean"
+Abundance = "Abundance"
+Amazon_Chandelier = "Amazon Chandelier"
+Containment = "Containment"
+Classical_Limit_7 = "Classical - Limit 7"
+CoaIP_Limit_7 = "Coaip - Limit 7"
+Chess = "Chess"
+Classical_KOTH = "Experimental: Classical - KOTH"
+CoaIP_KOTH = "Experimental: Coaip - KOTH"
+Omega = "Showcase: Omega"
+Omega_Squared = "Showcase: Omega^2"
+Omega_Cubed = "Showcase: Omega^3"
+Omega_To_The_Fourth = "Showcase: Omega^4"
+no_clock = "Pas d'horloge"
 clock = "Horloge"
 minutes = "m"
 seconds = "s"
@@ -214,6 +213,7 @@ private = "Privé"
 no = "Non"
 yes = "Oui"
 rated = "Classé"
+unrated = "Non classé"
 join_games = "Rejoindre des Parties:"
 private_invite = "Invitation Privée:"
 your_invite = "Votre code d'invitation:"
@@ -532,3 +532,12 @@ ws-bad_request = "Mauvaise Requête"
 ws-not_found = "404 Introuvable"
 ws-forbidden = "Interdit."
 ws-unauthorized_patron_page = "Non autorisé. Cette page est réservé aux patreons."
+ws-already_in_game = "You are already in a game."
+ws-no_create_invite_value = "Create invite message was sent without an invite for the value property!"
+ws-player_already_invited = "Player already has an existing invite."
+ws-modify_invite_parameters = "You cannot modify invite parameters (try refreshing)."
+ws-invite_cancelled = "Invite already cancelled."
+ws-cannot_delete_invite = "You are forbidden to delete this invite."
+ws-no_accept_invite_value = "Accept invite message was sent without invite info for the value property!"
+ws-invite_must_have_id = "Invite info must contain an id property."
+ws-accept_own_invite = "Silly goose. You can't accept your own invite!"

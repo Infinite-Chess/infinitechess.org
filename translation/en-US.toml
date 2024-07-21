@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "3"
+version = "4"
 
 [header]
 home = "Home"
@@ -97,7 +97,7 @@ username = "Username:"
 email = "Email:"
 password = "Password:"
 create_button = "Create Account"
-argreement = ["I agree to the ", "Terms of Service"]
+agreement = ["I agree to the ", "Terms of Service", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
 js-username_specs = "Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9"
@@ -178,32 +178,31 @@ online = "Online"
 local = "Local"
 computer = "Computer"
 variant = "Variant"
-variants = [
-"Classical",
-"Classical+",
-"Chess on an Infinite Plane",
-"Pawndard",
-"Knighted Chess",
-"Knightline",
-"Core",
-"Standarch",
-"Pawn Horde",
-"Space Classic",
-"Space",
-"Obstocean",
-"Abundance",
-"Amazon Chandelier",
-"Containment",
-"Classical - Limit 7",
-"Coaip - Limit 7",
-"Chess",
-"Experimental: Classical - KOTH",
-"Experimental: Coaip - KOTH",
-"Showcase: Omega",
-"Showcase: Omega^2",
-"Showcase: Omega^3",
-"Showcase: Omega^4",
-]
+Classical = "Classical"
+Classical_Plus = "Classical+"
+CoaIP = "Chess on an Infinite Plane"
+Pawndard = "Pawndard"
+Knighted_Chess = "Knighted Chess"
+Knightline = "Knightline"
+Core = "Core"
+Standarch = "Standarch"
+Pawn_Horde = "Pawn Horde"
+Space_Classic = "Space Classic"
+Space = "Space"
+Obstocean = "Obstocean"
+Abundance = "Abundance"
+Amazon_Chandelier = "Amazon Chandelier"
+Containment = "Containment"
+Classical_Limit_7 = "Classical - Limit 7"
+CoaIP_Limit_7 = "Coaip - Limit 7"
+Chess = "Chess"
+Classical_KOTH = "Experimental: Classical - KOTH"
+CoaIP_KOTH = "Experimental: Coaip - KOTH"
+Omega = "Showcase: Omega"
+Omega_Squared = "Showcase: Omega^2"
+Omega_Cubed = "Showcase: Omega^3"
+Omega_To_The_Fourth = "Showcase: Omega^4"
+no_clock = "No Clock"
 clock = "Clock"
 minutes = "m"
 seconds = "s"
@@ -214,6 +213,7 @@ private = "Private"
 no = "No"
 yes = "Yes"
 rated = "Rated"
+unrated = "Unrated"
 join_games = "Join Existing - Active Games:"
 private_invite = "Private Invite:"
 your_invite = "Your Invite Code:"
@@ -532,3 +532,14 @@ ws-bad_request = "Bad Request"
 ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."
 ws-unauthorized_patron_page = "Unauthorized. This page is patron-exclusive."
+ws-already_in_game = "You are already in a game."
+ws-no_create_invite_value = "Create invite message was sent without an invite for the value property!"
+ws-player_already_invited = "Player already has an existing invite."
+ws-modify_invite_parameters = "You cannot modify invite parameters (try refreshing)."
+ws-invite_cancelled = "Invite already cancelled."
+ws-cannot_delete_invite = "You are forbidden to delete this invite."
+ws-no_accept_invite_value = "Accept invite message was sent without invite info for the value property!"
+ws-invite_must_have_id = "Invite info must contain an id property."
+ws-accept_own_invite = "Silly goose. You can't accept your own invite!"
+ws-server_restarting = "The server is currently restarting. Try again soon."
+ws-minutes = "minutes" # unit of time

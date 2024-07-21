@@ -35,7 +35,7 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
 
     const content = JSON.stringify({
         allowinvites: true,
-        message: "Server is restarting.",
+        message: "ws-server_restarting",
         restartIn: false
     }, null, 2);
     writeFile_ensureDirectory(allowinvitesPath, content)
@@ -150,13 +150,13 @@ function sendClientActiveGameCount(ws, gamecount) {
 
 // Similar to connect(), but this does not log the users connection until they are given a browser ID.
 async function createNewInvite (ws, invite, messageID) { // invite: { id, owner, variant, clock, color, rated, publicity } 
-    if (gamemanager.isSocketInAnActiveGame(ws)) return ws.metadata.sendmessage(ws, "general", "notify", "You are already in a game.")
+    if (gamemanager.isSocketInAnActiveGame(ws)) return ws.metadata.sendmessage(ws, "general", "notify", "ws-already_in_game")
     
     // Verify their invite contains the required properties...
     // ...
 
     // It is defined?
-    if (invite == null) return ws.metadata.sendmessage(ws, "general", "error", "Create invite message was sent without an invite for the value property!", messageID)
+    if (invite == null) return ws.metadata.sendmessage(ws, "general", "error", "ws-no_create_invite_value", messageID)
 
     // Are we currently allowing invite creation?
     // Is the server restarting?
@@ -167,7 +167,7 @@ async function createNewInvite (ws, invite, messageID) { // invite: { id, owner,
     if (areUnderMaintenance(ws)) return;
 
     // Make sure they don't already have an existing invite
-    if (userHasInvite(ws)) return ws.metadata.sendmessage(ws, "general", "notify", "Player already has an existing invite.", messageID)
+    if (userHasInvite(ws)) return ws.metadata.sendmessage(ws, "general", "notify", "ws-player_already_invited", messageID)
     // This allows them to spam the button without receiving errors.
     // if (userHasInvite(ws)) return;
 
@@ -273,7 +273,8 @@ function areUnderMaintenance(ws) {
     gamemanager.printActiveGameCount();
     let message = allowinvites.message;
     const timeUntilRestart = getMinutesUntilRestart();
-    if (timeUntilRestart) message += ` Minutes: ${timeUntilRestart}`
+    // TODO: send the timeUntilRestart with the message somehow
+    // if (timeUntilRestart) message += ` Minutes: ${timeUntilRestart}`
     ws.metadata.sendmessage(ws, "general", "notify", message)
     return true; // NOT allowed to make na invite!
 }
@@ -311,14 +312,14 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
     if (!clockweb.isClockValueValid(invite.clock)) return true;
 
     if (invite.color !== "White" && invite.color !== "Black" && invite.color !== "Random") return true;
-    if (invite.rated !== 'Unrated') return true;
+    if (invite.rated !== 'unrated') return true;
     if (invite.publicity !== 'public' && invite.publicity !== 'private') return true;
 
     return false;
 }
 
 function reportForExploitingInvite(ws, invite) {
-    ws.metadata.sendmessage(ws, "general", "notify", "You cannot modify invite parameters (try refreshing).") // In order: socket, sub, action, value
+    ws.metadata.sendmessage(ws, "general", "notify", "ws-modify_invite_parameters") // In order: socket, sub, action, value
 
     let logText;
     if (ws.metadata.user) logText = `User ${ws.metadata.user} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
@@ -337,7 +338,7 @@ function cancelInvite (ws, value, messageID) { // Value should be the ID of the 
     const id = value; // id of invite to delete
 
     const inviteAndIndex = getInviteByID(id) // { invite, index }
-    if (!inviteAndIndex) return ws.metadata.sendmessage(ws, "general", "notify", "Invite already cancelled.", messageID);
+    if (!inviteAndIndex) return ws.metadata.sendmessage(ws, "general", "notify", "ws-invite_cancelled", messageID);
     // This allows them to spam the button without receiving errors.
     //if (!inviteAndIndex) return;
     
@@ -348,7 +349,7 @@ function cancelInvite (ws, value, messageID) { // Value should be the ID of the 
         const errText = `Player tried to delete an invite that wasn't theirs! Invite ID: ${id} Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
         console.error(errText);
         logEvents(errText, 'hackLog.txt')
-        return ws.metadata.sendmessage(ws, "general", "error", "You are forbidden to delete this invite.", messageID)
+        return ws.metadata.sendmessage(ws, "general", "error", "ws-cannot_delete_invite", messageID)
     }
 
     invites.splice(inviteAndIndex.index, 1) // Delete the invite
@@ -366,16 +367,16 @@ function getInviteByID(id) {
 }
 
 function acceptInvite(ws, inviteinfo) { // { id, isPrivate }
-    if (gamemanager.isSocketInAnActiveGame(ws)) return ws.metadata.sendmessage(ws, "general", "notify", "You are already in a game.")
+    if (gamemanager.isSocketInAnActiveGame(ws)) return ws.metadata.sendmessage(ws, "general", "notify", "ws-already_in_game")
     
     // Verify their invite contains the required properties...
     // ...
 
     // It is defined?
-    if (inviteinfo == null) return ws.metadata.sendmessage(ws, "general", "error", "Accept invite message was sent without invite info for the value property!")
+    if (inviteinfo == null) return ws.metadata.sendmessage(ws, "general", "error", "ws-no_accept_invite_value")
     
     const id = inviteinfo.id
-    if (id == null) return ws.metadata.sendmessage(ws, "general", "error", "Invite info must contain an id property.") // Hacking
+    if (id == null) return ws.metadata.sendmessage(ws, "general", "error", "ws-invite_must_have_id") // Hacking
 
     // Does the invite still exist?
     const inviteAndIndex = getInviteByID(id) // { invite, index }
@@ -389,7 +390,7 @@ function acceptInvite(ws, inviteinfo) { // { id, isPrivate }
         console.error(errString);
         logEvents(errString, 'hackLog.txt') // Log the exploit to the hackLog!
         // return ws.metadata.sendmessage(ws, "general", "notify", "Cannot accept our own invite.");
-        return ws.metadata.sendmessage(ws, "general", "notify", "Silly goose. You can't accept your own invite!");
+        return ws.metadata.sendmessage(ws, "general", "notify", "ws-accept_own_invite");
     }
 
     // Make sure it's legal for them to accept. (Not legal if they are a guest and the invite is RATED)

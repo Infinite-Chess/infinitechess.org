@@ -5,10 +5,54 @@
   },
   "2": {
     "note": "added login.login_button on line 448",
-    "changes": []
+    "changes": ["login.login_button"]
   },
   "3": {
     "note": "added play.javascript.invites.start_game on line 314",
-    "changes": []
+    "changes": ["play.javascript.invites.start_game"]
+  },
+  "4": {
+    "note": "Deleted create-account.argreement on line 100, and replaced it with create-account.agreement which is different. Added several entries to server.javascript. Deleted play.play-menu.variants. Added several entries to play.play-menu.",
+    "changes": ["create-account.argreement",
+                "create-account.agreement",
+                "server.javascript.ws-already_in_game",
+                "server.javascript.ws-no_create_invite_value",
+                "server.javascript.ws-player_already_invited",
+                "server.javascript.ws-modify_invite_parameters",
+                "server.javascript.ws-invite_cancelled",
+                "server.javascript.ws-cannot_delete_invite",
+                "server.javascript.ws-no_accept_invite_value",
+                "server.javascript.ws-invite_must_have_id",
+                "server.javascript.ws-accept_own_invite",
+                "server.javascript.ws-server_restarting",
+                "server.javascript.ws-minutes",
+                "play.play-menu.variants",
+                "play.play-menu.Classical",
+                "play.play-menu.Classical_Plus",
+                "play.play-menu.CoaIP",
+                "play.play-menu.Pawndard",
+                "play.play-menu.Knighted_Chess",
+                "play.play-menu.Knightline",
+                "play.play-menu.Core",
+                "play.play-menu.Standarch",
+                "play.play-menu.Pawn_Horde",
+                "play.play-menu.Space_Classic",
+                "play.play-menu.Space",
+                "play.play-menu.Obstocean",
+                "play.play-menu.Abundance",
+                "play.play-menu.Amazon_Chandelier",
+                "play.play-menu.Containment",
+                "play.play-menu.Classical_Limit_7",
+                "play.play-menu.CoaIP_Limit_7",
+                "play.play-menu.Chess",
+                "play.play-menu.Classical_KOTH",
+                "play.play-menu.CoaIP_KOTH",
+                "play.play-menu.Omega",
+                "play.play-menu.Omega_Squared",
+                "play.play-menu.Omega_Cubed",
+                "play.play-menu.Omega_To_The_Fourth",
+                "play.play-menu.no_clock",
+                "play.play-menu.unrated"
+              ]
   }
 }

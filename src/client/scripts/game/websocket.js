@@ -205,7 +205,7 @@ const websocket = (function(){
         try {
             // Parse the stringified JSON message and translate the message from the server if a translation is available
             message = JSON.parse(serverMessage.data); // { sub, action, value, id }
-            if (translations[message]) message = translations[message];
+            if (translations[message.value]) message.value = translations[message.value];
         } catch (error) {
             return console.error('Error parsing incoming message as JSON:', error);
         }
