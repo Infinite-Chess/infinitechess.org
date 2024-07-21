@@ -66,6 +66,8 @@ const guipause = (function(){
     function initListeners() {
         element_resume.addEventListener('click', callback_Resume)
         element_pointers.addEventListener('click', callback_TogglePointers)
+        document.addEventListener('copy', copypastegame.callbackCopy)
+        document.addEventListener('paste', copypastegame.callbackPaste)
         element_copygame.addEventListener('click', copypastegame.callbackCopy)
         element_pastegame.addEventListener('click', copypastegame.callbackPaste)
         element_mainmenu.addEventListener('click', callback_MainMenu)
@@ -75,6 +77,8 @@ const guipause = (function(){
     function closeListeners() {
         element_resume.removeEventListener('click', callback_Resume)
         element_pointers.removeEventListener('click', callback_TogglePointers)
+        document.removeEventListener('copy', copypastegame.callbackCopy)
+        document.removeEventListener('paste', copypastegame.callbackPaste)
         element_copygame.removeEventListener('click', copypastegame.callbackCopy)
         element_pastegame.removeEventListener('click', copypastegame.callbackPaste)
         element_mainmenu.removeEventListener('click', callback_MainMenu)
