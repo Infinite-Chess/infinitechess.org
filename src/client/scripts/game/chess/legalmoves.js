@@ -180,7 +180,7 @@ const legalmoves = (function(){
         for (let i = 0; i < line.length; i++) {
             // What are the coords of this piece?
             const thisPiece = line[i] // { type, coords }
-            const thisPieceSteps = math.getLineSteps(direction, coords, thisPiece.coords)
+            const thisPieceSteps = Math.floor((thisPiece.coords[axis]-coords[axis])/direction[axis])
             const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
             const isFriendlyPiece = color === thisPieceColor
             const isVoid = thisPiece.type === 'voidsN';
@@ -358,9 +358,12 @@ const legalmoves = (function(){
      * @returns {boolean} true if the piece is able to slide to the coordinates
      */
     function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords) {
-        const step = math.getLineSteps(direction, pieceCoords, coords)
+        const axis = direction[0] === 0 ? 1 : 0
+        const coordMag = coords[axis];
+        const min = slideMoveset[0] * direction[axis] + pieceCoords[axis]
+        const max = slideMoveset[1] * direction[axis] + pieceCoords[axis]
 
-        return step >= slideMoveset[0] && step <= slideMoveset[1];
+        return coordMag >= min && coordMag <= max;
     }
 
     /**

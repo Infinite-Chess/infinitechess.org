@@ -217,7 +217,7 @@ const highlights = (function(){
         // First we need to calculate the data of the horizontal slide
         concatData_HighlightedMoves_Sliding_Horz(coords, boundingBoxOfRenderRange.left, boundingBoxOfRenderRange.right)
 
-        // Calculate the data of the vertical slide
+        // Calculate the data of the vertical slide 
         concatData_HighlightedMoves_Sliding_Vert(coords, boundingBoxOfRenderRange.bottom, boundingBoxOfRenderRange.top)
         // Calculate the data of the diagonals
         concatData_HighlightedMoves_Diagonals(coords, boundingBoxOfRenderRange, r, g, b, a)

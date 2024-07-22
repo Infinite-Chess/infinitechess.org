@@ -51,7 +51,7 @@ const highlightline = (function(){
             
             const corner1 = math.getAABBCornerOfLine(line, true);
             
-            let point1 = math.getIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
+            let point1 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
             if (!point1) {continue};
             const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
             const leftLimitPointWorld = math.convertCoordToWorldSpace(leftLimitPointCoord);
@@ -59,7 +59,7 @@ const highlightline = (function(){
 
             const corner2 = math.getAABBCornerOfLine(line, false);
 
-            let point2 = math.getIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner2);
+            let point2 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner2);
             if (!point2) continue; // I hate this
             const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, true);
             const rightLimitPointWorld = math.convertCoordToWorldSpace(rightLimitPointCoord);
@@ -128,13 +128,13 @@ const highlightline = (function(){
 
         const corner1 = math.getAABBCornerOfLine(line, true);
 
-        point1 = math.getIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
+        point1 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
         const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, false);
         point1 = capPointAtSlideLimit(point1, leftLimitPointCoord, false, lineIsVertical);
 
         const corner2 = math.getAABBCornerOfLine(line, false);
 
-        point2 = math.getIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner2);
+        point2 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner2);
         const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, true);
         point2 = capPointAtSlideLimit(point2, rightLimitPointCoord, true, lineIsVertical);
 

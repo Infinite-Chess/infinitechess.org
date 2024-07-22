@@ -504,6 +504,19 @@ const math = (function() {
         // Doesn't intersect any tile in the box.
     }
 
+    /**
+     * Returns the number of steps needed to reach from startCoord to endCoord, rounded down.
+     * @param {number[]} step - [dx,dy]
+     * @param {number[]} startCoord - Coordinates to start on
+     * @param {number[]} endCoord - Coordinate to stop at, proceeding no further
+     * @returns {number} the number of steps
+     */
+    function getLineSteps(step, startCoord, endCoord) {
+        const chebyshevDist = chebyshevDistance(startCoord, endCoord)
+        const stepChebyshev = Math.max(step[0], step[1]);
+        return Math.floor(chebyshevDist / stepChebyshev);
+    }
+
     function convertWorldSpaceToGrid(value) {
         return value / movement.getBoardScale()
     }
@@ -1009,7 +1022,8 @@ const math = (function() {
         convertWorldSpaceToPixels_Virtual,
         getAABBCornerOfLine,
         getCornerOfBoundingBox,
-        getIntersectionEntryTile,
+        getLineIntersectionEntryTile,
+        getLineSteps,
         convertWorldSpaceToGrid,
         euclideanDistance,
         manhattanDistance,
