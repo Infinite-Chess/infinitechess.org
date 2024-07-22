@@ -61,33 +61,41 @@ const movesets = (function() {
             rooks: function () {
                 return {
                     individual: [],
-                    horizontal: [-slideLimit, slideLimit],
-                    vertical: [-slideLimit, slideLimit]
+                    sliding: {
+                        '1,0': [-slideLimit, slideLimit],
+                        '0,1': [-slideLimit, slideLimit]
+                    }
                 }
             },
             bishops: function () {
                 return {
                     individual: [],
-                    diagonalUp: [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
-                    diagonalDown: [-slideLimit, slideLimit]
+                    sliding: {
+                        '1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+                        '1,-1': [-slideLimit, slideLimit]
+                    }
                 }
             },
             queens: function () {
                 return {
                     individual: [],
-                    horizontal: [-slideLimit, slideLimit],
-                    vertical: [-slideLimit, slideLimit],
-                    diagonalUp: [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
-                    diagonalDown: [-slideLimit, slideLimit]
+                    sliding: {
+                        '1,0': [-slideLimit, slideLimit],
+                        '0,1': [-slideLimit, slideLimit],
+                        '1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+                        '1,-1': [-slideLimit, slideLimit]
+                    }
                 }
             },
             royalQueens: function () {
                 return {
                     individual: [],
-                    horizontal: [-slideLimit, slideLimit],
-                    vertical: [-slideLimit, slideLimit],
-                    diagonalUp: [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
-                    diagonalDown: [-slideLimit, slideLimit]
+                    sliding: {
+                        '1,0': [-slideLimit, slideLimit],
+                        '0,1': [-slideLimit, slideLimit],
+                        '1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+                        '1,-1': [-slideLimit, slideLimit]
+                    }
                 }
             },
             chancellors: function () {
@@ -96,8 +104,10 @@ const movesets = (function() {
                         [-2,1],[-1,2],[1,2],[2,1],
                         [-2,-1],[-1,-2],[1,-2],[2,-1]
                     ],
-                    horizontal: [-slideLimit, slideLimit],
-                    vertical: [-slideLimit, slideLimit]
+                    sliding: {
+                        '1,0': [-slideLimit, slideLimit],
+                        '0,1': [-slideLimit, slideLimit]
+                    }            
                 }
             },
             archbishops: function () {
@@ -106,8 +116,10 @@ const movesets = (function() {
                         [-2,1],[-1,2],[1,2],[2,1],
                         [-2,-1],[-1,-2],[1,-2],[2,-1]
                     ],
-                    diagonalUp: [-slideLimit, slideLimit],
-                    diagonalDown: [-slideLimit, slideLimit]
+                    sliding: {
+                        '1,1': [-slideLimit, slideLimit],
+                        '1,-1': [-slideLimit, slideLimit]
+                    }
                 }
             },
             amazons: function () {
@@ -116,10 +128,12 @@ const movesets = (function() {
                         [-2,1],[-1,2],[1,2],[2,1],
                         [-2,-1],[-1,-2],[1,-2],[2,-1]
                     ],
-                    horizontal: [-slideLimit, slideLimit],
-                    vertical: [-slideLimit, slideLimit],
-                    diagonalUp: [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
-                    diagonalDown: [-slideLimit, slideLimit]
+                    sliding: {
+                        '1,0': [-slideLimit, slideLimit],
+                        '0,1': [-slideLimit, slideLimit],
+                        '1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+                        '1,-1': [-slideLimit, slideLimit]
+                    }
                 }
             },
             camels: function () {
@@ -144,6 +158,17 @@ const movesets = (function() {
                         [-3,2],[-2,3],[2,3],[3,2],
                         [-3,-2],[-2,-3],[2,-3],[3,-2]
                     ]
+                }
+            },
+            knightriders: function () {
+                return {
+                    individual: [],
+                    sliding: {
+                        '1,2' : [-slideLimit, slideLimit],
+                        '1,-2' : [-slideLimit,slideLimit],
+                        '2,1' : [-slideLimit,slideLimit],
+                        '2,-1' : [-slideLimit,slideLimit],
+                    }
                 }
             },
             centaurs: function () {

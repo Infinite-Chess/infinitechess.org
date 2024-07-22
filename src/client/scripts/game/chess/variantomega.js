@@ -22,11 +22,11 @@ const variantomega = (function(){
     }
 
     /**
-     * Inits the gamefile for Andreas Tsevas's "Omega^2". Sets the startSnapshot and gameRules properties.
+     * Inits the gamefile for Andreas Tsevas's "Omega_Squared". Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmegaSquared(gamefile, { Variant, Date }) {
-        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega^2' })
+        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega_Squared' })
         gamefile.startSnapshot = {
             position,
             positionString,
@@ -37,11 +37,11 @@ const variantomega = (function(){
     }
 
     /**
-     * Inits the gamefile for the Omega^3 position. Sets the startSnapshot and gameRules properties.
+     * Inits the gamefile for the Omega_Cubed position. Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmegaCubed(gamefile, { Variant, Date }) {
-        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega^3' })
+        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega_Cubed' })
         gamefile.startSnapshot = {
             position,
             positionString,
@@ -52,11 +52,11 @@ const variantomega = (function(){
     }
 
     /**
-     * Inits the gamefile for the Omega^3 position. Sets the startSnapshot and gameRules properties.
+     * Inits the gamefile for the Omega_Fourth position. Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmegaFourth(gamefile, { Variant, Date }) {
-        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega^4' })
+        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega_Fourth' })
         gamefile.startSnapshot = {
             position,
             positionString,

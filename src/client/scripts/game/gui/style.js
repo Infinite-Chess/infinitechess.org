@@ -117,17 +117,6 @@ const style = (function() {
 
         return textContents;
     }
-    
-    /**
-     * Gets the value of a specified attribute from an element.
-     *
-     * @param {HTMLElement} element - The element from which to read the attribute.
-     * @param {string} attributeName - The name of the attribute to read.
-     * @returns {string | null} The value of the attribute, or null if the attribute does not exist.
-     */
-    function getAttributeValue(element, attributeName) {
-        return element.getAttribute(attributeName);
-    }
 
     return Object.freeze({
         hideElement,
@@ -135,8 +124,7 @@ const style = (function() {
         setNavStyle,
         fadeIn1s,
         fadeOut1s,
-        getChildrenTextContents,
-        getAttributeValue
+        getChildrenTextContents
     })
 
 })();
