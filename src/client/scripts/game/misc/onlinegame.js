@@ -706,7 +706,7 @@ const onlinegame = (function(){
             serverRestart.time = false;
             return; // Print no more server restarting messages
         }
-        const minutes_plurality = minutesLeft > 1 ? translations["onlinegame"]["minutes"] : translations["onlinegame"]["minute"];
+        const minutes_plurality = minutesLeft == 1 ? translations["onlinegame"]["minute"] : translations["onlinegame"]["minutes"];
         statustext.showStatus(`${translations["onlinegame"]["server_restarting_in"]} ${minutesLeft} ${minutes_plurality}...`, false, 2)
         let nextKeyMinute;
         for (const keyMinute of serverRestart.keyMinutes) {
