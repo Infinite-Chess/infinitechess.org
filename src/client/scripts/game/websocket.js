@@ -283,12 +283,13 @@ const websocket = (function(){
     /**
      * Called when we receive an incoming server message with route "general" and action "notify" or "notifyerror"
      * @param {Object} messagevalue - An object of the form { text: "blabla", number: 32 }
-     * @returns translated text in messagevalue.text, potentially enhanced with messagevalue.number
+     * @returns the translated text in messagevalue.text, potentially enhanced with messagevalue.number
      */
     function getTranslatedAndAssembledMessage(messagevalue){
         let text = messagevalue.text;
         if (translations[text]) text = translations[text];
         if (number in messagevalue){
+            // special case: number of minutes to be displayed upon server restart
             if (messagevalue.text == "ws-server_restarting"){
                 const minutes = messagevalue.number;
                 const minutes_plurality = minutes == 1 ? translations["ws-minute"] : translations["ws-minutes"];
