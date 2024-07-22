@@ -1,6 +1,6 @@
-name = "Polish" # Name of language
+name = "Polski" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "3"
+version = "5"
 
 [header]
 home = "Strona Główna"
@@ -40,11 +40,11 @@ about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
 ["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
 ]
-patreon_title = "Patreon Supporters"
+patreon_title = "Wspierający Patreon"
 
 [credits]
 title = "Credits"
-copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
+copyright = "Wszystko, co nie jest wypisane poniżej, jest własnością www.InfiniteChess.org"
 variants_heading = "Variants"
 variants_credits = [
 "Core designed by Andreas Tsevas.",
@@ -53,8 +53,8 @@ variants_credits = [
 "Coaip (Chess on an Infinite Plane) designed by Vickalan.",
 "Pawn Horde designed by Inaccessible Cardinal.",
 "Abundance designed by Clicktuck Suskriberz.",
-"Pawndard by SexiLexi.",
-"Classical+ by SexiLexi.",
+"Pawndard by SexyLexi.",
+"Classical+ by SexyLexi.",
 "Knightline by Inaccessible Cardinal.",
 "Knighted Chess by cycy98.",
 "designed by Cory Evans and Joel Hamkins.",
@@ -85,8 +85,8 @@ verify_confirm = "Dziękujemy! Twoje konto zostało zarejestrowane pomyślnie."
 rating = "Kwalifikacja ELO:"
 joined = "Dołączył:"
 seen = ["Ostatnio widziany:", " temu"]
-reveal_info = "Show Account Info"
-account_info_heading = "Account Info"
+reveal_info = "Pokaż informacje o koncie"
+account_info_heading = "Informacje o koncie"
 email = "Adres e-mail:"
 delete_account = "Usuń konto"
 password_reset_message = ["Aby zmienić nazwę użytkownika, e-mail lub hasło, ", "napisz do nas."]
@@ -97,11 +97,11 @@ username = "Nazwa użytkownika:"
 email = "E-mail:"
 password = "Hasło:"
 create_button = "Zarejestruj się"
-argreement = ["Zgadzam się na ", "Warunki korzystania z usługi"]
+agreement = ["Zgadzam się na ", "Warunki korzystania z usługi"]
 
 [create-account.javascript]
-js-username_specs = "Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9"
-js-username_tooshort = "Username must be at least 3 characters long"
+js-username_specs = "Nazwa użytkownika musi posiadać przynajmniej 3 znaki oraz zawierać tylko litery A-Z i cyfry 0-9"
+js-username_tooshort = "Nazwa użytkownika musi poisadać przynajmniej 3 znaki"
 js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
 js-email_invalid = "This is not a valid email"
 js-email_inuse = "This email is already in use"
@@ -178,32 +178,31 @@ online = "Online"
 local = "Lokalnie"
 computer = "Komputer"
 variant = "Variant"
-variants = [
-"Klasyczny",
-"Klasyczny+",
-"Chess on an Infinite Plane",
-"Pawndard",
-"Knighted Chess",
-"Knightline",
-"Core",
-"Standarch",
-"Pawn Horde",
-"Space Classic",
-"Space",
-"Obstocean",
-"Abundance",
-"Amazon Chandelier",
-"Containment",
-"Classical - Limit 7",
-"Coaip - Limit 7",
-"Szachy",
-"Experimental: Classical - KOTH",
-"Experimental: Coaip - KOTH",
-"Showcase: Omega",
-"Showcase: Omega^2",
-"Showcase: Omega^3",
-"Showcase: Omega^4",
-]
+Classical = "Klasyczny"
+Classical_Plus = "Klasyczny+"
+CoaIP = "Chess on an Infinite Plane"
+Pawndard = "Pawndard"
+Knighted_Chess = "Knighted Chess"
+Knightline = "Knightline"
+Core = "Core"
+Standarch = "Standarch"
+Pawn_Horde = "Pawn Horde"
+Space_Classic = "Space Classic"
+Space = "Space"
+Obstocean = "Obstocean"
+Abundance = "Abundance"
+Amazon_Chandelier = "Amazon Chandelier"
+Containment = "Containment"
+Classical_Limit_7 = "Classical - Limit 7"
+CoaIP_Limit_7 = "Coaip - Limit 7"
+Chess = "Szachy"
+Classical_KOTH = "Experimental: Classical - KOTH"
+CoaIP_KOTH = "Experimental: Coaip - KOTH"
+Omega = "Showcase: Omega"
+Omega_Squared = "Showcase: Omega^2"
+Omega_Cubed = "Showcase: Omega^3"
+Omega_Fourth = "Showcase: Omega^4"
+no_clock = "No Clock"
 clock = "Zegar"
 minutes = "min"
 seconds = "s"
@@ -213,9 +212,9 @@ piece_colors = ["Losowy", "Biały", "Czarny"]
 private = "Prywatny"
 no = "Nie"
 yes = "Tak"
-rated = "Rated"
-join_games = "Join Existing - Active Games:"
-private_invite = "Private Invite:"
+rated = "Ocenione"
+join_games = "Dołącz do istniejącej gry - Aktywne gry:"
+private_invite = "Osobiste zaproszenie:"
 your_invite = "Twój kod zaproszeniowy:"
 create_invite = "Utwórz kod zaproszeniowy"
 join = "Dołącz"
@@ -229,8 +228,8 @@ player_white = "Player white"
 player_black = "Player black"
 
 [play.pause]
-title = "Paused"
-resume = "Resume"
+title = "Zatrzymaj"
+resume = "Wznów"
 arrows = "Arrows: Defense"
 perspective = "Perspective: Off"
 copy = "Copy Game"
@@ -442,11 +441,11 @@ update = "(Last updated: 7/13/24. Added warning that all games played may become
 thanks = "Thank you!"
 
 [login]
-title = "Log In"
-username = "Username:"
-password = "Password:"
-forgot_password = ["Forgot? ", "Email us."]
-login_button = "Log In"
+title = "Zaloguj się"
+username = "Nazwa użytkownika:"
+password = "Hasło:"
+forgot_password = ["Zapomniałeś hasła? ", "Skontaktuj się z nami."]
+login_button = "Zaloguj się"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
@@ -456,8 +455,12 @@ login_button = "Log In"
 ########### NEWS ###########
 
 [news]
-title = "News"
+title = "Aktualności"
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+
+[news.july22-2024]
+date = "July 22, 2024:"
+account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
 
 [news.july13-2024]
 date = "July 13, 2024:"
@@ -499,36 +502,50 @@ text_top = "Infinite Chess v1.2 has been released! Introducing Move History. Use
 text_box = "The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!"
 
 [server.javascript]
-ws-invalid_username = "Username is invalid"
-ws-incorrect_password = "Password is incorrect"
-ws-username_and_password_required = "Username and password are required."
-ws-username_and_password_string = "Username and password must be a string."
-ws-login_failure_retry_in = "Failed to login, try again in"
-ws-seconds = "seconds" # unit of time
-ws-second = "second" # unit of time
-ws-username_length = "Username must be between 3-20 characters"
-ws-username_letters = "Username must only contain letters A-Z and numbers 0-9"
-ws-username_taken = "That username is taken"
-ws-username_bad_word = "That username contains a word that is not allowed"
-ws-email_too_long = "Your email is too looooooong."
-ws-email_invalid = "This is not a valid email"
-ws-email_in_use = "This email is already in use"
-ws-you_are_banned = "You are banned."
-ws-password_length = "Password must be 6-72 characters long"
-ws-password_format = "Password is in an incorrect format"
-ws-password_password = "Password must not be 'password'"
-ws-refresh_token_not_found_logged_out = "No member has that refresh token (already logged out)"
+ws-invalid_username = "Nazwa użytkownika jest nieprawidłowa!"
+ws-incorrect_password = "Hasło jest niepoprawne!"
+ws-username_and_password_required = "Nazwa użytkownika oraz hasło są wymagane."
+ws-username_and_password_string = "Nazwa użytkownika i hasło muszą być typu 'string'."
+ws-login_failure_retry_in = "Wystąpił problem z logowaniem, spróbuj ponownie."
+ws-seconds = "sekundy" # unit of time
+ws-second = "sekunda" # unit of time
+ws-username_length = "Nazwa użytkownika musi posiadać od 3 do 20 znaków"
+ws-username_letters = "Nazwa użytkownika może zawierać tylko litery A-Z oraz cyfry 0-9"
+ws-username_taken = "Nazwa użytkownika jest zajęta"
+ws-username_bad_word = "Nazwa użytkownika zawiera słowo, które jest zabronione!"
+ws-username_reserved = "Nazwa użytkownika jest zarezerwowana"
+ws-email_too_long = "Twój adres e-mail jest za dłuuuuuuuuuuuugi."
+ws-email_invalid = "Adres e-mail jest niepoprawny."
+ws-email_in_use = "Adres e-mail jest już w użyciu."
+ws-you_are_banned = "Jesteś zbanowany."
+ws-password_length = "Hasło musi posiadać od 6 do 72 znaków"
+ws-password_format = "Hasło ma niepoprwany format."
+ws-password_password = "Hasło nie może być 'hasłem'"
+ws-refresh_token_not_found_logged_out = "No member has that refresh token (wylogowano)"
 ws-refresh_token_not_found = "No member has that refresh token"
-ws-refresh_token_expired = "No refresh token found (expired session)"
+ws-refresh_token_expired = "No refresh token found (sesja wygasła)"
 ws-refresh_token_invalid = "Refresh token expired or tampered"
 ws-member_not_found = "Member not found"
-ws-forbidden_wrong_account = "Forbidden. This is not your account."
+ws-forbidden_wrong_account = "Zabronione. To nie jest twoje konto."
 ws-deleting_account_not_found = "Failed to delete account. Account not found."
 ws-server_error = "Sorry, there was a server error! Please go back."
 ws-unable_to_identify_client_ip = "Unable to identify client IP address"
-ws-you_are_banned_by_server = "You are banned"
-ws-too_many_requests_to_server = "Too Many Requests. Try again soon."
+ws-you_are_banned_by_server = "Jesteś zbanowany."
+ws-too_many_requests_to_server = "Za dużo requests. Spróbuj ponownie później."
 ws-bad_request = "Bad Request"
-ws-not_found = "404 Not Found"
-ws-forbidden = "Forbidden."
+ws-not_found = "404 Nieznaleziono"
+ws-forbidden = "Zabronione."
 ws-unauthorized_patron_page = "Unauthorized. This page is patron-exclusive."
+ws-already_in_game = "Już jestes w grze."
+ws-player_already_has_invite = "Player already has an open invite."
+ws-invite_cancelled = "Invite already cancelled."
+ws-accept_own_invite = "Nie możesz zaakceptować swojego zaproszenia głuptasie!"
+ws-server_restarting = "The server is restarting in"
+ws-minutes = "minuty" # unit of time
+ws-minute = "minuta" # unit of time
+ws-no_abort_game_over = "Can't abort game, it's already over."
+ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played."
+ws-game_aborted_cheating = "Game aborted for probable cheating."
+ws-cannot_resign_finished_game = "Can't resign game, it's already over."
+ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
+ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
