@@ -22,6 +22,7 @@ const pieces = (function () {
     let spritesheet; // Texture. 8x8 containing every texture of every piece, black and white.
     let spritesheetData; // Contains where each piece is located in the spritesheet (texture coord)
 
+    /** Opacity of ghost piece over legal move highlights. Default: 0.4 */
     const ghostOpacity = 0.4;
 
     // Amount of extra undefined pieces to store with each type array!

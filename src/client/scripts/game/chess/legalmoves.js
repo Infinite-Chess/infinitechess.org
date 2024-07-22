@@ -81,7 +81,7 @@ const legalmoves = (function(){
         const trimmedType = math.trimWorBFromType(type);
         const color = math.getPieceColorFromType(type) // Color of piece calculating legal moves of
 
-        if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
+        // if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
 
         const thisPieceMoveset = getPieceMoveset(gamefile, type) // Default piece moveset
 

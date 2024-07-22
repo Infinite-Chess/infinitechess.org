@@ -98,7 +98,7 @@ const highlights = (function(){
         // Get an array of the list of legal squares the current selected piece can move to
         const theseLegalMoves = selection.getLegalMovesOfSelectedPiece().individual
 
-        const legalMovesHighlightColor = options.getDefaultLegalMoveHighlight();
+        const legalMovesHighlightColor = options.getLegalMoveHighlightColor();
 
         const data = []
 
@@ -208,7 +208,7 @@ const highlights = (function(){
 
         const coords = selection.getPieceSelected().coords
 
-        const [r,g,b,a] = options.getDefaultLegalMoveHighlight(); // Legal moves highlight color
+        const [r,g,b,a] = options.getLegalMoveHighlightColor(); // Legal moves highlight color
 
         // How do we go about calculating the vertex data of our sliding moves?
         // We COULD minimize how often we regenerate the buffer model by extending these lines beyond our field of view.
@@ -227,7 +227,7 @@ const highlights = (function(){
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
         if (!legalMoves.sliding['1,0']) return; // Break if no legal horizontal slide
 
-        const [r,g,b,a] = options.getDefaultLegalMoveHighlight();
+        const [r,g,b,a] = options.getLegalMoveHighlightColor();
 
         // Left
 
@@ -258,7 +258,7 @@ const highlights = (function(){
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
         if (!legalMoves.sliding['0,1'])  return; // Break if there no legal vertical slide
 
-        const [r,g,b,a] = options.getDefaultLegalMoveHighlight();
+        const [r,g,b,a] = options.getLegalMoveHighlightColor();
 
         // Bottom
 

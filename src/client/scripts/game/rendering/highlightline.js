@@ -31,7 +31,7 @@ const highlightline = (function(){
         const pieceCoords = selection.getPieceSelected().coords;
         const worldSpaceCoords = math.convertCoordToWorldSpace(pieceCoords)
 
-        const color = math.deepCopyObject(options.getDefaultLegalMoveHighlight());
+        const color = math.deepCopyObject(options.getLegalMoveHighlightColor());
         color[3] = 1;
 
         const snapDist = miniimage.gwidthWorld() / 2;
