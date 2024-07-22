@@ -770,7 +770,7 @@ const gamemanager = (function() {
 
         if (isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
             console.error("Player tried to resign game when the game is already over!")
-            ws.metadata.sendmessage(ws, 'general', 'printerror', "Can't resign game, it's already over.")
+            ws.metadata.sendmessage(ws, 'general', 'notify', { text: "ws-cannot_resign_finished_game" })
             const colorPlayingAs = doesSocketBelongToGame_ReturnColor(game, ws);
             subscribeClientToGame(game, ws, colorPlayingAs);
             return;

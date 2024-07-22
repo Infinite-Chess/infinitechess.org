@@ -192,7 +192,7 @@ function checkUsernameAvailable(req, res) {
 
     if (doesMemberExist(usernameLowercase)) { allowed = false; reason = "ws-username_taken"; }
     if (checkProfanity(usernameLowercase)) { allowed = false; reason = "ws-username_bad_word"; }
-    if (reservedUsernames.includes(usernameLowercase)) { allowed = false; reason = "ws-username_taken"; } // Code for reserved (but the users don't know that!)
+    if (reservedUsernames.includes(usernameLowercase)) { allowed = false; reason = "ws-username_reserved"; } // Code for reserved
 
     return res.json({
         allowed,

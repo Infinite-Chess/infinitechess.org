@@ -42,6 +42,7 @@
                 "play.play-menu.Omega_Fourth",
                 "play.play-menu.no_clock",
                 "play.play-menu.unrated",
+                "server.javascript.ws-username_reserved",
                 "server.javascript.ws-already_in_game",
                 "server.javascript.ws-player_already_has_invite",
                 "server.javascript.ws-invite_cancelled",
@@ -52,6 +53,7 @@
                 "server.javascript.ws-no_abort_game_over",
                 "server.javascript.ws-no_abort_after_moves",
                 "server.javascript.ws-game_aborted_cheating",
+                "server.javascript.ws-cannot_resign_finished_game",
                 "server.javascript.ws-invalid_code",
                 "server.javascript.ws-game_aborted"
               ]
