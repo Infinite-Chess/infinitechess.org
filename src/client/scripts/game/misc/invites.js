@@ -281,7 +281,7 @@ const invites = (function(){
     function getInviteFromElement(inviteElement) {
         /** @type {string[]} */
         const childrenTextContent = style.getChildrenTextContents(inviteElement);
-        const id = style.getAttributeValue(inviteElement, 'id');
+        const id = inviteElement.getAttribute('id')
         
         /**
          * Starting from the first child, the order goes:
