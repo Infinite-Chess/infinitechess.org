@@ -31,6 +31,7 @@ const formatconverter = (function() {
         "centaursW": "CE", "centaursB": "ce",
         "royalQueensW": "RQ", "royalQueensB": "rq",
         "royalCentaursW": "RC", "royalCentaursB": "rc",
+        "knightridersW": "NR", "knightridersB": "nr",
         "obstaclesN": "ob",
         "voidsN": "vo"
     };

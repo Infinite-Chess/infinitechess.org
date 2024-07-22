@@ -10,10 +10,7 @@
 /** An object containing all the legal moves of a piece.
  * @typedef {Object} LegalMoves
  * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
- * @property {number[]} horizontal - A length-2 array containing the legal left and right slide limits: `[-5, Infinity]`
- * @property {number[]} vertical - A length-2 array containing the legal bottom and top slide limits: `[-Infinity, 1]`
- * @property {number[]} diagonalUp - A length-2 array containing the legal down-left, and up-right slides, where the number represents the `x` limit: `[-Infinity, 7]`
- * @property {number[]} diagonalDown - A length-2 array containing the legal up-left, and down-right slides, where the number represents the `x` limit: `[3, 15]`
+ * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
  */
 
 const legalmoves = (function(){
@@ -34,7 +31,9 @@ const legalmoves = (function(){
         // For every piece moveset...
         for (let i = 0; i < pieces.white.length; i++) {
             const thisPieceType = pieces.white[i]
-            const thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
+            var thisPieceIndividualMoveset
+            if (getPieceMoveset(gamefile, thisPieceType).individual) thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
+            else thisPieceIndividualMoveset = []
 
             // For each individual move...
             for (let a = 0; a < thisPieceIndividualMoveset.length; a++) {
@@ -87,10 +86,7 @@ const legalmoves = (function(){
         const thisPieceMoveset = getPieceMoveset(gamefile, type) // Default piece moveset
 
         let legalIndividualMoves = [];
-        let legalHorizontalMoves;
-        let legalVerticalMoves;
-        let legalUpDiagonalMoves;
-        let legalDownDiagonalMoves;
+        let legalSliding = {};
 
         if (!onlyCalcSpecials) {
 
@@ -98,17 +94,18 @@ const legalmoves = (function(){
     
             shiftIndividualMovesetByCoords(thisPieceMoveset.individual, coords)
             legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color)
-    
+            
             // Legal sliding moves
-    
-            let key = coords[1]; // Key is y level for horizontal slide
-            legalHorizontalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByRow[key], false, thisPieceMoveset.horizontal, coords, color)
-            key = coords[0] // Key is x for vertical slide
-            legalVerticalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByColumn[key], true, thisPieceMoveset.vertical, coords, color)
-            key = math.getUpDiagonalFromCoords(coords) // Key is -x + y for up-diagonal slide
-            legalUpDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByUpDiagonal[key], false, thisPieceMoveset.diagonalUp, coords, color)
-            key = math.getDownDiagonalFromCoords(coords) // Key is x + y for down-diagonal slide
-            legalDownDiagonalMoves = slide_CalcLegalLimit(gamefile.piecesOrganizedByDownDiagonal[key], false, thisPieceMoveset.diagonalDown, coords, color)
+            if (thisPieceMoveset.sliding) {
+                let lines = gamefile.startSnapshot.slidingPossible;
+                for (let i=0; i<lines.length; i++) {
+                    const line = lines[i];
+                    if (!thisPieceMoveset.sliding[line]) continue;
+                    const key = organizedlines.getKeyFromLine(line,coords);
+                    legalSliding[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line, thisPieceMoveset.sliding[line], coords, color);
+                };
+            };
+
         }
         
         // Add any special moves!
@@ -116,10 +113,7 @@ const legalmoves = (function(){
 
         let moves = {
             individual: legalIndividualMoves,
-            horizontal: legalHorizontalMoves,
-            vertical: legalVerticalMoves,
-            diagonalUp: legalUpDiagonalMoves,
-            diagonalDown: legalDownDiagonalMoves,
+            sliding: legalSliding
         }
         
         // Skip if we've selected the opposite side's piece (edit mode)
@@ -164,47 +158,49 @@ const legalmoves = (function(){
         return individualMoves;
     }
 
-    // Takes in specified organized list, direction of the slide, the current moveset...
-    // Shortens the moveset by pieces that block it's path.
-    function slide_CalcLegalLimit (organizedLine, lineIsVertical, slideMoveset, coords, color) {
+    /**
+     * Takes in specified organized list, direction of the slide, the current moveset...
+     * Shortens the moveset by pieces that block it's path.
+     * @param {Piece[]} line - The list of pieces on this line 
+     * @param {number[]} direction - The direction of the line: `[dx,dy]` 
+     * @param {number[]} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
+     * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
+     * @param {string} color - The color of friendlies
+     */
+    function slide_CalcLegalLimit (line, direction, slideMoveset, coords, color) {
 
-        if (!slideMoveset) return // Return undefined if there is no slide moveset
+        if (!slideMoveset) return; // Return undefined if there is no slide moveset
 
         // The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
-        // For most we'll be comparing the x values, only exception is the columns.
-        const zeroOrOne = lineIsVertical ? 1 : 0 
-        const limit = [slideMoveset[0] + coords[zeroOrOne], slideMoveset[1] + coords[zeroOrOne]]
-
+        // For most we'll be comparing the x values, only exception is the vertical lines.
+        const axis = direction[0] == 0 ? 1 : 0 
+        const limit = math.copyCoords(slideMoveset);
         // Iterate through all pieces on same line
-        for (let i = 0; i < organizedLine.length; i++) {
+        for (let i = 0; i < line.length; i++) {
             // What are the coords of this piece?
-            const thisPiece = organizedLine[i] // { type, coords }
-            const thisPieceXorY = thisPiece.coords[zeroOrOne]
+            const thisPiece = line[i] // { type, coords }
+            const thisPieceSteps = Math.floor((thisPiece.coords[axis]-coords[axis])/direction[axis])
             const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
             const isFriendlyPiece = color === thisPieceColor
             const isVoid = thisPiece.type === 'voidsN';
-
             // Is the piece to the left of us or right of us?
-            if (thisPieceXorY < coords[zeroOrOne]) { // To our left
+            if (thisPieceSteps < 0) { // To our left
 
                 // What would our new left slide limit be? If it's an opponent, it's legal to capture it.
-                const newLeftSlideLimit = isFriendlyPiece || isVoid ? thisPieceXorY + 1 : thisPieceXorY
-
+                const newLeftSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps + 1 : thisPieceSteps
                 // If the piece x is closer to us than our current left slide limit, update it
                 if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit
 
-            } else if (thisPieceXorY > coords[zeroOrOne]) { // To our right
+            } else if (thisPieceSteps > 0) { // To our right
 
                 // What would our new right slide limit be? If it's an opponent, it's legal to capture it.
-                const newRightSlideLimit = isFriendlyPiece || isVoid ? thisPieceXorY - 1 : thisPieceXorY
-
+                const newRightSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps - 1 : thisPieceSteps
                 // If the piece x is closer to us than our current left slide limit, update it
                 if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit
 
             } // else this is us, don't do anything.
         }
-
         return limit;
     }
 
@@ -237,38 +233,17 @@ const legalmoves = (function(){
             }
         }
 
-        // Do one of the horizontal moves match?
-        const horizontal = legalMoves.horizontal;
-        if (horizontal && endCoords[1] == startCoords[1]) {
-            // Compare the clicked x tile with this horizontal moveset
-            if (endCoords[0] >= horizontal[0] && endCoords[0] <= horizontal[1]) return true;
-        }
+        for (var strline in legalMoves.sliding) {
+            let line = math.getCoordsFromKey(strline); // 'dx,dy'
+            let limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
 
-        // Do one of the vertical moves match?
-        const vertical = legalMoves.vertical;
-        if (vertical && endCoords[0] == startCoords[0]) {
-            // Compare the clicked y tile with this vertical moveset
-            if (endCoords[1] >= vertical[0] && endCoords[1] <= vertical[1]) return true;
-        }
+            let selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);
+            let clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
+            if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
-        // Do one of the up-diagonal moves match?
-        const diagonalUp = legalMoves.diagonalUp;
-        let selectedPieceDiagonal = math.getUpDiagonalFromCoords(startCoords);
-        let clickedCoordsDiagonal = math.getUpDiagonalFromCoords(endCoords);
-        if (diagonalUp && selectedPieceDiagonal == clickedCoordsDiagonal) {
-            // Compare the clicked x tile with this diagonal moveset
-            if (endCoords[0] >= diagonalUp[0] && endCoords[0] <= diagonalUp[1]) return true;
+            if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords)) continue;
+            return true;
         }
-
-        // Do one of the down-diagonal moves match?
-        const diagonalDown = legalMoves.diagonalDown;
-        selectedPieceDiagonal = math.getDownDiagonalFromCoords(startCoords);
-        clickedCoordsDiagonal = math.getDownDiagonalFromCoords(endCoords);
-        if (diagonalDown && selectedPieceDiagonal == clickedCoordsDiagonal) {
-            // Compare the clicked x tile with this diagonal moveset
-            if (endCoords[0] >= diagonalDown[0] && endCoords[0] <= diagonalDown[1]) return true;
-        }
-
         return false;
     }
 
@@ -370,25 +345,41 @@ const legalmoves = (function(){
         }
     }
 
+    // TODO: moveset changes
     // This requires coords be on the same line as the sliding moveset.
-    function doesSlideMovesetContainSquare (slideMoveset, lineIsVertical, coords) {
 
-        const xOrY = lineIsVertical ? coords[1] : coords[0];
+    /**
+     * Tests if the piece's precalculated slideMoveset is able to reach the provided coords.
+     * ASSUMES the coords are on the direction of travel!!!
+     * @param {number[]} slideMoveset - The distance the piece can move along this line: `[left,right]`. If the line is vertical, this will be `[bottom,top]`.
+     * @param {number[]} direction - The direction of the line: `[dx,dy]`
+     * @param {number[]} pieceCoords - The coordinates of the piece with the provided sliding net
+     * @param {number[]} coords - The coordinates we want to know if they can reach.
+     * @returns {boolean} true if the piece is able to slide to the coordinates
+     */
+    function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords) {
+        // const step = math.getLineSteps(direction, pieceCoords, coords)
+        // return step >= slideMoveset[0] && step <= slideMoveset[1];
 
-        if (xOrY < slideMoveset[0]) return false;
-        if (xOrY > slideMoveset[1]) return false;
 
-        return true;
+        const axis = direction[0] === 0 ? 1 : 0
+        const coordMag = coords[axis];
+        const min = slideMoveset[0] * direction[axis] + pieceCoords[axis]
+        const max = slideMoveset[1] * direction[axis] + pieceCoords[axis]
+
+        return coordMag >= min && coordMag <= max;
     }
 
-    // Accepts the calculated legal moves, tests to see if there are any
+    /**
+     * Accepts the calculated legal moves, tests to see if there are any
+     * @param {LegalMoves} moves 
+     * @returns {boolean} 
+     */
     function hasAtleast1Move (moves) { // { individual, horizontal, vertical, ... }
         
         if (moves.individual.length > 0) return true;
-        if (doesSlideHaveWidth(moves.horizontal)) return true;
-        if (doesSlideHaveWidth(moves.vertical)) return true;
-        if (doesSlideHaveWidth(moves.diagonalUp)) return true;
-        if (doesSlideHaveWidth(moves.diagonalDown)) return true;
+        for (var line in moves.sliding)
+            if (doesSlideHaveWidth(moves.sliding[line])) return true;
 
         function doesSlideHaveWidth(slide) { // [-Infinity, Infinity]
             if (!slide) return false;
@@ -403,7 +394,7 @@ const legalmoves = (function(){
         getPieceMoveset,
         calculate,
         checkIfMoveLegal,
-        doesSlideMovesetContainSquare,
+        doesSlidingMovesetContainSquare,
         hasAtleast1Move,
         slide_CalcLegalLimit,
         isOpponentsMoveLegal

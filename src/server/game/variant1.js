@@ -48,7 +48,54 @@ const variant1 = (function() {
         if (options) initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options) // Ignores the "Variant" metadata, and just uses the specified startingPosition
         else initStartSnapshotAndGamerules(gamefile, metadata) // Default (built-in variant, not pasted)
 
+        initExistingTypes(gamefile);
         initPieceMovesets(gamefile)
+        initSlidingMoves(gamefile)
+    }
+
+    /**
+     * Sets the `existingTypes` property of the `startSnapshot` of the gamefile,
+     * which contains all types of pieces in the game, without their color extension.
+     * @param {gamefile} gamefile 
+     */
+    function initExistingTypes(gamefile) {
+        const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
+        const rawtypes = new Set();
+        for (const tpiece of teamtypes) {
+            rawtypes.add(math1.trimWorBFromType(tpiece)); // Make a set wit the team colour trimmed
+        }
+        gamefile.startSnapshot.existingTypes = rawtypes;
+    }
+
+    /**
+     * Inits the `slidingMoves` property of the `startSnapshot` of the gamefile.
+     * This contains the information of what slides are possible, according to
+     * what piece types are in this game.
+     * @param {gamefile} gamefile 
+     */
+    function initSlidingMoves(gamefile) {
+        gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile)
+    }
+
+    /**
+     * Calculates all possible slides that should be possible in the provided game,
+     * excluding pieces that aren't in the provided position.
+     * @param {gamefile} gamefile
+     */
+    function getPossibleSlides(gamefile) {
+        const rawtypes = gamefile.startSnapshot.existingTypes;
+        const movesets = gamefile.pieceMovesets;
+        const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
+        for (const type of rawtypes) {
+            let moveset = movesets[type];
+            if (!moveset) continue;
+            moveset = moveset();
+            if (!moveset.sliding) continue;
+            Object.keys(moveset.sliding).forEach( slide => { slides.add(slide) });
+        }
+        let temp = [];
+        slides.forEach(slideline => { temp.push(math1.getCoordsFromKey(slideline)) })
+        return temp;
     }
 
     /**
@@ -198,7 +245,7 @@ const variant1 = (function() {
             default:
                 throw new Error('Unknown variant.')
         }
-
+        
         // Every variant has the exact same initial moveRuleState value.
         if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0
         gamefile.startSnapshot.fullMove = 1; // Every variant has the exact same fullMove value.
@@ -304,7 +351,7 @@ const variant1 = (function() {
                 positionString = 'k5,8+|n3,8|n4,8|n6,8|n7,8|p-5,7+|p-4,7+|p-3,7+|p-2,7+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,7+|p12,7+|p13,7+|p14,7+|p15,7+|K5,1+|N3,1|N4,1|N6,1|N7,1|P-5,2+|P-4,2+|P-3,2+|P-2,2+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,2+|P12,2+|P13,2+|P14,2+|P15,2+';
                 return getStartSnapshotPosition({ positionString })
             case "Knighted_Chess":
-                positionString = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+';
+                positionString = getPositionStringOfKnightedChess(Date);
                 return getStartSnapshotPosition({ positionString })
             case "Omega": // Joel & Cory's version
                 positionString = 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3|Q-1,-3|P2,-3|K0,-4'
@@ -344,6 +391,20 @@ const variant1 = (function() {
         if (UTCTimeStamp < 1709017200000) return "p-3,15+|q4,15|p11,15+|p-4,14+|b4,14|p12,14+|p-5,13+|r2,13|b4,13|r6,13|p13,13+|p3,5+|p4,5+|p5,5+|n3,4|k4,4|n5,4|p-6,3+|p1,3+|p2,3+|p3,3+|p4,3+|p5,3+|p6,3+|p7,3+|p-8,2+|p-7,2+|p15,2+|p16,2+|p-9,1+|p17,1+|P-9,0+|P17,0+|P-8,-1+|P-7,-1+|P15,-1+|P16,-1+|P1,-2+|P2,-2+|P3,-2+|P4,-2+|P5,-2+|P6,-2+|P7,-2+|P14,-2+|N3,-3|K4,-3|N5,-3|P3,-4+|P4,-4+|P5,-4+|P-5,-12+|R2,-12|B4,-12|R6,-12|P13,-12+|P-4,-13+|B4,-13|P12,-13+|P-3,-14+|Q4,-14|P11,-14+"
         // Latest version
         else return "p-3,18+|r2,18|b4,18|b5,18|r7,18|p12,18+|p-4,17+|p13,17+|p-5,16+|p14,16+|p3,9+|p4,9+|p5,9+|p6,9+|n3,8|k4,8|q5,8|n6,8|p-6,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p-8,6+|p-7,6+|p16,6+|p17,6+|p-9,5+|p18,5+|P-9,4+|P18,4+|P-8,3+|P-7,3+|P16,3+|P17,3+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P15,2+|N3,1|K4,1|Q5,1|N6,1|P3,0+|P4,0+|P5,0+|P6,0+|P-5,-7+|P14,-7+|P-4,-8+|P13,-8+|P-3,-9+|R2,-9|B4,-9|B5,-9|R7,-9|P12,-9+"
+    }
+
+    /**
+     * Returns the specified version's starting position of Space Classic, latest if not specified.
+     * @param {string} Date - The date this game was played. If not specified, we'll return the latest version.
+     * @returns {string} The position in compressed short form
+     */
+    function getPositionStringOfKnightedChess(Date) {
+        const UTCTimeStamp = Date ? math1.getUTCTimestamp(Date) : Date.now();
+        // UTC timestamp for Jul 21, 2024, 9:33 PM
+        // Original, oldest version. NO knightrider
+        if (UTCTimeStamp < 1721619205980) return 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+'
+        // Latest version, with knightrider
+        else return 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|NR2,1|NR7,1|nr2,8|nr7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+'
     }
 
     /**
@@ -759,7 +820,7 @@ const variant1 = (function() {
      * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
      */
     function initKnightedChess(gamefile, { Variant, Date }) {
-        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Knighted_Chess' })
+        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Knighted_Chess', Date })
         gamefile.startSnapshot = {
             position,
             positionString,
