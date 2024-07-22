@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "3"
+version = "4"
 
 [header]
 home = "Home"
@@ -53,8 +53,8 @@ variants_credits = [
 "Coaip (Chess on an Infinite Plane) designed by Vickalan.",
 "Pawn Horde designed by Inaccessible Cardinal.",
 "Abundance designed by Clicktuck Suskriberz.",
-"Pawndard by SexiLexi.",
-"Classical+ by SexiLexi.",
+"Pawndard by SexyLexi.",
+"Classical+ by SexyLexi.",
 "Knightline by Inaccessible Cardinal.",
 "Knighted Chess by cycy98.",
 "designed by Cory Evans and Joel Hamkins.",
@@ -458,6 +458,10 @@ login_button = "Log In"
 [news]
 title = "News"
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+
+[news.july22-2024]
+date = "July 22, 2024:"
+account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
 
 [news.july13-2024]
 date = "July 13, 2024:"

@@ -95,7 +95,9 @@ const legalmoves = (function(){
             // Legal jumping/individual moves
     
             shiftIndividualMovesetByCoords(thisPieceMoveset.individual, coords)
-            legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color)
+            legalIndividualMoves = isPremove?
+                thisPieceMoveset.individual :
+                moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color);
             
             // Legal sliding moves
             if (thisPieceMoveset.sliding) {

@@ -6,7 +6,7 @@
 //                  Further, all scripts are minified with the use of terser.
 
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
-import { minify } from "terser";
+import swc from "@swc/core";
 import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js"
 import { DEV_BUILD } from "./src/server/config/config.js";
 
@@ -48,7 +48,7 @@ if (DEV_BUILD){
   });
   // overwrite play.ejs by injecting all needed scripts into it:
   await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
-} else{
+} else {
   // in prod mode, copy all clientside files over to dist, except for those contained in scripts
   await copy("./src/client", "./dist", {
     recursive: true,
@@ -70,7 +70,7 @@ if (DEV_BUILD){
     // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
     if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ){
       const code = await readFile(`./src/client/${file}`, 'utf8');
-      const minified = await minify(code, {
+      const minified = await swc.minify(code, {
         mangle: true, // Enable variable name mangling
         compress: true, // Enable compression
         sourceMap: false
@@ -84,7 +84,7 @@ if (DEV_BUILD){
   }
 
   // Combine all gamecode files into app.js
-  const minifiedgame = await minify(gamecode, {
+  const minifiedgame = await swc.minify(gamecode, {
     mangle: true,
     compress: true,
     sourceMap: false
