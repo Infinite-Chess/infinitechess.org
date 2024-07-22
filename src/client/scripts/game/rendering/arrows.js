@@ -217,7 +217,9 @@ const arrows = (function() {
             if (mode!==2) break attack;
             const piece = selection.getPieceSelected()
             if (!piece) break attack;
-            attacklines = Object.keys(legalmoves.getPieceMoveset(gamefile, piece.type).sliding)
+            const slidingMoveset = legalmoves.getPieceMoveset(gamefile, piece.type).sliding;
+            if (!slidingMoveset) break attack;
+            attacklines = Object.keys(slidingMoveset);
         }
         for (const strline in arrows) {
             if (attacklines.includes(strline)) {continue;}
