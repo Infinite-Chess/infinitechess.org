@@ -1,6 +1,6 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "4"
+version = "5"
 
 [header]
 home = "Accueil"
@@ -458,6 +458,10 @@ login_button = "Se connecter"
 [news]
 title = "Actualités"
 more_dev_logs = ["Plus de dev logs sont publiés sur le ", "discord officiel", ", et sur les ", "forums chess.com"]
+
+[news.july22-2024]
+date = "July 22, 2024:"
+account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
 
 [news.july13-2024]
 date = "13 Juillet 2024:"
