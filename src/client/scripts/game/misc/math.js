@@ -585,7 +585,7 @@ const math = (function() {
      * @returns {boolean} Whether the coordinates are equal
      */
     function areCoordsEqual(coord1, coord2) {
-        if (!coord2 || !coord2) return false; // One undefined, can't be equal
+        if (!coord1 || !coord2) return false; // One undefined, can't be equal
         return coord1[0] === coord2[0] && coord1[1] === coord2[1]
     }
 

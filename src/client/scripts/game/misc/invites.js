@@ -14,7 +14,7 @@
  * @property {string} clock - The clock value
  * @property {string} color - white/black
  * @property {string} publicity - public/private
- * @property {string} rated - No/Yes
+ * @property {string} rated - unrated/rated 
  */
 
 const invites = (function(){
@@ -279,9 +279,8 @@ const invites = (function(){
      * @returns {Invite} The invite object, parsed from an HTML element.
      */
     function getInviteFromElement(inviteElement) {
-        /** @type {string[]} */
         const childrenTextContent = style.getChildrenTextContents(inviteElement);
-        const id = style.getAttributeValue(inviteElement, 'id');
+        const id = inviteElement.getAttribute('id')
         
         /**
          * Starting from the first child, the order goes:

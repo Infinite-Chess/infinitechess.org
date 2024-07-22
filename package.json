@@ -6,6 +6,7 @@
   "license": "AGPL",
   "main": "src/server/server.js",
   "dependencies": {
+    "@swc/core": "^1.7.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -27,8 +28,7 @@
     "xss": "^1.0.15"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10",
-    "terser": "^5.31.2"
+    "@types/node": "^20.14.10"
   },
   "scripts": {
     "build": "node build.mjs",

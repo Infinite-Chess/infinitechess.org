@@ -12,6 +12,10 @@
     "changes": ["play.javascript.invites.start_game"]
   },
   "4": {
+    "note": "Added news.july22-2024 on line 462",
+    "changes": ["news.july22-2024"]
+  },
+  "5": {
     "note": "Deleted create-account.argreement on line 100, and replaced it with create-account.agreement which is different. Deleted play.play-menu.variants. Added several entries to play.play-menu. Added several entries to server.javascript.",
     "changes": ["create-account.argreement",
                 "create-account.agreement",
