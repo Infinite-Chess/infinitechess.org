@@ -1,11 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
+        <script>
+            const translations = <%-JSON.stringify({
+                ...t('header.javascript', {returnObjects: true}),
+                ...t('create-account.javascript', {returnObjects: true}),
+                ...t('server.javascript', {returnObjects: true})
+            })%>;
+        </script>
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Create Account</title>
         <link rel='stylesheet' href='/css/createaccount.css'>
+        <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" type="image/png" href="/img/favicon.png">
         <script defer src="/scripts/createaccount.js"></script>
     </head>
@@ -13,55 +21,51 @@
         <header>
             <nav>
                 <a href="/">
-                    <p>Home</p>
+                    <p><%=t('header.home')%></p>
                 </a>
                 <a href="/play">
-                    <p>Play</p>
+                    <p><%=t('header.play')%></p>
                 </a>
                 <a href="./news">
-                    <p>News</p>
+                    <p><%=t('header.news')%></p>
                 </a>
                 <a href="./login">
-                    <p>Log In</p>
+                    <p><%=t('header.login')%></p>
                 </a>
                 <a href="./createaccount">
-                    <p class="currPage">Create Account</p>
+                    <p class="currPage"><%=t('header.createaccount')%></p>
                 </a>
             </nav>
         </header>
         <main>
             <div id="content">
-                <h1 class="center">Create Account</h1>
+                <h1 class="center"><%=t('create-account.title')%></h1>
                 <form action="./createaccount" method="POST" class="center" id="form">
                     <div class="formfield">
                         <div id="usernameinputline">
-                            <label for="username">Username:</label>
+                            <label for="username"><%=t('create-account.username')%></label>
                             <input id="username" type="text" name="username" required minLength="3" maxLength="20" autocomplete="off" autofocus>
                         </div>
                         <!-- This is where our script inserts an error division! -->
                         <div id="emailinputline">
                             <div class="line">
-                            <label for="email">Email:</label>
+                            <label for="email"><%=t('create-account.email')%></label>
                             <input id="email" type="email" name="email" required minLength="3" maxLength="320" autocomplete="off">
                             </div>
                         </div>
                         <div id="passwordinputline">
                             <div class="line">
-                            <label for="password">Password:</label>
+                            <label for="password"><%=t('create-account.password')%></label>
                             <input id="password" type="password" name="password" required minLength="6">
                             </div>
                         </div>
                         
                     </div>
-                    <input type="submit" value="Create Account" class="unavailable" id="submit">
-                    <p class="agreement">I agree to the <a href="/termsofservice" class="agreement" target="_blank">Terms of Service</a></p>
+                    <input type="submit" value="<%=t('create-account.create_button')%>" class="unavailable" id="submit">
+                    <p class="agreement"><%=t('create-account.argreement.0')%><a href='/termsofservice' target='_blank'><%=t('create-account.argreement.1')%></a></p>
                 </form>
             </div>
         </main>
-        <footer>
-            <a href="mailto:infinitechess.org@gmail.com">Contact us.</a>
-            <a href="/termsofservice">Terms of Service</a>
-            <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank">Source Code</a>
-        </footer>
+        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
     </body>
 </html>

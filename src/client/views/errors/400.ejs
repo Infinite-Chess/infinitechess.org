@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%=language%>" dir="<%=t('direction')%>" >
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404</title>
+    <title>400</title>
     <link rel="stylesheet" href="/css/404.css" />
 </head>
 
 <body>
-    <h1>404 Not Found</h1>
+    <h1>400 Bad Request</h1>
+    <p><%=t('error-pages.400_message')%></p>
 </body>
 
 </html>

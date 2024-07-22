@@ -6,12 +6,10 @@ const path = require('path');
 const createaccountController = require('../controllers/createaccountController')
 const {getRegisterData, checkEmailAssociated, checkUsernameAvailable} = require('../controllers/createaccountController');
 
-const createAccountHTMLPath = path.join(__dirname, '..', '..', '..', 'dist', 'views', 'createaccount.html');
-
 
 
 router.get('/', (req, res) => {
-    res.sendFile(createAccountHTMLPath);
+    res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', req.i18n.resolvedLanguage, 'createaccount.html'));
 })
 
 router.post('/', createaccountController.createNewMember);

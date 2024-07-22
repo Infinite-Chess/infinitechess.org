@@ -101,7 +101,7 @@ const guiplay = (function(){
     function changePlayMode(mode) { // online / local / computer
         modeSelected = mode
         if (mode === 'online') {
-            element_playName.textContent = "Play - Online"
+            element_playName.textContent = translations["menu_online"]
             element_online.classList.add('selected')
             element_local.classList.remove('selected')
             element_online.classList.remove('not-selected')
@@ -117,7 +117,7 @@ const guiplay = (function(){
         } else if (mode === 'local') {
             guiplay.setElement_CreateInviteEnabled(true);
             invites.cancel()
-            element_playName.textContent = "Play - Local"
+            element_playName.textContent = translations["menu_local"]
             element_online.classList.remove('selected')
             element_local.classList.add('selected')
             element_online.classList.add('not-selected')
@@ -195,7 +195,7 @@ const guiplay = (function(){
 
         const code = element_textboxPrivate.value.toLowerCase()
 
-        if (code.length !== 5) return statustext.showStatus("Invite code needs to be 5 digits.")
+        if (code.length !== 5) return statustext.showStatus(translations["invite_error_digits"])
 
         element_joinPrivateMatch.disabled = true; // Re-enable when the code is changed
         
@@ -223,7 +223,7 @@ const guiplay = (function(){
         const code = invites.gelement_iCodeCode().textContent;
         
         main.copyToClipboard(code)
-        statustext.showStatus('Copied invite code to clipboard.')
+        statustext.showStatus(translations["invite_copied"])
     }
 
     function initListeners_Invites() {

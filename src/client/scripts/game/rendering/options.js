@@ -107,7 +107,7 @@ const options = (function() {
         camera.onPositionChange();
         perspective.initCrosshairModel();
         piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs()); // This will regenerate the voids model as wireframe
-        statustext.showStatus('Toggled Debug Mode: ' + (debugMode ? "On" : "Off"))
+        statustext.showStatus(`${translations["rendering"]["toggled_debug"]} ` + (debugMode ? translations["rendering"]["on"] : translations["rendering"]["off"]))
     }
 
     function disableEM() {
@@ -132,7 +132,7 @@ const options = (function() {
 
         main.renderThisFrame(); // Visual change, render the screen this frame
         em = !em;
-        statustext.showStatus('Toggled Edit Mode: ' + (em ? "On" : "Off"))
+        statustext.showStatus(`${translations["rendering"]["toggled_edit"]} ` + (em ? translations["rendering"]["on"] : translations["rendering"]["off"]))
     }
 
     /** Toggles the visibility of the navigation bars. */

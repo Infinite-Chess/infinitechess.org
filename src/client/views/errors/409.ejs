@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%=language%>" dir="<%=t('direction')%>" >
 
 <head>
     <meta charset="UTF-8">
@@ -11,7 +11,7 @@
 
 <body>
     <h1>409 Conflict</h1>
-    <p>There may have been a clashing username or email. Please <a href="/createaccount">reload</a> the page.</p>
+    <p><%=t('error-pages.409_message.0')%><a href='/createaccount'><%=t('error-pages.409_message.1')%></a><%=t('error-pages.409_message.2')%></p>
 </body>
 
 </html>

@@ -7,3 +7,6 @@ dist
 
 # JetBrains IDEs
 .idea/
+
+# PNPM
+pnpm-lock.yaml

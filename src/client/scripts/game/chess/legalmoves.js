@@ -163,24 +163,24 @@ const legalmoves = (function(){
      * Shortens the moveset by pieces that block it's path.
      * @param {Piece[]} line - The list of pieces on this line 
      * @param {number[]} direction - The direction of the line: `[dx,dy]` 
-     * @param {number[]} slidinget - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
-     * @param {number[]} coords - The coordinates of the piece with the specified slidinget.
+     * @param {number[]} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
+     * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
      * @param {string} color - The color of friendlies
      */
-    function slide_CalcLegalLimit (line, direction, slidinget, coords, color) {
+    function slide_CalcLegalLimit (line, direction, slideMoveset, coords, color) {
 
-        if (!slidinget) return; // Return undefined if there is no slide moveset
+        if (!slideMoveset) return; // Return undefined if there is no slide moveset
 
         // The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
         // For most we'll be comparing the x values, only exception is the vertical lines.
         const axis = direction[0] == 0 ? 1 : 0 
-        const limit = math.copyCoords(slidinget);
+        const limit = math.copyCoords(slideMoveset);
         // Iterate through all pieces on same line
         for (let i = 0; i < line.length; i++) {
             // What are the coords of this piece?
             const thisPiece = line[i] // { type, coords }
-            const thisPieceSteps = Math.floor((thisPiece.coords[axis]-coords[axis])/direction[axis])
+            const thisPieceSteps = math.getLineSteps(direction, coords, thisPiece.coords)
             const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
             const isFriendlyPiece = color === thisPieceColor
             const isVoid = thisPiece.type === 'voidsN';
@@ -241,7 +241,7 @@ const legalmoves = (function(){
             let clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
             if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
-            if (!doesSlidingNetContainSquare(limits, line, startCoords, endCoords)) continue;
+            if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords)) continue;
             return true;
         }
         return false;
@@ -349,21 +349,18 @@ const legalmoves = (function(){
     // This requires coords be on the same line as the sliding moveset.
 
     /**
-     * Tests if the piece's precalculated slidinget is able to reach the provided coords.
+     * Tests if the piece's precalculated slideMoveset is able to reach the provided coords.
      * ASSUMES the coords are on the direction of travel!!!
-     * @param {number[]} slidinget - The distance the piece can move along this line: `[left,right]`. If the line is vertical, this will be `[bottom,top]`.
+     * @param {number[]} slideMoveset - The distance the piece can move along this line: `[left,right]`. If the line is vertical, this will be `[bottom,top]`.
      * @param {number[]} direction - The direction of the line: `[dx,dy]`
      * @param {number[]} pieceCoords - The coordinates of the piece with the provided sliding net
      * @param {number[]} coords - The coordinates we want to know if they can reach.
      * @returns {boolean} true if the piece is able to slide to the coordinates
      */
-    function doesSlidingNetContainSquare(slidinget, direction, pieceCoords, coords) {
-        const axis = direction[0] === 0 ? 1 : 0
-        const coordMag = coords[axis];
-        const min = slidinget[0] * direction[axis] + pieceCoords[axis]
-        const max = slidinget[1] * direction[axis] + pieceCoords[axis]
+    function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords) {
+        const step = math.getLineSteps(direction, pieceCoords, coords)
 
-        return coordMag >= min && coordMag <= max;
+        return step >= slideMoveset[0] && step <= slideMoveset[1];
     }
 
     /**
@@ -390,7 +387,7 @@ const legalmoves = (function(){
         getPieceMoveset,
         calculate,
         checkIfMoveLegal,
-        doesSlidingNetContainSquare,
+        doesSlidingMovesetContainSquare,
         hasAtleast1Move,
         slide_CalcLegalLimit,
         isOpponentsMoveLegal

@@ -344,7 +344,7 @@ const shaders = (function() {
 
         // If creating the shader program failed, alert
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            alert(`Unable to initialize the shader program: ${gl.getProgramInfoLog(shaderProgram)}`);
+            alert(`${translations["shaders_failed"]} ${gl.getProgramInfoLog(shaderProgram)}`);
             return null;
         }
 
@@ -364,7 +364,7 @@ const shaders = (function() {
 
         // Check if it compiled successfully
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            const error = `An error occurred compiling the shaders: ${gl.getShaderInfoLog(shader)}`
+            const error = `${translations["failed_compiling_shaders"]} ${gl.getShaderInfoLog(shader)}`
             alert(error);
             console.error(error)
             gl.deleteShader(shader);

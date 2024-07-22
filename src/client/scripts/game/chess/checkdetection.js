@@ -169,7 +169,7 @@ const checkdetection = (function(){
             const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor)
             if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
-            if (!legalmoves.doesSlidingNetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)) continue; // This piece can't slide so far as to reach us, NEXT piece!
+            if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)) continue; // This piece can't slide so far as to reach us, NEXT piece!
 
             // This piece is attacking this square!
 

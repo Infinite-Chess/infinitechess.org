@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
+        <script>
+            const translations = <%-JSON.stringify({
+                ...t('header.javascript', {returnObjects: true}),
+                ...t('server.javascript', {returnObjects: true})
+            })%>;
+        </script>
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Log In</title>
         <link rel='stylesheet' href='/css/login.css'>
+        <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" type="image/png" href="/img/favicon.png">
         <script defer src="/scripts/login.js"></script>
     </head>
@@ -13,46 +20,42 @@
         <header>
             <nav>
                 <a href="/">
-                    <p>Home</p>
+                    <p><%=t('header.home')%></p>
                 </a>
                 <a href="/play">
-                    <p>Play</p>
+                    <p><%=t('header.play')%></p>
                 </a>
                 <a href="/news">
-                    <p>News</p>
+                    <p><%=t('header.news')%></p>
                 </a>
                 <a href="/login">
-                    <p class="currPage">Log In</p>
+                    <p class="currPage"><%=t('header.login')%></p>
                 </a>
                 <a href="/createaccount">
-                    <p>Create Account</p>
+                    <p><%=t('header.createaccount')%></p>
                 </a>
             </nav>
         </header>
         <main>
             <div id="content">                  
-                <h1 class="center">Log In</h1>
+                <h1 class="center"><%=t('login.title')%></h1>
                 <form action="./login" method="POST" class="center" id="form">
                     <div class="formfield">
                         <div id="usernameinputline">
-                            <label for="username">Username:</label>
+                            <label for="username"><%=t('login.username')%></label>
                             <input id="username" type="text" name="username" required maxLength="40" autocomplete="off" autofocus>
                         </div>
                         <div id="passwordinputline">
-                            <label for="password">Password:</label>
+                            <label for="password"><%=t('login.password')%></label>
                             <input id="password" type="password" name="password" required>
                         </div>
                         <!-- This is where our script inserts an error division! -->
                     </div>
-                    <p id="forgot" class="forgothidden">Forgot? <a href="mailto:infinitechess.org@gmail.com">Email us.</a></p>
-                    <input type="submit" value="Log In" class="unavailable" id="submit">
+                    <p id="forgot" class="forgothidden"><%=t('login.forgot_password.0')%><a href='mailto:infinitechess.org@gmail.com'><%=t('login.forgot_password.1')%></a></p>
+                    <input type="submit" value="<%=t('login.login_button')%>" class="unavailable" id="submit">
                 </form>
             </div>
         </main>
-        <footer>
-            <a href="mailto:infinitechess.org@gmail.com">Contact us.</a>
-            <a href="/termsofservice">Terms of Service</a>
-            <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank">Source Code</a> 
-        </footer>
+        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
     </body>
 </html>
