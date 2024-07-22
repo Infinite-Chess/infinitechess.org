@@ -43,9 +43,9 @@ about_paragraphs = [
 patreon_title = "Wspierający Patreon"
 
 [credits]
-title = "Credits" # Needs translation
+title = "Podziękowania"
 copyright = "Wszystko, co nie jest wypisane poniżej, jest własnością www.InfiniteChess.org"
-variants_heading = "Variants" # Needs translation
+variants_heading = "Tryby"
 variants_credits = [
 "Core designed by Andreas Tsevas.",
 "Space designed by Andreas Tsevas.",
@@ -54,7 +54,7 @@ variants_credits = [
 "Pawn Horde designed by Inaccessible Cardinal.",
 "Abundance designed by Clicktuck Suskriberz.",
 "Pawndard by SexyLexi.",
-"Classical+ by SexyLexi.",
+"Klasyczny+ by SexyLexi.",
 "Knightline by Inaccessible Cardinal.",
 "Knighted Chess by cycy98.",
 "designed by Cory Evans and Joel Hamkins.",
@@ -80,7 +80,7 @@ code_credits = [
 
 [member]
 verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację."
-resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu. Also, ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do mnie."]
+resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu lub, ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do mnie."]
 verify_confirm = "Dziękujemy! Twoje konto zostało zarejestrowane pomyślnie."
 rating = "Kwalifikacja ELO:"
 joined = "Dołączył:"
@@ -111,10 +111,10 @@ js-pwd_too_long = "Hasło nie może być dłuuuuuuuuuższe niż 72 znaki"
 js-pwd_not_pwd = "Hasło nie może być 'hasłem'"
 
 [play.main-menu]
-credits = "Credits" # Needs translation
+credits = "Podziękowania" # Needs translation
 play = "Graj"
 guide = "Poradnik"
-editor = "Board Editor"
+editor = "Edytor planszy"
 loading = "Ładowanie"
 error = "Błąd"
 
@@ -154,9 +154,9 @@ fairy_heading = "Fairy Pieces" # Needs translation
 fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!" # Needs translation
 editing_heading = "Edytor planszy"
 editing_paragraphs = [
-["There is an external ", "board editor", " currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
+["There is an external ", "edytor planszy", " currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
 "To play a custom position with a friend, have them join a private invite, then both of you paste the game code before you start playing!",
-"An in-game board editor is still planned.",
+"Dostępny w grze edytor planszy jest zaplanowany.",
 ] # Needs translation
 back = "Wróć"
 
@@ -173,11 +173,11 @@ void = {name="Void", description="A neutral piece (not controlled by either play
 
 [play.play-menu]
 title = "Graj - Online"
-colors = "Kolory"
+colors = "Kolor"
 online = "Online"
 local = "Lokalnie"
 computer = "Komputer"
-variant = "Wariant"
+variant = "Tryb"
 Classical = "Klasyczny"
 Classical_Plus = "Klasyczny+"
 CoaIP = "Szachy na nieskończonej planszy"
@@ -203,16 +203,16 @@ Omega_Squared = "Showcase: Omega^2" # Needs translation
 Omega_Cubed = "Showcase: Omega^3" # Needs translation
 Omega_Fourth = "Showcase: Omega^4" # Needs translation
 no_clock = "No Clock" # Needs translation
-clock = "Zegar"
+clock = "Czas"
 minutes = "min"
 seconds = "s"
 infinite_time = "Nielimitowany czas"
 color = "Kolor"
 piece_colors = ["Losowy", "Biały", "Czarny"]
-private = "Prywatny"
+private = "Private" # Needs translation
 no = "Nie"
 yes = "Tak"
-rated = "Ocenione"
+rated = "Rated" # Needs transaltion
 join_games = "Dołącz do istniejącej gry - Aktywne gry:"
 private_invite = "Osobiste zaproszenie:"
 your_invite = "Twój kod zaproszeniowy:"
@@ -231,7 +231,7 @@ player_black = "Player black" # Needs translation
 title = "Zatrzymaj"
 resume = "Wznów"
 arrows = "Arrows: Defense" # Needs translation
-perspective = "Perspektywa: Off"
+perspective = "Kamera 3D: Wyłączona"
 copy = "Kopiuj grę"
 paste = "Wklej grę"
 main_menu = "Menu główne"
@@ -245,7 +245,7 @@ your_move = "Your move" # Needs translation
 their_move = "Their move" # Needs translation
 lost_network = "Lost network." # Needs translation
 failed_to_load = "One or more resources failed to load. Please refresh." # Needs translation
-planned_feature = "This feature is planned!" # Needs translation
+planned_feature = "Ta funkcja jest zaplanowana!"
 main_menu = "Menu główne"
 resign_game = "Resign Game" # Needs translation
 abort_game = "Abort Game" # Needs translation
@@ -255,8 +255,8 @@ arrows_all = "Arrows: All" # Needs translation
 toggled = "Toggled" # Needs translation
 menu_online = "Graj - Online"
 menu_local = "Graj - Lokalnie"
-invite_error_digits = "Invite code needs to be 5 digits." # Needs translation
-invite_copied = "Copied invite code to clipboard." # Needs translation
+invite_error_digits = "Kod zaproszeniowy musi posiadać 5 cyfr."
+invite_copied = "Skopiowano kod zaproszeniowy do schowka."
 move_counter = "Move:" # Needs translation
 constructing_mesh = "Constructing mesh" # Needs translation
 rotating_mesh = "Rotating mesh" # Needs translation
@@ -282,7 +282,7 @@ piece_count = "Piece count" # Needs translation
 exceeded = "exceeded" # Needs translation
 changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)." # Needs translation
 loaded_from_clipboard = "Loaded game from clipboard!" # Needs translation
-loaded = "Loaded game!" # Needs translation
+loaded = "Załadowano grę!"
 slidelimit_not_number = "slideLimit gamerule must be a number. Received" # Needs translation
 
 [play.javascript.rendering]
@@ -292,9 +292,9 @@ icon_rendering_off = "Toggled off icon rendering." # Needs translation
 icon_rendering_on = "Toggled on icon rendering." # Needs translation
 toggled_debug = "Toggled Debug Mode:" # Needs translation
 toggled_edit = "Toggled Edit Mode:" # Needs translation
-perspective = "Perspective" # Needs translation
-perspective_mode_on_desktop = "Perspective mode is available on desktop!" # Needs translation
-movement_tutorial = "WASD to move. Space & shift to zoom." # Needs translation
+perspective = "Kamera 3D"
+perspective_mode_on_desktop = "Kamera 3D dostępna na komputerach!"
+movement_tutorial = "Użyj WASD aby się poruszać. Użyj spacji oraz shift'a aby przybliżać (i oddalać) kamerę."
 regenerated_pieces = "Regenerated pieces." # Needs translation
 
 [play.javascript.invites]
@@ -311,7 +311,7 @@ cancel = "Anuluj"
 create_invite = "Utwórz zaproszenie"
 cancel_invite = "Anuluj zaproszenie"
 start_game = "Zacznij grę"
-join_existing_active_games = "Join Existing - Active Games:" # Needs translation
+join_existing_active_games = "Dołącz do aktywnej rozgrywki - Aktywne gry:"
 
 [play.javascript.onlinegame]
 afk_warning = "Jesteś AFK."
@@ -322,7 +322,7 @@ auto_resigning_in = "Auto-resigning in" # Needs translation
 auto_aborting_in = "Auto-aborting in" # Needs translation
 not_logged_in = "You are not logged in. Please login to reconnect to this game." # Needs translation
 game_no_longer_exists = "Gra już nie istnieje."
-another_window_connected = "Another window has connected." # Needs translation
+another_window_connected = "Inne okno przeglądarki zostało połączone."
 server_restarting = "Serwer wkrótce się uruchomi ponownie..."
 server_restarting_in = "Serwer uruchomi się ponownie za"
 minute = "minutę"
@@ -333,8 +333,8 @@ no_connection = "Brak połączenia."
 reconnected = "Połączono."
 unable_to_identify_ip = "Nie udało się zweryfikować adresu IP."
 online_play_disabled = "Online play disabled. Cookies not supported. Try a different browser." # Needs translation
-too_many_requests = "Too many requests. Try again soon." # Needs translation
-message_too_big = "Message too big." # Needs translation
+too_many_requests = "Za dużo zapytań. Spróbuj ponownie później."
+message_too_big = "Wiadomość za duża."
 too_many_sockets = "Too many sockets" # Needs translation
 origin_error = "Origin error." # Needs translation
 connection_closed = "Connection closed unexpectedly. Server message:" # Needs translation
@@ -532,15 +532,15 @@ ws-server_error = "Sorry, there was a server error! Please go back." # Needs tra
 ws-unable_to_identify_client_ip = "Unable to identify client IP address" # Needs translation
 ws-you_are_banned_by_server = "Jesteś zbanowany."
 ws-too_many_requests_to_server = "Za dużo zapytań. Spróbuj ponownie później."
-ws-bad_request = "Bad Request" # Needs translation
+ws-bad_request = "Błąd zapytania"
 ws-not_found = "404 Nieznaleziono"
 ws-forbidden = "Zabronione."
 ws-unauthorized_patron_page = "Unauthorized. This page is patron-exclusive." # Needs translation
 ws-already_in_game = "Już jestes w grze."
 ws-player_already_has_invite = "Player already has an open invite." # Needs translation
-ws-invite_cancelled = "Invite already cancelled." # Needs translation
+ws-invite_cancelled = "Zaproszenie zostało anulowane."
 ws-accept_own_invite = "Nie możesz zaakceptować swojego zaproszenia, głuptasie!"
-ws-server_restarting = "The server is restarting in" # Needs translation
+ws-server_restarting = "Serwer uruchomi się ponownie za"
 ws-minutes = "minuty" # unit of time
 ws-minute = "minuta" # unit of time
 ws-no_abort_game_over = "Can't abort game, it's already over." # Needs translation
