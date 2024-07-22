@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "3"
+version = "4"
 
 [header]
 home = "Home"
@@ -458,6 +458,10 @@ login_button = "Log In"
 [news]
 title = "News"
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+
+[news.july22-2024]
+date = "July 22, 2024:"
+account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
 
 [news.july13-2024]
 date = "July 13, 2024:"
