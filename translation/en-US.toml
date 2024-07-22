@@ -544,5 +544,5 @@ ws-no_abort_game_over = "Can't abort game, it's already over."
 ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played."
 ws-game_aborted_cheating = "Game aborted for probable cheating."
 ws-cannot_resign_finished_game = "Can't resign game, it's already over."
-ws-invalid_code = "Invalid code!"
-ws-game_aborted = "Game aborted."
+ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
+ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
