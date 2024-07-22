@@ -357,11 +357,11 @@ draw_repetition = "Égalité par répétition !"
 draw_moverule = ["Égalité par la règle des ", " coups"]
 draw_insuffmat = "Égalité par manque de matériel !"
 draw_generic = "Égalité!"
-aborted = "Partie abandonnée."
+aborted = "Partie annulée."
 opponent_checkmate = "Défaite par échec-et-mat !"
 opponent_time = "Défaite par le temps!"
 opponen_resignation = "Défaite par abandon !"
-opponent_disconnect = "Défaite par abandon !"
+opponent_disconnect = "Défaite par déconnexion !"
 opponent_royalcapture = "Défaite par perte du Roi !"
 opponent_allroyalscaptured = "Défaite par perte de tous les Rois!"
 opponent_allpiecescaptured = "Défaite par perte de toutes les pièces!"
@@ -460,8 +460,8 @@ title = "Actualités"
 more_dev_logs = ["Plus de devlogs sont publiés sur le ", "discord officiel", ", et sur les ", "forums de chess.com"]
 
 [news.july22-2024]
-date = "July 22, 2024:"
-account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
+date = "22 Juillet 2024:"
+account_warning = "Si vous n'avez pas vérifié votre compte, faites le dès maintenant depuis votre profil s'il vous plaît! Tous les comptes non vérifiés serons bientôt supprimés!!"
 
 [news.july13-2024]
 date = "13 Juillet 2024:"
@@ -489,7 +489,7 @@ update_list = [
 "Des effets sonores lorsque vous ou quelqu'un d'autre crée une invitation ou joue un coup.",
 "L'ajout de la règle des 50 coups.",
 "Un compte a rebour sonore qui se joue quand il ne vous reste plus que 10 secondes de temps.",
-"Un compte à rebour pour l'abandon automatique (avec avertissement sonore) qui démarera si votre adversaire cesse de jouer."
+"Un compte à rebour pour l'abandon automatique (avec avertissement sonore) qui démarrera si votre adversaire cesse de jouer."
 ]
 text_box = ["Et pleins d'autres nouvelles choses! Pour la liste complète, rendez-vous sur ", "le discord !"]
 
@@ -514,7 +514,7 @@ ws-username_length = "Le nom d'utilisateur doit faire entre 3 et 20 caractères"
 ws-username_letters = "Le nom d'utilisateur ne doit contenir que des lettres et des chiffres"
 ws-username_taken = "Ce nom d'utilisateur est déjà pris"
 ws-username_bad_word = "Ce nom d'utilisateur contient un mot interdit"
-ws-username_reserved = "That username is reserved"
+ws-username_reserved = "Ce nom d'utilisateur est réservé"
 ws-email_too_long = "Votre email est trop looooong."
 ws-email_invalid = "Votre email n'est pas valide"
 ws-email_in_use = "Cette adresse est déjà utilisée"
@@ -537,16 +537,16 @@ ws-bad_request = "Mauvaise Requête"
 ws-not_found = "404 Introuvable"
 ws-forbidden = "Interdit."
 ws-unauthorized_patron_page = "Non autorisé. Cette page est réservé aux patreons."
-ws-already_in_game = "You are already in a game."
-ws-player_already_has_invite = "Player already has an existing invite."
-ws-invite_cancelled = "Invite already cancelled."
-ws-accept_own_invite = "Silly goose. You can't accept your own invite!"
-ws-server_restarting = "The server is restarting in"
+ws-already_in_game = "Vous êtes déjà dans une partie."
+ws-player_already_has_invite = "Ce joueur a déjà reçu une invitation."
+ws-invite_cancelled = "Cette invitation a déjà été annulée."
+ws-accept_own_invite = "Tu ne peux pas accepter ta propre invitation gros bêta"
+ws-server_restarting = "Ce serveur redémarre dans "
 ws-minutes = "minutes" # unit of time
 ws-minute = "minute" # unit of time
-ws-no_abort_game_over = "Can't abort game, it's already over."
-ws-no_abort_after_moves = "Can't abort game, atleast 2 moves have been played."
-ws-game_aborted_cheating = "Game aborted for probable cheating."
-ws-cannot_resign_finished_game = "Can't resign game, it's already over."
-ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
-ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
+ws-no_abort_game_over = "Vous ne pouvez pas annuler la partie, elle est déjà finie."
+ws-no_abort_after_moves = "Vous ne pouvez pas annuler la partie, plus de 2 coups ont déjà été joués."
+ws-game_aborted_cheating = "Annulation de la partie à cause d'une forte probabilité de triche."
+ws-cannot_resign_finished_game = "Vous ne pouvez pas abandonner, la partie est déjà finie."
+ws-invalid_code = "Code invalide!" # Invite code doesn't match any existing invites
+ws-game_aborted = "Partie annulée." # Invite was cancelled as you clicked on it
