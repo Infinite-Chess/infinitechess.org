@@ -113,10 +113,9 @@ const selection = (function() {
             // if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
 
             // If it clicked iteself, deselect.
-            if (pieceClickedType && math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
-                main.renderThisFrame();
+            if (math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
                 unselectPiece();
-            } else if (hoverSquareLegal && !isOpponentPiece) { // Captured opponent's piece, don't select it instead.
+            } else if (hoverSquareLegal) { // This piece is capturable, don't select it instead
                 break tag;
             } else if (pieceClickedType !== 'voidsN') { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
                 handleSelectingPiece(pieceClickedType);
@@ -124,8 +123,6 @@ const selection = (function() {
 
             return;
         }
-
-        if (isOpponentPiece) return; // Can't move our opponent's pieces, can only view their legal moves.
 
         // If we haven't return'ed at this point, check if the move is legal.
         if (!hoverSquareLegal) return; // Illegal
@@ -170,6 +167,7 @@ const selection = (function() {
         // If it's your turn, select that piece.
 
         // if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
+        if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
         if (options.getEM() && pieceClickedType === 'voidsN') return; // Don't select voids.
 
         const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare)
@@ -252,12 +250,12 @@ const selection = (function() {
         const hoverSquareIsSameColor = typeAtHoverCoords && math.getPieceColorFromType(pieceSelected.type) === math.getPieceColorFromType(typeAtHoverCoords);
         const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
         // This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
-        hoverSquareLegal = legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
+        hoverSquareLegal = (!isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
     }
 
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
     function renderGhostPiece() {
-        if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || main.videoMode || isOpponentPiece) return;
+        if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || main.videoMode) return;
         pieces.renderGhostPiece(pieceSelected.type, hoverSquare)
     }
 
