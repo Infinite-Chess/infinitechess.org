@@ -105,7 +105,7 @@ await remove("./dist", {
   force: true,
 });
 
-if (false){
+if (DEV_BUILD){
   // in dev mode, copy all clientside files over to dist and exit
   await copy("./src/client", "./dist", {
     recursive: true,
