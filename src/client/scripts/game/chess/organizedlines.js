@@ -10,7 +10,6 @@
 
 // Module
 const organizedlines = {
-
     /**
      * Organizes all the pieces of the specified game into many different lists,
      * organized in different ways. For example, organized by key `'1,2'`,
@@ -43,10 +42,12 @@ const organizedlines = {
 
     resetOrganizedLists: function(gamefile) {
         gamefile.piecesOrganizedByKey = {}
-        gamefile.piecesOrganizedByRow = {}
-        gamefile.piecesOrganizedByColumn = {}
-        gamefile.piecesOrganizedByUpDiagonal = {}
-        gamefile.piecesOrganizedByDownDiagonal = {}
+        gamefile.piecesOrganizedByLines = {}
+
+        let lines = gamefile.startSnapshot.slidingPossible
+        for (let i = 0; i<lines.length; i++) {
+            gamefile.piecesOrganizedByLines[math.getKeyFromCoords(lines[i])] = {}
+        }
     },
 
     // Inserts given piece into all the organized piece lists (key, row, column...)
@@ -61,58 +62,35 @@ const organizedlines = {
         // Is there already a piece there? (Desync)
         if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`)
         gamefile.piecesOrganizedByKey[key] = type;
-
-        // Organize by row
-        key = coords[1]
-        // Is row initialized?
-        if (!gamefile.piecesOrganizedByRow[key]) gamefile.piecesOrganizedByRow[key] = []
-        gamefile.piecesOrganizedByRow[key].push(piece)
-
-        // Organize by column
-        key = coords[0]
-        // Is the column initialized?
-        if (!gamefile.piecesOrganizedByColumn[key]) gamefile.piecesOrganizedByColumn[key] = []
-        gamefile.piecesOrganizedByColumn[key].push(piece)
         
-        // Organize by up-diagonal
-        key = math.getUpDiagonalFromCoords(coords);
-        // Is the diagonal initialized?
-        if (!gamefile.piecesOrganizedByUpDiagonal[key]) gamefile.piecesOrganizedByUpDiagonal[key] = []
-        gamefile.piecesOrganizedByUpDiagonal[key].push(piece)
+        // Organize by line
+        let lines = gamefile.startSnapshot.slidingPossible
+        for (let i = 0; i<lines.length; i++) {
+            const line = lines[i]
+            key = organizedlines.getKeyFromLine(line,coords)
+            const strline = math.getKeyFromCoords(line)
+            // Is line initialized
+            if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = []
+            gamefile.piecesOrganizedByLines[strline][key].push(piece)
+        }
         
-        // Organize by down-diagonal
-        key = math.getDownDiagonalFromCoords(coords)
-        // Is the diagonal initialized?
-        if (!gamefile.piecesOrganizedByDownDiagonal[key]) gamefile.piecesOrganizedByDownDiagonal[key] = []
-        gamefile.piecesOrganizedByDownDiagonal[key].push(piece)
     },
     
     // Remove specified piece from all the organized piece lists (piecesOrganizedByKey, etc.)
     removeOrganizedPiece: function (gamefile, coords) {
 
-        // Make the piece key undefined in piecesOrganizedByKey object
+        // Make the piece key undefined in piecesOrganizedByKey object  
         let key = math.getKeyFromCoords(coords)
         if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`)
         // Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
         delete gamefile.piecesOrganizedByKey[key] 
 
-        // Remove from organized rows
-        key = coords[1]
-        removePieceFromLine(gamefile.piecesOrganizedByRow, key)
-        
-        // Remove from organized columns
-        key = coords[0]
-        removePieceFromLine(gamefile.piecesOrganizedByColumn, key)
-
-        // Remove from organized up-diagonals
-        // What is the diagonal? It is equal to 0 - x + y. It is determined by the y-intercept point of the diagonal.
-        key = math.getUpDiagonalFromCoords(coords)
-        removePieceFromLine(gamefile.piecesOrganizedByUpDiagonal, key)
-
-        // Remove from organized down-diagonals
-        // What is the diagonal? It is equal to 0 + x + y. It is determined by the y-intercept point of the diagonal.
-        key = math.getDownDiagonalFromCoords(coords)
-        removePieceFromLine(gamefile.piecesOrganizedByDownDiagonal, key)
+        let lines = gamefile.startSnapshot.slidingPossible
+        for (let i = 0; i<lines.length; i++) {
+            const line = lines[i]
+            key = organizedlines.getKeyFromLine(line,coords)
+            removePieceFromLine(gamefile.piecesOrganizedByLines[line],key)
+        }
 
         // Takes a line from a property of an organized piece list, deletes the piece at specified coords
         function removePieceFromLine (organizedPieces, lineKey) {
@@ -278,5 +256,82 @@ const organizedlines = {
         }
 
         return state;
+    },
+
+    /**
+     * Gets a unique key from the line equation.
+     * Compatable with factorable steps like `[2,2]`.
+     * Discuss before changing func please as this may have unintended side-effects.
+     * @param {Number[]} step Line step `[deltax,deltay]`
+     * @param {Number[]} coords `[x,y]`
+     * @returns {String} the key `c|smallest_x_line_intcepts`
+     */
+    getKeyFromLine(step, coords) {
+        const C = organizedlines.getCFromLine(step, coords);
+        const X = organizedlines.getXFromLine(step, coords);
+        return `${C}|${X}`
+    },
+
+    /**
+     * Uses the calculation of ax + by = c
+     * c=b*y-intercept so is unique for each line
+     * Not unique when step can be factored
+     * eg [2,2]
+     * @param {number[]} step - The x-step and y-step of the line: `[deltax, deltay]`
+     * @param {number[]} coords - A point the line intersects: `[x,y]`
+     * @returns {number} integer c
+     */
+    getCFromLine(step, coords) {
+        return step[0]*coords[1]-step[1]*coords[0]
+    },
+
+    /**
+     * Calculates the X value of the line's key from the provided step direction and coordinates.
+     * This is also the nearest x value the line intersects on or after the y axis.
+     * @param {number[]} step - [dx,dy]
+     * @param {number[]} coords - Coordinates that are on the line
+     * @returns {number} The X in the line's key: `C|X`
+     */
+    getXFromLine(step, coords) {
+        // See these desmos graphs for inspiration for finding what line the coords are on:
+        // https://www.desmos.com/calculator/d0uf1sqipn
+        // https://www.desmos.com/calculator/t9wkt3kbfo
+
+        const lineIsVertical = step[0] === 0;
+        const deltaAxis = lineIsVertical ? step[1] : step[0];
+        const coordAxis = lineIsVertical ? coords[1] : coords[0];
+        return math.posMod(coordAxis, deltaAxis)
+    },
+
+    /**
+     * Tests if the provided gamefile has colinear organized lines present in the game.
+     * This can occur if there are sliders that can move in the same exact direction as others.
+     * For example, [2,0] and [3,0]. We typically like to know this information because
+     * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
+     * by using royalcapture instead of checkmate.
+     * @param {gamefile} gamefile 
+     */
+    areColinearSlidesPresentInGame(gamefile) {
+        const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
+
+        // How to know if 2 lines are colinear?
+        // They will have the exact same slope!
+
+        // Iterate through each line, comparing its slope with every other line
+        for (let a = 0; a < slidingPossible.length - 1; a++) {
+            const line1 = slidingPossible[a]; // [dx,dy]
+            const slope1 = line1[1] / line1[0]; // Rise/Run
+            const line1IsVertical = isNaN(slope1);
+            
+            for (let b = a+1; b < slidingPossible.length; b++) {
+                const line2 = slidingPossible[b]; // [dx,dy]
+                const slope2 = line2[1] / line2[0]; // Rise/Run
+                const line2IsVertical = isNaN(slope2);
+
+                if (line1IsVertical && line2IsVertical) return true; // Colinear!
+                if (slope1 === slope2) return true; // Colinear!
+            }
+        }
+        return false;
     }
 };
