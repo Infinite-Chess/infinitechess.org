@@ -420,17 +420,6 @@ const math = (function() {
         };
     }
 
-    function getLineSteps(step, origin, coord, isLeft) {
-        let x = (coord[0]-origin[0])/step[0]
-        if (!isLeft) x = Math.floor(x)
-        else x = Math.ceil(x)
-        if (step[0]!==0) return x;
-        let y = Math.floor((coord[1]-origin[1])/step[1])
-        if (!isLeft) x = Math.floor(x)
-        else x = Math.ceil(x)
-        return y
-    }
-
     function convertPixelsToWorldSpace_Virtual(value) {
         return (value / camera.getCanvasHeightVirtualPixels()) * (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)
     }
@@ -439,16 +428,25 @@ const math = (function() {
         return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels()
     }
 
-    function getAABBCornerOfLine(line, leftSide) {
+    /**
+     * Returns the side of the box, in english language, the line intersects with the box.
+     * If {@link negateSide} is false, it will return the positive X/Y side.
+     * If the line is orthogonal, it will only return top/bottom/left/right.
+     * Otherwise, it will return the corner name.
+     * @param {number[]} line - [dx,dy]
+     * @param {boolean} negateSide 
+     * @returns {string} Which side/corner the line passes through. [0,1] & false => "top"   [2,1] & true => "bottomleft"
+     */
+    function getAABBCornerOfLine(line, negateSide) {
         let corner = "";
         v: {
-            if (line[1]==0) break v; // Horizontal so parallel with top/bottom lines
-            corner += ((line[0]>0==line[1]>0)==leftSide==(line[0]!=0)) ? "bottom" : "top" 
+            if (line[1] === 0) break v; // Horizontal so parallel with top/bottom lines
+            corner += ((line[0] > 0 === line[1] > 0) === negateSide === (line[0] !== 0)) ? "bottom" : "top" 
             // Gonna be honest I have no idea how this works but it does sooooooo its staying
         }
         h: {
-            if (line[0]==0) break h; // Vertical so parallel with left/right lines
-            corner += leftSide ? "left" : "right"
+            if (line[0] === 0) break h; // Vertical so parallel with left/right lines
+            corner += negateSide ? "left" : "right"
         }
         return corner;
     }
@@ -461,35 +459,44 @@ const math = (function() {
         return [xval, yval]
     }
 
+    /**
+     * Returns the tile-point the line intersects, on the specified side, of the provided box.
+     * DOES NOT round to nearest tile, but returns the floating point intersection.
+     * @param {number} dx - X change of the line
+     * @param {number} dy - Y change of the line
+     * @param {number} c - The c value of the line
+     * @param {BoundingBox} boundingBox - The box
+     * @param {string} corner - What side/corner the line intersects, in english language. "left"/"topright"...
+     * @returns {number[] | undefined} - The tile the line intersects, on the specified side, of the provided box, if it does intersect, otherwise undefined.
+     */
     function getLineIntersectionEntryTile (dx, dy, c, boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
-        let xIntersectBottom = undefined;
-        let xIntersectTop = undefined;
-        let yIntersectLeft = undefined;
-        let yIntersectRight = undefined;
+
         // Check for intersection with left side of rectangle
         if (corner.endsWith('left')) {
-            yIntersectLeft = ((left * dy) + c) / dx;
+            const yIntersectLeft = ((left * dy) + c) / dx;
             if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft]
         }
         
         // Check for intersection with bottom side of rectangle
         if (corner.startsWith('bottom')) {
-            xIntersectBottom = ((bottom * dx) - c) / dy;
+            const xIntersectBottom = ((bottom * dx) - c) / dy;
             if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom]
         }
 
         // Check for intersection with right side of rectangle
         if (corner.endsWith('right')) {
-            yIntersectRight = ((right * dy) + c) / dx;
+            const yIntersectRight = ((right * dy) + c) / dx;
             if (yIntersectRight >= bottom && yIntersectRight <= top) return [right, yIntersectRight];
         }
 
         // Check for intersection with top side of rectangle
         if (corner.startsWith('top')) {
-            xIntersectTop = ((top * dx) - c) / dy;
+            const xIntersectTop = ((top * dx) - c) / dy;
             if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
         }
+
+        // Doesn't intersect any tile in the box.
     }
 
     // Returns point, if there is one, of a line with specified slope "b" intersection screen edge on desired corner
@@ -1021,7 +1028,6 @@ const math = (function() {
         convertCoordToWorldSpace_ClampEdge,
         clamp,
         closestPointOnLine,
-        getLineSteps,
         getBoundingBoxOfBoard,
         convertPixelsToWorldSpace_Virtual,
         convertWorldSpaceToPixels_Virtual,
