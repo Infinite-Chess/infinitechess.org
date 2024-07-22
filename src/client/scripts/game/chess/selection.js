@@ -125,8 +125,6 @@ const selection = (function() {
             return;
         }
 
-        if (isOpponentPiece) return; // Can't move our opponent's pieces, can only view their legal moves.
-
         // If we haven't return'ed at this point, check if the move is legal.
         if (!hoverSquareLegal) return; // Illegal
 
@@ -252,12 +250,12 @@ const selection = (function() {
         const hoverSquareIsSameColor = typeAtHoverCoords && math.getPieceColorFromType(pieceSelected.type) === math.getPieceColorFromType(typeAtHoverCoords);
         const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
         // This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
-        hoverSquareLegal = legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
+        hoverSquareLegal = (legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare) && !isOpponentPiece) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
     }
 
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
     function renderGhostPiece() {
-        if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || main.videoMode || isOpponentPiece) return;
+        if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || main.videoMode) return;
         pieces.renderGhostPiece(pieceSelected.type, hoverSquare)
     }
 
