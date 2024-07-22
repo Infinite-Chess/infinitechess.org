@@ -169,7 +169,7 @@ const invites = (function(){
             const name = createDiv(['invite-child'], n)
             newInvite.appendChild(name)
 
-            const variant = createDiv(['invite-child'], invite.variant)
+            const variant = createDiv(['invite-child'], translations[invite.variant])
             newInvite.appendChild(variant)
 
             const time = clock.getClockFromKey(invite.clock)
@@ -181,7 +181,7 @@ const invites = (function(){
             const color = createDiv(['invite-child'], uColor)
             newInvite.appendChild(color)
 
-            const rated = createDiv(['invite-child'], invite.rated)
+            const rated = createDiv(['invite-child'], translations[invite.rated])
             newInvite.appendChild(rated)
 
             const a = ours ? translations["invites"]["cancel"] : translations["invites"]["accept"]
