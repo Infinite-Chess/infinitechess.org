@@ -14,7 +14,7 @@
  * @property {string} clock - The clock value
  * @property {string} color - white/black
  * @property {string} publicity - public/private
- * @property {string} rated - No/Yes
+ * @property {string} rated - unrated/rated 
  */
 
 const invites = (function(){
