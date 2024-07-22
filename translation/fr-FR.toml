@@ -393,7 +393,7 @@ bug_generic = "Ceci est un bug, reportez le s'il vous plaît."
 
 [terms]
 title = "Conditions d'Utilisation"
-warning = ["CE DOCUMENT N'A PAS DE VALEUR LÉGALE. Notre responsabilité n'est engagé que par la version anglaise de ce texte. Cette traduction n'a qu'une valeur informationelle et peut contenir des erreurs ou inexactitudes. Vous pouvez accèder à la version Anglaise", "ici", "."]
+warning = ["CE DOCUMENT N'A PAS DE VALEUR LÉGALE. Notre responsabilité n'est engagé que par la version anglaise de ce texte. Cette traduction n'a qu'une valeur informationelle et peut contenir des erreurs ou inexactitudes. Vous pouvez accèder à la version Anglaise ", "ici", "."]
 consent = "En utilisant ce site, vous vous engager à respecter les conditions suivantes. Si vous ne les acceptez pas, vous devez immédiatement arrêter d'utiliser ce site."
 guardian_consent = "Si vous avez moins de 18 ans vous devez recervoir l'accord de vos responsables légaux pour utiliser ce site ou vous créer un compte."
 parents_header = "Parents"
@@ -433,10 +433,10 @@ conclusion_header = "Conclusion"
 conclusion_paragraphs = [
 "Toute violations de ces termes peut resulter en un bannissement ou en une suppression de votre compte. InfiniteChess.org a pour souhait de donner à tout le monde l'opportunité de jouer et de prendre du plaisir! Mais, nous nous reservons le droit de bannir ou de supprimer des comptes, pour des raisons que nous ne sommes pas tenus de justifier ou de communiquer et ne ne pourrons légalement pas être tenu pour responsables.",
 ["Ces termes peuvent être modifiés à tout moment. Il est de VOTRE responsabilité de vous tenir au courant des mises à jour de ces derniers! Quand les conditions d'utilisations seront modifiées nous vous en informerons sur la page ", "Actualités", ". Si, vous n'adhérez plus aux conditions après une mise à jour de ces dernières vous devez immédiatement quitter le site. Vous pouvez supprimer votre compte depuis votre profil. Si vous supprimez votre compte, toutes vos informations personnelles et les données qui vont concernent seront supprimées SAUF l'historique de vos parties, qui sont associées à votre nom d'utilisateur. Car ces parties sont des informations publiques."],
-["Ce site est open-source. Vous pouvez récuperer ou distribuer toutes les ressources qui s'y trouvent tant que vos respectez les conditions décrites dans les ", "licences", " ! Ce le lien ci dessus n'est pas fonctionelle il est de votre responsabilité de trouver les licences."],
+["Ce site est open-source. Vous pouvez récuperer ou distribuer toutes les ressources qui s'y trouvent tant que vos respectez les conditions décrites dans les ", "licences", "! Ce le lien ci dessus n'est pas fonctionelle il est de votre responsabilité de trouver les licences."],
 "Nous ne garantissons pas que ce site sera en ligne 100% du temps. Nous ne garantissons pas non plus que les données ne seront jamais corrompues.",
 "Vous n'êtes pas autorisé à performer des activités illégales sur ce site.",
-["Si vous avez des questions concernant ces conditions, ou à propos du site de manière générale,", "envoyez nous un email !"]
+["Si vous avez des questions concernant ces conditions, ou à propos du site de manière générale,", "envoyez nous un email!"]
 ]
 update = "(Dernière mise à jour: 13 Juillet 2024. Ajout de l'avertissement sur le fait que toutes les parties jouées sur le site sont des informations publiques, ce qui inclu une approximation de la durée depuis la dernière activité de votre compte. Ces conditions peuvent être mises à jour à tout moment et il est de votre responsabilité de vous assurez que vous restez à jour.)"
 thanks = "Merci!"
