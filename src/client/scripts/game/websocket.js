@@ -290,9 +290,9 @@ const websocket = (function(){
         if (translations[text]) text = translations[text];
         if (number in messagevalue){
             // special case: number of minutes to be displayed upon server restart
-            if (messagevalue.text == "ws-server_restarting"){
-                const minutes = messagevalue.number;
-                const minutes_plurality = minutes == 1 ? translations["ws-minute"] : translations["ws-minutes"];
+            if (messagevalue.text === "ws-server_restarting"){
+                const minutes = Number(messagevalue.number); // Cast to number in case it's a string
+                const minutes_plurality = minutes === 1 ? translations["ws-minute"] : translations["ws-minutes"];
                 text = `${text} ${minutes} ${minutes_plurality}.`;
             }
         }
