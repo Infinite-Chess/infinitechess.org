@@ -23,8 +23,57 @@
 
 const math = (function() {
 
+    /**
+     * Tests if the provided value is a power of 2.
+     * It does this efficiently by using bitwise operations.
+     * @param {number} value 
+     * @returns {boolean} true if the value is a power of 2.
+     */
     function isPowerOfTwo(value) {
         return (value & (value - 1)) === 0;
+    }
+
+    /**
+     * Returns true if the given values are approximately equal, with the most amount
+     * of difference allowed being the provided epsilon value.
+     * @param {number} a - Value 1
+     * @param {number} b - Value 2
+     * @param {number} [epsilon] The custom epsilon value. Default: Number.EPSILON (~2.2 x 10^-16). Idon us's old epsilon default value: 0.001
+     * @returns {boolean} true if the values are approximately equal, within the threshold.
+     */
+    function isAproxEqual(a, b, epsilon = Number.EPSILON) { // Idon us's old epsilon default value: 0.001
+        return Math.abs(a - b) < epsilon;
+    }
+
+    /**
+     * Finds the intersection point of two lines given in the form dx * x + dy * y = c.
+     * This will return `null` if there isn't one, or if there's infinite (colinear).
+     * @param {number} dx1 - The coefficient of x for the first line.
+     * @param {number} dy1 - The coefficient of y for the first line.
+     * @param {number} c1 - The constant term for the first line.
+     * @param {number} dx2 - The coefficient of x for the second line.
+     * @param {number} dy2 - The coefficient of y for the second line.
+     * @param {number} c2 - The constant term for the second line.
+     * @returns {number[] | null} - The intersection point [x, y], or null if there isn't one, or if there's infinite.
+     */
+    function getLineIntersection(dx1, dy1, c1, dx2, dy2, c2) {
+        // Idon us's old code
+        // return [
+        //     ((dx2*c1)-(dx1*c2))/((dx1*dy2)-(dx2*dy1)),
+        //     ((dy2*c1)-(dy1*c2))/((dx1*dy2)-(dx2*dy1))
+        // ]
+
+        // Naviary's new code
+        const denominator = (dx1 * dy2) - (dx2 * dy1);
+        if (denominator === 0) {
+            // The lines are parallel or coincident (no single intersection point)
+            return null;
+        }
+        
+        const x = ((dx2 * c1) - (dx1 * c2)) / denominator;
+        const y = ((dy2 * c1) - (dy1 * c2)) / denominator;
+        
+        return [x, y];
     }
 
     // Receives theta in RADIANS
@@ -60,7 +109,6 @@ const math = (function() {
     function boxContainsSquare(box, square) { // box: { left, right, bottom, top }  square: [x,y]
         if (!square) console.log("We need a square to test if it's within this box!")
         if (typeof square[0] !== 'number') console.log("Square is of the wrong data type!")
-
         if (square[0] < box.left) return false;
         if (square[0] > box.right) return false;
         if (square[1] < box.bottom) return false;
@@ -146,13 +194,52 @@ const math = (function() {
         return { left, right, bottom, top }
     }
 
-    function getUpDiagonalFromCoords (coords) {
-        // What is the diagonal? It is equal to 0 - x + y. It is determined by the y-intercept point of the diagonal.
-        return -coords[0] + coords[1] // -x + y
+    /**
+     * Computes the positive modulus of two numbers.
+     * @param {number} a - The dividend.
+     * @param {number} b - The divisor.
+     * @returns {number} The positive remainder of the division.
+     */
+    function posMod(a, b) {
+        return a - (Math.floor(a / b) * b);
+    }
+    
+    /**
+     * Checks if both the x-coordinate and the y-coordinate of a point are integers.
+     * @param {number} x - The x-coordinate of the point.
+     * @param {number} y - The y-coordinate of the point.
+     * @returns {boolean} - Returns true if both coordinates are integers, otherwise false.
+     */
+    function areCoordsIntegers(coords) {
+        return Number.isInteger(coords[0]) && Number.isInteger(coords[1]);
     }
 
-    function getDownDiagonalFromCoords (coords) {
-        return coords[0] + coords[1]; // x + y
+    // /**
+    //  * ALTERNATIVE to {@link areCoordsIntegers}, if we end up having floating point imprecision problems!
+    //  *
+    //  * Checks if a number is effectively an integer considering floating point imprecision.
+    //  * @param {number} num - The number to check.
+    //  * @param {number} [epsilon=Number.EPSILON] - The tolerance for floating point imprecision.
+    //  * @returns {boolean} - Returns true if the number is effectively an integer, otherwise false.
+    //  */
+    // function isEffectivelyInteger(num, epsilon = Number.EPSILON) {
+    //     return Math.abs(num - Math.round(num)) < epsilon;
+    // }
+
+    /**
+     * Checks if all lines are colinear aka `[[1,0],[2,0]]` would be as they are both the same direction
+     * @param {number[][]} lines Array of vectors `[[1,0],[2,0]]`
+     * @returns {boolean} 
+     */
+    function areLinesCollinear(lines) {
+        let gradient
+        for (const line of lines) {
+            const lgradient = line[1]/line[0]
+            if (!gradient) gradient = lgradient
+            if (!Number.isFinite(gradient)&&!Number.isFinite(lgradient)) {continue};
+            if (!isAproxEqual(lgradient, gradient)) return false;
+        }
+        return true
     }
 
     /**
@@ -286,39 +373,50 @@ const math = (function() {
         return [worldX, worldY]
     }
 
-    // Returns the point on the line segment that is nearest/perpendicular to the given point.
-    function closestPointOnLine (lineStart, lineEnd, point) {
+    /**
+     * Clamps a value between a minimum and a maximum value.
+     * @param {number} min - The minimum value.
+     * @param {number} max - The maximum value.
+     * @param {number} value - The value to clamp.
+     * @returns {number} The clamped value.
+     */
+    function clamp(min,max,value) {
+        if (min>value) return min;
+        if (max<value) return max;
+        return value;
+    }
 
+    /**
+     * Returns the point on the line segment that is nearest/perpendicular to the given point.
+     * @param {number[]} lineStart - The starting point of the line segment as [x, y].
+     * @param {number[]} lineEnd - The ending point of the line segment as [x, y].
+     * @param {number[]} point - The point to find the nearest point on the line to as [x, y].
+     * @returns {Object} An object containing the proeprties `coords`, which is the closest point on our segment to our point, and the `distance` to it.
+     */
+    function closestPointOnLine(lineStart, lineEnd, point) {
         let closestPoint;
-        let distance;
 
         const dx = lineEnd[0] - lineStart[0];
         const dy = lineEnd[1] - lineStart[1];
 
-        if (dx === 0) {
-            let closestPointY = point[1];
-                 if (closestPointY < lineStart[1]) closestPointY = lineStart[1]
-            else if (closestPointY > lineEnd[1]) closestPointY = lineEnd[1]
-
-            closestPoint = [lineStart[0], closestPointY]
-        } else {
-
+        if (dx === 0) { // Vertical line
+            closestPoint = [lineStart[0], clamp(lineStart[1], lineEnd[1], point[1])];
+        } else { // Not vertical
             const m = dy / dx;
             const b = lineStart[1] - m * lineStart[0];
-        
+            
             // Calculate x and y coordinates of closest point on line
-            const x = (m * (point[1] - b) + point[0]) / (m * m + 1);
+            let x = (m * (point[1] - b) + point[0]) / (m * m + 1);
+            x = clamp(lineStart[0], lineEnd[0], x);
             const y = m * x + b;
 
-            closestPoint = (x < lineStart[0]) ? lineStart : (x > lineEnd[0]) ? lineEnd : [x, y];
+            closestPoint = [x, y];
         }
-
-        distance = euclideanDistance(closestPoint, point)
 
         return {
-          coords: closestPoint,
-          distance: distance
-        }
+            coords: closestPoint,
+            distance: euclideanDistance(closestPoint, point)
+        };
     }
 
     function convertPixelsToWorldSpace_Virtual(value) {
@@ -329,33 +427,94 @@ const math = (function() {
         return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels()
     }
 
-    // Returns point, if there is one, of a line with specified slope "b" intersection screen edge on desired corner
-    function getIntersectionEntryTile (slope, b, boundingBox, corner) { // corner: "topright"/"bottomright"...
+    /**
+     * Returns the side of the box, in english language, the line intersects with the box.
+     * If {@link negateSide} is false, it will return the positive X/Y side.
+     * If the line is orthogonal, it will only return top/bottom/left/right.
+     * Otherwise, it will return the corner name.
+     * @param {number[]} line - [dx,dy]
+     * @param {boolean} negateSide 
+     * @returns {string} Which side/corner the line passes through. [0,1] & false => "top"   [2,1] & true => "bottomleft"
+     */
+    function getAABBCornerOfLine(line, negateSide) {
+        let corner = "";
+        v: {
+            if (line[1] === 0) break v; // Horizontal so parallel with top/bottom lines
+            corner += ((line[0] > 0 === line[1] > 0) === negateSide === (line[0] !== 0)) ? "bottom" : "top" 
+            // Gonna be honest I have no idea how this works but it does sooooooo its staying
+        }
+        h: {
+            if (line[0] === 0) break h; // Vertical so parallel with left/right lines
+            corner += negateSide ? "left" : "right"
+        }
+        return corner;
+    }
+
+    /**
+     * Get the corner coordinate of the bounding box.
+     * Will revert to top left if the corners sides aren't provided.
+     * @param {BoundingBox} boundingBox 
+     * @param {String} corner 
+     * @returns {Number[]}
+     */
+    function getCornerOfBoundingBox(boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
-        
+        let yval = corner.startsWith('bottom') ? bottom : top;
+        let xval = corner.endsWith('right') ? right : left
+        return [xval, yval]
+    }
+
+    /**
+     * Returns the tile-point the line intersects, on the specified side, of the provided box.
+     * DOES NOT round to nearest tile, but returns the floating point intersection.
+     * @param {number} dx - X change of the line
+     * @param {number} dy - Y change of the line
+     * @param {number} c - The c value of the line
+     * @param {BoundingBox} boundingBox - The box
+     * @param {string} corner - What side/corner the line intersects, in english language. "left"/"topright"...
+     * @returns {number[] | undefined} - The tile the line intersects, on the specified side, of the provided box, if it does intersect, otherwise undefined.
+     */
+    function getLineIntersectionEntryTile (dx, dy, c, boundingBox, corner) {
+        const { left, right, top, bottom } = boundingBox;
+
         // Check for intersection with left side of rectangle
         if (corner.endsWith('left')) {
-            const yIntersectLeft = left * slope + b;
+            const yIntersectLeft = ((left * dy) + c) / dx;
             if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft]
         }
         
         // Check for intersection with bottom side of rectangle
         if (corner.startsWith('bottom')) {
-            const xIntersectBottom = (bottom - b) * slope;
+            const xIntersectBottom = ((bottom * dx) - c) / dy;
             if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom]
         }
 
         // Check for intersection with right side of rectangle
         if (corner.endsWith('right')) {
-            const yIntersectRight = right * slope + b;
+            const yIntersectRight = ((right * dy) + c) / dx;
             if (yIntersectRight >= bottom && yIntersectRight <= top) return [right, yIntersectRight];
         }
 
         // Check for intersection with top side of rectangle
         if (corner.startsWith('top')) {
-            const xIntersectTop = (top - b) * slope;
+            const xIntersectTop = ((top * dx) - c) / dy;
             if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
         }
+
+        // Doesn't intersect any tile in the box.
+    }
+
+    /**
+     * Returns the number of steps needed to reach from startCoord to endCoord, rounded down.
+     * @param {number[]} step - [dx,dy]
+     * @param {number[]} startCoord - Coordinates to start on
+     * @param {number[]} endCoord - Coordinate to stop at, proceeding no further
+     * @returns {number} the number of steps
+     */
+    function getLineSteps(step, startCoord, endCoord) {
+        const chebyshevDist = chebyshevDistance(startCoord, endCoord)
+        const stepChebyshev = Math.max(step[0], step[1]);
+        return Math.floor(chebyshevDist / stepChebyshev);
     }
 
     function convertWorldSpaceToGrid(value) {
@@ -619,6 +778,21 @@ const math = (function() {
     }
 
     /**
+     * O(1) method of checking if an object/dict is empty
+     * @param {Object} obj 
+     * @returns {Boolean}
+     */
+    function isEmpty(obj) {
+        for (var prop in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+                return false;
+            }
+        }
+        
+        return true
+    }
+
+    /**
      * Tests if a string is in valid JSON format, and can thus be parsed into an object.
      * @param {string} str - The string to test
      * @returns {boolean} *true* if the string is in valid JSON fromat
@@ -787,15 +961,51 @@ const math = (function() {
         return totalMilliseconds;
     }
 
+    /**
+     * Get the GCD of two numbers
+     * Copied from https://www.geeksforgeeks.org/gcd-greatest-common-divisor-practice-problems-for-competitive-programming/
+     * @param {Number} a 
+     * @param {Number} b
+     * @returns {Number} 
+     */
+    function GCD(a, b) {
+        if (b === 0) {
+            return a;
+        } else {
+            return GCD(b, a % b);
+        }
+    }
+
+    /**
+     * Get the LCM of an array
+     * Copied from https://www.geeksforgeeks.org/lcm-of-given-array-elements/
+     * @param {Number[]} arr
+     */
+    function LCM(arr) {
+        // Initialize result 
+        let ans = arr[0]; 
+
+        // ans contains LCM of arr[0], ..arr[i] 
+        // after i'th iteration, 
+        for (let i = 1; i < arr.length; i++) 
+            ans = (((arr[i] * ans)) / 
+                    (GCD(arr[i], ans))); 
+
+        return ans; 
+    }
+
     return Object.freeze({
         isPowerOfTwo,
+        isAproxEqual,
+        getLineIntersection,
         getXYComponents_FromAngle,
         removeObjectFromArray,
         roundPointToNearestGridpoint,
         boxContainsBox,
         boxContainsSquare,
-        getUpDiagonalFromCoords,
-        getDownDiagonalFromCoords,
+        posMod,
+        areCoordsIntegers,
+        areLinesCollinear,
         deepCopyObject,
         getKeyFromCoords,
         getCoordsFromKey,
@@ -805,11 +1015,15 @@ const math = (function() {
         convertWorldSpaceToCoords_Rounded,
         convertCoordToWorldSpace,
         convertCoordToWorldSpace_ClampEdge,
+        clamp,
         closestPointOnLine,
         getBoundingBoxOfBoard,
         convertPixelsToWorldSpace_Virtual,
         convertWorldSpaceToPixels_Virtual,
-        getIntersectionEntryTile,
+        getAABBCornerOfLine,
+        getCornerOfBoundingBox,
+        getLineIntersectionEntryTile,
+        getLineSteps,
         convertWorldSpaceToGrid,
         euclideanDistance,
         manhattanDistance,
@@ -839,6 +1053,7 @@ const math = (function() {
         mergeBoundingBoxes,
         getBoxFromCoordsList,
         expandBoxToContainSquare,
+        isEmpty,
         isJson,
         invertObj,
         getUTCDateTime,
@@ -847,6 +1062,8 @@ const math = (function() {
         minutesToMillis,
         secondsToMillis,
         getTotalMilliseconds,
-        genUniqueID
+        genUniqueID,
+        GCD,
+        LCM
     });
 })();

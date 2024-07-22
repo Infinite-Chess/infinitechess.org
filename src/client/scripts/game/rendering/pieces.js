@@ -10,8 +10,8 @@ const pieces = (function () {
 
     // All piece names we have a texture for on our spritesheet (except voids).
     // They are arranged in this order for faster checkmate/draw detection.
-    const white = ['kingsW', 'giraffesW', 'camelsW', 'zebrasW', 'amazonsW', 'queensW', 'royalQueensW', 'hawksW', 'chancellorsW', 'archbishopsW', 'centaursW', 'royalCentaursW', 'knightsW', 'guardsW', 'rooksW', 'bishopsW', 'pawnsW'];
-    const black = ['kingsB', 'giraffesB', 'camelsB', 'zebrasB', 'amazonsB', 'queensB', 'royalQueensB', 'hawksB', 'chancellorsB', 'archbishopsB', 'centaursB', 'royalCentaursB', 'knightsB', 'guardsB', 'rooksB', 'bishopsB', 'pawnsB'];
+    const white = ['kingsW', 'giraffesW', 'camelsW', 'zebrasW', 'knightridersW','amazonsW', 'queensW', 'royalQueensW', 'hawksW', 'chancellorsW', 'archbishopsW', 'centaursW', 'royalCentaursW', 'knightsW', 'guardsW', 'rooksW', 'bishopsW', 'pawnsW'];
+    const black = ['kingsB', 'giraffesB', 'camelsB', 'zebrasB', 'knightridersB', 'amazonsB', 'queensB', 'royalQueensB', 'hawksB', 'chancellorsB', 'archbishopsB', 'centaursB', 'royalCentaursB', 'knightsB', 'guardsB', 'rooksB', 'bishopsB', 'pawnsB'];
     const neutral = ['obstaclesN', 'voidsN'];
 
     /** A list of the royal pieces, without the color appended. */

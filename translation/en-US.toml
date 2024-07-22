@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "1.0.1"
+version = "3"
 
 [header]
 home = "Home"
@@ -161,14 +161,14 @@ editing_paragraphs = [
 back = "Back"
 
 [play.guide.pieces]
-chancellor = {name="Chancellor", description="Moves like a rook and a knight combined."},
-archbishop = {name="Archbishop", description="Moves like a bishop and a knight combined."},
-amazon = {name="Amazon", description="Moves like a queen and a knight combined. This is the strongest piece in the game!"},
-guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."},
-hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."},
-centaur = {name="Centaur", description="Moves like a knight and a guard combined."},
-obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."},
-void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."},
+chancellor = {name="Chancellor", description="Moves like a rook and a knight combined."}
+archbishop = {name="Archbishop", description="Moves like a bishop and a knight combined."}
+amazon = {name="Amazon", description="Moves like a queen and a knight combined. This is the strongest piece in the game!"}
+guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."}
+hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."}
+centaur = {name="Centaur", description="Moves like a knight and a guard combined."}
+obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
+void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
 
 [play.play-menu]
@@ -311,6 +311,7 @@ accept = "Accept"
 cancel = "Cancel"
 create_invite = "Create Invite"
 cancel_invite = "Cancel Invite"
+start_game = "Start Game"
 join_existing_active_games = "Join Existing - Active Games:"
 
 [play.javascript.onlinegame]

@@ -1,4 +1,14 @@
 {
- "1": ["inital commit of en-US-toml"],
- "1.0.1": ["added login.login_button on line 448"]
+  "1": {
+    "note": "inital commit of en-US-toml",
+    "changes": []
+  },
+  "2": {
+    "note": "added login.login_button on line 448",
+    "changes": []
+  },
+  "3": {
+    "note": "added play.javascript.invites.start_game on line 314",
+    "changes": []
+  }
 }

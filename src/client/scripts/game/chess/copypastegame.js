@@ -19,8 +19,6 @@ const copypastegame = (function(){
      * @param {event} event - The event fired from the event listener
      */
     function callbackCopy(event) {
-        event = event || window.event;
-
         const gamefile = game.getGamefile();
         const Variant = gamefile.metadata.Variant;
 
@@ -80,8 +78,6 @@ const copypastegame = (function(){
      * @param {event} event - The event fired from the event listener
      */
     async function callbackPaste(event) {
-        event = event || window.event;
-
         // Make sure we're not in a public match
         if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations["copypaste"]["cannot_paste_in_public"])
 
