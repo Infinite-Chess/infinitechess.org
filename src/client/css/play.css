@@ -420,6 +420,10 @@ canvas {
     justify-content: center;
 }
 
+.img-fairymoveset img {
+    width: 100%;
+}
+
 .guide .img-fairymoveset {
     box-sizing: border-box;
     margin: 0 1em 0 0;

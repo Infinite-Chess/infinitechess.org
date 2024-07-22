@@ -1,14 +1,48 @@
 // This script deploys all files from /src/client to /dist in order to run the website.
 // Depending on the value of DEV_BUILD in /src/server/config/config.js, this happens either in development mode or in production mode.
 // Development mode: All files are simply copied over unmodified.
+//                   Only avif images are generated with 1 effort in order to reduce compilation time.
 // Production mode: All non-script assets are copied over unmodified,
 //                  but all game scripts in /src/client/scripts/game are concatenated into app.js.
-//                  Further, all scripts are minified with the use of terser.
+//                  Further, all scripts are minified with the use of swc.
+//                  Webp, png and avif images are generated with the biggest effort value.
 
 import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
+import path from "path";
 import swc from "@swc/core";
+import sharp from "sharp";
 import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js"
 import { DEV_BUILD } from "./src/server/config/config.js";
+
+// Development effort values
+const avif_dev_effort = 0; // 0-9
+// Production effort values
+// Reduce to improve start times
+const webp_effort = 6; // 0-6
+const png_effort = 10; // 1-10
+const avif_effort = 9; // 0-9
+
+/**
+* Images to optimise.
+* Key is image name, value is options for each format.
+*/ 
+const optimised_images = {
+  "king_w.png": {},
+  "queen_w.png": {},
+  "blank_board.png": {},
+  "member_default.png": {},
+  "/game/guide/promotionlines.png": {},
+  "/game/guide/kingrookfork.png": {},
+  "/game/guide/arrowindicators.png": {},
+  "/game/guide/fairy/chancellor.png": {},
+  "/game/guide/fairy/archbishop.png": {},
+  "/game/guide/fairy/amazon.png": {},
+  "/game/guide/fairy/guard.png": {},
+  "/game/guide/fairy/hawk.png": {},
+  "/game/guide/fairy/centaur.png": {},
+  "/game/guide/fairy/obstacle.png": {},
+  "/game/guide/fairy/void.png": {},
+}
 
 /**
  * 
@@ -34,13 +68,44 @@ async function getExtFiles(path, ext) {
   return files;
 }
 
+function endsWithArray(str, array) {
+  for (let el of array) {
+    if (str.endsWith(el)) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * @param {string} img Name of image 
+ * @param {string} format Format, either png, avif or webp
+ * @returns {Number} effort Value of effort to override if is nto set
+ */
+function loadImageConfig(img, format, effort) {
+  let config;
+  // Make sure format exists
+  if (format in optimised_images[img]) {
+    config = optimised_images[img]['avif']
+  } else {
+    config = {};
+  }
+  
+  // If effor is not set overriede with effort variable
+  if (!("effort" in config)) {
+    config["effort"] = effort;
+  }
+  
+  return config;
+}
+
 // remove dist
 await remove("./dist", {
   recursive: true,
   force: true,
 });
 
-if (DEV_BUILD){
+if (false){
   // in dev mode, copy all clientside files over to dist and exit
   await copy("./src/client", "./dist", {
     recursive: true,
@@ -48,13 +113,21 @@ if (DEV_BUILD){
   });
   // overwrite play.ejs by injecting all needed scripts into it:
   await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+  
+  // add avif images, webp and png are enable only in production
+  for (let img in optimised_images) {
+    const img_path = path.join(`./src/client/img/`, img);
+    sharp(img_path)
+    .avif(loadImageConfig(img, 'avif', avif_dev_effort))
+      .toFile(path.join('./dist/img/', `${ img.replace(/\.[^/.]+$/, '')}.avif`))
+  }
 } else {
-  // in prod mode, copy all clientside files over to dist, except for those contained in scripts
+  // in prod mode, copy all clientside files over to dist, except for those contained in scripts and images contained in optimised_images
   await copy("./src/client", "./dist", {
     recursive: true,
     force: true,
-    filter: filename => { 
-      return !/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) // make sure to create the scripts/game/folder
+    filter: filename => {
+      return (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename)) && !(/(\\|\/)img(\\|\/)/.test(filename) && endsWithArray(filename, Object.keys(optimised_images)))
     }
   });
 
@@ -93,4 +166,21 @@ if (DEV_BUILD){
   
   // overwrite play.ejs by injecting all needed scripts into it:
   await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+  
+  // Generate optimised images and copy them to /dist/img
+  console.log("Optimising images...");
+  for (let img in optimised_images) {
+    const img_path = path.join(`./src/client/img/`, img);
+    sharp(img_path)
+    .webp(loadImageConfig(img, 'webp', webp_effort))
+      .toFile(path.join('./dist/img/', `${ img.replace(/\.[^/.]+$/, '')}.webp`))
+    
+    sharp(img_path)
+    .png(loadImageConfig(img, 'png', png_effort))
+      .toFile(path.join('./dist/img/', `${ img.replace(/\.[^/.]+$/, '')}.png`))
+    
+    sharp(img_path)
+    .avif(loadImageConfig(img, 'avif', avif_effort))
+      .toFile(path.join('./dist/img/', `${ img.replace(/\.[^/.]+$/, '')}.avif`))
+  }
 }

@@ -74,7 +74,7 @@ const guiguide = (function() {
     }
 
     function hideCurrentFairy() {
-        const allFairyImgs = element_FairyImg.querySelectorAll('img')
+        const allFairyImgs = element_FairyImg.querySelectorAll('picture')
         const targetFairyImg = allFairyImgs[fairyIndex];
         style.hideElement(targetFairyImg)
 
@@ -84,7 +84,7 @@ const guiguide = (function() {
     }
 
     function revealCurrentFairy() {
-        const allFairyImgs = element_FairyImg.querySelectorAll('img')
+        const allFairyImgs = element_FairyImg.querySelectorAll('picture')
         const targetFairyImg = allFairyImgs[fairyIndex];
         style.revealElement(targetFairyImg)
 
