@@ -279,7 +279,6 @@ const invites = (function(){
      * @returns {Invite} The invite object, parsed from an HTML element.
      */
     function getInviteFromElement(inviteElement) {
-        /** @type {string[]} */
         const childrenTextContent = style.getChildrenTextContents(inviteElement);
         const id = inviteElement.getAttribute('id')
         
