@@ -6,6 +6,7 @@
  * And we resend requests account verification emails.
  */
 
+const locale = require('date-fns/locale')
 const { format, formatDistance } = require('date-fns');
 const { getVerified, setVerified, getInfo, getUsernameCaseSensitive, getJoinDate, getLastSeen, getElo, getEmail } = require('./members.js');
 const { sendEmailConfirmation } = require('../controllers/sendMail')
@@ -31,7 +32,9 @@ const getMemberData = async (req, res) => {
     const joinDate = getJoinDate(usernameLowercase);
     const joined = format(new Date(joinDate), 'PP');
     const lastSeen = getLastSeen(usernameLowercase);
-    const seen = formatDistance(new Date(), new Date(lastSeen));
+    let localeStr = req.i18n.resolvedLanguage.replace('-','');
+	if (!(localeStr in locale)) localeStr = req.i18n.resolvedLanguage.split('-')[0];
+    const seen = formatDistance(new Date(), new Date(lastSeen), { locale: locale[localeStr] });
     const sendData = {
         username,
         elo: getElo(usernameLowercase),
