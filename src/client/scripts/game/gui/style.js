@@ -98,12 +98,33 @@ const style = (function() {
         element_style.innerHTML = navigationStyle /* + "\n\n" + otherStyle */; // Other styles can be appended here later
     }
 
+    /**
+     * Gets all children of an element and returns an array of their text contents.
+     * @param {HTMLElement} parentElement - The parent element.
+     * @returns {string[]} An array of text contents of the child elements.
+     */
+    function getChildrenTextContents(parentElement) {
+        // Get all child elements
+        const children = parentElement.children;
+        
+        // Create an array to hold the text contents
+        const textContents = [];
+
+        // Loop through the child elements and extract their text content
+        for (let i = 0; i < children.length; i++) {
+            textContents.push(children[i].textContent);
+        }
+
+        return textContents;
+    }
+
     return Object.freeze({
         hideElement,
         revealElement,
         setNavStyle,
         fadeIn1s,
-        fadeOut1s
+        fadeOut1s,
+        getChildrenTextContents
     })
 
 })();

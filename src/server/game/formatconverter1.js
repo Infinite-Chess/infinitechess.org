@@ -1,3 +1,14 @@
+
+/*
+ * Universal Infinite Chess Notation [Converter] and Interface
+ * by Andreas Tsevas and Naviary
+ * https://github.com/tsevasa/infinite-chess-notation
+ * 
+ * This script converts primed gamefiles from JSON notation to a
+ * compact ICN (Infinite Chess Noation) and back, still human-readable,
+ * but taking less space to describe positions.
+ */
+
 'use strict';
 
 const formatconverter1 = (function() {
@@ -20,6 +31,7 @@ const formatconverter1 = (function() {
         "centaursW": "CE", "centaursB": "ce",
         "royalQueensW": "RQ", "royalQueensB": "rq",
         "royalCentaursW": "RC", "royalCentaursB": "rc",
+        "knightridersW": "NR", "knightridersB": "nr",
         "obstaclesN": "ob",
         "voidsN": "vo"
     };
@@ -954,7 +966,7 @@ const formatconverter1 = (function() {
     //     console.log(`\n\nCompressing of a variant's starting position example:\n\n${JSON.stringify(b)}`)
 
     //     // Speed test, put large position in "longposition.txt"
-    //     const fs = require('fs'); // supported in NodeJS
+    //     const fs = require('fs'); // supported in Node.js
     //     fs.readFile("longposition.txt", (err, data) => {
     //         if (err) return;
     //         const gameExampleLong = JSON.parse(data);

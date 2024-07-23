@@ -293,7 +293,7 @@ const clock = (function(){
      * @returns {string}
      */
     function getClockFromKey(key) { // mm+ss  converted to  15m+15s
-        if (key === "0") return "No Clock"
+        if (key === "0") return translations["no_clock"]
 
         const splitClock = key.split('+')
         const minutes = splitClock[0]

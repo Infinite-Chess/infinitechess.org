@@ -652,7 +652,7 @@ const gamemanager = (function() {
      * @param {Game} [game] The game, if already known. If not specified we will find it.
      */
     function resyncToGame(ws, game, gameID, replyToMessageID) {
-        if (!game && gameID == null) return ws.metadata.sendmessage(ws, 'general', 'error', 'Cannot resync to game without game ID.')
+        if (!game && gameID == null) return ws.metadata.sendmessage(ws, 'general', 'printerror', 'Cannot resync to game without game ID.')
 
         game = game || getGameByID(gameID) || (ws.metadata.subscriptions.game?.id ? getGameByID(ws.metadata.subscriptions.game?.id) : undefined);
         if (!game) {
@@ -686,14 +686,14 @@ const gamemanager = (function() {
         if (game.gameConclusion === 'aborted') return; // Opponent aborted first.
         else if (isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
             console.error("Player tried to abort game when the game is already over!")
-            ws.metadata.sendmessage(ws, 'general', 'notify', "Can't abort game, it's already over.")
+            ws.metadata.sendmessage(ws, 'general', 'notify', { text: "ws-no_abort_game_over" })
             subscribeClientToGame(game, ws, colorPlayingAs);
             return;
         };
 
         if (movesscript1.isGameResignable(game)) {
             console.error("Player tried to abort game when there's been atleast 2 moves played!")
-            ws.metadata.sendmessage(ws, 'general', 'notify', "Can't abort game, atleast 2 moves have been played.")
+            ws.metadata.sendmessage(ws, 'general', 'notify', { text: "ws-no_abort_after_moves" })
             subscribeClientToGame(game, ws, colorPlayingAs);
             return;
         }
@@ -727,7 +727,7 @@ const gamemanager = (function() {
         if (game.publicity === 'private') {
             const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${getSimplifiedGameString(game)}`
             logEvents(errString, 'hackLog.txt', { print: true })
-            sendMessageToSocketOfColor(game, ourColor, 'general', 'notify', 'Cannot report your friend for cheating in a private match!')
+            sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', 'Cannot report your friend for cheating in a private match!')
             return;
         }
 
@@ -736,7 +736,7 @@ const gamemanager = (function() {
         if (colorThatPlayedPerpetratingMove === ourColor) {
             const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${getSimplifiedGameString(game)}`
             logEvents(errString, 'hackLog.txt', { print: true })
-            sendMessageToSocketOfColor(game, ourColor, 'general', 'notify', "Silly goose. You can't report yourself for cheating! You played that move!")
+            sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', "Silly goose. You can't report yourself for cheating! You played that move!")
             return;
         }
 
@@ -753,8 +753,8 @@ const gamemanager = (function() {
         setGameConclusion(game, 'aborted')
 
         sendGameUpdateToBothPlayers(game);
-        sendMessageToSocketOfColor(game, 'white', 'general', 'notify', 'Game aborted for probable cheating.')
-        sendMessageToSocketOfColor(game, 'black', 'general', 'notify', 'Game aborted for probable cheating.')
+        sendMessageToSocketOfColor(game, 'white', 'general', 'notify', { text: "ws-game_aborted_cheating" })
+        sendMessageToSocketOfColor(game, 'black', 'general', 'notify', { text: "ws-game_aborted_cheating" })
     }
 
     /**
@@ -770,7 +770,7 @@ const gamemanager = (function() {
 
         if (isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
             console.error("Player tried to resign game when the game is already over!")
-            ws.metadata.sendmessage(ws, 'general', 'notify', "Can't resign game, it's already over.")
+            ws.metadata.sendmessage(ws, 'general', 'notify', { text: "ws-cannot_resign_finished_game" })
             const colorPlayingAs = doesSocketBelongToGame_ReturnColor(game, ws);
             subscribeClientToGame(game, ws, colorPlayingAs);
             return;
@@ -1124,7 +1124,7 @@ const gamemanager = (function() {
         // They can't submit a move if they aren't subscribed to a game
         if (!ws.metadata.subscriptions.game) {
             console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.")
-            // ws.metadata.sendmessage(ws, "general", "error", "Failed to submit move. Please refresh.")
+            // ws.metadata.sendmessage(ws, "general", "printerror", "Failed to submit move. Please refresh.")
             return;
         }
 
@@ -1134,7 +1134,7 @@ const gamemanager = (function() {
         const game = getGameByID(id);
         if (!game) {
             console.error('They should not be submitting a move when the game their subscribed to is deleted! Server error. We should ALWAYS unsubscribe them when we delete the game.');
-            return ws.metadata.sendmessage(ws, "general", "error", "Server error. Cannot submit move. This game does not exist.");
+            return ws.metadata.sendmessage(ws, "general", "printerror", "Server error. Cannot submit move. This game does not exist.");
         }
 
         // If the game is already over, don't accept it.
@@ -1151,20 +1151,20 @@ const gamemanager = (function() {
         }
 
         // Make sure it's their turn
-        if (game.whosTurn !== color) return ws.metadata.sendmessage(ws, "general", "error", "Cannot submit a move when it's not your turn.");
+        if (game.whosTurn !== color) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot submit a move when it's not your turn.");
 
         // Legality checks...
         if (!doesMoveCheckOut(messageContents.move)) {
             const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
             console.error(errString)
             logEvents(errString, 'hackLog.txt')
-            return ws.metadata.sendmessage(ws, "general", "error", "Invalid move format.")
+            return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid move format.")
         }
         if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
             const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
             console.error(errString)
             logEvents(errString, 'hackLog.txt')
-            return ws.metadata.sendmessage(ws, "general", "error", "Invalid game conclusion.");
+            return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid game conclusion.");
         }
         
         game.moves.push(messageContents.move); // Add the move to the list!
