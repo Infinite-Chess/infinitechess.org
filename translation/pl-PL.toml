@@ -39,6 +39,7 @@ about_title = "O projekcie"
 about_paragraphs = [
 "Jestem Naviary. Od kiedy odkryłem Nieskończone Szachy (koncept istniał długo przed tą stroną), byłem bardzo zaintrygowany jego możliwościami. Od dawna granie w tą wersję było bardzo trudne, gdyż wymagało od graczy na chess.com wysyłania zdjęć planszy po każdym zagranym ruchu. Ze względu na to, niewielu ludzi było w stanie zagrać w Nieskończone Szachy, a sam sposób gry był bardzo mało popularny",
 ["Moim celem było stworzenie sposobu aby Nieskończone Szachy były łatwo grywalne dla każdego, i stworzenie społeczności otaczającej je. Spędziłem niezliczone godziny nad tą stroną, aktualizowaniem i tworzeniem gry. Mam wiele innych pomysłów, które będą zajmować sporo mojego czasu. O ile chciałbym, żeby ta gra była darmowa, życie kosztuje, aby wesprzeć mnie finansowo rozważ dołączenie na mój", "Patreon"]
+]
 patreon_title = "Wspierający Patreon"
 
 [credits]
@@ -62,7 +63,7 @@ variants_credits = [
 "- Cory Evans, Joel Hamkins, i Norman Lewis Perlmutter.",
 ]
 textures_heading = "Tekstury"
-textures_licensed_under = "Testury na licencji"
+textures_licensed_under = "Tekstury na licencji"
 textures_credits = [
 "Gold coin, stworzone przez Quolte.",
 ]
@@ -133,22 +134,22 @@ careful_paragraphs = [
 "Many other variants have been created with the aim of strengthening your backside."
 ] # Needs translation
 controls_heading = "Sterowanie"
-controls_paragraph = "A lot of controls are intuitive, such as clicking and dragging the board to move around, and scrolling to zoom in and out, but let's take a look at the other controls you have at your disposal!" # Needs translation
+controls_paragraph = "Większość sterowania jest oczywista (jak np. klikanie i ruszanie myszką aby poruszać się na planszy, czy też scroll'owanie aby przybliżyć i oddalić kamerę), lecz skupmy się na innych klawiszach sterowania, które możesz wykorzystać!"
 keybinds = [
-" to move around.",
-["Space", " and ", "Shift", " to zoom in and out."],
-["Escape", " to pause the game."],
-["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu."],
-" will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
-] # Needs translation
-controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!" # Needs translation
+" aby się poruszać.",
+["Spacja", " i ", "Shift", " aby przybliżać i oddalać."],
+["Escape", " aby zatrzymać grę."],
+["Tab", " przełącza wskaźnik strzałek na granicy twojego ekranu, wskazujące położenie twoich pionków poza ekranem. Domyślnie, opcja ta jest ustawiona na tryb \"Obrona\", który pokazuje strzałki dla pionków które mogą się bezpośrednio poruszyć do twojej lokalizacji. Lecz klawisz ", "tab", " może przełączyć tę opcję na tryby \"Wszystko\" lub \"Wyłączone\", gdzie tryb \"Wszystko\" pokazuje wszystkie pionki, które mogą się poruszać prostopadle lub przekątnie po planszy. Opcja ta, może być również przełączona w menu pauzy."],
+" przełączy \"Tryb Edycji\" w grach lokalnych. Pozwoli to na poruszanie twoich pionków w dowolne miejsce na planszy! Bardzo użyteczne podczas analizy gry."
+]
+controls_paragraph2 = "To są najpotrzebniejsze klawisze sterowania jakie musisz znać, ale są też dodatkowe jeśli będziesz ich kiedykolwiek potrzebować!"
 keybinds_extra = [
-" will reset the rendering of the pieces. This is useful if they turn invisible. This glitch can happen if you move extreme distances (like 1e21).",
-" will toggle the rendering of the navigation and game info bars, which can be useful for recording. Streaming and making videos on the game is welcome!",
-" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed, to save compute.",
-" will toggle icon-rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throddler, but they can be toggled back on with ",
-[" (backtick, or the same key as ", ") will toggle Debug mode."],
-] # Needs translation
+" zresetuje renderowanie pionków. Jest to użyteczne gdy staną się one niewidoczne. Ten błąd może się wydarzyć, jeśli oddalisz się baaaaaaaaaaaaaaardzo daleko od planszy (jak np. na dystans 1e21).",
+" przełączy renderowanie informacji o grze, co może być przydatne podczas nagrywania. Stream'owanie oraz nagrywanie filmików jest zawsze mile widziane!",
+" przełączy informacje o FPS. Wyświetla to liczbę razy odświeżania gry na sekundę, a nie zawsze liczbę wyrenderowanych klatek (ze względu na pomijanie renderowania rzeczy, które się nie zmieniły, aby zwiększyć wydajność)",
+" przełączy renderowanie ikon. Są to małe zdjęcia pionków, które możesz kliknąć, gdy oddalisz kamerę wystarczająco daleko. W zaimportowanych grach, z ponad 50,000 pionków, jest to automatycznie wyłączone (ze względu na zmniejszoną wydajność) jednak możesz ją spowrotem włączyć używając, ",
+[" backtick albo klawisz ", ", włączą tryb debugowania."],
+] # 'backtick'  needs translation
 fairy_heading = "Fairy Pieces" # Needs translation
 fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!" # Needs translation
 editing_heading = "Edytor planszy"
@@ -506,7 +507,7 @@ ws-incorrect_password = "Hasło jest niepoprawne!"
 ws-username_and_password_required = "Nazwa użytkownika oraz hasło są wymagane."
 ws-username_and_password_string = "Nazwa użytkownika i hasło muszą być typu 'string'."
 ws-login_failure_retry_in = "Wystąpił problem z logowaniem, spróbuj ponownie."
-ws-seconds = "sekundy" # unit of time
+ws-seconds = "sek." # unit of time
 ws-second = "sekunda" # unit of time
 ws-username_length = "Nazwa użytkownika musi posiadać od 3 do 20 znaków"
 ws-username_letters = "Nazwa użytkownika może zawierać tylko litery A-Z oraz cyfry 0-9"
@@ -540,7 +541,7 @@ ws-player_already_has_invite = "Gracz już utworzył zaproszenie."
 ws-invite_cancelled = "Zaproszenie zostało anulowane."
 ws-accept_own_invite = "Nie możesz zaakceptować swojego zaproszenia, głuptasie!"
 ws-server_restarting = "Serwer uruchomi się ponownie za"
-ws-minutes = "minuty" # unit of time
+ws-minutes = "min." # unit of time
 ws-minute = "minuta" # unit of time
 ws-no_abort_game_over = "Can't abort game, it's already over." # Needs translation
 ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played." # Needs translation
