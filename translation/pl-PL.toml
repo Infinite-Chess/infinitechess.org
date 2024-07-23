@@ -34,7 +34,7 @@ what_is_it_pargaraphs = [
 "Jak możesz sobie wyobrazić, istnieją nieskończone możliwości ustawień początkowych, które możesz wykorzystać do gry kompetetywnej! Celem w grze dalej jest szach-mat, który wymaga nowych taktyk, gdyż nie ma ścian, które w zwykłej grze mogłyby zatrzymać króla",
 ] # Paragraph 2 needs translation
 how_to_title = "Jak zagrać?"
-how_to_paragraph = ["Obecna wersja (1.3.2) jest na stronie ","Graj"," !"]
+how_to_paragraph = ["Obecna wersja (1.3.2) jest dostępna na stronie ","Graj"," !"]
 about_title = "O projekcie"
 about_paragraphs = [
 "Jestem Naviary. Od kiedy odkryłem Nieskończone Szachy (koncept istniał długo przed tą stroną), byłem bardzo zaintrygowany jego możliwościami. Od dawna granie w tą wersję było bardzo trudne, gdyż wymagało od graczy na chess.com wysyłania zdjęć planszy po każdym zagranym ruchu. Ze względu na to, niewielu ludzi było w stanie zagrać w Nieskończone Szachy, a sam sposób gry był bardzo mało popularny",
@@ -80,7 +80,7 @@ code_credits = [
 
 [member]
 verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację."
-resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu lub, ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do mnie."]
+resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu lub ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do nas."]
 verify_confirm = "Dziękujemy! Twoje konto zostało zarejestrowane pomyślnie."
 rating = "Kwalifikacja ELO:"
 joined = "Dołączył:"
