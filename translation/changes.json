@@ -5,10 +5,61 @@
   },
   "2": {
     "note": "added login.login_button on line 448",
-    "changes": []
+    "changes": ["login.login_button"]
   },
   "3": {
     "note": "added play.javascript.invites.start_game on line 314",
-    "changes": []
+    "changes": ["play.javascript.invites.start_game"]
+  },
+  "4": {
+    "note": "Added news.july22-2024 on line 462",
+    "changes": ["news.july22-2024"]
+  },
+  "5": {
+    "note": "Deleted create-account.argreement on line 100, and replaced it with create-account.agreement which is different. Deleted play.play-menu.variants. Added several entries to play.play-menu. Added several entries to server.javascript.",
+    "changes": ["create-account.argreement",
+                "create-account.agreement",
+                "play.play-menu.variants",
+                "play.play-menu.Classical",
+                "play.play-menu.Classical_Plus",
+                "play.play-menu.CoaIP",
+                "play.play-menu.Pawndard",
+                "play.play-menu.Knighted_Chess",
+                "play.play-menu.Knightline",
+                "play.play-menu.Core",
+                "play.play-menu.Standarch",
+                "play.play-menu.Pawn_Horde",
+                "play.play-menu.Space_Classic",
+                "play.play-menu.Space",
+                "play.play-menu.Obstocean",
+                "play.play-menu.Abundance",
+                "play.play-menu.Amazon_Chandelier",
+                "play.play-menu.Containment",
+                "play.play-menu.Classical_Limit_7",
+                "play.play-menu.CoaIP_Limit_7",
+                "play.play-menu.Chess",
+                "play.play-menu.Classical_KOTH",
+                "play.play-menu.CoaIP_KOTH",
+                "play.play-menu.Omega",
+                "play.play-menu.Omega_Squared",
+                "play.play-menu.Omega_Cubed",
+                "play.play-menu.Omega_Fourth",
+                "play.play-menu.no_clock",
+                "play.play-menu.unrated",
+                "server.javascript.ws-username_reserved",
+                "server.javascript.ws-already_in_game",
+                "server.javascript.ws-player_already_has_invite",
+                "server.javascript.ws-invite_cancelled",
+                "server.javascript.ws-accept_own_invite",
+                "server.javascript.ws-server_restarting",
+                "server.javascript.ws-minutes",
+                "server.javascript.ws-minute",
+                "server.javascript.ws-no_abort_game_over",
+                "server.javascript.ws-no_abort_after_moves",
+                "server.javascript.ws-game_aborted_cheating",
+                "server.javascript.ws-cannot_resign_finished_game",
+                "server.javascript.ws-invalid_code",
+                "server.javascript.ws-game_aborted"
+              ]
   }
 }

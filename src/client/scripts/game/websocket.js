@@ -205,7 +205,6 @@ const websocket = (function(){
         try {
             // Parse the stringified JSON message and translate the message from the server if a translation is available
             message = JSON.parse(serverMessage.data); // { sub, action, value, id }
-            if (translations[message]) message = translations[message];
         } catch (error) {
             return console.error('Error parsing incoming message as JSON:', error);
         }
@@ -257,10 +256,10 @@ const websocket = (function(){
     function ongeneralmessage(action, value) {
         switch (action) {
             case "notify":
-                statustext.showStatus(value);
+                statustext.showStatus(getTranslatedAndAssembledMessage(value));
                 break;
-            case "error":
-                statustext.showStatus(value, true, 2);
+            case "notifyerror":
+                statustext.showStatus(getTranslatedAndAssembledMessage(value), true, 2);
                 break;
             case "print":
                 console.log(value)
@@ -279,6 +278,25 @@ const websocket = (function(){
             default:
                 console.log(`We don't know how to treat this server action in general route: Action "${action}". Value: ${value}`)
         }
+    }
+
+    /**
+     * Called when we receive an incoming server message with route "general" and action "notify" or "notifyerror"
+     * @param {Object} messagevalue - An object of the form { text: "blabla", number: 32 }
+     * @returns the translated text in messagevalue.text, potentially enhanced with messagevalue.number
+     */
+    function getTranslatedAndAssembledMessage(messagevalue){
+        let text = messagevalue.text;
+        if (translations[text]) text = translations[text];
+        if (number in messagevalue){
+            // special case: number of minutes to be displayed upon server restart
+            if (messagevalue.text === "ws-server_restarting"){
+                const minutes = Number(messagevalue.number); // Cast to number in case it's a string
+                const minutes_plurality = minutes === 1 ? translations["ws-minute"] : translations["ws-minutes"];
+                text = `${text} ${minutes} ${minutes_plurality}.`;
+            }
+        }
+        return text;
     }
 
     /**

@@ -14,7 +14,7 @@
  * @property {string} clock - The clock value
  * @property {string} color - white/black
  * @property {string} publicity - public/private
- * @property {string} rated - No/Yes
+ * @property {string} rated - unrated/rated 
  */
 
 const invites = (function(){
@@ -169,7 +169,7 @@ const invites = (function(){
             const name = createDiv(['invite-child'], n)
             newInvite.appendChild(name)
 
-            const variant = createDiv(['invite-child'], invite.variant)
+            const variant = createDiv(['invite-child'], translations[invite.variant])
             newInvite.appendChild(variant)
 
             const time = clock.getClockFromKey(invite.clock)
@@ -181,7 +181,7 @@ const invites = (function(){
             const color = createDiv(['invite-child'], uColor)
             newInvite.appendChild(color)
 
-            const rated = createDiv(['invite-child'], invite.rated)
+            const rated = createDiv(['invite-child'], translations[invite.rated])
             newInvite.appendChild(rated)
 
             const a = ours ? translations["invites"]["cancel"] : translations["invites"]["accept"]
@@ -279,9 +279,8 @@ const invites = (function(){
      * @returns {Invite} The invite object, parsed from an HTML element.
      */
     function getInviteFromElement(inviteElement) {
-        /** @type {string[]} */
         const childrenTextContent = style.getChildrenTextContents(inviteElement);
-        const id = style.getAttributeValue(inviteElement, 'id');
+        const id = inviteElement.getAttribute('id')
         
         /**
          * Starting from the first child, the order goes:
