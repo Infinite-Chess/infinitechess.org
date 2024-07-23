@@ -2,7 +2,7 @@
 const { logEvents } = require('./logEvents');
 
 function errorHandler(err, req, res, next) {
-    const errMessage = err.stack;
+    const errMessage = `${err.stack}`;
     logEvents(errMessage, 'errLog.txt', { print: true });
     
     // This sends back to the browser the error, instead of the ENTIRE stack which is PRIVATE.

@@ -363,6 +363,8 @@ const movepiece = (function(){
      */
     
     function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, updateData = true, updateProperties = true, simulated = false } = {}) {
+        if (!simulated) selection.unselectPiece(); // Unselect any piece, because forwarding may change its legal moves
+
         while(true) { // For as long as we have moves to forward...
             const nextIndex = gamefile.moveIndex + 1;
             if (movesscript.isIndexOutOfRange(gamefile.moves, nextIndex)) break;

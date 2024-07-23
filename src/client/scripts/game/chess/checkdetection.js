@@ -114,66 +114,71 @@ const checkdetection = (function(){
         return false;
     }
 
-    // Returns true if there's any sliding piece that can capture on that square
+    /**
+     * Calculates if any sliding piece can attack the specified square.
+     * Appends attackers to the provided `attackers` array.
+     * @param {gamefile} gamefile 
+     * @param {number[]} coords - The square to test if it can be attacked
+     * @param {string} color - The color of friendly pieces
+     * @param {Object[]} attackers - A running list of attackers on this square. Any new found attackers will be appended to this this.
+     * @returns {boolean} true if this square is under attack
+     */
     function doesSlideAttackSquare (gamefile, coords, color, attackers) {
 
         let atleast1Attacker = false;
 
-        // Horizontal
-        const row = gamefile.piecesOrganizedByRow[coords[1]];
-        if (doesLineAttackSquare(gamefile, row, 'horizontal', coords, color, attackers)) atleast1Attacker = true;
-
-        // Vertical
-        const column = gamefile.piecesOrganizedByColumn[coords[0]];
-        if (doesLineAttackSquare(gamefile, column, 'vertical', coords, color, attackers)) atleast1Attacker = true;
-
-        // Diagonal Up
-        let key = math.getUpDiagonalFromCoords(coords)
-        let diag = gamefile.piecesOrganizedByUpDiagonal[key];
-        if (doesLineAttackSquare(gamefile, diag, 'diagonalup', coords, color, attackers)) atleast1Attacker = true;
-
-        // Diagonal Down
-        key = math.getDownDiagonalFromCoords(coords)
-        diag = gamefile.piecesOrganizedByDownDiagonal[key];
-        if (doesLineAttackSquare(gamefile, diag, 'diagonaldown', coords, color, attackers)) atleast1Attacker = true;
+        for (const direction of gamefile.startSnapshot.slidingPossible) { // [dx,dy]
+            const directionKey = math.getKeyFromCoords(direction)
+            const key = organizedlines.getKeyFromLine(direction, coords)
+            if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[directionKey][key], direction, coords, color, attackers)) atleast1Attacker = true;
+        }
 
         return atleast1Attacker;
     }
 
-    // Returns true if a piece on the specified line can capture on that square
-    // THIS REQUIRES  coords  be already on the line.
-    // direction = 'horizontal' / 'vertical' / 'diagonalup' / 'diagonaldown'
-    function doesLineAttackSquare(gamefile, line, direction, coords, colorOfFriendlys, attackers) {
+    /**
+     * Returns true if a piece on the specified line can capture on that square.
+     * THIS REQUIRES `coords` be already on the line!!!
+     * Appends any attackeres to the provided `attackers` array.
+     * @param {gamefile} gamefile 
+     * @param {Piece[]} line - The line of pieces
+     * @param {number[]} direction - Step of the line: [dx,dy]
+     * @param {number} coords - The coordinates of the square to test if any piece on the line can move to.
+     * @param {string} color - The color of friendlies. We will exclude pieces of the same color, because they cannot capture friendlies.
+     * @param {Object[]} [attackers] - The running list of attackers threatening these coordinates. Any attackers found will be appended to this list. LEAVE BLANK to save compute not adding them to this list!
+     * @returns {boolean} true if the square is under threat
+     */
+    function doesLineAttackSquare(gamefile, line, direction, coords, color, attackers) {
+        if (!line) return false; // This line doesn't exist, then obviously no pieces can attack our square
 
-        if (!line) return false; // No line, no pieces to attack
+        const directionKey = math.getKeyFromCoords(direction); // 'dx,dy'
+        let foundCheckersCount = 0;
 
-        for (let a = 0; a < line.length; a++) { // { coords, type }
-            const thisPiece = line[a];
+        // Iterate through every piece on the line, and test if they can attack our square
+        for (const thisPiece of line) { // { coords, type }
 
             const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
-            if (colorOfFriendlys === thisPieceColor) continue; // Same team, can't capture us, CONTINUE next piece!
-            if (thisPieceColor === 'neutral') continue;
+            if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
+            if (thisPieceColor === 'neutral') continue; // Neutrals can't move, that means they can't make captures, right?
 
             const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type)
-            const lineIsVertical = direction === 'vertical' ? true : false;
-            const moveset = direction === 'horizontal' ? thisPieceMoveset.horizontal
-                          : direction === 'vertical' ? thisPieceMoveset.vertical
-                          : direction === 'diagonalup' ? thisPieceMoveset.diagonalUp
-                          : thisPieceMoveset.diagonalDown;
-            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, lineIsVertical, moveset, thisPiece.coords, thisPieceColor)
-            if (!thisPieceLegalSlide) continue; // This piece has no horizontal moveset, NEXT piece on this line!
 
-            // const rectangle = {left: thisPieceLegalSlide[0], right: thisPieceLegalSlide[1], bottom: coords[1], top: coords[1]}
-            // const isWithinMoveset = math.boxContainsSquare(rectangle, coords)
-            const isWithinMoveset = legalmoves.doesSlideMovesetContainSquare(thisPieceLegalSlide, lineIsVertical, coords)
+            if (!thisPieceMoveset.sliding) continue; // Piece has no sliding movesets.
+            const moveset = thisPieceMoveset.sliding[directionKey];
+            if (!moveset) continue; // Piece can't slide in the direction our line is going
+            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor)
+            if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
-            if (isWithinMoveset) {
-                if (attackers) appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
-                return true; // There'll never be more than 1 checker on the same line
-            }
+            if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)) continue; // This piece can't slide so far as to reach us, NEXT piece!
+
+            // This piece is attacking this square!
+
+            if (!attackers) return true; // Attackers array isn't being tracked, just insta-return to save compute not finding other attackers!
+            foundCheckersCount++;
+            appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
         }
 
-        return false;
+        return foundCheckersCount > 0;
     }
 
     /**
@@ -216,7 +221,7 @@ const checkdetection = (function(){
         if (!individualMoves) return;
 
         // Simulate the move, then check the game state for check
-        for (let i = individualMoves.length - 1; i >= 0; i--) {
+        for (let i = individualMoves.length - 1; i >= 0; i--) { // Iterate backwards so we don't run into issues as we delete indices while iterating
             const thisMove = individualMoves[i]; // [x,y]
             if (doesMovePutInCheck(gamefile, pieceSelected, thisMove, color)) individualMoves.splice(i, 1); // Remove the move
         }
@@ -230,13 +235,22 @@ const checkdetection = (function(){
         return movepiece.simulateMove(gamefile, move, color).isCheck;
     }
 
-    // Time complexity: O(1)
+
+    /**
+     * Removes sliding moves from the provided legal moves object that are illegal (i.e. they result in check).
+     * This can happen if they don't address an existing check, OR they open a discovered attack on your king.
+     * 
+     * Time complexity: O(slides) basically O(1) unless you add a ton of slides to a single piece
+     * @param {gamefile} gamefile 
+     * @param {LegalMoves} moves - The legal moves object to delete illegal slides from.
+     * @param {Piece} pieceSelected - The piece of which the running legal moves are for.
+     * @param {string} color - The color of friendlies
+     */
     function removeSlidingMovesThatPutYouInCheck (gamefile, moves, pieceSelected, color) {
+        if (!moves.sliding) return; // No sliding moves to remove
 
-        if (!moves.horizontal && !moves.vertical && !moves.diagonalUp && !moves.diagonalDown) return; // No sliding movesets to remove
-
-        const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color); // List of coordinates of all our royal jumping pieces
-
+        /** List of coordinates of all our royal jumping pieces @type {number[][]} */
+        const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color);
         if (royalCoords.length === 0) return; // No king, no open discoveries, don't remove any sliding moves
 
         // There are 2 ways a sliding move can put you in check:
@@ -274,7 +288,7 @@ const checkdetection = (function(){
 
         // 1. Capture the checking piece
 
-        const capturingNotPossible = attackerCount > 1; // Capturing not possible with a double-check, forced to dodge, or block if possible.
+        const capturingNotPossible = attackerCount > 1; // Capturing not possible with a double-check (atleast not with a sliding move), forced to dodge, or block if possible.
 
         // Check if the piece has the ability to capture
         if (!capturingNotPossible && legalmoves.checkIfMoveLegal(legalMoves, selectedPieceCoords, attacker.coords, { ignoreIndividualMoves: true })) {
@@ -287,433 +301,171 @@ const checkdetection = (function(){
         // then there's no way to block.
         const dist = math.chebyshevDistance(royalCoords[0], attacker.coords)
         if (!attacker.slidingCheck || dist === 1) {
-            eraseAllSlidingMoves();
+            delete legalMoves.sliding; // Erase all sliding moves
             return true;
         }
         
         appendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords)
-        eraseAllSlidingMoves();
+        delete legalMoves.sliding; // Erase all sliding moves
 
         return true;
-
-        function eraseAllSlidingMoves() {
-            legalMoves.vertical = undefined;
-            legalMoves.horizontal = undefined;
-            legalMoves.diagonalUp = undefined;
-            legalMoves.diagonalDown = undefined;
-        }
     }
 
+    /**
+     * Deletes any sliding moves from the provided running legal moves that
+     * open up a discovered attack on the specified coordinates
+     * @param {gamefile} gamefile 
+     * @param {LegalMoves} moves - The running legal moves of the selected piece
+     * @param {number[]} kingCoords - The coordinates to see what sliding moves open up a discovered on
+     * @param {Piece} pieceSelected - The piece with the provided running legal moves
+     * @param {string} color - The color of friendlies
+     */
     function removeSlidingMovesThatOpenDiscovered (gamefile, moves, kingCoords, pieceSelected, color) {
-
         const selectedPieceCoords = pieceSelected.coords;
-
-        const sameRow = kingCoords[1] === selectedPieceCoords[1];
-        const sameColumn = kingCoords[0] === selectedPieceCoords[0];
-        
-        const kingDiagUp = math.getUpDiagonalFromCoords(kingCoords);
-        const selectedPieceDiagUp = math.getUpDiagonalFromCoords(selectedPieceCoords);
-        const sameUpDiagonal = kingDiagUp === selectedPieceDiagUp;
-
-        const kingDiagDown = math.getDownDiagonalFromCoords(kingCoords);
-        const selectedPieceDiagDown = math.getDownDiagonalFromCoords(selectedPieceCoords);
-        const sameDownDiagonal = kingDiagDown === selectedPieceDiagDown;
-
+        /** A list of line directions that we're sharing with the king! */
+        let sameLines = []; // [ [dx,dy], [dx,dy] ]
+        // Only check current possible slides
+        for (const line of gamefile.startSnapshot.slidingPossible) { // [dx,dy]
+            const lineKey1 = organizedlines.getKeyFromLine(line, kingCoords);
+            const lineKey2 = organizedlines.getKeyFromLine(line, selectedPieceCoords);
+            if (lineKey1 !== lineKey2) continue; // Not same line
+            sameLines.push(line); // The piece is sharing this line with the king
+        };
         // If not sharing any common line, there's no way we can open a discovered
-        if (!sameRow && !sameColumn && !sameUpDiagonal && !sameDownDiagonal) return;
+        if (sameLines.length === 0) return;
 
         // Delete the piece, and add it back when we're done!
         const deletedPiece = math.deepCopyObject(pieceSelected);
-        movepiece.deletePiece(gamefile, pieceSelected, { updateData: false })
-
-        if (sameRow) {
-            // Does a movement off the row expose a discovered check?
-            const row = gamefile.piecesOrganizedByRow[kingCoords[1]]
-            const opensDiscovered = doesLineAttackSquare(gamefile, row, 'horizontal', kingCoords, color, [])
-            if (opensDiscovered) { // Remove the selected piece's vertical, and both diagonal movesets
-                moves.vertical = undefined;
-                moves.diagonalUp = undefined;
-                moves.diagonalDown = undefined;
+        movepiece.deletePiece(gamefile, pieceSelected, { updateData: false });
+        
+        // let checklines = []; // For Idon's code below
+        // For every line direction we share with the king...
+        for (const direction1 of sameLines) { // [dx,dy]
+            const strline = math.getKeyFromCoords(direction1); // 'dx,dy'
+            const key = organizedlines.getKeyFromLine(direction1,kingCoords); // 'C|X'
+            const line = gamefile.piecesOrganizedByLines[strline][key];
+            const opensDiscovered = doesLineAttackSquare(gamefile, line, direction1, kingCoords, color)
+            if (!opensDiscovered) continue;
+            // The piece opens a discovered if it were to be gone!
+            // checklines.push(line); // For Idon's code below
+            // Delete all lines except this one (because if we move off of it we would be in check!)
+            for (const direction2 of Object.keys(moves.sliding)) { // 'dx,dy'
+                const direction2NumbArray = math.getCoordsFromKey(direction2) // [dx,dy]
+                if (math.areCoordsEqual(direction1, direction2NumbArray)) continue; // Same line, it's okay to keep because it wouldn't open a discovered
+                delete moves.sliding[direction2]; // Not same line, delete it because it would open a discovered.
             }
+
         }
 
-        else if (sameColumn) {
-            const column = gamefile.piecesOrganizedByColumn[kingCoords[0]]
-            const opensDiscovered = doesLineAttackSquare(gamefile, column, 'vertical', kingCoords, color, [])
-            if (opensDiscovered) { // Remove the selected piece's horizontal, and both diagonal movesets
-                moves.horizontal = undefined;
-                moves.diagonalUp = undefined;
-                moves.diagonalDown = undefined;
-            }
-        }
+        // Idon us's code that handles the situation where moving off a line could expose multiple checks
+        // ON THE same line!! It's so tricky to know what squares would keep the discovered closed.
+        // See the discussion on discord: https://discord.com/channels/1114425729569017918/1260357580845224138/1263583566563119165
+        // const tempslides = {}
+        // r : {
+        //     if (checklines.length > 1) {
+        //         if (math.areLinesCollinear(checklines)) {
+        //             // FIXME: this is a problem as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
+        //             // Another case (3,0) (2,0) correct blocks are along (6,0) but thats not an organized line
 
-        else if (sameUpDiagonal) {
-            const key = math.getUpDiagonalFromCoords(kingCoords)
-            const diagUp = gamefile.piecesOrganizedByUpDiagonal[key]
-            const opensDiscovered = doesLineAttackSquare(gamefile, diagUp, 'diagonalup', kingCoords, color, [])
-            if (opensDiscovered) { // Remove the selected piece's horizontal, vertical, and down diagonal movesets
-                moves.horizontal = undefined;
-                moves.vertical = undefined;
-                moves.diagonalDown = undefined;
-            }
-        }
+        //             // Please can someone optimize this
 
-        else { // sameDownDiagonal === true
-            const key = math.getDownDiagonalFromCoords(kingCoords)
-            const diagDown = gamefile.piecesOrganizedByDownDiagonal[key]
-            const opensDiscovered = doesLineAttackSquare(gamefile, diagDown, 'diagonaldown', kingCoords, color, [])
-            if (opensDiscovered) { // Remove the selected piece's horizontal, vertical, and up diagonal movesets
-                moves.horizontal = undefined;
-                moves.vertical = undefined;
-                moves.diagonalUp = undefined;
-            }
-        }
+        //             let fline = checklines[0];
+        //             let fGcd = math.GCD(fline[0],fline[1]);
+
+        //             const baseLine = [fline[0]/fGcd, fline[1]/fGcd];
+
+        //             let mult = [];
+        //             checklines.forEach((line) => {mult.push(math.GCD(line[0],line[1]))});
+        //             const lcm = math.LCM(Object.values(mult));
+
+        //             const steps = [0,0]
+        //             for (const strline in moves.sliding) {
+        //                 const line = math.getCoordsFromKey(strline);
+        //                 if (!math.areLinesCollinear([line, baseLine])) continue;
+        //                 const gcd = math.GCD(line[0], line[1]);
+        //                 let rslides = [Math.floor(moves.sliding[strline][0]/lcm*gcd),Math.floor(moves.sliding[strline][1]/lcm*gcd)];
+        //                 if (rslides[0]<steps[0]) steps[0] = rslides[0];
+        //                 if (rslides[1]>steps[1]) steps[1] = rslides[1];
+        //             }
+
+        //             const line = [baseLine[0]*lcm,baseLine[1]*lcm]
+
+        //             if (!gamefile.startSnapshot.slidingPossible.includes(line)) {
+        //                 const strline = math.getKeyFromCoords(line) 
+        //                 tempslides[strline] = steps
+        //             } else {
+        //                 for (i=steps[0]; i<=steps[1]; i++) {
+        //                     if (i==0) continue;
+        //                     moves.individual.push([line[0]*i,line[1]*i])
+        //                 }
+        //             }
+
+        //             } else {
+        //             // Cannot slide to block all attack lines so blank the sliding
+        //             // Could probably blank regular attacks too
+        //         }
+        //     } else if (checklines.length === 1) {
+        //         const strline = math.getKeyFromCoords(checklines[0])
+        //         if (!moves.sliding[strline]) break r;
+        //         tempslides[strline] = moves.sliding[strline] 
+        //     }
+        // }
 
         // Add the piece back with the EXACT SAME index it had before!!
         movepiece.addPiece(gamefile, deletedPiece.type, deletedPiece.coords, deletedPiece.index, { updateData: false })
     }
 
     // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2
-    function appendBlockingMoves (square1, square2, moves, coords) { // coords is of the selected piece
-        
+
+    /**
+     * Appends legal blocking moves to the provided moves object if the piece
+     * is able to get between squares 1 & 2.
+     * @param {number[]} square1 - `[x,y]`
+     * @param {number[]} square2 - `[x,y]`
+     * @param {LegalMoves} moves - The moves object of the piece
+     * @param {number[]} coords - The coordinates of the piece with the provided legal moves: `[x,y]`
+     */
+    function appendBlockingMoves(square1, square2, moves, coords) { // coords is of the selected piece
         // What is the line between our king and the attacking piece?
-        let direction;
-        if (square1[1] === square2[1]) direction = 'horizontal';
-        else if (square1[0] === square2[0]) direction = 'vertical';
-        else if (square1[0] > square2[0] && square1[1] > square2[1]
-              || square2[0] > square1[0] && square2[1] > square1[1]) direction = 'diagonalUp'
-        else direction = 'diagonalDown'
+        let direction = [square1[0] - square2[0], square1[1] - square2[1]]; // [dx,dy]
 
-        const upDiag = math.getUpDiagonalFromCoords(coords)
-        const downDiag = math.getDownDiagonalFromCoords(coords)
-
-        function appendBlockPointIfLegal (coord, value1, value2, blockPoint) {
-            if (coord > value1 && coord < value2
-             || coord > value2 && coord < value1) {
-                // Can our piece legally move there?
-                if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
-            }
+        /** The minimum bounding box that contains our 2 squares, at opposite corners. @type {BoundingBox} */
+        const box = {
+            left: Math.min(square1[0],square2[0]),
+            right: Math.max(square1[0],square2[0]),
+            top: Math.max(square1[1],square2[1]),
+            bottom: Math.min(square1[1],square2[1])
         }
 
-        if (direction === 'horizontal') {
 
-            // Does our selected piece's vertical moveset intersect this line segment?
-            if (moves.vertical) {
-                const blockPoint = [coords[0], square1[1]];
-                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
-            }
+        for (const lineKey in moves.sliding) { // 'dx,dy'
+            const line = math.getCoordsFromKey(lineKey) // [dx,dy]
+            const c1 = organizedlines.getCFromLine(line, coords); // Line of our selected piece
+            const c2 = organizedlines.getCFromLine(direction,square2) // Line between our 2 squares
+            const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2) // The intersection point of the 2 lines.
 
-            //  Does our selected piece's diagonalUp moveset intersect this line segment?
-            if (moves.diagonalUp) {
-                // When y is the y level of our squares, what is the x intersection point?
-                const xIntsect = -upDiag + square1[1];
-                const blockPoint = [xIntsect, square1[1]]
-                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
-            }
+            // Idon us's old code
+            // if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
+            //     !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) {console.log("A"); continue}; // Block is off grid so probably not valid
+            // blockPoint=[Math.round(blockPoint[0]), Math.round(blockPoint[1])]
+            // if (organizedlines.getKeyFromLine(line,blockPoint)!==organizedlines.getKeyFromLine(line, coords)) {console.log("C"); continue}; // stop line multiples being annoying
 
-            //  Does our selected piece's diagonalDown moveset intersect this line segment?
-            if (moves.diagonalDown) {
-                const xIntsect = downDiag - square1[1];
-                const blockPoint = [xIntsect, square1[1]]
-                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
-            }
-        }
+            // Naviary's new code
+            if (blockPoint === null) continue; // None (or infinite) intersection points!
+            if (!math.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.
+            if (!math.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
+            if (math.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
+            if (math.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
 
-        else if (direction === 'vertical') {
-
-            // Does our selected piece's horizontal moveset intersect this line segment?
-            if (moves.horizontal) {
-                const blockPoint = [square1[0], coords[1]]
-                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
-            }
-
-            if (moves.diagonalUp) {
-                const yIntsect = upDiag + square1[0];
-                const blockPoint = [square1[0], yIntsect]
-                appendBlockPointIfLegal(yIntsect, square1[1], square2[1], blockPoint)
-            }
-
-            if (moves.diagonalDown) {
-                const yIntsect = downDiag - square1[0];
-                const blockPoint = [square1[0], yIntsect]
-                appendBlockPointIfLegal(yIntsect, square1[1], square2[1], blockPoint)
-            }
-        }
-
-        else if (direction === 'diagonalUp') {
-
-            if (moves.vertical) {
-                const xDiff = coords[0] - square1[0];
-                const intsectY = square1[1] + xDiff;
-                const blockPoint = [coords[0], intsectY]
-                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
-            }
-
-            if (moves.horizontal) {
-                const yDiff = coords[1] - square1[1];
-                const intsectX = square1[0] + yDiff;
-                const blockPoint = [intsectX, coords[1]]
-                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
-            }
-
-            out: if (moves.diagonalDown) {
-                const squaresUpDiag = math.getUpDiagonalFromCoords(square1)
-                // -1x + downDiag = 1x + squaresUpDiag   Set them equal to find their intersection point
-                // 2x = downDiag - squaresUpDiag
-                // x = (downDiag - squaresUpDiag) / 2
-                const xIntsect = (downDiag - squaresUpDiag) / 2;
-                if (!Number.isInteger(xIntsect)) break out; // Wrong color square diagonal
-                // y = -1x + downDiag
-                const yIntsect = downDiag - xIntsect;
-                const blockPoint = [xIntsect, yIntsect]
-                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
-            }
-        }
-
-        else { // direction === 'diagonalDown'
-
-            if (moves.vertical) {
-                const xDiff = coords[0] - square1[0];
-                const intsectY = square1[1] - xDiff;
-                const blockPoint = [coords[0], intsectY]
-                appendBlockPointIfLegal(coords[0], square1[0], square2[0], blockPoint)
-            }
-
-            if (moves.horizontal) {
-                const yDiff = coords[1] - square1[1];
-                const intsectX = square1[0] - yDiff;
-                const blockPoint = [intsectX, coords[1]]
-                appendBlockPointIfLegal(coords[1], square1[1], square2[1], blockPoint)
-            }
-
-            out: if (moves.diagonalUp) {
-                const squaresDownDiag = math.getDownDiagonalFromCoords(square1)
-                // 1x + upDiag = -1x + squaresDownDiag   Set them equal to find their intersection point
-                // 2x = squaresDownDiag - upDiag
-                // x = (squaresDownDiag - upDiag) / 2
-                const xIntsect = (squaresDownDiag - upDiag) / 2;
-                if (!Number.isInteger(xIntsect)) break out; // Wrong color square diagonal
-                // y = 1x + upDiag
-                const yIntsect = xIntsect + upDiag;
-                const blockPoint = [xIntsect, yIntsect]
-                appendBlockPointIfLegal(xIntsect, square1[0], square2[0], blockPoint)
-            }
+            // Can our piece legally move there?
+            if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
         }
     }
-
-    /**
-     * Calculates if the provided gamefile is over by checkmate or a repetition draw
-     * @param {gamefile} gamefile - The gamefile to detect if it's in checkmate
-     * @returns {string | false} The color of the player who won by checkmate. 'white checkmate', 'black checkmate', or 'draw repetition', 'draw stalemate'. Or *false* if the game isn't over.
-     */
-    function detectCheckmateOrDraw(gamefile) {
-
-        // Is there a draw by repetition?
-        if (detectRepetitionDraw(gamefile)) return 'draw repetition'
-
-        // The game also will be over when the player has zero legal moves remaining, lose or draw.
-        // Iterate through every piece, calculating its legal moves. The first legal move we find, we
-        // know the game is not over yet...
-
-        const whosTurn = gamefile.whosTurn;
-        const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
-        for (let i = 0; i < whiteOrBlack.length; i++) {
-            const thisType = whiteOrBlack[i];
-            const thesePieces = gamefile.ourPieces[thisType]
-            for (let a = 0; a < thesePieces.length; a++) {
-                const coords = thesePieces[a];
-                if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-                const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords)
-                const thisPiece = { type: thisType, coords, index }; // { index, coords }
-                const moves = legalmoves.calculate(gamefile, thisPiece)
-                if (!legalmoves.hasAtleast1Move(moves)) continue;
-                return false;
-            }
-        }
-
-        // We made it through every single piece without finding a single move.
-        // So is this draw or checkmate? Depends on whether the current state is check!
-        // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
-        const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate')
-        if (gamefile.inCheck && usingCheckmate) {
-            if (whosTurn === 'white') return 'black checkmate' // Black wins
-            else                      return 'white checkmate' // White wins
-        } else return 'draw stalemate';
-    }
-
-    // /** THE OLD CHECKMATE ALGORITHM, THAT IS ASYNCHRONIOUS. NO LONGER USED. ASYNC STUFF IS TOO MUCH OF A KNIGHTMARE.
-    //  * USE ROYALCAPTURE TO REMOVE FREEZES. JUST DON'T DO STALEMATE DETECTION IF THERE'S TOO MANY PIECES.
-    //  *
-    //  * Calculates if the provided gamefile is over by checkmate or a repetition draw
-    //  * @param {gamefile} gamefile - The gamefile to detect if it's in checkmate
-    //  * @returns {string} The color of the player who won by checkmate. 'white checkmate', 'black checkmate', or 'draw repetition', or 'draw stalemate'
-    //  */
-    // // Returns false when game is not over, 'white' if white has won, 'black', or 'draw'
-    // async function detectCheckmateOrDraw(gamefile) {
-
-    //     // Is there a draw by repetition?
-
-    //     if (detectRepetitionDraw(gamefile)) return 'draw repetition'
-
-    //     // No repetition
-
-    //     // The game also will be over when the player has zero legal moves remaining, lose or draw.
-
-    //     const whosTurn = gamefile.whosTurn;
-
-    //     // Iterate through every piece, calculating its legal moves. The first legal move we find, we
-    //     // know the game is not over yet.
-
-    //     // How much time can we spend on this potentially long task?
-    //     const ourPieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, whosTurn);
-    //     let pieceLimitToRecalcTime = 50;
-    //     let piecesSinceLastCheck = 0;
-    //     let piecesComplete = 0;
-    //     let startTime = performance.now();
-    //     let timeToStop = startTime + loadbalancer.getLongTaskTime();
-
-    //     gamefile.legalMoveSearch.isRunning = true;
-    //     gamefile.mesh.locked++;
-
-    //     // console.log('Begin checking for checkmate!')
-    //     // main.startTimer()
-
-    //     const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
-    //     for (let i = 0; i < whiteOrBlack.length; i++) {
-    //         const thisType = whiteOrBlack[i];
-    //         const thesePieces = gamefile.ourPieces[thisType]
-    //         for (let a = 0; a < thesePieces.length; a++) {
-    //             const coords = thesePieces[a];
-    //             if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-    //             const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords)
-    //             const thisPiece = { type: thisType, coords, index }; // { index, coords }
-    //             const moves = legalmoves.calculate(gamefile, thisPiece)
-    //             if (legalmoves.hasAtleast1Move(moves)) {
-    //                 // main.stopTimer((time) => console.log(`Checkmate alg finished! ${time} milliseconds! ${thisType} ${coords}`))
-    //                 stats.hideMoveLooking();
-    //                 gamefile.legalMoveSearch.isRunning = false;
-    //                 gamefile.mesh.locked--;
-    //                 return false;
-    //             }
-
-    //             // If we've spent too much time, sleep!
-    //             piecesSinceLastCheck++;
-    //             piecesComplete++;
-    //             if (piecesSinceLastCheck >= pieceLimitToRecalcTime) {
-    //                 piecesSinceLastCheck = 0;
-    //                 await sleepIfUsedTooMuchTime();
-    //                 if (gamefile.legalMoveSearch.terminate) {
-    //                     console.log("Legal move search terminated.");
-    //                     gamefile.legalMoveSearch.terminate = false;
-    //                     gamefile.legalMoveSearch.isRunning = false;
-    //                     gamefile.mesh.locked--;
-    //                     stats.hideMoveLooking();
-    //                     return;
-    //                 }
-    //                 if (main.gforceCalc()) {
-    //                     pieceLimitToRecalcTime = Infinity;
-    //                     main.sforceCalc(false);
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     async function sleepIfUsedTooMuchTime() {
-
-    //         if (!usedTooMuchTime()) return; // Keep processing...
-
-    //         // console.log(`Too much! Sleeping.. Used ${performance.now() - startTime} of our allocated ${maxTimeToSpend}`)
-    //         const percentComplete = piecesComplete / ourPieceCount;
-    //         stats.updateMoveLooking(percentComplete);
-    //         await main.sleep(0);
-    //         startTime = performance.now();
-    //         timeToStop = startTime + loadbalancer.getLongTaskTime();
-    //     }
-
-    //     function usedTooMuchTime() {
-    //         return performance.now() >= timeToStop;
-    //     }
-
-    //     stats.hideMoveLooking();
-    //     gamefile.legalMoveSearch.isRunning = false;
-    //     gamefile.mesh.locked--;
-
-    //     // main.stopTimer((time) => console.log(`Checkmate alg finished! ${time} milliseconds!`))
-
-    //     // We made it through every single piece without finding a single move.
-    //     // So is this draw or checkmate? Depends on whether the current state is check!
-    //     // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
-    //     const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate')
-    //     if (gamefile.inCheck && usingCheckmate) {
-
-    //         if (whosTurn === 'white') return 'black checkmate' // Black wins
-    //         else                      return 'white checkmate' // White wins
-
-    //     } else return 'draw stalemate';
-    // }
-
-    /**
-     * Tests if the provided gamefile has had a repetition draw.
-     * @param {gamefile} gamefile - The gamefile
-     * @returns {boolean} *true* if there has been a repetition draw
-     */
-    // Complexity O(m) where m is the move count since
-    // the last pawn push or capture!
-    function detectRepetitionDraw(gamefile) {
-        const moveList = gamefile.moves;
-
-        const deficit = { }; // `x,y,type`
-        const surplus = { }; // `x,y,type`
-
-        let equalPositionsFound = 0;
-
-        let index = moveList.length - 1;
-        while (index >= 0) {
-
-            // Moves are in the format: { type, startCoords, endCoords, captured: 'type'}
-            /** @type {Move} */
-            const thisMove = moveList[index]
-
-            // If the move was a pawn push or capture, no further equal positions, terminate the loop.
-            if (thisMove.captured || thisMove.type.startsWith('pawns')) break;
-
-            // If this move was undo'd, there would be a DEFICIT on its endCoords
-            const endCoords = thisMove.endCoords;
-            let key = `${endCoords[0]},${endCoords[1]},${thisMove.type}`
-            // If there is a SURPLUS with this exact same key, delete that instead! It's been canceled-out.
-            if (surplus[key]) delete surplus[key]
-            else deficit[key] = true;
-
-            // There would also be a SURPLUS on its startCoords
-            const startCoords = thisMove.startCoords;
-            key = `${startCoords[0]},${startCoords[1]},${thisMove.type}`
-            // If there is a DEFICIT with this exact same key, delete that instead! It's been canceled-out.
-            if (deficit[key]) delete deficit[key]
-            else surplus[key] = true;
-
-            // If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
-            const deficitKeys = Object.keys(deficit);
-            const surplusKeys = Object.keys(surplus);
-            if (deficitKeys.length === 0 && surplusKeys.length === 0) {
-                equalPositionsFound++;
-                if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
-            }
-
-            // Prep for next iteration, decrement index.
-            // WILL BE -1 if we've reached the beginning of the game!
-            index--;
-        }
-
-        // Loop is finished. How many equal positions did we find?
-        return equalPositionsFound === 2; // TRUE if there's a repetition draw!
-    }
-
 
     return Object.freeze({
         detectCheck,
         removeMovesThatPutYouInCheck,
-        doesMovePutInCheck,
-        detectCheckmateOrDraw,
+        doesMovePutInCheck
     })
 
 })();

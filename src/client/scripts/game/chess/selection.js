@@ -11,6 +11,9 @@ const selection = (function() {
     /** The pre-calculated legal moves of the current selected piece.
      * @type {LegalMoves} */
     let legalMoves;
+    /** Whether or not the piece selected belongs to the opponent.
+     * If so, it's legal moves are rendered a different color, and you aren't allowed to move it.  */
+    let isOpponentPiece = false;
 
     /** The tile the mouse is hovering over, OR the tile we just performed a simulated click over: `[x,y]` */
     let hoverSquare; // Current square mouse is hovering over
@@ -37,8 +40,14 @@ const selection = (function() {
     function isAPieceSelected() { return pieceSelected != null; }
 
     /**
+     * Returns true if we have selected an opponents piece to view their moves
+     * @returns {boolean}
+     */
+    function isOpponentPieceSelected() { return isOpponentPiece; }
+
+    /**
      * Returns the pre-calculated legal moves of the selected piece.
-     * @returns {Object} The selected piece, if there is one: `{ type, index, coords }`.
+     * @returns {LegalMoves}
      */
     function getLegalMovesOfSelectedPiece() { return legalMoves; }
 
@@ -59,7 +68,8 @@ const selection = (function() {
     function update() {
         // Guard clauses...
         const gamefile = game.getGamefile();
-        if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn
+        // if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn
+        if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
         if (pawnIsPromoting) { // Do nothing else this frame but wait for a promotion piece to be selected
             if (promoteTo) makePromotionMove()
             return;
@@ -98,18 +108,17 @@ const selection = (function() {
         tag: if (pieceClickedType) {
 
             // Did we click a friendly piece?
-            const selectedPieceColor = math.getPieceColorFromType(pieceSelected.type)
-            const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
-
-            if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
+            // const selectedPieceColor = math.getPieceColorFromType(pieceSelected.type)
+            // const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
+            // if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
 
             // If it clicked iteself, deselect.
-            if (pieceClickedType && math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
-                main.renderThisFrame();
+            if (math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
                 unselectPiece();
-            } else if (pieceClickedType !== 'voidsN') { // Select that other friendly piece instead. Prevents us from selecting a void after selecting an obstacle.
-                const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, coordsClicked)
-                selectPiece(pieceClickedType, clickedPieceIndex, coordsClicked)
+            } else if (hoverSquareLegal) { // This piece is capturable, don't select it instead
+                break tag;
+            } else if (pieceClickedType !== 'voidsN') { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
+                handleSelectingPiece(pieceClickedType);
             }
 
             return;
@@ -118,8 +127,7 @@ const selection = (function() {
         // If we haven't return'ed at this point, check if the move is legal.
         if (!hoverSquareLegal) return; // Illegal
 
-        // Don't move the piece if the mesh is locked, because it will mess up either
-        // the mesh generation algorithm or checkmate algorithm.
+        // Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
         if (gamefile.mesh.locked) return statustext.pleaseWaitForTask(); 
 
         // Check if the move is a pawn promotion
@@ -143,18 +151,23 @@ const selection = (function() {
     function handleSelectingPiece(pieceClickedType) {
         const gamefile = game.getGamefile();
         const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
+        const clickedFriendlyInOnlineGame = onlinegame.areInOnlineGame() && clickedPieceColor === onlinegame.getOurColor();
+        if (clickedFriendlyInOnlineGame && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn, don't select this piece
 
         // If we're viewing history, return. But also if we clicked a piece, forward moves.
         if (!movesscript.areWeViewingLatestMove(gamefile)) {
-            if (clickedPieceColor === gamefile.whosTurn ||
-                options.getEM() && pieceClickedType !== 'voidsN') return movepiece.forwardToFront(gamefile, { flipTurn: false, updateProperties: false })
+            // if (clickedPieceColor === gamefile.whosTurn ||
+            //     options.getEM() && pieceClickedType !== 'voidsN') 
                 // ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
                 // it will still forward you to front!
+            
+            return movepiece.forwardToFront(gamefile, { flipTurn: false, updateProperties: false })
         }
 
         // If it's your turn, select that piece.
 
-        if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
+        // if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
+        if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
         if (options.getEM() && pieceClickedType === 'voidsN') return; // Don't select voids.
 
         const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare)
@@ -174,6 +187,11 @@ const selection = (function() {
         pieceSelected = { type, index, coords }
         // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
         legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected)
+
+        const pieceColor = math.getPieceColorFromType(pieceSelected.type);
+        isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
+                               /* Local Game */        : pieceColor !== game.getGamefile().whosTurn;
+
         highlights.regenModel() // Generate the buffer model for the blue legal move fields.
     }
 
@@ -232,7 +250,7 @@ const selection = (function() {
         const hoverSquareIsSameColor = typeAtHoverCoords && math.getPieceColorFromType(pieceSelected.type) === math.getPieceColorFromType(typeAtHoverCoords);
         const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
         // This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
-        hoverSquareLegal = legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
+        hoverSquareLegal = (!isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
     }
 
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
@@ -249,6 +267,7 @@ const selection = (function() {
         isPawnCurrentlyPromoting,
         promoteToType,
         update,
-        renderGhostPiece
+        renderGhostPiece,
+        isOpponentPieceSelected
     })
 })();

@@ -106,7 +106,7 @@ const guiplay = (function(){
             element_local.classList.remove('selected')
             element_online.classList.remove('not-selected')
             element_local.classList.add('not-selected')
-            element_createInvite.textContent = "Create Invite"
+            element_createInvite.textContent = translations["invites"]["create_invite"]
             element_optionCardColor.classList.remove('hidden')
             element_optionCardRated.classList.remove('hidden')
             element_optionCardPrivate.classList.remove('hidden')
@@ -122,7 +122,7 @@ const guiplay = (function(){
             element_local.classList.add('selected')
             element_online.classList.add('not-selected')
             element_local.classList.remove('not-selected')
-            element_createInvite.textContent = "Start Game"
+            element_createInvite.textContent = translations["invites"]["start_game"]
             element_optionCardColor.classList.add('hidden')
             element_optionCardRated.classList.add('hidden')
             element_optionCardPrivate.classList.add('hidden')
