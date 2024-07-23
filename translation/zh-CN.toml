@@ -456,46 +456,46 @@ login_button = "登录"
 
 [news]
 title = "新闻"
-more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+more_dev_logs = ["更多开发者日志在我们的", "Discord", "和在", "chess.com的论坛！"]
 
 [news.july13-2024]
-date = "July 13, 2024:"
-tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."]
-game_history_warning = "Your game history may become available on your profile at a future time."
+date = "2024年7月13日"
+tos_update = ["服务条款", "已更新。变更内容：您在网站上玩的所有游戏都可能成为公共信息，包括您的帐户上次活跃的大概时间。条款可能会随时更新，确保您了解最新条款是您的责任。"]
+game_history_warning = "您的游戏历史可能在未来可在您的个人资料中查看。
 
 [news.july9-2024]
-date = "July 9, 2024:"
-text = ["Infinite Chess is Now Open Source! See, and contribute, to the project ", "on GitHub!"]
+date = "2024年7月9日"
+text = ["无限棋现在开源！查看并贡献项目，请访问 ", "GitHub！"]
 
 [news.may27-2024]
-date = "May 27, 2024:"
-text = "1.3.2: Added showcase variants for Omega^3 and Omega^4 that were shown in my latest video. Also, the checkmate algorithm is now compatible with multiple kings per side."
+date = "2024年5月27日"
+text = "1.3.2更新今天发布！新增了我在最新视频中展示的 Omega^3 和 Omega^4 的展示变体。此外，将军算法现在兼容每边多个国王。"
 
 [news.may24-2024]
-date = "May 24, 2024:"
-text = "Update 1.3.1 released! This includes the guide, pop-up tooltips when hovering over the navigation buttons, and links to the discord and game credits on the title page!"
+date = "2024年5月24日"
+text = "1.3更新今天发布！这包括指南、悬停导航按钮时的弹出式工具提示以及标题页上的 Discord 和游戏信用链接！"
 
 [news.may14-2024]
-date = "May 14, 2024:"
-text_top = "Update 1.3 released today! This includes MANY new speed and user experience improvements. Just a few are:"
+date = "2024年5月14日"
+text_top = "1.3更新今天发布！这包括很多的改进："
 update_list = [
-"The transition to websockets, decreasing the delay when your opponent moves.",
-"No longer getting disconnected when you switch tabs.",
-"Audible cues when you or someone else creates an invite, or makes a move.",
-"Added the 50-move rule.",
-"A drum countdown effect is now played at 10 seconds left on the clock.",
-"An auto-resignation timer will start if you're opponent goes AFK (with an audible warning)."
+"切换到 WebSocket，减少对手移动时的延迟。",
+"切换标签不再断开连接。",
+"当您或其他人创建邀请或下棋时，发出声音提示。",
+"加了50步规则",
+"现在在时钟剩余10秒时播放鼓式倒计时效果。",
+"如果您的对手AFK（并发出声音警告），将开始自动认输计时器。"
 ]
-text_box = ["And many others! For the full list, check out ", "the discord!"]
+text_box = ["还有更多！那些都在我们的", "Discord！"]
 
 [news.jan29-2024]
-date = "Jan 29, 2024:"
-text = "New video released today!"
+date = "2024年1月29日"
+text = "仅以案由一个新视频"
 
 [news.aug26-2023]
-date = "Aug 26, 2023:"
-text_top = "Infinite Chess v1.2 has been released! Introducing Move History. Use the left & right arrow keys to rewind and fast forward the game!"
-text_box = "The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!"
+date = "2023年8月26日"
+text_top = "Infinite Chess v1.2刚被发布! 介绍棋步历史。使用左右箭头键回放和快进游戏！"
+text_box = "账户验证系统已更新，更加可靠！如果您的账户未经验证，并且之前遇到验证链接问题，请再次尝试验证！"
 
 [server.javascript]
 ws-invalid_username = "用户名无效"
