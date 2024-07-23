@@ -4,6 +4,7 @@
         <script>
             const translations = <%-JSON.stringify({
                 ...t('play.javascript', {returnObjects: true}),
+                ...t('play.play-menu', {returnObjects: true}),
                 ...t('header.javascript', {returnObjects: true}),
                 ...t('server.javascript', {returnObjects: true})
             })%>;
@@ -216,32 +217,30 @@
                                 <p><%=t('play.play-menu.variant')%></p>
                                 <div class="option">
                                     <select id="option-variant" class="button">
-                                        <option value="Classical"><%=t('play.play-menu.variants.0')%></option>
-                                        <option value="Classical+"><%=t('play.play-menu.variants.1')%></option>
-                                        <option value="CoaIP"><%=t('play.play-menu.variants.2')%></option>
-                                        <option value="Pawndard"><%=t('play.play-menu.variants.3')%></option>
-                                        <option value="Knighted Chess"><%=t('play.play-menu.variants.4')%></option>
-                                        <option value="Knightline"><%=t('play.play-menu.variants.5')%></option>
-                                        <option value="Core"><%=t('play.play-menu.variants.6')%></option>
-                                        <option value="Standarch"><%=t('play.play-menu.variants.7')%></option>
-                                        <option value="Pawn Horde"><%=t('play.play-menu.variants.8')%></option>
-                                        <option value="Space Classic"><%=t('play.play-menu.variants.9')%></option>
-                                        <option value="Space"><%=t('play.play-menu.variants.10')%></option>
-                                        <option value="Obstocean"><%=t('play.play-menu.variants.11')%></option>
-                                        <option value="Abundance"><%=t('play.play-menu.variants.12')%></option>
-                                        <option value="Amazon Chandelier"><%=t('play.play-menu.variants.13')%></option>
-                                        <option value="Containment"><%=t('play.play-menu.variants.14')%></option>
-                                        <!-- <option value="Standarch - 3 Check">Standarch - 3 Check</option>
-                                        <option value="CoaIP - 3 Check">Coaip - 3 Check</option> -->
-                                        <option value="Classical - Limit 7"><%=t('play.play-menu.variants.15')%></option>
-                                        <option value="CoaIP - Limit 7"><%=t('play.play-menu.variants.16')%></option>
-                                        <option value="Chess"><%=t('play.play-menu.variants.17')%></option>
-                                        <option value="Classical - KOTH"><%=t('play.play-menu.variants.18')%></option>
-                                        <option value="CoaIP - KOTH"><%=t('play.play-menu.variants.19')%></option>
-                                        <option value="Omega"><%=t('play.play-menu.variants.20')%></option>
-                                        <option value="Omega^2"><%=t('play.play-menu.variants.21')%></option>
-                                        <option value="Omega^3"><%=t('play.play-menu.variants.22')%></option>
-                                        <option value="Omega^4"><%=t('play.play-menu.variants.23')%></option>
+                                        <option value="Classical"><%=t('play.play-menu.Classical')%></option>
+                                        <option value="Classical_Plus"><%=t('play.play-menu.Classical_Plus')%></option>
+                                        <option value="CoaIP"><%=t('play.play-menu.CoaIP')%></option>
+                                        <option value="Pawndard"><%=t('play.play-menu.Pawndard')%></option>
+                                        <option value="Knighted_Chess"><%=t('play.play-menu.Knighted_Chess')%></option>
+                                        <option value="Knightline"><%=t('play.play-menu.Knightline')%></option>
+                                        <option value="Core"><%=t('play.play-menu.Core')%></option>
+                                        <option value="Standarch"><%=t('play.play-menu.Standarch')%></option>
+                                        <option value="Pawn_Horde"><%=t('play.play-menu.Pawn_Horde')%></option>
+                                        <option value="Space_Classic"><%=t('play.play-menu.Space_Classic')%></option>
+                                        <option value="Space"><%=t('play.play-menu.Space')%></option>
+                                        <option value="Obstocean"><%=t('play.play-menu.Obstocean')%></option>
+                                        <option value="Abundance"><%=t('play.play-menu.Abundance')%></option>
+                                        <option value="Amazon_Chandelier"><%=t('play.play-menu.Amazon_Chandelier')%></option>
+                                        <option value="Containment"><%=t('play.play-menu.Containment')%></option>
+                                        <option value="Classical_Limit_7"><%=t('play.play-menu.Classical_Limit_7')%></option>
+                                        <option value="CoaIP_Limit_7"><%=t('play.play-menu.CoaIP_Limit_7')%></option>
+                                        <option value="Chess"><%=t('play.play-menu.Chess')%></option>
+                                        <option value="Classical_KOTH"><%=t('play.play-menu.Classical_KOTH')%></option>
+                                        <option value="CoaIP_KOTH"><%=t('play.play-menu.CoaIP_KOTH')%></option>
+                                        <option value="Omega"><%=t('play.play-menu.Omega')%></option>
+                                        <option value="Omega_Squared"><%=t('play.play-menu.Omega_Squared')%></option>
+                                        <option value="Omega_Cubed"><%=t('play.play-menu.Omega_Cubed')%></option>
+                                        <option value="Omega_Fourth"><%=t('play.play-menu.Omega_Fourth')%></option>
                                     </select>
                                 </div>
                             </div>
@@ -288,7 +287,7 @@
                                 <p><%=t('play.play-menu.rated')%></p>
                                 <div class="option">
                                     <select id="option-rated" class="button">
-                                        <option value="Unrated"><%=t('play.play-menu.no')%></option>
+                                        <option value="unrated"><%=t('play.play-menu.no')%></option>
                                     </select>
                                 </div>
                             </div>

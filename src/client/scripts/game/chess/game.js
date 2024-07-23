@@ -22,6 +22,10 @@ const game = (function(){
         return gamefile;
     }
 
+    function areInGame() {
+        return gamefile != null;
+    }
+
     // Initiates textures, buffer models for rendering, and the title screen.
     function init() {
 
@@ -143,7 +147,11 @@ const game = (function(){
         if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
             miniimage.disable();
             arrows.setMode(0); // Disables arrows
+            wincondition.swapCheckmateForRoyalCapture(gamefile); // Checkmate alg too slow, use royalcapture instead!
         } else miniimage.enable();
+
+        // If there are so many hippogonals so as to create issues with discovered attacks, let's use royal capture instead!
+        if (organizedlines.areColinearSlidesPresentInGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
 
         guipromotion.initUI(gamefile.gameRules.promotionsAllowed)
 
@@ -156,6 +164,8 @@ const game = (function(){
         guigameinfo.updateWhosTurn(gamefile)
         // Immediately conclude the game if we loaded a game that's over already
         if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile, gamefile.gameConclusion);
+
+        initListeners();
     }
 
     /** The canvas will no longer render the current game */
@@ -167,11 +177,25 @@ const game = (function(){
         selection.unselectPiece();
         transition.eraseTelHist();
         board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
+        closeListeners();
+    }
+
+    /** Called when a game is loaded, loads the event listeners for when we are in a game. */
+    function initListeners() {
+        document.addEventListener('copy', copypastegame.callbackCopy)
+        document.addEventListener('paste', copypastegame.callbackPaste)
+    }
+
+    /** Called when a game is unloaded, closes the event listeners for being in a game. */
+    function closeListeners() {
+        document.removeEventListener('copy', copypastegame.callbackCopy)
+        document.removeEventListener('paste', copypastegame.callbackPaste)
     }
 
 
     return Object.freeze({
         getGamefile,
+        areInGame,
         init,
         updateVariablesAfterScreenResize,
         update,
