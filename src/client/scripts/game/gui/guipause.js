@@ -89,14 +89,17 @@ const guipause = (function(){
     function updateDrawOfferButtonTransparency() {
         const gamefile = game.getGamefile()
         const moves = gamefile.moves;
+
+        if (isNaN(parseInt(gamefile.drawOfferWhite))) gamefile.drawOfferWhite = 0
+        if (isNaN(parseInt(gamefile.drawOfferBlack))) gamefile.drawOfferBlack = 0
+
+        const ourDrawOfferMove = onlinegame.getOurColor() === "white" ? gamefile.drawOfferWhite : gamefile.drawOfferBlack
         const movesLength = parseInt(moves.length)
-        const lastOffer = gamefile.LastDrawOfferMove == undefined ? 0 : gamefile.LastDrawOfferMove
-        const currentDrawOffers = gamefile.drawOffers == true
+        const ourRecentOffers = movesLength - ourDrawOfferMove > 2 // 3 moves in between
 
-        const RecentDrawOffers = (movesLength == lastOffer)
-        console.log(`Recent draw offers: ${RecentDrawOffers}`)
+        console.log(`Recent draw offers: ${ourRecentOffers}`)
 
-        if (!onlinegame.areInOnlineGame() || RecentDrawOffers || movesLength < 2 || currentDrawOffers) {
+        if (!onlinegame.areInOnlineGame() || ourRecentOffers || movesLength < 2) {
             element_offerDraw.classList.add('opacity-0_5')
         } else {
             console.log("allowed")
@@ -170,7 +173,7 @@ const guipause = (function(){
 
     async function callback_OfferDraw(event) {
         const gamefile = game.getGamefile()
-        if (element_offerDraw.classList.contains('opacity-0_5')) return statustext.showStatus(`Can't offer draw!`, false, 2)
+        if (areWeAcceptingDraw()) return statustext.showStatus(`Can't offer draw!`, false, 2)
         onlinegame.offerDraw()
         callback_Resume()
 

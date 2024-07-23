@@ -61,6 +61,8 @@ const movepiece = (function(){
         if (doGameOverChecks) gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
         else if (updateProperties) wincondition.detectThreecheck(gamefile); // This updates our check counters
 
+        onlinegame.declineDraw()
+
         if (updateData) {
             guinavigation.update_MoveButtons()
             main.renderThisFrame();

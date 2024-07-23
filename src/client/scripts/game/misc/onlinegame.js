@@ -232,11 +232,13 @@ const onlinegame = (function(){
             case "drawoffer":
                 guipause.openDrawOffer()
                 let gamefile = game.getGamefile()
-                gamefile.drawOffers = true
                 if (gamefile.moves) {
-                    gamefile.LastDrawOfferMove = gamefile.moves.length;
-                } else {
-                    gamefile.LastDrawOfferMove = 0
+                    if (getOurColor() === "white") {
+                        gamefile.drawOfferBlack = gamefile.moves.length
+                    }
+                    if (getOurColor() === "black") {
+                        gamefile.drawOfferWhite = gamefile.moves.length
+                    }
                 }
 
                 break;
@@ -559,24 +561,27 @@ const onlinegame = (function(){
 
     function offerDraw() {
         websocket.sendmessage('game', 'offerdraw')
-        if (gamefile.moves) gamefile.LastDrawOfferMove = gamefile.moves.length
+
+        const gamefile = game.getGamefile()
+        if ( !gamefile.moves ) return
+        if ( getOurColor() === "white" ) gamefile.drawOfferWhite = gamefile.moves.length
+        if ( getOurColor() === "black" ) gamefile.drawOfferBlack = gamefile.moves.length
     }
 
     function acceptDraw() {
         websocket.sendmessage('game', 'acceptdraw')
-        if (gamefile.moves) gamefile.LastDrawOfferMove = gamefile.moves.length
     }
 
     function declineDraw() {
-        websocket.sendmessage('game', 'declinedraw')
-        statustext.showStatus(`Draw declined`, false, 2)
-        if (gamefile.moves) gamefile.LastDrawOfferMove = gamefile.moves.length
+        if (!guipause.areWeAcceptingDraw()) return; // there isn't a draw to decline (we hope)
+        websocket.sendmessage('game', 'declinedraw');
+        statustext.showStatus(`Draw declined`, false, 2);
     }
 
     /**
      * This has to be called before and separate from {@link initOnlineGame}
      * because loading the gamefile and the mesh generation requires this script to know our color.
-     * @param {string} color - The color we are in this online game
+     * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `autoAFKResignTime`, `disconnect`, `serverRestartingAt`
      */
     function setColorAndGameID(gameOptions) {
         inOnlineGame = true

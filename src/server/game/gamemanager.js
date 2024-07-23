@@ -810,9 +810,13 @@ const gamemanager = (function() {
 
         if (isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
 
-        if (hasGameDrawOffer(game)) return console.error("Client offered a draw when the game has a draw offer");
-
-        if (game.moves.length <= game.drawOfferMove) return console.error("Client trying to offer a draw twice on the same move")
+        if (color === "white") {
+            if (hasWhiteDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
+            if (!game.moves.length - game.whiteDrawOfferMove > 2) return console.error("Client trying to offer a draw too fast")
+        } else {
+            if (hasBlackDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
+            if (!game.moves.length - game.blackDrawOfferMove > 2) return console.error("Client trying to offer a draw too fast")
+        }
         
         if (game.moves.length < 2) return console.error("Client trying to offer a draw on the first 2 moves")
         
@@ -850,10 +854,10 @@ const gamemanager = (function() {
         
         // Update the status of game
         if (color === 'white') {
-            if (!hasGameDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
+            if (!hasBlackDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
             game.whiteDrawOffer = 'confirmed'
         } else if (color === 'black') {
-            if (!hasGameDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
+            if (!hasWhiteDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
             game.blackDrawOffer = 'confirmed'
         }
         setGameConclusion(game, "draw agreement")
@@ -1196,14 +1200,32 @@ const gamemanager = (function() {
     function isGameOver(game) { return game.gameConclusion !== false; }
 
     /**
+     * Returns *true* if the white in the provided game has a draw offer.
+     * @param {Game} game - The game
+     * @returns {boolean}
+     */
+    function hasWhiteDrawOffer(game) {
+        const isOffering = (game.whiteDrawOffer === 'offered')
+        return isOffering
+    }
 
+    /**
+     * Returns *true* if the black in the provided game has a draw offer.
+     * @param {Game} game - The game
+     * @returns {boolean}
+     */
+    function hasBlackDrawOffer(game) {
+        const isOffering = (game.blackDrawOffer === 'offered')
+        return isOffering
+    }
+
+    /**
      * Returns *true* if the provided game has a draw offer.
-     * Games that have a draw offer can't make moves, until draw is accepted or declined.
      * @param {Game} game - The game
      * @returns {boolean}
      */
     function hasGameDrawOffer(game) {
-        const isOffering = (game.blackDrawOffer === 'offered' || game.whiteDrawOffer === 'offered')
+        const isOffering = (hasWhiteDrawOffer() || hasBlackDrawOffer())
         return isOffering
     }
 

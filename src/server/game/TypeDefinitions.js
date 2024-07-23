@@ -125,7 +125,8 @@ function Game() {
     this.autoAFKResignTime = undefined;
 
     /** Last move a draw was offered */
-    this.drawOfferMove = undefined
+    this.whiteDrawOfferMove = undefined
+    this.blackDrawOfferMove = undefined
 
     /** Information about players offering a draw */
     this.whiteDrawOffer = undefined
