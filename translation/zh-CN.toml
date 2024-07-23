@@ -448,9 +448,9 @@ forgot_password = ["忘记了? ", "给我们发邮件."]
 login_button = "登录"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
-400_message = "Invalid parameters were received."
-409_message = ["There may have been a clashing username or email. Please ", "reload", ", the page."]
-500_message = "This isn't supposed to happen. There is some debugging to be done!"
+400_message = "收到无效参数。"
+409_message = ["可能存在冲突的用户名或电子邮件。请", "重新加载", "页面"]
+500_message = "这不应该发生。需要进行一些调试！"
 
 ########### NEWS ###########
 
