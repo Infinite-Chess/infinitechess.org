@@ -1,6 +1,6 @@
 name = "中文" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "1.0.1"
+version = "3"
 
 [header]
 home = "主页"
@@ -299,18 +299,19 @@ movement_tutorial = "WASD to move. Space & shift to zoom."
 regenerated_pieces = "Regenerated pieces."
 
 [play.javascript.invites]
-move_mouse = "Move the mouse to reconnect."
-unknown_action_received_1 = "Unknown action"
-unknown_action_received_2 = "received from the server in the invites subscription!"
-cannot_cancel = "Cannot cancel invite of undefined ID."
-you_indicator = "(You)"
-you_are_white = "You're: White"
-you_are_black = "You're: Black"
-random = "Random"
-accept = "Accept"
-cancel = "Cancel"
-create_invite = "Create Invite"
-cancel_invite = "Cancel Invite"
+move_mouse = "移动鼠标以重新连接。"
+unknown_action_received_1 = "未知操作"
+unknown_action_received_2 = "从邀请订阅中接收到的服务器消息！"
+cannot_cancel = "无法取消未定义 ID 的邀请。"
+you_indicator = "(你)"
+you_are_white = "你是白方"
+you_are_black = "你是黑方"
+random = "随机"
+accept = "接受"
+cancel = "取消"
+create_invite = "创建邀请函"
+cancel_invite = "取消邀请函"
+start_game = "开始"
 join_existing_active_games = "Join Existing - Active Games:"
 
 [play.javascript.onlinegame]
