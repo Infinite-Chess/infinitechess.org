@@ -26,20 +26,19 @@ js-confirm_delete = "Czy napewno chcesz usunąć swoje konto? Usunięcie konta j
 js-enter_password = "Wpisz swoje hasło, aby usunąć konto NA ZAWSZE"
 
 [index]
-secondary_title = "The official website for playing live!" # Needs translation
+secondary_title = "Oficjalna strona do gry online!"
 what_is_it_title = "Co to?"
 what_is_it_pargaraphs = [
-"Infinite Chess is a variant of chess in which there are no borders, much larger than your familiar 8x8 board. The queen, rooks, and bishops have <em>no limit</em> to how far they can move per turn. Pick any natural number up to infinity!",
+"Nieskończone szachy to wersja szach z nieskończoną planszą, zamiast dobrze znanej przestrzeni 8x8. Hetman, wieże i gońce nie mają <em>żadnego</em> limitu co do dystansu, który mogą przemierzyć w czasie tury. Wybierz dowolną liczbę naturalną aż do nieskończoności!",
 "With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researches have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
-"As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
-] # Needs translation
+"Jak możesz sobie wyobrazić, istnieją nieskończone możliwości ustawień początkowych, które możesz wykorzystać do gry kompetetywnej! Celem w grze dalej jest szach-mat, który wymaga nowych taktyk, gdyż nie ma ścian, które w zwykłej grze mogłyby zatrzymać króla",
+] # Paragraph 2 needs translation
 how_to_title = "Jak zagrać?"
-how_to_paragraph = ["The current version release is 1.3.2 on the ","Play"," page!"] # Needs translation
+how_to_paragraph = ["Obecna wersja (1.3.2) jest na stronie ","Graj"," !"]
 about_title = "O projekcie"
 about_paragraphs = [
-"I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
-["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
-] # Needs translation
+"Jestem Naviary. Od kiedy odkryłem Nieskończone Szachy (koncept istniał długo przed tą stroną), byłem bardzo zaintrygowany jego możliwościami. Od dawna granie w tą wersję było bardzo trudne, gdyż wymagało od graczy na chess.com wysyłania zdjęć planszy po każdym zagranym ruchu. Ze względu na to, niewielu ludzi było w stanie zagrać w Nieskończone Szachy, a sam sposób gry był bardzo mało popularny",
+["Moim celem było stworzenie sposobu aby Nieskończone Szachy były łatwo grywalne dla każdego, i stworzenie społeczności otaczającej je. Spędziłem niezliczone godziny nad tą stroną, aktualizowaniem i tworzeniem gry. Mam wiele innych pomysłów, które będą zajmować sporo mojego czasu. O ile chciałbym, żeby ta gra była darmowa, życie kosztuje, aby wesprzeć mnie finansowo rozważ dołączenie na mój", "Patreon"]
 patreon_title = "Wspierający Patreon"
 
 [credits]
@@ -47,36 +46,36 @@ title = "Podziękowania"
 copyright = "Wszystko, co nie jest wypisane poniżej, jest własnością www.InfiniteChess.org"
 variants_heading = "Tryby"
 variants_credits = [
-"Core designed by Andreas Tsevas.",
-"Space designed by Andreas Tsevas.",
-"Space Classic designed by Andreas Tsevas.",
-"Coaip (Chess on an Infinite Plane) designed by Vickalan.",
-"Pawn Horde designed by Inaccessible Cardinal.",
-"Abundance designed by Clicktuck Suskriberz.",
-"Pawndard by SexyLexi.",
-"Klasyczny+ by SexyLexi.",
-"Knightline by Inaccessible Cardinal.",
-"Knighted Chess by cycy98.",
-"designed by Cory Evans and Joel Hamkins.",
-"designed by Andreas Tsevas.",
-"designed by Cory Evans and Joel Hamkins.",
-"designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
-] # Needs translation
+"Podstawowy - Andreas Tsevas.",
+"Przestrzenny - Andreas Tsevas.",
+"Przestrzenny klasyczny - Andreas Tsevas.",
+"Coaip (Szachy na nieskończonym polu) - Vickalan.",
+"Horda pionków - Inaccessible Cardinal.",
+"Obfitość - Clicktuck Suskriberz.",
+"Pawndard - SexyLexi.",
+"Klasyczny+ - SexyLexi.",
+"Linia rycerzy - Inaccessible Cardinal.",
+"Rycerzowane szachy - cycy98.",
+"- Cory Evans i Joel Hamkins.",
+"- Andreas Tsevas.",
+"- Cory Evans i Joel Hamkins.",
+"- Cory Evans, Joel Hamkins, i Norman Lewis Perlmutter.",
+]
 textures_heading = "Tekstury"
-textures_licensed_under = "textures licensed under the"
+textures_licensed_under = "Testury na licencji"
 textures_credits = [
-"Gold coin by Quolte.",
-] # Needs translation
+"Gold coin, stworzone przez Quolte.",
+]
 sounds_heading = "Dźwięki"
 sounds_credits = [
-["Some sounds are provided by the", "project under the"],
-"Other sounds created by Naviary.",
-] # Needs translation
+["Niektóre dźwięki pochodzą z projektu", "pod licencją"],
+"Inne odgłosy stworzone przez Naviary.",
+]
 code_heading = "Kod"
 code_credits = [
-"by Brandon Jones and Colin MacKenzie IV.",
-"by Andreas Tsevas and Naviary.",
-] # Needs translation
+"- Brandon Jones i Colin MacKenzie IV.",
+"- Andreas Tsevas i Naviary.",
+]
 
 [member]
 verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację."
@@ -111,7 +110,7 @@ js-pwd_too_long = "Hasło nie może być dłuuuuuuuuuższe niż 72 znaki"
 js-pwd_not_pwd = "Hasło nie może być 'hasłem'"
 
 [play.main-menu]
-credits = "Podziękowania" # Needs translation
+credits = "Podziękowania"
 play = "Graj"
 guide = "Poradnik"
 editor = "Edytor planszy"
@@ -122,12 +121,12 @@ error = "Błąd"
 title = "Poradnik"
 rules = "Zasady"
 rules_paragraphs = [
-"The rules to Infinite Chess are almost identical to classical chess, except the board is infinite in all directions! These are the only notes and changes you need to be aware of:",
-"Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions!",
-["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines, they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
-"Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
+"Zasady Nieskończonych Szach są niemal identyczne do zwykłych szach, z jednym wyjątkiem - plansza ma nieskończony rozmiar! To są jedyne zmiany, o których musisz wiedzieć:",
+"Pionki z dłuższymi ruchami, takie jak wieże, gońce, i hetman nie mają ograniczeń co do odległości ruchu. Tak długo jak nie mają przeszkód na drodze, możesz poruszyć się nawet o milion pól i więcej!",
+["W domyślnym trybie, białe pionki awansują na polu 8, a czarne pionki na polu 1. W tym obrazie, jest to wskazane przez cienkie białe linie. Pionki muszą jedynie stanąć naprzeciwko linii", "nie", " jest konieczne jej przekroczenie."],
+"Notacja pól nie jest już opisana jako litera i cyfra (np. a1), ale jako koordynaty x i y. Na przykład, pole a1 ma teraz notację (1,1), a h8 notację (8,8). Na urządzeniach desktopowych, koordynaty nad którymi znajduję się wskaźnik myszy znajdują się w górnej części ekranu",
 "All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
-] # Needs translation
+] # 3rd paragraph needs translation
 careful_heading = "Uważaj!"
 careful_paragraphs = [
 "The openness of the infinite board means it is very easy to exploit forks, pins, and skewers. Your backside is often very vulnerable. Watch out for tactics like this! Be creative about forming protection for your king and rooks! Opening strategy is very different from classical chess.",
