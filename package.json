@@ -34,6 +34,7 @@
   "scripts": {
     "build": "node build.mjs",
     "watch": "nodemon",
-    "start": "node ."
+    "start": "node .",
+    "build-images": "node src/server/utility/generateImages.js"
   }
 }
