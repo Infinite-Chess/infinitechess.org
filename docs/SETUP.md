@@ -52,7 +52,7 @@ Choose a location on your machine to store the repository. Then when prompted wh
 
 Inside the opened VSCode project, open a terminal window within it by going to Terminal > New Terminal.
 
-Run the following command to auto-install all project dependancies:
+Run the following command to auto-install all project dependencies:
 ```
 npm install
 ```

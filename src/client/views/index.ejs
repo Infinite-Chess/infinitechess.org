@@ -1,81 +1,39 @@
-<!DOCTYPE html>
-<html lang="<%=language%>" dir="<%=t('direction')%>" >
-    <head>
-        <script>
-            const translations = <%-JSON.stringify({
-                ...t('header.javascript', {returnObjects: true})
-            })%>;
-        </script>
-        <meta charset="utf-8" />
-        <meta http-equiv="x-ua-compatible" content="ie=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Infinite Chess | Home - The Official Website</title>
-        <link rel='stylesheet' href='/css/index.css'>
-        <link rel='stylesheet' href='/css/footer.css'>
-        <link rel="icon" type="image" href="/img/favicon.png">
-    </head>
-    <body>
-        <header>
-            <nav>
-                <a href="/">
-                    <p class="currPage"><%=t('header.home')%></p>
-                </a>
-                <a href="/play">
-                    <p><%=t('header.play')%></p>
-                </a>
-                <a href="/news">
-                    <p><%=t('header.news')%></p>
-                </a>
-                <a href="/login" id="loginlink">
-                    <p id="logintext"><%=t('header.login')%></p>
-                </a>
-                <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
-                </a>
-            </nav>
-        </header>
-        <main>
-            <div id="content">
-                <div class="logo">
-                    <img src="/img/king_w.png" alt="White chess king">
-                    <h1 class="center">Infinite Chess</h1>
-                    <img src="/img/queen_w.png" alt="White chess king">
-                    <p class="center"><%=t('index.secondary_title')%></p>
-                </div>
-                <div class="center">
-                    <iframe class="" src="https://www.youtube.com/embed/rav29N0-h2c" title="YouTube video: I Made Chess, but It's Infinite" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                </div>
-                <h2><%=t('index.what_is_it_title')%></h2>
-                <p><%-t('index.what_is_it_pargaraphs', { joinArrays: '</p><p>' })%></p>
-                    <h3><%=t('index.how_to_title')%></h3>
-                    <p><%=t('index.how_to_paragraph.0')%><a href='/play'><%=t('index.how_to_paragraph.1')%></a><%=t('index.how_to_paragraph.2')%></p>
-                    
-                    <br>
-                    <h3 class="center"><%=t('index.about_title')%></h3>
-                    <!-- <h3>About the Project</h3> -->
-                    <p><%=t('index.about_paragraphs.0')%></p>
-                    <p><%=t('index.about_paragraphs.1.0')%> <a target='_blank' href='https://www.patreon.com/Naviary'><%=t('index.about_paragraphs.1.1')%></a>.</p>
+<div id="content">
+    <div class="logo">
+        <img src="/img/king_w.png" alt="White chess king">
+        <h1 class="center">Infinite Chess</h1>
+        <img src="/img/queen_w.png" alt="White chess king">
+        <p class="center"><%=t('index.secondary_title')%></p>
+    </div>
+    <div class="center">
+        <iframe class="" src="https://www.youtube.com/embed/rav29N0-h2c" title="YouTube video: I Made Chess, but It's Infinite" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+    <h2><%=t('index.what_is_it_title')%></h2>
+    <p><%-t('index.what_is_it_pargaraphs', { joinArrays: '</p><p>' })%></p>
+        <h3><%=t('index.how_to_title')%></h3>
+        <p><%=t('index.how_to_paragraph.0')%><a href='/play'><%=t('index.how_to_paragraph.1')%></a><%=t('index.how_to_paragraph.2')%></p>
+        
+        <br>
+        <h3 class="center"><%=t('index.about_title')%></h3>
+        <!-- <h3>About the Project</h3> -->
+        <p><%=t('index.about_paragraphs.0')%></p>
+        <p><%=t('index.about_paragraphs.1.0')%> <a target='_blank' href='https://www.patreon.com/Naviary'><%=t('index.about_paragraphs.1.1')%></a>.</p>
 
-                    <br>
-                    <h3 class="center"><%=t('index.patreon_title')%></h3>
-                    <div class="patreon-container">
-                        <p>Andreas</p>
-                        <p>Lebarb</p>
-                        <p>Mauer01</p>
-                        <p>Levon</p>
-                        <p><spam class="IM">IM</spam> Luke Harmon-Vellotti</p>
-                        <!-- LJ -->
-                        <p>KnightBeforeLast</p>
-                        <p>SuperGamersGames</p>
-                    </div>
-                    <div class="patreon-container">
-                        <p>EmmaBellHelium</p>
-                        <p>Meni</p>
-                        <p>Settemio</p>
-                    </div>
-            </div>
-        </main>
-        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
-        <script src="/scripts/memberHeader.js"></script>
-    </body>
-</html>
+        <br>
+        <h3 class="center"><%=t('index.patreon_title')%></h3>
+        <div class="patreon-container">
+            <p>Andreas</p>
+            <p>Lebarb</p>
+            <p>Mauer01</p>
+            <p>Levon</p>
+            <p><spam class="IM">IM</spam> Luke Harmon-Vellotti</p>
+            <!-- LJ -->
+            <p>KnightBeforeLast</p>
+            <p>SuperGamersGames</p>
+        </div>
+        <div class="patreon-container">
+            <p>EmmaBellHelium</p>
+            <p>Meni</p>
+            <p>Settemio</p>
+        </div>
+</div>
