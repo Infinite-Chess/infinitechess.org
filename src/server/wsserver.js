@@ -201,7 +201,7 @@ function onmessage(req, ws, rawMessage) {
         const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
         console.error(errText);
         logEvents(errText, 'hackLog.txt');
-        return sendmessage(ws, 'general', 'error', `Invalid JSON format!`);
+        return sendmessage(ws, 'general', 'printerror', `Invalid JSON format!`);
     }
 
     const isEcho = message.action === "echo";
@@ -246,7 +246,7 @@ function onmessage(req, ws, rawMessage) {
         default:
             const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true })
-            sendmessage(ws, 'general', 'error', `Unknown route "${message.route}"!`);
+            sendmessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
             return;
     }
 }
@@ -506,7 +506,7 @@ function handleGeneralMessage(ws, data) { // data: { route, action, value, id }
         default:
             const errText = `UNKNOWN web socket received action in general route! ${data.action}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true });
-            sendmessage(ws, 'general', 'notify', `Unknown action "${data.action}" in route general.`)
+            sendmessage(ws, 'general', 'printerror', `Unknown action "${data.action}" in route general.`)
             return;
     }
 }
@@ -528,7 +528,7 @@ function handleSubbing(ws, value) {
         default:
             const errText = `Cannot subscribe user to strange new subscription list ${value}! Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true });
-            sendmessage(ws, 'general', 'error', `Cannot subscribe to "${value}" list!`)
+            sendmessage(ws, 'general', 'printerror', `Cannot subscribe to "${value}" list!`)
             return;
     }
 }
@@ -548,7 +548,7 @@ function handleUnsubbing(ws, key, value, closureNotByChoice) {
             const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
             console.error(errText);
             logEvents(errText, 'hackLog.txt');
-            return sendmessage(ws, 'general', 'error', `Cannot unsubscribe from "${key}" list!`)
+            return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`)
     }
 }
 

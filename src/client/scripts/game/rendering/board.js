@@ -307,7 +307,8 @@ const board = (function(){
         // whiteTiles
         // darkTiles
         // selectedPieceHighlightColor
-        // legalMovesHighlightColor
+        // legalMovesHighlightColor_Friendly
+        // legalMovesHighlightColor_Opponent
         // lastMoveHighlightColor
         // checkHighlightColor
         // useColoredPieces
@@ -323,7 +324,7 @@ const board = (function(){
         ifThemeArgumentDefined_Set(args, 'whiteTiles');
         ifThemeArgumentDefined_Set(args, 'darkTiles');
         ifThemeArgumentDefined_Set(args, 'selectedPieceHighlightColor');
-        ifThemeArgumentDefined_Set(args, 'legalMovesHighlightColor');
+        ifThemeArgumentDefined_Set(args, 'legalMovesHighlightColor_Friendly');
         ifThemeArgumentDefined_Set(args, 'lastMoveHighlightColor');
         ifThemeArgumentDefined_Set(args, 'checkHighlightColor');
         ifThemeArgumentDefined_Set(args, 'useColoredPieces');

@@ -113,7 +113,7 @@ const arrows = (function() {
             const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
             for (const key in gamefile.piecesOrganizedByLines[linestr]) {
                 const intsects = key.split("|").map(Number)
-                if (boardSlidesStart > intsects || boardSlidesEnd < intsects) continue;
+                if (boardSlidesStart > intsects[0] || boardSlidesEnd < intsects[0]) continue;
                 const pieces = calcPiecesOffScreen(line, gamefile.piecesOrganizedByLines[linestr][key])
 
                 if (math.isEmpty(pieces)) continue;
@@ -217,7 +217,9 @@ const arrows = (function() {
             if (mode!==2) break attack;
             const piece = selection.getPieceSelected()
             if (!piece) break attack;
-            attacklines = Object.keys(legalmoves.getPieceMoveset(gamefile, piece.type).sliding)
+            const slidingMoveset = legalmoves.getPieceMoveset(gamefile, piece.type).sliding;
+            if (!slidingMoveset) break attack;
+            attacklines = Object.keys(slidingMoveset);
         }
         for (const strline in arrows) {
             if (attacklines.includes(strline)) {continue;}
