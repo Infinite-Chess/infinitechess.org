@@ -82,7 +82,7 @@ const game = (function(){
         if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
         if (input.isKeyDown('r')) piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs(), true);
         if (input.isKeyDown('n')) options.toggleNavigationBar();
-        if (input.isKeyDown('c')) premove.clearPremoves();
+        if (input.isMouseDown_Right()) premove.clearPremoves();
 
         clock.update()
         miniimage.testIfToggled();

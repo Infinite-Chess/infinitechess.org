@@ -9,6 +9,8 @@ const input = (function(){
     const overlayElement = document.getElementById('overlay') // <div> element overtop the canvas. This is what detects all clicks and touches.
 
     const leftMouseKey = 0; // Input key index for when the left mouse button is pressed.
+    const rightMouseKey = 2; // Input key index for when the right mouse button is pressed.
+    const middleMouseKey = 1; // Input key index for when the middle mouse button is pressed.
 
     let touchDowns = [] // List of all touch points created this frame. Position is in pixels from screen center.  { id, x, y, changeInX, changeInY }
     let touchHelds = [] // List of all currently active touch points.  { id, x, y, changeInX, changeInY }
@@ -507,12 +509,20 @@ const input = (function(){
         return mouseDowns.includes(leftMouseKey);
     }
 
+    function isMouseDown_Right() {
+        return mouseDowns.includes(rightMouseKey);
+    }
+
     function removeMouseDown_Left() {
         math.removeObjectFromArray(mouseDowns, leftMouseKey);
     }
 
     function isMouseHeld_Left() {
         return mouseHelds.includes(leftMouseKey);
+    }
+
+    function isMouseHeld_Right() {
+        return mouseHelds.includes(rightMouseKey);
     }
 
     function isKeyDown(keyName) {
@@ -620,10 +630,12 @@ const input = (function(){
         atleast1TouchDown,
         getTouchClicked,
         isMouseDown_Left,
+        isMouseDown_Right,
         removeMouseDown_Left,
         getTouchClickedTile,
         getTouchClickedWorld,
         isMouseHeld_Left,
+        isMouseHeld_Right,
         isKeyDown,
         atleast1KeyHeld,
         isKeyHeld,
