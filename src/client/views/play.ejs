@@ -23,8 +23,6 @@
         <link rel="icon" type="image/png" href="/img/favicon.png">
         <!-- Custom fonts: Merriweather, Open Sans -->
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-        <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource -->
-        <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
 
         <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
@@ -104,7 +102,7 @@
                         <picture>
                             <source srcset="/img/game/guide/promotionlines.avif" type="image/avif" />
                             <source srcset="/img/game/guide/promotionlines.webp" type="image/webp" />
-                            <img data-src="/img/game/guide/promotionlines.png" class="img-promotionlines">
+                            <img loading="lazy" src="/img/game/guide/promotionlines.png" class="img-promotionlines">
                         </picture>
                         <ul>
                             <li><%=t('play.guide.rules_paragraphs.1')%></li>
@@ -119,7 +117,7 @@
                         <picture>
                             <source srcset="/img/game/guide/kingrookfork.avif" type="image/avif" />
                             <source srcset="/img/game/guide/kingrookfork.webp" type="image/webp" />
-                            <img data-src="/img/game/guide/kingrookfork.png" class="img-kingrookfork">
+                            <img loading="lazy" src="/img/game/guide/kingrookfork.png" class="img-kingrookfork">
                         </picture>
                         <p><%=t('play.guide.careful_paragraphs.0')%></p>
                         <p><%=t('play.guide.careful_paragraphs.1')%></p>
@@ -135,7 +133,7 @@
                             <picture>
                                 <source srcset="/img/game/guide/arrowindicators.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/arrowindicators.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
+                                <img loading="lazy" src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
                             </picture>
                             <li><strong><%=t('play.guide.keybinds.3.0')%></strong><%=t('play.guide.keybinds.3.1')%><strong><%=t('play.guide.keybinds.3.2')%></strong><%=t('play.guide.keybinds.3.3')%></li>
                             <li><strong>1</strong><%=t('play.guide.keybinds.4')%></li>
@@ -157,42 +155,42 @@
                             <picture id="ch-img" class="img-fairymoveset">
                                 <source srcset="/img/game/guide/fairy/chancellor.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/chancellor.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/fairy/chancellor.png">
+                                <img loading="lazy" src="/img/game/guide/fairy/chancellor.png">
                             </picture>
                             <picture id="ar-img" class="img-fairymoveset hidden">
                                 <source srcset="/img/game/guide/fairy/archbishop.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/archbishop.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/fairy/archbishop.png">
+                                <img loading="lazy" src="/img/game/guide/fairy/archbishop.png">
                             </picture>
                             <picture id="am-img" class="img-fairymoveset hidden">
                                 <source srcset="/img/game/guide/fairy/amazon.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/amazon.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/fairy/amazon.png">
+                                <img loading="lazy" src="/img/game/guide/fairy/amazon.png">
                             </picture>
                             <picture id="gu-img" class="img-fairymoveset hidden">
                                 <source srcset="/img/game/guide/fairy/guard.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/guard.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/fairy/guard.png">
+                                <img loading="lazy" src="/img/game/guide/fairy/guard.png">
                             </picture>
                             <picture id="ha-img" class="img-fairymoveset hidden">
                                 <source srcset="/img/game/guide/fairy/hawk.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/hawk.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/fairy/hawk.png">
+                                <img loading="lazy" src="/img/game/guide/fairy/hawk.png">
                             </picture>
                             <picture id="ce-img" class="img-fairymoveset hidden">
                                 <source srcset="/img/game/guide/fairy/centaur.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/centaur.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/fairy/centaur.png">
+                                <img loading="lazy" src="/img/game/guide/fairy/centaur.png">
                             </picture>
                             <picture id="ob-img" class="img-fairymoveset hidden">
                                 <source srcset="/img/game/guide/fairy/obstacle.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/obstacle.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/fairy/obstacle.png">
+                                <img loading="lazy" src="/img/game/guide/fairy/obstacle.png">
                             </picture>
                             <picture id="vo-img" class="img-fairymoveset hidden">
                                 <source srcset="/img/game/guide/fairy/void.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/void.webp" type="image/webp" />
-                                <img data-src="/img/game/guide/fairy/void.png">
+                                <img loading="lazy" src="/img/game/guide/fairy/void.png">
                             </picture>
                             <div class="fairy-card-container">
                                 <div id="fairy-back" class="left-arrow opacity-0_25 unselectable">

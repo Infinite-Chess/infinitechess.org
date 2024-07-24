@@ -49,13 +49,8 @@ header p {
 
 main {
     background-color: #fff;
+    /* Using PNG because it was the smallest after compression */
     background-image: url('/img/blank_board.png');
-    @supports (background-image: url('/img/blank_board.webp')) {
-        background-image: url('/img/blank_board.webp');
-    }
-    @supports (background-image: url('/img/blank_board.avif')) {
-        background-image: url('/img/blank_board.avif');
-    }
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;

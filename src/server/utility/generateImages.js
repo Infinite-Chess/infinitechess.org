@@ -39,6 +39,7 @@ const optimised_images = {
   "queen_w.png": {},
   "blank_board.png": {},
   "member_default.png": {},
+  "/game/promotions.png": {},
   "/game/guide/promotionlines.png": {},
   "/game/guide/kingrookfork.png": {},
   "/game/guide/arrowindicators.png": {},

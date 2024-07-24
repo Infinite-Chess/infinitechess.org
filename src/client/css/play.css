@@ -1042,7 +1042,13 @@ button.join-button, button.copy-button {
     transform: translate(-50%, -50%);
     background-color: rgba(255, 255, 255, 0.949);
     box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.918);
-    background-image: url("/img/game/promotions.png"); /* New pieces */
+    background-image: url("/img/game/promotions.png");
+    @supports (background-image: url('/img/game/promotions.webp')) {
+        background-image: url('/img/game/promotions.webp');
+    }
+    @supports (background-image: url('/img/game/promotions.avif')) {
+        background-image: url('/img/game/promotions.avif');
+    }
     background-repeat: no-repeat;
     background-size: 0;
 }
