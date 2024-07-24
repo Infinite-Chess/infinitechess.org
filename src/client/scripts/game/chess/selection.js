@@ -88,10 +88,10 @@ const selection = (function() {
 
         if (!input.getMouseClicked() && !input.getTouchClicked()) return; // Exit, we did not click
 
-        const pieceClickedType = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare)
+        const pieceClicked = premove.getPieceAtCoords(hoverSquare);
 
-        if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClickedType) // A piece is already selected. Test if it was moved.
-        else if (pieceClickedType) handleSelectingPiece(pieceClickedType);
+        if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClicked) // A piece is already selected. Test if it was moved.
+        else if (pieceClicked) handleSelectingPiece(pieceClicked);
         // Else we clicked, but there was no piece to select, *shrugs*
     }
 
@@ -99,13 +99,12 @@ const selection = (function() {
      * A piece is already selected. This is called when you *click* somewhere.
      * This will execute the move if you clicked on a legal square to move to,
      * or it will select a different piece if you clicked another piece.
-     * @param {number[]} coordsClicked - The square clicked: `[x,y]`.
-     * @param {string} [pieceClickedType] - The type of piece clicked on, if there is one.
+     * @param {Piece} pieceClicked
      */
-    function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
+    function handleMovingSelectedPiece(coordsClicked, pieceClicked) {
         const gamefile = game.getGamefile();
 
-        tag: if (pieceClickedType) {
+        tag: if (pieceClicked) {
 
             // Did we click a friendly piece?
             // const selectedPieceColor = math.getPieceColorFromType(pieceSelected.type)
@@ -117,8 +116,8 @@ const selection = (function() {
                 unselectPiece();
             } else if (hoverSquareLegal) { // This piece is capturable, don't select it instead
                 break tag;
-            } else if (pieceClickedType !== 'voidsN') { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
-                handleSelectingPiece(pieceClickedType);
+            } else if (pieceClicked.type !== 'voidsN') { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
+                handleSelectingPiece(pieceClicked);
             }
 
             return;
@@ -145,14 +144,13 @@ const selection = (function() {
      * A piece is **not** already selected. This is called when you *click* a piece.
      * This will select the piece if it is a friendly, or forward
      * you to the game's front if your viewing past moves.
-     * @param {number[]} coordsClicked - The square clicked: `[x,y]`.
-     * @param {string} [pieceClickedType] - The type of piece clicked on, if there is one.
+     * @param {Piece} pieceClicked
      */
-    function handleSelectingPiece(pieceClickedType) {
+    function handleSelectingPiece(pieceClicked) {
         const gamefile = game.getGamefile();
-        const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
+        const clickedPieceColor = math.getPieceColorFromType(pieceClicked.type);
         const clickedFriendlyInOnlineGame = onlinegame.areInOnlineGame() && clickedPieceColor === onlinegame.getOurColor();
-        if (clickedFriendlyInOnlineGame && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn, don't select this piece
+        if (clickedFriendlyInOnlineGame && !onlinegame.isItOurTurn(gamefile) && !premove.arePremovesEnabled()) return; // Not our turn, don't select this piece
 
         // If we're viewing history, return. But also if we clicked a piece, forward moves.
         if (!movesscript.areWeViewingLatestMove(gamefile)) {
@@ -168,12 +166,12 @@ const selection = (function() {
 
         // if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
         if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
-        if (options.getEM() && pieceClickedType === 'voidsN') return; // Don't select voids.
+        if (options.getEM() && pieceClicked.type === 'voidsN') return; // Don't select voids.
 
-        const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare)
+        const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClicked.type, hoverSquare)
 
         // Select the piece
-        selectPiece(pieceClickedType, clickedPieceIndex, hoverSquare)
+        selectPiece(pieceClicked.type, pieceClicked.index, hoverSquare)
     }
 
     /**
@@ -183,10 +181,10 @@ const selection = (function() {
      * @param {*} coords - The coordinates of the piece.
      */
     function selectPiece(type, index, coords) {
-        main.renderThisFrame()
+        main.renderThisFrame();
         pieceSelected = { type, index, coords }
         // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-        legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected)
+        legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected, {isPremove:premove.isPremove()});
 
         const pieceColor = math.getPieceColorFromType(pieceSelected.type);
         isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
@@ -203,7 +201,7 @@ const selection = (function() {
         legalMoves = undefined;
         pawnIsPromoting = false;
         promoteTo = undefined;
-        guipromotion.close() // Close the promotion UI
+        guipromotion.close(); // Close the promotion UI
         main.renderThisFrame();
     }
 
@@ -216,22 +214,26 @@ const selection = (function() {
         const strippedCoords = movepiece.stripSpecialMoveTagsFromCoords(coords);
         /** @type {Move} */
         const move = { type: pieceSelected.type, startCoords: pieceSelected.coords, endCoords: strippedCoords }
-        specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move)
+        specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move);
         const compact = formatconverter.LongToShort_CompactMove(move);
         move.compact = compact;
+        let gameFile = game.getGamefile();
+        if (!onlinegame.areInOnlineGame() || onlinegame.isItOurTurn(gamefile)) {
+            movepiece.makeMove(gameFile, move);
+            onlinegame.sendMove();
+        } else {
+            premove.makePremove(pieceSelected, move);
+        }
 
-        movepiece.makeMove(game.getGamefile(), move)
-        onlinegame.sendMove();
-
-        unselectPiece()
+        unselectPiece();
     }
 
     /** Adds the promotion flag to the destination coordinates before making the move. */
     function makePromotionMove() {
         const coords = pawnIsPromoting;
         coords.promotion = promoteTo; // Add a tag on the coords of what piece we're promoting to
-        moveGamefilePiece(coords)
-        perspective.relockMouse()
+        moveGamefilePiece(coords);
+        perspective.relockMouse();
     }
 
     /**
@@ -256,7 +258,7 @@ const selection = (function() {
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
     function renderGhostPiece() {
         if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || main.videoMode) return;
-        pieces.renderGhostPiece(pieceSelected.type, hoverSquare)
+        pieces.renderGhostPiece(pieceSelected.type, hoverSquare);
     }
 
     return Object.freeze({

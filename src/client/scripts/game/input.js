@@ -521,6 +521,10 @@ const input = (function(){
         return mouseHelds.includes(leftMouseKey);
     }
 
+    function isMouseHeld_Right() {
+        return mouseHelds.includes(rightMouseKey);
+    }
+
     function isKeyDown(keyName) {
         return keyDowns.includes(keyName);
     }
@@ -631,6 +635,7 @@ const input = (function(){
         getTouchClickedTile,
         getTouchClickedWorld,
         isMouseHeld_Left,
+        isMouseHeld_Right,
         isKeyDown,
         atleast1KeyHeld,
         isKeyHeld,

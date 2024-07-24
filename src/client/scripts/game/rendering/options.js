@@ -35,6 +35,7 @@ const options = (function() {
             legalMovesHighlightColor_Opponent: [0.7, 0, 0, 0.35],
             lastMoveHighlightColor: [0, 1, 0,  0.25], // 0.17
             // lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
+            premoveHighlightColor: [1, 0, 0, 0.25],
             checkHighlightColor: [1, 0, 0,  0.7],
             // If this is true, we will render them white,
             // utilizing the more efficient color-less shader program!
@@ -50,6 +51,7 @@ const options = (function() {
             legalMovesHighlightColor_Friendly: [0.6, 0, 1,  0.55],
             legalMovesHighlightColor_Opponent: [0.7, 0, 0, 0.35],
             lastMoveHighlightColor: [0.5, 0.2, 0,  0.75],
+            premoveHighlightColor: [0.83, 0.26, 0.13, 0.25],
             checkHighlightColor: [1, 0, 0.5,  0.76],
             useColoredPieces: true,
             whitePiecesColor: [0.6, 0.5, 0.45,  1],
@@ -64,6 +66,7 @@ const options = (function() {
             legalMovesHighlightColor_Friendly: [1, 0.2, 0,  0.35], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
             legalMovesHighlightColor_Opponent: [0.7, 0, 0, 0.35],
             lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
+            premoveHighlightColor: [1, 0, 0, 0.25],
             checkHighlightColor: [1, 0, 0,  0.7],
             useColoredPieces: false,
             whitePiecesColor: [1, 1, 1,  1],
@@ -78,6 +81,7 @@ const options = (function() {
             legalMovesHighlightColor_Friendly: [0, 0, 1,  0.35], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
             legalMovesHighlightColor_Opponent: [0.7, 0, 0, 0.35],
             lastMoveHighlightColor: [0, 0, 0.3,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
+            premoveHighlightColor: [1, 0, 0, 0.5],
             checkHighlightColor: [1, 0, 0,  0.7],
             useColoredPieces: true,
             whitePiecesColor: [0.4, 1, 0.4,  1],
@@ -89,7 +93,6 @@ const options = (function() {
     let em = false // editMode, allows moving pieces anywhere else on the board!
 
     let fps = false
-
 
     // Function
 

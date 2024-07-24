@@ -79,6 +79,8 @@ const movesscript = (function(){
 
         main.renderThisFrame();
 
+        premove.hidePremoves();
+
         movepiece.rewindMove(game.getGamefile(), { removeMove: false })
         
         selection.unselectPiece();
@@ -97,6 +99,8 @@ const movesscript = (function(){
 
         // Only leave animate and updateData as true
         movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false })
+
+        if (areWeViewingLatestMove(game.getGamefile()) && premove.arePremovesEnabled()) premove.showPremoves()
 
         // transition.teleportToLastMove()
 

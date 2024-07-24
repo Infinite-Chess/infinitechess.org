@@ -32,24 +32,30 @@ const specialmove = {
     // Called when the piece moved is a king.
     // Tests if the move contains "castle" special move, if so it executes it!
     // RETURNS FALSE if special move was not executed!
-    kings(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
+    kings(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false, isPremove = false } = {}) {
 
         const specialTag = move.castle; // { dir: -1/1, coord }
         if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
         // Move the king to new square
 
-        movepiece.movePiece(gamefile, piece, move.endCoords, { updateData }) // Make normal move
+        movepiece.movePiece(gamefile, piece, move.endCoords, { updateData, isPremove }) // Make normal move
 
         // Move the rook to new square
 
-        const pieceToCastleWith = gamefileutility.getPieceAtCoords(gamefile, specialTag.coord);
+        const pieceToCastleWith = isPremove?
+            premove.getPieceAtCoords(specialTag.coord) :
+            gamefileutility.getPieceAtCoords(gamefile, specialTag.coord, {isPremove});
         const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]]
-        // Delete the rook's special move rights
-        const key = math.getKeyFromCoords(pieceToCastleWith.coords)
-        delete gamefile.specialRights[key];
-        movepiece.movePiece(gamefile, pieceToCastleWith, landSquare, { updateData }) // Make normal move
-
+        if(isPremove) {
+            premove.premovePiece(pieceToCastleWith, landSquare);
+        } else {
+            // Delete the rook's special move rights
+            const key = math.getKeyFromCoords(pieceToCastleWith.coords)
+            delete gamefile.specialRights[key];
+            movepiece.movePiece(gamefile, pieceToCastleWith, landSquare, { updateData, isPremove }) // Make normal move
+        }
+        
         if (animate) {
             animation.animatePiece(piece.type, piece.coords, move.endCoords) // King
             const resetAnimations = false;
@@ -61,7 +67,7 @@ const specialmove = {
         return true;
     },
 
-    pawns(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
+    pawns(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false, isPremove = false } = {}) {
 
         // If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
         if (updateProperties && specialmove.isPawnMoveADoublePush(piece.coords, move.endCoords)) {
@@ -79,17 +85,17 @@ const specialmove = {
         if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
 
         // Delete the piece captured
-        if (capturedPiece) movepiece.deletePiece(gamefile, capturedPiece, { updateData })
+        if (capturedPiece) movepiece.deletePiece(gamefile, capturedPiece, { isPremove, updateData })
 
         if (promotionTag) {
             // Delete original pawn
-            movepiece.deletePiece(gamefile, piece, { updateData })
+            movepiece.deletePiece(gamefile, piece, { isPremove, updateData })
 
-            movepiece.addPiece(gamefile, promotionTag, move.endCoords, null, { updateData })
+            movepiece.addPiece(gamefile, promotionTag, move.endCoords, null, { isPremove, updateData })
 
         } else /* enpassantTag */ {
             // Move the pawn
-            movepiece.movePiece(gamefile, piece, move.endCoords, { updateData })
+            movepiece.movePiece(gamefile, piece, move.endCoords, { isPremove, updateData })
         }
 
         if (animate) animation.animatePiece(piece.type, piece.coords, move.endCoords, capturedPiece)

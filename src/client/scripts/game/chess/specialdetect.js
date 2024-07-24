@@ -36,8 +36,9 @@ const specialdetect = (function() {
      * @param {number[]} coords - Coordinates of the king selected
      * @param {string} color - The color of the king selected
      * @param {array[]} individualMoves - The legal individual moves calculated so far
+     * @param {boolean} [isPremove=false] - Ignore obstructions for premoves
      */
-    function kings(gamefile, coords, color, individualMoves) {
+    function kings(gamefile, coords, color, individualMoves, isPremove=false) {
         if (!doesPieceHaveSpecialRight(gamefile, coords)) return; // King doesn't have castling rights
 
         const x = coords[0];
@@ -59,6 +60,14 @@ const specialdetect = (function() {
         for (let i = 0; i < row.length; i++) {
             const thisPiece = row[i]; // { type, coords }
             const thisCoord = thisPiece.coords;
+
+            if(isPremove && 
+                (
+                !doesPieceHaveSpecialRight(gamefile, thisCoord) ||
+                math.getPieceColorFromType(thisPiece.type) !== color ||
+                thisPiece.type.startsWith('pawns')
+                )
+            ) continue; //Ignore obstructions when making premoves
 
             if      (thisCoord[0] < x && thisCoord[0] > left)  left  = thisCoord[0];
             else if (thisCoord[0] > x && thisCoord[0] < right) right = thisCoord[0];
@@ -82,8 +91,10 @@ const specialdetect = (function() {
         // The square the king lands on will be tested later, within  legalmoves.calculate()
 
         const oppositeColor = math.getOppositeColor(color)
-        if (wincondition.doesColorHaveWinCondition(gamefile, oppositeColor, 'checkmate')) {
+        tag: if (wincondition.doesColorHaveWinCondition(gamefile, oppositeColor, 'checkmate')) {
             if (gamefile.inCheck) return; // Not legal if in check
+
+            if (isPremove) break tag;
 
             // Simulate the space in-between
 
@@ -120,8 +131,13 @@ const specialdetect = (function() {
      * @param {number[]} coords - Coordinates of the pawn selected
      * @param {string} color - The color of the pawn selected
      * @param {array[]} individualMoves - The legal individual moves calculated so far
+     * @param {boolean} [isPremove=false] - Ignore obstructions for premoves
      */
-    function pawns(gamefile, coords, color, individualMoves) {
+    function pawns(gamefile, coords, color, individualMoves, isPremove=false) {
+        /**
+         * When premoving allways show captures and single push.
+         * Double push is only shown if the pawn has special rights.
+        */      
 
         // White and black pawns move and capture in opposite directions.
         const yOneorNegOne = color === 'white' ? 1 : -1 
@@ -132,12 +148,12 @@ const specialdetect = (function() {
     
         // Is there a piece in front of it?
         const coordsInFront = [coords[0], coords[1] + yOneorNegOne]
-        if (!gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront)) {
+        if (!gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront) || isPremove) {
             individualMoves.push(coordsInFront) // No piece, add the move
 
             // Is the double push legal?
             const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yOneorNegOne]
-            const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord)
+            const pieceAtCoords = isPremove? undefined:gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord)
             if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) individualMoves.push(doublePushCoord) // Add the double push!
         }
     
@@ -147,6 +163,13 @@ const specialdetect = (function() {
             [coords[0] - 1, coords[1] + yOneorNegOne],
             [coords[0] + 1, coords[1] + yOneorNegOne]
         ]
+
+        //Allways show diagonal premoves.
+        if(isPremove) {
+            individualMoves.push(...coordsToCapture);
+            return;
+        }
+
         for (let i = 0; i < 2; i++) {
             const thisCoordsToCapture = coordsToCapture[i];
     

@@ -14,6 +14,11 @@ const ARE_RATE_LIMITING = true; // Set to false to temporarily get around it, du
 /** The domain name of the production website. */
 const HOST_NAME = 'www.infinitechess.org';
 
+/** Whether players are auto resigned.
+ * Useful for testing if you don't want to be kicked every 20 seconds.
+ */
+const AUTO_AFK_RESIGN = false || !DEV_BUILD;
+
 /**
  * The latest version of the game.
  * If the client is ever using an old version, we will tell them to hard-refresh.
@@ -34,6 +39,7 @@ const allowedOrigins = [ // Allowed sites
 module.exports = {
     DEV_BUILD,
     ARE_RATE_LIMITING,
+    AUTO_AFK_RESIGN,
     HOST_NAME,
     GAME_VERSION,
     useOriginWhitelist,
