@@ -34,15 +34,12 @@ const premove = (function(){
      */
     let highlightedSquares = [];
 
-    /** Stores the position of a piece before and after all premoves are applied.
-     * @typedef {Object} PieceTranslation
-     * @property {number[]} startCoords - Where was the piece before premoves?
-     * @property {number[]} [endCoords] - Where will the piece be after premoves? Undefined if the piece was destoyed.
-     * @property {Piece} piece - The piece is moved.
-    */
-
-    /** @type {Object.<string, PieceTranslation>}*/
-    let movedPieces = {};
+    /** 
+     * Stores all of the pieces that have been moved to a position different from gamefile. 
+     * Actually moving the pieces would confuse legality checks and/or checkmate detection.
+     * 
+     */
+    let movedPieces = [];
 
     /**
      * Submits the next premove to the server if it is legal;
@@ -65,6 +62,8 @@ const premove = (function(){
 
         if (!premoves.length || !premovesEnabled)
             return; //The user has not made a premove.
+
+        /** @type {Move} */ //We already checked that the array isn't empty. `premoves.shift()` should return a value.
         let premove = premoves.shift();
         
         //check if the premove is legal
@@ -82,28 +81,48 @@ const premove = (function(){
         movepiece.makeMove(game.getGamefile(), premove)
         onlinegame.sendMove();
 
+        //If the last premove in the queue was just made,
+        //clear all highlighted sqares and movedPieces.
         if(!premoves) {
             clearPremoves();
             return;
         }
 
-        for(const key in movedPieces) {
-            const pieceTranslation = movedPieces[key];
-            if(math.areCoordsEqual(pieceTranslation.startCoords, premove.startCoords)) {
-                if (math.areCoordsEqual(pieceTranslation.endCoords, premove.endCoords))
-                {
-                    delete movedPieces[key];
-                    //Un-highlight the square the piece moved to as the piece is in its final position
-                    removeSquareHighlight(premove.endCoords);
-                } else {
-                    pieceTranslation.startCoords = premove.endCoords;
-                }
-                break;
+        if(math.areCoordsEqual(piece.coords, piece.premovedCoords)) {
+            if (math.areCoordsEqual(piece.premovedCoords, premove.endCoords))
+            {
+                movedPieces.splice(movedPieces.indexOf(piece), 2);
+                //Un-highlight the square the piece moved to as the piece is in its final position
+                removeSquareHighlight(premove.endCoords);
+            } else {
+                pieceTranslation.startCoords = premove.endCoords;
             }
         }
 
         //Un-highlight the square the piece moved from
         removeSquareHighlight(premove.startCoords);
+    }
+    
+    /**
+     * Move the visual position of the piece if premoves are shown.
+     * @param {Piece} piece - The piece to premove.
+     * @param {number[] | null} newCoords - The coordinates to move the piece to. *null* if the piece was captured.
+     */
+    function premovePiece(piece, newCoords) {
+        if(newCoords) {
+            
+            let capturedPiece = getPieceAtCoords(newCoords);
+            if (capturedPiece) premovePiece(capturedPiece, null);
+
+            //Update the visual position of the piece.
+            piecesmodel.movebufferdata(game.getGamefile(), piece, newCoords);
+        } else {
+            //The piece was captured. Remove it.
+            piecesmodel.deletebufferdata(game.getGamefile(), piece);
+        }
+
+        piece.premovedCoords = newCoords;
+        movedPieces.push(piece);
     }
 
     /** Remove premove highlight from a square.
@@ -125,19 +144,16 @@ const premove = (function(){
             return;
         if (main.devBuild) console.log("A premove was made.");
         premoves.push(move);
-        if (!movedPieces[piece.type + piece.index]) {
-            movedPieces[piece.type + piece.index] = {
-                piece, 
-                startCoords: move.startCoords, 
-                endCoords: move.endCoords
-            };
-            highlightedSquares.push(move.startCoords);
-        }
-        else {
-            movedPieces[piece.type + piece.index].endCoords = move.endCoords;
-        }
+
+        let trimmedType = math.trimWorBFromType(piece.type);
+        let specialMoveMade;
+        let gamefile = game.getGamefile();
+        if(gamefile.specialMoves[trimmedType]) 
+            specialMoveMade = game.getGamefile().specialMoves[trimmedType](gamefile, piece, move, { isPremove:true });
+
+        if (!specialMoveMade) premovePiece(piece, move.endCoords);
+
         highlightedSquares.push(move.endCoords);
-        piecesmodel.movebufferdata(game.getGamefile(), piece, move.endCoords);
     }
 
     /** Sends all premoved pieces back to their original positions then clears the queue of premoves. */
@@ -145,40 +161,57 @@ const premove = (function(){
     {
         hidePremoves();
         premoves = [];
-        movedPieces = {};
+        movedPieces = [];
         highlightedSquares = [];
     }
 
     /** Displays premoved pieces in their new positions. */
     function showPremoves() {
         if(!premoves) return;
-        for (const pieceTranslation of Object.values(movedPieces)) {
-            piecesmodel.movebufferdata(game.getGamefile(), pieceTranslation.piece, pieceTranslation.endCoords);
+        let gamefile = game.getGamefile();
+        for (let movedPiece of Object.values(movedPieces)) {
+            if(movedPiece.premovedCoords)
+                piecesmodel.movebufferdata(gamefile, movedPiece, movedPiece.premovedCoords);
+            else if(movedPiece.premovedCoords == null)
+                piecesmodel.deletebufferdata(gamefile, movedPiece);
+            else
+                console.error("Premoved coordinates undefined.");
         }
     }
 
     /** Sends all pieces back to their original positions. */
     function hidePremoves() {
         if(!premoves) return;
-        for (const pieceTranslation of Object.values(movedPieces)) {
-            piecesmodel.movebufferdata(game.getGamefile(), pieceTranslation.piece, pieceTranslation.startCoords);
+        let gamefile = game.getGamefile();
+        for (const movedPiece of Object.values(movedPieces)) {
+            if(movedPiece.premovedCoords) {
+                piecesmodel.movebufferdata(gamefile, movedPiece, movedPiece.coords);
+            } else if (movedPiece.premovedCoords === null) {
+                piecesmodel.overwritebufferdata(
+                    gamefile, 
+                    movedPiece, 
+                    movedPiece.coords, 
+                    movedPiece.type);
+            } else {
+                console.error("Premoved coordinates undefined.");
+            }
         }
     }
 
     /**
      * Returns piece that has been premoved to `coords`. 
      * 
-     * If no piece has been premoved to `coords` forwards the request to `gamefile`
+     * If no piece has been premoved to `coords` forwards the request to `gamefileutility`
      * @param {number[]} coords - The coordinates of the pieces: `[x,y]`
-     * @returns {Piece | undefined} The piece at `coords` or *undifined* if there isn't one.
+     * @returns {Piece} The piece at `coords` if there is one.
      */
     function getPieceAtCoords(coords) {
         let pieceGone = false; //Has the piece moved away or been captured?
-        for (let pieceMoved of Object.values(movedPieces)) {
-            if (math.areCoordsEqual(pieceMoved.endCoords, coords)) {
-                return pieceMoved.piece;
+        for (let movedPiece of Object.values(movedPieces)) {
+            if (math.areCoordsEqual(movedPiece.premovedCoords, coords)) {
+                return movedPiece;
             }
-            if (math.areCoordsEqual(pieceMoved.startCoords, coords)) {
+            if (math.areCoordsEqual(movedPiece.coords, coords)) {
                 pieceGone = true;
             }
         }
@@ -204,6 +237,7 @@ const premove = (function(){
         hidePremoves,
         showPremoves,
         submitPremove,
+        premovePiece,
         allowPremoves,
         arePremovesEnabled,
         getPremoveCount,

@@ -165,7 +165,8 @@ const gamefileutility = (function(){
      * @param {number[]} coords - The coordinates to retreive the piece at
      * @returns {Piece | undefined} The piece, or *undefined* if there isn't one.
      */
-    function getPieceAtCoords(gamefile, coords) {
+    function getPieceAtCoords(gamefile, coords, {isPremove = false} = {}) {
+        if (isPremove) return premove.getPieceAtCoords();
         const type = getPieceTypeAtCoords(gamefile, coords);
         if (!type) return undefined;
         const index = getPieceIndexByTypeAndCoords(gamefile, type, coords);
