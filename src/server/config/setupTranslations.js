@@ -292,7 +292,7 @@ function initTranslations() {
 /**
  * Retrieves the translation for a given key and language.
  * @param {string} key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
- * @param {string} language - The language code (e.g., 'en-US') for the translation. Default: 'en-US'
+ * @param {string} language - The language code for the translation. Default: 'en-US'
  * @param {Object} [options={}] - Additional options for the translation.
  * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
  * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
