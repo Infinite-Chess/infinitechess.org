@@ -1,7 +1,7 @@
 
 const clockweb = (function() {
 
-    const validClockValues = ['0','0.3+2','1+2','2+2','3+2','5+2','8+3','10+4','12+5','15+6','20+8','25+10','30+15','40+20']
+    const validClockValues = ['-','15+2','60+2','120+2','180+2','300+2','480+3','600+4','720+5','900+6','1200+8','1500+10','1800+15','2400+20'] 
 
     /**
      * Returns true if the provided clock value is valid.
@@ -13,21 +13,23 @@ const clockweb = (function() {
 
     /**
      * Splits the clock from the form `10+5` into the `minutes` and `increment` properties.
-     * If it is an untimed game (represented by `0`), then `minutes` will be 0, and `increment` will be undefined.
-     * @param {string} clock - The string representing the clock value.
-     * @returns {Object} An object with 2 properties: `minutes`, `increment`.
+     * If it is an untimed game (represented by `-`), then this will return null.
+     * @param {string} clock - The string representing the clock value: `10+5`
+     * @returns {Object} An object with 2 properties: `minutes`, `increment`, or `null` if the clock is infinite.
      */
     function getMinutesAndIncrementFromClock(clock) {
-        const [ minutes, increment ] = clock.split('+').map(part => +part); // Convert them into a number
+        if (isClockValueInfinite(clock)) return null;
+        const [ seconds, increment ] = clock.split('+').map(part => +part); // Convert them into a number
+        const minutes = seconds / 60;
         return { minutes, increment };
     }
 
     /**
-     * Returns true if the clock value is infinite. Internally, untimed games are represented with a "0".
+     * Returns true if the clock value is infinite. Internally, untimed games are represented with a "-".
      * @param {string} clock - The clock value (e.g. "10+5").
      * @returns {boolean} *true* if it's infinite.
      */
-    function isClockValueInfinite(clock) { return clock === '0'; }
+    function isClockValueInfinite(clock) { return clock === '-' }
 
     return Object.freeze({
         isClockValueValid,

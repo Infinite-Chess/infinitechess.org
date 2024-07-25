@@ -22,7 +22,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         Version: undefined,
         White: undefined,
         Black: undefined,
-        Clock: undefined,
+        TimeControl: undefined,
         Date: undefined,
         /** 1-0 = White won */
         Result: undefined,

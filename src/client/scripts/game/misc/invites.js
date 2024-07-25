@@ -284,7 +284,7 @@ const invites = (function(){
         
         /**
          * Starting from the first child, the order goes:
-         * Name, Variant, Clock, Color, Publicity, Rated
+         * Name, Variant, TimeControl, Color, Publicity, Rated
          * (see the {@link Invite} object)
          */
 

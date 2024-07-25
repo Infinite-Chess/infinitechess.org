@@ -88,12 +88,18 @@ const clock = (function(){
         const gamefile = game.getGamefile();
         if (!gamefile) return console.error("Game must be initialized before starting the clocks.")
 
-        const clockPartsSplit = getMinutesAndIncrementFromClock(clock) // { minutes, increment }
-        startTime.minutes = clockPartsSplit.minutes;
-        startTime.millis = math.minutesToMillis(startTime.minutes);
-        startTime.increment = clockPartsSplit.increment;
+        startTime.minutes = null;
+        startTime.millis = null;
+        startTime.increment = null;
 
-        untimed = startTime.minutes === 0 && startTime.increment === undefined
+        const clockPartsSplit = getMinutesAndIncrementFromClock(clock) // { minutes, increment }
+        if (clockPartsSplit !== null) {
+            startTime.minutes = clockPartsSplit.minutes;
+            startTime.millis = math.minutesToMillis(startTime.minutes);
+            startTime.increment = clockPartsSplit.increment;
+        }
+
+        untimed = isClockValueInfinite(clock);
 
         if (untimed) { // Hide clock elements
             style.hideElement(element_timerContainerWhite)
@@ -104,7 +110,7 @@ const clock = (function(){
             style.revealElement(element_timerContainerBlack)
         }
 
-         // Edit the closk if we're re-loading an online game
+        // Edit the closk if we're re-loading an online game
         if (currentTimes) edit(currentTimes.timerWhite, currentTimes.timerBlack, currentTimes.timeNextPlayerLosesAt)
         else { // No current time specified, start both players with the default.
             currentTime.white = startTime.millis
@@ -289,36 +295,34 @@ const clock = (function(){
 
     /**
      * Returns the clock in a slightly more human-readable format: `10m+5s`
-     * @param {string} key - The clock string: `10+5`
+     * @param {string} key - The clock string: `600+5`, where the left is the start time in seconds, right is increment in seconds.
      * @returns {string}
      */
-    function getClockFromKey(key) { // mm+ss  converted to  15m+15s
-        if (key === "0") return translations["no_clock"]
-
-        const splitClock = key.split('+')
-        const minutes = splitClock[0]
-        const seconds = splitClock[1]
-
-        return `${minutes}m+${seconds}s`
+    function getClockFromKey(key) { // ssss+ss  converted to  15m+15s
+        const minutesAndIncrement = getMinutesAndIncrementFromClock(key);
+        if (minutesAndIncrement === null) return translations["no_clock"]
+        return `${minutesAndIncrement.minutes}m+${minutesAndIncrement.increment}s`
     }
 
     /**
      * Splits the clock from the form `10+5` into the `minutes` and `increment` properties.
-     * If it is an untimed game (represented by `0`), then `minutes` will be 0, and `increment` will be undefined.
+     * If it is an untimed game (represented by `-`), then this will return null.
      * @param {string} clock - The string representing the clock value: `10+5`
-     * @returns {Object} An object with 2 properties: `minutes`, `increment`.
+     * @returns {Object} An object with 2 properties: `minutes`, `increment`, or `null` if the clock is infinite.
      */
     function getMinutesAndIncrementFromClock(clock) {
-        const [ minutes, increment ] = clock.split('+').map(part => +part); // Convert them into a number
+        if (isClockValueInfinite(clock)) return null;
+        const [ seconds, increment ] = clock.split('+').map(part => +part); // Convert them into a number
+        const minutes = seconds / 60;
         return { minutes, increment };
     }
 
     /**
-     * Returns true if the clock value is infinite. Internally, untimed games are represented with a "0".
+     * Returns true if the clock value is infinite. Internally, untimed games are represented with a "-".
      * @param {string} clock - The clock value (e.g. "10+5").
      * @returns {boolean} *true* if it's infinite.
      */
-    function isClockValueInfinite(clock) { return clock === '0' }
+    function isClockValueInfinite(clock) { return clock === '-' }
 
     function printClocks() {
         console.log(`White time: ${currentTime.white}`)

@@ -274,11 +274,10 @@ const guiplay = (function(){
         // console.log(inviteOptions);
         gui.setScreen('game local'); // Change screen location
 
-        const untimedGame = clock.isClockValueInfinite(inviteOptions.clock);
         const gameOptions = {
             metadata: {
                 Variant: inviteOptions.variant,
-                Clock: untimedGame ? "Infinite" : inviteOptions.clock
+                TimeControl: inviteOptions.clock
             }
         }
         loadGame(gameOptions)
@@ -293,7 +292,7 @@ const guiplay = (function(){
      * `timerBlack`, `timeNextPlayerLosesAt`, `autoAFKResignTime`,
      * `disconnect`, `gameConclusion`, `serverRestartingAt`
      * 
-     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `Clock`, `Date`, `Rated`.
+     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `Date`, `Rated`.
      */
     function startOnlineGame(gameOptions) {
         gui.setScreen('game online') // Change screen location
@@ -329,8 +328,7 @@ const guiplay = (function(){
     /**
      * Starts a game according to the options provided.
      * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`
-
-     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `Clock`, `Date`.
+     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `Date`.
      */
     function loadGame(gameOptions) {
         console.log("Loading game with game options:")

@@ -11,7 +11,7 @@ const copypastegame = (function(){
      * A list of metadata properties that are retained when pasting a new game.
      * These will overwrite the pasted game's metadata with the current game's metadata.
      */
-    const retainMetadataWhenPasting = ['White','Black','Clock','Rated']
+    const retainMetadataWhenPasting = ['White','Black','TimeControl','Rated']
 
     /**
      * Copies the current game to the clipboard in ICN notation.

@@ -86,9 +86,14 @@ const gamemanager = (function() {
             }
         }
 
-        const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
-        newGame.startTimeMillis = math1.minutesToMillis(minutes);
-        newGame.incrementMillis = math1.secondsToMillis(increment);
+        newGame.startTimeMillis = null;
+        newGame.incrementMillis = null;
+
+        const minutesAndIncrement = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
+        if (minutesAndIncrement !== null) {
+            newGame.startTimeMillis = math1.minutesToMillis(minutesAndIncrement.minutes);
+            newGame.incrementMillis = math1.secondsToMillis(minutesAndIncrement.increment);
+        }
 
         const player1 = inviteOptions.owner; // { member/browser }  The invite owner
         const player2 = wsfunctions.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
@@ -223,7 +228,7 @@ const gamemanager = (function() {
             Variant: game.variant,
             White: getDisplayNameOfPlayer(game.white),
             Black: getDisplayNameOfPlayer(game.black),
-            Clock: clockweb.isClockValueInfinite(game.clock) ? "Infinite" : game.clock,
+            TimeControl: game.clock,
             Date,
             Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
             Termination: wincondition1.getTerminationInEnglish(condition),
@@ -610,7 +615,7 @@ const gamemanager = (function() {
                 Variant: safeGameInfo.variant,
                 White: safeGameInfo.playerWhite,
                 Black: safeGameInfo.playerBlack,
-                Clock: clockweb.isClockValueInfinite(safeGameInfo.clock) ? "Infinite" : safeGameInfo.clock,
+                TimeControl: safeGameInfo.clock,
                 Date: math1.getUTCDateTime(safeGameInfo.timeCreated),
                 Rated: safeGameInfo.rated
             },
