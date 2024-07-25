@@ -23,7 +23,8 @@
         <link rel="icon" type="image/png" href="/img/favicon.png">
         <!-- Custom fonts: Merriweather, Open Sans -->
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-        <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource -->
+        <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource.
+         Right now this only preloads the png, because we don't know if avif or webp is supported. -->
         <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
 
         <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
@@ -101,7 +102,11 @@
                         <h2><%=t('play.guide.rules')%></h2>
                         <hr class="line-break">
                         <p><%=t('play.guide.rules_paragraphs.0')%></p>
-                        <img data-src="/img/game/guide/promotionlines.png" class="img-promotionlines">
+                        <picture>
+                            <source srcset="/img/game/guide/promotionlines.avif" type="image/avif" />
+                            <source srcset="/img/game/guide/promotionlines.webp" type="image/webp" />
+                            <img loading="lazy" src="/img/game/guide/promotionlines.png" class="img-promotionlines">
+                        </picture>
                         <ul>
                             <li><%=t('play.guide.rules_paragraphs.1')%></li>
                             <li><%=t('play.guide.rules_paragraphs.2.0')%><em><%=t('play.guide.rules_paragraphs.2.1')%></em><%=t('play.guide.rules_paragraphs.2.2')%></li>
@@ -112,7 +117,11 @@
                         
                         <h2><%=t('play.guide.careful_heading')%></h2>
                         <hr class="line-break">
-                        <img data-src="/img/game/guide/kingrookfork.png" class="img-kingrookfork">
+                        <picture>
+                            <source srcset="/img/game/guide/kingrookfork.avif" type="image/avif" />
+                            <source srcset="/img/game/guide/kingrookfork.webp" type="image/webp" />
+                            <img loading="lazy" src="/img/game/guide/kingrookfork.png" class="img-kingrookfork">
+                        </picture>
                         <p><%=t('play.guide.careful_paragraphs.0')%></p>
                         <p><%=t('play.guide.careful_paragraphs.1')%></p>
                         <div class="clear-float"></div>
@@ -124,7 +133,11 @@
                             <li><strong>WASD</strong><%=t('play.guide.keybinds.0')%></li>
                             <li><strong><%=t('play.guide.keybinds.1.0')%></strong><%=t('play.guide.keybinds.1.1')%><strong><%=t('play.guide.keybinds.1.2')%></strong><%=t('play.guide.keybinds.1.3')%></li>
                             <li><strong><%=t('play.guide.keybinds.2.0')%></strong><%=t('play.guide.keybinds.2.1')%></li>
-                            <img data-src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
+                            <picture>
+                                <source srcset="/img/game/guide/arrowindicators.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/arrowindicators.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
+                            </picture>
                             <li><strong><%=t('play.guide.keybinds.3.0')%></strong><%=t('play.guide.keybinds.3.1')%><strong><%=t('play.guide.keybinds.3.2')%></strong><%=t('play.guide.keybinds.3.3')%></li>
                             <li><strong>1</strong><%=t('play.guide.keybinds.4')%></li>
                         </ul>
@@ -142,14 +155,46 @@
                         <hr class="line-break">
                         <p><%=t('play.guide.fairy_paragraph')%></p>
                         <div id="fairy-pieces" class="fairy-pieces">
-                            <img data-src="/img/game/guide/fairy/chancellor.png" id="ch-img" class="img-fairymoveset">
-                            <img data-src="/img/game/guide/fairy/archbishop.png" id="ar-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/amazon.png" id="am-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/guard.png" id="gu-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/hawk.png" id="ha-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/centaur.png" id="ce-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/obstacle.png" id="ob-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/void.png" id="vo-img" class="img-fairymoveset hidden">
+                            <picture id="ch-img" class="img-fairymoveset">
+                                <source srcset="/img/game/guide/fairy/chancellor.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/chancellor.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/chancellor.png">
+                            </picture>
+                            <picture id="ar-img" class="img-fairymoveset hidden">
+                                <source srcset="/img/game/guide/fairy/archbishop.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/archbishop.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/archbishop.png">
+                            </picture>
+                            <picture id="am-img" class="img-fairymoveset hidden">
+                                <source srcset="/img/game/guide/fairy/amazon.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/amazon.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/amazon.png">
+                            </picture>
+                            <picture id="gu-img" class="img-fairymoveset hidden">
+                                <source srcset="/img/game/guide/fairy/guard.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/guard.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/guard.png">
+                            </picture>
+                            <picture id="ha-img" class="img-fairymoveset hidden">
+                                <source srcset="/img/game/guide/fairy/hawk.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/hawk.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/hawk.png">
+                            </picture>
+                            <picture id="ce-img" class="img-fairymoveset hidden">
+                                <source srcset="/img/game/guide/fairy/centaur.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/centaur.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/centaur.png">
+                            </picture>
+                            <picture id="ob-img" class="img-fairymoveset hidden">
+                                <source srcset="/img/game/guide/fairy/obstacle.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/obstacle.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/obstacle.png">
+                            </picture>
+                            <picture id="vo-img" class="img-fairymoveset hidden">
+                                <source srcset="/img/game/guide/fairy/void.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/void.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/void.png">
+                            </picture>
                             <div class="fairy-card-container">
                                 <div id="fairy-back" class="left-arrow opacity-0_25 unselectable">
                                     <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000" stroke-width="46.08"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z" fill="#000000"></path></g></svg>
@@ -466,8 +511,10 @@
             </div>
 
             <!-- Game images -->
-            <img id="tiles" src="/img/game/tiles/tiles.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
-            <img id="tilesGrey78" src="/img/game/tiles/tilesGrey78.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
+            <img id="tiles" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAACXBIWXMAADXUAAA11AFeZeUIAAAAFElEQVQImWP4////fwYY+P///38AR8oH+QG3t1YAAAAASUVORK5CYII="
+            width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
+            <img id="tilesGrey78" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAADXUAAA11AFeZeUIAAAAF0lEQVQImWP8////yZMnGU6cOPH//38ASt0Kr4co274AAAAASUVORK5CYII="
+            width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
             <!-- This transparent tiles texture gives us freedom of color, but the moiré effect is heavier -->
             <img id="tiles256" src="/img/game/tiles/tiles256.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
             <img id="spritesheet" src="/img/game/spritesheet64_cburnett.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">

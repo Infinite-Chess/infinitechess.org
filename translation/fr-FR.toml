@@ -341,6 +341,22 @@ origin_error = "Origin error."
 connection_closed = "La connection a été fermé de façon imprévue. Message du serveur:"
 please_report_bug = "Ceci ne devrait jamais arriver, reportez ce bug s'il vous plaît !"
 
+[play.javascript.termination] # What caused the termination of the game, in spoken language
+checkmate = "Checkmate" # Needs translation
+stalemate = "Stalemate" # Needs translation
+repetition = "Threefold repetition" # Needs translation
+moverule = "-move rule"  # The game inserts a number in front of this phrase # Needs translation
+insuffmat = "Insufficient material" # Needs translation
+royalcapture = "Royal capture" # Needs translation
+allroyalscaptured = "All royals captured" # Needs translation
+allpiecescaptured = "All pieces captured" # Needs translation
+threecheck = "Three-check" # Needs translation
+koth = "King of the hill" # Needs translation
+resignation = "Resignation" # Needs translation
+time = "Time forfeit" # Needs translation
+aborted = "Aborted" # Game was cancelled (no elo exchanged) # Needs translation
+disconnect = "Abandoned" # A player left # Needs translation
+
 [play.javascript.results]
 you_checkmate = "Victoire par échec-et-mat !"
 you_time = "Victoire par le temps!"

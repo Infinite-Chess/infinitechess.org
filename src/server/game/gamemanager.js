@@ -228,8 +228,8 @@ const gamemanager = (function() {
             Black: getDisplayNameOfPlayer(game.black),
             Clock: clockweb.isClockValueInfinite(game.clock) ? "Infinite" : game.clock,
             Date,
-            Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : '0.5-0.5',
-            Condition: math1.capitalizeFirstLetter(condition),
+            Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
+            Termination: wincondition1.getTerminationInEnglish(condition),
             Rated: game.rated
         }
         const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position)

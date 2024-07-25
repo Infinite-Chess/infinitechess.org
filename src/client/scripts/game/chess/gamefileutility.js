@@ -225,35 +225,35 @@ const gamefileutility = (function(){
         if (!onlinegame.areInOnlineGame()) {
             if (!gamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs)
             else sound.playSound_draw(delayToPlayConcludeSoundSecs)
-            // Set the Result and Condition metadata
-            const { victor, condition } = wincondition.getVictorAndConditionFromGameConclusion(conclusion)
-            gamefile.metadata.Condition = math.capitalizeFirstLetter(condition);
-            gamefile.metadata.Result = victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : '0.5-0.5'
         } else { // In online game
             if (gamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs)
             else if (gamefile.gameConclusion.includes('draw') || gamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs)
             else sound.playSound_loss(delayToPlayConcludeSoundSecs);
         }
 
+        // Set the Result and Condition metadata
+        setTerminationMetadata(gamefile);
+
         selection.unselectPiece();
         guipause.changeTextOfMainMenuButton()
-        setConditionMetadata(gamefile);
     }
 
     /**
-     * 
+     * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
      * @param {gamefile} gamefile - The gamefile
      */
-    function setConditionMetadata(gamefile) {
+    function setTerminationMetadata(gamefile) {
         if (!gamefile.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.")
 
-        const  victorAndCondition = wincondition.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
-        const condition = math.capitalizeFirstLetter(victorAndCondition.condition);
-        gamefile.metadata.Condition = condition;
+        const victorAndCondition = wincondition.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
+        const condition = wincondition.getTerminationInEnglish(gamefile, victorAndCondition.condition);
+        gamefile.metadata.Termination = condition;
     
-        const victor = victorAndCondition.victor;
-        if (!victor) return;
-        gamefile.metadata.Result = victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : '0.5-0.5'
+        const victor = victorAndCondition.victor; // white/black/draw/undefined
+        gamefile.metadata.Result = victor === 'white' ? '1-0'
+                                 : victor === 'black' ? '0-1'
+                                 : victor === 'draw' ? '1/2-1/2'
+                                 : '0-0'; // Aborted
     }
 
     // Returns a list of all the jumping royal it comes across of a specific color.

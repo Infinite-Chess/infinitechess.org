@@ -37,9 +37,17 @@
         <main>
             <div id="content">
                 <div class="logo">
-                    <img src="/img/king_w.png" alt="White chess king">
+                    <picture>
+                        <source srcset="/img/king_w.avif" type="image/avif" />
+                        <source srcset="/img/king_w.webp" type="image/webp" />
+                        <img src="/img/king_w.png" alt="White chess king">
+                    </picture>
                     <h1 class="center">Infinite Chess</h1>
-                    <img src="/img/queen_w.png" alt="White chess king">
+                    <picture>
+                        <source srcset="/img/queen_w.avif" type="image/avif" />
+                        <source srcset="/img/queen_w.webp" type="image/webp" />
+                        <img src="/img/queen_w.png" alt="White chess king">
+                    </picture>
                     <p class="center"><%=t('index.secondary_title')%></p>
                 </div>
                 <div class="center">

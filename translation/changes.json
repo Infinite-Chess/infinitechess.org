@@ -63,6 +63,10 @@
               ]
   },
   "6": {
+    "note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
+    "changes": []
+  },
+  "7": {
     "note": "added draw offers",
     "changes": ["play.pause.offer_draw",
                 "play.drawoffer.title"
