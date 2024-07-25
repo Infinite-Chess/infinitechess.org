@@ -100,13 +100,14 @@ const formatconverter = (function() {
         // metadata - appended in correct order given by metadata_key_ordering
         let metadata_keys_used = {};
         for (let key of metadata_key_ordering){
-            if (longformat.metadata[key] != null){
+            if (longformat.metadata[key]){
                 shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
                 metadata_keys_used[key] = true;
             }
         }
+        // append the rest of the metadata
         for (let key in longformat["metadata"]){
-            if (longformat.metadata[key] != null && !metadata_keys_used[key]) shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
+            if (longformat.metadata[key] && !metadata_keys_used[key]) shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
         }
         if (longformat["metadata"]) shortformat += whitespace;
 
