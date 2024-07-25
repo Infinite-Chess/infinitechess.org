@@ -1,6 +1,10 @@
 :root {
     --accent: rgb(0, 128, 255);
     --accent-transparent: rgba(0, 128, 255, 0.5);
+    --nav-bar-height: 40px;
+    --vw-capped: clamp(0px, 100vw, 1086px);
+    --vh-sub-nav: calc(100vh - var(--nav-bar-height));
+    --vwh: min(var(--vh-sub-nav), var(--vw-capped));
 }
 
 * {
@@ -16,8 +20,6 @@ html {
     height: 100%;
     background-color: rgb(33, 33, 33);
 }
-
-
 
 header {
     position: fixed;
@@ -101,6 +103,19 @@ a {
 
 .bold {
     font-weight: bold;
+}
+
+button {
+    width: 128px;
+    height: 40px;
+    background-color: black;
+    color: white;
+    border-radius: 4px;
+    transition: all 250ms;
+}
+
+button:hover {
+    background-color: #222;
 }
 
 /* Start increasing header links width */

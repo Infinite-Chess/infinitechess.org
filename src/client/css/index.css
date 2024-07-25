@@ -27,11 +27,3 @@ p {
 #hero .text * {
     margin-block: 16px;
 }
-
-button {
-    width: 128px;
-    height: 40px;
-    background-color: black;
-    color: white;
-    border-radius: 4px;
-}
