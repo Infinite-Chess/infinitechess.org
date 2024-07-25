@@ -312,4 +312,5 @@ function getTranslation(key, language, options = {}) {
 module.exports = {
   initTranslations,
   i18nextInstance,
+  getTranslation
 };
