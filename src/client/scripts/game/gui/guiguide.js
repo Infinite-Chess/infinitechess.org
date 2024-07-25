@@ -45,7 +45,7 @@ const guiguide = (function() {
     function loadAllImages() {
         const images = element_Guide.querySelectorAll('picture > img[loading]');
         images.forEach(img => {
-            img.removeAttribute('loading');  // Assumes each img has a 'data-src' attribute with the actual image URL
+            img.removeAttribute('loading');  // Remove the "loading: lazy" attribute from these images. They have now been loaded.
         });
     }
 
