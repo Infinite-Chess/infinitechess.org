@@ -26,8 +26,12 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         UTCTime: undefined,
         /** 1-0 = White won */
         Result: undefined,
-        /** What win condition the winner won by */
-        Condition: undefined
+        /** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
+        Termination: undefined,
+        /** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game" */
+        Event: undefined,
+        /** What website hosted the game. "https://www.infinitechess.org/" */
+        Site: undefined,
     }
     
     /** Information about the beginning of the game (position, positionString, specialRights, turn) */
