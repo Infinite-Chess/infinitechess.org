@@ -283,10 +283,27 @@ function initTranslations() {
     resources: translations,
     defaultNS: "default",
     fallbackLng: "en-US",
+    // debug: true // Enable debug mode to see logs for missing keys and other details
   });
+
   translateStaticTemplates(translations); // Compiles static files
+}
+
+/**
+ * Retrieves the translation for a given key and language.
+ * @param {string} key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
+ * @param {string} language - The language code for the translation. Default: `"en-US"`
+ * @param {Object} [options={}] - Additional options for the translation.
+ * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
+ * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
+ * @returns {string} The translated string.
+ */
+function getTranslation(key, language = 'en-US', options = {}) {
+  options.lng = language;
+  return i18next.t(key, options);
 }
 
 module.exports = {
   initTranslations,
+  getTranslation
 };
