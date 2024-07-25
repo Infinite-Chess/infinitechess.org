@@ -310,7 +310,7 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
     if (!clockweb.isClockValueValid(invite.clock)) return true;
 
     if (invite.color !== "White" && invite.color !== "Black" && invite.color !== "Random") return true;
-    if (invite.rated !== 'unrated') return true;
+    if (invite.rated !== 'casual') return true;
     if (invite.publicity !== 'public' && invite.publicity !== 'private') return true;
 
     return false;

@@ -274,8 +274,12 @@ const guiplay = (function(){
         // console.log(inviteOptions);
         gui.setScreen('game local'); // Change screen location
 
+        // [Event "Casual Space Classic infinite chess game"] [Site "https://www.infinitechess.org/"] [Round "-"]
         const gameOptions = {
             metadata: {
+                Event: `Casual local ${translations[inviteOptions.variant]} infinite chess game`,
+                Site: "https://www.infinitechess.org/",
+                Round: "-",
                 Variant: inviteOptions.variant,
                 TimeControl: inviteOptions.clock
             }

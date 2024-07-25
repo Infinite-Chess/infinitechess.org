@@ -244,7 +244,7 @@ const variant1 = (function() {
                 break;
                 */
             default:
-                throw new Error('Unknown variant.')
+                throw new Error(`Unknown variant "${Variant}"`)
         }
         // Every variant has the exact same initial moveRuleState value.
         if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0

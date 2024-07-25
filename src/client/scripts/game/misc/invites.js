@@ -14,7 +14,7 @@
  * @property {string} clock - The clock value
  * @property {string} color - white/black
  * @property {string} publicity - public/private
- * @property {string} rated - unrated/rated 
+ * @property {string} rated - rated/casual
  */
 
 const invites = (function(){
@@ -162,7 +162,7 @@ const invites = (function(){
             // <div class="invite-child">Standard</div>
             // <div class="invite-child">15m+15s</div>
             // <div class="invite-child">Random</div>
-            // <div class="invite-child">Unrated</div>
+            // <div class="invite-child">Casual</div>
             // <div class="invite-child accept">Accept</div>
 
             const n = ours ? translations["invites"]["you_indicator"] : invite.name

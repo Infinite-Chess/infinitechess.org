@@ -19,7 +19,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** Information about the game */
     this.metadata = {
         Variant: undefined,
-        Version: undefined,
         White: undefined,
         Black: undefined,
         TimeControl: undefined,
