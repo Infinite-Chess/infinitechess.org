@@ -84,7 +84,7 @@ const formatconverter = (function() {
         let whitespace = (make_new_lines ? "\n" : " ");
         // metadata
         for (let key in longformat["metadata"]){
-            if (longformat.metadata[key] != null) shortformat += `[${key}: ${longformat["metadata"][key]}]${whitespace}`;
+            if (longformat.metadata[key] != null) shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
         }
         if (longformat["metadata"]) shortformat += whitespace;
 
@@ -273,9 +273,17 @@ const formatconverter = (function() {
             let metadatastring = shortformat.slice(start_index+1,end_index);
             shortformat = `${shortformat.slice(0,start_index)}${shortformat.slice(end_index+1)}`;
             
-            let split_index = metadatastring.indexOf(": ");
-            if (split_index > -1) metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index+2);
-            else metadata[metadatastring] = "";
+            // new metadata format [Metadata "value"]
+            if (/^[^\s\:]*\s+\"/.test(metadatastring)){
+                let split_index = metadatastring.search(/\s\"/);
+                metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index+2, -1);
+            }
+            // old metadata format [Metadata: value]
+            else{
+                let split_index = metadatastring.indexOf(": ");
+                if (split_index > -1) metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index+2);
+                else metadata[metadatastring] = "";
+            }
         }
         longformat["metadata"] = metadata;
 
