@@ -354,8 +354,8 @@ threecheck = "Three-check" # Needs translation
 koth = "King of the hill" # Needs translation
 resignation = "Resignation" # Needs translation
 time = "Time forfeit" # Needs translation
-aborted = "Aborted" # Needs translation
-disconnect = "Abandoned" # Needs translation
+aborted = "Aborted" # Game was cancelled (no elo exchanged) # Needs translation
+disconnect = "Abandoned" # A player left # Needs translation
 
 [play.javascript.results]
 you_checkmate = "Victoire par échec-et-mat !"

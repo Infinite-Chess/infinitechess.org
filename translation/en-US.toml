@@ -354,8 +354,8 @@ threecheck = "Three-check"
 koth = "King of the hill"
 resignation = "Resignation"
 time = "Time forfeit"
-aborted = "Aborted"
-disconnect = "Abandoned"
+aborted = "Aborted" # Game was cancelled (no elo exchanged)
+disconnect = "Abandoned" # A player left
 
 [play.javascript.results]
 you_checkmate = "You win by checkmate!"
