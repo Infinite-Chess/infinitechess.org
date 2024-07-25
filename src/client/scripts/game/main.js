@@ -62,40 +62,8 @@ const main = (function(){
 
         localstorage.eraseExpiredItems();
 
-        queueLazyLoadImages();
-
         gameLoop(); // Update & draw the scene repeatedly
     }
-
-    // All images in the document with the "data-src" attribute will wait
-    // to be loaded until they are visible on screen!
-    function queueLazyLoadImages() {
-        const images = document.querySelectorAll('img[data-src]'); // Only select images with data-src attribute
-    
-        const lazyLoad = (entries, observer) => {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) return;
-                const img = entry.target;
-                // Check if the image is already loaded, skip setting src if it is.
-                if (!img.src) {
-                    console.log('skipping')
-                    img.src = img.getAttribute('data-src');
-                    img.removeAttribute('data-src');
-                }
-                observer.unobserve(img);
-            });
-        };
-    
-        const observer = new IntersectionObserver(lazyLoad, {
-            rootMargin: '0px 0px 50px 0px', // Adjust as needed
-            threshold: 0.01 // Adjust as needed
-        });
-    
-        images.forEach(img => {
-            observer.observe(img);
-        });
-    }
-    
 
     function initListeners() {
         input.initListeners() // Mouse, touch, & key event listeners
