@@ -8,6 +8,9 @@ const xss = require("xss");
 
 const translationsFolder = "./translation";
 
+/** Allows access to translations server-side */
+let i18nextInstance;
+
 /**
  * Templates without any external data other than translations.
  * Don't insert names with file extensions.
@@ -277,16 +280,36 @@ function translateStaticTemplates(translations) {
 function initTranslations() {
   const translations = loadTranslationsFolder(translationsFolder);
 
-  i18next.use(middleware.LanguageDetector).init({
+  i18nextInstance = i18next.use(middleware.LanguageDetector).init({
     // debug: true,
     preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
     resources: translations,
     defaultNS: "default",
     fallbackLng: "en-US",
   });
+
   translateStaticTemplates(translations); // Compiles static files
+}
+
+/**
+ * Retrieves the translation for a given key and language.
+ * @param {string} key - The translation key to look up.
+ * @param {string} language - The language code (e.g., 'en-US') for the translation.
+ * @param {Object} [options={}] - Additional options for the translation.
+ * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
+ * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
+ * @returns {string} The translated string.
+ */
+function getTranslation(key, language, options = {}) {
+  if (!i18nextInstance) {
+    throw new Error(`i18nextInstance is not initialized, cannot access translation for key "${key}". Call initTranslations() first.`);
+  }
+
+  options.lng = language;
+  return i18nextInstance.t(key, options);
 }
 
 module.exports = {
   initTranslations,
+  i18nextInstance,
 };
