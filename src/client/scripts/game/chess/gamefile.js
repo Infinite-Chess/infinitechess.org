@@ -64,7 +64,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
             /** An array of types black can promote to, with the W/B removed from the end: `['queens','rooks']` @type {Array} */
             black: undefined,
         },
-        slideLimit: undefined
+        slideLimit: undefined,
+        /** How many plies (half-moves) may pass until a draw is automatically pronounced! */
+        moveRule: undefined
     }
 
     /** Pieces organized by type: `{ queensW:[[1,2],[2,3]] }` */

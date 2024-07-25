@@ -152,15 +152,6 @@ const math1 = (function(){
     
         return totalMilliseconds;
     }
-
-    /**
-     * Capitalizes the first letter of the string.
-     * @param {string} str - Thes tring
-     * @returns 
-     */
-    function capitalizeFirstLetter(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
     
     /**
      * Converts a date and time string in the format `YYYY/MM/DD HH:MM:SS` to a UTC timestamp.
@@ -244,7 +235,6 @@ const math1 = (function(){
         secondsToMillis,
         getTotalMilliseconds,
         getUTCDateTime,
-        capitalizeFirstLetter,
         getUTCTimestamp,
         getCurrentMonth,
         getCurrentDay,

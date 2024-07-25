@@ -61,5 +61,9 @@
                 "server.javascript.ws-invalid_code",
                 "server.javascript.ws-game_aborted"
               ]
+  },
+  "6": {
+    "note": "Added all of play.javascript.termination, which provides spoken language descriptions of what caused the termination of the game.",
+    "changes": []
   }
 }

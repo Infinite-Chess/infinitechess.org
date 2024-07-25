@@ -837,15 +837,6 @@ const math = (function() {
     }
 
     /**
-     * Capitalizes the first letter of the string.
-     * @param {string} str - Thes tring
-     * @returns 
-     */
-    function capitalizeFirstLetter(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    /**
      * Generates a random ID of the provided length, with the characters 0-9 and a-z.
      * @param {number} length - The length of the desired ID
      * @returns {string} The ID
@@ -1058,7 +1049,6 @@ const math = (function() {
         invertObj,
         getUTCDateTime,
         getUTCTimestamp,
-        capitalizeFirstLetter,
         minutesToMillis,
         secondsToMillis,
         getTotalMilliseconds,
