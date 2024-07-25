@@ -222,14 +222,15 @@ const gamemanager = (function() {
          * gameRules
          */
         const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(game.gameConclusion)
-        const Date = math1.getUTCDateTime(game.timeCreated)
+        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated)
         const positionStuff = variant1.getStartingPositionOfVariant({ Variant: game.variant, Date }); // 3 properties: position, positionString, and specialRights.
         const metadata = {
             Variant: game.variant,
             White: getDisplayNameOfPlayer(game.white),
             Black: getDisplayNameOfPlayer(game.black),
             TimeControl: game.clock,
-            Date,
+            UTCDate,
+            UTCTime,
             Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
             Termination: wincondition1.getTerminationInEnglish(condition),
             Rated: game.rated
@@ -610,13 +611,16 @@ const gamemanager = (function() {
         // id, publicity, variant, moves, playerWhite, playerBlack,
         // youAreColor, moves, clock, timerWhite, timerBlack, gameConclusion
 
+        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(safeGameInfo.timeCreated)
+
         const gameOptions = {
             metadata: {
                 Variant: safeGameInfo.variant,
                 White: safeGameInfo.playerWhite,
                 Black: safeGameInfo.playerBlack,
                 TimeControl: safeGameInfo.clock,
-                Date: math1.getUTCDateTime(safeGameInfo.timeCreated),
+                UTCDate,
+                UTCTime,
                 Rated: safeGameInfo.rated
             },
             id: safeGameInfo.id,

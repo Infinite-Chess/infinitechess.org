@@ -292,7 +292,7 @@ const guiplay = (function(){
      * `timerBlack`, `timeNextPlayerLosesAt`, `autoAFKResignTime`,
      * `disconnect`, `gameConclusion`, `serverRestartingAt`
      * 
-     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `Date`, `Rated`.
+     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.
      */
     function startOnlineGame(gameOptions) {
         gui.setScreen('game online') // Change screen location
@@ -328,7 +328,7 @@ const guiplay = (function(){
     /**
      * Starts a game according to the options provided.
      * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`
-     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `Date`.
+     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
      */
     function loadGame(gameOptions) {
         console.log("Loading game with game options:")
@@ -337,7 +337,8 @@ const guiplay = (function(){
         movement.eraseMomentum();
         options.disableEM();
 
-        gameOptions.metadata.Date = gameOptions.metadata.Date || math.getUTCDateTime();
+        gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || math.getCurrentUTCDate();
+        gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || math.getCurrentUTCTime();
 
         const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
             moves: gameOptions.moves,

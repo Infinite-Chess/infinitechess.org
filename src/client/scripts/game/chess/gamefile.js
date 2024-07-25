@@ -5,7 +5,7 @@
 
 /**
  * Constructs a gamefile from provided arguments. Use the *new* keyword.
- * @param {Object} metadata - An object containing the property `Variant`, and optionally `Date`, which can be used to extract the version of the variant. Without `Date`, the latest version will be used.
+ * @param {Object} metadata - An object containing the property `Variant`, and optionally `UTCDate` and `UTCTime`, which can be used to extract the version of the variant. Without the date, the latest version will be used.
  * @param {Object} [options] - Options for constructing the gamefile.
  * @param {string[]} [options.moves=[]] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
@@ -23,7 +23,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         White: undefined,
         Black: undefined,
         TimeControl: undefined,
-        Date: undefined,
+        UTCDate: undefined,
+        UTCTime: undefined,
         /** 1-0 = White won */
         Result: undefined,
         /** What win condition the winner won by */

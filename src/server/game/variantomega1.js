@@ -14,7 +14,7 @@ const variantomega1 = (function(){
      * Inits the gamefile for Joel & Cory's "Omega". Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
-    function initOmega(gamefile, { Variant, Date }) {
+    function initOmega(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega' })
         gamefile.startSnapshot = {
             position,
@@ -22,14 +22,14 @@ const variantomega1 = (function(){
             specialRights,
             turn: 'black'
         }
-        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
      * Inits the gamefile for Andreas Tsevas's "Omega_Squared". Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
-    function initOmegaSquared(gamefile, { Variant, Date }) {
+    function initOmegaSquared(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Squared' })
         gamefile.startSnapshot = {
             position,
@@ -37,14 +37,14 @@ const variantomega1 = (function(){
             specialRights,
             turn: 'black'
         }
-        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
      * Inits the gamefile for the Omega_Cubed position. Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
-    function initOmegaCubed(gamefile, { Variant, Date }) {
+    function initOmegaCubed(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Cubed' })
         gamefile.startSnapshot = {
             position,
@@ -52,14 +52,14 @@ const variantomega1 = (function(){
             specialRights,
             turn: 'black'
         }
-        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
      * Inits the gamefile for the Omega_Fourth position. Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
-    function initOmegaFourth(gamefile, { Variant, Date }) {
+    function initOmegaFourth(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Fourth' })
         gamefile.startSnapshot = {
             position,
@@ -67,7 +67,7 @@ const variantomega1 = (function(){
             specialRights,
             turn: 'black'
         }
-        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -526,7 +526,7 @@ const variantomega1 = (function(){
             startingPos[math1.getKeyFromCoords([x-4,y-5])] = 'pawnsW';
             
             // Generate segments
-            // i tells us how many to iteratively gen!
+            // it tells us how many to iteratively gen!
             const count = i+1;
             const segSpacing = 6;
 
@@ -601,12 +601,6 @@ const variantomega1 = (function(){
      * @param {BoundingBox} box - The rectangle to which to form the void box.
      */
     function surroundPositionInVoidBox(position, box) {
-        // Iterate through all pieces and make sure they don't go past the box edges.
-        // for (const key in position) {
-        //     const coords = math.getCoordsFromKey(key);
-        //     if (!math.boxContainsSquare(box, coords)) delete position[key];
-        // }
-
         for (let x = box.left; x <= box.right; x++) {
             let key = math1.getKeyFromCoords([x,box.bottom]);
             position[key] = 'voidsN';
