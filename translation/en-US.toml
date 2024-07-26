@@ -213,7 +213,7 @@ private = "Private"
 no = "No"
 yes = "Yes"
 rated = "Rated"
-unrated = "Unrated"
+casual = "Casual"
 join_games = "Join Existing - Active Games:"
 private_invite = "Private Invite:"
 your_invite = "Your Invite Code:"
@@ -341,6 +341,22 @@ origin_error = "Origin error."
 connection_closed = "Connection closed unexpectedly. Server message:"
 please_report_bug = "This should never happen, please report this bug!"
 
+[play.javascript.termination] # What caused the termination of the game, in spoken language
+checkmate = "Checkmate"
+stalemate = "Stalemate"
+repetition = "Threefold repetition"
+moverule = "-move rule"  # The game inserts a number in front of this phrase
+insuffmat = "Insufficient material"
+royalcapture = "Royal capture"
+allroyalscaptured = "All royals captured"
+allpiecescaptured = "All pieces captured"
+threecheck = "Three-check"
+koth = "King of the hill"
+resignation = "Resignation"
+time = "Time forfeit"
+aborted = "Aborted" # Game was cancelled (no elo exchanged)
+disconnect = "Abandoned" # A player left
+
 [play.javascript.results]
 you_checkmate = "You win by checkmate!"
 you_time = "You win on time!"
@@ -406,7 +422,7 @@ fair_play_paragraph1 = ["You cannot create more than 1 account. If you would lik
 fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
 fair_play_rules = [
 "Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, etc. This can be done to intentionally break the game, or to give you an advantage.",
-"In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated games)",
+"In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated, casual, games)",
 "Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
 ]
 cleanliness_header = "Cleanliness"

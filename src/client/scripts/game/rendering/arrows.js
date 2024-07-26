@@ -113,7 +113,7 @@ const arrows = (function() {
             const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
             for (const key in gamefile.piecesOrganizedByLines[linestr]) {
                 const intsects = key.split("|").map(Number)
-                if (boardSlidesStart > intsects || boardSlidesEnd < intsects) continue;
+                if (boardSlidesStart > intsects[0] || boardSlidesEnd < intsects[0]) continue;
                 const pieces = calcPiecesOffScreen(line, gamefile.piecesOrganizedByLines[linestr][key])
 
                 if (math.isEmpty(pieces)) continue;

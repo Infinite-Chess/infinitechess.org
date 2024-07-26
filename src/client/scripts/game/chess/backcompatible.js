@@ -110,8 +110,56 @@ const backcompatible = (function() {
         return longformat.variant || longformat.promotionRanks || longformat.moves && movesscript.areMovesIn2DFormat(longformat.moves)
     }
 
+    /**
+     * Tests if the given Date metadata is in the old format "YYYY/MM/DD HH:MM:SS"
+     * @param {string} Date - The Date metadata, if it is defined.
+     * @returns {boolean}
+     */
+    function isDateMetadataInOldFormat(Date) {
+        if (!Date) return false;
+        return Date.indexOf(' ') !== -1;
+    }
+
+    /**
+     * Converts a date and time string from the old `Date` metdata in the form "YYYY/MM/DD HH:MM:SS"
+     * to an object with the new `UTCDate` and `UTCTime` metadata properties.
+     * @param {string} DateMetadata - The date and time string in the format "YYYY/MM/DD HH:MM:SS".
+     * @returns {Object} An object with the properties { UTCDate: "YYYY.MM.DD", UTCTime: "HH:MM:SS" }.
+     */
+    function convertDateMetdatatoUTCDateUTCTime(DateMetadata) {
+        const dateTime = new Date(DateMetadata);
+    
+        const year = String(dateTime.getUTCFullYear());
+        const month = String(dateTime.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(dateTime.getUTCDate()).padStart(2, '0');
+        const hours = String(dateTime.getUTCHours()).padStart(2, '0');
+        const minutes = String(dateTime.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(dateTime.getUTCSeconds()).padStart(2, '0');
+    
+        const UTCDate = `${year}.${month}.${day}`;
+        const UTCTime = `${hours}:${minutes}:${seconds}`;
+    
+        return { UTCDate, UTCTime };
+    }
+
+    /**
+     * Convert old Clock metadata to the new TimeControl metadata.
+     * @param {string} Clock - 'mm+ss' or "Infinite"
+     */
+    function convertClockToTimeControl(Clock) {
+        if (!Clock) return undefined;
+
+        if (Clock === "Infinite") return '-';
+        else [ minutes, incrementSecs ] = Clock.split('+');
+        const seconds = minutes * 60;
+        return `${seconds}+${incrementSecs}`;
+    }
+
     return Object.freeze({
-        getLongformatInNewNotation
+        getLongformatInNewNotation,
+        isDateMetadataInOldFormat,
+        convertDateMetdatatoUTCDateUTCTime,
+        convertClockToTimeControl
     }) 
 
 })();

@@ -1,19 +1,7 @@
 {
-  "1": {
-    "note": "inital commit of en-US-toml",
+  "6": {
+    "note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
     "changes": []
-  },
-  "2": {
-    "note": "added login.login_button on line 448",
-    "changes": ["login.login_button"]
-  },
-  "3": {
-    "note": "added play.javascript.invites.start_game on line 314",
-    "changes": ["play.javascript.invites.start_game"]
-  },
-  "4": {
-    "note": "Added news.july22-2024 on line 462",
-    "changes": ["news.july22-2024"]
   },
   "5": {
     "note": "Deleted create-account.argreement on line 100, and replaced it with create-account.agreement which is different. Deleted play.play-menu.variants. Added several entries to play.play-menu. Added several entries to server.javascript.",
@@ -45,7 +33,7 @@
                 "play.play-menu.Omega_Cubed",
                 "play.play-menu.Omega_Fourth",
                 "play.play-menu.no_clock",
-                "play.play-menu.unrated",
+                "play.play-menu.casual",
                 "server.javascript.ws-username_reserved",
                 "server.javascript.ws-already_in_game",
                 "server.javascript.ws-player_already_has_invite",
@@ -61,5 +49,21 @@
                 "server.javascript.ws-invalid_code",
                 "server.javascript.ws-game_aborted"
               ]
+  },
+  "4": {
+    "note": "Added news.july22-2024 on line 462",
+    "changes": ["news.july22-2024"]
+  },
+  "3": {
+    "note": "added play.javascript.invites.start_game on line 314",
+    "changes": ["play.javascript.invites.start_game"]
+  },
+  "2": {
+    "note": "added login.login_button on line 448",
+    "changes": ["login.login_button"]
+  },
+  "1": {
+    "note": "inital commit of en-US-toml",
+    "changes": []
   }
 }

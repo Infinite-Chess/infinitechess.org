@@ -261,6 +261,50 @@ const wincondition = (function() {
         console.log("Swapped checkmate wincondition for royalcapture.")
     }
 
+    /**
+     * Returns the termination of the game in english language.
+     * @param {gamefile} gamefile
+     * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
+     */
+    function getTerminationInEnglish(gamefile, condition) {
+        // Modify these values in translation/en-US.toml
+        switch (condition) {
+            case "checkmate":
+                return translations.termination.checkmate;
+            case "stalemate":
+                return translations.termination.stalemate;
+            case "repetition":
+                return translations.termination.repetition;
+            case "moverule":
+                const numbWholeMovesUntilAutoDraw = gamefile.gameRules.moveRule / 2;
+                return `${numbWholeMovesUntilAutoDraw}${translations.termination.moverule}`;
+            case "insuffmat":
+                return translations.termination.insuffmat;
+            case "royalcapture":
+                return translations.termination.royalcapture;
+            case "allroyalscaptured":
+                return translations.termination.allroyalscaptured;
+            case "allpiecescaptured":
+                return translations.termination.allpiecescaptured;
+            case "threecheck":
+                return translations.termination.threecheck;
+            case "koth":
+                return translations.termination.koth;
+            // Non-decisive "decisive" conclusions
+            case "resignation":
+                return translations.termination.resignation;
+            case "time":
+                return translations.termination.time;
+            case "aborted": // Happens within the first 2 moves
+                return translations.termination.aborted;
+            case "disconnect": // Happens when a player leaves
+                return translations.termination.disconnect;
+            default:
+                console.error(`Cannot return English termination for unknown condition "${condition}"!`);
+                return 'Unknown';
+        }
+    }
+
     return Object.freeze({
         validWinConditions,
         getGameConclusion,
@@ -271,7 +315,8 @@ const wincondition = (function() {
         isGameConclusionDecisive,
         getVictorAndConditionFromGameConclusion,
 	    getResultFromVictor,
-        swapCheckmateForRoyalCapture
+        swapCheckmateForRoyalCapture,
+        getTerminationInEnglish,
     })
 
 })();

@@ -43,10 +43,9 @@ const guiguide = (function() {
     }
 
     function loadAllImages() {
-        const images = element_Guide.querySelectorAll('img');
+        const images = element_Guide.querySelectorAll('picture > img[loading]');
         images.forEach(img => {
-            if (img.src) return; // Already loaded
-            img.src = img.getAttribute('data-src');  // Assumes each img has a 'data-src' attribute with the actual image URL
+            img.removeAttribute('loading');  // Remove the "loading: lazy" attribute from these images. They have now been loaded.
         });
     }
 
@@ -74,7 +73,7 @@ const guiguide = (function() {
     }
 
     function hideCurrentFairy() {
-        const allFairyImgs = element_FairyImg.querySelectorAll('img')
+        const allFairyImgs = element_FairyImg.querySelectorAll('picture')
         const targetFairyImg = allFairyImgs[fairyIndex];
         style.hideElement(targetFairyImg)
 
@@ -84,7 +83,7 @@ const guiguide = (function() {
     }
 
     function revealCurrentFairy() {
-        const allFairyImgs = element_FairyImg.querySelectorAll('img')
+        const allFairyImgs = element_FairyImg.querySelectorAll('picture')
         const targetFairyImg = allFairyImgs[fairyIndex];
         style.revealElement(targetFairyImg)
 
