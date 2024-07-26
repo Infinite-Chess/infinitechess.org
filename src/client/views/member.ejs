@@ -1,77 +1,29 @@
-<!DOCTYPE html>
-<html lang="<%=language%>" dir="<%=t('direction')%>" >
-    <head>
-        <script>
-            const translations = <%-JSON.stringify({
-                ...t('header.javascript', {returnObjects: true}),
-                ...t('member.javascript', {returnObjects: true}),
-                ...t('server.javascript', {returnObjects: true})
-            })%>;
-        </script>
-        <meta charset="utf-8" />
-        <meta http-equiv="x-ua-compatible" content="ie=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Member</title>
-        <link rel='stylesheet' href='/css/member.css'>
-        <link rel='stylesheet' href='/css/footer.css'>
-        <link rel="icon" type="image/png" href="/img/favicon.png">
-    </head>
-    <body>
-        <header>
-            <nav>
-                <a href="/">
-                    <p><%=t('header.home')%></p>
-                </a>
-                <a href="/play">
-                    <p><%=t('header.play')%></p>
-                </a>
-                <a href="/news">
-                    <p><%=t('header.news')%></p>
-                </a>
-                <a href="/login" id="loginlink">
-                    <p id="logintext"><%=t('header.login')%></p>
-                </a>
-                <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
-                </a>
-            </nav>
-        </header>
-        <main>
-            <div id="content">                  
-                <div id="verifyerror" class="hidden">
-                    <h2 class="red center"><%=t('member.verify_message')%></h2>
-                    <p class="center"><%=t('member.resend_message.0')%><span id="sendemail" class="underline"><%=t('member.resend_message.1')%></span><%=t('member.resend_message.2')%><a href="mailto:infinitechess.org@gmail.com"><%=t('member.resend_message.3')%></a></p>
-                </div>
-                <h2 id="verifyconfirm" class="hidden green center"><%=t('member.verify_confirm')%></h2>
-                <div class="member">
-                    <picture>
-                        <source srcset="/img/member_default.webp" type="image/webp" />
-                        <source srcset="/img/member_default.avif" type="image/avif" />
-                        <img src="/img/member_default.png" alt="Blank profile image">
-                    </picture>
-                    <h1 id="membername"></h1>
-                </div>
-                <section id="stats" class="center">
-                    <p><strong><%=t('member.rating')%> </strong><spam id="elo"></spam></p>
-                    <p><strong><%=t('member.joined')%> </strong><spam id="joined"></spam></p>
-                    <p><strong><%=t('member.seen.0')%> </strong><spam id="seen"></spam><%=t('member.seen.1')%></p>
-                </section>
-                <div id="content-container">
-                    <div style="flex-grow: 1;">
-                        <button id="show-account-info" class="hidden action-button" onclick="showAccountInfo()"><%=t('member.reveal_info')%></button>
-                        <section id="accountinfo" class="hidden">
-                            <h6 class="center"><%=t('member.account_info_heading')%></h6>
-                            <p><strong><%=t('member.email')%> </strong><spam id="email"> - </spam></p>
-                        </section>
-                    </div>
-                    <div style="flex-grow: 0;">
-                        <button id="delete-account" class="hidden action-button"><%=t('member.delete_account')%></button>
-                    </div>
-                </div>
-                <p id="change" class="hidden center"><%=t('member.password_reset_message.0')%><a href="mailto:infinitechess.org@gmail.com"><%=t('member.password_reset_message.1')%></a></p>
-            </div>
-            <script src="/scripts/member.js"></script>
-        </main>
-        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
-    </body>
-</html>
+<div id="content">                  
+    <div id="verifyerror" class="hidden">
+        <h2 class="red center"><%=t('member.verify_message')%></h2>
+        <p class="center"><%=t('member.resend_message.0')%><span id="sendemail" class="underline"><%=t('member.resend_message.1')%></span><%=t('member.resend_message.2')%><a href="mailto:infinitechess.org@gmail.com"><%=t('member.resend_message.3')%></a></p>
+    </div>
+    <h2 id="verifyconfirm" class="hidden green center"><%=t('member.verify_confirm')%></h2>
+    <div class="member">
+        <img src="/img/member_default.png" alt="Blank profile image">
+        <h1 id="membername"></h1>
+    </div>
+    <section id="stats" class="center">
+        <p><strong><%=t('member.rating')%> </strong><spam id="elo"></spam></p>
+        <p><strong><%=t('member.joined')%> </strong><spam id="joined"></spam></p>
+        <p><strong><%=t('member.seen.0')%> </strong><spam id="seen"></spam><%=t('member.seen.1')%></p>
+    </section>
+    <div id="content-container">
+        <div style="flex-grow: 1;">
+            <button id="show-account-info" class="hidden action-button" onclick="showAccountInfo()"><%=t('member.reveal_info')%></button>
+            <section id="accountinfo" class="hidden">
+                <h6 class="center"><%=t('member.account_info_heading')%></h6>
+                <p><strong><%=t('member.email')%> </strong><spam id="email"> - </spam></p>
+            </section>
+        </div>
+        <div style="flex-grow: 0;">
+            <button id="delete-account" class="hidden action-button"><%=t('member.delete_account')%></button>
+        </div>
+    </div>
+    <p id="change" class="hidden center"><%=t('member.password_reset_message.0')%><a href="mailto:infinitechess.org@gmail.com"><%=t('member.password_reset_message.1')%></a></p>
+</div>

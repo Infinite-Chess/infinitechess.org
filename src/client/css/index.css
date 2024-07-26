@@ -1,222 +1,30 @@
-* {
-    margin: 0;
-    padding: 0;
-    font-family: Verdana;
-    border: 0;
-    /* Enable temporarily during dev to see the borders of all elements */
-    /* outline: 1px solid rgba(0, 0, 0, 0.102); */
-}
-
-html {
-    height: 100%;
-    background-color: rgb(33, 33, 33);
-}
-
-
-
-header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
-    box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    height: 40px;
-    font-size: 0;
-    overflow: scroll;
-    white-space: nowrap;
-    text-align: center;
-    background-color: white;
-    z-index: 1;
-}
-
-header a {
-    display: inline-block;
-    text-decoration: none;
-    line-height: 40px;
-    margin-left: 4px;
-    min-width: 70px;
-    font-size: 16px;
-    color: black;
-}
-
-header a:hover {
-    background-color: rgb(211, 235, 255);
-}
-
-header p {
-    padding: 0 10px;
-}
-
-
-
-main {
-    background-color: #fff;
-    /* Using PNG because it was the smallest after compression */
-    background-image: url('/img/blank_board.png');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-attachment: fixed;
-
-    margin-top: 40px;
-}
-
-#content {
-    background-color: rgba(255, 255, 255, 0.805);
-    margin: auto;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
-    padding: 30px 20px;
-}
-
-.logo {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.logo h1 {
-    display: inline-block;
-    vertical-align: bottom;
-    font-size: 40px;
-    font-family: georgia;
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.318);
-}
-
-.logo img {
-    display: inline-block;
-    vertical-align: bottom;
-    display: none;
-    width: 70px;
-}
-
-.logo p {
-    margin-top: 15px;
-}
-
-iframe {
-    --videoWidth: 85vw;
-    width: var(--videoWidth);
-    height: calc(var(--videoWidth) * 9/16);
-}
-
-#content h2 {
-    font-size: 30px;
-    margin: 35px 0 20px;
-}
-
-#content h3 {
-    font-size: 25px;
-    margin: 35px 0 20px;
-}
-
-#content p {
-    line-height: 1.5;
-    font-size: 17px;
-    margin: 20px 0px;
-}
-
-.patreon-container {
+#hero {
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: var(--vh-sub-nav);
+    backdrop-filter: brightness(1.05);
 }
 
-#content .patreon-container p {
-    font-size: 18px;
-    background-color: rgb(244, 244, 244);
-    padding: 0.5em 0.8em;
-    border-radius: 0.5em;
-    box-shadow: 0 0 18px rgba(0, 0, 0, 0.325);
-    /* text-shadow: 0 2px 3px rgba(0, 0, 0, 0.16); */
-    transition: box-shadow 0.25s, transform 0.25s;
-    margin: 10px 10px;
-    cursor: default;
+h1 {
+    font-size: 64px;
 }
 
-#content .patreon-container p:hover {
-    transform: translate(0%, 0%) scale(1.1);
-    box-shadow: 0 0 18px rgba(0, 0, 0, 0.54);
+p {
+    font-size: 16px;
 }
 
-.IM {
-    color: rgb(0, 38, 255);
-    font-weight: bold;
-    font-size: 0.9em;
-    text-shadow: -2px 0px 0.6em rgba(0, 38, 255, 0.2);
+#hero .container {
+    display: flex;
+    width: 1024px;
+    margin: auto;
 }
 
-.currPage {
-    background-color: rgb(236, 236, 236);
+#hero .text {
+    width: 50%;
 }
 
-.grey {
-    color:rgba(0, 0, 0, 0.345)
-}
-
-.center {
-    text-align: center;
-}
-
-a {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
-}
-
-.bold {
-    font-weight: bold;
-}
-
-
-
-/* Start increasing header links width */
-@media only screen and (min-width: 450px) {
-    header {
-        overflow: unset;
-    }
-
-    header a {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
-}
-
-/* Reveal pictures in logo */
-@media only screen and (min-width: 480px) {
-    .logo img {
-        display: unset;
-        width: calc(70px + 0.09 * (100vw - 475px));
-    }
-
-    .logo h1 {
-        font-size: calc(40px + 0.059 * (100vw - 475px));
-    }
-}
-
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-    header a {
-        min-width: 110px;
-    }
-}
-
-/* Cap content width size */
-@media only screen and (min-width: 810px) {
-    #content {
-        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
-        padding: 40px 30px 100px;
-        min-height: 800px;
-    }
-
-    .logo h1 {
-        font-size: 60px;
-    }
-
-    .logo img {
-        width: 100px;
-    }
-
-    iframe {
-        width: 700px;
-        height: 394px;
-    }
+#hero .text * {
+    margin-block: 16px;
 }

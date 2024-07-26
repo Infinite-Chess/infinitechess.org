@@ -57,7 +57,7 @@ router.get("/logout", handleLogout);
 router.get("/termsofservice(.html)?", (req, res) => {
   res.sendFile(
     path.join(htmlDirectory, req.i18n.resolvedLanguage, "termsofservice.html"),
-    );
+  );
 });
 
 router.get("/verify/:member/:id", verifyAccount);
