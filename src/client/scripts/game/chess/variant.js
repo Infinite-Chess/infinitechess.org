@@ -36,7 +36,7 @@ const variant = (function() {
      * To load a custom position, include the options within the `options` parameter!
      * All options are a snapshot of the starting position, before any moves are forwarded.
      * @param {gamefile} gamefile - The gamefile to initialize
-     * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "Date" is required if you want to load a different version of the desired variant.
+     * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
      * @param {Object} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
      */
     function setupVariant(gamefile, metadata, options) {
@@ -115,16 +115,17 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile to initialize
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * - `Variant`: The name of the variant. Only required if `options` doesn't specify "startingPosition".
-     * - `Date`: Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * - `UTCDate`: Optional. Controls the version of the variant to initialize its starting position. If not specified, returns latest version.
+     * - `UTCTime`: Optional. Controls the version of the variant to initialize its starting position. If not specified, returns latest version.
      * @param {Object} options - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If metadata doesn't contain "Variant", then "startingPosition" is required.
      */
-    function initStartSnapshotAndGamerulesFromOptions(gamefile, { Variant, Date }, options) {
+    function initStartSnapshotAndGamerulesFromOptions(gamefile, { Variant, UTCDate, UTCTime }, options) {
 
         let positionString = options.positionString;
         let position = options.startingPosition;
         let specialRights = options.specialRights;
         if (!options.startingPosition) {
-            const result = getStartingPositionOfVariant({ Variant, Date })
+            const result = getStartingPositionOfVariant({ Variant, UTCDate, UTCTime })
             positionString = result.positionString;
             position = result.position;
             specialRights = result.specialRights;
@@ -153,92 +154,92 @@ const variant = (function() {
      * @param {string} metadata.Variant - Required. The name of the variant.
      * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
      */
-    function initStartSnapshotAndGamerules(gamefile, { Variant, Date }) {
+    function initStartSnapshotAndGamerules(gamefile, { Variant, UTCDate, UTCTime }) {
         switch (Variant) {
             case "Classical":
-                initClassical(gamefile, { Variant, Date })
+                initClassical(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "Core":
-                initCore(gamefile, { Variant, Date })
+                initCore(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "Standarch":
-                initStandarch(gamefile, { Variant, Date });
+                initStandarch(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Space_Classic":
-                initSpaceClassic(gamefile, { Variant, Date });
+                initSpaceClassic(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "CoaIP":
-                initCoaip(gamefile, { Variant, Date });
+                initCoaip(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Pawn_Horde":
-                initPawnHorde(gamefile, { Variant, Date });
+                initPawnHorde(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Space":
-                initSpace(gamefile, { Variant, Date });
+                initSpace(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Obstocean":
-                initObstocean(gamefile, { Variant, Date });
+                initObstocean(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Abundance":
-                initAbundance(gamefile, { Variant, Date });
+                initAbundance(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Amazon_Chandelier":
-                initAmazonChandelier(gamefile, { Variant, Date });
+                initAmazonChandelier(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Containment":
-                initContainment(gamefile, { Variant, Date });
+                initContainment(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Classical_Limit_7":
-                initClassical(gamefile, { Variant, Date })
+                initClassical(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "CoaIP_Limit_7":
-                initCoaip(gamefile, { Variant, Date })
+                initCoaip(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "Chess":
-                initChess(gamefile, { Variant, Date });
+                initChess(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Classical_KOTH":
-                initClassical(gamefile, { Variant, Date })
+                initClassical(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "CoaIP_KOTH":
-                initCoaip(gamefile, { Variant, Date })
+                initCoaip(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "Classical_Plus":
-                initClassicalPlus(gamefile, { Variant, Date })
+                initClassicalPlus(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "Pawndard":
-                initPawndard(gamefile, { Variant, Date })
+                initPawndard(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "Knightline":
-                initKnightline(gamefile, { Variant, Date })
+                initKnightline(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             case "Knighted_Chess":
-                initKnightedChess(gamefile, { Variant, Date })
+                initKnightedChess(gamefile, { Variant, UTCDate, UTCTime })
                 break;
             // Showcasings...
             case "Omega": // Joel & Cory's version
-                variantomega.initOmega(gamefile, { Variant, Date });
+                variantomega.initOmega(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Omega_Squared":
-                variantomega.initOmegaSquared(gamefile, { Variant, Date });
+                variantomega.initOmegaSquared(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Omega_Cubed":
-                variantomega.initOmegaCubed(gamefile, { Variant, Date });
+                variantomega.initOmegaCubed(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "Omega_Fourth":
-                variantomega.initOmegaFourth(gamefile, { Variant, Date });
+                variantomega.initOmegaFourth(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             // Removed...
             /*
             case "Standarch - 3 Check":
-                initStandarch(gamefile, { Variant, Date });
+                initStandarch(gamefile, { Variant, UTCDate, UTCTime });
                 break;
             case "CoaIP - 3 Check":
-                initCoaip(gamefile, { Variant, Date });
+                initCoaip(gamefile, { Variant, UTCDate, UTCTime });
                 break;
                 */
             default:
-                throw new Error('Unknown variant.')
+                throw new Error(`Unknown variant "${Variant}"`)
         }
         // Every variant has the exact same initial moveRuleState value.
         if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0
@@ -283,7 +284,7 @@ const variant = (function() {
      * @param {Object} options - An object containing the properties `Variant`, and if desired, `Date`.
      * @returns {Object} An object containing 3 properties: `position`, `positionString`, and `specialRights`.
      */
-    function getStartingPositionOfVariant({ Variant, Date }) {
+    function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }) {
         let positionString;
         let startingPosition;
         switch (Variant) {
@@ -297,7 +298,7 @@ const variant = (function() {
                 positionString = 'p4,11+|p5,11+|p1,10+|p2,10+|p3,10+|p6,10+|p7,10+|p8,10+|p0,9+|ar4,9|ch5,9|p9,9+|p0,8+|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|p9,8+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P0,1+|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|P9,1+|P0,0+|AR4,0|CH5,0|P9,0+|P1,-1+|P2,-1+|P3,-1+|P6,-1+|P7,-1+|P8,-1+|P4,-2+|P5,-2+'
                 return getStartSnapshotPosition({ positionString });
             case "Space_Classic":
-                positionString = getPositionStringOfSpaceClassic(Date);
+                positionString = getPositionStringOfSpaceClassic(UTCDate, UTCTime);
                 return getStartSnapshotPosition({ positionString });
             case "CoaIP":
                 positionString = 'P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|HA-2,-6|HA11,-6|ha-2,15|ha11,15|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+'
@@ -345,7 +346,7 @@ const variant = (function() {
                 positionString = 'k5,8+|n3,8|n4,8|n6,8|n7,8|p-5,7+|p-4,7+|p-3,7+|p-2,7+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,7+|p12,7+|p13,7+|p14,7+|p15,7+|K5,1+|N3,1|N4,1|N6,1|N7,1|P-5,2+|P-4,2+|P-3,2+|P-2,2+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,2+|P12,2+|P13,2+|P14,2+|P15,2+';
                 return getStartSnapshotPosition({ positionString })
             case "Knighted_Chess":
-                positionString = getPositionStringOfKnightedChess(Date);
+                positionString = getPositionStringOfKnightedChess(UTCDate, UTCTime);
                 return getStartSnapshotPosition({ positionString })
             case "Omega": // Joel & Cory's version
                 positionString = 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3|Q-1,-3|P2,-3|K0,-4'
@@ -375,13 +376,13 @@ const variant = (function() {
 
     /**
      * Returns the specified version's starting position of Space Classic, latest if not specified.
-     * @param {string} Date - The date this game was played. If not specified, we'll return the latest version.
+     * @param {string} UTCDate - The date this game was played. If not specified, we'll return the latest version.
+     * @param {string} UTCTime - The time this game was played.
      * @returns {string} The position in compressed short form
      */
-    function getPositionStringOfSpaceClassic(Date) {
-        const UTCTimeStamp = Date ? math.getUTCTimestamp(Date) : Date.now();
-        // UTC timestamp for Feb 27, 2024, 7:00
-        // Original, oldest version.
+    function getPositionStringOfSpaceClassic(UTCDate, UTCTime) {
+        const UTCTimeStamp = UTCDate ? math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime) : Date.now();
+        // Original, oldest version.   UTC timestamp for Feb 27, 2024, 7:00
         if (UTCTimeStamp < 1709017200000) return "p-3,15+|q4,15|p11,15+|p-4,14+|b4,14|p12,14+|p-5,13+|r2,13|b4,13|r6,13|p13,13+|p3,5+|p4,5+|p5,5+|n3,4|k4,4|n5,4|p-6,3+|p1,3+|p2,3+|p3,3+|p4,3+|p5,3+|p6,3+|p7,3+|p-8,2+|p-7,2+|p15,2+|p16,2+|p-9,1+|p17,1+|P-9,0+|P17,0+|P-8,-1+|P-7,-1+|P15,-1+|P16,-1+|P1,-2+|P2,-2+|P3,-2+|P4,-2+|P5,-2+|P6,-2+|P7,-2+|P14,-2+|N3,-3|K4,-3|N5,-3|P3,-4+|P4,-4+|P5,-4+|P-5,-12+|R2,-12|B4,-12|R6,-12|P13,-12+|P-4,-13+|B4,-13|P12,-13+|P-3,-14+|Q4,-14|P11,-14+"
         // Latest version
         else return "p-3,18+|r2,18|b4,18|b5,18|r7,18|p12,18+|p-4,17+|p13,17+|p-5,16+|p14,16+|p3,9+|p4,9+|p5,9+|p6,9+|n3,8|k4,8|q5,8|n6,8|p-6,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p-8,6+|p-7,6+|p16,6+|p17,6+|p-9,5+|p18,5+|P-9,4+|P18,4+|P-8,3+|P-7,3+|P16,3+|P17,3+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P15,2+|N3,1|K4,1|Q5,1|N6,1|P3,0+|P4,0+|P5,0+|P6,0+|P-5,-7+|P14,-7+|P-4,-8+|P13,-8+|P-3,-9+|R2,-9|B4,-9|B5,-9|R7,-9|P12,-9+"
@@ -389,11 +390,12 @@ const variant = (function() {
 
     /**
      * Returns the specified version's starting position of Space Classic, latest if not specified.
-     * @param {string} Date - The date this game was played. If not specified, we'll return the latest version.
+     * @param {string} UTCDate - The date this game was played. If not specified, we'll return the latest version.
+     * @param {string} UTCTime - The time this game was played.
      * @returns {string} The position in compressed short form
      */
-    function getPositionStringOfKnightedChess(Date) {
-        const UTCTimeStamp = Date ? math.getUTCTimestamp(Date) : Date.now();
+    function getPositionStringOfKnightedChess(UTCDate, UTCTime) {
+        const UTCTimeStamp = UTCDate ? math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime) : Date.now();
         // UTC timestamp for Jul 21, 2024, 9:33 PM
         // Original, oldest version. NO knightrider
         if (UTCTimeStamp < 1721619205980) return 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+'
@@ -433,12 +435,15 @@ const variant = (function() {
      * Returns the variant's gamerules at the provided date in time.
      * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
      * @param {string} options.Variant - The name of the variant for which to get the gamerules.
-     * @param {number} [options.Date=Date.now()] - Optional. The date metadata for which to get the gamerules, in the format `YYYY/MM/DD HH:MM:SS`. Defaults to the current date and time.
+     * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the gamerules, in the format `YYYY.MM.DD`. Defaults to the current date.
+     * @param {number} [options.UTCTime] - Optional. The UTCTime metadata for which to get the gamerules, in the format `HH:MM:SS`. Defaults to the current time.
      * @param {Object} [position] - The starting position of the game, organized by key `{ '1,2': 'queensB' }`, if it's already known. If not provided, it will be calculated.
      * @returns {Object} The gamerules object for the variant.
      */
-    function getGameRulesOfVariant({ Variant, Date = math.getUTCDateTime() }, position) {
+    function getGameRulesOfVariant({ Variant, UTCDate = math.getCurrentUTCDate(), UTCTime = math.getCurrentUTCTime() }, position) {
+        
         if (!position) position = getStartingPositionOfVariant({ Variant }).position
+        console.log(Variant);
         
         switch (Variant) {
             case "Classical":
@@ -448,7 +453,8 @@ const variant = (function() {
             case "Standarch":
                 return getGameRules({ position })
             case "Space_Classic":
-                const UTCTimeStamp = math.getUTCTimestamp(Date);
+                const UTCTimeStamp = math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+                console.log(UTCTimeStamp);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
                 const promotionRanks = UTCTimeStamp < 1709017200000 ? [4,-3] : undefined; // undefined will use default [8,1]
                 getGameRules({ promotionRanks, position })
@@ -540,9 +546,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initClassical(gamefile, { Variant, Date }) {
+    function initClassical(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Classical' })
         gamefile.startSnapshot = {
             position,
@@ -550,7 +557,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -558,9 +565,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initCore(gamefile, { Variant, Date }) {
+    function initCore(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Core' })
         gamefile.startSnapshot = {
             position,
@@ -568,7 +576,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -576,9 +584,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initStandarch(gamefile, { Variant, Date }) {
+    function initStandarch(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Standarch' })
         gamefile.startSnapshot = {
             position,
@@ -586,7 +595,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -594,18 +603,20 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initSpaceClassic(gamefile, { Variant, Date }) {
-        gamefile.metadata.Date = Date;
-        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Space_Classic', Date })
+    function initSpaceClassic(gamefile, { Variant, UTCDate, UTCTime }) {
+        gamefile.metadata.UTCDate = UTCDate;
+        gamefile.metadata.UTCTime = UTCTime;
+        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Space_Classic', UTCDate, UTCTime })
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -613,9 +624,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initCoaip(gamefile, { Variant, Date }) {
+    function initCoaip(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'CoaIP' })
         gamefile.startSnapshot = {
             position,
@@ -623,7 +635,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -631,9 +643,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initPawnHorde(gamefile, { Variant, Date }) {
+    function initPawnHorde(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Pawn_Horde' })
         gamefile.startSnapshot = {
             position,
@@ -641,7 +654,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -649,9 +662,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initSpace(gamefile, { Variant, Date }) {
+    function initSpace(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Space' })
         gamefile.startSnapshot = {
             position,
@@ -659,7 +673,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -667,9 +681,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initObstocean(gamefile, { Variant, Date }) {
+    function initObstocean(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Obstocean' })
         gamefile.startSnapshot = {
             position,
@@ -677,7 +692,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -685,9 +700,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initAbundance(gamefile, { Variant, Date }) {
+    function initAbundance(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Abundance' })
         gamefile.startSnapshot = {
             position,
@@ -695,7 +711,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -703,9 +719,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initAmazonChandelier(gamefile, { Variant, Date }) {
+    function initAmazonChandelier(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Amazon_Chandelier' })
         gamefile.startSnapshot = {
             position,
@@ -713,7 +730,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -721,9 +738,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initContainment(gamefile, { Variant, Date }) {
+    function initContainment(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Containment' })
         gamefile.startSnapshot = {
             position,
@@ -731,7 +749,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -739,9 +757,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initChess(gamefile, { Variant, Date }) {
+    function initChess(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Chess' })
         gamefile.startSnapshot = {
             position,
@@ -749,7 +768,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -757,9 +776,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initClassicalPlus(gamefile, { Variant, Date }) {
+    function initClassicalPlus(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Classical_Plus' })
         gamefile.startSnapshot = {
             position,
@@ -767,7 +787,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -775,9 +795,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initPawndard(gamefile, { Variant, Date }) {
+    function initPawndard(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Pawndard' })
         gamefile.startSnapshot = {
             position,
@@ -785,7 +806,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -793,9 +814,10 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initKnightline(gamefile, { Variant, Date }) {
+    function initKnightline(gamefile, { Variant, UTCDate, UTCTime }) {
         const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Knightline' })
         gamefile.startSnapshot = {
             position,
@@ -803,7 +825,7 @@ const variant = (function() {
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
     /**
@@ -811,17 +833,18 @@ const variant = (function() {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} metadata - The metadata of the variant, with the following properties:
      * @param {string} metadata.Variant - Required. The name of the variant.
-     * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCDate] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
+     * @param {number} [metadata.UTCTime] - Optional.
      */
-    function initKnightedChess(gamefile, { Variant, Date }) {
-        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Knighted_Chess', Date })
+    function initKnightedChess(gamefile, { Variant, UTCDate, UTCTime }) {
+        const { position, positionString, specialRights } = getStartingPositionOfVariant({ Variant: 'Knighted_Chess', UTCDate, UTCTime })
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
             turn: 'white'
         }
-        gamefile.gameRules = getGameRulesOfVariant({ Variant, Date }, position)
+        gamefile.gameRules = getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
     }
 
 

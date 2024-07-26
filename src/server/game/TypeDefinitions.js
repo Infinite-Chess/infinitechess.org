@@ -81,7 +81,7 @@ function Game() {
     this.startTimeMillis = undefined;
     /** The increment amount, in seconds. */
     this.incrementMillis = undefined;
-    /** Whether the game is rated. "Yes" or "No" */
+    /** Whether the game is rated. true or false */
     this.rated = undefined;
     /** The white player: `{ member }` or `{ browser }` */
     this.white = undefined;

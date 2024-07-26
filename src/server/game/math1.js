@@ -100,26 +100,6 @@ const math1 = (function(){
     function secondsToMillis(seconds) { return seconds * 1000; }
 
     /**
-     * Returns the date and time in UTC in the format `YYYY/MM/DD HH:MM:SS`.
-     * If a timestamp is provided, it will be used; otherwise, the current date and time will be used.
-     * Useful for recording the `Date` metadata of new games.
-     * @param {number} [timestamp] - Optional. The timestamp in milliseconds. Defaults to the current time if not provided.
-     * @returns {string} The date and time in the format `YYYY/MM/DD HH:MM:SS`.
-     */
-    function getUTCDateTime(timestamp) {
-        const currentDate = timestamp ? new Date(timestamp) : new Date();
-        
-        const year = currentDate.getUTCFullYear();
-        const month = ('0' + (currentDate.getUTCMonth() + 1)).slice(-2); // Adding 1 because months are zero-based
-        const day = ('0' + currentDate.getUTCDate()).slice(-2);
-        const hours = ('0' + currentDate.getUTCHours()).slice(-2);
-        const minutes = ('0' + currentDate.getUTCMinutes()).slice(-2);
-        const seconds = ('0' + currentDate.getUTCSeconds()).slice(-2);
-        
-        return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
-    }
-
-    /**
      * Calculates the total milliseconds based on the provided options.
      * @param {Object} options - An object containing time units and their values.
      * @param {number} [options.milliseconds=0] - The number of milliseconds.
@@ -153,22 +133,6 @@ const math1 = (function(){
         return totalMilliseconds;
     }
     
-    /**
-     * Converts a date and time string in the format `YYYY/MM/DD HH:MM:SS` to a UTC timestamp.
-     * @param {string} dateTimeString - The date and time string.
-     * @returns {number} The timestamp in milliseconds since the Unix epoch.
-     */
-    function getUTCTimestamp(dateTimeString) {
-        const [datePart, timePart] = dateTimeString.split(' ');
-        const [year, month, day] = datePart.split('/').map(num => parseInt(num, 10));
-        const [hours, minutes, seconds] = timePart.split(':').map(num => parseInt(num, 10));
-        
-        // Constructing a Date object from the parts
-        const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
-        
-        // Return the timestamp in milliseconds
-        return date.getTime();
-    }
     /**
      * Gets the current month in 'yyyy-mm' format.
      * @returns {string} The current month in 'yyyy-mm' format.
@@ -224,6 +188,68 @@ const math1 = (function(){
         return type.slice(0, -1); // Returns a new string that starts from the first character (index 0) and excludes the last character (because of -1).
     }
 
+    /**
+     * Returns the current UTC date in the "YYYY.MM.DD" format.
+     * @returns {string} The current UTC date.
+     */
+    function getCurrentUTCDate() {
+        const now = new Date();
+        const year = now.getUTCFullYear();
+        const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(now.getUTCDate()).padStart(2, '0');
+        
+        return `${year}.${month}.${day}`;
+    }
+    
+    /**
+     * Returns the current UTC time in the "HH:MM:SS" format.
+     * @returns {string} The current UTC time.
+     */
+    function getCurrentUTCTime() {
+        const now = new Date();
+        const hours = String(now.getUTCHours()).padStart(2, '0');
+        const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+        
+        return `${hours}:${minutes}:${seconds}`;
+    }
+
+    /**
+     * Converts a timestamp to an object with UTCDate and UTCTime.
+     * @param {number} timestamp - The timestamp in milliseconds since the Unix Epoch.
+     * @returns {Object} An object with the properties { UTCDate: "YYYY.MM.DD", UTCTime: "HH:MM:SS" }.
+     */
+    function convertTimestampToUTCDateUTCTime(timestamp) {
+        const date = new Date(timestamp);
+        
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        
+        const hours = String(date.getUTCHours()).padStart(2, '0');
+        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+        
+        const UTCDate = `${year}.${month}.${day}`;
+        const UTCTime = `${hours}:${minutes}:${seconds}`;
+        
+        return { UTCDate, UTCTime };
+    }
+    
+    /**
+     * Converts a UTCDate and optional UTCTime to a UTC timestamp in milliseconds since the Unix Epoch.
+     * @param {string} UTCDate - The date in the format "YYYY.MM.DD".
+     * @param {string} UTCTime - The time in the format "HH:MM:SS". Defaults to "00:00:00".
+     * @returns {number} The UTC timestamp in milliseconds since the Unix Epoch.
+     */
+    function convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime = "00:00:00") {
+        const [year, month, day] = UTCDate.split('.').map(Number);
+        const [hours, minutes, seconds] = UTCTime.split(':').map(Number);
+    
+        const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
+        return date.getTime();
+    }
+
     return Object.freeze({
         deepCopyObject,
         getOppositeColor,
@@ -234,13 +260,15 @@ const math1 = (function(){
         minutesToMillis,
         secondsToMillis,
         getTotalMilliseconds,
-        getUTCDateTime,
-        getUTCTimestamp,
         getCurrentMonth,
         getCurrentDay,
         getKeyFromCoords,
         getCoordsFromKey,
-        trimWorBFromType
+        trimWorBFromType,
+        getCurrentUTCDate,
+        getCurrentUTCTime,
+        convertTimestampToUTCDateUTCTime,
+        convertUTCDateUTCTimeToTimeStamp,
     })
 })();
 

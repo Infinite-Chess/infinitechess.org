@@ -5,7 +5,7 @@
 
 /**
  * Constructs a gamefile from provided arguments. Use the *new* keyword.
- * @param {Object} metadata - An object containing the property `Variant`, and optionally `Date`, which can be used to extract the version of the variant. Without `Date`, the latest version will be used.
+ * @param {Object} metadata - An object containing the property `Variant`, and optionally `UTCDate` and `UTCTime`, which can be used to extract the version of the variant. Without the date, the latest version will be used.
  * @param {Object} [options] - Options for constructing the gamefile.
  * @param {string[]} [options.moves=[]] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
@@ -19,15 +19,19 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** Information about the game */
     this.metadata = {
         Variant: undefined,
-        Version: undefined,
         White: undefined,
         Black: undefined,
-        Clock: undefined,
-        Date: undefined,
+        TimeControl: undefined,
+        UTCDate: undefined,
+        UTCTime: undefined,
         /** 1-0 = White won */
         Result: undefined,
-        /** What win condition the winner won by */
-        Condition: undefined
+        /** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
+        Termination: undefined,
+        /** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game" */
+        Event: undefined,
+        /** What website hosted the game. "https://www.infinitechess.org/" */
+        Site: undefined,
     }
     
     /** Information about the beginning of the game (position, positionString, specialRights, turn) */

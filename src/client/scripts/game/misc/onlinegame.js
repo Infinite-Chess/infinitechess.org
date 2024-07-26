@@ -313,7 +313,7 @@ const onlinegame = (function(){
     function handleJoinGame(message) {
         // The server's message looks like:
         // {
-        //     metadata: { Variant, White, Black, Clock, Date, Rated },
+        //     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
         //     id, clock, publicity, youAreColor, timerWhite,
         //     timerBlack, moves, autoAFKResignTime, disconnect, gameConclusion
         // }

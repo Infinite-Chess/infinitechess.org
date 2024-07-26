@@ -293,19 +293,21 @@
                                 <p><%=t('play.play-menu.clock')%></p>
                                 <div class="option">
                                     <select id="option-clock" class="button">
-                                        <option value="1+2">1<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
-                                        <option value="2+2">2<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
-                                        <option value="3+2">3<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
-                                        <option value="5+2">5<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
-                                        <option value="8+3">8<%=t('play.play-menu.minutes')%>+3<%=t('play.play-menu.seconds')%></option>
-                                        <option value="10+4" selected>10<%=t('play.play-menu.minutes')%>+4<%=t('play.play-menu.seconds')%></option>
-                                        <option value="12+5">12<%=t('play.play-menu.minutes')%>+5<%=t('play.play-menu.seconds')%></option>
-                                        <option value="15+6">15<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
-                                        <option value="20+8">20<%=t('play.play-menu.minutes')%>+8<%=t('play.play-menu.seconds')%></option>
-                                        <option value="25+10">25<%=t('play.play-menu.minutes')%>+10<%=t('play.play-menu.seconds')%></option>
-                                        <option value="30+15">30<%=t('play.play-menu.minutes')%>+15<%=t('play.play-menu.seconds')%></option>
-                                        <option value="40+20">40<%=t('play.play-menu.minutes')%>+20<%=t('play.play-menu.seconds')%></option>
-                                        <option value="0"><%=t('play.play-menu.infinite_time')%></option>
+                                        <!-- Developmental time control: 15 seconds -->
+                                        <!-- <option value="15+2">1<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option> -->
+                                        <option value="60+2">1<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
+                                        <option value="120+2">2<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
+                                        <option value="180+2">3<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
+                                        <option value="300+2">5<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
+                                        <option value="480+3">8<%=t('play.play-menu.minutes')%>+3<%=t('play.play-menu.seconds')%></option>
+                                        <option value="600+4" selected>10<%=t('play.play-menu.minutes')%>+4<%=t('play.play-menu.seconds')%></option>
+                                        <option value="720+5">12<%=t('play.play-menu.minutes')%>+5<%=t('play.play-menu.seconds')%></option>
+                                        <option value="900+6">15<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
+                                        <option value="1200+8">20<%=t('play.play-menu.minutes')%>+8<%=t('play.play-menu.seconds')%></option>
+                                        <option value="1500+10">25<%=t('play.play-menu.minutes')%>+10<%=t('play.play-menu.seconds')%></option>
+                                        <option value="1800+15">30<%=t('play.play-menu.minutes')%>+15<%=t('play.play-menu.seconds')%></option>
+                                        <option value="2400+20">40<%=t('play.play-menu.minutes')%>+20<%=t('play.play-menu.seconds')%></option>
+                                        <option value="-"><%=t('play.play-menu.infinite_time')%></option>
                                     </select>
                                 </div>
                             </div>
@@ -332,7 +334,7 @@
                                 <p><%=t('play.play-menu.rated')%></p>
                                 <div class="option">
                                     <select id="option-rated" class="button">
-                                        <option value="unrated"><%=t('play.play-menu.no')%></option>
+                                        <option value="casual"><%=t('play.play-menu.no')%></option>
                                     </select>
                                 </div>
                             </div>
@@ -347,7 +349,7 @@
                                     <div class="invite-child">Standard</div>
                                     <div class="invite-child">15m+15s</div>
                                     <div class="invite-child">Random</div>
-                                    <div class="invite-child">Unrated</div>
+                                    <div class="invite-child">Casual</div>
                                     <div class="invite-child accept">Accept</div>
                                 </div> -->
                             </div>
