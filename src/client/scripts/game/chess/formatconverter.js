@@ -36,6 +36,20 @@ const formatconverter = (function() {
         "voidsN": "vo"
     };
 
+    const metadata_key_ordering = [
+        "Event",
+        "Site",
+        "Variant",
+        "Round",
+        "UTCDate",
+        "UTCTime",
+        "TimeControl",
+        "White",
+        "Black",
+        "Result",
+        "Termination"
+    ];
+
     function invertDictionary(json){
         let inv = {};
         for(let key in json){
@@ -82,9 +96,18 @@ const formatconverter = (function() {
     function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = true, specifyPosition = true } = {}){
         let shortformat = "";
         let whitespace = (make_new_lines ? "\n" : " ");
-        // metadata
+
+        // metadata - appended in correct order given by metadata_key_ordering
+        let metadata_keys_used = {};
+        for (let key of metadata_key_ordering){
+            if (longformat.metadata[key]){
+                shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
+                metadata_keys_used[key] = true;
+            }
+        }
+        // append the rest of the metadata
         for (let key in longformat["metadata"]){
-            if (longformat.metadata[key] != null) shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
+            if (longformat.metadata[key] && !metadata_keys_used[key]) shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
         }
         if (longformat["metadata"]) shortformat += whitespace;
 
