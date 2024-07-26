@@ -8,10 +8,10 @@
 const copypastegame = (function(){
 
     /**
-     * A list of metadata properties that are retained when pasting a new game.
+     * A list of metadata properties that are retained from the current game when pasting an external game.
      * These will overwrite the pasted game's metadata with the current game's metadata.
      */
-    const retainMetadataWhenPasting = ['White','Black','Clock','Rated']
+    const retainMetadataWhenPasting = ['White','Black','TimeControl','Event','Site','Round']
 
     /**
      * Copies the current game to the clipboard in ICN notation.
@@ -54,6 +54,7 @@ const copypastegame = (function(){
         const gameRulesCopy = math.deepCopyObject(gamefile.gameRules);
 
         primedGamefile.metadata = gamefile.metadata;
+        primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant]; // Convert the variant metadata code to spoken language
         primedGamefile.turn = gamefile.startSnapshot.turn;
         primedGamefile.enpassant = gamefile.startSnapshot.enpassant;
         if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
@@ -110,6 +111,8 @@ const copypastegame = (function(){
         longformat = backcompatible.getLongformatInNewNotation(longformat);
 
         if (!verifyLongformat(longformat)) return;
+
+        console.log(longformat);
         
         pasteGame(longformat)
     }
@@ -197,14 +200,27 @@ const copypastegame = (function(){
         retainMetadataWhenPasting.forEach((metadataName) => {
             longformat.metadata[metadataName] = currentGameMetadata[metadataName];
         })
-        // Only transfer the Date of the pasted game if the starting position isn't specified,
+        // Only keep the Date of the current game if the starting position of the pasted game isn't specified,
         // because loading the variant version relies on that.
-        if (longformat.shortposition || longformat.startingPosition) longformat.metadata.Date = currentGameMetadata.Date;
+        if (longformat.shortposition || longformat.startingPosition) {
+            longformat.metadata.UTCDate = currentGameMetadata.UTCDate;
+            longformat.metadata.UTCTime = currentGameMetadata.UTCTime;
+        } else if (backcompatible.isDateMetadataInOldFormat(longformat.metadata.Date)) { // Import Date metadata from pasted game, converting it if it is in an old format.
+            const { UTCDate, UTCTime } = backcompatible.convertDateMetdatatoUTCDateUTCTime(longformat.metadata.Date);
+            longformat.metadata.UTCDate = UTCDate;
+            longformat.metadata.UTCTime = UTCTime;
+        }
+
+        // The variant metadata needs to be converted from language-specific to internal game code
+        longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant)
+
+        delete longformat.metadata.Clock;
 
         // Don't transfer the pasted game's Result and Condition metadata. For all we know,
         // the game could have ended by time, in which case we want to further analyse what could have happened.
         delete longformat.metadata.Result;
-        delete longformat.metadata.Condition;
+        delete longformat.metadata.Condition; // Old format
+        delete longformat.metadata.Termination; // New format
 
         // The variant options passed into the variant loader needs to contain the following properties:
         // `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
@@ -260,6 +276,16 @@ const copypastegame = (function(){
         game.loadGamefile(newGamefile);
 
         console.log(translations["copypaste"]["loaded"])
+    }
+
+    function convertVariantFromSpokenLanguageToCode(Variant) {
+        // Iterate through all translations until we find one that matches this name
+        for (const translationCode in translations) {
+            if (translations[translationCode] === Variant) {
+                return translationCode;
+            }
+        }
+        // Else unknown variant, return undefined
     }
 
     /**

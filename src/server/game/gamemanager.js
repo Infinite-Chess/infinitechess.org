@@ -19,6 +19,8 @@ const statlogger = require('./statlogger');
 const { executeSafely_async } = require('../utility/errorGuard');
 const { ensureJSONString } = require('../utility/JSONUtils');
 
+const { getTranslation } = require('../config/setupTranslations')
+
 const gamemanager = (function() {
 
     /** The object containing all currently active games. Each game's id is the key: `{ id: Game } 
@@ -64,7 +66,7 @@ const gamemanager = (function() {
             publicity: inviteOptions.publicity,
             variant: inviteOptions.variant,
             clock: inviteOptions.clock,
-            rated: inviteOptions.rated === "Rated" ? "Yes" : "No",
+            rated: inviteOptions.rated === "Rated",
             moves: [],
             blackGoesFirst: variant1.isVariantAVariantWhereBlackStarts(inviteOptions.variant),
             gameConclusion: false,
@@ -86,9 +88,14 @@ const gamemanager = (function() {
             }
         }
 
-        const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
-        newGame.startTimeMillis = math1.minutesToMillis(minutes);
-        newGame.incrementMillis = math1.secondsToMillis(increment);
+        newGame.startTimeMillis = null;
+        newGame.incrementMillis = null;
+
+        const minutesAndIncrement = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
+        if (minutesAndIncrement !== null) {
+            newGame.startTimeMillis = math1.minutesToMillis(minutesAndIncrement.minutes);
+            newGame.incrementMillis = math1.secondsToMillis(minutesAndIncrement.increment);
+        }
 
         const player1 = inviteOptions.owner; // { member/browser }  The invite owner
         const player2 = wsfunctions.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
@@ -217,20 +224,25 @@ const gamemanager = (function() {
          * gameRules
          */
         const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(game.gameConclusion)
-        const Date = math1.getUTCDateTime(game.timeCreated)
+        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated)
         const positionStuff = variant1.getStartingPositionOfVariant({ Variant: game.variant, Date }); // 3 properties: position, positionString, and specialRights.
+        const RatedOrCasual = game.rated ? "Rated" : "Casual";
         const metadata = {
+            Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
+            Site: "https://www.infinitechess.org/",
+            Round: "-",
             Variant: game.variant,
             White: getDisplayNameOfPlayer(game.white),
             Black: getDisplayNameOfPlayer(game.black),
-            Clock: clockweb.isClockValueInfinite(game.clock) ? "Infinite" : game.clock,
-            Date,
-            Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : '0.5-0.5',
-            Condition: math1.capitalizeFirstLetter(condition),
-            Rated: game.rated
+            TimeControl: game.clock,
+            UTCDate,
+            UTCTime,
+            Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
+            Termination: wincondition1.getTerminationInEnglish(condition)
         }
         const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position)
         delete gameRules.moveRule;
+        metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant1 has gotten the game rules.
         const primedGamefile = {
             metadata,
             turn: variant1.isVariantAVariantWhereBlackStarts(game.variant) ? 'black' : 'white',
@@ -605,14 +617,21 @@ const gamemanager = (function() {
         // id, publicity, variant, moves, playerWhite, playerBlack,
         // youAreColor, moves, clock, timerWhite, timerBlack, gameConclusion
 
+        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(safeGameInfo.timeCreated)
+
+        console.log(safeGameInfo.rated)
+        const RatedOrCasual = safeGameInfo.rated ? "Rated" : "Casual";
         const gameOptions = {
             metadata: {
+                Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${safeGameInfo.variant}`)} infinite chess game`,
+                Site: "https://www.infinitechess.org/",
+                Round: "-",
                 Variant: safeGameInfo.variant,
                 White: safeGameInfo.playerWhite,
                 Black: safeGameInfo.playerBlack,
-                Clock: clockweb.isClockValueInfinite(safeGameInfo.clock) ? "Infinite" : safeGameInfo.clock,
-                Date: math1.getUTCDateTime(safeGameInfo.timeCreated),
-                Rated: safeGameInfo.rated
+                TimeControl: safeGameInfo.clock,
+                UTCDate,
+                UTCTime,
             },
             id: safeGameInfo.id,
             clock: safeGameInfo.clock,

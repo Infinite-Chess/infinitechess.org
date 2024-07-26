@@ -202,8 +202,16 @@ const specialdetect = (function() {
         if (Math.abs(xLandDiff) !== 1) return; // Not immediately left or right of us
         if (coords[1] + oneOrNegOne !== gamefile.enpassant[1]) return; // Not one in front of us
 
-        // It is capturable en passant!
         const captureSquare = [coords[0] + xLandDiff, coords[1] + oneOrNegOne]
+
+        const capturedPieceSquare = [coords[0] + xLandDiff, coords[1]];
+        const capturedPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, capturedPieceSquare);
+        // cannot capture nothing en passant
+        if (!capturedPieceType) return;
+        // cannot capture own piece en passant
+        if (color === math.getPieceColorFromType(capturedPieceType)) return;
+
+        // It is capturable en passant!
 
         // Extra check to make sure there's no piece (bug if so)
         if (gamefileutility.getPieceTypeAtCoords(gamefile, captureSquare)) return console.error("We cannot capture onpassant onto a square with an existing piece! " + captureSquare)
