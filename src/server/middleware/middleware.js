@@ -89,6 +89,9 @@ function configureMiddleware(app) {
     // Serve protected assets. Needs to be after verifying their jwt and setting their role
     app.use(protectedStatic);
 
+    // Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
+    app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, 'cert/.well-known/acme-challenge')));
+
     // Provide a route
     app.use('/', require('../routes/root'));
     app.use('/createaccount(.html)?', require('../routes/createaccount'));
