@@ -103,10 +103,6 @@ input[type='submit'].ready:focus {
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
-    #content h1 {
-        font-size: calc(40px + 0.027 * (100vw - 450px));
-    }
-
     input {
         width: calc(180px + 0.3 * (100vw - 450px)); /* Must also change div.error width! */
     }

@@ -1,304 +1,409 @@
-<!DOCTYPE html>
-<html lang="<%=language%>" dir="<%=t('direction')%>" >
-    <head>
-        <script>
-            const translations = <%-JSON.stringify({
-                ...t('play.javascript', {returnObjects: true}),
-                ...t('play.play-menu', {returnObjects: true}),
-                ...t('header.javascript', {returnObjects: true}),
-                ...t('server.javascript', {returnObjects: true})
-            })%>;
-        </script>
-        <!-- Do not modify the next line under any circumstances. It is used by HTMLScriptInjector.js as a reference point of where to inject htmlscript.js -->
-        <!-- htmlscript.js inject here -->
+<!-- Loading Screen -->
 
-        <!-- Javascript will add future styles in here -->
-        <style id="style"></style>
+<div id="loading-animation" class="animation-container">
+    <div id="loading-glow" class="loading-glow loadingGlowAnimation"></div>
+    <span id="loading-text" class="loading-text pulsing"><%=t('play.main-menu.loading')%></span>
+    <div id="loading-error" class="loading-error hidden">
+        <h1><%=t('play.main-menu.error')%></h1>
+        <p id="loading-error-text"></p>
+    </div>
+    <div class="checkerboard"></div>
+</div>
 
-        <meta charset="utf-8" />
-        <meta http-equiv="x-ua-compatible" content="ie=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
-        <title>Infinite Chess - Play</title>
-        <!-- <link rel="stylesheet" href="/css/common.css"> -->
-        <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
-        <link rel="icon" type="image/png" href="/img/favicon.png">
-        <!-- Custom fonts: Merriweather, Open Sans -->
-        <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-        <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource -->
-        <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
+<!-- The webgl context will render the game onto here -->
+<canvas id="game" class="hidden"></canvas>
 
-        <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
-        <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
-        <!-- All clientside game scripts are inject here -->
+<div id="overlay" class="overlay">
 
-    </head>
-    <!-- The onload event listener to call main.start() is now within the htmlscript! -->
-    <body>
-        <header>
-            <nav>
-                <a href="/">
-                    <p><%=t('header.home')%></p>
-                </a>
-                <a href="/play">
-                    <p class="currPage"><%=t('header.play')%></p>
-                </a>
-                <a href="/news">
-                    <p><%=t('header.news')%></p>
-                </a>
-                <a href="/login" id="loginlink">
-                    <p id="logintext"><%=t('header.login')%></p>
-                </a>
-                <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
-                </a>
-            </nav>
-        </header>
-        <main>
+    <!-- The external discord & game credits links on the title screen -->
+    <div id="menu-external-links" class="menu-external-links hidden">
+        <!-- Discord icon, bottom left -->
+        <a href="https://discord.gg/NFWFGZeNh5" target="_blank" class="discord-icon">
+            <svg viewBox="0 -28.5 256 256" version="1.1" preserveAspectRatio="xMidYMid" fill="#000000">
+                <g stroke-width="0"></g>
+                <g stroke-linecap="round" stroke-linejoin="round"></g>
+                <g>
+                    <g>
+                        <path
+                            d="M216.856339,16.5966031 C200.285002,8.84328665 182.566144,3.2084988 164.041564,0 C161.766523,4.11318106 159.108624,9.64549908 157.276099,14.0464379 C137.583995,11.0849896 118.072967,11.0849896 98.7430163,14.0464379 C96.9108417,9.64549908 94.1925838,4.11318106 91.8971895,0 C73.3526068,3.2084988 55.6133949,8.86399117 39.0420583,16.6376612 C5.61752293,67.146514 -3.4433191,116.400813 1.08711069,164.955721 C23.2560196,181.510915 44.7403634,191.567697 65.8621325,198.148576 C71.0772151,190.971126 75.7283628,183.341335 79.7352139,175.300261 C72.104019,172.400575 64.7949724,168.822202 57.8887866,164.667963 C59.7209612,163.310589 61.5131304,161.891452 63.2445898,160.431257 C105.36741,180.133187 151.134928,180.133187 192.754523,160.431257 C194.506336,161.891452 196.298154,163.310589 198.110326,164.667963 C191.183787,168.842556 183.854737,172.420929 176.223542,175.320965 C180.230393,183.341335 184.861538,190.991831 190.096624,198.16893 C211.238746,191.588051 232.743023,181.531619 254.911949,164.955721 C260.227747,108.668201 245.831087,59.8662432 216.856339,16.5966031 Z M85.4738752,135.09489 C72.8290281,135.09489 62.4592217,123.290155 62.4592217,108.914901 C62.4592217,94.5396472 72.607595,82.7145587 85.4738752,82.7145587 C98.3405064,82.7145587 108.709962,94.5189427 108.488529,108.914901 C108.508531,123.290155 98.3405064,135.09489 85.4738752,135.09489 Z M170.525237,135.09489 C157.88039,135.09489 147.510584,123.290155 147.510584,108.914901 C147.510584,94.5396472 157.658606,82.7145587 170.525237,82.7145587 C183.391518,82.7145587 193.761324,94.5189427 193.539891,108.914901 C193.539891,123.290155 183.391518,135.09489 170.525237,135.09489 Z"
+                            fill="#000000" fill-rule="nonzero"> </path>
+                    </g>
+                </g>
+            </svg>
+        </a>
 
-            <!-- Loading Screen -->
+        <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank" class="github-icon">
+            <svg viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                <g stroke-width="0"></g>
+                <g stroke-linecap="round" stroke-linejoin="round"></g>
+                <g>
+                    <g>
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"
+                            fill="#000"></path>
+                    </g>
+                </g>
+            </svg>
+        </a>
 
-            <div id="loading-animation" class="animation-container">
-                <div id="loading-glow" class="loading-glow loadingGlowAnimation"></div>
-                <span id="loading-text" class="loading-text pulsing"><%=t('play.main-menu.loading')%></span>
-                <div id="loading-error" class="loading-error hidden">
-                    <h1><%=t('play.main-menu.error')%></h1>
-                    <p id="loading-error-text"></p>
+        <a href="/credits" class="credits"><%=t('play.main-menu.credits')%></a>
+    </div>
+
+    <!-- Menu screen UI -->
+    <div id="title" class="title hidden">
+        <h1>Infinite Chess</h1>
+        <button id="play" class="play big-btn button"><%=t('play.main-menu.play')%></button>
+        <button id="rules" class="rules big-btn button"><%=t('play.main-menu.guide')%></button>
+        <button id="board-editor"
+            class="board-editor big-btn button opacity-0_5"><%=t('play.main-menu.editor')%></button>
+    </div>
+
+    <!-- Guide -->
+    <div id="guide" class="guide hidden">
+        <div class="guide-contents big-btn">
+            <h1 class="center">
+                <%=t('play.guide.title')%>
+            </h1>
+
+            <h2>
+                <%=t('play.guide.rules')%>
+            </h2>
+            <hr class="line-break">
+            <p>
+                <%=t('play.guide.rules_paragraphs.0')%>
+            </p>
+            <img data-src="/img/game/guide/promotionlines.png" class="img-promotionlines">
+            <ul>
+                <li>
+                    <%=t('play.guide.rules_paragraphs.1')%>
+                </li>
+                <li>
+                    <%=t('play.guide.rules_paragraphs.2.0')%><em>
+                            <%=t('play.guide.rules_paragraphs.2.1')%>
+                        </em>
+                        <%=t('play.guide.rules_paragraphs.2.2')%>
+                </li>
+            </ul>
+            <p>
+                <%=t('play.guide.rules_paragraphs.3')%>
+            </p>
+            <p>
+                <%=t('play.guide.rules_paragraphs.4')%>
+            </p>
+            <div class="clear-float"></div>
+
+            <h2>
+                <%=t('play.guide.careful_heading')%>
+            </h2>
+            <hr class="line-break">
+            <img data-src="/img/game/guide/kingrookfork.png" class="img-kingrookfork">
+            <p>
+                <%=t('play.guide.careful_paragraphs.0')%>
+            </p>
+            <p>
+                <%=t('play.guide.careful_paragraphs.1')%>
+            </p>
+            <div class="clear-float"></div>
+
+            <h2>
+                <%=t('play.guide.controls_heading')%>
+            </h2>
+            <hr class="line-break">
+            <p>
+                <%=t('play.guide.controls_paragraph')%>
+            </p>
+            <ul>
+                <li><strong>WASD</strong>
+                    <%=t('play.guide.keybinds.0')%>
+                </li>
+                <li><strong>
+                        <%=t('play.guide.keybinds.1.0')%>
+                    </strong>
+                    <%=t('play.guide.keybinds.1.1')%><strong>
+                            <%=t('play.guide.keybinds.1.2')%>
+                        </strong>
+                        <%=t('play.guide.keybinds.1.3')%>
+                </li>
+                <li><strong>
+                        <%=t('play.guide.keybinds.2.0')%>
+                    </strong>
+                    <%=t('play.guide.keybinds.2.1')%>
+                </li>
+                <img data-src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
+                <li><strong>
+                        <%=t('play.guide.keybinds.3.0')%>
+                    </strong>
+                    <%=t('play.guide.keybinds.3.1')%><strong>
+                            <%=t('play.guide.keybinds.3.2')%>
+                        </strong>
+                        <%=t('play.guide.keybinds.3.3')%>
+                </li>
+                <li><strong>1</strong>
+                    <%=t('play.guide.keybinds.4')%>
+                </li>
+            </ul>
+            <p>
+                <%=t('play.guide.controls_paragraph2')%>
+            </p>
+            <ul>
+                <li><strong>R</strong>
+                    <%=t('play.guide.keybinds_extra.0')%>
+                </li>
+                <li><strong>N</strong>
+                    <%=t('play.guide.keybinds_extra.1')%>
+                </li>
+                <li><strong>M</strong>
+                    <%=t('play.guide.keybinds_extra.2')%>
+                </li>
+                <li><strong>P</strong>
+                    <%=t('play.guide.keybinds_extra.3')%><strong>P</strong>.
+                </li>
+                <li><strong>`</strong>
+                    <%=t('play.guide.keybinds_extra.4.0')%><strong>~</strong>
+                        <%=t('play.guide.keybinds_extra.4.1')%>
+                </li>
+            </ul>
+            <div class="clear-float"></div>
+
+            <h2>
+                <%=t('play.guide.fairy_heading')%>
+            </h2>
+            <hr class="line-break">
+            <p>
+                <%=t('play.guide.fairy_paragraph')%>
+            </p>
+            <div id="fairy-pieces" class="fairy-pieces">
+                <img data-src="/img/game/guide/fairy/chancellor.png" id="ch-img" class="img-fairymoveset">
+                <img data-src="/img/game/guide/fairy/archbishop.png" id="ar-img" class="img-fairymoveset hidden">
+                <img data-src="/img/game/guide/fairy/amazon.png" id="am-img" class="img-fairymoveset hidden">
+                <img data-src="/img/game/guide/fairy/guard.png" id="gu-img" class="img-fairymoveset hidden">
+                <img data-src="/img/game/guide/fairy/hawk.png" id="ha-img" class="img-fairymoveset hidden">
+                <img data-src="/img/game/guide/fairy/centaur.png" id="ce-img" class="img-fairymoveset hidden">
+                <img data-src="/img/game/guide/fairy/obstacle.png" id="ob-img" class="img-fairymoveset hidden">
+                <img data-src="/img/game/guide/fairy/void.png" id="vo-img" class="img-fairymoveset hidden">
+                <div class="fairy-card-container">
+                    <div id="fairy-back" class="left-arrow opacity-0_25 unselectable">
+                        <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                            fill="#000000" stroke="#000000" stroke-width="46.08">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                                <path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z"
+                                    fill="#000000"></path>
+                            </g>
+                        </svg>
+                    </div>
+                    <div id="fairy-card" class="fairy-card">
+                        <div class="space-1"></div>
+                        <div id="ch-desc" class="fairy-card-desc">
+                            <p class="fairy-card-title">
+                                <%=t('play.guide.pieces.chancellor.name')%>
+                            </p>
+                            <p class="fairy-card-description">
+                                <%=t('play.guide.pieces.chancellor.description')%>
+                            </p>
+                        </div>
+                        <div id="ar-desc" class="fairy-card-desc hidden">
+                            <p class="fairy-card-title">
+                                <%=t('play.guide.pieces.archbishop.name')%>
+                            </p>
+                            <p class="fairy-card-description">
+                                <%=t('play.guide.pieces.archbishop.description')%>
+                            </p>
+                        </div>
+                        <div id="am-desc" class="fairy-card-desc hidden">
+                            <p class="fairy-card-title">
+                                <%=t('play.guide.pieces.amazon.name')%>
+                            </p>
+                            <p class="fairy-card-description">
+                                <%=t('play.guide.pieces.amazon.description')%>
+                            </p>
+                        </div>
+                        <div id="gu-desc" class="fairy-card-desc hidden">
+                            <p class="fairy-card-title">
+                                <%=t('play.guide.pieces.guard.name')%>
+                            </p>
+                            <p class="fairy-card-description">
+                                <%=t('play.guide.pieces.guard.description')%>
+                            </p>
+                        </div>
+                        <div id="ha-desc" class="fairy-card-desc hidden">
+                            <p class="fairy-card-title">
+                                <%=t('play.guide.pieces.hawk.name')%>
+                            </p>
+                            <p class="fairy-card-description">
+                                <%=t('play.guide.pieces.hawk.description')%>
+                            </p>
+                        </div>
+                        <div id="ce-desc" class="fairy-card-desc hidden">
+                            <p class="fairy-card-title">
+                                <%=t('play.guide.pieces.centaur.name')%>
+                            </p>
+                            <p class="fairy-card-description">
+                                <%=t('play.guide.pieces.centaur.description')%>
+                            </p>
+                        </div>
+                        <div id="ob-desc" class="fairy-card-desc hidden">
+                            <p class="fairy-card-title">
+                                <%=t('play.guide.pieces.obstacle.name')%>
+                            </p>
+                            <p class="fairy-card-description">
+                                <%=t('play.guide.pieces.obstacle.description')%>
+                            </p>
+                        </div>
+                        <div id="vo-desc" class="fairy-card-desc hidden">
+                            <p class="fairy-card-title">
+                                <%=t('play.guide.pieces.void.name')%>
+                            </p>
+                            <p class="fairy-card-description">
+                                <%=t('play.guide.pieces.void.description')%>
+                            </p>
+                        </div>
+                        <div class="space-2"></div>
+                    </div>
+                    <div id="fairy-forward" class="right-arrow unselectable">
+                        <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                            fill="#000000" stroke="#000000" stroke-width="46.08">
+                            <g stroke-width="0"></g>
+                            <g stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g transform="scale(-1, 1) translate(-1035,0)">
+                                <path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z"
+                                    fill="#000000"></path>
+                            </g>
+                        </svg>
+                    </div>
                 </div>
-                <div class="checkerboard"></div>
             </div>
 
-            <!-- The webgl context will render the game onto here -->
-            <canvas id="game" class="hidden"></canvas>
-
-            <div id="overlay" class="overlay">
-
-                <!-- The external discord & game credits links on the title screen -->
-                <div id="menu-external-links" class="menu-external-links hidden">
-                    <!-- Discord icon, bottom left -->
-                    <a href="https://discord.gg/NFWFGZeNh5" target="_blank" class="discord-icon">
-                        <svg viewBox="0 -28.5 256 256" version="1.1" preserveAspectRatio="xMidYMid" fill="#000000"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g> <g> <path d="M216.856339,16.5966031 C200.285002,8.84328665 182.566144,3.2084988 164.041564,0 C161.766523,4.11318106 159.108624,9.64549908 157.276099,14.0464379 C137.583995,11.0849896 118.072967,11.0849896 98.7430163,14.0464379 C96.9108417,9.64549908 94.1925838,4.11318106 91.8971895,0 C73.3526068,3.2084988 55.6133949,8.86399117 39.0420583,16.6376612 C5.61752293,67.146514 -3.4433191,116.400813 1.08711069,164.955721 C23.2560196,181.510915 44.7403634,191.567697 65.8621325,198.148576 C71.0772151,190.971126 75.7283628,183.341335 79.7352139,175.300261 C72.104019,172.400575 64.7949724,168.822202 57.8887866,164.667963 C59.7209612,163.310589 61.5131304,161.891452 63.2445898,160.431257 C105.36741,180.133187 151.134928,180.133187 192.754523,160.431257 C194.506336,161.891452 196.298154,163.310589 198.110326,164.667963 C191.183787,168.842556 183.854737,172.420929 176.223542,175.320965 C180.230393,183.341335 184.861538,190.991831 190.096624,198.16893 C211.238746,191.588051 232.743023,181.531619 254.911949,164.955721 C260.227747,108.668201 245.831087,59.8662432 216.856339,16.5966031 Z M85.4738752,135.09489 C72.8290281,135.09489 62.4592217,123.290155 62.4592217,108.914901 C62.4592217,94.5396472 72.607595,82.7145587 85.4738752,82.7145587 C98.3405064,82.7145587 108.709962,94.5189427 108.488529,108.914901 C108.508531,123.290155 98.3405064,135.09489 85.4738752,135.09489 Z M170.525237,135.09489 C157.88039,135.09489 147.510584,123.290155 147.510584,108.914901 C147.510584,94.5396472 157.658606,82.7145587 170.525237,82.7145587 C183.391518,82.7145587 193.761324,94.5189427 193.539891,108.914901 C193.539891,123.290155 183.391518,135.09489 170.525237,135.09489 Z" fill="#000000" fill-rule="nonzero"> </path> </g> </g></svg>
+            <h2>
+                <%=t('play.guide.editing_heading')%>
+            </h2>
+            <hr class="line-break">
+            <p>
+                <%=t('play.guide.editing_paragraphs.0.0')%><a
+                        href="https://docs.google.com/spreadsheets/d/1Eo1SIo2esUijZ3LQzGy8QLKTOVh77DdDQuqEBILec9I/edit?usp=sharing"
+                        target="_blank">
+                        <%=t('play.guide.editing_paragraphs.0.1')%>
                     </a>
+                    <%=t('play.guide.editing_paragraphs.0.2')%>
+            </p>
+            <p>
+                <%=t('play.guide.editing_paragraphs.1')%>
+            </p>
+            <p>
+                <%=t('play.guide.editing_paragraphs.2')%>
+            </p>
+        </div>
+        <button id="guide-back" class="guide-back big-btn button">
+            <%=t('play.guide.back')%>
+        </button>
+    </div>
 
-                    <a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank" class="github-icon">
-                        <svg viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g> <g> <path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" fill="#000"></path></g></g> </svg>     
-                    </a>
-
-                    <a href="/credits" class="credits"><%=t('play.main-menu.credits')%></a>
-                </div>
-
-                <!-- Menu screen UI -->
-                <div id="title" class="title hidden">
-                    <h1>Infinite Chess</h1>
-                    <button id="play" class="play titlebubble button"><%=t('play.main-menu.play')%></button>
-                    <button id="rules" class="rules titlebubble button"><%=t('play.main-menu.guide')%></button>
-                    <button id="board-editor" class="board-editor titlebubble button opacity-0_5"><%=t('play.main-menu.editor')%></button>
-                </div>
-
-                <!-- Guide -->
-                <div id="guide" class="guide hidden">
-                    <div class="guide-contents titlebubble">
-                        <h1 class="center"><%=t('play.guide.title')%></h1>
-
-                        <h2><%=t('play.guide.rules')%></h2>
-                        <hr class="line-break">
-                        <p><%=t('play.guide.rules_paragraphs.0')%></p>
-                        <img data-src="/img/game/guide/promotionlines.png" class="img-promotionlines">
-                        <ul>
-                            <li><%=t('play.guide.rules_paragraphs.1')%></li>
-                            <li><%=t('play.guide.rules_paragraphs.2.0')%><em><%=t('play.guide.rules_paragraphs.2.1')%></em><%=t('play.guide.rules_paragraphs.2.2')%></li>
-                        </ul>
-                        <p><%=t('play.guide.rules_paragraphs.3')%></p>
-                        <p><%=t('play.guide.rules_paragraphs.4')%></p>
-                        <div class="clear-float"></div>
-                        
-                        <h2><%=t('play.guide.careful_heading')%></h2>
-                        <hr class="line-break">
-                        <img data-src="/img/game/guide/kingrookfork.png" class="img-kingrookfork">
-                        <p><%=t('play.guide.careful_paragraphs.0')%></p>
-                        <p><%=t('play.guide.careful_paragraphs.1')%></p>
-                        <div class="clear-float"></div>
-
-                        <h2><%=t('play.guide.controls_heading')%></h2>
-                        <hr class="line-break">
-                        <p><%=t('play.guide.controls_paragraph')%></p>
-                        <ul>
-                            <li><strong>WASD</strong><%=t('play.guide.keybinds.0')%></li>
-                            <li><strong><%=t('play.guide.keybinds.1.0')%></strong><%=t('play.guide.keybinds.1.1')%><strong><%=t('play.guide.keybinds.1.2')%></strong><%=t('play.guide.keybinds.1.3')%></li>
-                            <li><strong><%=t('play.guide.keybinds.2.0')%></strong><%=t('play.guide.keybinds.2.1')%></li>
-                            <img data-src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
-                            <li><strong><%=t('play.guide.keybinds.3.0')%></strong><%=t('play.guide.keybinds.3.1')%><strong><%=t('play.guide.keybinds.3.2')%></strong><%=t('play.guide.keybinds.3.3')%></li>
-                            <li><strong>1</strong><%=t('play.guide.keybinds.4')%></li>
-                        </ul>
-                        <p><%=t('play.guide.controls_paragraph2')%></p>
-                        <ul>
-                            <li><strong>R</strong><%=t('play.guide.keybinds_extra.0')%></li>
-                            <li><strong>N</strong><%=t('play.guide.keybinds_extra.1')%></li>
-                            <li><strong>M</strong><%=t('play.guide.keybinds_extra.2')%></li>
-                            <li><strong>P</strong><%=t('play.guide.keybinds_extra.3')%><strong>P</strong>.</li>
-                            <li><strong>`</strong><%=t('play.guide.keybinds_extra.4.0')%><strong>~</strong><%=t('play.guide.keybinds_extra.4.1')%></li>
-                        </ul>
-                        <div class="clear-float"></div>
-
-                        <h2><%=t('play.guide.fairy_heading')%></h2>
-                        <hr class="line-break">
-                        <p><%=t('play.guide.fairy_paragraph')%></p>
-                        <div id="fairy-pieces" class="fairy-pieces">
-                            <img data-src="/img/game/guide/fairy/chancellor.png" id="ch-img" class="img-fairymoveset">
-                            <img data-src="/img/game/guide/fairy/archbishop.png" id="ar-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/amazon.png" id="am-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/guard.png" id="gu-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/hawk.png" id="ha-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/centaur.png" id="ce-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/obstacle.png" id="ob-img" class="img-fairymoveset hidden">
-                            <img data-src="/img/game/guide/fairy/void.png" id="vo-img" class="img-fairymoveset hidden">
-                            <div class="fairy-card-container">
-                                <div id="fairy-back" class="left-arrow opacity-0_25 unselectable">
-                                    <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000" stroke-width="46.08"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z" fill="#000000"></path></g></svg>
-                                </div>
-                                <div id="fairy-card" class="fairy-card">
-                                    <div class="space-1"></div>
-                                    <div id="ch-desc" class="fairy-card-desc">
-                                        <p class="fairy-card-title"><%=t('play.guide.pieces.chancellor.name')%></p>
-                                        <p class="fairy-card-description"><%=t('play.guide.pieces.chancellor.description')%></p>
-                                    </div>
-                                    <div id="ar-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title"><%=t('play.guide.pieces.archbishop.name')%></p>
-                                        <p class="fairy-card-description"><%=t('play.guide.pieces.archbishop.description')%></p>
-                                    </div>
-                                    <div id="am-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title"><%=t('play.guide.pieces.amazon.name')%></p>
-                                        <p class="fairy-card-description"><%=t('play.guide.pieces.amazon.description')%></p>
-                                    </div>
-                                    <div id="gu-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title"><%=t('play.guide.pieces.guard.name')%></p>
-                                        <p class="fairy-card-description"><%=t('play.guide.pieces.guard.description')%></p>
-                                    </div>
-                                    <div id="ha-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title"><%=t('play.guide.pieces.hawk.name')%></p>
-                                        <p class="fairy-card-description"><%=t('play.guide.pieces.hawk.description')%></p>
-                                    </div>
-                                    <div id="ce-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title"><%=t('play.guide.pieces.centaur.name')%></p>
-                                        <p class="fairy-card-description"><%=t('play.guide.pieces.centaur.description')%></p>
-                                    </div>
-                                    <div id="ob-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title"><%=t('play.guide.pieces.obstacle.name')%></p>
-                                        <p class="fairy-card-description"><%=t('play.guide.pieces.obstacle.description')%></p>
-                                    </div>
-                                    <div id="vo-desc" class="fairy-card-desc hidden">
-                                        <p class="fairy-card-title"><%=t('play.guide.pieces.void.name')%></p>
-                                        <p class="fairy-card-description"><%=t('play.guide.pieces.void.description')%></p>
-                                    </div>
-                                    <div class="space-2"></div>
-                                </div>
-                                <div id="fairy-forward"  class="right-arrow unselectable">
-                                    <svg viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000" stroke-width="46.08"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g transform="scale(-1, 1) translate(-1035,0)"><path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z" fill="#000000"></path></g></svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h2><%=t('play.guide.editing_heading')%></h2>
-                        <hr class="line-break">
-                        <p><%=t('play.guide.editing_paragraphs.0.0')%><a href="https://docs.google.com/spreadsheets/d/1Eo1SIo2esUijZ3LQzGy8QLKTOVh77DdDQuqEBILec9I/edit?usp=sharing" target="_blank"><%=t('play.guide.editing_paragraphs.0.1')%></a><%=t('play.guide.editing_paragraphs.0.2')%></p>
-                        <p><%=t('play.guide.editing_paragraphs.1')%></p>
-                        <p><%=t('play.guide.editing_paragraphs.2')%></p>
+    <!-- Play selection -->
+    <div id="play-selection" class="play-selection hidden">
+        <p id="play-name" class="play-name"><%=t('play.play-menu.title')%></p>
+        <button id="online" class="online big-btn button"><%=t('play.play-menu.online')%></button>
+        <button id="local" class="local big-btn button"><%=t('play.play-menu.local')%></button>
+        <button id="computer" class="computer big-btn opacity-0_5 button"><%=t('play.play-menu.computer')%></button>
+        <div class="game-options big-btn">
+            <div class="options">
+                <div class="option-card">
+                    <p><%=t('play.play-menu.variant')%></p>
+                    <div class="option">
+                        <select id="option-variant" class="button">
+                            <option value="Classical"><%=t('play.play-menu.Classical')%></option>
+                            <option value="Classical_Plus"><%=t('play.play-menu.Classical_Plus')%></option>
+                            <option value="CoaIP"><%=t('play.play-menu.CoaIP')%></option>
+                            <option value="Pawndard"><%=t('play.play-menu.Pawndard')%></option>
+                            <option value="Knighted_Chess"><%=t('play.play-menu.Knighted_Chess')%></option>
+                            <option value="Knightline"><%=t('play.play-menu.Knightline')%></option>
+                            <option value="Core"><%=t('play.play-menu.Core')%></option>
+                            <option value="Standarch"><%=t('play.play-menu.Standarch')%></option>
+                            <option value="Pawn_Horde"><%=t('play.play-menu.Pawn_Horde')%></option>
+                            <option value="Space_Classic"><%=t('play.play-menu.Space_Classic')%></option>
+                            <option value="Space"><%=t('play.play-menu.Space')%></option>
+                            <option value="Obstocean"><%=t('play.play-menu.Obstocean')%></option>
+                            <option value="Abundance"><%=t('play.play-menu.Abundance')%></option>
+                            <option value="Amazon_Chandelier"><%=t('play.play-menu.Amazon_Chandelier')%></option>
+                            <option value="Containment"><%=t('play.play-menu.Containment')%></option>
+                            <option value="Classical_Limit_7"><%=t('play.play-menu.Classical_Limit_7')%></option>
+                            <option value="CoaIP_Limit_7"><%=t('play.play-menu.CoaIP_Limit_7')%></option>
+                            <option value="Chess"><%=t('play.play-menu.Chess')%></option>
+                            <option value="Classical_KOTH"><%=t('play.play-menu.Classical_KOTH')%></option>
+                            <option value="CoaIP_KOTH"><%=t('play.play-menu.CoaIP_KOTH')%></option>
+                            <option value="Omega"><%=t('play.play-menu.Omega')%></option>
+                            <option value="Omega_Squared"><%=t('play.play-menu.Omega_Squared')%></option>
+                            <option value="Omega_Cubed"><%=t('play.play-menu.Omega_Cubed')%></option>
+                            <option value="Omega_Fourth"><%=t('play.play-menu.Omega_Fourth')%></option>
+                        </select>
                     </div>
-                    <button id="guide-back" class="guide-back titlebubble button"><%=t('play.guide.back')%></button>
                 </div>
-
-                <!-- Play selection -->
-                <div id="play-selection" class="play-selection hidden">
-                    <p id="play-name" class="play-name"><%=t('play.play-menu.title')%></p>
-                    <button id="online" class="online titlebubble button"><%=t('play.play-menu.online')%></button>
-                    <button id="local" class="local titlebubble button"><%=t('play.play-menu.local')%></button>
-                    <button id="computer" class="computer titlebubble opacity-0_5 button"><%=t('play.play-menu.computer')%></button>
-                    <div class="game-options titlebubble">
-                        <div class="options">
-                            <div class="option-card">
-                                <p><%=t('play.play-menu.variant')%></p>
-                                <div class="option">
-                                    <select id="option-variant" class="button">
-                                        <option value="Classical"><%=t('play.play-menu.Classical')%></option>
-                                        <option value="Classical_Plus"><%=t('play.play-menu.Classical_Plus')%></option>
-                                        <option value="CoaIP"><%=t('play.play-menu.CoaIP')%></option>
-                                        <option value="Pawndard"><%=t('play.play-menu.Pawndard')%></option>
-                                        <option value="Knighted_Chess"><%=t('play.play-menu.Knighted_Chess')%></option>
-                                        <option value="Knightline"><%=t('play.play-menu.Knightline')%></option>
-                                        <option value="Core"><%=t('play.play-menu.Core')%></option>
-                                        <option value="Standarch"><%=t('play.play-menu.Standarch')%></option>
-                                        <option value="Pawn_Horde"><%=t('play.play-menu.Pawn_Horde')%></option>
-                                        <option value="Space_Classic"><%=t('play.play-menu.Space_Classic')%></option>
-                                        <option value="Space"><%=t('play.play-menu.Space')%></option>
-                                        <option value="Obstocean"><%=t('play.play-menu.Obstocean')%></option>
-                                        <option value="Abundance"><%=t('play.play-menu.Abundance')%></option>
-                                        <option value="Amazon_Chandelier"><%=t('play.play-menu.Amazon_Chandelier')%></option>
-                                        <option value="Containment"><%=t('play.play-menu.Containment')%></option>
-                                        <option value="Classical_Limit_7"><%=t('play.play-menu.Classical_Limit_7')%></option>
-                                        <option value="CoaIP_Limit_7"><%=t('play.play-menu.CoaIP_Limit_7')%></option>
-                                        <option value="Chess"><%=t('play.play-menu.Chess')%></option>
-                                        <option value="Classical_KOTH"><%=t('play.play-menu.Classical_KOTH')%></option>
-                                        <option value="CoaIP_KOTH"><%=t('play.play-menu.CoaIP_KOTH')%></option>
-                                        <option value="Omega"><%=t('play.play-menu.Omega')%></option>
-                                        <option value="Omega_Squared"><%=t('play.play-menu.Omega_Squared')%></option>
-                                        <option value="Omega_Cubed"><%=t('play.play-menu.Omega_Cubed')%></option>
-                                        <option value="Omega_Fourth"><%=t('play.play-menu.Omega_Fourth')%></option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="option-card">
-                                <p><%=t('play.play-menu.clock')%></p>
-                                <div class="option">
-                                    <select id="option-clock" class="button">
-                                        <option value="1+2">1<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
-                                        <option value="2+2">2<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
-                                        <option value="3+2">3<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
-                                        <option value="5+2">5<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
-                                        <option value="8+3">8<%=t('play.play-menu.minutes')%>+3<%=t('play.play-menu.seconds')%></option>
-                                        <option value="10+4" selected>10<%=t('play.play-menu.minutes')%>+4<%=t('play.play-menu.seconds')%></option>
-                                        <option value="12+5">12<%=t('play.play-menu.minutes')%>+5<%=t('play.play-menu.seconds')%></option>
-                                        <option value="15+6">15<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
-                                        <option value="20+8">20<%=t('play.play-menu.minutes')%>+8<%=t('play.play-menu.seconds')%></option>
-                                        <option value="25+10">25<%=t('play.play-menu.minutes')%>+10<%=t('play.play-menu.seconds')%></option>
-                                        <option value="30+15">30<%=t('play.play-menu.minutes')%>+15<%=t('play.play-menu.seconds')%></option>
-                                        <option value="40+20">40<%=t('play.play-menu.minutes')%>+20<%=t('play.play-menu.seconds')%></option>
-                                        <option value="0"><%=t('play.play-menu.infinite_time')%></option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div id="option-card-color" class="option-card">
-                                <p><%=t('play.play-menu.color')%></p>
-                                <div class="option">
-                                    <select id="option-color" class="button">
-                                        <option value="Random"><%=t('play.play-menu.piece_colors.0')%></option>
-                                        <option value="White"><%=t('play.play-menu.piece_colors.1')%></option>
-                                        <option value="Black"><%=t('play.play-menu.piece_colors.2')%></option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div id="option-card-private" class="option-card">
-                                <p><%=t('play.play-menu.private')%></p>
-                                <div class="option">
-                                    <select id="option-private" class="button">
-                                        <option value="public"><%=t('play.play-menu.no')%></option>
-                                        <option value="private"><%=t('play.play-menu.yes')%></option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div id="option-card-rated" class="option-card">
-                                <p><%=t('play.play-menu.rated')%></p>
-                                <div class="option">
-                                    <select id="option-rated" class="button">
-                                        <option value="unrated"><%=t('play.play-menu.no')%></option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="invite-list">
-                            <p id="join-existing" class="join-existing"><%=t('play.play-menu.join_games')%> </p>
-                            <div id="our-invite"></div>
-                            <div id="invites">
-                                <!-- Example invite -->
-                                <!-- <div class="invite">
+                <div class="option-card">
+                    <p><%=t('play.play-menu.clock')%></p>
+                    <div class="option">
+                        <select id="option-clock" class="button">
+                            <option value="1+2">1<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="2+2">2<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="3+2">3<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="5+2">5<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="8+3">8<%=t('play.play-menu.minutes')%>+3<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="10+4" selected>
+                                10<%=t('play.play-menu.minutes')%>+4<%=t('play.play-menu.seconds')%></option>
+                            <option value="12+5">12<%=t('play.play-menu.minutes')%>+5<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="15+6">15<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="20+8">20<%=t('play.play-menu.minutes')%>+8<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="25+10">25<%=t('play.play-menu.minutes')%>+10<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="30+15">30<%=t('play.play-menu.minutes')%>+15<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="40+20">40<%=t('play.play-menu.minutes')%>+20<%=t('play.play-menu.seconds')%>
+                            </option>
+                            <option value="0"><%=t('play.play-menu.infinite_time')%></option>
+                        </select>
+                    </div>
+                </div>
+                <div id="option-card-color" class="option-card">
+                    <p><%=t('play.play-menu.color')%></p>
+                    <div class="option">
+                        <select id="option-color" class="button">
+                            <option value="Random"><%=t('play.play-menu.piece_colors.0')%></option>
+                            <option value="White"><%=t('play.play-menu.piece_colors.1')%></option>
+                            <option value="Black"><%=t('play.play-menu.piece_colors.2')%></option>
+                        </select>
+                    </div>
+                </div>
+                <div id="option-card-private" class="option-card">
+                    <p><%=t('play.play-menu.private')%></p>
+                    <div class="option">
+                        <select id="option-private" class="button">
+                            <option value="public"><%=t('play.play-menu.no')%></option>
+                            <option value="private"><%=t('play.play-menu.yes')%></option>
+                        </select>
+                    </div>
+                </div>
+                <div id="option-card-rated" class="option-card">
+                    <p><%=t('play.play-menu.rated')%></p>
+                    <div class="option">
+                        <select id="option-rated" class="button">
+                            <option value="unrated"><%=t('play.play-menu.no')%></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="invite-list">
+                <p id="join-existing" class="join-existing"><%=t('play.play-menu.join_games')%> </p>
+                <div id="our-invite"></div>
+                <div id="invites">
+                    <!-- Example invite -->
+                    <!-- <div class="invite">
                                     <div class="invite-child">Playername (elo)</div>
                                     <div class="invite-child">Standard</div>
                                     <div class="invite-child">15m+15s</div>
@@ -306,164 +411,299 @@
                                     <div class="invite-child">Unrated</div>
                                     <div class="invite-child accept">Accept</div>
                                 </div> -->
-                            </div>
-                        </div>
-                        <div id="join-private" class="join-private hidden">
-                            <p><%=t('play.play-menu.private_invite')%></p>
-                            <input type="text" id="textbox-private" class="textbox-private" placeholder="<%=t('play.play-menu.code')%>" maxlength="5">
-                            <button id="join-button" class="join-button"><%=t('play.play-menu.join')%></button>
-                        </div>
-                        <div id="invite-code" class="invite-code hidden">
-                            <p><%=t('play.play-menu.your_invite')%></p>
-                            <p id="invite-code-code" class="invite-code-code"></p>
-                            <button id="copy-button" class="copy-button"><%=t('play.play-menu.copy')%></button>
-                        </div>
-                    </div>
-                    <button id="create-invite" class="create-invite titlebubble button"><%=t('play.play-menu.create_invite')%></button>
-                    <button id="play-back" class="play-back titlebubble button"><%=t('play.play-menu.back')%></button>
                 </div>
-
-                <!-- Stats below navigation bar -->
-                <!-- This is absolutely positioned. Our javascript will udate it's 'top' ruleset based
-                on the height of the navigation bar. -->
-                <div id="stats">
-                    <p id="status-fps" class="status hidden"></p>
-                    <p id="status-pieces-mesh" class="status hidden"></p>
-                    <p id="status-rotate-mesh" class="status hidden"></p>
-                    <p id="status-coords" class="status hidden"></p>
-                    <p id="status-moves" class="status hidden"></p>
-                </div>
-
-                <!-- Navigation controls -->
-                <div id="navigation" class="hidden unselectable">
-                    <!-- Header navigation -->
-                    <div class="navigation">
-                        <div class="teleport">
-                            <div class="buttoncontainer">
-                                <div id="back" class="button tooltip-dr" data-tooltip="Undo transition">
-                                    <svg viewBox="-1.68 -1.68 27.36 27.36" fill="none" stroke="#333" stroke-width="0.45600000000000007"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g> <path fill-rule="evenodd" clip-rule="evenodd" d="M10.5303 5.46967C10.8232 5.76256 10.8232 6.23744 10.5303 6.53033L5.81066 11.25H20C20.4142 11.25 20.75 11.5858 20.75 12C20.75 12.4142 20.4142 12.75 20 12.75H5.81066L10.5303 17.4697C10.8232 17.7626 10.8232 18.2374 10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303L3.46967 12.5303C3.17678 12.2374 3.17678 11.7626 3.46967 11.4697L9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967Z" fill="#333"></path> </g></svg>
-                                </div>
-                            </div>
-                            <div class="buttoncontainer">
-                                <div id="expand" class="button tooltip-d" data-tooltip="Expand to fit all">
-                                    <svg viewBox="-3.84 -3.84 31.68 31.68" fill="none"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="M3 7C3 7.55228 2.55228 8 2 8C1.44772 8 1 7.55228 1 7V3C1 1.89543 1.89543 1 3 1H7C7.55228 1 8 1.44772 8 2C8 2.55228 7.55228 3 7 3H4.41421L10.7071 9.29289C11.0976 9.68342 11.0976 10.3166 10.7071 10.7071C10.3166 11.0976 9.68342 11.0976 9.29289 10.7071L3 4.41422V7Z" fill="#333"></path> <path d="M21 17C21 16.4477 21.4477 16 22 16C22.5523 16 23 16.4477 23 17V21C23 22.1046 22.1046 23 21 23H17C16.4477 23 16 22.5523 16 22C16 21.4477 16.4477 21 17 21H19.5858L13.2929 14.7071C12.9024 14.3166 12.9024 13.6834 13.2929 13.2929C13.6834 12.9024 14.3166 12.9024 14.7071 13.2929L21 19.5858V17Z" fill="#333"></path> <path d="M21 7C21 7.55228 21.4477 8 22 8C22.5523 8 23 7.55228 23 7V3C23 1.89543 22.1046 1 21 1H17C16.4477 1 16 1.44772 16 2C16 2.55228 16.4477 3 17 3H19.5858L13.2929 9.29289C12.9024 9.68342 12.9024 10.3166 13.2929 10.7071C13.6834 11.0976 14.3166 11.0976 14.7071 10.7071L21 4.41421V7Z" fill="#333"></path> <path d="M3 17C3 16.4477 2.55228 16 2 16C1.44772 16 1 16.4477 1 17V21C1 22.1046 1.89543 23 3 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H4.41421L10.7071 14.7071C11.0976 14.3166 11.0976 13.6834 10.7071 13.2929C10.3166 12.9024 9.68342 12.9024 9.29289 13.2929L3 19.5858V17Z" fill="#333"></path> </g></svg>
-                                </div>
-                            </div>
-                            <div class="buttoncontainer">
-                                <div id="recenter" class="button tooltip-d" data-tooltip="Recenter">
-                                    <svg fill="#333" viewBox="-59.11 -59.11 610.81 610.81" stroke="#333" stroke-width="0.0049258900000000005"><g><path d="M468.467,222.168h-28.329c-9.712-89.679-80.46-161.18-169.71-172.258V24.135c0-13.338-10.791-24.134-24.134-24.134 c-13.311,0-24.117,10.796-24.117,24.134V49.91C132.924,60.988,62.177,132.488,52.482,222.168H24.153 C10.806,222.168,0,232.964,0,246.286c0,13.336,10.806,24.132,24.153,24.132h29.228c12.192,86.816,81.551,155.4,168.797,166.229 v31.804c0,13.336,10.806,24.135,24.117,24.135c13.343,0,24.134-10.799,24.134-24.135v-31.804 c87.228-10.829,156.607-79.413,168.775-166.229h29.264c13.33,0,24.122-10.796,24.122-24.132 C492.589,232.964,481.797,222.168,468.467,222.168z M246.294,398.093c-85.345,0-154.804-69.453-154.804-154.813 c0-85.363,69.459-154.813,154.804-154.813c85.376,0,154.823,69.45,154.823,154.813 C401.117,328.639,331.671,398.093,246.294,398.093z"></path> <path d="M246.294,176.93c-36.628,0-66.34,29.704-66.34,66.349c0,36.635,29.711,66.349,66.34,66.349 c36.66,0,66.34-29.713,66.34-66.349C312.634,206.635,282.955,176.93,246.294,176.93z"></path></g></svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="coords selectable" >
-                            <div id="position">
-                                <div class="x">X: <spam id='x'></spam></div>
-                                <div class="y">Y: <spam id='y'></spam></div>
-                            </div>
-                        </div>
-                        <div class="right-nav">
-                            <div class="buttoncontainer">
-                                <div id="move-left" class="button opacity-0_5 tooltip-d" data-tooltip="Rewind move">
-                                    <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"></path></g></svg>
-                                </div>
-                            </div>
-                            <div class="buttoncontainer">
-                                <div id="move-right" class="button opacity-0_5 tooltip-d" data-tooltip="Forward move">
-                                    <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4">
-                                        <g transform="scale(-1, 1) translate(-25.16, 0)">
-                                          <path d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"></path>
-                                        </g>
-                                      </svg>
-                                </div>
-                            </div>
-                            <div class="buttoncontainer">
-                                <div id="pause" class="button tooltip-d" data-tooltip="Pause">
-                                    <svg viewBox="-2.5 -2.5 29 29" version="1.2" fill="#333" stroke-width="2.4"><g stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6H20M4 12H20M4 18H20"></path></g></svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Game info, clocks, player names, whos turn -->
-                    <div id="footer" class="footer">
-                        <div id="timer-container-white" class="timerwhitecontainer">
-                            <div id="timer-white" class="timerwhite">10:00</div>
-                        </div>
-                        <div id="playerwhite" class="playerwhite"><%=t('play.footer.player_white')%></div>
-                        <div class="whosturn">
-                            <div id="dot" class="dotwhite"></div>
-                            <div id="whosturn"><%=t('play.footer.white_to_move')%></div>
-                        </div>
-                        <div id="playerblack" class="playerblack"><%=t('play.footer.player_black')%></div>
-                        <div id="timer-container-black" class="timerblackcontainer">
-                            <div id="timer-black" class="timerblack">10:00</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Promotion UI -->
-                <div id="promote" class="center hidden">
-                    <div id="promotewhite" class="promotecolor">
-                        <!--                                                                "amazonsW" MUST remain the 2nd class! -->
-                        <div id="amazonsW" class="promotepiececontainer hidden"><div class="promotepiece amazonsW button"></div></div>
-                        <div id="queensW" class="promotepiececontainer hidden"><div class="promotepiece queensW button"></div></div>
-                        <div id="knightridersW" class="promotepiececontainer hidden"><div class="promotepiece knightridersW button"></div></div>
-                        <div id="chancellorsW" class="promotepiececontainer hidden"><div class="promotepiece chancellorsW button"></div></div>
-                        <div id="archbishopsW" class="promotepiececontainer hidden"><div class="promotepiece archbishopsW button"></div></div>
-                        <div id="rooksW" class="promotepiececontainer hidden"><div class="promotepiece rooksW button"></div></div>
-                        <div id="bishopsW" class="promotepiececontainer hidden"><div class="promotepiece bishopsW button"></div></div>
-                        <div id="rosesW" class="promotepiececontainer hidden"><div class="promotepiece rosesW button"></div></div>
-                        <div id="hawksW" class="promotepiececontainer hidden"><div class="promotepiece hawksW button"></div></div>
-                        <div id="giraffesW" class="promotepiececontainer hidden"><div class="promotepiece giraffesW button"></div></div>
-                        <div id="zebrasW" class="promotepiececontainer hidden"><div class="promotepiece zebrasW button"></div></div>
-                        <div id="camelsW" class="promotepiececontainer hidden"><div class="promotepiece camelsW button"></div></div>
-                        <div id="centaursW" class="promotepiececontainer hidden"><div class="promotepiece centaursW button"></div></div>
-                        <div id="knightsW" class="promotepiececontainer hidden"><div class="promotepiece knightsW button"></div></div>
-                        <div id="guardsW" class="promotepiececontainer hidden"><div class="promotepiece guardsW button"></div></div>
-                    </div>
-                    <div id="promoteblack" class="promotecolor">
-                        <div id="amazonsB" class="promotepiececontainer hidden"><div class="promotepiece amazonsB button"></div></div>
-                        <div id="queensB" class="promotepiececontainer hidden"><div class="promotepiece queensB button"></div></div>
-                        <div id="knightridersB" class="promotepiececontainer hidden"><div class="promotepiece knightridersB button"></div></div>
-                        <div id="chancellorsB" class="promotepiececontainer hidden"><div class="promotepiece chancellorsB button"></div></div>
-                        <div id="archbishopsB" class="promotepiececontainer hidden"><div class="promotepiece archbishopsB button"></div></div>
-                        <div id="rooksB" class="promotepiececontainer hidden"><div class="promotepiece rooksB button"></div></div>
-                        <div id="bishopsB" class="promotepiececontainer hidden"><div class="promotepiece bishopsB button"></div></div>
-                        <div id="rosesB" class="promotepiececontainer hidden"><div class="promotepiece rosesB button"></div></div>
-                        <div id="hawksB" class="promotepiececontainer hidden"><div class="promotepiece hawksB button"></div></div>
-                        <div id="giraffesB" class="promotepiececontainer hidden"><div class="promotepiece giraffesB button"></div></div>
-                        <div id="zebrasB" class="promotepiececontainer hidden"><div class="promotepiece zebrasB button"></div></div>
-                        <div id="camelsB" class="promotepiececontainer hidden"><div class="promotepiece camelsB button"></div></div>
-                        <div id="centaursB" class="promotepiececontainer hidden"><div class="promotepiece centaursB button"></div></div>
-                        <div id="knightsB" class="promotepiececontainer hidden"><div class="promotepiece knightsB button"></div></div>
-                        <div id="guardsB" class="promotepiececontainer hidden"><div class="promotepiece guardsB button"></div></div>
-                    </div>
-                </div>
-
-                <!-- Pause UI -->
-                <div id="pauseUI" class="pauseUI hidden">
-                    <p class="paused"><%=t('play.pause.title')%></p>
-                    <button id="resume" class="resume button"><%=t('play.pause.resume')%></button>
-                    <button id="togglepointers" class="togglepointers button"><%=t('play.pause.arrows')%></button>
-                    <button id="toggleperspective" class="toggleperspective button"><%=t('play.pause.perspective')%></button>
-                    <button id="copygame" class="copygame button"><%=t('play.pause.copy')%></button>
-                    <button id="pastegame" class="pastegame button"><%=t('play.pause.paste')%></button>
-                    <button id="mainmenu" class="mainmenu button"><%=t('play.pause.main_menu')%></button>
-                </div>
-
-                <!-- Status message -->
-                <div id="statusmessage" class="statusmessage hidden">
-                    <p id="statustext" class="statustext"></p>
-                </div>
-                
             </div>
+            <div id="join-private" class="join-private hidden">
+                <p><%=t('play.play-menu.private_invite')%></p>
+                <input type="text" id="textbox-private" class="textbox-private"
+                    placeholder="<%=t('play.play-menu.code')%>" maxlength="5">
+                <button id="join-button" class="join-button"><%=t('play.play-menu.join')%></button>
+            </div>
+            <div id="invite-code" class="invite-code hidden">
+                <p><%=t('play.play-menu.your_invite')%></p>
+                <p id="invite-code-code" class="invite-code-code"></p>
+                <button id="copy-button" class="copy-button"><%=t('play.play-menu.copy')%></button>
+            </div>
+        </div>
+        <button id="create-invite"
+            class="create-invite big-btn button"><%=t('play.play-menu.create_invite')%></button>
+        <button id="play-back" class="play-back big-btn button"><%=t('play.play-menu.back')%></button>
+    </div>
 
-            <!-- Game images -->
-            <img id="tiles" src="/img/game/tiles/tiles.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
-            <img id="tilesGrey78" src="/img/game/tiles/tilesGrey78.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
-            <!-- This transparent tiles texture gives us freedom of color, but the moiré effect is heavier -->
-            <img id="tiles256" src="/img/game/tiles/tiles256.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
-            <img id="spritesheet" src="/img/game/spritesheet64_cburnett.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
-        </main>
-    </body>
-</html>
+    <!-- Stats below navigation bar -->
+    <!-- This is absolutely positioned. Our javascript will udate it's 'top' ruleset based
+                on the height of the navigation bar. -->
+    <div id="stats">
+        <p id="status-fps" class="status hidden"></p>
+        <p id="status-pieces-mesh" class="status hidden"></p>
+        <p id="status-rotate-mesh" class="status hidden"></p>
+        <p id="status-coords" class="status hidden"></p>
+        <p id="status-moves" class="status hidden"></p>
+    </div>
+
+    <!-- Navigation controls -->
+    <div id="navigation" class="hidden unselectable">
+        <!-- Header navigation -->
+        <div class="navigation">
+            <div class="teleport">
+                <div class="buttoncontainer">
+                    <div id="back" class="button tooltip-dr" data-tooltip="Undo transition">
+                        <svg viewBox="-1.68 -1.68 27.36 27.36" fill="none" stroke="#333"
+                            stroke-width="0.45600000000000007">
+                            <g stroke-width="0"></g>
+                            <g stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g>
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                    d="M10.5303 5.46967C10.8232 5.76256 10.8232 6.23744 10.5303 6.53033L5.81066 11.25H20C20.4142 11.25 20.75 11.5858 20.75 12C20.75 12.4142 20.4142 12.75 20 12.75H5.81066L10.5303 17.4697C10.8232 17.7626 10.8232 18.2374 10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303L3.46967 12.5303C3.17678 12.2374 3.17678 11.7626 3.46967 11.4697L9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967Z"
+                                    fill="#333"></path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <div class="buttoncontainer">
+                    <div id="expand" class="button tooltip-d" data-tooltip="Expand to fit all">
+                        <svg viewBox="-3.84 -3.84 31.68 31.68" fill="none">
+                            <g stroke-width="0"></g>
+                            <g stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g>
+                                <path
+                                    d="M3 7C3 7.55228 2.55228 8 2 8C1.44772 8 1 7.55228 1 7V3C1 1.89543 1.89543 1 3 1H7C7.55228 1 8 1.44772 8 2C8 2.55228 7.55228 3 7 3H4.41421L10.7071 9.29289C11.0976 9.68342 11.0976 10.3166 10.7071 10.7071C10.3166 11.0976 9.68342 11.0976 9.29289 10.7071L3 4.41422V7Z"
+                                    fill="#333"></path>
+                                <path
+                                    d="M21 17C21 16.4477 21.4477 16 22 16C22.5523 16 23 16.4477 23 17V21C23 22.1046 22.1046 23 21 23H17C16.4477 23 16 22.5523 16 22C16 21.4477 16.4477 21 17 21H19.5858L13.2929 14.7071C12.9024 14.3166 12.9024 13.6834 13.2929 13.2929C13.6834 12.9024 14.3166 12.9024 14.7071 13.2929L21 19.5858V17Z"
+                                    fill="#333"></path>
+                                <path
+                                    d="M21 7C21 7.55228 21.4477 8 22 8C22.5523 8 23 7.55228 23 7V3C23 1.89543 22.1046 1 21 1H17C16.4477 1 16 1.44772 16 2C16 2.55228 16.4477 3 17 3H19.5858L13.2929 9.29289C12.9024 9.68342 12.9024 10.3166 13.2929 10.7071C13.6834 11.0976 14.3166 11.0976 14.7071 10.7071L21 4.41421V7Z"
+                                    fill="#333"></path>
+                                <path
+                                    d="M3 17C3 16.4477 2.55228 16 2 16C1.44772 16 1 16.4477 1 17V21C1 22.1046 1.89543 23 3 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H4.41421L10.7071 14.7071C11.0976 14.3166 11.0976 13.6834 10.7071 13.2929C10.3166 12.9024 9.68342 12.9024 9.29289 13.2929L3 19.5858V17Z"
+                                    fill="#333"></path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <div class="buttoncontainer">
+                    <div id="recenter" class="button tooltip-d" data-tooltip="Recenter">
+                        <svg fill="#333" viewBox="-59.11 -59.11 610.81 610.81" stroke="#333"
+                            stroke-width="0.0049258900000000005">
+                            <g>
+                                <path
+                                    d="M468.467,222.168h-28.329c-9.712-89.679-80.46-161.18-169.71-172.258V24.135c0-13.338-10.791-24.134-24.134-24.134 c-13.311,0-24.117,10.796-24.117,24.134V49.91C132.924,60.988,62.177,132.488,52.482,222.168H24.153 C10.806,222.168,0,232.964,0,246.286c0,13.336,10.806,24.132,24.153,24.132h29.228c12.192,86.816,81.551,155.4,168.797,166.229 v31.804c0,13.336,10.806,24.135,24.117,24.135c13.343,0,24.134-10.799,24.134-24.135v-31.804 c87.228-10.829,156.607-79.413,168.775-166.229h29.264c13.33,0,24.122-10.796,24.122-24.132 C492.589,232.964,481.797,222.168,468.467,222.168z M246.294,398.093c-85.345,0-154.804-69.453-154.804-154.813 c0-85.363,69.459-154.813,154.804-154.813c85.376,0,154.823,69.45,154.823,154.813 C401.117,328.639,331.671,398.093,246.294,398.093z">
+                                </path>
+                                <path
+                                    d="M246.294,176.93c-36.628,0-66.34,29.704-66.34,66.349c0,36.635,29.711,66.349,66.34,66.349 c36.66,0,66.34-29.713,66.34-66.349C312.634,206.635,282.955,176.93,246.294,176.93z">
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="coords selectable">
+                <div id="position">
+                    <div class="x">X: <spam id='x'></spam>
+                    </div>
+                    <div class="y">Y: <spam id='y'></spam>
+                    </div>
+                </div>
+            </div>
+            <div class="right-nav">
+                <div class="buttoncontainer">
+                    <div id="move-left" class="button opacity-0_5 tooltip-d" data-tooltip="Rewind move">
+                        <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4">
+                            <g stroke-width="0"></g>
+                            <g stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g>
+                                <path
+                                    d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z">
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <div class="buttoncontainer">
+                    <div id="move-right" class="button opacity-0_5 tooltip-d" data-tooltip="Forward move">
+                        <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4">
+                            <g transform="scale(-1, 1) translate(-25.16, 0)">
+                                <path
+                                    d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z">
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <div class="buttoncontainer">
+                    <div id="pause" class="button tooltip-d" data-tooltip="Pause">
+                        <svg viewBox="-2.5 -2.5 29 29" version="1.2" fill="#333" stroke-width="2.4">
+                            <g stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 6H20M4 12H20M4 18H20"></path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game info, clocks, player names, whos turn -->
+        <div id="footer" class="footer">
+            <div id="timer-container-white" class="timerwhitecontainer">
+                <div id="timer-white" class="timerwhite">10:00</div>
+            </div>
+            <div id="playerwhite" class="playerwhite">
+                <%=t('play.footer.player_white')%>
+            </div>
+            <div class="whosturn">
+                <div id="dot" class="dotwhite"></div>
+                <div id="whosturn">
+                    <%=t('play.footer.white_to_move')%>
+                </div>
+            </div>
+            <div id="playerblack" class="playerblack">
+                <%=t('play.footer.player_black')%>
+            </div>
+            <div id="timer-container-black" class="timerblackcontainer">
+                <div id="timer-black" class="timerblack">10:00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promotion UI -->
+    <div id="promote" class="center hidden">
+        <div id="promotewhite" class="promotecolor">
+            <!--                                                                "amazonsW" MUST remain the 2nd class! -->
+            <div id="amazonsW" class="promotepiececontainer hidden">
+                <div class="promotepiece amazonsW button"></div>
+            </div>
+            <div id="queensW" class="promotepiececontainer hidden">
+                <div class="promotepiece queensW button"></div>
+            </div>
+            <div id="knightridersW" class="promotepiececontainer hidden">
+                <div class="promotepiece knightridersW button"></div>
+            </div>
+            <div id="chancellorsW" class="promotepiececontainer hidden">
+                <div class="promotepiece chancellorsW button"></div>
+            </div>
+            <div id="archbishopsW" class="promotepiececontainer hidden">
+                <div class="promotepiece archbishopsW button"></div>
+            </div>
+            <div id="rooksW" class="promotepiececontainer hidden">
+                <div class="promotepiece rooksW button"></div>
+            </div>
+            <div id="bishopsW" class="promotepiececontainer hidden">
+                <div class="promotepiece bishopsW button"></div>
+            </div>
+            <div id="rosesW" class="promotepiececontainer hidden">
+                <div class="promotepiece rosesW button"></div>
+            </div>
+            <div id="hawksW" class="promotepiececontainer hidden">
+                <div class="promotepiece hawksW button"></div>
+            </div>
+            <div id="giraffesW" class="promotepiececontainer hidden">
+                <div class="promotepiece giraffesW button"></div>
+            </div>
+            <div id="zebrasW" class="promotepiececontainer hidden">
+                <div class="promotepiece zebrasW button"></div>
+            </div>
+            <div id="camelsW" class="promotepiececontainer hidden">
+                <div class="promotepiece camelsW button"></div>
+            </div>
+            <div id="centaursW" class="promotepiececontainer hidden">
+                <div class="promotepiece centaursW button"></div>
+            </div>
+            <div id="knightsW" class="promotepiececontainer hidden">
+                <div class="promotepiece knightsW button"></div>
+            </div>
+            <div id="guardsW" class="promotepiececontainer hidden">
+                <div class="promotepiece guardsW button"></div>
+            </div>
+        </div>
+        <div id="promoteblack" class="promotecolor">
+            <div id="amazonsB" class="promotepiececontainer hidden">
+                <div class="promotepiece amazonsB button"></div>
+            </div>
+            <div id="queensB" class="promotepiececontainer hidden">
+                <div class="promotepiece queensB button"></div>
+            </div>
+            <div id="knightridersB" class="promotepiececontainer hidden">
+                <div class="promotepiece knightridersB button"></div>
+            </div>
+            <div id="chancellorsB" class="promotepiececontainer hidden">
+                <div class="promotepiece chancellorsB button"></div>
+            </div>
+            <div id="archbishopsB" class="promotepiececontainer hidden">
+                <div class="promotepiece archbishopsB button"></div>
+            </div>
+            <div id="rooksB" class="promotepiececontainer hidden">
+                <div class="promotepiece rooksB button"></div>
+            </div>
+            <div id="bishopsB" class="promotepiececontainer hidden">
+                <div class="promotepiece bishopsB button"></div>
+            </div>
+            <div id="rosesB" class="promotepiececontainer hidden">
+                <div class="promotepiece rosesB button"></div>
+            </div>
+            <div id="hawksB" class="promotepiececontainer hidden">
+                <div class="promotepiece hawksB button"></div>
+            </div>
+            <div id="giraffesB" class="promotepiececontainer hidden">
+                <div class="promotepiece giraffesB button"></div>
+            </div>
+            <div id="zebrasB" class="promotepiececontainer hidden">
+                <div class="promotepiece zebrasB button"></div>
+            </div>
+            <div id="camelsB" class="promotepiececontainer hidden">
+                <div class="promotepiece camelsB button"></div>
+            </div>
+            <div id="centaursB" class="promotepiececontainer hidden">
+                <div class="promotepiece centaursB button"></div>
+            </div>
+            <div id="knightsB" class="promotepiececontainer hidden">
+                <div class="promotepiece knightsB button"></div>
+            </div>
+            <div id="guardsB" class="promotepiececontainer hidden">
+                <div class="promotepiece guardsB button"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause UI -->
+    <div id="pauseUI" class="pauseUI hidden">
+        <p class="paused">
+            <%=t('play.pause.title')%>
+        </p>
+        <button id="resume" class="resume button">
+            <%=t('play.pause.resume')%>
+        </button>
+        <button id="togglepointers" class="togglepointers button">
+            <%=t('play.pause.arrows')%>
+        </button>
+        <button id="toggleperspective" class="toggleperspective button">
+            <%=t('play.pause.perspective')%>
+        </button>
+        <button id="copygame" class="copygame button">
+            <%=t('play.pause.copy')%>
+        </button>
+        <button id="pastegame" class="pastegame button">
+            <%=t('play.pause.paste')%>
+        </button>
+        <button id="mainmenu" class="mainmenu button">
+            <%=t('play.pause.main_menu')%>
+        </button>
+    </div>
+
+    <!-- Status message -->
+    <div id="statusmessage" class="statusmessage hidden">
+        <p id="statustext" class="statustext"></p>
+    </div>
+
+</div>
+
+<!-- Game images -->
+<img id="tiles" src="/img/game/tiles/tiles.png" width="0" onerror="htmlscript.callback_LoadingError(event)"
+    onload="(() => { htmlscript.removeOnerror.call(this); })()">
+<img id="tilesGrey78" src="/img/game/tiles/tilesGrey78.png" width="0" onerror="htmlscript.callback_LoadingError(event)"
+    onload="(() => { htmlscript.removeOnerror.call(this); })()">
+<!-- This transparent tiles texture gives us freedom of color, but the moiré effect is heavier -->
+<img id="tiles256" src="/img/game/tiles/tiles256.png" width="0" onerror="htmlscript.callback_LoadingError(event)"
+    onload="(() => { htmlscript.removeOnerror.call(this); })()">
+<img id="spritesheet" src="/img/game/spritesheet64_cburnett.png" width="0"
+    onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">

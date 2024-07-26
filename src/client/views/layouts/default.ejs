@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
-        <%- include(`${viewsfolder}/components/head`) %> 
+        <%- include(`${viewsfolder}/components/head`) %>
 
         <title><%= title %> | Infinite Chess</title>
         <link rel='stylesheet' href='/css/<%- name %>.css'>
@@ -13,5 +13,6 @@
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
         <script src="/scripts/memberHeader.js"></script>
+        <script src="/scripts/pihedron.js"></script>
     </body>
 </html>

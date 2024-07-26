@@ -1,7 +1,7 @@
 :root {
     --accent: rgb(0, 128, 255);
-    --accent-transparent: rgba(0, 128, 255, 0.5);
-    --nav-bar-height: 40px;
+    --accent-transparent: rgba(0, 128, 255, 0.125);
+    --nav-bar-height: 64px;
     --vw-capped: clamp(0px, 100vw, 1086px);
     --vh-sub-nav: calc(100vh - var(--nav-bar-height));
     --vwh: min(var(--vh-sub-nav), var(--vw-capped));
@@ -18,7 +18,11 @@
 
 html {
     height: 100%;
-    background-color: rgb(33, 33, 33);
+}
+
+a {
+    color: black;
+    text-decoration: none;
 }
 
 header {
@@ -26,33 +30,62 @@ header {
     left: 0;
     top: 0;
     right: 0;
-    box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    height: 40px;
+    width: 100%;
+    z-index: 1;
+    background-color: white;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    height: var(--nav-bar-height);
     font-size: 0;
-    overflow: scroll;
+    overflow: hidden;
     white-space: nowrap;
     text-align: center;
-    background-color: white;
-    z-index: 1;
+    width: 1024px;
+    margin: auto;
 }
 
-header a {
-    display: inline-block;
+nav {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    width: 512px;
+}
+
+nav a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-decoration: none;
     line-height: 40px;
-    min-width: 70px;
+    width: 128px;
+    height: 100%;
     font-size: 16px;
     color: black;
+    transition: all 250ms;
 }
 
-header a:hover {
+nav a:hover {
     background-color: var(--accent-transparent);
 }
 
-header p {
-    padding: 0 10px;
+.logo {
+    position: relative;
+    display: flex;
+    flex-grow: 1;
+    justify-content: start;
+    align-items: center;
+    height: 100%;
 }
 
+.logo-text {
+    margin-left: 16px;
+    position: relative;
+    display: flex;
+    font-size: 32px;
+}
 
 main {
     background-image: url('/img/blank_board.png');
@@ -63,25 +96,26 @@ main {
     -moz-background-size: cover;
     -o-background-size: cover;
     background-attachment: fixed;
-
-    margin-top: 40px;
-    min-height: 400px;
+    margin-top: var(--nav-bar-height);
+    overflow-y: auto;
 }
 
 #content {
-    background-color: rgba(255, 255, 255, 0.805);
-    min-height: 450px;
-    margin: auto;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
+    background-color: rgba(255, 255, 255, 0.25);
+    min-height: 100%;
+    margin: 16px auto;
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
     padding: 30px 20px;
+    backdrop-filter: blur(2px);
+    border-radius: 8px;
 }
 
 #content h1 {
-    font-size: 40px;
+    font-size: 48px;
 }
 
-.currPage {
-    background-color: rgb(236, 236, 236);
+a.active {
+    background-color: #00000020;
 }
 
 .center {
@@ -112,6 +146,7 @@ button {
     color: white;
     border-radius: 4px;
     transition: all 250ms;
+    cursor: pointer;
 }
 
 button:hover {
@@ -122,17 +157,6 @@ button:hover {
 @media only screen and (min-width: 450px) {
     header {
         overflow: unset;
-    }
-
-    header a {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
-}
-
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-    header a {
-        min-width: 110px;
     }
 }
 
@@ -145,7 +169,7 @@ button:hover {
     }
 
     #content h1 {
-        font-size: 50px;
-        margin-bottom: 50px;
+        font-size: 48px;
+        margin-bottom: 1em;
     }
 }

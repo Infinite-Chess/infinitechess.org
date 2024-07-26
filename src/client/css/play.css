@@ -1,56 +1,15 @@
 :root {
-    /* 100vw, but with a maximum, so some UIs don't get too big. */
+    --accent: rgb(0, 128, 255);
+    --accent-transparent: rgba(0, 128, 255, 0.125);
+    --nav-bar-height: 64px;
     --vw-capped: clamp(0px, 100vw, 1086px);
-    --nav-bar-height: 40px;
-    /* The viewport height, subtract the navigation bar height. */
     --vh-sub-nav: calc(100vh - var(--nav-bar-height));
-    /* The minimum between the viewport width and height */
     --vwh: min(var(--vh-sub-nav), var(--vw-capped));
 }
 
-* {
+main {
     margin: 0;
-    padding: 0;
-    font-family: 'JetBrains Mono';
-    border: 0;
-}
-
-html {
-    background-color: rgb(33, 33, 33);
-}
-
-/* Header along the very top of the page */
-header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
-    box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    height: var(--nav-bar-height);
-    font-size: 0;
-    overflow: scroll;
-    white-space: nowrap;
-    text-align: center;
-    background-color: white;
-    z-index: 1;
-}
-
-header a {
-    display: inline-block;
-    text-decoration: none;
-    line-height: var(--nav-bar-height);
-    margin-left: 4px;
-    min-width: 70px;
-    font-size: 16px;
-    color: black;
-}
-
-header a:hover {
-    background-color: rgb(211, 235, 255);
-}
-
-header p {
-    padding: 0 10px;
+    height: 100%;
 }
 
 /* Start increasing header links width */
@@ -68,19 +27,6 @@ header p {
         min-width: 110px;
     }
 }
-
-/* Everything besides the top navigation bar */
-
-main {
-    position: fixed;
-    height: 100%;
-    top: var(--nav-bar-height);
-    bottom: 0;
-    left: 0;
-    right: 0;
-}
-
-
 
 /* Loading Page */
 
@@ -133,7 +79,6 @@ main {
 .loading-text {
     color: white;
     position: absolute;
-    font-family: Verdana;
     font-size: calc(30px + 1.2vw);
     letter-spacing: 0.05em;
     font-weight: bold;
@@ -162,7 +107,7 @@ main {
 .loading-error {
     color: red;
     position: absolute;
-    font-family: Verdana;
+
     text-align: center;
 }
 
@@ -273,7 +218,6 @@ canvas {
 
 .title h1 {
     font-size: min(10vw, 108px, calc(var(--vh-sub-nav) * 0.115));
-    font-family: Georgia;
     color: rgb(0, 0, 0);
     text-shadow: 1px 2px 3px rgb(255, 255, 255);
     text-align: center;
@@ -281,32 +225,15 @@ canvas {
     grid-column: 1 / 4;
 }
 
-/* All bubble buttons on title screen have similar design */
-.titlebubble {
-    box-shadow: 2px 4px 6px 0px rgb(0, 0, 0);
-    border: 2px solid rgb(139, 139, 139);
-    border-radius: min(1.3vw, 14px, calc(var(--vh-sub-nav) * 0.015));
-    color: rgb(0, 0, 0);
-    background-color: rgb(255, 255, 255);
-    background: linear-gradient(to bottom, white, rgb(226, 226, 226), white);
-}
-
 .title button {
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
     grid-column: 2 / 3;
 }
 
-.title button:hover {
-    /* box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.51); */
-    background: linear-gradient(to bottom, white, rgb(242, 242, 242), white);
+.big-btn {
+    width: 100%;
+    height: 100%;
 }
-
-.title button:active {
-    /* background-color: rgb(255, 255, 255); */
-    background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
-}
-
-
 
 /* Guide */
 
@@ -326,7 +253,13 @@ canvas {
 }
 
 .guide .guide-contents {
-    padding: 5%;
+    box-sizing: border-box;
+    background-color: rgba(255, 255, 255, 0.25);
+    margin: 16px auto;
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
+    padding: 64px;
+    backdrop-filter: blur(2px);
+    border-radius: 8px;
     overflow-y: scroll;
 }
 
@@ -335,18 +268,16 @@ canvas {
 }
 
 .guide button:hover {
-    background: linear-gradient(to bottom, white, rgb(242, 242, 242), white);
+    /* background */
 }
 
 .guide button:active {
-    background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
+    /* background */
 }
 
 .guide h1 {
     margin: 0 0 1em;
     font-weight: normal;
-    --edge-color: rgb(249, 249, 249);
-    background: linear-gradient(to right, var(--edge-color), rgb(228, 228, 228), var(--edge-color));
     border-radius: 0.25em;
     padding: 0.25em;
 }
@@ -434,14 +365,11 @@ canvas {
     padding: 5%;
     border-radius: 0.5em;
     /* margin: 0.75em 0; */
+    transition: all 250ms;
 }
 
-.guide svg:hover {
-    background-color: rgb(224, 224, 224);
-}
-
-.guide svg:active {
-    background-color: rgb(218, 218, 218);
+.guide svg:hover, .guide svg:active {
+    transform: scale(0.875);
 }
 
 .guide .fairy-card {
@@ -542,11 +470,11 @@ canvas {
 }
 
 .play-selection button:hover {
-    background: linear-gradient(to bottom, white, rgb(242, 242, 242), white);
+    /* background */
 }
 
 .play-selection button:active {
-    background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
+    /* background */
 }
 
 .play-selection .play-name {
@@ -570,7 +498,6 @@ canvas {
 
 .play-selection .create-invite {
     grid-column: 1 / 4;
-    background: linear-gradient(to bottom, white, rgb(226, 226, 226), white);
 }
 
 .play-selection .play-back {
@@ -607,9 +534,6 @@ canvas {
 }
 
 .game-options .options {
-    background: linear-gradient(to bottom, white, rgb(229, 229, 229), white);
-    border-bottom: 2px solid rgb(168, 168, 168);
-    /* border-radius: min(1.3vw, 30px) min(1.3vw, 30px) 0 0; */
     border-radius: min(1.3vw, 30px, calc(var(--vh-sub-nav) * 0.015));
     display: flex;
     justify-content: center;
@@ -708,7 +632,6 @@ canvas {
     justify-content: center;
     align-items: center;
     font-size: 0.9em;
-    background: linear-gradient(to bottom, white, rgb(229, 229, 229), white);
     padding: 0.5em 0;
     border-top: 2px solid rgb(168, 168, 168);
     border-radius: min(1.3vw, 30px, calc(var(--vh-sub-nav) * 0.015));
@@ -747,7 +670,6 @@ button.join-button, button.copy-button {
     padding: 0.45em 0.65em;
     border-radius: 0.6em;
     box-shadow: 0 0 0.4em rgba(0, 0, 0, 0.649);
-    background: linear-gradient(to bottom, white, rgb(226, 226, 226), white);
 }
 
 
@@ -762,7 +684,6 @@ button.join-button, button.copy-button {
     height: 1em;
     display: flex;
     box-shadow: 0px 1px 7px 0px rgba(0, 0, 0, 0.659);
-    background: linear-gradient(to top, rgba(255, 255, 255, 0.104), rgba(255, 255, 255, 0.552), rgba(255, 255, 255, 0.216));
     backdrop-filter: blur(8px); /* Apply a blur effect to the background */
     -webkit-backdrop-filter: blur(5px); /* Fixes blur for Safari */
 }
@@ -890,7 +811,6 @@ button.join-button, button.copy-button {
     height: 84px; 
     box-shadow: 0px -1px 7px 0px rgba(0, 0, 0, 0.659);
     display: flex;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.307), white, rgba(255, 255, 255, 0.84));    
     backdrop-filter: blur(8px); /* Apply a blur effect to the background */
     -webkit-backdrop-filter: blur(5px); /* Fixes blur for Safari */
 }
@@ -950,7 +870,6 @@ button.join-button, button.copy-button {
     justify-content: center;
     text-align: center;
     font-size: 30px;
-    font-family: "Open Sans";
     font-weight: bold;
 }
 
@@ -1223,17 +1142,14 @@ button.join-button, button.copy-button {
     box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.27);
     border-radius: min(0.9vw, 10px);
     color: rgb(0, 0, 0);
-    background: linear-gradient(to bottom, white, rgb(199, 199, 199), white);
 }
 
 .pauseUI button:hover {
-    /* background-color: rgb(255, 255, 255); */
-    background: linear-gradient(to bottom, white, rgb(219, 219, 219), white);
+    /* box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.51); */
 }
 
 .pauseUI button:active {
     /* box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.51); */
-    background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
 .pauseUI p.paused, button.paused, button.resume, button.mainmenu {

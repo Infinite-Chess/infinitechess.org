@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="<%=language%>" dir="<%=t('direction')%>" >
+    <head>
+        <%- include(`${viewsfolder}/components/head`) %>
+        <!-- Do not modify the next line under any circumstances. It is used by HTMLScriptInjector.js as a reference point of where to inject htmlscript.js -->
+        <!-- htmlscript.js inject here -->
+
+        <!-- Javascript will add future styles in here -->
+        <style id="style"></style>
+        <title>Play Infinite Chess</title>
+        <link rel="stylesheet" href="/css/common.css">
+        <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
+        <link rel="icon" type="image/png" href="/img/favicon.png">
+        <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource -->
+        <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
+
+        <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
+        <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
+        <!-- All clientside game scripts are inject here -->
+
+    </head>
+    <!-- The onload event listener to call main.start() is now within the htmlscript! -->
+    <body>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
+        <main>
+            <%- include(`${viewsfolder}/${name}`, {t:t, languages:languages, language:language}) %>
+        </main>
+        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
+    </body>
+</html>

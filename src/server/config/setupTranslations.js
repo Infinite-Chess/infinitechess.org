@@ -276,7 +276,7 @@ function translateStaticTemplates(translations) {
         ejs.render(
           // Read EJS template
           fs
-            .readFileSync(path.join(templatesPath, template == 'play' ? 'play.ejs' : 'layouts/default.ejs'))
+            .readFileSync(path.join(templatesPath, 'layouts', template == 'play' ? 'play.ejs' : 'default.ejs'))
             .toString(),
           {
             // Function for translations
