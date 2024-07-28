@@ -124,6 +124,10 @@ const selection = (function() {
             return;
         }
 
+        // Don't allow players to move a piece of a color not matching the current player's turn
+        const selectedPieceColor = math.getPieceColorFromType(pieceSelected.type);
+        if (selectedPieceColor !== gamefile.whosTurn) return;
+
         // If we haven't return'ed at this point, check if the move is legal.
         if (!hoverSquareLegal) return; // Illegal
 
@@ -150,9 +154,6 @@ const selection = (function() {
      */
     function handleSelectingPiece(pieceClickedType) {
         const gamefile = game.getGamefile();
-        const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
-        const clickedFriendlyInOnlineGame = onlinegame.areInOnlineGame() && clickedPieceColor === onlinegame.getOurColor();
-        if (clickedFriendlyInOnlineGame && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn, don't select this piece
 
         // If we're viewing history, return. But also if we clicked a piece, forward moves.
         if (!movesscript.areWeViewingLatestMove(gamefile)) {
@@ -249,8 +250,10 @@ const selection = (function() {
         const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
         const hoverSquareIsSameColor = typeAtHoverCoords && math.getPieceColorFromType(pieceSelected.type) === math.getPieceColorFromType(typeAtHoverCoords);
         const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
+        // The next boolean ensures that only pieces of the same color as the current player's turn can have a ghost piece:
+        const selectionColorAgreesWithMoveTurn = math.getPieceColorFromType(pieceSelected.type) === gamefile.whosTurn;
         // This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
-        hoverSquareLegal = (!isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
+        hoverSquareLegal = (selectionColorAgreesWithMoveTurn && !isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
     }
 
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
