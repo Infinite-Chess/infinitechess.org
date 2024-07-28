@@ -26,7 +26,7 @@ function refreshPatreonPatronList() {
 }
 
 /**
- * Returns a list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
+ * Returns a list of patrons on Naviary's [patreon](https://www.patreon.com/Naviary) page,
  * updated every {@link intervalToRefreshContributorsMillis}.
  * @returns {string[]}
  */
