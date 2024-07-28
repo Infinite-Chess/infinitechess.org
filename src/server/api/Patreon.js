@@ -13,7 +13,7 @@ const patrons = [];
 const replacementNames = {};
 
 /** The interval, in milliseconds, to use Patreon's API to refresh the patron list. */
-const intervalToRefreshContributorsMillis = 1000 * 60 * 60; // 1 hour
+const intervalToRefreshPatreonPatronsMillis = 1000 * 60 * 60; // 1 hour
 
 /**
  * Uses Patreon's API to fetch all patrons on Naviary's
@@ -27,7 +27,7 @@ function refreshPatreonPatronList() {
 
 /**
  * Returns a list of patrons on Naviary's [patreon](https://www.patreon.com/Naviary) page,
- * updated every {@link intervalToRefreshContributorsMillis}.
+ * updated every {@link intervalToRefreshPatreonPatronsMillis}.
  * @returns {string[]}
  */
 function getPatreonPatrons() {
