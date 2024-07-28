@@ -395,8 +395,10 @@ const gamemanager = (function() {
                 if(game.sockets[i]?.metadata?.subscriptions?.game?.color === playerColor){
                     game.sockets[i].metadata.sendmessage(game.sockets[i], 'game','leavegame')
                     unsubClientFromGame(game.sockets[i], { sendMessage: false })
+                    break;
                 }
             }
+            
         }
 
         // 2. Modify their socket metadata to add the 'game', subscription,
@@ -483,14 +485,31 @@ const gamemanager = (function() {
 
 
         // Alert their opponent the time their opponent will be auto-resigned by disconnection.
-        const opponentColor = math1.getOppositeColor(color);
-        const value = { autoDisconnectResignTime: timeToAutoLoss, wasByChoice: !closureNotByChoice }
-        sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value)
+        const is4Player = fourPlayerColors.includes(color);
+        if(is4Player){
+            const allOpponentColors = math1.getAllColorsExcept4p(color, game.colorsOut);
+            const value = { autoDisconnectResignTime: timeToAutoLoss, wasByChoice: !closureNotByChoice }
+            
+            for(let i = 0; i < allOpponentColors.length; i++){
+                sendMessageToSocketOfColor(game, allOpponentColors[i], 'game', 'opponentdisconnect', value)
+            }
+        } else {
+            const opponentColor = math1.getOppositeColor(color);
+            const value = { autoDisconnectResignTime: timeToAutoLoss, wasByChoice: !closureNotByChoice }
+            sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value)
+        }
     }
 
     function cancelDisconnectTimers(game) {
-        cancelDisconnectTimer(game, 'white', { dontNotifyOpponent: true });
-        cancelDisconnectTimer(game, 'black', { dontNotifyOpponent: true });
+        if(game.isFourPlayer){
+            cancelDisconnectTimer(game, 'yellow', { dontNotifyOpponent: true });
+            cancelDisconnectTimer(game, 'green', { dontNotifyOpponent: true });
+            cancelDisconnectTimer(game, 'red', { dontNotifyOpponent: true });
+            cancelDisconnectTimer(game, 'blue', { dontNotifyOpponent: true });
+        } else {
+            cancelDisconnectTimer(game, 'white', { dontNotifyOpponent: true });
+            cancelDisconnectTimer(game, 'black', { dontNotifyOpponent: true });
+        }
     }
 
     /**
@@ -511,8 +530,16 @@ const gamemanager = (function() {
         if (dontNotifyOpponent) return;
         // Alert their opponent their opponent has returned.
         // ...
-        const opponentColor = math1.getOppositeColor(color);
-        sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn')
+
+        if(game.isFourPlayer){
+            const allOpponentColors = math1.getAllColorsExcept4p(color, game.colorsOut);
+            for(let i = 0; i < allOpponentColors.length; i++){
+                sendMessageToSocketOfColor(game, allOpponentColors[i], 'game', 'opponentdisconnectreturn')
+            }
+        } else {
+            const opponentColor = math1.getOppositeColor(color);
+            sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn')
+        }
     }
 
     /**
@@ -1375,17 +1402,29 @@ const gamemanager = (function() {
      * @param {Game} game - The game
      */
     function sendUpdatedClockToColor(game, color) {
-        if (color !== 'white' && color !== 'black') return console.error(`color must be white or black! ${color}`)
         if (isGameUntimed(game)) return; // Don't send clock values in an untimed game
+        if(game.isFourPlayer){
+            if (color !== 'yellow' && color !== 'red' && color !== 'green' && color !== 'blue') return console.error(`colorJustMoved must be a valid 4 player color! ${color}`)
 
-        const message = {
-            timerWhite: game.timerWhite,
-            timerBlack: game.timerBlack,
-            timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
+            const message = {
+                timerWhite: game.timerWhite,
+                timerBlack: game.timerBlack,
+                timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
+            }
+            const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
+            if (!playerSocket) return; // They are not connected, can't send message
+            playerSocket.metadata.sendmessage(playerSocket, "game", "clock", message)
+        } else {
+            if (color !== 'white' && color !== 'black') return console.error(`color must be white or black! ${color}`)
+            const message = {
+                timerWhite: game.timerWhite,
+                timerBlack: game.timerBlack,
+                timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
+            }
+            const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
+            if (!playerSocket) return; // They are not connected, can't send message
+            playerSocket.metadata.sendmessage(playerSocket, "game", "clock", message)
         }
-        const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
-        if (!playerSocket) return; // They are not connected, can't send message
-        playerSocket.metadata.sendmessage(playerSocket, "game", "clock", message)
     }
 
     /**
@@ -1556,13 +1595,27 @@ const gamemanager = (function() {
             autoAFKResignTime: game.autoAFKResignTime
         }
         // If their opponent has disconnected, send them that info too.
-        const opponentColor = math1.getOppositeColor(color)
-        if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
-            messageContents.disconnect = {
-                autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
-                wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
+        if(game.isFourPlayer){
+            const opponentColors = math1.getAllColorsExcept4p(color, game.colorsOut);
+            for(let i = 0; i < opponentColors.length; i++){
+                const opponentColor = opponentColors[i];
+                if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
+                    messageContents.disconnect = {
+                        autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
+                        wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
+                    }
+                }    
+            }
+        } else {
+            const opponentColor = math1.getOppositeColor(color)
+            if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
+                messageContents.disconnect = {
+                    autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
+                    wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
+                }
             }
         }
+        
         // Also send the time the server is restarting, if it is
         if (serverRestartingAt !== false) messageContents.serverRestartingAt = serverRestartingAt;
 
