@@ -32,11 +32,11 @@ function refreshPatreonPatronList() {
  */
 function getPatreonPatrons() {
     // Replace their true usernames with replacements
-    const patronsWithReplacedNamess = patrons.map((patron) => {
+    const patronsWithReplacedNames = patrons.map((patron) => {
         return replacementNames[patron] || patron;
     })
 
-    return patronsWithReplacedNamess;
+    return patronsWithReplacedNames;
 }
 
 
