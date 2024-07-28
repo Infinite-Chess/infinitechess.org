@@ -7,7 +7,7 @@ home = "Home"
 play = "Play"
 news = "News"
 login = "Log In"
-createaccount = "Create Account"
+createaccount = "Account"
 
 [footer]
 contact = "Contact us"
@@ -114,7 +114,7 @@ js-pwd_not_pwd = "Password must not be 'password'"
 credits = "Credits"
 play = "Play"
 guide = "Guide"
-editor = "Board Editor"
+editor = "Editor"
 loading = "LOADING"
 error = "ERROR"
 

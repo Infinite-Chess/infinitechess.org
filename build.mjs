@@ -5,10 +5,10 @@
 //                  but all game scripts in /src/client/scripts/game are concatenated into app.js.
 //                  Further, all scripts are minified with the use of terser.
 
-import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
-import swc from "@swc/core";
-import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js"
-import { DEV_BUILD } from "./src/server/config/config.js";
+import { readdir, cp as copy, rm as remove, readFile, writeFile } from 'node:fs/promises';
+import swc from '@swc/core';
+import { injectScriptsIntoPlayEjs } from './src/server/utility/HTMLScriptInjector.js'
+import { DEV_BUILD } from './src/server/config/config.js';
 
 /**
  * 
@@ -35,22 +35,22 @@ async function getExtFiles(path, ext) {
 }
 
 // remove dist
-await remove("./dist", {
+await remove('./dist', {
   recursive: true,
   force: true,
 });
 
 if (DEV_BUILD){
   // in dev mode, copy all clientside files over to dist and exit
-  await copy("./src/client", "./dist", {
+  await copy('./src/client', './dist', {
     recursive: true,
     force: true
   });
   // overwrite play.ejs by injecting all needed scripts into it:
-  await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+  await writeFile(`./dist/views/layouts/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
 } else {
   // in prod mode, copy all clientside files over to dist, except for those contained in scripts
-  await copy("./src/client", "./dist", {
+  await copy('./src/client', './dist', {
     recursive: true,
     force: true,
     filter: filename => { 
@@ -60,11 +60,11 @@ if (DEV_BUILD){
 
   // make a list of all client scripts:
   const clientFiles = [];
-  const clientScripts = await getExtFiles("./src/client/scripts", ".js");
+  const clientScripts = await getExtFiles('./src/client/scripts', '.js');
   clientFiles.push(...clientScripts.map(v => `scripts/${v}`));
 
   // string containing all code in /game except for htmlscript.js:
-  let gamecode = ""; 
+  let gamecode = ''; 
 
   for (const file of clientFiles) {
     // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
@@ -92,5 +92,5 @@ if (DEV_BUILD){
   await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
   
   // overwrite play.ejs by injecting all needed scripts into it:
-  await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+  await writeFile(`./dist/views/layouts/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
 }
