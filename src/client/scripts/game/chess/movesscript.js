@@ -245,7 +245,7 @@ const movesscript = (function(){
      * @param {number[]} coords - The coordinates of the piece
      */
     function didPieceMoveLastTurn(gamefile, coords) {
-        const lastMove = getLastMove(gamefile);
+        const lastMove = getLastMove(gamefile.moves);
         if (!lastMove) return false; // Beginning of the game, it hasn't moved.
         return math.areCoordsEqual(lastMove.startCoords, coords); // true if it just moved
     }

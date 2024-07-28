@@ -215,7 +215,7 @@ const selection = (function() {
         if (!pieceSelected) return; // No piece to reselect.
         const gamefile = game.getGamefile();
         if (movesscript.didPieceMoveLastTurn(gamefile, pieceSelected.coords)) {
-            console.log('moved last turn');
+            unselectPiece(); // Can't be reselected, unselect it instead.
             return;
         }
 

@@ -379,9 +379,6 @@ const movepiece = (function(){
 
         // If updateData is true, lock the rewind/forward buttons for a brief moment.
         if (updateData) guinavigation.lockRewind();
-
-        // Reselect the currently selected piece, because its moves may have changed, or need to be recolored.
-        if (!simulated) selection.reselectPiece();
     }
 
     /**

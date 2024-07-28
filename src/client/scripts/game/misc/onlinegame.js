@@ -360,6 +360,8 @@ const onlinegame = (function(){
         specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move)
         movepiece.makeMove(gamefile, move)
 
+        selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
+
         // Edit the clocks
         clock.edit(message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt)
 
@@ -526,6 +528,7 @@ const onlinegame = (function(){
         }
 
         if (!aChangeWasMade) movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false })
+        else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
         return true; // No cheating detected
     }
