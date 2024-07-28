@@ -133,12 +133,12 @@ const selection = (function() {
             return;
         }
 
-        // Don't allow players to move a piece of a color not matching the current player's turn
-        const selectedPieceColor = math.getPieceColorFromType(pieceSelected.type);
-        if (selectedPieceColor !== gamefile.whosTurn) return;
-
         // If we haven't return'ed at this point, check if the move is legal.
         if (!hoverSquareLegal) return; // Illegal
+
+        // If it's a premove, hoverSquareLegal should not be true at this point unless
+        // we are actually starting to implement premoving.
+        if (isPremove) throw new Error("Don't know how to premove yet! Will not submit move normally.");
 
         // Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
         if (gamefile.mesh.locked) return statustext.pleaseWaitForTask(); 
