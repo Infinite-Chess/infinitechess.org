@@ -363,7 +363,6 @@ const movepiece = (function(){
      */
     
     function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, updateData = true, updateProperties = true, simulated = false } = {}) {
-        if (!simulated) selection.unselectPiece(); // Unselect any piece, because forwarding may change its legal moves
 
         while(true) { // For as long as we have moves to forward...
             const nextIndex = gamefile.moveIndex + 1;
@@ -380,12 +379,9 @@ const movepiece = (function(){
 
         // If updateData is true, lock the rewind/forward buttons for a brief moment.
         if (updateData) guinavigation.lockRewind();
-        // CREATES BUGS with sometimes games being aborted from illegal play because
-        // the game thinks the position is in check when its not.
-        // This rarely happens when you make a move when the other player is viewing history.
-        // if (animateLastMove || updateProperties) updateInCheck(gamefile, false)
-        // WE NO LONGER NEED THIS as every single move now calls updateInCheck.
-        // updateInCheck(gamefile, false)
+
+        // Reselect the currently selected piece, because its moves may have changed, or need to be recolored.
+        if (!simulated) selection.reselectPiece();
     }
 
     /**

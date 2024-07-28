@@ -6,7 +6,7 @@
 
 const selection = (function() {
 
-    /** The currently selected piece, if there is one: `{ type, index, coords }` */
+    /** The currently selected piece, if there is one: `{ type, index, coords }` @type {Piece} */
     let pieceSelected;
     /** The pre-calculated legal moves of the current selected piece.
      * @type {LegalMoves} */
@@ -196,6 +196,26 @@ const selection = (function() {
     }
 
     /**
+     * Reselects the currently selected piece by recalculating its legal moves again,
+     * and changing the color if needed.
+     * Typically called after our opponent makes a move while we have a piece selected.
+     */
+    function reselectPiece() {
+        if (!pieceSelected) return; // No piece to reselect.
+        const gamefile = game.getGamefile();
+        if (movesscript.didPieceMoveLastTurn(gamefile, pieceSelected.coords)) {
+            console.log('moved last turn');
+            return;
+        }
+
+        // Reselect! Recalc its legal moves, and recolor.
+        pawnIsPromoting = false;
+        promoteTo = undefined;
+        const newIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
+        selectPiece(pieceSelected.type, newIndex, pieceSelected.coords);
+    }
+
+    /**
      * Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI.
      */
     function unselectPiece() {
@@ -262,6 +282,7 @@ const selection = (function() {
     return Object.freeze({
         isAPieceSelected,
         getPieceSelected,
+        reselectPiece,
         unselectPiece,
         getLegalMovesOfSelectedPiece,
         isPawnCurrentlyPromoting,
