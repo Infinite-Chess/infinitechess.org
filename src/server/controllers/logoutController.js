@@ -1,7 +1,8 @@
 
 const { findMemberFromRefreshToken, deleteRefreshToken, getUsernameCaseSensitive } = require('./members');
 const websocketserver = require('../wsserver')
-const invitesmanager = require('../game/invitesmanager')
+const invitesmanager = require('../game/invitesmanager');
+const { getTranslationForReq } = require('../config/setupTranslations');
 
 const handleLogout = async (req, res) => {
     // On client, also delete the accessToken
@@ -13,7 +14,7 @@ const handleLogout = async (req, res) => {
 
     // Is refreshToken in db?
     const foundMemberKey = findMemberFromRefreshToken(refreshToken)
-    if (!foundMemberKey) return res.status(409).json({'message':"ws-refresh_token_not_found"}); // Forbidden
+    if (!foundMemberKey) return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) }); // Forbidden
 
     // Delete refreshToken in db.
     // This also saves the members file.

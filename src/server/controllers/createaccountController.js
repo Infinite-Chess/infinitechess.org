@@ -14,7 +14,8 @@ const { handleLogin } = require('./authController')
 const { sendEmailConfirmation } = require('./sendMail')
 const { addMember, getMemberData, doesMemberExist, isEmailAvailable } = require('./members.js')
 const { logEvents } = require('../middleware/logEvents');
-const { isEmailBanned } = require('../middleware/banned')
+const { isEmailBanned } = require('../middleware/banned');
+const { getTranslationForReq } = require('../config/setupTranslations.js');
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
@@ -76,7 +77,7 @@ const profainWords = [
 const createNewMember = async (req, res) => {
     if (!req.body) {
         console.log(`User sent a bad create account request missing the whole body!`)
-        return res.status(400).send("ws-bad_request"); // 400 Bad request
+        return res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
     }
     // First make sure we have all 3 variables.
     let { username, email, password } = req.body;
@@ -91,9 +92,9 @@ const createNewMember = async (req, res) => {
 
     // First we make checks on the username...
     // These 'return's are so that we don't send duplicate responses, AND so we don't create the member anyway.
-    if (doUsernameFormatChecks(username, res) !== true) return;
-    if (doEmailFormatChecks(email, res) !== true) return;
-    if (doPasswordFormatChecks(password, res) !== true) return;
+    if (doUsernameFormatChecks(username, req, res) !== true) return;
+    if (doEmailFormatChecks(email, req, res) !== true) return;
+    if (doPasswordFormatChecks(password, req, res) !== true) return;
 
     await generateAccount({ username, email, password })
 
@@ -190,9 +191,9 @@ function checkUsernameAvailable(req, res) {
     let allowed = true;
     let reason = '';
 
-    if (doesMemberExist(usernameLowercase)) { allowed = false; reason = "ws-username_taken"; }
-    if (checkProfanity(usernameLowercase)) { allowed = false; reason = "ws-username_bad_word"; }
-    if (reservedUsernames.includes(usernameLowercase)) { allowed = false; reason = "ws-username_reserved"; } // Code for reserved
+    if (doesMemberExist(usernameLowercase)) { allowed = false; reason = getTranslationForReq("server.javascript.ws-username_taken", req); }
+    if (checkProfanity(usernameLowercase)) { allowed = false; reason = getTranslationForReq("server.javascript.ws-username_bad_word", req); }
+    if (reservedUsernames.includes(usernameLowercase)) { allowed = false; reason = getTranslationForReq("server.javascript.ws-username_reserved", req); } // Code for reserved
 
     return res.json({
         allowed,
@@ -200,22 +201,22 @@ function checkUsernameAvailable(req, res) {
     });
 }
 
-const doUsernameFormatChecks = function (username, res) {
+const doUsernameFormatChecks = function (username, req, res) {
     // First we check the username's length
-    if (username.length < 3 || username.length > 20) return res.status(400).json({ 'message': "ws-username_length"});
+    if (username.length < 3 || username.length > 20) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_length", req) });
     // Then the format
-    if (!onlyLettersAndNumbers(username)) return res.status(400).json({ 'message': "ws-username_letters"});
+    if (!onlyLettersAndNumbers(username)) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_letters", req) });
     // Then check if the name's taken
     const usernameLowercase = username.toLowerCase();
 
     // Make sure the username isn't taken!!
 
-    if (doesMemberExist(usernameLowercase)) return res.status(409).json({ 'conflict': "ws-username_taken"});
+    if (doesMemberExist(usernameLowercase)) return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-username_taken", req) });
     
     // Then check if the name's reserved
-    if (reservedUsernames.includes(usernameLowercase)) return res.status(409).json({ 'conflict': "ws-username_taken"}); // Code for reserved (but the users don't know that!)
+    if (reservedUsernames.includes(usernameLowercase)) return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-username_taken", req) }); // Code for reserved (but the users don't know that!)
     // Lastly check for profain words
-    if (checkProfanity(usernameLowercase)) return res.status(409).json({ 'conflict': "ws-username_bad_word"});
+    if (checkProfanity(usernameLowercase)) return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-username_bad_word", req) });
     return true; // Everything's good, no conflicts!
 }
 
@@ -233,14 +234,14 @@ const checkProfanity = function (string) {
     return false;
 }
 
-const doEmailFormatChecks = function (string, res) {
-    if (string.length > 320) return res.status(400).json({ 'message': "ws-email_too_long"}); // Max email length
-    if (!isValidEmail(string)) return res.status(400).json({ 'message': "ws-email_invalid"});
-    if(!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': "ws-email_in_use"});
+const doEmailFormatChecks = function (string, req, res) {
+    if (string.length > 320) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_too_long", req) }); // Max email length
+    if (!isValidEmail(string)) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_invalid", req) });
+    if(!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-email_in_use", req) });
     if (isEmailBanned(string)) {
         const errMessage = `Banned user with email ${string.toLowerCase()} tried to recreate their account!`;
         logEvents(errMessage, 'bannedIPLog.txt', { print: true })
-        return res.status(409).json({ 'conflict': "ws-you_are_banned"});
+        return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-you_are_banned", req) });
     }
     return true;
 }
@@ -251,11 +252,11 @@ const isValidEmail = function (string) {
     return regex.test(string);
 }
 
-const doPasswordFormatChecks = function (password, res) {
+const doPasswordFormatChecks = function (password, req, res) {
     // First we check password length
-    if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': "ws-password_length"});
-    if (!isValidPassword(password)) return res.status(400).json({ 'message': "ws-password_format"});
-    if (password.toLowerCase() === 'password') return res.status(400).json({ 'message': "ws-password_password"});
+    if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_length", req) });
+    if (!isValidPassword(password)) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_format", req) });
+    if (password.toLowerCase() === 'password') return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_password", req) });
     return true;
 }
 

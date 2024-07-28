@@ -6,7 +6,7 @@ const fsPromises = require('fs').promises;
 const path = require('path');
 
 const { getClientIP } = require("./IP");
-const wsfunctions = require('../game/wsfunctions');
+const wsutility = require('../game/wsutility');
 const { Socket } = require('../game/TypeDefinitions');
 const { ensureDirectoryExists } = require('../utility/fileUtils');
 
@@ -67,7 +67,7 @@ const logger = (req, res, next) => {
  * @param {Socket} ws - The websocket object
  */
 function logWebsocketStart(req, ws) {
-    const stringifiedSocketMetadata = wsfunctions.stringifySocketMetadata(ws);
+    const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
     const userAgent = req.headers['user-agent']
     // const userAgent = ws.metadata.userAgent;
     let logThis = `Socket: ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
@@ -80,7 +80,7 @@ function logWebsocketStart(req, ws) {
  * @param {string} messageData - The raw data of the incoming message, as a string
  */
 function logReqWebsocketIn(ws, messageData) {
-    const stringifiedSocketMetadata = wsfunctions.stringifySocketMetadata(ws);
+    const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
     let logThis = `Socket: ${stringifiedSocketMetadata}`;
     if (messageData) logThis += `\n${messageData}`;
     logEvents(logThis, 'wsInLog.txt');
@@ -92,7 +92,7 @@ function logReqWebsocketIn(ws, messageData) {
  * @param {string} messageData - The raw data of the outgoing message, as a string
  */
 function logReqWebsocketOut(ws, messageData) {
-    const stringifiedSocketMetadata = wsfunctions.stringifySocketMetadata(ws);
+    const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
     let logThis = `To socket: ${stringifiedSocketMetadata}\n${messageData}`;
     logEvents(logThis, 'wsOutLog.txt');
 }

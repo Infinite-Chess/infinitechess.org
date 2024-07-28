@@ -2,10 +2,11 @@
 // This script contains generalized methods for working with websocket objects,
 // thus the only dependancies it has are for the type definitions.
 
+const { getTranslation } = require('../config/setupTranslations');
 const { ensureJSONString } = require('../utility/JSONUtils');
 const { Socket } = require('./TypeDefinitions')
 
-const wsfunctions = (function() {
+const wsutility = (function() {
 
     /**
      * Prints the websocket to the console, temporarily removing self-referencing first.
@@ -57,14 +58,43 @@ const wsfunctions = (function() {
     function getOwnerFromSocket(ws) {
         if (ws.metadata.user) return { member: ws.metadata.user }
         else if (ws.metadata['browser-id']) return { browser: ws.metadata['browser-id']}
-        else return console.error(`Cannot get owner info from socket in gamesweb.js when socket doesn't contain authentication! Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+        else return console.error(`Cannot get owner info from socket in gamesweb.js when socket doesn't contain authentication! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
+    }
+
+    /**
+     * Sends a message to the client through the websocket, to be displayed on-screen.
+     * @param {Socket} ws - The socket
+     * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
+     * @param {number} [number] - A number to include with special messages, if applicable. Typically a number of minutes.
+     */
+    function sendNotify(ws, translationCode, number) {
+        const i18next = ws.metadata.i18next;
+        let text = getTranslation(translationCode, i18next);
+        // Special case: number of minutes to be displayed upon server restart
+        if (translationCode === "server.javascript.ws-server_restarting" && number !== undefined) {
+            const minutes = Number(number); // Cast to number in case it's a string
+            const minutes_plurality = minutes === 1 ? getTranslation("server.javascript.ws-minute", i18next) : getTranslation("server.javascript.ws-minutes", i18next);
+            text += ` ${minutes} ${minutes_plurality}.`;
+        }
+        ws.metadata.sendmessage(ws, "general", "notify", text)
+    }
+
+    /**
+     * Sends a message to the client through the websocket, to be displayed on-screen as an ERROR.
+     * @param {Socket} ws - The socket
+     * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
+     */
+    function sendNotifyError(ws, translationCode) {
+        ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.i18next))
     }
 
     return Object.freeze({
         printSocket,
         stringifySocketMetadata,
-        getOwnerFromSocket
+        getOwnerFromSocket,
+        sendNotify,
+        sendNotifyError
     })
 })();
 
-module.exports = wsfunctions
+module.exports = wsutility

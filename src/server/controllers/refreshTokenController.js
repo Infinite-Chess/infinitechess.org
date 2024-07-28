@@ -4,7 +4,8 @@ const jwt = require('jsonwebtoken');
 const { findMemberFromRefreshToken, getUsernameCaseSensitive, updateLastSeen } = require('./members');
 const { logEvents } = require('../middleware/logEvents');
 const { isBrowserIDBanned } = require('../middleware/banned');
-const { generateID } = require("../game/math1")
+const { generateID } = require("../game/math1");
+const { getTranslationForReq } = require('../config/setupTranslations');
 
 /**
  * How long until the cookie containing their new access token
@@ -22,7 +23,7 @@ const handleRefreshToken = (req, res) => {
     // If we have cookies AND there's a jwt property..
     if (!cookies?.jwt) {
         assignOrRenewBrowserID(req, res);
-        return res.status(401).json({'message' : "ws-refresh_token_expired"});
+        return res.status(401).json({'message' : getTranslationForReq("server.javascript.ws-refresh_token_expired", req) });
     }
     const refreshToken = cookies.jwt;
     const foundMemberKey = findMemberFromRefreshToken(refreshToken);
@@ -30,7 +31,7 @@ const handleRefreshToken = (req, res) => {
     // As soon as they log out, we will have removed the token from the database.
     if (!foundMemberKey) {
         assignOrRenewBrowserID(req, res);
-        return res.status(403).json({'message': "ws-refresh_token_not_found_logged_out"}); // Forbidden
+        return res.status(403).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found_logged_out", req) }); // Forbidden
     }
 
     // Evaluate jwt
@@ -41,7 +42,7 @@ const handleRefreshToken = (req, res) => {
             // If the token is expired/wrong, or the payload is different
             if (err || foundMemberKey !== decoded.username) {
                 assignOrRenewBrowserID(req, res);
-                return res.status(403).json({'message' : "ws-refresh_token_invalid"});
+                return res.status(403).json({'message' : getTranslationForReq("server.javascript.ws-refresh_token_invalid", req) });
             }
             // Else verified. Send them new access token!
             const accessToken = jwt.sign(

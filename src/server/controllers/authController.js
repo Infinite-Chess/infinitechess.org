@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 const { getUsernameCaseSensitive, getHashedPassword, addRefreshToken, incrementLoginCount, updateLastSeen } = require('./members');
 const { getClientIP } = require('../middleware/IP');
 const { logEvents } = require('../middleware/logEvents');
+const { getTranslationForReq } = require('../config/setupTranslations');
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
@@ -95,12 +96,12 @@ async function testPasswordForRequest(req, res) {
     const hashedPassword = getHashedPassword(usernameLowercase);
 
     if (!usernameCaseSensitive || !hashedPassword) {
-        res.status(401).json({ 'message': "ws-invalid_username"}); // Unauthorized, username not found
+        res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-invalid_username", req)}); // Unauthorized, username not found
         return false;
     }
     
     const browserAgent = getBrowserAgent(req, usernameLowercase);
-    if (!rateLimitLogin(res, browserAgent)) {
+    if (!rateLimitLogin(req, res, browserAgent)) {
         return false; // They are being rate limited from enterring incorrectly too many times
     }
 
@@ -108,7 +109,7 @@ async function testPasswordForRequest(req, res) {
     const match = await bcrypt.compare(password, hashedPassword);
     if (!match) {
         logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
-        res.status(401).json({ 'message': "ws-incorrect_password"}); // Unauthorized, password not found
+        res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-incorrect_password", req )}); // Unauthorized, password not found
         onIncorrectPassword(browserAgent, usernameCaseSensitive);
         return false;
     }
@@ -128,7 +129,7 @@ async function testPasswordForRequest(req, res) {
 function verifyBodyHasLoginFormData(req, res) {
     if (!req.body) { // Missing body
         console.log(`User sent a bad login request missing the body!`)
-        res.status(400).send("ws-bad_request"); // 400 Bad request
+        res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
         return false;
     }
 
@@ -136,13 +137,13 @@ function verifyBodyHasLoginFormData(req, res) {
     
     if (!username || !password) {
         console.log(`User ${username} sent a bad login request missing either username or password!`)
-        res.status(400).json({ 'message': "ws-username_and_password_required"}); // 400 Bad request
+        res.status(400).json({ 'message': getTranslationForReq('server.javascript.ws-username_and_password_required', req) }); // 400 Bad request
         return false;
     }
 
     if (typeof username !== "string" || typeof password !== "string") {
         console.log(`User ${username} sent a bad login request with either username or password not a string!`)
-        res.status(400).json({ 'message': "ws-username_and_password_string"}); // 400 Bad request
+        res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_and_password_string", req) }); // 400 Bad request
         return false;
     }
 
@@ -199,7 +200,7 @@ function updateMembersInfo(usernameLowercase) {
  * Prevents a user-IP combination from entering login attempts too fast.
  * @returns {boolean} true if the attempt is allowed
  */
-function rateLimitLogin(res, browserAgent) {
+function rateLimitLogin(req, res, browserAgent) {
     const now = new Date();
     loginAttemptData[browserAgent] = loginAttemptData[browserAgent] || {
         attempts: 0,
@@ -217,11 +218,13 @@ function rateLimitLogin(res, browserAgent) {
     // Too many attempts!
 
     if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) { // Still on cooldown
-        res.status(401).json({
-            'message': "ws-login_failure_retry_in",
-            'login_cooldown': Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs)
-        });
-        // res.status(401).json({ 'message': `Failed to login, try again in ${Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs)} seconds.`});
+
+        let translation = getTranslationForReq('server.javascript.ws-login_failure_retry_in', req);
+        const login_cooldown = Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs);
+        const seconds_plurality = login_cooldown === 1 ? getTranslationForReq("server.javascript.ws-second", req) : getTranslationForReq("server.javascript.ws-seconds", req);
+        translation += ` ${login_cooldown} ${seconds_plurality}.`
+
+        res.status(401).json({ 'message': translation }); // "Failed to log in, try again in 3 seconds.""
         
         // Reset the timer to auto-delete them from the login attempt data
         // if they haven't tried in a while.

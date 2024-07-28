@@ -11,6 +11,7 @@ const { format, formatDistance } = require('date-fns');
 const { getVerified, setVerified, getInfo, getUsernameCaseSensitive, getJoinDate, getLastSeen, getElo, getEmail } = require('./members.js');
 const { sendEmailConfirmation } = require('../controllers/sendMail')
 const { logEvents } = require('../middleware/logEvents');
+const { getTranslationForReq } = require('../config/setupTranslations.js');
 
 // Route
 // Fetched by member script.
@@ -26,7 +27,7 @@ const getMemberData = async (req, res) => {
 
     // Load their case sensitive username
     const username = getUsernameCaseSensitive(usernameLowercase);
-    if (!username) return res.status(404).json({message: "ws-member_not_found"})
+    if (!username) return res.status(404).json({ message: getTranslationForReq("server.javascript.ws-member_not_found", req) })
 
     // Load their data
     const joinDate = getJoinDate(usernameLowercase);

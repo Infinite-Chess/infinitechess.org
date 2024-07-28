@@ -1,4 +1,5 @@
 
+const { getTranslationForReq } = require('../config/setupTranslations.js');
 const { logEvents } = require('../middleware/logEvents.js');
 const { getUsernameCaseSensitive, getVerified, setVerified, doesVerificationIDMatch } = require('./members.js');
 
@@ -29,7 +30,7 @@ const verifyAccount = async function (req, res) {
     if (req.user !== usernameLowercase) { // Forbid them if they are logged in and NOT who they're wanting to verify!
         const errText = `User ${req.user} attempted to verify ${usernameLowercase}!`
         logEvents(errText, 'hackLog.txt', { print: true });
-        res.status(403).send("ws-forbidden_wrong_account");
+        res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req));
         return;
     }
 

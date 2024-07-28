@@ -6,6 +6,7 @@ const { removeMember, getAllUsernames, getVerified, getJoinDate, getUsernameCase
 const { testPasswordForRequest } = require('../controllers/authController');
 const { removeAllRoles } = require('../controllers/roles');
 const { logEvents } = require('../middleware/logEvents');
+const { getTranslationForReq } = require('../config/setupTranslations');
 
 // Automatic deletion of accounts...
 
@@ -27,7 +28,7 @@ async function removeAccount(req, res) {
     // Check to make sure they're logged in
     if (req.user !== usernameLowercase) {
         logEvents(`User ${req.user} tried to delete account of ${usernameLowercase}!!`, 'hackLog.txt', { print: true })
-        return res.status(403).json({'message' : "ws-forbidden_wrong_account"});
+        return res.status(403).json({'message' : getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req) });
     }
 
     // The delete account request doesn't come with the username
@@ -44,7 +45,7 @@ async function removeAccount(req, res) {
         return res.send('OK'); // 200 is default code
     } else {
         logEvents(`Can't delete ${usernameLowercase}'s account. They do not exist.`, 'hackLog.txt', { print: true });
-        return res.status(404).json({'message' : "ws-deleting_account_not_found"});
+        return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_not_found", req) });
     }
 }
 
