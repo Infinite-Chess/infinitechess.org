@@ -1,7 +1,7 @@
 
 /*
  * This module, in the future, where be where we connect to Patreon's API
- * to dynamically refresh a list of Patreon-specific patrons on the webiste.
+ * to dynamically refresh the list of Patreon-specific patrons on the webiste.
  */
 
 
