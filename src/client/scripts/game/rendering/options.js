@@ -175,7 +175,7 @@ const options = (function() {
 
     function getLegalMoveHighlightColor() {
         if (selection.isOpponentPieceSelected()) return themes[theme].legalMovesHighlightColor_Opponent;
-        else if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn()) return themes[theme].legalMovesHighlightColor_Premove;
+        else if (selection.arePremoving()) return themes[theme].legalMovesHighlightColor_Premove;
         else return themes[theme].legalMovesHighlightColor_Friendly;
     }
 

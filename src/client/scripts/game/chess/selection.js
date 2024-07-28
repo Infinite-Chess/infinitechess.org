@@ -14,6 +14,9 @@ const selection = (function() {
     /** Whether or not the piece selected belongs to the opponent.
      * If so, it's legal moves are rendered a different color, and you aren't allowed to move it.  */
     let isOpponentPiece = false;
+    /** Whether or not the piece selected activated premove mode.
+     * This happens when we select our own pieces, in online games, when it's not our turn. */
+    let isPremove = false;
 
     /** The tile the mouse is hovering over, OR the tile we just performed a simulated click over: `[x,y]` */
     let hoverSquare; // Current square mouse is hovering over
@@ -44,6 +47,12 @@ const selection = (function() {
      * @returns {boolean}
      */
     function isOpponentPieceSelected() { return isOpponentPiece; }
+
+    /**
+     * Returns true if we are in premove mode (i.e. selected our own piece in an online game, when it's not our turn)
+     * @returns {boolean}
+     */
+    function arePremoving() { return isPremove; }
 
     /**
      * Returns the pre-calculated legal moves of the selected piece.
@@ -192,6 +201,7 @@ const selection = (function() {
         const pieceColor = math.getPieceColorFromType(pieceSelected.type);
         isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
                                /* Local Game */        : pieceColor !== game.getGamefile().whosTurn;
+        isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 
         highlights.regenModel() // Generate the buffer model for the blue legal move fields.
     }
@@ -201,6 +211,8 @@ const selection = (function() {
      */
     function unselectPiece() {
         pieceSelected = undefined;
+        isOpponentPiece = false;
+        isPremove = false;
         legalMoves = undefined;
         pawnIsPromoting = false;
         promoteTo = undefined;
@@ -271,6 +283,7 @@ const selection = (function() {
         promoteToType,
         update,
         renderGhostPiece,
-        isOpponentPieceSelected
+        isOpponentPieceSelected,
+        arePremoving
     })
 })();
