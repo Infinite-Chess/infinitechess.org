@@ -28,9 +28,16 @@ const arrows = (function() {
      * 0 = Off, 1 = Defense, 2 = All */
     let mode = 1;
 
-    /**  Whether our mouse is currently hovering over one arrow indicator.
+    /** Whether our mouse is currently hovering over one arrow indicator.
      * Could be used to cancel other mouse events. */
     let hovering = false;
+
+    /**
+     * An object that stores the LegalMoves and highlights mesh for hippogonal
+     * rider arrow indicators currently being hovered over!
+     * `{ '20,2': { LegalMoves, mesh } }`
+     */
+    const hippogonalRidersHoveredOver = {};
 
     /**
      * Returns the mode the arrow indicators on the edges of the screen is currently in.
@@ -283,6 +290,7 @@ const arrows = (function() {
         const mouseWorldX = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[0] : mouseWorldLocation[0]
         const mouseWorldY = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1]
         if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
+            onIndicatorHover(pieceCoords, direction);
             thisOpacity = 1;
             hovering = true;
             // If we also clicked, then teleport!
@@ -347,6 +355,47 @@ const arrows = (function() {
         model.render();
         // render.renderModel(modelArrows, undefined, undefined, "TRIANGLES")
         modelArrows.render();
+    }
+
+    function onIndicatorHover(pieceCoords, direction) {
+        if (!isDirectionHippogonal(direction)) return; // Not hippogonal mover (don't render their legal moves)
+
+        // Check if their legal moves and mesh have already been stored
+
+        const key = math.getKeyFromCoords(pieceCoords);
+        if (key in hippogonalRidersHoveredOver) return; // Legal moves and mesh already calculated, continue to render them.
+
+        // Calculate their legal moves and mesh!
+
+        const gamefile = game.getGamefile();
+        const thisRider = gamefileutility.getPieceAtCoords(gamefile, pieceCoords);
+        const thisRiderLegalMoves = legalmoves.calculate(gamefile, thisRider)
+
+        console.log(`Rider coords: ${key}. Calculated rider legal moves:`)
+        console.log(thisRiderLegalMoves)
+
+        // Calculate the mesh...
+
+        
+
+
+
+
+        // Store both these objects inside hippogonalRidersHoveredOver
+
+        // hippogonalRidersHoveredOver[key] = { legalMoves: thisRiderLegalMoves, mesh }
+    }
+
+    /**
+     * Returns true if the provided direction/step is hippogonal,
+     * not orthogonal or diagonal. A [2,0] directions counts as orthogonal here, not hippogonal.
+     * @param {number[]} direction - [dx,dy]
+     */
+    function isDirectionHippogonal(direction) {
+        const [dx,dy] = direction;
+        if (dx === 0 || dy === 0) return false; // Orthogonal
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) return true; // Hippogonal
+        return false; // Diagonal
     }
 
     return Object.freeze({

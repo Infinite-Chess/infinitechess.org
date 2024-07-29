@@ -163,7 +163,7 @@ const gamefileutility = (function(){
      * Returns the piece at the indicated coordinates, if there is one.
      * @param {gamefile} gamefile - The gamefile
      * @param {number[]} coords - The coordinates to retreive the piece at
-     * @returns {Piece | undefined} The piece, or *undefined* if there isn't one.
+     * @returns {Piece | undefined} The piece, or *undefined* if there isn't one: `{ type, index, coords }`
      */
     function getPieceAtCoords(gamefile, coords) {
         const type = getPieceTypeAtCoords(gamefile, coords);
