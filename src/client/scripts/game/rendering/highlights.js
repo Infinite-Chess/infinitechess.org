@@ -219,16 +219,15 @@ const highlights = (function(){
         // BUT currently we're regenerating every frame so let's just render to screen edge!
 
         // First we need to calculate the data of the horizontal slide
-        concatData_HighlightedMoves_Sliding_Horz(data, coords, boundingBoxOfRenderRange.left, boundingBoxOfRenderRange.right)
+        concatData_HighlightedMoves_Sliding_Horz(data, coords, legalMoves, boundingBoxOfRenderRange.left, boundingBoxOfRenderRange.right)
 
         // Calculate the data of the vertical slide 
-        concatData_HighlightedMoves_Sliding_Vert(data, coords, boundingBoxOfRenderRange.bottom, boundingBoxOfRenderRange.top)
+        concatData_HighlightedMoves_Sliding_Vert(data, coords, legalMoves, boundingBoxOfRenderRange.bottom, boundingBoxOfRenderRange.top)
         // Calculate the data of the diagonals
-        concatData_HighlightedMoves_Diagonals(data, coords, boundingBoxOfRenderRange, r, g, b, a)
+        concatData_HighlightedMoves_Diagonals(data, coords, legalMoves, boundingBoxOfRenderRange, r, g, b, a)
     }
 
-    function concatData_HighlightedMoves_Sliding_Horz(data, coords, left, right) {
-        const legalMoves = selection.getLegalMovesOfSelectedPiece()
+    function concatData_HighlightedMoves_Sliding_Horz(data, coords, legalMoves, left, right) {
         if (!legalMoves.sliding['1,0']) return; // Break if no legal horizontal slide
 
         const [r,g,b,a] = options.getLegalMoveHighlightColor();
@@ -258,8 +257,7 @@ const highlights = (function(){
         data.push(...bufferdata.getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a))
     }
 
-    function concatData_HighlightedMoves_Sliding_Vert(data, coords, bottom, top) {
-        const legalMoves = selection.getLegalMovesOfSelectedPiece()
+    function concatData_HighlightedMoves_Sliding_Vert(data, coords, legalMoves, bottom, top) {
         if (!legalMoves.sliding['0,1'])  return; // Break if there no legal vertical slide
 
         const [r,g,b,a] = options.getLegalMoveHighlightColor();
@@ -290,8 +288,7 @@ const highlights = (function(){
     }
 
     // Adds the vertex data of all legal slide diagonals (not orthogonal), no matter the step size/slope
-    function concatData_HighlightedMoves_Diagonals (data, coords, renderBoundingBox, r, g, b, a) {
-        const legalMoves = selection.getLegalMovesOfSelectedPiece()
+    function concatData_HighlightedMoves_Diagonals (data, coords, legalMoves, renderBoundingBox, r, g, b, a) {
         const lineSet = new Set(Object.keys(legalMoves.sliding))
         lineSet.delete('1,0')
         lineSet.delete('0,1')
