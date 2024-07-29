@@ -12,30 +12,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Member</title>
         <link rel='stylesheet' href='/css/member.css'>
+        <link rel='stylesheet' href='/css/_.css'>
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
     </head>
     <body>
-        <header>
-            <nav>
-                <a href="/">
-                    <p><%=t('header.home')%></p>
-                </a>
-                <a href="/play">
-                    <p><%=t('header.play')%></p>
-                </a>
-                <a href="/news">
-                    <p><%=t('header.news')%></p>
-                </a>
-                <a href="/login" id="loginlink">
-                    <p id="logintext"><%=t('header.login')%></p>
-                </a>
-                <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
-                </a>
-            </nav>
-        </header>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
             <div id="content">                  
                 <div id="verifyerror" class="hidden">

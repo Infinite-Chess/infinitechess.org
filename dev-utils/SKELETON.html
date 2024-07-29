@@ -9,24 +9,7 @@
         <link rel="icon" type="image/png" href="/img/favicon.png">
     </head>
     <body>
-        <header>
-            <a href="/">
-                <p class="currPage">Home</p>
-            </a>
-            <a href="/play">
-                <p>Play</p>
-            </a>
-            <a href="/news">
-                <p>News</p>
-            </a>
-            <a href="/login" id="loginlink">
-                <p id="logintext">Log In</p>
-            </a>
-            <a href="/createaccount" id="createaccountlink">
-                <p id="createaccounttext">Create Account</p>
-            </a>
-            <script src="/scripts/memberHeader.js"></script>
-        </header>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
             <div id="content">
                 <h1 class="center">Skeleton</h1>

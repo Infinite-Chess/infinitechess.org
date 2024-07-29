@@ -8,6 +8,9 @@
                 ...t('header.javascript', {returnObjects: true})
             })%>;
         </script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
         <!-- Do not modify the next line under any circumstances. It is used by HTMLScriptInjector.js as a reference point of where to inject htmlscript.js -->
         <!-- htmlscript.js inject here -->
 
@@ -18,6 +21,7 @@
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
         <title>Infinite Chess - Play</title>
+        <link rel="stylesheet" href="/css/_.css">
         <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
@@ -34,25 +38,7 @@
     </head>
     <!-- The onload event listener to call main.start() is now within the htmlscript! -->
     <body>
-        <header>
-            <nav>
-                <a href="/">
-                    <p><%=t('header.home')%></p>
-                </a>
-                <a href="/play">
-                    <p class="currPage"><%=t('header.play')%></p>
-                </a>
-                <a href="/news">
-                    <p><%=t('header.news')%></p>
-                </a>
-                <a href="/login" id="loginlink">
-                    <p id="logintext"><%=t('header.login')%></p>
-                </a>
-                <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
-                </a>
-            </nav>
-        </header>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
 
             <!-- Loading Screen -->

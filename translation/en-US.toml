@@ -7,7 +7,7 @@ home = "Home"
 play = "Play"
 news = "News"
 login = "Log In"
-createaccount = "Create Account"
+createaccount = "Register"
 
 [footer]
 contact = "Contact us"
@@ -26,13 +26,8 @@ js-confirm_delete = "Are you sure you want to delete your account? This CANNOT b
 js-enter_password = "Enter your password to PERMANENTLY delete your account:"
 
 [index]
-secondary_title = "The official website for playing live!"
-what_is_it_title = "What is it?"
-what_is_it_pargaraphs = [
-"Infinite Chess is a variant of chess in which there are no borders, much larger than your familiar 8x8 board. The queen, rooks, and bishops have <em>no limit</em> to how far they can move per turn. Pick any natural number up to infinity!",
-"With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researches have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
-"As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
-]
+splash_title = "Beyond 64 Squares"
+splash_text = "Infinite Chess is a variant of chess in which there are <strong>no borders</strong>, much larger than your familiar 8x8 board. The queen, rooks, and bishops have <strong>no limit</strong> to how far they can move per turn. Pick any natural integer up to infinity!"
 how_to_title = "How can I play?"
 how_to_paragraph = ["The current version release is 1.3.2 on the ","Play"," page!"]
 about_title = "About the Project"

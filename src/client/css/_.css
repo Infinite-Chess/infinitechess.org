@@ -1,0 +1,183 @@
+:root {
+    --accent: rgb(0, 128, 255);
+    --accent-transparent: rgba(0, 128, 255, 0.125);
+    --nav-bar-height: 64px;
+    --vw-capped: clamp(0px, 100vw, 1086px);
+    --vh-sub-nav: calc(100vh - var(--nav-bar-height));
+    --vwh: min(var(--vh-sub-nav), var(--vw-capped));
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'JetBrains Mono';
+    border: 0;
+    /* Enable temporarily during dev to see the borders of all elements */
+    /* outline: 1px solid rgba(0, 0, 0, 0.191); */
+}
+
+html {
+    height: 100%;
+}
+
+a {
+    color: black;
+    text-decoration: none;
+}
+
+header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1;
+    background-color: white;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    height: var(--nav-bar-height);
+    font-size: 0;
+    white-space: nowrap;
+    text-align: center;
+    width: 1024px;
+    margin: auto;
+}
+
+nav {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    width: 512px;
+}
+
+nav a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    line-height: 40px;
+    width: 128px;
+    height: 100%;
+    font-size: 16px;
+    color: black;
+    transition: all 250ms;
+}
+
+nav a:hover {
+    background-color: var(--accent-transparent);
+}
+
+.logo {
+    position: relative;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    height: 100%;
+}
+
+.logo .icon {
+    transform-origin: 0 100%;
+    transition: all 250ms;
+}
+
+.logo:hover .icon {
+    transform: rotateZ(-15deg);
+}
+
+.logo-text {
+    margin-left: 16px;
+    position: relative;
+    display: flex;
+    font-size: 32px;
+}
+
+main {
+    background-image: url('/img/blank_board.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-attachment: fixed;
+    margin-top: var(--nav-bar-height);
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+#content {
+    background-color: rgba(255, 255, 255, 0.25);
+    min-height: 100%;
+    margin: 16px auto;
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
+    padding: 30px 20px;
+    backdrop-filter: blur(2px);
+    border-radius: 8px;
+}
+
+#content h1 {
+    font-size: 48px;
+}
+
+a.active {
+    background-color: #00000020;
+}
+
+.center {
+    text-align: center;
+}
+
+p a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
+}
+
+.grey {
+    color:rgba(0, 0, 0, 0.345)
+}
+
+.bold {
+    font-weight: bold;
+}
+
+button {
+    width: 128px;
+    height: 40px;
+    background-color: black;
+    color: white;
+    border-radius: 4px;
+    transition: all 250ms;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #222;
+}
+
+/* Start increasing header links width */
+@media only screen and (min-width: 450px) {
+    header {
+        overflow: unset;
+    }
+}
+
+/* Cap content width size, revealing image on the sides */
+@media only screen and (min-width: 810px) {
+    #content {
+        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+        padding: 40px 30px;
+        min-height: 800px;
+    }
+
+    #content h1 {
+        font-size: 48px;
+        margin-bottom: 1em;
+    }
+}

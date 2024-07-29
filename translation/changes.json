@@ -1,4 +1,8 @@
 {
+  "8": {
+    "note": "Added splash_title and splash_text at 29:31",
+    "changes": []
+  },
   "7": {
     "note": "Added ws-server_under_maintenance on line 561.",
     "changes": []
