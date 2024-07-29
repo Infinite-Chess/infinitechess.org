@@ -62,6 +62,7 @@ const movepiece = (function(){
         else if (updateProperties) wincondition.detectThreecheck(gamefile); // This updates our check counters
 
         onlinegame.declineDraw() // decline draw offer, if any
+        guidrawoffer.closeDrawOffer()
 
         if (updateData) {
             guinavigation.update_MoveButtons()

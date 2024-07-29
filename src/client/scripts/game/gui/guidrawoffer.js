@@ -67,6 +67,7 @@ const guidrawoffer = (function(){
     return Object.freeze({
         areWeAcceptingDraw,
         openDrawOffer,
+        closeDrawOffer,
         callback_AcceptDraw,
         callback_DeclineDraw
     })
