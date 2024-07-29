@@ -220,8 +220,6 @@ const selection = (function() {
         }
 
         // Reselect! Recalc its legal moves, and recolor.
-        pawnIsPromoting = false;
-        promoteTo = undefined;
         const newIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
         selectPiece(pieceSelected.type, newIndex, pieceSelected.coords);
     }
