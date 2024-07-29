@@ -343,7 +343,11 @@ const highlights = (function(){
     function concatData_HighlightedMoves_Diagonal_Split(coords, step, intsect1Tile, intsect2Tile, limit, vertexData) {
         if (limit === 0) return; // Quick exit
 
-        const stepIsPositive = step[0] > 0;
+        const lineIsVertical = step[0] === 0;
+        const index = lineIsVertical ? 1 : 0;
+        const inverseIndex = 1 - index;
+
+        const stepIsPositive = step[index] > 0;
         const entryIntsectTile = stepIsPositive ? intsect1Tile : intsect2Tile;
         const exitIntsectTile = stepIsPositive ? intsect2Tile : intsect1Tile;
         
@@ -351,22 +355,22 @@ const highlights = (function(){
         let startCoords = [coords[0] + step[0], coords[1] + step[1]];
         // Is the piece 
         // Is the piece left, off-screen, of our intsect1Tile?
-        if (stepIsPositive && startCoords[0] < entryIntsectTile[0] || !stepIsPositive && startCoords[0] > entryIntsectTile[0]) { // Modify the start square
-            const distToEntryIntsectTile = entryIntsectTile[0] - startCoords[0]; // Can be negative
-            const distInSteps = Math.ceil(distToEntryIntsectTile / step[0]); // Should always be positive
-            const distRoundedUpToNearestStep = distInSteps * step[0]; // Can be negative
-            const newStartX = startCoords[0] + distRoundedUpToNearestStep;
-            const yToXStepRatio = step[1] / step[0];
-            const newStartY = startCoords[1] + distRoundedUpToNearestStep * yToXStepRatio;
-            startCoords = [newStartX, newStartY]
+        if (stepIsPositive && startCoords[index] < entryIntsectTile[index] || !stepIsPositive && startCoords[index] > entryIntsectTile[index]) { // Modify the start square
+            const distToEntryIntsectTile = entryIntsectTile[index] - startCoords[index]; // Can be negative
+            const distInSteps = Math.ceil(distToEntryIntsectTile / step[index]); // Should always be positive
+            const distRoundedUpToNearestStep = distInSteps * step[index]; // Can be negative
+            const newStartXY = startCoords[index] + distRoundedUpToNearestStep;
+            const yxToXStepRatio = step[inverseIndex] / step[index];
+            const newStartYX = startCoords[inverseIndex] + distRoundedUpToNearestStep * yxToXStepRatio;
+            startCoords = lineIsVertical ? [newStartYX, newStartXY] : [newStartXY, newStartYX];
         }
 
         let endCoords = exitIntsectTile;
         // Is the exitIntsectTile farther than we can legally slide?
-        const xWeShouldEnd = coords[0] + step[0] * limit;
-        if (stepIsPositive && xWeShouldEnd < endCoords[0] || !stepIsPositive && xWeShouldEnd > endCoords[0]) {
-            const yWeShouldEnd = coords[1] + step[1] * limit;
-            endCoords = [xWeShouldEnd, yWeShouldEnd]
+        const xyWeShouldEnd = coords[index] + step[index] * limit;
+        if (stepIsPositive && xyWeShouldEnd < endCoords[index] || !stepIsPositive && xyWeShouldEnd > endCoords[index]) {
+            const yxWeShouldEnd = coords[inverseIndex] + step[inverseIndex] * limit;
+            endCoords = lineIsVertical ? [yxWeShouldEnd, xyWeShouldEnd] : [xyWeShouldEnd, xyWeShouldEnd]
         }
 
         // Shift the vertex data of our first step to the right place
@@ -375,9 +379,9 @@ const highlights = (function(){
         shiftVertexData(vertexData, vertexDataXDiff, vertexDataYDiff); // The vertex data of the 1st step!
 
         // Calculate how many times we need to iteratively shift this vertex data and append it to our vertex data array
-        const xDist = stepIsPositive ? endCoords[0] - startCoords[0] : startCoords[0] - endCoords[0];
-        if (xDist < 0) return; // Early exit. The piece is up-right of our screen
-        const iterationCount = Math.floor((xDist + Math.abs(step[0])) / Math.abs(step[0])); // How many legal move square/dots to render on this line
+        const xyDist = stepIsPositive ? endCoords[index] - startCoords[index] : startCoords[index] - endCoords[index];
+        if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
+        const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
 
         addDataDiagonalVariant(vertexData, step, iterationCount)
     }
