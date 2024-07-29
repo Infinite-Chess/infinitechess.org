@@ -1265,7 +1265,7 @@ button.join-button, button.copy-button {
 
 /* Draw Offer UI */
 
-.drawOfferUI {
+.draw_offer_ui {
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -1289,18 +1289,18 @@ button.join-button, button.copy-button {
 }
 
 @media only screen and (max-width: 1520px) {  /* Mobile screens: make smaller in order to not obscure names */
-    .drawOfferUI {
+    .draw_offer_ui {
         margin-left: 22%;
         margin-right: 22%;
         width: 56%;
     }
 }
 
-.drawOfferUI p.offertitle, .drawOfferUI button {
+.draw_offer_ui p.offer_title, .draw_offer_ui button {
     font-size: min(3.5vw, 35px);
 }
 
-.drawOfferUI p.offertitle {
+.draw_offer_ui p.offer_title {
     color: black;
     text-align: center;
     vertical-align: middle;
@@ -1310,7 +1310,7 @@ button.join-button, button.copy-button {
     bottom: 50;
 }
 
-.drawOfferUI button {
+.draw_offer_ui button {
     background-color: rgb(255, 255, 255) !important;
     box-shadow: 0px 0px 7px 1px #727272 !important;
     border-radius: min(0.9vw, 10px);
@@ -1323,7 +1323,7 @@ button.join-button, button.copy-button {
     align-items: center;
 }
 
-.drawOfferUI img {
+.draw_offer_ui img {
     position: relative;
 	height: 85%;
 	margin:1px;
@@ -1335,12 +1335,12 @@ button.join-button, button.copy-button {
 	height: 95%;
 }
 
-.drawOfferUI button:hover {
+.draw_offer_ui button:hover {
     /* background-color: rgb(255, 255, 255); */
     background: linear-gradient(to bottom, white, rgb(219, 219, 219), white);
 }
 
-.drawOfferUI button:active {
+.draw_offer_ui button:active {
     /* box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.51); */
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
