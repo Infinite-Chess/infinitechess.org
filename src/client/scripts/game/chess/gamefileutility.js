@@ -201,8 +201,6 @@ const gamefileutility = (function(){
         board.darkenColor();
         guigameinfo.gameEnd(gamefile.gameConclusion);
         guipause.disableDrawOfferButton();
-        onlinegame.cancelAFKTimer();
-        onlinegame.cancelFlashTabTimer();
         onlinegame.cancelMoveSound();
         onlinegame.resetServerRestarting();
         onlinegame.deleteCustomVariantOptions();
