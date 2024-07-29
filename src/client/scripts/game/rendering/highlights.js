@@ -214,10 +214,6 @@ const highlights = (function(){
 
         const [r,g,b,a] = options.getLegalMoveHighlightColor(); // Legal moves highlight color
 
-        // How do we go about calculating the vertex data of our sliding moves?
-        // We COULD minimize how often we regenerate the buffer model by extending these lines beyond our field of view.
-        // BUT currently we're regenerating every frame so let's just render to screen edge!
-
         // First we need to calculate the data of the horizontal slide
         concatData_HighlightedMoves_Sliding_Horz(data, coords, legalMoves, boundingBoxOfRenderRange.left, boundingBoxOfRenderRange.right)
 
