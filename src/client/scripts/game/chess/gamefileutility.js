@@ -173,20 +173,6 @@ const gamefileutility = (function(){
     }
 
     /**
-     * A variant of {@link getPieceAtCoords} that returns the piece at the indicated coords,
-     * if there is one, except it doesn't look for its `index`, so it's a tad faster.
-     * @param {gamefile} gamefile - The gamefile
-     * @param {number[]} coords - The coordinates to retreive the piece at
-     * @returns {Piece | undefined} The piece, or *undefined* if there isn't one.
-     */
-    function getPieceAtCoords_noIndex(gamefile, coords) { // Returns { type, coords }
-        const type = getPieceTypeAtCoords(gamefile, coords);
-        if (!type) return undefined;
-
-        return { type, coords }
-    }
-
-    /**
      * Tests if the game is over by the used win condition, and if so, ends it.
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} An object containing various properties:
@@ -491,7 +477,6 @@ const gamefileutility = (function(){
         getPieceIndexByTypeAndCoords,
         getPieceTypeAtCoords,
         getPieceAtCoords,
-        getPieceAtCoords_noIndex,
         getPieceFromTypeAndCoords,
         updateGameConclusion,
         concludeGame,
