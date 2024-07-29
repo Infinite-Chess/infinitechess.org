@@ -25,9 +25,14 @@ const highlights = (function(){
     /** The buffer model of the blue legal move fields.
      * @type {BufferModel} */
     let model;
-    let model_Offset; // [x,y]
+    let model_Offset = [0,0]; // [x,y]
 
     const z = -0.01;
+
+
+    function getOffset() {
+        return model_Offset;
+    }
 
     function render() {
         if (movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're zoomed out.
@@ -35,17 +40,13 @@ const highlights = (function(){
         highlightLastMove()
         checkhighlight.render()
         renderLegalMoves()
+        arrows.renderEachHoveredHippogonalRider();
     }
 
     function renderLegalMoves() {
-
         if (!selection.isAPieceSelected()) return; // Only render if we have a highlighted squares model to use (will be undefined if none are highlighted)
         
-        // Do we need to recalculate the buffer model of highlights?
-        if (isRenderRangeBoundingBoxOutOfRange()
-        /* || math.isOrthogonalDistanceGreaterThanValue(model_Offset, movement.getBoardPos(), highlightedMovesRegenRange)*/) regenModel();
-        // Pretty sure the above is never needed because the render bounding box will always change and
-        // subsequently regenerate the model before we ever get more than 10,000 squares away for it to get gittery.
+        updateOffsetAndBoundingBoxOfRenderRange();
 
         const boardPos = movement.getBoardPos();
         const position = [
@@ -55,7 +56,6 @@ const highlights = (function(){
         ]
         const boardScale = movement.getBoardScale();
         const scale = [boardScale, boardScale, 1]
-        // render.renderModel(model, position, scale, "TRIANGLES")
         model.render(position, scale);
 
         if (options.isDebugModeOn()) renderBoundingBoxOfRenderRange();
@@ -65,8 +65,9 @@ const highlights = (function(){
     function regenModel() {
         if (!selection.isAPieceSelected()) return;
         main.renderThisFrame()
-        // This is the range at which we will always regen this model. Prevents gittering, but also needed because we can't render all infinite highlights at once.
-        model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange)
+        console.log("Regenerating legal moves model..")
+
+        updateOffsetAndBoundingBoxOfRenderRange();
 
         // Initate the variable that will store our vertex data
         data = []
@@ -81,13 +82,35 @@ const highlights = (function(){
 
         // Potentially infinite data on sliding moves...
 
-        initBoundingBoxOfRenderRange()
-
         const coords = selection.getPieceSelected().coords;
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
         concatData_HighlightedMoves_Sliding(data, coords, legalMoves)
 
         model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
+    }
+
+    /**
+     * Updates the offset and bounding box universal to all rendered legal move highlights.
+     * If a change is made, it calls to regenerate the model.
+     */
+    function updateOffsetAndBoundingBoxOfRenderRange() {
+        let changeMade = false;
+
+        const oldOffset = math.deepCopyObject(model_Offset);
+        // This is the range at which we will always regen this model. Prevents gittering.
+        model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange)
+        if (!math.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
+
+        // Used to limit the data/highlights of infinitely sliding moves to the area on your screen.
+        if (isRenderRangeBoundingBoxOutOfRange()) {
+            initBoundingBoxOfRenderRange()
+            changeMade = true;
+        }
+
+        if (changeMade) {
+            regenModel();
+            arrows.regenModelsOfHoveredHippogonalRiders();
+        }
     }
 
     function calcHighlightData_SelectedPiece() {
@@ -167,6 +190,7 @@ const highlights = (function(){
     }
 
     function isRenderRangeBoundingBoxOutOfRange() {
+        if (!boundingBoxOfRenderRange) return true; // It isn't even initiated yet 
 
         const boundingBoxOfView = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
                                                            : board.gboundingBox();
@@ -212,7 +236,11 @@ const highlights = (function(){
     function concatData_HighlightedMoves_Sliding (data, coords, legalMoves) { // { left, right, bottom, top} The size of the box we should render within
         if (!legalMoves.sliding) return; // No sliding moves
 
+        updateOffsetAndBoundingBoxOfRenderRange();
+
         const [r,g,b,a] = options.getLegalMoveHighlightColor(); // Legal moves highlight color
+
+        // How do we go about calculating the vertex data of our sliding moves?
 
         // First we need to calculate the data of the horizontal slide
         concatData_HighlightedMoves_Sliding_Horz(data, coords, legalMoves, boundingBoxOfRenderRange.left, boundingBoxOfRenderRange.right)
@@ -451,6 +479,7 @@ const highlights = (function(){
     }
 
     return Object.freeze({
+        getOffset,
         render,
         regenModel,
         concatData_HighlightedMoves_Sliding
