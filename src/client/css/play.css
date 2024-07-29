@@ -1284,7 +1284,7 @@ button.join-button, button.copy-button {
 
     /* Make it not a popup / tsevasa's suggestion */
     border-color: transparent;
-    background-color: transparent;
+    background-color: rgba(0, 0, 0, 0);
     box-shadow: none;
 }
 
