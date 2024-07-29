@@ -1258,7 +1258,7 @@ const gamemanager = (function() {
      * @returns {boolean}
      */
     function hasGameDrawOffer(game) {
-        const isOffering = (hasWhiteDrawOffer() || hasBlackDrawOffer())
+        const isOffering = (hasWhiteDrawOffer(game) || hasBlackDrawOffer(game))
         return isOffering
     }
 

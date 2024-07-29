@@ -239,7 +239,7 @@ offer_draw = "Offer a Draw"
 main_menu = "Main Menu"
 
 [play.drawoffer]
-title = "Accept draw offer?"
+question = "Accept draw offer?"
 
 [play.javascript]
 guest_indicator = "(Guest)"

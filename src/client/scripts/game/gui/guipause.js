@@ -71,11 +71,12 @@ const guipause = (function(){
 
         console.log(`Recent draw offers: ${ourRecentOffers}`)
 
-        if (!onlinegame.areInOnlineGame() || ourRecentOffers || movesLength < 2) {
+        if (!onlinegame.areInOnlineGame() || ourRecentOffers || !movesscript.isGameResignable(gamefile) || gamefile.gameConclusion) {
             element_offerDraw.classList.add('opacity-0_5')
+            return false
         } else {
-            console.log("allowed")
             element_offerDraw.classList.remove('opacity-0_5')
+            return true
         }
     }
 
@@ -135,12 +136,9 @@ const guipause = (function(){
 
     async function callback_OfferDraw(event) {
         const gamefile = game.getGamefile()
-        if (guidrawoffer.areWeAcceptingDraw()) return statustext.showStatus(`Can't offer draw!`, false, 2)
+        if (!updateDrawOfferButtonTransparency()) return statustext.showStatus(`Can't offer draw!`, false, 2)
         onlinegame.offerDraw()
         callback_Resume()
-
-        console.log(game.getGamefile().moves)
-        element_offerDraw.classList.add('opacity-0_5')
         statustext.showStatus(`Waiting for opponent to accept the draw...`, false, 3)
     }
 
