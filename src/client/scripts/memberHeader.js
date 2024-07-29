@@ -150,6 +150,10 @@ favicon: { // This block auto detects device theme and adjusts the browser icon 
 
     const element_favicon = document.getElementById('favicon');
 
+    /**
+     * Switches the browser icon to match the given theme.
+     * @param {string} theme "dark"/"light"
+     */
     function switchFavicon(theme) {
         if (theme === 'dark') element_favicon.href = '/img/favicon-dark.png';
         else favicon.href = '/img/favicon-light.png';
