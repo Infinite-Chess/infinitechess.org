@@ -5,6 +5,7 @@
     --vw-capped: clamp(0px, 100vw, 1086px);
     --vh-sub-nav: calc(100vh - var(--nav-bar-height));
     --vwh: min(var(--vh-sub-nav), var(--vw-capped));
+    --content-margin: 32px;
 }
 
 * {
@@ -106,12 +107,14 @@ main {
     margin-top: var(--nav-bar-height);
     overflow-x: hidden;
     overflow-y: auto;
+    min-height: var(--vh-sub-nav);
 }
 
 #content {
+    box-sizing: border-box;
     background-color: rgba(255, 255, 255, 0.25);
-    min-height: 100%;
-    margin: 16px auto;
+    min-height: calc(var(--vh-sub-nav) - var(--content-margin) * 2);
+    margin: var(--content-margin) auto;
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
     padding: 30px 20px;
     backdrop-filter: blur(2px);
@@ -173,11 +176,20 @@ button:hover {
     #content {
         max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
         padding: 40px 30px;
-        min-height: 800px;
     }
 
     #content h1 {
         font-size: 48px;
         margin-bottom: 1em;
+    }
+}
+
+@media only screen and (max-width: 1024px) {
+    .logo {
+        display: none;
+    }
+
+    .navbar {
+        justify-content: center;
     }
 }

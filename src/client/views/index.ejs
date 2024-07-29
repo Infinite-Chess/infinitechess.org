@@ -2,7 +2,7 @@
 <html lang="<%=language%>" dir="<%=t('direction')%>">
 <head>
     <script>
-        const translations = <% -JSON.stringify({
+        const translations = <%- JSON.stringify({
             ...t('header.javascript', { returnObjects: true })
         }) %>;
     </script>
