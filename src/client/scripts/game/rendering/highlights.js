@@ -81,8 +81,6 @@ const highlights = (function(){
 
         // Potentially infinite data on sliding moves...
 
-        initBoundingBoxOfRenderRange()
-
         const coords = selection.getPieceSelected().coords;
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
         concatData_HighlightedMoves_Sliding(data, coords, legalMoves)
@@ -213,6 +211,8 @@ const highlights = (function(){
         if (!legalMoves.sliding) return; // No sliding moves
 
         const [r,g,b,a] = options.getLegalMoveHighlightColor(); // Legal moves highlight color
+
+        initBoundingBoxOfRenderRange();
 
         // How do we go about calculating the vertex data of our sliding moves?
         // We COULD minimize how often we regenerate the buffer model by extending these lines beyond our field of view.
