@@ -772,6 +772,15 @@ const onlinegame = (function(){
         if (isPrivate) localstorage.deleteItem(gameID);
     }
 
+    /** Called when an online game is concluded (termination shown on-screen) */
+    function onGameConclude() {
+        cancelAFKTimer();
+        cancelFlashTabTimer();
+        cancelMoveSound();
+        resetServerRestarting();
+        deleteCustomVariantOptions();
+    }
+
     return Object.freeze({
         onmessage,
         areInOnlineGame,
@@ -791,14 +800,13 @@ const onlinegame = (function(){
         resyncToGame,
         update,
         onLostConnection,
-        cancelAFKTimer,
-        cancelFlashTabTimer,
         cancelMoveSound,
         resetServerRestarting,
         deleteCustomVariantOptions,
         offerDraw,
         acceptDraw,
-        declineDraw
+        declineDraw,
+        onGameConclude
     })
 
 })();

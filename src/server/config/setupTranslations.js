@@ -313,7 +313,7 @@ function getTranslation(key, language = 'en-US', options = {}) {
  * @returns {string} The translated string.
  */
 function getTranslationForReq(key, req, options = {}) {
-  return getTranslation(key, req.cookies.i18next, options)
+  return getTranslation(key, req.cookies?.i18next, options)
 }
 
 module.exports = {

@@ -163,27 +163,13 @@ const gamefileutility = (function(){
      * Returns the piece at the indicated coordinates, if there is one.
      * @param {gamefile} gamefile - The gamefile
      * @param {number[]} coords - The coordinates to retreive the piece at
-     * @returns {Piece | undefined} The piece, or *undefined* if there isn't one.
+     * @returns {Piece | undefined} The piece, or *undefined* if there isn't one: `{ type, index, coords }`
      */
     function getPieceAtCoords(gamefile, coords) {
         const type = getPieceTypeAtCoords(gamefile, coords);
         if (!type) return undefined;
         const index = getPieceIndexByTypeAndCoords(gamefile, type, coords);
         return { type, index, coords }
-    }
-
-    /**
-     * A variant of {@link getPieceAtCoords} that returns the piece at the indicated coords,
-     * if there is one, except it doesn't look for its `index`, so it's a tad faster.
-     * @param {gamefile} gamefile - The gamefile
-     * @param {number[]} coords - The coordinates to retreive the piece at
-     * @returns {Piece | undefined} The piece, or *undefined* if there isn't one.
-     */
-    function getPieceAtCoords_noIndex(gamefile, coords) { // Returns { type, coords }
-        const type = getPieceTypeAtCoords(gamefile, coords);
-        if (!type) return undefined;
-
-        return { type, coords }
     }
 
     /**
@@ -220,6 +206,8 @@ const gamefileutility = (function(){
         onlinegame.cancelMoveSound();
         onlinegame.resetServerRestarting();
         onlinegame.deleteCustomVariantOptions();
+        guigameinfo.gameEnd(gamefile.gameConclusion)
+        onlinegame.onGameConclude();
 
         const delayToPlayConcludeSoundSecs = 0.65;
         if (!onlinegame.areInOnlineGame()) {
@@ -492,7 +480,6 @@ const gamefileutility = (function(){
         getPieceIndexByTypeAndCoords,
         getPieceTypeAtCoords,
         getPieceAtCoords,
-        getPieceAtCoords_noIndex,
         getPieceFromTypeAndCoords,
         updateGameConclusion,
         concludeGame,

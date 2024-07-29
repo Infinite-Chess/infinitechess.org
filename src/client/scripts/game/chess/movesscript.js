@@ -244,10 +244,12 @@ const movesscript = (function(){
      * @param {gamefile} gamefile 
      * @param {number[]} coords - The coordinates of the piece
      */
-    function didPieceMoveLastTurn(gamefile, coords) {
+    function didPieceMoveLastTurnOrWasCaptured(gamefile, coords) {
         const lastMove = getLastMove(gamefile.moves);
         if (!lastMove) return false; // Beginning of the game, it hasn't moved.
-        return math.areCoordsEqual(lastMove.startCoords, coords); // true if it just moved
+        if (math.areCoordsEqual(lastMove.startCoords, coords)) return true; // It just moved
+        if (math.areCoordsEqual(lastMove.endCoords, coords)) return true; // It was just captured
+        return false;
     }
 
     /**
@@ -346,7 +348,7 @@ const movesscript = (function(){
         getWhosTurnAtFront,
         getPlyCount,
         hasPieceMoved,
-        didPieceMoveLastTurn,
+        didPieceMoveLastTurnOrWasCaptured,
         deleteLastMove,
         flagLastMoveAsCheck,
         flagLastMoveAsMate,
