@@ -376,14 +376,16 @@ const arrows = (function() {
 
         // Calculate the mesh...
 
-        
+        const data = [];
 
-
+        // Currently causing a crash
+        // highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisRiderLegalMoves);
+        // console.log(data);
 
 
         // Store both these objects inside hippogonalRidersHoveredOver
 
-        // hippogonalRidersHoveredOver[key] = { legalMoves: thisRiderLegalMoves, mesh }
+        // hippogonalRidersHoveredOver[key] = { legalMoves: thisRiderLegalMoves, mesh: data }
     }
 
     /**

@@ -205,7 +205,7 @@ const highlights = (function(){
     /**
      * Calculates buffer data of legal sliding moves and appends it to the provided vertex data array.
      * renderBoundingBox should always be greater than screen bounding box
-     * @param {*} data 
+     * @param {number[]} data - The vertex data array to apphend the new vertex data to
      * @param {number[]} coords - The coordinates of the piece with the provided legal moves
      * @param {LegalMoves} legalMoves 
      */
@@ -459,7 +459,8 @@ const highlights = (function(){
 
     return Object.freeze({
         render,
-        regenModel
+        regenModel,
+        concatData_HighlightedMoves_Sliding
     })
 
 })();
