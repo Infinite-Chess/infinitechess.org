@@ -214,6 +214,8 @@ const highlights = (function(){
 
         const [r,g,b,a] = options.getLegalMoveHighlightColor(); // Legal moves highlight color
 
+        // How do we go about calculating the vertex data of our sliding moves?
+
         // First we need to calculate the data of the horizontal slide
         concatData_HighlightedMoves_Sliding_Horz(data, coords, legalMoves, boundingBoxOfRenderRange.left, boundingBoxOfRenderRange.right)
 
