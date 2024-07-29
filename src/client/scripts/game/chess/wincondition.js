@@ -299,6 +299,8 @@ const wincondition = (function() {
                 return translations.termination.aborted;
             case "disconnect": // Happens when a player leaves
                 return translations.termination.disconnect;
+            case "agreement":
+                return translations.termination.agreement
             default:
                 console.error(`Cannot return English termination for unknown condition "${condition}"!`);
                 return 'Unknown';

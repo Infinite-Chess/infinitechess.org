@@ -357,6 +357,7 @@ allpiecescaptured = "All pieces captured"
 threecheck = "Three-check"
 koth = "King of the hill"
 resignation = "Resignation"
+agreement = "Agreement"
 time = "Time forfeit"
 aborted = "Aborted" # Game was cancelled (no elo exchanged)
 disconnect = "Abandoned" # A player left

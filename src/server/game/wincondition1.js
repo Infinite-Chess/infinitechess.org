@@ -79,6 +79,8 @@ const wincondition1 = (function() {
                 return getTranslation('play.javascript.termination.aborted');
             case "disconnect": // Happens when a player leaves
                 return getTranslation('play.javascript.termination.disconnect');
+            case "agreement":
+                return getTranslation('play.javascript.termination.agreement');
             default:
                 console.error(`Cannot return English termination for unknown condition "${condition}"!`);
                 return 'Unknown';
