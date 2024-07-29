@@ -166,7 +166,7 @@ archbishop = {name="L'Archifou", description="Il se déplace comme un fou et un 
 amazon = {name="L'Amazone", description="Elle se déplace comme une dame et un cavalier combinés. C'est la pièce fée la plus forte du jeu !"}
 guard = {name="Le Garde", description="Il se déplace comme le roi mais ne peut pas être mis en échec ou en échec et mat."}
 hawk = {name="Le Faucon", description="Il se déplace d'exactement 2 ou 3 cases dans chaque direction. Il peut sauter au dessus d'autres pièces comme un cavalier."}
-obstacle = {name="Obstacle", description="Une pièce neutre (controlées par aucun des joueurs) qui bloque les mouvements mais peut être capturée."},
+obstacle = {name="Obstacle", description="Une pièce neutre (controlées par aucun des joueurs) qui bloque les mouvements mais peut être capturée."}
 centaur = {name="Le Centaure", description="Il se déplace comme un cavalier et un garde combinés."}
 void = {name="Vide", description="Une pièce neutre (controlées par aucun des joueurs) qui représente l'absence d'une case sur le plateau. Les pièces ne peuvent se déplacer ni au dessus ni à travers du vide."}
 
