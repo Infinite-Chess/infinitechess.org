@@ -199,11 +199,7 @@ const gamefileutility = (function(){
         clock.stop()
         board.darkenColor()
         guigameinfo.gameEnd(gamefile.gameConclusion)
-        onlinegame.cancelAFKTimer();
-        onlinegame.cancelFlashTabTimer();
-        onlinegame.cancelMoveSound();
-        onlinegame.resetServerRestarting();
-        onlinegame.deleteCustomVariantOptions();
+        onlinegame.onGameConclude();
 
         const delayToPlayConcludeSoundSecs = 0.65;
         if (!onlinegame.areInOnlineGame()) {
