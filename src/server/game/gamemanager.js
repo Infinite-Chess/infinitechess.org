@@ -832,10 +832,10 @@ const gamemanager = (function() {
 
         if (color === "white") {
             if (hasWhiteDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
-            if (!game.moves.length - game.whiteDrawOfferMove > 2) return console.error("Client trying to offer a draw too fast")
+            if (game.moves.length - game.whiteDrawOfferMove <= 3) return console.error("Client trying to offer a draw too fast")
         } else {
             if (hasBlackDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
-            if (!game.moves.length - game.blackDrawOfferMove > 2) return console.error("Client trying to offer a draw too fast")
+            if (game.moves.length - game.blackDrawOfferMove <= 3) return console.error("Client trying to offer a draw too fast")
         }
         
         if (game.moves.length < 2) return console.error("Client trying to offer a draw on the first 2 moves")
@@ -844,12 +844,12 @@ const gamemanager = (function() {
         if (color === 'white') {
             game.whiteDrawOffer = 'offered'
             game.blackDrawOffer = 'unconfirmed'
+            game.whiteDrawOfferMove = game.moves.length
         } else if (color === 'black') {
             game.blackDrawOffer = 'offered'
             game.whiteDrawOffer = 'unconfirmed'
+            game.blackDrawOfferMove = game.moves.length
         }
-
-        game.drawOfferMove = game.moves.length
 
         // Alert their opponent
         const opponentColor = math1.getOppositeColor(color);

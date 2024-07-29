@@ -240,8 +240,6 @@ main_menu = "Main Menu"
 
 [play.drawoffer]
 title = "Accept draw offer?"
-accept = "Accept"
-decline = "Decline"
 
 [play.javascript]
 guest_indicator = "(Guest)"

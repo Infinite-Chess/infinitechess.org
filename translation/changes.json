@@ -1,4 +1,11 @@
 {
+  "8": {
+    "note": "added draw offers",
+    "changes": [
+      "play.pause.offer_draw",
+      "play.drawoffer.title"
+    ]
+  },
   "7": {
     "note": "Added ws-server_under_maintenance on line 561.",
     "changes": []
@@ -69,11 +76,5 @@
   "1": {
     "note": "inital commit of en-US-toml",
     "changes": []
-  },
-  "7": {
-    "note": "added draw offers",
-    "changes": ["play.pause.offer_draw",
-                "play.drawoffer.title"
-              ]
   }
 }

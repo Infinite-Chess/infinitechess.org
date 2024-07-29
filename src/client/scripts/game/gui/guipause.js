@@ -20,12 +20,6 @@ const guipause = (function(){
     const element_offerDraw = document.getElementById('offerdraw')
     const element_perspective = document.getElementById('toggleperspective')
 
-    // Draw Offer UI
-    let isAcceptingDraw = false
-    const element_drawOfferUI = document.getElementById('drawOfferUI')
-    const element_acceptDraw = document.getElementById('acceptdraw')
-    const element_declineDraw = document.getElementById('declinedraw')
-
     // Whosturn
     const element_whosturn = document.getElementById('whosturn')
     
@@ -37,12 +31,6 @@ const guipause = (function(){
      */
     function areWePaused() { return isPaused; }
 
-    /**
-     * Returns *true* if the user is deciding on accepting draw.
-     * @returns {boolean}
-     */
-    function areWeAcceptingDraw() { return isAcceptingDraw; }
-
     function getelement_perspective() {
         return element_perspective;
     }
@@ -53,23 +41,7 @@ const guipause = (function(){
         updatePasteButtonTransparency()
         updateDrawOfferButtonTransparency()
         style.revealElement(element_pauseUI)
-        if (!gamefile.LastDrawOfferMove) gamefile.LastDrawOfferMove = 0 // ugly fix, will work trust me
         initListeners()
-    }
-
-    function openDrawOffer() {
-        isAcceptingDraw = true;
-        style.revealElement(element_drawOfferUI)
-        style.hideElement(element_whosturn)
-        sound.playSound_drawOffer()
-        initDrawOfferListeners()
-    }
-
-    function closeDrawOffer() {
-        isAcceptingDraw = false;
-        style.hideElement(element_drawOfferUI)
-        style.revealElement(element_whosturn)
-        closeDrawOfferListeners()
     }
 
     function toggle() {
@@ -95,7 +67,7 @@ const guipause = (function(){
 
         const ourDrawOfferMove = onlinegame.getOurColor() === "white" ? gamefile.drawOfferWhite : gamefile.drawOfferBlack
         const movesLength = parseInt(moves.length)
-        const ourRecentOffers = movesLength - ourDrawOfferMove > 2 // 3 moves in between
+        const ourRecentOffers = movesLength - ourDrawOfferMove <= 3 // 3 moves in between
 
         console.log(`Recent draw offers: ${ourRecentOffers}`)
 
@@ -119,16 +91,6 @@ const guipause = (function(){
         if (movesscript.isGameResignable(game.getGamefile())) return element_mainmenu.textContent = translations["resign_game"];
 
         return element_mainmenu.textContent = translations["abort_game"];
-    }
-
-    function initDrawOfferListeners() {
-        element_acceptDraw.addEventListener('click', callback_AcceptDraw)
-        element_declineDraw.addEventListener('click', callback_DeclineDraw)
-    }
-
-    function closeDrawOfferListeners() {
-        element_acceptDraw.removeEventListener('click', callback_AcceptDraw)
-        element_declineDraw.removeEventListener('click', callback_DeclineDraw)
     }
 
     function initListeners() {
@@ -173,35 +135,16 @@ const guipause = (function(){
 
     async function callback_OfferDraw(event) {
         const gamefile = game.getGamefile()
-        if (areWeAcceptingDraw()) return statustext.showStatus(`Can't offer draw!`, false, 2)
+        if (guidrawoffer.areWeAcceptingDraw()) return statustext.showStatus(`Can't offer draw!`, false, 2)
         onlinegame.offerDraw()
         callback_Resume()
 
         console.log(game.getGamefile().moves)
-        if (game.getGamefile().moves) {
-            gamefile.LastDrawOfferMove = game.getGamefile().moves.length
-        }
         element_offerDraw.classList.add('opacity-0_5')
         statustext.showStatus(`Waiting for opponent to accept the draw...`, false, 3)
     }
 
-    async function callback_AcceptDraw(event) {
-        onlinegame.acceptDraw()
-        closeDrawOffer()
-
-        const gamefile = game.getGamefile();
-        gamefile.gameConclusion = 'draw agreement';
-        clock.stop()
-        gamefileutility.concludeGame(gamefile);
-    }
-
-    async function callback_DeclineDraw(event) {
-        onlinegame.declineDraw()
-        const gamefile = game.getGamefile();
-        gamefile.drawOffers = false
-        closeDrawOffer()
-        statustext.showStatus(`Draw declined`, false, 2)
-    }
+    
 
     function callback_TogglePointers (event) {
         event = event || window.event;
@@ -224,19 +167,15 @@ const guipause = (function(){
     
     return Object.freeze({
         areWePaused,
-        areWeAcceptingDraw,
         getelement_perspective,
         open,
-        openDrawOffer,
-        closeDrawOffer,
         toggle,
+        updateDrawOfferButtonTransparency,
         changeTextOfMainMenuButton,
         disableDrawOfferButton,
         callback_Resume,
         callback_TogglePointers,
-        callback_OfferDraw,
-        callback_AcceptDraw,
-        callback_DeclineDraw
+        callback_OfferDraw
     })
 
 })();

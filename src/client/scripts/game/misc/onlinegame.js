@@ -230,7 +230,7 @@ const onlinegame = (function(){
                 initServerRestart(data.value);
                 break;
             case "drawoffer":
-                guipause.openDrawOffer()
+                guidrawoffer.openDrawOffer()
                 let gamefile = game.getGamefile()
                 if (gamefile.moves) {
                     if (getOurColor() === "white") {
@@ -243,7 +243,6 @@ const onlinegame = (function(){
 
                 break;
             case "declinedraw":
-                gamefile.drawOffers = false
                 statustext.showStatus(`Opponent declined the draw`, false, 2)
                 break;
             default:
@@ -389,6 +388,8 @@ const onlinegame = (function(){
         stopOpponentAFKCountdown(); // The opponent is no longer AFK if they were
         flashTabNameYOUR_MOVE(true);
         scheduleMoveSound_timeoutID();
+
+        if (guipause.areWePaused) guipause.updateDrawOfferButtonTransparency()
     }
 
     function flashTabNameYOUR_MOVE(on) {
@@ -576,7 +577,7 @@ const onlinegame = (function(){
     }
 
     function declineDraw() {
-        if (!guipause.areWeAcceptingDraw()) return; // there isn't a draw to decline (we hope)
+        if (!guidrawoffer.areWeAcceptingDraw()) return; // there isn't a draw to decline (we hope)
         websocket.sendmessage('game', 'declinedraw');
         statustext.showStatus(`Draw declined`, false, 2);
     }

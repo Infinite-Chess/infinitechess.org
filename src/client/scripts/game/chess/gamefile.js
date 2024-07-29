@@ -184,11 +184,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.attackers = undefined;
     /** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
     this.checksGiven = undefined;
-    /** The last move when a draw offer was given
-     * Used for disabling the button */
-    this.LastDrawOfferMove = undefined;
-    /** Is there a draw offer currentrly */
-    this.drawOffers = false;
+    /** Last draw offer */
     this.drawOfferWhite = false;
     this.drawOfferBlack = false;
 
