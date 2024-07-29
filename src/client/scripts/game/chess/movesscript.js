@@ -240,6 +240,17 @@ const movesscript = (function(){
     }
 
     /**
+     * Returns true if the piece on the provided coordinates just barely moved last turn.
+     * @param {gamefile} gamefile 
+     * @param {number[]} coords - The coordinates of the piece
+     */
+    function didPieceMoveLastTurn(gamefile, coords) {
+        const lastMove = getLastMove(gamefile.moves);
+        if (!lastMove) return false; // Beginning of the game, it hasn't moved.
+        return math.areCoordsEqual(lastMove.startCoords, coords); // true if it just moved
+    }
+
+    /**
      * Deletes the latest move played.
      * @param {Move[]} moves - The moves list
      */
@@ -335,6 +346,7 @@ const movesscript = (function(){
         getWhosTurnAtFront,
         getPlyCount,
         hasPieceMoved,
+        didPieceMoveLastTurn,
         deleteLastMove,
         flagLastMoveAsCheck,
         flagLastMoveAsMate,

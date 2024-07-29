@@ -48,6 +48,8 @@ function Socket() {
         renewConnectionTimeoutID: undefined,
         /** A function that when called, returns true if this socket has an open invite. @type {Function} */
         hasInvite: undefined,
+        /** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
+        i18next: undefined,
     }
 }
 

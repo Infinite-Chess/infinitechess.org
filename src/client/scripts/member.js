@@ -146,16 +146,7 @@ async function removeAccount(confirmation) {
         if (!response.ok) {
             // translate the message from the server if a translation is available
             const result = await response.json();
-            let message = result.message;
-            if (translations[message]) message = translations[message];
-
-            // append the login cooldown if it exists
-            let login_cooldown = ("login_cooldown" in result ? result["login_cooldown"] : undefined);
-            if (login_cooldown !== undefined){
-                const seconds_plurality = login_cooldown == 1 ? translations["ws-second"] : translations["ws-seconds"];
-                message += ` ${login_cooldown} ${seconds_plurality}.`
-            }
-            alert(message);
+            alert(result.message);
             removeAccount(false);
         } else {
             window.location.href = '/';

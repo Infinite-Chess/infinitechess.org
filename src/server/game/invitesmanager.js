@@ -9,7 +9,9 @@ const { getUsernameCaseSensitive } = require('../controllers/members.js')
 
 // Custom imports
 const { Socket } = require('./TypeDefinitions.js')
-const wsfunctions = require('./wsfunctions.js');
+const wsutility = require('./wsutility.js');
+const sendNotify = wsutility.sendNotify;
+const sendNotifyError = wsutility.sendNotifyError;
 const math1 = require('./math1.js')
 const variant1 = require('./variant1.js')
 const gamemanager = require('./gamemanager.js');
@@ -35,7 +37,6 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
 
     const content = JSON.stringify({
         allowinvites: true,
-        message: "ws-server_restarting",
         restartIn: false
     }, null, 2);
     writeFile_ensureDirectory(allowinvitesPath, content)
@@ -150,7 +151,7 @@ function sendClientActiveGameCount(ws, gamecount) {
 
 // Similar to connect(), but this does not log the users connection until they are given a browser ID.
 async function createNewInvite (ws, invite, messageID) { // invite: { id, owner, variant, clock, color, rated, publicity } 
-    if (gamemanager.isSocketInAnActiveGame(ws)) return ws.metadata.sendmessage(ws, "general", "notify", { text: "ws-already_in_game" })
+    if (gamemanager.isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game');
     
     // Verify their invite contains the required properties...
     // ...
@@ -164,10 +165,10 @@ async function createNewInvite (ws, invite, messageID) { // invite: { id, owner,
     await readAllowInvites()
     
     // If so, sends a message to the socket informing them of that!
-    if (areUnderMaintenance(ws)) return;
+    if (areInvitesAllowed(ws)) return;
 
     // Make sure they don't already have an existing invite
-    if (userHasInvite(ws)) return ws.metadata.sendmessage(ws, "general", "notify", { text: "ws-player_already_has_invite" }, messageID)
+    if (userHasInvite(ws)) return sendNotify(ws, 'server.javascript.ws-player_already_has_invite')
     // This allows them to spam the button without receiving errors.
     // if (userHasInvite(ws)) return;
 
@@ -247,7 +248,7 @@ async function initServerRestart(newAllowInvitesValue) { // { allowInvites, mess
     // Save the file
     const nameOfFile = 'allowinvites.json'
     await writeFile(
-        path.join(__dirname, '../database', nameOfFile),
+        path.join(__dirname, '../../../database', nameOfFile),
         newAllowInvitesValue,
         `Error locking & writing file ${nameOfFile} after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created.`
     )
@@ -260,20 +261,20 @@ async function initServerRestart(newAllowInvitesValue) { // { allowInvites, mess
     gamemanager.broadCastGameRestarting(restartingAt)
 }
 
-// Returns true if the server is under maintenance,
+// Returns true if invites not allowed currently, server under maintenance
 // and sends a message to the socket informing them of that!
 // Call when they attempt to create an invite.
-function areUnderMaintenance(ws) {
+function areInvitesAllowed(ws) {
     // If allowinvites is false, disallow invite creation
     const isOwner = ws.metadata.role === 'owner'
-    if (allowinvites.allowinvites || isOwner || ws.metadata.IP === "98.202.60.22") return false; // They are allowed to make an invite!
+    if (allowinvites.allowinvites || isOwner) return false; // They are allowed to make an invite!
 
     // Making an invite is NOT allowed...
 
     gamemanager.printActiveGameCount();
-    const message = allowinvites.message;
     const timeUntilRestart = getMinutesUntilRestart();
-    ws.metadata.sendmessage(ws, "general", "notify", {text: message, number: timeUntilRestart});
+    const message = timeUntilRestart ? 'server.javascript.ws-server_restarting' : 'server.javascript.ws-server_under_maintenance'; 
+    sendNotify(ws, message, timeUntilRestart)
     return true; // NOT allowed to make na invite!
 }
 
@@ -336,7 +337,7 @@ function cancelInvite (ws, value, messageID) { // Value should be the ID of the 
     const id = value; // id of invite to delete
 
     const inviteAndIndex = getInviteByID(id) // { invite, index }
-    if (!inviteAndIndex) return ws.metadata.sendmessage(ws, "general", "notify", { text: "ws-invite_cancelled" }, messageID);
+    if (!inviteAndIndex) return sendNotify(ws, "server.javascript.ws-invite_cancelled");
     // This allows them to spam the button without receiving errors.
     //if (!inviteAndIndex) return;
     
@@ -344,7 +345,7 @@ function cancelInvite (ws, value, messageID) { // Value should be the ID of the 
 
     // Make sure they are the owner.
     if (!isInviteOurs(ws, invite)) {
-        const errText = `Player tried to delete an invite that wasn't theirs! Invite ID: ${id} Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+        const errText = `Player tried to delete an invite that wasn't theirs! Invite ID: ${id} Socket: ${wsutility.stringifySocketMetadata(ws)}`
         console.error(errText);
         logEvents(errText, 'hackLog.txt')
         return ws.metadata.sendmessage(ws, "general", "printerror", "You are forbidden to delete this invite.", messageID)
@@ -365,7 +366,7 @@ function getInviteByID(id) {
 }
 
 function acceptInvite(ws, inviteinfo) { // { id, isPrivate }
-    if (gamemanager.isSocketInAnActiveGame(ws)) return ws.metadata.sendmessage(ws, "general", "notify", { text: "ws-already_in_game" })
+    if (gamemanager.isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game");
     
     // Verify their invite contains the required properties...
     // ...
@@ -384,11 +385,10 @@ function acceptInvite(ws, inviteinfo) { // { id, isPrivate }
 
     // Make sure they are not accepting their own.
     if (isInviteOurs(ws, invite)) {
-        const errString = `Player tried to accept their own invite! Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+        const errString = `Player tried to accept their own invite! Socket: ${wsutility.stringifySocketMetadata(ws)}`
         console.error(errString);
         logEvents(errString, 'hackLog.txt') // Log the exploit to the hackLog!
-        // return ws.metadata.sendmessage(ws, "general", "notify", "Cannot accept our own invite.");
-        return ws.metadata.sendmessage(ws, "general", "notify", { text: "ws-accept_own_invite"});
+        return sendNotify(ws, "server.javascript.ws-accept_own_invite");
     }
 
     // Make sure it's legal for them to accept. (Not legal if they are a guest and the invite is RATED)
@@ -423,14 +423,14 @@ function unsubClientFromListNoInvite(ws) {
     delete subscribedClients[ws.metadata.id];
     //math.removeObjectFromArray(ws.metadata.subscriptions, "invites")
     delete ws.metadata.subscriptions.invites
-    if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+    if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
     if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`)
 }
 
 function informThemGameAborted(ws, isPrivate, inviteID) {
-    const errString = isPrivate ? "ws-invalid_code" : "ws-game_aborted";
-    if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${wsfunctions.stringifySocketMetadata(ws)}`)
-    return ws.metadata.sendmessage(ws, "general", "notify", { text: errString });
+    const errString = isPrivate ? "server.javascript.ws-invalid_code" : "server.javascript.ws-game_aborted";
+    if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${wsutility.stringifySocketMetadata(ws)}`)
+    return sendNotify(ws, errString);
 }
 
 // Returns true if atleast 1 public invite was changed
@@ -444,7 +444,7 @@ function deleteUsersExistingInvite(ws) { // Set dontBroadcastChange to true if y
             const inviteIsPublic = thisInvite.publicity === 'public'
             if (inviteIsPublic) deleted1PublicInvite = true;
             invites.splice(i, 1) // Delete the invite.
-            console.log(`Deleted members invite. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+            console.log(`Deleted members invite. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
         }
     } else /*ws.metadata['browser-id']*/ {
         const browser = ws.metadata['browser-id'];
@@ -454,7 +454,7 @@ function deleteUsersExistingInvite(ws) { // Set dontBroadcastChange to true if y
             const inviteIsPublic = thisInvite.publicity === 'public'
             if (inviteIsPublic) deleted1PublicInvite = true;
             invites.splice(i, 1) // Delete the invite.
-            console.log(`Deleted browsers invite. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+            console.log(`Deleted browsers invite. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
         }
     }
     return deleted1PublicInvite;
@@ -471,7 +471,7 @@ function deleteMembersExistingInvite(ws) {
         const inviteIsPublic = thisInvite.publicity === 'public'
         if (inviteIsPublic) deleted1PublicInvite = true;
         invites.splice(i, 1) // Delete the invite.
-        console.log(`Deleted members invite from disconnection. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+        console.log(`Deleted members invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
     }
     return deleted1PublicInvite;
 }
@@ -487,7 +487,7 @@ function deleteBrowsersExistingInvite(ws) {
         const inviteIsPublic = thisInvite.publicity === 'public'
         if (inviteIsPublic) deleted1PublicInvite = true;
         invites.splice(i, 1) // Delete the invite.
-        console.log(`Deleted browsers invite from disconnection. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+        console.log(`Deleted browsers invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
     }
     return deleted1PublicInvite;
 }
@@ -516,12 +516,12 @@ function findSocketFromOwner(owner) { // { member/browser }
 const invitesmanager = (function(){
 
     function subClientToList(ws) { // data: { route, action, value, id }
-        // if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+        // if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
         if (ws.metadata.subscriptions.invites) return; // Already subscribed
         
         subscribedClients[ws.metadata.id] = ws;
         ws.metadata.subscriptions.invites = true;
-        if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+        if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
         if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`)
 
         sendClientInvitesList(ws)
@@ -543,7 +543,7 @@ const invitesmanager = (function(){
         delete subscribedClients[ws.metadata.id];
         //math.removeObjectFromArray(ws.metadata.subscriptions, "invites")
         delete ws.metadata.subscriptions.invites
-        if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+        if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
         if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`)
 
         // One day this could be modified to not delete their existing invite
@@ -574,7 +574,7 @@ const invitesmanager = (function(){
                 acceptInvite(ws, data.value);
                 break;
             default:
-                console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+                console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
                 console.log(`Data: ${JSON.stringify(data)}`)
                 return;
         }
