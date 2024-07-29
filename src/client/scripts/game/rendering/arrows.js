@@ -35,7 +35,7 @@ const arrows = (function() {
     /**
      * An object that stores the LegalMoves and highlights mesh for hippogonal
      * rider arrow indicators currently being hovered over!
-     * `{ '20,2': { LegalMoves, mesh } }`
+     * `{ '20,2': { LegalMoves, model } }`
      */
     const hippogonalRidersHoveredOver = {};
 
@@ -377,15 +377,12 @@ const arrows = (function() {
         // Calculate the mesh...
 
         const data = [];
-
-        // Currently causing a crash
-        // highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisRiderLegalMoves);
-        // console.log(data);
-
+        highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisRiderLegalMoves);
+        const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
 
         // Store both these objects inside hippogonalRidersHoveredOver
 
-        // hippogonalRidersHoveredOver[key] = { legalMoves: thisRiderLegalMoves, mesh: data }
+        hippogonalRidersHoveredOver[key] = { legalMoves: thisRiderLegalMoves, model }
     }
 
     /**
@@ -400,12 +397,53 @@ const arrows = (function() {
         return false; // Diagonal
     }
 
+    function renderEachHoveredHippogonalRider() {
+        const boardPos = movement.getBoardPos();
+        const model_Offset = highlights.getOffset();
+        const position = [
+            -boardPos[0] + model_Offset[0], // Add the model's offset
+            -boardPos[1] + model_Offset[1],
+            0
+        ]
+        const boardScale = movement.getBoardScale();
+        const scale = [boardScale, boardScale, 1]
+
+        for (const value of Object.values(hippogonalRidersHoveredOver)) { // { legalMoves, model }
+            value.model.render(position, scale);
+        }
+    }
+
+    /**
+     * Call when our highlights offset, or render range bounding box, changes.
+     * This regenerates the mesh of the hippogonal rider arrow indicators hovered
+     * over to account for the new offset.
+     */
+    function regenModelsOfHoveredHippogonalRiders() {
+        if (!Object.keys(hippogonalRidersHoveredOver).length) return;
+
+        console.log('Updating models of hovered hippogonal rider legal moves..')
+
+        for (const [key, value] of Object.entries(hippogonalRidersHoveredOver)) { // { legalMoves, model }
+            const coords = math.getCoordsFromKey(key);
+            const thisRiderLegalMoves = value.legalMoves;
+
+            // Calculate the mesh...
+
+            const data = [];
+            highlights.concatData_HighlightedMoves_Sliding(data, coords, thisRiderLegalMoves);
+            // Overwrite the model inside hippogonalRidersHoveredOver
+            value.model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
+        }
+    }
+
     return Object.freeze({
         getMode,
         update,
         setMode,
         renderThem,
-        isMouseHovering
+        isMouseHovering,
+        renderEachHoveredHippogonalRider,
+        regenModelsOfHoveredHippogonalRiders
     });
 
 })();
