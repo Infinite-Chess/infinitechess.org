@@ -197,7 +197,6 @@ const gamefileutility = (function(){
         if (requestRemovalFromActiveGames) onlinegame.requestRemovalFromPlayersInActiveGames();
         if (wincondition.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
         clock.stop()
-        main.renderThisFrame();
         board.darkenColor()
         guigameinfo.gameEnd(gamefile.gameConclusion)
         onlinegame.cancelAFKTimer();
