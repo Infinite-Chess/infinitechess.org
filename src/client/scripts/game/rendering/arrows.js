@@ -34,10 +34,10 @@ const arrows = (function() {
 
     /**
      * An object that stores the LegalMoves and model for rendering the legal move highlights
-     * of hippogonal rider arrow indicators currently being hovered over!
+     * of piece arrow indicators currently being hovered over!
      * `{ '1,8': { legalMoves, model, color } }`
      */
-    let hippogonalRidersHoveredOver = {};
+    let piecesHoveredOver = {};
 
     /**
      * Returns the mode the arrow indicators on the edges of the screen is currently in.
@@ -53,7 +53,7 @@ const arrows = (function() {
      */
     function setMode(value) {
         mode = value;
-        if (mode === 0) hippogonalRidersHoveredOver = {}; // Erase, otherwise their legal move highlights continue to render
+        if (mode === 0) piecesHoveredOver = {}; // Erase, otherwise their legal move highlights continue to render
     }
 
     /**
@@ -183,8 +183,8 @@ const arrows = (function() {
             paddedBoundingBox.left+=cpadding
         }
 
-        /** A running list of of hippogonal rider arrows being hovered over this frame, in the form: `{ type, coords, dir }` @type {Object[]} */
-        const hippogonalRidersHoveringOverThisFrame = [];
+        /** A running list of of piece arrows being hovered over this frame, in the form: `{ type, coords, dir }` @type {Object[]} */
+        const piecesHoveringOverThisFrame = [];
 
         if (perspective.getEnabled()) padding = 0;
         for (const strline in slideArrows) {
@@ -203,23 +203,23 @@ const arrows = (function() {
                     const renderCoords = math.getLineIntersectionEntryTile(direction[0], direction[1], intersect, paddedBoundingBox, corner)
                     if (!renderCoords) continue;
                     const arrowDirection = isLeft ? [-direction[0],-direction[1]] : direction
-                    concatData(renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, hippogonalRidersHoveringOverThisFrame)
+                    concatData(renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame)
                 }
             }
         }
 
-        // Iterate through all pieces in hippogonalRidersHoveredOver, if they aren't being
+        // Iterate through all pieces in piecesHoveredOver, if they aren't being
         // hovered over anymore, delete them. Stop rendering their legal moves. 
-        const hippogonalRidersHoveringOverThisFrame_Keys = hippogonalRidersHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
-        for (const key of Object.keys(hippogonalRidersHoveredOver)) {
-            if (hippogonalRidersHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
-            delete hippogonalRidersHoveredOver[key]; // No longer being hovered over
+        const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
+        for (const key of Object.keys(piecesHoveredOver)) {
+            if (piecesHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
+            delete piecesHoveredOver[key]; // No longer being hovered over
         }
 
         if (data.length === 0) return;
 
-        for (const hippogonalRiderHovered of hippogonalRidersHoveringOverThisFrame) { // { type, coords, dir }
-            onHippogonalIndicatorHover(hippogonalRiderHovered.type, hippogonalRiderHovered.coords, hippogonalRiderHovered.dir); // Generate their legal moves and highlight model
+        for (const pieceHovered of piecesHoveringOverThisFrame) { // { type, coords, dir }
+            onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
         }
         
         model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", pieces.getSpritesheet())
@@ -270,7 +270,7 @@ const arrows = (function() {
         }
     }
 
-    function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCoords, direction, hippogonalRidersHoveringOverThisFrame) {
+    function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCoords, direction, piecesHoveringOverThisFrame) {
         const worldHalfWidth = worldWidth/2
 
         // Convert to world-space
@@ -308,7 +308,7 @@ const arrows = (function() {
         const mouseWorldX = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[0] : mouseWorldLocation[0]
         const mouseWorldY = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1]
         if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
-            hippogonalRidersHoveringOverThisFrame.push({ type, coords: pieceCoords, dir: direction })
+            piecesHoveringOverThisFrame.push({ type, coords: pieceCoords, dir: direction })
             thisOpacity = 1;
             hovering = true;
             // If we also clicked, then teleport!
@@ -376,21 +376,16 @@ const arrows = (function() {
     }
 
     /**
-     * Call when a hippogonal rider's arrow is hovered over.
+     * Call when a piece's arrow is hovered over.
      * Calculates their legal moves and model for rendering them.
      * @param {string} type - The type of piece of this arrow indicator
      * @param {number[]} pieceCoords - The coordinates of the piece the arrow is pointing to
      * @param {number[]} direction - The direction/line the arrow is pointing: `[dx,dy]`
      */
-    function onHippogonalIndicatorHover(type, pieceCoords, direction) {
+    function onPieceIndicatorHover(type, pieceCoords, direction) {
         // Check if their legal moves and mesh have already been stored
         const key = math.getKeyFromCoords(pieceCoords);
-        if (key in hippogonalRidersHoveredOver) return; // Legal moves and mesh already calculated.
-        // Enable the 4 lines below to not render legal move highlights for orthogonals and diagonals!
-        // if (!isDirectionHippogonal(direction)) return; // Not hippogonal arrow (don't render their legal moves)
-        // While the direction of the arrow MAY be hippogonal, that doesn't mean
-        // the piece CAN move hipppogonally, because we just may have arrows mode "all" on.
-        // if (!doesTypeHaveDirection(type, direction)) return;
+        if (key in piecesHoveredOver) return; // Legal moves and mesh already calculated.
 
         // Calculate their legal moves and mesh!
 
@@ -404,14 +399,15 @@ const arrows = (function() {
         const pieceColor = math.getPieceColorFromType(type);
         const opponentColor = onlinegame.areInOnlineGame() ? math.getOppositeColor(onlinegame.getOurColor()) : math.getOppositeColor(gamefile.whosTurn);
         const isOpponentPiece = pieceColor === opponentColor;
-        const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: false })
+        const isOurTurn = gamefile.whosTurn === pieceColor;
+        const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
         highlights.concatData_HighlightedMoves_Individual(data, thisRiderLegalMoves, color);
         highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisRiderLegalMoves, color);
         const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
 
-        // Store both these objects inside hippogonalRidersHoveredOver
+        // Store both these objects inside piecesHoveredOver
 
-        hippogonalRidersHoveredOver[key] = { legalMoves: thisRiderLegalMoves, model, color }
+        piecesHoveredOver[key] = { legalMoves: thisRiderLegalMoves, model, color }
     }
 
     /**
@@ -444,19 +440,7 @@ const arrows = (function() {
         return [dx,dy];
     }
 
-    /**
-     * Returns true if the provided direction/step is hippogonal,
-     * not orthogonal or diagonal. A [2,0] directions counts as orthogonal here, not hippogonal.
-     * @param {number[]} direction - [dx,dy]
-     */
-    function isDirectionHippogonal(direction) {
-        const [dx,dy] = direction;
-        if (dx === 0 || dy === 0) return false; // Orthogonal
-        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) return true; // Hippogonal
-        return false; // Diagonal
-    }
-
-    function renderEachHoveredHippogonalRider() {
+    function renderEachHoveredPiece() {
         const boardPos = movement.getBoardPos();
         const model_Offset = highlights.getOffset();
         const position = [
@@ -467,7 +451,7 @@ const arrows = (function() {
         const boardScale = movement.getBoardScale();
         const scale = [boardScale, boardScale, 1]
 
-        for (const [key, value] of Object.entries(hippogonalRidersHoveredOver)) { // 'x,y': { legalMoves, model, color }
+        for (const [key, value] of Object.entries(piecesHoveredOver)) { // 'x,y': { legalMoves, model, color }
             // Skip it if the rider being hovered over IS the piece selected! (Its legal moves are already being rendered)
             if (selection.isAPieceSelected()) {
                 const coords = math.getCoordsFromKey(key);
@@ -480,25 +464,23 @@ const arrows = (function() {
 
     /**
      * Call when our highlights offset, or render range bounding box, changes.
-     * This regenerates the mesh of the hippogonal rider arrow indicators hovered
+     * This regenerates the mesh of the piece arrow indicators hovered
      * over to account for the new offset.
      */
-    function regenModelsOfHoveredHippogonalRiders() {
-        if (!Object.keys(hippogonalRidersHoveredOver).length) return;
+    function regenModelsOfHoveredPieces() {
+        if (!Object.keys(piecesHoveredOver).length) return;
 
-        console.log('Updating models of hovered hippogonal rider legal moves..')
+        console.log('Updating models of hovered piece\'s legal moves..')
 
-        for (const [key, value] of Object.entries(hippogonalRidersHoveredOver)) { // { legalMoves, model, color }
+        for (const [key, value] of Object.entries(piecesHoveredOver)) { // { legalMoves, model, color }
             const coords = math.getCoordsFromKey(key);
             // Calculate the mesh...
             const data = [];
             highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color);
-            // Overwrite the model inside hippogonalRidersHoveredOver
+            // Overwrite the model inside piecesHoveredOver
             value.model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
         }
     }
-
-    function a() {return hippogonalRidersHoveredOver}
 
     return Object.freeze({
         getMode,
@@ -506,8 +488,8 @@ const arrows = (function() {
         setMode,
         renderThem,
         isMouseHovering,
-        renderEachHoveredHippogonalRider,
-        regenModelsOfHoveredHippogonalRiders
+        renderEachHoveredPiece,
+        regenModelsOfHoveredPieces
     });
 
 })();

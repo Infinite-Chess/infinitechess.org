@@ -41,7 +41,7 @@ const highlights = (function(){
         checkhighlight.render()
         updateOffsetAndBoundingBoxOfRenderRange();
         renderLegalMoves()
-        arrows.renderEachHoveredHippogonalRider();
+        arrows.renderEachHoveredPiece();
         renderBoundingBoxOfRenderRange();
     }
 
@@ -108,7 +108,7 @@ const highlights = (function(){
         if (changeMade) {
             console.log("Shifted offset of highlights.")
             regenModel();
-            arrows.regenModelsOfHoveredHippogonalRiders();
+            arrows.regenModelsOfHoveredPieces();
         }
     }
 
