@@ -229,7 +229,7 @@ const arrows = (function() {
             attacklines = Object.keys(slidingMoveset);
         }
         for (const strline in arrows) {
-            if (attacklines.includes(strline)) {continue;}
+            if (attacklines.includes(strline)) continue;
             removeTypesWithIncorrectMoveset(arrows[strline],strline)
             if (math.isEmpty(arrows[strline])) delete arrows[strline];
         }
@@ -247,7 +247,7 @@ const arrows = (function() {
 
         function doesTypeHaveMoveset(gamefile, type, direction) {
             const moveset = legalmoves.getPieceMoveset(gamefile, type)
-            if (!moveset.sliding) {return false;}
+            if (!moveset.sliding) return false;
             return moveset.sliding[direction] != null;
         }
     }
