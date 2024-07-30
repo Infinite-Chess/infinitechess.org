@@ -258,8 +258,7 @@ const highlights = (function(){
     }
 
     /**
-     * Adds the vertex of a directional movement line, in both directions, of ANY SLOPED
-     * step EXCEPT those that are orthogonal! This works with ALL diagonal or hippogonals!
+     * Adds the vertex of a directional movement line, in both directions, of ANY SLOPED step!
      * @param {number[]} data - The currently running vertex data array to apphend the new vertex data to
      * @param {number[]} coords - [x,y] of the piece
      * @param {number[]} step - Of the line / moveset
