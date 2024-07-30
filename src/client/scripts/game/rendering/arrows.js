@@ -208,16 +208,15 @@ const arrows = (function() {
             }
         }
 
-        if (data.length === 0) return;
-
-        const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
-
         // Iterate through all pieces in piecesHoveredOver, if they aren't being
         // hovered over anymore, delete them. Stop rendering their legal moves. 
+        const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
         for (const key of Object.keys(piecesHoveredOver)) {
             if (piecesHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
             delete piecesHoveredOver[key]; // No longer being hovered over
         }
+
+        if (data.length === 0) return;
 
         for (const pieceHovered of piecesHoveringOverThisFrame) { // { type, coords, dir }
             onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
@@ -482,6 +481,8 @@ const arrows = (function() {
             value.model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
         }
     }
+
+    function a() {return hippogonalRidersHoveredOver}
 
     return Object.freeze({
         getMode,
