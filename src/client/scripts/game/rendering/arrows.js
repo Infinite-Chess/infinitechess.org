@@ -388,10 +388,9 @@ const arrows = (function() {
         if (key in piecesHoveredOver) return; // Legal moves and mesh already calculated.
 
         // Calculate their legal moves and mesh!
-
         const gamefile = game.getGamefile();
         const thisRider = gamefileutility.getPieceAtCoords(gamefile, pieceCoords);
-        const thisRiderLegalMoves = legalmoves.calculate(gamefile, thisRider)
+        const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider)
 
         // Calculate the mesh...
 
@@ -401,13 +400,13 @@ const arrows = (function() {
         const isOpponentPiece = pieceColor === opponentColor;
         const isOurTurn = gamefile.whosTurn === pieceColor;
         const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
-        highlights.concatData_HighlightedMoves_Individual(data, thisRiderLegalMoves, color);
-        highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisRiderLegalMoves, color);
+        highlights.concatData_HighlightedMoves_Individual(data, thisPieceLegalMoves, color);
+        highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisPieceLegalMoves, color);
         const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
 
         // Store both these objects inside piecesHoveredOver
 
-        piecesHoveredOver[key] = { legalMoves: thisRiderLegalMoves, model, color }
+        piecesHoveredOver[key] = { legalMoves: thisPieceLegalMoves, model, color }
     }
 
     /**
