@@ -173,9 +173,9 @@ const options = (function() {
         else         return themes[theme].darkTiles;
     }
 
-    function getLegalMoveHighlightColor() {
-        if (selection.isOpponentPieceSelected()) return themes[theme].legalMovesHighlightColor_Opponent;
-        else if (selection.arePremoving()) return themes[theme].legalMovesHighlightColor_Premove;
+    function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
+        if (isOpponentPiece) return themes[theme].legalMovesHighlightColor_Opponent;
+        else if (isPremove) return themes[theme].legalMovesHighlightColor_Premove;
         else return themes[theme].legalMovesHighlightColor_Friendly;
     }
 

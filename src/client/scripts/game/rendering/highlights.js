@@ -39,14 +39,14 @@ const highlights = (function(){
 
         highlightLastMove()
         checkhighlight.render()
+        updateOffsetAndBoundingBoxOfRenderRange();
         renderLegalMoves()
         arrows.renderEachHoveredHippogonalRider();
+        renderBoundingBoxOfRenderRange();
     }
 
     function renderLegalMoves() {
         if (!selection.isAPieceSelected()) return; // Only render if we have a highlighted squares model to use (will be undefined if none are highlighted)
-        
-        updateOffsetAndBoundingBoxOfRenderRange();
 
         const boardPos = movement.getBoardPos();
         const position = [
@@ -57,8 +57,6 @@ const highlights = (function(){
         const boardScale = movement.getBoardScale();
         const scale = [boardScale, boardScale, 1]
         model.render(position, scale);
-
-        if (options.isDebugModeOn()) renderBoundingBoxOfRenderRange();
     }
 
     // Regenerates the model for all highlighted squares. Expensive, minimize calling this.
@@ -84,7 +82,8 @@ const highlights = (function(){
 
         const coords = selection.getPieceSelected().coords;
         const legalMoves = selection.getLegalMovesOfSelectedPiece()
-        concatData_HighlightedMoves_Sliding(data, coords, legalMoves)
+        const color = options.getLegalMoveHighlightColor(); // [r,g,b,a]
+        concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color)
 
         model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
     }
@@ -233,12 +232,10 @@ const highlights = (function(){
      * @param {number[]} coords - The coordinates of the piece with the provided legal moves
      * @param {LegalMoves} legalMoves 
      */
-    function concatData_HighlightedMoves_Sliding (data, coords, legalMoves) { // { left, right, bottom, top} The size of the box we should render within
+    function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { // { left, right, bottom, top} The size of the box we should render within
         if (!legalMoves.sliding) return; // No sliding moves
 
         updateOffsetAndBoundingBoxOfRenderRange();
-
-        const [r,g,b,a] = options.getLegalMoveHighlightColor(); // Legal moves highlight color
 
         // How do we go about calculating the vertex data of our sliding moves?
 
@@ -248,7 +245,7 @@ const highlights = (function(){
         // Calculate the data of the vertical slide 
         concatData_HighlightedMoves_Sliding_Vert(data, coords, legalMoves, boundingBoxOfRenderRange.bottom, boundingBoxOfRenderRange.top)
         // Calculate the data of the diagonals
-        concatData_HighlightedMoves_Diagonals(data, coords, legalMoves, boundingBoxOfRenderRange, r, g, b, a)
+        concatData_HighlightedMoves_Diagonals(data, coords, legalMoves, boundingBoxOfRenderRange, color)
     }
 
     function concatData_HighlightedMoves_Sliding_Horz(data, coords, legalMoves, left, right) {
@@ -312,13 +309,13 @@ const highlights = (function(){
     }
 
     // Adds the vertex data of all legal slide diagonals (not orthogonal), no matter the step size/slope
-    function concatData_HighlightedMoves_Diagonals (data, coords, legalMoves, renderBoundingBox, r, g, b, a) {
+    function concatData_HighlightedMoves_Diagonals (data, coords, legalMoves, renderBoundingBox, color) {
         const lineSet = new Set(Object.keys(legalMoves.sliding))
         lineSet.delete('1,0')
         lineSet.delete('0,1')
 
         const offset = game.getGamefile().mesh.offset;
-        const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(offset, coords, z, [r,g,b,a]) // Square / dot highlighting 1 legal move
+        const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(offset, coords, z, color) // Square / dot highlighting 1 legal move
 
         for (const strline of lineSet) {
             const line = math.getCoordsFromKey(strline); // [dx,dy]
@@ -453,6 +450,8 @@ const highlights = (function(){
 
     // Generates buffer model and renders the outline of the render range of our highlights, useful in developer mode.
     function renderBoundingBoxOfRenderRange() {
+        if (!options.isDebugModeOn()) return; // Skip if debug mode off
+
         const color = [1,0,1, 1];
         const data = bufferdata.getDataRect_FromTileBoundingBox(boundingBoxOfRenderRange, color);
 
