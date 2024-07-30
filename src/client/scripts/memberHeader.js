@@ -107,10 +107,10 @@ const validation = (function(){
     function changeNavigationLinks() {
 
         loginLink.setAttribute('href', `/member/${member.toLowerCase()}`);
-        loginText.textContent = translations["js-profile"];
+        loginLink.textContent = translations["js-profile"];
 
         createaccountLink.setAttribute('href', '/logout');
-        createaccountText.textContent = translations["js-logout"];
+        createaccountLink.textContent = translations["js-logout"];
     }
 
     /**

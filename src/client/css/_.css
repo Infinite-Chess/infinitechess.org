@@ -155,7 +155,7 @@ a {
     font-weight: bold;
 }
 
-button {
+.pihedron-btn {
     width: 128px;
     height: 40px;
     background-color: black;
@@ -165,7 +165,7 @@ button {
     cursor: pointer;
 }
 
-button:hover {
+.pihedron-btn:hover {
     background-color: #222;
 }
 
