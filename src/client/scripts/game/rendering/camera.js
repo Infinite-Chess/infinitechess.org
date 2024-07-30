@@ -23,9 +23,9 @@ const camera = (function() {
     const zNear = 1;
     const zFar = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  perspective.distToRenderBoard * sqrt(2)
         
-    // Header = 40
+    // Header = 64
     // Footer = 59.5
-    const MARGIN_OF_HEADER_AND_FOOTER = 40; // UPDATE with the html document  ---  !!! This is the sum of the heights of the page's navigation bar and footer.
+    const MARGIN_OF_HEADER_AND_FOOTER = 64; // UPDATE with the html document  ---  !!! This is the sum of the heights of the page's navigation bar and footer.
     // How many physical pixels per virtual pixel on the device screen? For retina displays this is usually 2 or 3.
     const pixelDensity = window.devicePixelRatio
     let PIXEL_HEIGHT_OF_TOP_NAV = undefined // In virtual pixels
@@ -163,7 +163,7 @@ const camera = (function() {
 
     function updatePIXEL_HEIGHT_OF_NAVS() {
         PIXEL_HEIGHT_OF_TOP_NAV = !options.gnavigationVisible() ? 0
-                                      : window.innerWidth > 700 ? 84 + 64 // Update with the css stylesheet!
+                                      : window.innerWidth > 700 ? 84 // Update with the css stylesheet!
                                       : window.innerWidth > 550 ? window.innerWidth * 0.12
                                       : window.innerWidth > 368 ? 66 : window.innerWidth * 0.179;
         PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.gnavigationVisible() ? 0 : 84;
