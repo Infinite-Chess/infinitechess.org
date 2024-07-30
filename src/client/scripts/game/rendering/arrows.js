@@ -208,16 +208,15 @@ const arrows = (function() {
             }
         }
 
-        if (data.length === 0) return;
-
-        const hippogonalRidersHoveringOverThisFrame_Keys = hippogonalRidersHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
-
         // Iterate through all pieces in hippogonalRidersHoveredOver, if they aren't being
         // hovered over anymore, delete them. Stop rendering their legal moves. 
+        const hippogonalRidersHoveringOverThisFrame_Keys = hippogonalRidersHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
         for (const key of Object.keys(hippogonalRidersHoveredOver)) {
             if (hippogonalRidersHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
             delete hippogonalRidersHoveredOver[key]; // No longer being hovered over
         }
+
+        if (data.length === 0) return;
 
         for (const hippogonalRiderHovered of hippogonalRidersHoveringOverThisFrame) { // { type, coords, dir }
             onHippogonalIndicatorHover(hippogonalRiderHovered.type, hippogonalRiderHovered.coords, hippogonalRiderHovered.dir); // Generate their legal moves and highlight model
@@ -498,6 +497,8 @@ const arrows = (function() {
             value.model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
         }
     }
+
+    function a() {return hippogonalRidersHoveredOver}
 
     return Object.freeze({
         getMode,
