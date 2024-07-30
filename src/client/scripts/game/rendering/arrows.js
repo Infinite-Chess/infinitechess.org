@@ -489,12 +489,9 @@ const arrows = (function() {
 
         for (const [key, value] of Object.entries(hippogonalRidersHoveredOver)) { // { legalMoves, model, color }
             const coords = math.getCoordsFromKey(key);
-            const thisRiderLegalMoves = value.legalMoves;
-
             // Calculate the mesh...
-
             const data = [];
-            highlights.concatData_HighlightedMoves_Sliding(data, coords, thisRiderLegalMoves, value.color);
+            highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color);
             // Overwrite the model inside hippogonalRidersHoveredOver
             value.model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
         }

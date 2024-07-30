@@ -107,6 +107,7 @@ const highlights = (function(){
         }
 
         if (changeMade) {
+            console.log("Shifted offset of highlights.")
             regenModel();
             arrows.regenModelsOfHoveredHippogonalRiders();
         }
@@ -314,8 +315,7 @@ const highlights = (function(){
         lineSet.delete('1,0')
         lineSet.delete('0,1')
 
-        const offset = game.getGamefile().mesh.offset;
-        const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(offset, coords, z, color) // Square / dot highlighting 1 legal move
+        const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coords, z, color) // Square / dot highlighting 1 legal move
 
         for (const strline of lineSet) {
             const line = math.getCoordsFromKey(strline); // [dx,dy]
