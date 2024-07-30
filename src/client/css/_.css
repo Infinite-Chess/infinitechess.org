@@ -80,12 +80,17 @@ nav a:hover {
 }
 
 .logo .icon {
-    transform-origin: 0 100%;
+    width: 48px;
+    height: 48px;
     transition: all 250ms;
 }
 
 .logo:hover .icon {
-    transform: rotateZ(-15deg);
+    transform: scale(0.9);
+}
+
+.logo .icon img {
+    width: 100%;
 }
 
 .logo-text {
@@ -190,6 +195,15 @@ button:hover {
     }
 
     .navbar {
+        width: 100%;
         justify-content: center;
+    }
+
+    .reading {
+        width: 100%;
+    }
+
+    section {
+        padding: 32px;
     }
 }
