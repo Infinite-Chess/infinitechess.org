@@ -406,6 +406,7 @@ const arrows = (function() {
         const opponentColor = onlinegame.areInOnlineGame() ? math.getOppositeColor(onlinegame.getOurColor()) : math.getOppositeColor(gamefile.whosTurn);
         const isOpponentPiece = pieceColor === opponentColor;
         const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: false })
+        highlights.concatData_HighlightedMoves_Individual(data, thisRiderLegalMoves, color);
         highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisRiderLegalMoves, color);
         const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
 
