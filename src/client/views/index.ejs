@@ -1,70 +1,68 @@
 <!DOCTYPE html>
 <html lang="<%=language%>" dir="<%=t('direction')%>">
-<head>
-    <script>
-        const translations = <%- JSON.stringify({
-            ...t('header.javascript', { returnObjects: true })
-        }) %>;
-    </script>
-    <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="ie=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Infinite Chess Official Website</title>
-    <link rel='stylesheet' href='/css/index.css'>
-    <link rel='stylesheet' href='/css/_.css'>
-    <link rel='stylesheet' href='/css/footer.css'>
-    <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
-    <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
-</head>
-<body>
-    <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
-    <main>
-        <div id="hero">
-            <div class="container">
-                <div class="text">
-                    <h1><%- t('index.splash_title') %></h1>
-                    <p>
-                        <%- t('index.splash_text') %>
-                    </p>
-                    <button onclick="window.open('/play')">Play</button>
+    <head>
+        <script>
+            const translations = <%- JSON.stringify({
+                ...t('header.javascript', { returnObjects: true })
+            }) %>;
+        </script>
+        <%- include(`${viewsfolder}/components/meta`) %>
+        <%- include(`${viewsfolder}/components/font`) %>
+        <title>Infinite Chess Official Website</title>
+        <link rel='stylesheet' href='/css/<%= name %>.css'>
+        <%- include(`${viewsfolder}/components/css`, {name: name}) %>
+        <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+    </head>
+    <body>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
+        <main>
+            <div id="hero">
+                <div class="container">
+                    <div class="text">
+                        <h1><%- t('index.splash_title') %></h1>
+                        <p>
+                            <%- t('index.splash_text') %>
+                        </p>
+                        <button onclick="window.open('/play')">Play</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <section>
-            <div class="reading">
-                <h2>
-                    <%=t('index.about_title')%>
-                </h2>
-                <p>
-                    <%=t('index.about_paragraphs.0')%>
-                </p>
-                <p>
-                    <%=t('index.about_paragraphs.1.0')%>
-                    <a target='_blank' href='https://www.patreon.com/Naviary'>
-                        <%=t('index.about_paragraphs.1.1')%>
-                    </a>.
-                </p>
-                <h2>
-                    <%=t('index.patreon_title')%>
-                </h2>
-                <div class="patreon-container">
-                    <p>Andreas</p>
-                    <p>Lebarb</p>
-                    <p>Mauer01</p>
-                    <p>Levon</p>
+            <section>
+                <div class="reading">
+                    <h2>
+                        <%=t('index.about_title')%>
+                    </h2>
                     <p>
-                        <spam class="IM">IM</spam> Luke Harmon-Vellotti
+                        <%=t('index.about_paragraphs.0')%>
                     </p>
-                    <p>KnightBeforeLast</p>
-                    <p>SuperGamersGames</p>
-                    <p>EmmaBellHelium</p>
-                    <p>Meni</p>
-                    <p>Settemio</p>
+                    <p>
+                        <%=t('index.about_paragraphs.1.0')%>
+                        <a target='_blank' href='https://www.patreon.com/Naviary'>
+                            <%=t('index.about_paragraphs.1.1')%>
+                        </a>.
+                    </p>
+                    <h2>
+                        <%=t('index.patreon_title')%>
+                    </h2>
+                    <div class="patreon-container">
+                        <p>Andreas</p>
+                        <p>Lebarb</p>
+                        <p>Mauer01</p>
+                        <p>Levon</p>
+                        <p>
+                            <spam class="IM">IM</spam> Luke Harmon-Vellotti
+                        </p>
+                        <p>KnightBeforeLast</p>
+                        <p>SuperGamersGames</p>
+                        <p>EmmaBellHelium</p>
+                        <p>Meni</p>
+                        <p>Settemio</p>
+                    </div>
                 </div>
-            </div>
-        </section>
-    </main>
-    <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
-    <script src="/scripts/memberHeader.js"></script>
-</body>
+            </section>
+        </main>
+        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
+        <script src="/scripts/memberHeader.js"></script>
+    </body>
 </html>

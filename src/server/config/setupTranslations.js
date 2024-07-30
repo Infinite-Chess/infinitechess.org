@@ -263,6 +263,7 @@ function translateStaticTemplates(translations) {
             languages: languages_list,
             language: language,
             viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
+            name: template,
           },
         ),
       );
