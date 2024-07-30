@@ -387,10 +387,11 @@ const arrows = (function() {
         // Check if their legal moves and mesh have already been stored
         const key = math.getKeyFromCoords(pieceCoords);
         if (key in hippogonalRidersHoveredOver) return; // Legal moves and mesh already calculated.
-        if (!isDirectionHippogonal(direction)) return; // Not hippogonal arrow (don't render their legal moves)
+        // Enable the 4 lines below to not render legal move highlights for orthogonals and diagonals!
+        // if (!isDirectionHippogonal(direction)) return; // Not hippogonal arrow (don't render their legal moves)
         // While the direction of the arrow MAY be hippogonal, that doesn't mean
         // the piece CAN move hipppogonally, because we just may have arrows mode "all" on.
-        if (!doesTypeHaveDirection(type, direction)) return;
+        // if (!doesTypeHaveDirection(type, direction)) return;
 
         // Calculate their legal moves and mesh!
 
