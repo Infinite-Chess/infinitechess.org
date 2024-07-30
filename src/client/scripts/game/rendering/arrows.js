@@ -482,8 +482,6 @@ const arrows = (function() {
         }
     }
 
-    function a() {return hippogonalRidersHoveredOver}
-
     return Object.freeze({
         getMode,
         update,
