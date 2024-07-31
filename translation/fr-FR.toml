@@ -80,7 +80,7 @@ code_credits = [
 
 [member]
 verify_message = "Validez l'email pour vérifier votre compte."
-resend_message = ["Vous n'avez pas reçu d'email ? Vérifiez vos spams. Aussi, ", "renvoyer.", "Si vous ne recevez toujours rien, <a href='mailto:infinitechess.org@gmail.com'>envoyez moi un message.</a>"]
+resend_message = ["Vous n'avez pas reçu d'email ? Vérifiez vos spams. Aussi, ", "renvoyer.", " Si vous ne recevez toujours rien, ", "envoyez moi un message."]
 verify_confirm = "Merci ! Votre compte est désormais vérifié."
 rating = "Classement elo:"
 joined = "A rejoint le:"
