@@ -23,7 +23,7 @@
   },
   "7": {
     "note": "Added ws-server_under_maintenance on line 561.",
-    "changes": []
+    "changes": ["server.javascript.ws-server_under_maintenance"]
   },
   "6": {
     "note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
