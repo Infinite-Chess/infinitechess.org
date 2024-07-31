@@ -1,4 +1,8 @@
 {
+  "8": {
+    "note": "Added a knightrider description for the guide, on line 170.",
+    "changes": []
+  },
   "7": {
     "note": "Added ws-server_under_maintenance on line 561.",
     "changes": []
