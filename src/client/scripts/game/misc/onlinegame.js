@@ -625,8 +625,9 @@ const onlinegame = (function(){
         inSync = false;
         resetAFKValues();
         resetServerRestarting();
-        cancelFlashTabTimer()
-        perspective.resetRotations() // Without this, leaving an online game of which we were black, won't reset our rotation.
+        cancelFlashTabTimer();
+        guipause.changeAcceptDrawToOfferDraw(); // prevent "accept draw"
+        perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
     }
 
     function resetAFKValues() {
