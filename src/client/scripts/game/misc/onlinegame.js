@@ -670,6 +670,7 @@ const onlinegame = (function(){
 
         websocket.sendmessage('game', 'submitmove', data, true)
         onlinegame.declineDraw() // decline draw offer, if any
+        guidrawoffer.closeDrawOffer()
 
         rescheduleAlertServerWeAFK();
     }
