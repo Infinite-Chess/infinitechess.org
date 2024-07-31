@@ -480,16 +480,16 @@ more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and 
 date = "August 1, 2024:"
 text_top = "Update 1.4 is released! There have been many collaborative features added since we open sourced!"
 update_list = [
-"The addition of knightriders, which hop infinitely like a knight until obstructed! The 'Knighted Chess' variant has been upgraded to replace the knights with knightriders!",
-"The game now auto declares draws if there's insufficient material on the board to force checkmate.",
+"Knightriders have been added, which hop infinitely like a knight until they're obstructed! The 'Knighted Chess' variant has been upgraded to replace the knights with knightriders!",
+"The game now automatically declares a draw if there's insufficient material on the board to force checkmate.",
 "Translated the website into French! You can change the language by visiting the footer on any page.",
-"Improved loading time of the website.",
-"Click you or your opponent's pieces at any time to view their possible moves!",
-"Right click at any time to deselect the currently-selected piece.",
+"Improved the loading time of the website.",
+"Click your or your opponent's pieces at any time to view their possible moves!",
+"Right-click at any time to deselect the currently selected piece.",
 "Hovering over arrow indicators on the edge of the screen now renders the legal moves of the piece they are pointing to!",
-"New website icon! Ω This automatically matches your preferred light or dark device theme.",
-"Game code, or the ICN's, metadata has been reformatted to more closely match PGN norms.",
-"Users can now delete their account if they so choose on their profile page, without having to email us."
+"New website icon, Ω! This automatically matches your preferred light or dark device theme.",
+"The game code's, or the ICN's, metadata has been reformatted to more closely match PGN norms.",
+"Users can now delete their account on their profile page, if they so choose, without having to email us."
 ]
 
 [news.july22-2024]
