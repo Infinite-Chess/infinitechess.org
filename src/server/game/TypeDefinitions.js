@@ -130,7 +130,7 @@ function Game() {
     this.whiteDrawOfferMove = undefined
     this.blackDrawOfferMove = undefined
 
-    /** Information about players offering a draw */
+    /** The states of players offering draws */
     this.whiteDrawOffer = undefined
     this.blackDrawOffer = undefined
 
