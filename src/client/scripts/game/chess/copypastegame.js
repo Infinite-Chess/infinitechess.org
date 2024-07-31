@@ -34,10 +34,9 @@ const copypastegame = (function(){
     /**
      * Primes the provided gamefile to for the formatconverter to turn it into an ICN
      * @param {gamefile} gamefile - The gamefile
-	 * @param {boolean} copySinglePosition - Enable to only copy a single position without all the moves
      * @returns {Object} The primed gamefile for converting into ICN format
      */
-    function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the entire gamefile for copying
+    function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for copying
         let primedGamefile = {};
         /** What values do we need?
          * 
@@ -64,6 +63,7 @@ const copypastegame = (function(){
         primedGamefile.moves = gamefile.moves;
         primedGamefile.gameRules = gameRulesCopy;
 
+        const copySinglePosition = false; // Enable to only copy a single position without all the moves
         if (copySinglePosition) {
             primedGamefile.startingPosition = gamefile.startSnapshot.position;
             primedGamefile.specialRights = gamefile.startSnapshot.specialRights;
