@@ -346,7 +346,7 @@ please_report_bug = "Ceci ne devrait jamais arriver, reportez ce bug s'il vous p
 checkmate = "Échec et Mat"
 stalemate = "Pat"
 repetition = "Répétition de coups" # Needs translation
-moverule = "-move rule"  # The game inserts a number in front of this phrase # Can't be translated for now
+moverule = ["Regle des ", " coups"]  # The game inserts a number in between the 2 strings
 insuffmat = "Matériel insuffisant"
 royalcapture = "Capture royale" # Needs translation
 allroyalscaptured = "Toutes les pièces royales ont été capturées"
@@ -356,7 +356,7 @@ koth = "KOTH"
 resignation = "Abandon"
 time = "Défaite au temps"
 aborted = "Annulation" # Game was cancelled (no elo exchanged)
-disconnect = "Déconnexion" # A player left # Needs translation
+disconnect = "Déconnexion" # A player left
 
 [play.javascript.results]
 you_checkmate = "Victoire par échec-et-mat !"
