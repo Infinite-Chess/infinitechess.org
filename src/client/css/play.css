@@ -1305,6 +1305,8 @@ button.join-button, button.copy-button {
     text-align: center;
     vertical-align: middle;
     line-height: 100%;
+    font-size: 30px;
+    font-family: "Open Sans";
     font-weight: bold;
     top: 50%;
     bottom: 50;
