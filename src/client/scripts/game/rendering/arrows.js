@@ -5,11 +5,17 @@
 
 const arrows = (function() {
 
-    const width = 0.65; // % of 1 tile   default 0.6
-    const sidePadding = 0.15; // % of 1 tile between piece and screen edge
+    /** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */
+    const width = 0.65;
+    /** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
+    const sidePadding = 0.15;
+    /** Opacity of the mini images of the pieces and arrows. */
     const opacity = 0.6;
+    /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
     const renderZoomLimit = 10; // virtual pixels. Default: 14
 
+    /** The distance in perspective mode to render the arrow indicators from the camera.
+     * We need this because there is no normal edge of the screen like in 2D mode. */
     const perspectiveDist = 17;
 
     let data;
