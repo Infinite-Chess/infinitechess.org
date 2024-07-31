@@ -484,7 +484,7 @@ update_list = [
 "The game now auto declares draws if there's insufficient material on the board to force checkmate.",
 "Translated the website into French! You can change the language by visiting the footer on any page.",
 "Improved loading time of the website.",
-"Click your or your opponent's pieces at any time to view their possible moves!",
+"Click you or your opponent's pieces at any time to view their possible moves!",
 "Right click at any time to deselect the currently-selected piece.",
 "Hovering over arrow indicators on the edge of the screen now renders the legal moves of the piece they are pointing to!",
 "New website icon! Ω This automatically matches your preferred light or dark device theme.",
