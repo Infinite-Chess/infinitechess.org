@@ -97,6 +97,10 @@ main {
     font-size: 18px;
 }
 
+#content ul li {
+    margin-bottom: 0.7em;
+}
+
 
 .currPage {
     background-color: rgb(236, 236, 236);

@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "9"
+version = "10"
 
 [header]
 home = "Home"
@@ -476,6 +476,22 @@ login_button = "Log In"
 title = "News"
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
 
+[news.aug1-2024] # Update 1.4
+date = "August 1, 2024:"
+text_top = "Update 1.4 is released! There have been many collaborative features added since we open sourced!"
+update_list = [
+"The addition of knightriders, which hop infinitely like a knight until obstructed! The 'Knighted Chess' variant has been upgraded to replace the knights with knightriders!",
+"The game now auto declares draws if there's insufficient material on the board to force checkmate.",
+"Translated the website into French! You can change the language by visiting the footer on any page.",
+"Improved loading time of the website.",
+"Click your or your opponent's pieces at any time to view their possible moves!",
+"Right click at any time to deselect the currently-selected piece.",
+"Hovering over arrow indicators on the edge of the screen now renders the legal moves of the piece they are pointing to!",
+"New website icon! Ω This automatically matches your preferred light or dark device theme.",
+"Game code, or the ICN's, metadata has been reformatted to more closely match PGN norms.",
+"Users can now delete their account if they so choose on their profile page, without having to email us."
+]
+
 [news.july22-2024]
 date = "July 22, 2024:"
 account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
@@ -513,11 +529,6 @@ text_box = ["And many others! For the full list, check out ", "the discord!"]
 [news.jan29-2024]
 date = "Jan 29, 2024:"
 text = "New video released today!"
-
-[news.aug26-2023]
-date = "Aug 26, 2023:"
-text_top = "Infinite Chess v1.2 has been released! Introducing Move History. Use the left & right arrow keys to rewind and fast forward the game!"
-text_box = "The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!"
 
 [server.javascript]
 ws-invalid_username = "Username is invalid"

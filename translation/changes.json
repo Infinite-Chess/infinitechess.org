@@ -1,4 +1,12 @@
 {
+  "10": {
+    "note": "Added news post Aug 1, 2024. Deleted news post Aug 26, 2023.",
+    "changes": [
+        "news.aug26-2023.date",
+        "news.aug26-2023.text_top",
+        "news.aug26-2023.text_box"
+      ]
+  },
   "9": {
     "note": "In the guide, under controls, where it describes what the Tab key does, added sentence 'Clicking these arrows will teleport you to the piece they're pointing to.' line 142. Also changed controls_paragraph, line 137.",
     "changes": []
