@@ -48,10 +48,12 @@ const guidrawoffer = (function(){
     }
 
     async function callback_AcceptDraw(event) {
+        const gamefile = game.getGamefile();
+        
+        if (gamefile.gameConclusion) return // game already over
         onlinegame.acceptDraw()
         closeDrawOffer()
 
-        const gamefile = game.getGamefile();
         gamefile.gameConclusion = 'draw agreement';
         clock.stop()
         gamefileutility.concludeGame(gamefile);

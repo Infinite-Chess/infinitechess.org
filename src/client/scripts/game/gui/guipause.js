@@ -11,6 +11,7 @@ const guipause = (function(){
 
     // Pause UI
     let isPaused = false
+    let offerDrawOverAcceptDraw = true
     const element_pauseUI = document.getElementById('pauseUI')
     const element_resume = document.getElementById('resume')
     const element_pointers = document.getElementById('togglepointers')
@@ -58,16 +59,35 @@ const guipause = (function(){
         else                                                      element_pastegame.classList.remove('opacity-0_5')
     }
 
+    function changeOfferDrawToAcceptDraw() {
+        offerDrawOverAcceptDraw = false
+        element_offerDraw.innerText = translations["accept_draw"]
+        closeListeners()
+        initListeners()
+    }
+
+    function changeAcceptDrawToOfferDraw() {
+        offerDrawOverAcceptDraw = true
+        element_offerDraw.innerText = translations["offer_draw"]
+        closeListeners() // prevent weirdness
+        initListeners()
+    }
+
     function updateDrawOfferButtonTransparency() {
         const gamefile = game.getGamefile()
         const moves = gamefile.moves;
+
+        if (!offerDrawOverAcceptDraw) {
+            if (!gamefile.gameConclusion) element_offerDraw.classList.remove('opacity-0_5');
+            return
+        }
 
         if (isNaN(parseInt(gamefile.drawOfferWhite))) gamefile.drawOfferWhite = 0
         if (isNaN(parseInt(gamefile.drawOfferBlack))) gamefile.drawOfferBlack = 0
 
         const ourDrawOfferMove = onlinegame.getOurColor() === "white" ? gamefile.drawOfferWhite : gamefile.drawOfferBlack
         const movesLength = parseInt(moves.length)
-        const ourRecentOffers = movesLength - ourDrawOfferMove <= 3 // 3 moves in between
+        const ourRecentOffers = !(movesLength - ourDrawOfferMove >= 2) // 2 move in between
 
         console.log(`Recent draw offers: ${ourRecentOffers}`)
 
@@ -100,7 +120,11 @@ const guipause = (function(){
         element_copygame.addEventListener('click', copypastegame.callbackCopy)
         element_pastegame.addEventListener('click', copypastegame.callbackPaste)
         element_mainmenu.addEventListener('click', callback_MainMenu)
-        element_offerDraw.addEventListener('click', callback_OfferDraw)
+        if (offerDrawOverAcceptDraw) {
+            element_offerDraw.addEventListener('click', callback_OfferDraw)
+        } else {
+            element_offerDraw.addEventListener('click', guidrawoffer.callback_AcceptDraw)
+        }
         element_perspective.addEventListener('click', callback_Perspective)
     }
 
@@ -111,11 +135,12 @@ const guipause = (function(){
         element_pastegame.removeEventListener('click', copypastegame.callbackPaste)
         element_mainmenu.removeEventListener('click', callback_MainMenu)
         element_offerDraw.removeEventListener('click', callback_OfferDraw)
+        element_offerDraw.removeEventListener('click', guidrawoffer.callback_AcceptDraw)
         element_perspective.removeEventListener('click', callback_Perspective)
     }
 
     function callback_Resume(event) {
-        if (!isPaused && !isAcceptingDraw) return;
+        if (!isPaused) return;
         event = event || window.event;
         isPaused = false;
         style.hideElement(element_pauseUI)
@@ -168,6 +193,8 @@ const guipause = (function(){
         getelement_perspective,
         open,
         toggle,
+        changeOfferDrawToAcceptDraw,
+        changeAcceptDrawToOfferDraw,
         updateDrawOfferButtonTransparency,
         changeTextOfMainMenuButton,
         disableDrawOfferButton,

@@ -832,10 +832,10 @@ const gamemanager = (function() {
 
         if (color === "white") {
             if (hasWhiteDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
-            if (game.moves.length - game.whiteDrawOfferMove <= 3) return console.error("Client trying to offer a draw too fast")
+            if (game.moves.length - game.whiteDrawOfferMove <= 1) return console.error("Client trying to offer a draw too fast")
         } else {
             if (hasBlackDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
-            if (game.moves.length - game.blackDrawOfferMove <= 3) return console.error("Client trying to offer a draw too fast")
+            if (game.moves.length - game.blackDrawOfferMove <= 1) return console.error("Client trying to offer a draw too fast")
         }
         
         if (game.moves.length < 2) return console.error("Client trying to offer a draw on the first 2 moves")
@@ -1639,6 +1639,8 @@ const gamemanager = (function() {
         // Also cancel the one that auto loses by AFK
         cancelAutoAFKResignTimer(game);
         cancelDisconnectTimers(game);
+        game.blackDrawOffer = 'declined'
+        game.whiteDrawOffer = 'declined'
 
         // Set a 5-second timer to delete it and change elos,
         // to give the other client time to oppose the conclusion if they want.

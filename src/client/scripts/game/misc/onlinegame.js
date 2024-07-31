@@ -231,6 +231,8 @@ const onlinegame = (function(){
                 break;
             case "drawoffer":
                 guidrawoffer.openDrawOffer()
+                guipause.callback_Resume() // close
+                guipause.changeOfferDrawToAcceptDraw()
                 let gamefile = game.getGamefile()
                 if (gamefile.moves) {
                     if (getOurColor() === "white") {
@@ -578,6 +580,7 @@ const onlinegame = (function(){
 
     function declineDraw() {
         if (!guidrawoffer.areWeAcceptingDraw()) return; // there isn't a draw to decline (we hope)
+        guipause.changeAcceptDrawToOfferDraw()
         websocket.sendmessage('game', 'declinedraw');
         statustext.showStatus(`Draw declined`, false, 2);
     }

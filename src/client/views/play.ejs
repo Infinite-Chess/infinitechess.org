@@ -5,7 +5,8 @@
             const translations = <%-JSON.stringify({
                 ...t('play.javascript', {returnObjects: true}),
                 ...t('play.play-menu', {returnObjects: true}),
-                ...t('header.javascript', {returnObjects: true})
+                ...t('header.javascript', {returnObjects: true}),
+                ...t('play.pause', {returnObjects: true})
             })%>;
         </script>
         <!-- Do not modify the next line under any circumstances. It is used by HTMLScriptInjector.js as a reference point of where to inject htmlscript.js -->
@@ -494,6 +495,13 @@
                         <div id="guardsB" class="promotepiececontainer hidden"><div class="promotepiece guardsB button"></div></div>
                     </div>
                 </div>
+                
+                <!-- Draw Offer UI -->
+                <div id="draw_offer_ui" class="draw_offer_ui footer hidden">
+                    <p class="offer_title"><%=t('play.drawoffer.question')%></p>
+                    <button id="acceptdraw" class="acceptdraw button"><img src="/img/checkmark.svg" alt="accept" class="icon"></button>
+                    <button id="declinedraw" class="declinedraw button"><img src="/img/xmark.svg" alt="decline" class="icon"></button>
+                </div>
 
                 <!-- Pause UI -->
                 <div id="pauseUI" class="pauseUI hidden">
@@ -505,13 +513,6 @@
                     <button id="pastegame" class="pastegame button"><%=t('play.pause.paste')%></button>
                     <button id="offerdraw" class="offerdraw button"><%=t('play.pause.offer_draw')%></button>
                     <button id="mainmenu" class="mainmenu button"><%=t('play.pause.main_menu')%></button>
-                </div>
-
-                <!-- Draw Offer UI -->
-                <div id="draw_offer_ui" class="draw_offer_ui footer hidden">
-                    <p class="offer_title"><%=t('play.drawoffer.question')%></p>
-                    <button id="acceptdraw" class="acceptdraw button"><img src="/img/checkmark.svg" alt="accept" class="icon"></button>
-                    <button id="declinedraw" class="declinedraw button"><img src="/img/xmark.svg" alt="decline" class="icon"></button>
                 </div>
 
                 <!-- Status message -->

@@ -3,6 +3,7 @@
     "note": "added draw offers",
     "changes": [
       "play.pause.offer_draw",
+      "play.pause.accept_draw",
       "play.drawoffer.question",
       "play.javascript.termination"
     ]

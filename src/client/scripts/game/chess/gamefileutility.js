@@ -200,6 +200,7 @@ const gamefileutility = (function(){
         main.renderThisFrame();
         board.darkenColor();
         guigameinfo.gameEnd(gamefile.gameConclusion);
+        guidrawoffer.closeDrawOffer();
         guipause.disableDrawOfferButton();
         onlinegame.cancelMoveSound();
         onlinegame.resetServerRestarting();
