@@ -1378,6 +1378,8 @@ const gamemanager = (function() {
         // console.log("New move list:")
         // console.log(game.moves);
 
+        if (hasGameDrawOffer(game)) declineDraw(ws) // decline draw, server sided
+
         if (isGameOver(game)) sendGameUpdateToColor(game, color)
         else sendUpdatedClockToColor(game, color);
         sendMoveToColor(game, opponentColor); // Send their move to their opponent.
