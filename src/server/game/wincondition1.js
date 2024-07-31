@@ -57,7 +57,7 @@ const wincondition1 = (function() {
             case "repetition":
                 return getTranslation('play.javascript.termination.repetition');
             case "moverule":
-                return `${getTranslation('play.javascript.termination.moverule[0]')}50${getTranslation('play.javascript.termination.moverule[1]')}`;
+                return `${getTranslation('play.javascript.termination.moverule.0')}50${getTranslation('play.javascript.termination.moverule.1')}`;
             case "insuffmat":
                 return getTranslation('play.javascript.termination.insuffmat');
             case "royalcapture":
