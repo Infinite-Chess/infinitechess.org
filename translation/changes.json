@@ -1,4 +1,8 @@
 {
+  "9": {
+    "note": "In the guide, under controls, where it describes what the Tab key does, added sentence 'Clicking these arrows will teleport you to the piece they're pointing to.' line 142. Also changed controls_paragraph, line 137.",
+    "changes": []
+  },
   "8": {
     "note": "Added a knightrider description for the guide, on line 170.",
     "changes": []

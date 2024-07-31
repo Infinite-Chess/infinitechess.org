@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "8"
+version = "9"
 
 [header]
 home = "Home"
@@ -134,12 +134,12 @@ careful_paragraphs = [
 "Many other variants have been created with the aim of strengthening your backside."
 ]
 controls_heading = "Controls"
-controls_paragraph = "A lot of controls are intuitive, such as clicking and dragging the board to move around, and scrolling to zoom in and out, but let's take a look at the other controls you have at your disposal!"
+controls_paragraph = "Click and drag the board to move around. Scroll to zoom in and out. Click any piece, including your opponent's pieces, to view their legal moves at any point! Additional controls are:"
 keybinds = [
 " to move around.",
 ["Space", " and ", "Shift", " to zoom in and out."],
 ["Escape", " to pause the game."],
-["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu."],
+["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu. Clicking these arrows will teleport you to the piece they're pointing to."],
 " will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
 ]
 controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
