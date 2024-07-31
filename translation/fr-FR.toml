@@ -34,7 +34,7 @@ what_is_it_pargaraphs = [
 "Comme vous pouvez l'imaginer, il y a une infinité de positions de départ possibles dont beaucoup que vous pouvez jouer de façon compétitive ! Le but final reste de faire un échec et mat, il est donc nécessaire de développer des nouvelles techniques vu qu'il n'y pas de murs pour coincer le roi ennemi. Normalement, les parties ne durent pas plus longtemps que dans un jeu d'échec classique. Les pions font leur promotions sur les lignes 1 et 8 respectivement !",
 ]
 how_to_title = "Comment Jouer ?"
-how_to_paragraph = ["Le jeu est actuellement en version 1.3.2 sur la page ","Jouer","!"]
+how_to_paragraph = ["Le jeu est actuellement en version 1.4 sur la page ","Jouer","!"]
 about_title = "À Propos"
 about_paragraphs = [
 "Je m'apelle Naviary. Dès que j'ai découvert Infinite Chess (le concept existait bien avant ce site), J'ai été très intrigué par ce jeu et par les possibilités qu'il débloque ! Jusqu'à aujourd'hui, y jouer était plutôt difficile, les membres de chess.com devaient créer des images du plateau eux même et se les envoyer à chaque coup. À cause de ça, peu de gens connaissent cette variante.",
