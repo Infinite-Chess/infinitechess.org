@@ -399,7 +399,7 @@ const variant1 = (function() {
      * @param {string} UTCTime - The time this game was played.
      * @returns {string} The position in compressed short form
      */
-    function getPositionStringOfKnightedChess(Date) {
+    function getPositionStringOfKnightedChess(UTCDate, UTCTime) {
         const UTCTimeStamp = UTCDate ? math1.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime) : Date.now();
         // UTC timestamp for Jul 21, 2024, 9:33 PM
         // Original, oldest version. NO knightrider

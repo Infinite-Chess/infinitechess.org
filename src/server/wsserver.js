@@ -450,7 +450,7 @@ function terminateAllIPSockets(IP) {
     for (const id of connectionList) {
         //console.log(`Terminating 1.. id ${id}`)
         const ws = websocketConnections[id];
-        ws.close(1009, 'Message Too Big')
+        ws.close(1009, 'Message Too Big') // Perhaps this will be a duplicate close action? Because rateLimit.js also can also close the socket.
     }
 
     // console.log(`Terminated all of IP ${IP}`)

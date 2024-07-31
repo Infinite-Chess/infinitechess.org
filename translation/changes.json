@@ -1,5 +1,5 @@
 {
-  "8": {
+  "11": {
     "note": "added draw offers",
     "changes": [
       "play.pause.offer_draw",
@@ -7,9 +7,31 @@
       "play.javascript.termination"
     ]
   },
+  "10": {
+    "note": "Added news post Aug 1, 2024. Deleted news post Aug 26, 2023.",
+    "changes": [
+        "news.aug1-2024.date",
+        "news.aug1-2024.text_top",
+        "news.aug1-2024.update_list",
+        "news.aug26-2023.date",
+        "news.aug26-2023.text_top",
+        "news.aug26-2023.text_box"
+      ]
+  },
+  "9": {
+    "note": "In the guide, under controls, where it describes what the Tab key does, added sentence 'Clicking these arrows will teleport you to the piece they're pointing to.' line 142. Also changed controls_paragraph, line 137.",
+    "changes": [
+      "play.guide.controls_paragraph",
+      "play.guide.keybinds"
+    ]
+  },
+  "8": {
+    "note": "Added a knightrider description for the guide, on line 170.",
+    "changes": ["play.guide.pieces.knightrider"]
+  },
   "7": {
     "note": "Added ws-server_under_maintenance on line 561.",
-    "changes": []
+    "changes": ["server.javascript.ws-server_under_maintenance"]
   },
   "6": {
     "note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",

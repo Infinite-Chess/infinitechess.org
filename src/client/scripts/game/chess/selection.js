@@ -32,7 +32,7 @@ const selection = (function() {
 
     /**
      * Returns the current selected piece, if there is one.
-     * @returns {Object | undefined} The selected piece, if there is one: `{ type, index, coords }`, otherwise undefined.
+     * @returns {Piece | undefined} The selected piece, if there is one: `{ type, index, coords }`, otherwise undefined.
      */
     function getPieceSelected() { return pieceSelected; }
 

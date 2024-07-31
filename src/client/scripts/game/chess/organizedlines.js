@@ -259,12 +259,18 @@ const organizedlines = {
     },
 
     /**
-     * Gets a unique key from the line equation.
-     * Compatable with factorable steps like `[2,2]`.
-     * Discuss before changing func please as this may have unintended side-effects.
-     * @param {Number[]} step Line step `[deltax,deltay]`
-     * @param {Number[]} coords `[x,y]`
-     * @returns {String} the key `c|smallest_x_line_intcepts`
+     * Returns a string that is a unique identifier of a given organized line: `"C|X"`.
+     * Where `C` is the c in the linear standard form of the line: "ax + by = c",
+     * and `X` is the nearest x-value the line intersects on or after the y-axis.
+     * For example, the line with step-size [2,0] that starts on point (0,0) will have an X value of '0',
+     * whereas the line with step-size [2,0] that starts on point (1,0) will have an X value of '1',
+     * because it's step size means it never intersects the y-axis at x = 0, but x = 1 is the nearest it gets to it, after 0.
+     * 
+     * If the line is perfectly vertical, the axis will be flipped, so `X` in this
+     * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
+     * @param {Number[]} step - Line step `[dx,dy]`
+     * @param {Number[]} coords `[x,y]` - A point the line intersects
+     * @returns {String} the key `C|X`
      */
     getKeyFromLine(step, coords) {
         const C = organizedlines.getCFromLine(step, coords);
@@ -273,21 +279,26 @@ const organizedlines = {
     },
 
     /**
-     * Uses the calculation of ax + by = c
-     * c=b*y-intercept so is unique for each line
-     * Not unique when step can be factored
-     * eg [2,2]
+     * Calculates the `C` value in the linear standard form of the line: "ax + by = c".
+     * Step size here is unimportant, but the slope **is**.
+     * This value will be unique for every line that *has the same slope*, but different positions.
      * @param {number[]} step - The x-step and y-step of the line: `[deltax, deltay]`
      * @param {number[]} coords - A point the line intersects: `[x,y]`
-     * @returns {number} integer c
+     * @returns {number} The C in the line's key: `C|X`
      */
     getCFromLine(step, coords) {
         return step[0]*coords[1]-step[1]*coords[0]
     },
 
     /**
-     * Calculates the X value of the line's key from the provided step direction and coordinates.
-     * This is also the nearest x value the line intersects on or after the y axis.
+     * Calculates the `X` value of the line's key from the provided step direction and coordinates,
+     * which is the nearest x-value the line intersects on or after the y-axis.
+     * For example, the line with step-size [2,0] that starts on point (0,0) will have an X value of '0',
+     * whereas the line with step-size [2,0] that starts on point (1,0) will have an X value of '1',
+     * because it's step size means it never intersects the y-axis at x = 0, but x = 1 is the nearest it gets to it, after 0.
+     * 
+     * If the line is perfectly vertical, the axis will be flipped, so `X` in this
+     * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
      * @param {number[]} step - [dx,dy]
      * @param {number[]} coords - Coordinates that are on the line
      * @returns {number} The X in the line's key: `C|X`

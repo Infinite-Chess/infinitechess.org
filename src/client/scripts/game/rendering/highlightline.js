@@ -52,7 +52,7 @@ const highlightline = (function(){
             const corner1 = math.getAABBCornerOfLine(line, true);
             
             let point1 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
-            if (!point1) {continue};
+            if (!point1) continue;
             const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
             const leftLimitPointWorld = math.convertCoordToWorldSpace(leftLimitPointCoord);
             point1 = capPointAtSlideLimit(point1, leftLimitPointWorld, false, lineIsVertical);
@@ -68,8 +68,8 @@ const highlightline = (function(){
             appendLineToData(dataLines, point1, point2, color);
             
             const snapPoint = math.closestPointOnLine(point1, point2, mouseLocation)
-            if (!closestDistance) {if (snapPoint.distance>snapDist) continue;}
-            else if (snapPoint.distance>closestDistance) {continue;}
+            if (!closestDistance) { if (snapPoint.distance > snapDist) continue; }
+            else if (snapPoint.distance > closestDistance) {continue;}
             closestDistance = snapPoint.distance
             snapPoint.moveset = legalmoves.sliding[strline]
             snapPoint.line = line

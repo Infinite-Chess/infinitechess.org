@@ -49,6 +49,7 @@ const optimised_images = {
   "/game/guide/fairy/guard.png": {},
   "/game/guide/fairy/hawk.png": {},
   "/game/guide/fairy/centaur.png": {},
+  "/game/guide/fairy/knightrider.png": {},
   "/game/guide/fairy/obstacle.png": {},
   "/game/guide/fairy/void.png": {},
 };

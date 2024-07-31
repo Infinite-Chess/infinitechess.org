@@ -11,7 +11,7 @@ const movement = (function() {
     const scaleAccel = 6.0; // Acceleration of board scaling   Default: 6
     const scaleVelCap = 1.0; // Default: 1.0
     const maximumScale = 20.0;
-    const scrollScaleVel = 0.03; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.03
+    const scrollScaleVel = 0.015; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.03
     const scrollScaleVelCap = 2.5;
 
     const passwordForSetting = "pidough";
