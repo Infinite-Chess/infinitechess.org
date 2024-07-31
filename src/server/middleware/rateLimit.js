@@ -59,7 +59,7 @@ let recentRequests = []; // List of times of recent connections
  * The maximum size of an incoming websocket message, in bytes.
  * Above this will be rejected, and an error sent to the client.
  */
-const maxWebsocketMessageSizeBytes = 60000;
+const maxWebsocketMessageSizeBytes = 100_000; // 100 megabytes
 /**
  * How many requests should an over-sized incoming websocket message
  * stand for? Increase this to make them be rate limited sooner when sending over-sized messages.
