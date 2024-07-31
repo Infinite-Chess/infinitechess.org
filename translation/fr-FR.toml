@@ -1,6 +1,6 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "5"
+version = "10"
 
 [header]
 home = "Accueil"
