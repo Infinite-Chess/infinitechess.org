@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "10"
+version = "11"
 
 [header]
 home = "Home"
@@ -346,7 +346,7 @@ please_report_bug = "This should never happen, please report this bug!"
 checkmate = "Checkmate"
 stalemate = "Stalemate"
 repetition = "Threefold repetition"
-moverule = "-move rule"  # The game inserts a number in front of this phrase
+moverule = ["", "-move rule"]  # The game inserts a number inbetween these two strings
 insuffmat = "Insufficient material"
 royalcapture = "Royal capture"
 allroyalscaptured = "All royals captured"
@@ -371,7 +371,7 @@ you_koth = "You win by king of the hill!"
 you_generic = "You win!"
 draw_stalemate = "Draw by stalemate!"
 draw_repetition = "Draw by repetition!"
-draw_moverule = ["Draw by the ", "-move-rule!"]
+draw_moverule = ["Draw by the ", "-move-rule!"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Draw by insufficient material!"
 draw_generic = "Draw!"
 aborted = "Game aborted."
