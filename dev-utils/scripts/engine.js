@@ -10,7 +10,7 @@ const engine = (function() {
 		const xSet = new Set();
 		const ySet = new Set();
 		// generate the line array
-		for (let i of Object.keys(gamefile.piecesOrganizedByKey)) {
+		for (let i in gamefile.piecesOrganizedByKey) {
 			const [x,y] = math.getCoordsFromKey(i);
 			xSet.add(x);
 			ySet.add(y);
@@ -31,7 +31,7 @@ const engine = (function() {
 				intersections.add([(y - b1) * m1, y]);
 			}
 
-			// calculate its intersecions with all vertical lines
+			// calculate its intersections with all vertical lines
 			for (let x of xSet) {
 				intersections.add([x, m1 * x + b1]);
 			}
@@ -49,7 +49,28 @@ const engine = (function() {
 		return intersections;
 	}
 
+	/**
+	 * 
+	 * @param {gamefile} gamefile 
+	 */
+	function getConsideredMoves(gamefile) {
+		const moves = [];
+		const intersections = getIntersections(gamefile);
+		for (let type in gamefile.ourPieces) {
+			if (gamefile.whosTurn !== math.getPieceColorFromType(type)) continue;
+			for (coords of gamefile.ourPieces[type]) {
+				if(!coords) continue;
+				const legalMoves = legalmoves.calculate(gamefile, {type, coords, index: gamefileutility.getPieceIndexByTypeAndCoords(gamefile, type, coords)})
+				for (let intersection of intersections) {
+					if(legalmoves.checkIfMoveLegal(legalMoves, coords, intersection)) moves.push({type, startCoords: coords, endCoords: intersection});
+				}
+			}
+		}
+		return moves;
+	}
+
 	return Object.freeze({
 		getIntersections,
+		getConsideredMoves
 	})
 })();
