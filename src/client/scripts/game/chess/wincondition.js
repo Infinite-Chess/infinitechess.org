@@ -277,7 +277,7 @@ const wincondition = (function() {
                 return translations.termination.repetition;
             case "moverule":
                 const numbWholeMovesUntilAutoDraw = gamefile.gameRules.moveRule / 2;
-                return `${numbWholeMovesUntilAutoDraw}${translations.termination.moverule}`;
+                return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
             case "insuffmat":
                 return translations.termination.insuffmat;
             case "royalcapture":
