@@ -41,7 +41,7 @@ In case you are translating a language that is currently not present in the proj
 
 Then you can start a test server with `npx nodemon` and start translating. If you insert the address `https://localhost:3443` into your browser, the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure that you have selected the language that you are editing in the website's UI. There is a footer with a language selection dropdown at the bottom of almost every page.
 
-In case you are updating an existing language and you aren't sure what has changed since the last update, you can view changes of `en-US.toml` in [the official changelog](../translation/changes.json) or in the [file commit history](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml).
+In case you are updating an existing language and you aren't sure what has changed since the last update, you can view changes of `en-US.toml` in [the official changelog](../translation/changes.json) or in the [file commit history](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml). In general, a translation is only considered up to date if the `version` variable on top matches the `version` value of the English TOML file.
 
 > [!IMPORTANT]
 > If there is an HTML tag in the value you want to translate, do not modify it!
