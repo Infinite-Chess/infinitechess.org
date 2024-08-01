@@ -46,6 +46,8 @@ function Move() {
         inCheck: undefined,
         /** The gamefile's `attackers` property before this move was made. */
         attackers: undefined,
+        /** The gamefile's `gameConclusion` property before this move was made. */
+        gameConclusion: undefined,
     }
     /** The move in most compact notation: `8,7>8,8Q` */
     this.compact = undefined;
