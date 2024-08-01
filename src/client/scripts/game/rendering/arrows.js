@@ -490,6 +490,16 @@ const arrows = (function() {
         }
     }
 
+    /**
+     * Erases the list of piece arrows the mouse is currently hovering over & rendering legal moves for.
+     * This is typically called when a move is made in-game, so that the arrows' legal moves don't leak from move to move.
+     */
+    function clearListOfHoveredPieces() {
+        for (const hoveredPieceKey in piecesHoveredOver) {
+            delete piecesHoveredOver[hoveredPieceKey];
+        }
+    }
+
     return Object.freeze({
         getMode,
         update,
@@ -497,7 +507,8 @@ const arrows = (function() {
         renderThem,
         isMouseHovering,
         renderEachHoveredPiece,
-        regenModelsOfHoveredPieces
+        regenModelsOfHoveredPieces,
+        clearListOfHoveredPieces
     });
 
 })();

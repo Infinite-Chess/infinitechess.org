@@ -55,7 +55,6 @@ const movepiece = (function(){
 
         if (flipTurn) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
 
-        // if (doGameOverChecks || animate || updateProperties) updateInCheck(gamefile, recordMove)
         // ALWAYS DO THIS NOW, no matter what. 
         updateInCheck(gamefile, recordMove)
         if (doGameOverChecks) gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
@@ -65,6 +64,8 @@ const movepiece = (function(){
             guinavigation.update_MoveButtons()
             main.renderThisFrame();
         }
+
+        if (!simulated) arrows.clearListOfHoveredPieces();
     }
 
     /**
