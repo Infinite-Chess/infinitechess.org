@@ -1266,6 +1266,8 @@ button.join-button, button.copy-button {
 /* Draw Offer UI */
 
 .draw_offer_ui {
+    height: 100px;
+
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -1277,7 +1279,7 @@ button.join-button, button.copy-button {
     padding: 15px;
     /*margin-left: 14%;*/
     /*margin-right: 14%;*/
-    width: 72%;
+    /*width: 72%;*/
     gap: 15px;
     border-radius: 5px;
     box-sizing: border-box;
