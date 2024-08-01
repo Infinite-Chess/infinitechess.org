@@ -219,6 +219,8 @@ const selection = (function() {
             return;
         }
 
+        if (game.getGamefile().gameConclusion) return; // Don't reselect, game is over
+
         // Reselect! Recalc its legal moves, and recolor.
         const newIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
         selectPiece(pieceSelected.type, newIndex, pieceSelected.coords);

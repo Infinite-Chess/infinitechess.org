@@ -34,7 +34,7 @@ what_is_it_pargaraphs = [
 "As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
 how_to_title = "How can I play?"
-how_to_paragraph = ["The current version release is 1.3.2 on the ","Play"," page!"]
+how_to_paragraph = ["The current version release is 1.4 on the ","Play"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
@@ -351,7 +351,7 @@ please_report_bug = "This should never happen, please report this bug!"
 checkmate = "Checkmate"
 stalemate = "Stalemate"
 repetition = "Threefold repetition"
-moverule = "-move rule"  # The game inserts a number in front of this phrase
+moverule = ["", "-move rule"]  # The game inserts a number inbetween these two strings
 insuffmat = "Insufficient material"
 royalcapture = "Royal capture"
 allroyalscaptured = "All royals captured"
@@ -377,7 +377,7 @@ you_koth = "You win by king of the hill!"
 you_generic = "You win!"
 draw_stalemate = "Draw by stalemate!"
 draw_repetition = "Draw by repetition!"
-draw_moverule = ["Draw by the ", "-move-rule!"]
+draw_moverule = ["Draw by the ", "-move-rule!"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Draw by insufficient material!"
 draw_agreement = "Draw by agreement!"
 draw_generic = "Draw!"
@@ -577,7 +577,7 @@ ws-player_already_has_invite = "Player already has an open invite."
 ws-invite_cancelled = "Invite already cancelled."
 ws-accept_own_invite = "Silly goose. You can't accept your own invite!"
 ws-server_restarting = "The server is restarting in" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
-ws-server_under_maintenance = "The server is restarting shortly." # Can be changed at will to change the display message.
+ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
 ws-minutes = "minutes" # unit of time
 ws-minute = "minute" # unit of time
 ws-no_abort_game_over = "Can't abort game, it's already over."

@@ -214,6 +214,9 @@ const arrows = (function() {
             }
         }
 
+        // Do not render line highlights upon arrow hover, when game is rewinded
+        if (!movesscript.areWeViewingLatestMove(gamefile)) piecesHoveringOverThisFrame.length = 0;
+
         // Iterate through all pieces in piecesHoveredOver, if they aren't being
         // hovered over anymore, delete them. Stop rendering their legal moves. 
         const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
@@ -487,6 +490,16 @@ const arrows = (function() {
         }
     }
 
+    /**
+     * Erases the list of piece arrows the mouse is currently hovering over & rendering legal moves for.
+     * This is typically called when a move is made in-game, so that the arrows' legal moves don't leak from move to move.
+     */
+    function clearListOfHoveredPieces() {
+        for (const hoveredPieceKey in piecesHoveredOver) {
+            delete piecesHoveredOver[hoveredPieceKey];
+        }
+    }
+
     return Object.freeze({
         getMode,
         update,
@@ -494,7 +507,8 @@ const arrows = (function() {
         renderThem,
         isMouseHovering,
         renderEachHoveredPiece,
-        regenModelsOfHoveredPieces
+        regenModelsOfHoveredPieces,
+        clearListOfHoveredPieces
     });
 
 })();

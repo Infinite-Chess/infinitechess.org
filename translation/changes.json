@@ -1,5 +1,5 @@
 {
-  "11": {
+  "12": {
     "note": "added draw offers",
     "changes": [
       "play.pause.offer_draw",
@@ -7,6 +7,12 @@
       "play.drawoffer.question",
       "play.javascript.termination"
     ]
+  },
+  "11": {
+    "note": "Changed the structure of play.javascript.termination.moverule",
+    "changes": [
+        "play.javascript.termination.moverule"
+      ]
   },
   "10": {
     "note": "Added news post Aug 1, 2024. Deleted news post Aug 26, 2023.",

@@ -55,7 +55,6 @@ const movepiece = (function(){
 
         if (flipTurn) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
 
-        // if (doGameOverChecks || animate || updateProperties) updateInCheck(gamefile, recordMove)
         // ALWAYS DO THIS NOW, no matter what. 
         updateInCheck(gamefile, recordMove)
         if (doGameOverChecks) gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated })
@@ -65,6 +64,8 @@ const movepiece = (function(){
             guinavigation.update_MoveButtons()
             main.renderThisFrame();
         }
+
+        if (!simulated) arrows.clearListOfHoveredPieces();
     }
 
     /**
@@ -82,6 +83,7 @@ const movepiece = (function(){
         if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
         if (!rewindInfoAlreadyPresent) {
             rewindInfo.inCheck = math.deepCopyObject(gamefile.inCheck);
+            rewindInfo.gameConclusion = gamefile.gameConclusion;
             if (gamefile.attackers)             rewindInfo.attackers = math.deepCopyObject(gamefile.attackers);
             if (gamefile.enpassant)             rewindInfo.enpassant =     gamefile.enpassant;
             if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
@@ -431,7 +433,7 @@ const movepiece = (function(){
                 const key = math.getKeyFromCoords(move.endCoords);
                 gamefile.specialRights[key] = true;
             }
-            gamefile.gameConclusion = false; // Simulated moves may or may not have performed game over checks.
+            gamefile.gameConclusion = move.rewindInfo.gameConclusion; // Simulated moves may or may not have performed game over checks.
         }
         // The capturedIndex and pawnIndex are only used for undo'ing
         // simulated moves, so that we don't screw up the mesh
