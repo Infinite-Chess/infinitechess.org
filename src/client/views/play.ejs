@@ -449,6 +449,13 @@
                         <div class="whosturn">
                             <div id="dot" class="dotwhite"></div>
                             <div id="whosturn"><%=t('play.footer.white_to_move')%></div>
+                            
+                            <!-- Draw Offer UI -->
+                            <div id="draw_offer_ui" class="draw_offer_ui footer hidden">
+                                <p class="offer_title"><%=t('play.drawoffer.question')%></p>
+                                <button id="acceptdraw" class="acceptdraw button"><img src="/img/checkmark.svg" alt="accept" class="icon"></button>
+                                <button id="declinedraw" class="declinedraw button"><img src="/img/xmark.svg" alt="decline" class="icon"></button>
+                            </div>
                         </div>
                         <div id="playerblack" class="playerblack"><%=t('play.footer.player_black')%></div>
                         <div id="timer-container-black" class="timerblackcontainer">
@@ -494,13 +501,6 @@
                         <div id="knightsB" class="promotepiececontainer hidden"><div class="promotepiece knightsB button"></div></div>
                         <div id="guardsB" class="promotepiececontainer hidden"><div class="promotepiece guardsB button"></div></div>
                     </div>
-                </div>
-                
-                <!-- Draw Offer UI -->
-                <div id="draw_offer_ui" class="draw_offer_ui footer hidden">
-                    <p class="offer_title"><%=t('play.drawoffer.question')%></p>
-                    <button id="acceptdraw" class="acceptdraw button"><img src="/img/checkmark.svg" alt="accept" class="icon"></button>
-                    <button id="declinedraw" class="declinedraw button"><img src="/img/xmark.svg" alt="decline" class="icon"></button>
                 </div>
 
                 <!-- Pause UI -->

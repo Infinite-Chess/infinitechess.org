@@ -1275,17 +1275,20 @@ button.join-button, button.copy-button {
     font-family: "Open Sans";
     font-weight: bold;
     padding: 15px;
-    margin-left: 14%;
-    margin-right: 14%;
+    /*margin-left: 14%;*/
+    /*margin-right: 14%;*/
     width: 72%;
     gap: 15px;
     border-radius: 5px;
     box-sizing: border-box;
 
     /* Make it not a popup / tsevasa's suggestion */
+    background: none;
     border-color: transparent;
     background-color: rgba(0, 0, 0, 0);
     box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 @media only screen and (max-width: 1520px) {  /* Mobile screens: make smaller in order to not obscure names */

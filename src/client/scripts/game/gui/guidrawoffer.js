@@ -13,6 +13,7 @@ const guidrawoffer = (function(){
     const element_draw_offer_ui = document.getElementById('draw_offer_ui')
     const element_acceptDraw = document.getElementById('acceptdraw')
     const element_declineDraw = document.getElementById('declinedraw')
+    const element_whosturn = document.getElementById('whosturn')
 
     // Functions
 
@@ -25,7 +26,7 @@ const guidrawoffer = (function(){
     function openDrawOffer() {
         isAcceptingDraw = true;
         style.revealElement(element_draw_offer_ui)
-        // style.hideElement(element_whosturn)
+        style.hideElement(element_whosturn)
         sound.playSound_drawOffer()
         initDrawOfferListeners()
     }
@@ -33,7 +34,7 @@ const guidrawoffer = (function(){
     function closeDrawOffer() {
         isAcceptingDraw = false;
         style.hideElement(element_draw_offer_ui)
-        //style.revealElement(element_whosturn)
+        style.revealElement(element_whosturn)
         closeDrawOfferListeners()
     }
 
