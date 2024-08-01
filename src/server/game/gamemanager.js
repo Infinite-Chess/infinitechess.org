@@ -1391,7 +1391,7 @@ const gamemanager = (function() {
         // console.log("New move list:")
         // console.log(game.moves);
 
-        if (hasColorDrawOffer(game, color)) declineDraw(ws)
+        if (hasColorDrawOffer(game, opponentColor)) declineDraw(ws)
 
         if (isGameOver(game)) sendGameUpdateToColor(game, color)
         else sendUpdatedClockToColor(game, color);
