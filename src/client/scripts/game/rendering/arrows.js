@@ -214,24 +214,22 @@ const arrows = (function() {
             }
         }
 
-        // do not render line highlights upon arrow hover, when game is rewinded
-        if (movesscript.isIncrementingLegal(gamefile)){
-            piecesHoveredOver = {};
-        } else {
-            // Iterate through all pieces in piecesHoveredOver, if they aren't being
-            // hovered over anymore, delete them. Stop rendering their legal moves. 
-            const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
-            for (const key of Object.keys(piecesHoveredOver)) {
-                if (piecesHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
-                delete piecesHoveredOver[key]; // No longer being hovered over
-            }
+        // Do not render line highlights upon arrow hover, when game is rewinded
+        if (!movesscript.areWeViewingLatestMove(gamefile)) piecesHoveringOverThisFrame.length = 0;
 
-            if (data.length === 0) return;
+        // Iterate through all pieces in piecesHoveredOver, if they aren't being
+        // hovered over anymore, delete them. Stop rendering their legal moves. 
+        const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
+        for (const key of Object.keys(piecesHoveredOver)) {
+            if (piecesHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
+            delete piecesHoveredOver[key]; // No longer being hovered over
+        }
 
-            for (const pieceHovered of piecesHoveringOverThisFrame) { // { type, coords, dir }
-                onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
-            }
-        } 
+        if (data.length === 0) return;
+
+        for (const pieceHovered of piecesHoveringOverThisFrame) { // { type, coords, dir }
+            onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
+        }
         
         model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", pieces.getSpritesheet())
         modelArrows = buffermodel.createModel_Colored(new Float32Array(dataArrows), 2, "TRIANGLES")
