@@ -17,7 +17,6 @@ We are still far off from our vision. We refuse to stop until many crucial featu
 - Themes, colors, board textures
 - Premoving
 - Highlighting squares, drawing infinite lines
-- Knightriders, and other exotic pieces
 - Engine play
 - Snapping to more easily threaten pieces
 - Games with infinitely many pieces
