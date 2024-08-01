@@ -116,7 +116,6 @@ const legalmoves = (function(){
             sliding: legalSliding
         }
         
-        // Skip if we've selected the opposite side's piece (edit mode)
         checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color)
 
         return moves;
