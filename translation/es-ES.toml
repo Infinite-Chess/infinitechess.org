@@ -1,0 +1,552 @@
+name = "Español" # Name of language
+direction = "ltr" # Change to "rtl" for right to left languages
+version = "5"
+
+[header]
+home = "Inicio"
+play = "Jugar"
+news = "Noticias"
+login = "Iniciar Sesión"
+createaccount = "Crear Cuenta"
+
+[footer]
+contact = "Contacte con nosotros"
+terms_of_service = "Términos de Servicio"
+source_code = "Código Fuente"
+language = "Idioma"
+
+[header.javascript]
+js-profile = "Cuenta"
+js-logout = "Cerrar Sesión"
+js-login = "Iniciar Sesión"
+js-createaccount = "Crear Cuenta"
+
+[member.javascript]
+js-confirm_delete = "¿Esta seguro que desea eliminar su cuenta? !Esta acción NO puede ser deshecha! Haga click en OK para introducir su contraseña."
+js-enter_password = "Introduzca su contraseña para eliminar su cuenta PERMANENTEMENTE:"
+
+[index]
+secondary_title = "¡La página web oficial para jugar!"
+what_is_it_title = "¿Qué es?"
+what_is_it_pargaraphs = [
+"Infinite Chess es una variante de ajedrez en la cual no hay bordes, y es mucho mas grande que el típico tablero de 8x8. La dama, torres y alfiles <em>no tienen ningún límite</em> a como de lejos pueden moverse
+"With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researches have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
+"As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
+]
+how_to_title = "How can I play?"
+how_to_paragraph = ["The current version release is 1.3.2 on the ","Play"," page!"]
+about_title = "About the Project"
+about_paragraphs = [
+"I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
+["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
+]
+patreon_title = "Patreon Supporters"
+
+[credits]
+title = "Credits"
+copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
+variants_heading = "Variants"
+variants_credits = [
+"Core designed by Andreas Tsevas.",
+"Space designed by Andreas Tsevas.",
+"Space Classic designed by Andreas Tsevas.",
+"Coaip (Chess on an Infinite Plane) designed by Vickalan.",
+"Pawn Horde designed by Inaccessible Cardinal.",
+"Abundance designed by Clicktuck Suskriberz.",
+"Pawndard by SexyLexi.",
+"Classical+ by SexyLexi.",
+"Knightline by Inaccessible Cardinal.",
+"Knighted Chess by cycy98.",
+"designed by Cory Evans and Joel Hamkins.",
+"designed by Andreas Tsevas.",
+"designed by Cory Evans and Joel Hamkins.",
+"designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
+]
+textures_heading = "Textures"
+textures_licensed_under = "textures licensed under the"
+textures_credits = [
+"Gold coin by Quolte.",
+]
+sounds_heading = "Sounds"
+sounds_credits = [
+["Some sounds are provided by the", "project under the"],
+"Other sounds created by Naviary.",
+]
+code_heading = "Code"
+code_credits = [
+"by Brandon Jones and Colin MacKenzie IV.",
+"by Andreas Tsevas and Naviary.",
+]
+
+[member]
+verify_message = "Please check your email to verify your account."
+resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message me."]
+verify_confirm = "Thank you! Your account has been verified."
+rating = "Elo rating:"
+joined = "Joined:"
+seen = ["Seen:", " ago"]
+reveal_info = "Show Account Info"
+account_info_heading = "Account Info"
+email = "Email:"
+delete_account = "Delete account"
+password_reset_message = ["To change your username, email or password, ", "contact us."]
+
+[create-account]
+title = "Create Account"
+username = "Username:"
+email = "Email:"
+password = "Password:"
+create_button = "Create Account"
+agreement = ["I agree to the ", "Terms of Service", "."]  # the middle entry is a hyperlink, the others are not
+
+[create-account.javascript]
+js-username_specs = "Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9"
+js-username_tooshort = "Username must be at least 3 characters long"
+js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
+js-email_invalid = "This is not a valid email"
+js-email_inuse = "This email is already in use"
+js-pwd_incorrect_format = "Password is in an incorrect format"
+js-pwd_too_short = "Password must be 6+ characters long"
+js-pwd_too_long = "Password can't be over 72 characters long"
+js-pwd_not_pwd = "Password must not be 'password'"
+
+[play.main-menu]
+credits = "Credits"
+play = "Play"
+guide = "Guide"
+editor = "Board Editor"
+loading = "LOADING"
+error = "ERROR"
+
+[play.guide]
+title = "Guide"
+rules = "Rules"
+rules_paragraphs = [
+"The rules to Infinite Chess are almost identical to classical chess, except the board is infinite in all directions! These are the only notes and changes you need to be aware of:",
+"Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions!",
+["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines, they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
+"Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
+"All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
+]
+careful_heading = "Be Careful!"
+careful_paragraphs = [
+"The openness of the infinite board means it is very easy to exploit forks, pins, and skewers. Your backside is often very vulnerable. Watch out for tactics like this! Be creative about forming protection for your king and rooks! Opening strategy is very different from classical chess.",
+"Many other variants have been created with the aim of strengthening your backside."
+]
+controls_heading = "Controls"
+controls_paragraph = "A lot of controls are intuitive, such as clicking and dragging the board to move around, and scrolling to zoom in and out, but let's take a look at the other controls you have at your disposal!"
+keybinds = [
+" to move around.",
+["Space", " and ", "Shift", " to zoom in and out."],
+["Escape", " to pause the game."],
+["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu."],
+" will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
+]
+controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
+keybinds_extra = [
+" will reset the rendering of the pieces. This is useful if they turn invisible. This glitch can happen if you move extreme distances (like 1e21).",
+" will toggle the rendering of the navigation and game info bars, which can be useful for recording. Streaming and making videos on the game is welcome!",
+" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed, to save compute.",
+" will toggle icon-rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throddler, but they can be toggled back on with ",
+[" (backtick, or the same key as ", ") will toggle Debug mode."],
+]
+fairy_heading = "Fairy Pieces"
+fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!"
+editing_heading = "Board Editing"
+editing_paragraphs = [
+["There is an external ", "board editor", " currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
+"To play a custom position with a friend, have them join a private invite, then both of you paste the game code before you start playing!",
+"An in-game board editor is still planned.",
+]
+back = "Back"
+
+[play.guide.pieces]
+chancellor = {name="Chancellor", description="Moves like a rook and a knight combined."}
+archbishop = {name="Archbishop", description="Moves like a bishop and a knight combined."}
+amazon = {name="Amazon", description="Moves like a queen and a knight combined. This is the strongest piece in the game!"}
+guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."}
+hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."}
+centaur = {name="Centaur", description="Moves like a knight and a guard combined."}
+obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
+void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
+
+
+[play.play-menu]
+title = "Play - Online"
+colors = "Colors"
+online = "Online"
+local = "Local"
+computer = "Computer"
+variant = "Variant"
+Classical = "Classical"
+Classical_Plus = "Classical+"
+CoaIP = "Chess on an Infinite Plane"
+Pawndard = "Pawndard"
+Knighted_Chess = "Knighted Chess"
+Knightline = "Knightline"
+Core = "Core"
+Standarch = "Standarch"
+Pawn_Horde = "Pawn Horde"
+Space_Classic = "Space Classic"
+Space = "Space"
+Obstocean = "Obstocean"
+Abundance = "Abundance"
+Amazon_Chandelier = "Amazon Chandelier"
+Containment = "Containment"
+Classical_Limit_7 = "Classical - Limit 7"
+CoaIP_Limit_7 = "Coaip - Limit 7"
+Chess = "Chess"
+Classical_KOTH = "Experimental: Classical - KOTH"
+CoaIP_KOTH = "Experimental: Coaip - KOTH"
+Omega = "Showcase: Omega"
+Omega_Squared = "Showcase: Omega^2"
+Omega_Cubed = "Showcase: Omega^3"
+Omega_Fourth = "Showcase: Omega^4"
+no_clock = "No Clock"
+clock = "Clock"
+minutes = "m"
+seconds = "s"
+infinite_time = "Infinite Time"
+color = "Color"
+piece_colors = ["Random", "White", "Black"]
+private = "Private"
+no = "No"
+yes = "Yes"
+rated = "Rated"
+unrated = "Unrated"
+join_games = "Join Existing - Active Games:"
+private_invite = "Private Invite:"
+your_invite = "Your Invite Code:"
+create_invite = "Create Invite"
+join = "Join"
+copy = "Copy"
+back = "Back"
+code = "Code"
+
+[play.footer]
+white_to_move = "White to move"
+player_white = "Player white"
+player_black = "Player black"
+
+[play.pause]
+title = "Paused"
+resume = "Resume"
+arrows = "Arrows: Defense"
+perspective = "Perspective: Off"
+copy = "Copy Game"
+paste = "Paste Game"
+main_menu = "Main Menu"
+
+[play.javascript]
+guest_indicator = "(Guest)"
+you_indicator = "(You)"
+white_to_move = "White to move"
+black_to_move = "Black to move"
+your_move = "Your move"
+their_move = "Their move"
+lost_network = "Lost network."
+failed_to_load = "One or more resources failed to load. Please refresh."
+planned_feature = "This feature is planned!"
+main_menu = "Main Menu"
+resign_game = "Resign Game"
+abort_game = "Abort Game"
+arrows_off = "Arrows: Off"
+arrows_defense = "Arrows: Defense"
+arrows_all = "Arrows: All"
+toggled = "Toggled"
+menu_online = "Play - Online"
+menu_local = "Play - Local"
+invite_error_digits = "Invite code needs to be 5 digits."
+invite_copied = "Copied invite code to clipboard."
+move_counter = "Move:"
+constructing_mesh = "Constructing mesh"
+rotating_mesh = "Rotating mesh"
+lost_connection = "Lost connection."
+please_wait = "Please wait a moment to perform this task."
+webgl_unsupported = "Your browser does not support WebGL. This game requires that to function. Please update your browser."
+bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
+shaders_failed = "Unable to initialize the shader program:"
+failed_compiling_shaders = "An error occurred compiling the shaders:"
+
+[play.javascript.copypaste]
+copied_game = "Copied game to clipboard!"
+cannot_paste_in_public = "Cannot paste game in a public match!"
+cannot_paste_after_moves = "Cannot paste game after moves are made!"
+clipboard_denied = "Clipboard permission denied. This might be your browser."
+clipboard_invalid = "Clipboard is not in valid ICN notation."
+game_needs_to_specify = "Game needs to specify either the 'Variant' metadata, or 'startingPosition' property."
+invalid_wincon_white = "White has an invalid win condition"
+invalid_wincon_black = "Black has an invalid win condition"
+pasting_game = "Pasting game..."
+pasting_in_private = "Pasting a game in a private match will cause a desync if your opponent doesn't do the same!"
+piece_count = "Piece count"
+exceeded = "exceeded"
+changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
+loaded_from_clipboard = "Loaded game from clipboard!"
+loaded = "Loaded game!"
+slidelimit_not_number = "slideLimit gamerule must be a number. Received"
+
+[play.javascript.rendering]
+on = "On"
+off = "Off"
+icon_rendering_off = "Toggled off icon rendering."
+icon_rendering_on = "Toggled on icon rendering."
+toggled_debug = "Toggled Debug Mode:"
+toggled_edit = "Toggled Edit Mode:"
+perspective = "Perspective"
+perspective_mode_on_desktop = "Perspective mode is available on desktop!"
+movement_tutorial = "WASD to move. Space & shift to zoom."
+regenerated_pieces = "Regenerated pieces."
+
+[play.javascript.invites]
+move_mouse = "Move the mouse to reconnect."
+unknown_action_received_1 = "Unknown action"
+unknown_action_received_2 = "received from the server in the invites subscription!"
+cannot_cancel = "Cannot cancel invite of undefined ID."
+you_indicator = "(You)"
+you_are_white = "You're: White"
+you_are_black = "You're: Black"
+random = "Random"
+accept = "Accept"
+cancel = "Cancel"
+create_invite = "Create Invite"
+cancel_invite = "Cancel Invite"
+start_game = "Start Game"
+join_existing_active_games = "Join Existing - Active Games:"
+
+[play.javascript.onlinegame]
+afk_warning = "You are AFK."
+opponent_afk = "Opponent is AFK."
+opponent_disconnected = "Opponent has disconnected."
+opponent_lost_connection = "Opponent has lost connection."
+auto_resigning_in = "Auto-resigning in"
+auto_aborting_in = "Auto-aborting in"
+not_logged_in = "You are not logged in. Please login to reconnect to this game."
+game_no_longer_exists = "Game no longer exists."
+another_window_connected = "Another window has connected."
+server_restarting = "Server restarting shortly..."
+server_restarting_in = "Server restarting in"
+minute = "minute"
+minutes = "minutes"
+
+[play.javascript.websocket]
+no_connection = "No connection."
+reconnected = "Reconnected."
+unable_to_identify_ip = "Unable to identify IP."
+online_play_disabled = "Online play disabled. Cookies not supported. Try a different browser."
+too_many_requests = "Too many requests. Try again soon."
+message_too_big = "Message too big."
+too_many_sockets = "Too many sockets"
+origin_error = "Origin error."
+connection_closed = "Connection closed unexpectedly. Server message:"
+please_report_bug = "This should never happen, please report this bug!"
+
+[play.javascript.results]
+you_checkmate = "You win by checkmate!"
+you_time = "You win on time!"
+you_resignation = "You win by resignation!"
+you_disconnect = "You win by abandonment!"
+you_royalcapture = "You win by royal capture!"
+you_allroyalscaptured = "You win by all royals captured!"
+you_allpiecescaptured = "You win by all pieces captured!"
+you_threecheck = "You win by three-check!"
+you_koth = "You win by king of the hill!"
+you_generic = "You win!"
+draw_stalemate = "Draw by stalemate!"
+draw_repetition = "Draw by repetition!"
+draw_moverule = ["Draw by the ", "-move-rule!"]
+draw_insuffmat = "Draw by insufficient material!"
+draw_generic = "Draw!"
+aborted = "Game aborted."
+opponent_checkmate = "You lose by checkmate!"
+opponent_time = "You lose on time!"
+opponen_resignation = "You lose by resignation!"
+opponent_disconnect = "You lose by abandonment!"
+opponent_royalcapture = "You lose by royal capture!"
+opponent_allroyalscaptured = "You lose by all royals captured!"
+opponent_allpiecescaptured = "You lose by all pieces captured!"
+opponent_threecheck = "You lose by three-check!"
+opponent_koth = "You lose by king of the hill!"
+opponent_generic = "You lose!"
+white_checkmate = "White wins by checkmate!"
+black_checkmate = "Black wins by checkmate!"
+bug_checkmate = "This is a bug, please report. Game ended by checkmate."
+white_time = "White wins on time!"
+black_time = "Black wins on time!"
+bug_time = "This is a bug, please report. Game ended on time."
+white_royalcapture = "White wins by royal capture!"
+black_royalcapture = "Black wins by royal capture!"
+bug_royalcapture = "This is a bug, please report. Game ended by royal capture."
+white_allroyalscaptured = "White wins by all royals captured!"
+black_allroyalscaptured = "Black wins by all royals captured!"
+bug_allroyalscaptured = "This is a bug, please report. Game ended by all royals captured."
+white_allpiecescaptured = "White wins by all pieces captured!"
+black_allpiecescaptured = "Black wins by all pieces captured!"
+bug_allpiecescaptured = "This is a bug, please report. Game ended by all pieces captured."
+white_threecheck = "White wins by three-check!"
+black_threecheck = "Black wins by three-check!"
+bug_threecheck = "This is a bug, please report. Game ended by three-check."
+white_koth = "White wins by king of the hill!"
+black_koth = "Black wins by king of the hill!"
+bug_koth = "This is a bug, please report. Game ended by king of the hill."
+bug_generic = "This is a bug, please report!"
+
+[terms] # Translations are disabled for now, only language is en-US
+title = "Terms of Service"
+warning = ["THIS DOCUMENT IS NOT LEGALLY BINDING. We are only accountable for the English version of this document. This translation is provided solely for general informational purposes. You can access the official English version ", "here", "."]
+consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site."
+guardian_consent = "If you are under 18, you must receive consent from a parent or legal guardian to use this site and to create an account."
+parents_header = "Parents"
+parents_paragraphs = [
+"There is an algorithm in place for prohibiting users setting their name to common cuss words. At this time there is no method of communication between members on the site.",
+"Currently, members cannot set their own profile picture. There is a plan to allow this feature. At that time we will do our best to prevent innapropriate profile pictures.",
+]
+fair_play_header = "Fair Play"
+fair_play_paragraph1 = ["You cannot create more than 1 account. If you would like to change the email address associated with your account, ", "contact us."]
+fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
+fair_play_rules = [
+"Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, etc. This can be done to intentionally break the game, or to give you an advantage.",
+"In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated games)",
+"Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
+]
+cleanliness_header = "Cleanliness"
+cleanliness_rules = [
+"In all your language on the site, you must remain clean, no vulgarity or cursing. You cannot bully, harass, or threaten anyone, or do anything that is illegal. You cannot spam other users or forums.",
+"You cannot not upload imagery to your profile that is innapropriate, suggestive, or gory. Doing so may result in a ban or termination of your account."
+]
+privacy_header = "Privacy"
+privacy_rules = [
+"Currently, the only personal information we collect is email. This is with intent to verify users' accounts, and provide a means of proving who they are when they request a password reset. We do not send any promotional emails or offers. We do not share any user's email address with anyone else.",
+"InfiniteChess.org may collect data about your usage on the site, including your ip address. This is intended to help prevent attacks from bots and other unwanted entities, and to keep accurate statistics in the database. This is NOT your home address.",
+"All games you play on this website become public information. If you wish to remain anonymous, do not share your username with friends or family. If this is your desire, it is your responsibility to make sure no one finds out your username is associated with your human identity.",
+"Your account online status, and the approximate last time you were active on the website, is also public information.",
+["While InfiniteChess.org will strive to keep everyone's account and personal information safe to the best of our ability, in the event of a hack or data leak, you may not press charges on us. If a data leak ever happens, users will be notified on the ", "News", "page."],
+"There is no content available on the site for purchase. Any other personal information is not collected.",
+"To have your private information deleted from our servers, you may delete your account through your profile page. The only thing with ties to your username that we will NOT delete, is your game history, because all games are public information.",
+]
+cookie_header = "Cookie Policy"
+cookie_paragraphs = [
+"This site uses cookies, which are small text files that are stored in your browser, and sent to the server when connections are made. The purpose of these cookies are to: Validate your login session, validate your browser belongs to the chess game it says it's in, and to store user game preferences so they can keep their preferences when they re-visit the site. The site does not use 3rd-party cookies, cookies are not shared with external parties.",
+"Cookies are required for this site and game to function correctly. If you do not want the site to store cookies, you must stop using the site. You can navigate to your browsers preferences to delete existing cookies. By continuing to use this site, you are consenting to the use of cookies."
+]
+conclusion_header = "Conclusion"
+conclusion_paragraphs = [
+"Any violations of these terms may result in a ban or termination of your account. InfiniteChess.org wants to be able to give everyone the opportunity to play and have fun! But, we reserve the right to, at any time, ban or terminate the accounts of any users, for reasons that need not to be disclosed. Charges may not be pressed against us.",
+["These terms of service may be modified at any point. It is YOUR responsibility to make sure you stay updated on the latest changes! When these terms of service receive an update, that information will be posted on the", "News", "page. If, at the time of a terms-of-service update, you do not agree with the new terms, you must immediately stop using the website. You may delete your account from your profile page. If you delete your account, all your private information and account data will be deleted, EXCEPT we do not delete your game history associated with your username, that is public information."],
+["This site is open source. You may copy or distribute anything on this website as long as you follow the conditions outlined in", "the license terms", "! If this link is broken, it is your responsibility to find the terms."],
+"We cannot guarantee the site will be running 100% of the time. We also cannot guarantee that data will never be corrupted.",
+"You may not perform any illegal activity on the site.",
+["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
+]
+update = "(Last updated: 7/13/24. Added warning that all games played may become public information, including your account's approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
+thanks = "Thank you!"
+
+[login]
+title = "Log In"
+username = "Username:"
+password = "Password:"
+forgot_password = ["Forgot? ", "Email us."]
+login_button = "Log In"
+
+[error-pages] # Messages shown on some error pages explaining what went wrong
+400_message = "Invalid parameters were received."
+409_message = ["There may have been a clashing username or email. Please ", "reload", ", the page."]
+500_message = "This isn't supposed to happen. There is some debugging to be done!"
+
+########### NEWS ###########
+
+[news]
+title = "News"
+more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+
+[news.july22-2024]
+date = "July 22, 2024:"
+account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
+
+[news.july13-2024]
+date = "July 13, 2024:"
+tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."]
+game_history_warning = "Your game history may become available on your profile at a future time."
+
+[news.july9-2024]
+date = "July 9, 2024:"
+text = ["Infinite Chess is Now Open Source! See, and contribute, to the project ", "on GitHub!"]
+
+[news.may27-2024]
+date = "May 27, 2024:"
+text = "1.3.2: Added showcase variants for Omega^3 and Omega^4 that were shown in my latest video. Also, the checkmate algorithm is now compatible with multiple kings per side."
+
+[news.may24-2024]
+date = "May 24, 2024:"
+text = "Update 1.3.1 released! This includes the guide, pop-up tooltips when hovering over the navigation buttons, and links to the discord and game credits on the title page!"
+
+[news.may14-2024]
+date = "May 14, 2024:"
+text_top = "Update 1.3 released today! This includes MANY new speed and user experience improvements. Just a few are:"
+update_list = [
+"The transition to websockets, decreasing the delay when your opponent moves.",
+"No longer getting disconnected when you switch tabs.",
+"Audible cues when you or someone else creates an invite, or makes a move.",
+"Added the 50-move rule.",
+"A drum countdown effect is now played at 10 seconds left on the clock.",
+"An auto-resignation timer will start if you're opponent goes AFK (with an audible warning)."
+]
+text_box = ["And many others! For the full list, check out ", "the discord!"]
+
+[news.jan29-2024]
+date = "Jan 29, 2024:"
+text = "New video released today!"
+
+[news.aug26-2023]
+date = "Aug 26, 2023:"
+text_top = "Infinite Chess v1.2 has been released! Introducing Move History. Use the left & right arrow keys to rewind and fast forward the game!"
+text_box = "The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!"
+
+[server.javascript]
+ws-invalid_username = "Username is invalid"
+ws-incorrect_password = "Password is incorrect"
+ws-username_and_password_required = "Username and password are required."
+ws-username_and_password_string = "Username and password must be a string."
+ws-login_failure_retry_in = "Failed to login, try again in"
+ws-seconds = "seconds" # unit of time
+ws-second = "second" # unit of time
+ws-username_length = "Username must be between 3-20 characters"
+ws-username_letters = "Username must only contain letters A-Z and numbers 0-9"
+ws-username_taken = "That username is taken"
+ws-username_bad_word = "That username contains a word that is not allowed"
+ws-username_reserved = "That username is reserved"
+ws-email_too_long = "Your email is too looooooong."
+ws-email_invalid = "This is not a valid email"
+ws-email_in_use = "This email is already in use"
+ws-you_are_banned = "You are banned."
+ws-password_length = "Password must be 6-72 characters long"
+ws-password_format = "Password is in an incorrect format"
+ws-password_password = "Password must not be 'password'"
+ws-refresh_token_not_found_logged_out = "No member has that refresh token (already logged out)"
+ws-refresh_token_not_found = "No member has that refresh token"
+ws-refresh_token_expired = "No refresh token found (expired session)"
+ws-refresh_token_invalid = "Refresh token expired or tampered"
+ws-member_not_found = "Member not found"
+ws-forbidden_wrong_account = "Forbidden. This is not your account."
+ws-deleting_account_not_found = "Failed to delete account. Account not found."
+ws-server_error = "Sorry, there was a server error! Please go back."
+ws-unable_to_identify_client_ip = "Unable to identify client IP address"
+ws-you_are_banned_by_server = "You are banned"
+ws-too_many_requests_to_server = "Too Many Requests. Try again soon."
+ws-bad_request = "Bad Request"
+ws-not_found = "404 Not Found"
+ws-forbidden = "Forbidden."
+ws-unauthorized_patron_page = "Unauthorized. This page is patron-exclusive."
+ws-already_in_game = "You are already in a game."
+ws-player_already_has_invite = "Player already has an open invite."
+ws-invite_cancelled = "Invite already cancelled."
+ws-accept_own_invite = "Silly goose. You can't accept your own invite!"
+ws-server_restarting = "The server is restarting in"
+ws-minutes = "minutes" # unit of time
+ws-minute = "minute" # unit of time
+ws-no_abort_game_over = "Can't abort game, it's already over."
+ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played."
+ws-game_aborted_cheating = "Game aborted for probable cheating."
+ws-cannot_resign_finished_game = "Can't resign game, it's already over."
+ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
+ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
