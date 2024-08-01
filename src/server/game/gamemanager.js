@@ -1263,6 +1263,19 @@ const gamemanager = (function() {
     }
 
     /**
+     * Returns *true* if the provided game has a draw offer.
+     * @param {Game} game - The game
+     * @param {String} color - Color
+     * @returns {boolean}
+     */
+    function hasColorDrawOffer(game, color) {
+        if (color === "white") {
+            return hasWhiteDrawOffer(game)
+        }
+        return hasBlackDrawOffer(game)
+    }
+
+    /**
 
      * Handles all incoming websocket messages related to active games.
      * Possible actions: submitmove/offerdraw/abort/resign/joingame/resync
@@ -1378,7 +1391,7 @@ const gamemanager = (function() {
         // console.log("New move list:")
         // console.log(game.moves);
 
-        if (hasGameDrawOffer(game)) declineDraw(ws) // decline draw, server sided
+        if (hasColorDrawOffer(game, color)) declineDraw(ws)
 
         if (isGameOver(game)) sendGameUpdateToColor(game, color)
         else sendUpdatedClockToColor(game, color);

@@ -670,7 +670,7 @@ const onlinegame = (function(){
 
         websocket.sendmessage('game', 'submitmove', data, true)
         // onlinegame.declineDraw() not needed, server-sided
-        guidrawoffer.closeDrawOffer()
+        if (guidrawoffer.areWeAcceptingDraw()) guidrawoffer.closeDrawOffer()
 
         rescheduleAlertServerWeAFK();
     }
