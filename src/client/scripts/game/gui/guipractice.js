@@ -133,10 +133,12 @@ const guipractice = (function(){
 
     /**
      * Starts a local game according to the options provided.
-     * @param {Object} [endgameOptions] - An object that contains the invite properties `variant`, `clock`, `color`, `publicity`, `rated`.
+     * @param {Object} [endgameOptions] - An object that contains optional entries
      */
     function startEndgamePractice(endgameOptions = {}) {
         gui.setScreen('endgame practice'); // Change screen location
+
+        const startingPosition = endgame.getEndgameStartingPosition(endgameSelectedID);
 
         const gameOptions = {
             metadata: {
@@ -145,6 +147,17 @@ const guipractice = (function(){
                 Round: "-",
                 Variant: "Classical",
                 TimeControl: "-"
+            },
+            variantOptions: {
+                turn: "white",
+                fullMove: "1",
+                startingPosition: startingPosition,
+                specialRights: {},
+                gameRules: {
+                    promotionRanks: null,
+                    promotionsAllowed: {"white":[],"black":[]},
+                    winConditions: {"white": ["checkmate"], "black": ["allpiecescaptured"]}
+                }
             }
         }
         loadGame(gameOptions)
@@ -167,7 +180,8 @@ const guipractice = (function(){
         gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || math.getCurrentUTCDate();
         gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || math.getCurrentUTCTime();
 
-        const newGamefile = new gamefile(gameOptions.metadata)
+        const variantOptions = gameOptions.variantOptions
+        const newGamefile = new gamefile(gameOptions.metadata, { moves: undefined, variantOptions})
         game.loadGamefile(newGamefile);
 
         const centerArea = area.calculateFromUnpaddedBox(newGamefile.startSnapshot.box)
