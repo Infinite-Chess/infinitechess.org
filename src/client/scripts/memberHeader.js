@@ -208,3 +208,19 @@ favicon: { // This block auto detects device theme and adjusts the browser icon 
         switchFavicon(newTheme);
     });
 }
+
+{ // This block auto-removes the "lng" query parameter from the url, visually, without refreshing
+  function removeLngQueryParam() {
+    // Create a URL object from the current window location
+    const url = new URL(window.location);
+  
+    // Remove the "lng" query parameter
+    url.searchParams.delete('lng');
+  
+    // Update the browser's URL without refreshing the page
+    window.history.replaceState({}, '', url);
+  }
+ 
+  // Remove the "lng" param from the url bar when the DOM content is fully loaded
+  document.addEventListener('DOMContentLoaded', removeLngQueryParam);
+}
