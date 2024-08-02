@@ -110,7 +110,7 @@ const guiplay = (function(){
             element_optionCardColor.classList.remove('hidden')
             element_optionCardRated.classList.remove('hidden')
             element_optionCardPrivate.classList.remove('hidden')
-            const localStorageClock = localstorage.loadItem('clock_online');
+            const localStorageClock = localstorage.loadItem('preferred_online_clock_invite_value');
             element_optionClock.selectedIndex = localStorageClock != null ? localStorageClock : indexOf10m; // 10m+4s
             element_joinPrivate.classList.remove('hidden')
             // callback_updateOptions()
@@ -126,7 +126,7 @@ const guiplay = (function(){
             element_optionCardColor.classList.add('hidden')
             element_optionCardRated.classList.add('hidden')
             element_optionCardPrivate.classList.add('hidden')
-            const localStorageClock = localstorage.loadItem('clock_local');
+            const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
             element_optionClock.selectedIndex = localStorageClock != null ? localStorageClock : indexOfInfiniteTime; // Infinite Time
             element_joinPrivate.classList.add('hidden')
             element_inviteCode.classList.add('hidden')
@@ -187,7 +187,7 @@ const guiplay = (function(){
 
     function savePreferredClockOption(clockIndex) {
         const localOrOnline = modeSelected;
-        localstorage.saveItem(`clock_${localOrOnline}`, clockIndex, math.getTotalMilliseconds({ days: 7 }))
+        localstorage.saveItem(`preferred_${localOrOnline}_clock_invite_value`, clockIndex, math.getTotalMilliseconds({ days: 7 }))
     }
 
     function callback_joinPrivate(event) {
