@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router(); // Here we define router instead of an app
+const router = express.Router();
 const path = require("path");
 const fs = require("fs");
 const i18next = require("i18next");
@@ -9,8 +9,10 @@ const { handleRefreshToken } = require("../controllers/refreshTokenController");
 const { handleLogout } = require("../controllers/logoutController");
 const { verifyAccount } = require("../controllers/verifyAccountController");
 const { ensureOwner, ensurePatron } = require("../middleware/verifyRoles");
+const { getLanguageToServe } = require("../config/setupTranslations")
 
 const htmlDirectory = path.join(__dirname, "../../../dist/views");
+
 
 // router.get('/skeleton(.html)?', (req, res) => { // If it starts & ends with '/', OR it's '/index.html' OR '/index'
 //     res.render(path.join(__dirname, '../views', 'skeleton.ejs'));
@@ -18,33 +20,37 @@ const htmlDirectory = path.join(__dirname, "../../../dist/views");
 
 // Send the index/root / home page
 router.get("^/$|/index(.html)?", (req, res) => {
-  // If it starts & ends with '/', OR it's '/index.html' OR '/index'
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "index.html"),
+    path.join(htmlDirectory, language, "index.html"),
   );
 });
 
 router.get("/credits(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "credits.html"),
+    path.join(htmlDirectory, language, "credits.html"),
   );
 });
 
 router.get("/play(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "play.html"),
+    path.join(htmlDirectory, language, "play.html"),
   );
 });
 
 router.get("/news(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "news.html"),
+    path.join(htmlDirectory, language, "news.html"),
   );
 });
 
 router.get("/login(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "login.html"),
+    path.join(htmlDirectory, language, "login.html"),
   );
 });
 
@@ -55,38 +61,42 @@ router.get("/refresh", handleRefreshToken);
 router.get("/logout", handleLogout);
 
 router.get("/termsofservice(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "termsofservice.html"),
-    );
+    path.join(htmlDirectory, language, "termsofservice.html"),
+  );
 });
 
 router.get("/verify/:member/:id", verifyAccount);
 
-const errorDirectory = path.join(htmlDirectory, "errors");
-
 router.get("/400(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "400.html"),
+    path.join(htmlDirectory, language, "errors", "400.html"),
   );
 });
 router.get("/401(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "401.html"),
+    path.join(htmlDirectory, language, "errors", "401.html"),
   );
 });
 router.get("/404(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "404.html"),
+    path.join(htmlDirectory, language, "errors", "404.html"),
   );
 });
 router.get("/409(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "409.html"),
+    path.join(htmlDirectory, language, "errors", "409.html"),
   );
 });
 router.get("/500(.html)?", (req, res) => {
+  const language = getLanguageToServe(req);
   res.sendFile(
-    path.join(htmlDirectory, req.i18n.resolvedLanguage, "errors", "500.html"),
+    path.join(htmlDirectory, language, "errors", "500.html"),
   );
 });
 
