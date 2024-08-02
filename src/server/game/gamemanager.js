@@ -830,12 +830,14 @@ const gamemanager = (function() {
 
         if (isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
 
+        // Config for draw offers, change if eg. 4 player is enabled
+        let movesBetweenDrawOffers = 2
         if (color === "white") {
             if (hasWhiteDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
-            if (game.moves.length - game.whiteDrawOfferMove <= 1) return console.error("Client trying to offer a draw too fast")
+            if (game.moves.length - game.whiteDrawOfferMove <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
         } else {
             if (hasBlackDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
-            if (game.moves.length - game.blackDrawOfferMove <= 1) return console.error("Client trying to offer a draw too fast")
+            if (game.moves.length - game.blackDrawOfferMove <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
         }
         
         if (game.moves.length < 2) return console.error("Client trying to offer a draw on the first 2 moves")

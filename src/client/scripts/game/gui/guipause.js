@@ -9,6 +9,9 @@ const guipause = (function(){
 
     // Variables
 
+    // Config
+    let movesBetweenDrawOffers = 2
+
     // Pause UI
     let isPaused = false
     let offerDrawOverAcceptDraw = true
@@ -87,7 +90,7 @@ const guipause = (function(){
 
         const ourDrawOfferMove = onlinegame.getOurColor() === "white" ? gamefile.drawOfferWhite : gamefile.drawOfferBlack
         const movesLength = parseInt(moves.length)
-        const ourRecentOffers = !(movesLength - ourDrawOfferMove >= 2) // 2 move in between
+        const ourRecentOffers = !(movesLength - ourDrawOfferMove >= movesBetweenDrawOffers)
 
         console.log(`Recent draw offers: ${ourRecentOffers}`)
 
