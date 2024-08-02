@@ -49,4 +49,19 @@
     // Reload the page
     location.reload();
   });
+  
+  /**  Modifies the URL in the browser's address bar to remove the "lng" query parameter without refreshing the page. */
+  // function removeLngQueryParam() {
+  //   // Create a URL object from the current window location
+  //   const url = new URL(window.location);
+  
+  //   // Remove the "lng" query parameter
+  //   url.searchParams.delete('lng');
+  
+  //   // Update the browser's URL without refreshing the page
+  //   window.history.replaceState({}, '', url);
+  // }
+ 
+  // // Remove the "lng" param from the url bar when the DOM content is fully loaded
+  // document.addEventListener('DOMContentLoaded', removeLngQueryParam);
 }
