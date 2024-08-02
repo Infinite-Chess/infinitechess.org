@@ -113,7 +113,7 @@ js-pwd_not_pwd = "Password must not be 'password'"
 [play.main-menu]
 credits = "Credits"
 play = "Play"
-puzzle = "Puzzle"
+practice = "Practice"
 guide = "Guide"
 editor = "Board Editor"
 loading = "LOADING"
@@ -172,8 +172,8 @@ knightrider = {name="Knightrider", description="Hops like a knight infinitely in
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
-[play.puzzle-menu]
-title = "Puzzle"
+[play.practice-menu]
+title = "Practice"
 endgame = "Endgames"
 tactics = "Tactics"
 play = "Play"
@@ -275,7 +275,7 @@ webgl_unsupported = "Your browser does not support WebGL. This game requires tha
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
-menu_endgame = "Puzzle - Endgames"
+menu_endgame = "Practice - Endgames"
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"

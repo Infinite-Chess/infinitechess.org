@@ -535,9 +535,9 @@ canvas {
 }
 
 
-/* Puzzle Page: Puzzle selection screen */
+/* Practice Page: Practice selection screen */
 
-.puzzle-selection {
+.practice-selection {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -551,47 +551,47 @@ canvas {
     margin-bottom: 8vh;
 }
 
-.puzzle-selection button {
+.practice-selection button {
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
 }
 
-.puzzle-selection button:hover {
+.practice-selection button:hover {
     background: linear-gradient(to bottom, white, rgb(242, 242, 242), white);
 }
 
-.puzzle-selection button:active {
+.practice-selection button:active {
     background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
 }
 
-.puzzle-selection .puzzle-name {
+.practice-selection .practice-name {
     grid-column: 1 / 7;
     align-self: center;
     justify-self: center;
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
 }
 
-.puzzle-selection .endgame-puzzle {
+.practice-selection .endgame-practice {
     grid-column: 1 / 4;
 }
 
-.puzzle-selection .tactics-puzzle {
+.practice-selection .tactics-practice {
     grid-column: 4 / 7;
 }
 
-.puzzle-selection .puzzle-play {
+.practice-selection .practice-play {
     grid-column: 1 / 4;
     background: linear-gradient(to bottom, white, rgb(226, 226, 226), white);
 }
 
-.puzzle-selection .puzzle-back {
+.practice-selection .practice-back {
     grid-column: 4 / 7;
 }
 
-.puzzle-selection .selected {
+.practice-selection .selected {
     box-shadow: none;
 }
 
-.puzzle-selection .game-options {
+.practice-selection .game-options {
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
     grid-column: 1 / 7;
     overflow-y: auto;
@@ -599,11 +599,11 @@ canvas {
     flex-direction: column;
 }
 
-.puzzle-list {
+.endgame-list {
     flex-grow: 1;
 }
 
-.game-options .puzzle {
+.game-options .endgame {
     background-color: rgb(168, 168, 168);
     height: 3em;
     display: flex;
@@ -614,11 +614,11 @@ canvas {
     border-radius: 0.3em;
 }
 
-.puzzle .puzzle-child {
+.endgame .endgame-child {
     padding: 0 3em;
 }
 
-.puzzle:hover {
+.endgame:hover {
     background-color: rgba(48, 145, 255, 0.442);
 }
 
