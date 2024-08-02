@@ -27,7 +27,7 @@ const guidrawoffer = (function(){
         isAcceptingDraw = true;
         style.revealElement(element_draw_offer_ui)
         style.hideElement(element_whosturn)
-        sound.playSound_drawOffer()
+        sound.playSound_base() //playSound_drawOffer()
         initDrawOfferListeners()
     }
 

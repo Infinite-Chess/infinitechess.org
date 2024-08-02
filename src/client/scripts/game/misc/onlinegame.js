@@ -669,11 +669,13 @@ const onlinegame = (function(){
         }
 
         websocket.sendmessage('game', 'submitmove', data, true)
+
         // onlinegame.declineDraw() not needed, server-sided
         if (guidrawoffer.areWeAcceptingDraw()) {
             guipause.changeAcceptDrawToOfferDraw()
             guidrawoffer.closeDrawOffer()
         }
+        
         rescheduleAlertServerWeAFK();
     }
 

@@ -883,10 +883,6 @@ const gamemanager = (function() {
             game.blackDrawOffer = 'confirmed'
         }
         setGameConclusion(game, "draw agreement")
-
-        // End the game
-        onRequestRemovalFromPlayersInActiveGames(ws);
-        unsubClientFromGame(ws, { sendMessage: false });
         sendGameUpdateToColor(game, opponentColor);
     }
 
