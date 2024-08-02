@@ -4,12 +4,14 @@ const router = express.Router();
 const path = require('path');
 
 const createaccountController = require('../controllers/createaccountController')
-const {getRegisterData, checkEmailAssociated, checkUsernameAvailable} = require('../controllers/createaccountController');
+const { getRegisterData, checkEmailAssociated, checkUsernameAvailable } = require('../controllers/createaccountController');
+const { getLanguageToServe } = require("../config/setupTranslations")
 
 
 
 router.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', req.i18n.resolvedLanguage, 'createaccount.html'));
+    const language = getLanguageToServe(req);
+    res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'createaccount.html'));
 })
 
 router.post('/', createaccountController.createNewMember);

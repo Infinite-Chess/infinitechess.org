@@ -3,12 +3,14 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 
-const {getMemberData,requestConfirmEmail} = require('../controllers/memberController');
-const {removeAccount} = require('../controllers/removeAccountController');
+const { getMemberData,requestConfirmEmail } = require('../controllers/memberController');
+const { removeAccount } = require('../controllers/removeAccountController');
+const { getLanguageToServe } = require("../config/setupTranslations")
 
 
 router.get('/:member', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', req.i18n.resolvedLanguage, 'member.html'), {t: req.t});
+    const language = getLanguageToServe(req);
+    res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'member.html'), {t: req.t});
 });
 
 router.get('/:member/data', getMemberData);

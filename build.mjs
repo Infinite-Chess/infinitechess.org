@@ -60,7 +60,9 @@ if (DEV_BUILD){
     recursive: true,
     force: true,
     filter: filename => { 
-      return (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename)
+      // return (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename)
+      // TEMPORARILY REVERTED THE LIGHTNING-CSS ADDITIONS, BECAUSE when in a game it breaks the bars blur effect!
+      return !/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) // make sure to create the scripts/game/folder
     }
   });
 
@@ -101,15 +103,16 @@ if (DEV_BUILD){
   await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
   
   // Make a list of all css files
-  const cssFiles = await getExtFiles("./src/client/css", ".css");
-  for (const file of cssFiles) {
-    // Minify css files
-    let { code } = transform({
-      targets: targets,
-      code: Buffer.from(await readFile(`./src/client/css/${file}`, 'utf8')),
-      minify: true,
-    });
-    // Write into /dist
-    await writeFile(`./dist/css/${file}`, code, 'utf8');
-  }
+  // TEMPORARILY REVERTED THE LIGHTNING-CSS ADDITIONS, BECAUSE, when in a game it breaks the bars blur effect!
+  // const cssFiles = await getExtFiles("./src/client/css", ".css");
+  // for (const file of cssFiles) {
+  //   // Minify css files
+  //   let { code } = transform({
+  //     targets: targets,
+  //     code: Buffer.from(await readFile(`./src/client/css/${file}`, 'utf8')),
+  //     minify: true,
+  //   });
+  //   // Write into /dist
+  //   await writeFile(`./dist/css/${file}`, code, 'utf8');
+  // }
 }
