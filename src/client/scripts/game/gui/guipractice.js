@@ -19,7 +19,10 @@ const guipractice = (function(){
     const element_tacticsPractice = document.getElementById('tactics-practice')
     const element_practicePlay = document.getElementById('practice-play')
 
+    const elements_endgames = document.getElementsByClassName('endgame');
+
     let modeSelected; // endgame-practice / tactics-practice
+    let endgameSelectedID; // id of selected endgame
 
     // Functions
 
@@ -32,6 +35,8 @@ const guipractice = (function(){
         style.revealElement(element_practiceSelection)
         style.revealElement(element_menuExternalLinks);
         changePracticeMode('endgame-practice')
+        changeEndgameSelected('endgame1')
+        updateEndgamesBeaten()
         initListeners()
     }
 
@@ -46,6 +51,9 @@ const guipractice = (function(){
         element_endgamePractice.addEventListener('click', callback_endgamePractice)
         element_tacticsPractice.addEventListener('click', gui.callback_featurePlanned)
         element_practicePlay.addEventListener('click', callback_practicePlay)
+        for (let element of elements_endgames) {
+            element.addEventListener('click', callback_endgameList);
+        }
     }
 
     function closeListeners() {
@@ -53,6 +61,9 @@ const guipractice = (function(){
         element_endgamePractice.removeEventListener('click', callback_endgamePractice)
         element_tacticsPractice.removeEventListener('click', gui.callback_featurePlanned)
         element_practicePlay.removeEventListener('click', callback_practicePlay)
+        for (let element of elements_endgames) {
+            element.removeEventListener('click', callback_endgameList);
+        }
     }
 
     function changePracticeMode(mode) { // endgame-practice / tactics-practice
@@ -69,6 +80,29 @@ const guipractice = (function(){
         }
     }
 
+    function changeEndgameSelected(endgameid) {
+        for (let element of elements_endgames){
+            if (endgameid === element.id) {
+                element.classList.remove('not-selected')
+                element.classList.add('selected')
+            } else {
+                element.classList.remove('selected')
+                element.classList.add('not-selected')
+            }
+        }
+    }
+
+    // TODO: implement beaten endgame list
+    function updateEndgamesBeaten() {
+        for (let element of elements_endgames){
+            element.classList.remove('beaten')
+            element.classList.add('unbeaten')
+        }
+
+        elements_endgames[2].classList.add('beaten')
+        elements_endgames[2].classList.remove('unbeaten')
+    }
+
     function callback_practiceBack(event) {
         event = event || window.event;
         close()
@@ -80,11 +114,17 @@ const guipractice = (function(){
         changePracticeMode('endgame-practice')
     }
 
+    function callback_endgameList(event){
+        event = event || window.event;
+        endgameSelectedID = event.currentTarget.id;
+        changeEndgameSelected(endgameSelectedID)
+    }
+
     function callback_practicePlay(event) {
         event = event || window.event;
 
         const gameOptions = {
-            variant: "Classical",
+            variant: "Classical", // use endgameSelectedID
             clock: "-",
             color: "White",
             rated: "casual",

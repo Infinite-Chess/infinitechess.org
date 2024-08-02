@@ -604,7 +604,6 @@ canvas {
 }
 
 .game-options .endgame {
-    background-color: rgb(168, 168, 168);
     height: 3em;
     display: flex;
     align-items: center;
@@ -612,14 +611,36 @@ canvas {
     justify-content: space-between;
     margin: 0.4em;
     border-radius: 0.3em;
+    border-color:rgb(0, 0, 0);
+    border-style: solid;
 }
 
 .endgame .endgame-child {
     padding: 0 3em;
 }
 
-.endgame:hover {
-    background-color: rgba(48, 145, 255, 0.442);
+.endgame.selected {
+    border-width: 0.3em;
+}
+
+.endgame.not-selected {
+    border-width: 0em;
+}
+
+.endgame.beaten {
+    background-color: rgba(0, 128, 0, 0.3);
+}
+
+.endgame.unbeaten {
+    background-color: rgba(168, 168, 168, 1);
+}
+
+.endgame.beaten:hover {
+    background-color: rgba(0, 128, 0, 0.2);
+}
+
+.endgame.unbeaten:hover {
+    background-color: rgba(168, 168, 168, 0.8);
 }
 
 /* Play Page: Invite creation screen */
