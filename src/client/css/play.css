@@ -977,6 +977,7 @@ button.join-button, button.copy-button {
     margin: 12px;
     transition: 0.25s;
     flex-shrink: 0;
+    float: left;
 }
 
 .dotwhite {
@@ -1266,9 +1267,9 @@ button.join-button, button.copy-button {
 /* Draw Offer UI */
 
 .draw_offer_ui {
-    height: 100px;
+    width: fit-content;
+    height: 100%;
 
-    flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1277,9 +1278,6 @@ button.join-button, button.copy-button {
     font-family: "Open Sans";
     font-weight: bold;
     padding: 15px;
-    /*margin-left: 14%;*/
-    /*margin-right: 14%;*/
-    /*width: 72%;*/
     gap: 15px;
     border-radius: 5px;
     box-sizing: border-box;
@@ -1293,16 +1291,14 @@ button.join-button, button.copy-button {
     -webkit-backdrop-filter: none;
 }
 
-@media only screen and (max-width: 1520px) {  /* Mobile screens: make smaller in order to not obscure names */
-    .draw_offer_ui {
-        margin-left: 22%;
-        margin-right: 22%;
-        width: 56%;
-    }
-}
-
 .draw_offer_ui p.offer_title, .draw_offer_ui button {
     font-size: min(3.5vw, 35px);
+}
+
+@media (max-width:700px) {
+    .draw_offer_ui p.offer_title, .draw_offer_ui button {
+        font-size: 20px;
+    }
 }
 
 .draw_offer_ui p.offer_title {
@@ -1314,7 +1310,7 @@ button.join-button, button.copy-button {
     font-family: "Open Sans";
     font-weight: bold;
     top: 50%;
-    bottom: 50;
+    bottom: 50%;
 }
 
 .draw_offer_ui button {
