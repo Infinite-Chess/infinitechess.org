@@ -31,19 +31,19 @@ what_is_it_title = "¿Qué es?"
 what_is_it_pargaraphs = [
 "Infinite Chess es una variante de ajedrez en la cual no hay bordes, y es mucho mas grande que el típico tablero de 8x8. La dama, torres y alfiles <em>no tienen ningún límite</em> a como de lejos pueden moverse cada turno. ¡Escoge cualquier numero natural hasta el infinito!",
 "Sin límite a como de lejos puedes moverte, hay posiciones en las que el reloj de mate, o mate en <em>x</em>, adquiere el primer ordinal infinito, <strong>omega ω</strong>. De hecho, estudios han demostrado que <strong>qualquier</strong> numero ordinal contable, ¡Es valido para el reloj de mate!",
-"Como puedes imaginar, hay infinitas posibilidades para la posición de início, ¡Muchas de las cuales puedes jugar competitivamente! Tu objetivo final sigue siendo el jaque mate, que requiere nuevas estrategias",
+"Como puedes imaginar, hay infinitas posibilidades para la posición de início, ¡Muchas de las cuales puedes jugar competitivamente! Tu objetivo final sigue siendo el jaque mate, que requiere nuevas estrategias, dado que ya no hay muros para atrapar al rey rival. Las partidas no suelen durar mas que las de ajedrez normal. ¡Los Peones siguen coronando en las filas 1 y 8!",
 ]
-how_to_title = "How can I play?"
-how_to_paragraph = ["The current version release is 1.3.2 on the ","Play"," page!"]
-about_title = "About the Project"
+how_to_title = "¿Como Puedo Jugar?"
+how_to_paragraph = ["¡La actual versión es la 1.4, y esta disponible en la pagina","Jugar!"]
+about_title = "Sobre el proyecto"
 about_paragraphs = [
-"I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
-["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
+"Soy Naviary. Desde que descubrí Infinte Chess (el concepto existe desde hace mucho antes que esta web), ¡Me han intrigado sus posibilidades! Hasta hace muy poco, jugar ha sido bastante complicado, usuarios de chess.com tenían que crear imagenes del tablero actual y enviarlas entre ellos cada jugada. Debido a esto, no mucha gente conoce o ha sido capaz de jugar a esto.",
+["Es mi objetivo crear una manera de hacerlo facilmente jugable por todo el mundo, y crear una comunidad rodeandolo. He invertido incontables horas de mi tiempo en esta web, manteniendo y desarrollando el juego. Aún tengo muchas más ideas que me mantendrán ocupado durante un tiempo. Aunque deseo mantener este proyecto gratis, la vida tiene requerimientos, y para ayudarme financiariamente por favor considera unirte a mi ", "Patreon"]
 ]
-patreon_title = "Patreon Supporters"
+patreon_title = "Contribuidores en Premium"
 
 [credits]
-title = "Credits"
+title = "Creditos"
 copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
 variants_heading = "Variants"
 variants_credits = [
