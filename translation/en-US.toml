@@ -178,6 +178,10 @@ endgame = "Endgames"
 tactics = "Tactics"
 play = "Play"
 back = "Back"
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
+insane = "Insane"
 
 [play.play-menu]
 title = "Play - Online"

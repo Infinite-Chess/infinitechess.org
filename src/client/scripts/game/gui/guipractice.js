@@ -35,7 +35,7 @@ const guipractice = (function(){
         style.revealElement(element_practiceSelection)
         style.revealElement(element_menuExternalLinks);
         changePracticeMode('endgame-practice')
-        changeEndgameSelected('endgame1')
+        changeEndgameSelected('2Q-1k')
         updateEndgamesBeaten()
         initListeners()
     }
