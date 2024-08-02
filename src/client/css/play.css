@@ -275,7 +275,7 @@ canvas {
     left: 0;
     right: 0;
     display: grid;
-    grid-template: min(16vw, 173px, calc(var(--vh-sub-nav) * 0.184)) repeat(3, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) / 1fr min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) 1fr;
+    grid-template: min(16vw, 173px, calc(var(--vh-sub-nav) * 0.184)) repeat(4, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) / 1fr min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) 1fr;
     gap: min(2vw, 22px, calc(var(--vh-sub-nav) * 0.023));
     padding-bottom: min(10vw, 108px, calc(var(--vh-sub-nav) * 0.115));
     justify-content: center;
@@ -535,6 +535,69 @@ canvas {
 }
 
 
+/* Puzzle Page: Puzzle selection screen */
+
+.puzzle-selection {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: grid;
+    grid-template: repeat(2, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) / repeat(6, min(13vw, 141px, calc(var(--vh-sub-nav) * 0.15)));
+    gap: min(1.5vw, 16px, calc(var(--vh-sub-nav) * 0.0173));
+    justify-content: center;
+    align-content: center;
+    margin-bottom: 8vh;
+}
+
+.puzzle-selection button {
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+}
+
+.puzzle-selection button:hover {
+    background: linear-gradient(to bottom, white, rgb(242, 242, 242), white);
+}
+
+.puzzle-selection button:active {
+    background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
+}
+
+.puzzle-selection .puzzle-name {
+    grid-column: 1 / 7;
+    align-self: center;
+    justify-self: center;
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+}
+
+.puzzle-selection .endgame-puzzle {
+    grid-column: 1 / 4;
+}
+
+.puzzle-selection .tactics-puzzle {
+    grid-column: 4 / 7;
+}
+
+.puzzle-selection .puzzle-play {
+    grid-column: 1 / 4;
+    background: linear-gradient(to bottom, white, rgb(226, 226, 226), white);
+}
+
+.puzzle-selection .puzzle-back {
+    grid-column: 4 / 7;
+}
+
+.puzzle-selection .selected {
+    box-shadow: none;
+}
+
+.puzzle-selection .game-options {
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+    grid-column: 1 / 7;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
 
 /* Play Page: Invite creation screen */
 

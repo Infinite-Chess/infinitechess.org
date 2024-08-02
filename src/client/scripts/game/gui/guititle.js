@@ -14,6 +14,7 @@ const guititle = (function(){
 
     const titleElement = document.getElementById('title') // Visible when on the title screen
     const element_play = document.getElementById('play')
+    const element_puzzle = document.getElementById('puzzle')
     const element_guide = document.getElementById('rules')
     const element_boardEditor = document.getElementById('board-editor')
     const element_menuExternalLinks = document.getElementById('menu-external-links');
@@ -40,12 +41,14 @@ const guititle = (function(){
 
     function initListeners() {
         element_play.addEventListener('click', callback_Play)
+        element_puzzle.addEventListener('click', callback_Puzzle)
         element_guide.addEventListener('click', callback_Guide)
         element_boardEditor.addEventListener('click', gui.callback_featurePlanned)
     }
 
     function closeListeners() {
         element_play.removeEventListener('click', callback_Play)
+        element_puzzle.removeEventListener('click', callback_Puzzle)
         element_guide.removeEventListener('click', callback_Guide)
         element_boardEditor.removeEventListener('click', gui.callback_featurePlanned)
     }
@@ -54,6 +57,12 @@ const guititle = (function(){
         event = event || window.event;
         close()
         guiplay.open()
+    }
+
+    function callback_Puzzle(event) {
+        event = event || window.event;
+        close()
+        guipuzzle.open()
     }
 
     function callback_Guide(event) {
