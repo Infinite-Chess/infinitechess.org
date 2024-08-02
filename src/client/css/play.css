@@ -599,6 +599,29 @@ canvas {
     flex-direction: column;
 }
 
+.puzzle-list {
+    flex-grow: 1;
+}
+
+.game-options .puzzle {
+    background-color: rgb(168, 168, 168);
+    height: 3em;
+    display: flex;
+    align-items: center;
+    font-size: min(1.7vw, 18px, calc(var(--vh-sub-nav) * 0.020));
+    justify-content: space-between;
+    margin: 0.4em;
+    border-radius: 0.3em;
+}
+
+.puzzle .puzzle-child {
+    padding: 0 3em;
+}
+
+.puzzle:hover {
+    background-color: rgba(48, 145, 255, 0.442);
+}
+
 /* Play Page: Invite creation screen */
 
 .play-selection {
