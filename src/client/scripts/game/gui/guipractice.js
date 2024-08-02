@@ -99,8 +99,8 @@ const guipractice = (function(){
             element.classList.add('unbeaten')
         }
 
-        elements_endgames[2].classList.add('beaten')
-        elements_endgames[2].classList.remove('unbeaten')
+        // elements_endgames[2].classList.add('beaten')
+        // elements_endgames[2].classList.remove('unbeaten')
     }
 
     function callback_practiceBack(event) {
@@ -123,17 +123,9 @@ const guipractice = (function(){
     function callback_practicePlay(event) {
         event = event || window.event;
 
-        const gameOptions = {
-            variant: "Classical", // use endgameSelectedID
-            clock: "-",
-            color: "White",
-            rated: "casual",
-            publicity: "private"
-        }
-
         if (modeSelected === 'endgame-practice') {
             close()
-            startEndgamePractice(gameOptions)
+            startEndgamePractice()
         } else if (modeSelected === 'tactics-practice') {
             // nothing yet
         }
@@ -141,23 +133,22 @@ const guipractice = (function(){
 
     /**
      * Starts a local game according to the options provided.
-     * @param {Object} inviteOptions - An object that contains the invite properties `variant`, `clock`, `color`, `publicity`, `rated`.
+     * @param {Object} [endgameOptions] - An object that contains the invite properties `variant`, `clock`, `color`, `publicity`, `rated`.
      */
-    function startEndgamePractice(inviteOptions) {
+    function startEndgamePractice(endgameOptions = {}) {
         gui.setScreen('endgame practice'); // Change screen location
 
-        // [Event "Casual Space Classic infinite chess game"] [Site "https://www.infinitechess.org/"] [Round "-"]
         const gameOptions = {
             metadata: {
                 Event: `Infinite chess endgame practice`,
                 Site: "https://www.infinitechess.org/",
                 Round: "-",
-                Variant: inviteOptions.variant,
-                TimeControl: inviteOptions.clock
+                Variant: "Classical",
+                TimeControl: "-"
             }
         }
         loadGame(gameOptions)
-        clock.set(inviteOptions.clock)
+        clock.set("-")
         guigameinfo.hidePlayerNames();
     }
 
@@ -167,7 +158,7 @@ const guipractice = (function(){
      * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
      */
     function loadGame(gameOptions) {
-        console.log("Loading practice with game options:")
+        console.log("Loading practice endgame with game options:")
         console.log(gameOptions);
         main.renderThisFrame();
         movement.eraseMomentum();
@@ -176,11 +167,7 @@ const guipractice = (function(){
         gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || math.getCurrentUTCDate();
         gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || math.getCurrentUTCTime();
 
-        const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
-            moves: gameOptions.moves,
-            variantOptions: gameOptions.variantOptions,
-            gameConclusion: gameOptions.gameConclusion
-        })
+        const newGamefile = new gamefile(gameOptions.metadata)
         game.loadGamefile(newGamefile);
 
         const centerArea = area.calculateFromUnpaddedBox(newGamefile.startSnapshot.box)
