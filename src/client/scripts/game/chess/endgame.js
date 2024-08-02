@@ -39,11 +39,34 @@ const endgame = (function() {
         "1K3HA-1k",
     ];
 
-    function getEndgameStartingPosition(endgameID){
+    function generateEndgameStartingPosition(endgameID){
+        // error if user somehow submitted invalid endgame ID
+        if (!validEndgames.includes(endgameID)) return console.error("User tried to play invalid endgame practice.");
+
+        // the position to be generated
+        let startingPosition = {};
+        
+        // read the elementID and convert it to a position
+        const piecelist = endgameID.match(/[0-9]+[a-zA-Z]+/g);
+        for (let entry of piecelist) {
+            let amount = entry.match(/[0-9]+/)[0];
+            let piece = entry.match(/[a-zA-Z]+/)[0];
+            piece = formatconverter.ShortToLong_Piece(piece);
+            while (amount != 0) {
+                amount -= 1;
+                if (math.getPieceColorFromType(piece)) {
+                    // place randomly near origin
+                    // console.log(Math.random())
+                } else {
+                    // place randomly at a distance
+                }
+            }
+        }
+
         return {"0,0": "pawnsW", "1,0": "queensW", "2,0": "queensW", "10,15": "kingsB"};
     }
 
     return Object.freeze({
-        getEndgameStartingPosition,
+        generateEndgameStartingPosition,
     })
 })()

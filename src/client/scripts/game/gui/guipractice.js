@@ -85,6 +85,7 @@ const guipractice = (function(){
             if (endgameid === element.id) {
                 element.classList.remove('not-selected')
                 element.classList.add('selected')
+                endgameSelectedID = endgameid;
             } else {
                 element.classList.remove('selected')
                 element.classList.add('not-selected')
@@ -116,8 +117,7 @@ const guipractice = (function(){
 
     function callback_endgameList(event){
         event = event || window.event;
-        endgameSelectedID = event.currentTarget.id;
-        changeEndgameSelected(endgameSelectedID)
+        changeEndgameSelected(event.currentTarget.id)
     }
 
     function callback_practicePlay(event) {
@@ -138,7 +138,7 @@ const guipractice = (function(){
     function startEndgamePractice(endgameOptions = {}) {
         gui.setScreen('endgame practice'); // Change screen location
 
-        const startingPosition = endgame.getEndgameStartingPosition(endgameSelectedID);
+        const startingPosition = endgame.generateEndgameStartingPosition(endgameSelectedID);
 
         const gameOptions = {
             metadata: {
