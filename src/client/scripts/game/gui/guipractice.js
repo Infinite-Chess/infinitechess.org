@@ -156,7 +156,7 @@ const guipractice = (function(){
                 gameRules: {
                     promotionRanks: null,
                     promotionsAllowed: {"white":[],"black":[]},
-                    winConditions: {"white": ["checkmate"], "black": ["allpiecescaptured"]}
+                    winConditions: {"white": ["checkmate"], "black": ["checkmate"]}
                 }
             }
         }
