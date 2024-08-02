@@ -1,13 +1,13 @@
 
 /**
- * This script handles endgame practice generation
+ * This script handles checkmate practice generation
  */
 
 "use strict";
 
-const endgame = (function() {
+const checkmatepractice = (function() {
 
-    const validEndgames = [
+    const validCheckmates = [
         // easy
         "2Q-1k",
         "3R-1k",
@@ -39,15 +39,15 @@ const endgame = (function() {
         "1K3HA-1k",
     ];
 
-    function generateEndgameStartingPosition(endgameID){
-        // error if user somehow submitted invalid endgame ID
-        if (!validEndgames.includes(endgameID)) return console.error("User tried to play invalid endgame practice.");
+    function generateCheckmateStartingPosition(checkmateID){
+        // error if user somehow submitted invalid checkmate ID
+        if (!validCheckmates.includes(checkmateID)) return console.error("User tried to play invalid checkmate practice.");
 
         // the position to be generated
         let startingPosition = {};
         
         // read the elementID and convert it to a position
-        const piecelist = endgameID.match(/[0-9]+[a-zA-Z]+/g);
+        const piecelist = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
         for (let entry of piecelist) {
             let amount = entry.match(/[0-9]+/)[0];
             let piece = entry.match(/[a-zA-Z]+/)[0];
@@ -67,6 +67,6 @@ const endgame = (function() {
     }
 
     return Object.freeze({
-        generateEndgameStartingPosition,
+        generateCheckmateStartingPosition,
     })
 })()

@@ -570,7 +570,7 @@ canvas {
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
 }
 
-.practice-selection .endgame-practice {
+.practice-selection .checkmate-practice {
     grid-column: 1 / 4;
 }
 
@@ -599,11 +599,11 @@ canvas {
     flex-direction: column;
 }
 
-.endgame-list {
+.checkmate-list {
     flex-grow: 1;
 }
 
-.game-options .endgame, .game-options .endgame-separator {
+.game-options .checkmate, .game-options .checkmate-separator {
     height: 3em;
     display: flex;
     align-items: center;
@@ -615,35 +615,35 @@ canvas {
     border-style: solid;
 }
 
-.game-options .endgame-separator {
+.game-options .checkmate-separator {
     font-weight: bold;
 }
 
-.endgame .endgame-child {
+.checkmate .checkmate-child {
     padding: 0 3em;
 }
 
-.endgame.selected {
+.checkmate.selected {
     border-width: 0.3em;
 }
 
-.endgame.not-selected {
+.checkmate.not-selected {
     border-width: 0em;
 }
 
-.endgame.beaten {
+.checkmate.beaten {
     background-color: rgba(0, 128, 0, 0.3);
 }
 
-.endgame.unbeaten {
+.checkmate.unbeaten {
     background-color: rgba(168, 168, 168, 1);
 }
 
-.endgame.beaten:hover {
+.checkmate.beaten:hover {
     background-color: rgba(0, 128, 0, 0.2);
 }
 
-.endgame.unbeaten:hover {
+.checkmate.unbeaten:hover {
     background-color: rgba(168, 168, 168, 0.8);
 }
 

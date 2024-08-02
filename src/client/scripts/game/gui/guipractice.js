@@ -15,14 +15,14 @@ const guipractice = (function(){
     const element_practiceSelection = document.getElementById('practice-selection')
     const element_practiceName = document.getElementById('practice-name')
     const element_practiceBack = document.getElementById('practice-back')
-    const element_endgamePractice = document.getElementById('endgame-practice')
+    const element_checkmatePractice = document.getElementById('checkmate-practice')
     const element_tacticsPractice = document.getElementById('tactics-practice')
     const element_practicePlay = document.getElementById('practice-play')
 
-    const elements_endgames = document.getElementsByClassName('endgame');
+    const elements_checkmates = document.getElementsByClassName('checkmate');
 
-    let modeSelected; // endgame-practice / tactics-practice
-    let endgameSelectedID; // id of selected endgame
+    let modeSelected; // checkmate-practice / tactics-practice
+    let checkmateSelectedID; // id of selected checkmate
 
     // Functions
 
@@ -34,9 +34,9 @@ const guipractice = (function(){
         gui.setScreen('title practice')
         style.revealElement(element_practiceSelection)
         style.revealElement(element_menuExternalLinks);
-        changePracticeMode('endgame-practice')
-        changeEndgameSelected('2Q-1k')
-        updateEndgamesBeaten()
+        changePracticeMode('checkmate-practice')
+        changeCheckmateSelected('2Q-1k')
+        updateCheckmatesBeaten()
         initListeners()
     }
 
@@ -48,31 +48,31 @@ const guipractice = (function(){
 
     function initListeners() {
         element_practiceBack.addEventListener('click', callback_practiceBack)
-        element_endgamePractice.addEventListener('click', callback_endgamePractice)
+        element_checkmatePractice.addEventListener('click', callback_checkmatePractice)
         element_tacticsPractice.addEventListener('click', gui.callback_featurePlanned)
         element_practicePlay.addEventListener('click', callback_practicePlay)
-        for (let element of elements_endgames) {
-            element.addEventListener('click', callback_endgameList);
+        for (let element of elements_checkmates) {
+            element.addEventListener('click', callback_checkmateList);
         }
     }
 
     function closeListeners() {
         element_practiceBack.removeEventListener('click', callback_practiceBack)
-        element_endgamePractice.removeEventListener('click', callback_endgamePractice)
+        element_checkmatePractice.removeEventListener('click', callback_checkmatePractice)
         element_tacticsPractice.removeEventListener('click', gui.callback_featurePlanned)
         element_practicePlay.removeEventListener('click', callback_practicePlay)
-        for (let element of elements_endgames) {
-            element.removeEventListener('click', callback_endgameList);
+        for (let element of elements_checkmates) {
+            element.removeEventListener('click', callback_checkmateList);
         }
     }
 
-    function changePracticeMode(mode) { // endgame-practice / tactics-practice
+    function changePracticeMode(mode) { // checkmate-practice / tactics-practice
         modeSelected = mode
-        if (mode === 'endgame-practice') {
-            element_practiceName.textContent = translations["menu_endgame"]
-            element_endgamePractice.classList.add('selected')
+        if (mode === 'checkmate-practice') {
+            element_practiceName.textContent = translations["menu_checkmate"]
+            element_checkmatePractice.classList.add('selected')
             element_tacticsPractice.classList.remove('selected')
-            element_endgamePractice.classList.remove('not-selected')
+            element_checkmatePractice.classList.remove('not-selected')
             element_tacticsPractice.classList.add('not-selected')
             // callback_updateOptions()
         } else if (mode === 'tactics-practice') {
@@ -80,12 +80,12 @@ const guipractice = (function(){
         }
     }
 
-    function changeEndgameSelected(endgameid) {
-        for (let element of elements_endgames){
-            if (endgameid === element.id) {
+    function changeCheckmateSelected(checkmateid) {
+        for (let element of elements_checkmates){
+            if (checkmateid === element.id) {
                 element.classList.remove('not-selected')
                 element.classList.add('selected')
-                endgameSelectedID = endgameid;
+                checkmateSelectedID = checkmateid;
             } else {
                 element.classList.remove('selected')
                 element.classList.add('not-selected')
@@ -93,15 +93,15 @@ const guipractice = (function(){
         }
     }
 
-    // TODO: implement beaten endgame list
-    function updateEndgamesBeaten() {
-        for (let element of elements_endgames){
+    // TODO: implement beaten checkmate list
+    function updateCheckmatesBeaten() {
+        for (let element of elements_checkmates){
             element.classList.remove('beaten')
             element.classList.add('unbeaten')
         }
 
-        // elements_endgames[2].classList.add('beaten')
-        // elements_endgames[2].classList.remove('unbeaten')
+        // elements_checkmates[2].classList.add('beaten')
+        // elements_checkmates[2].classList.remove('unbeaten')
     }
 
     function callback_practiceBack(event) {
@@ -110,22 +110,22 @@ const guipractice = (function(){
         guititle.open()
     }
 
-    function callback_endgamePractice(event) {
+    function callback_checkmatePractice(event) {
         event = event || window.event;
-        changePracticeMode('endgame-practice')
+        changePracticeMode('checkmate-practice')
     }
 
-    function callback_endgameList(event){
+    function callback_checkmateList(event){
         event = event || window.event;
-        changeEndgameSelected(event.currentTarget.id)
+        changeCheckmateSelected(event.currentTarget.id)
     }
 
     function callback_practicePlay(event) {
         event = event || window.event;
 
-        if (modeSelected === 'endgame-practice') {
+        if (modeSelected === 'checkmate-practice') {
             close()
-            startEndgamePractice()
+            startCheckmatePractice()
         } else if (modeSelected === 'tactics-practice') {
             // nothing yet
         }
@@ -133,16 +133,16 @@ const guipractice = (function(){
 
     /**
      * Starts a local game according to the options provided.
-     * @param {Object} [endgameOptions] - An object that contains optional entries
+     * @param {Object} [checkmateOptions] - An object that contains optional entries
      */
-    function startEndgamePractice(endgameOptions = {}) {
-        gui.setScreen('endgame practice'); // Change screen location
+    function startCheckmatePractice(checkmateOptions = {}) {
+        gui.setScreen('checkmate practice'); // Change screen location
 
-        const startingPosition = endgame.generateEndgameStartingPosition(endgameSelectedID);
+        const startingPosition = checkmatepractice.generateCheckmateStartingPosition(checkmateSelectedID);
 
         const gameOptions = {
             metadata: {
-                Event: `Infinite chess endgame practice`,
+                Event: `Infinite chess checkmate practice`,
                 Site: "https://www.infinitechess.org/",
                 Round: "-",
                 Variant: "Classical",
@@ -171,7 +171,7 @@ const guipractice = (function(){
      * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
      */
     function loadGame(gameOptions) {
-        console.log("Loading practice endgame with game options:")
+        console.log("Loading practice checkmate with game options:")
         console.log(gameOptions);
         main.renderThisFrame();
         movement.eraseMomentum();
@@ -203,7 +203,7 @@ const guipractice = (function(){
         getModeSelected,
         open,
         close,
-        startEndgamePractice,
+        startCheckmatePractice,
         onPracticePage
     })
 
