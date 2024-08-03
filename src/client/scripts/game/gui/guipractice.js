@@ -143,7 +143,6 @@ const guipractice = (function(){
                 Event: `Infinite chess checkmate practice`,
                 Site: "https://www.infinitechess.org/",
                 Round: "-",
-                Variant: "Classical",
                 TimeControl: "-",
                 White: "(You)",
                 Black: "Engine"
