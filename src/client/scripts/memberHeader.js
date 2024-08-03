@@ -106,11 +106,47 @@ const validation = (function(){
      */
     function changeNavigationLinks() {
 
-        loginLink.setAttribute('href', `/member/${member.toLowerCase()}`);
+        loginLink.href = addLngQueryParamToLink(`/member/${member.toLowerCase()}`);
         loginText.textContent = translations["js-profile"];
 
-        createaccountLink.setAttribute('href', '/logout');
+        createaccountLink.href = addLngQueryParamToLink('/logout');
         createaccountText.textContent = translations["js-logout"];
+    }
+
+    /**
+     * Adds the "lng" query parameter to all navigation links.
+     */
+    function addLngToNavLinks() {
+      const lng = getCookieValue('i18next');
+      if (!lng) return;
+    
+      const navLinks = document.querySelectorAll('nav a');
+      navLinks.forEach(link => {
+        link.href = addLngQueryParamToLink(link);
+      });
+    }
+
+    // Ensure the lng query parameter is added to all nav links after updating them
+    addLngToNavLinks();
+
+    /**
+     * Modifies the given URL to include the "lng" query parameter based on the i18next cookie.
+     * @param {string} href - The original URL.
+     * @returns {string} The modified URL with the "lng" query parameter.
+     */
+    function addLngQueryParamToLink(href) {
+        // Get the value of the i18next cookie
+        const lng = getCookieValue('i18next');
+        if (!lng) return href;
+    
+        // Create a URL object from the given href
+        const url = new URL(href, window.location.origin);
+    
+        // Add or update the "lng" query parameter
+        url.searchParams.set('lng', lng);
+    
+        // Return the modified URL as a string
+        return url.toString();
     }
 
     /**
@@ -171,4 +207,20 @@ favicon: { // This block auto detects device theme and adjusts the browser icon 
         console.log(`Toggled ${newTheme} icon`);
         switchFavicon(newTheme);
     });
+}
+
+{ // This block auto-removes the "lng" query parameter from the url, visually, without refreshing
+  function removeLngQueryParam() {
+    // Create a URL object from the current window location
+    const url = new URL(window.location);
+  
+    // Remove the "lng" query parameter
+    url.searchParams.delete('lng');
+  
+    // Update the browser's URL without refreshing the page
+    window.history.replaceState({}, '', url);
+  }
+ 
+  // Remove the "lng" param from the url bar when the DOM content is fully loaded
+  document.addEventListener('DOMContentLoaded', removeLngQueryParam);
 }

@@ -8,6 +8,31 @@ const xss = require("xss");
 
 const translationsFolder = "./translation";
 
+/** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
+const supportedLanguages = [];
+const defaultLanguage = 'en-US';
+
+/**
+ * Determines the language to be used for serving an HTML file to a request.
+ * The language is determined in the following order of precedence:
+ * 1. The 'lng' query parameter.
+ * 2. The 'i18next' cookie.
+ * 3. A default language if neither the query parameter nor the cookie is present.
+ * The selected language is validated against supported languages.
+ * @param {Object} req - The Express request object.
+ * @returns {string} The language to be used.
+ */
+function getLanguageToServe(req) {
+  let language = req.query.lng || req.cookies.i18next || req.i18n.resolvedLanguage /* || defaultLanguage */;
+  if (!supportedLanguages.includes(language)) { // Query param language not supported
+    language = req.cookies.i18next;
+  }
+  if (!supportedLanguages.includes(language)) { // Cookie language not supported
+    language = req.i18n.resolvedLanguage;
+  }
+  return language;
+}
+
 /**
  * Templates without any external data other than translations.
  * Don't insert names with file extensions.
@@ -142,9 +167,9 @@ function html_escape(value) {
 
 /**
  * Removes keys from `object` based on string of format 'foo.bar'.
- * @param {key_string} String representing key that has to be deleted in format 'foo.bar'.s
- * @param {object} Object that is target of the removal.
- * @returns Copy of `object` with deleted values
+ * @param {string} key_string - String representing key that has to be deleted in format 'foo.bar'.
+ * @param {Object} object - Object that is target of the removal.
+ * @returns {Object} Copy of `object` with deleted values
  */
 function remove_key(key_string, object) {
   const keys = key_string.split(".");
@@ -201,7 +226,8 @@ function loadTranslationsFolder(folder) {
       return x.endsWith(".toml");
     })
     .forEach((file) => {
-      resources[file.replace(".toml", "")] = {
+      const languageCode = file.replace(".toml", "");
+      resources[languageCode] = {
         default: html_escape(
           removeOutdated(
             parse(fs.readFileSync(path.join(folder, file)).toString()),
@@ -209,6 +235,7 @@ function loadTranslationsFolder(folder) {
           ),
         ),
       };
+      supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
     });
 
   return resources;
@@ -282,7 +309,7 @@ function initTranslations() {
     preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
     resources: translations,
     defaultNS: "default",
-    fallbackLng: "en-US",
+    fallbackLng: defaultLanguage,
     // debug: true // Enable debug mode to see logs for missing keys and other details
   });
 
@@ -298,7 +325,7 @@ function initTranslations() {
  * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
  * @returns {string} The translated string.
  */
-function getTranslation(key, language = 'en-US', options = {}) {
+function getTranslation(key, language = defaultLanguage, options = {}) {
   options.lng = language;
   return i18next.t(key, options);
 }
@@ -317,6 +344,7 @@ function getTranslationForReq(key, req, options = {}) {
 }
 
 module.exports = {
+  getLanguageToServe,
   initTranslations,
   getTranslation,
   getTranslationForReq
