@@ -76,19 +76,23 @@ const engine = (function() {
 		return moves;
 	}
 
+	function loneBlackKingEval(gamefile) {
+
+	}
+
 	/**
 	 * 
 	 * @param {gamefile} gamefile 
 	 * @param {number} depth 
 	 * @param {Function} eval 
 	 */
-	function calculate(gamefile, depth, eval) {
-		const moves = getConsideredMoves(gamefile);
+	function negamax(gamefile, depth, eval) {
+		if (depth == 0) return 
 	}
 
 	return Object.freeze({
 		getIntersections,
 		getConsideredMoves,
-		calculate
+		negamax
 	})
 })();
