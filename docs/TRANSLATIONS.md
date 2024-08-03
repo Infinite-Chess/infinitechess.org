@@ -34,14 +34,14 @@ key2 = "value2"
 
 ## Translation process ##
 
-In case you are translating a language that is currently not present in the project, you can start the process by copying [en-US.toml](../translation/en-US.toml) and renaming it as described above. If you are updating an existing language, the only thing you need to do is to update the `version` variable at the top of your TOML document to the value of the `version` variable in [en-US.toml](../translation/en-US.toml).
+In case you are translating a language that is currently not present in the project, you can start the process by copying [en-US.toml](../translation/en-US.toml) and renaming it as described above. If you are updating an existing language, the only thing you need to do is to update the `version` variable at the top of your TOML document to the value of the `version` variable in [en-US.toml](../translation/en-US.toml), indicating that the translation is up to date.
 
 > [!IMPORTANT]
 > You should always use [en-US.toml](../translation/en-US.toml) as a reference. It is the only file that is up to date and comes straight from the developers. Do not use any other files!
 
 Then you can start a test server with `npx nodemon` and start translating. If you insert the address `https://localhost:3443` into your browser, the website should be there and it should automatically update as you make your changes (after reloading the page). Make sure that you have selected the language that you are editing in the website's UI. There is a footer with a language selection dropdown at the bottom of almost every page.
 
-In case you are updating an existing language and you aren't sure what has changed since the last update, you can view changes of `en-US.toml` [here](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml).
+In case you are updating an existing language and you aren't sure what has changed since the last update, you can view changes of `en-US.toml` in [the official changelog](../translation/changes.json) or in the [file commit history](https://github.com/Infinite-Chess/infinitechess.org/commits/main/translation/en-US.toml). In general, a translation is only considered up to date if the `version` variable on top matches the `version` value of the English TOML file.
 
 > [!IMPORTANT]
 > If there is an HTML tag in the value you want to translate, do not modify it!

@@ -1,6 +1,6 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "5"
+version = "11"
 
 [header]
 home = "Accueil"
@@ -34,7 +34,7 @@ what_is_it_pargaraphs = [
 "Comme vous pouvez l'imaginer, il y a une infinité de positions de départ possibles dont beaucoup que vous pouvez jouer de façon compétitive ! Le but final reste de faire un échec et mat, il est donc nécessaire de développer des nouvelles techniques vu qu'il n'y pas de murs pour coincer le roi ennemi. Normalement, les parties ne durent pas plus longtemps que dans un jeu d'échec classique. Les pions font leur promotions sur les lignes 1 et 8 respectivement !",
 ]
 how_to_title = "Comment Jouer ?"
-how_to_paragraph = ["Le jeu est actuellement en version 1.3.2 sur la page ","Jouer","!"]
+how_to_paragraph = ["Le jeu est actuellement en version 1.4 sur la page ","Jouer","!"]
 about_title = "À Propos"
 about_paragraphs = [
 "Je m'apelle Naviary. Dès que j'ai découvert Infinite Chess (le concept existait bien avant ce site), J'ai été très intrigué par ce jeu et par les possibilités qu'il débloque ! Jusqu'à aujourd'hui, y jouer était plutôt difficile, les membres de chess.com devaient créer des images du plateau eux même et se les envoyer à chaque coup. À cause de ça, peu de gens connaissent cette variante.",
@@ -80,7 +80,7 @@ code_credits = [
 
 [member]
 verify_message = "Validez l'email pour vérifier votre compte."
-resend_message = ["Vous n'avez pas reçu d'email ? Vérifiez vos spams. Aussi, ", "renvoyer.", "Si vous ne recevez toujours rien, <a href='mailto:infinitechess.org@gmail.com'>envoyez moi un message.</a>"]
+resend_message = ["Vous n'avez pas reçu d'email ? Vérifiez vos spams. Aussi, ", "renvoyer.", " Si vous ne recevez toujours rien,", "envoyez moi un message."]
 verify_confirm = "Merci ! Votre compte est désormais vérifié."
 rating = "Classement elo:"
 joined = "A rejoint le:"
@@ -134,12 +134,12 @@ careful_paragraphs = [
 "Beaucoup d'autres variantes ont été crées avec pour but de renforcer l'arrière du roi."
 ]
 controls_heading = "Contrôles"
-controls_paragraph = "Beaucoup de contrôles sont intuitifs, comme cliquer et faire glisser le plateau pour se déplacer, ou scroller pour zoomer, mais regardons les autres contrôles que vous pouvez utiliser !"
+controls_paragraph = "Vous pouvez cliquer et faire glisser le plateau pour vous y déplacer, ou scroller pour zoomer, vous pouvez également cliquer sur n'importe quelle pièce (y compris celles de votre adversaire) pour voir leurs déplacements légaux. Il y a d'autres contrôles un peu plus avancés, les voici: "
 keybinds = [
 " pour se déplacer.",
 ["Espace", " et ", "Maj", " pour zoomer et dézoomer."],
 ["Échap", " pour mettre pause."],
-["Tab", " pour activer et désactiver les flèches pointant vers les pièces hors champ sur les bords de l'écran. Par défaut elles sont en mode \"Défense\", une flèche n'est alors affichée que pour les pièces qui peuvent bouger de leur emplacement à une case visible sur l'écran. Mais, appuyer sur ", "tab", " permet de désactivé totalement ces flèches ou de les passer en mode \"Toutes\". Le mode \"Toutes\" révèle toutes les pièces qui passent par des lignes ou des diagonales visibles à l'écran, selon si ces pièces se déplacent en ligne ou en diagonale. Le mode choisit peut également être changé depuis le menu pause."],
+["Tab", " pour activer et désactiver les flèches pointant vers les pièces hors champ sur les bords de l'écran. Par défaut elles sont en mode \"Défense\", une flèche n'est alors affichée que pour les pièces qui peuvent bouger de leur emplacement à une case visible sur l'écran. Mais, appuyer sur ", "tab", " permet de désactivé totalement ces flèches ou de les passer en mode \"Toutes\". Le mode \"Toutes\" révèle toutes les pièces qui passent par des lignes ou des diagonales visibles à l'écran, selon si ces pièces se déplacent en ligne ou en diagonale. Le mode choisit peut également être changé depuis le menu pause. Cliquer sur les flèches vous téléportera à la pièce vers laquelle elles pointent."],
 " va activer/désativer le \"mode d'édition\" dans les parties locales. Le mode d'édition vous permet déplacer n'importe quelle pièce n'importe où sur le plateau. Très utile pour faire des analyses."
 ]
 controls_paragraph2 = "Ce sont les principaux contrôles que vous devez connaître. Mais il y en d'autres qui pourraient vous être utiles !"
@@ -166,8 +166,9 @@ archbishop = {name="L'Archifou", description="Il se déplace comme un fou et un 
 amazon = {name="L'Amazone", description="Elle se déplace comme une dame et un cavalier combinés. C'est la pièce fée la plus forte du jeu !"}
 guard = {name="Le Garde", description="Il se déplace comme le roi mais ne peut pas être mis en échec ou en échec et mat."}
 hawk = {name="Le Faucon", description="Il se déplace d'exactement 2 ou 3 cases dans chaque direction. Il peut sauter au dessus d'autres pièces comme un cavalier."}
-obstacle = {name="Obstacle", description="Une pièce neutre (controlées par aucun des joueurs) qui bloque les mouvements mais peut être capturée."},
 centaur = {name="Le Centaure", description="Il se déplace comme un cavalier et un garde combinés."}
+knightrider = {name="Le Cavalier Sauteur", description="Saute comme un cavalier mais jusqu'à l'infini, tant qu'il ne rencontre pas d'obstacles."}
+obstacle = {name="Obstacle", description="Une pièce neutre (controlées par aucun des joueurs) qui bloque les mouvements mais peut être capturée."}
 void = {name="Vide", description="Une pièce neutre (controlées par aucun des joueurs) qui représente l'absence d'une case sur le plateau. Les pièces ne peuvent se déplacer ni au dessus ni à travers du vide."}
 
 
@@ -282,7 +283,7 @@ pasting_in_private = "Coller une position dans une partie privée causera une d�
 piece_count = "Nombre de pièces"
 exceeded = "dépassé"
 changed_wincon = "Les condition de victoire par mat ont étés passé à 'capture royale', et l'affichage des icones a été désactivé. Appuyez sur 'P' pour les réactiver (déconseillé)."
-loaded_from_clipboard = "La position a été chargée depuis le presse-papier!"
+loaded_from_clipboard = "La position a été chargée depuis le presse-papier !"
 loaded = "Position chargée !"
 slidelimit_not_number = "La gamerule 'slideLimit' doit être un nombre."
 
@@ -301,7 +302,7 @@ regenerated_pieces = "Les pièces ont été régénérés."
 [play.javascript.invites]
 move_mouse = "Déplacez votre souris pour vous reconnecter."
 unknown_action_received_1 = "Action inconnue"
-unknown_action_received_2 = "reçu par le serveur dans l'abonnement d'invitations!"
+unknown_action_received_2 = "reçu par le serveur dans l'abonnement d'invitations !"
 cannot_cancel = "Impossible d'annuler l'invitation ou identifiant non défini."
 you_indicator = "(Vous)"
 you_are_white = "Vous êtes: Les blancs"
@@ -342,20 +343,20 @@ connection_closed = "La connection a été fermé de façon imprévue. Message d
 please_report_bug = "Ceci ne devrait jamais arriver, reportez ce bug s'il vous plaît !"
 
 [play.javascript.termination] # What caused the termination of the game, in spoken language
-checkmate = "Checkmate" # Needs translation
-stalemate = "Stalemate" # Needs translation
-repetition = "Threefold repetition" # Needs translation
-moverule = "-move rule"  # The game inserts a number in front of this phrase # Needs translation
-insuffmat = "Insufficient material" # Needs translation
-royalcapture = "Royal capture" # Needs translation
-allroyalscaptured = "All royals captured" # Needs translation
-allpiecescaptured = "All pieces captured" # Needs translation
-threecheck = "Three-check" # Needs translation
-koth = "King of the hill" # Needs translation
-resignation = "Resignation" # Needs translation
-time = "Time forfeit" # Needs translation
-aborted = "Aborted" # Game was cancelled (no elo exchanged) # Needs translation
-disconnect = "Abandoned" # A player left # Needs translation
+checkmate = "Échec et Mat"
+stalemate = "Pat"
+repetition = "Répétition de coups" # Needs translation
+moverule = ["Regle des ", " coups"] # The game inserts a number inbetween these two strings
+insuffmat = "Matériel insuffisant"
+royalcapture = "Capture royale" # Needs translation
+allroyalscaptured = "Toutes les pièces royales ont été capturées"
+allpiecescaptured = "Toutes les pièces ont été capturées"
+threecheck = "Triple échec"
+koth = "KOTH"
+resignation = "Abandon"
+time = "Défaite au temps"
+aborted = "Annulation" # Game was cancelled (no elo exchanged)
+disconnect = "Déconnexion" # A player left
 
 [play.javascript.results]
 you_checkmate = "Victoire par échec-et-mat !"
@@ -370,7 +371,7 @@ you_koth = "Victoire par KOTH !"
 you_generic = "Victoire !"
 draw_stalemate = "Pat !"
 draw_repetition = "Égalité par répétition !"
-draw_moverule = ["Égalité par la règle des ", " coups"]
+draw_moverule = ["Égalité par la règle des ", " coups"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Égalité par manque de matériel !"
 draw_generic = "Égalité!"
 aborted = "Partie annulée."
@@ -452,7 +453,7 @@ conclusion_paragraphs = [
 ["Ce site est open-source. Vous pouvez récuperer ou distribuer toutes les ressources qui s'y trouvent tant que vos respectez les conditions décrites dans les ", "licences", " ! Si le lien ci dessus n'est pas fonctionnel il est de votre responsabilité de trouver les licences."],
 "Nous ne garantissons pas que ce site sera en ligne 100% du temps. Nous ne garantissons pas non plus que les données ne seront jamais corrompues.",
 "Vous n'êtes pas autorisé à performer des activités illégales sur ce site.",
-["Si vous avez des questions concernant ces conditions, ou à propos du site de manière générale,", "envoyez nous un email!"]
+["Si vous avez des questions concernant ces conditions, ou à propos du site de manière générale,", "envoyez nous un email !"]
 ]
 update = "(Dernière mise à jour: 13 Juillet 2024. Ajout de l'avertissement sur le fait que toutes les parties jouées sur le site sont des informations publiques, ce qui inclut une approximation de la durée depuis la dernière activité de votre compte. Ces conditions peuvent être changées à tout instant et il est de votre responsabilité de vous assurez que vous restez à jour.)"
 thanks = "Merci !"
@@ -475,9 +476,25 @@ login_button = "Se connecter"
 title = "Actualités"
 more_dev_logs = ["Plus de devlogs sont publiés sur le ", "discord officiel", ", et sur les ", "forums de chess.com"]
 
+[news.aug1-2024] # Update 1.4
+date = "1 Août 2024:"
+text_top = "La mise à jour 1.4 a été déployée ! Il y a eu de nombreuses fonctionnalités ajoutées par la communauté depuis que le projet a été mis en open-source !"
+update_list = [
+"Les Cavaliers Sauteurs ont été ajoutés, ils bondissent comme un cavalier mais jusqu'à l'infini, tant que leur chemin n'est pas bloqué ! La variante 'Knighted Chess' a été modifiée pour remplacer les cavaliers avec les cavaliers sauteurs !",
+"Vous pouvez désormais cliquer sur les pièces de votre adversaire à n'importe quel moment pour voir tous les movements qu'elles peuvent faire !",
+"Vous pouvez maintenant faire un clic droit pour déselectionner une pièce.",
+"Survoler les flèches sur les bords de l'écran affiche désormais les déplacement de la pièce vers laquelle la flèche pointe !",
+"La partie se finira désormais automatiquement lorsqu'il n'y a pas assez de matériel sur le plateau pour forcer un mat.",
+"Le site a été entièrement traduit en français ! Vous pouvez changer la langue via le footer en bas de chaque page.",
+"Les temps de chargement ont été améliorés sur le site.",
+"Le site a une nouvelle icône: Ω ! Elle s'adapte automatiquement au mode clair ou sombre.",
+"Les codes ICN ont été reformatté pour se rapprocher des standards PGN.",
+"Les utilisateurs peuvent désormais supprimer leur compte depuis leur profil s'ils le souhaitent, sans avoir à nous envoyer de mails."
+]
+
 [news.july22-2024]
 date = "22 Juillet 2024:"
-account_warning = "Si vous n'avez pas vérifié votre compte, faites le dès maintenant depuis votre profil s'il vous plaît! Tous les comptes non vérifiés serons bientôt supprimés!!"
+account_warning = "Si vous n'avez pas vérifié votre compte, faites le dès maintenant depuis votre profil s'il vous plaît ! Tous les comptes non vérifiés serons bientôt supprimés!!"
 
 [news.july13-2024]
 date = "13 Juillet 2024:"
@@ -512,11 +529,6 @@ text_box = ["Et pleins d'autres nouvelles choses! Pour la liste complète, rende
 [news.jan29-2024]
 date = "29 Janvier 2024:"
 text = "Nouvelle vidéo sortie aujourd'hui !"
-
-[news.aug26-2023]
-date = "26 Août 2023:"
-text_top = "La version 1.2 d'Infinite Chess a été publiée ! Elle amène l'historique de coups. Utilisez les flèches gauches et droites pour rembobiner ou accèlerer la partie !"
-text_box = "Le système de vérification de comptes a été mis-à-jour pour être plus fiable ! Si votre compte n'est pas vérifié et que vous aviez des problèmes avec le lien de vérification, réessayez de vous vérifier !"
 
 [server.javascript]
 ws-invalid_username = "Nom d'utilisateur invalide"
@@ -557,12 +569,13 @@ ws-already_in_game = "Vous êtes déjà dans une partie."
 ws-player_already_has_invite = "Ce joueur a déjà reçu une invitation."
 ws-invite_cancelled = "Cette invitation a déjà été annulée."
 ws-accept_own_invite = "Tu ne peux pas accepter ta propre invitation gros bêta"
-ws-server_restarting = "Ce serveur redémarre dans "
+ws-server_restarting = "Ce serveur redémarre dans"
+ws-server_under_maintenance = "Le serveur redémarre bientôt." # Can be changed at will to change the display message.
 ws-minutes = "minutes" # unit of time
 ws-minute = "minute" # unit of time
 ws-no_abort_game_over = "Vous ne pouvez pas annuler la partie, elle est déjà finie."
 ws-no_abort_after_moves = "Vous ne pouvez pas annuler la partie, plus de 2 coups ont déjà été joués."
 ws-game_aborted_cheating = "Annulation de la partie à cause d'une forte probabilité de triche."
 ws-cannot_resign_finished_game = "Vous ne pouvez pas abandonner, la partie est déjà finie."
-ws-invalid_code = "Code invalide!" # Invite code doesn't match any existing invites
+ws-invalid_code = "Code invalide !" # Invite code doesn't match any existing invites
 ws-game_aborted = "Partie annulée." # Invite was cancelled as you clicked on it

@@ -6,7 +6,7 @@ const { DEV_BUILD, HOST_NAME, GAME_VERSION } = require('./config/config');
 
 const { WebsocketMessage, Socket } = require('./game/TypeDefinitions')
 const { genUniqueID, generateNumbID } = require('./game/math1');
-const wsfunctions = require('./game/wsfunctions');
+const wsutility = require('./game/wsutility');
 const invitesmanager = require('./game/invitesmanager')
 const gamemanager = require('./game/gamemanager');
 
@@ -86,7 +86,11 @@ const closureCodesNotByChoice = [1006]
 const closureReasonsNotByChoice = ["Connection expired", "Logged out", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."]
 
 
-
+/**
+ * 
+ * @param {Socket} ws 
+ * @param {Object} req
+ */
 function onConnectionRequest(ws, req) {
     // Make sure the connection is secure https
     const origin = req.headers.origin;
@@ -101,16 +105,13 @@ function onConnectionRequest(ws, req) {
         return ws.close(1009, "Origin Error");
     }
 
+    // Parse cookies from the Upgrade http headers
+    const cookies = getCookiesFromWebsocket(req);
+
     ws.metadata = {
         subscriptions: {}, // NEEDS TO BE INITIALIZED before we do anything it will crash because it's undefined!
-        userAgent: req.headers['user-agent']
-        // user,
-        // role,
-        // browser-id,
-        // id,
-        // IP,
-        // clearafter,  // The id of the timeout to expire the connection after 15m
-        // sendmessage,
+        userAgent: req.headers['user-agent'],
+        i18next: cookies.i18next, // Their preferred language, i.e. 'en-US'
     };
 
     // Rate Limit Here
@@ -135,8 +136,6 @@ function onConnectionRequest(ws, req) {
 
     // Initialize who they are. Member? Browser ID?...
 
-    // Parse cookies from the Upgrade http headers
-    const cookies = getCookiesFromWebsocket(req);
 
     verifyJWTWebSocket(ws, cookies); // Auto sets ws.metadata.user/role properties!
     if (cookies['browser-id'] != null) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
@@ -156,7 +155,7 @@ function onConnectionRequest(ws, req) {
     // Log the request
     logWebsocketStart(req, ws);
 
-    if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`);
+    if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
 
     ws.on('message', (message) => { executeSafely(onmessage, 'Error caught within websocket on-message event:', req, ws, message) })
     ws.on('close', (code, reason) => { executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason) })
@@ -198,7 +197,7 @@ function onmessage(req, ws, rawMessage) {
     } catch (error) {
         if (!rateLimitWebSocket(req, ws)) return; // Don't miss rate limiting
         logReqWebsocketIn(ws, rawMessage); // Log it anyway before quitting
-        const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+        const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
         console.error(errText);
         logEvents(errText, 'hackLog.txt');
         return sendmessage(ws, 'general', 'printerror', `Invalid JSON format!`);
@@ -210,7 +209,7 @@ function onmessage(req, ws, rawMessage) {
         if (!validEcho) {
             if (!rateLimitWebSocket(req, ws)) return; // Don't miss rate limiting
             logReqWebsocketIn(ws, rawMessage); // Log the request anyway.
-            const errText = `User detected sending invalid echo! Message: ${JSON.stringify(message)}. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`;
+            const errText = `User detected sending invalid echo! Message: ${JSON.stringify(message)}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`;
             console.error(errText)
             logEvents(errText, 'errLog.txt')
         }
@@ -244,7 +243,7 @@ function onmessage(req, ws, rawMessage) {
             gamemanager.handleIncomingMessage(ws, message);
             break;
         default:
-            const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+            const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true })
             sendmessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
             return;
@@ -256,7 +255,7 @@ function onmessage(req, ws, rawMessage) {
  * @param {Socket} ws - The websocket
  */
 function informSocketToHardRefresh(ws) {
-    console.log(`Informing socket to hard refresh! ${wsfunctions.stringifySocketMetadata(ws)}`)
+    console.log(`Informing socket to hard refresh! ${wsutility.stringifySocketMetadata(ws)}`)
     sendmessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
 
@@ -293,7 +292,7 @@ function onclose(ws, code, reason) {
 }
 
 function onerror(ws, error) {
-    const errText = `An error occurred in a websocket. ${wsfunctions.stringifySocketMetadata(ws)}\n${error.stack}`;
+    const errText = `An error occurred in a websocket. ${wsutility.stringifySocketMetadata(ws)}\n${error.stack}`;
     logEvents(errText, 'errLog.txt', { print: true });
 }
 
@@ -308,7 +307,7 @@ function onerror(ws, error) {
 function sendmessage(ws, sub, action, value, replyto) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
     if (ws == null) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`)
     if (ws.readyState === WebSocket.CLOSED) {
-        const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsfunctions.stringifySocketMetadata(ws)}`
+        const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`
         logEvents(errText, 'errLog.txt', { print: true });
         return;
     }
@@ -451,7 +450,7 @@ function terminateAllIPSockets(IP) {
     for (const id of connectionList) {
         //console.log(`Terminating 1.. id ${id}`)
         const ws = websocketConnections[id];
-        ws.close(1009, 'Message Too Big')
+        ws.close(1009, 'Message Too Big') // Perhaps this will be a duplicate close action? Because rateLimit.js also can also close the socket.
     }
 
     // console.log(`Terminated all of IP ${IP}`)
@@ -504,7 +503,7 @@ function handleGeneralMessage(ws, data) { // data: { route, action, value, id }
             handleFeatureNotSupported(ws, data.value);
             break;
         default:
-            const errText = `UNKNOWN web socket received action in general route! ${data.action}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+            const errText = `UNKNOWN web socket received action in general route! ${data.action}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true });
             sendmessage(ws, 'general', 'printerror', `Unknown action "${data.action}" in route general.`)
             return;
@@ -512,7 +511,7 @@ function handleGeneralMessage(ws, data) { // data: { route, action, value, id }
 }
 
 function handleFeatureNotSupported(ws, description) {
-    const errText = `Client unsupported feature: ${ensureJSONString(description)}   Socket: ${wsfunctions.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`
+    const errText = `Client unsupported feature: ${ensureJSONString(description)}   Socket: ${wsutility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`
     logEvents(errText, 'featuresUnsupported.txt', { print: true })
 }
 
@@ -526,7 +525,7 @@ function handleSubbing(ws, value) {
             invitesmanager.subClientToList(ws)
             break;
         default:
-            const errText = `Cannot subscribe user to strange new subscription list ${value}! Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+            const errText = `Cannot subscribe user to strange new subscription list ${value}! Socket: ${wsutility.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true });
             sendmessage(ws, 'general', 'printerror', `Cannot subscribe to "${value}" list!`)
             return;
@@ -545,7 +544,7 @@ function handleUnsubbing(ws, key, value, closureNotByChoice) {
             gamemanager.unsubClientFromGame(ws, { sendMessage: false }) // info: { id: gameID, color: ourColor }
             break;
         default:
-            const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+            const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`
             console.error(errText);
             logEvents(errText, 'hackLog.txt');
             return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`)

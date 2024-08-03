@@ -8,7 +8,7 @@ const guiguide = (function() {
     const element_Guide = document.getElementById('guide');
     const element_Back = document.getElementById('guide-back')
 
-    // The element that holds all fairy images
+    // The element that holds all fairy images and their descriptions.
     const element_FairyImg = document.getElementById('fairy-pieces');
     // The element that holds all fairy descriptions
     const element_FairyCard = document.getElementById('fairy-card');
@@ -16,8 +16,7 @@ const guiguide = (function() {
     const element_FairyForward = document.getElementById('fairy-forward')
 
     let fairyIndex = 0;
-    let maxFairyIndex = 7;
-
+    let maxFairyIndex = element_FairyImg.querySelectorAll('picture').length - 1;
 
     function open() {
         style.revealElement(element_Guide);

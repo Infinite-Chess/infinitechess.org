@@ -3,7 +3,8 @@ const { getClientIP, getClientIP_Websocket } = require("./IP")
 
 const { isIPBanned } = require('./banned');
 const { DEV_BUILD, ARE_RATE_LIMITING } = require('../config/config');
-const { Socket } = require("../game/TypeDefinitions")
+const { Socket } = require("../game/TypeDefinitions");
+const { getTranslationForReq } = require('../config/setupTranslations');
 
 // For rate limiting a client...
 
@@ -58,7 +59,7 @@ let recentRequests = []; // List of times of recent connections
  * The maximum size of an incoming websocket message, in bytes.
  * Above this will be rejected, and an error sent to the client.
  */
-const maxWebsocketMessageSizeBytes = 60000;
+const maxWebsocketMessageSizeBytes = 100_000; // 100 megabytes
 /**
  * How many requests should an over-sized incoming websocket message
  * stand for? Increase this to make them be rate limited sooner when sending over-sized messages.
@@ -82,18 +83,18 @@ function rateLimit(req, res, next) {
     const clientIP = getClientIP(req);
     if (!clientIP) {
         console.log('Unable to identify client IP address')
-        return res.status(500).json({ message: "ws-unable_to_identify_client_ip" });
+        return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
     }
 
     if (isIPBanned(clientIP)) {
         const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
         logEvents(logThis, 'bannedIPLog.txt', { print: true });
-        return res.status(403).json({ message: "ws-you_are_banned_by_server" });
+        return res.status(403).json({ message: getTranslationForReq("server.javascript.ws-you_are_banned_by_server", req) });
     }
 
     if (rateLimitHash[clientIP] > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
         console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
-        return res.status(429).json({ message: "ws-too_many_requests_to_server" });
+        return res.status(429).json({ message: getTranslationForReq("server.javascript.ws-too_many_requests_to_server", req) });
     }
 
     // Increment their recent connection count,

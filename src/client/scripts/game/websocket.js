@@ -256,10 +256,10 @@ const websocket = (function(){
     function ongeneralmessage(action, value) {
         switch (action) {
             case "notify":
-                statustext.showStatus(getTranslatedAndAssembledMessage(value));
+                statustext.showStatus(value);
                 break;
             case "notifyerror":
-                statustext.showStatus(getTranslatedAndAssembledMessage(value), true, 2);
+                statustext.showStatus(value, true, 2);
                 break;
             case "print":
                 console.log(value)
@@ -285,19 +285,19 @@ const websocket = (function(){
      * @param {Object} messagevalue - An object of the form { text: "blabla", number: 32 }
      * @returns the translated text in messagevalue.text, potentially enhanced with messagevalue.number
      */
-    function getTranslatedAndAssembledMessage(messagevalue){
-        let text = messagevalue.text;
-        if (translations[text]) text = translations[text];
-        if (number in messagevalue){
-            // special case: number of minutes to be displayed upon server restart
-            if (messagevalue.text === "ws-server_restarting"){
-                const minutes = Number(messagevalue.number); // Cast to number in case it's a string
-                const minutes_plurality = minutes === 1 ? translations["ws-minute"] : translations["ws-minutes"];
-                text = `${text} ${minutes} ${minutes_plurality}.`;
-            }
-        }
-        return text;
-    }
+    // function getTranslatedAndAssembledMessage(messagevalue){
+    //     let text = messagevalue.text;
+    //     if (translations[text]) text = translations[text];
+    //     if (number in messagevalue){
+    //         // special case: number of minutes to be displayed upon server restart
+    //         if (messagevalue.text === "ws-server_restarting"){
+    //             const minutes = Number(messagevalue.number); // Cast to number in case it's a string
+    //             const minutes_plurality = minutes === 1 ? translations["ws-minute"] : translations["ws-minutes"];
+    //             text = `${text} ${minutes} ${minutes_plurality}.`;
+    //         }
+    //     }
+    //     return text;
+    // }
 
     /**
      * Attempts to hard refresh the page, bypassing the cache,

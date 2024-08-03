@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "5"
+version = "11"
 
 [header]
 home = "Home"
@@ -34,7 +34,7 @@ what_is_it_pargaraphs = [
 "As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
 how_to_title = "How can I play?"
-how_to_paragraph = ["The current version release is 1.3.2 on the ","Play"," page!"]
+how_to_paragraph = ["The current version release is 1.4 on the ","Play"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
@@ -134,12 +134,12 @@ careful_paragraphs = [
 "Many other variants have been created with the aim of strengthening your backside."
 ]
 controls_heading = "Controls"
-controls_paragraph = "A lot of controls are intuitive, such as clicking and dragging the board to move around, and scrolling to zoom in and out, but let's take a look at the other controls you have at your disposal!"
+controls_paragraph = "Click and drag the board to move around. Scroll to zoom in and out. Click any piece, including your opponent's pieces, to view their legal moves at any point! Additional controls are:"
 keybinds = [
 " to move around.",
 ["Space", " and ", "Shift", " to zoom in and out."],
 ["Escape", " to pause the game."],
-["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu."],
+["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu. Clicking these arrows will teleport you to the piece they're pointing to."],
 " will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
 ]
 controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
@@ -167,6 +167,7 @@ amazon = {name="Amazon", description="Moves like a queen and a knight combined. 
 guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."}
 hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."}
 centaur = {name="Centaur", description="Moves like a knight and a guard combined."}
+knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
@@ -345,7 +346,7 @@ please_report_bug = "This should never happen, please report this bug!"
 checkmate = "Checkmate"
 stalemate = "Stalemate"
 repetition = "Threefold repetition"
-moverule = "-move rule"  # The game inserts a number in front of this phrase
+moverule = ["", "-move rule"]  # The game inserts a number inbetween these two strings
 insuffmat = "Insufficient material"
 royalcapture = "Royal capture"
 allroyalscaptured = "All royals captured"
@@ -370,7 +371,7 @@ you_koth = "You win by king of the hill!"
 you_generic = "You win!"
 draw_stalemate = "Draw by stalemate!"
 draw_repetition = "Draw by repetition!"
-draw_moverule = ["Draw by the ", "-move-rule!"]
+draw_moverule = ["Draw by the ", "-move-rule!"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Draw by insufficient material!"
 draw_generic = "Draw!"
 aborted = "Game aborted."
@@ -475,6 +476,22 @@ login_button = "Log In"
 title = "News"
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
 
+[news.aug1-2024] # Update 1.4
+date = "August 1, 2024:"
+text_top = "Update 1.4 is released! There have been many collaborative features added since we open sourced!"
+update_list = [
+"Knightriders have been added, which hop infinitely like a knight until they're obstructed! The 'Knighted Chess' variant has been upgraded to replace the knights with knightriders!",
+"Click your or your opponent's pieces at any time to view their possible moves!",
+"Right-click at any time to deselect the currently selected piece.",
+"Hovering over arrow indicators on the edge of the screen now renders the legal moves of the piece they are pointing to!",
+"The game now automatically declares a draw if there's insufficient material on the board to force checkmate.",
+"Translated the website into French! You can change the language by visiting the footer on any page.",
+"Improved the loading time of the website.",
+"New website icon, Ω! This automatically matches your preferred light or dark device theme.",
+"The game code's, or the ICN's, metadata has been reformatted to more closely match PGN norms.",
+"Users can now delete their account on their profile page, if they so choose, without having to email us."
+]
+
 [news.july22-2024]
 date = "July 22, 2024:"
 account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
@@ -512,11 +529,6 @@ text_box = ["And many others! For the full list, check out ", "the discord!"]
 [news.jan29-2024]
 date = "Jan 29, 2024:"
 text = "New video released today!"
-
-[news.aug26-2023]
-date = "Aug 26, 2023:"
-text_top = "Infinite Chess v1.2 has been released! Introducing Move History. Use the left & right arrow keys to rewind and fast forward the game!"
-text_box = "The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!"
 
 [server.javascript]
 ws-invalid_username = "Username is invalid"
@@ -557,7 +569,8 @@ ws-already_in_game = "You are already in a game."
 ws-player_already_has_invite = "Player already has an open invite."
 ws-invite_cancelled = "Invite already cancelled."
 ws-accept_own_invite = "Silly goose. You can't accept your own invite!"
-ws-server_restarting = "The server is restarting in"
+ws-server_restarting = "The server is restarting in" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
+ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
 ws-minutes = "minutes" # unit of time
 ws-minute = "minute" # unit of time
 ws-no_abort_game_over = "Can't abort game, it's already over."

@@ -8,7 +8,9 @@ const { logEvents } = require('../middleware/logEvents');
 
 // Custom imports
 const { Socket, WebsocketMessage, Game } = require('./TypeDefinitions')
-const wsfunctions = require('./wsfunctions');
+const wsutility = require('./wsutility');
+const sendNotify = wsutility.sendNotify;
+const sendNotifyError = wsutility.sendNotifyError;
 const clockweb = require('./clockweb');
 const math1 = require('./math1')
 const variant1 = require('./variant1');
@@ -98,7 +100,7 @@ const gamemanager = (function() {
         }
 
         const player1 = inviteOptions.owner; // { member/browser }  The invite owner
-        const player2 = wsfunctions.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
+        const player2 = wsutility.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
         const { white, black, player1Color, player2Color } = assignWhiteBlackPlayersFromInvite(inviteOptions.color, player1, player2);
         newGame.white = white;
         newGame.black = black;
@@ -489,7 +491,7 @@ const gamemanager = (function() {
         if (gameID == null) return console.error("Cannot unsub client from game when it's not subscribed to one.")
 
         const game = getGameByID(gameID)
-        if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+        if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
 
         // 1. Detach their socket from the game so we no longer send updates
         removePlayerSocketFromGame(game, ws.metadata.subscriptions.game.color)
@@ -501,7 +503,7 @@ const gamemanager = (function() {
         // Start an auto-resign timer IF the disconnection wasn't by choice
         // ...
 
-        // console.log(`Unsubbed client from game ${game.id}. Metadata: ${wsfunctions.stringifySocketMetadata(ws)}`)
+        // console.log(`Unsubbed client from game ${game.id}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
         // console.log("Game:")
         // printGame(game)
 
@@ -619,7 +621,6 @@ const gamemanager = (function() {
 
         const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(safeGameInfo.timeCreated)
 
-        console.log(safeGameInfo.rated)
         const RatedOrCasual = safeGameInfo.rated ? "Rated" : "Casual";
         const gameOptions = {
             metadata: {
@@ -675,7 +676,7 @@ const gamemanager = (function() {
 
         game = game || getGameByID(gameID) || (ws.metadata.subscriptions.game?.id ? getGameByID(ws.metadata.subscriptions.game?.id) : undefined);
         if (!game) {
-            console.log(`Game of id ${gameID} not found for socket ${wsfunctions.stringifySocketMetadata(ws)}`)
+            console.log(`Game of id ${gameID} not found for socket ${wsutility.stringifySocketMetadata(ws)}`)
             return ws.metadata.sendmessage(ws, 'game', 'nogame')
         }
                 
@@ -705,14 +706,14 @@ const gamemanager = (function() {
         if (game.gameConclusion === 'aborted') return; // Opponent aborted first.
         else if (isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
             console.error("Player tried to abort game when the game is already over!")
-            ws.metadata.sendmessage(ws, 'general', 'notify', { text: "ws-no_abort_game_over" })
+            sendNotify(ws, "server.javascript.ws-no_abort_game_over")
             subscribeClientToGame(game, ws, colorPlayingAs);
             return;
         };
 
         if (movesscript1.isGameResignable(game)) {
             console.error("Player tried to abort game when there's been atleast 2 moves played!")
-            ws.metadata.sendmessage(ws, 'general', 'notify', { text: "ws-no_abort_after_moves" })
+            sendNotify(ws, "server.javascript.ws-no_abort_after_moves")
             subscribeClientToGame(game, ws, colorPlayingAs);
             return;
         }
@@ -772,8 +773,8 @@ const gamemanager = (function() {
         setGameConclusion(game, 'aborted')
 
         sendGameUpdateToBothPlayers(game);
-        sendMessageToSocketOfColor(game, 'white', 'general', 'notify', { text: "ws-game_aborted_cheating" })
-        sendMessageToSocketOfColor(game, 'black', 'general', 'notify', { text: "ws-game_aborted_cheating" })
+        sendMessageToSocketOfColor(game, 'white', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
+        sendMessageToSocketOfColor(game, 'black', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
     }
 
     /**
@@ -789,7 +790,7 @@ const gamemanager = (function() {
 
         if (isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
             console.error("Player tried to resign game when the game is already over!")
-            ws.metadata.sendmessage(ws, 'general', 'notify', { text: "ws-cannot_resign_finished_game" })
+            sendNotify(ws, "server.javascript.ws-cannot_resign_finished_game")
             const colorPlayingAs = doesSocketBelongToGame_ReturnColor(game, ws);
             subscribeClientToGame(game, ws, colorPlayingAs);
             return;
@@ -840,11 +841,24 @@ const gamemanager = (function() {
         sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafk', value)
     }
 
+    /**
+     * 
+     * @param {*} game 
+     * @param {*} color 
+     * @param {*} sub 
+     * @param {string} action - If sub is "general" and action is "notify" or "notifyerror", then the `value` needs to be the key, and we will auto translate it!
+     * @param {*} value 
+     * @returns 
+     */
     function sendMessageToSocketOfColor(game, color, sub, action, value) {
         if (!game || !color || !action) return console.log("Missing game or color or action")
         const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
         if (!playerSocket) return; // They are not connected, can't send message
-        playerSocket.metadata.sendmessage(playerSocket, sub, action, value)
+        if (sub === 'general') {
+            if (action === 'notify') return sendNotify(ws, value) // The value needs translating
+            if (action === 'notifyerror') return sendNotifyError(ws, value) // The value needs translating
+        }
+        playerSocket.metadata.sendmessage(playerSocket, sub, action, value) // Value doesn't need translating, send normally.
     }
 
     /**
@@ -974,7 +988,7 @@ const gamemanager = (function() {
 
         // Is the client in a game? What's their username/browser-id?
         const player = getMemberOrBrowserFromSocket(ws)
-        if (player.member == null && player.browser == null) return console.error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`);
+        if (player.member == null && player.browser == null) return console.error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${wsutility.stringifySocketMetadata(ws)}`);
 
         return getGameByPlayer(player);
     }
@@ -1015,8 +1029,8 @@ const gamemanager = (function() {
         const originalDisconnect = game.disconnect;
 
         // We can't print normal websockets because they contain self-referencing.
-        if (whiteSocket) game.whiteSocket = wsfunctions.stringifySocketMetadata(whiteSocket);
-        if (blackSocket) game.blackSocket = wsfunctions.stringifySocketMetadata(blackSocket);
+        if (whiteSocket) game.whiteSocket = wsutility.stringifySocketMetadata(whiteSocket);
+        if (blackSocket) game.blackSocket = wsutility.stringifySocketMetadata(blackSocket);
         delete game.autoTimeLossTimeoutID;
         delete game.disconnect;
         delete game.autoAFKResignTimeoutID;
@@ -1045,8 +1059,8 @@ const gamemanager = (function() {
         const originalDisconnect = game.disconnect;
 
         // We can't print normal websockets because they contain self-referencing.
-        if (whiteSocket) game.whiteSocket = wsfunctions.stringifySocketMetadata(whiteSocket);
-        if (blackSocket) game.blackSocket = wsfunctions.stringifySocketMetadata(blackSocket);
+        if (whiteSocket) game.whiteSocket = wsutility.stringifySocketMetadata(whiteSocket);
+        if (blackSocket) game.blackSocket = wsutility.stringifySocketMetadata(blackSocket);
         delete game.autoTimeLossTimeoutID;
         delete game.disconnect;
         delete game.autoAFKResignTimeoutID;
@@ -1164,7 +1178,7 @@ const gamemanager = (function() {
         // Make sure the move number matches up. If not, they're out of sync, resync them!
         const expectedMoveNumber = game.moves.length + 1;
         if (messageContents.moveNumber !== expectedMoveNumber) {
-            const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+            const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
             logEvents(errString, 'hackLog.txt', { print: true })
             return resyncToGame(ws, game);
         }
@@ -1174,13 +1188,13 @@ const gamemanager = (function() {
 
         // Legality checks...
         if (!doesMoveCheckOut(messageContents.move)) {
-            const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+            const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
             console.error(errString)
             logEvents(errString, 'hackLog.txt')
             return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid move format.")
         }
         if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
-            const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsfunctions.stringifySocketMetadata(ws)}`
+            const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
             console.error(errString)
             logEvents(errString, 'hackLog.txt')
             return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid game conclusion.");

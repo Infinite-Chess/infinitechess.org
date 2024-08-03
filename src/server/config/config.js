@@ -18,9 +18,9 @@ const HOST_NAME = 'www.infinitechess.org';
  * The latest version of the game.
  * If the client is ever using an old version, we will tell them to hard-refresh.
  * 
- * THIS SHOULD ALWAYS MATCH protected-owner/scripts/game/main/DEV_VERSION
+ * THIS SHOULD ALWAYS MATCH protected-owner/scripts/game/main/GAME_VERSION
  */
-const GAME_VERSION = "1.3.3.1"
+const GAME_VERSION = "1.4"
 
 /** Whether we are currently using a whitelist for connections from other origins.
  * If we are getting unwanted origins, this can be enabled. */

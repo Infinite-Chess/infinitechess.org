@@ -29,10 +29,11 @@ const options = (function() {
             // darkTiles: [197/255,141/255,88/255,1],
             selectedPieceHighlightColor: [0, 0.5, 0.5,  0.3],
             // selectedPieceHighlightColor: [1, 1, 0,  0.25], // Yellow (for wood theme)
-            legalMovesHighlightColor_Friendly: [0, 0, 1,  0.35],
+            legalMovesHighlightColor_Friendly: [0, 0, 1,  0.3],
             // legalMovesHighlightColor_Friendly: [1, 0.4, 0,  0.35], // Orange (for sandstone theme)
             // legalMovesHighlightColor_Friendly: [1, 0.2, 0,  0.4], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
-            legalMovesHighlightColor_Opponent: [0.7, 0, 0, 0.35],
+            legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
+            legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
             lastMoveHighlightColor: [0, 1, 0,  0.25], // 0.17
             // lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
             checkHighlightColor: [1, 0, 0,  0.7],
@@ -48,7 +49,8 @@ const options = (function() {
             darkTiles:  [1, 0.4, 0,  1],
             selectedPieceHighlightColor: [0, 0, 0, 0.5],
             legalMovesHighlightColor_Friendly: [0.6, 0, 1,  0.55],
-            legalMovesHighlightColor_Opponent: [0.7, 0, 0, 0.35],
+            legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
+            legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
             lastMoveHighlightColor: [0.5, 0.2, 0,  0.75],
             checkHighlightColor: [1, 0, 0.5,  0.76],
             useColoredPieces: true,
@@ -62,7 +64,8 @@ const options = (function() {
             darkTiles: [188/255,160/255,136/255,1],
             selectedPieceHighlightColor: [0, 0.5, 0.5,  0.3],
             legalMovesHighlightColor_Friendly: [1, 0.2, 0,  0.35], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
-            legalMovesHighlightColor_Opponent: [0.7, 0, 0, 0.35],
+            legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
+            legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
             lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
             checkHighlightColor: [1, 0, 0,  0.7],
             useColoredPieces: false,
@@ -76,7 +79,8 @@ const options = (function() {
             darkTiles: [0/255, 199/255, 238/255, 1],
             selectedPieceHighlightColor: [0, 0.5, 0.5,  0.3],
             legalMovesHighlightColor_Friendly: [0, 0, 1,  0.35], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
-            legalMovesHighlightColor_Opponent: [0.7, 0, 0, 0.35],
+            legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
+            legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
             lastMoveHighlightColor: [0, 0, 0.3,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
             checkHighlightColor: [1, 0, 0,  0.7],
             useColoredPieces: true,
@@ -169,8 +173,10 @@ const options = (function() {
         else         return themes[theme].darkTiles;
     }
 
-    function getLegalMoveHighlightColor() {
-        return selection.isOpponentPieceSelected() ? themes[theme].legalMovesHighlightColor_Opponent : themes[theme].legalMovesHighlightColor_Friendly;
+    function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
+        if (isOpponentPiece) return themes[theme].legalMovesHighlightColor_Opponent;
+        else if (isPremove) return themes[theme].legalMovesHighlightColor_Premove;
+        else return themes[theme].legalMovesHighlightColor_Friendly;
     }
 
     function getDefaultSelectedPieceHighlight() {

@@ -6,7 +6,7 @@
 
 const selection = (function() {
 
-    /** The currently selected piece, if there is one: `{ type, index, coords }` */
+    /** The currently selected piece, if there is one: `{ type, index, coords }` @type {Piece} */
     let pieceSelected;
     /** The pre-calculated legal moves of the current selected piece.
      * @type {LegalMoves} */
@@ -14,6 +14,9 @@ const selection = (function() {
     /** Whether or not the piece selected belongs to the opponent.
      * If so, it's legal moves are rendered a different color, and you aren't allowed to move it.  */
     let isOpponentPiece = false;
+    /** Whether or not the piece selected activated premove mode.
+     * This happens when we select our own pieces, in online games, when it's not our turn. */
+    let isPremove = false;
 
     /** The tile the mouse is hovering over, OR the tile we just performed a simulated click over: `[x,y]` */
     let hoverSquare; // Current square mouse is hovering over
@@ -29,7 +32,7 @@ const selection = (function() {
 
     /**
      * Returns the current selected piece, if there is one.
-     * @returns {Object | undefined} The selected piece, if there is one: `{ type, index, coords }`, otherwise undefined.
+     * @returns {Piece | undefined} The selected piece, if there is one: `{ type, index, coords }`, otherwise undefined.
      */
     function getPieceSelected() { return pieceSelected; }
 
@@ -44,6 +47,12 @@ const selection = (function() {
      * @returns {boolean}
      */
     function isOpponentPieceSelected() { return isOpponentPiece; }
+
+    /**
+     * Returns true if we are in premove mode (i.e. selected our own piece in an online game, when it's not our turn)
+     * @returns {boolean}
+     */
+    function arePremoving() { return isPremove; }
 
     /**
      * Returns the pre-calculated legal moves of the selected piece.
@@ -127,6 +136,10 @@ const selection = (function() {
         // If we haven't return'ed at this point, check if the move is legal.
         if (!hoverSquareLegal) return; // Illegal
 
+        // If it's a premove, hoverSquareLegal should not be true at this point unless
+        // we are actually starting to implement premoving.
+        if (isPremove) throw new Error("Don't know how to premove yet! Will not submit move normally.");
+
         // Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
         if (gamefile.mesh.locked) return statustext.pleaseWaitForTask(); 
 
@@ -150,9 +163,6 @@ const selection = (function() {
      */
     function handleSelectingPiece(pieceClickedType) {
         const gamefile = game.getGamefile();
-        const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
-        const clickedFriendlyInOnlineGame = onlinegame.areInOnlineGame() && clickedPieceColor === onlinegame.getOurColor();
-        if (clickedFriendlyInOnlineGame && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn, don't select this piece
 
         // If we're viewing history, return. But also if we clicked a piece, forward moves.
         if (!movesscript.areWeViewingLatestMove(gamefile)) {
@@ -191,8 +201,32 @@ const selection = (function() {
         const pieceColor = math.getPieceColorFromType(pieceSelected.type);
         isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
                                /* Local Game */        : pieceColor !== game.getGamefile().whosTurn;
+        isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 
         highlights.regenModel() // Generate the buffer model for the blue legal move fields.
+    }
+
+    /**
+     * Reselects the currently selected piece by recalculating its legal moves again,
+     * and changing the color if needed.
+     * Typically called after our opponent makes a move while we have a piece selected.
+     */
+    function reselectPiece() {
+        if (!pieceSelected) return; // No piece to reselect.
+        const gamefile = game.getGamefile();
+        // Test if the piece is no longer there
+        // This will work for us long as it is impossible to capture friendly's
+        const pieceTypeOnCoords = gamefileutility.getPieceTypeAtCoords(gamefile, pieceSelected.coords);
+        if (pieceTypeOnCoords !== pieceSelected.type) { // It either moved, or was captured
+            unselectPiece(); // Can't be reselected, unselect it instead.
+            return;
+        }
+
+        if (game.getGamefile().gameConclusion) return; // Don't reselect, game is over
+
+        // Reselect! Recalc its legal moves, and recolor.
+        const newIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
+        selectPiece(pieceSelected.type, newIndex, pieceSelected.coords);
     }
 
     /**
@@ -200,6 +234,8 @@ const selection = (function() {
      */
     function unselectPiece() {
         pieceSelected = undefined;
+        isOpponentPiece = false;
+        isPremove = false;
         legalMoves = undefined;
         pawnIsPromoting = false;
         promoteTo = undefined;
@@ -249,8 +285,10 @@ const selection = (function() {
         const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
         const hoverSquareIsSameColor = typeAtHoverCoords && math.getPieceColorFromType(pieceSelected.type) === math.getPieceColorFromType(typeAtHoverCoords);
         const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
+        // The next boolean ensures that only pieces of the same color as the current player's turn can have a ghost piece:
+        const selectionColorAgreesWithMoveTurn = math.getPieceColorFromType(pieceSelected.type) === gamefile.whosTurn;
         // This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
-        hoverSquareLegal = (!isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
+        hoverSquareLegal = (selectionColorAgreesWithMoveTurn && !isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor)
     }
 
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
@@ -262,12 +300,14 @@ const selection = (function() {
     return Object.freeze({
         isAPieceSelected,
         getPieceSelected,
+        reselectPiece,
         unselectPiece,
         getLegalMovesOfSelectedPiece,
         isPawnCurrentlyPromoting,
         promoteToType,
         update,
         renderGhostPiece,
-        isOpponentPieceSelected
+        isOpponentPieceSelected,
+        arePremoving
     })
 })();
