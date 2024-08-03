@@ -16,11 +16,10 @@ const engine = (function(){
         const gamefile = game.getGamefile();
 
         try {
-            // This code only works if Black has exactly one king or royal centaur, and only the game is not concluded yet
-            // For now, it just submits a random move
-            const royalCoords = gamefileutility.getRoyalCoords(gamefile, 'black')[0]
-            const endCoords = getRandomRoyalMove(gamefile, royalCoords)
-            enginegame.makeEngineMove({startCoords: royalCoords, endCoords: endCoords})
+            // This code only works if Black has exactly one king or royal centaur
+            // For now, it just submits a random move for Black
+            const randomMove = getRandomRoyalMove(gamefile, "black")
+            enginegame.makeEngineMove(randomMove)
         } catch (e) {
             console.error("You used the engine for an unsupported type of game.")
         }
@@ -28,16 +27,19 @@ const engine = (function(){
     }
 
     /**
-     * Calculates a random individual legal move by the black king or royal centaur in the given gamefile
+     * Calculates a random legal move for a player
+     * Only works if that player has a lone king or royal centaur
      * @param {gamefile} gamefile - The gamefile
-     * @param {number[]} blackRoyalCoords - The coordinates of the black royal piece
+     * @param {string} color - "white" or "black": The color of the player to move
      * @returns random legalmove
      */
-    function getRandomRoyalMove(gamefile, blackRoyalCoords) {
-        const blackRoyalPiece = gamefileutility.getPieceAtCoords(gamefile, blackRoyalCoords);
-        const blackmoves = legalmoves.calculate(gamefile, blackRoyalPiece)?.individual;
-        if (blackmoves) return blackmoves[Math.floor(Math.random() * blackmoves.length)]; // return a random move from the list of moves
-        else return undefined;
+    function getRandomRoyalMove(gamefile, color) {
+        const royalCoords = gamefileutility.getRoyalCoords(gamefile, color)[0]
+        const blackRoyalPiece = gamefileutility.getPieceAtCoords(gamefile, royalCoords);
+        const blackmoves = legalmoves.calculate(gamefile, blackRoyalPiece).individual;
+        const randomEndCoords = blackmoves[Math.floor(Math.random() * blackmoves.length)]; // random endcoords from the list of individual moves
+        const move = {startCoords: royalCoords, endCoords: randomEndCoords};
+        return move;
     }
 
     return Object.freeze({
