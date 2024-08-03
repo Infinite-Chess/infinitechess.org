@@ -1295,12 +1295,6 @@ button.join-button, button.copy-button {
     font-size: min(3.5vw, 35px);
 }
 
-@media (max-width:700px) {
-    .draw_offer_ui p.offer_title, .draw_offer_ui button {
-        font-size: 20px;
-    }
-}
-
 .draw_offer_ui p.offer_title {
     color: black;
     text-align: center;
@@ -1311,6 +1305,12 @@ button.join-button, button.copy-button {
     font-weight: bold;
     top: 50%;
     bottom: 50%;
+}
+
+@media (max-width:700px) {
+    .draw_offer_ui p.offer_title, .draw_offer_ui button {
+        font-size: 20px;
+    }
 }
 
 .draw_offer_ui button {
