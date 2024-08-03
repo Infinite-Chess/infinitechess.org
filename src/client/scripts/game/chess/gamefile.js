@@ -69,6 +69,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
             black: undefined,
         },
         slideLimit: undefined,
+
+        /** An array of teams: `['white','black']` @type {Array} */
+        turnOrder: undefined,
+
         /** How many plies (half-moves) may pass until a draw is automatically pronounced! */
         moveRule: undefined
     }

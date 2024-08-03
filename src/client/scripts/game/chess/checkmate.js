@@ -23,9 +23,8 @@ const checkmate = (function() {
         // know the game is not over yet...
 
         const whosTurn = gamefile.whosTurn;
-        const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
-        for (let i = 0; i < whiteOrBlack.length; i++) {
-            const thisType = whiteOrBlack[i];
+        const teamTypes = pieces[whosTurn];
+        for (const thisType of teamTypes) {
             const thesePieces = gamefile.ourPieces[thisType]
             for (let a = 0; a < thesePieces.length; a++) {
                 const coords = thesePieces[a];

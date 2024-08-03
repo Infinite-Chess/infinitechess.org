@@ -248,9 +248,20 @@ const movepiece = (function(){
      * - `doGameOverChecks`: Whether game-over checks such as checkmate, or other win conditions, are performed for this move.
      */
     function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
-        gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
+        gamefile.whosTurn = getWhosTurn(gamefile);
         if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile)
         if (pushClock) clock.push()
+    }
+
+
+    /**
+     * 
+     * @param {gamefile} gamefile
+     * @param {number} [movenumber=gamefile.moveIndex]
+     */
+    function getWhosTurn(gamefile, movenumber = gamefile.moveIndex) {
+        const loopIndex = (movenumber + 1) % gamefile.gameRules.turnOrder.length
+        return gamefile.gameRules.turnOrder[loopIndex]
     }
 
     /**
