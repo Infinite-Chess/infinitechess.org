@@ -834,10 +834,10 @@ const gamemanager = (function() {
         let movesBetweenDrawOffers = 2
         if (color === "white") {
             if (hasWhiteDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
-            if (game.moves.length - game.whiteDrawOfferMove <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
+            if (game.moves.length - game.whiteDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
         } else {
             if (hasBlackDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
-            if (game.moves.length - game.blackDrawOfferMove <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
+            if (game.moves.length - game.blackDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
         }
         
         if (game.moves.length < 2) return console.error("Client trying to offer a draw on the first 2 moves")
