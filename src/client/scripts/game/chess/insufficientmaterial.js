@@ -112,7 +112,8 @@ const insufficientmaterial = (function(){
 
 		// Temporary: only check for draws if a player has a lone king and no other royals
 		if (blackPieceCount > 1 && whitePieceCount > 1) return false;
-		if (gamefileutility.getPieceCountOfType(gamefile, 'kingsB') !== 1 || gamefileutility.getPieceCountOfType(gamefile, 'kingsW') !== 1) return false;
+		// Make sure atleast one side has a king. (One side might not have a king. for example: Practice Mode)
+		if (gamefileutility.getPieceCountOfType(gamefile, 'kingsB') !== 1 && gamefileutility.getPieceCountOfType(gamefile, 'kingsW') !== 1) return false;
 		if (gamefileutility.getRoyalCountOfColor(gamefile.piecesOrganizedByKey, 'white') > 1 || gamefileutility.getRoyalCountOfColor(gamefile.piecesOrganizedByKey, 'black') > 1) return false;
 		if (blackPieceCount == 1 && whitePieceCount == 1) return 'draw insuffmat'; // trivial case.
 
