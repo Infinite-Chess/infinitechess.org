@@ -32,11 +32,21 @@
     fetch("/setlanguage", {
       method: "POST",
       credentials: "same-origin",
-    })
+    });
   }
 
   language_picker.addEventListener("change", () => {
-    updateCookie("i18next", language_picker.value, 365);
+    const selectedLanguage = language_picker.value;
+    updateCookie("i18next", selectedLanguage, 365);
+
+    // Modify the URL to include the "lng" query parameter
+    const url = new URL(window.location);
+    url.searchParams.set("lng", selectedLanguage);
+
+    // Update the browser's URL without reloading the page
+    window.history.replaceState({}, '', url);
+
+    // Reload the page
     location.reload();
   });
 }
