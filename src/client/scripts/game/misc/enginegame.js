@@ -77,9 +77,6 @@ const enginegame = (function(){
 
         selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
-        // Edit the clocks - TODO: support clock for engine games
-        // clock.edit(message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt)
-
         if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
     }
 
