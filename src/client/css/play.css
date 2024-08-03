@@ -591,7 +591,7 @@ canvas {
     box-shadow: none;
 }
 
-.practice-selection .game-options {
+.practice-selection .practice-options {
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
     grid-column: 1 / 7;
     overflow-y: auto;
@@ -603,31 +603,33 @@ canvas {
     flex-grow: 1;
 }
 
-.game-options .checkmate, .game-options .checkmate-separator {
-    height: 3em;
+.practice-options .checkmate, .practice-options .checkmate-separator {
     display: flex;
     align-items: center;
     font-size: min(1.7vw, 18px, calc(var(--vh-sub-nav) * 0.020));
     justify-content: center; /* OR: space-between */
-    margin: 0.4em;
+    margin: 0.3em;
     border-radius: 0.3em;
     border-color:rgb(0, 0, 0);
     border-style: solid;
 }
 
-.game-options .checkmate-separator {
+.practice-options .checkmate-separator {
+    height: 3em;
     font-weight: bold;
 }
 
 .checkmate .checkmate-child {
-    padding: 0 3em;
+    padding: 0 0.3em;
 }
 
 .checkmate.selected {
-    border-width: 0.3em;
+    height: 2.5em;
+    border-width: 0.25em;
 }
 
 .checkmate.not-selected {
+    height: 3em;
     border-width: 0em;
 }
 
