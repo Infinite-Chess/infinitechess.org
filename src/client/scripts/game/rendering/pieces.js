@@ -55,7 +55,7 @@ const pieces = (function () {
         const scale = [boardScale, boardScale, 1]
 
         let modelToUse;
-        if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
+        if (onlinegame.areWeColor('black') || enginegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
         else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model
 
         modelToUse.render(position, scale);
