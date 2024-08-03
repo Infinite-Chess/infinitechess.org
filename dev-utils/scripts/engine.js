@@ -1,11 +1,13 @@
-import { get } from "http";
-
 const engine = (function () {
 	/**
 	 * 
 	 * @param {gamefile} gamefile 
 	 */
 	function getIntersections(gamefile) {
+
+		// TODO: fix a bug where some intersections dont get detected
+		// TODO: make intersections an array instead of a set, and don't add duplicates
+
 		const intersections = new Set();
 
 		const diagonalLineArr = [] // an array holding arrays of the slope and the y-intercept of each diagonal line respectfully. this will help us determine the intersections between them
