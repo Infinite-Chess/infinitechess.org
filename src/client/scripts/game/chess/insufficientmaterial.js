@@ -122,7 +122,7 @@ const insufficientmaterial = (function(){
 		// Check for black's pieces when the white king is alone and vice versa
 		if (whitePieceCount == 1 && whiteKingCount == 1) {
 			if(detectInsufficientMaterialForSideAgainstLoneKing(gamefile, pieces.black, 'black')) return 'draw insuffmat';
-		} else if(blackKingCount == 1) {
+		} else if(blackPieceCount == 1 && blackKingCount == 1) {
 			if(detectInsufficientMaterialForSideAgainstLoneKing(gamefile, pieces.white, 'white')) return 'draw insuffmat';
 		}
         return false;
