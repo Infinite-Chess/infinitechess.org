@@ -170,7 +170,7 @@ const guipractice = (function(){
     }
 
     /**
-     * Starts a game according to the options provided.
+     * Loads a game according to the options provided.
      * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`
      * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
      */

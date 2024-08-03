@@ -27,7 +27,7 @@ const enginegame = (function(){
 
     /**
      * Inits an engine game according to the options provided
-     * @param {Object} gameOptions - An object that contains the properties `youAreColor`
+     * @param {Object} gameOptions - An object that contains the property `youAreColor`
      */
     function initEngineGame (gameOptions) {
         // These make sure it will place us in black's perspective
@@ -57,7 +57,7 @@ const enginegame = (function(){
     function submitMove() {
         if (!inEngineGame) return; // Don't do anything if it's not an engine game
         if (game.getGamefile().gameConclusion) return; // Don't do anything if the game is over
-        
+
         engine.runEngine();
     }
 
@@ -77,10 +77,9 @@ const enginegame = (function(){
 
         selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
-        // Edit the clocks
+        // Edit the clocks - TODO: support clock for engine games
         // clock.edit(message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt)
 
-        // For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
         if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
     }
 
