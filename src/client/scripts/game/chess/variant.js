@@ -55,10 +55,16 @@ const variant = (function() {
      */
     function initExistingTypes(gamefile) {
         const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
-        const rawtypes = new Set();
+        
+        // Makes sure all possible pieces are accounted for. even when they dont start with them
+        const promotiontypes = [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black]
+        
+        // Promotion types already have teams stripped
+        const rawtypes = new Set(promotiontypes);
         for (const tpiece of teamtypes) {
             rawtypes.add(math.trimWorBFromType(tpiece)); // Make a set wit the team colour trimmed
         }
+
         gamefile.startSnapshot.existingTypes = rawtypes;
     }
 
