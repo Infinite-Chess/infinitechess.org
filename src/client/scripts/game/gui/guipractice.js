@@ -132,22 +132,24 @@ const guipractice = (function(){
     }
 
     /**
-     * Starts a local game according to the options provided.
-     * @param {Object} [checkmateOptions] - An object that contains optional entries
+     * Starts a checkmate practice game according to the options provided.
      */
-    function startCheckmatePractice(checkmateOptions = {}) {
+    function startCheckmatePractice() {
         gui.setScreen('checkmate practice'); // Change screen location
 
         const startingPosition = checkmatepractice.generateCheckmateStartingPosition(checkmateSelectedID);
-
         const gameOptions = {
             metadata: {
                 Event: `Infinite chess checkmate practice`,
                 Site: "https://www.infinitechess.org/",
                 Round: "-",
                 Variant: "Classical",
-                TimeControl: "-"
+                TimeControl: "-",
+                White: "(You)",
+                Black: "Engine"
             },
+            youAreColor: 'white',
+            clock: "-",
             variantOptions: {
                 turn: "white",
                 fullMove: "1",
@@ -160,9 +162,11 @@ const guipractice = (function(){
                 }
             }
         }
+        enginegame.setColorAndGameID(gameOptions)
         loadGame(gameOptions)
-        clock.set("-")
-        guigameinfo.hidePlayerNames();
+        enginegame.initEngineGame(gameOptions)
+        clock.set(gameOptions.clock)
+        guigameinfo.revealPlayerNames(gameOptions)
     }
 
     /**

@@ -199,9 +199,12 @@ const selection = (function() {
         legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected)
 
         const pieceColor = math.getPieceColorFromType(pieceSelected.type);
-        isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
-                               /* Local Game */        : pieceColor !== game.getGamefile().whosTurn;
-        isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
+        if (onlinegame.areInOnlineGame()) isOpponentPiece = pieceColor !== onlinegame.getOurColor();
+        else if (enginegame.areInEngineGame()) isOpponentPiece = pieceColor !== enginegame.getOurColor();
+        else isOpponentPiece = pieceColor !== game.getGamefile().whosTurn;
+
+        isPremove = !isOpponentPiece && ((onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn()) ||
+                                         (enginegame.areInEngineGame() && !enginegame.isItOurTurn()));
 
         highlights.regenModel() // Generate the buffer model for the blue legal move fields.
     }

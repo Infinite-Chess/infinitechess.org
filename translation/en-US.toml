@@ -284,6 +284,7 @@ menu_checkmate = "Practice - Checkmates"
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
 cannot_paste_in_public = "Cannot paste game in a public match!"
+cannot_paste_in_engine = "Cannot paste game in an engine match!"
 cannot_paste_after_moves = "Cannot paste game after moves are made!"
 clipboard_denied = "Clipboard permission denied. This might be your browser."
 clipboard_invalid = "Clipboard is not in valid ICN notation."

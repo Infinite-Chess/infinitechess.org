@@ -49,8 +49,8 @@ const guipause = (function(){
         const movesLength = moves.length;
         const legalInPrivateMatch = onlinegame.getIsPrivate() && (movesLength === 0 || moves[0].length === 1 && moves[0][0] == null);
 
-        if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5')
-        else                                                  element_pastegame.classList.remove('opacity-0_5')
+        if ((onlinegame.areInOnlineGame() && !legalInPrivateMatch) || enginegame.areInEngineGame()) element_pastegame.classList.add('opacity-0_5')
+        else                                                                                        element_pastegame.classList.remove('opacity-0_5')
     }
 
     function changeTextOfMainMenuButton() {
@@ -94,6 +94,7 @@ const guipause = (function(){
         event = event || window.event;
         onlinegame.onMainMenuPress()
         onlinegame.closeOnlineGame()
+        enginegame.closeEngineGame()
         callback_Resume()
         game.unloadGame()
         clock.reset();

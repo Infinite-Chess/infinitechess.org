@@ -117,6 +117,18 @@ const checkmatepractice = (function() {
         return true;
     }
 
+    /**
+     * Calculates a random individual legal move by the black royal in the given position
+     * @param {gamefile} gamefile - The gamefile
+     * @param {number[]} blackRoyalCoords - The coordinates of the black royal piece
+     * @returns random legalmove
+     */
+    function getRandomEngineMove(gamefile, blackRoyalCoords) {
+        const blackRoyalPiece = gamefileutility.getPieceAtCoords(gamefile, blackRoyalCoords);
+        const blackmoves = legalmoves.calculate(gamefile, blackRoyalPiece).individual;
+        return blackmoves[Math.floor(Math.random() * blackmoves.length)]
+    }
+
     return Object.freeze({
         generateCheckmateStartingPosition,
     })
