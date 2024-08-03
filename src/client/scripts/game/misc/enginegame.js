@@ -56,9 +56,12 @@ const enginegame = (function(){
 
     function submitMove() {
         if (!inEngineGame) return; // Don't do anything if it's not an engine game
+        if (game.getGamefile().gameConclusion) return; // Don't do anything if the game is over
+        
+        engine.runEngine();
     }
 
-    function receiveEngineMove(move) {
+    function makeEngineMove(move) {
         if (!inEngineGame) return;
         
         const gamefile = game.getGamefile();
@@ -75,7 +78,7 @@ const enginegame = (function(){
         selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
         // Edit the clocks
-        clock.edit(message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt)
+        // clock.edit(message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt)
 
         // For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
         if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
@@ -91,7 +94,7 @@ const enginegame = (function(){
         isItOurTurn,
         areWeColor,
         submitMove,
-        receiveEngineMove
+        makeEngineMove
     })
 
 })();

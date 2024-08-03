@@ -206,7 +206,8 @@ const gamefileutility = (function(){
             if (!gamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs)
             else sound.playSound_draw(delayToPlayConcludeSoundSecs)
         } else { // In online game
-            if (gamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs)
+            if (gamefile.gameConclusion.includes(onlinegame.getOurColor()) ||
+                gamefile.gameConclusion.includes(enginegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs)
             else if (gamefile.gameConclusion.includes('draw') || gamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs)
             else sound.playSound_loss(delayToPlayConcludeSoundSecs);
         }

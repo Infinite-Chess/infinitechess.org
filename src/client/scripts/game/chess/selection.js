@@ -261,6 +261,7 @@ const selection = (function() {
 
         movepiece.makeMove(game.getGamefile(), move)
         onlinegame.sendMove();
+        enginegame.submitMove();
 
         unselectPiece()
     }
