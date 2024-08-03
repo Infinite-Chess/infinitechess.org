@@ -52,25 +52,43 @@ const engine = (function() {
 	/**
 	 * 
 	 * @param {gamefile} gamefile 
+	 * @returns {Move[]}
 	 */
 	function getConsideredMoves(gamefile) {
 		const moves = [];
 		const intersections = getIntersections(gamefile);
 		for (let type in gamefile.ourPieces) {
 			if (gamefile.whosTurn !== math.getPieceColorFromType(type)) continue;
-			for (coords of gamefile.ourPieces[type]) {
+			for (let coords of gamefile.ourPieces[type]) {
 				if(!coords) continue;
 				const legalMoves = legalmoves.calculate(gamefile, {type, coords, index: gamefileutility.getPieceIndexByTypeAndCoords(gamefile, type, coords)})
 				for (let intersection of intersections) {
-					if(legalmoves.checkIfMoveLegal(legalMoves, coords, intersection)) moves.push({type, startCoords: coords, endCoords: intersection});
+					if(legalmoves.checkIfMoveLegal(legalMoves, coords, intersection)) {
+						const move = {type, startCoords: coords, endCoords: intersection};
+						// legalmoves.checkIfMoveLegal transfers special flags from startCoords to endCoords
+						// we want our move to have the special flags so we will transfer them to it.
+						specialdetect.transferSpecialFlags_FromCoordsToMove(intersection, move);
+						moves.push(move);
+					}
 				}
 			}
 		}
 		return moves;
 	}
 
+	/**
+	 * 
+	 * @param {gamefile} gamefile 
+	 * @param {number} depth 
+	 * @param {Function} eval 
+	 */
+	function calculate(gamefile, depth, eval) {
+		const moves = getConsideredMoves(gamefile);
+	}
+
 	return Object.freeze({
 		getIntersections,
-		getConsideredMoves
+		getConsideredMoves,
+		calculate
 	})
 })();
