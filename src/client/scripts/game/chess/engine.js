@@ -12,13 +12,14 @@ const engine = (function(){
      * It gets called as soon as the human player submits a move.
      * It ends by submitting a move via enginegame.makeEngineMove(move).
      */
-    function runEngine() {
+    async function runEngine() {
         const gamefile = game.getGamefile();
 
         try {
             // This code only works if Black has exactly one king or royal centaur
             // For now, it just submits a random move for Black
             const randomMove = getRandomRoyalMove(gamefile, "black")
+            await new Promise(r => setTimeout(r, 1500)) // unnecessary delay
             enginegame.makeEngineMove(randomMove)
         } catch (e) {
             console.error("You used the engine for an unsupported type of game.")
