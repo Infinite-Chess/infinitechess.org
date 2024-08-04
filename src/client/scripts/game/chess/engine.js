@@ -149,7 +149,7 @@ const engine = (function () {
 		// put this here instead of evaluation function to end search immediately
 		const gameConclusion = wincondition.getGameConclusion(gamefile);
 		if (gameConclusion == 'white checkmate') return colorNum * -Infinity;
-		if (gameConclusion && gameConclusion.startsWith('draw')) return colorNum * Infinity;
+		if (gameConclusion?.startsWith('draw')) return colorNum * Infinity;
 
 		// return evaluation if depth is zero
 		if (depth == 0) return colorNum * loneBlackKingEval(gamefile);
