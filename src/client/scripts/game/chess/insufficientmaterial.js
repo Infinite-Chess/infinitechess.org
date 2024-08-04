@@ -6,8 +6,9 @@ const insufficientmaterial = (function(){
 
 	const scenrariosForInsuffMat = [
 		{'kingsB': Infinity, 'kingsW': Infinity},
+		{'royalCentaursB': Infinity, 'royalCentaursW': Infinity},
 
-		// with the white king
+		// Checkmate a black king with the white king
 		{'kingsB': 1, 'kingsW': 1, 'queensW': 1},
 		{'kingsB': 1, 'kingsW': 1, 'bishopsW': 3},
 		{'kingsB': 1, 'kingsW': 1, 'knightsW': 3},
@@ -21,9 +22,9 @@ const insufficientmaterial = (function(){
 		{'kingsB': 1, 'kingsW': 1, 'guardsW': 1},
 		{'kingsB': 1, 'kingsW': 1, 'pawnsW': 3},
 
-		// without the white king
+		// Checkmate a black king without the white king
 		{'kingsB': 1, 'queensW': 1, 'rooksW': 1},
-		{'kingsB': 1, 'bishopsW': 5},
+		{'kingsB': 1, 'bishopsW': 4},
 		{'kingsB': 1, 'knightsW': 4},
 		{'kingsB': 1, 'bishopsW': 2, 'knightsW': 2},
 		{'kingsB': 1, 'bishopsW': 3, 'knightsW': 1},
@@ -50,7 +51,7 @@ const insufficientmaterial = (function(){
 	 * @returns {boolean} *true*, if the scenario is a draw by insufficient material, otherwise *false*
 	 */
 	function isScenarioInsuffMat(scenario) {
-		// lopp over all draw scenarios to see if they apply here
+		// loop over all draw scenarios to see if they apply here
 		drawscenarioloop:
 		for (let drawScenario of scenrariosForInsuffMat){
 			for (let piece in scenario) {
