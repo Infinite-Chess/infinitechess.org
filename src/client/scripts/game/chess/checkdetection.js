@@ -275,8 +275,8 @@ const checkdetection = (function(){
      */
     function addressExistingChecks (gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
         if (!gamefile.inCheck) return false; // Exit if not in check
-        const isOurCheck = color === gamefile.whosTurn;
-        if (!isOurCheck) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
+        
+        if (!areWeInCheck(gamefile, color)) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
         const attackerCount = gamefile.attackers.length;
         if (attackerCount === 0) throw new Error("We are in check, but there is no specified attacker!")
@@ -312,6 +312,18 @@ const checkdetection = (function(){
         delete legalMoves.sliding; // Erase all sliding moves
 
         return true;
+    }
+
+    /**
+     * 
+     * @param {gamefile} gamefile 
+     * @param {String} color 
+     * @returns {Boolean}
+     */
+    function areWeInCheck (gamefile, color) {
+        const royals = gamefileutility.getRoyalCoords(gamefile, color)
+        const checkedRoyals = gamefile.inCheck
+        return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length)
     }
 
     /**
