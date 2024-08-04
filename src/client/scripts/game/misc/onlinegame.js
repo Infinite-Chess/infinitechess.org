@@ -231,17 +231,22 @@ const onlinegame = (function(){
                 break;
             case "drawoffer":
                 guidrawoffer.openDrawOffer()
-                guipause.callback_Resume() // close
+                guipause.callback_Resume() // close pause screen
                 guipause.changeOfferDrawToAcceptDraw()
                 let gamefile = game.getGamefile()
-                if (gamefile.moves) {
+
+                const moves = data.value;
+                gamefile.drawOfferBlack = moves.blackOfferMove
+                gamefile.drawOfferWhite = moves.whiteOfferMove
+
+                /*if (gamefile.moves) {
                     if (getOurColor() === "white") {
                         gamefile.drawOfferBlack = gamefile.moves.length
                     }
                     if (getOurColor() === "black") {
                         gamefile.drawOfferWhite = gamefile.moves.length
                     }
-                }
+                }*/
 
                 break;
             case "declinedraw":
@@ -699,12 +704,16 @@ const onlinegame = (function(){
         websocket.getSubs().game = false;
         inSync = false;
         websocket.sendmessage('game','resign')
+        guipause.changeAcceptDrawToOfferDraw()
+        guidrawoffer.closeDrawOffer()
     }
 
     function abort() {
         websocket.getSubs().game = false;
         inSync = false;
         websocket.sendmessage('game','abort')
+        guipause.changeAcceptDrawToOfferDraw()
+        guidrawoffer.closeDrawOffer()
     }
 
     function getOpponentColor() {

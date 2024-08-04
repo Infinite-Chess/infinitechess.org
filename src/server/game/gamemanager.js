@@ -855,7 +855,7 @@ const gamemanager = (function() {
 
         // Alert their opponent
         const opponentColor = math1.getOppositeColor(color);
-        const value = { offererColor: color }
+        const value = { offererColor: color, whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
         sendMessageToSocketOfColor(game, opponentColor, 'game', 'drawoffer', value)
     }
 
@@ -926,12 +926,12 @@ const gamemanager = (function() {
         if (hasGameDrawOffer(game)) {
             if (color == 'white') {
                 if (game.blackDrawOffer == 'offered') {
-                    const value = { offererColor: 'black' }
+                    const value = { offererColor: 'black', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
                     sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
                 }
             } else if (color == 'black') {
                 if (game.whiteDrawOffer == 'offered') {
-                    const value = { offererColor: 'white' }
+                    const value = { offererColor: 'white', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
                     sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
                 }
             }
