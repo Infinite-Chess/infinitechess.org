@@ -239,15 +239,6 @@ const onlinegame = (function(){
                 gamefile.drawOfferBlack = moves.blackOfferMove
                 gamefile.drawOfferWhite = moves.whiteOfferMove
 
-                /*if (gamefile.moves) {
-                    if (getOurColor() === "white") {
-                        gamefile.drawOfferBlack = gamefile.moves.length
-                    }
-                    if (getOurColor() === "black") {
-                        gamefile.drawOfferWhite = gamefile.moves.length
-                    }
-                }*/
-
                 break;
             case "declinedraw":
                 statustext.showStatus(`Opponent declined the draw`, false, 2)
@@ -434,9 +425,9 @@ const onlinegame = (function(){
      * Called when the server sends us the conclusion of the game when it ends,
      * OR we just need to resync! The game may not always be over.
      * @param {Object} messageContents - The contents of the server message, with the properties:
-     * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`.
+     * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`, `whiteDrawOfferMove`, `whiteDrawOfferMove`.
      */
-    function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime }
+    function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime, whiteDrawOfferMove, blackDrawOfferMove }
         if (!inOnlineGame) return;
         const gamefile = game.getGamefile();
         const claimedGameConclusion = messageContents.gameConclusion
@@ -635,6 +626,7 @@ const onlinegame = (function(){
         resetServerRestarting();
         cancelFlashTabTimer();
         guipause.changeAcceptDrawToOfferDraw(); // prevent "accept draw"
+        guidrawoffer.closeDrawOffer() // if it's open somehow, close it anyway
         perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
     }
 

@@ -645,7 +645,9 @@ const gamemanager = (function() {
             timerWhite: safeGameInfo.timerWhite,
             timerBlack: safeGameInfo.timerBlack,
             timeNextPlayerLosesAt: safeGameInfo.timeNextPlayerLosesAt,
-            gameConclusion: safeGameInfo.gameConclusion
+            gameConclusion: safeGameInfo.gameConclusion,
+            whiteDrawOfferMove: safeGameInfo.whiteDrawOfferMove,
+            blackDrawOfferMove: safeGameInfo.blackDrawOfferMove
         }
 
         // If true, we know it's their opponent that's afk, because this client
@@ -1064,7 +1066,9 @@ const gamemanager = (function() {
             youAreColor,
             moves: game.moves,
             clock: game.clock,
-            gameConclusion: game.gameConclusion
+            gameConclusion: game.gameConclusion,
+            whiteDrawOfferMove: game.whiteDrawOfferMove,
+            blackDrawOfferMove: game.blackDrawOfferMove
         }
         if (!clockweb.isClockValueInfinite(game.clock)) {
             safeGame.timerWhite = game.timerWhite;
