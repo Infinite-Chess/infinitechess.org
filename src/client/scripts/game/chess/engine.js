@@ -39,7 +39,7 @@ const engine = (function(){
         const blackmoves = legalmoves.calculate(gamefile, blackRoyalPiece).individual;
         const randomEndCoords = blackmoves[Math.floor(Math.random() * blackmoves.length)]; // random endcoords from the list of individual moves
         const move = {startCoords: royalCoords, endCoords: randomEndCoords};
-        specialdetect.transferSpecialFlags_FromCoordsToMove(royalCoords, move);
+        specialdetect.transferSpecialFlags_FromCoordsToMove(randomEndCoords, move);
         return move;
     }
 

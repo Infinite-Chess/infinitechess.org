@@ -80,7 +80,6 @@ const enginegame = (function(){
         legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial) // Passes on any special moves flags to the endCoords
 
         move.type = piecemoved.type;
-        specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move)
         movepiece.makeMove(gamefile, move)
 
         selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
