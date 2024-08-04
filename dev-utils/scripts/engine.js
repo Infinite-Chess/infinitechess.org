@@ -86,13 +86,9 @@ const engine = (function () {
 	 * @param {gamefile} gamefile 
 	 */
 	function loneBlackKingEval(gamefile) {
-
-		// TODO: weight closest rook lines (and other long range pieces)
-
 		let evaluation = 0;
 		const kingCoords = gamefile.ourPieces.kingsB[0];
 		const kingLegalMoves = legalmoves.calculate(gamefile, { type: 'kingsB', coords: kingCoords, index: gamefileutility.getPieceIndexByTypeAndCoords(gamefile, 'kingsB', kingCoords) });
-		console.log('king legal moves count ', kingLegalMoves.individual.length);
 		evaluation += kingLegalMoves.individual.length;
 
 		// add a point to the evaluation for each piece the king is attacking.
@@ -119,7 +115,6 @@ const engine = (function () {
 
 
 				// chebyshevDistance = max(distanceX, distanceY)
-				console.log(type);
 				evaluation += math.chebyshevDistance(pieceCoords, kingCoords) * whitePiecesWeightTable[type];
 			}
 		}
@@ -154,7 +149,7 @@ const engine = (function () {
 		// put this here instead of evaluation function to end search immediately
 		const gameConclusion = wincondition.getGameConclusion(gamefile);
 		if (gameConclusion == 'white checkmate') return colorNum * -Infinity;
-		if (gameConclusion == 'draw insuffmat') return colorNum * Infinity;
+		if (gameConclusion.startsWith('draw')) return colorNum * Infinity;
 
 		// return evaluation if depth is zero
 		if (depth == 0) return colorNum * loneBlackKingEval(gamefile);
@@ -169,7 +164,6 @@ const engine = (function () {
 				updateData: false,
 				simulated: true,
 			});
-			console.log(gamefile.moves);
 			const score = -negamax(gamefile, depth - 1, -beta, -alpha, -colorNum);
 			movepiece.rewindMove(gamefile, {
 				updateData: false,
@@ -180,6 +174,7 @@ const engine = (function () {
 				return beta;
 			}
 			if (score > alpha) {
+				// found better move
 				alpha = score;
 			}
 		}
@@ -194,7 +189,8 @@ const engine = (function () {
 	function calculate(gamefile, depth) {
 		let moves = getBlackKingLegalMoves(gamefile);
 		let bestScore = -Infinity;
-		let bestMove = null;
+		// choose a random move. if the search returns -Infinity (means checkmate is forced) play this instead
+		let bestMove = moves[Math.floor(Math.random() * moves.length)];
 		for (let move of moves) {
 			movepiece.makeMove(gamefile, move, {
 				pushClock: false,
@@ -212,7 +208,6 @@ const engine = (function () {
 				bestMove = move;
 			}
 		}
-		console.log(`eval: ${bestScore}`)
 		return bestMove;
 	}
 
