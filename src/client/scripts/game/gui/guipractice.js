@@ -72,8 +72,6 @@ const guipractice = (function(){
             element_practiceName.textContent = translations["menu_checkmate"]
             element_checkmatePractice.classList.add('selected')
             element_tacticsPractice.classList.remove('selected')
-            element_checkmatePractice.classList.remove('not-selected')
-            element_tacticsPractice.classList.add('not-selected')
             // callback_updateOptions()
         } else if (mode === 'tactics-practice') {
             // nothing yet
@@ -83,12 +81,10 @@ const guipractice = (function(){
     function changeCheckmateSelected(checkmateid) {
         for (let element of elements_checkmates){
             if (checkmateid === element.id) {
-                element.classList.remove('not-selected')
                 element.classList.add('selected')
                 checkmateSelectedID = checkmateid;
             } else {
                 element.classList.remove('selected')
-                element.classList.add('not-selected')
             }
         }
     }
@@ -97,32 +93,25 @@ const guipractice = (function(){
     function updateCheckmatesBeaten() {
         for (let element of elements_checkmates){
             element.classList.remove('beaten')
-            element.classList.add('unbeaten')
         }
 
         // elements_checkmates[2].classList.add('beaten')
-        // elements_checkmates[2].classList.remove('unbeaten')
     }
 
-    function callback_practiceBack(event) {
-        event = event || window.event;
+    function callback_practiceBack() {
         close()
         guititle.open()
     }
 
-    function callback_checkmatePractice(event) {
-        event = event || window.event;
+    function callback_checkmatePractice() {
         changePracticeMode('checkmate-practice')
     }
 
     function callback_checkmateList(event){
-        event = event || window.event;
         changeCheckmateSelected(event.currentTarget.id)
     }
 
-    function callback_practicePlay(event) {
-        event = event || window.event;
-
+    function callback_practicePlay() {
         if (modeSelected === 'checkmate-practice') {
             close()
             startCheckmatePractice()
@@ -157,7 +146,7 @@ const guipractice = (function(){
                 gameRules: {
                     promotionRanks: null,
                     promotionsAllowed: {"white":[],"black":[]},
-                    winConditions: {"white": ["checkmate"], "black": ["checkmate"]}
+                    winConditions: variant.getDefaultWinConditions()
                 }
             }
         }
@@ -184,7 +173,7 @@ const guipractice = (function(){
         gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || math.getCurrentUTCTime();
 
         const variantOptions = gameOptions.variantOptions
-        const newGamefile = new gamefile(gameOptions.metadata, { moves: undefined, variantOptions})
+        const newGamefile = new gamefile(gameOptions.metadata, { variantOptions })
         game.loadGamefile(newGamefile);
 
         const centerArea = area.calculateFromUnpaddedBox(newGamefile.startSnapshot.box)

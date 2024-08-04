@@ -623,30 +623,27 @@ canvas {
     padding: 0 0.3em;
 }
 
+.checkmate {
+    height: 3em;
+    border-width: 0em;
+    background-color: rgba(168, 168, 168, 1);
+}
+
 .checkmate.selected {
     height: 2.5em;
     border-width: 0.25em;
-}
-
-.checkmate.not-selected {
-    height: 3em;
-    border-width: 0em;
 }
 
 .checkmate.beaten {
     background-color: rgba(0, 128, 0, 0.3);
 }
 
-.checkmate.unbeaten {
-    background-color: rgba(168, 168, 168, 1);
+.checkmate:hover {
+    background-color: rgba(168, 168, 168, 0.8);
 }
 
 .checkmate.beaten:hover {
     background-color: rgba(0, 128, 0, 0.2);
-}
-
-.checkmate.unbeaten:hover {
-    background-color: rgba(168, 168, 168, 0.8);
 }
 
 /* Play Page: Invite creation screen */
