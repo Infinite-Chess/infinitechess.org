@@ -610,12 +610,11 @@ canvas {
     justify-content: center; /* OR: space-between */
     margin: 0.3em;
     border-radius: 0.3em;
-    border-color:rgb(0, 0, 0);
-    border-style: solid;
+    border-width: 0em;
+    height: 3em;
 }
 
 .practice-options .checkmate-separator {
-    height: 3em;
     font-weight: bold;
 }
 
@@ -624,14 +623,13 @@ canvas {
 }
 
 .checkmate {
-    height: 3em;
-    border-width: 0em;
     background-color: rgba(168, 168, 168, 1);
 }
 
 .checkmate.selected {
-    height: 2.5em;
-    border-width: 0.25em;
+    outline-style: solid;
+    outline-width: 0.25em;
+    outline-offset: -0.15em;
 }
 
 .checkmate.beaten {
