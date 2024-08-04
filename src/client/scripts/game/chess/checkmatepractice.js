@@ -100,7 +100,7 @@ const checkmatepractice = (function() {
      * It also checks that it is not attacked by a knightrider
      * @param {string} square - square of black piece
      * @param {Object} startingPosition - startingPosition JSON containing all white pieces
-     * @returns true or false, depending on if the square is in sight or not
+     * @returns {boolean} true or false, depending on if the square is in sight or not
      */
     function squareNotInSight(square, startingPosition) {
         const [sx,sy] = math.getCoordsFromKey(square);

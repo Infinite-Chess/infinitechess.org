@@ -12,7 +12,7 @@ const engine = (function(){
      * Main function of this script. It gets called as soon as the human player submits a move.
      * It takes a gamefile as an input and computes a move.
      * @param {gamefile} gamefile - gamefile of the current game
-     * @returns {Move} - move as chosen by some calculation
+     * @returns {Promise} - promise which resolves to some engine move
      */
     async function runEngine(gamefile) {
         try {
@@ -20,7 +20,7 @@ const engine = (function(){
             // For now, it just submits a random move for Black
             const randomMove = getRandomRoyalMove(gamefile, "black")
             await main.sleep(1000) // unnecessary delay
-            return randomMove;
+            return Promise.resolve(randomMove);
         } catch (e) {
             console.error("You used the engine for an unsupported type of game.")
         }
