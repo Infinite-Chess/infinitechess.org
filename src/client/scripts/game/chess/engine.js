@@ -19,7 +19,7 @@ const engine = (function(){
             // This code only works if Black has exactly one king or royal centaur
             // For now, it just submits a random move for Black
             const randomMove = getRandomRoyalMove(gamefile, "black")
-            await main.sleep(1000) // unnecessary delay
+            await main.sleep(500) // unnecessary delay
             return Promise.resolve(randomMove);
         } catch (e) {
             console.error("You used the engine for an unsupported type of game.")
