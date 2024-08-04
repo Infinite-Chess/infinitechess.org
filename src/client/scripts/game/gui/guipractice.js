@@ -121,7 +121,7 @@ const guipractice = (function(){
     }
 
     /**
-     * Starts a checkmate practice game according to the options provided.
+     * Starts a checkmate practice game
      */
     function startCheckmatePractice() {
         gui.setScreen('checkmate practice'); // Change screen location
@@ -159,8 +159,7 @@ const guipractice = (function(){
 
     /**
      * Loads a game according to the options provided.
-     * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`
-     * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
+     * @param {Object} gameOptions - An object that contains the properties `metadata`, `youAreColor`, `clock` and `variantOptions`
      */
     function loadGame(gameOptions) {
         console.log("Loading practice checkmate with game options:")
