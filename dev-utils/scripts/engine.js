@@ -5,9 +5,6 @@ const engine = (function () {
 	 */
 	function getIntersections(gamefile) {
 
-		// TODO: fix a bug where some intersections dont get detected
-		// TODO: make intersections as a set of strings instead of set of arrays
-
 		const intersections = new Set();
 
 		const diagonalLineArr = [] // an array holding arrays of the slope and the y-intercept of each diagonal line respectfully. this will help us determine the intersections between them
