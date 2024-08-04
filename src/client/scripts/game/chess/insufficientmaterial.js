@@ -1,84 +1,65 @@
-// Currently, this draw detection by insufficient material only works for games with the checkmate win condition and with exactly one king per side
-
-// TODO: add support for more different piece combinations, void squares, obstacles, promotion lines, royals and win conditions
-
-// TODO: refactor detectInsufficientMaterialForSideAgainstLoneKing() method, it is quite ugly.
-// Ideally, create a nice clean dictionary encoding all the drawn piece and rule combinations instead of having a bunch of ugly if-else checks
+// Draw detection by insufficient material
 
 "use strict";
 
 const insufficientmaterial = (function(){
 
-	
-	/**
-     * Checks if there is no pieces of color `color` with piece types other than pieces type in `pieceTypes` and the king with given `color`.
-     * @param {string[]} pieceTypes - The piece types (ex: `bishopsB`)
-     * @param {string} WorB - `W` | `B` The piece's color
-	 * @param {Object} pieceCountTable - An object representing a table that maps piece types of color `color` to their count
-     * @returns {boolean} **true** if there is no pieces of color `color` with pieces types other than pieces type in `pieceTypes` and the king with given `color`, otherwise returns **false**
-     */
-	function noPieceTypesOtherThan(pieceTypes, WorB, pieceCountTable) {
-		return Object.keys(pieceCountTable).every(type => pieceTypes.includes(type) || type === `kings${WorB}` || pieceCountTable[type] === 0);
-	}
+	const scenrariosForInsuffMat = [
+		{'kingsB': Infinity, 'kingsW': Infinity},
 
-	const pieceCombinationsForDrawCheckmate = [
-		[['queens', 1]],
-		[['bishops', 3]],
-		[['knights', 3]],
-		[['hawks', 2]],
-		[['rooks', 1], ['knights', 1]],
-		[['rooks', 1], ['bishops', 1]],
-		[['archbishops', 1],['bishops',1]],
-		[['archbishops', 1],['knights',1]],
-		[['bishops', 2], ['knights', 1]],
-		[['bishops', 1], ['knights', 2]]
-	]
+		// with the white king
+		{'kingsB': 1, 'kingsW': 1, 'queensW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'bishopsW': 3},
+		{'kingsB': 1, 'kingsW': 1, 'knightsW': 3},
+		{'kingsB': 1, 'kingsW': 1, 'hawksW': 2},
+		{'kingsB': 1, 'kingsW': 1, 'rooksW': 1, 'knightsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'rooksW': 1, 'bishopsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'archbishopsW': 1, 'bishopsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'archbishopsW': 1, 'knightsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'bishopsW': 2, 'knightsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'bishopsW': 1, 'knightsW': 2},
+		{'kingsB': 1, 'kingsW': 1, 'guardsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'pawnsW': 3},
+
+		// without the white king
+		{'kingsB': 1, 'queensW': 1, 'rooksW': 1},
+		{'kingsB': 1, 'bishopsW': 5},
+		{'kingsB': 1, 'knightsW': 4},
+		{'kingsB': 1, 'bishopsW': 2, 'knightsW': 2},
+		{'kingsB': 1, 'bishopsW': 3, 'knightsW': 1},
+		{'kingsB': 1, 'hawksW': 3},
+		{'kingsB': 1, 'rooksW': 1, 'bishopsW': 1, 'knightsW': 1},
+		{'kingsB': 1, 'rooksW': 1, 'knightsW': 2},
+		{'kingsB': 1, 'rooksW': 1, 'guardsW': 1},
+		{'kingsB': 1, 'rooksW': 2, 'bishopsW': 1},
+		{'kingsB': 1, 'rooksW': 2, 'knightsW': 1},
+		{'kingsB': 1, 'archbishopsW': 1, 'bishopsW': 2},
+		{'kingsB': 1, 'archbishopsW': 1, 'knightsW': 2},
+		{'kingsB': 1, 'archbishopsW': 2},
+		{'kingsB': 1, 'chancellorsW': 1, 'guardsW': 1},
+		{'kingsB': 1, 'chancellorsW': 1, 'knightsW': 1},
+		{'kingsB': 1, 'chancellorsW': 1, 'rooksW': 1},
+		{'kingsB': 1, 'guardsW': 2},
+		{'kingsB': 1, 'amazonsW': 1},
+		{'kingsB': 1, 'pawnsW': 6},
+	];
 
 	/**
-	 * 
-	 * @param {string[][][]} pieceCombinationsList
-	 * @param {string} WorB - `W` | `B` the pieces' color
-	 * @param {Object} pieceCountTable - An object representing a table that maps piece types of color `color` to their count
-	 * @returns {boolean} **true** if the combination is found otherwise returns **false**
+	 * Detects if the provided piecelist scenario is a draw by insufficient material
+	 * @param {Object} scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
+	 * @returns {boolean} *true*, if the scenario is a draw by insufficient material, otherwise *false*
 	 */
-	function checkForPieceCombinations(pieceCombinationsList, WorB, pieceCountTable) {
-		for (let pieceCombination of pieceCombinationsList) {
-			const pieceTypes = pieceCombination.map(x => `${x[0]}${WorB}`);
-			if(!noPieceTypesOtherThan(pieceTypes, WorB, pieceCountTable)) continue;
-
-			let allPiecesSatisfyPieceCount = true;
-
-			for (let [pieceType, pieceCount] of pieceCombination) {
-				if( pieceCountTable[`${pieceType}${WorB}`] > pieceCount) {
-					allPiecesSatisfyPieceCount = false;
-					break;
-				};
+	function isScenarioInsuffMat(scenario) {
+		// lopp over all draw scenarios to see if they apply here
+		drawscenarioloop:
+		for (let drawScenario of scenrariosForInsuffMat){
+			for (let piece in scenario) {
+				// discard draw scenario if it does not fit the scenario
+				if (!(piece in drawScenario) || (scenario[piece] > drawScenario[piece])) continue drawscenarioloop;
 			}
-			if(!allPiecesSatisfyPieceCount) continue;
 			return true;
 		}
 		return false;
-	}
-
-	/**
-	 * Checks if a given piece list is insufficient to achieve mate for a player of a given color against a lone king
-	 * @param {gamefile} gamefile - the gamefile
-	 * @param {String[]} piecesOfColor - The piece types, aka an array containing all the possible piece names for the player of a given color
-	 * @param {String} color - a string specifying the player who will be checked for sufficient material, either 'white' or 'black'
-	 * @returns **true** if the player given by color cannot possibly checkmate an opposing lone king using his pieces of the type piecesOfColor
-	 */
-	function detectInsufficientMaterialForSideAgainstLoneKing(gamefile, piecesOfColor, color) {
-		const pieceCountTable = {};
-		for (let pieceType of piecesOfColor) {
-			pieceCountTable[pieceType] = gamefileutility.getPieceCountOfType(gamefile, pieceType);
-		}
-
-		let WorB = math.getWorBFromColor(color);
-
-		// refer to the theory spreadsheet
-		// https://docs.google.com/spreadsheets/d/13KWe6atX2fauBhthJbzCun_AmKXvso6NY2_zjKtikfc/edit
-
-		return checkForPieceCombinations(pieceCombinationsForDrawCheckmate, WorB, pieceCountTable);
 	}
 
 	/**
@@ -86,46 +67,48 @@ const insufficientmaterial = (function(){
      * @param {gamefile} gamefile - The gamefile
      * @returns {'draw insuffmat' | false} 'draw insuffmat', if the game is over by the insufficient material, otherwise *false*.
      */
-    const detectInsufficientMaterial = function(gamefile) {
-
+    function detectInsufficientMaterial(gamefile) {
 		// Only make the draw check if the win condition is checkmate for both players
 		if (!wincondition.doesColorHaveWinCondition(gamefile, 'white', 'checkmate') || !wincondition.doesColorHaveWinCondition(gamefile, 'black', 'checkmate')) return false;
 		if (wincondition.getWinConditionCountOfColor(gamefile, 'white') != 1 || wincondition.getWinConditionCountOfColor(gamefile, 'black') != 1) return false;
 
-		// Only make the draw check if the last move was a capture
+		// Only make the draw check if the last move was a capture or if there is no last move
 		const lastMove = movesscript.getLastMove(gamefile.moves);
 		if (lastMove && !lastMove.captured) return false;
 
-		// Temporary: only make the draw check if there are less than 6 pieces
-        if (gamefileutility.getPieceCountOfGame(gamefile) >= 6) return false;
+		// Only make the draw check if there are less than 8 non-obstacle pieces
+        if (gamefileutility.getPieceCountOfGame(gamefile, {ignoreVoids: false, ignoreObstacles: true}) >= 8) return false;
 
-		// Temporary: only make the draw check if there are no voids
-        if (gamefileutility.getPieceCountOfType(gamefile, 'voidsN') > 0) return false;
-		
-		// Get the total piece count for each player
-		let blackPieceCount = pieces.black.reduce((currentCount, pieceType) => {
-			return currentCount + gamefileutility.getPieceCountOfType(gamefile, pieceType);
-		}, 0);
-		let whitePieceCount = pieces.white.reduce((currentCount, pieceType) => {
-			return currentCount + gamefileutility.getPieceCountOfType(gamefile, pieceType);
-		}, 0);
-
-		// Temporary: only check for draws if a player has a lone king and no other royals
-		if (blackPieceCount > 1 && whitePieceCount > 1) return false;
-		// Make sure atleast one side has a king. (One side might not have a king. for example: Practice Mode)
-		const blackKingCount = gamefileutility.getPieceCountOfType(gamefile, 'kingsB');
-		const whiteKingCount = gamefileutility.getPieceCountOfType(gamefile, 'kingsW');
-		if (blackKingCount !== 1 && whiteKingCount !== 1) return false;
-		if (gamefileutility.getRoyalCountOfColor(gamefile.piecesOrganizedByKey, 'white') > 1 || gamefileutility.getRoyalCountOfColor(gamefile.piecesOrganizedByKey, 'black') > 1) return false;
-		if (blackPieceCount == 1 && whitePieceCount == 1) return 'draw insuffmat'; // trivial case.
-
-		// Check for black's pieces when the white king is alone and vice versa
-		if (whitePieceCount == 1 && whiteKingCount == 1) {
-			if(detectInsufficientMaterialForSideAgainstLoneKing(gamefile, pieces.black, 'black')) return 'draw insuffmat';
-		} else if(blackPieceCount == 1 && blackKingCount == 1) {
-			if(detectInsufficientMaterialForSideAgainstLoneKing(gamefile, pieces.white, 'white')) return 'draw insuffmat';
+		// Create scenario object listing amount of all non-obstacle pieces in the game
+		let scenario = {};
+		for(let key in gamefile.piecesOrganizedByKey) {
+			const piece = gamefile.piecesOrganizedByKey[key];
+			if (piece === "obstaclesN") continue;
+			else if (piece in scenario) scenario[piece] += 1;
+			else scenario[piece] = 1
 		}
-        return false;
+
+		// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
+		// This is fully enough for the checkmate practice mode, for now
+		// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
+		if (gamefile.gameRules.promotionRanks) {
+			const promotionListWhite = gamefile.gameRules.promotionsAllowed.white;
+			const promotionListBlack = gamefile.gameRules.promotionsAllowed.black;
+			if ("pawnsW" in scenario && promotionListWhite.length != 0) return false;
+			if ("pawnsB" in scenario && promotionListBlack.length != 0) return false;
+		}
+
+		// Create scenario object with inverted colors
+		let invertedScenario = {};
+		for (let piece in scenario) {
+			const pieceInverted = piece.endsWith("W") ? piece.replace(/W$/, "B") : piece.replace(/B$/, "W");
+			invertedScenario[pieceInverted] = scenario[piece];
+		}
+
+		// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
+		if (isScenarioInsuffMat(scenario)) return 'draw insuffmat';
+		else if (isScenarioInsuffMat(invertedScenario)) return 'draw insuffmat';
+		else return false;
     }
 
     return Object.freeze({
