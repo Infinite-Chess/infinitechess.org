@@ -60,9 +60,7 @@ if (DEV_BUILD){
     recursive: true,
     force: true,
     filter: filename => { 
-      // return (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename)
-      // TEMPORARILY REVERTED THE LIGHTNING-CSS ADDITIONS, BECAUSE when in a game it breaks the bars blur effect!
-      return !/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) // make sure to create the scripts/game/folder
+      return (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename)
     }
   });
 
