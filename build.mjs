@@ -102,6 +102,7 @@ if (DEV_BUILD){
   // overwrite play.ejs by injecting all needed scripts into it:
   await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
   
+  // Make a list of all css files
   const cssFiles = await getExtFiles("./src/client/css", ".css");
   for (const file of cssFiles) {
     // Minify css files
