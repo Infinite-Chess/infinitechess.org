@@ -248,21 +248,13 @@ const movepiece = (function(){
      * - `doGameOverChecks`: Whether game-over checks such as checkmate, or other win conditions, are performed for this move.
      */
     function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
-        gamefile.whosTurn = getWhosTurn(gamefile);
+        gamefile.whosTurn = gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
         if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile)
         if (pushClock) clock.push()
     }
 
 
-    /**
-     * 
-     * @param {gamefile} gamefile
-     * @param {number} [movenumber=gamefile.moveIndex]
-     */
-    function getWhosTurn(gamefile, movenumber = gamefile.moveIndex) {
-        const loopIndex = (movenumber + 1) % gamefile.gameRules.turnOrder.length
-        return gamefile.gameRules.turnOrder[loopIndex]
-    }
+
 
     /**
      * Updates the `inCheck` and `attackers` properties of the gamefile after making a move or rewinding.

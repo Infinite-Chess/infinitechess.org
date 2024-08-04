@@ -457,9 +457,8 @@ const gamefileutility = (function(){
      * @returns {string} 'white' / 'black'
      */
     function getWhosTurnAtMoveIndex(gamefile, moveIndex) {
-        let mod2 = Math.abs(moveIndex % 2);
-        if (gamefile.startSnapshot.turn === 'black') mod2++;
-        return mod2 === 1 ? 'white' : 'black';
+        const loopIndex = (moveIndex + 1) % gamefile.gameRules.turnOrder.length
+        return gamefile.gameRules.turnOrder[loopIndex]
     }
 
     return Object.freeze({
