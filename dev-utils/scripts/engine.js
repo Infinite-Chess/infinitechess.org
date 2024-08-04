@@ -101,28 +101,40 @@ const engine = (function () {
 		const opponentPieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, 'white');
 		evaluation -= opponentPieceCount * 100;
 
-		const longRangeWhitePieces = ['queensW', 'chancellorsW', 'rooksW', 'bishopsW', 'archbishopsW', 'knightridersW', 'royalQueensW']
+		// Pieces that can put a king in some sort of a box or a cage (for example two rooks can put a king in a cage)
+		const boxerWhitePieces = ['queensW', 'chancellorsW', 'rooksW', 'royalQueensW'];
 		const whitePiecesWeightTable = {
-			kingsW: 4,
-			knightsW: 3,
-			hawksW: 2
+			kingsW: {weight: 4, distanceFunction: math.chebyshevDistance},
+			guardsW: {weight: 4, distanceFunction: math.chebyshevDistance},
+			knightsW: {weight: 3, distanceFunction: math.chebyshevDistance},
+			hawksW: {weight: 2, distanceFunction: math.chebyshevDistance},
+		}
+		let boxerWhitePieceCount = 0;
+		for (let boxerWhitePiece of boxerWhitePieces) {
+			boxerWhitePieceCount += gamefileutility.getPieceCountOfType(gamefile, boxerWhitePiece);
+			if (boxerWhitePieceCount > 1) {
+				for (let bWP of boxerWhitePieces) {
+					whitePiecesWeightTable[bWP] = {weight: 1, distanceFunction: math.manhattanDistance};
+				}
+				break;
+			}
 		}
 		for (let type of pieces.white) {
-			if (longRangeWhitePieces.includes(type) || !gamefile.ourPieces[type]?.length) continue;
+			if (!(type in whitePiecesWeightTable) || !gamefileutility.getPieceCountOfType(gamefile, type)) continue;
+			const pieceWeightTable = whitePiecesWeightTable[type];
+
 			for (let pieceCoords of gamefile.ourPieces[type]) {
-				// calculate the chebyshev distance between king and the piece
+				if(!pieceCoords) continue;
+				// calculate the distance between king and the piece
 				// multiply it by the piece weight and add it to the evaluation
-
-
-				// chebyshevDistance = max(distanceX, distanceY)
-				evaluation += math.chebyshevDistance(pieceCoords, kingCoords) * whitePiecesWeightTable[type];
+				evaluation += pieceWeightTable.distanceFunction(pieceCoords, kingCoords) * pieceWeightTable.weight;
 			}
 		}
 		return evaluation;
 	}
 
 	/**
-	 * 
+	 * Gets the legal moves of the black king (first one if there's multiple)
 	 * @param {gamefile} gamefile
 	 * @returns {Move[]} 
 	 */
@@ -130,7 +142,7 @@ const engine = (function () {
 		const kingCoords = gamefile.ourPieces.kingsB[0];
 		const kingPiece = gamefileutility.getPieceAtCoords(gamefile, gamefile.ourPieces.kingsB[0]);
 		const { individual } = legalmoves.calculate(gamefile, kingPiece);
-		return moves = individual.map(x => ({type: 'kingsB', startCoords: kingCoords, endCoords: x}));
+		return individual.map(x => ({type: 'kingsB', startCoords: kingCoords, endCoords: x}));
 	}
 
 	/**
