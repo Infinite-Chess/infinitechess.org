@@ -6,7 +6,7 @@ const engine = (function () {
 	function getIntersections(gamefile) {
 
 		// TODO: fix a bug where some intersections dont get detected
-		// TODO: make intersections an array instead of a set, and don't add duplicates
+		// TODO: make intersections as a set of strings instead of set of arrays
 
 		const intersections = new Set();
 
@@ -32,12 +32,12 @@ const engine = (function () {
 				// intersections.add([(y - b1) / m1, y]);
 				// but because m1 is either 1 or -1 multiplying is the same as dividing
 				// and dividing is known to be slower.
-				intersections.add([(y - b1) * m1, y]);
+				intersections.add(`${(y - b1) * m1},${y}`);
 			}
 
 			// calculate its intersections with all vertical lines
 			for (let x of xSet) {
-				intersections.add([x, m1 * x + b1]);
+				intersections.add(`${x},${m1 * x + b1}`);
 			}
 
 			for (let j = i + 1; j < diagonalLineArr.length; j++) {
@@ -46,7 +46,7 @@ const engine = (function () {
 				const intersectionX = (b2 - b1) / (m1 - m2);
 				if (!isFinite(intersectionX) || !Number.isInteger(intersectionX)) continue;
 				const intersectionY = m1 * intersectionX + b1
-				intersections.add([intersectionX, intersectionY])
+				intersections.add(`${intersectionX},${intersectionY}`)
 			}
 		}
 
@@ -67,11 +67,12 @@ const engine = (function () {
 				if (!coords) continue;
 				const legalMoves = legalmoves.calculate(gamefile, { type, coords, index: gamefileutility.getPieceIndexByTypeAndCoords(gamefile, type, coords) })
 				for (let intersection of intersections) {
-					if (legalmoves.checkIfMoveLegal(legalMoves, coords, intersection)) {
-						const move = { type, startCoords: coords, endCoords: intersection };
+					const intersectionCoords = math.getCoordsFromKey(intersection);
+					if (legalmoves.checkIfMoveLegal(legalMoves, coords, intersectionCoords)) {
+						const move = { type, startCoords: coords, endCoords: intersectionCoords };
 						// legalmoves.checkIfMoveLegal transfers special flags from startCoords to endCoords
 						// we want our move to have the special flags so we will transfer them to it.
-						specialdetect.transferSpecialFlags_FromCoordsToMove(intersection, move);
+						specialdetect.transferSpecialFlags_FromCoordsToMove(intersectionCoords, move);
 						moves.push(move);
 					}
 				}
@@ -98,7 +99,7 @@ const engine = (function () {
 		for (let x = -1; x <= 1; x++) {
 			for (let y = -1; y <= 1; y++) {
 				if (x == 0 && y == 0) continue;
-				if (gamefileutility.getPieceAtCoords(gamefile, [kingX + x, kingY + y])) evaluation += 1;
+				if (gamefileutility.getPieceAtCoords(gamefile, [kingCoords[0] + x, kingCoords[1] + y])) evaluation += 1;
 			}
 		}
 		const opponentPieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, 'white');
@@ -111,13 +112,14 @@ const engine = (function () {
 			hawksW: 2
 		}
 		for (let type of pieces.white) {
-			if (!longRangeWhitePieces.includes(type) || !gamefile.ourPieces[type]?.length) continue;
+			if (longRangeWhitePieces.includes(type) || !gamefile.ourPieces[type]?.length) continue;
 			for (let pieceCoords of gamefile.ourPieces[type]) {
 				// calculate the chebyshev distance between king and the piece
 				// multiply it by the piece weight and add it to the evaluation
 
 
 				// chebyshevDistance = max(distanceX, distanceY)
+				console.log(type);
 				evaluation += math.chebyshevDistance(pieceCoords, kingCoords) * whitePiecesWeightTable[type];
 			}
 		}
@@ -126,7 +128,8 @@ const engine = (function () {
 
 	/**
 	 * 
-	 * @param {gamefile} gamefile 
+	 * @param {gamefile} gamefile
+	 * @returns {Move[]} 
 	 */
 	function getBlackKingLegalMoves(gamefile) {
 		const kingCoords = gamefile.ourPieces.kingsB[0];
@@ -199,7 +202,7 @@ const engine = (function () {
 				updateData: false,
 				simulated: true,
 			});
-			const score = -negamax(gamefile, depth - 1, -Infinity, Infinity, 1);
+			const score = -negamax(gamefile, depth - 1, -Infinity, Infinity, -1);
 			movepiece.rewindMove(gamefile, {
 				updateData: false,
 				animate: false
