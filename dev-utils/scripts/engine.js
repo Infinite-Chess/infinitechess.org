@@ -1,7 +1,8 @@
 const engine = (function () {
 	/**
-	 * 
-	 * @param {gamefile} gamefile 
+	 * returns all intersections of diagonal, horizontal and vertical lines emitting from all pieces.
+	 * meant to represent squares the engine would care about.
+	 * @param {gamefile} gamefile - gamefile
 	 */
 	function getIntersections(gamefile) {
 
@@ -51,9 +52,10 @@ const engine = (function () {
 	}
 
 	/**
-	 * 
-	 * @param {gamefile} gamefile 
-	 * @returns {Move[]}
+	 * returns all legal moves that move into an intersection of pieces (see `engine.getIntersections`)
+	 * mainly used to get the moves the engine would consider aka look into in its search.
+	 * @param {gamefile} gamefile - gamefile
+	 * @returns {Move[]} - array of considered moves
 	 */
 	function getConsideredMoves(gamefile) {
 		const moves = [];
@@ -79,8 +81,9 @@ const engine = (function () {
 	}
 
 	/**
-	 * 
-	 * @param {gamefile} gamefile 
+	 * evaluation function for a lone black king. (designed for Practice Mode)
+	 * @param {gamefile} gamefile - the gamefile
+	 * @returns {number} - the evaluation of the position (gamefile)
 	 */
 	function loneBlackKingEval(gamefile) {
 		let evaluation = 0;
@@ -132,8 +135,8 @@ const engine = (function () {
 
 	/**
 	 * Gets the legal moves of the black king (first one if there's multiple)
-	 * @param {gamefile} gamefile
-	 * @returns {Move[]} 
+	 * @param {gamefile} gamefile - gamefile
+	 * @returns {Move[]} - legal moves for the black king (first one if there's multiple)
 	 */
 	function getBlackKingLegalMoves(gamefile) {
 		const kingCoords = gamefile.ourPieces.kingsB[0];
@@ -143,13 +146,13 @@ const engine = (function () {
 	}
 
 	/**
-	 * 
+	 * searches the tree of possible lines with the negamax algorithm with alpha-beta pruning
 	 * @param {gamefile} gamefile - the gamefile
-	 * @param {number} depth - the depth
-	 * @param {number} alpha - the alpha value
-	 * @param {number} beta - the beta value
+	 * @param {number} depth - how much moves deep the algorithm will search
+	 * @param {number} alpha - the alpha value (lower bound)
+	 * @param {number} beta - the beta value (upper bound)
 	 * @param {number} colorNum - a number representing the number (1 if black, -1 if white)
-	 * @returns {number}
+	 * @returns {number} - the score of the given position (gamefile) after searching with depth of `depth`
 	 */
 	function negamax(gamefile, depth, alpha, beta, colorNum) {
 		// return -Infinity if white manages to checkmate in this line to discourage the engine from choosing this move if it could
@@ -190,10 +193,10 @@ const engine = (function () {
 		return alpha;
 	}
 	/**
-	 * 
-	 * @param {gamefile} gamefile 
-	 * @param {number} depth 
-	 * @returns 
+	 * runs negamax search on every move and returns the move with the highest score. returns a random move if checkmate is forced
+	 * @param {gamefile} gamefile - the gamefile
+	 * @param {number} depth - how much moves deep the search will go
+	 * @returns {Move} - the move with the highest score or a random move if checkmate is forced
 	 */
 	function calculate(gamefile, depth) {
 		let moves = getBlackKingLegalMoves(gamefile);
