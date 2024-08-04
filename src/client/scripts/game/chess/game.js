@@ -48,6 +48,17 @@ const game = (function(){
     }
 
     /**
+     * Checks if we control a specific color in a game that is not a local game
+     * @param {String} color - "white" or "black"
+     * @returns {String}
+     */
+    function getOurColorInNonLocalGame() {
+        if (onlinegame.areInOnlineGame()) return onlinegame.getOurColor();
+        else if (enginegame.areInEngineGame()) return enginegame.getOurColor();
+        else return undefined;
+    }
+
+    /**
      * Checks if it is currently our turn to move in a game that is not a local game
      * @returns {boolean}
      */
@@ -123,7 +134,7 @@ const game = (function(){
         clock.update()
         miniimage.testIfToggled();
         animation.update()
-        if (guipause.areWePaused() && !onlinegame.areInOnlineGame()) return;
+        if (guipause.areWePaused() && !areInNonLocalGame()) return;
 
         movement.recalcPosition()
         transition.update()
@@ -235,6 +246,7 @@ const game = (function(){
         areInGame,
         areInNonLocalGame,
         areWeColorInNonLocalGame,
+        getOurColorInNonLocalGame,
         isItOurTurnInNonLocalGame,
         closeNonLocalGame,
         init,

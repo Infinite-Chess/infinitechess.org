@@ -406,8 +406,7 @@ const arrows = (function() {
         const data = [];
         const pieceColor = math.getPieceColorFromType(type);
         let opponentColor;
-        if (onlinegame.areInOnlineGame()) opponentColor = math.getOppositeColor(onlinegame.getOurColor());
-        else if (enginegame.areInEngineGame()) opponentColor = math.getOppositeColor(enginegame.getOurColor());
+        if (game.areInNonLocalGame()) opponentColor = math.getOppositeColor(game.getOurColorInNonLocalGame());
         else opponentColor = math.getOppositeColor(gamefile.whosTurn);
         const isOpponentPiece = pieceColor === opponentColor;
         const isOurTurn = gamefile.whosTurn === pieceColor;

@@ -593,8 +593,7 @@ const input = (function(){
             setTouchesChangeInXYTo0(touch2)
         }
 
-        const oneOrNegOne = ((onlinegame.areInOnlineGame() && onlinegame.areWeColor('black')) ||
-                             (enginegame.areInEngineGame() && enginegame.areWeColor('black'))) ? -1 : 1;
+        const oneOrNegOne = ( game.areInNonLocalGame() && game.areWeColorInNonLocalGame('black') ) ? -1 : 1;
 
         mouseWorldLocation[0] -= touchMovementX * dampeningToMoveMouseInTouchMode * oneOrNegOne;
         mouseWorldLocation[1] -= touchMovementY * dampeningToMoveMouseInTouchMode * oneOrNegOne;

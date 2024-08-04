@@ -32,9 +32,9 @@ const guigameinfo = (function(){
         const white = gameOptions.metadata.White;
         const black = gameOptions.metadata.Black;
         // If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
-        element_playerWhite.textContent = (enginegame.areWeColor('white') || onlinegame.areWeColor('white'))
+        element_playerWhite.textContent = game.areWeColorInNonLocalGame('white')
                                           && white === translations["guest_indicator"] ? translations["you_indicator"] : white;
-        element_playerBlack.textContent = (enginegame.areWeColor('black') || onlinegame.areWeColor('black'))
+        element_playerBlack.textContent = game.areWeColorInNonLocalGame('black')
                                           && black === translations["guest_indicator"] ? translations["you_indicator"] : black;
         style.revealElement(element_playerWhite)
         style.revealElement(element_playerBlack)
@@ -52,11 +52,8 @@ const guigameinfo = (function(){
             throw new Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`)
 
         let textContent = "";
-        if (onlinegame.areInOnlineGame()) {
-            const ourTurn = onlinegame.isItOurTurn(gamefile)
-            textContent = ourTurn ? translations["your_move"] : translations["their_move"];
-        } else if (enginegame.areInEngineGame()) {
-            const ourTurn = enginegame.isItOurTurn(gamefile)
+        if (game.areInNonLocalGame()) {
+            const ourTurn = game.isItOurTurnInNonLocalGame()
             textContent = ourTurn ? translations["your_move"] : translations["their_move"];
         } else textContent = color === "white" ? translations["white_to_move"] : translations["black_to_move"]
 
@@ -80,9 +77,9 @@ const guigameinfo = (function(){
 
         style.hideElement(element_dot)
 
-        if (onlinegame.areInOnlineGame() || enginegame.areInEngineGame() ) {
+        if (game.areInNonLocalGame()) {
 
-          if (onlinegame.areWeColor(victor) || enginegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? translations["results"]["you_checkmate"]
+          if (game.areWeColorInNonLocalGame(victor)) element_whosturn.textContent = condition === 'checkmate' ? translations["results"]["you_checkmate"]
                                                                                 : condition === 'time' ? translations["results"]["you_time"]
                                                                                 : condition === 'resignation' ? translations["results"]["you_resignation"]
                                                                                 : condition === 'disconnect' ? translations["results"]["you_disconnect"]

@@ -81,7 +81,7 @@ const perspective = (function() {
     // Sets rotations to orthographic view. Sensitive to if we're white or black.
     function resetRotations() {
         rotX = 0;
-        rotZ = onlinegame.getOurColor() === 'black' || enginegame.getOurColor() === 'black' ? 180 : 0; // Will be undefined if not in online or engine game
+        rotZ = game.getOurColorInNonLocalGame() === 'black' ? 180 : 0; // Will be undefined if not in online or engine game
 
         updateIsViewingBlackPerspective()
 
