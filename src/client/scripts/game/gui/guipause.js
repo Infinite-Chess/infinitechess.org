@@ -93,8 +93,7 @@ const guipause = (function(){
     async function callback_MainMenu(event) {
         event = event || window.event;
         onlinegame.onMainMenuPress()
-        onlinegame.closeOnlineGame()
-        enginegame.closeEngineGame()
+        game.closeNonLocalGame()
         callback_Resume()
         game.unloadGame()
         clock.reset();

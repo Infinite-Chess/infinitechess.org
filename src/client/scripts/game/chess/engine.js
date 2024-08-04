@@ -31,7 +31,7 @@ const engine = (function(){
      * Only works if that player has a lone king or royal centaur
      * @param {gamefile} gamefile - The gamefile
      * @param {string} color - "white" or "black": The color of the player to move
-     * @returns random legalmove
+     * @returns {Move} random legalmove
      */
     function getRandomRoyalMove(gamefile, color) {
         const royalCoords = gamefileutility.getRoyalCoords(gamefile, color)[0]
@@ -39,6 +39,7 @@ const engine = (function(){
         const blackmoves = legalmoves.calculate(gamefile, blackRoyalPiece).individual;
         const randomEndCoords = blackmoves[Math.floor(Math.random() * blackmoves.length)]; // random endcoords from the list of individual moves
         const move = {startCoords: royalCoords, endCoords: randomEndCoords};
+        specialdetect.transferSpecialFlags_FromCoordsToMove(royalCoords, move);
         return move;
     }
 

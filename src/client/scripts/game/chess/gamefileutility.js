@@ -181,7 +181,7 @@ const gamefileutility = (function(){
      */
     function updateGameConclusion(gamefile, { concludeGameIfOver = true, simulated = false } = {}) {
         gamefile.gameConclusion = wincondition.getGameConclusion(gamefile)
-        if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !game.areInNonLocalGame()) concludeGame(gamefile)
+        if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) concludeGame(gamefile)
     }
 
     /**
