@@ -49,14 +49,14 @@ const guipause = (function(){
         const movesLength = moves.length;
         const legalInPrivateMatch = onlinegame.getIsPrivate() && (movesLength === 0 || moves[0].length === 1 && moves[0][0] == null);
 
-        if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5')
-        else                                                  element_pastegame.classList.remove('opacity-0_5')
+        if ((game.areInNonLocalGame() && !legalInPrivateMatch)) element_pastegame.classList.add('opacity-0_5')
+        else                                                                                        element_pastegame.classList.remove('opacity-0_5')
     }
 
     function changeTextOfMainMenuButton() {
         if (!isPaused) return;
 
-        if (!onlinegame.areInOnlineGame() || game.getGamefile().gameConclusion) return element_mainmenu.textContent = translations["main_menu"];
+        if (!game.areInNonLocalGame() || game.getGamefile().gameConclusion) return element_mainmenu.textContent = translations["main_menu"];
 
         if (movesscript.isGameResignable(game.getGamefile())) return element_mainmenu.textContent = translations["resign_game"];
 
@@ -93,7 +93,7 @@ const guipause = (function(){
     async function callback_MainMenu(event) {
         event = event || window.event;
         onlinegame.onMainMenuPress()
-        onlinegame.closeOnlineGame()
+        game.closeNonLocalGame()
         callback_Resume()
         game.unloadGame()
         clock.reset();

@@ -202,11 +202,11 @@ const gamefileutility = (function(){
         onlinegame.onGameConclude();
 
         const delayToPlayConcludeSoundSecs = 0.65;
-        if (!onlinegame.areInOnlineGame()) {
+        if (!game.areInNonLocalGame()) {
             if (!gamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs)
             else sound.playSound_draw(delayToPlayConcludeSoundSecs)
-        } else { // In online game
-            if (gamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs)
+        } else { // In non-local game
+            if (gamefile.gameConclusion.includes(game.getOurColorInNonLocalGame())) sound.playSound_win(delayToPlayConcludeSoundSecs)
             else if (gamefile.gameConclusion.includes('draw') || gamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs)
             else sound.playSound_loss(delayToPlayConcludeSoundSecs);
         }

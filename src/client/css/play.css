@@ -275,7 +275,7 @@ canvas {
     left: 0;
     right: 0;
     display: grid;
-    grid-template: min(16vw, 173px, calc(var(--vh-sub-nav) * 0.184)) repeat(3, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) / 1fr min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) 1fr;
+    grid-template: min(16vw, 173px, calc(var(--vh-sub-nav) * 0.184)) repeat(4, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) / 1fr min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) 1fr;
     gap: min(2vw, 22px, calc(var(--vh-sub-nav) * 0.023));
     padding-bottom: min(10vw, 108px, calc(var(--vh-sub-nav) * 0.115));
     justify-content: center;
@@ -535,6 +535,114 @@ canvas {
 }
 
 
+/* Practice Page: Practice selection screen */
+
+.practice-selection {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: grid;
+    grid-template: repeat(2, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) / repeat(6, min(13vw, 141px, calc(var(--vh-sub-nav) * 0.15)));
+    gap: min(1.5vw, 16px, calc(var(--vh-sub-nav) * 0.0173));
+    justify-content: center;
+    align-content: center;
+    margin-bottom: 8vh;
+}
+
+.practice-selection button {
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+}
+
+.practice-selection button:hover {
+    background: linear-gradient(to bottom, white, rgb(242, 242, 242), white);
+}
+
+.practice-selection button:active {
+    background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
+}
+
+.practice-selection .practice-name {
+    grid-column: 1 / 7;
+    align-self: center;
+    justify-self: center;
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+}
+
+.practice-selection .checkmate-practice {
+    grid-column: 1 / 4;
+}
+
+.practice-selection .tactics-practice {
+    grid-column: 4 / 7;
+}
+
+.practice-selection .practice-play {
+    grid-column: 1 / 4;
+    background: linear-gradient(to bottom, white, rgb(226, 226, 226), white);
+}
+
+.practice-selection .practice-back {
+    grid-column: 4 / 7;
+}
+
+.practice-selection .selected {
+    box-shadow: none;
+}
+
+.practice-selection .practice-options {
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+    grid-column: 1 / 7;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.checkmate-list {
+    flex-grow: 1;
+}
+
+.practice-options .checkmate, .practice-options .checkmate-separator {
+    display: flex;
+    align-items: center;
+    font-size: min(1.7vw, 18px, calc(var(--vh-sub-nav) * 0.020));
+    justify-content: center; /* OR: space-between */
+    margin: 0.3em;
+    border-radius: 0.3em;
+    border-width: 0em;
+    height: 3em;
+}
+
+.practice-options .checkmate-separator {
+    font-weight: bold;
+}
+
+.checkmate .checkmate-child {
+    padding: 0 0.3em;
+}
+
+.checkmate {
+    background-color: rgba(168, 168, 168, 1);
+}
+
+.checkmate.selected {
+    outline-style: solid;
+    outline-width: 0.25em;
+    outline-offset: -0.15em;
+}
+
+.checkmate.beaten {
+    background-color: rgba(0, 128, 0, 0.3);
+}
+
+.checkmate:hover {
+    background-color: rgba(168, 168, 168, 0.8);
+}
+
+.checkmate.beaten:hover {
+    background-color: rgba(0, 128, 0, 0.2);
+}
 
 /* Play Page: Invite creation screen */
 
