@@ -289,7 +289,9 @@ const formatconverter = (function() {
 
         // metadata handling. Don't put ": " in metadata fields.
         let metadata = {};
-        while (shortformat.indexOf("[") > -1){
+        let metaformat = /^(\[.* .*\]\s)*/.exec(shortformat) // Metadata was eating my damn [] outside of scope
+        shortformat = shortformat.replace(/^(\[.* .*\]\s)*/, "")
+        while (metaformat.indexOf("[") > -1){
             let start_index = shortformat.indexOf("[");
             let end_index = shortformat.indexOf("]");
             if (end_index == -1) throw new Error("Unclosed [ detected");
