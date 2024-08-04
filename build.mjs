@@ -102,17 +102,15 @@ if (DEV_BUILD){
   // overwrite play.ejs by injecting all needed scripts into it:
   await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
   
-  // Make a list of all css files
-  // TEMPORARILY REVERTED THE LIGHTNING-CSS ADDITIONS, BECAUSE, when in a game it breaks the bars blur effect!
-  // const cssFiles = await getExtFiles("./src/client/css", ".css");
-  // for (const file of cssFiles) {
-  //   // Minify css files
-  //   let { code } = transform({
-  //     targets: targets,
-  //     code: Buffer.from(await readFile(`./src/client/css/${file}`, 'utf8')),
-  //     minify: true,
-  //   });
-  //   // Write into /dist
-  //   await writeFile(`./dist/css/${file}`, code, 'utf8');
-  // }
+  const cssFiles = await getExtFiles("./src/client/css", ".css");
+  for (const file of cssFiles) {
+    // Minify css files
+    let { code } = transform({
+      targets: targets,
+      code: Buffer.from(await readFile(`./src/client/css/${file}`, 'utf8')),
+      minify: true,
+    });
+    // Write into /dist
+    await writeFile(`./dist/css/${file}`, code, 'utf8');
+  }
 }
