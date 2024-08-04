@@ -153,8 +153,8 @@ const engine = (function () {
 		// multiply those two by color to make them fit which color's turn it is
 		// put this here instead of evaluation function to end search immediately
 		const gameConclusion = wincondition.getGameConclusion(gamefile);
-		if (gameConclusion == 'white checkmate') return color * -Infinity;
-		if (gameConclusion == 'draw insuffmat') return color * Infinity;
+		if (gameConclusion == 'white checkmate') return colorNum * -Infinity;
+		if (gameConclusion == 'draw insuffmat') return colorNum * Infinity;
 
 		// return evaluation if depth is zero
 		if (depth == 0) return colorNum * loneBlackKingEval(gamefile);
