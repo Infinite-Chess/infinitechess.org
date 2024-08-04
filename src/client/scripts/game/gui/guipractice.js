@@ -163,7 +163,7 @@ const guipractice = (function(){
         }
         enginegame.setColorAndGameID(gameOptions)
         loadGame(gameOptions)
-        enginegame.initEngineGame(gameOptions)
+        enginegame.initEngineGame()
         clock.set(gameOptions.clock)
         guigameinfo.revealPlayerNames(gameOptions)
     }

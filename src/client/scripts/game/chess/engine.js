@@ -1,6 +1,7 @@
-
 /**
- * This script runs the chess engine for enginegames
+ * This script runs the chess engine for enginegames.
+ * It is modular and may be replaced by any other engine script to test a different engine.
+ * To that end, engine.runEngine(gamefile) is the only function that is called from the outside.
  */
 
 "use strict";
@@ -8,23 +9,21 @@
 const engine = (function(){
 
     /**
-     * Main function of this script.
-     * It gets called as soon as the human player submits a move.
-     * It ends by submitting a move via enginegame.makeEngineMove(move).
+     * Main function of this script. It gets called as soon as the human player submits a move.
+     * It takes a gamefile as an input and computes a move.
+     * @param {gamefile} gamefile - gamefile of the current game
+     * @returns {Move} - move as chosen by some calculation
      */
-    async function runEngine() {
-        const gamefile = game.getGamefile();
-
+    async function runEngine(gamefile) {
         try {
             // This code only works if Black has exactly one king or royal centaur
             // For now, it just submits a random move for Black
             const randomMove = getRandomRoyalMove(gamefile, "black")
-            await new Promise(r => setTimeout(r, 1500)) // unnecessary delay
-            enginegame.makeEngineMove(randomMove)
+            await main.sleep(1000) // unnecessary delay
+            return randomMove;
         } catch (e) {
             console.error("You used the engine for an unsupported type of game.")
         }
-        
     }
 
     /**

@@ -9,7 +9,7 @@ const enginegame = (function(){
     let inEngineGame = false
     let ourColor; // white/black
 
-    const engineTimeLimitPerMove = 1000
+    const engineTimeLimitPerMoveMillis = 1000;
 
     function areInEngineGame() { return inEngineGame }
 
@@ -26,11 +26,10 @@ const enginegame = (function(){
     }
 
     /**
-     * Inits an engine game according to the options provided
-     * @param {Object} gameOptions - An object that contains the property `youAreColor`
+     * Inits an engine game
      */
-    function initEngineGame (gameOptions) {
-        // These make sure it will place us in black's perspective
+    function initEngineGame () {
+        // This make sure it will place us in black's perspective if applicable
         perspective.resetRotations()
     }
 
@@ -54,17 +53,26 @@ const enginegame = (function(){
      */
     function areWeColor(color) { return color === ourColor; }
 
+    /**
+     * This method is called externally when the player submits his move in an engine game
+     */
     function submitMove() {
         if (!inEngineGame) return; // Don't do anything if it's not an engine game
         if (game.getGamefile().gameConclusion) return; // Don't do anything if the game is over
 
-        engine.runEngine();
+        // Let the engine take over now
+        makeEngineMove();
     }
 
-    function makeEngineMove(move) {
+    /**
+     * This method takes care of all the logic involved in making an engine move
+     * It is async because it needs to wait for the engine to finish its calculation
+     */
+    async function makeEngineMove() {
         if (!inEngineGame) return;
         
         const gamefile = game.getGamefile();
+        const move = await engine.runEngine(gamefile);
 
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);

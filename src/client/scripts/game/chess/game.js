@@ -22,8 +22,45 @@ const game = (function(){
         return gamefile;
     }
 
+    /**
+     * Checks if we are currently in a game
+     * @returns {boolean}
+     */
     function areInGame() {
         return gamefile != null;
+    }
+
+    /**
+     * Checks if we are currently in a game that is not a local game
+     * @returns {boolean}
+     */
+    function areInNonLocalGame() {
+        return onlinegame.areInOnlineGame() || enginegame.areInEngineGame();
+    }
+
+    /**
+     * Checks if we control a specific color in a game that is not a local game
+     * @param {String} color - "white" or "black"
+     * @returns {boolean}
+     */
+    function areWeColorInNonLocalGame(color) {
+        return onlinegame.areWeColor(color) || enginegame.areWeColor(color);
+    }
+
+    /**
+     * Checks if it is currently our turn to move in a game that is not a local game
+     * @returns {boolean}
+     */
+    function isItOurTurnInNonLocalGame() {
+        return onlinegame.isItOurTurn() || enginegame.isItOurTurn();
+    }
+
+    /**
+     * Gets called when a game that is a not local game needs to be closed. Closes onlinegames and enginegames.
+     */
+    function closeNonLocalGame() {
+        onlinegame.closeOnlineGame();
+        enginegame.closeEngineGame();
     }
 
     // Initiates textures, buffer models for rendering, and the title screen.
@@ -196,6 +233,10 @@ const game = (function(){
     return Object.freeze({
         getGamefile,
         areInGame,
+        areInNonLocalGame,
+        areWeColorInNonLocalGame,
+        isItOurTurnInNonLocalGame,
+        closeNonLocalGame,
         init,
         updateVariablesAfterScreenResize,
         update,
