@@ -92,8 +92,6 @@ const guipause = (function(){
         const movesLength = parseInt(moves.length)
         const ourRecentOffers = !(movesLength - ourDrawOfferMove >= movesBetweenDrawOffers)
 
-        console.log(`Recent draw offers: ${ourRecentOffers}`)
-
         if (!onlinegame.areInOnlineGame() || ourRecentOffers || !movesscript.isGameResignable(gamefile) || gamefile.gameConclusion) {
             element_offerDraw.classList.add('opacity-0_5')
             return false

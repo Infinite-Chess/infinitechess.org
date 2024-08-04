@@ -471,6 +471,9 @@ const onlinegame = (function(){
         clock.edit(messageContents.timerWhite, messageContents.timerBlack, messageContents.timeNextPlayerLosesAt)
 
         if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
+
+        gamefile.drawOfferWhite = messageContents.whiteDrawOfferMove
+        gamefile.drawOfferBlack = messageContents.blackDrawOfferMove
     }
 
     /**

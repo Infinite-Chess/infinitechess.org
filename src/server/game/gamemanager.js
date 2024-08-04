@@ -1605,7 +1605,9 @@ const gamemanager = (function() {
             timerBlack: game.timerBlack,
             timeNextPlayerLosesAt: game.timeNextPlayerLosesAt,
             moves: game.moves, // Send the final move list so they can make sure they're in sync.
-            autoAFKResignTime: game.autoAFKResignTime
+            autoAFKResignTime: game.autoAFKResignTime,
+            whiteDrawOfferMove: game.whiteDrawOfferMove,
+            blackDrawOfferMove: game.blackDrawOfferMove
         }
         // If their opponent has disconnected, send them that info too.
         const opponentColor = math1.getOppositeColor(color)
