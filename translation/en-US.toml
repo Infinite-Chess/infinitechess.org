@@ -178,10 +178,12 @@ checkmates = "Checkmates"
 tactics = "Tactics"
 play = "Play"
 back = "Back"
+versus = "vs"
 easy = "Easy"
 medium = "Medium"
 hard = "Hard"
 insane = "Insane"
+difficulty = "Difficulty"
 
 [play.play-menu]
 title = "Play - Online"

@@ -22,7 +22,7 @@ const guipractice = (function(){
     const elements_checkmates = document.getElementsByClassName('checkmate');
 
     let modeSelected; // checkmate-practice / tactics-practice
-    let checkmateSelectedID; // id of selected checkmate
+    let checkmateSelectedID = '2Q-1k'; // id of selected checkmate
 
     // Functions
 
@@ -35,7 +35,7 @@ const guipractice = (function(){
         style.revealElement(element_practiceSelection)
         style.revealElement(element_menuExternalLinks);
         changePracticeMode('checkmate-practice')
-        changeCheckmateSelected('2Q-1k')
+        changeCheckmateSelected(checkmateSelectedID)
         updateCheckmatesBeaten()
         initListeners()
     }
