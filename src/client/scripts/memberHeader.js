@@ -71,7 +71,7 @@ const memberHeader = (function(){
      */
     async function waitUntilInitialRequestBack() {
         while (lastRefreshTime == null) {
-            await new Promise(resolve => setTimeout(resolve, ms));
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
     }
 
