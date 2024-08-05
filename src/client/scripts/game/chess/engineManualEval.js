@@ -6,7 +6,7 @@
 
 "use strict";
 
-const engine = (function(){
+const engineManualEval = (function(){
 
 	const checkmateScore = -100000
 	let beginningTimestamp = Date.now();
