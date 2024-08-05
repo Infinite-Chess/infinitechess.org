@@ -642,15 +642,26 @@ canvas {
     background-color: rgba(0, 128, 0, 0.2);
 }
 
-.checkmate.checkmate-child {
-    padding: 0 0.3em;
-}
-
 .checkmate-child {
+    padding: 0 0.3em;
     margin: 0.8em;
 }
+
+.piecelistW {
+    display: flex;
+    justify-content: center;
+    width: 40%;
+    margin-right: 10%;
+}
+
 .checkmate-child.versus {
-    left: 70%;
+    width: 10%;
+}
+
+.piecelistB {
+    display: flex;
+    justify-content: center;
+    width: 10%;
 }
 
 .checkmatepiececontainer {
