@@ -138,6 +138,7 @@ const guipractice = (function(){
             },
             youAreColor: 'white',
             clock: "-",
+            currentEngine: engineRandomRoyalMoves,
             variantOptions: {
                 turn: "white",
                 fullMove: "1",
@@ -152,7 +153,7 @@ const guipractice = (function(){
         }
         enginegame.setColorAndGameID(gameOptions)
         loadGame(gameOptions)
-        enginegame.initEngineGame()
+        enginegame.initEngineGame(gameOptions)
         clock.set(gameOptions.clock)
         guigameinfo.revealPlayerNames(gameOptions)
     }
