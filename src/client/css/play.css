@@ -594,7 +594,6 @@ canvas {
 .practice-box {
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
     grid-column: 1 / 7;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
@@ -607,11 +606,15 @@ canvas {
     display: flex;
     justify-content: center;
     align-content: center;
-    padding-top: 0.8em;
-    padding-bottom: 0.8em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
 }
 
 .checkmate-list {
+    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
 }
 
@@ -660,7 +663,7 @@ canvas {
 
 .checkmate-progress-bar {
     width: 75%;
-    margin-right: 5%;
+    margin-right: 2%;
 }
 
 .completion-mark {
