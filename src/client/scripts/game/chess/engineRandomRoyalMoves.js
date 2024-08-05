@@ -1,18 +1,18 @@
 /**
- * This script runs the chess engine for enginegames.
- * It is modular and may be replaced by any other engine script to test a different engine.
- * To that end, engine.runEngine(gamefile) is the only function that is called from the outside.
+ * This script runs a very basic chess engine for enginegames that just computes a random move for the black royal piece.
+ * runEngine(gamefile) is the only function that is called from the outside.
+ * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
  */
 
 "use strict";
 
-const engine = (function(){
+const engineRandomRoyalMoves = (function(){
 
     /**
      * Main function of this script. It gets called as soon as the human player submits a move.
      * It takes a gamefile as an input and computes a move.
      * @param {gamefile} gamefile - gamefile of the current game
-     * @returns {Promise} - promise which resolves to some engine move
+     * @returns {Promise<Move>} - promise which resolves to some engine move
      */
     async function runEngine(gamefile) {
         try {
@@ -35,9 +35,9 @@ const engine = (function(){
      */
     function getRandomRoyalMove(gamefile, color) {
         const royalCoords = gamefileutility.getRoyalCoords(gamefile, color)[0]
-        const blackRoyalPiece = gamefileutility.getPieceAtCoords(gamefile, royalCoords);
-        const blackmoves = legalmoves.calculate(gamefile, blackRoyalPiece).individual;
-        const randomEndCoords = blackmoves[Math.floor(Math.random() * blackmoves.length)]; // random endcoords from the list of individual moves
+        const royalPiece = gamefileutility.getPieceAtCoords(gamefile, royalCoords);
+        const moves = legalmoves.calculate(gamefile, royalPiece).individual;
+        const randomEndCoords = moves[Math.floor(Math.random() * moves.length)]; // random endcoords from the list of individual moves
         const move = {startCoords: royalCoords, endCoords: randomEndCoords};
         specialdetect.transferSpecialFlags_FromCoordsToMove(randomEndCoords, move);
         return move;
