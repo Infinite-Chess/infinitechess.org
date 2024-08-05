@@ -24,6 +24,15 @@ const memberHeader = (function(){
     const createaccountLink = document.getElementById('createaccountlink');
     const createaccountText = document.getElementById('createaccounttext');
 
+    /**
+     * Returns true if we've received back our first token request.
+     * After that, we know we either are logged in, or have a browser-id cookie.
+     * @returns {boolean}
+     */
+    function haveWeSentInitialRequest() {
+        return lastRefreshTime != null;
+    }
+
     // If we're logged in, the log in button will change to their profile,
     // and create account will change to log out...
 
@@ -57,9 +66,20 @@ const memberHeader = (function(){
     }
 
     /**
+     * This function will not return until our initial request for an access token,
+     * to see if we're logged in, is back.
+     */
+    async function waitUntilInitialRequestBack() {
+        while (lastRefreshTime == null) {
+            await new Promise(resolve => setTimeout(resolve, ms));
+        }
+    }
+
+
+    /**
      * Inits our token, and, if we're logged in, inits member, and changes navigation links if we're logged in.
      * 
-     * If we're not signed in, the server will give/renew us a browser-id cookie for validation.
+     * If we're not signed in, the server will give/renew us a browser-id cookie for validating our identity.
      */
     function refreshToken() {
         requestOut = true;
@@ -82,12 +102,12 @@ const memberHeader = (function(){
                 }
 
                 member = result.member;
-                changeNavigationLinks();
             } else { // Unauthorized, don't change any navigation links. Should have given us a browser-id!
                 console.log(`Server: ${result['message']}`);
                 areLoggedIn = false;
             }
 
+            updateNavigationLinks();
             lastRefreshTime = Date.now();
             requestOut = false;
         })
@@ -100,17 +120,21 @@ const memberHeader = (function(){
     }
 
     /**
-     * Changes the navigation links if we're logged in.
-     * 
-     * Changes the Login and Create Account buttons to Profile and Log Out buttons.
+     * Changes the navigation links, depending on if we're logged in, to
+     * go to our Profile or the Log Out route, or the Log In / Create Account pages.
      */
-    function changeNavigationLinks() {
-
-        loginLink.href = addLngQueryParamToLink(`/member/${member.toLowerCase()}`);
-        loginText.textContent = translations["js-profile"];
-
-        createaccountLink.href = addLngQueryParamToLink('/logout');
-        createaccountText.textContent = translations["js-logout"];
+    function updateNavigationLinks() {
+        if (areLoggedIn) {
+            loginLink.href = addLngQueryParamToLink(`/member/${member.toLowerCase()}`);
+            loginText.textContent = translations["js-profile"];
+            createaccountLink.href = addLngQueryParamToLink('/logout');
+            createaccountText.textContent = translations["js-logout"];
+        } else { // Not logged in
+            loginLink.href = addLngQueryParamToLink('/login');
+            loginText.textContent = translations["js-login"];
+            createaccountLink.href = addLngQueryParamToLink('/createaccount');
+            createaccountText.textContent = translations["js-createaccount"];
+        }
     }
 
     /**
@@ -125,16 +149,13 @@ const memberHeader = (function(){
         link.href = addLngQueryParamToLink(link);
       });
 
-      /**
-         * Adds the "lng" query parameter to the ToS link at the bottom, if it exists
-      */
-      if (document.getElementById("toslink")){
-        addLngQueryParamToLink(document.getElementById("toslink"))
+      /** Adds the "lng" query parameter to the ToS link at the bottom, if it exists (it doesn't on the play page) */
+      toslink: {
+        const element_toslink = document.getElementById("toslink");
+        if (!element_toslink) break toslink;
+        element_toslink.href = addLngQueryParamToLink(element_toslink)
       }
     }
-
-    // Ensure the lng query parameter is added to all nav links after updating them
-    addLngToNavLinks();
 
     /**
      * Modifies the given URL to include the "lng" query parameter based on the i18next cookie.
@@ -179,12 +200,16 @@ const memberHeader = (function(){
 
     refreshToken();
 
+    // Ensure the lng query parameter is added to all nav links
+    addLngToNavLinks();
+
     return Object.freeze({
         getAccessToken,
         getMember,
         getCookieValue,
         deleteToken,
         areWeLoggedIn,
+        waitUntilInitialRequestBack
     })
 
 })();
