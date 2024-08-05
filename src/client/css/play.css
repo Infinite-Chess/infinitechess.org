@@ -702,16 +702,16 @@ canvas {
     background-repeat: no-repeat;
     background-size: 0;
     padding: 0.02em;
-    margin: 0.5em;
+    margin: 0.25em;
     border-radius: 1em;
 }
 
 .checkmatepiececontainer.collated {
-    margin-left: -0.9em;
+    margin-left: -0.65em;
 }
 
 .checkmatepiececontainer.collated-strong {
-    margin-left: -2em;
+    margin-left: -1.75em;
 }
 
 .checkmatepiece {
