@@ -33,7 +33,6 @@
                 <a href="./createaccount" id="createaccountlink">
                     <p id="createaccounttext"><%=t('header.createaccount')%></p>
                 </a>
-                <script src="/scripts/memberHeader.js"></script>
             </nav>
         </header>
         <main>
@@ -72,5 +71,6 @@
             </div>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
+        <script src="/scripts/memberHeader.js"></script>
     </body>
 </html>

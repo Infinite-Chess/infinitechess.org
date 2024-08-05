@@ -1,15 +1,10 @@
-
-// This script will, if we're logged in, change the navigation bar hyperlink to go to your profile.
-// It also stores our access token.
+// This script is used on the /play page.
+// It stores our access token.
 // And if we're not logged in, this will retrieve us a browser-id.
 
 "use strict";
 
 const validation = (function(){
-
-    const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 60 * 15; // Milliseconds   15m is the server expire time for access token.
-    const cushionMillis = 10_000
-    const browserIDExpireTimeMillis = 1000 * 60 * 60 * 24 * 7 - 1000*60*60; // 7 days is the expire time for browser id's, WITH SOME cushion! (-1hr)
 
     let requestOut = false;
 
@@ -24,25 +19,6 @@ const validation = (function(){
     const createaccountLink = document.getElementById('createaccountlink');
     const createaccountText = document.getElementById('createaccounttext');
 
-    // If we're logged in, the log in button will change to their profile,
-    // and create account will change to log out...
-
-    /**
-     * Retreive our username, if logged in.
-     * @returns {string | undefined} Our username, if logged in, otherwise, undefined.
-     */
-    function getMember() {
-        return member;
-    }
-
-    /**
-     * Returns Whether we are currently logged in.
-     * @returns {boolean} *true* if we are logged in.
-     */
-    function areWeLoggedIn() {
-        return areLoggedIn;
-    }
-
     /**
      * Returns true if we've received back our first token request.
      * After that, we know we either are logged in, or have a browser-id cookie.
@@ -56,27 +32,6 @@ const validation = (function(){
         while (lastRefreshTime == null) {
             await main.sleep(100);
         }
-    }
-
-    /**
-     * Returns access token, refreshing it first if needed.
-     * @returns {string} Access token
-     */
-    async function getAccessToken() {
-
-        while (requestOut) await main.sleep(100);
-
-        const currTime = Date.now()
-        const diff = currTime - lastRefreshTime
-
-        // If it's expired, invalidate it.
-        if (token && diff > (TOKEN_EXPIRE_TIME_MILLIS - cushionMillis)) token = undefined;
-
-        // ...then try refreshing if we're logged in.
-        if (!token && areLoggedIn) await refreshToken()
-        else if (!areLoggedIn && diff > browserIDExpireTimeMillis) await refreshToken(); // Renews browser-id
-
-        return token;
     }
 
     /**
@@ -97,7 +52,7 @@ const validation = (function(){
         })
         .then(result => {
             if (OK) { // Refresh token (from cookie) accepted!
-                token = getCookieValue('token');
+                token = memberHeader.getCookieValue('token');
                 if (!token) {
                     console.error("Response from the server did not include a token!");
                 } else {
@@ -144,20 +99,6 @@ const validation = (function(){
     }
 
     /**
-     * Searches the document for the specified cookie, and returns it if found.
-     * @param {string} cookieName The name of the cookie you would like to retrieve.
-     * @returns {string | undefined} The cookie, if it exists, otherwise, undefined.
-     */
-    function getCookieValue(cookieName) {
-        const cookieArray = document.cookie.split("; ");
-
-        for (let i = 0; i < cookieArray.length; i++) {
-            const cookiePair = cookieArray[i].split("=");
-            if (cookiePair[0] === cookieName) return cookiePair[1];
-        }
-    }
-
-    /**
      * Returns all document cookies accessible by javascript.
      * This excludes cookies like our refresh token and browser-id.
      * @returns {string} The cookies
@@ -166,55 +107,11 @@ const validation = (function(){
         return document.cookie;
     }
 
-    /** Deletes the current access token from memory, updates the navigation bars. */
-    function deleteToken() {
-        token = undefined;
-        member = undefined;
-        lastRefreshTime = undefined;
-        areLoggedIn = false;
-        // This cookie only lasts 10 seconds, but let's delete it just in case.
-        // Setting the expire time is the only way I've found to successfully delete it.
-        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-        updateNavigationLinks();
-    }
-
     refreshToken();
 
     return Object.freeze({
-        getAccessToken,
-        getMember,
         getAllCookies,
-        getCookieValue,
-        deleteToken,
-        areWeLoggedIn,
         waitUntilInitialRequestBack
     })
 
 })();
-
-favicon: { // This block auto detects device theme and adjusts the browser icon accordingly
-
-    const element_favicon = document.getElementById('favicon');
-
-    /**
-     * Switches the browser icon to match the given theme.
-     * @param {string} theme "dark"/"light"
-     */
-    function switchFavicon(theme) {
-        if (theme === 'dark') element_favicon.href = '/img/favicon-dark.png';
-        else favicon.href = '/img/favicon-light.png';
-    }
-    
-    if (!window.matchMedia) break favicon; // Don't create a theme-change event listener if matchMedia isn't supported.
-
-    // Initial theme detection
-    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    switchFavicon(prefersDarkScheme ? 'dark' : 'light');
-    
-    // Listen for theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-        const newTheme = event.matches ? 'dark' : 'light';
-        console.log(`Toggled ${newTheme} icon`);
-        switchFavicon(newTheme);
-    });
-}

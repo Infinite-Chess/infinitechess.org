@@ -5,7 +5,7 @@
 
 "use strict";
 
-const validation = (function(){
+const memberHeader = (function(){
 
     const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 60 * 15; // Milliseconds   15m is the server expire time for access token.
     const cushionMillis = 10_000
@@ -124,6 +124,13 @@ const validation = (function(){
       navLinks.forEach(link => {
         link.href = addLngQueryParamToLink(link);
       });
+
+      /**
+         * Adds the "lng" query parameter to the ToS link at the bottom, if it exists
+      */
+      if (document.getElementById("toslink")){
+        addLngQueryParamToLink(document.getElementById("toslink"))
+      }
     }
 
     // Ensure the lng query parameter is added to all nav links after updating them

@@ -70,8 +70,9 @@
                 </div>
                 <p id="change" class="hidden center"><%=t('member.password_reset_message.0')%><a href="mailto:infinitechess.org@gmail.com"><%=t('member.password_reset_message.1')%></a></p>
             </div>
-            <script src="/scripts/member.js"></script>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
+        <script src="/scripts/memberHeader.js"></script>
+        <script src="/scripts/member.js"></script>
     </body>
 </html>

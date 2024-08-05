@@ -34,9 +34,6 @@
                 <a href="/createaccount">
                     <p><%=t('header.createaccount')%></p>
                 </a>
-                <!-- This script is only used on this page to monitor whether
-                 the browser icon should be light or dark theme -->
-                <script src="/scripts/memberHeader.js"></script>
             </nav>
         </header>
         <main>
@@ -60,5 +57,6 @@
             </div>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
+        <script src="/scripts/memberHeader.js"></script>
     </body>
 </html>
