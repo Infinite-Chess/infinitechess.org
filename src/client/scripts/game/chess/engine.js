@@ -163,9 +163,9 @@ const engine = (function(){
 	 * @param {number} alpha - the alpha value (lower bound)
 	 * @param {number} beta - the beta value (upper bound)
 	 * @param {number} colorNum - a number representing the number (1 if black, -1 if white)
-	 * @returns {number} - the score of the given position (gamefile) after searching with depth of `depth`
+	 * @returns {Promise<number>} - the score of the given position (gamefile) after searching with depth of `depth`
 	 */
-	function negamax(gamefile, depth, alpha, beta, colorNum) {
+	async function negamax(gamefile, depth, alpha, beta, colorNum) {
 		// return -Infinity if white manages to checkmate in this line to discourage the engine from choosing this move if it could
 		// return Infinity if black manages to draw in this line to make engine pick this or other moves that draw
 		// multiply those two by color to make them fit which color's turn it is
@@ -187,13 +187,17 @@ const engine = (function(){
 				updateData: false,
 				simulated: true,
 			});
-			// main.sleep(0);
-			
-			const score = -negamax(gamefile, depth - 1, -beta, -alpha, -colorNum);
+			const score = -await negamax(gamefile, depth - 1, -beta, -alpha, -colorNum);
 			movepiece.rewindMove(gamefile, {
 				updateData: false,
 				animate: false
 			});
+			const now = Date.now();
+			console.log(now - beginningTimestamp)
+			if (now - beginningTimestamp >= loadbalancer.getMonitorRefreshRate()) {
+				beginningTimestamp = now
+				await main.sleep(0);
+			}
 			if (score >= beta) {
 				// beta cut-off
 				return beta;
@@ -209,9 +213,9 @@ const engine = (function(){
 	 * runs negamax search on every move and returns the move with the highest score. returns a random move if checkmate is forced
 	 * @param {gamefile} gamefile - the gamefile
 	 * @param {number} depth - how much moves deep the search will go
-	 * @returns {Move} - the move with the highest score or a random move if checkmate is forced
+	 * @returns {Promise<Move>} - the move with the highest score or a random move if checkmate is forced
 	 */
-	function calculate(gamefile, depth) {
+	async function calculate(gamefile, depth) {
 		// let the the board render while we are calculating
 		let moves = getBlackKingLegalMoves(gamefile);
 		let bestScore = -Infinity;
@@ -224,7 +228,7 @@ const engine = (function(){
 				updateData: false,
 				simulated: true,
 			});
-			const score = -negamax(gamefile, depth - 1, -Infinity, Infinity, -1);
+			const score = -await negamax(gamefile, depth - 1, -Infinity, Infinity, -1);
 			movepiece.rewindMove(gamefile, {
 				updateData: false,
 				animate: false
@@ -242,13 +246,13 @@ const engine = (function(){
      * Main function of this script. It gets called as soon as the human player submits a move.
      * It takes a gamefile as an input and computes a move.
      * @param {gamefile} gamefile - gamefile of the current game
-     * @returns {Promise} - promise which resolves to some engine move
+     * @returns {Promise<Move>} - promise which resolves to some engine move
      */
     async function runEngine(gamefile) {
         try {
             // This code only works if Black has exactly one king or royal centaur
             // For now, it just submits a random move for Black
-            const move = calculate(gamefile, 5);
+            const move = await calculate(gamefile, 5);
             return Promise.resolve(move);
         } catch (e) {
 			console.error(e);
