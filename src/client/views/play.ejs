@@ -23,9 +23,6 @@
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
         <!-- Custom fonts: Merriweather, Open Sans -->
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-        <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource.
-         Right now this only preloads the png, because we don't know if avif or webp is supported. -->
-        <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
 
         <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
         <!-- All clientside game scripts are inject here -->
