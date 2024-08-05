@@ -200,6 +200,8 @@ const checkmate = (function() {
 
             checkEqualPosition: {
                 // Has a full turn cycle ocurred since the last increment of equalPositionsFound?
+                // If so, we can't count this as an equal position, because it will break it in multiplayer games,
+                // or if we have multiple turns in a row.
                 const indexDiff = indexOfLastEqualPositionFound - index;
                 if (indexDiff < gamefile.gameRules.turnOrder.length) break checkEqualPosition; // Hasn't been a full turn cycle yet, don't increment the counter
 
