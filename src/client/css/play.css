@@ -679,76 +679,6 @@ canvas {
     background-size: 800%; 
 }
 
-.checkmatepiece.pawnsW {
-    background-position-x: calc(100%/7 * 0);
-    background-position-y: calc(100%/7 * 0);
-}
-
-.checkmatepiece.knightsW {
-    background-position-x: calc(100%/7 * 2);
-    background-position-y: calc(100%/7 * 0);
-}
-
-.checkmatepiece.bishopsW {
-    background-position-x: calc(100%/7 * 4);
-    background-position-y: calc(100%/7 * 0);
-}
-
-.checkmatepiece.rooksW {
-    background-position-x: calc(100%/7 * 6);
-    background-position-y: calc(100%/7 * 0);
-}
-
-.checkmatepiece.queensW {
-    background-position-x: calc(100%/7 * 0);
-    background-position-y: calc(100%/7 * 1);
-}
-
-.checkmatepiece.kingsW {
-    background-position-x: calc(100%/7 * 2);
-    background-position-y: calc(100%/7 * 1);
-}
-
-.checkmatepiece.kingsB {
-    background-position-x: calc(100%/7 * 3);
-    background-position-y: calc(100%/7 * 1);
-}
-
-.checkmatepiece.chancellorsW {
-    background-position-x: calc(100%/7 * 4);
-    background-position-y: calc(100%/7 * 1);
-}
-
-.checkmatepiece.archbishopsW {
-    background-position-x: calc(100%/7 * 6);
-    background-position-y: calc(100%/7 * 1);
-}
-
-.checkmatepiece.amazonsW {
-    background-position-x: calc(100%/7 * 0);
-    background-position-y: calc(100%/7 * 2);
-}
-
-.checkmatepiece.hawksW {
-    background-position-x: calc(100%/7 * 6);
-    background-position-y: calc(100%/7 * 2);
-}
-
-.checkmatepiece.knightridersW {
-    background-position-x: calc(100%/7 * 6);
-    background-position-y: calc(100%/7 * 3);
-}
-
-.checkmatepiece.royalcentaursW {
-    background-position-x: calc(100%/7 * 0);
-    background-position-y: calc(100%/7 * 5);
-}
-
-.checkmatepiece.royalcentaursB {
-    background-position-x: calc(100%/7 * 1);
-    background-position-y: calc(100%/7 * 5);
-}
-
 /* Play Page: Invite creation screen */
 
 .play-selection {
@@ -1300,130 +1230,201 @@ button.join-button, button.copy-button {
     height: 80px;
     background-image: inherit;
     background-repeat: no-repeat;
-    /* NEEDS TO BE as many times greater than 100% as there are pieces in the promotions spritesheet! 30 pieces => 3000% */
-    background-size: 3000%; 
+    /* NEEDS TO BE as many times greater than 100% as there are pieces in a row in the spritesheet! 8 pieces => 800% */
+    background-size: 800%; 
 }
 
-.promotepiece.knightsW {
-    background-position-x: calc(100%/29 * 0);
+/* Spritesheet piece locations */
+
+.pawnsW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 0);
 }
 
-.promotepiece.knightsB {
-    background-position-x: calc(100%/29 * 1);
+.pawnsB {
+    background-position-x: calc(100%/7 * 1);
+    background-position-y: calc(100%/7 * 0);
 }
 
-.promotepiece.guardsW {
-    background-position-x: calc(100%/29 * 2);
+.knightsW {
+    background-position-x: calc(100%/7 * 2);
+    background-position-y: calc(100%/7 * 0);
 }
 
-.promotepiece.guardsB {
-    background-position-x: calc(100%/29 * 3);
+.knightsB {
+    background-position-x: calc(100%/7 * 3);
+    background-position-y: calc(100%/7 * 0);
 }
 
-.promotepiece.bishopsW {
-    background-position-x: calc(100%/29 * 4);
+.bishopsW {
+    background-position-x: calc(100%/7 * 4);
+    background-position-y: calc(100%/7 * 0);
 }
 
-.promotepiece.bishopsB {
-    background-position-x: calc(100%/29 * 5);
+.bishopsB {
+    background-position-x: calc(100%/7 * 5);
+    background-position-y: calc(100%/7 * 0);
 }
 
-.promotepiece.rooksW {
-    background-position-x: calc(100%/29 * 6);
+.rooksW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 0);
 }
 
-.promotepiece.rooksB {
-    background-position-x: calc(100%/29 * 7);
+.rooksB {
+    background-position-x: calc(100%/7 * 7);
+    background-position-y: calc(100%/7 * 0);
 }
 
-.promotepiece.queensW {
-    background-position-x: calc(100%/29 * 8);
+.queensW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 1);
 }
 
-.promotepiece.queensB {
-    background-position-x: calc(100%/29 * 9);
+.queensB {
+    background-position-x: calc(100%/7 * 1);
+    background-position-y: calc(100%/7 * 1);
 }
 
-.promotepiece.archbishopsW {
-    background-position-x: calc(100%/29 * 10);
+.kingsW {
+    background-position-x: calc(100%/7 * 2);
+    background-position-y: calc(100%/7 * 1);
 }
 
-.promotepiece.archbishopsB {
-    background-position-x: calc(100%/29 * 11);
+.kingsB {
+    background-position-x: calc(100%/7 * 3);
+    background-position-y: calc(100%/7 * 1);
 }
 
-.promotepiece.chancellorsW {
-    background-position-x: calc(100%/29 * 12);
+.chancellorsW {
+    background-position-x: calc(100%/7 * 4);
+    background-position-y: calc(100%/7 * 1);
 }
 
-.promotepiece.chancellorsB {
-    background-position-x: calc(100%/29 * 13);
+.chancellorsB {
+    background-position-x: calc(100%/7 * 5);
+    background-position-y: calc(100%/7 * 1);
 }
 
-.promotepiece.amazonsW {
-    background-position-x: calc(100%/29 * 14);
+.archbishopsW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 1);
 }
 
-.promotepiece.amazonsB {
-    background-position-x: calc(100%/29 * 15);
+.archbishopsB {
+    background-position-x: calc(100%/7 * 7);
+    background-position-y: calc(100%/7 * 1);
 }
 
-.promotepiece.hawksW {
-    background-position-x: calc(100%/29 * 16);
+.amazonsW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 2);
 }
 
-.promotepiece.hawksB {
-    background-position-x: calc(100%/29 * 17);
+.amazonsB {
+    background-position-x: calc(100%/7 * 1);
+    background-position-y: calc(100%/7 * 2);
 }
 
-.promotepiece.camelsW {
-    background-position-x: calc(100%/29 * 18);
+.guardsW {
+    background-position-x: calc(100%/7 * 2);
+    background-position-y: calc(100%/7 * 2);
 }
 
-.promotepiece.camelsB {
-    background-position-x: calc(100%/29 * 19);
+.guardsB {
+    background-position-x: calc(100%/7 * 3);
+    background-position-y: calc(100%/7 * 2);
 }
 
-.promotepiece.giraffesW {
-    background-position-x: calc(100%/29 * 20);
+.hawksW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 2);
 }
 
-.promotepiece.giraffesB {
-    background-position-x: calc(100%/29 * 21);
+.hawksB {
+    background-position-x: calc(100%/7 * 7);
+    background-position-y: calc(100%/7 * 2);
 }
 
-.promotepiece.zebrasW {
-    background-position-x: calc(100%/29 * 22);
+.camelsW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 3);
 }
 
-.promotepiece.zebrasB {
-    background-position-x: calc(100%/29 * 23);
+.camelsB {
+    background-position-x: calc(100%/7 * 1);
+    background-position-y: calc(100%/7 * 3);
 }
 
-.promotepiece.centaursW {
-    background-position-x: calc(100%/29 * 24);
+.giraffesW {
+    background-position-x: calc(100%/7 * 2);
+    background-position-y: calc(100%/7 * 3);
 }
 
-.promotepiece.centaursB {
-    background-position-x: calc(100%/29 * 25);
+.giraffesB {
+    background-position-x: calc(100%/7 * 3);
+    background-position-y: calc(100%/7 * 3);
 }
 
-.promotepiece.knightridersW {
-    background-position-x: calc(100%/29 * 26);
+.zebrasW {
+    background-position-x: calc(100%/7 * 4);
+    background-position-y: calc(100%/7 * 3);
 }
 
-.promotepiece.knightridersB {
-    background-position-x: calc(100%/29 * 27);
+.zebrasB {
+    background-position-x: calc(100%/7 * 5);
+    background-position-y: calc(100%/7 * 3);
 }
 
-.promotepiece.rosesW {
-    background-position-x: calc(100%/29 * 28);
+.knightridersW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 3);
 }
 
-.promotepiece.rosesB {
-    background-position-x: calc(100%/29 * 29);
+.knightridersB {
+    background-position-x: calc(100%/7 * 7);
+    background-position-y: calc(100%/7 * 3);
 }
 
+.rosesW {
+    background-position-x: calc(100%/7 * 4);
+    background-position-y: calc(100%/7 * 4);
+}
+
+.rosesB {
+    background-position-x: calc(100%/7 * 5);
+    background-position-y: calc(100%/7 * 4);
+}
+
+.centaursW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 4);
+}
+
+.centaursB {
+    background-position-x: calc(100%/7 * 7);
+    background-position-y: calc(100%/7 * 4);
+}
+
+.royalCentaursW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 5);
+}
+
+.royalCentaursB {
+    background-position-x: calc(100%/7 * 1);
+    background-position-y: calc(100%/7 * 5);
+}
+
+.royalQueensW {
+    background-position-x: calc(100%/7 * 2);
+    background-position-y: calc(100%/7 * 5);
+}
+
+.royalQueensB {
+    background-position-x: calc(100%/7 * 3);
+    background-position-y: calc(100%/7 * 5);
+}
 
 
 /* Pause UI */
