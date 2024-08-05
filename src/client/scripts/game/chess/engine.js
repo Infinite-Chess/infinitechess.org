@@ -163,7 +163,7 @@ const engine = (function(){
 	 * @param {number} alpha - the alpha value (lower bound)
 	 * @param {number} beta - the beta value (upper bound)
 	 * @param {number} colorNum - a number representing the number (1 if black, -1 if white)
-	 * @returns {Promise<number>} - the score of the given position (gamefile) after searching with depth of `depth`
+	 * @returns {Promise<number>} - promise to the score of the given position (gamefile) after searching with depth of `depth`
 	 */
 	async function negamax(gamefile, depth, alpha, beta, colorNum) {
 		// return -Infinity if white manages to checkmate in this line to discourage the engine from choosing this move if it could
@@ -213,7 +213,7 @@ const engine = (function(){
 	 * runs negamax search on every move and returns the move with the highest score. returns a random move if checkmate is forced
 	 * @param {gamefile} gamefile - the gamefile
 	 * @param {number} depth - how much moves deep the search will go
-	 * @returns {Promise<Move>} - the move with the highest score or a random move if checkmate is forced
+	 * @returns {Promise<Move>} - promise to the move with the highest score or a random move if checkmate is forced
 	 */
 	async function calculate(gamefile, depth) {
 		// let the the board render while we are calculating
