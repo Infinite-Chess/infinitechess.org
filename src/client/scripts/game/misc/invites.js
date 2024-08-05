@@ -261,7 +261,7 @@ const invites = (function(){
      * @returns {boolean} true if it is our
      */
     function isInviteOurs(invite) {
-        if (validation.getMember() === invite.name) return true;
+        if (memberHeader.getMember() === invite.name) return true;
 
         if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 
