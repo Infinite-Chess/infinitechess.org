@@ -616,14 +616,12 @@ canvas {
 
 .practice-options .checkmate-separator {
     font-weight: bold;
-}
-
-.checkmate .checkmate-child {
-    padding: 0 0.3em;
+    font-size: min(2.04vw, 21.6px, calc(var(--vh-sub-nav) * 0.024));
+    height: 2.5em;
 }
 
 .checkmate {
-    background-color: rgba(168, 168, 168, 1);
+    background-color: rgba(199, 199, 199, 1);
 }
 
 .checkmate.selected {
@@ -642,6 +640,113 @@ canvas {
 
 .checkmate.beaten:hover {
     background-color: rgba(0, 128, 0, 0.2);
+}
+
+.checkmate.checkmate-child {
+    padding: 0 0.3em;
+}
+
+.checkmate-child {
+    margin: 0.8em;
+}
+.checkmate-child.versus {
+    left: 70%;
+}
+
+.checkmatepiececontainer {
+    background-image: url("/img/game/spritesheet64_cburnett.png");
+    background-repeat: no-repeat;
+    background-size: 0;
+    padding: 0.02em;
+    margin: 0.5em;
+    border-radius: 1em;
+}
+
+.checkmatepiececontainer.collated {
+    margin-left: -0.9em;
+}
+
+.checkmatepiececontainer.collated-strong {
+    margin-left: -2em;
+}
+
+.checkmatepiece {
+    width: 3em;
+    height: 3em;
+    background-image: inherit;
+    background-repeat: no-repeat;
+    /* NEEDS TO BE as many times greater than 100% as there are pieces in a row in the spritesheet! 8 pieces => 800% */
+    background-size: 800%; 
+}
+
+.checkmatepiece.pawnsW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 0);
+}
+
+.checkmatepiece.knightsW {
+    background-position-x: calc(100%/7 * 2);
+    background-position-y: calc(100%/7 * 0);
+}
+
+.checkmatepiece.bishopsW {
+    background-position-x: calc(100%/7 * 4);
+    background-position-y: calc(100%/7 * 0);
+}
+
+.checkmatepiece.rooksW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 0);
+}
+
+.checkmatepiece.queensW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 1);
+}
+
+.checkmatepiece.kingsW {
+    background-position-x: calc(100%/7 * 2);
+    background-position-y: calc(100%/7 * 1);
+}
+
+.checkmatepiece.kingsB {
+    background-position-x: calc(100%/7 * 3);
+    background-position-y: calc(100%/7 * 1);
+}
+
+.checkmatepiece.chancellorsW {
+    background-position-x: calc(100%/7 * 4);
+    background-position-y: calc(100%/7 * 1);
+}
+
+.checkmatepiece.archbishopsW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 1);
+}
+
+.checkmatepiece.amazonsW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 2);
+}
+
+.checkmatepiece.hawksW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 2);
+}
+
+.checkmatepiece.knightridersW {
+    background-position-x: calc(100%/7 * 6);
+    background-position-y: calc(100%/7 * 3);
+}
+
+.checkmatepiece.royalcentaursW {
+    background-position-x: calc(100%/7 * 0);
+    background-position-y: calc(100%/7 * 5);
+}
+
+.checkmatepiece.royalcentaursB {
+    background-position-x: calc(100%/7 * 1);
+    background-position-y: calc(100%/7 * 5);
 }
 
 /* Play Page: Invite creation screen */
@@ -1199,123 +1304,123 @@ button.join-button, button.copy-button {
     background-size: 3000%; 
 }
 
-.knightsW {
+.promotepiece.knightsW {
     background-position-x: calc(100%/29 * 0);
 }
 
-.knightsB {
+.promotepiece.knightsB {
     background-position-x: calc(100%/29 * 1);
 }
 
-.guardsW {
+.promotepiece.guardsW {
     background-position-x: calc(100%/29 * 2);
 }
 
-.guardsB {
+.promotepiece.guardsB {
     background-position-x: calc(100%/29 * 3);
 }
 
-.bishopsW {
+.promotepiece.bishopsW {
     background-position-x: calc(100%/29 * 4);
 }
 
-.bishopsB {
+.promotepiece.bishopsB {
     background-position-x: calc(100%/29 * 5);
 }
 
-.rooksW {
+.promotepiece.rooksW {
     background-position-x: calc(100%/29 * 6);
 }
 
-.rooksB {
+.promotepiece.rooksB {
     background-position-x: calc(100%/29 * 7);
 }
 
-.queensW {
+.promotepiece.queensW {
     background-position-x: calc(100%/29 * 8);
 }
 
-.queensB {
+.promotepiece.queensB {
     background-position-x: calc(100%/29 * 9);
 }
 
-.archbishopsW {
+.promotepiece.archbishopsW {
     background-position-x: calc(100%/29 * 10);
 }
 
-.archbishopsB {
+.promotepiece.archbishopsB {
     background-position-x: calc(100%/29 * 11);
 }
 
-.chancellorsW {
+.promotepiece.chancellorsW {
     background-position-x: calc(100%/29 * 12);
 }
 
-.chancellorsB {
+.promotepiece.chancellorsB {
     background-position-x: calc(100%/29 * 13);
 }
 
-.amazonsW {
+.promotepiece.amazonsW {
     background-position-x: calc(100%/29 * 14);
 }
 
-.amazonsB {
+.promotepiece.amazonsB {
     background-position-x: calc(100%/29 * 15);
 }
 
-.hawksW {
+.promotepiece.hawksW {
     background-position-x: calc(100%/29 * 16);
 }
 
-.hawksB {
+.promotepiece.hawksB {
     background-position-x: calc(100%/29 * 17);
 }
 
-.camelsW {
+.promotepiece.camelsW {
     background-position-x: calc(100%/29 * 18);
 }
 
-.camelsB {
+.promotepiece.camelsB {
     background-position-x: calc(100%/29 * 19);
 }
 
-.giraffesW {
+.promotepiece.giraffesW {
     background-position-x: calc(100%/29 * 20);
 }
 
-.giraffesB {
+.promotepiece.giraffesB {
     background-position-x: calc(100%/29 * 21);
 }
 
-.zebrasW {
+.promotepiece.zebrasW {
     background-position-x: calc(100%/29 * 22);
 }
 
-.zebrasB {
+.promotepiece.zebrasB {
     background-position-x: calc(100%/29 * 23);
 }
 
-.centaursW {
+.promotepiece.centaursW {
     background-position-x: calc(100%/29 * 24);
 }
 
-.centaursB {
+.promotepiece.centaursB {
     background-position-x: calc(100%/29 * 25);
 }
 
-.knightridersW {
+.promotepiece.knightridersW {
     background-position-x: calc(100%/29 * 26);
 }
 
-.knightridersB {
+.promotepiece.knightridersB {
     background-position-x: calc(100%/29 * 27);
 }
 
-.rosesW {
+.promotepiece.rosesW {
     background-position-x: calc(100%/29 * 28);
 }
 
-.rosesB {
+.promotepiece.rosesB {
     background-position-x: calc(100%/29 * 29);
 }
 
