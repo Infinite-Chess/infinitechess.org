@@ -725,7 +725,7 @@ const onlinegame = (function(){
         // because then we will atleast have a browser-id cookie
         // when we try to create our websocket!
         // The server only allows sockets if we are either logged in, or have a browser-id cookie.
-        await validation.waitUntilInitialRequestBack()
+        await memberHeader.waitUntilInitialRequestBack()
 
         const messageContents = undefined
         websocket.sendmessage('game', 'joingame', messageContents, true)
