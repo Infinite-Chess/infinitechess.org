@@ -1185,13 +1185,13 @@ button.join-button, button.copy-button {
     transform: translate(-50%, -50%);
     background-color: rgba(255, 255, 255, 0.949);
     box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.918);
-    background-image: url("/img/game/promotions.png");
+    background-image: url("/img/game/spritesheet64_cburnett.png");
     /* The html document pre-loads only the png because it doesn't know if webp or avif is supported. */
-    /* @supports (background-image: url('/img/game/promotions.webp')) {
-        background-image: url('/img/game/promotions.webp');
+    /* @supports (background-image: url('/img/game/spritesheet64_cburnett.webp')) {
+        background-image: url('/img/game/spritesheet64_cburnett.webp');
     }
-    @supports (background-image: url('/img/game/promotions.avif')) {
-        background-image: url('/img/game/promotions.avif');
+    @supports (background-image: url('/img/game/spritesheet64_cburnett.avif')) {
+        background-image: url('/img/game/spritesheet64_cburnett.avif');
     } */
     background-repeat: no-repeat;
     background-size: 0;
