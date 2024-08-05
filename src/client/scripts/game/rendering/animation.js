@@ -14,6 +14,14 @@ const animation = (function() {
 
     const animations = []; // { duration, startTime, type, startCoords, endCoords, captured, distIsGreater }
 
+    /** Used for calculating the duration move animations. */
+    const moveAnimationDuration = {
+        /** The base amount of duration, in millis. */
+        baseMillis: 150,
+        /** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
+        multiplierMillis: 6,
+    }
+
     /**
      * Animates a piece after moving it.   
      * @param {string} type - The type of piece to animate
@@ -28,7 +36,6 @@ const animation = (function() {
         // let dist = math.euclideanDistance(startCoords, endCoords); // Distance between start and end points of animation.
         let dist = math.chebyshevDistance(startCoords, endCoords); // Distance between start and end points of animation.
         const distIsGreater = dist > maxDistB4Teleport; // True if distance requires a teleport because it's so big
-        const distToAnimate = distIsGreater ? maxDistB4Teleport : dist; // It will never VISUALLY travel over 80 blocks! Because it will teleport
 
         const newAnimation = {
             startTime: performance.now(),
@@ -42,7 +49,7 @@ const animation = (function() {
             dist,
             distIsGreater,
     
-            duration: 150 + distToAnimate * 6, // Default: 150 + dist * 6
+            duration: getDurationMillisOfMoveAnimation({ startCoords, endCoords })
         }
 
         // Set a timer when to play the sound
@@ -50,6 +57,20 @@ const animation = (function() {
         newAnimation.soundTimeoutID = setTimeout(playAnimationsSound, timeToPlaySound, newAnimation)
 
         animations.push(newAnimation);
+    }
+
+    /**
+     * Calculates the duration in milliseconds a particular move would take to animate.
+     * @param {Move} move 
+     */
+    function getDurationMillisOfMoveAnimation(move) {
+        // let dist = math.euclideanDistance(startCoords, endCoords); // Distance between start and end points of animation.
+        let dist = math.chebyshevDistance(move.startCoords, move.endCoords); // Distance between start and end points of animation.
+        const cappedDist = Math.min(dist, maxDistB4Teleport)
+
+        const additionMillis = moveAnimationDuration.multiplierMillis * cappedDist;
+
+        return moveAnimationDuration.baseMillis + additionMillis;
     }
 
     // All animations cleared (skipping through moves quickly),
@@ -230,6 +251,7 @@ const animation = (function() {
         animatePiece,
         update,
         renderTransparentSquares,
-        renderPieces
+        renderPieces,
+        getDurationMillisOfMoveAnimation
     })
 })();
