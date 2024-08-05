@@ -8,6 +8,7 @@
 
 const engine = (function(){
 
+	const checkmateScore = -100000
 	let beginningTimestamp = Date.now();
 
 	/**
@@ -171,7 +172,9 @@ const engine = (function(){
 		// multiply those two by color to make them fit which color's turn it is
 		// put this here instead of evaluation function to end search immediately
 		const gameConclusion = wincondition.getGameConclusion(gamefile);
-		if (gameConclusion == 'white checkmate') return colorNum * -Infinity;
+		// favour checkmates that are further in the future than ones that are closer.
+		// add 1 to depth to not multiply by zero in case the search is about to end.
+		if (gameConclusion == 'white checkmate') return colorNum * checkmateScore * (depth + 1);
 		if (gameConclusion && gameConclusion.startsWith('draw')) return colorNum * Infinity;
 
 		// return evaluation if depth is zero
@@ -193,7 +196,6 @@ const engine = (function(){
 				animate: false
 			});
 			const now = Date.now();
-			console.log(now - beginningTimestamp)
 			if (now - beginningTimestamp >= loadbalancer.getMonitorRefreshRate()) {
 				beginningTimestamp = now
 				await main.sleep(0);
@@ -219,8 +221,7 @@ const engine = (function(){
 		// let the the board render while we are calculating
 		let moves = getBlackKingLegalMoves(gamefile);
 		let bestScore = -Infinity;
-		// choose a random move. if the search returns -Infinity (means checkmate is forced) play this instead
-		let bestMove = moves[Math.floor(Math.random() * moves.length)];
+		let bestMove = null;
 		for (let move of moves) {
 			movepiece.makeMove(gamefile, move, {
 				pushClock: false,
@@ -238,6 +239,7 @@ const engine = (function(){
 				bestMove = move;
 			}
 		}
+		console.log(`eval: ${bestScore}`);
 		return bestMove;
 	}
 
