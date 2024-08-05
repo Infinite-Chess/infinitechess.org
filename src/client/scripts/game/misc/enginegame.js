@@ -37,13 +37,9 @@ const enginegame = (function(){
         // This make sure it will place us in black's perspective if applicable
         perspective.resetRotations()
 
-        try{
-            if (!gameOptions.currentEngine || !eval(gameOptions.currentEngine)) throw new Error();
-            currentEngine = gameOptions.currentEngine;
-            console.log(`Started engine game with engine ${currentEngine}`);
-        } catch(e) {
-            console.error (`Attempting to start game with unknown engine: ${gameOptions.currentEngine}`);
-        }
+        currentEngine = gameOptions.currentEngine
+        if (!currentEngine) return console.error (`Attempting to start game with unknown engine: ${currentEngine}`);
+        console.log(`Started engine game with engine ${currentEngine}`);
     }
 
     // Call when we leave an engine game
@@ -87,7 +83,7 @@ const enginegame = (function(){
         if (!currentEngine) return console.error ("Attempting to make engine move, but no engine loaded!");
         
         const gamefile = game.getGamefile();
-        const move = await eval(currentEngine).runEngine(gamefile);
+        const move = await currentEngine.runEngine(gamefile);
 
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
