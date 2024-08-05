@@ -375,7 +375,7 @@ const variant = (function() {
                 return getStartSnapshotPosition({ positionString })
                 */
             default:
-                throw new Error('Unknown variant.')
+                throw new Error(`Unknown variant "${Variant}"`)
         }
     }
 
@@ -511,7 +511,7 @@ const variant = (function() {
                 return getGameRules({ winConditions: getWinConditionsOfThreeCheck(), position });
                 */
             default:
-                throw new Error('Unknown variant.')
+                throw new Error(`Unknown variant "${Variant}"`)
         }
     }
 

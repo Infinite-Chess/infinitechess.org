@@ -13,8 +13,6 @@ const variant1 = (function() {
 
     /** Variants names the game works with */
     const validVariants = ["Classical","Core","Standarch","Space_Classic","CoaIP","Pawn_Horde","Space","Obstocean","Abundance","Amazon_Chandelier","Containment","Classical_Limit_7","CoaIP_Limit_7","Chess","Classical_KOTH","CoaIP_KOTH","Omega","Omega_Squared","Omega_Cubed","Omega_Fourth","Classical_Plus","Pawndard","Knightline","Knighted_Chess"];
-    /** A list of all variants where black moves first */
-    const blackMovesFirstGames = ['Omega','Omega_Squared','Omega_Cubed','Omega_Fourth']
 
     /**
      * Tests if the provided variant is a valid variant
@@ -60,10 +58,16 @@ const variant1 = (function() {
      */
     function initExistingTypes(gamefile) {
         const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
-        const rawtypes = new Set();
+        
+        // Makes sure all possible pieces are accounted for. even when they dont start with them
+        const promotiontypes = [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black]
+        
+        // Promotion types already have teams stripped
+        const rawtypes = new Set(promotiontypes);
         for (const tpiece of teamtypes) {
-            rawtypes.add(math1.trimWorBFromType(tpiece)); // Make a set wit the team colour trimmed
+            rawtypes.add(math1.trimWorBFromType(tpiece)); // Make a set with the team color trimmed
         }
+
         gamefile.startSnapshot.existingTypes = rawtypes;
     }
 
@@ -262,7 +266,8 @@ const variant1 = (function() {
             promotionRanks,
             promotionsAllowed: modifications.promotionsAllowed || getPromotionsAllowed(modifications.position, promotionRanks),
             winConditions: modifications.winConditions || getDefaultWinConditions(),
-            moveRule: modifications.moveRule || 100
+            moveRule: modifications.moveRule || 100,
+            turnOrder: modifications.turnOrder || ['white', 'black']
         }
         if (modifications.slideLimit != null) gameRules.slideLimit = modifications.slideLimit;
         if (modifications.moveRule === null) delete gameRules.moveRule;
@@ -375,7 +380,7 @@ const variant1 = (function() {
                 return getStartSnapshotPosition({ positionString })
                 */
             default:
-                throw new Error('Unknown variant.')
+                throw new Error(`Unknown variant "${Variant}"`)
         }
     }
 
@@ -458,6 +463,7 @@ const variant1 = (function() {
                 return getGameRules({ position })
             case "Space_Classic":
                 const UTCTimeStamp = math1.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+                console.log(UTCTimeStamp);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
                 const promotionRanks = UTCTimeStamp < 1709017200000 ? [4,-3] : undefined; // undefined will use default [8,1]
                 getGameRules({ promotionRanks, position })
@@ -494,13 +500,13 @@ const variant1 = (function() {
             case "Knighted_Chess":
                 return getGameRules({ position });
             case "Omega": // Joel & Cory's version
-                return getGameRules({ promotionRanks: null, moveRule: null, position })
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: ['black', 'white'] })
             case "Omega_Squared":
-                return getGameRules({ promotionRanks: null, moveRule: null, position })
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: ['black', 'white'] })
             case "Omega_Cubed":
-                return getGameRules({ promotionRanks: null, moveRule: null, position })
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: ['black', 'white'] })
             case "Omega_Fourth":
-                return getGameRules({ promotionRanks: null, moveRule: null, winConditions: getRoyalCaptureWinConditions(), position })
+                return getGameRules({ promotionRanks: null, moveRule: null, winConditions: getRoyalCaptureWinConditions(), position, turnOrder: ['black', 'white'] })
             // Removed...
             /*
             case "Standarch - 3 Check":
@@ -509,7 +515,7 @@ const variant1 = (function() {
                 return getGameRules({ winConditions: getWinConditionsOfThreeCheck(), position });
                 */
             default:
-                throw new Error('Unknown variant.')
+                throw new Error(`Unknown variant "${Variant}"`)
         }
     }
 
@@ -907,7 +913,6 @@ const variant1 = (function() {
         getBareMinimumGameRules,
         getStartingPositionOfVariant,
         getDefaultWinConditions,
-        isVariantAVariantWhereBlackStarts,
         isVariantValid,
         getPromotionsAllowed
     });

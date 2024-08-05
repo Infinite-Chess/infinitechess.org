@@ -70,7 +70,7 @@ const gamemanager = (function() {
             clock: inviteOptions.clock,
             rated: inviteOptions.rated === "Rated",
             moves: [],
-            blackGoesFirst: variant1.isVariantAVariantWhereBlackStarts(inviteOptions.variant),
+            turnOrder: variant1.getGameRulesOfVariant({Variant: inviteOptions.variant}).turnOrder,
             gameConclusion: false,
             timeRemainAtTurnStart: undefined,
             timeAtTurnStart: undefined,
@@ -105,7 +105,7 @@ const gamemanager = (function() {
         newGame.white = white;
         newGame.black = black;
 
-        newGame.whosTurn = newGame.blackGoesFirst ? 'black' : 'white';
+        newGame.whosTurn = newGame.turnOrder[0];
 
         if (!clockweb.isClockValueInfinite(inviteOptions.clock)) {
             newGame.timerWhite = newGame.startTimeMillis;
@@ -1314,7 +1314,7 @@ const gamemanager = (function() {
     function pushGameClock(game) {
         // if (!game.whosTurn) return; // Game is over
         const colorWhoJustMoved = game.whosTurn; // white/black
-        game.whosTurn = math1.getOppositeColor(game.whosTurn);
+        game.whosTurn = game.turnOrder[(game.moves.length) % game.turnOrder.length];
         if (isGameUntimed(game)) return; // Don't adjust the times if the game isn't timed.
 
         if (!movesscript1.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
