@@ -636,6 +636,11 @@ canvas {
 
 .checkmate:hover {
     background-color: rgba(168, 168, 168, 0.8);
+    cursor: pointer;
+}
+
+.checkmate:active {
+    background-color: rgba(157, 156, 156, 0.8);
 }
 
 .checkmate.beaten:hover {
