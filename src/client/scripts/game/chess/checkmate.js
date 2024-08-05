@@ -174,6 +174,7 @@ const checkmate = (function() {
         let equalPositionsFound = 0;
 
         let index = moveList.length - 1;
+        let indexOfLastEqualPositionFound = index + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
         while (index >= 0) {
 
             // Moves are in the format: { type, startCoords, endCoords, captured: 'type'}
@@ -197,12 +198,19 @@ const checkmate = (function() {
             if (deficit[key]) delete deficit[key]
             else surplus[key] = true;
 
-            // If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
-            const deficitKeys = Object.keys(deficit);
-            const surplusKeys = Object.keys(surplus);
-            if (deficitKeys.length === 0 && surplusKeys.length === 0) {
-                equalPositionsFound++;
-                if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
+            checkEqualPosition: {
+                // Has a full turn cycle ocurred since the last increment of equalPositionsFound?
+                const indexDiff = indexOfLastEqualPositionFound - index;
+                if (indexDiff < gamefile.gameRules.turnOrder.length) break checkEqualPosition; // Hasn't been a full turn cycle yet, don't increment the counter
+
+                // If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
+                const deficitKeys = Object.keys(deficit);
+                const surplusKeys = Object.keys(surplus);
+                if (deficitKeys.length === 0 && surplusKeys.length === 0) {
+                    equalPositionsFound++;
+                    indexOfLastEqualPositionFound = index;
+                    if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
+                }
             }
 
             // Prep for next iteration, decrement index.
