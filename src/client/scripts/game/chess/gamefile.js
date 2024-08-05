@@ -10,9 +10,11 @@
  * @param {string[]} [options.moves=[]] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
+ * @param {Number} [options.drawOfferWhite] - The last move when white has made a draw offer
+ * @param {Number} [options.drawOfferBlack] - The last move when black has made a draw offer
  * @returns {Object} The gamefile
  */
-function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {}) {
+function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOfferWhite, drawOfferBlack } = {}) {
 
     // Everything for JSDoc stuff...
 
@@ -185,8 +187,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
     this.checksGiven = undefined;
     /** Last draw offer move in plies */
-    this.drawOfferWhite = false;
-    this.drawOfferBlack = false;
+    this.drawOfferWhite = 0;
+    this.drawOfferBlack = 0;
 
     this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
     this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)
@@ -198,6 +200,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
     this.gameConclusion = gameConclusion || this.gameConclusion;
+
+    this.drawOfferWhite = drawOfferWhite || this.drawOfferWhite;
+    this.drawOfferBlack = drawOfferBlack || this.drawOfferBlack;
 
     organizedlines.addMoreUndefineds(this, { regenModel: false })
 };

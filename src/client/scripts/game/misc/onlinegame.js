@@ -312,7 +312,8 @@ const onlinegame = (function(){
         // {
         //     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
         //     id, clock, publicity, youAreColor, timerWhite,
-        //     timerBlack, moves, autoAFKResignTime, disconnect, gameConclusion
+        //     timerBlack, moves, autoAFKResignTime, disconnect, gameConclusion, 
+        //     blackDrawOfferMove, whiteDrawOfferMove
         // }
 
         // We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
