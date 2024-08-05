@@ -183,6 +183,7 @@ easy = "Easy"
 medium = "Medium"
 hard = "Hard"
 insane = "Insane"
+difficulty = "Difficulty"
 
 [play.play-menu]
 title = "Play - Online"

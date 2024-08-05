@@ -381,12 +381,15 @@
                     <p id="practice-name" class="practice-name"><%=t('play.practice-menu.title')%></p>
                     <button id="checkmate-practice" class="checkmate-practice titlebubble button"><%=t('play.practice-menu.checkmates')%></button>
                     <button id="tactics-practice" class="tactics-practice titlebubble opacity-0_5 button"><%=t('play.practice-menu.tactics')%></button>
-                    <div class="practice-options titlebubble">
+                    <div class="practice-box titlebubble">
+                        <div class="practice-head">
+                            <div class="checkmate-progress-bar"></div>
+                            <div class="checkmate-difficulty"><%=t('play.practice-menu.difficulty')%></div>
+                        </div>
                         <div class="checkmate-list">
                             <div id="checkmates">
-                                <!-- Example checkmates -->
-                                <div class="checkmate-separator"><%=t('play.practice-menu.easy')%></div>
                                 <div class="checkmate" id="2Q-1k">
+                                    <div class="completion-mark">X</div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece queensW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer collated"><div class="checkmatepiece queensW"></div></div>
@@ -395,8 +398,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.easy')%></div>
                                 </div>
                                 <div class="checkmate" id="3R-1k">
+                                    <div class="completion-mark">X</div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece rooksW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer collated-strong"><div class="checkmatepiece rooksW"></div></div>
@@ -406,8 +411,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.easy')%></div>
                                 </div>
                                 <div class="checkmate" id="1K2R-1k">
+                                    <div class="completion-mark">X</div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece rooksW"></div></div>
@@ -417,8 +424,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.easy')%></div>
                                 </div>
                                 <div class="checkmate" id="1K2B2B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece bishopsW"></div></div>
@@ -430,8 +439,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.easy')%></div>
                                 </div>
                                 <div class="checkmate" id="3B3B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece bishopsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer collated-strong"><div class="checkmatepiece bishopsW"></div></div>
@@ -444,8 +455,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.easy')%></div>
                                 </div>
                                 <div class="checkmate" id="1K1AM-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece amazonsW"></div></div>
@@ -454,10 +467,11 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.easy')%></div>
                                 </div>
 
-                                <div class="checkmate-separator"><%=t('play.practice-menu.medium')%></div>
                                 <div class="checkmate" id="1K1Q1B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece queensW"></div></div>
@@ -467,8 +481,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.medium')%></div>
                                 </div>
                                 <div class="checkmate" id="1K1Q1N-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece queensW"></div></div>
@@ -478,8 +494,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.medium')%></div>
                                 </div>
                                 <div class="checkmate" id="1Q1B1B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece queensW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece bishopsW"></div></div>
@@ -489,8 +507,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.medium')%></div>
                                 </div>
                                 <div class="checkmate" id="1Q2N-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece queensW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece knightsW"></div></div>
@@ -500,8 +520,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.medium')%></div>
                                 </div>
                                 <div class="checkmate" id="2R1N-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece rooksW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer collated-strong"><div class="checkmatepiece rooksW"></div></div>
@@ -511,8 +533,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.medium')%></div>
                                 </div>
                                 <div class="checkmate" id="1K1R1B1B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece rooksW"></div></div>
@@ -523,8 +547,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.medium')%></div>
                                 </div>
                                 <div class="checkmate" id="1K1AR1R-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece archbishopsW"></div></div>
@@ -534,10 +560,11 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.medium')%></div>
                                 </div>
 
-                                <div class="checkmate-separator"><%=t('play.practice-menu.hard')%></div>
                                 <div class="checkmate" id="1K1N2B1B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece knightsW"></div></div>
@@ -549,8 +576,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.hard')%></div>
                                 </div>
                                 <div class="checkmate" id="1K2N1B1B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece knightsW"></div></div>
@@ -562,8 +591,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.hard')%></div>
                                 </div>
                                 <div class="checkmate" id="1K1R1N1B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece rooksW"></div></div>
@@ -574,8 +605,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.hard')%></div>
                                 </div>
                                 <div class="checkmate" id="1K1R2N-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece rooksW"></div></div>
@@ -586,8 +619,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.hard')%></div>
                                 </div>
                                 <div class="checkmate" id="2K1R-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer collated-strong"><div class="checkmatepiece kingsW"></div></div>
@@ -597,8 +632,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.hard')%></div>
                                 </div>
                                 <div class="checkmate" id="1K2AR-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece archbishopsW"></div></div>
@@ -608,9 +645,11 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.hard')%></div>
                                 </div>
-                                <div class="checkmate-separator"><%=t('play.practice-menu.insane')%></div>
+
                                 <div class="checkmate" id="1K2N7B-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece knightsW"></div></div>
@@ -627,8 +666,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.insane')%></div>
                                 </div>
                                 <div class="checkmate" id="1K1Q1P-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece queensW"></div></div>
@@ -638,8 +679,10 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.insane')%></div>
                                 </div>
                                 <div class="checkmate" id="1K3HA-1k">
+                                    <div class="completion-mark"></div>
                                     <div class="piecelistW">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsW"></div></div>
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece hawksW"></div></div>
@@ -650,6 +693,7 @@
                                     <div class="piecelistB">
                                         <div class="checkmate-child checkmatepiececontainer"><div class="checkmatepiece kingsB"></div></div>
                                     </div>
+                                    <div class="checkmate-difficulty"><%=t('play.practice-menu.insane')%></div>
                                 </div>
                             </div>
                         </div>
