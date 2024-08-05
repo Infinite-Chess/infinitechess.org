@@ -30,7 +30,7 @@ const enginegame = (function(){
     }
 
     /**
-     * Inits an engine game
+     * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
      * @param {Object} gameOptions - An object that contains the property `currentEngine`
      */
     function initEngineGame (gameOptions) {
