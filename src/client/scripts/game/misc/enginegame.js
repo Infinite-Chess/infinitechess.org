@@ -8,12 +8,15 @@ const enginegame = (function(){
     /** Whether we are currently in an engine game. */
     let inEngineGame = false
     let ourColor; // white/black
+    let currentEngine; // name of the current engine used
 
     const engineTimeLimitPerMoveMillis = 1000;
 
     function areInEngineGame() { return inEngineGame }
 
     function getOurColor() { return ourColor }
+
+    function getCurrentEngine() { return currentEngine }
 
     /**
      * This has to be called before and separate from {@link initEngineGame}
@@ -23,20 +26,27 @@ const enginegame = (function(){
     function setColorAndGameID(gameOptions) {
         inEngineGame = true
         ourColor = gameOptions.youAreColor;
+        
     }
 
     /**
      * Inits an engine game
+     * @param {Object} gameOptions - An object that contains the property `currentEngine`
      */
-    function initEngineGame () {
+    function initEngineGame (gameOptions) {
         // This make sure it will place us in black's perspective if applicable
         perspective.resetRotations()
+
+        currentEngine = gameOptions.currentEngine;
+        if (currentEngine) console.log(`Started engine game with engine ${currentEngine}`);
+        else console.error ("Attempting to start game with unknown engine!");
     }
 
     // Call when we leave an engine game
     function closeEngineGame() {
         inEngineGame = false;
         ourColor = undefined;
+        currentEngine = undefined;
         perspective.resetRotations() // Without this, leaving an engine game of which we were black, won't reset our rotation.
     }
 
@@ -70,9 +80,10 @@ const enginegame = (function(){
      */
     async function makeEngineMove() {
         if (!inEngineGame) return;
+        if (!currentEngine) console.error ("Attempting to make move with unknown engine!");
         
         const gamefile = game.getGamefile();
-        const move = await engine.runEngine(gamefile);
+        const move = await eval(currentEngine).runEngine(gamefile);
 
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
@@ -91,6 +102,7 @@ const enginegame = (function(){
     return Object.freeze({
         areInEngineGame,
         getOurColor,
+        getCurrentEngine,
         setColorAndGameID,
         initEngineGame,
         closeEngineGame,

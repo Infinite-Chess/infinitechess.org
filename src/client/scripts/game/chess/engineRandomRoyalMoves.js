@@ -6,7 +6,7 @@
 
 "use strict";
 
-const engine = (function(){
+const engineRandomRoyalMoves = (function(){
 
     /**
      * Main function of this script. It gets called as soon as the human player submits a move.
@@ -35,9 +35,9 @@ const engine = (function(){
      */
     function getRandomRoyalMove(gamefile, color) {
         const royalCoords = gamefileutility.getRoyalCoords(gamefile, color)[0]
-        const blackRoyalPiece = gamefileutility.getPieceAtCoords(gamefile, royalCoords);
-        const blackmoves = legalmoves.calculate(gamefile, blackRoyalPiece).individual;
-        const randomEndCoords = blackmoves[Math.floor(Math.random() * blackmoves.length)]; // random endcoords from the list of individual moves
+        const royalPiece = gamefileutility.getPieceAtCoords(gamefile, royalCoords);
+        const moves = legalmoves.calculate(gamefile, royalPiece).individual;
+        const randomEndCoords = moves[Math.floor(Math.random() * moves.length)]; // random endcoords from the list of individual moves
         const move = {startCoords: royalCoords, endCoords: randomEndCoords};
         specialdetect.transferSpecialFlags_FromCoordsToMove(randomEndCoords, move);
         return move;
