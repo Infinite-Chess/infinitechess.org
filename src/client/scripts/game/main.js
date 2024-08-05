@@ -76,7 +76,7 @@ const main = (function(){
             // "1000 Closed by client" instead of "1001 Endpoint left"
             websocket.closeSocket();
 
-            validation.deleteToken();
+            memberHeader.deleteToken();
             
             invites.deleteInviteTagInLocalStorage();
             localstorage.eraseExpiredItems();

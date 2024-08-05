@@ -27,10 +27,10 @@
          Right now this only preloads the png, because we don't know if avif or webp is supported. -->
         <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
 
-        <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
         <!-- All clientside game scripts are inject here -->
 
+        <script defer src="/scripts/memberHeader.js"></script>
     </head>
     <!-- The onload event listener to call main.start() is now within the htmlscript! -->
     <body>
