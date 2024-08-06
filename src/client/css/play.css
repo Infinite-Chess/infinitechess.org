@@ -669,7 +669,7 @@ canvas {
 .completion-mark {
     display: flex;
     justify-content: center;
-    width: 10%;
+    width: 7%;
     margin-right: 5%;
 }
 
@@ -694,7 +694,7 @@ canvas {
     display: flex;
     justify-content: center;
     align-content: center;
-    width: 20%;
+    width: 23%;
 }
 
 .checkmatepiececontainer {
