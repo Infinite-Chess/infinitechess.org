@@ -297,8 +297,8 @@ const formatconverter = (function() {
 
         // metadata handling. Don't put ": " in metadata fields.
         let metadata = {};
-        let metaformat = /^(\[.* .*\]\s)*/.exec(shortformat) // Metadata was eating my damn [] outside of scope
-        shortformat = shortformat.replace(/^(\[.* .*\]\s)*/, "")
+        let metaformat = /^\s*+(\[([^\"\]]*\"[^\"]*\"|[^:\]]*+:\s*+[^\]]*+)\]\s*+)*/.exec(shortformat) // Metadata was eating my damn [] outside of scope
+        shortformat = shortformat.replace(/^\s*+(\[([^\"\]]*+\"[^\"]*+\"|[^:\]]*+:\s*+[^\]]*+)\]\s*+)*/, "")
         while (metaformat.indexOf("[") > -1){
             let start_index = shortformat.indexOf("[");
             let end_index = shortformat.indexOf("]");
