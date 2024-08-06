@@ -26,6 +26,7 @@ const checkmatepractice = (function() {
         "2R1N-1k",
         "1K1R1B1B-1k",
         "1K1AR1R-1k",
+        "2AM-1rc",
 
         // hard
         "1K1N2B1B-1k",
@@ -34,9 +35,10 @@ const checkmatepractice = (function() {
         "1K1R2N-1k",
         "2K1R-1k",
         "1K2AR-1k",
+        "1K2N7B-1k",
 
         // insane
-        "1K2N7B-1k",
+        "1K3NR-1k",
         "1K1Q1P-1k",
         "1K3HA-1k",
     ];
