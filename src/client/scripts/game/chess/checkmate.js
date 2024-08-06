@@ -160,16 +160,19 @@ const checkmate = (function() {
 
     /**
      * Tests if the provided gamefile has had a repetition draw.
+     * 
+     * Complexity O(m) where m is the move count since the last pawn push or capture!
      * @param {gamefile} gamefile - The gamefile
      * @returns {boolean} *true* if there has been a repetition draw
      */
-    // Complexity O(m) where m is the move count since
-    // the last pawn push or capture!
     function detectRepetitionDraw(gamefile) {
         const moveList = gamefile.moves;
 
         const deficit = { }; // `x,y,type`
         const surplus = { }; // `x,y,type`
+
+        // TODO: Make sure that all special rights, and gamefile's en passant values,
+        // match, in order for positions to be counted as equal!!!!!
 
         let equalPositionsFound = 0;
 
