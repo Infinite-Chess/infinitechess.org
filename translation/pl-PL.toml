@@ -1,0 +1,551 @@
+name = "Polski" # Name of language
+direction = "ltr" # Change to "rtl" for right to left languages
+version = "5"
+
+[header]
+home = "Strona Główna"
+play = "Graj"
+news = "Aktualności"
+login = "Zaloguj"
+createaccount = "Utwórz konto"
+
+[footer]
+contact = "Kontakt"
+terms_of_service = "Warunki korzystania z usługi"
+source_code = "Kod źródłowy"
+language = "Język"
+
+[header.javascript]
+js-profile = "Profil"
+js-logout = "Wyloguj"
+js-login = "Zaloguj"
+js-createaccount = "Utwórz konto"
+
+[member.javascript]
+js-confirm_delete = "Czy napewno chcesz usunąć swoje konto? Usunięcie konta jest NIEODWRACALNE! Naciśnij OK, aby wpisać hasło"
+js-enter_password = "Wpisz swoje hasło, aby usunąć konto NA ZAWSZE"
+
+[index]
+secondary_title = "Oficjalna strona do gry online!"
+what_is_it_title = "Co to?"
+what_is_it_pargaraphs = [
+"Nieskończone szachy to wersja szach z nieskończoną planszą, zamiast dobrze znanej przestrzeni 8x8. Hetman, wieże i gońce nie mają <em>żadnego</em> limitu co do dystansu, który mogą przemierzyć w czasie tury. Wybierz dowolną liczbę naturalną aż do nieskończoności!",
+"With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researches have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
+"Jak możesz sobie wyobrazić, istnieją nieskończone możliwości ustawień początkowych, które możesz wykorzystać do gry kompetetywnej! Celem w grze dalej jest szach-mat, który wymaga nowych taktyk, gdyż nie ma ścian, które w zwykłej grze mogłyby zatrzymać króla",
+] # Paragraph 2 needs translation
+how_to_title = "Jak zagrać?"
+how_to_paragraph = ["Obecna wersja (1.3.2) jest dostępna na stronie ","Graj"," !"]
+about_title = "O projekcie"
+about_paragraphs = [
+"Jestem Naviary. Od kiedy odkryłem Nieskończone Szachy (koncept istniał długo przed tą stroną), byłem bardzo zaintrygowany jego możliwościami. Od dawna granie w tą wersję było bardzo trudne, gdyż wymagało od graczy na chess.com wysyłania zdjęć planszy po każdym zagranym ruchu. Ze względu na to, niewielu ludzi było w stanie zagrać w Nieskończone Szachy, a sam sposób gry był bardzo mało popularny",
+["Moim celem było stworzenie sposobu aby Nieskończone Szachy były łatwo grywalne dla każdego, i stworzenie społeczności otaczającej je. Spędziłem niezliczone godziny nad tą stroną, aktualizowaniem i tworzeniem gry. Mam wiele innych pomysłów, które będą zajmować sporo mojego czasu. O ile chciałbym, żeby ta gra była darmowa, życie kosztuje, aby wesprzeć mnie finansowo rozważ dołączenie na mój", "Patreon"]
+]
+patreon_title = "Wspierający Patreon"
+
+[credits]
+title = "Podziękowania"
+copyright = "Wszystko, co nie jest wypisane poniżej, jest własnością www.InfiniteChess.org"
+variants_heading = "Tryby"
+variants_credits = [
+"Podstawowy - Andreas Tsevas.",
+"Przestrzenny - Andreas Tsevas.",
+"Przestrzenny klasyczny - Andreas Tsevas.",
+"Coaip (Szachy na nieskończonym polu) - Vickalan.",
+"Horda pionków - Inaccessible Cardinal.",
+"Obfitość - Clicktuck Suskriberz.",
+"Pawndard - SexyLexi.",
+"Klasyczny+ - SexyLexi.",
+"Linia rycerzy - Inaccessible Cardinal.",
+"Rycerzowane szachy - cycy98.",
+"- Cory Evans i Joel Hamkins.",
+"- Andreas Tsevas.",
+"- Cory Evans i Joel Hamkins.",
+"- Cory Evans, Joel Hamkins, i Norman Lewis Perlmutter.",
+]
+textures_heading = "Tekstury"
+textures_licensed_under = "Tekstury na licencji"
+textures_credits = [
+"Gold coin, stworzone przez Quolte.",
+]
+sounds_heading = "Dźwięki"
+sounds_credits = [
+["Niektóre dźwięki pochodzą z projektu", "pod licencją"],
+"Inne odgłosy stworzone przez Naviary.",
+]
+code_heading = "Kod"
+code_credits = [
+"- Brandon Jones i Colin MacKenzie IV.",
+"- Andreas Tsevas i Naviary.",
+]
+
+[member]
+verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację."
+resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu lub ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do nas."]
+verify_confirm = "Dziękujemy! Twoje konto zostało zarejestrowane pomyślnie."
+rating = "Kwalifikacja ELO:"
+joined = "Dołączył:"
+seen = ["Ostatnio widziany:", " temu"]
+reveal_info = "Pokaż informacje o koncie"
+account_info_heading = "Informacje o koncie"
+email = "Adres e-mail:"
+delete_account = "Usuń konto"
+password_reset_message = ["Aby zmienić nazwę użytkownika, e-mail lub hasło, ", "napisz do nas."]
+
+[create-account]
+title = "Utwórz konto"
+username = "Nazwa użytkownika:"
+email = "E-mail:"
+password = "Hasło:"
+create_button = "Zarejestruj się"
+agreement = ["Zgadzam się na ", "Warunki korzystania z usługi"]
+
+[create-account.javascript]
+js-username_specs = "Nazwa użytkownika musi posiadać przynajmniej 3 znaki oraz zawierać tylko litery A-Z i cyfry 0-9"
+js-username_tooshort = "Nazwa użytkownika musi poisadać przynajmniej 3 znaki"
+js-username_wrongenc = "Nazwa użytkownia może zaweirać tylko litery oraz cyfry 0-9"
+js-email_invalid = "Adres e-mail jest nieprawidłowy"
+js-email_inuse = "Adres e-mail jest już używany przez inne konto."
+js-pwd_incorrect_format = "Hasło ma nieprawidłowy format"
+js-pwd_too_short = "Hasło musi posiadać przynajmniej 6 znaków"
+js-pwd_too_long = "Hasło nie może być dłuuuuuuuuuższe niż 72 znaki"
+js-pwd_not_pwd = "Hasło nie może być 'hasłem'"
+
+[play.main-menu]
+credits = "Podziękowania"
+play = "Graj"
+guide = "Poradnik"
+editor = "Edytor planszy"
+loading = "Ładowanie"
+error = "Błąd"
+
+[play.guide]
+title = "Poradnik"
+rules = "Zasady"
+rules_paragraphs = [
+"Zasady Nieskończonych Szach są niemal identyczne do zwykłych szach, z jednym wyjątkiem - plansza ma nieskończony rozmiar! To są jedyne zmiany, o których musisz wiedzieć:",
+"Pionki z dłuższymi ruchami, takie jak wieże, gońce, i hetman nie mają ograniczeń co do odległości ruchu. Tak długo jak nie mają przeszkód na drodze, możesz poruszyć się nawet o milion pól i więcej!",
+["W domyślnym trybie, białe pionki awansują na polu 8, a czarne pionki na polu 1. W tym obrazie, jest to wskazane przez cienkie białe linie. Pionki muszą jedynie stanąć naprzeciwko linii", "nie", " jest konieczne jej przekroczenie."],
+"Notacja pól nie jest już opisana jako litera i cyfra (np. a1), ale jako koordynaty x i y. Na przykład, pole a1 ma teraz notację (1,1), a h8 notację (8,8). Na urządzeniach desktopowych, koordynaty nad którymi znajduję się wskaźnik myszy znajdują się w górnej części ekranu",
+"All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
+] # 3rd paragraph needs translation
+careful_heading = "Uważaj!"
+careful_paragraphs = [
+"The openness of the infinite board means it is very easy to exploit forks, pins, and skewers. Your backside is often very vulnerable. Watch out for tactics like this! Be creative about forming protection for your king and rooks! Opening strategy is very different from classical chess.",
+"Many other variants have been created with the aim of strengthening your backside."
+] # Needs translation
+controls_heading = "Sterowanie"
+controls_paragraph = "Większość sterowania jest oczywista (jak np. klikanie i ruszanie myszką aby poruszać się na planszy, czy też scroll'owanie aby przybliżyć i oddalić kamerę), lecz skupmy się na innych klawiszach sterowania, które możesz wykorzystać!"
+keybinds = [
+" aby się poruszać.",
+["Spacja", " i ", "Shift", " aby przybliżać i oddalać."],
+["Escape", " aby zatrzymać grę."],
+["Tab", " przełącza wskaźnik strzałek na granicy twojego ekranu, wskazujące położenie twoich pionków poza ekranem. Domyślnie, opcja ta jest ustawiona na tryb \"Obrona\", który pokazuje strzałki dla pionków które mogą się bezpośrednio poruszyć do twojej lokalizacji. Lecz klawisz ", "tab", " może przełączyć tę opcję na tryby \"Wszystko\" lub \"Wyłączone\", gdzie tryb \"Wszystko\" pokazuje wszystkie pionki, które mogą się poruszać prostopadle lub przekątnie po planszy. Opcja ta, może być również przełączona w menu pauzy."],
+" przełączy \"Tryb Edycji\" w grach lokalnych. Pozwoli to na poruszanie twoich pionków w dowolne miejsce na planszy! Bardzo użyteczne podczas analizy gry."
+]
+controls_paragraph2 = "To są najpotrzebniejsze klawisze sterowania jakie musisz znać, ale są też dodatkowe jeśli będziesz ich kiedykolwiek potrzebować!"
+keybinds_extra = [
+" zresetuje renderowanie pionków. Jest to użyteczne gdy staną się one niewidoczne. Ten błąd może się wydarzyć, jeśli oddalisz się baaaaaaaaaaaaaaardzo daleko od planszy (jak np. na dystans 1e21).",
+" przełączy renderowanie informacji o grze, co może być przydatne podczas nagrywania. Stream'owanie oraz nagrywanie filmików jest zawsze mile widziane!",
+" przełączy informacje o FPS. Wyświetla to liczbę razy odświeżania gry na sekundę, a nie zawsze liczbę wyrenderowanych klatek (ze względu na pomijanie renderowania rzeczy, które się nie zmieniły, aby zwiększyć wydajność)",
+" przełączy renderowanie ikon. Są to małe zdjęcia pionków, które możesz kliknąć, gdy oddalisz kamerę wystarczająco daleko. W zaimportowanych grach, z ponad 50,000 pionków, jest to automatycznie wyłączone (ze względu na zmniejszoną wydajność) jednak możesz ją spowrotem włączyć używając, ",
+[" backtick albo klawisz ", ", włączą tryb debugowania."],
+] # 'backtick'  needs translation
+fairy_heading = "Fairy Pieces" # Needs translation
+fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!" # Needs translation
+editing_heading = "Edytor planszy"
+editing_paragraphs = [
+["There is an external ", "edytor planszy", " currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
+"To play a custom position with a friend, have them join a private invite, then both of you paste the game code before you start playing!",
+"Dostępny w grze edytor planszy jest zaplanowany.",
+] # Needs translation
+back = "Wróć"
+
+[play.guide.pieces]
+chancellor = {name="Chancellor", description="Moves like a rook and a knight combined."} # Needs translation
+archbishop = {name="Archbishop", description="Moves like a bishop and a knight combined."} # Needs translation
+amazon = {name="Amazon", description="Moves like a queen and a knight combined. This is the strongest piece in the game!"} # Needs translation
+guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."} # Needs translation
+hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."} # Needs translation
+centaur = {name="Centaur", description="Moves like a knight and a guard combined."} # Needs translation
+obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."} # Needs translation
+void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."} # Needs translation
+
+
+[play.play-menu]
+title = "Graj - Online"
+colors = "Kolor"
+online = "Online"
+local = "Lokalnie"
+computer = "Komputer"
+variant = "Tryb"
+Classical = "Klasyczny"
+Classical_Plus = "Klasyczny+"
+CoaIP = "Szachy na nieskończonej planszy"
+Pawndard = "Pawndard" # Needs translation
+Knighted_Chess = "Knighted Chess" # Needs translation
+Knightline = "Knightline" # Needs translation
+Core = "Core" # Needs translation
+Standarch = "Standarch" # Needs translation
+Pawn_Horde = "Pawn Horde" # Needs translation
+Space_Classic = "Space Classic" # Needs translation
+Space = "Space" # Needs translation
+Obstocean = "Obstocean" # Needs translation
+Abundance = "Abundance" # Needs translation
+Amazon_Chandelier = "Amazon Chandelier" # Needs translation
+Containment = "Containment" # Needs translation
+Classical_Limit_7 = "Classical - Limit 7" # Needs translation
+CoaIP_Limit_7 = "Coaip - Limit 7" # Needs translation
+Chess = "Szachy"
+Classical_KOTH = "Experimental: Classical - KOTH" # Needs translation
+CoaIP_KOTH = "Experimental: Coaip - KOTH" # Needs translation
+Omega = "Showcase: Omega" # Needs translation
+Omega_Squared = "Showcase: Omega^2" # Needs translation
+Omega_Cubed = "Showcase: Omega^3" # Needs translation
+Omega_Fourth = "Showcase: Omega^4" # Needs translation
+no_clock = "No Clock" # Needs translation
+clock = "Czas"
+minutes = "min"
+seconds = "s"
+infinite_time = "Nielimitowany czas"
+color = "Kolor"
+piece_colors = ["Losowy", "Biały", "Czarny"]
+private = "Private" # Needs translation
+no = "Nie"
+yes = "Tak"
+rated = "Rated" # Needs transaltion
+join_games = "Dołącz do istniejącej gry - Aktywne gry:"
+private_invite = "Osobiste zaproszenie:"
+your_invite = "Twój kod zaproszeniowy:"
+create_invite = "Utwórz kod zaproszeniowy"
+join = "Dołącz"
+copy = "Kopiuj"
+back = "Wróć"
+code = "Kod"
+
+[play.footer]
+white_to_move = "White to move" # Needs translation
+player_white = "Player white" # Needs translation
+player_black = "Player black" # Needs translation
+
+[play.pause]
+title = "Zatrzymaj"
+resume = "Wznów"
+arrows = "Arrows: Defense" # Needs translation
+perspective = "Kamera 3D: Wyłączona"
+copy = "Kopiuj grę"
+paste = "Wklej grę"
+main_menu = "Menu główne"
+
+[play.javascript]
+guest_indicator = "(Gość)"
+you_indicator = "(Ty)"
+white_to_move = "Ruch białych"
+black_to_move = "Ruch czarnych"
+your_move = "Twój ruch"
+their_move = "Ruch przeciwnika"
+lost_network = "Utracono połączenie z siecią."
+failed_to_load = "Nie udało się załadować niektórych zasobów. Prosimy odświeżyć stronę."
+planned_feature = "Ta funkcja jest zaplanowana!"
+main_menu = "Menu główne"
+resign_game = "Resign Game" # Needs translation
+abort_game = "Abort Game" # Needs translation
+arrows_off = "Strzałki: Wyłączone"
+arrows_defense = "Strzałki: Obrona"
+arrows_all = "Strzałki: Wszystko"
+toggled = "Toggled" # Needs translation
+menu_online = "Graj - Online"
+menu_local = "Graj - Lokalnie"
+invite_error_digits = "Kod zaproszeniowy musi posiadać 5 cyfr."
+invite_copied = "Skopiowano kod zaproszeniowy do schowka."
+move_counter = "Ruch:"
+constructing_mesh = "Constructing mesh" # Needs translation
+rotating_mesh = "Rotating mesh" # Needs translation
+lost_connection = "Utracono połączenie."
+please_wait = "Prosimy zaczekać chwilę aby wykonać to zadanie."
+webgl_unsupported = "Twoja przeglądarka nie wspiera technologii WebGL, która jest wymagana aby grać. Prosimy zaktualizować przeglądarkę."
+bigints_unsupported = "Typ zmiennej 'BigInt' nie jest wspierany. Prosimy zaktualizować przeglądarkę.\nTyp ten jest wymagany aby plansza była nieskończona"
+shaders_failed = "Niemożna zainicjować programu shader'ów:"
+failed_compiling_shaders = "Wystąpił błąd podczas kompilowania shader'ów:"
+
+[play.javascript.copypaste]
+copied_game = "Skopiowano grę do schowka!"
+cannot_paste_in_public = "Niemożna wkleić gry w publicznej rozgrywce!"
+cannot_paste_after_moves = "Niemożna wkleić gry po wykonaniu ruchów!"
+clipboard_denied = "Zablokowano dostęp do schowka. Sprawdź ustawienia przeglądarki."
+clipboard_invalid = "Schowek nie jest w poprawnym formacie ICN."
+game_needs_to_specify = "Gra musi zdefiniować tag 'Variant', lub polę 'startingPosition'."
+invalid_wincon_white = "Biali mają nieprawidłowy powód wygranej"
+invalid_wincon_black = "Czarni mają nieprawidłowy powód wygranej"
+pasting_game = "Wklejanie gry..."
+pasting_in_private = "Wklejanie gry w prywatnej rozgrywce może spowodować brak synchronizacji, jeśli przeciwnik nie zrobi tego samego!"
+piece_count = "Liczba pionków"
+exceeded = "wykroczono"
+changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)." # Needs translation
+loaded_from_clipboard = "Załadowano grę ze schowka!"
+loaded = "Załadowano grę!"
+slidelimit_not_number = "Zasady gry 'slideLimit' musi być liczbą. Otrzymano"
+
+[play.javascript.rendering]
+on = "Włączone"
+off = "Wyłączone"
+icon_rendering_off = "Wyłączono renderowanie ikon."
+icon_rendering_on = "Włączono renderowanie ikon."
+toggled_debug = "Toggled Debug Mode:" # Needs translation
+toggled_edit = "Toggled Edit Mode:" # Needs translation
+perspective = "Kamera 3D"
+perspective_mode_on_desktop = "Kamera 3D dostępna na komputerach!"
+movement_tutorial = "Użyj WASD aby się poruszać. Użyj spacji oraz shift'a aby przybliżać (i oddalać) kamerę."
+regenerated_pieces = "Wygenerowano pionki ponownie."
+
+[play.javascript.invites]
+move_mouse = "Poruszaj myszką aby połączyć się ponownie."
+unknown_action_received_1 = "Nieznana akcja"
+unknown_action_received_2 = "received from the server in the invites subscription!" # Needs translation
+cannot_cancel = "Niemożna anulować zaproszenia bez ID."
+you_indicator = "(Ty)"
+you_are_white = "Grasz: Białymi"
+you_are_black = "Grasz: Czarnymi"
+random = "Losowe"
+accept = "Zaakcpetuj"
+cancel = "Anuluj"
+create_invite = "Utwórz zaproszenie"
+cancel_invite = "Anuluj zaproszenie"
+start_game = "Zacznij grę"
+join_existing_active_games = "Dołącz do aktywnej rozgrywki - Aktywne gry:"
+
+[play.javascript.onlinegame]
+afk_warning = "Jesteś AFK."
+opponent_afk = "Przeciwnik jest AFK."
+opponent_disconnected = "Przeciwnik rozłączył się."
+opponent_lost_connection = "Przeciwnik utracił połączenie"
+auto_resigning_in = "Auto-resigning in" # Needs translation
+auto_aborting_in = "Auto-aborting in" # Needs translation
+not_logged_in = "Nie jesteś zalogowany. Prosimy zalogować się ponownie aby dołaczyć spowrotem do tej gry."
+game_no_longer_exists = "Gra już nie istnieje."
+another_window_connected = "Inne okno przeglądarki zostało połączone."
+server_restarting = "Serwer wkrótce się uruchomi ponownie..."
+server_restarting_in = "Serwer uruchomi się ponownie za"
+minute = "minutę"
+minutes = "minuty"
+
+[play.javascript.websocket]
+no_connection = "Brak połączenia."
+reconnected = "Połączono."
+unable_to_identify_ip = "Nie udało się zweryfikować adresu IP."
+online_play_disabled = "Gra online wyłączona. Pliki cookies nie są wspierane. Spróbuj użyć innej przeglądarki."
+too_many_requests = "Za dużo zapytań. Spróbuj ponownie później."
+message_too_big = "Wiadomość za duża."
+too_many_sockets = "Too many sockets" # Needs translation
+origin_error = "Origin error." # Needs translation
+connection_closed = "Połączenie zostało gwałtownie zamknięte. Wiadomość serwera:"
+please_report_bug = "To nigdy nie powinno się stać, proszę zgłosić ten błąd!"
+
+[play.javascript.results]
+you_checkmate = "Szachmat, wygrałeś!"
+you_time = "You win on time!" # Needs translation
+you_resignation = "You win by resignation!" # Needs translation
+you_disconnect = "You win by abandonment!" # Needs translation
+you_royalcapture = "You win by royal capture!" # Needs translation
+you_allroyalscaptured = "You win by all royals captured!" # Needs translation
+you_allpiecescaptured = "You win by all pieces captured!" # Needs translation
+you_threecheck = "You win by three-check!" # Needs translation
+you_koth = "You win by king of the hill!" # Needs translation
+you_generic = "Wygrałeś!"
+draw_stalemate = "Draw by stalemate!" # Needs translation
+draw_repetition = "Draw by repetition!" # Needs translation
+draw_moverule = ["Draw by the ", "-move-rule!"] # Needs translation
+draw_insuffmat = "Draw by insufficient material!" # Needs translation
+draw_generic = "Remis!"
+aborted = "Game aborted." # Needs translation
+opponent_checkmate = "Szachmat, przegrałeś!"
+opponent_time = "You lose on time!" # Needs translation
+opponen_resignation = "You lose by resignation!" # Needs translation
+opponent_disconnect = "You lose by abandonment!" # Needs translation
+opponent_royalcapture = "You lose by royal capture!" # Needs translation
+opponent_allroyalscaptured = "You lose by all royals captured!" # Needs translation
+opponent_allpiecescaptured = "You lose by all pieces captured!" # Needs translation
+opponent_threecheck = "You lose by three-check!" # Needs translation
+opponent_koth = "You lose by king of the hill!" # Needs translation
+opponent_generic = "Przegrałeś!"
+white_checkmate = "White wins by checkmate!" # Needs translation
+black_checkmate = "Black wins by checkmate!" # Needs translation
+bug_checkmate = "This is a bug, please report. Game ended by checkmate." # Needs translation
+white_time = "White wins on time!" # Needs translation
+black_time = "Black wins on time!" # Needs translation
+bug_time = "This is a bug, please report. Game ended on time." # Needs translation
+white_royalcapture = "White wins by royal capture!" # Needs translation
+black_royalcapture = "Black wins by royal capture!" # Needs translation
+bug_royalcapture = "This is a bug, please report. Game ended by royal capture." # Needs translation
+white_allroyalscaptured = "White wins by all royals captured!" # Needs translation
+black_allroyalscaptured = "Black wins by all royals captured!" # Needs translation
+bug_allroyalscaptured = "This is a bug, please report. Game ended by all royals captured." # Needs translation
+white_allpiecescaptured = "White wins by all pieces captured!" # Needs translation
+black_allpiecescaptured = "Black wins by all pieces captured!" # Needs translation
+bug_allpiecescaptured = "This is a bug, please report. Game ended by all pieces captured." # Needs translation
+white_threecheck = "White wins by three-check!" # Needs translation
+black_threecheck = "Black wins by three-check!" # Needs translation
+bug_threecheck = "This is a bug, please report. Game ended by three-check." # Needs translation
+white_koth = "White wins by king of the hill!" # Needs translation
+black_koth = "Black wins by king of the hill!" # Needs translation
+bug_koth = "This is a bug, please report. Game ended by king of the hill." # Needs translation
+bug_generic = "This is a bug, please report!" # Needs translation
+
+[terms] # Translations are disabled for now, only language is en-US
+title = "Terms of Service" # Needs translation
+warning = ["THIS DOCUMENT IS NOT LEGALLY BINDING. We are only accountable for the English version of this document. This translation is provided solely for general informational purposes. You can access the official English version ", "here", "."] # Needs translation
+consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site." # Needs translation
+guardian_consent = "If you are under 18, you must receive consent from a parent or legal guardian to use this site and to create an account." # Needs translation
+parents_header = "Parents" # Needs translation
+parents_paragraphs = [
+"There is an algorithm in place for prohibiting users setting their name to common cuss words. At this time there is no method of communication between members on the site.",
+"Currently, members cannot set their own profile picture. There is a plan to allow this feature. At that time we will do our best to prevent innapropriate profile pictures.",
+] # Needs translation
+fair_play_header = "Fair Play" # Needs translation
+fair_play_paragraph1 = ["You cannot create more than 1 account. If you would like to change the email address associated with your account, ", "contact us."] # Needs translation
+fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:" # Needs translation
+fair_play_rules = [
+"Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, etc. This can be done to intentionally break the game, or to give you an advantage.",
+"In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated games)",
+"Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
+] # Needs translation
+cleanliness_header = "Cleanliness" # Needs translation
+cleanliness_rules = [
+"In all your language on the site, you must remain clean, no vulgarity or cursing. You cannot bully, harass, or threaten anyone, or do anything that is illegal. You cannot spam other users or forums.",
+"You cannot not upload imagery to your profile that is innapropriate, suggestive, or gory. Doing so may result in a ban or termination of your account."
+] # Needs translation
+privacy_header = "Privacy" # Needs translation
+privacy_rules = [
+"Currently, the only personal information we collect is email. This is with intent to verify users' accounts, and provide a means of proving who they are when they request a password reset. We do not send any promotional emails or offers. We do not share any user's email address with anyone else.",
+"InfiniteChess.org may collect data about your usage on the site, including your ip address. This is intended to help prevent attacks from bots and other unwanted entities, and to keep accurate statistics in the database. This is NOT your home address.",
+"All games you play on this website become public information. If you wish to remain anonymous, do not share your username with friends or family. If this is your desire, it is your responsibility to make sure no one finds out your username is associated with your human identity.",
+"Your account online status, and the approximate last time you were active on the website, is also public information.",
+["While InfiniteChess.org will strive to keep everyone's account and personal information safe to the best of our ability, in the event of a hack or data leak, you may not press charges on us. If a data leak ever happens, users will be notified on the ", "News", "page."],
+"There is no content available on the site for purchase. Any other personal information is not collected.",
+"To have your private information deleted from our servers, you may delete your account through your profile page. The only thing with ties to your username that we will NOT delete, is your game history, because all games are public information.",
+] # Needs translation
+cookie_header = "Cookie Policy" # Needs translation
+cookie_paragraphs = [
+"This site uses cookies, which are small text files that are stored in your browser, and sent to the server when connections are made. The purpose of these cookies are to: Validate your login session, validate your browser belongs to the chess game it says it's in, and to store user game preferences so they can keep their preferences when they re-visit the site. The site does not use 3rd-party cookies, cookies are not shared with external parties.",
+"Cookies are required for this site and game to function correctly. If you do not want the site to store cookies, you must stop using the site. You can navigate to your browsers preferences to delete existing cookies. By continuing to use this site, you are consenting to the use of cookies."
+] # Needs translation
+conclusion_header = "Conclusion" # Needs translation
+conclusion_paragraphs = [
+"Any violations of these terms may result in a ban or termination of your account. InfiniteChess.org wants to be able to give everyone the opportunity to play and have fun! But, we reserve the right to, at any time, ban or terminate the accounts of any users, for reasons that need not to be disclosed. Charges may not be pressed against us.",
+["These terms of service may be modified at any point. It is YOUR responsibility to make sure you stay updated on the latest changes! When these terms of service receive an update, that information will be posted on the", "News", "page. If, at the time of a terms-of-service update, you do not agree with the new terms, you must immediately stop using the website. You may delete your account from your profile page. If you delete your account, all your private information and account data will be deleted, EXCEPT we do not delete your game history associated with your username, that is public information."],
+["This site is open source. You may copy or distribute anything on this website as long as you follow the conditions outlined in", "the license terms", "! If this link is broken, it is your responsibility to find the terms."],
+"We cannot guarantee the site will be running 100% of the time. We also cannot guarantee that data will never be corrupted.",
+"You may not perform any illegal activity on the site.",
+["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
+] # Needs translation
+update = "(Last updated: 7/13/24. Added warning that all games played may become public information, including your account's approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)" # Needs translation
+thanks = "Thank you!" # Needs translation
+
+[login]
+title = "Zaloguj się"
+username = "Nazwa użytkownika:"
+password = "Hasło:"
+forgot_password = ["Zapomniałeś hasła? ", "Skontaktuj się z nami."]
+login_button = "Zaloguj się"
+
+[error-pages] # Messages shown on some error pages explaining what went wrong
+400_message = "Podano niepoprawne parametry."
+409_message = ["There may have been a clashing username or email. Please ", "reload", ", the page."] # Needs translation
+500_message = "To nie powinno się stać. Czas na trochę debugowania!" # Needs translation
+
+########### NEWS ###########
+
+[news]
+title = "Aktualności"
+more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+
+[news.july22-2024]
+date = "July 22, 2024:"
+account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
+
+[news.july13-2024]
+date = "July 13, 2024:"
+tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."]
+game_history_warning = "Your game history may become available on your profile at a future time."
+
+[news.july9-2024]
+date = "July 9, 2024:"
+text = ["Infinite Chess is Now Open Source! See, and contribute, to the project ", "on GitHub!"]
+
+[news.may27-2024]
+date = "May 27, 2024:"
+text = "1.3.2: Added showcase variants for Omega^3 and Omega^4 that were shown in my latest video. Also, the checkmate algorithm is now compatible with multiple kings per side."
+
+[news.may24-2024]
+date = "May 24, 2024:"
+text = "Update 1.3.1 released! This includes the guide, pop-up tooltips when hovering over the navigation buttons, and links to the discord and game credits on the title page!"
+
+[news.may14-2024]
+date = "May 14, 2024:"
+text_top = "Update 1.3 released today! This includes MANY new speed and user experience improvements. Just a few are:"
+update_list = [
+"The transition to websockets, decreasing the delay when your opponent moves.",
+"No longer getting disconnected when you switch tabs.",
+"Audible cues when you or someone else creates an invite, or makes a move.",
+"Added the 50-move rule.",
+"A drum countdown effect is now played at 10 seconds left on the clock.",
+"An auto-resignation timer will start if you're opponent goes AFK (with an audible warning)."
+]
+text_box = ["And many others! For the full list, check out ", "the discord!"]
+
+[news.jan29-2024]
+date = "Jan 29, 2024:"
+text = "New video released today!"
+
+[news.aug26-2023]
+date = "Aug 26, 2023:"
+text_top = "Infinite Chess v1.2 has been released! Introducing Move History. Use the left & right arrow keys to rewind and fast forward the game!"
+text_box = "The system for verifying accounts has been updated to be more reliable! If your account is not verified and you had trouble with the verification link before, please try verifying again!"
+
+[server.javascript]
+ws-invalid_username = "Nazwa użytkownika jest nieprawidłowa!"
+ws-incorrect_password = "Hasło jest niepoprawne!"
+ws-username_and_password_required = "Nazwa użytkownika oraz hasło są wymagane."
+ws-username_and_password_string = "Nazwa użytkownika i hasło muszą być typu 'string'."
+ws-login_failure_retry_in = "Wystąpił problem z logowaniem, spróbuj ponownie."
+ws-seconds = "sek." # unit of time
+ws-second = "sekunda" # unit of time
+ws-username_length = "Nazwa użytkownika musi posiadać od 3 do 20 znaków"
+ws-username_letters = "Nazwa użytkownika może zawierać tylko litery A-Z oraz cyfry 0-9"
+ws-username_taken = "Nazwa użytkownika jest zajęta"
+ws-username_bad_word = "Nazwa użytkownika zawiera słowo, które jest zabronione!"
+ws-username_reserved = "Nazwa użytkownika jest zarezerwowana"
+ws-email_too_long = "Twój adres e-mail jest za dłuuuuuuuuuuuugi."
+ws-email_invalid = "Adres e-mail jest niepoprawny."
+ws-email_in_use = "Adres e-mail jest już używany przez inne konto."
+ws-you_are_banned = "Jesteś zbanowany."
+ws-password_length = "Hasło musi posiadać od 6 do 72 znaków"
+ws-password_format = "Hasło ma niepoprwany format."
+ws-password_password = "Hasło nie może być 'hasłem'"
+ws-refresh_token_not_found_logged_out = "No member has that refresh token (wylogowano)" # Needs translation
+ws-refresh_token_not_found = "No member has that refresh token" # Needs translation
+ws-refresh_token_expired = "No refresh token found (sesja wygasła)" # Needs translation
+ws-refresh_token_invalid = "Refresh token expired or tampered" # Needs translation
+ws-member_not_found = "Nieznaleziono użytkownika"
+ws-forbidden_wrong_account = "Zabronione. To nie jest twoje konto."
+ws-deleting_account_not_found = "Nie udało się usunąć konta. Nieznaleziono konta."
+ws-server_error = "Przepraszamy, wystąpił błąd serwera! Prosimy wrócić na poprzednią stronę."
+ws-unable_to_identify_client_ip = "Nie można zweryfikować adresu IP"
+ws-you_are_banned_by_server = "Jesteś zbanowany."
+ws-too_many_requests_to_server = "Za dużo zapytań. Spróbuj ponownie później."
+ws-bad_request = "Błąd zapytania"
+ws-not_found = "404 Nieznaleziono"
+ws-forbidden = "Zabronione."
+ws-unauthorized_patron_page = "Nieautoryzowany dostęp. Ta strona jest dostępna tylko dla wspierających patreon."
+ws-already_in_game = "Już jestes w grze."
+ws-player_already_has_invite = "Gracz już utworzył zaproszenie."
+ws-invite_cancelled = "Zaproszenie zostało anulowane."
+ws-accept_own_invite = "Nie możesz zaakceptować swojego zaproszenia, głuptasie!"
+ws-server_restarting = "Serwer uruchomi się ponownie za"
+ws-minutes = "min." # unit of time
+ws-minute = "minuta" # unit of time
+ws-no_abort_game_over = "Can't abort game, it's already over." # Needs translation
+ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played." # Needs translation
+ws-game_aborted_cheating = "Game aborted for probable cheating." # Needs translation
+ws-cannot_resign_finished_game = "Can't resign game, it's already over." # Needs translation
+ws-invalid_code = "Niepoprwany kod" # Invite code doesn't match any existing invites
+ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it # Needs translation
