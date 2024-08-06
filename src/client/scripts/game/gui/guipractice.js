@@ -94,7 +94,7 @@ const guipractice = (function(){
     // TODO: implement beaten checkmate list
     function updateCheckmatesBeaten() {
         for (let element of elements_checkmates){
-            element.classList.remove('beaten')
+            // element.classList.remove('beaten')
         }
 
         // elements_checkmates[2].classList.add('beaten')

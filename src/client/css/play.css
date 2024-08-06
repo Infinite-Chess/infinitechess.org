@@ -667,10 +667,15 @@ canvas {
 }
 
 .completion-mark {
-    display: flex;
-    justify-content: center;
-    width: 7%;
-    margin-right: 5%;
+    width: 10%;
+    height: 100%;
+}
+
+/* Add the checkmark */
+.checkmate.beaten .completion-mark {
+    background-image: url('/img/game/checkmatepractice/checkmark.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .piecelistW {
@@ -694,7 +699,7 @@ canvas {
     display: flex;
     justify-content: center;
     align-content: center;
-    width: 23%;
+    width: 20%;
 }
 
 .checkmatepiececontainer {
@@ -1602,6 +1607,11 @@ a {
 
 .hidden {
     display: none;
+}
+
+/** Not visible, but takes up same space on the doc */
+.invisible {
+    visibility: hidden;
 }
 
 .opacity-0_5 {
