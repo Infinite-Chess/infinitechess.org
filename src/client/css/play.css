@@ -896,7 +896,7 @@ button.join-button, button.copy-button {
 
 
 
-/* Bottom Navigation: Color to move, clocks, player names, draw off UI */
+/* Bottom Navigation: Color to move, clocks, player names, draw offer UI */
 
 .footer {
     position: absolute;
@@ -1030,7 +1030,11 @@ button.join-button, button.copy-button {
 /* Draw Offer UI (in the bottom nav bar) */
 
 .draw_offer_ui {
-    width: fit-content;
+    width: max-content;
+    width: -moz-max-content;
+    width: -webkit-max-content;
+    width: intrinsic;
+
     height: 100%;
 
     display: flex;
