@@ -11,6 +11,8 @@ const checkmatepractice = (function() {
         // easy
         "2Q-1k",
         "3R-1k",
+        "2CH-1k",
+        "1Q1CH-1k",
         "1K2R-1k",
         "1K2B2B-1k",
         "3B3B-1k",
