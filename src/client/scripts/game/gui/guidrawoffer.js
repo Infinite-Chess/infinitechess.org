@@ -23,15 +23,18 @@ const guidrawoffer = (function(){
      */
     function areWeAcceptingDraw() { return isAcceptingDraw; }
 
+    /** Open a draw offer from our opponent */
     function openDrawOffer() {
         isAcceptingDraw = true;
         style.revealElement(element_draw_offer_ui)
         style.hideElement(element_whosturn)
         sound.playSound_base() //playSound_drawOffer()
         initDrawOfferListeners()
+        guipause.updateDrawOfferButton()
     }
 
     function closeDrawOffer() {
+        guipause.updateDrawOfferButton();
         isAcceptingDraw = false;
         style.hideElement(element_draw_offer_ui)
         style.revealElement(element_whosturn)
@@ -48,19 +51,19 @@ const guidrawoffer = (function(){
         element_declineDraw.removeEventListener('click', callback_DeclineDraw)
     }
 
-    async function callback_AcceptDraw(event) {
-        const gamefile = game.getGamefile();
-        
-        if (gamefile.gameConclusion) return // game already over
-        onlinegame.acceptDraw()
-        closeDrawOffer()
-
-        gamefile.gameConclusion = 'draw agreement';
-        clock.stop()
-        gamefileutility.concludeGame(gamefile);
+    function extendDrawOffer() {
+        onlinegame.offerDraw()
+        guipause.callback_Resume()
+        statustext.showStatus(`Waiting for opponent to accept...`)
     }
 
-    async function callback_DeclineDraw(event) {
+    function callback_AcceptDraw(event) {
+        if (gamefileutility.isGameOver()) return; // Can't accept draw when game over
+        onlinegame.acceptDraw()
+        closeDrawOffer()
+    }
+
+    function callback_DeclineDraw(event) {
         onlinegame.declineDraw()
         const gamefile = game.getGamefile();
         closeDrawOffer()
@@ -71,6 +74,7 @@ const guidrawoffer = (function(){
         areWeAcceptingDraw,
         openDrawOffer,
         closeDrawOffer,
+        extendDrawOffer,
         callback_AcceptDraw,
         callback_DeclineDraw
     })

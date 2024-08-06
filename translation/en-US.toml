@@ -236,7 +236,7 @@ arrows = "Arrows: Defense"
 perspective = "Perspective: Off"
 copy = "Copy Game"
 paste = "Paste Game"
-offer_draw = "Offer a Draw"
+offer_draw = "Offer Draw"
 accept_draw = "Accept Draw"
 main_menu = "Main Menu"
 

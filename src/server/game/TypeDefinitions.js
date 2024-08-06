@@ -131,8 +131,7 @@ function Game() {
     this.blackDrawOfferMove = undefined
 
     /** The states of players offering draws 
-     * @type {(string|undefined)} 'offering' / 'declined' / undefined
-    */
+     * @type {string|undefined} 'offering' / 'declined' / undefined */
     this.whiteDrawOffer = undefined
     this.blackDrawOffer = undefined
 

@@ -539,7 +539,6 @@ const gamemanager = (function() {
 
         cancelDisconnectTimer(game, colorPlayingAs)
         subscribeClientToGame(game, ws, colorPlayingAs)
-        reinformPlayerAboutDrawOffers(game, ws)
     }
 
     /**
@@ -872,20 +871,19 @@ const gamemanager = (function() {
         const game = getGameBySocket(ws);
         if (!game) return console.error("Client accepted a draw when they don't belong in a game.")
         const color = doesSocketBelongToGame_ReturnColor(game, ws);
-        const opponentColor = math1.getOppositeColor(color);
 
         if (isGameOver(game)) return console.error("Client accepted a draw when the game is already over. Ignoring.");
         
         // Update the status of game
         if (color === 'white') {
-            if (!hasBlackDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
+            if (!hasBlackDrawOffer(game)) return console.error("Client white accepted a draw when there wasn't a draw offer")
             game.whiteDrawOffer = 'confirmed'
         } else if (color === 'black') {
-            if (!hasWhiteDrawOffer(game)) return console.error("Client accepted a draw when there wasn't a draw offer")
+            if (!hasWhiteDrawOffer(game)) return console.error("Client black accepted a draw when there wasn't a draw offer")
             game.blackDrawOffer = 'confirmed'
         }
         setGameConclusion(game, "draw agreement")
-        sendGameUpdateToColor(game, opponentColor);
+        sendGameUpdateToBothPlayers(game);
     }
 
     /** 
@@ -918,28 +916,29 @@ const gamemanager = (function() {
         sendMessageToSocketOfColor(game, opponentColor, 'game', 'declinedraw')
     }
 
+    // THIS SHOULD NOT BE NEEDED if we send the details about open draw offers in the correct places
     /**
      * Reinforms the player about draw offers after page refresh
      * @param {Game} game The game in which the player is
      * @param {WebSocket} ws The websocket to inform
      */
-    function reinformPlayerAboutDrawOffers(game, ws) {
-        const color = doesSocketBelongToGame_ReturnColor(game, ws);
-        if (hasGameDrawOffer(game)) {
-            if (color == 'white') {
-                if (game.blackDrawOffer == 'offered') {
-                    const value = { offererColor: 'black', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
-                    sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
-                }
-            } else if (color == 'black') {
-                if (game.whiteDrawOffer == 'offered') {
-                    const value = { offererColor: 'white', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
-                    sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
-                }
-            }
+    // function reinformPlayerAboutDrawOffers(game, ws) {
+    //     const color = doesSocketBelongToGame_ReturnColor(game, ws);
+    //     if (hasGameDrawOffer(game)) {
+    //         if (color == 'white') {
+    //             if (game.blackDrawOffer == 'offered') {
+    //                 const value = { offererColor: 'black', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
+    //                 sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
+    //             }
+    //         } else if (color == 'black') {
+    //             if (game.whiteDrawOffer == 'offered') {
+    //                 const value = { offererColor: 'white', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
+    //                 sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
+    //             }
+    //         }
 
-        }
-    }
+    //     }
+    // }
 
     /**
      * Called when a client alerts us they have gone AFK.

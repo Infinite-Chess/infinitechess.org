@@ -77,7 +77,6 @@ const guigameinfo = (function(){
 
         if (onlinegame.areInOnlineGame()) {
 
-
           if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? translations["results"]["you_checkmate"]
                                                                                 : condition === 'time' ? translations["results"]["you_time"]
                                                                                 : condition === 'resignation' ? translations["results"]["you_resignation"]
@@ -105,7 +104,6 @@ const guigameinfo = (function(){
                                                              : condition === 'threecheck' ? translations["results"]["opponent_threecheck"]
                                                              : condition === 'koth' ? translations["results"]["opponent_koth"]
                                                              : translations["results"]["opponent_generic"]
-
         } else { // Local game
             if (condition === 'checkmate') element_whosturn.textContent = victor === 'white' ? translations["results"]["white_checkmate"]
                                                                        : victor === 'black' ? translations["results"]["black_checkmate"]

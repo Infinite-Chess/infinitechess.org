@@ -7,14 +7,11 @@
 
 const guipause = (function(){
 
-    // Variables
-
-    // Config
+    /** The number of half moves allowed before we can make an additional draw offer. */
     let movesBetweenDrawOffers = 2
 
     // Pause UI
     let isPaused = false
-    let offerDrawOverAcceptDraw = true
     const element_pauseUI = document.getElementById('pauseUI')
     const element_resume = document.getElementById('resume')
     const element_pointers = document.getElementById('togglepointers')
@@ -23,9 +20,6 @@ const guipause = (function(){
     const element_mainmenu = document.getElementById('mainmenu')
     const element_offerDraw = document.getElementById('offerdraw')
     const element_perspective = document.getElementById('toggleperspective')
-
-    // Whosturn
-    const element_whosturn = document.getElementById('whosturn')
     
     // Functions
 
@@ -43,7 +37,7 @@ const guipause = (function(){
         isPaused = true;
         changeTextOfMainMenuButton()
         updatePasteButtonTransparency()
-        updateDrawOfferButtonTransparency()
+        updateDrawOfferButton();
         style.revealElement(element_pauseUI)
         initListeners()
     }
@@ -62,57 +56,50 @@ const guipause = (function(){
         else                                                      element_pastegame.classList.remove('opacity-0_5')
     }
 
-    function changeOfferDrawToAcceptDraw() {
-        offerDrawOverAcceptDraw = false
-        element_offerDraw.innerText = translations["accept_draw"]
-        closeListeners()
-        initListeners()
-    }
+    function updateDrawOfferButton() {
+        if (!isPaused) return; // Not paused, no point in updating button, because it's updated as soon as we pause the game
 
-    function changeAcceptDrawToOfferDraw() {
-        offerDrawOverAcceptDraw = true
-        element_offerDraw.innerText = translations["offer_draw"]
-        closeListeners() // prevent weirdness
-        initListeners()
-    }
+        // Should it say "offer draw" or "accept draw"?
+        if (guidrawoffer.areWeAcceptingDraw()) element_offerDraw.innerText = translations.accept_draw;
+        else element_offerDraw.innerText = translations.offer_draw;
 
-    function updateDrawOfferButtonTransparency() {
+        // Update transparency...
+
         const gamefile = game.getGamefile()
-        const moves = gamefile.moves;
 
-        if (!offerDrawOverAcceptDraw) {
-            if (!gamefile.gameConclusion) element_offerDraw.classList.remove('opacity-0_5');
-            return
+        if (guidrawoffer.areWeAcceptingDraw()) {
+            if (!gamefileutility.isGameOver(gamefile)) element_offerDraw.classList.remove('opacity-0_5');
+            return;
         }
 
         if (isNaN(parseInt(gamefile.drawOfferWhite))) gamefile.drawOfferWhite = 0
         if (isNaN(parseInt(gamefile.drawOfferBlack))) gamefile.drawOfferBlack = 0
 
-        const ourDrawOfferMove = onlinegame.getOurColor() === "white" ? gamefile.drawOfferWhite : gamefile.drawOfferBlack
-        const movesLength = parseInt(moves.length)
-        const ourRecentOffers = !(movesLength - ourDrawOfferMove >= movesBetweenDrawOffers)
-
-        if (!onlinegame.areInOnlineGame() || ourRecentOffers || !movesscript.isGameResignable(gamefile) || gamefile.gameConclusion) {
-            element_offerDraw.classList.add('opacity-0_5')
-            return false
-        } else {
-            element_offerDraw.classList.remove('opacity-0_5')
-            return true
-        }
+        if (isOfferingDrawLegal()) element_offerDraw.classList.remove('opacity-0_5')
+        else element_offerDraw.classList.add('opacity-0_5')
     }
 
-    function disableDrawOfferButton() {
-        element_offerDraw.classList.add('opacity-0_5')
+    function isOfferingDrawLegal() {
+        const gamefile = game.getGamefile();
+        const ourDrawOfferMove = onlinegame.getOurColor() === "white" ? gamefile.drawOfferWhite : gamefile.drawOfferBlack
+        const movesLength = gamefile.moves.length
+        const ourRecentOffers = movesLength - ourDrawOfferMove < movesBetweenDrawOffers
+        return onlinegame.areInOnlineGame() && !ourRecentOffers && movesscript.isGameResignable(gamefile) && !gamefileutility.isGameOver(gamefile);
+    }
+
+    function onReceiveOpponentsMove() {
+        changeTextOfMainMenuButton();
+        updateDrawOfferButton()
     }
 
     function changeTextOfMainMenuButton() {
         if (!isPaused) return;
 
-        if (!onlinegame.areInOnlineGame() || game.getGamefile().gameConclusion) return element_mainmenu.textContent = translations["main_menu"];
+        if (!onlinegame.areInOnlineGame() || gamefileutility.isGameOver()) return element_mainmenu.textContent = translations["main_menu"];
 
         if (movesscript.isGameResignable(game.getGamefile())) return element_mainmenu.textContent = translations["resign_game"];
 
-        return element_mainmenu.textContent = translations["abort_game"];
+        element_mainmenu.textContent = translations["abort_game"];
     }
 
     function initListeners() {
@@ -121,11 +108,7 @@ const guipause = (function(){
         element_copygame.addEventListener('click', copypastegame.callbackCopy)
         element_pastegame.addEventListener('click', copypastegame.callbackPaste)
         element_mainmenu.addEventListener('click', callback_MainMenu)
-        if (offerDrawOverAcceptDraw) {
-            element_offerDraw.addEventListener('click', callback_OfferDraw)
-        } else {
-            element_offerDraw.addEventListener('click', guidrawoffer.callback_AcceptDraw)
-        }
+        element_offerDraw.addEventListener('click', callback_OfferDraw)
         element_perspective.addEventListener('click', callback_Perspective)
     }
 
@@ -136,7 +119,6 @@ const guipause = (function(){
         element_pastegame.removeEventListener('click', copypastegame.callbackPaste)
         element_mainmenu.removeEventListener('click', callback_MainMenu)
         element_offerDraw.removeEventListener('click', callback_OfferDraw)
-        element_offerDraw.removeEventListener('click', guidrawoffer.callback_AcceptDraw)
         element_perspective.removeEventListener('click', callback_Perspective)
     }
 
@@ -149,7 +131,7 @@ const guipause = (function(){
         main.renderThisFrame();
     }
 
-    async function callback_MainMenu(event) {
+    function callback_MainMenu(event) {
         event = event || window.event;
         onlinegame.onMainMenuPress()
         onlinegame.closeOnlineGame()
@@ -160,15 +142,15 @@ const guipause = (function(){
         guititle.open()
     }
 
-    async function callback_OfferDraw(event) {
-        const gamefile = game.getGamefile()
-        if (!updateDrawOfferButtonTransparency()) return statustext.showStatus(`Can't offer draw!`, false, 2)
-        onlinegame.offerDraw()
-        callback_Resume()
-        statustext.showStatus(`Waiting for opponent to accept the draw...`, false, 3)
-    }
+    // Called when the draw offer button is clicked
+    function callback_OfferDraw(event) {
+        if (!movesscript.isGameResignable(game.getGamefile())) return statustext.showStatus("Can't offer draw.")
 
-    
+        // Do we need to extend a draw offer or accept one?
+        if (!guidrawoffer.areWeAcceptingDraw() && isOfferingDrawLegal()) guidrawoffer.extendDrawOffer();
+        else if (guidrawoffer.areWeAcceptingDraw()) guidrawoffer.callback_AcceptDraw();
+        else statustext.showStatus("Can't offer draw.")
+    }
 
     function callback_TogglePointers (event) {
         event = event || window.event;
@@ -194,14 +176,11 @@ const guipause = (function(){
         getelement_perspective,
         open,
         toggle,
-        changeOfferDrawToAcceptDraw,
-        changeAcceptDrawToOfferDraw,
-        updateDrawOfferButtonTransparency,
+        updateDrawOfferButton,
+        onReceiveOpponentsMove,
         changeTextOfMainMenuButton,
-        disableDrawOfferButton,
         callback_Resume,
-        callback_TogglePointers,
-        callback_OfferDraw
+        callback_TogglePointers
     })
 
 })();

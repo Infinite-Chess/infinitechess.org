@@ -231,8 +231,6 @@ const onlinegame = (function(){
                 break;
             case "drawoffer":
                 guidrawoffer.openDrawOffer()
-                guipause.callback_Resume() // close pause screen
-                guipause.changeOfferDrawToAcceptDraw()
                 let gamefile = game.getGamefile()
 
                 const moves = data.value;
@@ -241,7 +239,7 @@ const onlinegame = (function(){
 
                 break;
             case "declinedraw":
-                statustext.showStatus(`Opponent declined the draw`, false, 2)
+                statustext.showStatus(`Opponent declined draw offer.`)
                 break;
             default:
                 statustext.showStatus(`${translations["invites"]["unknown_action_received_1"]} ${message.action} ${translations["invites"]["unknown_action_received_2"]}`, true)
@@ -388,7 +386,7 @@ const onlinegame = (function(){
         flashTabNameYOUR_MOVE(true);
         scheduleMoveSound_timeoutID();
 
-        if (guipause.areWePaused) guipause.updateDrawOfferButtonTransparency()
+        guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
     }
 
     function flashTabNameYOUR_MOVE(on) {
@@ -566,10 +564,10 @@ const onlinegame = (function(){
     }
 
     function offerDraw() {
-        websocket.sendmessage('game', 'offerdraw')
-
         const gamefile = game.getGamefile()
-        if ( !gamefile.moves ) return
+        if (gamefile.moves.length < 2) throw new Error("Somehow we tried to extend a draw offer when there's < 2 moves played!")
+            
+        websocket.sendmessage('game', 'offerdraw')
         if ( getOurColor() === "white" ) gamefile.drawOfferWhite = gamefile.moves.length
         if ( getOurColor() === "black" ) gamefile.drawOfferBlack = gamefile.moves.length
     }
@@ -580,7 +578,7 @@ const onlinegame = (function(){
 
     function declineDraw() {
         if (!guidrawoffer.areWeAcceptingDraw()) return; // there isn't a draw to decline (we hope)
-        guipause.changeAcceptDrawToOfferDraw()
+        guipause.updateDrawOfferButton()
         websocket.sendmessage('game', 'declinedraw');
         statustext.showStatus(`Draw declined`, false, 2);
     }
@@ -626,7 +624,6 @@ const onlinegame = (function(){
         resetAFKValues();
         resetServerRestarting();
         cancelFlashTabTimer();
-        guipause.changeAcceptDrawToOfferDraw(); // prevent "accept draw"
         guidrawoffer.closeDrawOffer() // if it's open somehow, close it anyway
         perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
     }
@@ -672,10 +669,7 @@ const onlinegame = (function(){
         websocket.sendmessage('game', 'submitmove', data, true)
 
         // onlinegame.declineDraw() not needed, server-sided
-        if (guidrawoffer.areWeAcceptingDraw()) {
-            guipause.changeAcceptDrawToOfferDraw()
-            guidrawoffer.closeDrawOffer()
-        }
+        if (guidrawoffer.areWeAcceptingDraw()) guidrawoffer.closeDrawOffer()
         
         rescheduleAlertServerWeAFK();
     }
@@ -700,7 +694,6 @@ const onlinegame = (function(){
         websocket.getSubs().game = false;
         inSync = false;
         websocket.sendmessage('game','resign')
-        guipause.changeAcceptDrawToOfferDraw()
         guidrawoffer.closeDrawOffer()
     }
 
@@ -708,7 +701,6 @@ const onlinegame = (function(){
         websocket.getSubs().game = false;
         inSync = false;
         websocket.sendmessage('game','abort')
-        guipause.changeAcceptDrawToOfferDraw()
         guidrawoffer.closeDrawOffer()
     }
 
@@ -794,6 +786,7 @@ const onlinegame = (function(){
         cancelMoveSound();
         resetServerRestarting();
         deleteCustomVariantOptions();
+        guidrawoffer.closeDrawOffer();
     }
 
     return Object.freeze({
@@ -816,8 +809,6 @@ const onlinegame = (function(){
         update,
         onLostConnection,
         cancelMoveSound,
-        resetServerRestarting,
-        deleteCustomVariantOptions,
         offerDraw,
         acceptDraw,
         declineDraw,

@@ -197,14 +197,7 @@ const gamefileutility = (function(){
         if (requestRemovalFromActiveGames) onlinegame.requestRemovalFromPlayersInActiveGames();
         if (wincondition.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
         clock.stop()
-        main.renderThisFrame();
-        board.darkenColor();
-        guigameinfo.gameEnd(gamefile.gameConclusion);
-        guidrawoffer.closeDrawOffer();
-        guipause.disableDrawOfferButton();
-        onlinegame.cancelMoveSound();
-        onlinegame.resetServerRestarting();
-        onlinegame.deleteCustomVariantOptions();
+        board.darkenColor()
         guigameinfo.gameEnd(gamefile.gameConclusion)
         onlinegame.onGameConclude();
 
@@ -223,6 +216,16 @@ const gamefileutility = (function(){
 
         selection.unselectPiece();
         guipause.changeTextOfMainMenuButton()
+    }
+
+    /**
+     * Returns true if the provided game is over
+     * @param {gamefile} gamefile - The gamefile. If not specified, this is game.getGamefile()
+     * @returns {boolean} true if over
+     */
+    function isGameOver(gamefile = game.getGamefile()) {
+        if (gamefile.gameConclusion) return true; // If gameConclusion is truthy (not false), then game is over
+        return false;
     }
 
     /**
@@ -492,7 +495,8 @@ const gamefileutility = (function(){
         getRoyalCoords,
         getRoyalCountOfColor,
         getPieceCountOfGame,
-        getWhosTurnAtMoveIndex
+        getWhosTurnAtMoveIndex,
+        isGameOver
     })
 
 })();
