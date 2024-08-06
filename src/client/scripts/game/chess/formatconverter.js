@@ -36,8 +36,6 @@ const formatconverter = (function() {
         "voidsN": "vo"
     };
 
-    const colorDictionary = {"b":"black", "w":"white"}
-
     const metadata_key_ordering = [
         "Event",
         "Site",
@@ -61,8 +59,6 @@ const formatconverter = (function() {
     }
 
     const invertedpieceDictionary = invertDictionary(pieceDictionary);
-
-    const invertedColorDictionary = invertDictionary(colorDictionary)
 
     function LongToShort_Piece(longpiece){
         if (!pieceDictionary[longpiece]) throw new Error("Unknown piece type detected: "+longpiece);
@@ -118,13 +114,11 @@ const formatconverter = (function() {
         // move turn
         let next_move = "w";
         if (longformat["turn"] == "black"){
+            shortformat += "b ";
             next_move = "b";
-        }
-
-        if (longformat["gameRules"]) {
-            if (longformat["gameRules"]["turnOrder"]) {
-                shortformat+=`${longformat["gameRules"]["turnOrder"].map((color) => invertedColorDictionary[color]).join(":")} `
-            }
+        } else if (longformat["turn"] == "white"){
+            shortformat += "w ";
+            next_move = "w";
         }
 
         // en passant
@@ -205,11 +199,10 @@ const formatconverter = (function() {
         }
 
         // Extra gamerules not used will be stringified into the ICN
-        const includedRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder"])
         const extraGameRules = {};
         let added_extras = false;
         for (const key in longformat.gameRules) {
-            if (includedRules.has(key))
+            if (key === "promotionRanks" || key === "promotionsAllowed" || key === "winConditions") continue; // Skip this key
             extraGameRules[key] = longformat.gameRules[key];
             added_extras = true;
         }
@@ -293,13 +286,10 @@ const formatconverter = (function() {
     function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = true, trust_check_and_mate_symbols = true*/){
         let longformat = {};
         longformat.gameRules = {};
-        const turnregexExp = new RegExp(`^(${Object.keys(colorDictionary).join("|")})(:(${Object.keys(colorDictionary).join("|")}))*\$`)
 
         // metadata handling. Don't put ": " in metadata fields.
         let metadata = {};
-        let metaformat = /^(\[.* .*\]\s)*/.exec(shortformat) // Metadata was eating my damn [] outside of scope
-        shortformat = shortformat.replace(/^(\[.* .*\]\s)*/, "")
-        while (metaformat.indexOf("[") > -1){
+        while (shortformat.indexOf("[") > -1){
             let start_index = shortformat.indexOf("[");
             let end_index = shortformat.indexOf("]");
             if (end_index == -1) throw new Error("Unclosed [ detected");
@@ -330,10 +320,10 @@ const formatconverter = (function() {
             let string = shortformat.slice(0,index);
             let removed_char = shortformat.slice(index,index+1);
             shortformat = shortformat.slice(index+1);
-            // /^(b|w)((:(b|w))*)$/m
+
             // move turn
-            if (longformat["gameRules"]["turnOrder"] && turnregexExp.test(string)){
-                longformat["gameRules"]["turnOrder"] = string.split(":").map((scolor) => colorDictionary[scolor])
+            if (!longformat["turn"] && /^(w|b)$/.test(string)){
+                longformat["turn"] = (string == "b" ? "black" : "white");
                 continue;
             }
 
