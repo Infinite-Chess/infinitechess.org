@@ -51,6 +51,7 @@ const guipractice = (function(){
         element_checkmatePractice.addEventListener('click', callback_checkmatePractice)
         element_tacticsPractice.addEventListener('click', gui.callback_featurePlanned)
         element_practicePlay.addEventListener('click', callback_practicePlay)
+        document.addEventListener('keydown', callback_return);
         for (let element of elements_checkmates) {
             element.addEventListener('click', callback_checkmateList);
         }
@@ -61,6 +62,7 @@ const guipractice = (function(){
         element_checkmatePractice.removeEventListener('click', callback_checkmatePractice)
         element_tacticsPractice.removeEventListener('click', gui.callback_featurePlanned)
         element_practicePlay.removeEventListener('click', callback_practicePlay)
+        document.removeEventListener('keydown', callback_return);
         for (let element of elements_checkmates) {
             element.removeEventListener('click', callback_checkmateList);
         }
@@ -118,6 +120,11 @@ const guipractice = (function(){
         } else if (modeSelected === 'tactics-practice') {
             // nothing yet
         }
+    }
+
+    /** If enter is pressed, click Play */
+    function callback_return(event) {
+        if (event.key === 'Enter') callback_practicePlay()
     }
 
     /**
