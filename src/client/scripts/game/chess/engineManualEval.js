@@ -33,6 +33,17 @@ const engineManualEval = (function(){
 			diagonalLineArr.push(firstLine, secondLine);
 		}
 
+		// calculate intersections between vertical lines and horizontal lines emitted from all pieces.
+		const xArr = Array.from(xSet);
+		const yArr = Array.from(ySet);
+		for (let i = 0; i < xArr.length; i++) {
+			for (let j = i+1; j < xArr.length; j++) {
+				intersections.add(`${xArr[i]},${yArr[j]}`);
+				intersections.add(`${xArr[j]},${yArr[i]}`);
+			}
+		}
+
+		// calculate intersections of diagonal lines
 		for (let i = 0; i < diagonalLineArr.length; i++) {
 			const [m1, b1] = diagonalLineArr[i];
 
@@ -50,7 +61,12 @@ const engineManualEval = (function(){
 				intersections.add(`${x},${m1 * x + b1}`);
 			}
 
-			for (let j = i + 1; j < diagonalLineArr.length; j++) {
+			// Skip calculating the intersection with the first line 
+			// after the line we are currently checking with if the latter has an even index
+			// since its guaranteed to be its mirror in regard to the y axis
+			// because we push diagonal lines and their mirrored versions to diagonalLineArr directly after each other
+			const loopOffset = i % 2 == 0 ? 2 : 1;
+			for (let j = i + loopOffset; j < diagonalLineArr.length; j++) {
 				const [m2, b2] = diagonalLineArr[j];
 
 				const intersectionX = (b2 - b1) / (m1 - m2);
@@ -183,6 +199,7 @@ const engineManualEval = (function(){
 		// if its black's turn get all king legal moves
 		// if its white's turn get the considered moves. aka moves that move into an intersection
 		let moves = colorNum == 1 ? getBlackKingLegalMoves(gamefile) : getConsideredMoves(gamefile);
+		console.log(moves)
 		for (let move of moves) {
 			movepiece.makeMove(gamefile, move, {
 				pushClock: false,
