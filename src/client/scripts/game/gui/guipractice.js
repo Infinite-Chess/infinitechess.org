@@ -138,7 +138,7 @@ const guipractice = (function(){
             },
             youAreColor: 'white',
             clock: "-",
-            currentEngine: engineRandomRoyalMoves,
+            currentEngine: engineAndreas,
             variantOptions: {
                 turn: "white",
                 fullMove: "1",
