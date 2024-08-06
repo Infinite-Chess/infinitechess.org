@@ -24,15 +24,6 @@ const variant1 = (function() {
     }
 
     /**
-     * Determines if the provided variant is a variant where black moves first
-     * @param {string} variantName - The name of the variant
-     * @returns {boolean} *true* if black moves first
-     */
-    function isVariantAVariantWhereBlackStarts(variantName) {
-        return blackMovesFirstGames.includes(variantName);
-    }
-
-    /**
      * Initializes the startSnapshot and gameRules properties of the provided gamefile.
      * And inits the piece movesets. ..Basically everything unique to the variant!
      * 
