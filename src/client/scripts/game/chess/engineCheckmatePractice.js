@@ -3,7 +3,7 @@
 "use strict";
 
 
-const engineAndreas = (function(){
+const engineCheckmatePractice = (function(){
     // Black royal piece properties. The black royal piece is always at square [0,0]
     const king_moves = [ 
         [-1,  1], [0,  1], [1,  1],

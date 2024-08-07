@@ -145,7 +145,7 @@ const guipractice = (function(){
             },
             youAreColor: 'white',
             clock: "-",
-            currentEngine: engineAndreas,
+            currentEngine: engineCheckmatePractice,
             variantOptions: {
                 turn: "white",
                 fullMove: "1",
