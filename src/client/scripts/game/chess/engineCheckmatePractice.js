@@ -77,7 +77,7 @@ const engineCheckmatePractice = (function(){
     };
 
     const distancesEvalDictionary = {
-        3: [11, manhattanNorm], // bishop
+        3: [2, manhattanNorm], // bishop
         4: [10, manhattanNorm],  // knight
         5: [20, manhattanNorm],  // king
         6: [30, manhattanNorm], // pawn
