@@ -139,6 +139,14 @@ const checkmatepractice = (function() {
         // Add the checkmate ID to the beaten list
         if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
         saveCheckmatesBeaten();
+        console.log("Marked checkmate practice as completed!")
+    }
+
+    /** Completely for dev testing, call {@link checkmatepractice} in developer tools! */
+    function eraseCheckmatePracticeProgress() {
+        completedCheckmates = [];
+        localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
+        console.log("DELETED all checkmate practice progress.")
     }
 
     /** Called when an engine game ends */
@@ -157,6 +165,7 @@ const checkmatepractice = (function() {
 
     return Object.freeze({
         generateCheckmateStartingPosition,
-        onEngineGameConclude
+        onEngineGameConclude,
+        eraseCheckmatePracticeProgress
     })
 })()
