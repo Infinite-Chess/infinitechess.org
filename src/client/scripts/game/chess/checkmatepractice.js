@@ -150,6 +150,7 @@ const checkmatepractice = (function() {
     function eraseCheckmatePracticeProgress() {
         completedCheckmates.length = 0;
         localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
+        guipractice.updateCheckmatesBeaten() // Delete the 'beaten' class from all
         console.log("DELETED all checkmate practice progress.")
     }
 

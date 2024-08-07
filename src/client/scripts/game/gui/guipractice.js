@@ -109,7 +109,7 @@ const guipractice = (function(){
             const id_string = element.id; // "2Q-1k"
             // If this id is inside our list of beaten checkmates, add the beaten class
             if (completedCheckmates.includes(id_string)) element.classList.add('beaten');
-            // else element.classList.remove('beaten');
+            else element.classList.remove('beaten');
         }
     }
 
@@ -216,6 +216,7 @@ const guipractice = (function(){
         getCheckmateSelectedID,
         open,
         close,
+        updateCheckmatesBeaten,
         startCheckmatePractice,
         onPracticePage
     })
