@@ -46,7 +46,7 @@ const checkmatepractice = (function() {
     const nameOfCompletedCheckmatesInStorage = 'checkmatePracticeCompletion';
     /** A list of checkmate strings we have beaten
      * [ "2Q-1k", "3R-1k", "2CH-1k"] @type {string[]} */
-    const completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage);
+    const completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
     const expiryOfCompletedCheckmatesMillis = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 
