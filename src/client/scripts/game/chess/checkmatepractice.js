@@ -51,6 +51,10 @@ const checkmatepractice = (function() {
 
 
 
+    function getCompletedCheckmates() {
+        return math.deepCopyObject(completedCheckmates);
+    }
+
     /**
      * This method generates a random starting position object for a given checkmate practice ID
      * @param {string} checkmateID - a string containing the ID of the selected checkmate practice problem
@@ -155,7 +159,7 @@ const checkmatepractice = (function() {
         if (gui.getScreen() !== 'checkmate practice') return; // No
 
         // Did we win or lose?
-        const victor = wincondition.getVictorAndConditionFromGameConclusion(game.getGamefile()).victor;
+        const victor = wincondition.getVictorAndConditionFromGameConclusion(game.getGamefile().gameConclusion).victor;
         if (!enginegame.areWeColor(victor)) return; // Lost
 
         // Add the checkmate to the list of completed!
@@ -164,6 +168,7 @@ const checkmatepractice = (function() {
     }
 
     return Object.freeze({
+        getCompletedCheckmates,
         generateCheckmateStartingPosition,
         onEngineGameConclude,
         eraseCheckmatePracticeProgress
