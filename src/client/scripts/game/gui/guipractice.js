@@ -143,18 +143,20 @@ const guipractice = (function(){
     /** If enter is pressed, click Play. Or if arrow keys are pressed, move up and down selection */
     function callback_keyPress(event) {
         if (event.key === 'Enter') callback_practicePlay()
-        else if (event.key === 'ArrowDown') moveDownSelection()
-        else if (event.key === 'ArrowUp') moveUpSelection()
+        else if (event.key === 'ArrowDown') moveDownSelection(event)
+        else if (event.key === 'ArrowUp') moveUpSelection(event)
     }
 
-    function moveDownSelection() {
+    function moveDownSelection(event) {
+        event.preventDefault();
         if (indexSelected >= elements_checkmates.length - 1) return;
         indexSelected++;
         const newSelectionElement = elements_checkmates[indexSelected];
         changeCheckmateSelected(newSelectionElement.id)
     }
 
-    function moveUpSelection() {
+    function moveUpSelection(event) {
+        event.preventDefault();
         if (indexSelected <= 0) return;
         indexSelected--;
         const newSelectionElement = elements_checkmates[indexSelected];
