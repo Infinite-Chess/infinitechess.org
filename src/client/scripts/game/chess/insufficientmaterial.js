@@ -9,6 +9,7 @@ const insufficientmaterial = (function(){
 	// so that bishops on different colored squares are treated seperately
 
 	// Checkmate one black king with one white king for help
+	// The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list
 	const insuffmatScenarios_1K1k = [
 		{'queensW': 1},
 		{'bishopsW': [Infinity, 1]},
@@ -28,6 +29,7 @@ const insufficientmaterial = (function(){
 	]
 
 	// Checkmate one black king without any white kings
+	// The piece {'kingsB': 1} is assumed for each entry of this list
 	const insuffmatScenarios_0K1k = [
 		{'queensW': 1, 'rooksW': 1},
 		{'queensW': 1, 'knightsW': 1},
