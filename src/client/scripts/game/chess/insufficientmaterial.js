@@ -4,11 +4,12 @@
 
 const insufficientmaterial = (function(){
 
-	// Scenarios that lead to a draw by insufficient material
+	// Lists of scenarios that lead to a draw by insufficient material
 	// Entries for bishops are given by tuples ordered in descending order, because of parity
+	// so that bishops on different colored squares are treated seperately
 
 	// Checkmate one black king with one white king for help
-	const insuffmatScenrarios_1K1k = [
+	const insuffmatScenarios_1K1k = [
 		{'queensW': 1},
 		{'bishopsW': [Infinity, 1]},
 		{'knightsW': 3},
@@ -23,11 +24,11 @@ const insufficientmaterial = (function(){
 		{'guardsW': 1},
 		{'chancellorsW': 1},
 		{'knightridersW': 2},
-		{'pawnsW': 3},
+		{'pawnsW': 3}
 	]
 
 	// Checkmate one black king without any white kings
-	const insuffmatScenrarios_0K1k = [
+	const insuffmatScenarios_0K1k = [
 		{'queensW': 1, 'rooksW': 1},
 		{'queensW': 1, 'knightsW': 1},
 		{'queensW': 1, 'bishopsW': [1, 0]},
@@ -56,15 +57,15 @@ const insufficientmaterial = (function(){
 		{'guardsW': 2},
 		{'amazonsW': 1},
 		{'knightridersW': 3},
-		{'pawnsW': 6},
+		{'pawnsW': 6}
 	];
 
 	// other special insuffmat scenarios
-	const insuffmatScenrarios_special = [
+	const insuffmatScenarios_special = [
 		{'kingsB': Infinity, 'kingsW': Infinity},
 		{'royalCentaursB': Infinity, 'royalCentaursW': Infinity},
-		{'royalCentaursB': 1, 'amazonsW': 1},
-	]
+		{'royalCentaursB': 1, 'amazonsW': 1}
+	];
 
 	/**
 	 * Detects if the provided piecelist scenario is a draw by insufficient material
@@ -76,20 +77,20 @@ const insufficientmaterial = (function(){
 		let scenrariosForInsuffMat;
 		if (scenario["kingsB"] === 1) {
 			if (scenario["kingsW"] === 1) {
-				scenrariosForInsuffMat = insuffmatScenrarios_1K1k;
+				scenrariosForInsuffMat = insuffmatScenarios_1K1k;
 				delete scenario["kingsW"];
 				delete scenario["kingsB"];
 			} else if (!scenario["kingsW"]) {
-				scenrariosForInsuffMat = insuffmatScenrarios_0K1k;
+				scenrariosForInsuffMat = insuffmatScenarios_0K1k;
 				delete scenario["kingsB"];
 			} else {
-				scenrariosForInsuffMat = insuffmatScenrarios_special;
+				scenrariosForInsuffMat = insuffmatScenarios_special;
 			}
 		} else {
-			scenrariosForInsuffMat = insuffmatScenrarios_special;
+			scenrariosForInsuffMat = insuffmatScenarios_special;
 		}
 
-		// loop over all draw scenarios to see if they apply here
+		// loop over all applicable draw scenarios to see if they apply here
 		drawscenarioloop:
 		for (let drawScenario of scenrariosForInsuffMat){
 			for (let piece in scenario) {
@@ -156,8 +157,9 @@ const insufficientmaterial = (function(){
 			if (piece === "obstaclesN") continue;
 			else if (math.trimWorBFromType(piece) === "bishops") {
 				const parity = sum_tuple_coords(math.getCoordsFromKey(key)) % 2;
-				if (math.getWorBFromType(piece) === "W") bishopsW_count[parity] += 1;
-				else bishopsB_count[parity] += 1;
+				const color = math.getWorBFromType(piece);
+				if (color === "W") bishopsW_count[parity] += 1;
+				else if (color === "B") bishopsB_count[parity] += 1;
 			}
 			else if (piece in scenario) scenario[piece] += 1;
 			else scenario[piece] = 1
