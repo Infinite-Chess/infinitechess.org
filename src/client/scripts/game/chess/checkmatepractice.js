@@ -43,6 +43,14 @@ const checkmatepractice = (function() {
         "1K3HA-1k",
     ];
 
+    const nameOfCompletedCheckmatesInStorage = 'checkmatePracticeCompletion';
+    /** A list of checkmate strings we have beaten
+     * [ "2Q-1k", "3R-1k", "2CH-1k"] @type {string[]} */
+    const completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage);
+    const expiryOfCompletedCheckmatesMillis = 1000 * 60 * 60 * 24 * 365; // 1 year
+
+
+
     /**
      * This method generates a random starting position object for a given checkmate practice ID
      * @param {string} checkmateID - a string containing the ID of the selected checkmate practice problem
@@ -120,8 +128,35 @@ const checkmatepractice = (function() {
         }
         return true;
     }
+    
+    /** Saves the list of beaten checkmates into browser storages. */
+    function saveCheckmatesBeaten() {
+        localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis)
+    }
+
+    function markCheckmateBeaten(checkmatePracticeID) {
+        if (typeof checkmatePracticeID !== 'string') throw new Error('Cannot save completed checkmate when its ID is not a string.');
+        // Add the checkmate ID to the beaten list
+        if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
+        saveCheckmatesBeaten();
+    }
+
+    /** Called when an engine game ends */
+    function onEngineGameConclude() {
+        // Were we doing checkmate practice
+        if (gui.getScreen() !== 'checkmate practice') return; // No
+
+        // Did we win or lose?
+        const victor = wincondition.getVictorAndConditionFromGameConclusion(game.getGamefile()).victor;
+        if (!enginegame.areWeColor(victor)) return; // Lost
+
+        // Add the checkmate to the list of completed!
+        const checkmatePracticeID = guipractice.getCheckmateSelectedID();
+        markCheckmateBeaten(checkmatePracticeID);
+    }
 
     return Object.freeze({
         generateCheckmateStartingPosition,
+        onEngineGameConclude
     })
 })()
