@@ -63,6 +63,7 @@ const guipractice = (function(){
         document.addEventListener('keydown', callback_keyPress);
         for (let element of elements_checkmates) {
             element.addEventListener('click', callback_checkmateList);
+            element.addEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
         }
     }
 
@@ -74,6 +75,7 @@ const guipractice = (function(){
         document.removeEventListener('keydown', callback_keyPress);
         for (let element of elements_checkmates) {
             element.removeEventListener('click', callback_checkmateList);
+            element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
         }
     }
 
