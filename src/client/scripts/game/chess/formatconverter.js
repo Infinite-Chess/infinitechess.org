@@ -297,14 +297,14 @@ const formatconverter = (function() {
 
         // metadata handling. Don't put ": " in metadata fields.
         let metadata = {};
-        let metaformat = /^\s*+(\[([^\"\]]*\"[^\"]*\"|[^:\]]*+:\s*+[^\]]*+)\]\s*+)*/.exec(shortformat) // Metadata was eating my damn [] outside of scope
-        shortformat = shortformat.replace(/^\s*+(\[([^\"\]]*+\"[^\"]*+\"|[^:\]]*+:\s*+[^\]]*+)\]\s*+)*/, "")
+        let metaformat = /^\s*(\[([^\"\]]*\"[^\"]*\"|[^:\]]*:\s*[^\]]*)\]\s*)*/.exec(shortformat)[0] // Metadata was eating my damn [] outside of scope
+        shortformat = shortformat.replace(/^\s*(\[([^\"\]]*\"[^\"]*\"|[^:\]]*:\s*[^\]]*)\]\s*)*/, "")
         while (metaformat.indexOf("[") > -1){
-            let start_index = shortformat.indexOf("[");
-            let end_index = shortformat.indexOf("]");
+            let start_index = metaformat.indexOf("[");
+            let end_index = metaformat.indexOf("]");
             if (end_index == -1) throw new Error("Unclosed [ detected");
-            let metadatastring = shortformat.slice(start_index+1,end_index);
-            shortformat = `${shortformat.slice(0,start_index)}${shortformat.slice(end_index+1)}`;
+            let metadatastring = metaformat.slice(start_index+1,end_index);
+            metaformat = `${metaformat.slice(0,start_index)}${metaformat.slice(end_index+1)}`;
             
             // new metadata format [Metadata "value"]
             if (/^[^\s\:]*\s+\"/.test(metadatastring)){
