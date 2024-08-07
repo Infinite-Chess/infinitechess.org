@@ -7,62 +7,64 @@ const insufficientmaterial = (function(){
 	// Scenarios that lead to a draw by insufficient material
 	// Entries for bishops are given by tuples ordered in descending order, because of parity
 
-	// Checkmate black with at least one white king
-	const scenrariosForInsuffMatWhiteKing = [
-		{'kingsB': Infinity, 'kingsW': Infinity},
-		{'kingsB': 1, 'kingsW': 1, 'queensW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'bishopsW': [Infinity, 1]},
-		{'kingsB': 1, 'kingsW': 1, 'knightsW': 3},
-		{'kingsB': 1, 'kingsW': 1, 'hawksW': 2},
-		{'kingsB': 1, 'kingsW': 1, 'rooksW': 1, 'knightsW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'rooksW': 1, 'bishopsW': [1, 0]},
-		{'kingsB': 1, 'kingsW': 1, 'archbishopsW': 1, 'bishopsW': [1, 0]},
-		{'kingsB': 1, 'kingsW': 1, 'archbishopsW': 1, 'knightsW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'knightsW': 1, 'bishopsW': [Infinity, 0]},
-		{'kingsB': 1, 'kingsW': 1, 'knightsW': 1, 'bishopsW': [1, 1]},
-		{'kingsB': 1, 'kingsW': 1, 'knightsW': 2, 'bishopsW': [1, 0]},
-		{'kingsB': 1, 'kingsW': 1, 'guardsW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'chancellorsW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'knightridersW': 2},
-		{'kingsB': 1, 'kingsW': 1, 'pawnsW': 3},
+	// Checkmate one black king with one white king for help
+	const insuffmatScenrarios_1K1k = [
+		{'queensW': 1},
+		{'bishopsW': [Infinity, 1]},
+		{'knightsW': 3},
+		{'hawksW': 2},
+		{'rooksW': 1, 'knightsW': 1},
+		{'rooksW': 1, 'bishopsW': [1, 0]},
+		{'archbishopsW': 1, 'bishopsW': [1, 0]},
+		{'archbishopsW': 1, 'knightsW': 1},
+		{'knightsW': 1, 'bishopsW': [Infinity, 0]},
+		{'knightsW': 1, 'bishopsW': [1, 1]},
+		{'knightsW': 2, 'bishopsW': [1, 0]},
+		{'guardsW': 1},
+		{'chancellorsW': 1},
+		{'knightridersW': 2},
+		{'pawnsW': 3},
 	]
 
-	// Checkmate black without any white kings
-	const scenrariosForInsuffMatNoWhiteWhiteKing = [
-		{'kingsB': 1, 'queensW': 1, 'rooksW': 1},
-		{'kingsB': 1, 'queensW': 1, 'knightsW': 1},
-		{'kingsB': 1, 'queensW': 1, 'bishopsW': [1, 0]},
-		{'kingsB': 1, 'queensW': 1, 'pawnsW': 1},
-		{'kingsB': 1, 'bishopsW': [2, 2]},
-		{'kingsB': 1, 'bishopsW': [Infinity, 1]},
-		{'kingsB': 1, 'knightsW': 4},
-		{'kingsB': 1, 'knightsW': 2, 'bishopsW': [Infinity, 0]},
-		{'kingsB': 1, 'knightsW': 2, 'bishopsW': [1, 1]},
-		{'kingsB': 1, 'knightsW': 1, 'bishopsW': [2, 1]},
-		{'kingsB': 1, 'hawksW': 3},
-		{'kingsB': 1, 'rooksW': 1, 'knightsW': 1, 'bishopsW': [1, 0]},
-		{'kingsB': 1, 'rooksW': 1, 'knightsW': 1, 'pawnsW': 1},
-		{'kingsB': 1, 'rooksW': 1, 'knightsW': 2},
-		{'kingsB': 1, 'rooksW': 1, 'guardsW': 1},
-		{'kingsB': 1, 'rooksW': 2, 'bishopsW': [1, 0]},
-		{'kingsB': 1, 'rooksW': 2, 'knightsW': 1},
-		{'kingsB': 1, 'rooksW': 2, 'pawnsW': 1},
-		{'kingsB': 1, 'archbishopsW': 1, 'bishopsW': [2, 0]},
-		{'kingsB': 1, 'archbishopsW': 1, 'bishopsW': [1, 1]},
-		{'kingsB': 1, 'archbishopsW': 1, 'knightsW': 2},
-		{'kingsB': 1, 'archbishopsW': 2},
-		{'kingsB': 1, 'chancellorsW': 1, 'guardsW': 1},
-		{'kingsB': 1, 'chancellorsW': 1, 'knightsW': 1},
-		{'kingsB': 1, 'chancellorsW': 1, 'rooksW': 1},
-		{'kingsB': 1, 'guardsW': 2},
-		{'kingsB': 1, 'amazonsW': 1},
-		{'kingsB': 1, 'knightridersW': 3},
-		{'kingsB': 1, 'pawnsW': 6},
+	// Checkmate one black king without any white kings
+	const insuffmatScenrarios_0K1k = [
+		{'queensW': 1, 'rooksW': 1},
+		{'queensW': 1, 'knightsW': 1},
+		{'queensW': 1, 'bishopsW': [1, 0]},
+		{'queensW': 1, 'pawnsW': 1},
+		{'bishopsW': [2, 2]},
+		{'bishopsW': [Infinity, 1]},
+		{'knightsW': 4},
+		{'knightsW': 2, 'bishopsW': [Infinity, 0]},
+		{'knightsW': 2, 'bishopsW': [1, 1]},
+		{'knightsW': 1, 'bishopsW': [2, 1]},
+		{'hawksW': 3},
+		{'rooksW': 1, 'knightsW': 1, 'bishopsW': [1, 0]},
+		{'rooksW': 1, 'knightsW': 1, 'pawnsW': 1},
+		{'rooksW': 1, 'knightsW': 2},
+		{'rooksW': 1, 'guardsW': 1},
+		{'rooksW': 2, 'bishopsW': [1, 0]},
+		{'rooksW': 2, 'knightsW': 1},
+		{'rooksW': 2, 'pawnsW': 1},
+		{'archbishopsW': 1, 'bishopsW': [2, 0]},
+		{'archbishopsW': 1, 'bishopsW': [1, 1]},
+		{'archbishopsW': 1, 'knightsW': 2},
+		{'archbishopsW': 2},
+		{'chancellorsW': 1, 'guardsW': 1},
+		{'chancellorsW': 1, 'knightsW': 1},
+		{'chancellorsW': 1, 'rooksW': 1},
+		{'guardsW': 2},
+		{'amazonsW': 1},
+		{'knightridersW': 3},
+		{'pawnsW': 6},
+	];
 
-		// Checkmate black royal centaurs
+	// other special insuffmat scenarios
+	const insuffmatScenrarios_special = [
+		{'kingsB': Infinity, 'kingsW': Infinity},
 		{'royalCentaursB': Infinity, 'royalCentaursW': Infinity},
 		{'royalCentaursB': 1, 'amazonsW': 1},
-	];
+	]
 
 	/**
 	 * Detects if the provided piecelist scenario is a draw by insufficient material
@@ -70,7 +72,20 @@ const insufficientmaterial = (function(){
 	 * @returns {boolean} *true*, if the scenario is a draw by insufficient material, otherwise *false*
 	 */
 	function isScenarioInsuffMat(scenario) {
-		const scenrariosForInsuffMat = "kingsW" in scenario ? scenrariosForInsuffMatWhiteKing : scenrariosForInsuffMatNoWhiteWhiteKing;
+		// find out if we are in the 1 king vs 1 king, or in the 0 kings vs 1 king situation, and set scenrariosForInsuffMat accordingly
+		let scenrariosForInsuffMat;
+		if (scenario["kingsB"] === 1) {
+			if (scenario["kingsW"] === 1) {
+				scenrariosForInsuffMat = insuffmatScenrarios_1K1k;
+				delete scenario["kingsW"]
+				delete scenario["kingsB"]
+			} else if (!scenario["kingsW"]) {
+				scenrariosForInsuffMat = insuffmatScenrarios_0K1k;
+				delete scenario["kingsB"]
+			}
+		} else {
+			scenrariosForInsuffMat = insuffmatScenrarios_special;
+		}
 
 		// loop over all draw scenarios to see if they apply here
 		drawscenarioloop:
