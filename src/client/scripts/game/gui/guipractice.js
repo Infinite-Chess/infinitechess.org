@@ -23,11 +23,20 @@ const guipractice = (function(){
 
     let modeSelected; // checkmate-practice / tactics-practice
     let checkmateSelectedID = '2Q-1k'; // id of selected checkmate
+    let indexSelected = 0; // index of selected checkmate among its brothers and sisters
 
     // Functions
 
     function getModeSelected() {
         return modeSelected;
+    }
+
+    /**
+     * Returns the last selected checkmate practce. Useful
+     * for knowing which one we just beat.
+     */
+    function getCheckmateSelectedID() {
+        return checkmateSelectedID;
     }
 
     function open() {
@@ -36,7 +45,7 @@ const guipractice = (function(){
         style.revealElement(element_menuExternalLinks);
         changePracticeMode('checkmate-practice')
         changeCheckmateSelected(checkmateSelectedID)
-        updateCheckmatesBeaten()
+        updateCheckmatesBeaten(); // Adds 'beaten' class to them
         initListeners()
     }
 
@@ -51,8 +60,10 @@ const guipractice = (function(){
         element_checkmatePractice.addEventListener('click', callback_checkmatePractice)
         element_tacticsPractice.addEventListener('click', gui.callback_featurePlanned)
         element_practicePlay.addEventListener('click', callback_practicePlay)
+        document.addEventListener('keydown', callback_keyPress);
         for (let element of elements_checkmates) {
             element.addEventListener('click', callback_checkmateList);
+            element.addEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
         }
     }
 
@@ -61,8 +72,10 @@ const guipractice = (function(){
         element_checkmatePractice.removeEventListener('click', callback_checkmatePractice)
         element_tacticsPractice.removeEventListener('click', gui.callback_featurePlanned)
         element_practicePlay.removeEventListener('click', callback_practicePlay)
+        document.removeEventListener('keydown', callback_keyPress);
         for (let element of elements_checkmates) {
             element.removeEventListener('click', callback_checkmateList);
+            element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
         }
     }
 
@@ -83,19 +96,25 @@ const guipractice = (function(){
             if (checkmateid === element.id) {
                 element.classList.add('selected')
                 checkmateSelectedID = checkmateid;
+                element.scrollIntoView({ behavior: 'instant', block: 'nearest' });
             } else {
                 element.classList.remove('selected')
             }
         }
     }
 
-    // TODO: implement beaten checkmate list
-    function updateCheckmatesBeaten() {
-        for (let element of elements_checkmates){
-            element.classList.remove('beaten')
+    /**
+     * Updates each checkmate practice element's 'beaten' class.
+     * @param {string[]} completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
+     */
+    function updateCheckmatesBeaten(completedCheckmates = checkmatepractice.getCompletedCheckmates()) {
+        for (const element of elements_checkmates){
+            // What is the id string of this checkmate?
+            const id_string = element.id; // "2Q-1k"
+            // If this id is inside our list of beaten checkmates, add the beaten class
+            if (completedCheckmates.includes(id_string)) element.classList.add('beaten');
+            else element.classList.remove('beaten');
         }
-
-        // elements_checkmates[2].classList.add('beaten')
     }
 
     function callback_practiceBack() {
@@ -103,12 +122,13 @@ const guipractice = (function(){
         guititle.open()
     }
 
-    function callback_checkmatePractice() {
+    function callback_checkmatePractice(event) {
         changePracticeMode('checkmate-practice')
     }
 
     function callback_checkmateList(event){
         changeCheckmateSelected(event.currentTarget.id)
+        indexSelected = style.getElementIndexWithinItsParent(event.currentTarget)
     }
 
     function callback_practicePlay() {
@@ -118,6 +138,27 @@ const guipractice = (function(){
         } else if (modeSelected === 'tactics-practice') {
             // nothing yet
         }
+    }
+
+    /** If enter is pressed, click Play. Or if arrow keys are pressed, move up and down selection */
+    function callback_keyPress(event) {
+        if (event.key === 'Enter') callback_practicePlay()
+        else if (event.key === 'ArrowDown') moveDownSelection()
+        else if (event.key === 'ArrowUp') moveUpSelection()
+    }
+
+    function moveDownSelection() {
+        if (indexSelected >= elements_checkmates.length - 1) return;
+        indexSelected++;
+        const newSelectionElement = elements_checkmates[indexSelected];
+        changeCheckmateSelected(newSelectionElement.id)
+    }
+
+    function moveUpSelection() {
+        if (indexSelected <= 0) return;
+        indexSelected--;
+        const newSelectionElement = elements_checkmates[indexSelected];
+        changeCheckmateSelected(newSelectionElement.id)
     }
 
     /**
@@ -138,7 +179,7 @@ const guipractice = (function(){
             },
             youAreColor: 'white',
             clock: "-",
-            currentEngine: engineRandomRoyalMoves,
+            currentEngine: engineCheckmatePractice,
             variantOptions: {
                 turn: "white",
                 fullMove: "1",
@@ -193,8 +234,10 @@ const guipractice = (function(){
 
     return Object.freeze({
         getModeSelected,
+        getCheckmateSelectedID,
         open,
         close,
+        updateCheckmatesBeaten,
         startCheckmatePractice,
         onPracticePage
     })

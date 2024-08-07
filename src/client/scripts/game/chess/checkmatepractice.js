@@ -11,6 +11,8 @@ const checkmatepractice = (function() {
         // easy
         "2Q-1k",
         "3R-1k",
+        "2CH-1k",
+        "1Q1CH-1k",
         "1K2R-1k",
         "1K2B2B-1k",
         "3B3B-1k",
@@ -24,6 +26,7 @@ const checkmatepractice = (function() {
         "2R1N-1k",
         "1K1R1B1B-1k",
         "1K1AR1R-1k",
+        "2AM-1rc",
 
         // hard
         "1K1N2B1B-1k",
@@ -32,12 +35,25 @@ const checkmatepractice = (function() {
         "1K1R2N-1k",
         "2K1R-1k",
         "1K2AR-1k",
+        "1K2N7B-1k",
 
         // insane
-        "1K2N7B-1k",
+        "1K3NR-1k",
         "1K1Q1P-1k",
         "1K3HA-1k",
     ];
+
+    const nameOfCompletedCheckmatesInStorage = 'checkmatePracticeCompletion';
+    /** A list of checkmate strings we have beaten
+     * [ "2Q-1k", "3R-1k", "2CH-1k"] @type {string[]} */
+    const completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
+    const expiryOfCompletedCheckmatesMillis = 1000 * 60 * 60 * 24 * 365; // 1 year
+
+
+
+    function getCompletedCheckmates() {
+        return math.deepCopyObject(completedCheckmates);
+    }
 
     /**
      * This method generates a random starting position object for a given checkmate practice ID
@@ -116,8 +132,46 @@ const checkmatepractice = (function() {
         }
         return true;
     }
+    
+    /** Saves the list of beaten checkmates into browser storages. */
+    function saveCheckmatesBeaten() {
+        localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis)
+    }
+
+    function markCheckmateBeaten(checkmatePracticeID) {
+        if (typeof checkmatePracticeID !== 'string') throw new Error('Cannot save completed checkmate when its ID is not a string.');
+        // Add the checkmate ID to the beaten list
+        if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
+        saveCheckmatesBeaten();
+        console.log("Marked checkmate practice as completed!")
+    }
+
+    /** Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! */
+    function eraseCheckmatePracticeProgress() {
+        completedCheckmates.length = 0;
+        localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
+        guipractice.updateCheckmatesBeaten() // Delete the 'beaten' class from all
+        console.log("DELETED all checkmate practice progress.")
+    }
+
+    /** Called when an engine game ends */
+    function onEngineGameConclude() {
+        // Were we doing checkmate practice
+        if (gui.getScreen() !== 'checkmate practice') return; // No
+
+        // Did we win or lose?
+        const victor = wincondition.getVictorAndConditionFromGameConclusion(game.getGamefile().gameConclusion).victor;
+        if (!enginegame.areWeColor(victor)) return; // Lost
+
+        // Add the checkmate to the list of completed!
+        const checkmatePracticeID = guipractice.getCheckmateSelectedID();
+        markCheckmateBeaten(checkmatePracticeID);
+    }
 
     return Object.freeze({
+        getCompletedCheckmates,
         generateCheckmateStartingPosition,
+        onEngineGameConclude,
+        eraseCheckmatePracticeProgress
     })
 })()
