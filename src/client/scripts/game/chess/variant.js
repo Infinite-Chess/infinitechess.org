@@ -126,11 +126,13 @@ const variant = (function() {
             specialRights = result.specialRights;
         } else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
 
+        options.gameRules.turnOrder = options.gameRules.turnOrder || ["white", "black"]
+
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
-            turn: options.turn || 'white',
+            turn: options.gameRules.turnOrder[0],
             fullMove: options.fullMove || 1
         }
         if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
@@ -139,6 +141,7 @@ const variant = (function() {
             gamefile.startSnapshot.moveRuleState = Number(state);
             options.gameRules.moveRule = Number(max);
         }
+        
         gamefile.gameRules = options.gameRules;
     }
 

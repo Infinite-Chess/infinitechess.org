@@ -111,15 +111,21 @@ const formatconverter = (function() {
         }
         if (longformat["metadata"]) shortformat += whitespace;
 
-        // move turn
-        let next_move = "w";
-        if (longformat["turn"] == "black"){
-            shortformat += "b ";
-            next_move = "b";
-        } else if (longformat["turn"] == "white"){
-            shortformat += "w ";
-            next_move = "w";
+        let turnOrder = ""
+        let turnOrderStr = ""
+        if (longformat["gameRules"]) {
+            if (longformat["gameRules"]["turnOrder"]) {
+                turnOrder = longformat["gameRules"]["turnOrder"]
+            }
         }
+
+        turnOrder = turnOrder || ['white', 'black']
+
+        turnOrder = turnOrder.map((color) => invertedColorDictionary[color])
+        turnOrderStr = turnOrder.join(":")
+        
+        if (turnOrderStr == "w:b") shortformat += 'w ';
+        else if (turnOrderStr == "b:w") shortformat += 'b ';
 
         // en passant
         if(longformat["enpassant"]) shortformat += `${longformat["enpassant"].toString()} `;
@@ -199,10 +205,11 @@ const formatconverter = (function() {
         }
 
         // Extra gamerules not used will be stringified into the ICN
+        const includedRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions"])
         const extraGameRules = {};
         let added_extras = false;
         for (const key in longformat.gameRules) {
-            if (key === "promotionRanks" || key === "promotionsAllowed" || key === "winConditions") continue; // Skip this key
+            if (includedRules.has(key)) continue;
             extraGameRules[key] = longformat.gameRules[key];
             added_extras = true;
         }
@@ -219,7 +226,7 @@ const formatconverter = (function() {
         }
 
         // moves
-        if (longformat.moves) shortformat += longToShortMoves(longformat.moves, { next_move, fullmove, compact_moves, make_new_lines });
+        if (longformat.moves) shortformat += longToShortMoves(longformat.moves, { turnOrder, fullmove, compact_moves, make_new_lines });
 
         return shortformat;
     }
@@ -230,18 +237,19 @@ const formatconverter = (function() {
      * @param {Object} longmoves 
      * @param {Object} options - Contains the `next_move` and `compact_moves` parameters.
      */
-    function longToShortMoves(longmoves, { next_move, fullmove, make_new_lines, compact_moves }) {
+    function longToShortMoves(longmoves, { turnOrder, fullmove, make_new_lines, compact_moves }) {
         // If the moves are provided like: ['1,2>3,4','5,6>7,8N'], then quick return!
         if (typeof longmoves[0] === 'string') return longmoves.join('|')
 
         let shortmoves = "";
         for (let i = 0; i < longmoves.length; i++){
             let longmove = longmoves[i];
-            if (next_move == "w" && compact_moves == 0){
+            if (i % turnOrder.length == 0 && compact_moves == 0){
                 shortmoves += (!make_new_lines && i != 0 ? " " : "");
                 shortmoves += fullmove.toString() + ". ";
-            } else if (compact_moves == 0){
-                shortmoves += (i == 0 ? fullmove.toString() + ".   ...   | " : " | ");
+                if (turnOrder.join(":") == 'b:w' && i == 0) {
+                    shortmoves += "   ...   | " // Back compatability
+                }
             } else {
                 shortmoves += (i == 0 ? "" : "|");
             }
@@ -262,17 +270,14 @@ const formatconverter = (function() {
                 shortmoves += "+";
             }
             shortmoves = shortmoves.trimEnd();
-            if (next_move == "w"){
-                next_move = "b";
-            } else{
-                next_move = "w";
+
+            if (i + 1 % turnOrder.length == 0) {
                 fullmove += 1;
                 if (i != longmoves.length - 1 && compact_moves == 0){
                     shortmoves += (make_new_lines ? "\n" : " |");
                 }
             }
         }
-
         return shortmoves.trimEnd();
     }
 
@@ -289,12 +294,14 @@ const formatconverter = (function() {
 
         // metadata handling. Don't put ": " in metadata fields.
         let metadata = {};
-        while (shortformat.indexOf("[") > -1){
-            let start_index = shortformat.indexOf("[");
-            let end_index = shortformat.indexOf("]");
+        let metaformat = /^\s*(\[([^\"\]]*\"[^\"]*\"|[^:\]]*:\s*[^\]]*)\]\s*)*/.exec(shortformat)[0] // Metadata was eating my damn [] outside of scope
+        shortformat = shortformat.replace(/^\s*(\[([^\"\]]*\"[^\"]*\"|[^:\]]*:\s*[^\]]*)\]\s*)*/, "")
+        while (metaformat.indexOf("[") > -1){
+            let start_index = metaformat.indexOf("[");
+            let end_index = metaformat.indexOf("]");
             if (end_index == -1) throw new Error("Unclosed [ detected");
-            let metadatastring = shortformat.slice(start_index+1,end_index);
-            shortformat = `${shortformat.slice(0,start_index)}${shortformat.slice(end_index+1)}`;
+            let metadatastring = metaformat.slice(start_index+1,end_index);
+            metaformat = `${metaformat.slice(0,start_index)}${metaformat.slice(end_index+1)}`;
             
             // new metadata format [Metadata "value"]
             if (/^[^\s\:]*\s+\"/.test(metadatastring)){
@@ -322,8 +329,9 @@ const formatconverter = (function() {
             shortformat = shortformat.slice(index+1);
 
             // move turn
-            if (!longformat["turn"] && /^(w|b)$/.test(string)){
-                longformat["turn"] = (string == "b" ? "black" : "white");
+            if (!longformat["gameRules"]["turnOrder"] && /^(w|b)$/.test(string)){
+                if (string == "w") longformat["gameRules"]["turnOrder"] = ["white", "black"]
+                else if (string == "b") longformat["gameRules"]["turnOrder"] = ["black", "white"]
                 continue;
             }
 
@@ -665,13 +673,18 @@ const formatconverter = (function() {
             let move = ret["moves"][i];
 
             // update fullmove counter
-            if (ret["turn"]){
-                if (ret["turn"] == "black" && ret["fullMove"]){
-                    ret["fullMove"] += 1;
-                }
-                ret["turn"] = (ret["turn"] == "black" ? "white" : "black");
-            } else if(move["type"].slice(-1) == "B" && ret["fullMove"]){
-                ret["fullMove"] += 1;
+            // Pre turnorder changes
+            // if (ret["turn"]){
+            //     if (ret["turn"] == "black" && ret["fullMove"]){
+            //         ret["fullMove"] += 1;
+            //     }
+            //     ret["turn"] = (ret["turn"] == "black" ? "white" : "black");
+            // } else if(move["type"].slice(-1) == "B" && ret["fullMove"]){
+            //     ret["fullMove"] += 1;
+            // }
+
+            if (i%longformat['gamerules']['turnOrder'].length === 0) {
+                ret['fullMove']++
             }
 
             let startString = move["startCoords"].toString();
