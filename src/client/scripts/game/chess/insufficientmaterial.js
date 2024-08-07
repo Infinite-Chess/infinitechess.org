@@ -77,11 +77,13 @@ const insufficientmaterial = (function(){
 		if (scenario["kingsB"] === 1) {
 			if (scenario["kingsW"] === 1) {
 				scenrariosForInsuffMat = insuffmatScenrarios_1K1k;
-				delete scenario["kingsW"]
-				delete scenario["kingsB"]
+				delete scenario["kingsW"];
+				delete scenario["kingsB"];
 			} else if (!scenario["kingsW"]) {
 				scenrariosForInsuffMat = insuffmatScenrarios_0K1k;
-				delete scenario["kingsB"]
+				delete scenario["kingsB"];
+			} else {
+				scenrariosForInsuffMat = insuffmatScenrarios_special;
 			}
 		} else {
 			scenrariosForInsuffMat = insuffmatScenrarios_special;
