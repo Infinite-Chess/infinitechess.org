@@ -158,7 +158,7 @@ const guipractice = (function(){
             },
             youAreColor: 'white',
             clock: "-",
-            currentEngine: engineRandomRoyalMoves,
+            currentEngine: engineCheckmatePractice,
             variantOptions: {
                 turn: "white",
                 fullMove: "1",
