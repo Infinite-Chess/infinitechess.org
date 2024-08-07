@@ -88,7 +88,7 @@ const engineAndreas = (function(){
         "k": {
             // in check
             0: {
-                0: -Infinity,
+                0: -Infinity, // checkmate
                 1: -100,
                 2: -50,
                 3: -25,
@@ -100,7 +100,7 @@ const engineAndreas = (function(){
             },
             // not in check
             1: {
-                0: Infinity,
+                0: Infinity, // stalemate
                 1: -100,
                 2: -50,
                 3: -25,
@@ -114,7 +114,7 @@ const engineAndreas = (function(){
         "rc": {
             // in check
             0: {
-                0: -Infinity,
+                0: -Infinity, // checkmate
                 1: -100,
                 2: -90,
                 3: -80,
@@ -134,7 +134,7 @@ const engineAndreas = (function(){
             },
             // not in check
             1: {
-                0: Infinity,
+                0: Infinity, // stalemate
                 1: -100,
                 2: -90,
                 3: -80,
@@ -313,6 +313,25 @@ const engineAndreas = (function(){
         return score;
     }
 
+    function get_best_next_move(piecelist, coordlist){
+        let best_score = - Infinity;
+        let best_move;
+        for (let move of get_black_legal_moves(piecelist, coordlist)) {
+            const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
+            const new_score = get_position_evaluation(new_piecelist, new_coordlist);
+            if (new_score > best_score || !best_move) {
+                best_score = new_score;
+                best_move = move;
+            } else if (new_score == best_score) {
+                if (Math.random() < 0.5) {
+                    best_move = move;
+                }
+            }
+        }
+
+        return best_move;
+    }
+
     async function runEngine(gamefile) {
         // parse gamefile into engine readable format
 
@@ -341,23 +360,10 @@ const engineAndreas = (function(){
             start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
         }
 
-        let best_score = - Infinity;
-        let best_move;
-        for (let move of get_black_legal_moves(start_piecelist, start_coordlist)) {
-            const [new_piecelist, new_coordlist] = make_black_move(move, start_piecelist, start_coordlist);
-            const new_score = get_position_evaluation(new_piecelist, new_coordlist);
-            if (new_score > best_score || !best_move) {
-                best_score = new_score;
-                best_move = move;
-            } else if (new_score == best_score) {
-                if (Math.random() < 0.5) {
-                    best_move = move;
-                }
-            }
-        }
-
+        // For now, just make the highest scoring move available without looking any deeper into the position
+        const move = get_best_next_move(start_piecelist, start_coordlist);
         const startCoords = [gamefile_royal_coords[0], gamefile_royal_coords[1]];
-        const endCoords = [gamefile_royal_coords[0] + best_move[0], gamefile_royal_coords[1] + best_move[1]];
+        const endCoords = [gamefile_royal_coords[0] + move[0], gamefile_royal_coords[1] + move[1]];
 
         await main.sleep(500) // unnecessary delay
         return {startCoords: startCoords, endCoords: endCoords};
