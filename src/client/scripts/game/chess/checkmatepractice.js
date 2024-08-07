@@ -144,7 +144,7 @@ const checkmatepractice = (function() {
 
     /** Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! */
     function eraseCheckmatePracticeProgress() {
-        completedCheckmates = [];
+        completedCheckmates.length = 0;
         localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
         console.log("DELETED all checkmate practice progress.")
     }
