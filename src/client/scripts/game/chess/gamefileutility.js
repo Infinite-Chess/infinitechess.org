@@ -200,6 +200,7 @@ const gamefileutility = (function(){
         board.darkenColor()
         guigameinfo.gameEnd(gamefile.gameConclusion)
         onlinegame.onGameConclude();
+        enginegame.onGameConclude();
 
         const delayToPlayConcludeSoundSecs = 0.65;
         if (!game.areInNonLocalGame()) {

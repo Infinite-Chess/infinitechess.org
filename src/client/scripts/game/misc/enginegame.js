@@ -98,6 +98,11 @@ const enginegame = (function(){
         if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
     }
 
+    function onGameConclude() {
+        if (!inEngineGame) return;
+        checkmatepractice.onEngineGameConclude();
+    }
+
 
     return Object.freeze({
         areInEngineGame,
@@ -109,7 +114,8 @@ const enginegame = (function(){
         isItOurTurn,
         areWeColor,
         submitMove,
-        makeEngineMove
+        makeEngineMove,
+        onGameConclude
     })
 
 })();

@@ -30,13 +30,21 @@ const guipractice = (function(){
         return modeSelected;
     }
 
+    /**
+     * Returns the last selected checkmate practce. Useful
+     * for knowing which one we just beat.
+     */
+    function getCheckmateSelectedID() {
+        return checkmateSelectedID;
+    }
+
     function open() {
         gui.setScreen('title practice')
         style.revealElement(element_practiceSelection)
         style.revealElement(element_menuExternalLinks);
         changePracticeMode('checkmate-practice')
         changeCheckmateSelected(checkmateSelectedID)
-        updateCheckmatesBeaten()
+        updateCheckmatesBeaten(); // Adds 'beaten' class to them
         initListeners()
     }
 
@@ -91,13 +99,18 @@ const guipractice = (function(){
         }
     }
 
-    // TODO: implement beaten checkmate list
-    function updateCheckmatesBeaten() {
-        for (let element of elements_checkmates){
-            // element.classList.remove('beaten')
+    /**
+     * Updates each checkmate practice element's 'beaten' class.
+     * @param {string[]} completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
+     */
+    function updateCheckmatesBeaten(completedCheckmates = checkmatepractice.getCompletedCheckmates()) {
+        for (const element of elements_checkmates){
+            // What is the id string of this checkmate?
+            const id_string = element.id; // "2Q-1k"
+            // If this id is inside our list of beaten checkmates, add the beaten class
+            if (completedCheckmates.includes(id_string)) element.classList.add('beaten');
+            else element.classList.remove('beaten');
         }
-
-        // elements_checkmates[2].classList.add('beaten')
     }
 
     function callback_practiceBack() {
@@ -200,8 +213,10 @@ const guipractice = (function(){
 
     return Object.freeze({
         getModeSelected,
+        getCheckmateSelectedID,
         open,
         close,
+        updateCheckmatesBeaten,
         startCheckmatePractice,
         onPracticePage
     })
