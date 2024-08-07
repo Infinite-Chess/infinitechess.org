@@ -4,37 +4,51 @@
 
 const insufficientmaterial = (function(){
 
-	const scenrariosForInsuffMat = [
-		{'kingsB': Infinity, 'kingsW': Infinity},
-		{'royalCentaursB': Infinity, 'royalCentaursW': Infinity},
+	// Scenarios that lead to a draw by insufficient material
+	// Entries for bishops are given by tuples ordered in descending order, because of parity
 
-		// Checkmate a black king with the white king
+	// Checkmate black with at least one white king
+	const scenrariosForInsuffMatWhiteKing = [
+		{'kingsB': Infinity, 'kingsW': Infinity},
 		{'kingsB': 1, 'kingsW': 1, 'queensW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'bishopsW': 3},
+		{'kingsB': 1, 'kingsW': 1, 'bishopsW': [Infinity, 1]},
 		{'kingsB': 1, 'kingsW': 1, 'knightsW': 3},
 		{'kingsB': 1, 'kingsW': 1, 'hawksW': 2},
 		{'kingsB': 1, 'kingsW': 1, 'rooksW': 1, 'knightsW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'rooksW': 1, 'bishopsW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'archbishopsW': 1, 'bishopsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'rooksW': 1, 'bishopsW': [1, 0]},
+		{'kingsB': 1, 'kingsW': 1, 'archbishopsW': 1, 'bishopsW': [1, 0]},
 		{'kingsB': 1, 'kingsW': 1, 'archbishopsW': 1, 'knightsW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'bishopsW': 2, 'knightsW': 1},
-		{'kingsB': 1, 'kingsW': 1, 'bishopsW': 1, 'knightsW': 2},
+		{'kingsB': 1, 'kingsW': 1, 'knightsW': 1, 'bishopsW': [Infinity, 0]},
+		{'kingsB': 1, 'kingsW': 1, 'knightsW': 1, 'bishopsW': [1, 1]},
+		{'kingsB': 1, 'kingsW': 1, 'knightsW': 2, 'bishopsW': [1, 0]},
 		{'kingsB': 1, 'kingsW': 1, 'guardsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'chancellorsW': 1},
+		{'kingsB': 1, 'kingsW': 1, 'knightridersW': 2},
 		{'kingsB': 1, 'kingsW': 1, 'pawnsW': 3},
+	]
 
-		// Checkmate a black king without the white king
+	// Checkmate black without any white kings
+	const scenrariosForInsuffMatNoWhiteWhiteKing = [
 		{'kingsB': 1, 'queensW': 1, 'rooksW': 1},
-		{'kingsB': 1, 'bishopsW': 4},
+		{'kingsB': 1, 'queensW': 1, 'knightsW': 1},
+		{'kingsB': 1, 'queensW': 1, 'bishopsW': [1, 0]},
+		{'kingsB': 1, 'queensW': 1, 'pawnsW': 1},
+		{'kingsB': 1, 'bishopsW': [2, 2]},
+		{'kingsB': 1, 'bishopsW': [Infinity, 1]},
 		{'kingsB': 1, 'knightsW': 4},
-		{'kingsB': 1, 'bishopsW': 2, 'knightsW': 2},
-		{'kingsB': 1, 'bishopsW': 3, 'knightsW': 1},
+		{'kingsB': 1, 'knightsW': 2, 'bishopsW': [Infinity, 0]},
+		{'kingsB': 1, 'knightsW': 2, 'bishopsW': [1, 1]},
+		{'kingsB': 1, 'knightsW': 1, 'bishopsW': [2, 1]},
 		{'kingsB': 1, 'hawksW': 3},
-		{'kingsB': 1, 'rooksW': 1, 'bishopsW': 1, 'knightsW': 1},
+		{'kingsB': 1, 'rooksW': 1, 'knightsW': 1, 'bishopsW': [1, 0]},
+		{'kingsB': 1, 'rooksW': 1, 'knightsW': 1, 'pawnsW': 1},
 		{'kingsB': 1, 'rooksW': 1, 'knightsW': 2},
 		{'kingsB': 1, 'rooksW': 1, 'guardsW': 1},
-		{'kingsB': 1, 'rooksW': 2, 'bishopsW': 1},
+		{'kingsB': 1, 'rooksW': 2, 'bishopsW': [1, 0]},
 		{'kingsB': 1, 'rooksW': 2, 'knightsW': 1},
-		{'kingsB': 1, 'archbishopsW': 1, 'bishopsW': 2},
+		{'kingsB': 1, 'rooksW': 2, 'pawnsW': 1},
+		{'kingsB': 1, 'archbishopsW': 1, 'bishopsW': [2, 0]},
+		{'kingsB': 1, 'archbishopsW': 1, 'bishopsW': [1, 1]},
 		{'kingsB': 1, 'archbishopsW': 1, 'knightsW': 2},
 		{'kingsB': 1, 'archbishopsW': 2},
 		{'kingsB': 1, 'chancellorsW': 1, 'guardsW': 1},
@@ -42,7 +56,12 @@ const insufficientmaterial = (function(){
 		{'kingsB': 1, 'chancellorsW': 1, 'rooksW': 1},
 		{'kingsB': 1, 'guardsW': 2},
 		{'kingsB': 1, 'amazonsW': 1},
+		{'kingsB': 1, 'knightridersW': 3},
 		{'kingsB': 1, 'pawnsW': 6},
+
+		// Checkmate black royal centaurs
+		{'royalCentaursB': Infinity, 'royalCentaursW': Infinity},
+		{'royalCentaursB': 1, 'amazonsW': 1},
 	];
 
 	/**
@@ -51,16 +70,46 @@ const insufficientmaterial = (function(){
 	 * @returns {boolean} *true*, if the scenario is a draw by insufficient material, otherwise *false*
 	 */
 	function isScenarioInsuffMat(scenario) {
+		const scenrariosForInsuffMat = "kingsW" in scenario ? scenrariosForInsuffMatWhiteKing : scenrariosForInsuffMatNoWhiteWhiteKing;
+
 		// loop over all draw scenarios to see if they apply here
 		drawscenarioloop:
 		for (let drawScenario of scenrariosForInsuffMat){
 			for (let piece in scenario) {
 				// discard draw scenario if it does not fit the scenario
-				if (!(piece in drawScenario) || (scenario[piece] > drawScenario[piece])) continue drawscenarioloop;
+				if (!(piece in drawScenario) || has_more_pieces(scenario[piece], drawScenario[piece])) continue drawscenarioloop;
 			}
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Checks if a is larger than b, either as a number, or if it has some larger entry as a tuple
+	 * @param {number | number[]} a - number or tuple of two numbers
+	 * @param {number | number[]} b - number or tuple of two numbers
+	 * @returns {boolean}
+	 */
+	function has_more_pieces (a, b) {
+		if (typeof a === "number") return a > b;
+		else return a[0] > b[0] || a[1] > b[1];
+	}
+
+	/**
+	 * @param {number[]} tuple - tuple of two numbers
+	 * @returns {number} sum of tuple entries
+	 */
+	function sum_tuple_coords (tuple){
+		return tuple[0] + tuple [1];
+	}
+
+	/**
+	 * @param {number[]} tuple - tuple of two numbers
+	 * @returns {number[]} tuple ordered in descending order
+	 */
+	function ordered_tuple_descending (tuple) {
+		if (tuple[0] < tuple [1]) return [tuple[1], tuple[0]];
+		else return tuple;
 	}
 
 	/**
@@ -77,17 +126,29 @@ const insufficientmaterial = (function(){
 		const lastMove = movesscript.getLastMove(gamefile.moves);
 		if (lastMove && !lastMove.captured) return false;
 
-		// Only make the draw check if there are less than 8 non-obstacle pieces
-        if (gamefileutility.getPieceCountOfGame(gamefile, {ignoreVoids: false, ignoreObstacles: true}) >= 8) return false;
+		// Only make the draw check if there are less than 11 non-obstacle pieces
+        if (gamefileutility.getPieceCountOfGame(gamefile, {ignoreVoids: false, ignoreObstacles: true}) >= 11) return false;
 
 		// Create scenario object listing amount of all non-obstacle pieces in the game
 		let scenario = {};
+		// bishops are treated specially and separated by parity
+		let bishopsW_count = [0, 0];
+		let bishopsB_count = [0, 0];
 		for(let key in gamefile.piecesOrganizedByKey) {
 			const piece = gamefile.piecesOrganizedByKey[key];
 			if (piece === "obstaclesN") continue;
+			else if (math.trimWorBFromType(piece) === "bishops") {
+				const parity = sum_tuple_coords(math.getCoordsFromKey(key)) % 2;
+				if (math.getWorBFromType(piece) === "W") bishopsW_count[parity] += 1;
+				else bishopsB_count[parity] += 1;
+			}
 			else if (piece in scenario) scenario[piece] += 1;
 			else scenario[piece] = 1
 		}
+
+		// add bishop tuples to scenario, and make sure the first entry of the bishop lists is the largest one
+		if (sum_tuple_coords(bishopsW_count) != 0) scenario["bishopsW"] = ordered_tuple_descending(bishopsW_count);
+		if (sum_tuple_coords(bishopsB_count) != 0) scenario["bishopsB"] = ordered_tuple_descending(bishopsB_count);
 
 		// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
 		// This is fully enough for the checkmate practice mode, for now
