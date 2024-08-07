@@ -142,7 +142,7 @@ const checkmatepractice = (function() {
         console.log("Marked checkmate practice as completed!")
     }
 
-    /** Completely for dev testing, call {@link checkmatepractice} in developer tools! */
+    /** Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! */
     function eraseCheckmatePracticeProgress() {
         completedCheckmates = [];
         localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
