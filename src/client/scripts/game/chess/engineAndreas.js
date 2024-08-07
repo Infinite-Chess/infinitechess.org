@@ -18,11 +18,14 @@ const engineAndreas = (function(){
                   [-1, -2],          [1, -2]
     ];
     let royal_moves;
+    let royal_type;
 
     // White pieces. Their coordinates are relative to the black royal
+
     let start_piecelist;
     let start_coordlist;
 
+    // only used for parsing in the position
     const pieceNameDictionary = {
         // 0 corresponds to a captured piece
        "queensW": 1,
@@ -36,8 +39,9 @@ const engineAndreas = (function(){
        "chancellorsW": 9,
        "archbishopsW": 10,
        "knightridersW": 11
-    }
+    };
 
+    // legal move storage for pieces in piecelist
     const pieceTypeDictionary = {
         // 0 corresponds to a captured piece
         1: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]}, // queen
@@ -56,6 +60,104 @@ const engineAndreas = (function(){
             jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // archbishop
         11: {rides: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]} // knightrider
     };
+
+    const pieceExistenceEvalDictionary = {
+        0: 0, // 0 corresponds to a captured piece
+        1: -100_000, // queen
+        2: -100_000, // rook
+        3: -100_000, // bishop
+        4: -100_000, // knight
+        5: -100_000, // king
+        6: -100_000, //pawn
+        7: -100_000, // amazon
+        8: -100_000, //hawk
+        9: -100_000, // chancellor
+        10: -100_000, // archbishop
+        11: -100_000 // knightrider
+    };
+
+    const distancesEvalDictionary = {
+        4: [10, manhattanNorm],  // knight
+        5: [20, manhattanNorm],  // king
+        6: [30, manhattanNorm], // pawn
+        8: [10, manhattanNorm],  // hawk
+    };
+
+    // eval scores for number of legal moves of black royal
+    const legalMoveEvalDictionary = {
+        "k": {
+            // in check
+            0: {
+                0: -Infinity,
+                1: -100,
+                2: -50,
+                3: -25,
+                4: -12,
+                5: -8,
+                6: -4,
+                7: -2,
+                8: 0
+            },
+            // not in check
+            1: {
+                0: Infinity,
+                1: -100,
+                2: -50,
+                3: -25,
+                4: -12,
+                5: -8,
+                6: -4,
+                7: -2,
+                8: 0
+            },
+        },
+        "rc": {
+            // in check
+            0: {
+                0: -Infinity,
+                1: -100,
+                2: -90,
+                3: -80,
+                4: -70,
+                5: -50,
+                6: -40,
+                7: -30,
+                8: -25,
+                9: -20,
+                10: -15,
+                11: -12.5,
+                12: -10,
+                13: -7.5,
+                14: -5,
+                15: -2.5,
+                16: 0
+            },
+            // not in check
+            1: {
+                0: Infinity,
+                1: -100,
+                2: -90,
+                3: -80,
+                4: -70,
+                5: -50,
+                6: -40,
+                7: -30,
+                8: -25,
+                9: -20,
+                10: -15,
+                11: -12.5,
+                12: -10,
+                13: -7.5,
+                14: -5,
+                15: -2.5,
+                16: 0
+            },
+        }
+    };
+
+    function manhattanNorm(square) {
+        return Math.abs(square[0]) + Math.abs(square[1]);
+    }
 
     /**
      * 
@@ -88,7 +190,7 @@ const engineAndreas = (function(){
         return false;
     }
 
-    function move(square, v) {
+    function add_move(square, v) {
         return [square[0] + v[0], square[1] + v[1]];
     }
 
@@ -117,7 +219,7 @@ const engineAndreas = (function(){
 
         // pawn threatening
         if (piece_properties.is_pawn) {
-            if (squares_are_equal(move(piece_square, [-1, 1]), target_square) || squares_are_equal(move(piece_square, [1, 1]), target_square)) return true;
+            if (squares_are_equal(add_move(piece_square, [-1, 1]), target_square) || squares_are_equal(add_move(piece_square, [1, 1]), target_square)) return true;
             else return false;
         }
 
@@ -151,14 +253,64 @@ const engineAndreas = (function(){
         return black_legal_moves;
     }
 
+    function get_black_legal_move_amount(piecelist, coordlist) {
+        let black_legal_move_amount = 0;
+        for (let square of royal_moves){
+            if (!square_is_threatened(square, piecelist, coordlist)) black_legal_move_amount += 1;
+        }
+        return black_legal_move_amount;
+    }
+
+    function is_check(piecelist, coordlist) {
+        return square_is_threatened([0, 0], piecelist, coordlist);
+    }
+
     function is_mate(piecelist, coordlist) {
-        if (get_black_legal_moves(piecelist, coordlist).length == 0 && square_is_threatened([0, 0], piecelist, coordlist)) return true;
+        if (get_black_legal_move_amount(piecelist, coordlist) == 0 && square_is_threatened([0, 0], piecelist, coordlist)) return true;
         else return false;
     }
 
     function is_stalemate(piecelist, coordlist) {
-        if (get_black_legal_moves(piecelist, coordlist).length == 0 && !square_is_threatened([0, 0], piecelist, coordlist)) return true;
+        if (get_black_legal_move_amount(piecelist, coordlist) == 0 && !square_is_threatened([0, 0], piecelist, coordlist)) return true;
         else return false;
+    }
+
+    function make_black_move(move, piecelist, coordlist) {
+        let new_piecelist = [];
+        let new_coordlist = [];
+        for (let i = 0; i < piecelist.length; i++) {
+            if (move[0] == coordlist[i][0] && move[1] == coordlist[i][1]) {
+                new_piecelist.push(0);
+            } else {
+                new_piecelist.push(piecelist[i]);
+            }
+
+            new_coordlist.push(add_move(coordlist[i], [-move[0], -move[1]]));
+        }
+
+        return [new_piecelist, new_coordlist];
+    }
+
+    function get_position_evaluation(piecelist, coordlist) {
+        let score = 0;
+
+        // add penalty based on number of legal moves of black royal
+        const incheck = is_check(piecelist, coordlist);
+        score += legalMoveEvalDictionary[royal_type][incheck ? 0 : 1][get_black_legal_move_amount(piecelist, coordlist)];
+
+        
+        for (let i = 0; i < piecelist.length; i++) {
+            // add penalty based on existence of white pieces
+            score += pieceExistenceEvalDictionary[piecelist[i]];
+
+            // add penalty based on distance of black royal to white shortrange pieces
+            if (piecelist[i] in distancesEvalDictionary) {
+                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]];
+                score += weight * distancefunction(coordlist[i]);
+            }
+        }
+        
+        return score;
     }
 
     async function runEngine(gamefile) {
@@ -169,9 +321,11 @@ const engineAndreas = (function(){
         if (gamefile.ourPieces["kingsB"].length != 0){
             gamefile_royal_coords = gamefile.ourPieces["kingsB"][0];
             royal_moves = king_moves;
+            royal_type = "k";
         } else if (gamefile.ourPieces["royalCentaursB"].length != 0) {
             gamefile_royal_coords = gamefile.ourPieces["royalCentaursB"][0];
             royal_moves = centaur_moves;
+            royal_type = "rc";
         } else {
             return console.error("No black king or royal centaur found in game");
         }
@@ -187,7 +341,26 @@ const engineAndreas = (function(){
             start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
         }
 
-        return engineRandomRoyalMoves.runEngine(gamefile);
+        let best_score = - Infinity;
+        let best_move;
+        for (let move of get_black_legal_moves(start_piecelist, start_coordlist)) {
+            const [new_piecelist, new_coordlist] = make_black_move(move, start_piecelist, start_coordlist);
+            const new_score = get_position_evaluation(new_piecelist, new_coordlist);
+            if (new_score > best_score || !best_move) {
+                best_score = new_score;
+                best_move = move;
+            } else if (new_score == best_score) {
+                if (Math.random() < 0.5) {
+                    best_move = move;
+                }
+            }
+        }
+
+        const startCoords = [gamefile_royal_coords[0], gamefile_royal_coords[1]];
+        const endCoords = [gamefile_royal_coords[0] + best_move[0], gamefile_royal_coords[1] + best_move[1]];
+
+        await main.sleep(500) // unnecessary delay
+        return {startCoords: startCoords, endCoords: endCoords};
     }    
 
     return Object.freeze({
