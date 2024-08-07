@@ -77,10 +77,13 @@ const engineCheckmatePractice = (function(){
     };
 
     const distancesEvalDictionary = {
+        3: [11, manhattanNorm], // bishop
         4: [10, manhattanNorm],  // knight
         5: [20, manhattanNorm],  // king
         6: [30, manhattanNorm], // pawn
-        8: [10, manhattanNorm],  // hawk
+        8: [11, manhattanNorm],  // hawk
+        10: [11, manhattanNorm],  // archbishop
+        11: [11, manhattanNorm],  // knightrider
     };
 
     // eval scores for number of legal moves of black royal
