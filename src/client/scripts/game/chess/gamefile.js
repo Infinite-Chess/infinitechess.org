@@ -46,6 +46,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         moveRuleState: undefined,
         /** This is the full-move number at the start of the game. Used for converting to ICN notation. */
         fullMove: undefined,
+        /** The number of players in this game (the number of unique colors in the turn order) */
+        playerCount: undefined,
         /** Whos turn it was at the beginning of the game. */
         turn: undefined,
         /** The count of pieces the game started with. */

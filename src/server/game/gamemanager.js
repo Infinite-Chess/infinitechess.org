@@ -243,12 +243,15 @@ const gamemanager = (function() {
             Termination: wincondition1.getTerminationInEnglish(condition)
         }
         const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position)
+        const turn = gameRules.turnOrder[0];
+        delete gameRules.turnOrder;
+        const moveRuleString = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
         delete gameRules.moveRule;
         metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant1 has gotten the game rules.
         const primedGamefile = {
             metadata,
-            turn: variant1.isVariantAVariantWhereBlackStarts(game.variant) ? 'black' : 'white',
-            moveRule: variant1.isVariantAVariantWhereBlackStarts(game.variant) ? undefined : "0/100",
+            turn,
+            moveRule: moveRuleString,
             fullMove: 1,
             startingPosition: positionStuff.positionString, // Technically not needed, as we set `specifyPosition` to false
             moves: game.moves,

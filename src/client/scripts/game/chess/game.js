@@ -147,13 +147,11 @@ const game = (function(){
         if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
             miniimage.disable();
             arrows.setMode(0); // Disables arrows
-            wincondition.swapCheckmateForRoyalCapture(gamefile); // Checkmate alg too slow, use royalcapture instead!
+            // Checkmate is swapped out for royalcapture further down
         } else miniimage.enable();
 
-        // If there are so many hippogonals so as to create issues with discovered attacks, let's use royal capture instead!
-        if (organizedlines.areColinearSlidesPresentInGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
-
-        turnOrderEdgeCase(gamefile)
+        // Do we need to convert any checkmate win conditions to royalcapture?
+        if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
 
         guipromotion.initUI(gamefile.gameRules.promotionsAllowed)
 
@@ -168,51 +166,6 @@ const game = (function(){
         if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile, gamefile.gameConclusion);
 
         initListeners();
-    }
-
-    // TODO please move this and rename it idk where it should go
-    /**
-     * Adds the royal capture wincon to any that team can royal capture due to the turnorder
-     * @param {gamefile} gamefile
-     */
-    function turnOrderEdgeCase(gamefile) {
-        const winConditions = gamefile.gameRules.winConditions;
-        const turnOrder = gamefile.gameRules.turnOrder;
-
-        const royalcaptures = new Set('royalcapture', 'allroyalscaptured');
-        const checkColors = new Set();
-
-        for (const [color, conditions] of Object.entries(winConditions)) {
-            if (!conditions.includes("checkmate")) continue; // This is only a problem with those that have the checkmate wincon so filter any that dont have it
-            if (!royalcaptures.isDisjointFrom(new Set(conditions))) continue; // If its already got royal capture we dont need to consider it
-            checkColors.add(color);
-        }
-
-        for (const i in turnOrder) {
-            const color = turnOrder[i];
-            if (!checkColors.has(color)) continue;
-            let searchI = math.posMod(i-1, turnOrder.length);
-
-            // The color of the team that can help discover royal capture
-            const assistColor = turnOrder[searchI]
-
-            // If assist is the same it means the color has two or moves
-            // Thus can royal capture
-            if (assistColor === color) {
-                winConditions[color].push('royalcapture');
-                checkColors.delete(color); // Dont need to check this color anymore as we know it could royalcapture
-                continue;
-            }
-
-            while (searchI !== i) {
-                searchI = math.posMod(searchI-1, turnOrder.length)
-                if (turnOrder[searchI] === assistColor) continue; // The other color wont let you royal capture them? I assume not
-                if (turnOrder[searchI] === color) break; // Can't royal capture yourself 
-                winConditions[color].push('royalcapture') 
-                checkColors.delete(color) // Dont need to check this color anymore as we know it could royalcapture
-                break;
-            }
-        }
     }
 
     /** The canvas will no longer render the current game */

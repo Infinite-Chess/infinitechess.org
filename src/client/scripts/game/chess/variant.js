@@ -32,6 +32,8 @@ const variant = (function() {
         if (options) initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options) // Ignores the "Variant" metadata, and just uses the specified startingPosition
         else initStartSnapshotAndGamerules(gamefile, metadata) // Default (built-in variant, not pasted)
 
+        gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
+
         initExistingTypes(gamefile);
         initPieceMovesets(gamefile)
         initSlidingMoves(gamefile)
@@ -126,7 +128,7 @@ const variant = (function() {
             specialRights = result.specialRights;
         } else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
 
-        options.gameRules.turnOrder = options.gameRules.turnOrder || ["white", "black"]
+        options.gameRules.turnOrder = options.gameRules.turnOrder || getDefaultTurnOrder();
 
         gamefile.startSnapshot = {
             position,
@@ -256,13 +258,15 @@ const variant = (function() {
             promotionsAllowed: modifications.promotionsAllowed || getPromotionsAllowed(modifications.position, promotionRanks),
             winConditions: modifications.winConditions || getDefaultWinConditions(),
             moveRule: modifications.moveRule || 100,
-            turnOrder: modifications.turnOrder || ['white', 'black']
+            turnOrder: modifications.turnOrder || getDefaultTurnOrder(),
         }
         if (modifications.slideLimit != null) gameRules.slideLimit = modifications.slideLimit;
         if (modifications.moveRule === null) delete gameRules.moveRule;
         return gameRules;
     }
 
+    function getDefaultTurnOrder() { return ['white', 'black'] }
+    function getTurnOrderOfOmega() { return ['black', 'white'] }
     function getDefaultWinConditions() { return { white: ['checkmate'], black: ['checkmate'] } }
     function getRoyalCaptureWinConditions() { return { white: ['royalcapture'], black: ['royalcapture'] } }
     function getWinConditionsOfThreeCheck() { return { white: ['checkmate','threecheck'], black: ['checkmate','threecheck'] } }
@@ -442,7 +446,6 @@ const variant = (function() {
     function getGameRulesOfVariant({ Variant, UTCDate = math.getCurrentUTCDate(), UTCTime = math.getCurrentUTCTime() }, position) {
         
         if (!position) position = getStartingPositionOfVariant({ Variant }).position
-        console.log(Variant);
         
         switch (Variant) {
             case "Classical":
@@ -453,7 +456,6 @@ const variant = (function() {
                 return getGameRules({ position })
             case "Space_Classic":
                 const UTCTimeStamp = math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
-                console.log(UTCTimeStamp);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
                 const promotionRanks = UTCTimeStamp < 1709017200000 ? [4,-3] : undefined; // undefined will use default [8,1]
                 getGameRules({ promotionRanks, position })
@@ -490,13 +492,13 @@ const variant = (function() {
             case "Knighted_Chess":
                 return getGameRules({ position });
             case "Omega": // Joel & Cory's version
-                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: ['black', 'white'] })
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() })
             case "Omega_Squared":
-                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: ['black', 'white'] })
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() })
             case "Omega_Cubed":
-                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: ['black', 'white'] })
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() })
             case "Omega_Fourth":
-                return getGameRules({ promotionRanks: null, moveRule: null, winConditions: getRoyalCaptureWinConditions(), position, turnOrder: ['black', 'white'] })
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() })
             // Removed...
             /*
             case "Standarch - 3 Check":
