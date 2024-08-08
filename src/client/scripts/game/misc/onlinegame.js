@@ -8,6 +8,7 @@ const onlinegame = (function(){
     /** Whether we are currently in an online game. */
     let inOnlineGame = false
     let gameID;
+    /** Whether the game is a private one (joined from an invite code). */
     let isPrivate;
     let ourColor; // white/black
 
@@ -28,8 +29,9 @@ const onlinegame = (function(){
 
     /** All variables related to being afk and alerting the server of that */
     const afk = {
-        timeUntilAFKSecs: 40,
-        timeUntilAFKSecs_Abortable: 20,
+        timeUntilAFKSecs: 40, // 40 + 20 = 1 minute
+        timeUntilAFKSecs_Abortable: 20, // 20 + 20 = 40 seconds
+        timeUntilAFKSecs_Untimed: 100, // 100 + 20 = 2 minutes
         /** The amount of time we have, in milliseconds, from the time we alert the
          * server we are afk, to the time we lose if we don't return. */
         timerToLossFromAFK: 20000,
@@ -93,9 +95,12 @@ const onlinegame = (function(){
 
     function rescheduleAlertServerWeAFK() {
         clearTimeout(afk.timeoutID);
-        if (!isItOurTurn() || game.getGamefile().gameConclusion) return;
+        const gamefile = game.getGamefile();
+        if (!isItOurTurn() || gamefileutility.isGameOver(gamefile) || isPrivate && clock.isGameUntimed()) return;
         // Games with less than 2 moves played more-quickly start the AFK auto resign timer
-        const timeUntilAFKSecs = movesscript.isGameResignable(game.getGamefile()) ? afk.timeUntilAFKSecs : afk.timeUntilAFKSecs_Abortable;
+        const timeUntilAFKSecs = !movesscript.isGameResignable(game.getGamefile()) ? afk.timeUntilAFKSecs_Abortable
+                                : clock.isGameUntimed() ? afk.timeUntilAFKSecs_Untimed
+                                : afk.timeUntilAFKSecs;
         afk.timeoutID = setTimeout(tellServerWeAFK, timeUntilAFKSecs * 1000)
     }
 
