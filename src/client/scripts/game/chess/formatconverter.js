@@ -292,7 +292,7 @@ const formatconverter = (function() {
         longformat.gameRules = {};
 
 
-        let elements = shortformat.match(/[\[\]\"\{\}\(\)\']/g)
+        let elements = shortformat.match(/[\[\]\"\{\}\(\)\']/g) || []
         let statements = []
         let stateIdxs = []
         let currentIdx = 0
