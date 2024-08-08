@@ -177,7 +177,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.whosTurn = this.startSnapshot.turn;
     /** If the currently-viewed move is in check, this will be a list of coordinates
      * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {number[][]} */
-    this.inCheck = undefined;
+    this.inCheck = false;
     /** List of maximum 2 pieces currently checking whoever's turn is next,
      * with their coords and slidingCheck property. ONLY USED with `checkmate` wincondition!!
      * Only used to calculate legal moves, and checkmate. */
