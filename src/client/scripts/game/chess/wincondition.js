@@ -251,6 +251,7 @@ const wincondition = (function() {
      * Checkmate is also not compatible with games with colinear lines present, because the logic surrounding
      * making opening discovered attacks illegal is a nightmare.
      * @param {gamefile} gamefile
+     * @returns {boolean} true if the gamefile is checkmate compatible
      */
     function isCheckmateCompatibleWithGame(gamefile) {
         if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
