@@ -8,6 +8,7 @@ const onlinegame = (function(){
     /** Whether we are currently in an online game. */
     let inOnlineGame = false
     let gameID;
+    /** Whether the game is a private one (joined from an invite code). */
     let isPrivate;
     let ourColor; // white/black
 
@@ -93,7 +94,8 @@ const onlinegame = (function(){
 
     function rescheduleAlertServerWeAFK() {
         clearTimeout(afk.timeoutID);
-        if (!isItOurTurn() || game.getGamefile().gameConclusion) return;
+        const gamefile = game.getGamefile();
+        if (!isItOurTurn() || gamefileutility.isGameOver(gamefile) || isPrivate && clock.isGameUntimed()) return;
         // Games with less than 2 moves played more-quickly start the AFK auto resign timer
         const timeUntilAFKSecs = movesscript.isGameResignable(game.getGamefile()) ? afk.timeUntilAFKSecs : afk.timeUntilAFKSecs_Abortable;
         afk.timeoutID = setTimeout(tellServerWeAFK, timeUntilAFKSecs * 1000)

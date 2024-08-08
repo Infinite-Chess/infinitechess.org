@@ -219,6 +219,16 @@ const gamefileutility = (function(){
     }
 
     /**
+     * Returns true if the game is over (gameConclusion is truthy).
+     * If the game is over, it will be a strin. If not, it will be false.
+     * @param {gamefile} gamefile 
+     */
+    function isGameOver(gamefile) {
+        if (gamefile.gameConclusion) return true;
+        return false;
+    }
+
+    /**
      * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
      * @param {gamefile} gamefile - The gamefile
      */
@@ -485,7 +495,8 @@ const gamefileutility = (function(){
         getRoyalCoords,
         getRoyalCountOfColor,
         getPieceCountOfGame,
-        getWhosTurnAtMoveIndex
+        getWhosTurnAtMoveIndex,
+        isGameOver,
     })
 
 })();
