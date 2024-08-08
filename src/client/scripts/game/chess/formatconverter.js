@@ -121,11 +121,10 @@ const formatconverter = (function() {
 
         turnOrder = turnOrder || ['white', 'black']
 
-        turnOrder = turnOrder.map((color) => invertedColorDictionary[color])
         turnOrderStr = turnOrder.join(":")
         
-        if (turnOrderStr == "w:b") shortformat += 'w ';
-        else if (turnOrderStr == "b:w") shortformat += 'b ';
+        if (turnOrderStr == "white:black") shortformat += 'w ';
+        else if (turnOrderStr == "black:white") shortformat += 'b ';
 
         // en passant
         if(longformat["enpassant"]) shortformat += `${longformat["enpassant"].toString()} `;
@@ -247,7 +246,7 @@ const formatconverter = (function() {
             if (i % turnOrder.length == 0 && compact_moves == 0){
                 shortmoves += (!make_new_lines && i != 0 ? " " : "");
                 shortmoves += fullmove.toString() + ". ";
-                if (turnOrder.join(":") == 'b:w' && i == 0) {
+                if (turnOrder.join(":") == 'black:white' && i == 0) {
                     shortmoves += "   ...   | " // Back compatability
                 }
             } else {
