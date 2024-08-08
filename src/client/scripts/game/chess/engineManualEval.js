@@ -12,6 +12,37 @@ const engineManualEval = (function(){
 	let beginningTimestamp = Date.now();
 
 	/**
+	 * 
+	 * @param {gamefile} gamefile 
+	 * @param {Move} move 
+	 */
+	function makeMove(gamefile, move) {
+		// we plan on undoing this move in the search
+		// so we will properly attach the `rewindInfo` property if its not defined
+		if(move.rewindInfo == null) {
+			const rewindInfo = {};
+			rewindInfo.inCheck = structuredClone(gamefile.inCheck);
+            if (gamefile.attackers) rewindInfo.attackers = structuredClone(gamefile.attackers);
+			move.rewindInfo = rewindInfo;
+		}
+		const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
+		if (capturedPiece) {
+			move.captured = capturedPiece.type;
+			gamefileutility.deleteIndexFromPieceList(gamefile.ourPieces[capturedPiece.type], piece.index)
+
+        	// Remove captured piece from organized piece lists
+        	organizedlines.removeOrganizedPiece(gamefile, capturedPiece.coords)
+		}
+
+		// store the move in the gamefile's movelist
+		gamefile.moveIndex++;
+		gamefile.moves.push(move);
+		// flip the turn
+        gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
+
+	}
+
+	/**
 	 * returns all intersections of diagonal, horizontal and vertical lines emitting from all pieces.
 	 * meant to represent squares the engine would care about.
 	 * @param {gamefile} gamefile - gamefile
@@ -90,9 +121,11 @@ const engineManualEval = (function(){
 		const intersections = getIntersections(gamefile);
 		for (let type in gamefile.ourPieces) {
 			if (gamefile.whosTurn !== math.getPieceColorFromType(type)) continue;
-			for (let coords of gamefile.ourPieces[type]) {
+			const thesePieces = gamefile.ourPieces[type];
+			for (let i = 0; i < thesePieces.length; i++) {
+				const coords = thesePieces[i]
 				if (!coords) continue;
-				const legalMoves = legalmoves.calculate(gamefile, { type, coords, index: gamefileutility.getPieceIndexByTypeAndCoords(gamefile, type, coords) })
+				const legalMoves = legalmoves.calculate(gamefile, { type, coords, index: i })
 				for (let intersection of intersections) {
 					const intersectionCoords = math.getCoordsFromKey(intersection);
 					if (legalmoves.checkIfMoveLegal(legalMoves, coords, intersectionCoords)) {
@@ -116,7 +149,7 @@ const engineManualEval = (function(){
 	function loneBlackKingEval(gamefile) {
 		let evaluation = 0;
 		const kingCoords = gamefile.ourPieces.kingsB[0];
-		const kingLegalMoves = legalmoves.calculate(gamefile, { type: 'kingsB', coords: kingCoords, index: gamefileutility.getPieceIndexByTypeAndCoords(gamefile, 'kingsB', kingCoords) });
+		const kingLegalMoves = legalmoves.calculate(gamefile, { type: 'kingsB', coords: kingCoords, index: 0 });
 		evaluation += kingLegalMoves.individual.length;
 
 		// add a point to the evaluation for each piece the king is attacking.
