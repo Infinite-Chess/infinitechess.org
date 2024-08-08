@@ -291,28 +291,69 @@ const formatconverter = (function() {
         let longformat = {};
         longformat.gameRules = {};
 
+
+        let elements = shortformat.match(/[\[\]\"\{\}\(\)\']/g)
+        let statements = []
+        let stateIdxs = []
+        let currentIdx = 0
+        let alterformat = shortformat
+        let temp = ''
+        let trace = []
+        let endCharDict = {'[':']', '(':')', '{':'}', '"':'"', "'":"'"}
+
+        for (const element of elements) {
+
+            const elemIdx = alterformat.indexOf(element)
+            currentIdx+=elemIdx
+            if (!!trace[0]) temp += alterformat.slice(0, elemIdx)
+            else stateIdxs.push(currentIdx)
+            temp += element
+            alterformat = alterformat.slice(elemIdx+1)
+
+            if (endCharDict[trace[trace.length-1]] == element) {
+                trace.pop();
+            } else if (trace[trace.length-1] == '"' || trace[trace.length-1] === "'") {
+                continue;
+            } else {
+                trace.push(element);
+            }
+            if (!trace[0]) {
+                statements.push(temp);
+                temp = '';
+            }
+        }
+        for (const element of trace) console.error(`${element} is not closed`)
+        
+        console.log(stateIdxs, statements)
+
         // metadata handling. Don't put ": " in metadata fields.
+        
         let metadata = {};
-        let metaformat = /^\s*(\[([^\"\]]*\"[^\"]*\"|[^:\]]*:\s*[^\]]*)\]\s*)*/.exec(shortformat)[0] // Metadata was eating my damn [] outside of scope
-        shortformat = shortformat.replace(/^\s*(\[([^\"\]]*\"[^\"]*\"|[^:\]]*:\s*[^\]]*)\]\s*)*/, "")
-        while (metaformat.indexOf("[") > -1){
-            let start_index = metaformat.indexOf("[");
-            let end_index = metaformat.indexOf("]");
-            if (end_index == -1) throw new Error("Unclosed [ detected");
-            let metadatastring = metaformat.slice(start_index+1,end_index);
-            metaformat = `${metaformat.slice(0,start_index)}${metaformat.slice(end_index+1)}`;
-            
+        let i = statements.length - 1
+        let remove = false
+        while (i >= 0){
+            const string = statements[i]
             // new metadata format [Metadata "value"]
-            if (/^[^\s\:]*\s+\"/.test(metadatastring)){
-                let split_index = metadatastring.search(/\s\"/);
-                metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index+2, -1);
+            if (/^\[[^\s\:]*\s+\"/.test(string)){
+                let split_index = string.search(/\s\"/);
+                metadata[string.slice(1,split_index)] = string.slice(split_index+2, -1);
+                remove = true
             }
             // old metadata format [Metadata: value]
-            else{
-                let split_index = metadatastring.indexOf(": ");
-                if (split_index > -1) metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index+2);
-                else metadata[metadatastring] = "";
+            else if (/^\[[^\:]*\:\s/.test(string)) {
+                string = string.slice(1)
+                let split_index = string.indexOf(": ");
+                if (split_index > -1) metadata[string.slice(1,split_index)] = string.slice(split_index+2);
+                else metadata[string] = "";
+                remove = true
             }
+
+            if (remove) {
+                shortformat = `${shortformat.slice(0,stateIdxs[i])}${shortformat.slice(stateIdxs[i]+string.length)}`
+                stateIdxs.splice(i,1)
+                statements.splice(i,1)
+            }
+            i--
         }
         longformat["metadata"] = metadata;
 
@@ -383,7 +424,7 @@ const formatconverter = (function() {
             }
 
             // win condition (has to start with a letter and not include numbers)
-            if(/^(\(?[a-zA-z][^0-9]*)$/.test(string)){
+            if(/^(\(?[a-zA-z][^0-9]+)$/.test(string)){
                 if (!longformat["gameRules"]["winConditions"]){
                     longformat["gameRules"]["winConditions"] = {};
                     string = string.replace(/[\(\)]/g,"").split("|");
