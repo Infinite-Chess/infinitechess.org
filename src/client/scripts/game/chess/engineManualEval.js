@@ -31,8 +31,16 @@ const engineManualEval = (function(){
 			gamefileutility.deleteIndexFromPieceList(gamefile.ourPieces[capturedPiece.type], piece.index)
 
         	// Remove captured piece from organized piece lists
-        	organizedlines.removeOrganizedPiece(gamefile, capturedPiece.coords)
+        	organizedlines.removeOrganizedPiece(gamefile, capturedPiece.coords);
 		}
+
+		gamefile.ourPieces[capturedPiece.type][capturedPiece.index] = move.endCoords
+
+        // Remove selected piece from all the organized piece lists (piecesOrganizedByKey, etc.)
+        organizedlines.removeOrganizedPiece(gamefile, capturedPiece.coords);
+
+        // Add the piece to organized lists with new destination
+        organizedlines.organizePiece(capturedPiece.type, move.endCoords, gamefile)
 
 		// store the move in the gamefile's movelist
 		gamefile.moveIndex++;
@@ -40,8 +48,18 @@ const engineManualEval = (function(){
 		// flip the turn
         gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
 
+		// detect checks and update gamefile accordingly
+		let attackers = [];
+        const whosTurnItWasAtMoveIndex = gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
+        gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
+		gamefile.attackers = attackers;
+		if(gamefile.inCheck) movesscript.flagLastMoveAsCheck(gamefile);
+		gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
 	}
 
+	function rewindMove() {
+		
+	}
 	/**
 	 * returns all intersections of diagonal, horizontal and vertical lines emitting from all pieces.
 	 * meant to represent squares the engine would care about.
