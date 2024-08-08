@@ -23,7 +23,7 @@ const checkmatepractice = (function() {
         "1K1Q1N-1k",
         "1Q1B1B-1k",
         "1Q2N-1k",
-        "2R1N-1k",
+        "2R1N1P-1k",
         "1K1R1B1B-1k",
         "1K1AR1R-1k",
         "2AM-1rc",
@@ -124,8 +124,7 @@ const checkmatepractice = (function() {
             const [x,y] = math.getCoordsFromKey(key);
             if (x == sx || y == sy || Math.abs(sx - x) == Math.abs(sy - y)) return false;
             if (startingPosition[key] === "knightridersW"){
-                if (Math.abs(sx-2*x) == Math.abs(sy - 2*y) || Math.abs(2*sx-x) == Math.abs(2*sy - y) ||
-                    Math.abs(sx-2*x) == Math.abs(2*sy - y) || Math.abs(2*sx-x) == Math.abs(sy - 2*y)) {
+                if (Math.abs(sx - x) == 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) == Math.abs(sy - y)) {
                         return false;
                     }
             }
