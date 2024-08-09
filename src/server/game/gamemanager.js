@@ -22,6 +22,7 @@ const { ensureJSONString } = require('../utility/JSONUtils');
 
 const { getTranslation } = require('../config/setupTranslations');
 const { getTimeServerRestarting } = require('./serverrestart');
+const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
 
 const gamemanager = (function() {
 
@@ -511,130 +512,6 @@ const gamemanager = (function() {
         game1.sendGameUpdateToColor(game, opponentColor);
     }
 
-
-    /** 
-     * Called when client wants to offer a draw
-     * Sends confirmation to opponents
-     * @param {Socket} ws - The socket
-     */
-    function offerDraw(ws) {
-        console.log("Client offers a draw.")
-
-        const game = getGameBySocket(ws);
-        if (!game) return console.error("Client offered a draw when they don't belong in a game.")
-        const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-
-        if (game1.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
-
-        // Config for draw offers, change if eg. 4 player is enabled
-        let movesBetweenDrawOffers = 2
-        if (color === "white") {
-            if (hasGameDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
-            if (game.moves.length - game.whiteDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
-        } else {
-            if (hasGameDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
-            if (game.moves.length - game.blackDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
-        }
-        
-        if (game.moves.length < 2) return console.error("Client trying to offer a draw on the first 2 moves")
-        
-        // Update the status of game
-        if (color === 'white') {
-            game.whiteDrawOffer = 'offered'
-            game.blackDrawOffer = 'unconfirmed'
-            game.whiteDrawOfferMove = game.moves.length
-        } else if (color === 'black') {
-            game.blackDrawOffer = 'offered'
-            game.whiteDrawOffer = 'unconfirmed'
-            game.blackDrawOfferMove = game.moves.length
-        }
-
-        // Alert their opponent
-        const opponentColor = math1.getOppositeColor(color);
-        const value = { offererColor: color, whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
-        game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'drawoffer', value)
-    }
-
-    /** 
-     * Called when client accepts a draw
-     * Ends the game
-     * @param {Socket} ws - The socket
-     */
-    function acceptDraw(ws) {
-        console.log("Client accepts a draw.")
-
-        const game = getGameBySocket(ws);
-        if (!game) return console.error("Client accepted a draw when they don't belong in a game.")
-        const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-
-        if (game1.isGameOver(game)) return console.error("Client accepted a draw when the game is already over. Ignoring.");
-        
-        // Update the status of game
-        if (color === 'white') {
-            if (!hasBlackDrawOffer(game)) return console.error("Client white accepted a draw when there wasn't a draw offer")
-            game.whiteDrawOffer = 'confirmed'
-        } else if (color === 'black') {
-            if (!hasWhiteDrawOffer(game)) return console.error("Client black accepted a draw when there wasn't a draw offer")
-            game.blackDrawOffer = 'confirmed'
-        }
-        setGameConclusion(game, "draw agreement")
-        game1.sendGameUpdateToBothPlayers(game);
-    }
-
-    /** 
-     * Called when client declines a draw
-     * Alerts opponent
-     * @param {Socket} ws - The socket
-     */
-    function declineDraw(ws) {
-        console.log("Client declines a draw.")
-
-        const game = getGameBySocket(ws);
-        if (!game) return console.error("Client declined a draw when they don't belong in a game.")
-        const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-        const opponentColor = math1.getOppositeColor(color);
-
-        if (game1.isGameOver(game)) return console.error("Client declined a draw when the game is already over. Ignoring.");
-        
-        // Update the status of game
-        if (color === 'white') {
-            if (!hasGameDrawOffer(game)) return console.error("Client declined a draw when there wasn't a draw offer")
-            game.whiteDrawOffer = 'declined'
-            game.blackDrawOffer = undefined
-        } else if (color === 'black') {
-            if (!hasGameDrawOffer(game)) return console.error("Client declined a draw when there wasn't a draw offer")
-            game.blackDrawOffer = 'declined'
-            game.whiteDrawOffer = undefined
-        }
-
-        // Alert their opponent
-        game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'declinedraw')
-    }
-
-    // THIS SHOULD NOT BE NEEDED if we send the details about open draw offers in the correct places
-    /**
-     * Reinforms the player about draw offers after page refresh
-     * @param {Game} game The game in which the player is
-     * @param {WebSocket} ws The websocket to inform
-     */
-    // function reinformPlayerAboutDrawOffers(game, ws) {
-    //     const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-    //     if (hasGameDrawOffer(game)) {
-    //         if (color == 'white') {
-    //             if (game.blackDrawOffer == 'offered') {
-    //                 const value = { offererColor: 'black', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
-    //                 game1.sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
-    //             }
-    //         } else if (color == 'black') {
-    //             if (game.whiteDrawOffer == 'offered') {
-    //                 const value = { offererColor: 'white', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
-    //                 game1.sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
-    //             }
-    //         }
-
-    //     }
-    // }
-
     /**
      * Called when a client alerts us they have gone AFK.
      * Alerts their opponent, and starts a timer to auto-resign.
@@ -718,7 +595,7 @@ const gamemanager = (function() {
     /**
      * Gets a game by player.
      * @param {Object} player - The player object with one of 2 properties: `member` or `browser`, depending on if they are signed in.
-     * @returns {Game | undefined} - The game they are in, if they belong in one, otherwise *false*.
+     * @returns {Game | undefined} - The game they are in, if they belong in one, otherwise undefined..
      */
     function getGameByPlayer(player) {
         let foundGame;
@@ -731,7 +608,7 @@ const gamemanager = (function() {
      * Gets a game by socket, first checking if they are subscribed to a game,
      * if not then it checks if they are in the players in active games list.
      * @param {Socket} ws - Their websocket
-     * @returns {Game | undefined} - The game they are in, if they belong in one, otherwise *false*.
+     * @returns {Game | undefined} - The game they are in, if they belong in one, otherwise undefined.
      */
     function getGameBySocket(ws) {
         const gameID = ws.metadata.subscriptions.game?.id;
@@ -761,55 +638,13 @@ const gamemanager = (function() {
     }
 
     /**
-     * Returns *true* if the white in the provided game has a draw offer.
-     * @param {Game} game - The game
-     * @returns {boolean}
-     */
-    function hasWhiteDrawOffer(game) {
-        const isOffering = (game.whiteDrawOffer === 'offered')
-        return isOffering
-    }
-
-    /**
-     * Returns *true* if the black in the provided game has a draw offer.
-     * @param {Game} game - The game
-     * @returns {boolean}
-     */
-    function hasBlackDrawOffer(game) {
-        const isOffering = (game.blackDrawOffer === 'offered')
-        return isOffering
-    }
-
-    /**
-     * Returns *true* if the provided game has a draw offer.
-     * @param {Game} game - The game
-     * @returns {boolean}
-     */
-    function hasGameDrawOffer(game) {
-        const isOffering = (hasWhiteDrawOffer(game) || hasBlackDrawOffer(game))
-        return isOffering
-    }
-
-    /**
-     * Returns *true* if the provided game has a draw offer.
-     * @param {Game} game - The game
-     * @param {String} color - Color
-     * @returns {boolean}
-     */
-    function hasColorDrawOffer(game, color) {
-        if (color === "white") {
-            return hasWhiteDrawOffer(game)
-        }
-        return hasBlackDrawOffer(game)
-    }
-
-    /**
      * Handles all incoming websocket messages related to active games.
      * Possible actions: submitmove/offerdraw/abort/resign/joingame/resync
      * @param {Socket} ws - The socket
      * @param {WebsocketMessage} message - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
      */
     function handleIncomingMessage(ws, message) {
+        const game = getGameBySocket(ws);
         switch (message.action) {
             case 'submitmove':
                 submitMove(ws, message.value);
@@ -830,13 +665,15 @@ const gamemanager = (function() {
                 resignGame(ws)
                 break;
             case 'offerdraw':
-                offerDraw(ws);
+                offerDraw(ws, game);
                 break;
             case 'acceptdraw':
-                acceptDraw(ws);
-                break;
+                if (acceptDraw(ws, game)) { // Draw acceptance was a success, terminate the game.
+                    setGameConclusion(game, "draw agreement")
+                    game1.sendGameUpdateToBothPlayers(game);
+                } break;
             case 'declinedraw':
-                declineDraw(ws);
+                declineDraw(ws, game);
                 break;
             case 'AFK':
                 onAFK(ws);
@@ -915,7 +752,7 @@ const gamemanager = (function() {
         // console.log("New move list:")
         // console.log(game.moves);
 
-        if (hasColorDrawOffer(game, opponentColor)) declineDraw(ws)
+        declineDraw(ws, game) // Auto-decline any open draw offer on move submissions
 
         if (game1.isGameOver(game)) game1.sendGameUpdateToColor(game, color)
         else sendUpdatedClockToColor(game, color);
