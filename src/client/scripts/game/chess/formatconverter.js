@@ -323,12 +323,12 @@ const formatconverter = (function() {
             }
         }
         for (const element of trace) console.error(`${element} is not closed`)
-        
-        console.log(stateIdxs, statements)
 
         // metadata handling. Don't put ": " in metadata fields.
         
         let metadata = {};
+        longformat["metadata"] = metadata;
+
         let i = statements.length - 1
         let remove = false
         while (i >= 0){
@@ -336,14 +336,13 @@ const formatconverter = (function() {
             // new metadata format [Metadata "value"]
             if (/^\[[^\s\:]*\s+\"/.test(string)){
                 let split_index = string.search(/\s\"/);
-                metadata[string.slice(1,split_index)] = string.slice(split_index+2, -1);
+                metadata[string.slice(1,split_index)] = string.slice(split_index+2, -2);
                 remove = true
             }
             // old metadata format [Metadata: value]
             else if (/^\[[^\:]*\:\s/.test(string)) {
-                string = string.slice(1)
                 let split_index = string.indexOf(": ");
-                if (split_index > -1) metadata[string.slice(1,split_index)] = string.slice(split_index+2);
+                if (split_index > -1) metadata[string.slice(1,split_index)] = string.slice(split_index+2, -1);
                 else metadata[string] = "";
                 remove = true
             }
@@ -355,7 +354,7 @@ const formatconverter = (function() {
             }
             i--
         }
-        longformat["metadata"] = metadata;
+        console.log(metadata)
 
         while(shortformat != ""){
             if (/\s/.test(shortformat[0])){
