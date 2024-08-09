@@ -34,8 +34,8 @@ const guidrawoffer = (function(){
     }
 
     function closeDrawOffer() {
-        guipause.updateDrawOfferButton();
         isAcceptingDraw = false;
+        guipause.updateDrawOfferButton();
         style.hideElement(element_draw_offer_ui)
         style.revealElement(element_whosturn)
         closeDrawOfferListeners()

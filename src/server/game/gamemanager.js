@@ -529,10 +529,10 @@ const gamemanager = (function() {
         // Config for draw offers, change if eg. 4 player is enabled
         let movesBetweenDrawOffers = 2
         if (color === "white") {
-            if (hasWhiteDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
+            if (hasGameDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
             if (game.moves.length - game.whiteDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
         } else {
-            if (hasBlackDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
+            if (hasGameDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
             if (game.moves.length - game.blackDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
         }
         

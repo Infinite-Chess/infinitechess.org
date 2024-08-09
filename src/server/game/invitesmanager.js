@@ -476,7 +476,8 @@ function deleteMembersExistingInvite(ws) {
         invites.splice(i, 1) // Delete the invite.
         console.log(`Deleted members invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
     }
-    return deleted1PublicInvite;
+
+    if (deleted1PublicInvite) onPublicInvitesChange();
 }
 
 // Returns true if 1 public invite was deleted
@@ -492,7 +493,8 @@ function deleteBrowsersExistingInvite(ws) {
         invites.splice(i, 1) // Delete the invite.
         console.log(`Deleted browsers invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
     }
-    return deleted1PublicInvite;
+    
+    if (deleted1PublicInvite) onPublicInvitesChange();
 }
 
 // Returns the first socket, if there is one, that owns the invite.

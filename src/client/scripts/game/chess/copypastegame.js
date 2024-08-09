@@ -7,6 +7,9 @@
 
 const copypastegame = (function(){
 
+    /** Enable to only copy a single position without all the moves prior */
+    const copySinglePosition = false; 
+
     /**
      * A list of metadata properties that are retained from the current game when pasting an external game.
      * These will overwrite the pasted game's metadata with the current game's metadata.
@@ -63,7 +66,6 @@ const copypastegame = (function(){
         primedGamefile.moves = gamefile.moves;
         primedGamefile.gameRules = gameRulesCopy;
 
-        const copySinglePosition = false; // Enable to only copy a single position without all the moves
         if (copySinglePosition) {
             primedGamefile.startingPosition = gamefile.startSnapshot.position;
             primedGamefile.specialRights = gamefile.startSnapshot.specialRights;
