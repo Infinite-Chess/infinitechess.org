@@ -57,7 +57,7 @@ const copypastegame = (function(){
         const gameRulesCopy = math.deepCopyObject(gamefile.gameRules);
 
         primedGamefile.metadata = gamefile.metadata;
-        primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant]; // Convert the variant metadata code to spoken language
+        primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant] || primedGamefile.metadata.Variant; // Convert the variant metadata code to spoken language
         primedGamefile.turn = gamefile.startSnapshot.turn;
         primedGamefile.enpassant = gamefile.startSnapshot.enpassant;
         if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
@@ -214,7 +214,7 @@ const copypastegame = (function(){
         }
 
         // The variant metadata needs to be converted from language-specific to internal game code
-        longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant)
+        longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant
 
         delete longformat.metadata.Clock;
 
