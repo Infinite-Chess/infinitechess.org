@@ -424,6 +424,11 @@ const clock = (function(){
         countdown.tick.sound = sound.playSound_tick({ volume: 0.07, fadeInDuration: countdown.tick.fadeInDuration, offset });
     }
 
+    /** Returns true if the current game is untimed (infinite clocks) */
+    function isGameUntimed() {
+        return untimed;
+    }
+
     return Object.freeze({
         set,
         edit,
@@ -433,7 +438,8 @@ const clock = (function(){
         push,
         getClockFromKey,
         isClockValueInfinite,
-        printClocks
+        printClocks,
+        isGameUntimed,
     })
 
 })();

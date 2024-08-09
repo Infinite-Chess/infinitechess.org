@@ -13,7 +13,6 @@ const checkhighlight = (function(){
         const royalsInCheck = game.getGamefile().inCheck;
         
         const model = genCheckHighlightModel(royalsInCheck)
-        // render.renderModel(model, undefined, undefined, "TRIANGLES")
         model.render();
     }
 

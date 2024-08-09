@@ -219,12 +219,13 @@ const gamefileutility = (function(){
     }
 
     /**
-     * Returns true if the provided game is over
+     * Returns true if the game is over (gameConclusion is truthy).
+     * If the game is over, it will be a string. If not, it will be false.
      * @param {gamefile} gamefile - The gamefile. If not specified, this is game.getGamefile()
      * @returns {boolean} true if over
      */
     function isGameOver(gamefile = game.getGamefile()) {
-        if (gamefile.gameConclusion) return true; // If gameConclusion is truthy (not false), then game is over
+        if (gamefile.gameConclusion) return true;
         return false;
     }
 
@@ -496,7 +497,7 @@ const gamefileutility = (function(){
         getRoyalCountOfColor,
         getPieceCountOfGame,
         getWhosTurnAtMoveIndex,
-        isGameOver
+        isGameOver,
     })
 
 })();
