@@ -502,6 +502,8 @@ const game1 = (function() {
      * @returns {string | false} The color they are, if they belong, otherwise *false*.
      */
     function doesSocketBelongToGame_ReturnColor(game, ws) {
+        if (game.id === ws.metadata.subscriptions.game?.id) return ws.metadata.subscriptions.game?.color;
+        // Color isn't provided in their subscriptions, perhaps a resync/refresh?
         const player = wsutility.getOwnerFromSocket(ws);
         return doesPlayerBelongToGame_ReturnColor(game, player);
     }
