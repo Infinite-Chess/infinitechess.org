@@ -17,6 +17,7 @@ const variant1 = require('./variant1.js')
 const gamemanager = require('./gamemanager.js');
 const clockweb = require('./clockweb.js');
 const { writeFile_ensureDirectory } = require('../utility/fileUtils');
+const { setTimeServerRestarting } = require('./serverrestart.js');
 
 
 // List of active invites
@@ -253,12 +254,14 @@ async function initServerRestart(newAllowInvitesValue) { // { allowInvites, mess
         `Error locking & writing file ${nameOfFile} after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created.`
     )
 
+    setTimeServerRestarting(restartingAt)
+
     // Alert all people on the invite screen that we will be restarting soon
     // ...
 
     // Alert all people in a game that we will be restarting soon
     // ...
-    gamemanager.broadCastGameRestarting(restartingAt)
+    gamemanager.broadCastGameRestarting()
 }
 
 // Returns true if invites not allowed currently, server under maintenance

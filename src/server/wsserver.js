@@ -289,6 +289,8 @@ function onclose(ws, code, reason) {
     if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`)
 
     cancelRenewConnectionTimer(ws);
+
+    if (reason === 'No echo heard') console.log(`Socket closed from no echo heard. ${wsutility.stringifySocketMetadata(ws)}`)
 }
 
 function onerror(ws, error) {
@@ -541,7 +543,7 @@ function handleUnsubbing(ws, key, value, closureNotByChoice) {
             invitesmanager.unsubClientFromList(ws, closureNotByChoice)
             break;
         case "game":
-            gamemanager.unsubClientFromGame(ws, { sendMessage: false }) // info: { id: gameID, color: ourColor }
+            gamemanager.unsubClientFromGameBySocket(ws) // info: { id: gameID, color: ourColor }
             break;
         default:
             const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`

@@ -77,13 +77,13 @@ function Game() {
     this.publicity = undefined;
     /** The variant of this game. */
     this.variant = undefined;
-    /** The clock value (e.g. "10+5"). Untimed games are represented with a "0".*/
+    /** The clock value (e.g. "10+5"). Untimed games are represented with a "-".*/
     this.clock = undefined;
     /** The start time for both players, in milliseconds. */
     this.startTimeMillis = undefined;
     /** The increment amount, in seconds. */
     this.incrementMillis = undefined;
-    /** Whether the game is rated. true or false */
+    /** Whether the game is rated. @type {boolean}*/
     this.rated = undefined;
     /** The white player: `{ member }` or `{ browser }` */
     this.white = undefined;
