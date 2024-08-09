@@ -346,9 +346,9 @@ const sound = (function(){
         return playSound('draw', { volume: 0.7, delay })
     }
 
-    function playSound_drawOffer(delay) {
-        return playSound('draw_offer', { volume: 0.7, delay })
-    }
+    // function playSound_drawOffer(delay) {
+    //     return playSound('draw_offer', { volume: 0.7, delay })
+    // }
 
     function playSound_loss(delay) {
         return playSound('loss', { volume: 0.7, delay })
@@ -399,7 +399,7 @@ const sound = (function(){
         playSound_lowtime,
         playSound_win,
         playSound_draw,
-        playSound_drawOffer,
+        // playSound_drawOffer,
         playSound_loss,
         playSound_drum,
         playSound_tick,
