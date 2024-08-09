@@ -804,7 +804,6 @@ const gamemanager = (function() {
     }
 
     /**
-
      * Handles all incoming websocket messages related to active games.
      * Possible actions: submitmove/offerdraw/abort/resign/joingame/resync
      * @param {Socket} ws - The socket
