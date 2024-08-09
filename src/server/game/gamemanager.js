@@ -70,7 +70,7 @@ const gamemanager = (function() {
             clock: inviteOptions.clock,
             rated: inviteOptions.rated === "Rated",
             moves: [],
-            blackGoesFirst: variant1.isVariantAVariantWhereBlackStarts(inviteOptions.variant),
+            turnOrder: variant1.getGameRulesOfVariant({Variant: inviteOptions.variant}).turnOrder,
             gameConclusion: false,
             timeRemainAtTurnStart: undefined,
             timeAtTurnStart: undefined,
@@ -105,7 +105,7 @@ const gamemanager = (function() {
         newGame.white = white;
         newGame.black = black;
 
-        newGame.whosTurn = newGame.blackGoesFirst ? 'black' : 'white';
+        newGame.whosTurn = newGame.turnOrder[0];
 
         if (!clockweb.isClockValueInfinite(inviteOptions.clock)) {
             newGame.timerWhite = newGame.startTimeMillis;
@@ -243,12 +243,15 @@ const gamemanager = (function() {
             Termination: wincondition1.getTerminationInEnglish(condition)
         }
         const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position)
+        const turn = gameRules.turnOrder[0];
+        delete gameRules.turnOrder;
+        const moveRuleString = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
         delete gameRules.moveRule;
         metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant1 has gotten the game rules.
         const primedGamefile = {
             metadata,
-            turn: variant1.isVariantAVariantWhereBlackStarts(game.variant) ? 'black' : 'white',
-            moveRule: variant1.isVariantAVariantWhereBlackStarts(game.variant) ? undefined : "0/100",
+            turn,
+            moveRule: moveRuleString,
             fullMove: 1,
             startingPosition: positionStuff.positionString, // Technically not needed, as we set `specifyPosition` to false
             moves: game.moves,
@@ -1314,7 +1317,7 @@ const gamemanager = (function() {
     function pushGameClock(game) {
         // if (!game.whosTurn) return; // Game is over
         const colorWhoJustMoved = game.whosTurn; // white/black
-        game.whosTurn = math1.getOppositeColor(game.whosTurn);
+        game.whosTurn = game.turnOrder[(game.moves.length) % game.turnOrder.length];
         if (isGameUntimed(game)) return; // Don't adjust the times if the game isn't timed.
 
         if (!movesscript1.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
