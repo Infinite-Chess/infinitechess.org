@@ -77,13 +77,13 @@ function Game() {
     this.publicity = undefined;
     /** The variant of this game. */
     this.variant = undefined;
-    /** The clock value (e.g. "10+5"). Untimed games are represented with a "0".*/
+    /** The clock value (e.g. "10+5"). Untimed games are represented with a "-".*/
     this.clock = undefined;
     /** The start time for both players, in milliseconds. */
     this.startTimeMillis = undefined;
     /** The increment amount, in seconds. */
     this.incrementMillis = undefined;
-    /** Whether the game is rated. true or false */
+    /** Whether the game is rated. @type {boolean}*/
     this.rated = undefined;
     /** The white player: `{ member }` or `{ browser }` */
     this.white = undefined;
@@ -125,6 +125,15 @@ function Game() {
     /** The time the current player will be auto-resigned by
      * AFK if they are currently AFK. */
     this.autoAFKResignTime = undefined;
+
+    /** Last move a draw was offered */
+    this.whiteDrawOfferMove = undefined
+    this.blackDrawOfferMove = undefined
+
+    /** The states of players offering draws 
+     * @type {string|undefined} 'offering' / 'declined' / undefined */
+    this.whiteDrawOffer = undefined
+    this.blackDrawOffer = undefined
 
     /** Contains information about which sides are
      * about to lose by disconnection. */
