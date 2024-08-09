@@ -68,7 +68,7 @@ const main = (function(){
     function initListeners() {
         input.initListeners() // Mouse, touch, & key event listeners
 
-        window.addEventListener('beforeunload', function(event) {
+        window.addEventListener('unload', function(event) {
             event = event || window.event;
             // console.log('Detecting unload')
 
