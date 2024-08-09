@@ -25,6 +25,11 @@ const game = (function(){
     function areInGame() {
         return gamefile != null;
     }
+    
+    // Is there game in progress?
+    function areInActiveGame() {
+        return areInGame() && !gamefile.gameConclusion;
+    }
 
     // Initiates textures, buffer models for rendering, and the title screen.
     function init() {
@@ -196,6 +201,7 @@ const game = (function(){
     return Object.freeze({
         getGamefile,
         areInGame,
+        areInActiveGame,
         init,
         updateVariablesAfterScreenResize,
         update,
