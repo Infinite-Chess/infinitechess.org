@@ -1080,6 +1080,7 @@ button.join-button, button.copy-button {
     box-shadow: 0px 0px 7px 1px #727272 !important;
     border-radius: min(0.9vw, 10px);
     color: rgb(0, 0, 0);
+    max-width: 54px;
     height: 100%;
     aspect-ratio: 1/1;
     background: rgb(227, 227, 227);
