@@ -23,6 +23,7 @@ const { ensureJSONString } = require('../utility/JSONUtils');
 const { getTranslation } = require('../config/setupTranslations');
 const { getTimeServerRestarting } = require('./serverrestart');
 const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
+const { abortGame, resignGame } = require('./abortresigngame');
 
 const gamemanager = (function() {
 
@@ -393,42 +394,6 @@ const gamemanager = (function() {
     }
 
     /**
-     * Called when a client tries to abort a game.
-     * @param {Socket} ws - The websocket
-     */
-    function abortGame(ws) {
-        const game = getGameBySocket(ws)
-        if (!game) return console.error("Can't abort a game when player isn't in one.")
-        const colorPlayingAs = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-
-        // Is it legal?...
-
-        if (game.gameConclusion === 'aborted') return; // Opponent aborted first.
-        else if (game1.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
-            console.error("Player tried to abort game when the game is already over!")
-            sendNotify(ws, "server.javascript.ws-no_abort_game_over")
-            game1.subscribeClientToGame(game, ws, colorPlayingAs);
-            return;
-        };
-
-        if (movesscript1.isGameResignable(game)) {
-            console.error("Player tried to abort game when there's been atleast 2 moves played!")
-            sendNotify(ws, "server.javascript.ws-no_abort_after_moves")
-            game1.subscribeClientToGame(game, ws, colorPlayingAs);
-            return;
-        }
-    
-        setGameConclusion(game, 'aborted')
-
-        const ourColor = ws.metadata.subscriptions.game?.color || game1.doesSocketBelongToGame_ReturnColor(game, ws);
-        const opponentColor = math1.getOppositeColor(ourColor)
-
-        onRequestRemovalFromPlayersInActiveGames(ws);
-        game1.unsubClientFromGame(game, ws, { sendMessage: false });
-        game1.sendGameUpdateToColor(game, opponentColor);
-    }
-
-    /**
      * 
      * @param {Socket} ws - The socket
      * @param {*} messageContents - The contents of the socket report message
@@ -475,41 +440,6 @@ const gamemanager = (function() {
         game1.sendGameUpdateToBothPlayers(game);
         game1.sendMessageToSocketOfColor(game, 'white', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
         game1.sendMessageToSocketOfColor(game, 'black', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
-    }
-
-    /**
-     * Called when a client tries to resign a game.
-     * @param {Socket} ws - The websocket
-     */
-    function resignGame(ws) {
-        const game = getGameBySocket(ws)
-
-        if (!game) return console.error("Can't resign a game when player isn't in one.")
-
-        // Is it legal?...
-
-        if (game1.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
-            console.error("Player tried to resign game when the game is already over!")
-            sendNotify(ws, "server.javascript.ws-cannot_resign_finished_game")
-            const colorPlayingAs = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-            game1.subscribeClientToGame(game, ws, colorPlayingAs);
-            return;
-        }
-
-        const ourColor = ws.metadata.subscriptions.game?.color || game1.doesSocketBelongToGame_ReturnColor(game, ws);
-        const opponentColor = math1.getOppositeColor(ourColor)
-
-        if (movesscript1.isGameResignable(game)) { // Resign
-            const gameConclusion = `${opponentColor} resignation`
-            setGameConclusion(game, gameConclusion)
-        } else { // Abort instead
-            console.error("Player tried to resign game when there's less than 2 moves played! Aborting instead..")
-            setGameConclusion(game, 'aborted')
-        }
-    
-        onRequestRemovalFromPlayersInActiveGames(ws);
-        game1.unsubClientFromGame(game, ws, { sendMessage: false });
-        game1.sendGameUpdateToColor(game, opponentColor);
     }
 
     /**
@@ -644,7 +574,7 @@ const gamemanager = (function() {
      * @param {WebsocketMessage} message - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
      */
     function handleIncomingMessage(ws, message) {
-        const game = getGameBySocket(ws);
+        const game = getGameBySocket(ws); // The game they belong in, if they belong in one.
         switch (message.action) {
             case 'submitmove':
                 submitMove(ws, message.value);
@@ -653,17 +583,28 @@ const gamemanager = (function() {
                 onJoinGame(ws);
                 break;
             case 'removefromplayersinactivegames':
-                onRequestRemovalFromPlayersInActiveGames(ws);
+                onRequestRemovalFromPlayersInActiveGames(ws, game);
                 break;
             case 'resync':
                 resyncToGame(ws, undefined, message.value, message.id);
                 break;
             case 'abort':
-                abortGame(ws);
-                break;
+                if (abortGame(ws, game)) { // Aborting was a success, terminate the game
+                    setGameConclusion(game, 'aborted')
+                    onRequestRemovalFromPlayersInActiveGames(ws, game);
+                    const colorPlayingAs = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+                    const opponentColor = math1.getOppositeColor(colorPlayingAs)
+                    game1.sendGameUpdateToColor(game, opponentColor);
+                } break;
             case 'resign':
-                resignGame(ws)
-                break;
+                if (resignGame(ws, game)) { // Resigning was a success, terminate the game
+                    const ourColor = ws.metadata.subscriptions.game?.color || game1.doesSocketBelongToGame_ReturnColor(game, ws);
+                    const opponentColor = math1.getOppositeColor(ourColor)
+                    const gameConclusion = `${opponentColor} resignation`
+                    setGameConclusion(game, gameConclusion)
+                    onRequestRemovalFromPlayersInActiveGames(ws, game);
+                    game1.sendGameUpdateToColor(game, opponentColor);
+                } break;
             case 'offerdraw':
                 offerDraw(ws, game);
                 break;
@@ -995,10 +936,10 @@ const gamemanager = (function() {
      * agrees with the resulting game conclusion (no cheating detected),
      * and the server may change the players elos once both players send this.
      * @param {Socket} ws - Their websocket
+     * @param {Game} game - The game they belong in, if they belong in one.
      */
-    function onRequestRemovalFromPlayersInActiveGames(ws) {
+    function onRequestRemovalFromPlayersInActiveGames(ws, game) {
         const user = wsutility.getOwnerFromSocket(ws); // { member/browser }
-        const game = getGameBySocket(ws);
         if (!game) return console.error("Can't remove player from players in active games list when they don't belong in a game")
         removeUserFromActiveGame(user, game.id)
     }

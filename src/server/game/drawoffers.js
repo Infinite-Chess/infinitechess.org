@@ -83,7 +83,7 @@ function acceptDraw(ws, game) {
         game.blackDrawOffer = 'confirmed'
     } else console.error(`Unknown color "${color}" when accepting draw!`)
 
-    return true;
+    return true; // Draw offer acceptance was a success!
 }
 
 /** 
