@@ -959,6 +959,8 @@ button.join-button, button.copy-button {
 }
 
 .whosturn {
+    min-width: 0;
+    max-width: 100%;
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -1030,13 +1032,7 @@ button.join-button, button.copy-button {
 /* Draw Offer UI (in the bottom nav bar) */
 
 .draw_offer_ui {
-    width: max-content;
-    width: -moz-max-content;
-    width: -webkit-max-content;
-    width: intrinsic;
-
     height: 100%;
-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1054,8 +1050,6 @@ button.join-button, button.copy-button {
     border-color: transparent;
     background-color: rgba(0, 0, 0, 0);
     box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
 }
 
 .draw_offer_ui p.offer_title, .draw_offer_ui button {
@@ -1085,6 +1079,7 @@ button.join-button, button.copy-button {
     box-shadow: 0px 0px 7px 1px #727272 !important;
     border-radius: min(0.9vw, 10px);
     color: rgb(0, 0, 0);
+    max-width: 54px;
     height: 100%;
     aspect-ratio: 1/1;
     background: rgb(227, 227, 227);
