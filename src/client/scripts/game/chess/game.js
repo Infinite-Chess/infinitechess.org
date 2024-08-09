@@ -168,7 +168,7 @@ const game = (function(){
 
         guigameinfo.updateWhosTurn(gamefile)
         // Immediately conclude the game if we loaded a game that's over already
-        if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile, gamefile.gameConclusion);
+        if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile, gamefile.gameConclusion);
 
         initListeners();
     }
