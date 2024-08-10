@@ -35,13 +35,10 @@ function offerDraw(ws, game) {
     
     if (hasGameDrawOffer(game)) return console.error(`${color} tried to offer a draw when the game already has a draw offer!`);
 
-    const movesSinceLastOffer
-
-    if (color === "white") {
-        if (game.moves.length - game.whiteDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
-    } else if (color === "black") { // color === "black"
-        if (game.moves.length - game.blackDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
-    } else console.error(`Unknown color "${color}" when offering draw!`)
+    const movesSinceLastOffer = color === 'white' ? game.moves.length - game.whiteDrawOfferMove
+                              : color === 'black' ? game.moves.length - game.blackDrawOfferMove
+                              : 0;
+    if (movesSinceLastOffer < movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
 
     if (!movesscript1.isGameResignable(game)) return console.error("Client trying to offer a draw on the first 2 moves")
     
@@ -118,7 +115,6 @@ function declineDraw(ws, game) {
     } else console.error(`Unknown color "${color}" when accepting draw!`)
 
     // Alert their opponent
-    console.log(opponentColor)
     game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'declinedraw')
 }
 

@@ -193,9 +193,7 @@ const game1 = (function() {
         // 2. Remove the game key-value pair from the sockets metadata subscription list.
         delete ws.metadata.subscriptions.game;
 
-        // Let their opponent know they have disconnected.
-        // I THINK this route never happens unless the client intentionally leaves the game...
-        console.log(`Unsubbed client from game ${game.id}. Would we need to inform their opponent they disconnected here?`)
+        // We inform their opponent they have disconnected inside gamemanager.js when we call this method.
 
         // Tell the client to unsub on their end, IF the socket isn't closing.
         if (sendMessage && ws.readyState === WebSocket.OPEN) ws.metadata.sendmessage(ws, 'game', 'unsub')
@@ -222,7 +220,7 @@ const game1 = (function() {
      * @param {string} playerColor - The color the are. "white" / "black"
      */
     function sendGameInfoToPlayer(game, playerSocket, playerColor) {
-        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(safeGameInfo.timeCreated)
+        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated)
 
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
         const gameOptions = {
@@ -350,35 +348,6 @@ const game1 = (function() {
         if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;
 
         playerSocket.metadata.sendmessage(playerSocket, "game", "gameupdate", messageContents, replyTo)
-    }
-
-    /**
-     * Strips the game of potentially doxing info, making it safe to send to the players.
-     * 
-     * DO NOT MODIFY the return value, because it will modify the original game!
-     * @param {Game} game - The game
-     * @param {string} youAreColor - The value to set the `youAreColor` property.
-     * @returns {Object} The game, stripped of unsafe info.
-     */
-    function getGameInfoSafe(game, youAreColor) { // color: white/black
-        const safeGame = {
-            variant: game.variant,
-            moves: game.moves,
-            playerWhite: getDisplayNameOfPlayer(game.white),
-            playerBlack: getDisplayNameOfPlayer(game.black),
-            youAreColor,
-            clock: game.clock,
-            gameConclusion: game.gameConclusion,
-            // MODIFY...
-            whiteDrawOfferMove: game.whiteDrawOfferMove,
-            blackDrawOfferMove: game.blackDrawOfferMove
-        }
-        if (!game.untimed) {
-            safeGame.timerWhite = game.timerWhite;
-            safeGame.timerBlack = game.timerBlack;
-            safeGame.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt;
-        }
-        return safeGame;
     }
 
     /**
@@ -527,7 +496,7 @@ const game1 = (function() {
      */
     function printGame(game) {
         const stringifiedGame = getSimplifiedGameString(game);
-        console.log(stringifiedGame);
+        console.log(JSON.parse(stringifiedGame)); // Turning it back into an object gives it a special formatting in the console, instead of just printing a string.
     }
 
     /**

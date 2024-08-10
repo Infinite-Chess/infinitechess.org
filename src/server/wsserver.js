@@ -278,10 +278,9 @@ function onclose(ws, code, reason) {
     // They would want to keep their invite, AND remain in their game!
     const closureNotByChoice = wasSocketClosureNotByTheirChoice(code, reason);
 
-    gamemanager.onSocketClosure(ws, { closureNotByChoice })
-
     // Unsubscribe them from all. NO LIST. It doesn't matter if they want to keep their invite or remain
     // connected to their game, without a websocket to send updates to, there's no point in any SUBSCRIPTION service!
+    // Unsubbing them from their game will start their auto-resignation timer.
     unsubClientFromAllSubs(ws, closureNotByChoice);
 
     // Cancel the timer to auto delete it at the end of its life
@@ -543,7 +542,9 @@ function handleUnsubbing(ws, key, value, closureNotByChoice) {
             invitesmanager.unsubClientFromList(ws, closureNotByChoice)
             break;
         case "game":
-            gamemanager.unsubClientFromGameBySocket(ws) // info: { id: gameID, color: ourColor }
+            // If the unsub is not by choice (network interruption instead of closing tab), then we give them
+            // a 5 second cushion before starting an auto-resignation timer
+            gamemanager.unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice })
             break;
         default:
             const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`

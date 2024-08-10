@@ -120,35 +120,6 @@ function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
 //--------------------------------------------------------------------------------------------------------
 
 /**
- * Flags, or sets a timer to, the socket as disconnected. Alerts their opponent. This does NOT unsub them from the game.
- * @param {Socket} ws - Their websocket
- * @param {Game} game - The game they belong in, if they belong to one.
- * @param {Function} onAutoResignFunc - The function to call when the player should be auto resigned from disconnection.This should have 2 arguments: The game, and the color that won.
- * @param {Object} options - An object that contains the property `closureNotByChoice`, that when true,
- * will give them 5 seconds to reconnect before flagging them as disconnected.
- */
-function onSocketClosure2(ws, game, onAutoResignFunc, { closureNotByChoice = true } = {}) {
-    if (!game) return console.error("Cannot find game socket was in, cannot start timer to auto resign them.")
-
-    // Quit if the game is over already
-    if (game1.isGameOver(game)) return;
-
-    const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-
-    if (closureNotByChoice) {
-        // Their connection/internet dropped. Give them 5 seconds
-        // before flagging them as disconnected, informing their opponent
-        // they lost connection, and starting a 60s auto resign timer.
-        console.log("Waiting 5 seconds before starting disconnection timer.")
-        game.disconnect.startTimer[color] = setTimeout(startDisconnectTimer, timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis, game, color, closureNotByChoice, onAutoResignFunc)
-    } else {
-        // Closed the tab manually. Immediately flag them
-        // as disconnected, start a 20s auto resign timer.
-        startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
-    }
-}
-
-/**
  * Starts a timer to auto-resign a player from disconnection.
  * @param {Game} game - The game
  * @param {string} color - The color to start the auto-resign timer for
@@ -221,14 +192,21 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
     game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn')
 }
 
+//--------------------------------------------------------------------------------------------------------
+
+/**
+ * Returns the cushion, in millis, that we give disconnected players to reconnect before we start an auto-resign timer.
+ * @returns {number}
+ */
+function getDisconnectionForgivenessDuration() { return timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis }
 
 
 module.exports = {
     onAFK,
     onAFK_Return,
     cancelAutoAFKResignTimer,
-    onSocketClosure2,
     startDisconnectTimer,
     cancelDisconnectTimers,
-    cancelDisconnectTimer
+    cancelDisconnectTimer,
+    getDisconnectionForgivenessDuration
 }
