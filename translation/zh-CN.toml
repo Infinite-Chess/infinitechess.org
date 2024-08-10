@@ -97,7 +97,7 @@ username = "账号:"
 email = "电子邮箱:"
 password = "密码:"
 create_button = "注册"
-argreement = ["I agree to the ", "Terms of Service"]
+agreement = ["我同意", "服务条款", "。"]
 
 [create-account.javascript]
 js-username_specs = "用户名必须至少包含 3 个字符，并且只能包含字母 A-Z 和数字 0-9"
@@ -178,32 +178,31 @@ online = "网上"
 local = "本地"
 computer = "计算机"
 variant = "Variant"
-variants = [
-"Classical",
-"Classical+",
-"Chess on an Infinite Plane",
-"Pawndard",
-"Knighted Chess",
-"Knightline",
-"Core",
-"Standarch",
-"Pawn Horde",
-"Space Classic",
-"Space",
-"Obstocean",
-"Abundance",
-"Amazon Chandelier",
-"Containment",
-"Classical - Limit 7",
-"Coaip - Limit 7",
-"Chess",
-"Experimental: Classical - KOTH",
-"Experimental: Coaip - KOTH",
-"Showcase: Omega",
-"Showcase: Omega^2",
-"Showcase: Omega^3",
-"Showcase: Omega^4",
-]
+Classical = "经典"
+Classical_Plus = "经典+"
+CoaIP = "无限棋盘上的国际象棋"
+Pawndard = "兵棋"
+Knighted_Chess = "骑士国际象棋"
+Knightline = "骑士线"
+Core = "核心"
+Standarch = "标准弧"
+Pawn_Horde = "兵群"
+Space_Classic = "太空经典"
+Space = "太空"
+Obstocean = "障碍海洋"
+Abundance = "丰饶"
+Amazon_Chandelier = "亚马逊吊灯"
+Containment = "遏制"
+Classical_Limit_7 = "经典 - 限制 7"
+CoaIP_Limit_7 = "无限棋盘 - 限制 7"
+Chess = "国际象棋"
+Classical_KOTH = "实验: 经典 - 王者争夺"
+CoaIP_KOTH = "实验: 无限棋盘 - 王者争夺"
+Omega = "展示: 欧米伽"
+Omega_Squared = "展示: 欧米伽²"
+Omega_Cubed = "展示: 欧米伽³"
+Omega_Fourth = "展示: 欧米伽⁴"
+no_clock = "没有表"
 clock = "表"
 minutes = "分钟"
 seconds = "妙"
@@ -536,3 +535,17 @@ ws-bad_request = "400"
 ws-not_found = "404"
 ws-forbidden = "403"
 ws-unauthorized_patron_page = "未经授权。此页面仅限会员访问。"
+ws-username_reserved = "用户名已被保留"
+ws-already_in_game = "已在游戏中"
+ws-player_already_has_invite = "玩家已经有邀请"
+ws-invite_cancelled = "邀请已取消"
+ws-accept_own_invite = "不能接受自己的邀请"
+ws-server_restarting = "服务器正在重启"
+ws-minutes = "分钟"
+ws-minute = "分钟"
+ws-no_abort_game_over = "游戏结束无法中止"
+ws-no_abort_after_moves = "无法在棋步后中止"
+ws-game_aborted_cheating = "因作弊游戏中止"
+ws-cannot_resign_finished_game = "无法放弃已完成的游戏"
+ws-invalid_code = "无效代码"
+ws-game_aborted = "游戏中止"
