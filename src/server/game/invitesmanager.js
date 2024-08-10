@@ -487,7 +487,7 @@ function deleteBrowsersExistingInvite(ws) {
     let deleted1PublicInvite = false;
     for (let i = invites.length - 1; i >= 0; i--) {
         const thisInvite = invites[i]
-        if (browser !== thisInvite.owner.member) continue;
+        if (browser !== thisInvite.owner.browser) continue;
         const inviteIsPublic = thisInvite.publicity === 'public'
         if (inviteIsPublic) deleted1PublicInvite = true;
         invites.splice(i, 1) // Delete the invite.
@@ -560,6 +560,8 @@ const invitesmanager = (function(){
         }
 
         // The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
+
+        // console.log("Setting a 5-second timer to delete a player's invites!")
 
         if (ws.metadata.user) timersMember[ws.metadata.user] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws)
         if (ws.metadata['browser-id']) timersBrowser[ws.metadata['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws)
