@@ -14,6 +14,7 @@
 // Custom imports
 const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
+const { getGameByID } = require('./gamemanager');
 
 const { cancelDisconnectTimer } = require('./afkdisconnect');
 
@@ -27,13 +28,17 @@ const { cancelDisconnectTimer } = require('./afkdisconnect');
  * @param {number} [replyToMessageID] - If specified, the id of the incoming socket message this resync will be the reply to
  */
 function resyncToGame(ws, game, gameID, replyToMessageID) {
-    if (!game) {
-        console.log(`Cannot resync client to game because they aren't in one, and the ID they said it was ${gameID} doesn't exist.`)
+    if (game && game.id !== gameID) {
+        console.log(`Cannot resync client to game because they tried to resync to a game with id ${gameID} when they belong to game with id ${game.id}!`)
         return ws.metadata.sendmessage(ws, 'game', 'nogame')
     }
 
-    if (game.id !== gameID) {
-        console.log(`Cannot resync client to game because they tried to resync to a game with id ${gameID} when they belong to game with id ${game.id}!`)
+    // Perhaps this is a socket reopening, and we weren't able to find their game because they are signed out.
+    // Let's check the game they said they're in!
+    game = game || getGameByID(gameID)
+
+    if (!game) {
+        console.log(`Cannot resync client to game because they aren't in one, and the ID they said it was ${gameID} doesn't exist.`)
         return ws.metadata.sendmessage(ws, 'game', 'nogame')
     }
 

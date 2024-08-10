@@ -50,7 +50,7 @@ async function handleCleanup(signal) {
 
     await saveMembersIfChangesMade();
     await saveRolesIfChangesMade();
-    await gamemanager.logAllGames();
+    await logAllGames();
 
     process.exit(0);
 }

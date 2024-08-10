@@ -14,20 +14,18 @@ const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
 const math1 = require('./math1.js')
 const variant1 = require('./variant1.js')
-const gamemanager = require('./gamemanager/gamemanager.js');
+const gamemanager = require('./gamemanager/js');
 const clockweb = require('./clockweb.js');
 const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 const { setTimeServerRestarting } = require('./serverrestart.js');
+const { createGame, isSocketInAnActiveGame } = require('./gamemanager/gamemanager.js');
+
+const { getActiveGameCount } = require('../gamemanager/gamecount')
 
 
 // List of active invites
 let invites = []; // { id, owner, variant, clock, color, rated, publicity }  publicity: "public"/"private"
 
-// List of clients currently subscribed to invites list events!
-const subscribedClients = {}; // { id: ws }
-
-const printNewAndClosedSubscriptions = false;
-const printSubscriberCount = true;
 
 
 
@@ -122,7 +120,7 @@ function onPublicInvitesChange(messageID) { // The message that this broadcast i
 
 function broadcastInvites(messageID) {
     const newInvitesList = getPublicInvitesListSafe();
-    const currentGameCount = gamemanager.getActiveGameCount();
+    const currentGameCount = getActiveGameCount();
 
     const subbedClientsKeys = Object.keys(subscribedClients); // []
     for (let id of subbedClientsKeys) {
@@ -131,20 +129,20 @@ function broadcastInvites(messageID) {
     }
 }
 
-function sendClientInvitesList(ws, invitesList = getPublicInvitesListSafe(), currentGameCount = gamemanager.getActiveGameCount(), replyto) {
+function sendClientInvitesList(ws, invitesList = getPublicInvitesListSafe(), currentGameCount = getActiveGameCount(), replyto) {
     invitesList = addMyPrivateInviteToList(ws, invitesList)
     const message = { invitesList, currentGameCount }
     ws.metadata.sendmessage(ws, "invites", "inviteslist", message, replyto) // In order: socket, sub, action, value
 }
 
 function broadcastActiveGameCount() {
-    gamecount = gamemanager.getActiveGameCount();
+    gamecount = getActiveGameCount();
     const subbedClientsKeys = Object.keys(subscribedClients); // []
     for (let id of subbedClientsKeys) {
         sendClientActiveGameCount(subscribedClients[id], gamecount);
     }
 }
-gamemanager.setOnActiveGameCountChange(broadcastActiveGameCount);
+setOnActiveGameCountChange(broadcastActiveGameCount);
 
 function sendClientActiveGameCount(ws, gamecount) {
     ws.metadata.sendmessage(ws, "invites", "gamecount", gamecount) // In order: socket, sub, action, value
@@ -152,7 +150,7 @@ function sendClientActiveGameCount(ws, gamecount) {
 
 // Similar to connect(), but this does not log the users connection until they are given a browser ID.
 async function createNewInvite (ws, invite, messageID) { // invite: { id, owner, variant, clock, color, rated, publicity } 
-    if (gamemanager.isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game');
+    if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game');
     
     // Verify their invite contains the required properties...
     // ...
@@ -261,7 +259,7 @@ async function initServerRestart(newAllowInvitesValue) { // { allowInvites, mess
 
     // Alert all people in a game that we will be restarting soon
     // ...
-    gamemanager.broadCastGameRestarting()
+    broadCastGameRestarting()
 }
 
 // Returns true if invites not allowed currently, server under maintenance
@@ -274,7 +272,7 @@ function areInvitesAllowed(ws) {
 
     // Making an invite is NOT allowed...
 
-    gamemanager.printActiveGameCount();
+    printActiveGameCount();
     const timeUntilRestart = getMinutesUntilRestart();
     const message = timeUntilRestart ? 'server.javascript.ws-server_restarting' : 'server.javascript.ws-server_under_maintenance'; 
     sendNotify(ws, message, timeUntilRestart)
@@ -369,7 +367,7 @@ function getInviteByID(id) {
 }
 
 function acceptInvite(ws, inviteinfo) { // { id, isPrivate }
-    if (gamemanager.isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game");
+    if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game");
     
     // Verify their invite contains the required properties...
     // ...
@@ -409,7 +407,7 @@ function acceptInvite(ws, inviteinfo) { // { id, isPrivate }
 
     const player1Socket = findSocketFromOwner(invite.owner); // Could be undefined occasionally
     const player2Socket = ws;
-    gamemanager.createGame(invite, player1Socket, player2Socket)
+    createGame(invite, player1Socket, player2Socket)
 
     // Unsubscribe them both from the invites subscription list.
     unsubClientFromListNoInvite(player1Socket);
@@ -518,105 +516,81 @@ function findSocketFromOwner(owner) { // { member/browser }
 }
 
 
-const invitesmanager = (function(){
+function subToInvitesList(ws) { // data: { route, action, value, id }
+    // if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
+    if (ws.metadata.subscriptions.invites) return; // Already subscribed
+    
+    subscribedClients[ws.metadata.id] = ws;
+    ws.metadata.subscriptions.invites = true;
+    if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
+    if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`)
 
-    function subClientToList(ws) { // data: { route, action, value, id }
-        // if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
-        if (ws.metadata.subscriptions.invites) return; // Already subscribed
-        
-        subscribedClients[ws.metadata.id] = ws;
-        ws.metadata.subscriptions.invites = true;
-        if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
-        if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`)
+    sendClientInvitesList(ws)
 
-        sendClientInvitesList(ws)
+    // Cancel any existing timer set to delete their invite!
+    // ...
 
-        // Cancel any existing timer set to delete their invite!
-        // ...
+    if (ws.metadata.user) {
+        clearTimeout(timersMember[ws.metadata.user])
+        delete timersMember[ws.metadata.user]
+    } if (ws.metadata['browser-id']) {
+        clearTimeout(timersBrowser[ws.metadata['browser-id']])
+        delete timersBrowser[ws.metadata['browser-id']]
+    }
+}
 
-        if (ws.metadata.user) {
-            clearTimeout(timersMember[ws.metadata.user])
-            delete timersMember[ws.metadata.user]
-        } if (ws.metadata['browser-id']) {
-            clearTimeout(timersBrowser[ws.metadata['browser-id']])
-            delete timersBrowser[ws.metadata['browser-id']]
-        }
+// Set closureNotByChoice to true if you don't immediately want to delete their invite, but say after 5 seconds.
+function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action, value, id }
+    delete subscribedClients[ws.metadata.id];
+    //math.removeObjectFromArray(ws.metadata.subscriptions, "invites")
+    delete ws.metadata.subscriptions.invites
+    if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
+    if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`)
+
+    // One day this could be modified to not delete their existing invite
+    // IF THEY have another socket connected!
+    if (!closureNotByChoice) {
+        // Delete their existing invites
+        if (deleteUsersExistingInvite(ws)) onPublicInvitesChange();
+        return;
     }
 
-    // Set closureNotByChoice to true if you don't immediately want to delete their invite, but say after 5 seconds.
-    function unsubClientFromList(ws, closureNotByChoice) { // data: { route, action, value, id }
-        delete subscribedClients[ws.metadata.id];
-        //math.removeObjectFromArray(ws.metadata.subscriptions, "invites")
-        delete ws.metadata.subscriptions.invites
-        if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
-        if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`)
+    // The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
 
-        // One day this could be modified to not delete their existing invite
-        // IF THEY have another socket connected!
-        if (!closureNotByChoice) {
-            // Delete their existing invites
-            if (deleteUsersExistingInvite(ws)) onPublicInvitesChange();
-            return;
-        }
+    // console.log("Setting a 5-second timer to delete a player's invites!")
 
-        // The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
+    if (ws.metadata.user) timersMember[ws.metadata.user] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws)
+    if (ws.metadata['browser-id']) timersBrowser[ws.metadata['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws)
+}
 
-        // console.log("Setting a 5-second timer to delete a player's invites!")
+function deleteAllInvitesOfMember(usernameLowercase) {
+    if (usernameLowercase == null) return console.error("Cannot delete all invites of member without their username.")
 
-        if (ws.metadata.user) timersMember[ws.metadata.user] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws)
-        if (ws.metadata['browser-id']) timersBrowser[ws.metadata['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws)
-    }
-
-    function handleIncomingMessage(ws, data) { // data: { route, action, value, id }
-        // What is their action? Create invite? Cancel invite? Accept invite?
-
-        switch (data.action) {
-            case "createinvite":
-                createNewInvite(ws, data.value, data.id)
-                break;
-            case "cancelinvite":
-                cancelInvite(ws, data.value, data.id)
-                break;
-            case "acceptinvite":
-                acceptInvite(ws, data.value);
-                break;
-            default:
-                console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
-                console.log(`Data: ${JSON.stringify(data)}`)
-                return;
-        }
-    }
-
-    function deleteAllInvitesOfMember(usernameLowercase) {
-        if (usernameLowercase == null) return console.error("Cannot delete all invites of member without their username.")
-
-        let publicInviteDeleted = false;
-        invites = invites.filter((invite) => { // { id, owner, variant, clock, color, rated, publicity }
-            const inviteMatches = invite.owner.member === usernameLowercase
-            if (inviteMatches && invite.publicity === 'public') publicInviteDeleted = true;
-            return !inviteMatches;
-        })
-        if (publicInviteDeleted) onPublicInvitesChange();
-    }
-
-    /**
-     * Attaches a hasInvite() method to the socket's metadata
-     * @param {Socket} ws - The socket
-     */
-    function giveSocketMetadataHasInviteFunc(ws) {
-        ws.metadata.hasInvite = () => userHasInvite(ws)
-    }
-
-    return Object.freeze({
-        subClientToList,
-        unsubClientFromList,
-        handleIncomingMessage,
-        deleteAllInvitesOfMember,
-        giveSocketMetadataHasInviteFunc,
+    let publicInviteDeleted = false;
+    invites = invites.filter((invite) => { // { id, owner, variant, clock, color, rated, publicity }
+        const inviteMatches = invite.owner.member === usernameLowercase
+        if (inviteMatches && invite.publicity === 'public') publicInviteDeleted = true;
+        return !inviteMatches;
     })
+    if (publicInviteDeleted) onPublicInvitesChange();
+}
 
-})();
+/**
+ * Attaches a hasInvite() method to the socket's metadata
+ * @param {Socket} ws - The socket
+ */
+function giveSocketMetadataHasInviteFunc(ws) {
+    ws.metadata.hasInvite = () => userHasInvite(ws)
+}
 
 
 
-module.exports = invitesmanager;
+module.exports = {
+    subToInvitesList,
+    unsubFromInvitesList,
+    deleteAllInvitesOfMember,
+    giveSocketMetadataHasInviteFunc,
+    createNewInvite,
+    cancelInvite,
+    acceptInvite,
+};

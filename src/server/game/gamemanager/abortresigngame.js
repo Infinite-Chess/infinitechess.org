@@ -10,6 +10,8 @@ const wsutility = require('../wsutility');
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
 const movesscript1 = require('../movesscript1');
+const math1 = require('../math1');
+const { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } = require('./gamemanager');
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -17,7 +19,6 @@ const movesscript1 = require('../movesscript1');
  * Called when a client tries to abort a game.
  * @param {Socket} ws - The websocket
  * @param {Game} game - The game they belong in, if they belong in one.
- * @returns {true | undefined} true if the aborting was a success (the game manager should terminate the game), otherwise undefined.
  */
 function abortGame(ws, game) {
     if (!game) return console.error("Can't abort a game when player isn't in one.")
@@ -44,14 +45,17 @@ function abortGame(ws, game) {
 
     gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
 
-    return true; // Aborting was a success!
+    setGameConclusion(game, 'aborted')
+    onRequestRemovalFromPlayersInActiveGames(ws, game);
+    const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+    const opponentColor = math1.getOppositeColor(colorPlayingAs)
+    gameutility.sendGameUpdateToColor(game, opponentColor);
 }
 
 /**
  * Called when a client tries to resign a game.
  * @param {Socket} ws - The websocket
  * @param {Game} game - The game they belong in, if they belong in one.
- * @returns {true | undefined} true if the resignation was a success (the game manager should terminate the game), otherwise undefined.
  */
 function resignGame(ws, game) {
     if (!game) return console.error("Can't resign a game when player isn't in one.")
@@ -72,7 +76,12 @@ function resignGame(ws, game) {
 
     gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
 
-    return true; // Resigning was a success!
+    const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+    const opponentColor = math1.getOppositeColor(ourColor)
+    const gameConclusion = `${opponentColor} resignation`
+    setGameConclusion(game, gameConclusion)
+    onRequestRemovalFromPlayersInActiveGames(ws, game);
+    gameutility.sendGameUpdateToColor(game, opponentColor);
 }
 
 

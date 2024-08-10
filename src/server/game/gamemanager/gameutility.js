@@ -193,7 +193,7 @@ const gameutility = (function() {
         // 2. Remove the game key-value pair from the sockets metadata subscription list.
         delete ws.metadata.subscriptions.game;
 
-        // We inform their opponent they have disconnected inside gamemanager.js when we call this method.
+        // We inform their opponent they have disconnected inside js when we call this method.
 
         // Tell the client to unsub on their end, IF the socket isn't closing.
         if (sendMessage && ws.readyState === WebSocket.OPEN) ws.metadata.sendmessage(ws, 'game', 'unsub')
@@ -576,6 +576,45 @@ const gameutility = (function() {
         return game.disconnect.autoResign[color].timeToAutoLoss != null;
     }
 
+    /**
+     * Sends the current clock values to the player who just moved.
+     * @param {Game} game - The game
+     */
+    function sendUpdatedClockToColor(game, color) {
+        if (color !== 'white' && color !== 'black') return console.error(`color must be white or black! ${color}`)
+        if (game.untimed) return; // Don't send clock values in an untimed game
+
+        const message = {
+            timerWhite: game.timerWhite,
+            timerBlack: game.timerBlack,
+            timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
+        }
+        const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
+        if (!playerSocket) return; // They are not connected, can't send message
+        playerSocket.metadata.sendmessage(playerSocket, "game", "clock", message)
+    }
+
+    /**
+     * Sends the most recent played move to the player who's turn it is now.
+     * @param {Game} game - The game
+     * @param {string} color - The color of the player to send the latest move to
+     */
+    function sendMoveToColor(game, color) {
+        if (color !== 'white' && color !== 'black') return console.error(`colorJustMoved must be white or black! ${color}`)
+        
+        const message = {
+            move: movesscript1.getLastMove(game.moves),
+            gameConclusion: game.gameConclusion,
+            moveNumber: game.moves.length,
+            timerWhite: game.timerWhite,
+            timerBlack: game.timerBlack,
+            timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
+        }
+        const sendToSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
+        if (!sendToSocket) return; // They are not connected, can't send message
+        sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message)
+    }
+
     return Object.freeze({
         newGame,
         subscribeClientToGame,
@@ -591,7 +630,9 @@ const gameutility = (function() {
         isGameOver,
         isAFKTimerActive,
         isDisconnectTimerActiveForColor,
-        isAutoResignDisconnectTimerActiveForColor
+        isAutoResignDisconnectTimerActiveForColor,
+        sendUpdatedClockToColor,
+        sendMoveToColor,
     })
 
 })()
