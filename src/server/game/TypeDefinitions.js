@@ -97,7 +97,7 @@ function Game() {
     this.blackGoesFirst = undefined;
     /** Whos turn it is currently. */
     this.whosTurn = undefined;
-    /** If truthy, it's how the game ended. For example, "white checkmate". */
+    /** If the game is over, this is a string. For example, "white checkmate". Otherwise false. */
     this.gameConclusion = undefined;
 
     /** White's current time remaining, in milliseconds, if the game is timed, otherwise undefined. */

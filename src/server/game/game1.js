@@ -215,52 +215,48 @@ const game1 = (function() {
 
     /**
      * Sends the game info to the player, the info they need to load the online game.
+     * 
+     * Makes sure not to send sensitive info, such as player's browser-id cookies.
      * @param {Game} game - The game they're in.
      * @param {Socket} playerSocket - Their websocket
      * @param {string} playerColor - The color the are. "white" / "black"
      */
     function sendGameInfoToPlayer(game, playerSocket, playerColor) {
-        // Removes sensitive information from the provided game
-        // DO NOT MODIFY the returned version for it will modify the original game!!!!
-        const safeGameInfo = getGameInfoSafe(game, playerColor);
-        // Contains the properties:
-        // id, publicity, variant, moves, playerWhite, playerBlack,
-        // youAreColor, moves, clock, timerWhite, timerBlack, gameConclusion,
-        // whiteDrawOfferMove, blackDrawOfferMove
-
         const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(safeGameInfo.timeCreated)
 
-        const RatedOrCasual = safeGameInfo.rated ? "Rated" : "Casual";
+        const RatedOrCasual = game.rated ? "Rated" : "Casual";
         const gameOptions = {
             metadata: {
-                Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${safeGameInfo.variant}`)} infinite chess game`,
+                Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
                 Site: "https://www.infinitechess.org/",
                 Round: "-",
-                Variant: safeGameInfo.variant,
-                White: safeGameInfo.playerWhite,
-                Black: safeGameInfo.playerBlack,
-                TimeControl: safeGameInfo.clock,
+                Variant: game.variant,
+                White: getDisplayNameOfPlayer(game.white), // Protect browser's browser-id cookie
+                Black: getDisplayNameOfPlayer(game.black), // Protect browser's browser-id cookie
+                TimeControl: game.clock,
                 UTCDate,
                 UTCTime,
             },
-            id: safeGameInfo.id,
-            clock: safeGameInfo.clock,
-            publicity: safeGameInfo.publicity,
-            youAreColor: safeGameInfo.youAreColor,
-            moves: safeGameInfo.moves,
-            gameConclusion: safeGameInfo.gameConclusion,
+            id: game.id,
+            clock: game.clock,
+            publicity: game.publicity,
+            youAreColor: playerColor,
+            moves: game.moves,
+            gameConclusion: game.gameConclusion,
             // REMOVE draw offer details from here and put below!
-            whiteDrawOfferMove: safeGameInfo.whiteDrawOfferMove,
-            blackDrawOfferMove: safeGameInfo.blackDrawOfferMove
+            whiteDrawOfferMove: game.whiteDrawOfferMove,
+            blackDrawOfferMove: game.blackDrawOfferMove
         }
         // Include additional stuff if relevant
-        if (safeGameInfo.timerWhite) gameOptions.timerWhite = safeGameInfo.timerWhite
-        if (safeGameInfo.timerBlack) gameOptions.timerBlack = safeGameInfo.timerBlack
-        if (safeGameInfo.timeNextPlayerLosesAt) gameOptions.timeNextPlayerLosesAt = safeGameInfo.timeNextPlayerLosesAt
+        if (!game.untimed) {
+            gameOptions.timerWhite = game.timerWhite
+            gameOptions.timerBlack = game.timerBlack
+            gameOptions.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt
+        }
 
         // If true, we know it's their opponent that's afk, because this client
         // just refreshed the page and would have cancelled the timer if they were the ones afk.
-        if (game.autoAFKResignTime != null) gameOptions.autoAFKResignTime = game.autoAFKResignTime
+        if (isAFKTimerActive(game)) gameOptions.autoAFKResignTime = game.autoAFKResignTime
 
         // If their opponent has disconnected, send them that info too.
         const opponentColor = math1.getOppositeColor(playerColor)
@@ -331,7 +327,7 @@ const game1 = (function() {
             messageContents.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt;
         }
         // Include other relevant stuff if defined
-        if (game.autoAFKResignTime) messageContents.autoAFKResignTime = game.autoAFKResignTime;
+        if (isAFKTimerActive(game)) messageContents.autoAFKResignTime = game.autoAFKResignTime;
         // SEND THEM INFO ABOUT OPEN DRAW OFFERS
         // ...
         if (game.whiteDrawOfferMove) messageContents.whiteDrawOfferMove = game.whiteDrawOfferMove;
@@ -366,10 +362,6 @@ const game1 = (function() {
      */
     function getGameInfoSafe(game, youAreColor) { // color: white/black
         const safeGame = {
-            id: game.id,
-            timeCreated: game.timeCreated,
-            publicity: game.publicity,
-            rated: game.rated,
             variant: game.variant,
             moves: game.moves,
             playerWhite: getDisplayNameOfPlayer(game.white),
@@ -589,6 +581,17 @@ const game1 = (function() {
         // If this is defined, then the timer is defined.
         return game.autoAFKResignTime != null;
     }
+    
+    /**
+     * Returns true if the provided color has a disconnect
+     * timer to auto-resign them from being gone for too long.
+     * @param {Game} game - The game they're in
+     * @param {string} color - The color they are in this game
+     */
+    function isDisconnectTimerActiveForColor(game, color) {
+        // If these are defined, then the timer is defined.
+        return game.disconnect.startTimer[color] != null || game.disconnect.autoResign[color].timeToAutoLoss != null;
+    }
 
     return Object.freeze({
         newGame,
@@ -603,7 +606,8 @@ const game1 = (function() {
         printGame,
         getSimplifiedGameString,
         isGameOver,
-        isAFKTimerActive
+        isAFKTimerActive,
+        isDisconnectTimerActiveForColor
     })
 
 })()

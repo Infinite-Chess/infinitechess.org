@@ -63,7 +63,7 @@ function onAFK(ws, game, onAutoResignFunc) {
     // Verify it's their turn (can't lose by afk if not)
     if (game.whosTurn !== color) return console.error("Client submitted they are afk when it's not their turn. Ignoring.")
     
-    if (isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!")
+    if (game1.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!")
 
     const opponentColor = math1.getOppositeColor(color);
 
@@ -219,19 +219,6 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
 
     const opponentColor = math1.getOppositeColor(color);
     game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn')
-}
-
-//--------------------------------------------------------------------------------------------------------
-
-/**
- * Returns true if the provided color has a disconnect
- * timer to auto-resign them from being gone for too long.
- * @param {Game} game - The game they're in
- * @param {string} color - The color they are in this game
- */
-function isDisconnectTimerActiveForColor(game, color) {
-    // If these are defined, then the timer is defined.
-    return game.disconnect.startTimer[color] != null || game.disconnect.autoResign[color].timeToAutoLoss != null;
 }
 
 
