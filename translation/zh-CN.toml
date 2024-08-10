@@ -1,6 +1,6 @@
 name = "中文" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "7"
+version = "8"
 
 [header]
 home = "主页"
@@ -167,6 +167,7 @@ amazon = {name="Amazon", description="Moves like a queen and a knight combined. 
 guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."},
 hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."},
 centaur = {name="Centaur", description="Moves like a knight and a guard combined."},
+knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."},
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."},
 
