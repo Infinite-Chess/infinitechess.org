@@ -558,6 +558,7 @@ ws-invite_cancelled = "邀请已取消"
 ws-accept_own_invite = "不能接受自己的邀请"
 ws-server_restarting = "服务器正在重启"
 ws-minutes = "分钟"
+ws-server_under_maintenance = "服务器正在维护中。请稍后再试！"  # Can be changed at will to change the display message.
 ws-minute = "分钟"
 ws-no_abort_game_over = "游戏结束无法中止"
 ws-no_abort_after_moves = "无法在棋步后中止"
