@@ -205,7 +205,7 @@ const gamemanager = (function() {
         if (!game) return; // They don't belong in a game
 
         const colorPlayingAs = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-        game1.reconnectClientToGameAfterPageRefresh(game, colorPlayingAs, ws);
+        game1.subscribeClientToGame(game, ws, colorPlayingAs);
 
         // Cancel the timer that auto loses them by AFK, IF IT is their turn!
         if (game.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game, { alertOpponent: true });
@@ -272,6 +272,7 @@ const gamemanager = (function() {
      * them the current move list, player timers, and game conclusion.
      * @param {Socket} ws - Their websocket
      * @param {Game} [game] The game, if already known. If not specified we will find it.
+      * @param {number} [replyToMessageID] - If specified, the id of the incoming socket message this resync will be the reply to
      */
     function resyncToGame(ws, game, gameID, replyToMessageID) {
         if (!game && gameID == null) return ws.metadata.sendmessage(ws, 'general', 'printerror', 'Cannot resync to game without game ID.')

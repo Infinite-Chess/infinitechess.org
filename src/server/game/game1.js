@@ -16,7 +16,7 @@ const { getTranslation } = require('../config/setupTranslations');
 const { ensureJSONString } = require('../utility/JSONUtils');
 
 // Custom imports
-const { Socket, WebsocketMessage, Game } = require('./TypeDefinitions')
+const { Socket, Game } = require('./TypeDefinitions')
 const variant1 = require('./variant1');
 const math1 = require('./math1');
 const clockweb = require('./clockweb');
@@ -38,6 +38,7 @@ const game1 = (function() {
      * @param {string} inviteOptions.publicity - The publicity setting of the game. Can be "public" or "private".
      * @param {string} inviteOptions.clock - The clock format for the game, in the form "s+s" or "-" for no clock.
      * @param {string} inviteOptions.rated - The rating type of the game. Can be "casual" or "rated".
+     * @param {Object} id - The unique identifier to give this game.
      * @param {Object} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
      * @param {Object} player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
      * @returns {Game} The new game.
@@ -50,57 +51,46 @@ const game1 = (function() {
             publicity: inviteOptions.publicity,
             variant: inviteOptions.variant,
             clock: inviteOptions.clock,
+            untimed: clockweb.isClockValueInfinite(inviteOptions.clock),
             rated: inviteOptions.rated === "Rated",
             moves: [],
             blackGoesFirst: variant1.isVariantAVariantWhereBlackStarts(inviteOptions.variant),
             gameConclusion: false,
-            timeRemainAtTurnStart: undefined,
-            timeAtTurnStart: undefined,
-            whiteSocket: undefined,
-            blackSocket: undefined,
-            timeNextPlayerLosesAt: undefined,
-            autoTimeLossTimeoutID: undefined,
-            drawOfferMove: 0,
-            whiteDrawOffer: undefined,
-            blackDrawOffer: undefined,
             disconnect: {
-                startTimer: {
-                    white: undefined,
-                    black: undefined
-                },
+                startTimer: {},
                 autoResign: {
                     white: {},
                     black: {}
                 }
-            }
+            },
+            startTimeMillis: null,
+            incrementMillis: null,
         }
 
-        newGame.startTimeMillis = null;
-        newGame.incrementMillis = null;
-
-        const minutesAndIncrement = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
-        if (minutesAndIncrement !== null) {
-            newGame.startTimeMillis = math1.minutesToMillis(minutesAndIncrement.minutes);
-            newGame.incrementMillis = math1.secondsToMillis(minutesAndIncrement.increment);
+        if (!newGame.untimed) { // Set the start time and increment properties
+            const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
+            newGame.startTimeMillis = math1.minutesToMillis(minutes);
+            newGame.incrementMillis = math1.secondsToMillis(increment);
+            // Set the clocks
+            newGame.timerWhite = newGame.startTimeMillis;
+            newGame.timerBlack = newGame.startTimeMillis;
         }
 
+        // Set the colors
         const player1 = inviteOptions.owner; // { member/browser }  The invite owner
         const player2 = wsutility.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
         const { white, black, player1Color, player2Color } = assignWhiteBlackPlayersFromInvite(inviteOptions.color, player1, player2);
         newGame.white = white;
         newGame.black = black;
 
+        // Set whos turn
         newGame.whosTurn = newGame.blackGoesFirst ? 'black' : 'white';
-
-        if (!clockweb.isClockValueInfinite(inviteOptions.clock)) {
-            newGame.timerWhite = newGame.startTimeMillis;
-            newGame.timerBlack = newGame.startTimeMillis;
-        }
 
         // Auto-subscribe the players to this game!
         // This will link their socket to this game, modify their
         // metadata.subscriptions, and send them the game info!
         subscribeClientToGame(newGame, player2Socket, player2Color);
+        // Occasionally, player 1's (invite owner) socket will be closed.
         if (player1Socket) subscribeClientToGame(newGame, player1Socket, player1Color);
 
         return newGame;
@@ -193,7 +183,8 @@ const game1 = (function() {
      * Detaches their socket from the game, updates their metadata.subscriptions.
      * @param {Game} game
      * @param {Socket} ws - Their websocket.
-     * @param {Object} options - Additional options. This may contain `sendMessage`, which will inform the client to unsub from the game. Default: true
+     * @param {Object} options - Additional options.
+     * @param {Object} options.sendMessage - Whether to inform the client to unsub from the game. Default: true. This should be false if we're unsubbing because the socket is closing.
      */
     function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
         // 1. Detach their socket from the game so we no longer send updates
@@ -203,12 +194,8 @@ const game1 = (function() {
         delete ws.metadata.subscriptions.game;
 
         // Let their opponent know they have disconnected.
-        // Start an auto-resign timer IF the disconnection wasn't by choice
-        // ...
-
-        // console.log(`Unsubbed client from game ${game.id}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
-        // console.log("Game:")
-        // printGame(game)
+        // I THINK this route never happens unless the client intentionally leaves the game...
+        console.log(`Unsubbed client from game ${game.id}. Would we need to inform their opponent they disconnected here?`)
 
         // Tell the client to unsub on their end, IF the socket isn't closing.
         if (sendMessage && ws.readyState === WebSocket.OPEN) ws.metadata.sendmessage(ws, 'game', 'unsub')
@@ -228,17 +215,18 @@ const game1 = (function() {
 
     /**
      * Sends the game info to the player, the info they need to load the online game.
-     * @param {Game} activeGame - The game they're in.
-     * @param {Object} playerSocket - Their websocket
+     * @param {Game} game - The game they're in.
+     * @param {Socket} playerSocket - Their websocket
      * @param {string} playerColor - The color the are. "white" / "black"
      */
-    function sendGameInfoToPlayer(activeGame, playerSocket, playerColor) {
+    function sendGameInfoToPlayer(game, playerSocket, playerColor) {
         // Removes sensitive information from the provided game
         // DO NOT MODIFY the returned version for it will modify the original game!!!!
-        const safeGameInfo = getGameInfoSafe(activeGame, playerColor);
+        const safeGameInfo = getGameInfoSafe(game, playerColor);
         // Contains the properties:
         // id, publicity, variant, moves, playerWhite, playerBlack,
-        // youAreColor, moves, clock, timerWhite, timerBlack, gameConclusion
+        // youAreColor, moves, clock, timerWhite, timerBlack, gameConclusion,
+        // whiteDrawOfferMove, blackDrawOfferMove
 
         const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(safeGameInfo.timeCreated)
 
@@ -260,26 +248,31 @@ const game1 = (function() {
             publicity: safeGameInfo.publicity,
             youAreColor: safeGameInfo.youAreColor,
             moves: safeGameInfo.moves,
-            timerWhite: safeGameInfo.timerWhite,
-            timerBlack: safeGameInfo.timerBlack,
-            timeNextPlayerLosesAt: safeGameInfo.timeNextPlayerLosesAt,
             gameConclusion: safeGameInfo.gameConclusion,
+            // REMOVE draw offer details from here and put below!
             whiteDrawOfferMove: safeGameInfo.whiteDrawOfferMove,
             blackDrawOfferMove: safeGameInfo.blackDrawOfferMove
         }
+        // Include additional stuff if relevant
+        if (safeGameInfo.timerWhite) gameOptions.timerWhite = safeGameInfo.timerWhite
+        if (safeGameInfo.timerBlack) gameOptions.timerBlack = safeGameInfo.timerBlack
+        if (safeGameInfo.timeNextPlayerLosesAt) gameOptions.timeNextPlayerLosesAt = safeGameInfo.timeNextPlayerLosesAt
 
         // If true, we know it's their opponent that's afk, because this client
         // just refreshed the page and would have cancelled the timer if they were the ones afk.
-        if (activeGame.autoAFKResignTime != null) gameOptions.autoAFKResignTime = activeGame.autoAFKResignTime
+        if (game.autoAFKResignTime != null) gameOptions.autoAFKResignTime = game.autoAFKResignTime
 
         // If their opponent has disconnected, send them that info too.
         const opponentColor = math1.getOppositeColor(playerColor)
-        if (activeGame.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
+        if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
             gameOptions.disconnect = {
-                autoDisconnectResignTime: activeGame.disconnect.autoResign[opponentColor].timeToAutoLoss,
-                wasByChoice: activeGame.disconnect.autoResign[opponentColor].wasByChoice
+                autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
+                wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
             }
         }
+
+        // SEND DRAW OFFER DETAILS HERE
+        // ...
 
         // If the server is restarting, include the time too.
         const timeServerRestarting = getTimeServerRestarting()
@@ -293,8 +286,9 @@ const game1 = (function() {
      * knows the game id and much other information. We only need to send
      * them the current move list, player timers, and game conclusion.
      * @param {Socket} ws - Their websocket
-     * @param {Game} [game] The game, if already known. If not specified we will find it.
-     * @param {string} colorPlayingAs
+     * @param {Game} game - The game
+     * @param {string} colorPlayingAs - Their color
+     * @param {number} [replyToMessageID] - If specified, the id of the incoming socket message this update will be the reply to
      */
     function resyncToGame(ws, game, colorPlayingAs, replyToMessageID) {
         // If their socket isn't subscribed, connect them to the game!
@@ -319,18 +313,30 @@ const game1 = (function() {
      * and the current moves list and timers.
      * @param {Game} game - The game
      * @param {string} color - The color of the player
+     * @param {Object} options - Additional options
+     * @param {number} [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
      */
     function sendGameUpdateToColor(game, color, { replyTo } = {}) {
+        const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
+        if (!playerSocket) return; // Not connected, cant send message
+
         const messageContents = {
             gameConclusion: game.gameConclusion,
-            timerWhite: game.timerWhite,
-            timerBlack: game.timerBlack,
-            timeNextPlayerLosesAt: game.timeNextPlayerLosesAt,
             moves: game.moves, // Send the final move list so they can make sure they're in sync.
-            autoAFKResignTime: game.autoAFKResignTime,
-            whiteDrawOfferMove: game.whiteDrawOfferMove,
-            blackDrawOfferMove: game.blackDrawOfferMove
         }
+        // Include timer info if it's timed
+        if (!game.untimed) {
+            messageContents.timerWhite = game.timerWhite;
+            messageContents.timerBlack = game.timerBlack;
+            messageContents.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt;
+        }
+        // Include other relevant stuff if defined
+        if (game.autoAFKResignTime) messageContents.autoAFKResignTime = game.autoAFKResignTime;
+        // SEND THEM INFO ABOUT OPEN DRAW OFFERS
+        // ...
+        if (game.whiteDrawOfferMove) messageContents.whiteDrawOfferMove = game.whiteDrawOfferMove;
+        if (game.blackDrawOfferMove) messageContents.blackDrawOfferMove = game.blackDrawOfferMove;
+
         // If their opponent has disconnected, send them that info too.
         const opponentColor = math1.getOppositeColor(color)
         if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
@@ -339,12 +345,14 @@ const game1 = (function() {
                 wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
             }
         }
+
+        // ALSO SEND OPPONENT AFK STUFF
+        // ...
+
         // Also send the time the server is restarting, if it is
         const timeServerRestarting = getTimeServerRestarting()
         if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;
 
-        const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
-        if (!playerSocket) return; // Not connected, cant send message
         playerSocket.metadata.sendmessage(playerSocket, "game", "gameupdate", messageContents, replyTo)
     }
 
@@ -367,13 +375,13 @@ const game1 = (function() {
             playerWhite: getDisplayNameOfPlayer(game.white),
             playerBlack: getDisplayNameOfPlayer(game.black),
             youAreColor,
-            moves: game.moves,
             clock: game.clock,
             gameConclusion: game.gameConclusion,
+            // MODIFY...
             whiteDrawOfferMove: game.whiteDrawOfferMove,
             blackDrawOfferMove: game.blackDrawOfferMove
         }
-        if (!clockweb.isClockValueInfinite(game.clock)) {
+        if (!game.untimed) {
             safeGame.timerWhite = game.timerWhite;
             safeGame.timerBlack = game.timerBlack;
             safeGame.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt;
@@ -400,7 +408,7 @@ const game1 = (function() {
      * @param {Game} game - The game to log
      */
     async function logGame(game) {
-        if (game.moves.length === 0) return; // Don't log
+        if (game.moves.length === 0) return; // Don't log games with zero moves
 
         // First line of log...
 
@@ -440,7 +448,7 @@ const game1 = (function() {
             Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
             Site: "https://www.infinitechess.org/",
             Round: "-",
-            Variant: game.variant,
+            Variant: game.variant, // Don't translate yet, as variant1 needs the variant code to fetch gamerules.
             White: getDisplayNameOfPlayer(game.white),
             Black: getDisplayNameOfPlayer(game.black),
             TimeControl: game.clock,
@@ -462,7 +470,7 @@ const game1 = (function() {
             gameRules
         }
 
-        let logText = `Players: ${playersString} Game: ${stringifiedGame}`
+        let logText = `Players: ${playersString} Game: ${stringifiedGame}` // First line
 
         let ICN = 'ICN UNAVAILABLE';
         try {
@@ -473,26 +481,8 @@ const game1 = (function() {
             await logEvents(errText, 'hackLog.txt', { print: true })
         }
     
-        logText += `\n${ICN}`
+        logText += `\n${ICN}` // Add line 2
         await logEvents(logText, 'gameLog.txt');
-    }
-
-    /**
-     * Sends the client all information they need to load the game.
-     * This contains more info than {@link sendGameUpdateToColor}.
-     * This also informs their opponent they have returned, if they were afk.
-     * @param {Game} game 
-     * @param {string} color - The color they are playing as
-     * @param {Socket} ws - Their websocket
-     */
-    function reconnectClientToGameAfterPageRefresh(game, color, ws) {
-        // Alert opponent, if this player was afk, that they are not afk no more
-        if (game.whosTurn === color && game.autoAFKResignTime != null) {
-            const opponentColor = math1.getOppositeColor(color);
-            sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn')
-        }
-
-        subscribeClientToGame(game, ws, color)
     }
 
     /**
@@ -503,7 +493,7 @@ const game1 = (function() {
      */
     function doesSocketBelongToGame_ReturnColor(game, ws) {
         if (game.id === ws.metadata.subscriptions.game?.id) return ws.metadata.subscriptions.game?.color;
-        // Color isn't provided in their subscriptions, perhaps a resync/refresh?
+        // Color isn't provided in their subscriptions, perhaps this is a resync/refresh?
         const player = wsutility.getOwnerFromSocket(ws);
         return doesPlayerBelongToGame_ReturnColor(game, player);
     }
@@ -525,11 +515,10 @@ const game1 = (function() {
      * @param {Game} game - The game
      * @param {string} color - The color of the player in this game to send the message to
      * @param {string} sub - Where this message should be routed to, client side.
-     * @param {string} action - The action the client should perform. If sub is "general" and action is "notify" or "notifyerror", then this needs to be the key of the message in the TOML, and we will auto translate it!
+     * @param {string} action - The action the client should perform. If sub is "general" and action is "notify" or "notifyerror", then this needs to be the key of the message in the TOML, and we will auto-translate it!
      * @param {*} value - The value to send to the client.
      */
     function sendMessageToSocketOfColor(game, color, sub, action, value) {
-        if (!game || !color || !action) return console.log("Missing game or color or action")
         const ws = color === 'white' ? game.whiteSocket : game.blackSocket;
         if (!ws) return; // They are not connected, can't send message
         if (sub === 'general') {
@@ -540,33 +529,13 @@ const game1 = (function() {
     }
 
     /**
-     * Safely prints a game to the console. Temporarily stringifies the player sockets to remove self-referencing.
+     * Safely prints a game to the console. Temporarily stringifies the
+     * player sockets to remove self-referencing, and removes Node timers.
      * @param {Game} game - The game
      */
     function printGame(game) {
-        const whiteSocket = game.whiteSocket;
-        const blackSocket = game.blackSocket;
-        const originalAutoTimeLossTimeoutID = game.autoTimeLossTimeoutID;
-        const originalAutoAFKResignTimeoutID = game.autoAFKResignTimeoutID
-        const originalDeleteTimeoutID = game.deleteTimeoutID;
-        const originalDisconnect = game.disconnect;
-
-        // We can't print normal websockets because they contain self-referencing.
-        if (whiteSocket) game.whiteSocket = wsutility.stringifySocketMetadata(whiteSocket);
-        if (blackSocket) game.blackSocket = wsutility.stringifySocketMetadata(blackSocket);
-        delete game.autoTimeLossTimeoutID;
-        delete game.disconnect;
-        delete game.autoAFKResignTimeoutID;
-        delete game.deleteTimeoutID;
-
-        console.log(game);
-
-        if (whiteSocket) game.whiteSocket = whiteSocket;
-        if (blackSocket) game.blackSocket = blackSocket;
-        game.autoTimeLossTimeoutID = originalAutoTimeLossTimeoutID;
-        game.autoAFKResignTimeoutID = originalAutoAFKResignTimeoutID;
-        game.deleteTimeoutID = originalDeleteTimeoutID;
-        game.disconnect = originalDisconnect;
+        const stringifiedGame = getSimplifiedGameString(game);
+        console.log(stringifiedGame);
     }
 
     /**
@@ -603,26 +572,28 @@ const game1 = (function() {
     }
 
     /**
-     * Returns *true* if the provided game has ended.
+     * Returns *true* if the provided game has ended (gameConclusion truthy).
      * Games that are over are retained for a short period of time
      * to allow disconnected players to reconnect to see the results.
      * @param {Game} game - The game
-     * @returns {boolean}
+     * @returns {boolean} - true if the game is over (gameConclusion truthy)
      */
     function isGameOver(game) { return game.gameConclusion !== false; }
 
     /**
-     * Returns true if the game is untimed. Internally, the clock value will be `0`.
+     * Returns true if the color whos turn it is has an AFK
+     * timer running to auto-resign them from being AFK for too long.
      * @param {Game} game - The game
-     * @returns {boolean} *true* if the game is untimed.
      */
-    function isGameUntimed(game) { return clockweb.isClockValueInfinite(game.clock); }
+    function isAFKTimerActive(game) {
+        // If this is defined, then the timer is defined.
+        return game.autoAFKResignTime != null;
+    }
 
     return Object.freeze({
         newGame,
         subscribeClientToGame,
         unsubClientFromGame,
-        reconnectClientToGameAfterPageRefresh,
         resyncToGame,
         sendGameUpdateToBothPlayers,
         sendGameUpdateToColor,
@@ -632,7 +603,7 @@ const game1 = (function() {
         printGame,
         getSimplifiedGameString,
         isGameOver,
-        isGameUntimed,
+        isAFKTimerActive
     })
 
 })()

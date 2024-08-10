@@ -99,24 +99,15 @@ function onAFK_Return(ws, game) {
 //--------------------------------------------------------------------------------------------------------
 
 /**
- * Returns true if the color whos turn it is has an AFK
- * timer to auto-resign them from being AFK for too long.
- * @param {Game} game - The game
- */
-function isAFKTimerActive(game) {
-    // If this is defined, then the timer is defined.
-    return game.autoAFKResignTime != null;
-}
-
-/**
  * Cancels the timer that automatically resigns a player due to being AFK (Away From Keyboard).
- * This function should be called when the "AFK-Return" websocket action is received, indicating that the player has returned.
+ * This function should be called when the "AFK-Return" websocket action is received, indicating
+ * that the player has returned, OR when a client refreshes the page!
  * @param {Game} game - The game
  * @param {Object} [options] - Optional parameters.
  * @param {boolean} [options.alertOpponent=false] - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned.
  */
 function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
-    if (isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
+    if (game1.isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
         const opponentColor = math1.getOppositeColor(game.whosTurn);
         game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn')
     }
@@ -178,7 +169,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
     // If so, delete it, transferring it's time remaining to this disconnect timer.
     // We can do this because if player is disconnected, they are afk anyway.
     // And if if they reconnect, then they're not afk anymore either.
-    if (game.whosTurn === color && game.autoAFKResignTime != null) {
+    if (game.whosTurn === color && game1.isAFKTimerActive(game)) {
         if (game.autoAFKResignTime > timeToAutoLoss) console.error("The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.")
         timeToAutoLoss = game.autoAFKResignTime;
         timeBeforeAutoResign = timeToAutoLoss - now;
@@ -207,7 +198,7 @@ function cancelDisconnectTimers(game) {
 }
 
 /**
- * Cancels the player's auto-resign them from disconnection if they were disconnected.
+ * Cancels the player's timer to auto-resign them from disconnection if they were disconnected.
  * This is called when they reconnect/refresh.
  * @param {Game} game - The game
  * @param {string} color - The color to cancel the timer for
