@@ -3,10 +3,10 @@
  * This script handles the creation and acceptance of draw offers in online games
  */
 
-const { Socket, Game } = require('./TypeDefinitions')
+const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
-const math1 = require('./math1')
-const movesscript1 = require('./movesscript1');
+const math1 = require('../math1')
+const movesscript1 = require('../movesscript1');
 
 //--------------------------------------------------------------------------------------------------------
 

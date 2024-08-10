@@ -4,12 +4,12 @@
  */
 
 // Custom imports
-const { Socket, Game } = require('./TypeDefinitions')
+const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
-const wsutility = require('./wsutility');
+const wsutility = require('../wsutility');
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
-const movesscript1 = require('./movesscript1');
+const movesscript1 = require('../movesscript1');
 
 //--------------------------------------------------------------------------------------------------------
 

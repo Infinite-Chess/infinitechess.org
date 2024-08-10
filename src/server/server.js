@@ -11,7 +11,7 @@ const ejs = require('ejs');
 // Other imports
 const configureMiddleware = require('./middleware/middleware')
 const wsserver = require("./wsserver");
-const gamemanager = require('./game/gamemanager')
+const gamemanager = require('./game/gamemanager/gamemanager')
 const getCertOptions = require('./config/certOptions');
 const { DEV_BUILD } = require('./config/config');
 const { saveMembersIfChangesMade } = require('./controllers/members');

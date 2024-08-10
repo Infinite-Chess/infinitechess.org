@@ -1,25 +1,26 @@
 
 // Middleware imports
-const { logEvents } = require('../middleware/logEvents');
+const { logEvents } = require('../../middleware/logEvents');
 
 // Custom imports
-const { Socket, WebsocketMessage, Game } = require('./TypeDefinitions')
+const { Socket, WebsocketMessage, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
-const wsutility = require('./wsutility');
+const wsutility = require('../wsutility');
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
-const math1 = require('./math1')
-const wincondition1 = require('./wincondition1');
-const movesscript1 = require('./movesscript1');
-const statlogger = require('./statlogger');
-const { executeSafely_async } = require('../utility/errorGuard');
+const math1 = require('../math1')
+const wincondition1 = require('../wincondition1');
+const movesscript1 = require('../movesscript1');
+const statlogger = require('../statlogger');
+const { executeSafely_async } = require('../../utility/errorGuard');
 
-const { getTranslation } = require('../config/setupTranslations');
-const { getTimeServerRestarting } = require('./serverrestart');
+const { getTranslation } = require('../../config/setupTranslations');
+const { getTimeServerRestarting } = require('../serverrestart');
 const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
 const { abortGame, resignGame } = require('./abortresigngame');
 const { onAFK, onAFK_Return, cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, cancelDisconnectTimer, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
 const { onReport } = require('./cheatreport');
+const { resyncToGame } = require('./resync');
 
 const gamemanager = (function() {
 
@@ -255,31 +256,6 @@ const gamemanager = (function() {
     }
 
     /**
-     * Resyncs a client's websocket to a game. The client already
-     * knows the game id and much other information. We only need to send
-     * them the current move list, player timers, and game conclusion.
-     * @param {Socket} ws - Their websocket
-     * @param {Game} [game] The game, if already known. If not specified we will find it.
-      * @param {number} [replyToMessageID] - If specified, the id of the incoming socket message this resync will be the reply to
-     */
-    function resyncToGame(ws, game, gameID, replyToMessageID) {
-        if (!game && gameID == null) return ws.metadata.sendmessage(ws, 'general', 'printerror', 'Cannot resync to game without game ID.')
-
-        game = game || getGameByID(gameID) || (ws.metadata.subscriptions.game?.id ? getGameByID(ws.metadata.subscriptions.game?.id) : undefined);
-        if (!game) {
-            console.log(`Game of id ${gameID} not found for socket ${wsutility.stringifySocketMetadata(ws)}`)
-            return ws.metadata.sendmessage(ws, 'game', 'nogame')
-        }
-
-        const colorPlayingAs = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-        if (!colorPlayingAs) return ws.metadata.sendmessage(ws, 'game', 'login'); // Unable to verify their socket belongs to this game (probably logged out)
-
-        gameutility.resyncToGame(ws, game, colorPlayingAs, replyToMessageID)
-
-        cancelDisconnectTimer(game, colorPlayingAs)
-    }
-
-    /**
      * Called when a player in the game loses by abandonment (AFK).
      * Sets the gameConclusion, notifies both players.
      * Sets a 5 second timer to delete the game in case
@@ -374,7 +350,7 @@ const gamemanager = (function() {
                 onRequestRemovalFromPlayersInActiveGames(ws, game);
                 break;
             case 'resync':
-                resyncToGame(ws, undefined, message.value, message.id);
+                resyncToGame(ws, game, message.value, message.id);
                 break;
             case 'abort':
                 if (abortGame(ws, game)) { // Aborting was a success, terminate the game

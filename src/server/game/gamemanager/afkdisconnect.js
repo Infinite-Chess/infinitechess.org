@@ -6,11 +6,11 @@
  */
 
 // Custom imports
-const { Socket, Game } = require('./TypeDefinitions')
+const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
-const wsutility = require('./wsutility');
-const math1 = require('./math1')
-const movesscript1 = require('./movesscript1');
+const wsutility = require('../wsutility');
+const math1 = require('../math1')
+const movesscript1 = require('../movesscript1');
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -176,6 +176,9 @@ function cancelDisconnectTimers(game) {
  */
 function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
     // console.log(`Canceling disconnect timer for player ${color}!`)
+
+    /** Whether the timer (not the cushion to start the timer) for auto-resigning is RUNNING! */
+    const autoResignTimerWasRunning = gameutility.isAutoResignDisconnectTimerActiveForColor(game, color);
     
     clearTimeout(game.disconnect.startTimer[color])
     clearTimeout(game.disconnect.autoResign[color].timeoutID)
@@ -187,6 +190,8 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
     if (dontNotifyOpponent) return;
 
     // Alert their opponent their opponent has returned...
+
+    if (!autoResignTimerWasRunning) return; // Opponent was never notified their opponent was afk, skip telling them their opponent has returned.
 
     const opponentColor = math1.getOppositeColor(color);
     gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn')

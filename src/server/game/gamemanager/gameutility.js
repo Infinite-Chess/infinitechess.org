@@ -10,24 +10,24 @@
 const WebSocket = require('ws');
 
 // Middleware & other imports
-const { getUsernameCaseSensitive } = require('../controllers/members');
-const { logEvents } = require('../middleware/logEvents');
-const { getTranslation } = require('../config/setupTranslations');
-const { ensureJSONString } = require('../utility/JSONUtils');
+const { getUsernameCaseSensitive } = require('../../controllers/members');
+const { logEvents } = require('../../middleware/logEvents');
+const { getTranslation } = require('../../config/setupTranslations');
+const { ensureJSONString } = require('../../utility/JSONUtils');
 
 // Custom imports
-const { Socket, Game } = require('./TypeDefinitions')
-const variant1 = require('./variant1');
-const math1 = require('./math1');
-const clockweb = require('./clockweb');
-const wsutility = require('./wsutility');
+const { Socket, Game } = require('../TypeDefinitions')
+const variant1 = require('../variant1');
+const math1 = require('../math1');
+const clockweb = require('../clockweb');
+const wsutility = require('../wsutility');
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
-const wincondition1 = require('./wincondition1');
-const formatconverter1 = require('./formatconverter1');
-const movesscript1 = require('./movesscript1');
+const wincondition1 = require('../wincondition1');
+const formatconverter1 = require('../formatconverter1');
+const movesscript1 = require('../movesscript1');
 
-const { getTimeServerRestarting } = require('./serverrestart');
+const { getTimeServerRestarting } = require('../serverrestart');
 
 const gameutility = (function() {
 
@@ -553,13 +553,27 @@ const gameutility = (function() {
     
     /**
      * Returns true if the provided color has a disconnect
-     * timer to auto-resign them from being gone for too long.
+     * timer to auto-resign them from being gone for too long,
+     * OR THE TIMER to start that timer!
      * @param {Game} game - The game they're in
      * @param {string} color - The color they are in this game
      */
     function isDisconnectTimerActiveForColor(game, color) {
         // If these are defined, then the timer is defined.
         return game.disconnect.startTimer[color] != null || game.disconnect.autoResign[color].timeToAutoLoss != null;
+    }
+    
+    /**
+     * Returns true if the provided color has an actively running
+     * auto-resign timer. This differs from {@link isDisconnectTimerActiveForColor}
+     * because this returns true only if the timer has started and the opponent has
+     * been notified, NOT if the 5s cushion timer to START the auto-resign timer has started.
+     * @param {Game} game - The game they're in
+     * @param {string} color - The color they are in this game
+     */
+    function isAutoResignDisconnectTimerActiveForColor(game, color) {
+        // If these are defined, then the timer is defined.
+        return game.disconnect.autoResign[color].timeToAutoLoss != null;
     }
 
     return Object.freeze({
@@ -576,7 +590,8 @@ const gameutility = (function() {
         getSimplifiedGameString,
         isGameOver,
         isAFKTimerActive,
-        isDisconnectTimerActiveForColor
+        isDisconnectTimerActiveForColor,
+        isAutoResignDisconnectTimerActiveForColor
     })
 
 })()

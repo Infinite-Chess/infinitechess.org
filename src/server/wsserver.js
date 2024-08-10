@@ -8,7 +8,7 @@ const { WebsocketMessage, Socket } = require('./game/TypeDefinitions')
 const { genUniqueID, generateNumbID } = require('./game/math1');
 const wsutility = require('./game/wsutility');
 const invitesmanager = require('./game/invitesmanager')
-const gamemanager = require('./game/gamemanager');
+const gamemanager = require('./game/gamemanager/gamemanager');
 
 const { ensureJSONString } = require('./utility/JSONUtils');
 const { executeSafely } = require('./utility/errorGuard');

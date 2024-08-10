@@ -1,12 +1,12 @@
 
 // Middleware imports
-const { logEvents } = require('../middleware/logEvents');
+const { logEvents } = require('../../middleware/logEvents');
 
 // Custom imports
-const { Socket, Game } = require('./TypeDefinitions')
+const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
-const math1 = require('./math1')
-const movesscript1 = require('./movesscript1');
+const math1 = require('../math1')
+const movesscript1 = require('../movesscript1');
 
 
 /**
