@@ -11,20 +11,17 @@ const game1 = require('./game1');
 const wsutility = require('./wsutility');
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
-const clockweb = require('./clockweb');
 const math1 = require('./math1')
-const variant1 = require('./variant1');
 const wincondition1 = require('./wincondition1');
 const movesscript1 = require('./movesscript1');
 const statlogger = require('./statlogger');
 const { executeSafely_async } = require('../utility/errorGuard');
-const { ensureJSONString } = require('../utility/JSONUtils');
 
 const { getTranslation } = require('../config/setupTranslations');
 const { getTimeServerRestarting } = require('./serverrestart');
 const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
 const { abortGame, resignGame } = require('./abortresigngame');
-const { onAFK, onAFK_Return, cancelAutoAFKResignTimer, onSocketClosure2, startDisconnectTimer, cancelDisconnectTimers, cancelDisconnectTimer } = require('./afkdisconnect');
+const { onAFK, onAFK_Return, cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, cancelDisconnectTimer, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
 
 const gamemanager = (function() {
 
@@ -134,28 +131,6 @@ const gamemanager = (function() {
     }
 
     /**
-     * Flags, or sets a timer to, the socket as disconnected. Alerts their opponent. This does NOT unsub them from the game.
-     * 
-     * SHOULD THIS INSTEAD be when the client unsubs from the game? The only instance
-     * the client EVER manually unsubs from the game is when the game is already over,
-     * all other instances the server unsubs for them, and informs them of that.
-     * @param {Socket} ws - The socket
-     * @param {Object} options - An object that contains the property `closureNotByChoice`, that when true,
-     * will give them 5 seconds to reconnect before flagging them as disconnected.
-     */
-    function onSocketClosure(ws, { closureNotByChoice = true } = {}) {
-        // Quit if they're not in a game, they can't be auto-resigned by disconnection.
-        if (!ws.metadata.subscriptions.game) return;
-
-        // They were in a game...
-        const game = getGameBySocket(ws);
-
-        // Depending on whether they disconnected by choice, this either immediately
-        // starts the auto-resignation timer, or waits 5 seconds to.
-        onSocketClosure2(ws, game, onPlayerLostByDisconnect, { closureNotByChoice })
-    }
-
-    /**
      * Called when a player in the game loses by disconnection.
      * Sets the gameConclusion, notifies the opponent.
      * @param {Game} game - The game
@@ -183,8 +158,10 @@ const gamemanager = (function() {
      * Unsubscribes a websocket from the game their connected to.
      * Detaches their socket from the game, updates their metadata.subscriptions.
      * @param {Socket} ws - Their websocket.
+     * @param {Object} options - Additional options.
+     * @param {boolean} [unsubNotByChoice] When true, we will give them a 5-second cushion to re-sub before we start an auto-resignation timer. Set to false if we call this due to them closing the tab.
      */
-    function unsubClientFromGameBySocket(ws) {
+    function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
         const gameID = ws.metadata.subscriptions.game?.id;
         if (gameID == null) return console.error("Cannot unsub client from game when it's not subscribed to one.")
 
@@ -192,6 +169,19 @@ const gamemanager = (function() {
         if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
 
         game1.unsubClientFromGame(game, ws, { sendMessage: false })
+
+        // Let their opponent know they've disconnected...
+
+        if (game1.isGameOver(game)) return; // It's fine if players unsub/disconnect after the game has ended.
+
+        const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+        if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
+            console.log("Waiting 5 seconds before starting disconnection timer.")
+            const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
+            game.disconnect.startTimer[color] = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect)
+        } else { // Closed tab manually. Immediately start auto-resign timer.
+            startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect)
+        }
     }
 
     /**
@@ -205,7 +195,7 @@ const gamemanager = (function() {
         if (!game) return; // They don't belong in a game
 
         const colorPlayingAs = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-        game1.reconnectClientToGameAfterPageRefresh(game, colorPlayingAs, ws);
+        game1.subscribeClientToGame(game, ws, colorPlayingAs);
 
         // Cancel the timer that auto loses them by AFK, IF IT is their turn!
         if (game.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game, { alertOpponent: true });
@@ -272,6 +262,7 @@ const gamemanager = (function() {
      * them the current move list, player timers, and game conclusion.
      * @param {Socket} ws - Their websocket
      * @param {Game} [game] The game, if already known. If not specified we will find it.
+      * @param {number} [replyToMessageID] - If specified, the id of the incoming socket message this resync will be the reply to
      */
     function resyncToGame(ws, game, gameID, replyToMessageID) {
         if (!game && gameID == null) return ws.metadata.sendmessage(ws, 'general', 'printerror', 'Cannot resync to game without game ID.')
@@ -597,7 +588,7 @@ const gamemanager = (function() {
      */
     function sendUpdatedClockToColor(game, color) {
         if (color !== 'white' && color !== 'black') return console.error(`color must be white or black! ${color}`)
-        if (game1.isGameUntimed(game)) return; // Don't send clock values in an untimed game
+        if (game.untimed) return; // Don't send clock values in an untimed game
 
         const message = {
             timerWhite: game.timerWhite,
@@ -639,7 +630,7 @@ const gamemanager = (function() {
         // if (!game.whosTurn) return; // Game is over
         const colorWhoJustMoved = game.whosTurn; // white/black
         game.whosTurn = math1.getOppositeColor(game.whosTurn);
-        if (game1.isGameUntimed(game)) return; // Don't adjust the times if the game isn't timed.
+        if (game.untimed) return; // Don't adjust the times if the game isn't timed.
 
         if (!movesscript1.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
 
@@ -668,7 +659,7 @@ const gamemanager = (function() {
      * @param {Game} game - The game
      */
     function stopGameClock(game) {
-        if (game1.isGameUntimed(game)) return;
+        if (game.untimed) return;
 
         if (!movesscript1.isGameResignable(game)) { // The following values are undefined to begin with, their timers never left their starting values.
             game.whosTurn = undefined;
@@ -838,7 +829,6 @@ const gamemanager = (function() {
 
     return Object.freeze({
         createGame,
-        onSocketClosure,
         unsubClientFromGameBySocket,
         handleIncomingMessage,
         isSocketInAnActiveGame,

@@ -63,7 +63,7 @@ function onAFK(ws, game, onAutoResignFunc) {
     // Verify it's their turn (can't lose by afk if not)
     if (game.whosTurn !== color) return console.error("Client submitted they are afk when it's not their turn. Ignoring.")
     
-    if (isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!")
+    if (game1.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!")
 
     const opponentColor = math1.getOppositeColor(color);
 
@@ -99,24 +99,15 @@ function onAFK_Return(ws, game) {
 //--------------------------------------------------------------------------------------------------------
 
 /**
- * Returns true if the color whos turn it is has an AFK
- * timer to auto-resign them from being AFK for too long.
- * @param {Game} game - The game
- */
-function isAFKTimerActive(game) {
-    // If this is defined, then the timer is defined.
-    return game.autoAFKResignTime != null;
-}
-
-/**
  * Cancels the timer that automatically resigns a player due to being AFK (Away From Keyboard).
- * This function should be called when the "AFK-Return" websocket action is received, indicating that the player has returned.
+ * This function should be called when the "AFK-Return" websocket action is received, indicating
+ * that the player has returned, OR when a client refreshes the page!
  * @param {Game} game - The game
  * @param {Object} [options] - Optional parameters.
  * @param {boolean} [options.alertOpponent=false] - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned.
  */
 function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
-    if (isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
+    if (game1.isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
         const opponentColor = math1.getOppositeColor(game.whosTurn);
         game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn')
     }
@@ -127,35 +118,6 @@ function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
 }
 
 //--------------------------------------------------------------------------------------------------------
-
-/**
- * Flags, or sets a timer to, the socket as disconnected. Alerts their opponent. This does NOT unsub them from the game.
- * @param {Socket} ws - Their websocket
- * @param {Game} game - The game they belong in, if they belong to one.
- * @param {Function} onAutoResignFunc - The function to call when the player should be auto resigned from disconnection.This should have 2 arguments: The game, and the color that won.
- * @param {Object} options - An object that contains the property `closureNotByChoice`, that when true,
- * will give them 5 seconds to reconnect before flagging them as disconnected.
- */
-function onSocketClosure2(ws, game, onAutoResignFunc, { closureNotByChoice = true } = {}) {
-    if (!game) return console.error("Cannot find game socket was in, cannot start timer to auto resign them.")
-
-    // Quit if the game is over already
-    if (game1.isGameOver(game)) return;
-
-    const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-
-    if (closureNotByChoice) {
-        // Their connection/internet dropped. Give them 5 seconds
-        // before flagging them as disconnected, informing their opponent
-        // they lost connection, and starting a 60s auto resign timer.
-        console.log("Waiting 5 seconds before starting disconnection timer.")
-        game.disconnect.startTimer[color] = setTimeout(startDisconnectTimer, timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis, game, color, closureNotByChoice, onAutoResignFunc)
-    } else {
-        // Closed the tab manually. Immediately flag them
-        // as disconnected, start a 20s auto resign timer.
-        startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
-    }
-}
 
 /**
  * Starts a timer to auto-resign a player from disconnection.
@@ -178,7 +140,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
     // If so, delete it, transferring it's time remaining to this disconnect timer.
     // We can do this because if player is disconnected, they are afk anyway.
     // And if if they reconnect, then they're not afk anymore either.
-    if (game.whosTurn === color && game.autoAFKResignTime != null) {
+    if (game.whosTurn === color && game1.isAFKTimerActive(game)) {
         if (game.autoAFKResignTime > timeToAutoLoss) console.error("The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.")
         timeToAutoLoss = game.autoAFKResignTime;
         timeBeforeAutoResign = timeToAutoLoss - now;
@@ -207,7 +169,7 @@ function cancelDisconnectTimers(game) {
 }
 
 /**
- * Cancels the player's auto-resign them from disconnection if they were disconnected.
+ * Cancels the player's timer to auto-resign them from disconnection if they were disconnected.
  * This is called when they reconnect/refresh.
  * @param {Game} game - The game
  * @param {string} color - The color to cancel the timer for
@@ -233,24 +195,18 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
 //--------------------------------------------------------------------------------------------------------
 
 /**
- * Returns true if the provided color has a disconnect
- * timer to auto-resign them from being gone for too long.
- * @param {Game} game - The game they're in
- * @param {string} color - The color they are in this game
+ * Returns the cushion, in millis, that we give disconnected players to reconnect before we start an auto-resign timer.
+ * @returns {number}
  */
-function isDisconnectTimerActiveForColor(game, color) {
-    // If these are defined, then the timer is defined.
-    return game.disconnect.startTimer[color] != null || game.disconnect.autoResign[color].timeToAutoLoss != null;
-}
-
+function getDisconnectionForgivenessDuration() { return timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis }
 
 
 module.exports = {
     onAFK,
     onAFK_Return,
     cancelAutoAFKResignTimer,
-    onSocketClosure2,
     startDisconnectTimer,
     cancelDisconnectTimers,
-    cancelDisconnectTimer
+    cancelDisconnectTimer,
+    getDisconnectionForgivenessDuration
 }

@@ -12,7 +12,8 @@ const movesscript1 = require('./movesscript1');
 
 /**
  * Minimum number of plies (half-moves) that
- * must span between 2 consecutive draw offers!
+ * must span between 2 consecutive draw offers
+ * by the same player!
  */
 const movesBetweenDrawOffers = 2
 
@@ -31,14 +32,13 @@ function offerDraw(ws, game) {
     const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
 
     if (game1.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
+    
+    if (hasGameDrawOffer(game)) return console.error(`${color} tried to offer a draw when the game already has a draw offer!`);
 
-    if (color === "white") {
-        if (hasGameDrawOffer(game)) return console.error("White offered a draw when he already has a draw offer");
-        if (game.moves.length - game.whiteDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
-    } else if (color === "black") { // color === "black"
-        if (hasGameDrawOffer(game)) return console.error("Black offered a draw when he already has a draw offer");
-        if (game.moves.length - game.blackDrawOfferMove + 1 <= movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
-    } else console.error(`Unknown color "${color}" when offering draw!`)
+    const movesSinceLastOffer = color === 'white' ? game.moves.length - game.whiteDrawOfferMove
+                              : color === 'black' ? game.moves.length - game.blackDrawOfferMove
+                              : 0;
+    if (movesSinceLastOffer < movesBetweenDrawOffers) return console.error("Client trying to offer a draw too fast")
 
     if (!movesscript1.isGameResignable(game)) return console.error("Client trying to offer a draw on the first 2 moves")
     
@@ -115,7 +115,6 @@ function declineDraw(ws, game) {
     } else console.error(`Unknown color "${color}" when accepting draw!`)
 
     // Alert their opponent
-    console.log(opponentColor)
     game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'declinedraw')
 }
 
