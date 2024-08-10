@@ -29,7 +29,7 @@ const movesscript1 = require('./movesscript1');
 
 const { getTimeServerRestarting } = require('./serverrestart');
 
-const game1 = (function() {
+const gameutility = (function() {
 
     /**
      * Game constructor. Descriptions for each property can be found in the {@link Game} type definition.
@@ -581,4 +581,4 @@ const game1 = (function() {
 
 })()
 
-module.exports = game1;
+module.exports = gameutility;

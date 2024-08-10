@@ -7,7 +7,7 @@
 
 // Custom imports
 const { Socket, Game } = require('./TypeDefinitions')
-const game1 = require('./game1');
+const gameutility = require('./gameutility');
 const wsutility = require('./wsutility');
 const math1 = require('./math1')
 const movesscript1 = require('./movesscript1');
@@ -56,14 +56,14 @@ function onAFK(ws, game, onAutoResignFunc) {
     // console.log("Client alerted us they are AFK.")
 
     if (!game) return console.error("Client submitted they are afk when they don't belong in a game.")
-    const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+    const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
-    if (game1.isGameOver(game)) return console.error("Client submitted they are afk when the game is already over. Ignoring.")
+    if (gameutility.isGameOver(game)) return console.error("Client submitted they are afk when the game is already over. Ignoring.")
 
     // Verify it's their turn (can't lose by afk if not)
     if (game.whosTurn !== color) return console.error("Client submitted they are afk when it's not their turn. Ignoring.")
     
-    if (game1.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!")
+    if (gameutility.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!")
 
     const opponentColor = math1.getOppositeColor(color);
 
@@ -73,7 +73,7 @@ function onAFK(ws, game, onAutoResignFunc) {
 
     // Alert their opponent
     const value = { autoAFKResignTime: game.autoAFKResignTime }
-    game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafk', value)
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafk', value)
 }
 
 /**
@@ -86,9 +86,9 @@ function onAFK_Return(ws, game) {
     // console.log("Client alerted us they no longer AFK.")
 
     if (!game) return console.error("Client submitted they are back from being afk when they don't belong in a game.")
-    const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+    const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
-    if (game1.isGameOver(game)) return console.error("Client submitted they are back from being afk when the game is already over. Ignoring.")
+    if (gameutility.isGameOver(game)) return console.error("Client submitted they are back from being afk when the game is already over. Ignoring.")
 
     // Verify it's their turn (can't lose by afk if not)
     if (game.whosTurn !== color) return console.error("Client submitted they are back from being afk when it's not their turn. Ignoring.")
@@ -107,9 +107,9 @@ function onAFK_Return(ws, game) {
  * @param {boolean} [options.alertOpponent=false] - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned.
  */
 function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
-    if (game1.isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
+    if (gameutility.isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
         const opponentColor = math1.getOppositeColor(game.whosTurn);
-        game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn')
+        gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn')
     }
 
     clearTimeout(game.autoAFKResignTimeoutID)
@@ -140,7 +140,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
     // If so, delete it, transferring it's time remaining to this disconnect timer.
     // We can do this because if player is disconnected, they are afk anyway.
     // And if if they reconnect, then they're not afk anymore either.
-    if (game.whosTurn === color && game1.isAFKTimerActive(game)) {
+    if (game.whosTurn === color && gameutility.isAFKTimerActive(game)) {
         if (game.autoAFKResignTime > timeToAutoLoss) console.error("The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.")
         timeToAutoLoss = game.autoAFKResignTime;
         timeBeforeAutoResign = timeToAutoLoss - now;
@@ -155,7 +155,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
 
     // Alert their opponent the time their opponent will be auto-resigned by disconnection.
     const value = { autoDisconnectResignTime: timeToAutoLoss, wasByChoice: !closureNotByChoice }
-    game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value)
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value)
 }
 
 /**
@@ -189,7 +189,7 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
     // Alert their opponent their opponent has returned...
 
     const opponentColor = math1.getOppositeColor(color);
-    game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn')
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn')
 }
 
 //--------------------------------------------------------------------------------------------------------

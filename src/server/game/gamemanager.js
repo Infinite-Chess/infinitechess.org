@@ -7,7 +7,7 @@ const { logEvents } = require('../middleware/logEvents');
 
 // Custom imports
 const { Socket, WebsocketMessage, Game } = require('./TypeDefinitions')
-const game1 = require('./game1');
+const gameutility = require('./gameutility');
 const wsutility = require('./wsutility');
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
@@ -71,7 +71,7 @@ const gamemanager = (function() {
      */
     function createGame(invite, player1Socket, player2Socket) { // Player 1 is the invite owner.
         const gameID = math1.genUniqueID(5, activeGames);
-        const game = game1.newGame(invite, gameID, player1Socket, player2Socket)
+        const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket)
         if (!player1Socket) {
             // Player 1 (invite owner)'s socket closed before their invite was deleted.
             // Immediately start the auto-resign by disconnection timer
@@ -84,7 +84,7 @@ const gamemanager = (function() {
         addGameToActiveGames(game);
 
         console.log("Starting new game:")
-        game1.printGame(game)
+        gameutility.printGame(game)
         printActiveGameCount()
     }
 
@@ -115,8 +115,8 @@ const gamemanager = (function() {
 
         // Unsubscribe both players' sockets from the game if they still are connected.
         // If the socket is undefined, they will have already been auto-unsubscribed.
-        if (game.whiteSocket) game1.unsubClientFromGame(game, game.whiteSocket)
-        if (game.blackSocket) game1.unsubClientFromGame(game, game.blackSocket)
+        if (game.whiteSocket) gameutility.unsubClientFromGame(game, game.whiteSocket)
+        if (game.blackSocket) gameutility.unsubClientFromGame(game, game.blackSocket)
 
         // Remove them from the list of users in active games to allow them to join a new game.
         removeUserFromActiveGame(game.white, id)
@@ -126,7 +126,7 @@ const gamemanager = (function() {
 
         console.log(`Deleted game ${game.id}.`)
 
-        await executeSafely_async(game1.logGame, `Unable to log game! ${game1.getSimplifiedGameString(game)}`, game)
+        await executeSafely_async(gameutility.logGame, `Unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game)
         await statlogger.logGame(game); // The statlogger will only log games with atleast 2 moves played (resignable)
     }
 
@@ -139,7 +139,7 @@ const gamemanager = (function() {
     function onPlayerLostByDisconnect(game, colorWon) {
         if (!colorWon) return console.log("Cannot lose player by disconnection when colorWon is undefined")
 
-        if (game1.isGameOver(game)) return console.error("We should have cancelled the auto-loss-by-disconnection timer when the game ended!")
+        if (gameutility.isGameOver(game)) return console.error("We should have cancelled the auto-loss-by-disconnection timer when the game ended!")
 
         const resignable = movesscript1.isGameResignable(game)
 
@@ -151,7 +151,7 @@ const gamemanager = (function() {
             setGameConclusion(game, 'aborted')
         }
 
-        game1.sendGameUpdateToBothPlayers(game)
+        gameutility.sendGameUpdateToBothPlayers(game)
     }
 
     /**
@@ -168,13 +168,13 @@ const gamemanager = (function() {
         const game = getGameByID(gameID)
         if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
 
-        game1.unsubClientFromGame(game, ws, { sendMessage: false })
+        gameutility.unsubClientFromGame(game, ws, { sendMessage: false })
 
         // Let their opponent know they've disconnected...
 
-        if (game1.isGameOver(game)) return; // It's fine if players unsub/disconnect after the game has ended.
+        if (gameutility.isGameOver(game)) return; // It's fine if players unsub/disconnect after the game has ended.
 
-        const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+        const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
         if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
             console.log("Waiting 5 seconds before starting disconnection timer.")
             const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
@@ -194,8 +194,8 @@ const gamemanager = (function() {
         const game = getGameBySocket(ws);
         if (!game) return; // They don't belong in a game
 
-        const colorPlayingAs = game1.doesSocketBelongToGame_ReturnColor(game, ws);
-        game1.subscribeClientToGame(game, ws, colorPlayingAs);
+        const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+        gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
 
         // Cancel the timer that auto loses them by AFK, IF IT is their turn!
         if (game.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game, { alertOpponent: true });
@@ -273,10 +273,10 @@ const gamemanager = (function() {
             return ws.metadata.sendmessage(ws, 'game', 'nogame')
         }
 
-        const colorPlayingAs = ws.metadata.subscriptions.game?.color || game1.doesSocketBelongToGame_ReturnColor(game, ws);
+        const colorPlayingAs = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
         if (!colorPlayingAs) return ws.metadata.sendmessage(ws, 'game', 'login'); // Unable to verify their socket belongs to this game (probably logged out)
 
-        game1.resyncToGame(ws, game, colorPlayingAs, replyToMessageID)
+        gameutility.resyncToGame(ws, game, colorPlayingAs, replyToMessageID)
 
         cancelDisconnectTimer(game, colorPlayingAs)
     }
@@ -294,22 +294,22 @@ const gamemanager = (function() {
         const game = getGameBySocket(ws);
         if (!game) return console.error("Unable to find game after a hack report.")
 
-        const ourColor = ws.metadata.subscriptions.game?.color || game1.doesSocketBelongToGame_ReturnColor(game, ws);
+        const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
         const opponentColor = math1.getOppositeColor(ourColor)
 
         if (game.publicity === 'private') {
-            const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${game1.getSimplifiedGameString(game)}`
+            const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`
             logEvents(errString, 'hackLog.txt', { print: true })
-            game1.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', 'Cannot report your friend for cheating in a private match!')
+            gameutility.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', 'Cannot report your friend for cheating in a private match!')
             return;
         }
 
         const perpetratingMoveIndex = game.moves.length - 1;
         const colorThatPlayedPerpetratingMove = movesscript1.getColorThatPlayedMoveIndex(perpetratingMoveIndex, game.blackGoesFirst)
         if (colorThatPlayedPerpetratingMove === ourColor) {
-            const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${game1.getSimplifiedGameString(game)}`
+            const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`
             logEvents(errString, 'hackLog.txt', { print: true })
-            game1.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', "Silly goose. You can't report yourself for cheating! You played that move!")
+            gameutility.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', "Silly goose. You can't report yourself for cheating! You played that move!")
             return;
         }
 
@@ -319,15 +319,15 @@ const gamemanager = (function() {
         const reason = messageContents?.reason;
         const opponentsMoveNumber = messageContents?.opponentsMoveNumber;
 
-        const errText = `Cheating reported! Perpetrating move: ${perpetratingMove}. Move number: ${opponentsMoveNumber}. The report description: ${reason}. Color who reported: ${ourColor}. Probably cheater: ${JSON.stringify(game[opponentColor])}. Their color: ${opponentColor}.\nThe game: ${game1.getSimplifiedGameString(game)}`;
+        const errText = `Cheating reported! Perpetrating move: ${perpetratingMove}. Move number: ${opponentsMoveNumber}. The report description: ${reason}. Color who reported: ${ourColor}. Probably cheater: ${JSON.stringify(game[opponentColor])}. Their color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
         console.error(errText);
         logEvents(errText, 'hackLog.txt')
         
         setGameConclusion(game, 'aborted')
 
-        game1.sendGameUpdateToBothPlayers(game);
-        game1.sendMessageToSocketOfColor(game, 'white', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
-        game1.sendMessageToSocketOfColor(game, 'black', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
+        gameutility.sendGameUpdateToBothPlayers(game);
+        gameutility.sendMessageToSocketOfColor(game, 'white', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
+        gameutility.sendMessageToSocketOfColor(game, 'black', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
     }
 
     /**
@@ -349,7 +349,7 @@ const gamemanager = (function() {
             setGameConclusion(game, 'aborted')
         }
 
-        game1.sendGameUpdateToBothPlayers(game);
+        gameutility.sendGameUpdateToBothPlayers(game);
     }
 
     /**
@@ -431,18 +431,18 @@ const gamemanager = (function() {
                 if (abortGame(ws, game)) { // Aborting was a success, terminate the game
                     setGameConclusion(game, 'aborted')
                     onRequestRemovalFromPlayersInActiveGames(ws, game);
-                    const colorPlayingAs = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+                    const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
                     const opponentColor = math1.getOppositeColor(colorPlayingAs)
-                    game1.sendGameUpdateToColor(game, opponentColor);
+                    gameutility.sendGameUpdateToColor(game, opponentColor);
                 } break;
             case 'resign':
                 if (resignGame(ws, game)) { // Resigning was a success, terminate the game
-                    const ourColor = ws.metadata.subscriptions.game?.color || game1.doesSocketBelongToGame_ReturnColor(game, ws);
+                    const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
                     const opponentColor = math1.getOppositeColor(ourColor)
                     const gameConclusion = `${opponentColor} resignation`
                     setGameConclusion(game, gameConclusion)
                     onRequestRemovalFromPlayersInActiveGames(ws, game);
-                    game1.sendGameUpdateToColor(game, opponentColor);
+                    gameutility.sendGameUpdateToColor(game, opponentColor);
                 } break;
             case 'offerdraw':
                 offerDraw(ws, game);
@@ -450,7 +450,7 @@ const gamemanager = (function() {
             case 'acceptdraw':
                 if (acceptDraw(ws, game)) { // Draw acceptance was a success, terminate the game.
                     setGameConclusion(game, "draw agreement")
-                    game1.sendGameUpdateToBothPlayers(game);
+                    gameutility.sendGameUpdateToBothPlayers(game);
                 } break;
             case 'declinedraw':
                 declineDraw(ws, game);
@@ -496,7 +496,7 @@ const gamemanager = (function() {
         // If the game is already over, don't accept it.
         // Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
         // The ACTUAL game conclusion SHOULD already be on the way to them so....
-        if (game1.isGameOver(game)) return; 
+        if (gameutility.isGameOver(game)) return; 
 
         // Make sure the move number matches up. If not, they're out of sync, resync them!
         const expectedMoveNumber = game.moves.length + 1;
@@ -534,7 +534,7 @@ const gamemanager = (function() {
 
         declineDraw(ws, game) // Auto-decline any open draw offer on move submissions
 
-        if (game1.isGameOver(game)) game1.sendGameUpdateToColor(game, color)
+        if (gameutility.isGameOver(game)) gameutility.sendGameUpdateToColor(game, color)
         else sendUpdatedClockToColor(game, color);
         sendMoveToColor(game, opponentColor); // Send their move to their opponent.
     }
@@ -685,7 +685,7 @@ const gamemanager = (function() {
      * @param {Game} game - The game
      */
     function setAutoTimeLossTimer(game) {
-        if (game1.isGameOver(game)) return; // Don't set the timer if the game is over
+        if (gameutility.isGameOver(game)) return; // Don't set the timer if the game is over
         // Cancel previous auto loss timer if it exists
         clearTimeout(game.autoTimeLossTimeoutID)
         // Set the next one
@@ -715,7 +715,7 @@ const gamemanager = (function() {
         if (loser === 'white') game.timerWhite = 0;
         else                   game.timerBlack = 0;
 
-        game1.sendGameUpdateToBothPlayers(game);
+        gameutility.sendGameUpdateToBothPlayers(game);
     }
 
     /**
@@ -799,8 +799,8 @@ const gamemanager = (function() {
         const timeToRestart = getTimeServerRestarting()
         for (const gameID in activeGames) {
             const game = activeGames[gameID]
-            game1.sendMessageToSocketOfColor(game, 'white', 'game', 'serverrestart', timeToRestart)
-            game1.sendMessageToSocketOfColor(game, 'black', 'game', 'serverrestart', timeToRestart)
+            gameutility.sendMessageToSocketOfColor(game, 'white', 'game', 'serverrestart', timeToRestart)
+            gameutility.sendMessageToSocketOfColor(game, 'black', 'game', 'serverrestart', timeToRestart)
         }
         const minutesTillRestart = Math.ceil((timeToRestart - Date.now()) / (1000 * 60))
         console.log(`Alerted all clients in a game that the server is restarting in ${minutesTillRestart} minutes!`)
@@ -815,11 +815,11 @@ const gamemanager = (function() {
         for (const gameID in activeGames) {
             /** @type {Game} */
             const game = activeGames[gameID];
-            if (!game1.isGameOver(game)) {
+            if (!gameutility.isGameOver(game)) {
                 // Abort the game
                 setGameConclusion(game, 'aborted')
                 // Report conclusion to players
-                game1.sendGameUpdateToBothPlayers(game)
+                gameutility.sendGameUpdateToBothPlayers(game)
             }
             // Immediately log the game and update statistics.
             clearTimeout(game.deleteTimeoutID); // Cancel first, in case it's already scheduled to be deleted.

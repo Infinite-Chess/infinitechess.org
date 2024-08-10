@@ -4,7 +4,7 @@
  */
 
 const { Socket, Game } = require('./TypeDefinitions')
-const game1 = require('./game1');
+const gameutility = require('./gameutility');
 const math1 = require('./math1')
 const movesscript1 = require('./movesscript1');
 
@@ -29,9 +29,9 @@ function offerDraw(ws, game) {
     console.log("Client offers a draw.")
 
     if (!game) return console.error("Client offered a draw when they don't belong in a game.")
-    const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+    const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
-    if (game1.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
+    if (gameutility.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
     
     if (hasGameDrawOffer(game)) return console.error(`${color} tried to offer a draw when the game already has a draw offer!`);
 
@@ -56,7 +56,7 @@ function offerDraw(ws, game) {
     // Alert their opponent
     const opponentColor = math1.getOppositeColor(color);
     const value = { offererColor: color, whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
-    game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'drawoffer', value)
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'drawoffer', value)
 }
 
 /** 
@@ -70,9 +70,9 @@ function acceptDraw(ws, game) {
     console.log("Client accepts a draw.")
 
     if (!game) return console.error("Client accepted a draw when they don't belong in a game.")
-    const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+    const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
-    if (game1.isGameOver(game)) return console.error("Client accepted a draw when the game is already over. Ignoring.");
+    if (gameutility.isGameOver(game)) return console.error("Client accepted a draw when the game is already over. Ignoring.");
     
     // Update the status of game
     if (color === 'white') {
@@ -94,7 +94,7 @@ function acceptDraw(ws, game) {
  */
 function declineDraw(ws, game) {
     if (!game) return console.error("Can't decline any open draw when they don't belong in a game.")
-    const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+    const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
     const opponentColor = math1.getOppositeColor(color);
 
     // Since this method is run every time a move is submitted, we have to early exit
@@ -103,7 +103,7 @@ function declineDraw(ws, game) {
 
     console.log("Client declines a draw.")
 
-    if (game1.isGameOver(game)) return console.error("Client declined a draw when the game is already over. Ignoring.");
+    if (gameutility.isGameOver(game)) return console.error("Client declined a draw when the game is already over. Ignoring.");
 
     // Update the status of game
     if (color === 'white') {
@@ -115,7 +115,7 @@ function declineDraw(ws, game) {
     } else console.error(`Unknown color "${color}" when accepting draw!`)
 
     // Alert their opponent
-    game1.sendMessageToSocketOfColor(game, opponentColor, 'game', 'declinedraw')
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'declinedraw')
 }
 
 //--------------------------------------------------------------------------------------------------------
@@ -172,17 +172,17 @@ function hasColorDrawOffer(game, color) {
  * @param {WebSocket} ws The websocket to inform
  */
 function reinformPlayerAboutDrawOffers(game, ws) {
-    const color = game1.doesSocketBelongToGame_ReturnColor(game, ws);
+    const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
     if (hasGameDrawOffer(game)) {
         if (color == 'white') {
             if (game.blackDrawOffer == 'offered') {
                 const value = { offererColor: 'black', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
-                game1.sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
+                gameutility.sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
             }
         } else if (color == 'black') {
             if (game.whiteDrawOffer == 'offered') {
                 const value = { offererColor: 'white', whiteOfferMove: game.whiteDrawOfferMove, blackOfferMove: game.blackDrawOfferMove }
-                game1.sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
+                gameutility.sendMessageToSocketOfColor(game, color, 'game', 'drawoffer', value)
             }
         }
 
