@@ -74,6 +74,8 @@ const gamemanager = (function() {
         if (!player1Socket) {
             // Player 1 (invite owner)'s socket closed before their invite was deleted.
             // Immediately start the auto-resign by disconnection timer
+            const player2Color = gameutility.doesSocketBelongToGame_ReturnColor(game, player2Socket);
+            const player1Color = math1.getOppositeColor(player2Color);
             startDisconnectTimer(game, player1Color, false, onPlayerLostByDisconnect)
         }
 

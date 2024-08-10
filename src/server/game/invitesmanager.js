@@ -514,7 +514,7 @@ function findSocketFromOwner(owner) { // { member/browser }
         }
     } else return console.error(`Cannot find socket from owner of invite when owner does not have a member nor browser property! Owner: ${JSON.stringify(owner)}`)
 
-    console.log(`Unable to find socket from owner ${JSON.stringify(owner)}`)
+    console.log(`Unable to find socket socket that owns invite! ${JSON.stringify(owner)}`)
 }
 
 
