@@ -1,6 +1,6 @@
 name = "中文" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "5"
+version = "6"
 
 [header]
 home = "主页"
@@ -339,6 +339,22 @@ too_many_sockets = "套接字太多。"
 origin_error = "来源错误。"
 connection_closed = "连接意外关闭。服务器消息。"
 please_report_bug = "这不应该发生，请报告此错误！"
+
+[play.javascript.termination] # What caused the termination of the game, in spoken language
+checkmate = "将死"
+stalemate = "僵局"
+repetition = "三次重复"
+moverule = ["", "-回合规则"]  # The game inserts a number inbetween these two strings
+insuffmat = "棋子不足"
+royalcapture = "王被吃"
+allroyalscaptured = "所有王被吃"
+allpiecescaptured = "所有棋子被吃"
+threecheck = "三次将军"
+koth = "山丘之王"
+resignation = "认输"
+time = "超时"
+aborted = "已中止"  # Game was cancelled (no elo exchanged)
+disconnect = "弃赛"  # A player left
 
 [play.javascript.results]
 you_checkmate = "你赢了，将死！"
