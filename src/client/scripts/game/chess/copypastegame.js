@@ -7,6 +7,9 @@
 
 const copypastegame = (function(){
 
+    /** Enable to only copy a single position without all the moves prior */
+    const copySinglePosition = false; 
+
     /**
      * A list of metadata properties that are retained from the current game when pasting an external game.
      * These will overwrite the pasted game's metadata with the current game's metadata.
@@ -54,7 +57,7 @@ const copypastegame = (function(){
         const gameRulesCopy = math.deepCopyObject(gamefile.gameRules);
 
         primedGamefile.metadata = gamefile.metadata;
-        primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant]; // Convert the variant metadata code to spoken language
+        primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant] || primedGamefile.metadata.Variant; // Convert the variant metadata code to spoken language if translation is available
         primedGamefile.turn = gamefile.startSnapshot.turn;
         primedGamefile.enpassant = gamefile.startSnapshot.enpassant;
         if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
@@ -63,7 +66,6 @@ const copypastegame = (function(){
         primedGamefile.moves = gamefile.moves;
         primedGamefile.gameRules = gameRulesCopy;
 
-        const copySinglePosition = false; // Enable to only copy a single position without all the moves
         if (copySinglePosition) {
             primedGamefile.startingPosition = gamefile.startSnapshot.position;
             primedGamefile.specialRights = gamefile.startSnapshot.specialRights;
@@ -211,8 +213,8 @@ const copypastegame = (function(){
             longformat.metadata.UTCTime = UTCTime;
         }
 
-        // The variant metadata needs to be converted from language-specific to internal game code
-        longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant)
+        // If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
+        longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant
 
         delete longformat.metadata.Clock;
 
