@@ -1,7 +1,4 @@
 
-// System imports
-const WebSocket = require('ws');
-
 // Middleware imports
 const { logEvents } = require('../middleware/logEvents');
 
@@ -22,6 +19,7 @@ const { getTimeServerRestarting } = require('./serverrestart');
 const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
 const { abortGame, resignGame } = require('./abortresigngame');
 const { onAFK, onAFK_Return, cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, cancelDisconnectTimer, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
+const { onReport } = require('./cheatreport');
 
 const gamemanager = (function() {
 
@@ -282,55 +280,6 @@ const gamemanager = (function() {
     }
 
     /**
-     * 
-     * @param {Socket} ws - The socket
-     * @param {*} messageContents - The contents of the socket report message
-     */
-    function onReport(ws, messageContents) { // { reason, opponentsMoveNumber }
-        console.log("Client reported hacking!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-        if (!ws.metadata.subscriptions.game?.id) return console.error("Client reporting hacking isn't subscribed to a game. We can't get the game.")
-
-        const game = getGameBySocket(ws);
-        if (!game) return console.error("Unable to find game after a hack report.")
-
-        const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-        const opponentColor = math1.getOppositeColor(ourColor)
-
-        if (game.publicity === 'private') {
-            const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`
-            logEvents(errString, 'hackLog.txt', { print: true })
-            gameutility.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', 'Cannot report your friend for cheating in a private match!')
-            return;
-        }
-
-        const perpetratingMoveIndex = game.moves.length - 1;
-        const colorThatPlayedPerpetratingMove = movesscript1.getColorThatPlayedMoveIndex(perpetratingMoveIndex, game.blackGoesFirst)
-        if (colorThatPlayedPerpetratingMove === ourColor) {
-            const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`
-            logEvents(errString, 'hackLog.txt', { print: true })
-            gameutility.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', "Silly goose. You can't report yourself for cheating! You played that move!")
-            return;
-        }
-
-        // Remove the last move played.
-        const perpetratingMove = game.moves.pop();
-        
-        const reason = messageContents?.reason;
-        const opponentsMoveNumber = messageContents?.opponentsMoveNumber;
-
-        const errText = `Cheating reported! Perpetrating move: ${perpetratingMove}. Move number: ${opponentsMoveNumber}. The report description: ${reason}. Color who reported: ${ourColor}. Probably cheater: ${JSON.stringify(game[opponentColor])}. Their color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
-        console.error(errText);
-        logEvents(errText, 'hackLog.txt')
-        
-        setGameConclusion(game, 'aborted')
-
-        gameutility.sendGameUpdateToBothPlayers(game);
-        gameutility.sendMessageToSocketOfColor(game, 'white', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
-        gameutility.sendMessageToSocketOfColor(game, 'black', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
-    }
-
-    /**
      * Called when a player in the game loses by abandonment (AFK).
      * Sets the gameConclusion, notifies both players.
      * Sets a 5 second timer to delete the game in case
@@ -462,8 +411,10 @@ const gamemanager = (function() {
                 onAFK_Return(ws, game);
                 break;
             case 'report':
-                onReport(ws, message.value)
-                break;
+                if (onReport(ws, game, message.value)) { // Cheating report was valid, terminate the game
+                    setGameConclusion(game, 'aborted')
+                    gameutility.sendGameUpdateToBothPlayers(game);
+                } break;
             default:
                 return console.error(`Unsupported action ${message.action} in game route.`)
         }
