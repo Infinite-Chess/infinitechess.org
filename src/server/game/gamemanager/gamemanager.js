@@ -352,6 +352,10 @@ const gamemanager = (function() {
                 onRequestRemovalFromPlayersInActiveGames(ws, game);
                 break;
             case 'resync':
+                // Perhaps this is a socket reopening, and we weren't able to find their game because they are signed out.
+                // Let's check the game they said they're in!
+                const gameID = message.value;
+                game = game || getGameByID(gameID)
                 resyncToGame(ws, game, message.value, message.id);
                 break;
             case 'abort':

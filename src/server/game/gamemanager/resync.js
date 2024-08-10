@@ -28,11 +28,14 @@ const { cancelDisconnectTimer } = require('./afkdisconnect');
  */
 function resyncToGame(ws, game, gameID, replyToMessageID) {
     if (!game) {
-        console.log(`Cannot resync client to game when they aren't in one! They claimed the game id was ${gameID}.`)
+        console.log(`Cannot resync client to game because they aren't in one, and the ID they said it was ${gameID} doesn't exist.`)
         return ws.metadata.sendmessage(ws, 'game', 'nogame')
     }
 
-    if (game.id !== gameID) return console.error(`Client tried to resync to a game with id ${gameID} when they belong to game with id ${game.id}!`)
+    if (game.id !== gameID) {
+        console.log(`Cannot resync client to game because they tried to resync to a game with id ${gameID} when they belong to game with id ${game.id}!`)
+        return ws.metadata.sendmessage(ws, 'game', 'nogame')
+    }
 
     const colorPlayingAs = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
     if (!colorPlayingAs) return ws.metadata.sendmessage(ws, 'game', 'login'); // Unable to verify their socket belongs to this game (probably logged out)
