@@ -333,6 +333,9 @@ const formatconverter = (function() {
         let remove = false
         while (i >= 0){
             const string = statements[i]
+            const endIdx = stateIdxs[i]+string.length
+            if (shortformat.slice(stateIdxs[i], endIdx) !== string) throw new Error("Metadata indexs are offset")
+
             // new metadata format [Metadata "value"]
             if (/^\[[^\s\:]*\s+\"/.test(string)){
                 let split_index = string.search(/\s\"/);
@@ -348,8 +351,7 @@ const formatconverter = (function() {
             }
 
             if (remove) {
-                console.log(shortformat.slice(stateIdxs[i], stateIdxs[i]+string.length), '\n', string)
-                shortformat = `${shortformat.slice(0,stateIdxs[i])}${shortformat.slice(stateIdxs[i]+string.length)}`
+                shortformat = `${shortformat.slice(0,stateIdxs[i])}${shortformat.slice(endIdx)}`
 
                 stateIdxs.splice(i,1)
                 statements.splice(i,1)
