@@ -295,7 +295,7 @@ const formatconverter = (function() {
         let elements = shortformat.match(/[\[\]\"\{\}\(\)\']/g) || []
         let statements = []
         let stateIdxs = []
-        let currentIdx = 0
+        let currentIdx = -1
         let alterformat = shortformat
         let temp = ''
         let trace = []
@@ -304,7 +304,7 @@ const formatconverter = (function() {
         for (const element of elements) {
 
             const elemIdx = alterformat.indexOf(element)
-            currentIdx+=elemIdx
+            currentIdx+=elemIdx+1
             if (!!trace[0]) temp += alterformat.slice(0, elemIdx)
             else stateIdxs.push(currentIdx)
             temp += element
@@ -348,7 +348,9 @@ const formatconverter = (function() {
             }
 
             if (remove) {
+                console.log(shortformat.slice(stateIdxs[i], stateIdxs[i]+string.length), '\n', string)
                 shortformat = `${shortformat.slice(0,stateIdxs[i])}${shortformat.slice(stateIdxs[i]+string.length)}`
+
                 stateIdxs.splice(i,1)
                 statements.splice(i,1)
             }
