@@ -445,6 +445,9 @@ const engineCheckmatePractice = (function(){
                         for (let i = 0; i < candidate_squares.length; i++) {
                             // skip over accepted candidate square if it is a royal move
                             if (tuplelist_contains_tuple(royal_moves, candidate_squares[i])) continue redundancy_loop;
+                            // skip over accepted candidate square if its coords have a different sign from the current candidtae square
+                            else if (Math.sign(target_square[0]) != Math.sign(candidate_squares[i][0])) continue redundancy_loop;
+                            else if (Math.sign(target_square[1]) != Math.sign(candidate_squares[i][1])) continue redundancy_loop;
                             // eliminate current candidate square if it lies on the same line as accepted candidate square, but further away
                             else if (rider_threatens(v2, target_square, candidate_squares[i], piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
                             // replace accepted candidate square with current candidate square if they lie on the same line as, but new square is nearer
