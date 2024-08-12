@@ -203,9 +203,11 @@ const engineCheckmatePractice = (function(){
     }
 
     // checks if a rider on a given square threatens a given target square
-    // ignore_blockers specifies whether to ignore blocking pieces in piecelist&coordlist
+    // exclude_white_piece_squares specifies whether to exclude occupied squares from being threatened
+    // ignore_blockers specifies whether to completely ignore blocking pieces in piecelist&coordlist
     // threatening_own_square specifies whether a piece can threaten its own square
-    function rider_threatens(direction, piece_square, target_square, piecelist, coordlist, { ignore_blockers = false, threatening_own_square = false} = {}) {
+    function rider_threatens(direction, piece_square, target_square, piecelist, coordlist,
+        { exclude_white_piece_squares = false, ignore_blockers = false, threatening_own_square = false} = {}) {
         if (threatening_own_square && squares_are_equal(piece_square, target_square)) return true;
         const [works, distance] = is_natural_multiple([target_square[0] - piece_square[0], target_square[1] - piece_square[1]], direction);
         if (works) {
@@ -214,8 +216,9 @@ const engineCheckmatePractice = (function(){
             for (let i = 0; i < coordlist.length; i++) {
                 if (piecelist[i] != 0) {
                     const [collinear, thispiecedistance] = is_natural_multiple([coordlist[i][0] - piece_square[0], coordlist[i][1] - piece_square[1]], direction);
-                    if (collinear && thispiecedistance < distance) {
-                        return false;
+                    if (collinear) {
+                        if (exclude_white_piece_squares && thispiecedistance <= distance) return false;
+                        else if (thispiecedistance < distance) return false;
                     }
                 }
             }
@@ -445,7 +448,7 @@ const engineCheckmatePractice = (function(){
             const square_near_king_1 = add_move(target_square, rescaleVector(c2_min, v2));
             const square_near_king_2 = add_move(target_square, rescaleVector(c2_max, v2));
             // ensure that piece threatens target square
-            if (rider_threatens(v1, piece_square, target_square, piecelist, coordlist)) {
+            if (rider_threatens(v1, piece_square, target_square, piecelist, coordlist, {exclude_white_piece_squares: true})) {
                 // ensure that target square threatens square near black king
                 if (rider_threatens(v2, target_square, square_near_king_1, piecelist, coordlist, {threatening_own_square: true}) ||
                     rider_threatens(v2, target_square, square_near_king_2, piecelist, coordlist, {threatening_own_square: true})
