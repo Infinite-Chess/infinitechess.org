@@ -257,6 +257,14 @@ const engineCheckmatePractice = (function(){
         return false;
     }
 
+    // checks if a square is occupied by a white piece
+    function square_is_occupied(square, piecelist, coordlist) {
+        for (let index = 0; index < piecelist.length; index++) {
+            if (piecelist[index] != 0 && squares_are_equal(coordlist[index], square)) return true;
+        }
+        return false;
+    }
+
     // checks if a white piece at index piece_index in the piecelist&coordlist threatens a given square
     function piece_threatens_square(piece_index, target_square, piecelist, coordlist) {
         const piece_type = piecelist[piece_index];
@@ -364,6 +372,7 @@ const engineCheckmatePractice = (function(){
             let bestmove_distance = Infinity;
             for (let move_index = 0; move_index < num_jumps; move_index++) {
                 const target_square = add_move(piece_square, piece_properties.jumps[move_index]);
+                if (square_is_occupied(target_square, piecelist, coordlist)) continue;
                 const target_distance = manhattanNorm(target_square);
                 // only add jump moves that are short range in relation to black king
                 if (target_distance <= shortrangeLimit) {
