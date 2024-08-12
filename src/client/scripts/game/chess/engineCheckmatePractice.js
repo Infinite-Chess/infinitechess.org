@@ -551,8 +551,8 @@ const engineCheckmatePractice = (function(){
             start_coordlist = [];
             for (let key in gamefile.piecesOrganizedByKey) {
                 const pieceType = gamefile.piecesOrganizedByKey[key];
-                if (math.getWorBFromType(pieceType) != "W") continue; // ignore nonwhite pieces
-                let coords = math.getCoordsFromKey(key);
+                if (pieceType.slice(-1) != "W") continue; // ignore nonwhite pieces
+                let coords = key.split(',').map(Number);
                 start_piecelist.push(pieceNameDictionary[pieceType]);
                 // shift all white pieces, so that the black royal is at [0,0]
                 start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
