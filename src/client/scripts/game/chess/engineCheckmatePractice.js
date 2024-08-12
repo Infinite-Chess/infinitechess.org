@@ -75,6 +75,13 @@ const engineCheckmatePractice = (function(){
         10: 5, // archbishop
     };
 
+    // list of pieces with reduced rider move calculation
+    const piecesWithReducedRiderMoves = {
+        1: true, // queen
+        7: true, // amazon
+        11: true, // knightrider
+    };
+
     // weights for piece values of white pieces
     const pieceExistenceEvalDictionary = {
         0: 0, // 0 corresponds to a captured piece
@@ -393,7 +400,7 @@ const engineCheckmatePractice = (function(){
                         const c2 = - crossProduct(v1, piece_square) * inverse_denominator;
                         if (c1 >= 0 && c2 > 0) {
                             // suitable values for c1 and c2 were found, now add nearby values to candidate move list
-                            const wiggleroom = Math.abs(denominator) > 1 ? 2 : 1;
+                            const wiggleroom = Math.abs(denominator) > 1 && !piecesWithReducedRiderMoves[piece_type] ? 2 : 1;
                             const c1_min = Math.ceil(c1 - wiggleroom);
                             const c1_max = Math.floor(c1 + wiggleroom);
                             const c2_min = Math.ceil(c2 - wiggleroom);
