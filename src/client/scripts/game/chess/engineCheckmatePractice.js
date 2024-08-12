@@ -75,13 +75,6 @@ const engineCheckmatePractice = (function(){
         10: 5, // archbishop
     };
 
-    // list of pieces with reduced rider move calculation
-    const piecesWithReducedRiderMoves = {
-        1: true, // queen
-        7: true, // amazon
-        11: true, // knightrider
-    };
-
     // weights for piece values of white pieces
     const pieceExistenceEvalDictionary = {
         0: 0, // 0 corresponds to a captured piece
@@ -210,9 +203,13 @@ const engineCheckmatePractice = (function(){
     }
 
     // checks if a rider on a given square threatens a given target square
-    function rider_threatens(direction, piece_square, target_square, piecelist, coordlist) {
+    // ignore_blockers specifies whether to ignore blocking pieces in piecelist&coordlist
+    // threatening_own_square specifies whether a piece can threaten its own square
+    function rider_threatens(direction, piece_square, target_square, piecelist, coordlist, { ignore_blockers = false, threatening_own_square = false} = {}) {
+        if (threatening_own_square && squares_are_equal(piece_square, target_square)) return true;
         const [works, distance] = is_natural_multiple([target_square[0] - piece_square[0], target_square[1] - piece_square[1]], direction);
         if (works) {
+            if (ignore_blockers) return true;
             // loop over all potential blockers
             for (let i = 0; i < coordlist.length; i++) {
                 if (piecelist[i] != 0) {
@@ -395,38 +392,27 @@ const engineCheckmatePractice = (function(){
                     const v2 = piece_properties.rides[i2];
                     const denominator = crossProduct(v1, v2);
                     if (denominator != 0) {
-                        const inverse_denominator = 1 / denominator;
-                        const c1 = crossProduct(v2, piece_square) * inverse_denominator;
-                        const c2 = - crossProduct(v1, piece_square) * inverse_denominator;
+                        const c1 = crossProduct(v2, piece_square) / denominator;
+                        const c2 = - crossProduct(v1, piece_square) / denominator;
                         if (c1 >= 0 && c2 > 0) {
-                            // suitable values for c1 and c2 were found, now add nearby values to candidate move list
-                            const wiggleroom = Math.abs(denominator) > 1 && !piecesWithReducedRiderMoves[piece_type] ? 2 : 1;
+                            // suitable values for c1 and c2 were found, now compute min and max values for c1 and c2 to consider
+                            const wiggleroom = Math.abs(denominator) > 1 ? 2 : 1;
                             const c1_min = Math.ceil(c1 - wiggleroom);
                             const c1_max = Math.floor(c1 + wiggleroom);
                             const c2_min = Math.ceil(c2 - wiggleroom);
                             const c2_max = Math.floor(c2 + wiggleroom);
-                            // iterate through all candidate squares in v1 direction
-                            for (let rc1 = c1_min; rc1 <= c1_max; rc1++) {
-                                const target_square = add_move(piece_square, rescaleVector(rc1, v1));
-                                const square_near_king = add_move(target_square, rescaleVector(c2_min, v2));
-                                // ensure that piece threatens target square and that target square looks towards black king
-                                if (rider_threatens(v1, piece_square, target_square, piecelist, coordlist)) {
-                                    if (rider_threatens(v2, target_square, square_near_king, piecelist, coordlist)) {
-                                        candidate_squares.push(target_square);
-                                    }
-                                }
-                            }
-                            // iterate through all candidate squares in v2 direction
-                            for (let rc2 = c2_min; rc2 <= c2_max; rc2++) {
-                                const target_square = add_move(piece_square, rescaleVector(rc2, v2));
-                                const square_near_king = add_move(target_square, rescaleVector(c1_min, v1));
-                                // ensure that piece threatens target square and that target square looks towards black king
-                                if (rider_threatens(v2, piece_square, target_square, piecelist, coordlist)) {
-                                    if (rider_threatens(v1, target_square, square_near_king, piecelist, coordlist)) {
-                                        candidate_squares.push(target_square);
-                                    }
-                                }
-                            }
+
+                            // adds suitable squares along v1 to the candidates list
+                            add_suitable_squares_to_candidate_list(
+                                candidate_squares, piece_square, v1, v2,
+                                c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
+                            )
+
+                            // adds suitable squares along v2 to the candidates list
+                            add_suitable_squares_to_candidate_list(
+                                candidate_squares, piece_square, v2, v1,
+                                c2_min, c2_max, c1_min, c1_max, piecelist, coordlist
+                            )
                         }
                     }
                 }
@@ -436,6 +422,44 @@ const engineCheckmatePractice = (function(){
         return candidate_squares;
     }
 
+    // adds suitable squares along v1 to the candidates list, using v2 as the attack vector towards the king
+    function add_suitable_squares_to_candidate_list(
+        candidate_squares, piece_square, v1, v2,
+        c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
+    ){
+        // iterate through all candidate squares in v1 direction
+        candidates_loop:
+        for (let rc1 = c1_min; rc1 <= c1_max; rc1++) {
+            const target_square = add_move(piece_square, rescaleVector(rc1, v1));
+            // do not add square already in candidates list
+            if (tuplelist_contains_tuple(candidate_squares, target_square)) continue candidates_loop;
+            const square_near_king = add_move(target_square, rescaleVector(c2_min, v2));
+            // ensure that piece threatens target square
+            if (rider_threatens(v1, piece_square, target_square, piecelist, coordlist)) {
+                // ensure that target square threatens square near black king
+                if (rider_threatens(v2, target_square, square_near_king, piecelist, coordlist, {threatening_own_square: true})) {
+                    // definitely add target_square if it is a royal move
+                    if (!tuplelist_contains_tuple(royal_moves, target_square)) {
+                        // loop over all accepted candidate squares to eliminate reduncancies with new square
+                        redundancy_loop:
+                        for (let i = 0; i < candidate_squares.length; i++) {
+                            // skip over accepted candidate square if it is a royal move
+                            if (tuplelist_contains_tuple(royal_moves, candidate_squares[i])) continue redundancy_loop;
+                            // eliminate current candidate square if it lies on the same line as accepted candidate square, but further away
+                            else if (rider_threatens(v2, target_square, candidate_squares[i], piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
+                            // replace accepted candidate square with current candidate square if they lie on the same line as, but new square is nearer
+                            else if (rider_threatens(v2, candidate_squares[i], target_square, piecelist, coordlist, {ignore_blockers: true})) {
+                                candidate_squares[i] = target_square;
+                                continue candidates_loop;
+                            }
+                        }
+                    }
+                    candidate_squares.push(target_square);
+                }
+            }
+        }
+    }
+
     // calculate a list of interesting moves for the white pieces in the position given by piecelist&coordlist
     function get_white_candidate_moves(piecelist, coordlist) {
         let candidate_moves = [];
@@ -443,6 +467,22 @@ const engineCheckmatePractice = (function(){
             candidate_moves.push(get_white_piece_candidate_squares(piece_index, piecelist, coordlist))
         }
         return candidate_moves;
+    }
+
+    /**
+     * Updates the position by moving the piece given by piece_index to target_square
+     * @param {Array} piece_index 
+     * @param {number[]} target_square 
+     * @param {Array} piecelist 
+     * @param {Array} coordlist 
+     * @returns {Array}
+     */
+    function make_white_move(piece_index, target_square, piecelist, coordlist) {
+        let new_piecelist = piecelist.map(a => {return [...a]});
+        let new_coordlist = coordlist.map(a => {return [...a]});
+        new_coordlist[piece_index] = target_square;
+
+        return [new_piecelist, new_coordlist];
     }
 
     /**
