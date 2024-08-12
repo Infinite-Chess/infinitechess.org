@@ -433,11 +433,14 @@ const engineCheckmatePractice = (function(){
             const target_square = add_move(piece_square, rescaleVector(rc1, v1));
             // do not add square already in candidates list
             if (tuplelist_contains_tuple(candidate_squares, target_square)) continue candidates_loop;
-            const square_near_king = add_move(target_square, rescaleVector(c2_min, v2));
+            const square_near_king_1 = add_move(target_square, rescaleVector(c2_min, v2));
+            const square_near_king_2 = add_move(target_square, rescaleVector(c2_max, v2));
             // ensure that piece threatens target square
             if (rider_threatens(v1, piece_square, target_square, piecelist, coordlist)) {
                 // ensure that target square threatens square near black king
-                if (rider_threatens(v2, target_square, square_near_king, piecelist, coordlist, {threatening_own_square: true})) {
+                if (rider_threatens(v2, target_square, square_near_king_1, piecelist, coordlist, {threatening_own_square: true}) ||
+                    rider_threatens(v2, target_square, square_near_king_2, piecelist, coordlist, {threatening_own_square: true})
+                ) {
                     // definitely add target_square if it is a royal move
                     if (!tuplelist_contains_tuple(royal_moves, target_square)) {
                         // loop over all accepted candidate squares to eliminate reduncancies with new square
