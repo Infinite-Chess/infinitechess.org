@@ -181,7 +181,7 @@ const engineCheckmatePractice = (function(){
         return Math.abs(square[0]) + Math.abs(square[1]);
     }
 
-    // computes max(manhattan norm, manhattancap) of a square
+    // computes min(manhattan norm, manhattancap) of a square
     function cappedManhattanNorm(square, manhattancap = 10) {
         const manhattannorm = manhattanNorm(square);
         if (manhattannorm < manhattancap) return manhattannorm;
@@ -394,13 +394,31 @@ const engineCheckmatePractice = (function(){
                         if (c1 >= 0 && c2 > 0) {
                             // suitable values for c1 and c2 were found, now add nearby values to candidate move list
                             const wiggleroom = Math.abs(denominator) > 1 ? 2 : 1;
-                            for (let rc1 = Math.ceil(c1 - wiggleroom); rc1 <= Math.floor(c1 + wiggleroom); rc1++) {
+                            const c1_min = Math.ceil(c1 - wiggleroom);
+                            const c1_max = Math.floor(c1 + wiggleroom);
+                            const c2_min = Math.ceil(c2 - wiggleroom);
+                            const c2_max = Math.floor(c2 + wiggleroom);
+                            // iterate through all candidate squares in v1 direction
+                            for (let rc1 = c1_min; rc1 <= c1_max; rc1++) {
                                 const target_square = add_move(piece_square, rescaleVector(rc1, v1));
-                                if (piece_threatens_square(piece_index, target_square, piecelist, coordlist)) candidate_squares.push(target_square);
+                                const square_near_king = add_move(target_square, rescaleVector(c2_min, v2));
+                                // ensure that piece threatens target square and that target square looks towards black king
+                                if (rider_threatens(v1, piece_square, target_square, piecelist, coordlist)) {
+                                    if (rider_threatens(v2, target_square, square_near_king, piecelist, coordlist)) {
+                                        candidate_squares.push(target_square);
+                                    }
+                                }
                             }
-                            for (let rc2 = Math.ceil(c2 - wiggleroom); rc2 <= Math.floor(c2 + wiggleroom); rc2++) {
+                            // iterate through all candidate squares in v2 direction
+                            for (let rc2 = c2_min; rc2 <= c2_max; rc2++) {
                                 const target_square = add_move(piece_square, rescaleVector(rc2, v2));
-                                if (piece_threatens_square(piece_index, target_square, piecelist, coordlist)) candidate_squares.push(target_square);
+                                const square_near_king = add_move(target_square, rescaleVector(c1_min, v1));
+                                // ensure that piece threatens target square and that target square looks towards black king
+                                if (rider_threatens(v2, piece_square, target_square, piecelist, coordlist)) {
+                                    if (rider_threatens(v1, target_square, square_near_king, piecelist, coordlist)) {
+                                        candidate_squares.push(target_square);
+                                    }
+                                }
                             }
                         }
                     }
@@ -549,7 +567,7 @@ const engineCheckmatePractice = (function(){
                 total amount: ${candidate_moves[i].length}\n`;
             }
             // alert(`Total move count: ${candidate_move_count}`)
-            // alert(string + `Total move count: ${candidate_move_count}`)
+            alert(string + `Total move count: ${candidate_move_count}`)
             
             await main.sleep(500) // unnecessary delay
             return {startCoords: startCoords, endCoords: endCoords};
