@@ -9,15 +9,15 @@
 
 const engineCheckmatePractice = (function(){
 
+    // Here, the engine webworker received messages from the outside
+    self.onmessage = function(e) {
+        runEngine(e.data);
+    }
+
     // The move that is currently considered best by this engine
     // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
     let globallyBestMove;
     let globallyBestScore = - Infinity;
-
-    self.onmessage = function(e) {
-        const data = e.data;
-        runEngine(data);
-    }
 
     // the real coordinates of the black royal piece in the gamefile
     let gamefile_royal_coords;
@@ -698,7 +698,6 @@ const engineCheckmatePractice = (function(){
     /**
 	 * This function is called from outside and initializes the engine calculation given the provided gamefile
 	 * @param {gamefile} gamefile - the gamefile
-	 * @returns {Move} - promise to the move with the highest score
 	 */
     function runEngine(gamefile) {
         try {
