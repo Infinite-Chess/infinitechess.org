@@ -499,7 +499,7 @@ const engineCheckmatePractice = (function(){
      * @returns {Array}
      */
     function make_white_move(piece_index, target_square, piecelist, coordlist) {
-        let new_piecelist = piecelist.map(a => {return [...a]});
+        let new_piecelist = piecelist.map(a => {return a});
         let new_coordlist = coordlist.map(a => {return [...a]});
         new_coordlist[piece_index] = target_square;
 
@@ -536,7 +536,7 @@ const engineCheckmatePractice = (function(){
      * TODO: cap distance function when white to move
      * @param {Array} piecelist 
      * @param {Array} coordlist 
-     * @param {Number} black_to_move - 0 on white's turns, 1 on black's turns
+     * @param {Boolean} black_to_move - false on white's turns, true on black's turns
      * @returns {Number}
      */
     function get_position_evaluation(piecelist, coordlist, black_to_move) {
@@ -546,14 +546,14 @@ const engineCheckmatePractice = (function(){
         const incheck = is_check(piecelist, coordlist);
         score += legalMoveEvalDictionary[royal_type][incheck ? 0 : 1][get_black_legal_move_amount(piecelist, coordlist)];
 
-        
+        const black_to_move_num = black_to_move ? 1 : 0;
         for (let i = 0; i < piecelist.length; i++) {
             // add penalty based on existence of white pieces
             score += pieceExistenceEvalDictionary[piecelist[i]];
 
             // add penalty based on distance of black royal to white shortrange pieces
             if (piecelist[i] in distancesEvalDictionary) {
-                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]][black_to_move];
+                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]][black_to_move_num];
                 score += weight * distancefunction(coordlist[i]);
             }
         }
@@ -561,29 +561,48 @@ const engineCheckmatePractice = (function(){
         return score;
     }
 
-    /**
-     * Given a piecelist&coordlist, this function returns the best possible square that the black royal can move to
-     * @param {Array} piecelist 
-     * @param {Array} coordlist 
-     * @returns {Array}
-     */
-    function get_best_next_move(piecelist, coordlist){
-        let best_score = - Infinity;
-        let best_move;
-        for (let move of get_black_legal_moves(piecelist, coordlist)) {
-            const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-            const new_score = get_position_evaluation(new_piecelist, new_coordlist, 0);
-            if (new_score > best_score || !best_move) {
-                best_score = new_score;
-                best_move = move;
-            } else if (new_score == best_score) {
-                if (Math.random() < 0.5) {
-                    best_move = move;
-                }
-            }
+    function alphabeta(piecelist, coordlist, depth, black_to_move, alpha, beta) {
+        if (depth == 0 || get_black_legal_move_amount(piecelist, coordlist) == 0) {
+            return {score: get_position_evaluation(piecelist, coordlist, black_to_move)};
         }
 
-        return best_move;
+        let bestMove;
+
+        if (black_to_move) {
+            let maxScore = -Infinity;
+            for (let move of get_black_legal_moves(piecelist, coordlist)) {
+                const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
+                const new_score = alphabeta(new_piecelist, new_coordlist, depth - 1, false, alpha, beta).score;
+                if (new_score > maxScore) {
+                    bestMove = move;
+                    maxScore = new_score;
+                }
+                alpha = Math.max(alpha, new_score);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
+            return {score: maxScore, move: bestMove};
+        } else {
+            let minScore = Infinity;
+            const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
+            for (let piece_index = 0; piece_index < piecelist.length; piece_index++) {
+                for (let target_square of candidate_moves[piece_index]) {
+                    const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
+                    const new_score = alphabeta(new_piecelist, new_coordlist, depth - 1, true, alpha, beta).score;
+                    if (new_score < minScore) {
+                        // bestMovePieceIndex = piece_index;
+                        // bestMove = target_square;
+                        minScore = new_score;
+                    }
+                    beta = Math.min(beta, new_score);
+                    if (beta <= alpha) {
+                        break;
+                    }
+                }
+            }
+            return {score: minScore};
+        }
     }
 
     /**
@@ -620,11 +639,11 @@ const engineCheckmatePractice = (function(){
             }
 
             // For now, just make the highest scoring move available without looking any deeper into the position
-            const move = get_best_next_move(start_piecelist, start_coordlist);
+            const move = alphabeta(start_piecelist, start_coordlist, 7, true, -Infinity, Infinity).move;
             const startCoords = [gamefile_royal_coords[0], gamefile_royal_coords[1]];
             const endCoords = [gamefile_royal_coords[0] + move[0], gamefile_royal_coords[1] + move[1]];
 
-            
+            /*
             let string = "";
             let candidate_move_count = 0;
             const candidate_moves = get_white_candidate_moves(start_piecelist, start_coordlist);
@@ -636,8 +655,9 @@ const engineCheckmatePractice = (function(){
             }
             // alert(`Total move count: ${candidate_move_count}`)
             alert(string + `Total move count: ${candidate_move_count}`)
+            */
             
-            await main.sleep(500) // unnecessary delay
+            // await main.sleep(500) // unnecessary delay
             return {startCoords: startCoords, endCoords: endCoords};
 
         } catch(e) {
