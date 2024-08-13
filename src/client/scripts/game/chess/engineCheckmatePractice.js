@@ -375,7 +375,10 @@ const engineCheckmatePractice = (function(){
             let bestmove_distance = Infinity;
             for (let move_index = 0; move_index < num_jumps; move_index++) {
                 const target_square = add_move(piece_square, piece_properties.jumps[move_index]);
+                // do not jump onto an occupied square
                 if (square_is_occupied(target_square, piecelist, coordlist)) continue;
+                // do not move a royal piece onto a square controlled by black
+                if (piece_properties.is_royal && tuplelist_contains_tuple(royal_moves, target_square)) continue;
                 const target_distance = manhattanNorm(target_square);
                 // only add jump moves that are short range in relation to black king
                 if (target_distance <= shortrangeLimit) {
