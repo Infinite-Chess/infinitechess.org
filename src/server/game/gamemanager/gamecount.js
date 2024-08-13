@@ -8,19 +8,29 @@
  */
 
 
+const { broadcastToAllInviteSubs } = require("../invitesmanager/invitessubscribers");
+
+
 /** The number of currently active (not over) games. */
 let activeGameCount = 0;
 
 
+/** Call when a game is created. */
 function incrementActiveGameCount() {
     activeGameCount++;
     // Game count increment is already broadcasted automatically
-    // in the invites script when an invite is accepted.
+    // in the invitesmanager when an invite is accepted.
 }
 
+/** Call when a game ENDS (not necessarily deleted). */
 function decrementActiveGameCount() {
     activeGameCount--;
-    if (onActiveGameCountChange) onActiveGameCountChange();
+    broadcastGameCountToInviteSubs();
+}
+
+/** Broadcasts the current game count to all sockets subscribed to the invites list. */
+function broadcastGameCountToInviteSubs() {
+    broadcastToAllInviteSubs("gamecount", activeGameCount)
 }
 
 /**
@@ -45,4 +55,5 @@ module.exports = {
     decrementActiveGameCount,
     getActiveGameCount,
     printActiveGameCount,
+    broadcastGameCountToInviteSubs,
 }

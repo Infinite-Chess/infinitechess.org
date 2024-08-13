@@ -47,7 +47,6 @@ function abortGame(ws, game) {
 
     setGameConclusion(game, 'aborted')
     onRequestRemovalFromPlayersInActiveGames(ws, game);
-    const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
     const opponentColor = math1.getOppositeColor(colorPlayingAs)
     gameutility.sendGameUpdateToColor(game, opponentColor);
 }

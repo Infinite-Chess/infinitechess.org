@@ -7,14 +7,20 @@
  * invites is invitesmanager
  */
 
-const { createNewInvite, cancelInvite, acceptInvite } = require('./invitesmanager')
+
+const wsutility = require('../wsutility.js');
+
+const { createInvite } = require("./createinvite");
+const { cancelInvite } = require("./cancelinvite");
+const { acceptInvite } = require("./acceptinvite");
+
 
 function handleInviteRoute(ws, data) { // data: { route, action, value, id }
     // What is their action? Create invite? Cancel invite? Accept invite?
 
     switch (data.action) {
         case "createinvite":
-            createNewInvite(ws, data.value, data.id)
+            createInvite(ws, data.value, data.id)
             break;
         case "cancelinvite":
             cancelInvite(ws, data.value, data.id)

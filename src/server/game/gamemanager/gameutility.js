@@ -633,6 +633,7 @@ const gameutility = (function() {
         isAutoResignDisconnectTimerActiveForColor,
         sendUpdatedClockToColor,
         sendMoveToColor,
+        getDisplayNameOfPlayer
     })
 
 })()

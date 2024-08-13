@@ -16,11 +16,7 @@ const { executeSafely_async } = require('../../utility/errorGuard');
 
 const { getTranslation } = require('../../config/setupTranslations');
 const { getTimeServerRestarting } = require('../serverrestart');
-const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
-const { abortGame, resignGame } = require('./abortresigngame');
-const { onAFK, onAFK_Return, cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, cancelDisconnectTimer, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
-const { onReport } = require('./cheatreport');
-const { resyncToGame } = require('./resync');
+const { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
 const { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } = require('./gamecount')
 
 
@@ -231,14 +227,6 @@ function stopGameClock(game) {
 }
 
 /**
- * Sets the function to execute whenever the active game count changes.
- * @param {Function} callback - The function
- */
-function setOnActiveGameCountChange(callback) {
-    onActiveGameCountChange = callback;
-}
-
-/**
  * Send a message to all sockets in a game saying the server will restart soon.
  * Every reconnection from now on should re-send the time the server will restart.
  */
@@ -279,8 +267,6 @@ async function logAllGames() {
 /** The object containing all currently active games. Each game's id is the key: `{ id: Game }` 
  * This may temporarily include games that are over, but not yet deleted/logged. */
 const activeGames = {}
-/** The function to execute whenever the active game count changes. */
-let onActiveGameCountChange;
 
 /**
  * Contains what members are currently in a game: `{ member: gameID }`
@@ -500,8 +486,8 @@ module.exports = {
     createGame,
     unsubClientFromGameBySocket,
     isSocketInAnActiveGame,
+    onPlayerLostByAbandonment,
     
-    setOnActiveGameCountChange,
     broadCastGameRestarting,
     logAllGames,
 

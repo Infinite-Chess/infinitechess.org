@@ -14,7 +14,7 @@ const { Socket, WebsocketMessage } = require('../TypeDefinitions')
 const { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } = require('./gamemanager');
 const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
 const { abortGame, resignGame } = require('./abortresigngame');
-const { onAFK, onAFK_Return } = require('./afkdisconnect');
+const { onAFK, onAFK_Return } = require('./onAFK');
 const { onReport } = require('./cheatreport');
 const { resyncToGame } = require('./resync');
 const { submitMove } = require('./movesubmission');
@@ -58,7 +58,7 @@ function handleGameRoute(ws, message) {
             declineDraw(ws, game);
             break;
         case 'AFK':
-            onAFK(ws, game, onPlayerLostByAbandonment);
+            onAFK(ws, game);
             break;
         case 'AFK-Return':
             onAFK_Return(ws, game);

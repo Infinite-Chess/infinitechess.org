@@ -10,7 +10,7 @@ const wsutility = require('./game/wsutility');
 const { handleInviteRoute } = require('./game/invitesmanager/invitesrouter')
 const { handleGameRoute } = require('./game/gamemanager/gamerouter');
 const { unsubClientFromGameBySocket } = require('./game/gamemanager/gamemanager');
-const { giveSocketMetadataHasInviteFunc, subToInvitesList, unsubFromInvitesList } = require('./game/invitesmanager/invitesmanager');
+const { subToInvitesList, unsubFromInvitesList, userHasInvite } = require('./game/invitesmanager/invitesmanager');
 
 const { ensureJSONString } = require('./utility/JSONUtils');
 const { executeSafely } = require('./utility/errorGuard');
@@ -168,8 +168,6 @@ function onConnectionRequest(ws, req) {
 
     ws.metadata.clearafter = setTimeout(closeWebSocketConnection, maxWebSocketAgeMillis, ws, 1000, 'Connection expired') // Code 1000 for normal closure
 
-    giveSocketMetadataHasInviteFunc(ws)
-
     // Send the current game vesion, so they will know whether to refresh.
     sendmessage(ws, 'general', 'gameversion', GAME_VERSION);
 }
@@ -204,6 +202,10 @@ function onmessage(req, ws, rawMessage) {
         logEvents(errText, 'hackLog.txt');
         return sendmessage(ws, 'general', 'printerror', `Invalid JSON format!`);
     }
+
+    // Is the parsed message body an object? If not, accessing properties would give us a crash.
+    // We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
+    if (typeof message !== 'object' || message === null) return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid websocket message.")
 
     const isEcho = message.action === "echo";
     if (isEcho) {
@@ -349,7 +351,7 @@ function rescheduleRenewConnection(ws) {
     cancelRenewConnectionTimer(ws);
     // Only reset the timer if they are subscribed to a game,
     // or they have an open invite!
-    if (!ws.metadata.subscriptions.game && !ws.metadata.hasInvite()) return;
+    if (!ws.metadata.subscriptions.game && !userHasInvite(ws)) return;
 
     ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws)
 }
@@ -536,7 +538,7 @@ function handleSubbing(ws, value) {
 }
 
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function handleUnsubbing(ws, key, value, closureNotByChoice) {
+function handleUnsubbing(ws, key, subscription, closureNotByChoice) { // subscription: game: { id, color }
     // What are they wanting to unsubscribe from updates from?
     switch (key) {
         case "invites":
@@ -550,9 +552,8 @@ function handleUnsubbing(ws, key, value, closureNotByChoice) {
             break;
         default:
             const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`
-            console.error(errText);
-            logEvents(errText, 'hackLog.txt');
-            return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`)
+            logEvents(errText, 'hackLog.txt', { print: true });
+            return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from '${key}' list!`)
     }
 }
 
