@@ -2,8 +2,6 @@
  * This script runs a chess engine for checkmate practice that computes the best move for the black royal piece.
  * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.
  * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
- * 
- * @author Andreas Tsevas
  */
 
 "use strict";
