@@ -94,12 +94,15 @@ const engineCheckmatePractice = (function(){
     // weights and distance functions for white piece distance to the black king
     // the first entry for each piece is for black to move, the second entry is for white to move
     const distancesEvalDictionary = {
+        1: [[2, manhattanNorm], [2, cappedManhattanNorm]], // queen
+        2: [[2, manhattanNorm], [2, cappedManhattanNorm]], // rook
         3: [[2, manhattanNorm], [2, cappedManhattanNorm]], // bishop
         4: [[15, manhattanNorm], [15, manhattanNorm]],  // knight
         5: [[30, manhattanNorm], [30, manhattanNorm]],  // king
         6: [[100, manhattanNorm], [100, manhattanNorm]], // pawn
         7: [[14, manhattanNorm], [14, cappedManhattanNorm]], // amazon
         8: [[16, manhattanNorm], [16, manhattanNorm]],  // hawk
+        7: [[0, manhattanNorm], [0, cappedManhattanNorm]], // chancellor
         10: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // archbishop
         11: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // knightrider
     };
@@ -110,7 +113,7 @@ const engineCheckmatePractice = (function(){
             // in check
             0: {
                 0: -Infinity, // checkmate
-                1: -100,
+                1: -75,
                 2: -50,
                 3: -25,
                 4: -12,
@@ -122,7 +125,7 @@ const engineCheckmatePractice = (function(){
             // not in check
             1: {
                 0: Infinity, // stalemate
-                1: -90,
+                1: -60,
                 2: -45,
                 3: -22,
                 4: -10,
@@ -175,6 +178,11 @@ const engineCheckmatePractice = (function(){
             },
         }
     };
+
+    // computes the 2-norm of a square
+    function diagonalNorm(square) {
+        return Math.sqrt(square[0]**2 + square[1]**2);
+    }
 
     // computes the manhattan norm of a square
     function manhattanNorm(square) {
@@ -411,7 +419,8 @@ const engineCheckmatePractice = (function(){
                         const c2 = - crossProduct(v1, piece_square) / denominator;
                         if (c1 >= 0 && c2 > 0) {
                             // suitable values for c1 and c2 were found, now compute min and max values for c1 and c2 to consider
-                            const wiggleroom = Math.abs(denominator) > 1 ? 2 : 1;
+                            // const wiggleroom = Math.abs(denominator) > 1 ? 2 : 1;
+                            const wiggleroom = 1;
                             const c1_min = Math.ceil(c1 - wiggleroom);
                             const c1_max = Math.floor(c1 + wiggleroom);
                             const c2_min = Math.ceil(c2 - wiggleroom);
@@ -551,7 +560,7 @@ const engineCheckmatePractice = (function(){
             // add penalty based on existence of white pieces
             score += pieceExistenceEvalDictionary[piecelist[i]];
 
-            // add penalty based on distance of black royal to white shortrange pieces
+            // add score based on distance of black royal to white shortrange pieces
             if (piecelist[i] in distancesEvalDictionary) {
                 const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]][black_to_move_num];
                 score += weight * distancefunction(coordlist[i]);
@@ -561,6 +570,16 @@ const engineCheckmatePractice = (function(){
         return score;
     }
 
+    /**
+     * Performs a search with alpha-beta pruning through the game tree and returns the best score and move for black it finds
+     * @param {Array} piecelist 
+     * @param {Array} coordlist 
+     * @param {Number} depth 
+     * @param {Boolean} black_to_move 
+     * @param {Number} alpha 
+     * @param {Number} beta 
+     * @returns {Object} with properties "score", "move" and "termination_depth"
+     */
     function alphabeta(piecelist, coordlist, depth, black_to_move, alpha, beta) {
         if (depth == 0 || get_black_legal_move_amount(piecelist, coordlist) == 0) {
             return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth};
@@ -572,7 +591,6 @@ const engineCheckmatePractice = (function(){
             let maxScore = -Infinity;
             let bestDepth = depth;
             for (let move of get_black_legal_moves(piecelist, coordlist)) {
-                if (!bestMove) bestMove = move;
                 const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
                 const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, false, alpha, beta)
                 const new_score = evaluation.score;
@@ -587,20 +605,22 @@ const engineCheckmatePractice = (function(){
                     break;
                 }
             }
+            if (!bestMove) bestMove = get_black_legal_moves(piecelist, coordlist)[0];
             return {score: maxScore, move: bestMove, termination_depth: bestDepth};
         } else {
             let minScore = Infinity;
             let bestDepth = -1;
             const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
-            for (let piece_index = 0; piece_index < piecelist.length; piece_index++) {
+            // go through pieces for in increasing order of what piece has how many candidate moves
+            const indices = [...Array(piecelist.length).keys()];
+            indices.sort((a, b) => { return candidate_moves[a].length - candidate_moves[b].length });
+            for (let piece_index of indices) {
                 for (let target_square of candidate_moves[piece_index]) {
                     const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
                     const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, true, alpha, beta);
                     const new_score = evaluation.score;
                     const termination_depth = evaluation.termination_depth;
                     if (new_score < minScore || (new_score == minScore && termination_depth > bestDepth)) {
-                        // bestMovePieceIndex = piece_index;
-                        // bestMove = target_square;
                         minScore = new_score;
                         bestDepth = termination_depth;
                     }
@@ -612,6 +632,25 @@ const engineCheckmatePractice = (function(){
             }
             return {score: minScore, termination_depth: bestDepth};
         }
+    }
+
+    /**
+     * Performs a search with alpha-beta pruning through the game tree with iteratively greater depths
+     * @param {Array} piecelist 
+     * @param {Array} coordlist 
+     * @param {Number} maxdepth 
+     * @returns {Move} best move
+     */
+    function iterativeDeepening(piecelist, coordlist, maxdepth) {
+        let bestMove;
+        for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
+            const evaluation = alphabeta(piecelist, coordlist, depth, true, -Infinity, Infinity);
+            const score = evaluation.score;
+            const move = evaluation.move;
+            bestMove = move;
+            console.log(`Depth ${depth}: Best score: ${score}, Best move: ${move}.`);
+        }
+        return bestMove;
     }
 
     /**
@@ -647,11 +686,6 @@ const engineCheckmatePractice = (function(){
                 start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
             }
 
-            // For now, just make the highest scoring move available without looking any deeper into the position
-            const move = alphabeta(start_piecelist, start_coordlist, 5, true, -Infinity, Infinity).move;
-            const startCoords = [gamefile_royal_coords[0], gamefile_royal_coords[1]];
-            const endCoords = [gamefile_royal_coords[0] + move[0], gamefile_royal_coords[1] + move[1]];
-
             /*
             let string = "";
             let candidate_move_count = 0;
@@ -666,6 +700,9 @@ const engineCheckmatePractice = (function(){
             alert(string + `Total move count: ${candidate_move_count}`)
             */
             
+            const move = iterativeDeepening(start_piecelist, start_coordlist, 5);
+            const startCoords = [gamefile_royal_coords[0], gamefile_royal_coords[1]];
+            const endCoords = [gamefile_royal_coords[0] + move[0], gamefile_royal_coords[1] + move[1]];
             // await main.sleep(500) // unnecessary delay
             return {startCoords: startCoords, endCoords: endCoords};
 
