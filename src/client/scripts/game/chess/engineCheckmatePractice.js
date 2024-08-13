@@ -12,6 +12,7 @@ const engineCheckmatePractice = (function(){
     // The move that is currently considered best by this engine
     // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
     let globallyBestMove;
+    let globallyBestScore = - Infinity;
 
     self.onmessage = function(e) {
         const data = e.data;
@@ -588,12 +589,13 @@ const engineCheckmatePractice = (function(){
      * @param {Array} piecelist 
      * @param {Array} coordlist 
      * @param {Number} depth 
+     * @param {Number} start_depth - does not get changed at all during recursion
      * @param {Boolean} black_to_move 
      * @param {Number} alpha 
      * @param {Number} beta 
      * @returns {Object} with properties "score", "move" and "termination_depth"
      */
-    function alphabeta(piecelist, coordlist, depth, black_to_move, alpha, beta) {
+    function alphabeta(piecelist, coordlist, depth, start_depth, black_to_move, alpha, beta) {
         if (depth == 0 || get_black_legal_move_amount(piecelist, coordlist) == 0) {
             return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth};
         }
@@ -613,6 +615,11 @@ const engineCheckmatePractice = (function(){
                         bestMove = move;
                         maxScore = new_score;
                         bestDepth = termination_depth;
+                        if (depth == start_depth && new_score > globallyBestScore && !squares_are_equal(move, globallyBestMove)) {
+                            globallyBestMove = move;
+                            globallyBestScore = new_score;
+                            self.postMessage(move_to_gamefile_move(globallyBestMove));
+                        }
                     }
                 }
                 alpha = Math.max(alpha, new_score);
@@ -662,14 +669,16 @@ const engineCheckmatePractice = (function(){
         // immediately initialize and submit globallyBestMove, in case the engine gets immediately interrupted
         const black_moves = get_black_legal_moves(piecelist, coordlist);
         globallyBestMove = black_moves[Math.floor(Math.random() * black_moves.length)];
+        const [new_piecelist, new_coordlist] = make_black_move(globallyBestMove, piecelist, coordlist);
+        globallyBestScore = get_position_evaluation(new_piecelist, new_coordlist, false);
         self.postMessage(move_to_gamefile_move(globallyBestMove));
 
         // iteratively deeper and deeper search
         for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-            const evaluation = alphabeta(piecelist, coordlist, depth, true, -Infinity, Infinity);
-            const move = evaluation.move;
-            if (!squares_are_equal(move, globallyBestMove)) {
-                globallyBestMove = move;
+            const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity);
+            if (evaluation.move && !squares_are_equal(evaluation.move, globallyBestMove)) {
+                globallyBestMove = evaluation.move;
+                globallyBestScore = evaluation.score;
                 self.postMessage(move_to_gamefile_move(globallyBestMove))
             }
             // console.log(`Depth ${depth}: Best score: ${evaluation.score}, Best move: ${move}.`);

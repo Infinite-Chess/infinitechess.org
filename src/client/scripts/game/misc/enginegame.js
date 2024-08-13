@@ -80,7 +80,7 @@ const enginegame = (function(){
         currentEngineMove = undefined;
         engineWorker.onmessage = function(e) { 
             currentEngineMove = e.data;
-            console.log(`Updated the engine recommended move to ${JSON.stringify(currentEngineMove)}`);
+            // console.log(`Updated the engine recommended move to ${JSON.stringify(currentEngineMove)}`);
         };
 
         // Send the gamefile to the engine web worker
