@@ -9,9 +9,9 @@ const enginegame = (function(){
     let inEngineGame = false
     let ourColor; // white/black
     let currentEngine; // name of the current engine used
-    let currentEngineMove;
+    let currentEngineMove; // currently best move recommended by the engine
 
-    const engineTimeLimitPerMoveMillis = 500;
+    const engineTimeLimitPerMoveMillis = 500; // hard time limit for the engine to think in milliseconds
 
     function areInEngineGame() { return inEngineGame }
 
@@ -38,7 +38,8 @@ const enginegame = (function(){
         // This make sure it will place us in black's perspective if applicable
         perspective.resetRotations()
 
-        currentEngine = gameOptions.currentEngine
+        currentEngine = gameOptions.currentEngine;
+        currentEngineMove = undefined;
         if (!currentEngine) return console.error (`Attempting to start game with unknown engine: ${currentEngine}`);
         console.log(`Started engine game with engine ${currentEngine}`);
     }
@@ -48,6 +49,7 @@ const enginegame = (function(){
         inEngineGame = false;
         ourColor = undefined;
         currentEngine = undefined;
+        currentEngineMove = undefined;
         perspective.resetRotations() // Without this, leaving an engine game of which we were black, won't reset our rotation.
     }
 
@@ -75,6 +77,7 @@ const enginegame = (function(){
         // Initialize the engine as a webworker
         if (!window.Worker) return console.error('Your browser doesn\'t support web workers.');
         let engineWorker = new Worker(`../scripts/game/chess/${currentEngine}.js`);
+        currentEngineMove = undefined;
         engineWorker.onmessage = function(e) { 
             currentEngineMove = e.data;
             console.log(`Updated the engine recommended move to ${JSON.stringify(currentEngineMove)}`);
@@ -88,6 +91,7 @@ const enginegame = (function(){
 
         // terminate the webworker and make the recommended engine move
         engineWorker.terminate();
+        if (!currentEngineMove) return console.error("Engine failed to submit a move within the allocated time limit!");
         makeEngineMove(currentEngineMove);
     }
 

@@ -1,6 +1,6 @@
 /**
  * This script runs a chess engine for checkmate practice that computes the best move for the black royal piece.
- * runEngine(gamefile) is the only function that is called from the outside.
+ * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.
  * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
  */
 
@@ -9,13 +9,14 @@
 
 const engineCheckmatePractice = (function(){
 
+    // The move that is currently considered best by this engine
+    // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
+    let globallyBestMove;
+
     self.onmessage = function(e) {
         const data = e.data;
         runEngine(data);
     }
-
-    // The move that is currently considered best by this engine
-    let globallyBestMove;
 
     // the real coordinates of the black royal piece in the gamefile
     let gamefile_royal_coords;
@@ -583,7 +584,7 @@ const engineCheckmatePractice = (function(){
     }
 
     /**
-     * Performs a search with alpha-beta pruning through the game tree and returns the best score and move for black it finds
+     * Performs a standard search with alpha-beta pruning through the game tree and returns the best score and move for black it finds
      * @param {Array} piecelist 
      * @param {Array} coordlist 
      * @param {Number} depth 
@@ -658,6 +659,7 @@ const engineCheckmatePractice = (function(){
      * @returns {Move} best move
      */
     function runIterativeDeepening(piecelist, coordlist, maxdepth) {
+        // immediately initialize and submit globallyBestMove, in case the engine gets immediately interrupted
         const black_moves = get_black_legal_moves(piecelist, coordlist);
         globallyBestMove = black_moves[Math.floor(Math.random() * black_moves.length)];
         self.postMessage(move_to_gamefile_move(globallyBestMove));
@@ -674,9 +676,14 @@ const engineCheckmatePractice = (function(){
         }
     }
 
+    /**
+     * Converts a target square for the black king to move to into a Move Object, taking into account gamefile_royal_coords
+     * @param {number[]} target_square 
+     * @returns {Move}
+     */
     function move_to_gamefile_move(target_square) {
         const endCoords = [gamefile_royal_coords[0] + target_square[0], gamefile_royal_coords[1] + target_square[1]];
-        return {startCoords: gamefile_royal_coords, endCoords: endCoords}
+        return {startCoords: gamefile_royal_coords, endCoords: endCoords};
     }
 
     /**
