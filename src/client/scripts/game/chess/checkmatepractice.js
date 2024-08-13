@@ -44,15 +44,22 @@ const checkmatepractice = (function() {
     ];
 
     const nameOfCompletedCheckmatesInStorage = 'checkmatePracticeCompletion';
-    /** A list of checkmate strings we have beaten
-     * [ "2Q-1k", "3R-1k", "2CH-1k"] @type {string[]} */
+    /**
+     * A list of checkmate strings we have beaten
+     * [ "2Q-1k", "3R-1k", "2CH-1k"]
+     * 
+     * This will be initialized when guipractice calls {@link getCompletedCheckmates} for the first time!
+     * If we initialize it right here, we crash in production, because localstorage is not defined yet in app.js
+     * @type {string[]}
+     */
     let completedCheckmates;
     const expiryOfCompletedCheckmatesMillis = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 
 
     function getCompletedCheckmates() {
-        return completedCheckmates || localstorage.loadItem(nameOfCompletedCheckmatesInStorage);
+        if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage); // Initialize
+        return completedCheckmates;
     }
 
     /**
@@ -134,11 +141,14 @@ const checkmatepractice = (function() {
     
     /** Saves the list of beaten checkmates into browser storages. */
     function saveCheckmatesBeaten() {
+        if (!completedCheckmates) return console.error("Cannot save checkmates beaten when it was never initialized!")
         localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis)
     }
 
     function markCheckmateBeaten(checkmatePracticeID) {
         if (typeof checkmatePracticeID !== 'string') throw new Error('Cannot save completed checkmate when its ID is not a string.');
+        if (!completedCheckmates) return console.error("Cannot mark checkmate beaten when it was never initialized!")
+
         // Add the checkmate ID to the beaten list
         if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
         saveCheckmatesBeaten();
@@ -147,6 +157,7 @@ const checkmatepractice = (function() {
 
     /** Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! */
     function eraseCheckmatePracticeProgress() {
+        if (!completedCheckmates) return console.error("Cannot erase checkmate progress when completedCheckmates was never initialized!")
         completedCheckmates.length = 0;
         localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
         guipractice.updateCheckmatesBeaten() // Delete the 'beaten' class from all
