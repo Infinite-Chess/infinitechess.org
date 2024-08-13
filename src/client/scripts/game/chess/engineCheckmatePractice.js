@@ -2,8 +2,6 @@
  * This script runs a chess engine for checkmate practice that computes the best move for the black royal piece.
  * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.
  * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
- * 
- * @author Andreas Tsevas
  */
 
 "use strict";
@@ -11,16 +9,17 @@
 
 const engineCheckmatePractice = (function(){
 
-    // The move that is currently considered best by this engine
-    // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
-    let globallyBestMove;
-    let globallyBestScore = - Infinity;
-
+    // Here, the engine webworker received messages from the outside
     self.onmessage = function(e) {
         /** @type {gamefile} */
         const gamefile = e.data;
         runEngine(gamefile);
     }
+
+    // The move that is currently considered best by this engine
+    // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
+    let globallyBestMove;
+    let globallyBestScore = - Infinity;
 
     // the real coordinates of the black royal piece in the gamefile
     let gamefile_royal_coords;
@@ -693,7 +692,6 @@ const engineCheckmatePractice = (function(){
     /**
 	 * This function is called from outside and initializes the engine calculation given the provided gamefile
 	 * @param {gamefile} gamefile - the gamefile
-	 * @returns {Move} - promise to the move with the highest score
 	 */
     function runEngine(gamefile) {
         try {
