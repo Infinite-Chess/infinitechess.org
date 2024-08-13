@@ -2,6 +2,8 @@
  * This script runs a chess engine for checkmate practice that computes the best move for the black royal piece.
  * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.
  * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
+ * 
+ * @author Andreas Tsevas
  */
 
 "use strict";
@@ -110,17 +112,17 @@ const engineCheckmatePractice = (function(){
     // weights and distance functions for white piece distance to the black king
     // the first entry for each piece is for black to move, the second entry is for white to move
     const distancesEvalDictionary = {
-        1: [[2, manhattanNorm], [2, cappedManhattanNorm]], // queen
-        2: [[2, manhattanNorm], [2, cappedManhattanNorm]], // rook
-        3: [[2, manhattanNorm], [2, cappedManhattanNorm]], // bishop
-        4: [[15, manhattanNorm], [15, manhattanNorm]],  // knight
-        5: [[30, manhattanNorm], [30, manhattanNorm]],  // king
-        6: [[100, manhattanNorm], [100, manhattanNorm]], // pawn
-        7: [[14, manhattanNorm], [14, cappedManhattanNorm]], // amazon
-        8: [[16, manhattanNorm], [16, manhattanNorm]],  // hawk
-        7: [[2, manhattanNorm], [2, cappedManhattanNorm]], // chancellor
-        10: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // archbishop
-        11: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // knightrider
+        1: [2, manhattanNorm], // queen
+        2: [2, manhattanNorm], // rook
+        3: [2, manhattanNorm], // bishop
+        4: [15, manhattanNorm], // knight
+        5: [30, manhattanNorm], // king
+        6: [100, manhattanNorm], // pawn
+        7: [14, manhattanNorm], // amazon
+        8: [16, manhattanNorm], // hawk
+        7: [2, manhattanNorm], // chancellor
+        10: [16, manhattanNorm], // archbishop
+        11: [16, manhattanNorm], // knightrider
     };
 
     // eval scores for number of legal moves of black royal
@@ -570,7 +572,7 @@ const engineCheckmatePractice = (function(){
 
             // add score based on distance of black royal to white shortrange pieces
             if (piecelist[i] in distancesEvalDictionary) {
-                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]][black_to_move_num];
+                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]];
                 score += weight * distancefunction(coordlist[i]);
             }
         }
