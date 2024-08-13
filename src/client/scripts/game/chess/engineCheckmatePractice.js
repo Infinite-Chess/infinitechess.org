@@ -102,7 +102,7 @@ const engineCheckmatePractice = (function(){
         6: [[100, manhattanNorm], [100, manhattanNorm]], // pawn
         7: [[14, manhattanNorm], [14, cappedManhattanNorm]], // amazon
         8: [[16, manhattanNorm], [16, manhattanNorm]],  // hawk
-        7: [[0, manhattanNorm], [0, cappedManhattanNorm]], // chancellor
+        7: [[2, manhattanNorm], [2, cappedManhattanNorm]], // chancellor
         10: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // archbishop
         11: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // knightrider
     };
@@ -595,10 +595,12 @@ const engineCheckmatePractice = (function(){
                 const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, false, alpha, beta)
                 const new_score = evaluation.score;
                 const termination_depth = evaluation.termination_depth;
-                if (new_score > maxScore || (new_score == maxScore && termination_depth < bestDepth)) {
-                    bestMove = move;
-                    maxScore = new_score;
-                    bestDepth = termination_depth;
+                if (new_score >= maxScore) {
+                    if (new_score > maxScore || termination_depth < bestDepth || (termination_depth == bestDepth && Math.random() < 0.5)) {
+                        bestMove = move;
+                        maxScore = new_score;
+                        bestDepth = termination_depth;
+                    }
                 }
                 alpha = Math.max(alpha, new_score);
                 if (beta <= alpha) {
@@ -620,9 +622,11 @@ const engineCheckmatePractice = (function(){
                     const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, true, alpha, beta);
                     const new_score = evaluation.score;
                     const termination_depth = evaluation.termination_depth;
-                    if (new_score < minScore || (new_score == minScore && termination_depth > bestDepth)) {
-                        minScore = new_score;
-                        bestDepth = termination_depth;
+                    if (new_score <= minScore) {
+                        if (new_score < minScore || termination_depth > bestDepth || (termination_depth == bestDepth && Math.random() < 0.5)) {
+                            minScore = new_score;
+                            bestDepth = termination_depth;
+                        }
                     }
                     beta = Math.min(beta, new_score);
                     if (beta <= alpha) {
