@@ -607,7 +607,7 @@ const engineCheckmatePractice = (function(){
             let bestDepth = depth;
             for (let move of get_black_legal_moves(piecelist, coordlist)) {
                 const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-                const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, false, alpha, beta)
+                const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta)
                 const new_score = evaluation.score;
                 const termination_depth = evaluation.termination_depth;
                 if (new_score >= maxScore) {
@@ -639,7 +639,7 @@ const engineCheckmatePractice = (function(){
             for (let piece_index of indices) {
                 for (let target_square of candidate_moves[piece_index]) {
                     const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
-                    const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, true, alpha, beta);
+                    const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta);
                     const new_score = evaluation.score;
                     const termination_depth = evaluation.termination_depth;
                     if (new_score <= minScore) {
