@@ -1,3 +1,7 @@
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// DEPRECATED ENGINE FORMAT!!! PLEASE REFER TO engineCheckmatePractice.js
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 /**
  * This script runs the chess engine for enginegames.
  * It is modular and may be replaced by any other engine script to test a different engine.

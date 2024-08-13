@@ -8,6 +8,18 @@
 
 
 const engineCheckmatePractice = (function(){
+
+    self.onmessage = function(e) {
+        const data = e.data;
+        runEngine(data);
+    }
+
+    // The move that is currently considered best by this engine
+    let globallyBestMove;
+
+    // the real coordinates of the black royal piece in the gamefile
+    let gamefile_royal_coords;
+
     // Black royal piece properties. The black royal piece is always at square [0,0]
     const king_moves = [ 
         [-1,  1], [0,  1], [1,  1],
@@ -645,27 +657,36 @@ const engineCheckmatePractice = (function(){
      * @param {Number} maxdepth 
      * @returns {Move} best move
      */
-    function iterativeDeepening(piecelist, coordlist, maxdepth) {
-        let bestMove;
+    function runIterativeDeepening(piecelist, coordlist, maxdepth) {
+        const black_moves = get_black_legal_moves(piecelist, coordlist);
+        globallyBestMove = black_moves[Math.floor(Math.random() * black_moves.length)];
+        self.postMessage(move_to_gamefile_move(globallyBestMove));
+
+        // iteratively deeper and deeper search
         for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
             const evaluation = alphabeta(piecelist, coordlist, depth, true, -Infinity, Infinity);
-            const score = evaluation.score;
             const move = evaluation.move;
-            bestMove = move;
-            console.log(`Depth ${depth}: Best score: ${score}, Best move: ${move}.`);
+            if (!squares_are_equal(move, globallyBestMove)) {
+                globallyBestMove = move;
+                self.postMessage(move_to_gamefile_move(globallyBestMove))
+            }
+            // console.log(`Depth ${depth}: Best score: ${evaluation.score}, Best move: ${move}.`);
         }
-        return bestMove;
+    }
+
+    function move_to_gamefile_move(target_square) {
+        const endCoords = [gamefile_royal_coords[0] + target_square[0], gamefile_royal_coords[1] + target_square[1]];
+        return {startCoords: gamefile_royal_coords, endCoords: endCoords}
     }
 
     /**
 	 * This function is called from outside and initializes the engine calculation given the provided gamefile
 	 * @param {gamefile} gamefile - the gamefile
-	 * @returns {Promise<Move>} - promise to the move with the highest score
+	 * @returns {Move} - promise to the move with the highest score
 	 */
-    async function runEngine(gamefile) {
+    function runEngine(gamefile) {
         try {
             // get real coordinates and parse type of black royal piece
-            let gamefile_royal_coords;
             if (gamefile.ourPieces["kingsB"].length != 0){
                 gamefile_royal_coords = gamefile.ourPieces["kingsB"][0];
                 royal_moves = king_moves;
@@ -690,6 +711,9 @@ const engineCheckmatePractice = (function(){
                 start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
             }
 
+            // run iteratively deepened move search
+            runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
+
             /*
             let string = "";
             let candidate_move_count = 0;
@@ -703,21 +727,11 @@ const engineCheckmatePractice = (function(){
             // alert(`Total move count: ${candidate_move_count}`)
             alert(string + `Total move count: ${candidate_move_count}`)
             */
-            
-            const move = iterativeDeepening(start_piecelist, start_coordlist, 5);
-            const startCoords = [gamefile_royal_coords[0], gamefile_royal_coords[1]];
-            const endCoords = [gamefile_royal_coords[0] + move[0], gamefile_royal_coords[1] + move[1]];
-            // await main.sleep(500) // unnecessary delay
-            return {startCoords: startCoords, endCoords: endCoords};
 
         } catch(e) {
             console.error("An error occured in the engine computation of the checkmate practice");
             console.error(e);
         }
-    }    
-
-    return Object.freeze({
-        runEngine
-    })
+    }
 
 })();

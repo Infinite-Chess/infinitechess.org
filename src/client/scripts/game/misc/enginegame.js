@@ -9,8 +9,9 @@ const enginegame = (function(){
     let inEngineGame = false
     let ourColor; // white/black
     let currentEngine; // name of the current engine used
+    let currentEngineMove;
 
-    const engineTimeLimitPerMoveMillis = 1000;
+    const engineTimeLimitPerMoveMillis = 500;
 
     function areInEngineGame() { return inEngineGame }
 
@@ -66,25 +67,39 @@ const enginegame = (function(){
     /**
      * This method is called externally when the player submits his move in an engine game
      */
-    function submitMove() {
+    async function submitMove() {
         if (!inEngineGame) return; // Don't do anything if it's not an engine game
-        if (game.getGamefile().gameConclusion) return; // Don't do anything if the game is over
+        const gamefile = game.getGamefile();
+        if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
-        // Let the engine take over now
-        makeEngineMove();
+        // Initialize the engine as a webworker
+        if (!window.Worker) return console.error('Your browser doesn\'t support web workers.');
+        let engineWorker = new Worker(`../scripts/game/chess/${currentEngine}.js`);
+        engineWorker.onmessage = function(e) { 
+            currentEngineMove = e.data;
+            console.log(`Updated the engine recommended move to ${JSON.stringify(currentEngineMove)}`);
+        };
+
+        // Send the gamefile to the engine web worker
+        engineWorker.postMessage(JSON.parse(JSON.stringify(gamefile)));
+
+        // give the engine time to think
+        await main.sleep(engineTimeLimitPerMoveMillis);
+
+        // terminate the webworker and make the recommended engine move
+        engineWorker.terminate();
+        makeEngineMove(currentEngineMove);
     }
 
     /**
      * This method takes care of all the logic involved in making an engine move
-     * It is async because it needs to wait for the engine to finish its calculation
+     * It gets called after the engine finishes its calculation
      */
-    async function makeEngineMove() {
+    function makeEngineMove(move) {
         if (!inEngineGame) return;
         if (!currentEngine) return console.error ("Attempting to make engine move, but no engine loaded!");
         
         const gamefile = game.getGamefile();
-        const move = await currentEngine.runEngine(gamefile);
-
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
         const endCoordsToAppendSpecial = math.deepCopyObject(move.endCoords);
