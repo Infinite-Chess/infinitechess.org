@@ -571,6 +571,7 @@ const engineCheckmatePractice = (function(){
         if (black_to_move) {
             let maxScore = -Infinity;
             for (let move of get_black_legal_moves(piecelist, coordlist)) {
+                if (!bestMove) bestMove = move;
                 const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
                 const new_score = alphabeta(new_piecelist, new_coordlist, depth - 1, false, alpha, beta).score;
                 if (new_score > maxScore) {
@@ -639,7 +640,7 @@ const engineCheckmatePractice = (function(){
             }
 
             // For now, just make the highest scoring move available without looking any deeper into the position
-            const move = alphabeta(start_piecelist, start_coordlist, 7, true, -Infinity, Infinity).move;
+            const move = alphabeta(start_piecelist, start_coordlist, 5, true, -Infinity, Infinity).move;
             const startCoords = [gamefile_royal_coords[0], gamefile_royal_coords[1]];
             const endCoords = [gamefile_royal_coords[0] + move[0], gamefile_royal_coords[1] + move[1]];
 
