@@ -9,8 +9,9 @@ const enginegame = (function(){
     let inEngineGame = false
     let ourColor; // white/black
     let currentEngine; // name of the current engine used
+    let currentEngineMove; // currently best move recommended by the engine
 
-    const engineTimeLimitPerMoveMillis = 1000;
+    const engineTimeLimitPerMoveMillis = 500; // hard time limit for the engine to think in milliseconds
 
     function areInEngineGame() { return inEngineGame }
 
@@ -37,7 +38,8 @@ const enginegame = (function(){
         // This make sure it will place us in black's perspective if applicable
         perspective.resetRotations()
 
-        currentEngine = gameOptions.currentEngine
+        currentEngine = gameOptions.currentEngine;
+        currentEngineMove = undefined;
         if (!currentEngine) return console.error (`Attempting to start game with unknown engine: ${currentEngine}`);
         console.log(`Started engine game with engine ${currentEngine}`);
     }
@@ -47,6 +49,7 @@ const enginegame = (function(){
         inEngineGame = false;
         ourColor = undefined;
         currentEngine = undefined;
+        currentEngineMove = undefined;
         perspective.resetRotations() // Without this, leaving an engine game of which we were black, won't reset our rotation.
     }
 
@@ -66,25 +69,41 @@ const enginegame = (function(){
     /**
      * This method is called externally when the player submits his move in an engine game
      */
-    function submitMove() {
+    async function submitMove() {
         if (!inEngineGame) return; // Don't do anything if it's not an engine game
-        if (game.getGamefile().gameConclusion) return; // Don't do anything if the game is over
+        const gamefile = game.getGamefile();
+        if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
-        // Let the engine take over now
-        makeEngineMove();
+        // Initialize the engine as a webworker
+        if (!window.Worker) return console.error('Your browser doesn\'t support web workers.');
+        let engineWorker = new Worker(`../scripts/game/chess/${currentEngine}.js`);
+        currentEngineMove = undefined;
+        engineWorker.onmessage = function(e) { 
+            currentEngineMove = e.data;
+            // console.log(`Updated the engine recommended move to ${JSON.stringify(currentEngineMove)}`);
+        };
+
+        // Send the gamefile to the engine web worker
+        engineWorker.postMessage(JSON.parse(JSON.stringify(gamefile)));
+
+        // give the engine time to think
+        await main.sleep(engineTimeLimitPerMoveMillis);
+
+        // terminate the webworker and make the recommended engine move
+        engineWorker.terminate();
+        if (!currentEngineMove) return console.error("Engine failed to submit a move within the allocated time limit!");
+        makeEngineMove(currentEngineMove);
     }
 
     /**
      * This method takes care of all the logic involved in making an engine move
-     * It is async because it needs to wait for the engine to finish its calculation
+     * It gets called after the engine finishes its calculation
      */
-    async function makeEngineMove() {
+    function makeEngineMove(move) {
         if (!inEngineGame) return;
         if (!currentEngine) return console.error ("Attempting to make engine move, but no engine loaded!");
         
         const gamefile = game.getGamefile();
-        const move = await currentEngine.runEngine(gamefile);
-
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
         const endCoordsToAppendSpecial = math.deepCopyObject(move.endCoords);

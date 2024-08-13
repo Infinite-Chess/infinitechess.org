@@ -1,6 +1,6 @@
 /**
  * This script runs a chess engine for checkmate practice that computes the best move for the black royal piece.
- * runEngine(gamefile) is the only function that is called from the outside.
+ * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.
  * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
  */
 
@@ -8,6 +8,22 @@
 
 
 const engineCheckmatePractice = (function(){
+
+    // Here, the engine webworker received messages from the outside
+    self.onmessage = function(e) {
+        /** @type {gamefile} */
+        const gamefile = e.data;
+        runEngine(gamefile);
+    }
+
+    // The move that is currently considered best by this engine
+    // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
+    let globallyBestMove;
+    let globallyBestScore = - Infinity;
+
+    // the real coordinates of the black royal piece in the gamefile
+    let gamefile_royal_coords;
+
     // Black royal piece properties. The black royal piece is always at square [0,0]
     const king_moves = [ 
         [-1,  1], [0,  1], [1,  1],
@@ -52,7 +68,7 @@ const engineCheckmatePractice = (function(){
         3: {rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]]}, // bishop
         4: {jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // knight
         5: {jumps: [[-1, 1], [0, 1], [1, 1], [-1, 0], [1, 0], [-1, -1], [0, -1], [1, -1]], is_royal: true}, // king
-        6: {jumps: [0, 1], is_pawn: true}, //pawn
+        6: {jumps: [[0, 1]], is_pawn: true}, //pawn
         7: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]],
             jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // amazon
         8: {jumps: [[2, 0], [3, 0], [2, 2], [3, 3], [0, 2], [0, 3], [-2, 2], [-3, 3], [-2, 0], [-3, 0],
@@ -64,31 +80,47 @@ const engineCheckmatePractice = (function(){
         11: {rides: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]} // knightrider
     };
 
+    // define what "short range" means for each piece. Jump moves to at least as near as the values in this table are considered shortrange
+    const shortRangeJumpDictionary = {
+        4: 5, // knight
+        5: 4, // king - cannot be captured
+        6: 4, // pawn
+        7: 5, // amazon
+        8: 8, // hawk
+        9: 5, // chancellor
+        10: 5, // archbishop
+    };
+
     // weights for piece values of white pieces
     const pieceExistenceEvalDictionary = {
         0: 0, // 0 corresponds to a captured piece
-        1: -100_000, // queen
-        2: -100_000, // rook
+        1: -1_000_000, // queen
+        2: -800_000, // rook
         3: -100_000, // bishop
-        4: -100_000, // knight
-        5: -100_000, // king
-        6: -100_000, //pawn
-        7: -100_000, // amazon
-        8: -100_000, //hawk
-        9: -100_000, // chancellor
-        10: -100_000, // archbishop
-        11: -100_000 // knightrider
+        4: -800_000, // knight
+        5: 0, // king - cannot be captured
+        6: -100_000, // pawn
+        7: -1_000_000, // amazon
+        8: -800_000, // hawk
+        9: -800_000, // chancellor
+        10: -800_000, // archbishop
+        11: -800_000 // knightrider
     };
 
     // weights and distance functions for white piece distance to the black king
+    // the first entry for each piece is for black to move, the second entry is for white to move
     const distancesEvalDictionary = {
-        3: [2, manhattanNorm], // bishop
-        4: [10, manhattanNorm],  // knight
-        5: [20, manhattanNorm],  // king
-        6: [30, manhattanNorm], // pawn
-        8: [11, manhattanNorm],  // hawk
-        10: [11, manhattanNorm],  // archbishop
-        11: [11, manhattanNorm],  // knightrider
+        1: [[2, manhattanNorm], [2, cappedManhattanNorm]], // queen
+        2: [[2, manhattanNorm], [2, cappedManhattanNorm]], // rook
+        3: [[2, manhattanNorm], [2, cappedManhattanNorm]], // bishop
+        4: [[15, manhattanNorm], [15, manhattanNorm]],  // knight
+        5: [[30, manhattanNorm], [30, manhattanNorm]],  // king
+        6: [[100, manhattanNorm], [100, manhattanNorm]], // pawn
+        7: [[14, manhattanNorm], [14, cappedManhattanNorm]], // amazon
+        8: [[16, manhattanNorm], [16, manhattanNorm]],  // hawk
+        7: [[2, manhattanNorm], [2, cappedManhattanNorm]], // chancellor
+        10: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // archbishop
+        11: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // knightrider
     };
 
     // eval scores for number of legal moves of black royal
@@ -97,7 +129,7 @@ const engineCheckmatePractice = (function(){
             // in check
             0: {
                 0: -Infinity, // checkmate
-                1: -100,
+                1: -75,
                 2: -50,
                 3: -25,
                 4: -12,
@@ -109,13 +141,13 @@ const engineCheckmatePractice = (function(){
             // not in check
             1: {
                 0: Infinity, // stalemate
-                1: -100,
-                2: -50,
-                3: -25,
-                4: -12,
-                5: -8,
-                6: -4,
-                7: -2,
+                1: -60,
+                2: -45,
+                3: -22,
+                4: -10,
+                5: -6,
+                6: -3,
+                7: -1,
                 8: 0
             },
         },
@@ -144,28 +176,40 @@ const engineCheckmatePractice = (function(){
             1: {
                 0: Infinity, // stalemate
                 1: -100,
-                2: -90,
-                3: -80,
-                4: -70,
-                5: -50,
-                6: -40,
-                7: -30,
-                8: -25,
-                9: -20,
-                10: -15,
-                11: -12.5,
-                12: -10,
-                13: -7.5,
-                14: -5,
-                15: -2.5,
+                2: -85,
+                3: -75,
+                4: -65,
+                5: -45,
+                6: -35,
+                7: -25,
+                8: -20,
+                9: -15,
+                10: -12.5,
+                11: -10,
+                12: -7.5,
+                13: -5,
+                14: -2,
+                15: -1,
                 16: 0
             },
         }
     };
 
+    // computes the 2-norm of a square
+    function diagonalNorm(square) {
+        return Math.sqrt(square[0]**2 + square[1]**2);
+    }
+
     // computes the manhattan norm of a square
     function manhattanNorm(square) {
         return Math.abs(square[0]) + Math.abs(square[1]);
+    }
+
+    // computes min(manhattan norm, manhattancap) of a square
+    function cappedManhattanNorm(square, manhattancap = 10) {
+        const manhattannorm = manhattanNorm(square);
+        if (manhattannorm < manhattancap) return manhattannorm;
+        else return manhattancap;
     }
 
     /**
@@ -183,26 +227,44 @@ const engineCheckmatePractice = (function(){
     }
 
     // checks if a rider on a given square threatens a given target square
-    function rider_threatens(direction, piece_square, target_square, piecelist, coordlist) {
+    // exclude_white_piece_squares specifies whether to exclude occupied squares from being threatened
+    // ignore_blockers specifies whether to completely ignore blocking pieces in piecelist&coordlist
+    // threatening_own_square specifies whether a piece can threaten its own square
+    function rider_threatens(direction, piece_square, target_square, piecelist, coordlist,
+        { exclude_white_piece_squares = false, ignore_blockers = false, threatening_own_square = false} = {}) {
+        if (threatening_own_square && squares_are_equal(piece_square, target_square)) return true;
         const [works, distance] = is_natural_multiple([target_square[0] - piece_square[0], target_square[1] - piece_square[1]], direction);
-        if (works) {
-            // loop over all potential blockers
-            for (let i = 0; i < coordlist.length; i++) {
-                if (piecelist[i] != 0) {
-                    const [collinear, thispiecedistance] = is_natural_multiple([coordlist[i][0] - piece_square[0], coordlist[i][1] - piece_square[1]], direction);
-                    if (collinear && thispiecedistance < distance) {
-                        return false;
-                    }
-                }
-            }
-            return true;
+        if (!works) return false;
+        if (ignore_blockers) return true;
+        // loop over all potential blockers
+        for (let i = 0; i < coordlist.length; i++) {
+            if (piecelist[i] == 0) continue;
+            const [collinear, thispiecedistance] = is_natural_multiple([coordlist[i][0] - piece_square[0], coordlist[i][1] - piece_square[1]], direction);
+            if (!collinear) continue;
+            if (exclude_white_piece_squares && thispiecedistance <= distance) return false;
+            else if (thispiecedistance < distance) return false;
         }
-        return false;
+        return true;
     }
 
     // adds two squares
     function add_move(square, v) {
         return [square[0] + v[0], square[1] + v[1]];
+    }
+
+    // stretches vector by scalar
+    function rescaleVector (scalar, v) {
+        return [scalar * v[0], scalar * v[1]];
+    }
+
+    // computes the scalar product of two vectors
+    function scalarProduct(v1, v2) {
+        return v1[0] * v2[0] + v1[1] * v2[1];
+    }
+
+    // computes the cross product of two vectors
+    function crossProduct(v1, v2) {
+        return v1[0] * v2[1] - v1[1] * v2[0];
     }
 
     // checks if two squares are equal
@@ -214,6 +276,14 @@ const engineCheckmatePractice = (function(){
     function tuplelist_contains_tuple(tuplelist, tuple) {
         for (let entry of tuplelist) {
             if (tuple[0] == entry[0] && tuple[1] == entry[1]) return true;
+        }
+        return false;
+    }
+
+    // checks if a square is occupied by a white piece
+    function square_is_occupied(square, piecelist, coordlist) {
+        for (let index = 0; index < piecelist.length; index++) {
+            if (piecelist[index] != 0 && squares_are_equal(coordlist[index], square)) return true;
         }
         return false;
     }
@@ -305,6 +375,154 @@ const engineCheckmatePractice = (function(){
         else return false;
     }
 
+    // calculate a list of interesting squares to move to for a white piece with a certain piece index
+    function get_white_piece_candidate_squares(piece_index, piecelist, coordlist) {
+        let candidate_squares = [];
+
+        const piece_type = piecelist[piece_index];
+
+        // piece no longer exists
+        if (piece_type == 0) return candidate_squares;
+
+        const piece_properties = pieceTypeDictionary[piece_type];
+        const piece_square = coordlist[piece_index];
+
+        // jump moves
+        if (piece_properties.jumps) {
+            const num_jumps = piece_properties.jumps.length;
+            const shortrangeLimit = shortRangeJumpDictionary[piece_type];
+            let best_target_square = 0;
+            let bestmove_distance = Infinity;
+            for (let move_index = 0; move_index < num_jumps; move_index++) {
+                const target_square = add_move(piece_square, piece_properties.jumps[move_index]);
+                // do not jump onto an occupied square
+                if (square_is_occupied(target_square, piecelist, coordlist)) continue;
+                // do not move a royal piece onto a square controlled by black
+                if (piece_properties.is_royal && tuplelist_contains_tuple(royal_moves, target_square)) continue;
+                const target_distance = manhattanNorm(target_square);
+                // only add jump moves that are short range in relation to black king
+                if (target_distance <= shortrangeLimit) {
+                    candidate_squares.push(target_square);
+                }
+                // keep single jump move nearest to the black king in memory
+                else if (target_distance < bestmove_distance) {
+                    bestmove_distance = target_distance;
+                    best_target_square = target_square;
+                }
+            }
+            // if no jump move has been added and piece has no ride moves, add single best jump move as candidate
+            if (candidate_squares.length == 0 && !piece_properties.rides) candidate_squares.push(best_target_square);
+        }
+
+        // ride moves
+        if (piece_properties.rides) {
+            const num_directions = piece_properties.rides.length;
+            // check each pair of rider directions v1 and v2.
+            // Project them onto the square coordinates by solving c1*v1 + c2*v2 == - piece_square.
+            // only works if movement directions are not collinear
+            // See https://math.stackexchange.com/a/1307635/998803
+            for (let i1 = 0; i1 < num_directions; i1++) {
+                const v1 = piece_properties.rides[i1];
+                for (let i2 = i1 + 1; i2 < num_directions; i2++) {
+                    const v2 = piece_properties.rides[i2];
+                    const denominator = crossProduct(v1, v2);
+                    if (denominator == 0) continue;
+                    const c1 = crossProduct(v2, piece_square) / denominator;
+                    const c2 = - crossProduct(v1, piece_square) / denominator;
+                    if (c1 < 0 || c2 <= 0) continue;
+                    // suitable values for c1 and c2 were found, now compute min and max values for c1 and c2 to consider
+                    // const wiggleroom = Math.abs(denominator) > 1 ? 2 : 1;
+                    const wiggleroom = 1;
+                    const c1_min = Math.ceil(c1 - wiggleroom);
+                    const c1_max = Math.floor(c1 + wiggleroom);
+                    const c2_min = Math.ceil(c2 - wiggleroom);
+                    const c2_max = Math.floor(c2 + wiggleroom);
+
+                    // adds suitable squares along v1 to the candidates list
+                    add_suitable_squares_to_candidate_list(
+                        candidate_squares, piece_square, v1, v2,
+                        c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
+                    )
+
+                    // adds suitable squares along v2 to the candidates list
+                    add_suitable_squares_to_candidate_list(
+                        candidate_squares, piece_square, v2, v1,
+                        c2_min, c2_max, c1_min, c1_max, piecelist, coordlist
+                    )
+                }
+            }
+        }
+
+        return candidate_squares;
+    }
+
+    // adds suitable squares along v1 to the candidates list, using v2 as the attack vector towards the king
+    function add_suitable_squares_to_candidate_list(
+        candidate_squares, piece_square, v1, v2,
+        c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
+    ){
+        // iterate through all candidate squares in v1 direction
+        candidates_loop:
+        for (let rc1 = c1_min; rc1 <= c1_max; rc1++) {
+            const target_square = add_move(piece_square, rescaleVector(rc1, v1));
+            // do not add square already in candidates list
+            if (tuplelist_contains_tuple(candidate_squares, target_square)) continue candidates_loop;
+            const square_near_king_1 = add_move(target_square, rescaleVector(c2_min, v2));
+            const square_near_king_2 = add_move(target_square, rescaleVector(c2_max, v2));
+            // ensure that piece threatens target square
+            if (!rider_threatens(v1, piece_square, target_square, piecelist, coordlist, {exclude_white_piece_squares: true})) continue;
+            // ensure that target square threatens square near black king
+            if (!rider_threatens(v2, target_square, square_near_king_1, piecelist, coordlist, {threatening_own_square: true}) &&
+                !rider_threatens(v2, target_square, square_near_king_2, piecelist, coordlist, {threatening_own_square: true})
+            ) continue;
+            // definitely add target_square if it is a royal move
+            if (!tuplelist_contains_tuple(royal_moves, target_square)) {
+                // loop over all accepted candidate squares to eliminate reduncancies with new square
+                redundancy_loop:
+                for (let i = 0; i < candidate_squares.length; i++) {
+                    // skip over accepted candidate square if it is a royal move
+                    if (tuplelist_contains_tuple(royal_moves, candidate_squares[i])) continue redundancy_loop;
+                    // skip over accepted candidate square if its coords have a different sign from the current candidate square
+                    else if (Math.sign(target_square[0]) != Math.sign(candidate_squares[i][0])) continue redundancy_loop;
+                    else if (Math.sign(target_square[1]) != Math.sign(candidate_squares[i][1])) continue redundancy_loop;
+                    // eliminate current candidate square if it lies on the same line as accepted candidate square, but further away
+                    else if (rider_threatens(v2, target_square, candidate_squares[i], piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
+                    // replace accepted candidate square with current candidate square if they lie on the same line as, but new square is nearer
+                    else if (rider_threatens(v2, candidate_squares[i], target_square, piecelist, coordlist, {ignore_blockers: true})) {
+                        candidate_squares[i] = target_square;
+                        continue candidates_loop;
+                    }
+                }
+            }
+            candidate_squares.push(target_square);
+        }
+    }
+
+    // calculate a list of interesting moves for the white pieces in the position given by piecelist&coordlist
+    function get_white_candidate_moves(piecelist, coordlist) {
+        let candidate_moves = [];
+        for (let piece_index = 0; piece_index < piecelist.length; piece_index++) {
+            candidate_moves.push(get_white_piece_candidate_squares(piece_index, piecelist, coordlist))
+        }
+        return candidate_moves;
+    }
+
+    /**
+     * Updates the position by moving the piece given by piece_index to target_square
+     * @param {Array} piece_index 
+     * @param {number[]} target_square 
+     * @param {Array} piecelist 
+     * @param {Array} coordlist 
+     * @returns {Array}
+     */
+    function make_white_move(piece_index, target_square, piecelist, coordlist) {
+        let new_piecelist = piecelist.map(a => {return a});
+        let new_coordlist = coordlist.map(a => {return [...a]});
+        new_coordlist[piece_index] = target_square;
+
+        return [new_piecelist, new_coordlist];
+    }
+
     /**
      * Given a direction that the black royal moves to, this shifts all white pieces relative to [0,0] and returns an updated piecelist&coordlist
      * @param {number[]} move 
@@ -335,23 +553,24 @@ const engineCheckmatePractice = (function(){
      * TODO: cap distance function when white to move
      * @param {Array} piecelist 
      * @param {Array} coordlist 
+     * @param {Boolean} black_to_move - false on white's turns, true on black's turns
      * @returns {Number}
      */
-    function get_position_evaluation(piecelist, coordlist) {
+    function get_position_evaluation(piecelist, coordlist, black_to_move) {
         let score = 0;
 
         // add penalty based on number of legal moves of black royal
         const incheck = is_check(piecelist, coordlist);
         score += legalMoveEvalDictionary[royal_type][incheck ? 0 : 1][get_black_legal_move_amount(piecelist, coordlist)];
 
-        
+        const black_to_move_num = black_to_move ? 1 : 0;
         for (let i = 0; i < piecelist.length; i++) {
             // add penalty based on existence of white pieces
             score += pieceExistenceEvalDictionary[piecelist[i]];
 
-            // add penalty based on distance of black royal to white shortrange pieces
+            // add score based on distance of black royal to white shortrange pieces
             if (piecelist[i] in distancesEvalDictionary) {
-                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]];
+                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]][black_to_move_num];
                 score += weight * distancefunction(coordlist[i]);
             }
         }
@@ -360,39 +579,123 @@ const engineCheckmatePractice = (function(){
     }
 
     /**
-     * Given a piecelist&coordlist, this function returns the best possible square that the black royal can move to
+     * Performs a standard search with alpha-beta pruning through the game tree and returns the best score and move for black it finds
      * @param {Array} piecelist 
      * @param {Array} coordlist 
-     * @returns {Array}
+     * @param {Number} depth 
+     * @param {Number} start_depth - does not get changed at all during recursion
+     * @param {Boolean} black_to_move 
+     * @param {Number} alpha 
+     * @param {Number} beta 
+     * @returns {Object} with properties "score", "move" and "termination_depth"
      */
-    function get_best_next_move(piecelist, coordlist){
-        let best_score = - Infinity;
-        let best_move;
-        for (let move of get_black_legal_moves(piecelist, coordlist)) {
-            const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-            const new_score = get_position_evaluation(new_piecelist, new_coordlist);
-            if (new_score > best_score || !best_move) {
-                best_score = new_score;
-                best_move = move;
-            } else if (new_score == best_score) {
-                if (Math.random() < 0.5) {
-                    best_move = move;
-                }
-            }
+    function alphabeta(piecelist, coordlist, depth, start_depth, black_to_move, alpha, beta) {
+        if (depth == 0 || get_black_legal_move_amount(piecelist, coordlist) == 0) {
+            return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth};
         }
 
-        return best_move;
+        let bestMove;
+
+        if (black_to_move) {
+            let maxScore = -Infinity;
+            let bestDepth = depth;
+            for (let move of get_black_legal_moves(piecelist, coordlist)) {
+                const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
+                const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta)
+                const new_score = evaluation.score;
+                const termination_depth = evaluation.termination_depth;
+                if (new_score >= maxScore) {
+                    if (new_score > maxScore || termination_depth < bestDepth || (termination_depth == bestDepth && Math.random() < 0.5)) {
+                        bestMove = move;
+                        maxScore = new_score;
+                        bestDepth = termination_depth;
+                        if (depth == start_depth && new_score > globallyBestScore && !squares_are_equal(move, globallyBestMove)) {
+                            globallyBestMove = move;
+                            globallyBestScore = new_score;
+                            self.postMessage(move_to_gamefile_move(globallyBestMove));
+                        }
+                    }
+                }
+                alpha = Math.max(alpha, new_score);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
+            if (!bestMove) bestMove = get_black_legal_moves(piecelist, coordlist)[0];
+            return {score: maxScore, move: bestMove, termination_depth: bestDepth};
+        } else {
+            let minScore = Infinity;
+            let bestDepth = -1;
+            const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
+            // go through pieces for in increasing order of what piece has how many candidate moves
+            const indices = [...Array(piecelist.length).keys()];
+            indices.sort((a, b) => { return candidate_moves[a].length - candidate_moves[b].length });
+            for (let piece_index of indices) {
+                for (let target_square of candidate_moves[piece_index]) {
+                    const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
+                    const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta);
+                    const new_score = evaluation.score;
+                    const termination_depth = evaluation.termination_depth;
+                    if (new_score <= minScore) {
+                        if (new_score < minScore || termination_depth > bestDepth || (termination_depth == bestDepth && Math.random() < 0.5)) {
+                            minScore = new_score;
+                            bestDepth = termination_depth;
+                        }
+                    }
+                    beta = Math.min(beta, new_score);
+                    if (beta <= alpha) {
+                        break;
+                    }
+                }
+            }
+            return {score: minScore, termination_depth: bestDepth};
+        }
+    }
+
+    /**
+     * Performs a search with alpha-beta pruning through the game tree with iteratively greater depths
+     * @param {Array} piecelist 
+     * @param {Array} coordlist 
+     * @param {Number} maxdepth 
+     * @returns {Move} best move
+     */
+    function runIterativeDeepening(piecelist, coordlist, maxdepth) {
+        // immediately initialize and submit globallyBestMove, in case the engine gets immediately interrupted
+        const black_moves = get_black_legal_moves(piecelist, coordlist);
+        globallyBestMove = black_moves[Math.floor(Math.random() * black_moves.length)];
+        const [new_piecelist, new_coordlist] = make_black_move(globallyBestMove, piecelist, coordlist);
+        globallyBestScore = get_position_evaluation(new_piecelist, new_coordlist, false);
+        self.postMessage(move_to_gamefile_move(globallyBestMove));
+
+        // iteratively deeper and deeper search
+        for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
+            const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity);
+            if (evaluation.move && !squares_are_equal(evaluation.move, globallyBestMove)) {
+                globallyBestMove = evaluation.move;
+                globallyBestScore = evaluation.score;
+                self.postMessage(move_to_gamefile_move(globallyBestMove))
+            }
+            // console.log(`Depth ${depth}: Best score: ${evaluation.score}, Best move: ${move}.`);
+        }
+    }
+
+    /**
+     * Converts a target square for the black king to move to into a Move Object, taking into account gamefile_royal_coords
+     * @param {number[]} target_square 
+     * @returns {Move}
+     */
+    function move_to_gamefile_move(target_square) {
+        const endCoords = [gamefile_royal_coords[0] + target_square[0], gamefile_royal_coords[1] + target_square[1]];
+        return {startCoords: gamefile_royal_coords, endCoords: endCoords};
     }
 
     /**
 	 * This function is called from outside and initializes the engine calculation given the provided gamefile
 	 * @param {gamefile} gamefile - the gamefile
-	 * @returns {Promise<Move>} - promise to the move with the highest score
 	 */
-    async function runEngine(gamefile) {
+    function runEngine(gamefile) {
         try {
             // get real coordinates and parse type of black royal piece
-            let gamefile_royal_coords;
             if (gamefile.ourPieces["kingsB"].length != 0){
                 gamefile_royal_coords = gamefile.ourPieces["kingsB"][0];
                 royal_moves = king_moves;
@@ -410,29 +713,34 @@ const engineCheckmatePractice = (function(){
             start_coordlist = [];
             for (let key in gamefile.piecesOrganizedByKey) {
                 const pieceType = gamefile.piecesOrganizedByKey[key];
-                if (math.getWorBFromType(pieceType) != "W") continue; // ignore nonwhite pieces
-                let coords = math.getCoordsFromKey(key);
+                if (pieceType.slice(-1) != "W") continue; // ignore nonwhite pieces
+                let coords = key.split(',').map(Number);
                 start_piecelist.push(pieceNameDictionary[pieceType]);
                 // shift all white pieces, so that the black royal is at [0,0]
                 start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
             }
 
-            // For now, just make the highest scoring move available without looking any deeper into the position
-            const move = get_best_next_move(start_piecelist, start_coordlist);
-            const startCoords = [gamefile_royal_coords[0], gamefile_royal_coords[1]];
-            const endCoords = [gamefile_royal_coords[0] + move[0], gamefile_royal_coords[1] + move[1]];
+            // run iteratively deepened move search
+            runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
-            await main.sleep(500) // unnecessary delay
-            return {startCoords: startCoords, endCoords: endCoords};
+            /*
+            let string = "";
+            let candidate_move_count = 0;
+            const candidate_moves = get_white_candidate_moves(start_piecelist, start_coordlist);
+            for (let i=0; i<start_coordlist.length; i++){
+                candidate_move_count += candidate_moves[i].length;
+                string += `Piece at: ${start_coordlist[i]} 
+                move to ${candidate_moves[i]}
+                total amount: ${candidate_moves[i].length}\n`;
+            }
+            // alert(`Total move count: ${candidate_move_count}`)
+            alert(string + `Total move count: ${candidate_move_count}`)
+            */
 
         } catch(e) {
             console.error("An error occured in the engine computation of the checkmate practice");
             console.error(e);
         }
-    }    
-
-    return Object.freeze({
-        runEngine
-    })
+    }
 
 })();
