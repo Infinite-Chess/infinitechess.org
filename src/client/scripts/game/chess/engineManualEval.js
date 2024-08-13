@@ -6,6 +6,8 @@
  * This script runs the chess engine for enginegames.
  * It is modular and may be replaced by any other engine script to test a different engine.
  * To that end, engine.runEngine(gamefile) is the only function that is called from the outside.
+ * 
+ * @author AmineCrafter101
  */
 
 "use strict";
