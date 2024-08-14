@@ -78,12 +78,12 @@ code_credits = [
 "由Andreas
 
 [member]
-verify_message = "Please check your email to verify your account."
-resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message me."]
-verify_confirm = "Thank you! Your account has been verified."
-rating = "Elo rating:"
-joined = "Joined:"
-seen = ["Seen:", " ago"]
+verify_message = "请检查您的电子邮箱以验证您的账户。"
+resend_message = ["没有收到邮件？请检查您的垃圾邮件文件夹。另外，", "再次发送。", " 如果仍然找不到，请", "联系我。"]
+verify_confirm = "感谢您！您的账户已验证。"
+rating = "Elo 评级:"
+joined = "加入时间:"
+seen = ["上次在线:", " 前"]
 reveal_info = "显示账号资料"
 account_info_heading = "账号资料"
 email = "电子邮箱:"
