@@ -228,10 +228,10 @@ player_white = "白方"
 player_black = "黑方"
 
 [play.pause]
-title = "站厅了"
+title = "暂停"
 resume = "继续"
-arrows = "Arrows: Defense"
-perspective = "Perspective: Off"
+arrows = "箭头: 防御"
+perspective = "视角: 关闭"
 copy = "复制棋局"
 paste = "粘贴棋局"
 main_menu = "主页"
