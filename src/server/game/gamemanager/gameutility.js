@@ -154,14 +154,14 @@ const gameutility = (function() {
             // Tell the currently connected window that another window opened
             if (game.whiteSocket) {
                 game.whiteSocket.metadata.sendmessage(game.whiteSocket, 'game','leavegame')
-                unsubClientFromGame(game.whiteSocket, { sendMessage: false })
+                unsubClientFromGame(game, game.whiteSocket, { sendMessage: false })
             }
             game.whiteSocket = playerSocket
         } else { // 'black'
             // Tell the currently connected window that another window opened
             if (game.blackSocket) {
                 game.blackSocket.metadata.sendmessage(game.blackSocket, 'game','leavegame')
-                unsubClientFromGame(game.blackSocket, { sendMessage: false })
+                unsubClientFromGame(game, game.blackSocket, { sendMessage: false })
             }
             game.blackSocket = playerSocket
         }
