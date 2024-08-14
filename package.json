@@ -37,6 +37,7 @@
     "build": "node build.mjs",
     "watch": "nodemon",
     "start": "node .",
-    "build-images": "node src/server/utility/generateImages.js"
+    "build-images": "node src/server/utility/generateImages.js",
+    "generate-dependancy-graph": "node src/server/utility/generateDependancyGraph.js"
   }
 }
