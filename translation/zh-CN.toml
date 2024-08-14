@@ -311,7 +311,7 @@ cancel = "取消"
 create_invite = "创建邀请函"
 cancel_invite = "取消邀请函"
 start_game = "开始"
-join_existing_active_games = "Join Existing - Active Games:"
+join_existing_active_games = "加入现有 - 活跃游戏："
 
 [play.javascript.onlinegame]
 afk_warning = "你是AFK."
