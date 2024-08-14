@@ -11,12 +11,12 @@ const ejs = require('ejs');
 // Other imports
 const configureMiddleware = require('./middleware/middleware')
 const wsserver = require("./wsserver");
-const gamemanager = require('./game/gamemanager/gamemanager')
 const getCertOptions = require('./config/certOptions');
 const { DEV_BUILD } = require('./config/config');
 const { saveMembersIfChangesMade } = require('./controllers/members');
 const { saveRolesIfChangesMade } = require('./controllers/roles');
 const { initTranslations } = require('./config/setupTranslations');
+const { logAllGames } = require('./game/gamemanager/gamemanager');
 
 // Initiate translations
 initTranslations();
@@ -50,7 +50,7 @@ async function handleCleanup(signal) {
 
     await saveMembersIfChangesMade();
     await saveRolesIfChangesMade();
-    await gamemanager.logAllGames();
+    await logAllGames();
 
     process.exit(0);
 }

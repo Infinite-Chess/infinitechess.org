@@ -7,6 +7,7 @@ const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const math1 = require('../math1')
 const movesscript1 = require('../movesscript1');
+const { setGameConclusion } = require('./gamemanager');
 
 
 /**
@@ -53,7 +54,10 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
     gameutility.sendMessageToSocketOfColor(game, 'white', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
     gameutility.sendMessageToSocketOfColor(game, 'black', 'general', 'notify', "server.javascript.ws-game_aborted_cheating")
 
-    return true;
+    // Cheating report was valid, terminate the game..
+
+    setGameConclusion(game, 'aborted')
+    gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 

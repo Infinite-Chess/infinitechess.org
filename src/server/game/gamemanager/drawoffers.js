@@ -7,6 +7,7 @@ const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const math1 = require('../math1')
 const movesscript1 = require('../movesscript1');
+const { setGameConclusion } = require('./gamemanager');
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -83,7 +84,10 @@ function acceptDraw(ws, game) {
         game.blackDrawOffer = 'confirmed'
     } else console.error(`Unknown color "${color}" when accepting draw!`)
 
-    return true; // Draw offer acceptance was a success!
+    // Accept draw offer
+
+    setGameConclusion(game, "draw agreement")
+    gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 /** 

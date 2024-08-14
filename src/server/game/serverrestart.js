@@ -6,12 +6,12 @@
  * The actual reading is done in src/server/game/invitesmanager
  */
 
-/** The time the server is restarting, if it is, in milliseconds since the Unix Opoch, otherwise false. */
+/** The time the server is restarting, if it is, in milliseconds since the Unix Opoch, otherwise false. @type {number | false}*/
 let serverRestartingAt = false;
 
 /**
  * Returns the time the server is restarting at, if it is, in milliseconds since the Unix Opoch, otherwise false.
- * @returns {number}
+ * @returns {number | false}
  */
 function getTimeServerRestarting() { return serverRestartingAt }
 
@@ -21,8 +21,14 @@ function getTimeServerRestarting() { return serverRestartingAt }
  */
 function setTimeServerRestarting(value) { serverRestartingAt = value }
 
+/**
+ * Cancel the server restart by setting the restart time to false
+ */
+function cancelServerRestart() { serverRestartingAt = false; }
+
 
 module.exports = {
     getTimeServerRestarting,
-    setTimeServerRestarting
+    setTimeServerRestarting,
+    cancelServerRestart
 }
