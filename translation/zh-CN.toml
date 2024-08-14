@@ -160,15 +160,15 @@ editing_paragraphs = [
 back = "返回"
 
 [play.guide.pieces]
-chancellor = {name="Chancellor", description="Moves like a rook and a knight combined."},
-archbishop = {name="Archbishop", description="Moves like a bishop and a knight combined."},
-amazon = {name="Amazon", description="Moves like a queen and a knight combined. This is the strongest piece in the game!"},
-guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."},
-hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."},
-centaur = {name="Centaur", description="Moves like a knight and a guard combined."},
-knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
-obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."},
-void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."},
+chancellor = {name="大臣", description="像车和骑士的组合一样移动。"}
+archbishop = {name="主教骑士", description="像主教和骑士的组合一样移动。"}
+amazon = {name="女皇", description="像皇后和骑士的组合一样移动。这是游戏中最强大的棋子！"}
+guard = {name="护卫", description="像国王一样移动，但不易受将军或将死。"}
+hawk = {name="鹰", description="在任何方向上跳跃2或3格。"}
+centaur = {name="人马", description="像骑士和护卫的组合一样移动。"}
+knightrider = {name="骑士骑士", description="像骑士一样在一个方向上无限跳跃，直到被阻挡。"}
+obstacle = {name="障碍物", description="一个中立棋子（不由任何玩家控制），阻挡移动，但可以被捕获。"}
+void = {name="虚空", description="一个中立棋子（不由任何玩家控制），表示棋盘的缺失。棋子不能穿过或移动到它上面。"}
 
 
 [play.play-menu]
