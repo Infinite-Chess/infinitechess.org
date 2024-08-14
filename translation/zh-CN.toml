@@ -110,12 +110,12 @@ js-pwd_too_long = "密码禁止多于七十二个字母"
 js-pwd_not_pwd = "密码禁止是'password'"
 
 [play.main-menu]
-credits = "Credits"
+credits = "鸣谢"
 play = "开始"
 guide = "指南"
-editor = "Board Editor"
-loading = "LOADING"
-error = "ERROR"
+editor = "棋盘编辑器"
+loading = "加载中"
+error = "错误"
 
 [play.guide]
 title = "指南"
