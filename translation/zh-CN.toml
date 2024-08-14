@@ -119,45 +119,45 @@ error = "错误"
 
 [play.guide]
 title = "指南"
-rules = "规定"
+rules = "规则"
 rules_paragraphs = [
-"The rules to Infinite Chess are almost identical to classical chess, except the board is infinite in all directions! These are the only notes and changes you need to be aware of:",
-"Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions!",
-["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines, they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
-"Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
-"All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
+"无限国际象棋的规则与经典国际象棋几乎相同，唯一的区别是棋盘在所有方向上都是无限的！以下是您需要注意的更改和说明：",
+"滑动移动的棋子，如车、主教和皇后，每回合移动的距离没有限制！只要路径畅通无阻，您可以移动数百万格！",
+["在“经典”默认变体中，白兵在第8排晋升，黑兵在第1排晋升。在这张图片中，细黑线表示这一点，它们很微弱，看看您是否能找到它们！兵只需要到达相对的线即可晋升，", "不需要", "越过它。"],
+"棋盘方格不再用字母和数字（例如a1）表示，而是用x和y坐标对来定义。a1方格变成了(1,1)，h8方格变成了(8,8)。在桌面设备上，鼠标悬停的坐标会显示在屏幕顶部。",
+"其他规则与经典国际象棋相同，例如将军、逼和、三次重复、50步规则、王车易位、“吃过路兵”等！"
 ]
 careful_heading = "小心!"
 careful_paragraphs = [
-"The openness of the infinite board means it is very easy to exploit forks, pins, and skewers. Your backside is often very vulnerable. Watch out for tactics like this! Be creative about forming protection for your king and rooks! Opening strategy is very different from classical chess.",
-"Many other variants have been created with the aim of strengthening your backside."
+"无限棋盘的开放性意味着很容易利用叉子、钉子和斜线攻击。您的后方通常非常脆弱。小心这样的战术！在保护国王和车的过程中要有创造力！开局策略与经典国际象棋非常不同。",
+"为了增强您的后方，已经创建了许多其他变体。"
 ]
-controls_heading = "Controls"
-controls_paragraph = "Click and drag the board to move around. Scroll to zoom in and out. Click any piece, including your opponent's pieces, to view their legal moves at any point! Additional controls are:"
+controls_heading = "控制"
+controls_paragraph = "点击并拖动棋盘来移动。滚动鼠标滚轮进行缩放。点击任何棋子，包括对手的棋子，在任何时候查看它们的合法移动！其他控制如下："
 keybinds = [
-" to move around.",
-["Space", " and ", "Shift", " to zoom in and out."],
-["Escape", " to pause the game."],
-["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu. Clicking these arrows will teleport you to the piece they're pointing to."],
-" will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
+" 来移动棋盘。",
+["空格键", " 和 ", "Shift键", " 来缩放。"],
+["Esc键", " 来暂停游戏。"],
+["Tab键", " 切换屏幕边缘的箭头指示器，用于指向屏幕外的棋子。默认情况下，此模式设置为“防御”，显示从当前位置可以移动到您所在位置的棋子的箭头。但按", "Tab键", "可以将此模式切换为“全部”或“关闭”。“全部”模式显示所有在那些直线和斜线上的棋子，无论它们是否可以直线或斜线移动。此设置也可以在暂停菜单中切换。点击这些箭头会将您传送到它们指向的棋子位置。"],
+" 在本地游戏中切换“编辑模式”。这允许您将任何棋子移动到棋盘上的其他位置！非常适合分析。"
 ]
-controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
+controls_paragraph2 = "这些是您需要了解的主要控制。但如果您需要，这里还有一些额外的操作！"
 keybinds_extra = [
-" will reset the rendering of the pieces. This is useful if they turn invisible. This glitch can happen if you move extreme distances (like 1e21).",
-" will toggle the rendering of the navigation and game info bars, which can be useful for recording. Streaming and making videos on the game is welcome!",
-" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed, to save compute.",
-" will toggle icon-rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throddler, but they can be toggled back on with ",
-[" (backtick, or the same key as ", ") will toggle Debug mode."],
+" 将重置棋子的渲染。如果它们变得不可见，这将非常有用。如果您移动极远的距离（例如1e21），可能会发生此错误。",
+" 将切换导航和游戏信息栏的渲染，这对录制很有用。欢迎在游戏中进行流媒体或制作视频！",
+" 将切换FPS计数器。这显示游戏每秒更新的次数，而不总是显示渲染的帧数，因为游戏在没有可见变化时跳过渲染以节省计算资源。",
+" 将切换图标渲染。这些是在您足够远地缩小时棋子的可点击缩略图。在导入超过50,000个棋子的游戏中，这将自动关闭，因为它是性能瓶颈，但您可以使用 ",
+[" （反引号，或与 ", "相同的键）将切换调试模式。"],
 ]
-fairy_heading = "Fairy Pieces"
-fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!"
-editing_heading = "Board Editing"
+fairy_heading = "仙子棋子"
+fairy_paragraph = "您已经掌握了玩默认“经典”变体所需的知识。仙子棋子不用于常规国际象棋，但被整合到其他变体中！如果您发现自己在某个变体中遇到了一些以前没见过的棋子，让我们在这里学习它们的工作原理！"
+editing_heading = "棋盘编辑"
 editing_paragraphs = [
-["There is an external ", "board editor", " currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
-"To play a custom position with a friend, have them join a private invite, then both of you paste the game code before you start playing!",
-"An in-game board editor is still planned.",
+["目前有一个外部 ", "棋盘编辑器", "，可在公共Google表单上使用！它包含使用说明。此工具需要一些基本的Google表单知识。设置后，您将能够通过选项菜单中的“粘贴游戏”按钮创建和导入自定义棋局位置！"],
+"要与朋友玩自定义棋局，请让他们加入私人邀请，然后在开始游戏之前，双方都粘贴游戏代码！",
+"游戏内棋盘编辑器仍在计划中。",
 ]
-back = "Back"
+back = "返回"
 
 [play.guide.pieces]
 chancellor = {name="Chancellor", description="Moves like a rook and a knight combined."},
