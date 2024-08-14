@@ -371,7 +371,7 @@ const onlinegame = (function(){
         clock.edit(message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt)
 
         // For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
-        if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
+        if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile);
 
         rescheduleAlertServerWeAFK();
         stopOpponentAFKCountdown(); // The opponent is no longer AFK if they were
@@ -450,7 +450,7 @@ const onlinegame = (function(){
         // When the game has ended by time/disconnect/resignation/aborted
         clock.edit(messageContents.timerWhite, messageContents.timerBlack, messageContents.timeNextPlayerLosesAt)
 
-        if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
+        if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile);
     }
 
     /**
@@ -641,7 +641,7 @@ const onlinegame = (function(){
     function onMainMenuPress() {
         if (!inOnlineGame) return;
         const gamefile = game.getGamefile();
-        if (gamefile.gameConclusion) {
+        if (gamefileutility.isGameOver(gamefile)) {
             if (websocket.getSubs().game) {
                 websocket.sendmessage('general','unsub','game');
                 websocket.getSubs().game = false;
