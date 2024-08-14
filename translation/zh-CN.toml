@@ -43,40 +43,39 @@ about_paragraphs = [
 patreon_title = "Patreon支持者"
 
 [credits]
-title = "Credits"
-copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
-variants_heading = "Variants"
+title = "鸣谢"
+copyright = "网站上未列出的任何内容均为 www.InfiniteChess.org 的版权"
+variants_heading = "变体"
 variants_credits = [
-"Core designed by Andreas Tsevas.",
-"Space designed by Andreas Tsevas.",
-"Space Classic designed by Andreas Tsevas.",
-"Coaip (Chess on an Infinite Plane) designed by Vickalan.",
-"Pawn Horde designed by Inaccessible Cardinal.",
-"Abundance designed by Clicktuck Suskriberz.",
-"Pawndard by SexiLexi.",
-"Classical+ by SexiLexi.",
-"Knightline by Inaccessible Cardinal.",
-"Knighted Chess by cycy98.",
-"designed by Cory Evans and Joel Hamkins.",
-"designed by Andreas Tsevas.",
-"designed by Cory Evans and Joel Hamkins.",
-"designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
+"核心设计者：Andreas Tsevas。",
+"空间设计者：Andreas Tsevas。",
+"经典空间设计者：Andreas Tsevas。",
+"无限平面上的国际象棋（Coaip）设计者：Vickalan。",
+"兵群设计者：Inaccessible Cardinal。",
+"丰富设计者：Clicktuck Suskriberz。",
+"Pawndard设计者：SexiLexi。",
+"Classical+设计者：SexiLexi。",
+"Knightline设计者：Inaccessible Cardinal。",
+"Knighted Chess设计者：cycy98。",
+"设计者：Cory Evans 和 Joel Hamkins。",
+"设计者：Andreas Tsevas。",
+"设计者：Cory Evans 和 Joel Hamkins。",
+"设计者：Cory Evans，Joel Hamkins 和 Norman Lewis Perlmutter。",
 ]
-textures_heading = "Textures"
-textures_licensed_under = "textures licensed under the"
+textures_heading = "纹理"
+textures_licensed_under = "纹理使用了"
 textures_credits = [
-"Gold coin by Quolte.",
+"金币设计者：Quolte。",
 ]
 sounds_heading = "声音"
 sounds_credits = [
-["Some sounds are provided by the", "project under the"],
-"Other sounds created by Naviary.",
+["部分声音由", "项目提供，使用许可为"],
+"其他声音由Naviary创作。",
 ]
 code_heading = "程序"
 code_credits = [
-"by Brandon Jones and Colin MacKenzie IV.",
-"by Andreas Tsevas and Naviary.",
-]
+"由Brandon Jones 和 Colin MacKenzie IV 编写。",
+"由Andreas
 
 [member]
 verify_message = "Please check your email to verify your account."
