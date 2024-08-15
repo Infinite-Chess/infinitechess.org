@@ -129,14 +129,18 @@ function Game() {
      * AFK if they are currently AFK. */
     this.autoAFKResignTime = undefined;
 
-    /** Last move a draw was offered */
-    this.whiteDrawOfferMove = undefined
-    this.blackDrawOfferMove = undefined
-
-    /** The states of players offering draws 
-     * @type {string|undefined} 'offering' / 'declined' / undefined */
-    this.whiteDrawOffer = undefined
-    this.blackDrawOffer = undefined
+    /** Information about the draw offers of the game. */
+    this.drawOffers = {
+        /** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise undefined. @type {string | undefined} */
+        state: undefined,
+        /** Ply (half-move) numbers of when each color last extended a draw offer. Players may not extend draw offers too rapidly. */
+        lastOfferPly: {
+            /** The last ply (half-move) WHITE extended a draw offer, if they have, otherwise undefined. @type {number | undefined} */
+            white: undefined,
+            /** The last ply (half-move) BLACK extended a draw offer, if they have, otherwise undefined. @type {number | undefined} */
+            black: undefined,
+        },
+    }
 
     /** Contains information about which sides are
      * about to lose by disconnection. */

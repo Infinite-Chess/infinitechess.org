@@ -14,7 +14,8 @@ const { executeSafely_async } = require('../../utility/errorGuard');
 
 const { getTimeServerRestarting } = require('../serverrestart');
 const { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
-const { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } = require('./gamecount')
+const { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } = require('./gamecount');
+const { closeDrawOffer } = require('./drawoffers');
 
 
 
@@ -399,8 +400,7 @@ function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
     // Also cancel the one that auto loses by AFK
     cancelAutoAFKResignTimer(game);
     cancelDisconnectTimers(game);
-    game.blackDrawOffer = 'declined'
-    game.whiteDrawOffer = 'declined'
+    closeDrawOffer(game);
 
     // Set a 5-second timer to delete it and change elos,
     // to give the other client time to oppose the conclusion if they want.

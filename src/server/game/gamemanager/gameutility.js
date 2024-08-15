@@ -53,6 +53,8 @@ const gameutility = (function() {
             variant: inviteOptions.variant,
             clock: inviteOptions.clock,
             untimed: clockweb.isClockValueInfinite(inviteOptions.clock),
+            startTimeMillis: null,
+            incrementMillis: null,
             rated: inviteOptions.rated === "Rated",
             moves: [],
             blackGoesFirst: variant1.isVariantAVariantWhereBlackStarts(inviteOptions.variant),
@@ -64,8 +66,10 @@ const gameutility = (function() {
                     black: {}
                 }
             },
-            startTimeMillis: null,
-            incrementMillis: null,
+            drawOffers: {
+                state: undefined,
+                lastOfferPly: {}
+            },
         }
 
         if (!newGame.untimed) { // Set the start time and increment properties
@@ -243,8 +247,8 @@ const gameutility = (function() {
             moves: game.moves,
             gameConclusion: game.gameConclusion,
             // REMOVE draw offer details from here and put below!
-            whiteDrawOfferMove: game.whiteDrawOfferMove,
-            blackDrawOfferMove: game.blackDrawOfferMove
+            whiteDrawOfferMove: game.drawOffers.lastOfferPly.white,
+            blackDrawOfferMove: game.drawOffers.lastOfferPly.black
         }
         // Include additional stuff if relevant
         if (!game.untimed) {
@@ -329,8 +333,8 @@ const gameutility = (function() {
         if (isAFKTimerActive(game)) messageContents.autoAFKResignTime = game.autoAFKResignTime;
         // SEND THEM INFO ABOUT OPEN DRAW OFFERS
         // ...
-        if (game.whiteDrawOfferMove) messageContents.whiteDrawOfferMove = game.whiteDrawOfferMove;
-        if (game.blackDrawOfferMove) messageContents.blackDrawOfferMove = game.blackDrawOfferMove;
+        if (game.drawOffers.lastOfferPly.white) messageContents.whiteDrawOfferMove = game.drawOffers.lastOfferPly.white;
+        if (game.drawOffers.lastOfferPly.black) messageContents.blackDrawOfferMove = game.drawOffers.lastOfferPly.black;
 
         // If their opponent has disconnected, send them that info too.
         const opponentColor = math1.getOppositeColor(color)

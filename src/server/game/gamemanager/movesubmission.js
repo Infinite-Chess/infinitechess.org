@@ -10,7 +10,7 @@ const wsutility = require('../wsutility');
 const math1 = require('../math1')
 const wincondition1 = require('../wincondition1');
 
-const { declineDraw } = require('./drawoffers');
+const { declineDraw } = require('./onOfferDraw');
 const { resyncToGame } = require('./resync');
 const { getGameByID, pushGameClock, setGameConclusion } = require('./gamemanager');
 

@@ -13,7 +13,7 @@
 const { Socket, WebsocketMessage } = require('../TypeDefinitions')
 
 const { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } = require('./gamemanager');
-const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
+const { offerDraw, acceptDraw, declineDraw } = require('./onOfferDraw');
 const { abortGame, resignGame } = require('./abortresigngame');
 const { onAFK, onAFK_Return } = require('./onAFK');
 const { onReport } = require('./cheatreport');
