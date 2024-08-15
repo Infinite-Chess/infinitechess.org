@@ -4,6 +4,7 @@
 
 const { getTranslation } = require('../config/setupTranslations');
 const { ensureJSONString } = require('../utility/JSONUtils');
+// eslint-disable-next-line no-unused-vars
 const { Socket } = require('./TypeDefinitions')
 
 const wsutility = (function() {

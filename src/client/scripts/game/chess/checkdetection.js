@@ -256,7 +256,7 @@ const checkdetection = (function(){
         // There are 2 ways a sliding move can put you in check:
 
         // 1. By not blocking, or capturing an already-existing check.
-        if (addressExistingChecks(gamefile, moves, royalCoords, pieceSelected.coords, color)) return;
+        if (addressExistingChecks(gamefile, moves, gamefile.inCheck, pieceSelected.coords, color)) return;
 
         // 2. By opening a discovered on your king.
         royalCoords.forEach(thisRoyalCoords => { // Don't let the piece open a discovered on ANY of our royals! Not just one.
@@ -274,7 +274,7 @@ const checkdetection = (function(){
      * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
      */
     function addressExistingChecks (gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
-        if (!gamefile.inCheck) return false; // Exit if not in check
+        if (!gamefile.inCheck || gamefile.inCheck.length === 0) return false; // Exit if not in check
         const isOurCheck = color === gamefile.whosTurn;
         if (!isOurCheck) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 

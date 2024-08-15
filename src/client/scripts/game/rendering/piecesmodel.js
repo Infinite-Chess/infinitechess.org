@@ -364,7 +364,7 @@ const piecesmodel = {
         if (!piece) console.log("No piece at these coords to retrieve data from!")
 
         const index = piecesmodel.getPieceIndexInData(gamefile, piece)
-        printbufferdataOnIndex(index);
+        piecesmodel.printbufferdataOnIndex(index);
     },
 
     /**
@@ -378,7 +378,7 @@ const piecesmodel = {
         const stridePerPiece = gamefile.mesh.stride * piecesmodel.pointsPerSquare;
         let i = index * stridePerPiece;
 
-        for (a = 0; a < stridePerPiece; a++) {
+        for (let a = 0; a < stridePerPiece; a++) {
             const thisIndex = i + a;
             console.log(gamefile.mesh.data32[thisIndex])
         }

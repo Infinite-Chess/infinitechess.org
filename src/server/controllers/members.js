@@ -277,7 +277,7 @@ const deleteRefreshToken = async (username, token) => {
     delete refreshTokenHash[token]
     // Delete from the member data
     const thisMember = members[username];
-    index = thisMember.refreshTokens.indexOf(token)
+    const index = thisMember.refreshTokens.indexOf(token)
     thisMember.refreshTokens.splice(index, 1)
 
     membersHasBeenEdited = true; // Flag it to be saved

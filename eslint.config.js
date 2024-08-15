@@ -5,8 +5,8 @@ module.exports = [
   pluginJs.configs.recommended, // Overwrites "rules" below
   {
     rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above
-      'no-undef': 'error',
-      'no-unused-vars': 'warn',
+      'no-undef': 'error', // Undefined variables
+      'no-unused-vars': 'warn', // Unused variables
     },
     languageOptions: {
       sourceType: "module", // Can also be "commonjs", but "import" and "export" statements will give an eslint error
