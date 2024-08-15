@@ -137,8 +137,7 @@ async function generateAccount({ username, email, password, autoVerify }) {
     if (!autoVerify) newMember.verified = [false, generateID(24)]
     
     // Without 'await' this returns a promise.
-    const success = addMember(usernameLowercase, newMember)
-    if (!success) return res.status(500).redirect('/500') // Server error (username already exists)
+    if (!addMember(usernameLowercase, newMember)) return; // Failure to create (username taken). If we do proper checks this point should NEVER happen.
     
     const logTxt = `Created new member: ${newMember.username}`
     logEvents(logTxt, 'newMemberLog.txt', { print: true });
@@ -227,8 +226,7 @@ const onlyLettersAndNumbers = function (string) {
 
 // Returns true if bad word is found
 const checkProfanity = function (string) {
-    for (let i = 0; i < profainWords.length; i++) {
-        profanity = profainWords[i];
+    for (const profanity of profainWords) {
         if (string.includes(profanity)) return true;
     }
     return false;
@@ -248,6 +246,7 @@ const doEmailFormatChecks = function (string, req, res) {
 
 const isValidEmail = function (string) {
     // Credit for the regex: https://stackoverflow.com/a/201378
+    // eslint-disable-next-line no-control-regex
     const regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
     return regex.test(string);
 }
@@ -261,6 +260,7 @@ const doPasswordFormatChecks = function (password, req, res) {
 }
 
 const isValidPassword = function (string) {
+    // eslint-disable-next-line no-useless-escape
     const regex = /^[a-zA-Z0-9!@#$%^&*\?]+$/;
     if (regex.test(string) === true) return true;
     return false;

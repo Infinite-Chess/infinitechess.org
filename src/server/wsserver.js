@@ -4,6 +4,7 @@ const { rateLimitWebSocket } = require("./middleware/rateLimit")
 const { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } = require('./middleware/logEvents');
 const { DEV_BUILD, HOST_NAME, GAME_VERSION } = require('./config/config');
 
+// eslint-disable-next-line no-unused-vars
 const { WebsocketMessage, Socket } = require('./game/TypeDefinitions')
 const { genUniqueID, generateNumbID } = require('./game/math1');
 const wsutility = require('./game/wsutility');
@@ -246,11 +247,12 @@ function onmessage(req, ws, rawMessage) {
             // Forward them to our games module to handle their action
             handleGameRoute(ws, message);
             break;
-        default:
+        default: { // Surround this case in a block so it's variables are not hoisted
             const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true })
             sendmessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
             return;
+        }
     }
 }
 
@@ -507,11 +509,12 @@ function handleGeneralMessage(ws, data) { // data: { route, action, value, id }
         case 'feature-not-supported':
             handleFeatureNotSupported(ws, data.value);
             break;
-        default:
+        default: { // Surround this case in a block so that it's variables are not hoisted
             const errText = `UNKNOWN web socket received action in general route! ${data.action}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true });
             sendmessage(ws, 'general', 'printerror', `Unknown action "${data.action}" in route general.`)
             return;
+        }
     }
 }
 
@@ -529,11 +532,12 @@ function handleSubbing(ws, value) {
             // Subscribe them to the invites list
             subToInvitesList(ws)
             break;
-        default:
+        default: { // Surround this case in a block so that it's variables are not hoisted
             const errText = `Cannot subscribe user to strange new subscription list ${value}! Socket: ${wsutility.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true });
             sendmessage(ws, 'general', 'printerror', `Cannot subscribe to "${value}" list!`)
             return;
+        }
     }
 }
 
@@ -550,10 +554,11 @@ function handleUnsubbing(ws, key, subscription, closureNotByChoice) { // subscri
             // a 5 second cushion before starting an auto-resignation timer
             unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice })
             break;
-        default:
+        default: { // Surround this case in a block so that it's variables are not hoisted
             const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`
             logEvents(errText, 'hackLog.txt', { print: true });
-            return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from '${key}' list!`)
+            return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`)
+        }
     }
 }
 

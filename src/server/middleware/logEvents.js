@@ -1,12 +1,12 @@
 const { format } = require('date-fns');
 const { v4: uuid } = require('uuid');
 
-const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 
 const { getClientIP } = require("./IP");
 const wsutility = require('../game/wsutility');
+// eslint-disable-next-line no-unused-vars
 const { Socket } = require('../game/TypeDefinitions');
 const { ensureDirectoryExists } = require('../utility/fileUtils');
 

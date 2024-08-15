@@ -682,7 +682,7 @@ const math = (function() {
         if (type.endsWith('W')) return "white"
         else if (type.endsWith('B')) return "black"
         else if (type.endsWith('N')) return "neutral"
-        else throw new Error(`Cannot get the color of piece with type ${pieceType}`)
+        else throw new Error(`Cannot get the color of piece with type ${type}`)
     }
 
     function getColorFromWorB(WorB) {
@@ -801,7 +801,7 @@ const math = (function() {
     function isJson(str) {
         try {
             JSON.parse(str);
-        } catch (e) {
+        } catch {
             return false;
         }
         return true;
