@@ -4,9 +4,7 @@
 // eslint-disable-next-line no-unused-vars
 const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
-const wsutility = require('../wsutility');
 const math1 = require('../math1')
-const movesscript1 = require('../movesscript1');
 const { onPlayerLostByAbandonment } = require('./gamemanager');
 const { cancelAutoAFKResignTimer } = require('./afkdisconnect');
 

@@ -3,18 +3,15 @@
 const { logEvents } = require('../../middleware/logEvents');
 
 // Custom imports
-const { Socket, WebsocketMessage, Game } = require('../TypeDefinitions')
+// eslint-disable-next-line no-unused-vars
+const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const wsutility = require('../wsutility');
-const sendNotify = wsutility.sendNotify;
-const sendNotifyError = wsutility.sendNotifyError;
 const math1 = require('../math1')
-const wincondition1 = require('../wincondition1');
 const movesscript1 = require('../movesscript1');
 const statlogger = require('../statlogger');
 const { executeSafely_async } = require('../../utility/errorGuard');
 
-const { getTranslation } = require('../../config/setupTranslations');
 const { getTimeServerRestarting } = require('../serverrestart');
 const { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
 const { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } = require('./gamecount')
@@ -25,8 +22,8 @@ const { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount
  * Creates a new game when an invite is accepted.
  * Prints the game info and prints the active game count.
  * @param {Object} invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`, `publicity`.
- * @param {Object} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
- * @param {Object} player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+ * @param {Socket} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
+ * @param {Socket} player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
  */
 function createGame(invite, player1Socket, player2Socket) { // Player 1 is the invite owner.
     const gameID = math1.genUniqueID(5, activeGames);

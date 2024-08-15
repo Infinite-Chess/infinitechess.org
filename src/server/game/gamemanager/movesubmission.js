@@ -7,20 +7,10 @@ const { logEvents } = require('../../middleware/logEvents');
 const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const wsutility = require('../wsutility');
-const sendNotify = wsutility.sendNotify;
-const sendNotifyError = wsutility.sendNotifyError;
 const math1 = require('../math1')
 const wincondition1 = require('../wincondition1');
-const movesscript1 = require('../movesscript1');
-const statlogger = require('../statlogger');
-const { executeSafely_async } = require('../../utility/errorGuard');
 
-const { getTranslation } = require('../../config/setupTranslations');
-const { getTimeServerRestarting } = require('../serverrestart');
-const { offerDraw, acceptDraw, declineDraw } = require('./drawoffers');
-const { abortGame, resignGame } = require('./abortresigngame');
-const { onAFK, onAFK_Return, cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, cancelDisconnectTimer, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
-const { onReport } = require('./cheatreport');
+const { declineDraw } = require('./drawoffers');
 const { resyncToGame } = require('./resync');
 const { getGameByID, pushGameClock, setGameConclusion } = require('./gamemanager');
 
