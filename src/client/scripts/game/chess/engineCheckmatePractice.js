@@ -129,7 +129,7 @@ const engineCheckmatePractice = (function(){
             3: [2, manhattanNorm], // bishop
             4: [15, manhattanNorm], // knight
             5: [30, manhattanNorm], // king
-            6: [100, manhattanNorm], // pawn
+            6: [200, manhattanNorm], // pawn
             7: [14, manhattanNorm], // amazon
             8: [16, manhattanNorm], // hawk
             7: [2, manhattanNorm], // chancellor
@@ -138,8 +138,8 @@ const engineCheckmatePractice = (function(){
         };
 
         // eval scores for number of legal moves of black royal
-        legalMoveEvalDictionary = {
-            "k": {
+        if (royal_type == "k") {
+            legalMoveEvalDictionary = {
                 // in check
                 0: {
                     0: -Infinity, // checkmate
@@ -163,9 +163,10 @@ const engineCheckmatePractice = (function(){
                     6: -3,
                     7: -1,
                     8: 0
-                },
-            },
-            "rc": {
+                }
+            }
+        } else {
+            legalMoveEvalDictionary = {
                 // in check
                 0: {
                     0: -Infinity, // checkmate
@@ -205,9 +206,17 @@ const engineCheckmatePractice = (function(){
                     14: -2,
                     15: -1,
                     16: 0
-                },
+                }
             }
-        };
+        }
+
+        // variant-specific modifications to the weights:
+        switch(checkmateSelectedID) {
+            case "1K1Q1P-1k":
+                distancesEvalDictionary[1] = [-100, manhattanNorm];
+                distancesEvalDictionary[5] = [-10, manhattanNorm];
+                break;
+        }
     }
 
     // computes the 2-norm of a square
@@ -414,6 +423,21 @@ const engineCheckmatePractice = (function(){
                 if (square_is_occupied(target_square, piecelist, coordlist)) continue;
                 // do not move a royal piece onto a square controlled by black
                 if (piece_properties.is_royal && tuplelist_contains_tuple(royal_moves, target_square)) continue;
+                // check if target_square is a royal move
+                if (tuplelist_contains_tuple(royal_moves, target_square)) {
+                    let blunders_piece = true;
+                    // create copy of piece list without piece at piece_index
+                    let temp_piecelist = [...piecelist];
+                    temp_piecelist[piece_index] = 0;
+                    // only consider target square if another piece defends it as well, else it will be captured
+                    for (let index = 0; index < coordlist.length; index++){
+                        if (index != piece_index && piece_threatens_square(index, target_square, temp_piecelist, coordlist)) {
+                            blunders_piece = false;
+                            break;
+                        }
+                    }
+                    if (blunders_piece) continue;
+                } 
                 const target_distance = manhattanNorm(target_square);
                 // only add jump moves that are short range in relation to black king
                 if (target_distance <= shortrangeLimit) {
@@ -455,13 +479,13 @@ const engineCheckmatePractice = (function(){
 
                     // adds suitable squares along v1 to the candidates list
                     add_suitable_squares_to_candidate_list(
-                        candidate_squares, piece_square, v1, v2,
+                        candidate_squares, piece_index, piece_square, v1, v2,
                         c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
                     )
 
                     // adds suitable squares along v2 to the candidates list
                     add_suitable_squares_to_candidate_list(
-                        candidate_squares, piece_square, v2, v1,
+                        candidate_squares, piece_index, piece_square, v2, v1,
                         c2_min, c2_max, c1_min, c1_max, piecelist, coordlist
                     )
                 }
@@ -473,7 +497,7 @@ const engineCheckmatePractice = (function(){
 
     // adds suitable squares along v1 to the candidates list, using v2 as the attack vector towards the king
     function add_suitable_squares_to_candidate_list(
-        candidate_squares, piece_square, v1, v2,
+        candidate_squares, piece_index, piece_square, v1, v2,
         c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
     ){
         // iterate through all candidate squares in v1 direction
@@ -490,8 +514,21 @@ const engineCheckmatePractice = (function(){
             if (!rider_threatens(v2, target_square, square_near_king_1, piecelist, coordlist, {threatening_own_square: true}) &&
                 !rider_threatens(v2, target_square, square_near_king_2, piecelist, coordlist, {threatening_own_square: true})
             ) continue;
-            // definitely add target_square if it is a royal move
-            if (!tuplelist_contains_tuple(royal_moves, target_square)) {
+            // check if target_square is a royal move
+            if (tuplelist_contains_tuple(royal_moves, target_square)) {
+                // create copy of piece list without piece at piece_index
+                let temp_piecelist = [...piecelist];
+                temp_piecelist[piece_index] = 0;
+                // only add target square if another piece defends it as well, else it will be captured
+                for (let index = 0; index < coordlist.length; index++){
+                    if (index != piece_index && piece_threatens_square(index, target_square, temp_piecelist, coordlist)) {
+                        candidate_squares.push(target_square);
+                        continue candidates_loop;
+                    }
+                }
+            } 
+            // target square is not a royal move
+            else {
                 // loop over all accepted candidate squares to eliminate reduncancies with new square
                 redundancy_loop:
                 for (let i = 0; i < candidate_squares.length; i++) {
@@ -508,8 +545,8 @@ const engineCheckmatePractice = (function(){
                         continue candidates_loop;
                     }
                 }
+                candidate_squares.push(target_square);
             }
-            candidate_squares.push(target_square);
         }
     }
 
@@ -576,7 +613,7 @@ const engineCheckmatePractice = (function(){
 
         // add penalty based on number of legal moves of black royal
         const incheck = is_check(piecelist, coordlist);
-        score += legalMoveEvalDictionary[royal_type][incheck ? 0 : 1][get_black_legal_move_amount(piecelist, coordlist)];
+        score += legalMoveEvalDictionary[incheck ? 0 : 1][get_black_legal_move_amount(piecelist, coordlist)];
 
         for (let i = 0; i < piecelist.length; i++) {
             // add penalty based on existence of white pieces
@@ -738,10 +775,9 @@ const engineCheckmatePractice = (function(){
             // initialize the eval function weights
             initEvalWeights(checkmateSelectedID);
 
-            // run iteratively deepened move search
-            runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
+            
 
-            /*
+            
             let string = "";
             let candidate_move_count = 0;
             const candidate_moves = get_white_candidate_moves(start_piecelist, start_coordlist);
@@ -751,9 +787,12 @@ const engineCheckmatePractice = (function(){
                 move to ${candidate_moves[i]}
                 total amount: ${candidate_moves[i].length}\n`;
             }
-            // alert(`Total move count: ${candidate_move_count}`)
-            alert(string + `Total move count: ${candidate_move_count}`)
-            */
+            // console.log(`Total move count: ${candidate_move_count}`)
+            console.log(string + `Total move count: ${candidate_move_count}`)
+            
+
+            // run iteratively deepened move search
+            runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
         } catch(e) {
             console.error("An error occured in the engine computation of the checkmate practice");
