@@ -406,7 +406,7 @@ black_koth = "黑方通过山顶之王获胜！"
 bug_koth = "这是一个错误，请报告！游戏被山顶之王结束。"
 bug_generic = "这是一个错误，请报告！"
 
-[terms] # Translations are disabled for now, only language is en-US
+[terms]
 title = "Terms of Service"
 warning = ["THIS DOCUMENT IS NOT LEGALLY BINDING. We are only accountable for the English version of this document. This translation is provided solely for general informational purposes. You can access the official English version ", "here", "."]
 consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site."
