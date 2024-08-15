@@ -13,9 +13,10 @@ const engineCheckmatePractice = (function(){
 
     // Here, the engine webworker received messages from the outside
     self.onmessage = function(e) {
-        /** @type {gamefile} */
-        const gamefile = e.data;
-        runEngine(gamefile);
+        const message = e.data;
+        const gamefile = message.gamefile;
+        const checkmateSelectedID = message.engineConfig.checkmateSelectedID;
+        runEngine(gamefile, checkmateSelectedID);
     }
 
     // The move that is currently considered best by this engine
@@ -93,109 +94,121 @@ const engineCheckmatePractice = (function(){
         10: 5, // archbishop
     };
 
-    // weights for piece values of white pieces
-    const pieceExistenceEvalDictionary = {
-        0: 0, // 0 corresponds to a captured piece
-        1: -1_000_000, // queen
-        2: -800_000, // rook
-        3: -100_000, // bishop
-        4: -800_000, // knight
-        5: 0, // king - cannot be captured
-        6: -100_000, // pawn
-        7: -1_000_000, // amazon
-        8: -800_000, // hawk
-        9: -800_000, // chancellor
-        10: -800_000, // archbishop
-        11: -800_000 // knightrider
-    };
+    // weights for the evaluation function
+    let pieceExistenceEvalDictionary;
+    let distancesEvalDictionary;
+    let legalMoveEvalDictionary;
 
-    // weights and distance functions for white piece distance to the black king
-    // the first entry for each piece is for black to move, the second entry is for white to move
-    const distancesEvalDictionary = {
-        1: [2, manhattanNorm], // queen
-        2: [2, manhattanNorm], // rook
-        3: [2, manhattanNorm], // bishop
-        4: [15, manhattanNorm], // knight
-        5: [30, manhattanNorm], // king
-        6: [100, manhattanNorm], // pawn
-        7: [14, manhattanNorm], // amazon
-        8: [16, manhattanNorm], // hawk
-        7: [2, manhattanNorm], // chancellor
-        10: [16, manhattanNorm], // archbishop
-        11: [16, manhattanNorm], // knightrider
-    };
+    /**
+     * This method initializes the weights the evaluation function according to the checkmate ID provided
+     * @param {String} checkmateSelectedID - the ID of the selected checkmate variant
+     */
+    function initEvalWeights(checkmateSelectedID) {
 
-    // eval scores for number of legal moves of black royal
-    const legalMoveEvalDictionary = {
-        "k": {
-            // in check
-            0: {
-                0: -Infinity, // checkmate
-                1: -75,
-                2: -50,
-                3: -25,
-                4: -12,
-                5: -8,
-                6: -4,
-                7: -2,
-                8: 0
+        // weights for piece values of white pieces
+        pieceExistenceEvalDictionary = {
+            0: 0, // 0 corresponds to a captured piece
+            1: -1_000_000, // queen
+            2: -800_000, // rook
+            3: -100_000, // bishop
+            4: -800_000, // knight
+            5: 0, // king - cannot be captured
+            6: -100_000, // pawn
+            7: -1_000_000, // amazon
+            8: -800_000, // hawk
+            9: -800_000, // chancellor
+            10: -800_000, // archbishop
+            11: -800_000 // knightrider
+        };
+
+        // weights and distance functions for white piece distance to the black king
+        // the first entry for each piece is for black to move, the second entry is for white to move
+        distancesEvalDictionary = {
+            1: [2, manhattanNorm], // queen
+            2: [2, manhattanNorm], // rook
+            3: [2, manhattanNorm], // bishop
+            4: [15, manhattanNorm], // knight
+            5: [30, manhattanNorm], // king
+            6: [100, manhattanNorm], // pawn
+            7: [14, manhattanNorm], // amazon
+            8: [16, manhattanNorm], // hawk
+            7: [2, manhattanNorm], // chancellor
+            10: [16, manhattanNorm], // archbishop
+            11: [16, manhattanNorm], // knightrider
+        };
+
+        // eval scores for number of legal moves of black royal
+        legalMoveEvalDictionary = {
+            "k": {
+                // in check
+                0: {
+                    0: -Infinity, // checkmate
+                    1: -75,
+                    2: -50,
+                    3: -25,
+                    4: -12,
+                    5: -8,
+                    6: -4,
+                    7: -2,
+                    8: 0
+                },
+                // not in check
+                1: {
+                    0: Infinity, // stalemate
+                    1: -60,
+                    2: -45,
+                    3: -22,
+                    4: -10,
+                    5: -6,
+                    6: -3,
+                    7: -1,
+                    8: 0
+                },
             },
-            // not in check
-            1: {
-                0: Infinity, // stalemate
-                1: -60,
-                2: -45,
-                3: -22,
-                4: -10,
-                5: -6,
-                6: -3,
-                7: -1,
-                8: 0
-            },
-        },
-        "rc": {
-            // in check
-            0: {
-                0: -Infinity, // checkmate
-                1: -100,
-                2: -90,
-                3: -80,
-                4: -70,
-                5: -50,
-                6: -40,
-                7: -30,
-                8: -25,
-                9: -20,
-                10: -15,
-                11: -12.5,
-                12: -10,
-                13: -7.5,
-                14: -5,
-                15: -2.5,
-                16: 0
-            },
-            // not in check
-            1: {
-                0: Infinity, // stalemate
-                1: -100,
-                2: -85,
-                3: -75,
-                4: -65,
-                5: -45,
-                6: -35,
-                7: -25,
-                8: -20,
-                9: -15,
-                10: -12.5,
-                11: -10,
-                12: -7.5,
-                13: -5,
-                14: -2,
-                15: -1,
-                16: 0
-            },
-        }
-    };
+            "rc": {
+                // in check
+                0: {
+                    0: -Infinity, // checkmate
+                    1: -100,
+                    2: -90,
+                    3: -80,
+                    4: -70,
+                    5: -50,
+                    6: -40,
+                    7: -30,
+                    8: -25,
+                    9: -20,
+                    10: -15,
+                    11: -12.5,
+                    12: -10,
+                    13: -7.5,
+                    14: -5,
+                    15: -2.5,
+                    16: 0
+                },
+                // not in check
+                1: {
+                    0: Infinity, // stalemate
+                    1: -100,
+                    2: -85,
+                    3: -75,
+                    4: -65,
+                    5: -45,
+                    6: -35,
+                    7: -25,
+                    8: -20,
+                    9: -15,
+                    10: -12.5,
+                    11: -10,
+                    12: -7.5,
+                    13: -5,
+                    14: -2,
+                    15: -1,
+                    16: 0
+                },
+            }
+        };
+    }
 
     // computes the 2-norm of a square
     function diagonalNorm(square) {
@@ -565,7 +578,6 @@ const engineCheckmatePractice = (function(){
         const incheck = is_check(piecelist, coordlist);
         score += legalMoveEvalDictionary[royal_type][incheck ? 0 : 1][get_black_legal_move_amount(piecelist, coordlist)];
 
-        const black_to_move_num = black_to_move ? 1 : 0;
         for (let i = 0; i < piecelist.length; i++) {
             // add penalty based on existence of white pieces
             score += pieceExistenceEvalDictionary[piecelist[i]];
@@ -694,8 +706,9 @@ const engineCheckmatePractice = (function(){
     /**
 	 * This function is called from outside and initializes the engine calculation given the provided gamefile
 	 * @param {gamefile} gamefile - the gamefile
+     * @param {String} checkmateSelectedID - the ID of the selected checkmate variant
 	 */
-    function runEngine(gamefile) {
+    function runEngine(gamefile, checkmateSelectedID) {
         try {
             // get real coordinates and parse type of black royal piece
             if (gamefile.ourPieces["kingsB"].length != 0){
@@ -721,6 +734,9 @@ const engineCheckmatePractice = (function(){
                 // shift all white pieces, so that the black royal is at [0,0]
                 start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
             }
+
+            // initialize the eval function weights
+            initEvalWeights(checkmateSelectedID);
 
             // run iteratively deepened move search
             runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
