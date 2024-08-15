@@ -23,7 +23,7 @@ element_submitButton.addEventListener('click', (event) => {
     if (element_usernameInput.value && element_passwordInput.value && !loginErrorElement) sendLogin(element_usernameInput.value, element_passwordInput.value);
 });
 
-function handleInput(event) {
+function handleInput() {
     if (loginErrorElement) {
         loginErrorElement.remove();
         loginErrorElement = undefined;

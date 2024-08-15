@@ -84,7 +84,6 @@ const htmlscript = (function() {
     let lostNetwork = false;
 
     function callback_LoadingError(event) {
-        event = event || window.event;
         // const type = event.type; // Event type: "error"/"abort"
         // const target = event.target; // Element that triggered the event
         // const elementType = target?.tagName.toLowerCase();

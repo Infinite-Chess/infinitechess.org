@@ -152,16 +152,12 @@ function html_escape(value) {
       } else {
         throw "Unhandled object type while escaping";
       }
-      break;
     case "string":
       return custom_xss.process(value); // Html escape strings
-      break;
     case "number":
       return value;
-      break;
     default:
       throw "Unhandled type while escaping";
-      break;
   }
 }
 
@@ -201,7 +197,7 @@ function removeOutdated(object, changelog) {
   });
 
   let key_strings = [];
-  for (key of filtered_keys) {
+  for (const key of filtered_keys) {
     key_strings = key_strings.concat(changelog[key]["changes"]);
   }
   // Remove duplicate

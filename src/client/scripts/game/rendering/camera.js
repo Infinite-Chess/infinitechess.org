@@ -31,7 +31,8 @@ const camera = (function() {
     let PIXEL_HEIGHT_OF_TOP_NAV = undefined // In virtual pixels
     let PIXEL_HEIGHT_OF_BOTTOM_NAV = undefined // In virtual pixels.
 
-    let canvas = document.getElementById('game') // The element on the document WebGL renders onto
+    /** The canvas document element that WebGL renders the game onto. */
+    let canvas = document.getElementById('game');
     let canvasWidthVirtualPixels;
     let canvasHeightVirtualPixels;
     let canvasRect; // accessed by mouse move listener in input script

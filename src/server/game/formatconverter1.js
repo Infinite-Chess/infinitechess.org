@@ -78,7 +78,7 @@ const formatconverter1 = (function() {
     function isJson(str) {
         try {
             JSON.parse(str);
-        } catch (e) {
+        } catch {
             return false;
         }
         return true;
@@ -257,7 +257,7 @@ const formatconverter1 = (function() {
                 shortmoves += LongToShort_Piece(longmove["promotion"]);
             }
             if (longmove["mate"] && (compact_moves == 0 || compact_moves == 1)){
-                shortmoves += "\#";
+                shortmoves += "#";
             } else if (longmove["check"] && (compact_moves == 0 || compact_moves == 1)){
                 shortmoves += "+";
             }
@@ -448,10 +448,10 @@ const formatconverter1 = (function() {
         const longmoves = [];
 
         shortmoves.replace(/[\!\?=]/g,"");
-        while (shortmoves.indexOf("\{") > -1){
-            let start_index = shortmoves.indexOf("\{");
-            let end_index = shortmoves.indexOf("\}");
-            if (end_index == -1) throw new Error("Unclosed \{ found.");
+        while (shortmoves.indexOf("{") > -1){
+            let start_index = shortmoves.indexOf("{");
+            let end_index = shortmoves.indexOf("}");
+            if (end_index == -1) throw new Error("Unclosed { found.");
             shortmoves = shortmoves.slice(0,start_index) + "|" + shortmoves.slice(end_index+1);
         }
         shortmoves = shortmoves.match(/[a-zA-Z]*-?[0-9]+,-?[0-9]+[\s]*(x|>)+[\s]*-?[0-9]+,-?[0-9]+[^\|\.0-9]*/g);

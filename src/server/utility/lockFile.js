@@ -26,7 +26,6 @@ const readFile = async (path, errorString) => {
             console.error(e);
         } finally {
             releaseFunc();
-            return;
         }
     })
     .catch((e) => {

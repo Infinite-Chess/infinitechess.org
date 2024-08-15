@@ -4,6 +4,7 @@
  * requests and websocket connection requests.
  */
 
+// eslint-disable-next-line no-unused-vars
 const { Socket } = require('../game/TypeDefinitions') // The type definition for websocket objects
 
 

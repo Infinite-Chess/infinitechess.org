@@ -76,7 +76,7 @@ const webgl = (function() {
         }
         if (!gl) { // Init WebGL experimental
             console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.")
-            gl = canvas.getContext('experimental-webgl', { alpha: false});
+            gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
         }
         if (!gl) { // Experimental also failed to init
             alert(translations["webgl_unsupported"])

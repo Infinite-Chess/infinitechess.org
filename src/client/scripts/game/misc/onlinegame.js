@@ -174,7 +174,7 @@ const onlinegame = (function(){
     function onmessage(data) { // { sub, action, value, id }
         // console.log(`Received ${data.action} from server! Message contents:`)
         // console.log(data.value)
-
+        const message = 5;
         switch(data.action) {
             case "joingame":
                 handleJoinGame(data.value);
@@ -182,12 +182,12 @@ const onlinegame = (function(){
             case "move":
                 handleOpponentsMove(data.value);
                 break;
-            case "clock":
+            case "clock": { // Contain this case in a block so that it's variables are not hoisted 
                 if (!inOnlineGame) return;
                 const message = data.value; // { timerWhite, timerBlack, timeNextPlayerLosesAtAt }
                 clock.edit(message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt) // Edit the clocks
                 break;
-            case "gameupdate": // When the game has ended by time/disconnect/resignation/aborted
+            } case "gameupdate": // When the game has ended by time/disconnect/resignation/aborted
                 handleServerGameUpdate(data.value);
                 break;
             case "unsub": // The game has been deleted, server no longer sending update
@@ -341,7 +341,7 @@ const onlinegame = (function(){
         let move;
         try {
             move = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
-        } catch (error) {
+        } catch {
             console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`)
             const reason = 'Incorrectly formatted.'
             return reportOpponentsMove(reason);

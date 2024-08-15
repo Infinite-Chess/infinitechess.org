@@ -55,7 +55,7 @@ function injectScriptsIntoPlayEjs() {
   let HTML_callGame_JS_string = "";
   const game_JSscripts = glob.sync(`./dist/scripts/game/**/*.js`).filter((file) => { return !/htmlscript\.js/.test(file); });
   // Convert the list of scripts into an explicit HTML string that imports them all
-  for (file of game_JSscripts) {
+  for (const file of game_JSscripts) {
     const js_filename = file.split(/(\\|\/)+/).slice(4).join(""); // discard "dist/scripts/"
     HTML_callGame_JS_string += `\n\t\t${HMTL_scriptcall_p1}${js_filename}${HMTL_scriptcall_p2}`;
   }
