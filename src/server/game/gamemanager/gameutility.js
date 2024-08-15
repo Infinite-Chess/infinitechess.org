@@ -28,7 +28,7 @@ const wincondition1 = require('../wincondition1');
 const formatconverter1 = require('../formatconverter1');
 const movesscript1 = require('../movesscript1');
 
-const { getTimeServerRestarting } = require('../serverrestart');
+const { getTimeServerRestarting } = require('../timeServerRestarts');
 
 const gameutility = (function() {
 

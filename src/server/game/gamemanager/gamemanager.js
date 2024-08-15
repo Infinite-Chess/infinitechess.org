@@ -16,7 +16,7 @@ const movesscript1 = require('../movesscript1');
 const statlogger = require('../statlogger');
 const { executeSafely_async } = require('../../utility/errorGuard');
 
-const { getTimeServerRestarting } = require('../serverrestart');
+const { getTimeServerRestarting } = require('../timeServerRestarts');
 const { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
 const { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } = require('./gamecount');
 const { closeDrawOffer } = require('./drawoffers');

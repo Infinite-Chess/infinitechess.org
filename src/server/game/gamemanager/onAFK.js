@@ -1,4 +1,7 @@
 
+/**
+ * The script handles the route when users inform us they have gone AFK or returned from being AFK.
+ */
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars

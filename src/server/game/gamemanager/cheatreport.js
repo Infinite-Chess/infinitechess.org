@@ -1,4 +1,8 @@
 
+/**
+ * This script handles cheat reports, aborting games when they come in.
+ */
+
 // Middleware imports
 const { logEvents } = require('../../middleware/logEvents');
 
@@ -9,7 +13,6 @@ const gameutility = require('./gameutility');
 const math1 = require('../math1')
 const movesscript1 = require('../movesscript1');
 const { setGameConclusion } = require('./gamemanager');
-
 
 /**
  * 

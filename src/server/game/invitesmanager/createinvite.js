@@ -6,13 +6,9 @@
  */
 
 
-// System imports
-const fs = require('fs')
-const path = require('path');
 
 // Middleware imports
 const { logEvents } = require('../../middleware/logEvents.js');
-const { readFile, writeFile } = require('../../utility/lockFile.js');
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
@@ -25,48 +21,12 @@ const sendNotifyError = wsutility.sendNotifyError;
 const math1 = require('../math1.js')
 const variant1 = require('../variant1.js')
 const clockweb = require('../clockweb.js');
-const { writeFile_ensureDirectory } = require('../../utility/fileUtils');
-const { setTimeServerRestarting, cancelServerRestart, getTimeServerRestarting } = require('../serverrestart.js');
-const { broadCastGameRestarting } = require('../gamemanager/gamemanager.js');
 const { getDisplayNameOfPlayer } = require('../gamemanager/gameutility.js');
-
-const { printActiveGameCount } = require('../gamemanager/gamecount')
-
-
 const { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } = require('./invitesmanager.js');
 const { isSocketInAnActiveGame } = require('../gamemanager/activeplayers.js');
-
-
-
-/** The path to the allowinvites.json file in the "database" */
-const allowinvitesPath = path.resolve('database/allowinvites.json');
-/**
- * Generates the allowinvites.json file inside the "database", on
- * initial startup, if it isn't alread
- */
-(function ensureAllowInvitesFileExists() {
-    if (fs.existsSync(allowinvitesPath)) return; // Already exists
-
-    const content = JSON.stringify({
-        allowinvites: true,
-        restartIn: false
-    }, null, 2);
-    writeFile_ensureDirectory(allowinvitesPath, content)
-    console.log("Generated allowinvites file")
-})()
-
-/**
- * The allowinvites.json file in the "database". This needs to periodically be re-read
- * in order to see our changes made to it. This is typcailly
- * done when a new invite is attempted to be created.
- */
-let allowinvites = require(allowinvitesPath);
-/**
- * The minimum time required between new reads of allowinvites.json.
- * 
- * Typically this file is re-read every time someone generates an invite
- */
-const intervalToReadAllowinviteMillis = 5000; // 5 seconds
+const { printActiveGameCount } = require('../gamemanager/gamecount.js');
+const { getMinutesUntilServerRestart } = require('../timeServerRestarts.js');
+const { isServerRestarting } = require('../updateServerRestart.js');
 
 
 
@@ -89,7 +49,7 @@ async function createInvite (ws, messageContents, messageID) { // invite: { id, 
     // if (userHasInvite(ws)) return;
 
     // Are we restarting the server soon (invites not allowed)?
-    if (!await areInvitesAllowed(ws)) return;
+    if (!await isAllowedToCreateInvite(ws)) return;
     
     const invite = getInviteFromWebsocketMessageContents(ws, messageContents, messageID);
     if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
@@ -201,132 +161,27 @@ function reportForExploitingInvite(ws, invite) {
     logEvents(logText, 'hackLog.txt', { print: true }) // Log the exploit to the hackLog!
 }
 
-/** Makes sure {@link allowinvites} is up-to-date with any changes we've made. */
-const updateAllowInvites = (function() {
-
-    /**
-     * The time, in millis since the Unix Epoch, we last read allowinvites.json to see if
-     * we've modified it to disallow new invite creation or init a server restart.
-     * 
-     * Typically this file is re-read every time someone generates an invite, but we
-     * will not read it again if it has been read in the last {@link intervalToReadAllowinviteMillis}
-     */
-    let timeLastReadAllowInvites = Date.now()
-
-    return async () => {
-        // How long has it been since the last read?
-        const timePassedMillis = Date.now() - timeLastReadAllowInvites;
-        const isTimeToReadAgain = timePassedMillis >= intervalToReadAllowinviteMillis;
-        if (!isTimeToReadAgain) return; // Hasn't been over 5 seconds since last read
-    
-        //console.log("Reading allowinvites.json!")
-    
-        // If this is not called with 'await', it returns a promise.
-        const newAllowInvitesValue = await readFile(
-            allowinvitesPath,
-            `Error locking & reading allowinvites.json after receiving a created invite!`
-        )
-
-        timeLastReadAllowInvites = Date.now();
-    
-        if (newAllowInvitesValue == null) { // Not defined, error in reading. Probably file is locked
-            console.error(`There was an error reading allowinvites.json. Not updating it in memory.`)
-            return;
-        }
-
-        allowinvites = newAllowInvitesValue
-
-        // Stop server restarting if we're allowing invites again!
-        if (allowinvites.allowinvites) cancelServerRestart();
-        else initServerRestart(allowinvites)
-    }
-})()
-
-
 /**
- * Call when we've read allowinvites.json and it's `allowInvites` property is false.
- * This will, if it's `restartIn` property is a number of minutes, init a server
- * restart, calculate the time the server should restart (even though we restart it manually),
- * and broadcast to all clients in a game that the server's about to restart. We only broadcast once,
- * then the clients remember the time it will restart
- * periodically informing the user when it gets closer.
- * @param {Object} newAllowInvitesValue - The newly read allowinvites.json file.
- */
-async function initServerRestart(newAllowInvitesValue) { // { allowInvites, restartIn: minutes }
-    if (!newAllowInvitesValue.restartIn) return; // We have not changed the value to indicate we're restarting. Return.
-
-    const now = Date.now() // Current time in milliseconds
-    // restartIn is in minutes, convert to milliseconds!
-    const millisecondsUntilRestart = newAllowInvitesValue.restartIn * 60 * 1000;
-
-    const value = now + millisecondsUntilRestart;
-    setTimeServerRestarting(value)
-
-    console.log(`Will be restarting the server in ${newAllowInvitesValue.restartIn} minutes!`)
-
-    // Set our restartIn variable to undefined, so we don't repeat this next time we load the file!
-    newAllowInvitesValue.restartIn = false;
-
-    // Save the file
-    await writeFile(
-        allowinvitesPath,
-        newAllowInvitesValue,
-        `Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created.`
-    )
-
-
-    // Alert all people on the invite screen that we will be restarting soon
-    // ...
-
-    // Alert all people in a game that we will be restarting soon
-    broadCastGameRestarting()
-}
-
-// Returns true if invites not allowed currently, server under maintenance
-// and sends a message to the socket informing them of that!
-// Call when they attempt to create an invite.
-
-/**
- * Asks if invite creation is currently allowed by reading the allowinvites.json file
- * in the "database", if it hasn't been read the last 5 seconds, and observing
- * it's `allowInvites` property.
+ * Returns true if the user is allowed to create a new invite at this time,
+ * depending on whether the server is about to restart, or they have the owner role.
  * @param {Socket} ws - The socket attempting to create a new invite
  * @returns {Promise<boolean>} true if invite creation is allowed
  */
-async function areInvitesAllowed(ws) {
-    await updateAllowInvites()
+async function isAllowedToCreateInvite(ws) {
+    if (!await isServerRestarting()) return true; // Server not restarting, all new invites are allowed!
 
-    // If allowinvites is false, disallow invite creation
-    const isOwner = ws.metadata.role === 'owner'
-    if (allowinvites.allowinvites || isOwner) return true; // They are allowed to make an invite!
+    // Server is restarting... Do we have admin perms to create an invite anyway?
+
+    if (ws.metadata.role === 'owner') return true; // They are allowed to make an invite!
 
     // Making an invite is NOT allowed...
 
     printActiveGameCount();
-    const timeUntilRestart = getMinutesUntilRestart();
+    const timeUntilRestart = getMinutesUntilServerRestart();
     const message = timeUntilRestart ? 'server.javascript.ws-server_restarting' : 'server.javascript.ws-server_under_maintenance'; 
     sendNotify(ws, message, timeUntilRestart)
+
     return false; // NOT allowed to make an invite!
-}
-
-/**
- * Calculates the number of minutes, rounded up, the server will restart in,
- * if it is restarting. It does not restart automatically, but we manually do so.
- * The script just keeps track of the time we *plan* on restarting.
- * @returns {number} Minutes until restart, rounded up.
- */
-function getMinutesUntilRestart() {
-    const restartingAt = getTimeServerRestarting()
-    if (!restartingAt) return; // Not restarting
-
-    const now = Date.now(); // Current time in milliseconds
-    const millisLeft = restartingAt - now;
-
-    const minutesLeft = millisLeft / (1000 * 60)
-    const ceiled = Math.ceil(minutesLeft)
-    const returnThis = ceiled > 0 ? ceiled : 0;
-
-    return returnThis; // Convert to minutes
 }
 
 
