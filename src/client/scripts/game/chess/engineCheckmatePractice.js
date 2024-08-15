@@ -228,7 +228,10 @@ const engineCheckmatePractice = (function(){
         switch(checkmateSelectedID) {
             case "1K1Q1P-1k":
                 distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]] // queen
-                distancesEvalDictionary[5] = [[-20, manhattanNorm], [-20, manhattanNorm]] // king
+                distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]] // king
+                break;
+            case "2AM-1rc":
+                wiggleroom = 1;
                 break;
             case "1K2N7B-1k":
                 distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]] // knight
@@ -236,25 +239,25 @@ const engineCheckmatePractice = (function(){
                     // in check
                     0: {
                         0: -Infinity, // checkmate
-                        1: -200,
-                        2: -170,
-                        3: -140,
-                        4: -110,
-                        5: -80,
-                        6: -50,
-                        7: -25,
+                        1: -250,
+                        2: -220,
+                        3: -190,
+                        4: -160,
+                        5: -120,
+                        6: -90,
+                        7: -60,
                         8: 0
                     },
                     // not in check
                     1: {
                         0: Infinity, // stalemate
-                        1: -190,
-                        2: -160,
-                        3: -130,
-                        4: -100,
-                        5: -70,
-                        6: -40,
-                        7: -15,
+                        1: -220,
+                        2: -190,
+                        3: -160,
+                        4: -130,
+                        5: -100,
+                        6: -70,
+                        7: -40,
                         8: 0
                     }
                 }
@@ -289,7 +292,7 @@ const engineCheckmatePractice = (function(){
     // special norm for the knight, which gives a massive malus to the knight near the black king for black
     function knightmareNorm(square) {
         const diagnormsquared = diagonalNormSquared(square);
-        const penalty = diagnormsquared < 3 ? -10 : ( diagnormsquared < 9 ? -5 : 0 );
+        const penalty = diagnormsquared < 3 ? -16 : ( diagnormsquared < 9 ? -8 : (diagnormsquared < 19 ? -4 : 0));
         return manhattanNorm(square) + penalty;
     }
 
