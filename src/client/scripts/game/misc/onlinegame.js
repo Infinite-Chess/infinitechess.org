@@ -234,16 +234,14 @@ const onlinegame = (function(){
             case "serverrestart":
                 initServerRestart(data.value);
                 break;
-            case "drawoffer":
+            case "drawoffer": { // message contents: { blackOfferMove, whiteOfferMove }
                 guidrawoffer.openDrawOffer()
-                let gamefile = game.getGamefile()
-
-                const moves = data.value;
+                const gamefile = game.getGamefile()
+                const moves = data.value; // { blackOfferMove, whiteOfferMove }
                 gamefile.drawOfferBlack = moves.blackOfferMove
                 gamefile.drawOfferWhite = moves.whiteOfferMove
-
                 break;
-            case "declinedraw":
+            } case "declinedraw":
                 statustext.showStatus(`Opponent declined draw offer.`)
                 break;
             default:

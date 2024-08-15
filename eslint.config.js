@@ -45,6 +45,7 @@ module.exports = [
         guiplay: "readonly",
         guipromotion: "readonly",
         guititle: "readonly",
+        guidrawoffer: "readonly",
         stats: "readonly",
         statustext: "readonly",
         style: "readonly",
@@ -86,6 +87,7 @@ module.exports = [
         main: "readonly",
         websocket: "readonly",
         memberHeader: "readonly",
+        drawoffers: "readonly",
         translations: "readonly", // Injected into the html through ejs
       }
     }

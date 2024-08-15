@@ -17,6 +17,8 @@ const { logEvents } = require('../../middleware/logEvents');
  * Minimum number of plies (half-moves) that
  * must span between 2 consecutive draw offers
  * by the same player!
+ * 
+ * THIS MUST ALWAYS MATCH THE CLIENT-SIDE!!!!
  */
 const movesBetweenDrawOffers = 2
 
