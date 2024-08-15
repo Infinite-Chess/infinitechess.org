@@ -77,13 +77,15 @@ function Game() {
     this.publicity = undefined;
     /** The variant of this game. */
     this.variant = undefined;
-    /** The clock value (e.g. "10+5"). Untimed games are represented with a "0".*/
+    /** The clock value (e.g. "10+5"). Untimed games are represented with a "-".*/
     this.clock = undefined;
+    /** Whether or not the game is untimed. Clock will be "-". @type {boolean} */
+    this.untimed = undefined;
     /** The start time for both players, in milliseconds. */
     this.startTimeMillis = undefined;
     /** The increment amount, in seconds. */
     this.incrementMillis = undefined;
-    /** Whether the game is rated. true or false */
+    /** Whether the game is rated. @type {boolean}*/
     this.rated = undefined;
     /** The white player: `{ member }` or `{ browser }` */
     this.white = undefined;
@@ -95,29 +97,30 @@ function Game() {
     this.blackGoesFirst = undefined;
     /** Whos turn it is currently. */
     this.whosTurn = undefined;
-    /** If truthy, it's how the game ended. For example, "white checkmate". */
+    /** If the game is over, this is a string. For example, "white checkmate". Otherwise false. */
     this.gameConclusion = undefined;
 
-    /** White's current time remaining, in milliseconds. */
+    /** White's current time remaining, in milliseconds, if the game is timed, otherwise undefined. */
     this.timerWhite = undefined;
-    /** Black's current time remaining, in milliseconds. */
+    /** Black's current time remaining, in milliseconds, if the game is timed, otherwise undefined. */
     this.timerBlack = undefined;
 
     /** The amount of time remaining, in milliseconds, the current player had at the beginning of their turn. */
     this.timeRemainAtTurnStart = undefined;
     /** The time, in milliseconds, of the javascript process since the beginning of the current player's turn. */
     this.timeAtTurnStart = undefined;
+    /** The time, in milliseconds since the Unix epoch,
+     * at which the current player will lose on time if they don't move,
+     * IF THE GAME IS TIMED, otherwise undefined. */
+    this.timeNextPlayerLosesAt = undefined;
+    /** The ID of the timeout which will auto-lose the player
+     * whos turn it currently is when they run out of time. */
+    this.autoTimeLossTimeoutID = undefined;
 
     /** Player white's socket, if they are connected. @type {Socket} */
     this.whiteSocket = undefined;
     /** Player black's socket, if they are connected. @type {Socket} */
     this.blackSocket = undefined;
-    /** The time, in milliseconds since the Unix epoch,
-     * at which the current player will lose on time if they don't move. */
-    this.timeNextPlayerLosesAt = undefined;
-    /** The ID of the timeout which will auto-lose the player
-     * whos turn it currently is when they run out of time. */
-    this.autoTimeLossTimeoutID = undefined;
 
     /** The ID of the timeout which will auto-lose the player
      * whos turn it currently is if they go AFK too long. */
@@ -125,6 +128,15 @@ function Game() {
     /** The time the current player will be auto-resigned by
      * AFK if they are currently AFK. */
     this.autoAFKResignTime = undefined;
+
+    /** Last move a draw was offered */
+    this.whiteDrawOfferMove = undefined
+    this.blackDrawOfferMove = undefined
+
+    /** The states of players offering draws 
+     * @type {string|undefined} 'offering' / 'declined' / undefined */
+    this.whiteDrawOffer = undefined
+    this.blackDrawOffer = undefined
 
     /** Contains information about which sides are
      * about to lose by disconnection. */

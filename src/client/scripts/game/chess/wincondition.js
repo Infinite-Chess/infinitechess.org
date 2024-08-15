@@ -15,7 +15,7 @@ const wincondition = (function() {
     
     /**
      * List of all win conditions that happen after a move being made.
-     * This excludes conclusions such as resignation, time, aborted, and disconnect,
+     * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement.
      * which can happen at any point in time.
      */
     const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat']
@@ -199,7 +199,7 @@ const wincondition = (function() {
     /**
      * Calculates if the provided game conclusion is a decisive conclusion.
      * This is any conclusion that can happen after a move is made.
-     * Excludes conclusions like resignation, time, aborted, and disconnect,
+     * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
      * which can happen at any point in time.
      * @param {string} gameConclusion - The gameConclusion
      * @returns {boolean} *true* if the gameConclusion is decisive.
@@ -299,6 +299,8 @@ const wincondition = (function() {
                 return translations.termination.aborted;
             case "disconnect": // Happens when a player leaves
                 return translations.termination.disconnect;
+            case "agreement": // Draw by agreement
+                return translations.termination.agreement
             default:
                 console.error(`Cannot return English termination for unknown condition "${condition}"!`);
                 return 'Unknown';
