@@ -13,7 +13,7 @@ const element_verifyErrorElement = document.getElementById('verifyerror');
 const element_verifyConfirmElement = document.getElementById('verifyconfirm');
 const element_sendEmail = document.getElementById('sendemail')
 // Create a listener for if they push the 'send it again' link
-element_sendEmail.addEventListener('click', (event) => {resendConfirmEmail()})
+element_sendEmail.addEventListener('click', resendConfirmEmail)
 
 const element_member = document.getElementsByClassName('member')[0];
 const element_memberName = document.getElementById('membername');
@@ -197,13 +197,13 @@ function resendConfirmEmail () {
         return response.json();
     })
     .then((result) => { // Email was resent! Reload the page
-        window.location = window.location;
+        window.location.reload();
     });
 }
 
 function recalcUsernameSize() {
     // Change username text size depending on character count
-    const memberElementPadding = parseInt((window.getComputedStyle(element_member, null).getPropertyValue('padding-left')), 10) // parseInt() converts px to number
+    // const memberElementPadding = parseInt((window.getComputedStyle(element_member, null).getPropertyValue('padding-left')), 10) // parseInt() converts px to number
     const targetWidth = (window.innerWidth - 185) * 0.52;
     
     let fontSize = targetWidth * (3 / element_memberName.textContent.length);
@@ -232,4 +232,4 @@ function revealElement(element) {
     element.classList.remove("hidden");
 }
 
-window.addEventListener("resize", (event) => { recalcUsernameSize() });
+window.addEventListener("resize", recalcUsernameSize);

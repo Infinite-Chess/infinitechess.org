@@ -10,6 +10,7 @@
 const jwt = require('jsonwebtoken');
 const { findMemberFromRefreshToken, doesMemberExist } = require('../controllers/members');
 const { setRole, setRoleWebSocket } = require('../controllers/roles.js');
+// eslint-disable-next-line no-unused-vars
 const { Socket } = require('../game/TypeDefinitions.js');
 
 

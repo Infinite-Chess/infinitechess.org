@@ -456,12 +456,13 @@ const variant1 = (function() {
                 return getGameRules({ position })
             case "Standarch":
                 return getGameRules({ position })
-            case "Space_Classic":
-                const UTCTimeStamp = math1.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+            case "Space_Classic": { // Contain this case in a block so that it's variables are not hoisted 
+                const UTCTimeStamp = math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
                 const promotionRanks = UTCTimeStamp < 1709017200000 ? [4,-3] : undefined; // undefined will use default [8,1]
                 getGameRules({ promotionRanks, position })
-            case "CoaIP":
+                break;
+            } case "CoaIP":
                 return getGameRules({ position });
             case "Pawn_Horde":
                 return getGameRules({ winConditions: {white:['checkmate'],black:['allpiecescaptured']}, promotionRanks: [2,-7], position });
