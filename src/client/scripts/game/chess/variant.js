@@ -462,8 +462,7 @@ const variant = (function() {
                 const UTCTimeStamp = math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
                 const promotionRanks = UTCTimeStamp < 1709017200000 ? [4,-3] : undefined; // undefined will use default [8,1]
-                getGameRules({ promotionRanks, position })
-                break;
+                return getGameRules({ promotionRanks, position })
             } case "CoaIP":
                 return getGameRules({ position });
             case "Pawn_Horde":
