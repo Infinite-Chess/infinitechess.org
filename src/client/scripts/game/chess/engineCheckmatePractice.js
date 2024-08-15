@@ -215,10 +215,10 @@ const engineCheckmatePractice = (function(){
         // variant-specific modifications to the weights:
         switch(checkmateSelectedID) {
             case "1K1Q1P-1k":
-                distancesEvalDictionary[5] = [[0, zero], [0, zero]] // king
+                distancesEvalDictionary[5] = [[-20, manhattanNorm], [-20, manhattanNorm]] // king
                 break;
             case "2R1N1P-1k":
-                distancesEvalDictionary[4] = [[-10, zero], [-10, zero]] // knight
+                distancesEvalDictionary[4] = [[-10, manhattanNorm], [-10, manhattanNorm]] // knight
                 break;
         }
     }
