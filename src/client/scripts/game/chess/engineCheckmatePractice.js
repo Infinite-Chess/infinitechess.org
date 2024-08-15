@@ -15,9 +15,12 @@ const engineCheckmatePractice = (function(){
     self.onmessage = function(e) {
         const message = e.data;
         const gamefile = message.gamefile;
-        const checkmateSelectedID = message.engineConfig.checkmateSelectedID;
-        runEngine(gamefile, checkmateSelectedID);
+        checkmateSelectedID = message.engineConfig.checkmateSelectedID;
+        runEngine(gamefile);
     }
+
+    // the ID of the currently selected checkmate
+    let checkmateSelectedID;
 
     // The move that is currently considered best by this engine
     // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
@@ -101,9 +104,8 @@ const engineCheckmatePractice = (function(){
 
     /**
      * This method initializes the weights the evaluation function according to the checkmate ID provided
-     * @param {String} checkmateSelectedID - the ID of the selected checkmate variant
      */
-    function initEvalWeights(checkmateSelectedID) {
+    function initEvalWeights() {
 
         // weights for piece values of white pieces
         pieceExistenceEvalDictionary = {
@@ -124,17 +126,17 @@ const engineCheckmatePractice = (function(){
         // weights and distance functions for white piece distance to the black king
         // the first entry for each piece is for black to move, the second entry is for white to move
         distancesEvalDictionary = {
-            1: [2, manhattanNorm], // queen
-            2: [2, manhattanNorm], // rook
-            3: [2, manhattanNorm], // bishop
-            4: [15, manhattanNorm], // knight
-            5: [30, manhattanNorm], // king
-            6: [200, manhattanNorm], // pawn
-            7: [14, manhattanNorm], // amazon
-            8: [16, manhattanNorm], // hawk
-            7: [2, manhattanNorm], // chancellor
-            10: [16, manhattanNorm], // archbishop
-            11: [16, manhattanNorm], // knightrider
+            1: [[2, manhattanNorm], [2, manhattanNorm]], // queen
+            2: [[2, manhattanNorm], [2, manhattanNorm]], // rook
+            3: [[2, manhattanNorm], [2, manhattanNorm]], // bishop
+            4: [[15, manhattanNorm], [15, manhattanNorm]], // knight
+            5: [[30, manhattanNorm], [30, manhattanNorm]], // king
+            6: [[140, manhattanAndDiagonalNorm], [200, manhattanAndDiagonalNorm]], // pawn
+            7: [[14, manhattanNorm], [14, manhattanNorm]], // amazon
+            8: [[16, manhattanNorm], [16, manhattanNorm]], // hawk
+            7: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
+            10: [[16, manhattanNorm], [16, manhattanNorm]], // archbishop
+            11: [[16, manhattanNorm], [16, manhattanNorm]], // knightrider
         };
 
         // eval scores for number of legal moves of black royal
@@ -213,10 +215,13 @@ const engineCheckmatePractice = (function(){
         // variant-specific modifications to the weights:
         switch(checkmateSelectedID) {
             case "1K1Q1P-1k":
-                distancesEvalDictionary[1] = [-100, manhattanNorm];
-                distancesEvalDictionary[5] = [-10, manhattanNorm];
+                distancesEvalDictionary[5] = [[0, zero], [0, zero]] // king
                 break;
         }
+    }
+
+    function zero (square) {
+        return 0;
     }
 
     // computes the 2-norm of a square
@@ -227,6 +232,10 @@ const engineCheckmatePractice = (function(){
     // computes the manhattan norm of a square
     function manhattanNorm(square) {
         return Math.abs(square[0]) + Math.abs(square[1]);
+    }
+
+    function manhattanAndDiagonalNorm(square) {
+        return diagonalNorm(square) + manhattanNorm(square);
     }
 
     // computes min(manhattan norm, manhattancap) of a square
@@ -471,7 +480,7 @@ const engineCheckmatePractice = (function(){
                     if (c1 < 0 || c2 <= 0) continue;
                     // suitable values for c1 and c2 were found, now compute min and max values for c1 and c2 to consider
                     // const wiggleroom = Math.abs(denominator) > 1 ? 2 : 1;
-                    const wiggleroom = 1;
+                    const wiggleroom = 2;
                     const c1_min = Math.ceil(c1 - wiggleroom);
                     const c1_max = Math.floor(c1 + wiggleroom);
                     const c2_min = Math.ceil(c2 - wiggleroom);
@@ -615,13 +624,14 @@ const engineCheckmatePractice = (function(){
         const incheck = is_check(piecelist, coordlist);
         score += legalMoveEvalDictionary[incheck ? 0 : 1][get_black_legal_move_amount(piecelist, coordlist)];
 
+        const black_to_move_num = black_to_move ? 0 : 1;
         for (let i = 0; i < piecelist.length; i++) {
             // add penalty based on existence of white pieces
             score += pieceExistenceEvalDictionary[piecelist[i]];
 
             // add score based on distance of black royal to white shortrange pieces
             if (piecelist[i] in distancesEvalDictionary) {
-                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]];
+                const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]][black_to_move_num];
                 score += weight * distancefunction(coordlist[i]);
             }
         }
@@ -743,9 +753,8 @@ const engineCheckmatePractice = (function(){
     /**
 	 * This function is called from outside and initializes the engine calculation given the provided gamefile
 	 * @param {gamefile} gamefile - the gamefile
-     * @param {String} checkmateSelectedID - the ID of the selected checkmate variant
 	 */
-    function runEngine(gamefile, checkmateSelectedID) {
+    function runEngine(gamefile) {
         try {
             // get real coordinates and parse type of black royal piece
             if (gamefile.ourPieces["kingsB"].length != 0){
@@ -773,11 +782,12 @@ const engineCheckmatePractice = (function(){
             }
 
             // initialize the eval function weights
-            initEvalWeights(checkmateSelectedID);
+            initEvalWeights();
 
-            
+            // run iteratively deepened move search
+            runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
-            
+            /*
             let string = "";
             let candidate_move_count = 0;
             const candidate_moves = get_white_candidate_moves(start_piecelist, start_coordlist);
@@ -789,10 +799,7 @@ const engineCheckmatePractice = (function(){
             }
             // console.log(`Total move count: ${candidate_move_count}`)
             console.log(string + `Total move count: ${candidate_move_count}`)
-            
-
-            // run iteratively deepened move search
-            runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
+            */
 
         } catch(e) {
             console.error("An error occured in the engine computation of the checkmate practice");
