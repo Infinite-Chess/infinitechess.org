@@ -19,9 +19,9 @@ function Socket() {
             invites: undefined,
             /** Will be defined if they are subscribed to, or in, a game. */
             game: {
-                /** The id of the game they're in. */
+                /** The id of the game they're in. @type {string} */
                 id: undefined,
-                /** The color they are playing as. */
+                /** The color they are playing as. @type {string} */
                 color: undefined
             }
         },

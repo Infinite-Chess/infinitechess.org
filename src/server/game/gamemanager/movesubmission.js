@@ -26,24 +26,25 @@ const { getGameByID, pushGameClock, setGameConclusion } = require('./gamemanager
  * adds the move to the game's move list, adjusts the game's
  * properties, and alerts their opponent of the move.
  * @param {Socket} ws - The websocket submitting the move
+ * @param {Game | undefined} game - The game they are in, if they are in one.
  * @param {Object} messageContents - An object containing the properties `move`, `moveNumber`, and `gameConclusion`.
  */
-function submitMove(ws, messageContents) {
+function submitMove(ws, game, messageContents) {
     // They can't submit a move if they aren't subscribed to a game
     if (!ws.metadata.subscriptions.game) {
         console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.")
-        // ws.metadata.sendmessage(ws, "general", "printerror", "Failed to submit move. Please refresh.")
+        ws.metadata.sendmessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.")
         return;
     }
 
-    // Their subscription info should tell us what game they're in, including the color they are.
-    const { id, color } = ws.metadata.subscriptions.game;
-    const opponentColor = math1.getOppositeColor(color);
-    const game = getGameByID(id);
     if (!game) {
-        console.error('They should not be submitting a move when the game their subscribed to is deleted! Server error. We should ALWAYS unsubscribe them when we delete the game.');
+        console.error(`Cannot submit move when player does not belong in a game! Game of id "${ws.metadata.subscriptions.game.id}" is deleted!`);
         return ws.metadata.sendmessage(ws, "general", "printerror", "Server error. Cannot submit move. This game does not exist.");
     }
+
+    // Their subscription info should tell us what game they're in, including the color they are.
+    const color = ws.metadata.subscriptions.game.color;
+    const opponentColor = math1.getOppositeColor(color);
 
     // If the game is already over, don't accept it.
     // Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.

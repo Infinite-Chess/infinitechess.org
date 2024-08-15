@@ -4,7 +4,8 @@
  * message, and if so, sends them the game info
  */
 
-const { getGameBySocket } = require('./gamemanager');
+// eslint-disable-next-line no-unused-vars
+const { Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const { cancelAutoAFKResignTimer, cancelDisconnectTimer } = require('./afkdisconnect');
 
@@ -13,10 +14,9 @@ const { cancelAutoAFKResignTimer, cancelDisconnectTimer } = require('./afkdiscon
  * The method that fires when a client sends the 'joingame' command after refreshing the page.
  * This should fetch any game their in and reconnect them to it.
  * @param {Socket} ws - Their new websocket
+ * @param {Game | undefined} game - The game they are in, if they are in one.
  */
-function onJoinGame(ws) {
-    // Is the client in a game?
-    const game = getGameBySocket(ws);
+function onJoinGame(ws, game) {
     if (!game) return; // They don't belong in a game
 
     const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);

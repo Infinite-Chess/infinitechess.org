@@ -133,7 +133,7 @@ function getGameByPlayer(player) {
  */
 function getGameBySocket(ws) {
     const gameID = ws.metadata.subscriptions.game?.id;
-    if (gameID != null) return getGameByID(gameID); 
+    if (gameID) return getGameByID(gameID); 
     
     // The socket is not subscribed to any game. Perhaps this is a resync/refresh?
 
@@ -152,7 +152,7 @@ function getGameBySocket(ws) {
  * agrees with the resulting game conclusion (no cheating detected),
  * and the server may change the players elos once both players send this.
  * @param {Socket} ws - Their websocket
- * @param {Game} game - The game they belong in, if they belong in one.
+ * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws, game) {
     const user = wsutility.getOwnerFromSocket(ws); // { member/browser }

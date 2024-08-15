@@ -24,7 +24,7 @@ const { cancelDisconnectTimer } = require('./afkdisconnect');
  * knows the game id and much other information. We only need to send
  * them the current move list, player timers, and game conclusion.
  * @param {Socket} ws - Their websocket
- * @param {Game} game - The game, if already known. If not specified we will find it.
+ * @param {Game | undefined} game - The game, if already known. If not specified we will find from the id they gave us.
  * @param {number} gameID - The game, if already known. If not specified we will find it.
  * @param {number} [replyToMessageID] - If specified, the id of the incoming socket message this resync will be the reply to
  */

@@ -17,7 +17,7 @@ const { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHav
 /** 
  * Called when client wants to offer a draw. Sends confirmation to opponent.
  * @param {Socket} ws - The socket
- * @param {Game} game - The game they belong in, if they belong in one.
+ * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function offerDraw(ws, game) {
     console.log("Client offers a draw.")
@@ -43,7 +43,7 @@ function offerDraw(ws, game) {
 /** 
  * Called when client accepts a draw. Ends the game.
  * @param {Socket} ws - The socket
- * @param {Game} game - The game they belong in, if they belong in one.
+ * @param {Game | undefined} game - The game they belong in, if they belong in one.
  * @returns {true | undefined} true if the draw accept was a success (the game manager should terminate the game), otherwise undefined.
  */
 function acceptDraw(ws, game) {
@@ -67,7 +67,7 @@ function acceptDraw(ws, game) {
 /** 
  * Called when client declines a draw. Alerts opponent.
  * @param {Socket} ws - The socket
- * @param {Game} game - The game they belong in, if they belong in one.
+ * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function declineDraw(ws, game) {
     if (!game) return console.error("Can't decline any open draw when they don't belong in a game.")

@@ -32,10 +32,10 @@ function handleGameRoute(ws, message) {
     const game = getGameBySocket(ws); // The game they belong in, if they belong in one.
     switch (message.action) {
         case 'submitmove':
-            submitMove(ws, message.value);
+            submitMove(ws, game, message.value);
             break;
         case 'joingame':
-            onJoinGame(ws);
+            onJoinGame(ws, game);
             break;
         case 'removefromplayersinactivegames':
             onRequestRemovalFromPlayersInActiveGames(ws, game);

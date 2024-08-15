@@ -17,7 +17,7 @@ const { setGameConclusion } = require('./gamemanager');
 /**
  * 
  * @param {Socket} ws - The socket
- * @param {Game} game - The game they belong in, if they belong in one.
+ * @param {Game | undefined} game - The game they belong in, if they belong in one.
  * @param {*} messageContents - The contents of the socket report message
  * @returns {true | undefined} true if the cheat report was valid (the game manager should terminate the game), otherwise undefined.
  */

@@ -19,7 +19,7 @@ const { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } = require(
 /**
  * Called when a client tries to abort a game.
  * @param {Socket} ws - The websocket
- * @param {Game} game - The game they belong in, if they belong in one.
+ * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function abortGame(ws, game) {
     if (!game) return console.error("Can't abort a game when player isn't in one.")
@@ -55,7 +55,7 @@ function abortGame(ws, game) {
 /**
  * Called when a client tries to resign a game.
  * @param {Socket} ws - The websocket
- * @param {Game} game - The game they belong in, if they belong in one.
+ * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function resignGame(ws, game) {
     if (!game) return console.error("Can't resign a game when player isn't in one.")
