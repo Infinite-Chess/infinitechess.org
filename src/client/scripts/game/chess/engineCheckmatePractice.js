@@ -102,10 +102,15 @@ const engineCheckmatePractice = (function(){
     let distancesEvalDictionary;
     let legalMoveEvalDictionary;
 
+    let ignorepawnmoves; // if true, white pawn moves are not considered as candidate moves
+
     /**
      * This method initializes the weights the evaluation function according to the checkmate ID provided
      */
     function initEvalWeights() {
+
+        // ignoring white pawns moves as candidate moves makes engine much stronger at low depths
+        ignorepawnmoves = true;
 
         // weights for piece values of white pieces
         pieceExistenceEvalDictionary = {
@@ -215,16 +220,10 @@ const engineCheckmatePractice = (function(){
         // variant-specific modifications to the weights:
         switch(checkmateSelectedID) {
             case "1K1Q1P-1k":
+                distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]] // queen
                 distancesEvalDictionary[5] = [[-20, manhattanNorm], [-20, manhattanNorm]] // king
                 break;
-            case "2R1N1P-1k":
-                distancesEvalDictionary[4] = [[-10, manhattanNorm], [-10, manhattanNorm]] // knight
-                break;
         }
-    }
-
-    function zero (square) {
-        return 0;
     }
 
     // computes the 2-norm of a square
@@ -245,7 +244,7 @@ const engineCheckmatePractice = (function(){
     // special norm for the pawn
     // the pawn is more threatening if it has a negative y-coordinate
     function pawnNorm(square) {
-        return diagonalNorm(square) + manhattanNorm(square) + Math.min( 3, Math.max(0, - square[1]) );
+        return diagonalNorm(square) + manhattanNorm(square);
     }
 
     // computes min(manhattan norm, manhattancap) of a square
@@ -430,13 +429,15 @@ const engineCheckmatePractice = (function(){
         const piece_properties = pieceTypeDictionary[piece_type];
         const piece_square = coordlist[piece_index];
 
+        if (ignorepawnmoves && piece_properties.is_pawn) return candidate_squares;
+
         // jump moves
         if (piece_properties.jumps) {
             const num_jumps = piece_properties.jumps.length;
             const shortrangeLimit = shortRangeJumpDictionary[piece_type];
             let best_target_square = 0;
             let bestmove_distance = Infinity;
-            let bestmove_diagNorm = Infinity;
+            let bestmove_diagSquaredNorm = Infinity;
             for (let move_index = 0; move_index < num_jumps; move_index++) {
                 const target_square = add_move(piece_square, piece_properties.jumps[move_index]);
                 // do not jump onto an occupied square
@@ -459,15 +460,15 @@ const engineCheckmatePractice = (function(){
                     if (blunders_piece) continue;
                 } 
                 const target_distance = manhattanNorm(target_square);
-                const target_diagNorm = diagonalNormSquared(target_square); // tiebreaker
+                const target_diagSquaredNorm = diagonalNormSquared(target_square); // tiebreaker
                 // only add jump moves that are short range in relation to black king
                 if (target_distance <= shortrangeLimit) {
                     candidate_squares.push(target_square);
                 }
                 // keep single jump move nearest to the black king in memory
-                else if (target_distance < bestmove_distance || (target_distance == bestmove_distance && target_diagNorm < bestmove_diagNorm)) {
+                else if (target_distance < bestmove_distance || (target_distance == bestmove_distance && target_diagSquaredNorm < bestmove_diagSquaredNorm)) {
                     bestmove_distance = target_distance;
-                    bestmove_diagNorm = target_diagNorm;
+                    bestmove_diagSquaredNorm = target_diagSquaredNorm;
                     best_target_square = target_square;
                 }
             }
