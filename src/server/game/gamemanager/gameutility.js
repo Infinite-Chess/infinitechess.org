@@ -16,6 +16,7 @@ const { getTranslation } = require('../../config/setupTranslations');
 const { ensureJSONString } = require('../../utility/JSONUtils');
 
 // Custom imports
+// eslint-disable-next-line no-unused-vars
 const { Socket, Game } = require('../TypeDefinitions')
 const variant1 = require('../variant1');
 const math1 = require('../math1');

@@ -6,7 +6,8 @@
  */
 
 // Custom imports
-const { Socket, Game } = require('../TypeDefinitions')
+// eslint-disable-next-line no-unused-vars
+const { Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const wsutility = require('../wsutility');
 const math1 = require('../math1')

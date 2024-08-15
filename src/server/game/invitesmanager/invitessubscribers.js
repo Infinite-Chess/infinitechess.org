@@ -6,7 +6,9 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
-const { Socket } = require('../TypeDefinitions.js')
+// eslint-disable-next-line no-unused-vars
+const { Socket } = require('../TypeDefinitions.js');
+const wsutility = require('../wsutility.js');
 
 /**
  * List of clients currently subscribed to invites list events, with their

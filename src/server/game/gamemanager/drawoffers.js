@@ -3,6 +3,7 @@
  * This script handles the creation and acceptance of draw offers in online games
  */
 
+// eslint-disable-next-line no-unused-vars
 const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const math1 = require('../math1')

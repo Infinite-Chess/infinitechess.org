@@ -9,6 +9,7 @@
 
 
 // Custom imports
+// eslint-disable-next-line no-unused-vars
 const { Socket, WebsocketMessage } = require('../TypeDefinitions')
 
 const { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } = require('./gamemanager');

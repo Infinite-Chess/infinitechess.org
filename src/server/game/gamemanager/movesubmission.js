@@ -3,7 +3,8 @@
 const { logEvents } = require('../../middleware/logEvents');
 
 // Custom imports
-const { Socket, WebsocketMessage, Game } = require('../TypeDefinitions')
+// eslint-disable-next-line no-unused-vars
+const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const wsutility = require('../wsutility');
 const sendNotify = wsutility.sendNotify;

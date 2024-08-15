@@ -1,6 +1,7 @@
 
 
 // Custom imports
+// eslint-disable-next-line no-unused-vars
 const { Socket, Game } = require('../TypeDefinitions')
 const gameutility = require('./gameutility');
 const wsutility = require('../wsutility');

@@ -13,7 +13,9 @@ const { readFile, writeFile } = require('../../utility/lockFile.js');
 const { getUsernameCaseSensitive } = require('../../controllers/members.js')
 
 // Custom imports
+// eslint-disable-next-line no-unused-vars
 const { Socket } = require('../TypeDefinitions.js')
+// eslint-disable-next-line no-unused-vars
 const { Invite, isInviteOurs } = require('./inviteutility.js')
 const wsutility = require('../wsutility.js');
 const sendNotify = wsutility.sendNotify;

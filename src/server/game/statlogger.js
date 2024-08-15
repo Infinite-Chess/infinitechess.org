@@ -5,6 +5,7 @@ const { writeFile } = require('../utility/lockFile.js');
 const math1 = require('./math1.js')
 
 const { writeFile_ensureDirectory } = require('../utility/fileUtils');
+// eslint-disable-next-line no-unused-vars
 const { Game } = require('./TypeDefinitions')
 
 const statsPath = path.resolve('database/stats.json');

@@ -14,7 +14,9 @@ const { readFile, writeFile } = require('../../utility/lockFile.js');
 const { getUsernameCaseSensitive } = require('../../controllers/members.js')
 
 // Custom imports
+// eslint-disable-next-line no-unused-vars
 const { Socket } = require('../TypeDefinitions.js')
+// eslint-disable-next-line no-unused-vars
 const { Invite, isInviteOurs } = require('./inviteutility.js')
 const wsutility = require('../wsutility.js');
 const sendNotify = wsutility.sendNotify;
@@ -41,7 +43,7 @@ function acceptInvite(ws, messageContents) { // { id, isPrivate }
 
     if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game");
 
-    if (!verifyMessageContents(messageContents)) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot cancel invite when incoming socket message body is in an invalid format!" , replyto);
+    if (!verifyMessageContents(messageContents)) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot cancel invite when incoming socket message body is in an invalid format!");
     const { id, isPrivate } = messageContents;
 
 
