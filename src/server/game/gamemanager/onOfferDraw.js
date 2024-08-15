@@ -10,7 +10,7 @@ const gameutility = require('./gameutility');
 const math1 = require('../math1')
 const movesscript1 = require('../movesscript1');
 const { setGameConclusion } = require('./gamemanager');
-const { isDrawOfferOpen, hasColorOfferedTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } = require('./drawoffers');
+const { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } = require('./drawoffers');
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -27,7 +27,7 @@ function offerDraw(ws, game) {
 
     if (gameutility.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
     if (isDrawOfferOpen(game)) return console.error(`${color.toUpperCase()} tried to offer a draw when the game already has a draw offer!`);
-    if (hasColorOfferedTooFast(game, color)) return console.error("Client tried to offer a draw too fast.")
+    if (hasColorOfferedDrawTooFast(game, color)) return console.error("Client tried to offer a draw too fast.")
     if (!movesscript1.isGameResignable(game)) return console.error("Client tried to offer a draw on the first 2 moves")
 
     // Extend the draw offer!

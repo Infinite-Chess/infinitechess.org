@@ -49,7 +49,7 @@ function doesColorHaveExtendedDrawOffer(game, color) {
  * @param {string} color 
  * @returns {boolean}
  */
-function hasColorOfferedTooFast(game, color) {
+function hasColorOfferedDrawTooFast(game, color) {
     const lastPlyDrawOffered = game.drawOffers.lastOfferPly[color]; // number | undefined
     if (lastPlyDrawOffered !== undefined) { // They have made atleast 1 offer this game
         const movesSinceLastOffer = game.moves.length - lastPlyDrawOffered;
@@ -85,7 +85,7 @@ module.exports = {
     movesBetweenDrawOffers,
     isDrawOfferOpen,
     doesColorHaveExtendedDrawOffer,
-    hasColorOfferedTooFast,
+    hasColorOfferedDrawTooFast,
     openDrawOffer,
     closeDrawOffer,
 }
