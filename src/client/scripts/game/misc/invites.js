@@ -22,6 +22,7 @@ const invites = (function(){
     const invitesContainer = document.getElementById('invites')
     const ourInviteContainer = document.getElementById('our-invite')
 
+    /** The invites list. @type {Invite[]} */
     let activeInvites; // Invites list
 
     let weHaveInvite = false;
@@ -327,7 +328,7 @@ const invites = (function(){
     function getInviteFromID(id) {
         if (!id) return console.error('Cannot find the invite with undefined id!')
 
-        for (let i = 0; i < activelength; i++) {
+        for (let i = 0; i < activeInvites.length; i++) {
             const invite = activeInvites[i]
             if (invite.id === id) return invite;
         }

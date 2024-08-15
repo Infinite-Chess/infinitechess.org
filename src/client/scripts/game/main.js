@@ -68,8 +68,7 @@ const main = (function(){
     function initListeners() {
         input.initListeners() // Mouse, touch, & key event listeners
 
-        window.addEventListener('beforeunload', function(event) {
-            event = event || window.event;
+        window.addEventListener('beforeunload', function() {
             // console.log('Detecting unload')
 
             // This allows us to control the reason why the socket was closed.

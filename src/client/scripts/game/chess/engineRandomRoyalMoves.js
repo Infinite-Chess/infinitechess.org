@@ -1,7 +1,13 @@
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// DEPRECATED ENGINE FORMAT!!! PLEASE REFER TO engineCheckmatePractice.js
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 /**
  * This script runs a very basic chess engine for enginegames that just computes a random move for the black royal piece.
  * runEngine(gamefile) is the only function that is called from the outside.
  * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
+ * 
+ * @author Andreas Tsevas
  */
 
 "use strict";

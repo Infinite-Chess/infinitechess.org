@@ -275,10 +275,10 @@ const wincondition = (function() {
                 return translations.termination.stalemate;
             case "repetition":
                 return translations.termination.repetition;
-            case "moverule":
+            case "moverule": { // Contain this case in a block so that it's variables are not hoisted 
                 const numbWholeMovesUntilAutoDraw = gamefile.gameRules.moveRule / 2;
                 return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
-            case "insuffmat":
+            } case "insuffmat":
                 return translations.termination.insuffmat;
             case "royalcapture":
                 return translations.termination.royalcapture;

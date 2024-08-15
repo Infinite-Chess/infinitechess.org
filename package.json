@@ -31,12 +31,16 @@
     "xss": "^1.0.15"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10"
+    "@eslint/js": "^9.9.0",
+    "@types/node": "^20.14.10",
+    "eslint": "^9.9.0",
+    "globals": "^15.9.0"
   },
   "scripts": {
     "build": "node build.mjs",
     "watch": "nodemon",
     "start": "node .",
-    "build-images": "node src/server/utility/generateImages.js"
+    "build-images": "node src/server/utility/generateImages.js",
+    "generate-dependancy-graph": "node src/server/utility/generateDependancyGraph.js"
   }
 }

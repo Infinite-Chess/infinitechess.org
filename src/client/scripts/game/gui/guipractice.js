@@ -181,7 +181,7 @@ const guipractice = (function(){
             },
             youAreColor: 'white',
             clock: "-",
-            currentEngine: engineCheckmatePractice,
+            currentEngine: "engineCheckmatePractice",
             variantOptions: {
                 turn: "white",
                 fullMove: "1",
