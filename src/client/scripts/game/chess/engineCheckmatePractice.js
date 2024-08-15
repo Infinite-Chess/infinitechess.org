@@ -102,15 +102,22 @@ const engineCheckmatePractice = (function(){
     let distancesEvalDictionary;
     let legalMoveEvalDictionary;
 
-    let ignorepawnmoves; // if true, white pawn moves are not considered as candidate moves
+    // whether to consider white pawn moves as candidate moves
+    let ignorepawnmoves;
+
+    // number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)
+    let wiggleroom;
 
     /**
-     * This method initializes the weights the evaluation function according to the checkmate ID provided
+     * This method initializes the weights the evaluation function according to the checkmate ID provided, as well as global search properties
      */
-    function initEvalWeights() {
+    function initEvalWeightsAndSearchProperties() {
 
-        // ignoring white pawns moves as candidate moves makes engine much stronger at low depths
+        // default: ignoring white pawns moves as candidate moves makes engine much stronger at low depths
         ignorepawnmoves = true;
+
+        // default
+        wiggleroom = 2;
 
         // weights for piece values of white pieces
         pieceExistenceEvalDictionary = {
@@ -223,6 +230,38 @@ const engineCheckmatePractice = (function(){
                 distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]] // queen
                 distancesEvalDictionary[5] = [[-20, manhattanNorm], [-20, manhattanNorm]] // king
                 break;
+            case "1K2N7B-1k":
+                distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]] // knight
+                legalMoveEvalDictionary = {
+                    // in check
+                    0: {
+                        0: -Infinity, // checkmate
+                        1: -200,
+                        2: -170,
+                        3: -140,
+                        4: -110,
+                        5: -80,
+                        6: -50,
+                        7: -25,
+                        8: 0
+                    },
+                    // not in check
+                    1: {
+                        0: Infinity, // stalemate
+                        1: -190,
+                        2: -160,
+                        3: -130,
+                        4: -100,
+                        5: -70,
+                        6: -40,
+                        7: -15,
+                        8: 0
+                    }
+                }
+                break;
+            case "1K3NR-1k":
+                wiggleroom = 1;
+                break;
         }
     }
 
@@ -247,11 +286,11 @@ const engineCheckmatePractice = (function(){
         return diagonalNorm(square) + manhattanNorm(square);
     }
 
-    // computes min(manhattan norm, manhattancap) of a square
-    function cappedManhattanNorm(square, manhattancap = 10) {
-        const manhattannorm = manhattanNorm(square);
-        if (manhattannorm < manhattancap) return manhattannorm;
-        else return manhattancap;
+    // special norm for the knight, which gives a massive malus to the knight near the black king for black
+    function knightmareNorm(square) {
+        const diagnormsquared = diagonalNormSquared(square);
+        const penalty = diagnormsquared < 3 ? -10 : ( diagnormsquared < 9 ? -5 : 0 );
+        return manhattanNorm(square) + penalty;
     }
 
     /**
@@ -493,8 +532,6 @@ const engineCheckmatePractice = (function(){
                     const c2 = - crossProduct(v1, piece_square) / denominator;
                     if (c1 < 0 || c2 <= 0) continue;
                     // suitable values for c1 and c2 were found, now compute min and max values for c1 and c2 to consider
-                    // const wiggleroom = Math.abs(denominator) > 1 ? 2 : 1;
-                    const wiggleroom = 2;
                     const c1_min = Math.ceil(c1 - wiggleroom);
                     const c1_max = Math.floor(c1 + wiggleroom);
                     const c2_min = Math.ceil(c2 - wiggleroom);
@@ -797,8 +834,8 @@ const engineCheckmatePractice = (function(){
                 start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
             }
 
-            // initialize the eval function weights
-            initEvalWeights();
+            // initialize the eval function weights and global search properties
+            initEvalWeightsAndSearchProperties();
 
             // run iteratively deepened move search
             runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
