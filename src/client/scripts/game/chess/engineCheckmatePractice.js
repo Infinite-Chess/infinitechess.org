@@ -131,7 +131,7 @@ const engineCheckmatePractice = (function(){
             3: [[2, manhattanNorm], [2, manhattanNorm]], // bishop
             4: [[15, manhattanNorm], [15, manhattanNorm]], // knight
             5: [[30, manhattanNorm], [30, manhattanNorm]], // king
-            6: [[140, manhattanAndDiagonalNorm], [200, manhattanAndDiagonalNorm]], // pawn
+            6: [[200, pawnNorm], [200, pawnNorm]], // pawn
             7: [[14, manhattanNorm], [14, manhattanNorm]], // amazon
             8: [[16, manhattanNorm], [16, manhattanNorm]], // hawk
             7: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
@@ -217,6 +217,9 @@ const engineCheckmatePractice = (function(){
             case "1K1Q1P-1k":
                 distancesEvalDictionary[5] = [[0, zero], [0, zero]] // king
                 break;
+            case "2R1N1P-1k":
+                distancesEvalDictionary[4] = [[-10, zero], [-10, zero]] // knight
+                break;
         }
     }
 
@@ -229,13 +232,20 @@ const engineCheckmatePractice = (function(){
         return Math.sqrt(square[0]**2 + square[1]**2);
     }
 
+    // computes the squared 2-norm of a square
+    function diagonalNormSquared(square) {
+        return square[0]**2 + square[1]**2;
+    }
+
     // computes the manhattan norm of a square
     function manhattanNorm(square) {
         return Math.abs(square[0]) + Math.abs(square[1]);
     }
 
-    function manhattanAndDiagonalNorm(square) {
-        return diagonalNorm(square) + manhattanNorm(square);
+    // special norm for the pawn
+    // the pawn is more threatening if it has a negative y-coordinate
+    function pawnNorm(square) {
+        return diagonalNorm(square) + manhattanNorm(square) + Math.min( 3, Math.max(0, - square[1]) );
     }
 
     // computes min(manhattan norm, manhattancap) of a square
@@ -426,6 +436,7 @@ const engineCheckmatePractice = (function(){
             const shortrangeLimit = shortRangeJumpDictionary[piece_type];
             let best_target_square = 0;
             let bestmove_distance = Infinity;
+            let bestmove_diagNorm = Infinity;
             for (let move_index = 0; move_index < num_jumps; move_index++) {
                 const target_square = add_move(piece_square, piece_properties.jumps[move_index]);
                 // do not jump onto an occupied square
@@ -448,13 +459,15 @@ const engineCheckmatePractice = (function(){
                     if (blunders_piece) continue;
                 } 
                 const target_distance = manhattanNorm(target_square);
+                const target_diagNorm = diagonalNormSquared(target_square); // tiebreaker
                 // only add jump moves that are short range in relation to black king
                 if (target_distance <= shortrangeLimit) {
                     candidate_squares.push(target_square);
                 }
                 // keep single jump move nearest to the black king in memory
-                else if (target_distance < bestmove_distance) {
+                else if (target_distance < bestmove_distance || (target_distance == bestmove_distance && target_diagNorm < bestmove_diagNorm)) {
                     bestmove_distance = target_distance;
+                    bestmove_diagNorm = target_diagNorm;
                     best_target_square = target_square;
                 }
             }
@@ -665,6 +678,7 @@ const engineCheckmatePractice = (function(){
                 const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta)
                 const new_score = evaluation.score;
                 const termination_depth = evaluation.termination_depth;
+                // if (depth == start_depth) console.log(`Depth ${depth}, Move: ${move}, Score: ${new_score}.`);
                 if (new_score >= maxScore) {
                     if (new_score > maxScore || termination_depth < bestDepth || (termination_depth == bestDepth && Math.random() < 0.5)) {
                         bestMove = move;
@@ -731,12 +745,13 @@ const engineCheckmatePractice = (function(){
         // iteratively deeper and deeper search
         for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
             const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity);
+            // console.log(`Depth ${depth}, Move: ${evaluation.move}, Score: ${evaluation.score}.`);
             if (evaluation.move && !squares_are_equal(evaluation.move, globallyBestMove)) {
                 globallyBestMove = evaluation.move;
                 globallyBestScore = evaluation.score;
                 self.postMessage(move_to_gamefile_move(globallyBestMove))
             }
-            // console.log(`Depth ${depth}: Best score: ${evaluation.score}, Best move: ${move}.`);
+            // console.log(`Depth ${depth}: Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
         }
     }
 
