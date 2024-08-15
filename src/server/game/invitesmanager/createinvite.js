@@ -27,13 +27,14 @@ const variant1 = require('../variant1.js')
 const clockweb = require('../clockweb.js');
 const { writeFile_ensureDirectory } = require('../../utility/fileUtils');
 const { setTimeServerRestarting, cancelServerRestart, getTimeServerRestarting } = require('../serverrestart.js');
-const { isSocketInAnActiveGame, broadCastGameRestarting } = require('../gamemanager/gamemanager.js');
+const { broadCastGameRestarting } = require('../gamemanager/gamemanager.js');
 const { getDisplayNameOfPlayer } = require('../gamemanager/gameutility.js');
 
 const { printActiveGameCount } = require('../gamemanager/gamecount')
 
 
-const { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } = require('./invitesmanager.js')
+const { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } = require('./invitesmanager.js');
+const { isSocketInAnActiveGame } = require('../gamemanager/activeplayers.js');
 
 
 

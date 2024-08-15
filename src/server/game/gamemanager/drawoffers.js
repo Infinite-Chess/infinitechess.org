@@ -5,6 +5,7 @@
  * 
  * It does NOT contain the routes for when a player
  * extends/accepts a draw offer!
+ * NOR does it send any websocket messages.
  */
 
 // eslint-disable-next-line no-unused-vars

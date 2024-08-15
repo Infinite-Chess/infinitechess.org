@@ -14,11 +14,11 @@ const { Socket } = require('../TypeDefinitions.js')
 const { Invite, isInviteOurs } = require('./inviteutility.js')
 const wsutility = require('../wsutility.js');
 const sendNotify = wsutility.sendNotify;
-const { createGame, isSocketInAnActiveGame } = require('../gamemanager/gamemanager.js');
+const { createGame } = require('../gamemanager/gamemanager.js');
 const { removeSocketFromInvitesSubs } = require('./invitessubscribers.js');
-
 const { broadcastGameCountToInviteSubs } = require('../gamemanager/gamecount')
 const { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } = require('./invitesmanager.js');
+const { isSocketInAnActiveGame } = require('../gamemanager/activeplayers.js');
 
 
 /**

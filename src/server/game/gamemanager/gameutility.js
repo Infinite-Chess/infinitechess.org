@@ -33,15 +33,18 @@ const { getTimeServerRestarting } = require('../serverrestart');
 const gameutility = (function() {
 
     /**
-     * Game constructor. Descriptions for each property can be found in the {@link Game} type definition.
+     * Construct a new online game from the invite options,
+     * and subscribe the players to the game for receiving updates.
+     * 
+     * Descriptions for each property can be found in the {@link Game} type definition.
      * @param {Object} inviteOptions - The invite options that contain various settings for the game.
      * @param {string} inviteOptions.variant - The game variant to be played.
      * @param {string} inviteOptions.publicity - The publicity setting of the game. Can be "public" or "private".
      * @param {string} inviteOptions.clock - The clock format for the game, in the form "s+s" or "-" for no clock.
      * @param {string} inviteOptions.rated - The rating type of the game. Can be "casual" or "rated".
-     * @param {Object} id - The unique identifier to give this game.
-     * @param {Object} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
-     * @param {Object} player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+     * @param {string} id - The unique identifier to give this game.
+     * @param {Socket | undefined} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
+     * @param {Socket} player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
      * @returns {Game} The new game.
      */
     function newGame(inviteOptions, id, player1Socket, player2Socket) {
@@ -192,6 +195,8 @@ const gameutility = (function() {
      * @param {Object} options.sendMessage - Whether to inform the client to unsub from the game. Default: true. This should be false if we're unsubbing because the socket is closing.
      */
     function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
+        if (!ws) return; // Socket undefined, can't unsub.
+
         // 1. Detach their socket from the game so we no longer send updates
         removePlayerSocketFromGame(game, ws.metadata.subscriptions.game.color)
 
@@ -620,6 +625,14 @@ const gameutility = (function() {
         sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message)
     }
 
+    /**
+     * Cancel the timer to delete a game after it has ended if it is currently running.
+     * @param {Game} game 
+     */
+    function cancelDeleteGameTimer(game) {
+        clearTimeout(game.deleteTimeoutID);
+    }
+
     return Object.freeze({
         newGame,
         subscribeClientToGame,
@@ -638,7 +651,8 @@ const gameutility = (function() {
         isAutoResignDisconnectTimerActiveForColor,
         sendUpdatedClockToColor,
         sendMoveToColor,
-        getDisplayNameOfPlayer
+        getDisplayNameOfPlayer,
+        cancelDeleteGameTimer
     })
 
 })()

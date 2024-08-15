@@ -8,8 +8,8 @@ const { DEV_BUILD, HOST_NAME, GAME_VERSION } = require('./config/config');
 const { WebsocketMessage, Socket } = require('./game/TypeDefinitions')
 const { genUniqueID, generateNumbID } = require('./game/math1');
 const wsutility = require('./game/wsutility');
-const { handleInviteRoute } = require('./game/invitesmanager/invitesrouter')
 const { handleGameRoute } = require('./game/gamemanager/gamerouter');
+const { handleInviteRoute } = require('./game/invitesmanager/invitesrouter')
 const { unsubClientFromGameBySocket } = require('./game/gamemanager/gamemanager');
 const { subToInvitesList, unsubFromInvitesList, userHasInvite } = require('./game/invitesmanager/invitesmanager');
 
