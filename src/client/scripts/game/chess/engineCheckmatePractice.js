@@ -22,10 +22,11 @@ const engineCheckmatePractice = (function(){
     // the ID of the currently selected checkmate
     let checkmateSelectedID;
 
-    // The move that is currently considered best by this engine
-    // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
+    // The informtion that is currently considered best by this engine
+    // Whenever this gets initialized or updated, the engine WebWorker should send a message to the main thread!!
     let globallyBestMove = [0,0];
     let globallyBestScore = - Infinity;
+    let globalPliesToMate = Infinity;
 
     // the real coordinates of the black royal piece in the gamefile
     let gamefile_royal_coords;
@@ -229,6 +230,9 @@ const engineCheckmatePractice = (function(){
             case "1K1Q1P-1k":
                 distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]] // queen
                 distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]] // king
+                break;
+            case "2AM-1rc":
+                wiggleroom = 1;
                 break;
             case "1K2N7B-1k":
                 distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]] // knight
@@ -723,13 +727,12 @@ const engineCheckmatePractice = (function(){
                         bestMove = move;
                         maxScore = new_score;
                         deepestDepth = termination_depth;
-                        /*
-                        if (depth == start_depth && new_score > globallyBestScore && !squares_are_equal(move, globallyBestMove)) {
+                        if (depth == start_depth && new_score > globallyBestScore && globalPliesToMate >= start_depth - termination_depth) {
                             globallyBestMove = move;
                             globallyBestScore = new_score;
+                            globalPliesToMate = Math.min(globalPliesToMate, termination_depth > 0 ? start_depth - termination_depth : Infinity);
                             self.postMessage(move_to_gamefile_move(globallyBestMove));
                         }
-                        */
                     }
                 }
                 alpha = Math.max(alpha, new_score);
@@ -790,11 +793,9 @@ const engineCheckmatePractice = (function(){
             const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, depth, 0);
             globallyBestMove = evaluation.bestMove;
             globallyBestScore = evaluation.score;
+            globalPliesToMate = evaluation.termination_depth > 0 ? depth - evaluation.termination_depth : Infinity;
             self.postMessage(move_to_gamefile_move(globallyBestMove))
-            console.log(`Depth ${depth}, Termination depth: ${evaluation.termination_depth}, Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
-            const [test_piecelist, test_coordlist] = make_black_move(globallyBestMove, piecelist, coordlist);
-            console.log(`amazon from ${test_coordlist[0]} may move to ${get_white_piece_candidate_squares(0, test_piecelist, test_coordlist)}`)
-            console.log(`amazon from ${test_coordlist[1]} may move to ${get_white_piece_candidate_squares(1, test_piecelist, test_coordlist)}`)
+            // console.log(`Depth ${depth}, Plies To Mate: ${globalPliesToMate}, Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
         }
     }
 

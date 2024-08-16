@@ -12,7 +12,7 @@ const enginegame = (function(){
     let currentEngineMove; // currently best move recommended by the engine
     let engineConfig; // json that is sent to the engine, giving it extra config information
 
-    const engineTimeLimitPerMoveMillis = 1000; // hard time limit for the engine to think in milliseconds
+    const engineTimeLimitPerMoveMillis = 500; // hard time limit for the engine to think in milliseconds
 
     function areInEngineGame() { return inEngineGame }
 
