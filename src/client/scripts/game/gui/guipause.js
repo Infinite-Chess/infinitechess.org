@@ -5,19 +5,19 @@
 
 "use strict";
 
-const guipause = (function(){
+const guipause = (function() {
 
     // Variables
 
     // Pause UI
-    let isPaused = false
-    const element_pauseUI = document.getElementById('pauseUI')
-    const element_resume = document.getElementById('resume')
-    const element_pointers = document.getElementById('togglepointers')
-    const element_copygame = document.getElementById('copygame')
-    const element_pastegame = document.getElementById('pastegame')
-    const element_mainmenu = document.getElementById('mainmenu')
-    const element_perspective = document.getElementById('toggleperspective')
+    let isPaused = false;
+    const element_pauseUI = document.getElementById('pauseUI');
+    const element_resume = document.getElementById('resume');
+    const element_pointers = document.getElementById('togglepointers');
+    const element_copygame = document.getElementById('copygame');
+    const element_pastegame = document.getElementById('pastegame');
+    const element_mainmenu = document.getElementById('mainmenu');
+    const element_perspective = document.getElementById('toggleperspective');
     
     // Functions
 
@@ -33,15 +33,15 @@ const guipause = (function(){
 
     function open() {
         isPaused = true;
-        changeTextOfMainMenuButton()
-        updatePasteButtonTransparency()
-        style.revealElement(element_pauseUI)
-        initListeners()
+        changeTextOfMainMenuButton();
+        updatePasteButtonTransparency();
+        style.revealElement(element_pauseUI);
+        initListeners();
     }
 
     function toggle() {
         if (!isPaused) open();
-        else callback_Resume()
+        else callback_Resume();
     }
 
     function updatePasteButtonTransparency() {
@@ -49,8 +49,8 @@ const guipause = (function(){
         const movesLength = moves.length;
         const legalInPrivateMatch = onlinegame.getIsPrivate() && (movesLength === 0 || moves[0].length === 1 && moves[0][0] == null);
 
-        if ((game.areInNonLocalGame() && !legalInPrivateMatch)) element_pastegame.classList.add('opacity-0_5')
-        else                                                                                        element_pastegame.classList.remove('opacity-0_5')
+        if ((game.areInNonLocalGame() && !legalInPrivateMatch)) element_pastegame.classList.add('opacity-0_5');
+        else element_pastegame.classList.remove('opacity-0_5');
     }
 
     function changeTextOfMainMenuButton() {
@@ -64,44 +64,44 @@ const guipause = (function(){
     }
 
     function initListeners() {
-        element_resume.addEventListener('click', callback_Resume)
-        element_pointers.addEventListener('click', callback_TogglePointers)
-        element_copygame.addEventListener('click', copypastegame.callbackCopy)
-        element_pastegame.addEventListener('click', copypastegame.callbackPaste)
-        element_mainmenu.addEventListener('click', callback_MainMenu)
-        element_perspective.addEventListener('click', callback_Perspective)
+        element_resume.addEventListener('click', callback_Resume);
+        element_pointers.addEventListener('click', callback_TogglePointers);
+        element_copygame.addEventListener('click', copypastegame.callbackCopy);
+        element_pastegame.addEventListener('click', copypastegame.callbackPaste);
+        element_mainmenu.addEventListener('click', callback_MainMenu);
+        element_perspective.addEventListener('click', callback_Perspective);
     }
 
     function closeListeners() {
-        element_resume.removeEventListener('click', callback_Resume)
-        element_pointers.removeEventListener('click', callback_TogglePointers)
-        element_copygame.removeEventListener('click', copypastegame.callbackCopy)
-        element_pastegame.removeEventListener('click', copypastegame.callbackPaste)
-        element_mainmenu.removeEventListener('click', callback_MainMenu)
-        element_perspective.removeEventListener('click', callback_Perspective)
+        element_resume.removeEventListener('click', callback_Resume);
+        element_pointers.removeEventListener('click', callback_TogglePointers);
+        element_copygame.removeEventListener('click', copypastegame.callbackCopy);
+        element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
+        element_mainmenu.removeEventListener('click', callback_MainMenu);
+        element_perspective.removeEventListener('click', callback_Perspective);
     }
 
     function callback_Resume(event) {
         if (!isPaused) return;
         event = event || window.event;
         isPaused = false;
-        style.hideElement(element_pauseUI)
-        closeListeners()
+        style.hideElement(element_pauseUI);
+        closeListeners();
         main.renderThisFrame();
     }
 
     async function callback_MainMenu(event) {
         event = event || window.event;
-        onlinegame.onMainMenuPress()
-        game.closeNonLocalGame()
-        callback_Resume()
-        game.unloadGame()
+        onlinegame.onMainMenuPress();
+        game.closeNonLocalGame();
+        callback_Resume();
+        game.unloadGame();
         clock.reset();
-        guinavigation.close()
-        guititle.open()
+        guinavigation.close();
+        guititle.open();
     }
 
-    function callback_TogglePointers (event) {
+    function callback_TogglePointers(event) {
         event = event || window.event;
         main.renderThisFrame();
         let mode = arrows.getMode();
@@ -109,15 +109,15 @@ const guipause = (function(){
         if (mode > 2) mode = 0;
         arrows.setMode(mode);
         const text = mode === 0 ? translations["arrows_off"]
-                        : mode === 1 ? translations["arrows_defense"]
-                        : translations["arrows_all"];
+            : mode === 1 ? translations["arrows_defense"]
+                : translations["arrows_all"];
         element_pointers.textContent = text;
-        if (!isPaused) statustext.showStatus(translations["toggled"] + " " + text)
+        if (!isPaused) statustext.showStatus(translations["toggled"] + " " + text);
     }
 
     function callback_Perspective(event) {
         event = event || window.event;
-        perspective.toggle()
+        perspective.toggle();
     }
     
     return Object.freeze({
@@ -128,6 +128,6 @@ const guipause = (function(){
         changeTextOfMainMenuButton,
         callback_Resume,
         callback_TogglePointers,
-    })
+    });
 
 })();

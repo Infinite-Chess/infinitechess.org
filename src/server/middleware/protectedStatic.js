@@ -1,7 +1,7 @@
 
 const express = require('express');
 const path = require('path');
-const { isOwner, isPatron } = require("./verifyRoles")
+const { isOwner, isPatron } = require("./verifyRoles");
 
 function protectedStatic(req, res, next) {
     // If express.static does not find a file, it will return a function we need call to move on!
@@ -17,4 +17,4 @@ function protectedStatic(req, res, next) {
 
 module.exports = {
     protectedStatic
-}
+};

@@ -24,12 +24,12 @@ const htmlscript = (function() {
 
     // This stuff needs to be AFTER decoding audio buffer for our audio context
     // because the 'load' event listener needs to be 2nd in line, not first.
-    document.addEventListener('mousedown', callback_OnUserGesture)
-    document.addEventListener('click', callback_OnUserGesture)
+    document.addEventListener('mousedown', callback_OnUserGesture);
+    document.addEventListener('click', callback_OnUserGesture);
     function callback_OnUserGesture() {
         atleastOneUserGesture = true;
-        document.removeEventListener('mousedown', callback_OnUserGesture)
-        document.removeEventListener('click', callback_OnUserGesture)
+        document.removeEventListener('mousedown', callback_OnUserGesture);
+        document.removeEventListener('click', callback_OnUserGesture);
         if (audioContextDefined) sound.getAudioContext().resume();
         else window.addEventListener('load', () => { // resume() the Audio Context as soon as the page loads
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
@@ -48,34 +48,34 @@ const htmlscript = (function() {
         let audioDecodedBuffer;
 
         await fetch(pathToAllSoundsFile)
-        .then(response => response.arrayBuffer())
-        .then(async arrayBuffer => {
+            .then(response => response.arrayBuffer())
+            .then(async arrayBuffer => {
             // Process the array buffer...
             // Decode the audio buffer data
-            await audioContext.decodeAudioData(arrayBuffer, function(decodedBuffer) {
-                audioDecodedBuffer = decodedBuffer;
+                await audioContext.decodeAudioData(arrayBuffer, function(decodedBuffer) {
+                    audioDecodedBuffer = decodedBuffer;
+                });
+            })
+            .catch(error => {
+                console.error(`An error ocurred during loading of sounds: ${error.message}`);
+                callback_LoadingError();
             });
-        })
-        .catch(error => {
-            console.error(`An error ocurred during loading of sounds: ${error.message}`)
-            callback_LoadingError();
-        });
 
         // I don't want to miss calling this if the document is ready before this audio is finished loading
         if (document.readyState === 'complete') sendAudioContextToScript();
         else window.addEventListener('load', () => { // Send our audio context to our sound script.
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
-            sound.initAudioContext(audioContext, audioDecodedBuffer)
+            sound.initAudioContext(audioContext, audioDecodedBuffer);
             audioContextDefined = true;
         });
         function sendAudioContextToScript() {
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
-            sound.initAudioContext(audioContext, audioDecodedBuffer)
+            sound.initAudioContext(audioContext, audioDecodedBuffer);
             audioContextDefined = true;
         }
     })();
     
-    function hasUserGesturedAtleastOnce() { return atleastOneUserGesture };
+    function hasUserGesturedAtleastOnce() { return atleastOneUserGesture; };
 
     // If there's an error in loading, stop the loading animation
     // ...
@@ -148,6 +148,6 @@ const htmlscript = (function() {
         callback_LoadingError,
         removeOnerror,
         hasUserGesturedAtleastOnce
-    })
+    });
 
 })();

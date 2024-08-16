@@ -13,7 +13,7 @@ const perspective = (function() {
 
     let isViewingBlackPerspective = false;
 
-    let mouseSensitivity = 0.13; // 0.13 Default
+    const mouseSensitivity = 0.13; // 0.13 Default
 
     // How far to render the board into the distance
     const distToRenderBoard = 1500; // Default 1500. When changing this, also change  camera.getZFar()
@@ -24,7 +24,7 @@ const perspective = (function() {
     // Crosshair
     const crosshairThickness = 2.5; // Default: 2.5
     const crosshairWidth = 18; // Default: 16.7
-    const crosshairColor = [1, 1, 1,  1]; // RGBA. It will invert the colors. This is what color BLACKS will be dyed! Whites will appear black.
+    const crosshairColor = [1, 1, 1, 1]; // RGBA. It will invert the colors. This is what color BLACKS will be dyed! Whites will appear black.
     /** The buffer model of the mouse crosshair when in perspective mode.
      * @type {BufferModel} */
     let crosshairModel;
@@ -37,27 +37,27 @@ const perspective = (function() {
     function getIsViewingBlackPerspective() { return isViewingBlackPerspective; }
 
     function toggle() {
-        if (!input.isMouseSupported()) return statustext.showStatus(translations["rendering"]["perspective_mode_on_desktop"])
+        if (!input.isMouseSupported()) return statustext.showStatus(translations["rendering"]["perspective_mode_on_desktop"]);
 
-        if (!enabled) enable()
-        else disable()
+        if (!enabled) enable();
+        else disable();
     }
 
     function enable() {
         if (enabled) return console.error("Should not be enabling perspective when it is already enabled.");
         enabled = true;
 
-        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["on"]}`
+        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["on"]}`;
 
-        guipause.callback_Resume()
+        guipause.callback_Resume();
 
-        lockMouse()
+        lockMouse();
 
-        board.initDarkTilesModel() // Expanded model
+        board.initDarkTilesModel(); // Expanded model
         initCrosshairModel();
-        piecesmodel.initRotatedPiecesModel(game.getGamefile()) // Async
+        piecesmodel.initRotatedPiecesModel(game.getGamefile()); // Async
 
-        statustext.showStatus(translations["rendering"]["movement_tutorial"])
+        statustext.showStatus(translations["rendering"]["movement_tutorial"]);
     }
 
     function disable() {
@@ -67,15 +67,15 @@ const perspective = (function() {
         enabled = false;
         main.enableForceRender();
         // document.exitPointerLock()
-        guipause.callback_Resume()
+        guipause.callback_Resume();
 
-        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["off"]}`
+        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["off"]}`;
         
-        resetRotations()
+        resetRotations();
         
-        board.initDarkTilesModel() // Shrunk model
+        board.initDarkTilesModel(); // Shrunk model
 
-        piecesmodel.eraseRotatedModel(game.getGamefile())
+        piecesmodel.eraseRotatedModel(game.getGamefile());
     }
 
     // Sets rotations to orthographic view. Sensitive to if we're white or black.
@@ -83,9 +83,9 @@ const perspective = (function() {
         rotX = 0;
         rotZ = game.getOurColorInNonLocalGame() === 'black' ? 180 : 0; // Will be undefined if not in online or engine game
 
-        updateIsViewingBlackPerspective()
+        updateIsViewingBlackPerspective();
 
-        camera.onPositionChange()
+        camera.onPositionChange();
     }
 
     // Called when the mouse re-clicks the screen after ALREADY in perspective.
@@ -95,7 +95,7 @@ const perspective = (function() {
         if (guipause.areWePaused()) return;
         if (selection.isPawnCurrentlyPromoting()) return;
 
-        lockMouse()
+        lockMouse();
     }
 
     function lockMouse() {
@@ -113,8 +113,8 @@ const perspective = (function() {
         // Change rotations based on mouse motion
         rotX += mouseChangeInY * mouseSensitivity;
         rotZ += mouseChangeInX * mouseSensitivity;
-        capRotations()
-        updateIsViewingBlackPerspective()
+        capRotations();
+        updateIsViewingBlackPerspective();
 
         camera.onPositionChange(); // Calculate new viewMatrix
     }
@@ -126,20 +126,20 @@ const perspective = (function() {
         const cameraPos = camera.getPosition(); // devMode-sensitive
 
         // Shift the origin before rotating plane
-        mat4.translate(viewMatrix, viewMatrix, cameraPos)
+        mat4.translate(viewMatrix, viewMatrix, cameraPos);
 
         if (rotX < 0) { // Looking up somewhat
             const rotXRad = rotX * (Math.PI / 180);
-            mat4.rotate(viewMatrix, viewMatrix, rotXRad, [1,0,0])
+            mat4.rotate(viewMatrix, viewMatrix, rotXRad, [1,0,0]);
         }
         // const rotYRad = rotY * (Math.PI / 180);
         // mat4.rotate(viewMatrix, viewMatrix, rotYRad, [0,1,0])
         const rotZRad = rotZ * (Math.PI / 180);
-        mat4.rotate(viewMatrix, viewMatrix, rotZRad, [0,0,1])
+        mat4.rotate(viewMatrix, viewMatrix, rotZRad, [0,0,1]);
 
         // Shift the origin back where it was
-        const negativeCameraPos = [-cameraPos[0], -cameraPos[1], -cameraPos[2]]
-        mat4.translate(viewMatrix, viewMatrix, negativeCameraPos)
+        const negativeCameraPos = [-cameraPos[0], -cameraPos[1], -cameraPos[2]];
+        mat4.translate(viewMatrix, viewMatrix, negativeCameraPos);
     }
 
     // Returns true if we have no perspective rotation
@@ -164,7 +164,7 @@ const perspective = (function() {
     function isMouseLocked() {
         return document.pointerLockElement === camera.canvas
             || document.mozPointerLockElement === camera.canvas
-            || document.webkitPointerLockElement === camera.canvas
+            || document.webkitPointerLockElement === camera.canvas;
     }
 
     // Buffer model of crosshair. Called whenever perspective is enabled, screen is resized, or devMode is toggled.
@@ -178,6 +178,7 @@ const perspective = (function() {
 
         const [r,g,b,a] = crosshairColor;
 
+        /* eslint-disable indent */
         const data = new Float32Array([
             //       Vertex         Color
             //              MEDICAL PLUS sign cross hair
@@ -223,29 +224,30 @@ const perspective = (function() {
             //     innerSide,  -outerSide,        r, g, b, a,
             //     innerSide,  -innerSide,       r, g, b, a,
             //     -innerSide,  -innerSide,      r, g, b, a,
-            ])
-        crosshairModel = buffermodel.createModel_Colored(data, 2, "TRIANGLES") 
+        ]);
+        /* eslint-enable indent */
+        crosshairModel = buffermodel.createModel_Colored(data, 2, "TRIANGLES"); 
     }
 
     function renderCrosshair() {
         if (!enabled) return;
         if (main.videoMode) return; // Don't render while recording
-        if (crosshairModel == null) return console.error("Crosshair model is null but it should have been defined when toggling on perspective!")
+        if (crosshairModel == null) return console.error("Crosshair model is null but it should have been defined when toggling on perspective!");
 
-        const perspectiveViewMatrixCopy = camera.getViewMatrix()
-        camera.initViewMatrix(true) // Init view while ignoring perspective rotations
+        const perspectiveViewMatrixCopy = camera.getViewMatrix();
+        camera.initViewMatrix(true); // Init view while ignoring perspective rotations
 
         webgl.executeWithInverseBlending(() => {
             crosshairModel.render();
-        })
+        });
         
-        camera.setViewMatrix(perspectiveViewMatrixCopy) // Re-put back the perspective rotation
+        camera.setViewMatrix(perspectiveViewMatrixCopy); // Re-put back the perspective rotation
     }
 
     // Used when the promotion UI opens
     function unlockMouse() {
         if (!enabled) return;
-        document.exitPointerLock()
+        document.exitPointerLock();
     }
 
     function updateIsViewingBlackPerspective() {
@@ -270,6 +272,6 @@ const perspective = (function() {
         unlockMouse,
         isLookingUp,
         initCrosshairModel
-    })
+    });
 
 })();

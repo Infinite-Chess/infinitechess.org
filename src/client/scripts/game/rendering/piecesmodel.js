@@ -33,12 +33,12 @@ const piecesmodel = {
         gamefile.mesh.locked++;
         gamefile.mesh.isGenerating++;
 
-        console.log("Regenerating pieces model.")
+        console.log("Regenerating pieces model.");
 
         // Whenever you move 10,000 tiles away, the piece rendering starts to get gittery, SO regen the model with an offset! No more gittering!
         // Do we need an offset? Calculate the nearest 10,000
 
-        gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), piecesmodel.regenRange)
+        gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), piecesmodel.regenRange);
 
         // How many indeces will we need?
         const coinCount = coin.getCoinCount();
@@ -75,27 +75,29 @@ const piecesmodel = {
         stats.showPiecesMesh();
 
         // Iterates through every single piece and performs specified function on said piece
-        await pieces.forEachPieceType_Async(concatBufferData, { ignoreVoids: true })
+        await pieces.forEachPieceType_Async(concatBufferData, { ignoreVoids: true });
 
         // Adds pieces of that type's buffer to the overall data
-        async function concatBufferData (pieceType) {
+        async function concatBufferData(pieceType) {
             if (gamefile.mesh.terminate) return;
             const thesePieces = game.getGamefile().ourPieces[pieceType];
 
-            const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(pieceType, rotation)
+            const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(pieceType, rotation);
 
             if (colorArgs) {
                 const pieceColor = math.getPieceColorFromType(pieceType);
                 const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
                 // var's are FUNCTION-scoped!
+                /* eslint-disable no-var */
                 var r = colorArray[0];
                 var g = colorArray[1];
                 var b = colorArray[2];
                 var a = colorArray[3];
+                /* eslint-enable no-var */
             }
 
             for (let i = 0; i < thesePieces.length; i++) {
-                const thisPiece = thesePieces[i]
+                const thisPiece = thesePieces[i];
 
                 // If the piece is undefined, just leave the 0's there..
                 if (!thisPiece) {
@@ -106,7 +108,7 @@ const piecesmodel = {
                 const { startX, startY, endX, endY } = bufferdata.getCoordDataOfTile_WithOffset(gamefile.mesh.offset, thisPiece);
 
                 const data = colorArgs ? bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a)
-                                       : bufferdata.getDataQuad_Texture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY)
+                    : bufferdata.getDataQuad_Texture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY);
 
                 for (let a = 0; a < data.length; a++) {
                     mesh.data64[currIndex] = data[a];
@@ -155,14 +157,16 @@ const piecesmodel = {
         }
         main.enableForceRender(); // Renders the screen EVEN in a local-pause
 
+        /* eslint-disable indent */
         mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
-                                     : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
-                                    //  : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
+                               : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
+        //                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
+        /* eslint-enable indent */
 
         math.copyPropertiesToObject(mesh, gamefile.mesh);
         
         // If we are also in perspective mode, init the rotated model as well!
-        if (perspective.getEnabled()) await piecesmodel.initRotatedPiecesModel(game.getGamefile(), true) // ignoreLock
+        if (perspective.getEnabled()) await piecesmodel.initRotatedPiecesModel(game.getGamefile(), true); // ignoreLock
 
         if (gamefile.mesh.terminate) {
             gamefile.mesh.terminate = false;
@@ -173,9 +177,9 @@ const piecesmodel = {
 
         voids.regenModel(gamefile);
 
-        if (giveStatus) statustext.showStatus(translations["rendering"]["regenerated_pieces"], false, 0.5)
+        if (giveStatus) statustext.showStatus(translations["rendering"]["regenerated_pieces"], false, 0.5);
         
-        main.renderThisFrame()
+        main.renderThisFrame();
         main.enableForceRender(); // Renders the screen EVEN in a local-pause
 
         gamefile.mesh.locked--;
@@ -193,47 +197,47 @@ const piecesmodel = {
      * @param {number[]} newCoords - The destination coordinates
      */
     movebufferdata(gamefile, piece, newCoords) {
-        if (!gamefile.mesh.data64) throw new Error("Should not be moving piece data when data64 is not defined!")
-        if (!gamefile.mesh.data32) throw new Error("Should not be moving piece data when data32 is not defined!")
+        if (!gamefile.mesh.data64) throw new Error("Should not be moving piece data when data64 is not defined!");
+        if (!gamefile.mesh.data32) throw new Error("Should not be moving piece data when data32 is not defined!");
         
-        const index = piecesmodel.getPieceIndexInData(gamefile, piece)
+        const index = piecesmodel.getPieceIndexInData(gamefile, piece);
 
         const stridePerPiece = gamefile.mesh.stride * piecesmodel.pointsPerSquare;
 
-        let i = index * stridePerPiece;
+        const i = index * stridePerPiece;
 
         const { startX, startY, endX, endY } = bufferdata.getCoordDataOfTile_WithOffset(gamefile.mesh.offset, newCoords);
 
         const stride = gamefile.mesh.stride;
 
-        moveData(gamefile.mesh.data64)
-        moveData(gamefile.mesh.data32)
+        moveData(gamefile.mesh.data64);
+        moveData(gamefile.mesh.data32);
         
         if (perspective.getEnabled()) {
-            moveData(gamefile.mesh.rotatedData64)
-            moveData(gamefile.mesh.rotatedData32)
+            moveData(gamefile.mesh.rotatedData64);
+            moveData(gamefile.mesh.rotatedData32);
         }
 
         function moveData(array) {
             array[i] = startX;
             array[i + 1] = startY;
-            array[i + stride*1] = startX;
-            array[i + stride*1 + 1] = endY;
-            array[i + stride*2] = endX;
-            array[i + stride*2 + 1] = startY;
-            array[i + stride*3] = endX;
-            array[i + stride*3 + 1] = startY;
-            array[i + stride*4] = startX;
-            array[i + stride*4 + 1] = endY;
-            array[i + stride*5] = endX;
-            array[i + stride*5 + 1] = endY;
+            array[i + stride * 1] = startX;
+            array[i + stride * 1 + 1] = endY;
+            array[i + stride * 2] = endX;
+            array[i + stride * 2 + 1] = startY;
+            array[i + stride * 3] = endX;
+            array[i + stride * 3 + 1] = startY;
+            array[i + stride * 4] = startX;
+            array[i + stride * 4 + 1] = endY;
+            array[i + stride * 5] = endX;
+            array[i + stride * 5 + 1] = endY;
         }
 
         // Update the buffer on the gpu!
 
         const numbIndicesChanged = stride * 5 + 2;
-        gamefile.mesh.model.updateBufferIndices(i, numbIndicesChanged)
-        if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged)
+        gamefile.mesh.model.updateBufferIndices(i, numbIndicesChanged);
+        if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged);
     },
 
     // Overwrites the piece's vertex data with 0's, 
@@ -247,9 +251,9 @@ const piecesmodel = {
      * @param {Object} piece - The piece: `{ type, index }`
      */
     deletebufferdata(gamefile, piece) {
-        if (!gamefile.mesh.data64) throw new Error("Should not be deleting piece data when data64 is not defined!")
-        if (!gamefile.mesh.data32) throw new Error("Should not be deleting piece data when data32 is not defined!")
-        const index = piecesmodel.getPieceIndexInData(gamefile, piece)
+        if (!gamefile.mesh.data64) throw new Error("Should not be deleting piece data when data64 is not defined!");
+        if (!gamefile.mesh.data32) throw new Error("Should not be deleting piece data when data32 is not defined!");
+        const index = piecesmodel.getPieceIndexInData(gamefile, piece);
 
         const stridePerPiece = gamefile.mesh.stride * piecesmodel.pointsPerSquare;
         const i = index * stridePerPiece; // Start index of deleted piece
@@ -271,8 +275,8 @@ const piecesmodel = {
         // Update the buffer on the gpu!
 
         const numbIndicesChanged = stridePerPiece;
-        gamefile.mesh.model.updateBufferIndices(i, numbIndicesChanged)
-        if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged)
+        gamefile.mesh.model.updateBufferIndices(i, numbIndicesChanged);
+        if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged);
     },
 
     /**
@@ -286,18 +290,18 @@ const piecesmodel = {
      * @param {string} type - The type of piece to write
      */
     overwritebufferdata(gamefile, undefinedPiece, coords, type) {
-        if (!gamefile.mesh.data64) return console.error("Should not be overwriting piece data when data64 is not defined!")
-        if (!gamefile.mesh.data32) return console.error("Should not be overwriting piece data when data32 is not defined!")
+        if (!gamefile.mesh.data64) return console.error("Should not be overwriting piece data when data64 is not defined!");
+        if (!gamefile.mesh.data32) return console.error("Should not be overwriting piece data when data32 is not defined!");
         
-        const index = piecesmodel.getPieceIndexInData(gamefile, undefinedPiece)
+        const index = piecesmodel.getPieceIndexInData(gamefile, undefinedPiece);
 
         const stridePerPiece = gamefile.mesh.stride * piecesmodel.pointsPerSquare;
-        let i = index * stridePerPiece;
+        const i = index * stridePerPiece;
 
         const weAreBlack = (game.areInNonLocalGame() && game.areWeColorInNonLocalGame("black"));
         const rotation = weAreBlack ? -1 : 1;
 
-        const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation)
+        const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);
         const { startX, startY, endX, endY } = bufferdata.getCoordDataOfTile_WithOffset(gamefile.mesh.offset, coords);
 
         let data;
@@ -307,33 +311,33 @@ const piecesmodel = {
             const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
             const [r,g,b,a] = colorArray;
 
-            data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a) 
+            data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a); 
 
         } else data = bufferdata.getDataQuad_Texture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY);
 
         for (let a = 0; a < data.length; a++) {
             const thisIndex = i + a;
-            gamefile.mesh.data64[thisIndex] = data[a]
-            gamefile.mesh.data32[thisIndex] = data[a]
+            gamefile.mesh.data64[thisIndex] = data[a];
+            gamefile.mesh.data32[thisIndex] = data[a];
         }
 
         // Now overwrite the rotated model data!
         if (perspective.getEnabled()) {
-            const usingColoredPieces = gamefile.mesh.usingColoredTextures
+            const usingColoredPieces = gamefile.mesh.usingColoredTextures;
             const rotatedData = usingColoredPieces ? bufferdata.rotateDataColorTexture(data, rotation) : bufferdata.rotateDataTexture(data, rotation);
     
             for (let a = 0; a < rotatedData.length; a++) {
                 const thisIndex = i + a;
-                gamefile.mesh.rotatedData64[thisIndex] = rotatedData[a]
-                gamefile.mesh.rotatedData32[thisIndex] = rotatedData[a]
+                gamefile.mesh.rotatedData64[thisIndex] = rotatedData[a];
+                gamefile.mesh.rotatedData32[thisIndex] = rotatedData[a];
             }
         }
 
         // Update the buffer on the gpu!
 
         const numbIndicesChanged = data.length;
-        gamefile.mesh.model.updateBufferIndices(i, numbIndicesChanged)
-        if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged)
+        gamefile.mesh.model.updateBufferIndices(i, numbIndicesChanged);
+        if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged);
     },
 
     // Appends the index to account for coins within the data!
@@ -347,7 +351,7 @@ const piecesmodel = {
      * @returns {number} The index of the piece within the mesh
      */
     getPieceIndexInData(gamefile, piece) { // { type, index }
-        const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece)
+        const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
         // Add onto it the coin count, because they are before the pieces in the data!
         return index + coin.getCoinCount(); 
     },
@@ -360,10 +364,10 @@ const piecesmodel = {
      */
     printbufferdataOnCoords(gamefile, coords) {
         // Find the piece on the coords
-        const piece = gamefileutility.getPieceAtCoords(gamefile, coords)
-        if (!piece) console.log("No piece at these coords to retrieve data from!")
+        const piece = gamefileutility.getPieceAtCoords(gamefile, coords);
+        if (!piece) console.log("No piece at these coords to retrieve data from!");
 
-        const index = piecesmodel.getPieceIndexInData(gamefile, piece)
+        const index = piecesmodel.getPieceIndexInData(gamefile, piece);
         piecesmodel.printbufferdataOnIndex(index);
     },
 
@@ -376,11 +380,11 @@ const piecesmodel = {
      */
     printbufferdataOnIndex(gamefile, index) {
         const stridePerPiece = gamefile.mesh.stride * piecesmodel.pointsPerSquare;
-        let i = index * stridePerPiece;
+        const i = index * stridePerPiece;
 
         for (let a = 0; a < stridePerPiece; a++) {
             const thisIndex = i + a;
-            console.log(gamefile.mesh.data32[thisIndex])
+            console.log(gamefile.mesh.data32[thisIndex]);
         }
     },
 
@@ -394,56 +398,56 @@ const piecesmodel = {
      * @param {gamefile} gamefile - The gamefile
      */
     shiftPiecesModel: function(gamefile) {
-        console.log("Shifting pieces model..")
-        main.renderThisFrame()
+        console.log("Shifting pieces model..");
+        main.renderThisFrame();
 
         // console.log('Begin shifting model..')
 
-        const newOffset = math.roundPointToNearestGridpoint(movement.getBoardPos(), piecesmodel.regenRange)
+        const newOffset = math.roundPointToNearestGridpoint(movement.getBoardPos(), piecesmodel.regenRange);
 
         const diffXOffset = gamefile.mesh.offset[0] - newOffset[0];
         const diffYOffset = gamefile.mesh.offset[1] - newOffset[1];
 
-        gamefile.mesh.offset = newOffset
+        gamefile.mesh.offset = newOffset;
 
         // Also shift rotated model if its defined (in perspective mode)
-        if (perspective.getEnabled()) shiftBothModels()
-        else shiftMainModel()
+        if (perspective.getEnabled()) shiftBothModels();
+        else shiftMainModel();
 
         function shiftMainModel() {
             for (let i = 0; i < gamefile.mesh.data32.length; i += gamefile.mesh.stride) {
-                gamefile.mesh.data64[i]   += diffXOffset;
-                gamefile.mesh.data64[i+1] += diffYOffset;
-                gamefile.mesh.data32[i]   = gamefile.mesh.data64[i];
-                gamefile.mesh.data32[i+1] = gamefile.mesh.data64[i+1];
+                gamefile.mesh.data64[i] += diffXOffset;
+                gamefile.mesh.data64[i + 1] += diffYOffset;
+                gamefile.mesh.data32[i] = gamefile.mesh.data64[i];
+                gamefile.mesh.data32[i + 1] = gamefile.mesh.data64[i + 1];
             }
 
             // gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.data32)
             gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
-                                                           : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
+                : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
         }
 
         function shiftBothModels() {            
             for (let i = 0; i < gamefile.mesh.data32.length; i += gamefile.mesh.stride) { 
-                gamefile.mesh.data64[i]   += diffXOffset;
-                gamefile.mesh.data64[i+1] += diffYOffset;
-                gamefile.mesh.data32[i]   = gamefile.mesh.data64[i];
-                gamefile.mesh.data32[i+1] = gamefile.mesh.data64[i+1];
-                gamefile.mesh.rotatedData64[i]   += diffXOffset;
-                gamefile.mesh.rotatedData64[i+1] += diffYOffset;
-                gamefile.mesh.rotatedData32[i]   = gamefile.mesh.rotatedData64[i];
-                gamefile.mesh.rotatedData32[i+1] = gamefile.mesh.rotatedData64[i+1];
+                gamefile.mesh.data64[i] += diffXOffset;
+                gamefile.mesh.data64[i + 1] += diffYOffset;
+                gamefile.mesh.data32[i] = gamefile.mesh.data64[i];
+                gamefile.mesh.data32[i + 1] = gamefile.mesh.data64[i + 1];
+                gamefile.mesh.rotatedData64[i] += diffXOffset;
+                gamefile.mesh.rotatedData64[i + 1] += diffYOffset;
+                gamefile.mesh.rotatedData32[i] = gamefile.mesh.rotatedData64[i];
+                gamefile.mesh.rotatedData32[i + 1] = gamefile.mesh.rotatedData64[i + 1];
             }
 
             // gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.data32)
             gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
-                                                           : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
+                : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
             // gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
             gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet())
-                                                                  : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet());
+                : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet());
         }
 
-        voids.shiftModel(gamefile, diffXOffset, diffYOffset)
+        voids.shiftModel(gamefile, diffXOffset, diffYOffset);
 
         // main.stopTimer((time) => console.log(`Shifting model finished! ${time} milliseconds!`))
     },
@@ -461,7 +465,7 @@ const piecesmodel = {
         gamefile.mesh.locked++;
         gamefile.mesh.isGenerating++;
 
-        console.log("Rotating pieces model..")
+        console.log("Rotating pieces model..");
         main.renderThisFrame();
 
         // console.log('Begin rotating model..')
@@ -491,8 +495,8 @@ const piecesmodel = {
 
         // With a stride length of 4, the order is: 2 vertex points, 2 texture points.
         // BUT, 6 points make up the square!
-        const funcToUse = gamefile.mesh.usingColoredTextures ? rotateDataColorTexture : rotateDataTexture
-        await funcToUse(gamefile.mesh.data64, gamefile.mesh.rotatedData64)
+        const funcToUse = gamefile.mesh.usingColoredTextures ? rotateDataColorTexture : rotateDataTexture;
+        await funcToUse(gamefile.mesh.data64, gamefile.mesh.rotatedData64);
         if (gamefile.mesh.terminate) {
             console.log("Mesh generation terminated.");
             stats.hideRotateMesh();
@@ -501,7 +505,7 @@ const piecesmodel = {
             gamefile.mesh.isGenerating--;
             return;
         }
-        await funcToUse(gamefile.mesh.data32, gamefile.mesh.rotatedData32)
+        await funcToUse(gamefile.mesh.data32, gamefile.mesh.rotatedData32);
         if (gamefile.mesh.terminate) {
             console.log("Mesh generation terminated.");
             stats.hideRotateMesh();
@@ -514,40 +518,40 @@ const piecesmodel = {
         async function rotateDataTexture(sourceArray, destArray) {
             for (let i = 0; i < gamefile.mesh.data32.length; i += indicesPerPiece) {
                 // Point 1
-                destArray[i] =   sourceArray[i]
-                destArray[i+1] = sourceArray[i+1]
-                destArray[i+2] = sourceArray[i+2] + texWidth
-                destArray[i+3] = sourceArray[i+3] + texWidth
+                destArray[i] = sourceArray[i];
+                destArray[i + 1] = sourceArray[i + 1];
+                destArray[i + 2] = sourceArray[i + 2] + texWidth;
+                destArray[i + 3] = sourceArray[i + 3] + texWidth;
     
                 // Point 2
-                destArray[i+4] = sourceArray[i+4]
-                destArray[i+5] = sourceArray[i+5]
-                destArray[i+6] = sourceArray[i+6] + texWidth
-                destArray[i+7] = sourceArray[i+7] - texWidth
+                destArray[i + 4] = sourceArray[i + 4];
+                destArray[i + 5] = sourceArray[i + 5];
+                destArray[i + 6] = sourceArray[i + 6] + texWidth;
+                destArray[i + 7] = sourceArray[i + 7] - texWidth;
     
                 // Point 3
-                destArray[i+8] =  sourceArray[i+8]
-                destArray[i+9] =  sourceArray[i+9]
-                destArray[i+10] = sourceArray[i+10] - texWidth
-                destArray[i+11] = sourceArray[i+11] + texWidth
+                destArray[i + 8] = sourceArray[i + 8];
+                destArray[i + 9] = sourceArray[i + 9];
+                destArray[i + 10] = sourceArray[i + 10] - texWidth;
+                destArray[i + 11] = sourceArray[i + 11] + texWidth;
     
                 // Point 4
-                destArray[i+12] = sourceArray[i+12]
-                destArray[i+13] = sourceArray[i+13]
-                destArray[i+14] = sourceArray[i+14] - texWidth
-                destArray[i+15] = sourceArray[i+15] + texWidth
+                destArray[i + 12] = sourceArray[i + 12];
+                destArray[i + 13] = sourceArray[i + 13];
+                destArray[i + 14] = sourceArray[i + 14] - texWidth;
+                destArray[i + 15] = sourceArray[i + 15] + texWidth;
     
                 // Point 5
-                destArray[i+16] = sourceArray[i+16]
-                destArray[i+17] = sourceArray[i+17]
-                destArray[i+18] = sourceArray[i+18] + texWidth
-                destArray[i+19] = sourceArray[i+19] - texWidth
+                destArray[i + 16] = sourceArray[i + 16];
+                destArray[i + 17] = sourceArray[i + 17];
+                destArray[i + 18] = sourceArray[i + 18] + texWidth;
+                destArray[i + 19] = sourceArray[i + 19] - texWidth;
     
                 // Point 6
-                destArray[i+20] = sourceArray[i+20]
-                destArray[i+21] = sourceArray[i+21]
-                destArray[i+22] = sourceArray[i+22] - texWidth
-                destArray[i+23] = sourceArray[i+23] - texWidth
+                destArray[i + 20] = sourceArray[i + 20];
+                destArray[i + 21] = sourceArray[i + 21];
+                destArray[i + 22] = sourceArray[i + 22] - texWidth;
+                destArray[i + 23] = sourceArray[i + 23] - texWidth;
 
                 // If we've spent too much time, sleep!
                 piecesSinceLastCheck++;
@@ -569,24 +573,24 @@ const piecesmodel = {
         async function rotateDataColorTexture(sourceArray, destArray) {
             for (let i = 0; i < gamefile.mesh.data32.length; i += indicesPerPiece) {
                 // Point 1
-                destArray[i] =   sourceArray[i]
-                destArray[i+1] = sourceArray[i+1]
-                destArray[i+2] = sourceArray[i+2] + texWidth
-                destArray[i+3] = sourceArray[i+3] + texWidth
-                destArray[i+4] = sourceArray[i+4]
-                destArray[i+5] = sourceArray[i+5]
-                destArray[i+6] = sourceArray[i+6]
-                destArray[i+7] = sourceArray[i+7]
+                destArray[i] = sourceArray[i];
+                destArray[i + 1] = sourceArray[i + 1];
+                destArray[i + 2] = sourceArray[i + 2] + texWidth;
+                destArray[i + 3] = sourceArray[i + 3] + texWidth;
+                destArray[i + 4] = sourceArray[i + 4];
+                destArray[i + 5] = sourceArray[i + 5];
+                destArray[i + 6] = sourceArray[i + 6];
+                destArray[i + 7] = sourceArray[i + 7];
 
                 // Point 2
-                destArray[i+8] = sourceArray[i+8]
-                destArray[i+9] = sourceArray[i+9]
-                destArray[i+10] = sourceArray[i+10] + texWidth
-                destArray[i+11] = sourceArray[i+11] - texWidth
-                destArray[i+12] = sourceArray[i+12]
-                destArray[i+13] = sourceArray[i+13]
-                destArray[i+14] = sourceArray[i+14]
-                destArray[i+15] = sourceArray[i+15]
+                destArray[i + 8] = sourceArray[i + 8];
+                destArray[i + 9] = sourceArray[i + 9];
+                destArray[i + 10] = sourceArray[i + 10] + texWidth;
+                destArray[i + 11] = sourceArray[i + 11] - texWidth;
+                destArray[i + 12] = sourceArray[i + 12];
+                destArray[i + 13] = sourceArray[i + 13];
+                destArray[i + 14] = sourceArray[i + 14];
+                destArray[i + 15] = sourceArray[i + 15];
 
                 // Point 3
                 destArray[i + 16] = sourceArray[i + 16];
@@ -663,13 +667,13 @@ const piecesmodel = {
 
         // gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
         gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet())
-                                                              : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet());
+            : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet());
 
         // main.stopTimer((time) => console.log(`Rotating model finished! ${time} milliseconds!`))
 
         gamefile.mesh.locked--;
         gamefile.mesh.isGenerating--;
-        main.renderThisFrame()
+        main.renderThisFrame();
     },
 
     /**

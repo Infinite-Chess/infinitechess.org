@@ -19,10 +19,10 @@ const rolesPath = path.resolve('database/roles.json');
         owners: {},
         patrons: {}
     }, null, 2);
-    writeFile_ensureDirectory(rolesPath, content)
-    console.log("Generated roles file")
-})()
-let roles = require('../../../database/roles.json');
+    writeFile_ensureDirectory(rolesPath, content);
+    console.log("Generated roles file");
+})();
+const roles = require('../../../database/roles.json');
 
 let rolesHaveBeenEdited = false; // Set to true if we need to save the members after a change
 const intervalToSaveRolesMillis = 10000; // 10 seconds.
@@ -32,7 +32,7 @@ async function saveRolesIfChangesMade() {
     if (await save()) rolesHaveBeenEdited = false;
 }
 
-setInterval(saveRolesIfChangesMade, intervalToSaveRolesMillis)
+setInterval(saveRolesIfChangesMade, intervalToSaveRolesMillis);
 
 async function save() {
     console.log("Saving roles file..");
@@ -40,7 +40,7 @@ async function save() {
         path.join(__dirname, '..', '..', '..', 'database', 'roles.json'),
         roles,
         "Failed to lock/write roles.json! Please attempt role change again."
-    )
+    );
 }
 
 
@@ -51,7 +51,7 @@ async function save() {
  */
 const isOwner = function(member) {
     return roles.owners[member] != null;
-}
+};
 
 /**
  * Returns true if the given member is a patron.
@@ -60,7 +60,7 @@ const isOwner = function(member) {
  */
 const isPatron = function(member) {
     return roles.patrons[member] != null;
-}
+};
 
 /**
  * Sets the `role` property of the request to the
@@ -130,4 +130,4 @@ module.exports = {
     giveRole_Owner,
     giveRole_Patron,
     removeAllRoles
-}
+};

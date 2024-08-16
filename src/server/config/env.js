@@ -41,4 +41,4 @@ function generateSecret(length) {
 }
 
 
-module.exports = { ensureEnvFile }
+module.exports = { ensureEnvFile };

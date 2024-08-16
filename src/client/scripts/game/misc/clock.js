@@ -3,7 +3,7 @@
 
 "use strict";
 
-const clock = (function(){
+const clock = (function() {
 
     const element_timerWhite = document.getElementById('timer-white');
     const element_timerBlack = document.getElementById('timer-black');
@@ -20,13 +20,13 @@ const clock = (function(){
         millis: undefined,
         /** The increment used, in milliseconds. */
         increment: undefined,
-    }
+    };
 
     /** The time each player has remaining, in milliseconds. */
     const currentTime = {
         white: undefined,
         black: undefined,
-    }
+    };
 
     /** Which color's clock is currently running. This is usually the same as the gamefile's whosTurn property. */
     let colorTicking;
@@ -48,7 +48,7 @@ const clock = (function(){
         timeToStartFromEnd: 65615,
         /** The minimum start time required to give a lowtime notification at 1 minute remaining. */
         clockMinsRequiredToUse: 2,
-    }
+    };
 
     /** All variables related to the 10s countdown when you're almost out of time. */
     const countdown = {
@@ -77,7 +77,7 @@ const clock = (function(){
             fadeInDuration: 300,
             fadeOutDuration: 100,
         },
-    }
+    };
 
     /**
      * Sets the clocks.
@@ -86,13 +86,13 @@ const clock = (function(){
      */
     function set(clock, currentTimes) {
         const gamefile = game.getGamefile();
-        if (!gamefile) return console.error("Game must be initialized before starting the clocks.")
+        if (!gamefile) return console.error("Game must be initialized before starting the clocks.");
 
         startTime.minutes = null;
         startTime.millis = null;
         startTime.increment = null;
 
-        const clockPartsSplit = getMinutesAndIncrementFromClock(clock) // { minutes, increment }
+        const clockPartsSplit = getMinutesAndIncrementFromClock(clock); // { minutes, increment }
         if (clockPartsSplit !== null) {
             startTime.minutes = clockPartsSplit.minutes;
             startTime.millis = math.minutesToMillis(startTime.minutes);
@@ -102,22 +102,22 @@ const clock = (function(){
         untimed = isClockValueInfinite(clock);
 
         if (untimed) { // Hide clock elements
-            style.hideElement(element_timerContainerWhite)
-            style.hideElement(element_timerContainerBlack)
+            style.hideElement(element_timerContainerWhite);
+            style.hideElement(element_timerContainerBlack);
             return;
         } else { // Reveal clock elements
-            style.revealElement(element_timerContainerWhite)
-            style.revealElement(element_timerContainerBlack)
+            style.revealElement(element_timerContainerWhite);
+            style.revealElement(element_timerContainerBlack);
         }
 
         // Edit the closk if we're re-loading an online game
-        if (currentTimes) edit(currentTimes.timerWhite, currentTimes.timerBlack, currentTimes.timeNextPlayerLosesAt)
+        if (currentTimes) edit(currentTimes.timerWhite, currentTimes.timerBlack, currentTimes.timeNextPlayerLosesAt);
         else { // No current time specified, start both players with the default.
-            currentTime.white = startTime.millis
-            currentTime.black = startTime.millis
+            currentTime.white = startTime.millis;
+            currentTime.black = startTime.millis;
         }
 
-        updateTextContent()
+        updateTextContent();
     }
 
     /**
@@ -132,7 +132,7 @@ const clock = (function(){
 
         currentTime.white = newTimeWhite;
         currentTime.black = newTimeBlack;
-        timeNextPlayerLosesAt = timeNextPlayerLoses
+        timeNextPlayerLosesAt = timeNextPlayerLoses;
         const now = Date.now();
         timeAtTurnStart = now;
 
@@ -145,8 +145,8 @@ const clock = (function(){
         updateTextContent();
         
         // Remove colored border
-        if (colorTicking === 'white') removeBorder(element_timerBlack)
-        else                          removeBorder(element_timerWhite)
+        if (colorTicking === 'white') removeBorder(element_timerBlack);
+        else removeBorder(element_timerWhite);
 
         if (!movesscript.isGameResignable(gamefile) || gamefile.gameConclusion) return;
         rescheduleMinuteTick(); // Lowtime notif at 1 minute left
@@ -175,8 +175,8 @@ const clock = (function(){
         rescheduleCountdown(); // Schedule 10s drum countdown
 
         // Remove colored border
-        if (colorTicking === 'white') removeBorder(element_timerBlack)
-        else                          removeBorder(element_timerWhite)
+        if (colorTicking === 'white') removeBorder(element_timerBlack);
+        else removeBorder(element_timerWhite);
     }
 
     function stop() {
@@ -207,8 +207,8 @@ const clock = (function(){
         countdown.ticking.sound = undefined;
         countdown.tick.timeoutID = undefined;
         countdown.ticking.timeoutID = undefined;
-        removeBorder(element_timerWhite)
-        removeBorder(element_timerBlack)
+        removeBorder(element_timerWhite);
+        removeBorder(element_timerBlack);
     }
 
     function removeBorder(element) {
@@ -221,39 +221,39 @@ const clock = (function(){
         if (untimed || gamefile.gameConclusion || !movesscript.isGameResignable(gamefile) || timeAtTurnStart == null) return;
 
         // Update border color
-        if (colorTicking === 'white') updateBorderColor(element_timerWhite, currentTime.white)
-        else                          updateBorderColor(element_timerBlack, currentTime.black)
+        if (colorTicking === 'white') updateBorderColor(element_timerWhite, currentTime.white);
+        else updateBorderColor(element_timerBlack, currentTime.black);
 
         // Update current values
         const timePassedSinceTurnStart = Date.now() - timeAtTurnStart;
         if (colorTicking === 'white') currentTime.white = Math.ceil(timeRemainAtTurnStart - timePassedSinceTurnStart);
-        else                          currentTime.black = Math.ceil(timeRemainAtTurnStart - timePassedSinceTurnStart);
+        else currentTime.black = Math.ceil(timeRemainAtTurnStart - timePassedSinceTurnStart);
 
-        updateTextContent()
+        updateTextContent();
 
         // Has either clock run out of time?
         if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
         if (currentTime.white <= 0) {
-            gamefile.gameConclusion = 'black time'
-            gamefileutility.concludeGame(game.getGamefile())
+            gamefile.gameConclusion = 'black time';
+            gamefileutility.concludeGame(game.getGamefile());
         } else if (currentTime.black <= 0) {
-            gamefile.gameConclusion = 'white time'
-            gamefileutility.concludeGame(game.getGamefile())
+            gamefile.gameConclusion = 'white time';
+            gamefileutility.concludeGame(game.getGamefile());
         }
     }
 
     /** Changes the border color gradually */
     function updateBorderColor(element, currentTimeRemain) {
-        const percRemain = currentTimeRemain / (startTime.minutes * 60 * 1000)
+        const percRemain = currentTimeRemain / (startTime.minutes * 60 * 1000);
 
         // Green => Yellow => Orange => Red
         const perc = 1 - percRemain;
         let r = 0, g = 0, b = 0;
-        if (percRemain > 1 + 1/3) {
+        if (percRemain > 1 + 1 / 3) {
             g = 1;
             b = 1;
         } else if (percRemain > 1) {
-            const localPerc = (percRemain - 1) * 3
+            const localPerc = (percRemain - 1) * 3;
             g = 1;
             b = localPerc;
         } else if (perc < 0.5) { // Green => Yellow
@@ -261,7 +261,7 @@ const clock = (function(){
             r = localPerc;
             g = 1;
         } else if (perc < 0.75) { // Yellow => Orange
-            const localPerc = (perc - 0.5) * 4
+            const localPerc = (perc - 0.5) * 4;
             r = 1;
             g = 1 - localPerc * 0.5;
         } else { // Orange => Red
@@ -270,13 +270,13 @@ const clock = (function(){
             g = 0.5 - localPerc * 0.5;
         }
 
-        element.style.outline = `3px solid rgb(${r*255},${g*255},${b*255})`
+        element.style.outline = `3px solid rgb(${r * 255},${g * 255},${b * 255})`;
     }
 
     /** Updates the clocks' text content in the document. */
     function updateTextContent() {
-        const whiteText = getTextContentFromTimeRemain(currentTime.white)
-        const blackText = getTextContentFromTimeRemain(currentTime.black)
+        const whiteText = getTextContentFromTimeRemain(currentTime.white);
+        const blackText = getTextContentFromTimeRemain(currentTime.black);
         element_timerWhite.textContent = whiteText;
         element_timerBlack.textContent = blackText;
     }
@@ -300,8 +300,8 @@ const clock = (function(){
      */
     function getClockFromKey(key) { // ssss+ss  converted to  15m+15s
         const minutesAndIncrement = getMinutesAndIncrementFromClock(key);
-        if (minutesAndIncrement === null) return translations["no_clock"]
-        return `${minutesAndIncrement.minutes}m+${minutesAndIncrement.increment}s`
+        if (minutesAndIncrement === null) return translations["no_clock"];
+        return `${minutesAndIncrement.minutes}m+${minutesAndIncrement.increment}s`;
     }
 
     /**
@@ -322,13 +322,13 @@ const clock = (function(){
      * @param {string} clock - The clock value (e.g. "10+5").
      * @returns {boolean} *true* if it's infinite.
      */
-    function isClockValueInfinite(clock) { return clock === '-' }
+    function isClockValueInfinite(clock) { return clock === '-'; }
 
     function printClocks() {
-        console.log(`White time: ${currentTime.white}`)
-        console.log(`Black time: ${currentTime.black}`)
-        console.log(`timeRemainAtTurnStart: ${timeRemainAtTurnStart}`)
-        console.log(`timeAtTurnStart: ${timeAtTurnStart}`)
+        console.log(`White time: ${currentTime.white}`);
+        console.log(`Black time: ${currentTime.black}`);
+        console.log(`timeRemainAtTurnStart: ${timeRemainAtTurnStart}`);
+        console.log(`timeAtTurnStart: ${timeAtTurnStart}`);
     }
 
     // The lowtime notification...
@@ -340,14 +340,14 @@ const clock = (function(){
         if (onlinegame.areInOnlineGame() && colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
         if (colorTicking === 'white' && lowtimeNotif.whiteNotified || colorTicking === 'black' && lowtimeNotif.blackNotified) return;
         const timeRemain = timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd;
-        lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain)
+        lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain);
     }
 
     function playMinuteTick() {
         sound.playSound_tick({ volume: 0.07 });
         if (colorTicking === 'white') lowtimeNotif.whiteNotified = true;
         else if (colorTicking === 'black') lowtimeNotif.blackNotified = true;
-        else console.error("Cannot set white/lowtimeNotif.blackNotified when colorTicking is undefined")
+        else console.error("Cannot set white/lowtimeNotif.blackNotified when colorTicking is undefined");
     }
 
     // The 10s drum countdown...
@@ -364,14 +364,14 @@ const clock = (function(){
         clearTimeout(countdown.drum.timeoutID);
         if (onlinegame.areInOnlineGame() && colorTicking !== onlinegame.getOurColor() || !timeNextPlayerLosesAt) return; // Don't play the sound effect for our opponent.
         const timeUntil10SecsRemain = timeNextPlayerLosesAt - now - 10000;
-        let timeNextDrum = timeUntil10SecsRemain
+        let timeNextDrum = timeUntil10SecsRemain;
         let secsRemaining = 10;
         if (timeNextDrum < 0) {
-            const addTimeNextDrum = -Math.floor(timeNextDrum / 1000) * 1000
+            const addTimeNextDrum = -Math.floor(timeNextDrum / 1000) * 1000;
             timeNextDrum += addTimeNextDrum;
             secsRemaining -= addTimeNextDrum / 1000;
         }
-        countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeNextDrum, secsRemaining)
+        countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeNextDrum, secsRemaining);
     }
 
     function rescheduleTicking(now) {
@@ -384,7 +384,7 @@ const clock = (function(){
         if (timeRemain > 0) countdown.ticking.timeoutID = setTimeout(playTickingEffect, timeRemain);
         else {
             const offset = -timeRemain;
-            playTickingEffect(offset)
+            playTickingEffect(offset);
         }
     }
 
@@ -398,12 +398,12 @@ const clock = (function(){
         if (timeRemain > 0) countdown.tick.timeoutID = setTimeout(playTickEffect, timeRemain);
         else {
             const offset = -timeRemain;
-            playTickEffect(offset)
+            playTickEffect(offset);
         }
     }
 
     function playDrumAndQueueNext(secsRemaining) {
-        if (!secsRemaining) return console.error("Cannot play drum without secsRemaining")
+        if (!secsRemaining) return console.error("Cannot play drum without secsRemaining");
         sound.playSound_drum();
 
         const timeRemain = timeNextPlayerLosesAt - Date.now();
@@ -413,7 +413,7 @@ const clock = (function(){
         const newSecsRemaining = secsRemaining - 1;
         if (newSecsRemaining === 0) return; // Stop
         const timeUntilNextDrum = timeNextPlayerLosesAt - Date.now() - newSecsRemaining * 1000;
-        countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeUntilNextDrum, newSecsRemaining)
+        countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeUntilNextDrum, newSecsRemaining);
     }
 
     function playTickingEffect(offset) {
@@ -440,6 +440,6 @@ const clock = (function(){
         isClockValueInfinite,
         printClocks,
         isGameUntimed,
-    })
+    });
 
 })();

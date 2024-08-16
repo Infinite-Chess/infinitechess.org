@@ -5,7 +5,7 @@
 
 "use strict";
 
-const copypastegame = (function(){
+const copypastegame = (function() {
 
     /** Enable to only copy a single position without all the moves prior */
     const copySinglePosition = false; 
@@ -14,7 +14,7 @@ const copypastegame = (function(){
      * A list of metadata properties that are retained from the current game when pasting an external game.
      * These will overwrite the pasted game's metadata with the current game's metadata.
      */
-    const retainMetadataWhenPasting = ['White','Black','TimeControl','Event','Site','Round']
+    const retainMetadataWhenPasting = ['White','Black','TimeControl','Event','Site','Round'];
 
     /**
      * Copies the current game to the clipboard in ICN notation.
@@ -30,8 +30,8 @@ const copypastegame = (function(){
         const specifyPosition = !largeGame;
         const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
           
-        main.copyToClipboard(shortformat)
-        statustext.showStatus(translations["copypaste"]["copied_game"])
+        main.copyToClipboard(shortformat);
+        statustext.showStatus(translations["copypaste"]["copied_game"]);
     }
 
     /**
@@ -69,7 +69,7 @@ const copypastegame = (function(){
         if (copySinglePosition) {
             primedGamefile.startingPosition = gamefile.startSnapshot.position;
             primedGamefile.specialRights = gamefile.startSnapshot.specialRights;
-            primedGamefile = formatconverter.GameToPosition(primedGamefile, Infinity)
+            primedGamefile = formatconverter.GameToPosition(primedGamefile, Infinity);
         }
 
         return primedGamefile;
@@ -82,10 +82,10 @@ const copypastegame = (function(){
      */
     async function callbackPaste(event) {
         // Make sure we're not in a public match
-        if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations["copypaste"]["cannot_paste_in_public"])
+        if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations["copypaste"]["cannot_paste_in_public"]);
 
         // Make sure it's legal in a private match
-        if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && game.getGamefile().moves.length > 0) return statustext.showStatus(translations["copypaste"]["cannot_paste_after_moves"])
+        if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && game.getGamefile().moves.length > 0) return statustext.showStatus(translations["copypaste"]["cannot_paste_after_moves"]);
 
         // Make sure we're not in an engine match
         if (enginegame.areInEngineGame()) return statustext.showStatus(translations["copypaste"]["cannot_paste_in_engine"])
@@ -93,10 +93,10 @@ const copypastegame = (function(){
         // Do we have clipboard permission?
         let clipboard;
         try {
-            clipboard = await navigator.clipboard.readText()
+            clipboard = await navigator.clipboard.readText();
         } catch (error) {
-            const message = translations["copypaste"]["clipboard_denied"]
-            return statustext.showStatus((message + "\n" + error), true)
+            const message = translations["copypaste"]["clipboard_denied"];
+            return statustext.showStatus((message + "\n" + error), true);
         }
 
         // Convert clipboard text to object
@@ -105,10 +105,10 @@ const copypastegame = (function(){
             longformat = JSON.parse(clipboard); // Gamefile is already primed for the constructor
         } catch (error) {
             try {
-                longformat = formatconverter.ShortToLong_Format(clipboard, true, true)
-            } catch(e) {
+                longformat = formatconverter.ShortToLong_Format(clipboard, true, true);
+            } catch (e) {
                 console.error(e);
-                statustext.showStatus(translations["copypaste"]["clipboard_invalid"], true)
+                statustext.showStatus(translations["copypaste"]["clipboard_invalid"], true);
                 return;
             }
         }
@@ -119,7 +119,7 @@ const copypastegame = (function(){
 
         console.log(longformat);
         
-        pasteGame(longformat)
+        pasteGame(longformat);
     }
 
     /**
@@ -149,8 +149,8 @@ const copypastegame = (function(){
         if (!longformat.gameRules) longformat.gameRules = variant.getBareMinimumGameRules();
         longformat.gameRules.winConditions = longformat.gameRules.winConditions || variant.getDefaultWinConditions();
         if (!verifyWinConditions(longformat.gameRules.winConditions)) return false;
-        longformat.gameRules.promotionRanks = longformat.gameRules.promotionRanks || null
-        longformat.gameRules.promotionsAllowed = longformat.gameRules.promotionsAllowed || { white: [], black: [] }
+        longformat.gameRules.promotionRanks = longformat.gameRules.promotionRanks || null;
+        longformat.gameRules.promotionsAllowed = longformat.gameRules.promotionsAllowed || { white: [], black: [] };
 
         return true;
     }
@@ -161,7 +161,7 @@ const copypastegame = (function(){
             const winCondition = winConditions.white[i];
             if (wincondition.validWinConditions.includes(winCondition)) continue;
             // Not valid
-            statustext.showStatus(`${translations["copypaste"]["invalid_wincon_white"]} "${winCondition}".`, true)
+            statustext.showStatus(`${translations["copypaste"]["invalid_wincon_white"]} "${winCondition}".`, true);
             return false;
         }
 
@@ -169,7 +169,7 @@ const copypastegame = (function(){
             const winCondition = winConditions.black[i];
             if (wincondition.validWinConditions.includes(winCondition)) continue;
             // Not valid
-            statustext.showStatus(`${translations["copypaste"]["invalid_wincon_black"]} "${winCondition}".`, true)
+            statustext.showStatus(`${translations["copypaste"]["invalid_wincon_black"]} "${winCondition}".`, true);
             return false;
         }
 
@@ -181,7 +181,7 @@ const copypastegame = (function(){
      * @param {Object} longformat - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
      */
     function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
-        console.log(translations["copypaste"]["pasting_game"])
+        console.log(translations["copypaste"]["pasting_game"]);
 
         /** longformat properties:
          * metadata
@@ -204,7 +204,7 @@ const copypastegame = (function(){
         const currentGameMetadata = game.getGamefile().metadata;
         retainMetadataWhenPasting.forEach((metadataName) => {
             longformat.metadata[metadataName] = currentGameMetadata[metadataName];
-        })
+        });
         // Only keep the Date of the current game if the starting position of the pasted game isn't specified,
         // because loading the variant version relies on that.
         if (longformat.shortposition || longformat.startingPosition) {
@@ -217,7 +217,7 @@ const copypastegame = (function(){
         }
 
         // If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-        longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant
+        longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
 
         delete longformat.metadata.Clock;
 
@@ -238,16 +238,16 @@ const copypastegame = (function(){
             startingPosition: longformat.startingPosition,
             specialRights: longformat.specialRights,
             gameRules: longformat.gameRules
-        }
+        };
 
         if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
             // Playing a custom private game! Save the pasted position in browser
             // storage so that we can remember it upon refreshing.
             const gameID = onlinegame.getGameID();
-            localstorage.saveItem(gameID, variantOptions)
+            localstorage.saveItem(gameID, variantOptions);
         }
 
-        const newGamefile = new gamefile(longformat.metadata, { moves: longformat.moves, variantOptions })
+        const newGamefile = new gamefile(longformat.metadata, { moves: longformat.moves, variantOptions });
 
         // What is the warning message if pasting in a private match?
         const privateMatchWarning = onlinegame.getIsPrivate() ? ` ${translations["copypaste"]["pasting_in_private"]}` : "";
@@ -256,7 +256,7 @@ const copypastegame = (function(){
         let tooManyPieces = false;
         if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) { // TOO MANY pieces!
             tooManyPieces = true;
-            statustext.showStatus(`${translations["copypaste"]["piece_count"]} ${newGamefile.startSnapshot.pieceCount} ${translations["copypaste"]["exceeded"]} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations["copypaste"]["changed_wincon"]}${privateMatchWarning}`, false, 1.5)
+            statustext.showStatus(`${translations["copypaste"]["piece_count"]} ${newGamefile.startSnapshot.pieceCount} ${translations["copypaste"]["exceeded"]} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations["copypaste"]["changed_wincon"]}${privateMatchWarning}`, false, 1.5);
 
             // Make win condition from checkmate to royal capture
             const whiteHasCheckmate = newGamefile.gameRules.winConditions.white.includes('checkmate');
@@ -273,14 +273,14 @@ const copypastegame = (function(){
 
         // Only print "Loaded game!" if we haven't already shown a different status message cause of too many pieces
         if (!tooManyPieces) {
-            const message = `${translations["copypaste"]["loaded_from_clipboard"]}${privateMatchWarning}`
-            statustext.showStatus(message)
+            const message = `${translations["copypaste"]["loaded_from_clipboard"]}${privateMatchWarning}`;
+            statustext.showStatus(message);
         }
 
         game.unloadGame();
         game.loadGamefile(newGamefile);
 
-        console.log(translations["copypaste"]["loaded"])
+        console.log(translations["copypaste"]["loaded"]);
     }
 
     function convertVariantFromSpokenLanguageToCode(Variant) {
@@ -300,7 +300,7 @@ const copypastegame = (function(){
      */
     function verifyGamerules(gameRules) {
         if (gameRules.slideLimit !== undefined && typeof gameRules.slideLimit !== 'number') {
-            statustext.showStatus(`${translations["copypaste"]["slidelimit_not_number"]} "${gameRules.slideLimit}"`, true)
+            statustext.showStatus(`${translations["copypaste"]["slidelimit_not_number"]} "${gameRules.slideLimit}"`, true);
             return false;
         }
         return true;
@@ -479,6 +479,6 @@ const copypastegame = (function(){
     return Object.freeze({
         callbackCopy,
         callbackPaste
-    })
+    });
 
 })();

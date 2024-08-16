@@ -4,7 +4,7 @@
 
 "use strict";
 
-const highlights = (function(){
+const highlights = (function() {
 
     const highlightedMovesRegenRange = 10_000; // Not every highlighted move can be calculated every frame because it's infinite. So we render them out to a specified distance. This is NOT that specified distance. This is the distance to at which to call the function to recalculate the model of the highlighted moves (the out-of-bounds)
     
@@ -17,8 +17,8 @@ const highlights = (function(){
     // Amount of screens in length to render highlighted squares, beyond the screen.
     // This is useful because it means there's some cushioning when the user pans and
     // zooms around that we don't instantly need to regenerate the model.
-    const multiplier = 4
-    const multiplier_perspective = 2
+    const multiplier = 4;
+    const multiplier_perspective = 2;
 
     /** The vertex data of our blue legal move fields. */
     let data;
@@ -37,10 +37,10 @@ const highlights = (function(){
     function render() {
         if (movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're zoomed out.
 
-        highlightLastMove()
-        checkhighlight.render()
+        highlightLastMove();
+        checkhighlight.render();
         updateOffsetAndBoundingBoxOfRenderRange();
-        renderLegalMoves()
+        renderLegalMoves();
         arrows.renderEachHoveredPiece();
         renderBoundingBoxOfRenderRange();
     }
@@ -53,38 +53,38 @@ const highlights = (function(){
             -boardPos[0] + model_Offset[0], // Add the model's offset
             -boardPos[1] + model_Offset[1],
             0
-        ]
+        ];
         const boardScale = movement.getBoardScale();
-        const scale = [boardScale, boardScale, 1]
+        const scale = [boardScale, boardScale, 1];
         model.render(position, scale);
     }
 
     // Regenerates the model for all highlighted squares. Expensive, minimize calling this.
     function regenModel() {
         if (!selection.isAPieceSelected()) return;
-        main.renderThisFrame()
+        main.renderThisFrame();
         // console.log("Regenerating legal moves model..")
 
         updateOffsetAndBoundingBoxOfRenderRange();
 
         // Initate the variable that will store our vertex data
-        data = []
+        data = [];
 
         // 1 square data of our single selected piece
-        const selectedPieceHighlightData = calcHighlightData_SelectedPiece()
-        data.push(...selectedPieceHighlightData)
+        const selectedPieceHighlightData = calcHighlightData_SelectedPiece();
+        data.push(...selectedPieceHighlightData);
 
         const coords = selection.getPieceSelected().coords;
-        const legalMoves = selection.getLegalMovesOfSelectedPiece()
+        const legalMoves = selection.getLegalMovesOfSelectedPiece();
         const color = options.getLegalMoveHighlightColor(); // [r,g,b,a]
 
         // Data of short range moves within 3 tiles
-        concatData_HighlightedMoves_Individual(data, legalMoves, color)
+        concatData_HighlightedMoves_Individual(data, legalMoves, color);
 
         // Potentially infinite data on sliding moves...
-        concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color)
+        concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color);
 
-        model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
+        model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
     }
 
     /**
@@ -96,17 +96,17 @@ const highlights = (function(){
 
         const oldOffset = math.deepCopyObject(model_Offset);
         // This is the range at which we will always regen this model. Prevents gittering.
-        model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange)
+        model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange);
         if (!math.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
 
         // Used to limit the data/highlights of infinitely sliding moves to the area on your screen.
         if (isRenderRangeBoundingBoxOutOfRange()) {
-            initBoundingBoxOfRenderRange()
+            initBoundingBoxOfRenderRange();
             changeMade = true;
         }
 
         if (changeMade) {
-            console.log("Shifted offset of highlights.")
+            console.log("Shifted offset of highlights.");
             regenModel();
             arrows.regenModelsOfHoveredPieces();
         }
@@ -114,7 +114,7 @@ const highlights = (function(){
 
     function calcHighlightData_SelectedPiece() {
         const color = options.getDefaultSelectedPieceHighlight();
-        return bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, selection.getPieceSelected().coords, z, color)
+        return bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, selection.getPieceSelected().coords, z, color);
     }
 
     /**
@@ -125,12 +125,12 @@ const highlights = (function(){
      */
     function concatData_HighlightedMoves_Individual(data, legalMoves, color) {
         // Get an array of the list of individual legal squares the current selected piece can move to
-        const theseLegalMoves = legalMoves.individual
+        const theseLegalMoves = legalMoves.individual;
 
         // For each of these squares, calculate it's buffer data
         const length = !theseLegalMoves ? 0 : theseLegalMoves.length;
         for (let i = 0; i < length; i++) {
-            data.push(...bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, theseLegalMoves[i], z, color))
+            data.push(...bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, theseLegalMoves[i], z, color));
         }
     }
 
@@ -139,16 +139,16 @@ const highlights = (function(){
         // console.log("Recalculating bounding box of render range.")
 
         const [ newWidth, newHeight ] = perspective.getEnabled() ? getDimensionsOfPerspectiveViewRange()
-                                                              : getDimensionsOfOrthographicViewRange()
+            : getDimensionsOfOrthographicViewRange();
 
         const halfNewWidth = newWidth / 2;
         const halfNewHeight = newHeight / 2;
 
         const boardPos = movement.getBoardPos();
-        const newLeft = Math.ceil(boardPos[0] - halfNewWidth)
-        const newRight = Math.floor(boardPos[0] + halfNewWidth)
-        const newBottom = Math.ceil(boardPos[1] - halfNewHeight)
-        const newTop = Math.floor(boardPos[1] + halfNewHeight)
+        const newLeft = Math.ceil(boardPos[0] - halfNewWidth);
+        const newRight = Math.floor(boardPos[0] + halfNewWidth);
+        const newBottom = Math.ceil(boardPos[1] - halfNewHeight);
+        const newTop = Math.floor(boardPos[1] + halfNewHeight);
 
         boundingBoxOfRenderRange = { 
             left: newLeft,
@@ -163,8 +163,8 @@ const highlights = (function(){
 
         // The center of the bounding box is our current boardPos
         
-        let width = board.gboundingBox().right - board.gboundingBox().left + 1;
-        let height = board.gboundingBox().top - board.gboundingBox().bottom + 1;
+        const width = board.gboundingBox().right - board.gboundingBox().left + 1;
+        const height = board.gboundingBox().top - board.gboundingBox().bottom + 1;
 
         let newWidth = width * multiplier;
         let newHeight = height * multiplier;
@@ -178,20 +178,20 @@ const highlights = (function(){
             newHeight *= ratio;
         }
 
-        return [newWidth, newHeight]
+        return [newWidth, newHeight];
     }
 
     function getDimensionsOfPerspectiveViewRange() {
-        let width = perspective.viewRange * 2;
-        let newWidth = width * multiplier_perspective
-        return [newWidth, newWidth]
+        const width = perspective.viewRange * 2;
+        const newWidth = width * multiplier_perspective;
+        return [newWidth, newWidth];
     }
 
     function isRenderRangeBoundingBoxOutOfRange() {
         if (!boundingBoxOfRenderRange) return true; // It isn't even initiated yet 
 
         const boundingBoxOfView = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
-                                                           : board.gboundingBox();
+            : board.gboundingBox();
 
         // If our screen bounding box is less than 3x smaller than our render range bounding box,
         // we're wasting cpu, let's regenerate it.
@@ -211,8 +211,8 @@ const highlights = (function(){
     function getBoundingBoxOfPerspectiveView() {
 
         const boardPos = movement.getBoardPos();
-        const x = boardPos[0]
-        const y = boardPos[1]
+        const x = boardPos[0];
+        const y = boardPos[1];
 
         const a = perspective.viewRange;
 
@@ -221,7 +221,7 @@ const highlights = (function(){
         const bottom = y - a;
         const top = y + a;
 
-        return { left, right, bottom, top }
+        return { left, right, bottom, top };
     }
 
     /**
@@ -237,9 +237,9 @@ const highlights = (function(){
 
         updateOffsetAndBoundingBoxOfRenderRange();
 
-        const lineSet = new Set(Object.keys(legalMoves.sliding))
+        const lineSet = new Set(Object.keys(legalMoves.sliding));
 
-        const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coords, z, color) // Square / dot highlighting 1 legal move
+        const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coords, z, color); // Square / dot highlighting 1 legal move
 
         for (const strline of lineSet) {
             const line = math.getCoordsFromKey(strline); // [dx,dy]
@@ -267,14 +267,14 @@ const highlights = (function(){
      * @param {number[]} limits - Slide limit: [-7,Infinity]
      * @param {number[]} vertexData - The vertex data of a single legal move highlight (square or dot).
      */
-    function concatData_HighlightedMoves_Diagonal (data, coords, step, intsect1Tile, intsect2Tile, limits, vertexData) {
+    function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, vertexData) {
         
         // Right moveset
-        concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], math.deepCopyObject(vertexData))
+        concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], math.deepCopyObject(vertexData));
         
         // Left moveset
         const negStep = [step[0] * -1, step[1] * -1];
-        concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), math.deepCopyObject(vertexData))
+        concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), math.deepCopyObject(vertexData));
     }
 
     /**
@@ -317,7 +317,7 @@ const highlights = (function(){
         const xyWeShouldEnd = coords[index] + step[index] * limit;
         if (stepIsPositive && xyWeShouldEnd < endCoords[index] || !stepIsPositive && xyWeShouldEnd > endCoords[index]) {
             const yxWeShouldEnd = coords[inverseIndex] + step[inverseIndex] * limit;
-            endCoords = lineIsVertical ? [yxWeShouldEnd, xyWeShouldEnd] : [xyWeShouldEnd, xyWeShouldEnd]
+            endCoords = lineIsVertical ? [yxWeShouldEnd, xyWeShouldEnd] : [xyWeShouldEnd, xyWeShouldEnd];
         }
 
         // Shift the vertex data of our first step to the right place
@@ -330,7 +330,7 @@ const highlights = (function(){
         if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
         const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
 
-        addDataDiagonalVariant(data, vertexData, step, iterationCount)
+        addDataDiagonalVariant(data, vertexData, step, iterationCount);
     }
 
     /**
@@ -341,9 +341,9 @@ const highlights = (function(){
      * @param {number[]} step - [dx,dy]
      * @param {number} iterateCount 
      */
-    function addDataDiagonalVariant (data, vertexData, step, iterateCount) {
+    function addDataDiagonalVariant(data, vertexData, step, iterateCount) {
         for (let i = 0; i < iterateCount; i++) { 
-            data.push(...vertexData)
+            data.push(...vertexData);
             shiftVertexData(vertexData, step[0], step[1]);
         }
     }
@@ -381,21 +381,21 @@ const highlights = (function(){
         // const model = buffermodel.createModel_Color(new Float32Array(data));
         const model = buffermodel.createModel_Colored(new Float32Array(data), 2, "LINE_LOOP");
 
-        model.render()
+        model.render();
     }
 
     function highlightLastMove() {
-        const lastMove = movesscript.getCurrentMove(game.getGamefile())
+        const lastMove = movesscript.getCurrentMove(game.getGamefile());
         if (!lastMove) return; // Don't render if last move is undefined.
 
         const color = options.getDefaultLastMoveHighlightColor();
 
         const data = [];
 
-        data.push(...bufferdata.getDataQuad_Color3D_FromCoord(lastMove.startCoords, z, color))
-        data.push(...bufferdata.getDataQuad_Color3D_FromCoord(lastMove.endCoords, z, color))
+        data.push(...bufferdata.getDataQuad_Color3D_FromCoord(lastMove.startCoords, z, color));
+        data.push(...bufferdata.getDataQuad_Color3D_FromCoord(lastMove.endCoords, z, color));
 
-        const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
+        const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 
         model.render();
     }
@@ -406,6 +406,6 @@ const highlights = (function(){
         regenModel,
         concatData_HighlightedMoves_Individual,
         concatData_HighlightedMoves_Sliding
-    })
+    });
 
 })();
