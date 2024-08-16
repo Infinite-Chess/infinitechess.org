@@ -7,7 +7,7 @@
 "use strict";
 
 
-const engineCheckmatePractice = (function(){
+const engineCheckmatePractice = (function() {
 
     // Here, the engine webworker received messages from the outside
     self.onmessage = function(e) {
@@ -25,17 +25,17 @@ const engineCheckmatePractice = (function(){
     let gamefile_royal_coords;
 
     // Black royal piece properties. The black royal piece is always at square [0,0]
-    const king_moves = [ 
-        [-1,  1], [0,  1], [1,  1],
-        [-1,  0],          [1,  0],
+    const king_moves = [
+        [-1, 1], [0, 1], [1, 1],
+        [-1, 0], [1, 0],
         [-1, -1], [0, -1], [1, -1],
     ];
-    const centaur_moves = [ 
-                  [-1,  2],          [1,  2],
-        [-2,  1], [-1,  1], [0,  1], [1,  1], [2,  1],
-                  [-1,  0],          [1,  0],
+    const centaur_moves = [
+        [-1, 2], [1, 2],
+        [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1],
+        [-1, 0], [1, 0],
         [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1],
-                  [-1, -2],          [1, -2]
+        [-1, -2], [1, -2]
     ];
     let royal_moves; // king_moves or centaur_moves
     let royal_type; // "k" or "rc"
@@ -47,37 +47,45 @@ const engineCheckmatePractice = (function(){
     // only used for parsing in the position
     const pieceNameDictionary = {
         // 0 corresponds to a captured piece
-       "queensW": 1,
-       "rooksW": 2,
-       "bishopsW": 3,
-       "knightsW": 4,
-       "kingsW": 5,
-       "pawnsW": 6 ,
-       "amazonsW": 7,
-       "hawksW": 8,
-       "chancellorsW": 9,
-       "archbishopsW": 10,
-       "knightridersW": 11
+        "queensW": 1,
+        "rooksW": 2,
+        "bishopsW": 3,
+        "knightsW": 4,
+        "kingsW": 5,
+        "pawnsW": 6,
+        "amazonsW": 7,
+        "hawksW": 8,
+        "chancellorsW": 9,
+        "archbishopsW": 10,
+        "knightridersW": 11
     };
 
     // legal move storage for pieces in piecelist
     const pieceTypeDictionary = {
         // 0 corresponds to a captured piece
-        1: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]}, // queen
-        2: {rides: [[1, 0], [0, 1], [-1, 0], [0, -1]]}, // rook
-        3: {rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]]}, // bishop
-        4: {jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // knight
-        5: {jumps: [[-1, 1], [0, 1], [1, 1], [-1, 0], [1, 0], [-1, -1], [0, -1], [1, -1]], is_royal: true}, // king
-        6: {jumps: [[0, 1]], is_pawn: true}, //pawn
-        7: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]],
-            jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // amazon
-        8: {jumps: [[2, 0], [3, 0], [2, 2], [3, 3], [0, 2], [0, 3], [-2, 2], [-3, 3], [-2, 0], [-3, 0],
-                    [-2, -2], [-3, -3], [0, -2], [0, -3], [2, -2], [3, -3]]}, //hawk
-        9: {rides: [[1, 0], [0, 1], [-1, 0], [0, -1]],
-            jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // chancellor
-        10: {rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]],
-            jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // archbishop
-        11: {rides: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]} // knightrider
+        1: { rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]] }, // queen
+        2: { rides: [[1, 0], [0, 1], [-1, 0], [0, -1]] }, // rook
+        3: { rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]] }, // bishop
+        4: { jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]] }, // knight
+        5: { jumps: [[-1, 1], [0, 1], [1, 1], [-1, 0], [1, 0], [-1, -1], [0, -1], [1, -1]], is_royal: true }, // king
+        6: { jumps: [[0, 1]], is_pawn: true }, //pawn
+        7: {
+            rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]],
+            jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]
+        }, // amazon
+        8: {
+            jumps: [[2, 0], [3, 0], [2, 2], [3, 3], [0, 2], [0, 3], [-2, 2], [-3, 3], [-2, 0], [-3, 0],
+            [-2, -2], [-3, -3], [0, -2], [0, -3], [2, -2], [3, -3]]
+        }, //hawk
+        9: {
+            rides: [[1, 0], [0, 1], [-1, 0], [0, -1]],
+            jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]
+        }, // chancellor
+        10: {
+            rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]],
+            jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]
+        }, // archbishop
+        11: { rides: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]] } // knightrider
     };
 
     // define what "short range" means for each piece. Jump moves to at least as near as the values in this table are considered shortrange
@@ -118,7 +126,7 @@ const engineCheckmatePractice = (function(){
         6: [[100, manhattanNorm], [100, manhattanNorm]], // pawn
         7: [[14, manhattanNorm], [14, cappedManhattanNorm]], // amazon
         8: [[16, manhattanNorm], [16, manhattanNorm]],  // hawk
-        7: [[2, manhattanNorm], [2, cappedManhattanNorm]], // chancellor
+        9: [[2, manhattanNorm], [2, cappedManhattanNorm]], // chancellor
         10: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // archbishop
         11: [[16, manhattanNorm], [16, cappedManhattanNorm]],  // knightrider
     };
@@ -197,7 +205,7 @@ const engineCheckmatePractice = (function(){
 
     // computes the 2-norm of a square
     function diagonalNorm(square) {
-        return Math.sqrt(square[0]**2 + square[1]**2);
+        return Math.sqrt(square[0] ** 2 + square[1] ** 2);
     }
 
     // computes the manhattan norm of a square
@@ -231,7 +239,7 @@ const engineCheckmatePractice = (function(){
     // ignore_blockers specifies whether to completely ignore blocking pieces in piecelist&coordlist
     // threatening_own_square specifies whether a piece can threaten its own square
     function rider_threatens(direction, piece_square, target_square, piecelist, coordlist,
-        { exclude_white_piece_squares = false, ignore_blockers = false, threatening_own_square = false} = {}) {
+        { exclude_white_piece_squares = false, ignore_blockers = false, threatening_own_square = false } = {}) {
         if (threatening_own_square && squares_are_equal(piece_square, target_square)) return true;
         const [works, distance] = is_natural_multiple([target_square[0] - piece_square[0], target_square[1] - piece_square[1]], direction);
         if (!works) return false;
@@ -253,7 +261,7 @@ const engineCheckmatePractice = (function(){
     }
 
     // stretches vector by scalar
-    function rescaleVector (scalar, v) {
+    function rescaleVector(scalar, v) {
         return [scalar * v[0], scalar * v[1]];
     }
 
@@ -324,7 +332,7 @@ const engineCheckmatePractice = (function(){
 
     // checks if any white piece threatens a given square
     function square_is_threatened(target_square, piecelist, coordlist) {
-        for (let index = 0; index < coordlist.length; index++){
+        for (let index = 0; index < coordlist.length; index++) {
             if (piece_threatens_square(index, target_square, piecelist, coordlist)) return true;
         }
         return false;
@@ -338,7 +346,7 @@ const engineCheckmatePractice = (function(){
      */
     function get_black_legal_moves(piecelist, coordlist) {
         let black_legal_moves = [];
-        for (let square of royal_moves){
+        for (let square of royal_moves) {
             if (!square_is_threatened(square, piecelist, coordlist)) black_legal_moves.push(square);
         }
         return black_legal_moves;
@@ -352,7 +360,7 @@ const engineCheckmatePractice = (function(){
      */
     function get_black_legal_move_amount(piecelist, coordlist) {
         let black_legal_move_amount = 0;
-        for (let square of royal_moves){
+        for (let square of royal_moves) {
             if (!square_is_threatened(square, piecelist, coordlist)) black_legal_move_amount += 1;
         }
         return black_legal_move_amount;
@@ -460,7 +468,7 @@ const engineCheckmatePractice = (function(){
     function add_suitable_squares_to_candidate_list(
         candidate_squares, piece_square, v1, v2,
         c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
-    ){
+    ) {
         // iterate through all candidate squares in v1 direction
         candidates_loop:
         for (let rc1 = c1_min; rc1 <= c1_max; rc1++) {
@@ -470,10 +478,10 @@ const engineCheckmatePractice = (function(){
             const square_near_king_1 = add_move(target_square, rescaleVector(c2_min, v2));
             const square_near_king_2 = add_move(target_square, rescaleVector(c2_max, v2));
             // ensure that piece threatens target square
-            if (!rider_threatens(v1, piece_square, target_square, piecelist, coordlist, {exclude_white_piece_squares: true})) continue;
+            if (!rider_threatens(v1, piece_square, target_square, piecelist, coordlist, { exclude_white_piece_squares: true })) continue;
             // ensure that target square threatens square near black king
-            if (!rider_threatens(v2, target_square, square_near_king_1, piecelist, coordlist, {threatening_own_square: true}) &&
-                !rider_threatens(v2, target_square, square_near_king_2, piecelist, coordlist, {threatening_own_square: true})
+            if (!rider_threatens(v2, target_square, square_near_king_1, piecelist, coordlist, { threatening_own_square: true }) &&
+                !rider_threatens(v2, target_square, square_near_king_2, piecelist, coordlist, { threatening_own_square: true })
             ) continue;
             // definitely add target_square if it is a royal move
             if (!tuplelist_contains_tuple(royal_moves, target_square)) {
@@ -486,9 +494,9 @@ const engineCheckmatePractice = (function(){
                     else if (Math.sign(target_square[0]) != Math.sign(candidate_squares[i][0])) continue redundancy_loop;
                     else if (Math.sign(target_square[1]) != Math.sign(candidate_squares[i][1])) continue redundancy_loop;
                     // eliminate current candidate square if it lies on the same line as accepted candidate square, but further away
-                    else if (rider_threatens(v2, target_square, candidate_squares[i], piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
+                    else if (rider_threatens(v2, target_square, candidate_squares[i], piecelist, coordlist, { ignore_blockers: true })) continue candidates_loop;
                     // replace accepted candidate square with current candidate square if they lie on the same line as, but new square is nearer
-                    else if (rider_threatens(v2, candidate_squares[i], target_square, piecelist, coordlist, {ignore_blockers: true})) {
+                    else if (rider_threatens(v2, candidate_squares[i], target_square, piecelist, coordlist, { ignore_blockers: true })) {
                         candidate_squares[i] = target_square;
                         continue candidates_loop;
                     }
@@ -516,8 +524,8 @@ const engineCheckmatePractice = (function(){
      * @returns {Array}
      */
     function make_white_move(piece_index, target_square, piecelist, coordlist) {
-        let new_piecelist = piecelist.map(a => {return a});
-        let new_coordlist = coordlist.map(a => {return [...a]});
+        let new_piecelist = piecelist.map(a => { return a });
+        let new_coordlist = coordlist.map(a => { return [...a] });
         new_coordlist[piece_index] = target_square;
 
         return [new_piecelist, new_coordlist];
@@ -574,7 +582,7 @@ const engineCheckmatePractice = (function(){
                 score += weight * distancefunction(coordlist[i]);
             }
         }
-        
+
         return score;
     }
 
@@ -591,7 +599,7 @@ const engineCheckmatePractice = (function(){
      */
     function alphabeta(piecelist, coordlist, depth, start_depth, black_to_move, alpha, beta) {
         if (depth == 0 || get_black_legal_move_amount(piecelist, coordlist) == 0) {
-            return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth};
+            return { score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth };
         }
 
         let bestMove;
@@ -622,7 +630,7 @@ const engineCheckmatePractice = (function(){
                 }
             }
             if (!bestMove) bestMove = get_black_legal_moves(piecelist, coordlist)[0];
-            return {score: maxScore, move: bestMove, termination_depth: bestDepth};
+            return { score: maxScore, move: bestMove, termination_depth: bestDepth };
         } else {
             let minScore = Infinity;
             let bestDepth = -1;
@@ -648,7 +656,7 @@ const engineCheckmatePractice = (function(){
                     }
                 }
             }
-            return {score: minScore, termination_depth: bestDepth};
+            return { score: minScore, termination_depth: bestDepth };
         }
     }
 
@@ -686,17 +694,17 @@ const engineCheckmatePractice = (function(){
      */
     function move_to_gamefile_move(target_square) {
         const endCoords = [gamefile_royal_coords[0] + target_square[0], gamefile_royal_coords[1] + target_square[1]];
-        return {startCoords: gamefile_royal_coords, endCoords: endCoords};
+        return { startCoords: gamefile_royal_coords, endCoords: endCoords };
     }
 
     /**
-	 * This function is called from outside and initializes the engine calculation given the provided gamefile
-	 * @param {gamefile} gamefile - the gamefile
-	 */
+     * This function is called from outside and initializes the engine calculation given the provided gamefile
+     * @param {gamefile} gamefile - the gamefile
+     */
     function runEngine(gamefile) {
         try {
             // get real coordinates and parse type of black royal piece
-            if (gamefile.ourPieces["kingsB"].length != 0){
+            if (gamefile.ourPieces["kingsB"].length != 0) {
                 gamefile_royal_coords = gamefile.ourPieces["kingsB"][0];
                 royal_moves = king_moves;
                 royal_type = "k";
@@ -737,7 +745,7 @@ const engineCheckmatePractice = (function(){
             alert(string + `Total move count: ${candidate_move_count}`)
             */
 
-        } catch(e) {
+        } catch (e) {
             console.error("An error occured in the engine computation of the checkmate practice");
             console.error(e);
         }
