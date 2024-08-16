@@ -113,6 +113,7 @@ module.exports = [
         websocket: "readonly",
         memberHeader: "readonly",
         checkmatepractice: "readonly",
+        guipractice: "readonly",
         enginegame: "readonly",
         translations: "readonly", // Injected into the html through ejs
       }
