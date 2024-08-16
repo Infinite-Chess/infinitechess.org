@@ -55,17 +55,16 @@ if (DEV_BUILD) {
     // overwrite play.ejs by injecting all needed scripts into it:
     await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
 } else {
-  // in prod mode, copy all clientside files over to dist, except for those contained in scripts
-  await copy("./src/client", "./dist", {
-    recursive: true,
-    force: true,
-    filter: filename => { 
-      return (
-        (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) || /(\\|\/)game(\\|\/)chess$/.test(filename)) 
-        && !/(\\|\/)css(\\|\/)/.test(filename)
-      )
-    }
-  });
+    // in prod mode, copy all clientside files over to dist, except for those contained in scripts
+    await copy("./src/client", "./dist", {
+        recursive: true,
+        force: true,
+        filter: filename => { 
+            return (
+                (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) || /(\\|\/)game(\\|\/)chess$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename)
+            );
+        }
+    });
 
     // make a list of all client scripts:
     const clientFiles = [];
@@ -75,16 +74,21 @@ if (DEV_BUILD) {
     // string containing all code in /game except for htmlscript.js:
     let gamecode = ""; 
 
-  for (const file of clientFiles) {
+    for (const file of clientFiles) {
     // If the client script is htmlscript.js or an engine script or not in scripts/game, then minify it and copy it over
-    if (/(\\|\/)htmlscript\.js$/.test(file) || /chess(\\|\/)engine[^\.\\\/]*\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ){
-      const code = await readFile(`./src/client/${file}`, 'utf8');
-      const minified = await swc.minify(code, {
-        mangle: true, // Enable variable name mangling
-        compress: true, // Enable compression
-        sourceMap: false
-      });
-      await writeFile(`./dist/${file}`, minified.code, 'utf8');
+        if (/(\\|\/)htmlscript\.js$/.test(file) || /chess(\\|\/)engine[^\.\\\/]*\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
+            const code = await readFile(`./src/client/${file}`, 'utf8');
+            const minified = await swc.minify(code, {
+                mangle: true, // Enable variable name mangling
+                compress: true, // Enable compression
+                sourceMap: false
+            });
+            await writeFile(`./dist/${file}`, minified.code, 'utf8');
+        }
+        // Collect the code of all js files in /game except for htmlscript.js:
+        else {
+            gamecode += await readFile(`./src/client/${file}`, 'utf8');
+        }
     }
 
     // Combine all gamecode files into app.js
