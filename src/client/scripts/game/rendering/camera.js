@@ -169,6 +169,7 @@ const camera = (function() {
                                        : window.innerWidth > 550 ? window.innerWidth * 0.12
                                        : window.innerWidth > 368 ? 66
                                                                  : window.innerWidth * 0.179;
+        PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.gnavigationVisible() ? 0 : 84;
         /* eslint-enable indent */
         main.renderThisFrame();
 
