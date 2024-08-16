@@ -73,7 +73,7 @@ const guigameinfo = (function() {
         // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect
 
         const { victor, condition } = wincondition.getVictorAndConditionFromGameConclusion(conclusion);
-	const resultTranslations = translations["results"];
+	    const resultTranslations = translations["results"];
         style.hideElement(element_dot);
 
         if (onlinegame.areInOnlineGame()) {
