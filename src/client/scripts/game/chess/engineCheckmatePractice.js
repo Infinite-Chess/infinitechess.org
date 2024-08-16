@@ -699,6 +699,8 @@ const engineCheckmatePractice = (function(){
      * @param {Boolean} black_to_move 
      * @param {Number} alpha 
      * @param {Number} beta 
+     * @param {Number} alphaDepth 
+     * @param {Number} betaDepth 
      * @returns {Object} with properties "score", "move" and "termination_depth"
      */
     function alphabeta(piecelist, coordlist, depth, start_depth, black_to_move, alpha, beta, alphaDepth, betaDepth) {
@@ -721,11 +723,13 @@ const engineCheckmatePractice = (function(){
                         bestMove = move;
                         maxScore = new_score;
                         deepestDepth = termination_depth;
+                        /*
                         if (depth == start_depth && new_score > globallyBestScore && !squares_are_equal(move, globallyBestMove)) {
                             globallyBestMove = move;
                             globallyBestScore = new_score;
                             self.postMessage(move_to_gamefile_move(globallyBestMove));
                         }
+                        */
                     }
                 }
                 alpha = Math.max(alpha, new_score);

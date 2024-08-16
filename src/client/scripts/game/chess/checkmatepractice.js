@@ -71,8 +71,6 @@ const checkmatepractice = (function() {
         // error if user somehow submitted invalid checkmate ID
         if (!validCheckmates.includes(checkmateID)) return console.error("User tried to play invalid checkmate practice.");
 
-        if (checkmateID == "2AM-1rc") return {"6,11": "royalCentaursB", "5,8": "amazonsW", "11,8": "amazonsW"};
-
         let startingPosition = {}; // the position to be generated
         let blackpieceplaced = false; // monitors if a black piece has already been placed
         let whitebishopparity = Math.floor(Math.random() * 2); // square color of first white bishop batch
