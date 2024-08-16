@@ -9,9 +9,8 @@
 "use strict";
 
 /* eslint-disable max-depth */
-/* eslint-disable space-before-blocks */
 // eslint-disable-next-line no-unused-vars
-const engineCheckmatePractice = (function(){
+const engineCheckmatePractice = (function() {
 
     // Here, the engine webworker received messages from the outside
     self.onmessage = function(e) {
@@ -409,7 +408,7 @@ const engineCheckmatePractice = (function(){
 
     // checks if any white piece threatens a given square
     function square_is_threatened(target_square, piecelist, coordlist) {
-        for (let index = 0; index < coordlist.length; index++){
+        for (let index = 0; index < coordlist.length; index++) {
             if (piece_threatens_square(index, target_square, piecelist, coordlist)) return true;
         }
         return false;
@@ -423,7 +422,7 @@ const engineCheckmatePractice = (function(){
      */
     function get_black_legal_moves(piecelist, coordlist) {
         const black_legal_moves = [];
-        for (const square of royal_moves){
+        for (const square of royal_moves) {
             if (!square_is_threatened(square, piecelist, coordlist)) black_legal_moves.push(square);
         }
         return black_legal_moves;
@@ -437,7 +436,7 @@ const engineCheckmatePractice = (function(){
      */
     function get_black_legal_move_amount(piecelist, coordlist) {
         let black_legal_move_amount = 0;
-        for (const square of royal_moves){
+        for (const square of royal_moves) {
             if (!square_is_threatened(square, piecelist, coordlist)) black_legal_move_amount += 1;
         }
         return black_legal_move_amount;
@@ -498,7 +497,7 @@ const engineCheckmatePractice = (function(){
                     const temp_piecelist = [...piecelist];
                     temp_piecelist[piece_index] = 0;
                     // only consider target square if another piece defends it as well, else it will be captured
-                    for (let index = 0; index < coordlist.length; index++){
+                    for (let index = 0; index < coordlist.length; index++) {
                         if (index !== piece_index && piece_threatens_square(index, target_square, temp_piecelist, coordlist)) {
                             blunders_piece = false;
                             break;
@@ -567,7 +566,7 @@ const engineCheckmatePractice = (function(){
     function add_suitable_squares_to_candidate_list(
         candidate_squares, piece_index, piece_square, v1, v2,
         c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
-    ){
+    ) {
         // iterate through all candidate squares in v1 direction
         candidates_loop:
         for (let rc1 = c1_min; rc1 <= c1_max; rc1++) {
@@ -588,7 +587,7 @@ const engineCheckmatePractice = (function(){
                 const temp_piecelist = [...piecelist];
                 temp_piecelist[piece_index] = 0;
                 // only add target square if another piece defends it as well, else it will be captured
-                for (let index = 0; index < coordlist.length; index++){
+                for (let index = 0; index < coordlist.length; index++) {
                     if (index !== piece_index && piece_threatens_square(index, target_square, temp_piecelist, coordlist)) {
                         candidate_squares.push(target_square);
                         continue candidates_loop;
