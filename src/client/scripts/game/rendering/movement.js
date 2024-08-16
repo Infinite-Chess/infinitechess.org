@@ -380,8 +380,8 @@ const movement = (function() {
 
     // Called if the board is being dragged, calculates new board position.
     function dragBoard() {
-        if (boardIsGrabbed == 1) dragBoard_WithMouse(); // Mouse is dragging board
-        else if (boardIsGrabbed == 2) dragBoard_WithFingers(); // Finger is dragging board
+        if (boardIsGrabbed === 1) dragBoard_WithMouse(); // Mouse is dragging board
+        else if (boardIsGrabbed === 2) dragBoard_WithFingers(); // Finger is dragging board
     }
 
     // Called when board is being dragged by mouse, calculates new board position.
