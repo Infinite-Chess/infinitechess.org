@@ -1,4 +1,15 @@
 {
+  "12": {
+    "note": "Added draw offers.",
+    "changes": [
+      "play.pause.offer_draw",
+      "play.pause.accept_draw",
+      "play.drawoffer.question",
+      "play.javascript.termination.agreement",
+      "play.javascript.termination.agreement",
+      "play.javascript.results.draw_agreement"
+    ]
+  },
   "11": {
     "note": "Changed the structure of play.javascript.termination.moverule",
     "changes": [

@@ -234,6 +234,16 @@ const onlinegame = (function() {
             case "serverrestart":
                 initServerRestart(data.value);
                 break;
+            case "drawoffer": { // message contents: { blackOfferMove, whiteOfferMove }
+                guidrawoffer.openDrawOffer()
+                const gamefile = game.getGamefile()
+                const moves = data.value; // { blackOfferMove, whiteOfferMove }
+                gamefile.drawOfferBlack = moves.blackOfferMove
+                gamefile.drawOfferWhite = moves.whiteOfferMove
+                break;
+            } case "declinedraw":
+                statustext.showStatus(`Opponent declined draw offer.`)
+                break;
             default:
                 statustext.showStatus(`${translations["invites"]["unknown_action_received_1"]} ${message.action} ${translations["invites"]["unknown_action_received_2"]}`, true);
                 break;
@@ -303,7 +313,8 @@ const onlinegame = (function() {
         // {
         //     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
         //     id, clock, publicity, youAreColor, timerWhite,
-        //     timerBlack, moves, autoAFKResignTime, disconnect, gameConclusion
+        //     timerBlack, moves, autoAFKResignTime, disconnect, gameConclusion, 
+        //     blackDrawOfferMove, whiteDrawOfferMove
         // }
 
         // We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
@@ -377,6 +388,8 @@ const onlinegame = (function() {
         stopOpponentAFKCountdown(); // The opponent is no longer AFK if they were
         flashTabNameYOUR_MOVE(true);
         scheduleMoveSound_timeoutID();
+
+        guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
     }
 
     function flashTabNameYOUR_MOVE(on) {
@@ -414,9 +427,9 @@ const onlinegame = (function() {
      * Called when the server sends us the conclusion of the game when it ends,
      * OR we just need to resync! The game may not always be over.
      * @param {Object} messageContents - The contents of the server message, with the properties:
-     * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`.
+     * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`, `whiteDrawOfferMove`, `whiteDrawOfferMove`.
      */
-    function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime }
+    function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime, whiteDrawOfferMove, blackDrawOfferMove }
         if (!inOnlineGame) return;
         const gamefile = game.getGamefile();
         const claimedGameConclusion = messageContents.gameConclusion;
@@ -451,6 +464,9 @@ const onlinegame = (function() {
         clock.edit(messageContents.timerWhite, messageContents.timerBlack, messageContents.timeNextPlayerLosesAt);
 
         if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile);
+
+        gamefile.drawOfferWhite = messageContents.whiteDrawOfferMove
+        gamefile.drawOfferBlack = messageContents.blackDrawOfferMove
     }
 
     /**
@@ -550,10 +566,30 @@ const onlinegame = (function() {
         websocket.sendmessage('game', 'report', message);
     }
 
+    function offerDraw() {
+        const gamefile = game.getGamefile()
+        if (gamefile.moves.length < 2) throw new Error("Somehow we tried to extend a draw offer when there's < 2 moves played!")
+            
+        websocket.sendmessage('game', 'offerdraw')
+        if ( getOurColor() === "white" ) gamefile.drawOfferWhite = gamefile.moves.length
+        if ( getOurColor() === "black" ) gamefile.drawOfferBlack = gamefile.moves.length
+    }
+
+    function acceptDraw() {
+        websocket.sendmessage('game', 'acceptdraw')
+    }
+
+    function declineDraw() {
+        if (!guidrawoffer.areWeAcceptingDraw()) return; // there isn't a draw to decline (we hope)
+        guipause.updateDrawOfferButton()
+        websocket.sendmessage('game', 'declinedraw');
+        statustext.showStatus(`Draw declined`, false, 2);
+    }
+
     /**
      * This has to be called before and separate from {@link initOnlineGame}
      * because loading the gamefile and the mesh generation requires this script to know our color.
-     * @param {string} color - The color we are in this online game
+     * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `autoAFKResignTime`, `disconnect`, `serverRestartingAt`
      */
     function setColorAndGameID(gameOptions) {
         inOnlineGame = true;
@@ -591,6 +627,7 @@ const onlinegame = (function() {
         resetAFKValues();
         resetServerRestarting();
         cancelFlashTabTimer();
+        guidrawoffer.closeDrawOffer(); // if it's open somehow, close it anyway
         perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
     }
 
@@ -634,6 +671,9 @@ const onlinegame = (function() {
 
         websocket.sendmessage('game', 'submitmove', data, true);
 
+        // onlinegame.declineDraw() not needed, server-sided
+        if (guidrawoffer.areWeAcceptingDraw()) guidrawoffer.closeDrawOffer()
+        
         rescheduleAlertServerWeAFK();
     }
 
@@ -657,12 +697,14 @@ const onlinegame = (function() {
         websocket.getSubs().game = false;
         inSync = false;
         websocket.sendmessage('game','resign');
+        guidrawoffer.closeDrawOffer();
     }
 
     function abort() {
         websocket.getSubs().game = false;
         inSync = false;
         websocket.sendmessage('game','abort');
+        guidrawoffer.closeDrawOffer();
     }
 
     function getOpponentColor() {
@@ -747,6 +789,7 @@ const onlinegame = (function() {
         cancelMoveSound();
         resetServerRestarting();
         deleteCustomVariantOptions();
+        guidrawoffer.closeDrawOffer();
     }
 
     return Object.freeze({
@@ -769,6 +812,9 @@ const onlinegame = (function() {
         update,
         onLostConnection,
         cancelMoveSound,
+        offerDraw,
+        acceptDraw,
+        declineDraw,
         onGameConclude
     });
 
