@@ -8,7 +8,7 @@
 
 "use strict";
 
-
+// eslint-disable-next-line no-unused-vars
 const engineCheckmatePractice = (function(){
 
     // Here, the engine webworker received messages from the outside
@@ -44,6 +44,7 @@ const engineCheckmatePractice = (function(){
         [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1],
                   [-1, -2],          [1, -2]
     ];
+
     let royal_moves; // king_moves or centaur_moves
     let royal_type; // "k" or "rc"
 
@@ -342,11 +343,6 @@ const engineCheckmatePractice = (function(){
         return [scalar * v[0], scalar * v[1]];
     }
 
-    // computes the scalar product of two vectors
-    function scalarProduct(v1, v2) {
-        return v1[0] * v2[0] + v1[1] * v2[1];
-    }
-
     // computes the cross product of two vectors
     function crossProduct(v1, v2) {
         return v1[0] * v2[1] - v1[1] * v2[0];
@@ -448,6 +444,9 @@ const engineCheckmatePractice = (function(){
         return square_is_threatened([0, 0], piecelist, coordlist);
     }
 
+
+    // Unused functions
+    /*
     // checks if the black royal is mated
     function is_mate(piecelist, coordlist) {
         if (get_black_legal_move_amount(piecelist, coordlist) == 0 && square_is_threatened([0, 0], piecelist, coordlist)) return true;
@@ -459,6 +458,7 @@ const engineCheckmatePractice = (function(){
         if (get_black_legal_move_amount(piecelist, coordlist) == 0 && !square_is_threatened([0, 0], piecelist, coordlist)) return true;
         else return false;
     }
+    */
 
     // calculate a list of interesting squares to move to for a white piece with a certain piece index
     function get_white_piece_candidate_squares(piece_index, piecelist, coordlist) {
@@ -795,7 +795,7 @@ const engineCheckmatePractice = (function(){
             globallyBestScore = evaluation.score;
             globalPliesToMate = evaluation.termination_depth > 0 ? depth - evaluation.termination_depth : Infinity;
             self.postMessage(move_to_gamefile_move(globallyBestMove))
-            // console.log(`Depth ${depth}, Plies To Mate: ${globalPliesToMate}, Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
+            // console.log(`Depth ${depth}, Plies To Mate: ${globalPliesToMate}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestMove}.`);
         }
     }
 
