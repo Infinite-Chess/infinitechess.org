@@ -112,6 +112,7 @@ module.exports = [
         main: "readonly",
         websocket: "readonly",
         memberHeader: "readonly",
+        enginegame: "readonly",
         translations: "readonly", // Injected into the html through ejs
       }
     }
