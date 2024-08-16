@@ -8,7 +8,7 @@
 /** A Socket constructor, **PURELY** for useful JSDoc dropdowns.
  * This should NEVER be called! Objects type's can be declared as this. */
 function Socket() {
-    console.error("THIS CONSTRUCTOR SHOULD NOT BE CALLED. It is purely for JSDoc info.")
+    console.error("THIS CONSTRUCTOR SHOULD NOT BE CALLED. It is purely for JSDoc info.");
 
     /** Our custom-entered information about this websocket.
      * To my knowledge (Naviary), the `metadata` property isn't already in use. */
@@ -50,7 +50,7 @@ function Socket() {
         hasInvite: undefined,
         /** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
         i18next: undefined,
-    }
+    };
 }
 
 
@@ -67,7 +67,7 @@ function Socket() {
 
 /** The Game type definition. THIS SHOULD NOT be called, it is purely for JSDoc dropdowns. */
 function Game() {
-    console.error("THIS GAME CONSTRUCTOR should never be called! It is purely for the 'Game' type definition, for useful JSDoc dropdown info.")
+    console.error("THIS GAME CONSTRUCTOR should never be called! It is purely for the 'Game' type definition, for useful JSDoc dropdown info.");
 
     /** The game's unique ID */
     this.id = undefined;
@@ -165,7 +165,7 @@ function Game() {
                 wasByChoice: undefined,
             }
         }
-    }
+    };
 
     /** The ID of the timer to delete the game after it has ended.
      * This can be used to cancel it in case a hacking was reported. */
@@ -176,4 +176,4 @@ module.exports = {
     Socket,
     // WebsocketMessage, // Type definitions declared in this manner don't need to be exported for some reason? Other scripts can still import it
     Game
-}
+};

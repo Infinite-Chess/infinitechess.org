@@ -53,7 +53,7 @@ async function handleLogin(req, res) {
     if (!(await testPasswordForRequest(req, res))) return; // Incorrect password, it will have already sent a response.
     // Correct password...
 
-    let username = req.body.username; // We already know this property is present on the request
+    const username = req.body.username; // We already know this property is present on the request
     const usernameLowercase = username.toLowerCase();
     const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
 
@@ -64,7 +64,7 @@ async function handleLogin(req, res) {
     // Save the refresh token with current user so later when they log out we can invalidate it.
     addRefreshToken(usernameLowercase, refreshToken);
     
-    createRefreshTokenCookie(res, refreshToken)
+    createRefreshTokenCookie(res, refreshToken);
     
     // Update our member's statistics in their data file!
     updateMembersInfo(usernameLowercase);
@@ -89,6 +89,7 @@ async function handleLogin(req, res) {
 async function testPasswordForRequest(req, res) {
     if (!verifyBodyHasLoginFormData(req, res)) return false; // If false, it will have already sent a response.
     
+    // eslint-disable-next-line prefer-const
     let { username, password } = req.body;
     if (!username) username = req.params.member;
     const usernameLowercase = username.toLowerCase();
@@ -128,21 +129,21 @@ async function testPasswordForRequest(req, res) {
  */
 function verifyBodyHasLoginFormData(req, res) {
     if (!req.body) { // Missing body
-        console.log(`User sent a bad login request missing the body!`)
+        console.log(`User sent a bad login request missing the body!`);
         res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
         return false;
     }
 
-    let { username, password } = req.body;
+    const { username, password } = req.body;
     
     if (!username || !password) {
-        console.log(`User ${username} sent a bad login request missing either username or password!`)
+        console.log(`User ${username} sent a bad login request missing either username or password!`);
         res.status(400).json({ 'message': getTranslationForReq('server.javascript.ws-username_and_password_required', req) }); // 400 Bad request
         return false;
     }
 
     if (typeof username !== "string" || typeof password !== "string") {
-        console.log(`User ${username} sent a bad login request with either username or password not a string!`)
+        console.log(`User ${username} sent a bad login request with either username or password not a string!`);
         res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_and_password_string", req) }); // 400 Bad request
         return false;
     }
@@ -172,7 +173,7 @@ function signTokens(payload) {
         { expiresIn: refreshTokenExpirySecs }
     );
 
-    return { accessToken, refreshToken }
+    return { accessToken, refreshToken };
 }
 
 /**
@@ -206,7 +207,7 @@ function rateLimitLogin(req, res, browserAgent) {
         attempts: 0,
         cooldownTimeSecs: 0,
         lastAttemptTime: now
-    }
+    };
     
     const timeSinceLastAttemptsSecs = (now - loginAttemptData[browserAgent].lastAttemptTime) / 1000;
 
@@ -222,7 +223,7 @@ function rateLimitLogin(req, res, browserAgent) {
         let translation = getTranslationForReq('server.javascript.ws-login_failure_retry_in', req);
         const login_cooldown = Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs);
         const seconds_plurality = login_cooldown === 1 ? getTranslationForReq("server.javascript.ws-second", req) : getTranslationForReq("server.javascript.ws-seconds", req);
-        translation += ` ${login_cooldown} ${seconds_plurality}.`
+        translation += ` ${login_cooldown} ${seconds_plurality}.`;
 
         res.status(401).json({ 'message': translation }); // "Failed to log in, try again in 3 seconds.""
         
@@ -300,8 +301,8 @@ function cancelTimerToDeleteBrowserAgent(browserAgent) {
 function startTimerToDeleteBrowserAgent(browserAgent) {
     loginAttemptData[browserAgent].deleteTimeoutID = setTimeout(() => {
         delete loginAttemptData[browserAgent];
-        console.log(`Allowing browser agent "${browserAgent}" to login without cooldown again!`)
-    }, timeToDeleteBrowserAgentAfterNoAttemptsMillis)
+        console.log(`Allowing browser agent "${browserAgent}" to login without cooldown again!`);
+    }, timeToDeleteBrowserAgentAfterNoAttemptsMillis);
 }
 
 /**
@@ -311,7 +312,7 @@ function startTimerToDeleteBrowserAgent(browserAgent) {
  * @param {string} usernameCaseSensitive - The case-sensitive username.
  */
 function onIncorrectPassword(browserAgent, usernameCaseSensitive) {
-    if(loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
+    if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
     // Lock them!
     loginAttemptData[browserAgent].cooldownTimeSecs += loginCooldownIncrementorSecs;
     logEvents(`${usernameCaseSensitive} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt", { print: true });
@@ -323,7 +324,7 @@ function onIncorrectPassword(browserAgent, usernameCaseSensitive) {
  * @param {string} browserAgent - The browser agent string.
  */
 function onCorrectPassword(browserAgent) {
-    cancelTimerToDeleteBrowserAgent(browserAgent)
+    cancelTimerToDeleteBrowserAgent(browserAgent);
     // Delete now
     delete loginAttemptData[browserAgent];
 }

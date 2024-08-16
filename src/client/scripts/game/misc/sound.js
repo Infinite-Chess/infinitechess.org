@@ -2,7 +2,7 @@
 
 "use strict";
 
-const sound = (function(){
+const sound = (function() {
 
     /** The timestamps where each game sound effect starts and ends inside our sound spritesheet. */
     const soundStamps = {
@@ -24,7 +24,7 @@ const sound = (function(){
         marimba_c2_soft: [42.82, 44.82],
         base_staccato_c2: [44.82, 46.82],
         // draw_offer: [46.89, 48.526]   Only present for the sound spritesheet in dev-utils that includes the draw offer sound
-    }
+    };
 
     /** @type {AudioContext} */
     let audioContext;
@@ -43,7 +43,7 @@ const sound = (function(){
 
     // This is to fix castling being twice as loud
     let timeLastMoveSoundPlayed = 0;
-    let millisBetwMoveSounds = 35;
+    const millisBetwMoveSounds = 35;
 
     // Functions
 
@@ -72,7 +72,7 @@ const sound = (function(){
         // A reverb volume of 3.5 and a duration of 1.5 seconds most-closely matches my audio file!
         if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound 
         
-        if (!audioContext) throw new Error(`Can't play sound ${soundName} when audioContext isn't initialized yet! (Still loading)`)
+        if (!audioContext) throw new Error(`Can't play sound ${soundName} when audioContext isn't initialized yet! (Still loading)`);
 
         const soundStamp = getSoundStamp(soundName); // [ timeStart, timeEnd ] Start and end time stamps in the sprite
         const offsetSecs = offset / 1000;
@@ -103,10 +103,10 @@ const sound = (function(){
              * @param {number} durationMillis - The duration of the fade out
              */
             fadeOut: (durationMillis) => {
-                fadeOut(soundObject.source, durationMillis)
-                if (soundObject.sourceReverb) fadeOut(soundObject.sourceReverb, durationMillis)
+                fadeOut(soundObject.source, durationMillis);
+                if (soundObject.sourceReverb) fadeOut(soundObject.sourceReverb, durationMillis);
             }
-        }
+        };
 
         // 1. We need an audio "source" to play our main sound effect
         
@@ -117,7 +117,7 @@ const sound = (function(){
         // 2. If reverb is specified, we also need a source for that effect!
         // We will play them both!
         if (!reverbVolume) return fadeInAndReturn(); // No reverb effect if volume is falsey or zero :)
-        if (reverbDuration == null) return console.error("Need to specify a reverb duration.")
+        if (reverbDuration == null) return console.error("Need to specify a reverb duration.");
         const sourceReverb = createBufferSource(reverbVolume, 1, reverbDuration);
         sourceReverb.start(startAt, startTime, duration);
         soundObject.sourceReverb = sourceReverb;
@@ -126,8 +126,8 @@ const sound = (function(){
 
         function fadeInAndReturn() {
             if (fadeInDuration == null) return soundObject; // No fade-in effect
-            fadeIn(soundObject.source, volume, fadeInDuration)
-            if (soundObject.sourceReverb) fadeIn(soundObject.sourceReverb, reverbVolume, fadeInDuration)
+            fadeIn(soundObject.source, volume, fadeInDuration);
+            if (soundObject.sourceReverb) fadeIn(soundObject.sourceReverb, reverbVolume, fadeInDuration);
             return soundObject;
         }
     }
@@ -135,11 +135,11 @@ const sound = (function(){
     function getSoundStamp(soundName) {
         const stamp = soundStamps[soundName];
         if (stamp) return stamp;
-        else throw new Error(`Cannot return sound stamp for strange new sound ${soundName}!`)
+        else throw new Error(`Cannot return sound stamp for strange new sound ${soundName}!`);
     }
 
     function getStampDuration(stamp) { // [ startTimeSecs, endTimeSecs ]
-        return stamp[1] - stamp[0]
+        return stamp[1] - stamp[0];
     }
 
     // Buffer sources play our audio. Multiple of them can play multiple sounds at once.
@@ -154,7 +154,7 @@ const sound = (function(){
      */
     function createBufferSource(volume, playbackRate = 1, reverbDurationSecs) {
         const source = audioContext.createBufferSource();
-        if (audioDecodedBuffer == null) throw new Error("audioDecodedBuffer should never be undefined! This usually happens when soundspritesheet.mp3 starts loading but the document finishes loading in the middle of the audio loading.")
+        if (audioDecodedBuffer == null) throw new Error("audioDecodedBuffer should never be undefined! This usually happens when soundspritesheet.mp3 starts loading but the document finishes loading in the middle of the audio loading.");
         source.buffer = audioDecodedBuffer; // Assuming `decodedBuffer` is defined elsewhere
 
         // What nodes do we want?
@@ -168,7 +168,7 @@ const sound = (function(){
 
         // Reverb node (if specified)
         if (reverbDurationSecs != null) {
-            const convolver = generateConvolverNode(audioContext, reverbDurationSecs)
+            const convolver = generateConvolverNode(audioContext, reverbDurationSecs);
             nodes.push(convolver);
         }
 
@@ -183,8 +183,8 @@ const sound = (function(){
 
     // Reverb node
     function generateConvolverNode(audioContext, durationSecs) {
-        var impulse = impulseResponse(durationSecs);
-        return new ConvolverNode(audioContext, {buffer:impulse})
+        const impulse = impulseResponse(durationSecs);
+        return new ConvolverNode(audioContext, {buffer:impulse});
     }
 
     /**
@@ -195,7 +195,7 @@ const sound = (function(){
      */
     function generateGainNode(audioContext, volume) {
         if (volume > 4) {
-            console.error(`Gain was DANGEROUSLY set to ${volume}!!!! Resetting to 1.`)
+            console.error(`Gain was DANGEROUSLY set to ${volume}!!!! Resetting to 1.`);
             volume = 1;
         }
         const gainNode = audioContext.createGain();
@@ -206,11 +206,11 @@ const sound = (function(){
     // The mathematical function used by the convolver (reverb) node used to calculate the reverb effect!
     function impulseResponse(duration) { // Duration in seconds, decay
         const decay = 2;
-        const sampleRate = audioContext.sampleRate
+        const sampleRate = audioContext.sampleRate;
         const length = sampleRate * duration;
         const impulse = audioContext.createBuffer(1, length, sampleRate);
         const IR = impulse.getChannelData(0);
-        for (let i = 0; i < length; i++) IR[i] = (2*Math.random()-1)*Math.pow(1-i/length,decay)
+        for (let i = 0; i < length; i++) IR[i] = (2 * Math.random() - 1) * Math.pow(1 - i / length,decay);
         return impulse;
     }
 
@@ -261,7 +261,7 @@ const sound = (function(){
 
         const durationSecs = durationMillis / 1000;
         const currentTime = audioContext.currentTime;
-        const endTime = currentTime + durationSecs
+        const endTime = currentTime + durationSecs;
 
         // First, set the gain value explicitly to ensure starting point for ramp
         source.gainNode.gain.setValueAtTime(source.gainNode.gain.value, currentTime);
@@ -271,7 +271,7 @@ const sound = (function(){
         // Stop the audio after fade-out duration.
         // This needs to be like this to have the proper *this* object when calling,
         // otherwise we get "Illegal invocation" error.
-        setTimeout(() => { source.stop() }, durationMillis);
+        setTimeout(() => { source.stop(); }, durationMillis);
     }
 
 
@@ -283,13 +283,14 @@ const sound = (function(){
         const bell = distanceMoved >= bellDist;
         const dampener = dampen && bell ? amountToDampenSkippedBell : dampen ? amountToDampenSkippedMoves : 1;
         const volume = 1 * dampener;
-        let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved)
+        // eslint-disable-next-line prefer-const
+        let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
         reverbVolume *= dampener;
-        playSound('move', { volume, reverbVolume, reverbDuration })
+        playSound('move', { volume, reverbVolume, reverbDuration });
 
         if (bell) {
             const bellVolume = 0.6 * dampener;
-            playSound('bell', bellVolume)
+            playSound('bell', bellVolume);
         }
 
         timeLastMoveSoundPlayed = Date.now(); // This fixes castling being twice as loud
@@ -301,7 +302,7 @@ const sound = (function(){
 
         if (timeSinceLastMoveSoundPlayed >= millisBetwMoveSounds) return;
 
-        const timeLeft = millisBetwMoveSounds - timeSinceLastMoveSoundPlayed
+        const timeLeft = millisBetwMoveSounds - timeSinceLastMoveSoundPlayed;
         await main.sleep(timeLeft);
     }
 
@@ -309,21 +310,22 @@ const sound = (function(){
         const bell = distanceMoved >= bellDist;
         const dampener = dampen && bell ? amountToDampenSkippedBell : dampen ? amountToDampenSkippedMoves : 1;
         const volume = 1 * dampener;
-        let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved)
+        // eslint-disable-next-line prefer-const
+        let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
         reverbVolume *= dampener;
-        playSound('capture', { volume, reverbVolume, reverbDuration })
+        playSound('capture', { volume, reverbVolume, reverbDuration });
 
         if (distanceMoved >= bellDist) {
             const bellVolume = 0.6 * dampener;
-            playSound('bell', bellVolume)
+            playSound('bell', bellVolume);
         }
     }
 
     // Returns { reverbVol, reverbDur } from provided distance Chebyshev distance the piece moved;
     function calculateReverbVolDurFromDistance(distanceMoved) {
-        const x = (distanceMoved-minReverbDist)/(maxReverbDist-minReverbDist); // 0-1
-        if (x <= 0) return { reverbVolume: null, reverbDuration: null }
-        else if (x >= 1) return { reverbVolume: maxReverbVol, reverbDuration }
+        const x = (distanceMoved - minReverbDist) / (maxReverbDist - minReverbDist); // 0-1
+        if (x <= 0) return { reverbVolume: null, reverbDuration: null };
+        else if (x >= 1) return { reverbVolume: maxReverbVol, reverbDuration };
 
         function equation(x) { return x; } // Linear for now
 
@@ -331,19 +333,19 @@ const sound = (function(){
 
         const reverbVolume = maxReverbVol * y;
 
-        return { reverbVolume, reverbDuration }
+        return { reverbVolume, reverbDuration };
     }
 
     function playSound_gamestart() {
-        return playSound('gamestart', { volume: 0.4 })
+        return playSound('gamestart', { volume: 0.4 });
     }
 
     function playSound_win(delay) {
-        return playSound('win', { volume: 0.7, delay })
+        return playSound('win', { volume: 0.7, delay });
     }
 
     function playSound_draw(delay) {
-        return playSound('draw', { volume: 0.7, delay })
+        return playSound('draw', { volume: 0.7, delay });
     }
 
     // function playSound_drawOffer(delay) {
@@ -351,43 +353,43 @@ const sound = (function(){
     // }
 
     function playSound_loss(delay) {
-        return playSound('loss', { volume: 0.7, delay })
+        return playSound('loss', { volume: 0.7, delay });
     }
 
     function playSound_lowtime() {
-        return playSound('lowtime')
+        return playSound('lowtime');
     }
 
     function playSound_drum() {
         const oneOrTwo = Math.random() > 0.5 ? 1 : 2; // Randomly choose which drum. They sound ever slightly different.
-        const soundName = `drum${oneOrTwo}`
-        return playSound(soundName, { volume: 0.7 })
+        const soundName = `drum${oneOrTwo}`;
+        return playSound(soundName, { volume: 0.7 });
     }
 
     function playSound_tick({ volume, fadeInDuration, offset } = {}) {
-        return playSound('tick', { volume, offset, fadeInDuration }) // Default volume: 0.07
+        return playSound('tick', { volume, offset, fadeInDuration }); // Default volume: 0.07
     }
 
     function playSound_ticking({ fadeInDuration, offset } = {}) {
-        return playSound('ticking', { volume: 0.18, offset, fadeInDuration })
+        return playSound('ticking', { volume: 0.18, offset, fadeInDuration });
     }
 
     function playSound_viola_c3({ volume } = {}) {
-        return playSound('viola_staccato_c3', { volume })
+        return playSound('viola_staccato_c3', { volume });
     }
 
     function playSound_violin_c4() {
-        return playSound('violin_staccato_c4', { volume: 0.9 })
+        return playSound('violin_staccato_c4', { volume: 0.9 });
     }
 
     function playSound_marimba() {
         const soft = Math.random() > 0.15 ? '_soft' : '';
-        const audioName = `marimba_c2${soft}`
-        return playSound(audioName, { volume: 0.4 })
+        const audioName = `marimba_c2${soft}`;
+        return playSound(audioName, { volume: 0.4 });
     }
 
     function playSound_base() {
-        return playSound('base_staccato_c2', { volume: 0.8 })
+        return playSound('base_staccato_c2', { volume: 0.8 });
     }
 
     return Object.freeze({
@@ -408,6 +410,6 @@ const sound = (function(){
         playSound_violin_c4,
         playSound_marimba,
         playSound_base
-    })
+    });
 
 })();

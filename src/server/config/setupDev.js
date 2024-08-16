@@ -26,19 +26,19 @@ function callDotenvConfig() {
 
 function createDevelopmentAccounts() {
     if (!doesMemberExist("owner")) {
-        generateAccount({ username: "Owner", email: "exampleemail@gmail.com", password: "1", autoVerify: true })
-        giveRole_Owner("owner", "developmental account")
+        generateAccount({ username: "Owner", email: "exampleemail@gmail.com", password: "1", autoVerify: true });
+        giveRole_Owner("owner", "developmental account");
     }
     if (!doesMemberExist("patron")) {
-        generateAccount({ username: "Patron", email: "exampleemail@gmail.com", password: "1", autoVerify: true })
-        giveRole_Patron("patron", "developmental account")
+        generateAccount({ username: "Patron", email: "exampleemail@gmail.com", password: "1", autoVerify: true });
+        giveRole_Patron("patron", "developmental account");
     }
     if (!doesMemberExist("member")) {
-        generateAccount({ username: "Member", email: "exampleemail@gmail.com", password: "1", autoVerify: true })
+        generateAccount({ username: "Member", email: "exampleemail@gmail.com", password: "1", autoVerify: true });
     }
 }
 
 
 module.exports = {
     initDevEnvironment
-}
+};

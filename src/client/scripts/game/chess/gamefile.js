@@ -34,7 +34,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOf
         Event: undefined,
         /** What website hosted the game. "https://www.infinitechess.org/" */
         Site: undefined,
-    }
+    };
     
     /** Information about the beginning of the game (position, positionString, specialRights, turn) */
     this.startSnapshot = {
@@ -59,7 +59,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOf
         existingTypes: undefined,
         /** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {number[][]}*/
         slidingPossible: undefined
-    }
+    };
     
     this.gameRules = {
         winConditions: undefined,
@@ -73,7 +73,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOf
         slideLimit: undefined,
         /** How many plies (half-moves) may pass until a draw is automatically pronounced! */
         moveRule: undefined
-    }
+    };
 
     /** Pieces organized by type: `{ queensW:[[1,2],[2,3]] }` */
     this.ourPieces = undefined;
@@ -123,7 +123,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOf
         /** A flag the mesh generation reads to know whether to terminate or not.
          * Do ***NOT*** set manually, call `terminateIfGenerating()` instead. */
         terminate: false
-    }
+    };
 
     /** The object that contains the buffer model to render the voids */
     this.voidMesh = {
@@ -135,7 +135,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOf
          * from the pieces because we can simplify the mesh greatly.
          * @type {BufferModel} */
         model: undefined,
-    }
+    };
 
     /** Contains the movesets of every piece for this game. 
      * When this object's parameters are called as a function,
@@ -161,7 +161,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOf
     math.copyPropertiesToObject(metadata, this.metadata);
 
     // Init things related to the variant, and the startSnapshot of the position
-    variant.setupVariant(this, metadata, variantOptions) // Initiates startSnapshot, gameRules, and pieceMovesets
+    variant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
     /** The number of half-moves played since the last capture or pawn push. */
     this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
     area.initStartingAreaBox(this);
@@ -190,8 +190,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOf
     this.drawOfferWhite = 0;
     this.drawOfferBlack = 0;
 
-    this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
-    this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)
+    this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position);
+    this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
     
     organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
     // movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
@@ -204,6 +204,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, drawOf
     this.drawOfferWhite = drawOfferWhite || this.drawOfferWhite;
     this.drawOfferBlack = drawOfferBlack || this.drawOfferBlack;
 
-    organizedlines.addMoreUndefineds(this, { regenModel: false })
+    organizedlines.addMoreUndefineds(this, { regenModel: false });
 };
 

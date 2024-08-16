@@ -38,41 +38,41 @@ const sendLogin = (username, password) => {
     element_submitButton.disabled = true;
 
     let OK = false;
-    let config = {
+    const config = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin', // Allows cookie to be set from this request
         body: JSON.stringify({username, password})
     };
     fetch('/auth', config)
-    .then((response) => {
-        if (response.ok) OK = true;
-        return response.json();
-    })
-    .then((result) => {
-        if (OK) { // Username & password accepted! Handle our access token
+        .then((response) => {
+            if (response.ok) OK = true;
+            return response.json();
+        })
+        .then((result) => {
+            if (OK) { // Username & password accepted! Handle our access token
             // const token = getCookieValue('token')
 
-            // Check for a redirectTo query parameter, and if it exists, use it
-            const redirectTo = getQueryParam('redirectTo');
-            if (redirectTo) window.location.href = redirectTo;
-            else window.location.href = `/member/${username.toLowerCase()}`;
+                // Check for a redirectTo query parameter, and if it exists, use it
+                const redirectTo = getQueryParam('redirectTo');
+                if (redirectTo) window.location.href = redirectTo;
+                else window.location.href = `/member/${username.toLowerCase()}`;
 
-        } else { // Unauthorized, create error with the message contained in response body
-            if (!loginErrorElement) {
-                createErrorElement('loginerror', 'passwordinputline');
-                // Set variable because it now exists.
-                loginErrorElement = document.getElementById("loginerror");
-                // Make forgot password message visible
-                element_forgot.className = 'forgotvisible';
+            } else { // Unauthorized, create error with the message contained in response body
+                if (!loginErrorElement) {
+                    createErrorElement('loginerror', 'passwordinputline');
+                    // Set variable because it now exists.
+                    loginErrorElement = document.getElementById("loginerror");
+                    // Make forgot password message visible
+                    element_forgot.className = 'forgotvisible';
+                }
+                updateSubmitButton();
+
+                loginErrorElement.textContent = result['message'];
+                element_submitButton.disabled = false;
             }
-            updateSubmitButton();
-
-            loginErrorElement.textContent = result['message'];
-            element_submitButton.disabled = false;
-        }
-    });
-}
+        });
+};
 
 // Greys-out submit button if there's any errors.
 // The click-prevention is taken care of in the submit event listener.
@@ -82,7 +82,7 @@ const updateSubmitButton = function() {
     } else { // No Errors
         element_submitButton.className = 'ready';
     }
-}
+};
 
 function createErrorElement(id, insertAfter) {
     const errElement = document.createElement('div');

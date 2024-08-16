@@ -14,8 +14,8 @@ const secureRedirect = (req, res, next) => {
 
     // Force redirect to https...
 
-    let httpsPort = DEV_BUILD ? (':' + (process.env.HTTPSPORT_LOCAL || '3443')) : '';
+    const httpsPort = DEV_BUILD ? (':' + (process.env.HTTPSPORT_LOCAL || '3443')) : '';
     res.redirect(`https://${req.hostname}${httpsPort}${req.url}`);
-}
+};
 
 module.exports = secureRedirect;

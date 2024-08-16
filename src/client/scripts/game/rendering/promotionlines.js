@@ -10,16 +10,16 @@ const promotionlines = {
 
     render: function() {
         if (!game.getGamefile().gameRules.promotionRanks) return; // No promotion ranks in this game
-        const model = promotionlines.initModel()
+        const model = promotionlines.initModel();
 
         const boardPos = movement.getBoardPos();
         const position = [
             -boardPos[0], // Add the model's offset
             -boardPos[1],
             0
-        ]
+        ];
         const boardScale = movement.getBoardScale();
-        const scale = [boardScale, boardScale, 1]
+        const scale = [boardScale, boardScale, 1];
         // render.renderModel(model, position, scale, "TRIANGLES")
         model.render(position, scale);
     },
@@ -38,7 +38,7 @@ const promotionlines = {
         const startX = promotionlines.startEnd[0] - board.gsquareCenter();
         const endX = promotionlines.startEnd[1] + 1 - board.gsquareCenter();
 
-        const gamefile = game.getGamefile()
+        const gamefile = game.getGamefile();
         
         const yLow1 = gamefile.gameRules.promotionRanks[0] + 1 - board.gsquareCenter() - promotionlines.thickness;
         const yHigh1 = gamefile.gameRules.promotionRanks[0] + 1 - board.gsquareCenter() + promotionlines.thickness;
@@ -61,9 +61,9 @@ const promotionlines = {
             endX, yLow2,          0, 0, 0,  1,
             startX, yHigh2,       0, 0, 0,  1,
             endX, yHigh2,         0, 0, 0,  1,
-        ])
+        ]);
 
         // return buffermodel.createModel_Color(data)
-        return buffermodel.createModel_Colored(data, 2, "TRIANGLES")
+        return buffermodel.createModel_Colored(data, 2, "TRIANGLES");
     }
 };

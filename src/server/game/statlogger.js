@@ -1,12 +1,12 @@
 
 const path = require('path');
-const fs = require('fs')
+const fs = require('fs');
 const { writeFile } = require('../utility/lockFile.js');
-const math1 = require('./math1.js')
+const math1 = require('./math1.js');
 
 const { writeFile_ensureDirectory } = require('../utility/fileUtils');
 // eslint-disable-next-line no-unused-vars
-const { Game } = require('./TypeDefinitions')
+const { Game } = require('./TypeDefinitions');
 
 const statsPath = path.resolve('database/stats.json');
 (function ensureStatsFileExists() {
@@ -19,9 +19,9 @@ const statsPath = path.resolve('database/stats.json');
         },
         moveCount: {}
     }, null, 2);
-    writeFile_ensureDirectory(statsPath, content)
-    console.log("Generated stats file")
-})()
+    writeFile_ensureDirectory(statsPath, content);
+    console.log("Generated stats file");
+})();
 const stats = require(`../../../database/stats.json`);
 // {
 //     gamesPlayed: {
@@ -53,7 +53,7 @@ const statlogger = (function() {
         // What is the current month?
         const month = math1.getCurrentMonth(); // 'yyyy-mm'
         // What is the current day?
-        const day = math1.getCurrentDay() // 'yyyy-mm-dd'
+        const day = math1.getCurrentDay(); // 'yyyy-mm-dd'
         // What variant was played?
         const variant = game.variant;
 
@@ -110,12 +110,12 @@ const statlogger = (function() {
             path.join(__dirname, '..', '..', '..', 'database', 'stats.json'),
             stats,
             `Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.`
-        )
+        );
     }
 
     return Object.freeze({
         logGame
-    })
+    });
 })();
 
-module.exports = statlogger
+module.exports = statlogger;

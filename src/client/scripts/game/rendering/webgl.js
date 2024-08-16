@@ -16,7 +16,7 @@ const webgl = (function() {
      * The color the screen should be cleared to every frame.
      * This can be changed to give the sky a different color.
      */
-    let clearColor = [0.5, 0.5, 0.5] // Grey
+    let clearColor = [0.5, 0.5, 0.5]; // Grey
 
     /**
      * Specifies the condition under which a fragment passes the depth test,
@@ -30,7 +30,7 @@ const webgl = (function() {
      * 
      * Accepted values: `NEVER`, `LESS`, `EQUAL`, `LEQUAL`, `GREATER`, `NOTEQUAL`, `GEQUAL`, `ALWAYS`
      */
-    const defaultDepthFuncParam = 'LEQUAL'
+    const defaultDepthFuncParam = 'LEQUAL';
 
     /**
      * Whether to use WebGL2 if it's compatible. It is backwards compatible.
@@ -60,7 +60,7 @@ const webgl = (function() {
      * This is useful for changing the sky color.
      * @param {number[]} newClearColor - The new clear color: `[r,g,b]`
      */
-    function setClearColor(newClearColor) { clearColor = newClearColor;  }
+    function setClearColor(newClearColor) { clearColor = newClearColor; }
 
     /**
      * Initiate the WebGL context. This is our web-based render engine.
@@ -68,33 +68,33 @@ const webgl = (function() {
     function init() {
         if (useWebGL2) {
             // Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-            gl = camera.canvas.getContext('webgl2', { alpha: false })
-            if (!gl) console.log("Browser doesn't support WebGL-2, falling back to WebGL-1.")
+            gl = camera.canvas.getContext('webgl2', { alpha: false });
+            if (!gl) console.log("Browser doesn't support WebGL-2, falling back to WebGL-1.");
         }
         if (!gl) { // Init WebGL-1
-            gl = camera.canvas.getContext('webgl', { alpha: false })
+            gl = camera.canvas.getContext('webgl', { alpha: false });
         }
         if (!gl) { // Init WebGL experimental
-            console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.")
+            console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.");
             gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
         }
         if (!gl) { // Experimental also failed to init
-            alert(translations["webgl_unsupported"])
-            throw new Error("WebGL not supported.")
+            alert(translations["webgl_unsupported"]);
+            throw new Error("WebGL not supported.");
         }
     
         gl.clearDepth(1.0); // Set the clear depth value
-        clearScreen()
+        clearScreen();
 
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl[defaultDepthFuncParam]);
 
         gl.enable(gl.BLEND);
-        toggleNormalBlending()
+        toggleNormalBlending();
 
         if (culling) {
             gl.enable(gl.CULL_FACE);
-            const dir = frontFaceVerticesAreClockwise ? gl.CW : gl.CCW
+            const dir = frontFaceVerticesAreClockwise ? gl.CW : gl.CCW;
             gl.frontFace(dir); // Specifies what faces are considered front, depending on their vertices direction.
             gl.cullFace(gl.BACK); // Skip rendering back faces. Alertnatively we could skip rendering FRONT faces.
         }
@@ -105,7 +105,7 @@ const webgl = (function() {
      * Needs to be called every frame.
      */
     function clearScreen() {
-        gl.clearColor(...clearColor,  1.0);
+        gl.clearColor(...clearColor, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     }
 
@@ -113,7 +113,7 @@ const webgl = (function() {
      * Toggles normal blending mode. Transparent objects will correctly have
      * their color shaded onto the color behind them.
      */
-    function toggleNormalBlending() { gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA) }
+    function toggleNormalBlending() { gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); }
 
     /**
      * Toggles inverse blending mode, which will negate any color currently in the buffer.
@@ -121,7 +121,7 @@ const webgl = (function() {
      * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
      * and white on black backgrounds.
      */
-    function toggleInverseBlending() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.GL_ZERO) }
+    function toggleInverseBlending() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.GL_ZERO); }
 
     /**
      * Executes a function (typically a render function) while the depth function paramter
@@ -194,5 +194,5 @@ const webgl = (function() {
         executeWithInverseBlending,
         setClearColor,
         queryWebGLContextInfo
-    })
-})()
+    });
+})();

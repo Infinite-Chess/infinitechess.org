@@ -16,7 +16,7 @@ const checkmate = (function() {
     function detectCheckmateOrDraw(gamefile) {
 
         // Is there a draw by repetition?
-        if (detectRepetitionDraw(gamefile)) return 'draw repetition'
+        if (detectRepetitionDraw(gamefile)) return 'draw repetition';
 
         // The game also will be over when the player has zero legal moves remaining, lose or draw.
         // Iterate through every piece, calculating its legal moves. The first legal move we find, we
@@ -26,13 +26,13 @@ const checkmate = (function() {
         const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
         for (let i = 0; i < whiteOrBlack.length; i++) {
             const thisType = whiteOrBlack[i];
-            const thesePieces = gamefile.ourPieces[thisType]
+            const thesePieces = gamefile.ourPieces[thisType];
             for (let a = 0; a < thesePieces.length; a++) {
                 const coords = thesePieces[a];
                 if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-                const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords)
+                const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords);
                 const thisPiece = { type: thisType, coords, index }; // { index, coords }
-                const moves = legalmoves.calculate(gamefile, thisPiece)
+                const moves = legalmoves.calculate(gamefile, thisPiece);
                 if (!legalmoves.hasAtleast1Move(moves)) continue;
                 return false;
             }
@@ -41,10 +41,10 @@ const checkmate = (function() {
         // We made it through every single piece without finding a single move.
         // So is this draw or checkmate? Depends on whether the current state is check!
         // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
-        const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate')
+        const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate');
         if (gamefile.inCheck && usingCheckmate) {
-            if (whosTurn === 'white') return 'black checkmate' // Black wins
-            else                      return 'white checkmate' // White wins
+            if (whosTurn === 'white') return 'black checkmate'; // Black wins
+            else return 'white checkmate'; // White wins
         } else return 'draw stalemate';
     }
 
@@ -179,23 +179,23 @@ const checkmate = (function() {
 
             // Moves are in the format: { type, startCoords, endCoords, captured: 'type'}
             /** @type {Move} */
-            const thisMove = moveList[index]
+            const thisMove = moveList[index];
 
             // If the move was a pawn push or capture, no further equal positions, terminate the loop.
             if (thisMove.captured || thisMove.type.startsWith('pawns')) break;
 
             // If this move was undo'd, there would be a DEFICIT on its endCoords
             const endCoords = thisMove.endCoords;
-            let key = `${endCoords[0]},${endCoords[1]},${thisMove.type}`
+            let key = `${endCoords[0]},${endCoords[1]},${thisMove.type}`;
             // If there is a SURPLUS with this exact same key, delete that instead! It's been canceled-out.
-            if (surplus[key]) delete surplus[key]
+            if (surplus[key]) delete surplus[key];
             else deficit[key] = true;
 
             // There would also be a SURPLUS on its startCoords
             const startCoords = thisMove.startCoords;
-            key = `${startCoords[0]},${startCoords[1]},${thisMove.type}`
+            key = `${startCoords[0]},${startCoords[1]},${thisMove.type}`;
             // If there is a DEFICIT with this exact same key, delete that instead! It's been canceled-out.
-            if (deficit[key]) delete deficit[key]
+            if (deficit[key]) delete deficit[key];
             else surplus[key] = true;
 
             // If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
@@ -217,5 +217,5 @@ const checkmate = (function() {
 
     return Object.freeze({
         detectCheckmateOrDraw,
-    })
-})()
+    });
+})();
