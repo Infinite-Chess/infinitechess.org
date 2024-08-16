@@ -114,7 +114,6 @@ module.exports = [
         websocket: "readonly",
         memberHeader: "readonly",
         drawoffers: "readonly",
-        enginegame: "readonly",
         translations: "readonly", // Injected into the html through ejs
       }
     }
