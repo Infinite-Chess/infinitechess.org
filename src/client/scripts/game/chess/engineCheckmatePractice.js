@@ -24,7 +24,7 @@ const engineCheckmatePractice = (function(){
 
     // The move that is currently considered best by this engine
     // Whenever this move gets initialized or updated, the engine WebWorker should send a message to the main thread!!
-    let globallyBestMove;
+    let globallyBestMove = [0,0];
     let globallyBestScore = - Infinity;
 
     // the real coordinates of the black royal piece in the gamefile
@@ -353,7 +353,7 @@ const engineCheckmatePractice = (function(){
 
     // checks if two squares are equal
     function squares_are_equal(square_1, square_2) {
-        return square_1[0] == square_2[0] && square_1[1] == square_2[1];
+        return (square_1[0] == square_2[0]) && (square_1[1] == square_2[1]);
     }
 
     // checks if a list of squares contains a given square
@@ -719,7 +719,6 @@ const engineCheckmatePractice = (function(){
                 const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaDepth, betaDepth)
                 const new_score = evaluation.score;
                 const termination_depth = evaluation.termination_depth;
-                // if (depth == start_depth) console.log(`Depth ${depth}, Move: ${move}, Score: ${new_score}.`);
                 if (new_score >= maxScore) {
                     if (new_score > maxScore || termination_depth < deepestDepth || (termination_depth == deepestDepth && Math.random() < 0.5)) {
                         bestMove = move;
@@ -735,11 +734,11 @@ const engineCheckmatePractice = (function(){
                 alpha = Math.max(alpha, new_score);
                 alphaDepth = Math.min(alphaDepth, termination_depth);
                 if (beta <= alpha && betaDepth >= alphaDepth) {
-                    // break;
+                    break;
                 }
             }
             if (!bestMove) bestMove = get_black_legal_moves(piecelist, coordlist)[0];
-            return {score: maxScore, move: bestMove, termination_depth: deepestDepth};
+            return {score: maxScore, bestMove: bestMove, termination_depth: deepestDepth};
         } else {
             let minScore = Infinity;
             let highestDepth = 0;
@@ -762,7 +761,7 @@ const engineCheckmatePractice = (function(){
                     beta = Math.min(beta, new_score);
                     betaDepth = Math.max(betaDepth, termination_depth);
                     if (beta <= alpha && betaDepth >= alphaDepth) {
-                        // break;
+                        break;
                     }
                 }
             }
@@ -784,17 +783,16 @@ const engineCheckmatePractice = (function(){
         const [new_piecelist, new_coordlist] = make_black_move(globallyBestMove, piecelist, coordlist);
         globallyBestScore = get_position_evaluation(new_piecelist, new_coordlist, false);
         self.postMessage(move_to_gamefile_move(globallyBestMove));
-
+        
         // iteratively deeper and deeper search
         for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
             const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, depth, 0);
-            // console.log(`Depth ${depth}, Move: ${evaluation.move}, Score: ${evaluation.score}.`);
-            if (evaluation.move && !squares_are_equal(evaluation.move, globallyBestMove)) {
-                globallyBestMove = evaluation.move;
+            if (true || !squares_are_equal(evaluation.bestMove, globallyBestMove)) {
+                globallyBestMove = evaluation.bestMove;
                 globallyBestScore = evaluation.score;
                 self.postMessage(move_to_gamefile_move(globallyBestMove))
             }
-            console.log(`Depth ${depth}, Termination depth: ${evaluation.termination_depth}, Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
+            // console.log(`Depth ${depth}, Termination depth: ${evaluation.termination_depth}, Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
         }
     }
 
