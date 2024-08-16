@@ -704,8 +704,8 @@ const engineCheckmatePractice = (function(){
      * @param {Number} beta 
      * @returns {Object} with properties "score", "move" and "termination_depth"
      */
-    function alphabeta(piecelist, coordlist, depth, start_depth, black_to_move, alpha, beta) {
-        if (depth == 0 || get_black_legal_move_amount(piecelist, coordlist) == 0) {
+    function alphabeta(piecelist, coordlist, depth, start_depth, black_to_move, alpha, beta, alphaDepth, betaDepth) {
+        if (depth == 0 || ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) == 0) ) {
             return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth};
         }
 
@@ -713,18 +713,18 @@ const engineCheckmatePractice = (function(){
 
         if (black_to_move) {
             let maxScore = -Infinity;
-            let bestDepth = depth;
+            let deepestDepth = depth;
             for (let move of get_black_legal_moves(piecelist, coordlist)) {
                 const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-                const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta)
+                const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaDepth, betaDepth)
                 const new_score = evaluation.score;
                 const termination_depth = evaluation.termination_depth;
                 // if (depth == start_depth) console.log(`Depth ${depth}, Move: ${move}, Score: ${new_score}.`);
                 if (new_score >= maxScore) {
-                    if (new_score > maxScore || termination_depth < bestDepth || (termination_depth == bestDepth && Math.random() < 0.5)) {
+                    if (new_score > maxScore || termination_depth < deepestDepth || (termination_depth == deepestDepth && Math.random() < 0.5)) {
                         bestMove = move;
                         maxScore = new_score;
-                        bestDepth = termination_depth;
+                        deepestDepth = termination_depth;
                         if (depth == start_depth && new_score > globallyBestScore && !squares_are_equal(move, globallyBestMove)) {
                             globallyBestMove = move;
                             globallyBestScore = new_score;
@@ -733,15 +733,16 @@ const engineCheckmatePractice = (function(){
                     }
                 }
                 alpha = Math.max(alpha, new_score);
-                if (beta <= alpha) {
-                    break;
+                alphaDepth = Math.min(alphaDepth, termination_depth);
+                if (beta <= alpha && betaDepth >= alphaDepth) {
+                    // break;
                 }
             }
             if (!bestMove) bestMove = get_black_legal_moves(piecelist, coordlist)[0];
-            return {score: maxScore, move: bestMove, termination_depth: bestDepth};
+            return {score: maxScore, move: bestMove, termination_depth: deepestDepth};
         } else {
             let minScore = Infinity;
-            let bestDepth = -1;
+            let highestDepth = 0;
             const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
             // go through pieces for in increasing order of what piece has how many candidate moves
             const indices = [...Array(piecelist.length).keys()];
@@ -749,22 +750,23 @@ const engineCheckmatePractice = (function(){
             for (let piece_index of indices) {
                 for (let target_square of candidate_moves[piece_index]) {
                     const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
-                    const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta);
+                    const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta, alphaDepth, betaDepth);
                     const new_score = evaluation.score;
                     const termination_depth = evaluation.termination_depth;
                     if (new_score <= minScore) {
-                        if (new_score < minScore || termination_depth > bestDepth || (termination_depth == bestDepth && Math.random() < 0.5)) {
+                        if (new_score < minScore || termination_depth > highestDepth || (termination_depth == highestDepth && Math.random() < 0.5)) {
                             minScore = new_score;
-                            bestDepth = termination_depth;
+                            highestDepth = termination_depth;
                         }
                     }
                     beta = Math.min(beta, new_score);
-                    if (beta <= alpha) {
-                        break;
+                    betaDepth = Math.max(betaDepth, termination_depth);
+                    if (beta <= alpha && betaDepth >= alphaDepth) {
+                        // break;
                     }
                 }
             }
-            return {score: minScore, termination_depth: bestDepth};
+            return {score: minScore, termination_depth: highestDepth};
         }
     }
 
@@ -785,14 +787,14 @@ const engineCheckmatePractice = (function(){
 
         // iteratively deeper and deeper search
         for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-            const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity);
+            const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, depth, 0);
             // console.log(`Depth ${depth}, Move: ${evaluation.move}, Score: ${evaluation.score}.`);
             if (evaluation.move && !squares_are_equal(evaluation.move, globallyBestMove)) {
                 globallyBestMove = evaluation.move;
                 globallyBestScore = evaluation.score;
                 self.postMessage(move_to_gamefile_move(globallyBestMove))
             }
-            // console.log(`Depth ${depth}: Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
+            console.log(`Depth ${depth}, Termination depth: ${evaluation.termination_depth}, Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
         }
     }
 
