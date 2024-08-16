@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 /**
  * This script runs a chess engine for checkmate practice that computes the best move for the black royal piece.
  * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.
@@ -8,6 +9,7 @@
 
 "use strict";
 
+/* eslint-disable space-before-blocks */
 // eslint-disable-next-line no-unused-vars
 const engineCheckmatePractice = (function(){
 
@@ -17,7 +19,7 @@ const engineCheckmatePractice = (function(){
         const gamefile = message.gamefile;
         checkmateSelectedID = message.engineConfig.checkmateSelectedID;
         runEngine(gamefile);
-    }
+    };
 
     // the ID of the currently selected checkmate
     let checkmateSelectedID;
@@ -31,6 +33,7 @@ const engineCheckmatePractice = (function(){
     // the real coordinates of the black royal piece in the gamefile
     let gamefile_royal_coords;
 
+    /* eslint-disable indent */
     // Black royal piece properties. The black royal piece is always at square [0,0]
     const king_moves = [ 
         [-1,  1], [0,  1], [1,  1],
@@ -44,6 +47,7 @@ const engineCheckmatePractice = (function(){
         [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1],
                   [-1, -2],          [1, -2]
     ];
+    /* eslint-enable indent */
 
     let royal_moves; // king_moves or centaur_moves
     let royal_type; // "k" or "rc"
@@ -55,17 +59,17 @@ const engineCheckmatePractice = (function(){
     // only used for parsing in the position
     const pieceNameDictionary = {
         // 0 corresponds to a captured piece
-       "queensW": 1,
-       "rooksW": 2,
-       "bishopsW": 3,
-       "knightsW": 4,
-       "kingsW": 5,
-       "pawnsW": 6 ,
-       "amazonsW": 7,
-       "hawksW": 8,
-       "chancellorsW": 9,
-       "archbishopsW": 10,
-       "knightridersW": 11
+        "queensW": 1,
+        "rooksW": 2,
+        "bishopsW": 3,
+        "knightsW": 4,
+        "kingsW": 5,
+        "pawnsW": 6 ,
+        "amazonsW": 7,
+        "hawksW": 8,
+        "chancellorsW": 9,
+        "archbishopsW": 10,
+        "knightridersW": 11
     };
 
     // legal move storage for pieces in piecelist
@@ -80,7 +84,7 @@ const engineCheckmatePractice = (function(){
         7: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]],
             jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // amazon
         8: {jumps: [[2, 0], [3, 0], [2, 2], [3, 3], [0, 2], [0, 3], [-2, 2], [-3, 3], [-2, 0], [-3, 0],
-                    [-2, -2], [-3, -3], [0, -2], [0, -3], [2, -2], [3, -3]]}, //hawk
+            [-2, -2], [-3, -3], [0, -2], [0, -3], [2, -2], [3, -3]]}, //hawk
         9: {rides: [[1, 0], [0, 1], [-1, 0], [0, -1]],
             jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // chancellor
         10: {rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]],
@@ -154,7 +158,7 @@ const engineCheckmatePractice = (function(){
         };
 
         // eval scores for number of legal moves of black royal
-        if (royal_type == "k") {
+        if (royal_type === "k") {
             legalMoveEvalDictionary = {
                 // in check
                 0: {
@@ -180,7 +184,7 @@ const engineCheckmatePractice = (function(){
                     7: -1,
                     8: 0
                 }
-            }
+            };
         } else {
             legalMoveEvalDictionary = {
                 // in check
@@ -223,20 +227,20 @@ const engineCheckmatePractice = (function(){
                     15: -1,
                     16: 0
                 }
-            }
+            };
         }
 
         // variant-specific modifications to the weights:
-        switch(checkmateSelectedID) {
+        switch (checkmateSelectedID) {
             case "1K1Q1P-1k":
-                distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]] // queen
-                distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]] // king
+                distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
+                distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
                 break;
             case "2AM-1rc":
                 wiggleroom = 1;
                 break;
             case "1K2N7B-1k":
-                distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]] // knight
+                distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
                 legalMoveEvalDictionary = {
                     // in check
                     0: {
@@ -262,7 +266,7 @@ const engineCheckmatePractice = (function(){
                         7: -40,
                         8: 0
                     }
-                }
+                };
                 break;
             case "1K3NR-1k":
                 wiggleroom = 1;
@@ -272,12 +276,12 @@ const engineCheckmatePractice = (function(){
 
     // computes the 2-norm of a square
     function diagonalNorm(square) {
-        return Math.sqrt(square[0]**2 + square[1]**2);
+        return Math.sqrt(square[0] ** 2 + square[1] ** 2);
     }
 
     // computes the squared 2-norm of a square
     function diagonalNormSquared(square) {
-        return square[0]**2 + square[1]**2;
+        return square[0] ** 2 + square[1] ** 2;
     }
 
     // computes the manhattan norm of a square
@@ -306,10 +310,10 @@ const engineCheckmatePractice = (function(){
      */
     function is_natural_multiple(v, direction) {
         let scalar;
-        if (direction[0] != 0) scalar = v[0] / direction[0];
+        if (direction[0] !== 0) scalar = v[0] / direction[0];
         else scalar = v[1] / direction[1];
 
-        return [scalar > 0 && scalar * direction[0] == v[0] && scalar * direction[1] == v[1], scalar];
+        return [scalar > 0 && scalar * direction[0] === v[0] && scalar * direction[1] === v[1], scalar];
     }
 
     // checks if a rider on a given square threatens a given target square
@@ -324,7 +328,7 @@ const engineCheckmatePractice = (function(){
         if (ignore_blockers) return true;
         // loop over all potential blockers
         for (let i = 0; i < coordlist.length; i++) {
-            if (piecelist[i] == 0) continue;
+            if (piecelist[i] === 0) continue;
             const [collinear, thispiecedistance] = is_natural_multiple([coordlist[i][0] - piece_square[0], coordlist[i][1] - piece_square[1]], direction);
             if (!collinear) continue;
             if (exclude_white_piece_squares && thispiecedistance <= distance) return false;
@@ -339,7 +343,7 @@ const engineCheckmatePractice = (function(){
     }
 
     // stretches vector by scalar
-    function rescaleVector (scalar, v) {
+    function rescaleVector(scalar, v) {
         return [scalar * v[0], scalar * v[1]];
     }
 
@@ -350,13 +354,13 @@ const engineCheckmatePractice = (function(){
 
     // checks if two squares are equal
     function squares_are_equal(square_1, square_2) {
-        return (square_1[0] == square_2[0]) && (square_1[1] == square_2[1]);
+        return (square_1[0] === square_2[0]) && (square_1[1] === square_2[1]);
     }
 
     // checks if a list of squares contains a given square
     function tuplelist_contains_tuple(tuplelist, tuple) {
-        for (let entry of tuplelist) {
-            if (tuple[0] == entry[0] && tuple[1] == entry[1]) return true;
+        for (const entry of tuplelist) {
+            if (tuple[0] === entry[0] && tuple[1] === entry[1]) return true;
         }
         return false;
     }
@@ -364,7 +368,7 @@ const engineCheckmatePractice = (function(){
     // checks if a square is occupied by a white piece
     function square_is_occupied(square, piecelist, coordlist) {
         for (let index = 0; index < piecelist.length; index++) {
-            if (piecelist[index] != 0 && squares_are_equal(coordlist[index], square)) return true;
+            if (piecelist[index] !== 0 && squares_are_equal(coordlist[index], square)) return true;
         }
         return false;
     }
@@ -374,7 +378,7 @@ const engineCheckmatePractice = (function(){
         const piece_type = piecelist[piece_index];
 
         // piece no longer exists
-        if (piece_type == 0) return false;
+        if (piece_type === 0) return false;
 
         const piece_properties = pieceTypeDictionary[piece_type];
         const piece_square = coordlist[piece_index];
@@ -395,7 +399,7 @@ const engineCheckmatePractice = (function(){
 
         // rider move threatening
         if (piece_properties.rides) {
-            for (let ride_directrion of piece_properties.rides) {
+            for (const ride_directrion of piece_properties.rides) {
                 if (rider_threatens(ride_directrion, piece_square, target_square, piecelist, coordlist)) return true;
             }
         }
@@ -418,8 +422,8 @@ const engineCheckmatePractice = (function(){
      * @returns {Array}
      */
     function get_black_legal_moves(piecelist, coordlist) {
-        let black_legal_moves = [];
-        for (let square of royal_moves){
+        const black_legal_moves = [];
+        for (const square of royal_moves){
             if (!square_is_threatened(square, piecelist, coordlist)) black_legal_moves.push(square);
         }
         return black_legal_moves;
@@ -433,7 +437,7 @@ const engineCheckmatePractice = (function(){
      */
     function get_black_legal_move_amount(piecelist, coordlist) {
         let black_legal_move_amount = 0;
-        for (let square of royal_moves){
+        for (const square of royal_moves){
             if (!square_is_threatened(square, piecelist, coordlist)) black_legal_move_amount += 1;
         }
         return black_legal_move_amount;
@@ -462,12 +466,12 @@ const engineCheckmatePractice = (function(){
 
     // calculate a list of interesting squares to move to for a white piece with a certain piece index
     function get_white_piece_candidate_squares(piece_index, piecelist, coordlist) {
-        let candidate_squares = [];
+        const candidate_squares = [];
 
         const piece_type = piecelist[piece_index];
 
         // piece no longer exists
-        if (piece_type == 0) return candidate_squares;
+        if (piece_type === 0) return candidate_squares;
 
         const piece_properties = pieceTypeDictionary[piece_type];
         const piece_square = coordlist[piece_index];
@@ -491,11 +495,11 @@ const engineCheckmatePractice = (function(){
                 if (tuplelist_contains_tuple(royal_moves, target_square)) {
                     let blunders_piece = true;
                     // create copy of piece list without piece at piece_index
-                    let temp_piecelist = [...piecelist];
+                    const temp_piecelist = [...piecelist];
                     temp_piecelist[piece_index] = 0;
                     // only consider target square if another piece defends it as well, else it will be captured
                     for (let index = 0; index < coordlist.length; index++){
-                        if (index != piece_index && piece_threatens_square(index, target_square, temp_piecelist, coordlist)) {
+                        if (index !== piece_index && piece_threatens_square(index, target_square, temp_piecelist, coordlist)) {
                             blunders_piece = false;
                             break;
                         }
@@ -509,14 +513,14 @@ const engineCheckmatePractice = (function(){
                     candidate_squares.push(target_square);
                 }
                 // keep single jump move nearest to the black king in memory
-                else if (target_distance < bestmove_distance || (target_distance == bestmove_distance && target_diagSquaredNorm < bestmove_diagSquaredNorm)) {
+                else if (target_distance < bestmove_distance || (target_distance === bestmove_distance && target_diagSquaredNorm < bestmove_diagSquaredNorm)) {
                     bestmove_distance = target_distance;
                     bestmove_diagSquaredNorm = target_diagSquaredNorm;
                     best_target_square = target_square;
                 }
             }
             // if no jump move has been added and piece has no ride moves, add single best jump move as candidate
-            if (candidate_squares.length == 0 && !piece_properties.rides) candidate_squares.push(best_target_square);
+            if (candidate_squares.length === 0 && !piece_properties.rides) candidate_squares.push(best_target_square);
         }
 
         // ride moves
@@ -531,7 +535,7 @@ const engineCheckmatePractice = (function(){
                 for (let i2 = i1 + 1; i2 < num_directions; i2++) {
                     const v2 = piece_properties.rides[i2];
                     const denominator = crossProduct(v1, v2);
-                    if (denominator == 0) continue;
+                    if (denominator === 0) continue;
                     const c1 = crossProduct(v2, piece_square) / denominator;
                     const c2 = - crossProduct(v1, piece_square) / denominator;
                     if (c1 < 0 || c2 <= 0) continue;
@@ -545,13 +549,13 @@ const engineCheckmatePractice = (function(){
                     add_suitable_squares_to_candidate_list(
                         candidate_squares, piece_index, piece_square, v1, v2,
                         c1_min, c1_max, c2_min, c2_max, piecelist, coordlist
-                    )
+                    );
 
                     // adds suitable squares along v2 to the candidates list
                     add_suitable_squares_to_candidate_list(
                         candidate_squares, piece_index, piece_square, v2, v1,
                         c2_min, c2_max, c1_min, c1_max, piecelist, coordlist
-                    )
+                    );
                 }
             }
         }
@@ -581,11 +585,11 @@ const engineCheckmatePractice = (function(){
             // check if target_square is a royal move
             if (tuplelist_contains_tuple(royal_moves, target_square)) {
                 // create copy of piece list without piece at piece_index
-                let temp_piecelist = [...piecelist];
+                const temp_piecelist = [...piecelist];
                 temp_piecelist[piece_index] = 0;
                 // only add target square if another piece defends it as well, else it will be captured
                 for (let index = 0; index < coordlist.length; index++){
-                    if (index != piece_index && piece_threatens_square(index, target_square, temp_piecelist, coordlist)) {
+                    if (index !== piece_index && piece_threatens_square(index, target_square, temp_piecelist, coordlist)) {
                         candidate_squares.push(target_square);
                         continue candidates_loop;
                     }
@@ -599,8 +603,8 @@ const engineCheckmatePractice = (function(){
                     // skip over accepted candidate square if it is a royal move
                     if (tuplelist_contains_tuple(royal_moves, candidate_squares[i])) continue redundancy_loop;
                     // skip over accepted candidate square if its coords have a different sign from the current candidate square
-                    else if (Math.sign(target_square[0]) != Math.sign(candidate_squares[i][0])) continue redundancy_loop;
-                    else if (Math.sign(target_square[1]) != Math.sign(candidate_squares[i][1])) continue redundancy_loop;
+                    else if (Math.sign(target_square[0]) !== Math.sign(candidate_squares[i][0])) continue redundancy_loop;
+                    else if (Math.sign(target_square[1]) !== Math.sign(candidate_squares[i][1])) continue redundancy_loop;
                     // eliminate current candidate square if it lies on the same line as accepted candidate square, but further away
                     else if (rider_threatens(v2, target_square, candidate_squares[i], piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
                     // replace accepted candidate square with current candidate square if they lie on the same line as, but new square is nearer
@@ -616,9 +620,9 @@ const engineCheckmatePractice = (function(){
 
     // calculate a list of interesting moves for the white pieces in the position given by piecelist&coordlist
     function get_white_candidate_moves(piecelist, coordlist) {
-        let candidate_moves = [];
+        const candidate_moves = [];
         for (let piece_index = 0; piece_index < piecelist.length; piece_index++) {
-            candidate_moves.push(get_white_piece_candidate_squares(piece_index, piecelist, coordlist))
+            candidate_moves.push(get_white_piece_candidate_squares(piece_index, piecelist, coordlist));
         }
         return candidate_moves;
     }
@@ -632,8 +636,8 @@ const engineCheckmatePractice = (function(){
      * @returns {Array}
      */
     function make_white_move(piece_index, target_square, piecelist, coordlist) {
-        let new_piecelist = piecelist.map(a => {return a});
-        let new_coordlist = coordlist.map(a => {return [...a]});
+        const new_piecelist = piecelist.map(a => {return a;});
+        const new_coordlist = coordlist.map(a => {return [...a];});
         new_coordlist[piece_index] = target_square;
 
         return [new_piecelist, new_coordlist];
@@ -647,10 +651,10 @@ const engineCheckmatePractice = (function(){
      * @returns {Array}
      */
     function make_black_move(move, piecelist, coordlist) {
-        let new_piecelist = [];
-        let new_coordlist = [];
+        const new_piecelist = [];
+        const new_coordlist = [];
         for (let i = 0; i < piecelist.length; i++) {
-            if (move[0] == coordlist[i][0] && move[1] == coordlist[i][1]) {
+            if (move[0] === coordlist[i][0] && move[1] === coordlist[i][1]) {
                 // white piece is captured
                 new_piecelist.push(0);
             } else {
@@ -708,7 +712,7 @@ const engineCheckmatePractice = (function(){
      * @returns {Object} with properties "score", "move" and "termination_depth"
      */
     function alphabeta(piecelist, coordlist, depth, start_depth, black_to_move, alpha, beta, alphaDepth, betaDepth) {
-        if (depth == 0 || ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) == 0) ) {
+        if (depth === 0 || ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) ) {
             return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth};
         }
 
@@ -717,17 +721,17 @@ const engineCheckmatePractice = (function(){
         if (black_to_move) {
             let maxScore = -Infinity;
             let deepestDepth = depth;
-            for (let move of get_black_legal_moves(piecelist, coordlist)) {
+            for (const move of get_black_legal_moves(piecelist, coordlist)) {
                 const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-                const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaDepth, betaDepth)
+                const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaDepth, betaDepth);
                 const new_score = evaluation.score;
                 const termination_depth = evaluation.termination_depth;
                 if (new_score >= maxScore) {
-                    if (new_score > maxScore || termination_depth < deepestDepth || (termination_depth == deepestDepth && Math.random() < 0.5)) {
+                    if (new_score > maxScore || termination_depth < deepestDepth || (termination_depth === deepestDepth && Math.random() < 0.5)) {
                         bestMove = move;
                         maxScore = new_score;
                         deepestDepth = termination_depth;
-                        if (depth == start_depth && new_score > globallyBestScore && globalPliesToMate >= start_depth - termination_depth) {
+                        if (depth === start_depth && new_score > globallyBestScore && globalPliesToMate >= start_depth - termination_depth) {
                             globallyBestMove = move;
                             globallyBestScore = new_score;
                             globalPliesToMate = Math.min(globalPliesToMate, termination_depth > 0 ? start_depth - termination_depth : Infinity);
@@ -749,15 +753,15 @@ const engineCheckmatePractice = (function(){
             const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
             // go through pieces for in increasing order of what piece has how many candidate moves
             const indices = [...Array(piecelist.length).keys()];
-            indices.sort((a, b) => { return candidate_moves[a].length - candidate_moves[b].length });
-            for (let piece_index of indices) {
-                for (let target_square of candidate_moves[piece_index]) {
+            indices.sort((a, b) => { return candidate_moves[a].length - candidate_moves[b].length; });
+            for (const piece_index of indices) {
+                for (const target_square of candidate_moves[piece_index]) {
                     const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
                     const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta, alphaDepth, betaDepth);
                     const new_score = evaluation.score;
                     const termination_depth = evaluation.termination_depth;
                     if (new_score <= minScore) {
-                        if (new_score < minScore || termination_depth > highestDepth || (termination_depth == highestDepth && Math.random() < 0.5)) {
+                        if (new_score < minScore || termination_depth > highestDepth || (termination_depth === highestDepth && Math.random() < 0.5)) {
                             minScore = new_score;
                             highestDepth = termination_depth;
                         }
@@ -794,7 +798,7 @@ const engineCheckmatePractice = (function(){
             globallyBestMove = evaluation.bestMove;
             globallyBestScore = evaluation.score;
             globalPliesToMate = evaluation.termination_depth > 0 ? depth - evaluation.termination_depth : Infinity;
-            self.postMessage(move_to_gamefile_move(globallyBestMove))
+            self.postMessage(move_to_gamefile_move(globallyBestMove));
             // console.log(`Depth ${depth}, Plies To Mate: ${globalPliesToMate}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestMove}.`);
         }
     }
@@ -816,11 +820,11 @@ const engineCheckmatePractice = (function(){
     function runEngine(gamefile) {
         try {
             // get real coordinates and parse type of black royal piece
-            if (gamefile.ourPieces["kingsB"].length != 0){
+            if (gamefile.ourPieces["kingsB"].length !== 0) {
                 gamefile_royal_coords = gamefile.ourPieces["kingsB"][0];
                 royal_moves = king_moves;
                 royal_type = "k";
-            } else if (gamefile.ourPieces["royalCentaursB"].length != 0) {
+            } else if (gamefile.ourPieces["royalCentaursB"].length !== 0) {
                 gamefile_royal_coords = gamefile.ourPieces["royalCentaursB"][0];
                 royal_moves = centaur_moves;
                 royal_type = "rc";
@@ -831,10 +835,10 @@ const engineCheckmatePractice = (function(){
             // create list of types and coords of white pieces, in order to initialize start_piecelist and start_coordlist
             start_piecelist = [];
             start_coordlist = [];
-            for (let key in gamefile.piecesOrganizedByKey) {
+            for (const key in gamefile.piecesOrganizedByKey) {
                 const pieceType = gamefile.piecesOrganizedByKey[key];
-                if (pieceType.slice(-1) != "W") continue; // ignore nonwhite pieces
-                let coords = key.split(',').map(Number);
+                if (pieceType.slice(-1) !== "W") continue; // ignore nonwhite pieces
+                const coords = key.split(',').map(Number);
                 start_piecelist.push(pieceNameDictionary[pieceType]);
                 // shift all white pieces, so that the black royal is at [0,0]
                 start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
@@ -860,7 +864,7 @@ const engineCheckmatePractice = (function(){
             console.log(string + `Total move count: ${candidate_move_count}`)
             */
 
-        } catch(e) {
+        } catch (e) {
             console.error("An error occured in the engine computation of the checkmate practice");
             console.error(e);
         }
