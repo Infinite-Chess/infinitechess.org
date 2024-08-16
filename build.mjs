@@ -60,7 +60,10 @@ if (DEV_BUILD) {
         recursive: true,
         force: true,
         filter: filename => { 
-            return (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename);
+            return (
+                (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) || /(\\|\/)game(\\|\/)chess$/.test(filename)) 
+        && !/(\\|\/)css(\\|\/)/.test(filename)
+            );
         }
     });
 
@@ -70,11 +73,11 @@ if (DEV_BUILD) {
     clientFiles.push(...clientScripts.map(v => `scripts/${v}`));
 
     // string containing all code in /game except for htmlscript.js:
-    let gamecode = ""; 
+    const gamecode = ""; 
 
     for (const file of clientFiles) {
-    // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
-        if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
+    // If the client script is htmlscript.js or an engine script or not in scripts/game, then minify it and copy it over
+        if (/(\\|\/)htmlscript\.js$/.test(file) || /chess(\\|\/)engine[^\.\\\/]*\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
             const code = await readFile(`./src/client/${file}`, 'utf8');
             const minified = await swc.minify(code, {
                 mangle: true, // Enable variable name mangling
@@ -83,33 +86,29 @@ if (DEV_BUILD) {
             });
             await writeFile(`./dist/${file}`, minified.code, 'utf8');
         }
-        // Collect the code of all js files in /game except for htmlscript.js:
-        else {
-            gamecode += await readFile(`./src/client/${file}`, 'utf8');
-        }
-    }
 
-    // Combine all gamecode files into app.js
-    const minifiedgame = await swc.minify(gamecode, {
-        mangle: true,
-        compress: true,
-        sourceMap: false
-    });
-    await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
-  
-    // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
-  
-    // Make a list of all css files
-    const cssFiles = await getExtFiles("./src/client/css", ".css");
-    for (const file of cssFiles) {
-    // Minify css files
-        const { code } = transform({
-            targets: targets,
-            code: Buffer.from(await readFile(`./src/client/css/${file}`, 'utf8')),
-            minify: true,
+        // Combine all gamecode files into app.js
+        const minifiedgame = await swc.minify(gamecode, {
+            mangle: true,
+            compress: true,
+            sourceMap: false
         });
-        // Write into /dist
-        await writeFile(`./dist/css/${file}`, code, 'utf8');
+        await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
+  
+        // overwrite play.ejs by injecting all needed scripts into it:
+        await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+  
+        // Make a list of all css files
+        const cssFiles = await getExtFiles("./src/client/css", ".css");
+        for (const file of cssFiles) {
+            // Minify css files
+            const { code } = transform({
+                targets: targets,
+                code: Buffer.from(await readFile(`./src/client/css/${file}`, 'utf8')),
+                minify: true,
+            });
+            // Write into /dist
+            await writeFile(`./dist/css/${file}`, code, 'utf8');
+        }
     }
 }
