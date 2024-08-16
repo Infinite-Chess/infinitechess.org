@@ -5,6 +5,7 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const checkmatepractice = (function() {
 
     const validCheckmates = [
@@ -67,17 +68,17 @@ const checkmatepractice = (function() {
      * @param {string} checkmateID - a string containing the ID of the selected checkmate practice problem
      * @returns a starting position object corresponding to that ID
      */
-    function generateCheckmateStartingPosition(checkmateID){
+    function generateCheckmateStartingPosition(checkmateID) {
         // error if user somehow submitted invalid checkmate ID
         if (!validCheckmates.includes(checkmateID)) return console.error("User tried to play invalid checkmate practice.");
 
-        let startingPosition = {}; // the position to be generated
+        const startingPosition = {}; // the position to be generated
         let blackpieceplaced = false; // monitors if a black piece has already been placed
         let whitebishopparity = Math.floor(Math.random() * 2); // square color of first white bishop batch
         
         // read the elementID and convert it to a position
         const piecelist = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
-        for (let entry of piecelist) {
+        for (const entry of piecelist) {
             let amount = entry.match(/[0-9]+/)[0]; // number of pieces to be placed
             let piece = entry.match(/[a-zA-Z]+/)[0]; // piecetype to be placed
             piece = formatconverter.ShortToLong_Piece(piece);
@@ -93,7 +94,7 @@ const checkmatepractice = (function() {
                     const key = math.getKeyFromCoords([x,y]);
 
                     // check if square is occupied and white bishop parity is fulfilled
-                    if (!(key in startingPosition) && !(piece == "bishopsW" && (x + y)%2 != whitebishopparity)) {
+                    if (!(key in startingPosition) && !(piece == "bishopsW" && (x + y) % 2 != whitebishopparity)) {
                         startingPosition[key] = piece;
                         amount -= 1;
                     }
@@ -127,13 +128,13 @@ const checkmatepractice = (function() {
      */
     function squareNotInSight(square, startingPosition) {
         const [sx,sy] = math.getCoordsFromKey(square);
-        for (let key in startingPosition){
+        for (const key in startingPosition) {
             const [x,y] = math.getCoordsFromKey(key);
             if (x == sx || y == sy || Math.abs(sx - x) == Math.abs(sy - y)) return false;
-            if (startingPosition[key] === "knightridersW"){
+            if (startingPosition[key] === "knightridersW") {
                 if (Math.abs(sx - x) == 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) == Math.abs(sy - y)) {
-                        return false;
-                    }
+                    return false;
+                }
             }
         }
         return true;
@@ -141,27 +142,27 @@ const checkmatepractice = (function() {
     
     /** Saves the list of beaten checkmates into browser storages. */
     function saveCheckmatesBeaten() {
-        if (!completedCheckmates) return console.error("Cannot save checkmates beaten when it was never initialized!")
-        localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis)
+        if (!completedCheckmates) return console.error("Cannot save checkmates beaten when it was never initialized!");
+        localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
     }
 
     function markCheckmateBeaten(checkmatePracticeID) {
         if (typeof checkmatePracticeID !== 'string') throw new Error('Cannot save completed checkmate when its ID is not a string.');
-        if (!completedCheckmates) return console.error("Cannot mark checkmate beaten when it was never initialized!")
+        if (!completedCheckmates) return console.error("Cannot mark checkmate beaten when it was never initialized!");
 
         // Add the checkmate ID to the beaten list
         if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
         saveCheckmatesBeaten();
-        console.log("Marked checkmate practice as completed!")
+        console.log("Marked checkmate practice as completed!");
     }
 
     /** Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! */
     function eraseCheckmatePracticeProgress() {
-        if (!completedCheckmates) return console.error("Cannot erase checkmate progress when completedCheckmates was never initialized!")
+        if (!completedCheckmates) return console.error("Cannot erase checkmate progress when completedCheckmates was never initialized!");
         completedCheckmates.length = 0;
         localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
-        guipractice.updateCheckmatesBeaten() // Delete the 'beaten' class from all
-        console.log("DELETED all checkmate practice progress.")
+        guipractice.updateCheckmatesBeaten(); // Delete the 'beaten' class from all
+        console.log("DELETED all checkmate practice progress.");
     }
 
     /** Called when an engine game ends */
@@ -183,5 +184,5 @@ const checkmatepractice = (function() {
         generateCheckmateStartingPosition,
         onEngineGameConclude,
         eraseCheckmatePracticeProgress
-    })
-})()
+    });
+})();
