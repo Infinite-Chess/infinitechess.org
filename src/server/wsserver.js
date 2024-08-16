@@ -445,6 +445,11 @@ function memberHasMaxSocketCount(member) {
     return connectedMembers[member]?.length >= maxSocketsAllowedPerMember;
 }
 
+/**
+ * 
+ * @param {string} IP 
+ * @returns 
+ */
 function terminateAllIPSockets(IP) {
     if (!IP) return;
     const connectionList = connectedIPs[IP];
