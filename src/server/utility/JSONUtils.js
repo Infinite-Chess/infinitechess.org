@@ -12,7 +12,7 @@ function ensureJSONString(input, errorMessage) {
     } catch (error) {
         // Handle cases where input cannot be stringified
         if (errorMessage) { // Print the error...
-            const errText = `${errorMessage}\n${error.stack}`
+            const errText = `${errorMessage}\n${error.stack}`;
             console.log(errText);
         }
         return 'Error: Input could not be JSON stringified';

@@ -1,8 +1,9 @@
 const { logEvents } = require('./logEvents');
-const { getClientIP, getClientIP_Websocket } = require("./IP")
+const { getClientIP, getClientIP_Websocket } = require("./IP");
 
 const { isIPBanned } = require('./banned');
 const { DEV_BUILD, ARE_RATE_LIMITING } = require('../config/config');
+// eslint-disable-next-line no-unused-vars
 const { Socket } = require("../game/TypeDefinitions");
 const { getTranslationForReq } = require('../config/setupTranslations');
 
@@ -53,7 +54,7 @@ let underAttackMode = false;
  * received during the past {@link requestWindowToToggleAttackModeMillis}.
  * `[ 521521521, 521521578 ]`
  */
-let recentRequests = []; // List of times of recent connections
+const recentRequests = []; // List of times of recent connections
 
 /**
  * The maximum size of an incoming websocket message, in bytes.
@@ -82,7 +83,7 @@ function rateLimit(req, res, next) {
     
     const clientIP = getClientIP(req);
     if (!clientIP) {
-        console.log('Unable to identify client IP address')
+        console.log('Unable to identify client IP address');
         return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
     }
 
@@ -99,7 +100,7 @@ function rateLimit(req, res, next) {
 
     // Increment their recent connection count,
     // and set a timer to decrement their recent connection count after 1 min
-    incrementClientConnectionCount(clientIP)
+    incrementClientConnectionCount(clientIP);
 
     next(); // Continue the middleware waterfall
 }
@@ -119,14 +120,14 @@ function rateLimitWebSocket(req, ws) {
 
     const clientIP = getClientIP_Websocket(req, ws);
     if (!clientIP) {
-        console.log('Unable to identify client IP address from web socket connection')
-        ws.close(1008, 'Unable to identify client IP address') // Code 1008 is Policy Violation
+        console.log('Unable to identify client IP address from web socket connection');
+        ws.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
         return false;
     }
 
     if (rateLimitHash[clientIP] > maxRequestsPerMinute) {
         console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
-        ws.close(1009, 'Too Many Requests. Try again soon.')
+        ws.close(1009, 'Too Many Requests. Try again soon.');
         return false;
     }
 
@@ -135,12 +136,12 @@ function rateLimitWebSocket(req, ws) {
     // Then again.. Unless their initial http websocket upgrade request contains a massive amount of bytes, this will immediately reject them anyway!
     const messageSize = ws._socket.bytesRead;
     if (messageSize > maxWebsocketMessageSizeBytes) {
-        ws.close(1009, 'Message Too Big')
-        incrementClientConnectionCount(clientIP, connectionsLargeMessageCountsFor)
+        ws.close(1009, 'Message Too Big');
+        incrementClientConnectionCount(clientIP, connectionsLargeMessageCountsFor);
         return false;
     }
 
-    incrementClientConnectionCount(clientIP)
+    incrementClientConnectionCount(clientIP);
 
     return true; // Connection allowed!
 }
@@ -168,9 +169,9 @@ setInterval(() => {
     const hashKeys = Object.keys(rateLimitHash);
     for (const ip of hashKeys) {
         if (rateLimitHash[ip] !== 0) continue;
-        delete rateLimitHash[ip]
+        delete rateLimitHash[ip];
     }
-}, rateToClearDeadConnectionsMillis)
+}, rateToClearDeadConnectionsMillis);
 
 /**
  * Adds the current timestamp to {@link recentRequests}.
@@ -178,7 +179,7 @@ setInterval(() => {
  * EVEN if they are rate limited.
  */
 function countRecentRequests() {
-    const currentTimeMillis = Date.now()
+    const currentTimeMillis = Date.now();
     recentRequests.push(currentTimeMillis);
 }
 
@@ -194,7 +195,7 @@ function countRecentRequests() {
 setInterval(() => {
     // Delete recent requests longer than 2 seconds ago
     const twoSecondsAgo = Date.now() - requestWindowToToggleAttackModeMillis;
-    const indexToSplitAt = binarySearch_findValue(recentRequests, twoSecondsAgo)
+    const indexToSplitAt = binarySearch_findValue(recentRequests, twoSecondsAgo);
     recentRequests.splice(0, indexToSplitAt + 1);
 
     if (recentRequests.length > requestCapToToggleAttackMode) {

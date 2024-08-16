@@ -7,7 +7,7 @@
 
 "use strict";
 
-const gamefileutility = (function(){
+const gamefileutility = (function() {
 
     /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
     const pieceCountToDisableCheckmate = 50_000;
@@ -27,17 +27,17 @@ const gamefileutility = (function(){
     // Iterates through EVERY piece in the game state, and performs specified function on the type.
     // Callback parameters should be: (type, coords, gamefile)
     // USE THIS instead of forEachPieceInTypeList() when you need the gamefile passed into the callback!
-   function forEachPieceInGame (gamefile, callback, ignoreVoids) {
-        if (!gamefile) return console.log("Cannot iterate through each piece in an undefined game!")
-        if (!gamefile.ourPieces) return console.error("Cannot iterate through every piece of game when there's no piece list.")
+    function forEachPieceInGame(gamefile, callback, ignoreVoids) {
+        if (!gamefile) return console.log("Cannot iterate through each piece in an undefined game!");
+        if (!gamefile.ourPieces) return console.error("Cannot iterate through every piece of game when there's no piece list.");
 
-        forEachPieceInPiecesByType(callback, gamefile.ourPieces, ignoreVoids, gamefile)
+        forEachPieceInPiecesByType(callback, gamefile.ourPieces, ignoreVoids, gamefile);
     }
 
     // Callback params should be:  type, coords, gamefile (optional)
     // USE THIS instead of forEachPieceInGame() when you don't need the gamefile passed into the callback!
-    function forEachPieceInPiecesByType (callback, typeList, ignoreVoids, gamefile) { // typeList = pieces organized by type 
-        if (!typeList) return console.log("Cannot iterate through each piece in an undefined typeList!")
+    function forEachPieceInPiecesByType(callback, typeList, ignoreVoids, gamefile) { // typeList = pieces organized by type 
+        if (!typeList) return console.log("Cannot iterate through each piece in an undefined typeList!");
 
         for (let i = 0; i < pieces.white.length; i++) {
 
@@ -48,8 +48,8 @@ const gamefileutility = (function(){
             const theseBlackPieces = typeList[thisBlackType];
 
             // First it inserts the type of piece into the callback, then coords of piece 
-            if (theseWhitePieces) for (let a = 0; a < theseWhitePieces.length; a++) callback(thisWhiteType, theseWhitePieces[a], gamefile) 
-            if (theseBlackPieces) for (let a = 0; a < theseBlackPieces.length; a++) callback(thisBlackType, theseBlackPieces[a], gamefile) 
+            if (theseWhitePieces) for (let a = 0; a < theseWhitePieces.length; a++) callback(thisWhiteType, theseWhitePieces[a], gamefile); 
+            if (theseBlackPieces) for (let a = 0; a < theseBlackPieces.length; a++) callback(thisBlackType, theseBlackPieces[a], gamefile); 
         }
         for (let i = 0; i < pieces.neutral.length; i++) {
 
@@ -59,7 +59,7 @@ const gamefileutility = (function(){
             const theseNeutralPieces = typeList[thisNeutralType];
 
             // First it inserts the type of piece into the callback, then coords of piece 
-            if (theseNeutralPieces) for (let a = 0; a < theseNeutralPieces.length; a++) callback(thisNeutralType, theseNeutralPieces[a], gamefile) 
+            if (theseNeutralPieces) for (let a = 0; a < theseNeutralPieces.length; a++) callback(thisNeutralType, theseNeutralPieces[a], gamefile); 
         }
     }
 
@@ -71,32 +71,32 @@ const gamefileutility = (function(){
      * @param {boolean} [options.ignoreNeutrals] - If true, neutral pieces (those with types ending in 'N') will be ignored.
      * @param {boolean} [options.ignoreVoids] - If true, void pieces (those with types starting with 'voids') will be ignored.
      */
-    function forEachPieceInKeysState (callback, state, { ignoreNeutrals, ignoreVoids } = {}) { // state is pieces organized by key
-        if (!state) return console.log("Cannot iterate through each piece in an undefined keys-state!")
+    function forEachPieceInKeysState(callback, state, { ignoreNeutrals, ignoreVoids } = {}) { // state is pieces organized by key
+        if (!state) return console.log("Cannot iterate through each piece in an undefined keys-state!");
 
         // Position with 372K pieces takes 80ms to key,
         // WHETHER that's using Object.keys(), or the time until the first iteration of "for (let key in state)"
 
         if (ignoreNeutrals) {
-            for (let key in state) {
-                const thisPieceType = state[key]
+            for (const key in state) {
+                const thisPieceType = state[key];
                 if (thisPieceType.endsWith('N')) continue;
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)) 
+                callback(thisPieceType, math.getCoordsFromKey(key)); 
             }
         }
         if (ignoreVoids) {
-            for (let key in state) {
-                const thisPieceType = state[key]
+            for (const key in state) {
+                const thisPieceType = state[key];
                 if (thisPieceType.startsWith('voids')) continue;
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)) 
+                callback(thisPieceType, math.getCoordsFromKey(key)); 
             }
         } else {
-            for (let key in state) {
-                const thisPieceType = state[key]
+            for (const key in state) {
+                const thisPieceType = state[key];
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)) 
+                callback(thisPieceType, math.getCoordsFromKey(key)); 
             }
         }
     }
@@ -111,8 +111,8 @@ const gamefileutility = (function(){
     function deleteIndexFromPieceList(list, pieceIndex) {
         list[pieceIndex] = undefined;
         // Keep track of where the undefined indices are! Have an "undefineds" array property.
-        const insertIndex = math.binarySearch_findSplitPoint(list.undefineds, pieceIndex)
-        list.undefineds.splice(insertIndex, 0, pieceIndex)
+        const insertIndex = math.binarySearch_findSplitPoint(list.undefineds, pieceIndex);
+        list.undefineds.splice(insertIndex, 0, pieceIndex);
     }
 
     /**
@@ -126,14 +126,14 @@ const gamefileutility = (function(){
         const thesePieces = gamefile.ourPieces[type];
         if (!thesePieces) return console.error("Cannot find piece index. Type array doesn't exist."); // Break if there are none of those piece ty
         for (let i = 0; i < thesePieces.length; i++) {
-            const thisPieceCoords = thesePieces[i]
+            const thisPieceCoords = thesePieces[i];
             // Piece is undefined. Deleted pieces are left as "undefined" so others keep their indexes!
             if (!thisPieceCoords) continue;
 
             // Does this piece match the coords? If so, return the piece index.
             if (math.areCoordsEqual_noValidate(thisPieceCoords, coords)) return i;
         }
-        console.error("Unable to find index of piece!")
+        console.error("Unable to find index of piece!");
     }
 
     /**
@@ -145,7 +145,7 @@ const gamefileutility = (function(){
      */
     function getPieceFromTypeAndCoords(gamefile, type, coords) {
         const index = getPieceIndexByTypeAndCoords(gamefile, type, coords);
-        return { type, coords, index }
+        return { type, coords, index };
     }
 
     /**
@@ -155,8 +155,8 @@ const gamefileutility = (function(){
      * @returns {string | undefined} The type of the piece, if there is one, otherwise undefined
      */
     function getPieceTypeAtCoords(gamefile, coords) {
-        const key = math.getKeyFromCoords(coords)
-        return gamefile.piecesOrganizedByKey[key]
+        const key = math.getKeyFromCoords(coords);
+        return gamefile.piecesOrganizedByKey[key];
     }
 
     /**
@@ -169,7 +169,7 @@ const gamefileutility = (function(){
         const type = getPieceTypeAtCoords(gamefile, coords);
         if (!type) return undefined;
         const index = getPieceIndexByTypeAndCoords(gamefile, type, coords);
-        return { type, index, coords }
+        return { type, index, coords };
     }
 
     /**
@@ -180,8 +180,8 @@ const gamefileutility = (function(){
      * - `simulated`: Whether you plan on undo'ing this move. We don't conclude the game. Default: *false*
      */
     function updateGameConclusion(gamefile, { concludeGameIfOver = true, simulated = false } = {}) {
-        gamefile.gameConclusion = wincondition.getGameConclusion(gamefile)
-        if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) concludeGame(gamefile)
+        gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
+        if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) concludeGame(gamefile);
     }
 
     /**
@@ -196,18 +196,18 @@ const gamefileutility = (function(){
         gamefile.gameConclusion = conclusion;
         if (requestRemovalFromActiveGames) onlinegame.requestRemovalFromPlayersInActiveGames();
         if (wincondition.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
-        clock.stop()
-        board.darkenColor()
-        guigameinfo.gameEnd(gamefile.gameConclusion)
+        clock.stop();
+        board.darkenColor();
+        guigameinfo.gameEnd(gamefile.gameConclusion);
         onlinegame.onGameConclude();
 
         const delayToPlayConcludeSoundSecs = 0.65;
         if (!onlinegame.areInOnlineGame()) {
-            if (!gamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs)
-            else sound.playSound_draw(delayToPlayConcludeSoundSecs)
+            if (!gamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
+            else sound.playSound_draw(delayToPlayConcludeSoundSecs);
         } else { // In online game
-            if (gamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs)
-            else if (gamefile.gameConclusion.includes('draw') || gamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs)
+            if (gamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs);
+            else if (gamefile.gameConclusion.includes('draw') || gamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs);
             else sound.playSound_loss(delayToPlayConcludeSoundSecs);
         }
 
@@ -215,7 +215,17 @@ const gamefileutility = (function(){
         setTerminationMetadata(gamefile);
 
         selection.unselectPiece();
-        guipause.changeTextOfMainMenuButton()
+        guipause.changeTextOfMainMenuButton();
+    }
+
+    /**
+     * Returns true if the game is over (gameConclusion is truthy).
+     * If the game is over, it will be a string. If not, it will be false.
+     * @param {gamefile} gamefile 
+     */
+    function isGameOver(gamefile) {
+        if (gamefile.gameConclusion) return true;
+        return false;
     }
 
     /**
@@ -223,7 +233,7 @@ const gamefileutility = (function(){
      * @param {gamefile} gamefile - The gamefile
      */
     function setTerminationMetadata(gamefile) {
-        if (!gamefile.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.")
+        if (!gamefile.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
         const victorAndCondition = wincondition.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
         const condition = wincondition.getTerminationInEnglish(gamefile, victorAndCondition.condition);
@@ -231,9 +241,9 @@ const gamefileutility = (function(){
     
         const victor = victorAndCondition.victor; // white/black/draw/undefined
         gamefile.metadata.Result = victor === 'white' ? '1-0'
-                                 : victor === 'black' ? '0-1'
-                                 : victor === 'draw' ? '1/2-1/2'
-                                 : '0-0'; // Aborted
+            : victor === 'black' ? '0-1'
+                : victor === 'draw' ? '1/2-1/2'
+                    : '0-0'; // Aborted
     }
 
     // Returns a list of all the jumping royal it comes across of a specific color.
@@ -249,8 +259,8 @@ const gamefileutility = (function(){
                 if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
                 state[thisRoyalType].forEach(coords => { // [x,y]
                     if (!coords) return;
-                    royalCoordsList.push(coords)
-                })
+                    royalCoordsList.push(coords);
+                });
             }
         } else if (color === 'black') {
             for (let i = 0; i < jumpingRoyals.length; i++) {
@@ -258,10 +268,10 @@ const gamefileutility = (function(){
                 if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
                 state[thisRoyalType].forEach(coords => { // [x,y]
                     if (!coords) return;
-                    royalCoordsList.push(coords)
-                })
+                    royalCoordsList.push(coords);
+                });
             }
-        } else console.error(`Cannot get jumping royal coords from a side with color ${color}!`)
+        } else console.error(`Cannot get jumping royal coords from a side with color ${color}!`);
 
         return royalCoordsList;
     }
@@ -278,8 +288,8 @@ const gamefileutility = (function(){
 
             if (!piecesByType[thisType]) return console.error(`Cannot fetch royal count of type ${thisType} when the list is undefined!`);
             
-            let length = piecesByType[thisType].length
-            if (piecesByType[thisType].undefineds) length -= piecesByType[thisType].undefineds.length
+            let length = piecesByType[thisType].length;
+            if (piecesByType[thisType].undefineds) length -= piecesByType[thisType].undefineds.length;
 
             count += length;
         }
@@ -291,9 +301,9 @@ const gamefileutility = (function(){
 
         const allCoords = [];
 
-        forEachPieceInPiecesByType(callback, gamefile.ourPieces)
+        forEachPieceInPiecesByType(callback, gamefile.ourPieces);
 
-        function callback (type, coords) {
+        function callback(type, coords) {
             if (coords) allCoords.push(coords); // Only push coords if it's defined
         }
 
@@ -303,7 +313,7 @@ const gamefileutility = (function(){
     function getCoordsOfAllPiecesByKey(piecesByKey) {
         const allCoords = [];
 
-        forEachPieceInKeysState(callback, piecesByKey)
+        forEachPieceInKeysState(callback, piecesByKey);
         function callback(type, coords) {
             allCoords.push(coords);
         }
@@ -319,7 +329,7 @@ const gamefileutility = (function(){
         pieces.forEachPieceType(appendCount);
 
         function appendCount(type) {
-            pieceCount += piecesByType[type].length
+            pieceCount += piecesByType[type].length;
         }
 
         return pieceCount;
@@ -328,7 +338,7 @@ const gamefileutility = (function(){
     function getPieceCountOfColorFromPiecesByType(piecesByType, color) {
         let pieceCount = 0;
 
-        pieces.forEachPieceTypeOfColor(color, appendCount)
+        pieces.forEachPieceTypeOfColor(color, appendCount);
 
         function appendCount(type) {
             const thisTypeList = piecesByType[type];
@@ -353,15 +363,15 @@ const gamefileutility = (function(){
      */
     // Returns piece count of game, excluding undefineds.
     function getPieceCountOfGame(gamefile, { ignoreVoids, ignoreObstacles } = {}) {
-        if (!gamefile.ourPieces) return console.error("Cannot count pieces, ourPieces is not defined")
+        if (!gamefile.ourPieces) return console.error("Cannot count pieces, ourPieces is not defined");
 
         let count = 0;
         for (const key in gamefile.ourPieces) {
             if (ignoreVoids && key === 'voidsN') continue;
             if (ignoreObstacles && key === 'obstaclesN') continue;
 
-            const typeList = gamefile.ourPieces[key]
-            count += typeList.length
+            const typeList = gamefile.ourPieces[key];
+            count += typeList.length;
             if (typeList.undefineds) count -= typeList.undefineds.length;
         }
         return count;
@@ -397,13 +407,13 @@ const gamefileutility = (function(){
                 foundPiece = true;
                 return;
             } else { // Our piece isnt in this list
-                index += list.length
+                index += list.length;
             }
         }
 
         if (foundPiece) return index;
 
-        return console.error(`Could not find piece type ${piece.type} with index ${piece.index} when calculating its index in all the pieces!`)
+        return console.error(`Could not find piece type ${piece.type} with index ${piece.index} when calculating its index in all the pieces!`);
     }
 
     // Returns an array containing the coordinates of ALL royal pieces of specified color.
@@ -428,7 +438,7 @@ const gamefileutility = (function(){
         return royalCoords;
     }
 
-	/**
+    /**
 	 * Returns an number of the royal pieces a side has
 	 * @param {gamefile.piecesOrganizedByKey} piecesByKey - Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }`
 	 * @param {string} color - `white` | `black` | `neutral` a string that represents the color of pieces the function will return
@@ -440,8 +450,8 @@ const gamefileutility = (function(){
 
         let royalCount = 0;
         for (const key in piecesByKey) {
-            const type = piecesByKey[key]
-            const thisColor = math.getPieceColorFromType(type)
+            const type = piecesByKey[key];
+            const thisColor = math.getPieceColorFromType(type);
             if (!thisColor.endsWith(WorB)) return; // Different color
             const strippedType = math.trimWorBFromType(type);
             if (!royals.includes(strippedType)) continue; // Not royalty
@@ -463,7 +473,7 @@ const gamefileutility = (function(){
 
     return Object.freeze({
         pieceCountToDisableCheckmate,
-		getPieceCountOfType,
+        getPieceCountOfType,
         forEachPieceInGame,
         forEachPieceInPiecesByType,
         forEachPieceInKeysState,
@@ -484,7 +494,8 @@ const gamefileutility = (function(){
         getRoyalCoords,
         getRoyalCountOfColor,
         getPieceCountOfGame,
-        getWhosTurnAtMoveIndex
-    })
+        getWhosTurnAtMoveIndex,
+        isGameOver,
+    });
 
 })();

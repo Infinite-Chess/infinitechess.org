@@ -2,7 +2,7 @@
 
 "use strict";
 
-const statustext = (function(){
+const statustext = (function() {
 
     const statusMessage = document.getElementById('statusmessage');
     const statusText = document.getElementById('statustext');
@@ -32,34 +32,34 @@ const statustext = (function(){
      * @param {boolean} [isError] Optional. Whether the backdrop should be red for an error
      */
     function showStatusForDuration(text, durationMillis, isError) {
-        if (text == null) return console.error("Cannot show status of undefined text!!")
+        if (text == null) return console.error("Cannot show status of undefined text!!");
         
         layers++;
         
         fadeAfter(durationMillis);
 
         statusText.textContent = text;
-        statusText.classList.remove('fade-out-1s')
-        statusMessage.classList.remove('hidden')
+        statusText.classList.remove('fade-out-1s');
+        statusMessage.classList.remove('hidden');
 
         if (!isError) {
-            statusText.classList.remove('error')
-            statusText.classList.add('ok')
+            statusText.classList.remove('error');
+            statusText.classList.add('ok');
         } else {
-            statusText.classList.remove('ok')
-            statusText.classList.add('error')
-            console.error()
-            console.trace(text)
+            statusText.classList.remove('ok');
+            statusText.classList.add('error');
+            console.error();
+            console.trace(text);
         }
     }
 
     function fadeAfter(ms) {
         setTimeout(function() {
             if (layers === 1) {
-                statusText.classList.add('fade-out-1s')
+                statusText.classList.add('fade-out-1s');
                 hideAfter(fadeTimer);
             } else layers--; // This layer has been overwritten!
-        }, ms)
+        }, ms);
     }
 
     function hideAfter(ms) {
@@ -67,8 +67,8 @@ const statustext = (function(){
             layers--;
             if (layers > 0) return; // Only one left, hide!
             statusMessage.classList.add('hidden');
-            statusText.classList.remove('fade-out-1s')
-        }, ms)
+            statusText.classList.remove('fade-out-1s');
+        }, ms);
     }
 
     function lostConnection() {
@@ -77,7 +77,7 @@ const statustext = (function(){
 
     /** Shows a status message stating to please wait to perform this task. */
     function pleaseWaitForTask() {
-        showStatus(translations["please_wait"], false, 0.5)
+        showStatus(translations["please_wait"], false, 0.5);
     }
 
     // Dev purposes
@@ -91,6 +91,6 @@ const statustext = (function(){
         pleaseWaitForTask,
         getLayerCount,
         showStatusForDuration
-    })
+    });
 
 })();

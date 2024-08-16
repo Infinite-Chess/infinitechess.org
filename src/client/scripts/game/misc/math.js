@@ -77,13 +77,13 @@ const math = (function() {
     }
 
     // Receives theta in RADIANS
-    function getXYComponents_FromAngle (theta) { // x & y will be between -1 & 1
+    function getXYComponents_FromAngle(theta) { // x & y will be between -1 & 1
         return [Math.cos(theta), Math.sin(theta)]; // When hypotenuse is 1.0
     }
 
     // Whenever you move 10,000 tiles away, the piece rendering starts to get gittery, so we generate it with an offset.
     // This function calculates that offset by rounding our coords to the nearest 10,000 by default.  returns [x,y]
-    function roundPointToNearestGridpoint (point, gridSize) { // point: [x,y]  gridSize is width of cells, typically 10,000
+    function roundPointToNearestGridpoint(point, gridSize) { // point: [x,y]  gridSize is width of cells, typically 10,000
         const nearestX = Math.round(point[0] / gridSize) * gridSize;
         const nearestY = Math.round(point[1] / gridSize) * gridSize;
 
@@ -107,8 +107,8 @@ const math = (function() {
      * @returns {boolean} true if the box contains the square
      */
     function boxContainsSquare(box, square) { // box: { left, right, bottom, top }  square: [x,y]
-        if (!square) console.log("We need a square to test if it's within this box!")
-        if (typeof square[0] !== 'number') console.log("Square is of the wrong data type!")
+        if (!square) console.log("We need a square to test if it's within this box!");
+        if (typeof square[0] !== 'number') console.log("Square is of the wrong data type!");
         if (square[0] < box.left) return false;
         if (square[0] > box.right) return false;
         if (square[1] < box.bottom) return false;
@@ -123,18 +123,18 @@ const math = (function() {
      * @returns {BoundingBox} The minimum bounding box
      */
     function getBoxFromCoordsList(coordsList) { // Array of coordinates in the form [x,y]
-        if (coordsList == null) return console.error("Coords not specified when calculating the bounding box of a coordinate list!")
-        else if (coordsList.length === 0) return console.error("Cannot calculate the bounding box of 0 coordinates!")
+        if (coordsList == null) return console.error("Coords not specified when calculating the bounding box of a coordinate list!");
+        else if (coordsList.length === 0) return console.error("Cannot calculate the bounding box of 0 coordinates!");
 
         const box = {};
-        const firstPiece = coordsList.shift() // Removes first element
-        box.left = firstPiece[0]
-        box.right = firstPiece[0]
-        box.bottom = firstPiece[1]
-        box.top = firstPiece[1]
+        const firstPiece = coordsList.shift(); // Removes first element
+        box.left = firstPiece[0];
+        box.right = firstPiece[0];
+        box.bottom = firstPiece[1];
+        box.top = firstPiece[1];
 
         // Expands the bounding box to include every piece's coordinates. Centered on the piece.
-        for (const coord of coordsList) expandBoxToContainSquare(box, coord)
+        for (const coord of coordsList) expandBoxToContainSquare(box, coord);
 
         return box;
     }
@@ -142,13 +142,13 @@ const math = (function() {
     // Expands the bounding box to include the provided coordinates, if it doesn't already
     // Modifies the ORIGINAL
     function expandBoxToContainSquare(box, coord) {
-        if (!box) return console.error("Cannot expand an undefined box to fit a square!")
+        if (!box) return console.error("Cannot expand an undefined box to fit a square!");
         if (!coord) return console.error("Undefined coords shouldn't be passed into math.expandBoxToContainSquare()!");
 
-        if (coord[0] < box.left) box.left = coord[0]
-        else if (coord[0] > box.right) box.right = coord[0]
-        if (coord[1] < box.bottom) box.bottom = coord[1]
-        else if (coord[1] > box.top) box.top = coord[1]
+        if (coord[0] < box.left) box.left = coord[0];
+        else if (coord[0] > box.right) box.right = coord[0];
+        if (coord[1] < box.bottom) box.bottom = coord[1];
+        else if (coord[1] > box.top) box.top = coord[1];
     }
     /**
      * Returns the mimimum bounding box that contains both of the provided boxes.
@@ -157,14 +157,14 @@ const math = (function() {
      * @returns {BoundingBox} The merged box
      */
     function mergeBoundingBoxes(box1, box2) {
-        if (!box1 || !box2) return console.error("Cannot merge 2 bounding boxes when 1+ isn't defined.")
+        if (!box1 || !box2) return console.error("Cannot merge 2 bounding boxes when 1+ isn't defined.");
 
         const mergedBox = {
             left: box1.left < box2.left ? box1.left : box2.left,
             right: box1.right > box2.right ? box1.right : box2.right,
             bottom: box1.bottom < box2.bottom ? box1.bottom : box2.bottom,
             top: box1.top > box2.top ? box1.top : box2.top,
-        }
+        };
         return mergedBox;
     }
     /**
@@ -181,17 +181,17 @@ const math = (function() {
      */
     function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale()) {
 
-        const distToHorzEdgeDivScale = camera.getScreenBoundingBox().right / scale
+        const distToHorzEdgeDivScale = camera.getScreenBoundingBox().right / scale;
 
-        const left = position[0] - distToHorzEdgeDivScale
-        const right = position[0] + distToHorzEdgeDivScale
+        const left = position[0] - distToHorzEdgeDivScale;
+        const right = position[0] + distToHorzEdgeDivScale;
 
-        const distToVertEdgeDivScale = camera.getScreenBoundingBox().top / scale
+        const distToVertEdgeDivScale = camera.getScreenBoundingBox().top / scale;
 
-        const bottom = position[1] - distToVertEdgeDivScale
-        const top = position[1] + distToVertEdgeDivScale
+        const bottom = position[1] - distToVertEdgeDivScale;
+        const top = position[1] + distToVertEdgeDivScale;
 
-        return { left, right, bottom, top }
+        return { left, right, bottom, top };
     }
 
     /**
@@ -232,14 +232,14 @@ const math = (function() {
      * @returns {boolean} 
      */
     function areLinesCollinear(lines) {
-        let gradient
+        let gradient;
         for (const line of lines) {
-            const lgradient = line[1]/line[0]
-            if (!gradient) gradient = lgradient
-            if (!Number.isFinite(gradient)&&!Number.isFinite(lgradient)) {continue};
+            const lgradient = line[1] / line[0];
+            if (!gradient) gradient = lgradient;
+            if (!Number.isFinite(gradient) && !Number.isFinite(lgradient)) {continue;};
             if (!isAproxEqual(lgradient, gradient)) return false;
         }
-        return true
+        return true;
     }
 
     /**
@@ -254,9 +254,9 @@ const math = (function() {
     function deepCopyObject(src) {
         if (typeof src !== "object" || src === null) return src;
         
-        let copy = Array.isArray(src) ? [] : {}; // Create an empty array or object
+        const copy = Array.isArray(src) ? [] : {}; // Create an empty array or object
         
-        for (let key in src) {
+        for (const key in src) {
             const value = src[key];
             copy[key] = deepCopyObject(value); // Recursively copy each property
         }
@@ -271,13 +271,13 @@ const math = (function() {
      */
     function copyFloat32Array(src) {
         if (!src || !(src instanceof Float32Array)) {
-          throw new Error('Invalid input: must be a Float32Array');
+            throw new Error('Invalid input: must be a Float32Array');
         }
       
         const copy = new Float32Array(src.length);
       
         for (let i = 0; i < src.length; i++) {
-          copy[i] = src[i];
+            copy[i] = src[i];
         }
       
         return copy;
@@ -289,8 +289,8 @@ const math = (function() {
      * @returns {string} The key
      */
     // Receives coords, returns it's key to access it in game.getGamefile().piecesOrganizedByKey object.
-    function getKeyFromCoords (coords) {
-        return `${coords[0]},${coords[1]}`
+    function getKeyFromCoords(coords) {
+        return `${coords[0]},${coords[1]}`;
     }
 
     /**
@@ -308,10 +308,10 @@ const math = (function() {
 
     // Calculates if the orthogonal distance between 2 points is atleast the value
     function isOrthogonalDistanceGreaterThanValue(point1, point2, value) {
-        const xDiff = Math.abs(point2[0] - point1[0])
-        const yDiff = Math.abs(point2[1] - point1[1])
-        if (xDiff > value || yDiff > value) return true
-        return false
+        const xDiff = Math.abs(point2[0] - point1[0]);
+        const yDiff = Math.abs(point2[1] - point1[1]);
+        if (xDiff > value || yDiff > value) return true;
+        return false;
     }
 
     function getBaseLog10(value) {
@@ -322,21 +322,21 @@ const math = (function() {
 
         const boardPos = movement.getBoardPos();
         const boardScale = movement.getBoardScale();
-        const xCoord = worldCoords[0] / boardScale + boardPos[0]
-        const yCoord = worldCoords[1] / boardScale + boardPos[1]
+        const xCoord = worldCoords[0] / boardScale + boardPos[0];
+        const yCoord = worldCoords[1] / boardScale + boardPos[1];
 
-        return [xCoord, yCoord]
+        return [xCoord, yCoord];
     }
 
     function convertWorldSpaceToCoords_Rounded(worldCoords) {
 
         const boardPos = movement.getBoardPos();
         const boardScale = movement.getBoardScale();
-        const xCoord = worldCoords[0] / boardScale + boardPos[0]
-        const yCoord = worldCoords[1] / boardScale + boardPos[1]
+        const xCoord = worldCoords[0] / boardScale + boardPos[0];
+        const yCoord = worldCoords[1] / boardScale + boardPos[1];
 
         const squareCenter = board.gsquareCenter();
-        return [Math.floor(xCoord + squareCenter), Math.floor(yCoord + squareCenter)]
+        return [Math.floor(xCoord + squareCenter), Math.floor(yCoord + squareCenter)];
     }
 
     // Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.gsquareCenter().
@@ -345,7 +345,7 @@ const math = (function() {
         const worldX = (coords[0] - position[0] + 0.5 - board.gsquareCenter()) * scale;
         const worldY = (coords[1] - position[1] + 0.5 - board.gsquareCenter()) * scale;
 
-        return [worldX, worldY]
+        return [worldX, worldY];
     }
 
     // Returns [x,y], primed to add to buffer data.
@@ -361,16 +361,16 @@ const math = (function() {
 
         const inPerspective = perspective.getEnabled();
 
-        const a = perspective.distToRenderBoard
+        const a = perspective.distToRenderBoard;
         /** @type {BoundingBox} */
-        const boundingBox = inPerspective ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false)
+        const boundingBox = inPerspective ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false);
 
-        if      (worldX < boundingBox.left)  worldX = inPerspective ? -perspective.distToRenderBoard : camera.getScreenBoundingBox(false).left;
+        if      (worldX < boundingBox.left) worldX = inPerspective ? -perspective.distToRenderBoard : camera.getScreenBoundingBox(false).left;
         else if (worldX > boundingBox.right) worldX = inPerspective ? perspective.distToRenderBoard : camera.getScreenBoundingBox(false).right;
-        if      (worldY < boundingBox.bottom)  worldY = inPerspective ? -perspective.distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
+        if      (worldY < boundingBox.bottom) worldY = inPerspective ? -perspective.distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
         else if (worldY > boundingBox.top) worldY = inPerspective ? perspective.distToRenderBoard : camera.getScreenBoundingBox(false).top;
 
-        return [worldX, worldY]
+        return [worldX, worldY];
     }
 
     /**
@@ -381,8 +381,8 @@ const math = (function() {
      * @returns {number} The clamped value.
      */
     function clamp(min,max,value) {
-        if (min>value) return min;
-        if (max<value) return max;
+        if (min > value) return min;
+        if (max < value) return max;
         return value;
     }
 
@@ -420,11 +420,11 @@ const math = (function() {
     }
 
     function convertPixelsToWorldSpace_Virtual(value) {
-        return (value / camera.getCanvasHeightVirtualPixels()) * (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)
+        return (value / camera.getCanvasHeightVirtualPixels()) * (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom);
     }
 
     function convertWorldSpaceToPixels_Virtual(value) {
-        return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels()
+        return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels();
     }
 
     /**
@@ -440,12 +440,12 @@ const math = (function() {
         let corner = "";
         v: {
             if (line[1] === 0) break v; // Horizontal so parallel with top/bottom lines
-            corner += ((line[0] > 0 === line[1] > 0) === negateSide === (line[0] !== 0)) ? "bottom" : "top" 
+            corner += ((line[0] > 0 === line[1] > 0) === negateSide === (line[0] !== 0)) ? "bottom" : "top"; 
             // Gonna be honest I have no idea how this works but it does sooooooo its staying
         }
         h: {
             if (line[0] === 0) break h; // Vertical so parallel with left/right lines
-            corner += negateSide ? "left" : "right"
+            corner += negateSide ? "left" : "right";
         }
         return corner;
     }
@@ -459,9 +459,9 @@ const math = (function() {
      */
     function getCornerOfBoundingBox(boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
-        let yval = corner.startsWith('bottom') ? bottom : top;
-        let xval = corner.endsWith('right') ? right : left
-        return [xval, yval]
+        const yval = corner.startsWith('bottom') ? bottom : top;
+        const xval = corner.endsWith('right') ? right : left;
+        return [xval, yval];
     }
 
     /**
@@ -474,19 +474,19 @@ const math = (function() {
      * @param {string} corner - What side/corner the line intersects, in english language. "left"/"topright"...
      * @returns {number[] | undefined} - The tile the line intersects, on the specified side, of the provided box, if it does intersect, otherwise undefined.
      */
-    function getLineIntersectionEntryTile (dx, dy, c, boundingBox, corner) {
+    function getLineIntersectionEntryTile(dx, dy, c, boundingBox, corner) {
         const { left, right, top, bottom } = boundingBox;
 
         // Check for intersection with left side of rectangle
         if (corner.endsWith('left')) {
             const yIntersectLeft = ((left * dy) + c) / dx;
-            if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft]
+            if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft];
         }
         
         // Check for intersection with bottom side of rectangle
         if (corner.startsWith('bottom')) {
             const xIntersectBottom = ((bottom * dx) - c) / dy;
-            if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom]
+            if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom];
         }
 
         // Check for intersection with right side of rectangle
@@ -512,13 +512,13 @@ const math = (function() {
      * @returns {number} the number of steps
      */
     function getLineSteps(step, startCoord, endCoord) {
-        const chebyshevDist = chebyshevDistance(startCoord, endCoord)
+        const chebyshevDist = chebyshevDistance(startCoord, endCoord);
         const stepChebyshev = Math.max(step[0], step[1]);
         return Math.floor(chebyshevDist / stepChebyshev);
     }
 
     function convertWorldSpaceToGrid(value) {
-        return value / movement.getBoardScale()
+        return value / movement.getBoardScale();
     }
     
     /**
@@ -528,9 +528,9 @@ const math = (function() {
      * @returns {number} The Euclidean distance
      */
     function euclideanDistance(point1, point2) { // [x,y]
-        const xDiff = point2[0] - point1[0]
-        const yDiff = point2[1] - point1[1]
-        return Math.hypot(xDiff, yDiff)
+        const xDiff = point2[0] - point1[0];
+        const yDiff = point2[1] - point1[1];
+        return Math.hypot(xDiff, yDiff);
     }
 
     /**
@@ -575,7 +575,7 @@ const math = (function() {
             right: coords[0] + renderDistInSquares,
             bottom: coords[1] - renderDistInSquares,
             top: coords[1] + renderDistInSquares,
-        }
+        };
     }
 
     /**
@@ -586,7 +586,7 @@ const math = (function() {
      */
     function areCoordsEqual(coord1, coord2) {
         if (!coord1 || !coord2) return false; // One undefined, can't be equal
-        return coord1[0] === coord2[0] && coord1[1] === coord2[1]
+        return coord1[0] === coord2[0] && coord1[1] === coord2[1];
     }
 
     function areCoordsEqual_noValidate(coord1, coord2) {
@@ -595,7 +595,7 @@ const math = (function() {
 
     // Assumes the sortedArray DOES NOT contain the value!
     function binarySearch_findSplitPoint(sortedArray, value) {
-        if (value == null) throw new Error(`Cannot binary search when value is null! ${value}`)
+        if (value == null) throw new Error(`Cannot binary search when value is null! ${value}`);
 
         let left = 0;
         let right = sortedArray.length - 1;
@@ -607,7 +607,7 @@ const math = (function() {
             if (value < midValue) right = mid - 1;
             else if (value > midValue) left = mid + 1;
             else if (midValue === value) {
-                throw new(`Cannot find split point of sortedArray when it already contains the value! ${value}. List: ${JSON.stringify(sortedArray)}`)
+                throw new(`Cannot find split point of sortedArray when it already contains the value! ${value}. List: ${JSON.stringify(sortedArray)}`);
             }
         }
 
@@ -618,7 +618,7 @@ const math = (function() {
     // Returns the index at which you could insert the value and keep it organized,
     // OR returns the index of the value!
     function binarySearch_findValue(sortedArray, value) {
-        if (value == null) return console.error(`Cannot binary search when value is null! ${value}`)
+        if (value == null) return console.error(`Cannot binary search when value is null! ${value}`);
 
         let left = 0;
         let right = sortedArray.length - 1;
@@ -664,7 +664,7 @@ const math = (function() {
      * @returns Copied coords
      */
     function copyCoords(coords) {
-        return [coords[0], coords[1]]
+        return [coords[0], coords[1]];
     }
 
     function roundAwayFromZero(value) {
@@ -678,17 +678,17 @@ const math = (function() {
      */
     function getPieceColorFromType(type) {
         // If the last letter of the piece type is 'W', the piece is white.
-        if (type.endsWith('W')) return "white"
-        else if (type.endsWith('B')) return "black"
-        else if (type.endsWith('N')) return "neutral"
-        else throw new Error(`Cannot get the color of piece with type ${pieceType}`)
+        if (type.endsWith('W')) return "white";
+        else if (type.endsWith('B')) return "black";
+        else if (type.endsWith('N')) return "neutral";
+        else throw new Error(`Cannot get the color of piece with type ${type}`);
     }
 
     function getColorFromWorB(WorB) {
         if (WorB === 'W') return 'white';
         else if (WorB === 'B') return 'black';
         else if (WorB === 'N') return 'neutral';
-        throw new Error(`Cannot return color when WorB is not W, B, or N! Received: "${WorB}"`)
+        throw new Error(`Cannot return color when WorB is not W, B, or N! Received: "${WorB}"`);
     }
 
     /**
@@ -699,7 +699,7 @@ const math = (function() {
     function getOppositeColor(color) {
         if (color === 'white') return 'black';
         else if (color === 'black') return 'white';
-        else throw new Error(`Cannot return the opposite color of color ${color}!`)
+        else throw new Error(`Cannot return the opposite color of color ${color}!`);
     }
 
     // REQUIRES the type of piece to be valid, and have a W or B at the end!
@@ -711,7 +711,7 @@ const math = (function() {
         if (color === 'white') return 'W';
         else if (color === 'black') return 'B';
         else if (color === 'neutral') return 'N';
-        else throw new Error(`Cannot return WorB from strange color ${color}!`)
+        else throw new Error(`Cannot return WorB from strange color ${color}!`);
     }
 
     /**
@@ -743,16 +743,16 @@ const math = (function() {
         let previous = seed;
     
         this.nextInt = function() {
-            const next = (previous * a + c) % b
+            const next = (previous * a + c) % b;
             previous = next;
             return next; // 0 - 2147483647
         };
 
         this.nextFloat = function() {
-            const next = (previous * a + c) % b
+            const next = (previous * a + c) % b;
             previous = next;
             return next / b; // 0-1
-        }
+        };
     }
 
     function decimalToPercent(decimal) {
@@ -783,13 +783,13 @@ const math = (function() {
      * @returns {Boolean}
      */
     function isEmpty(obj) {
-        for (var prop in obj) {
+        for (const prop in obj) {
             if (Object.prototype.hasOwnProperty.call(obj, prop)) {
                 return false;
             }
         }
         
-        return true
+        return true;
     }
 
     /**
@@ -800,7 +800,7 @@ const math = (function() {
     function isJson(str) {
         try {
             JSON.parse(str);
-        } catch (e) {
+        } catch {
             return false;
         }
         return true;
@@ -812,8 +812,8 @@ const math = (function() {
      * @returns {Object} The inverted object
      */
     function invertObj(obj) {
-        let inv = {};
-        for(let key in obj){
+        const inv = {};
+        for (const key in obj) {
             inv[obj[key]] = key;
         }
         return inv;
@@ -825,8 +825,8 @@ const math = (function() {
      * @returns {string} The ID
      */
     function generateID(length) {
-        let result           = '';
-        const characters       = '0123456789abcdefghijklmnopqrstuvwxyz';
+        let result = '';
+        const characters = '0123456789abcdefghijklmnopqrstuvwxyz';
         const charactersLength = characters.length;
         for (let i = 0; i < length; i++) {
             result += characters.charAt(Math.random() * charactersLength); // Coerc to an int
@@ -845,7 +845,7 @@ const math = (function() {
         let id;
         do {
             id = generateID(length);
-        } while (object[id] != null)
+        } while (object[id] != null);
         return id;
     }
 
@@ -863,8 +863,8 @@ const math = (function() {
     // Removes specified object from given array. Throws error if it fails. The object cannot be an object or array, only a single value.
     function removeObjectFromArray(array, object) { // object can't be an array
         const index = array.indexOf(object);
-        if (index !== -1) array.splice(index, 1)
-        else throw new Error(`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`)
+        if (index !== -1) array.splice(index, 1);
+        else throw new Error(`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`);
     }
 
     /**

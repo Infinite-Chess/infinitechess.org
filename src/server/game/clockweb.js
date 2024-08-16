@@ -1,7 +1,7 @@
 
 const clockweb = (function() {
 
-    const validClockValues = ['-','15+2','60+2','120+2','180+2','300+2','480+3','600+4','720+5','900+6','1200+8','1500+10','1800+15','2400+20'] 
+    const validClockValues = ['-','15+2','60+2','120+2','180+2','300+2','480+3','600+4','720+5','900+6','1200+8','1500+10','1800+15','2400+20']; 
 
     /**
      * Returns true if the provided clock value is valid.
@@ -9,7 +9,7 @@ const clockweb = (function() {
      * @param {string} clock - The clock value (e.g. "10+5").
      * @returns {boolean} *true* if it is valid.
      */
-    function isClockValueValid(clock) { return validClockValues.includes(clock) }
+    function isClockValueValid(clock) { return validClockValues.includes(clock); }
 
     /**
      * Splits the clock from the form `10+5` into the `minutes` and `increment` properties.
@@ -29,13 +29,13 @@ const clockweb = (function() {
      * @param {string} clock - The clock value (e.g. "10+5").
      * @returns {boolean} *true* if it's infinite.
      */
-    function isClockValueInfinite(clock) { return clock === '-' }
+    function isClockValueInfinite(clock) { return clock === '-'; }
 
     return Object.freeze({
         isClockValueValid,
         getMinutesAndIncrementFromClock,
         isClockValueInfinite,
-    })
+    });
 
 })();
 

@@ -32,7 +32,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         Event: undefined,
         /** What website hosted the game. "https://www.infinitechess.org/" */
         Site: undefined,
-    }
+    };
     
     /** Information about the beginning of the game (position, positionString, specialRights, turn) */
     this.startSnapshot = {
@@ -59,7 +59,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         existingTypes: undefined,
         /** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {number[][]}*/
         slidingPossible: undefined
-    }
+    };
     
     this.gameRules = {
         winConditions: undefined,
@@ -77,7 +77,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
 
         /** How many plies (half-moves) may pass until a draw is automatically pronounced! */
         moveRule: undefined
-    }
+    };
 
     /** Pieces organized by type: `{ queensW:[[1,2],[2,3]] }` */
     this.ourPieces = undefined;
@@ -127,7 +127,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         /** A flag the mesh generation reads to know whether to terminate or not.
          * Do ***NOT*** set manually, call `terminateIfGenerating()` instead. */
         terminate: false
-    }
+    };
 
     /** The object that contains the buffer model to render the voids */
     this.voidMesh = {
@@ -139,7 +139,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
          * from the pieces because we can simplify the mesh greatly.
          * @type {BufferModel} */
         model: undefined,
-    }
+    };
 
     /** Contains the movesets of every piece for this game. 
      * When this object's parameters are called as a function,
@@ -165,7 +165,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     math.copyPropertiesToObject(metadata, this.metadata);
 
     // Init things related to the variant, and the startSnapshot of the position
-    variant.setupVariant(this, metadata, variantOptions) // Initiates startSnapshot, gameRules, and pieceMovesets
+    variant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
     /** The number of half-moves played since the last capture or pawn push. */
     this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
     area.initStartingAreaBox(this);
@@ -183,7 +183,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     this.whosTurn = this.startSnapshot.turn;
     /** If the currently-viewed move is in check, this will be a list of coordinates
      * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {number[][]} */
-    this.inCheck = undefined;
+    this.inCheck = false;
     /** List of maximum 2 pieces currently checking whoever's turn is next,
      * with their coords and slidingCheck property. ONLY USED with `checkmate` wincondition!!
      * Only used to calculate legal moves, and checkmate. */
@@ -191,8 +191,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
     this.checksGiven = undefined;
 
-    this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position)
-    this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this)
+    this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position);
+    this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
     
     organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
     // movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
@@ -202,6 +202,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
     this.gameConclusion = gameConclusion || this.gameConclusion;
 
-    organizedlines.addMoreUndefineds(this, { regenModel: false })
+    organizedlines.addMoreUndefineds(this, { regenModel: false });
 };
 

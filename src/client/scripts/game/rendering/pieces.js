@@ -6,7 +6,7 @@
 
 "use strict";
 
-const pieces = (function () {
+const pieces = (function() {
 
     // All piece names we have a texture for on our spritesheet (except voids).
     // They are arranged in this order for faster checkmate/draw detection.
@@ -42,21 +42,21 @@ const pieces = (function () {
 
         // Do we need to regen the pieces model? Are we out of bounds of our regenRange?
         if (!movement.isScaleLess1Pixel_Virtual()
-          && board.isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset, piecesmodel.regenRange)) piecesmodel.shiftPiecesModel(gamefile)
+          && board.isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset, piecesmodel.regenRange)) piecesmodel.shiftPiecesModel(gamefile);
 
         const boardPos = movement.getBoardPos();
         const position = [ // Translate
             -boardPos[0] + gamefile.mesh.offset[0], // Add the model's offset. 
             -boardPos[1] + gamefile.mesh.offset[1],
             0
-        ] // While separate these are each big decimals, TOGETHER they are small number! That's fast for rendering!
+        ]; // While separate these are each big decimals, TOGETHER they are small number! That's fast for rendering!
 
         const boardScale = movement.getBoardScale();
-        const scale = [boardScale, boardScale, 1]
+        const scale = [boardScale, boardScale, 1];
 
         let modelToUse;
         if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
-        else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model
+        else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
 
         modelToUse.render(position, scale);
         // Use this line when rendering with the tinted texture shader program.
@@ -66,7 +66,7 @@ const pieces = (function () {
     /** Renders a semi-transparent piece at the specified coordinates. */
     function renderGhostPiece(type, coords) {
         const color = options.getColorOfType(type); color.a *= ghostOpacity;
-        const data = bufferdata.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color)
+        const data = bufferdata.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
         const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", pieces.getSpritesheet());
         model.render();
     }
@@ -79,14 +79,14 @@ const pieces = (function () {
     function forEachPieceType(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
         for (let i = 0; i < white.length; i++) {
             // We iterate through black types first so that the white icons render on top!
-            callback(black[i])
-            callback(white[i])
+            callback(black[i]);
+            callback(white[i]);
         }
         if (ignoreNeutrals) return;
         for (let i = 0; i < neutral.length; i++) {
             const type = neutral[i];
             if (ignoreVoids && type.startsWith('voids')) continue;
-            callback(type)
+            callback(type);
         }
     }
 
@@ -100,26 +100,26 @@ const pieces = (function () {
     async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
         for (let i = 0; i < white.length; i++) {
             // We iterate through black types first so that the white icons render on top!
-            await callback(black[i])
-            await callback(white[i])
+            await callback(black[i]);
+            await callback(white[i]);
         }
         if (ignoreNeutrals) return;
         for (let i = 0; i < neutral.length; i++) {
             const type = neutral[i];
             if (ignoreVoids && type.startsWith('voids')) continue;
-            await callback(type)
+            await callback(type);
         }
     }
 
     // Iterates through every single piece TYPE in the game state of specified COLOR,
     // and performs specified function on the type
     function forEachPieceTypeOfColor(color, callback) {
-        if (color !== 'white' && color !== 'black') throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`)
+        if (color !== 'white' && color !== 'black') throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`);
         for (let i = 0; i < white.length; i++) callback(pieces[color][i]);
     }
 
     function initSpritesheet() {
-        spritesheet = texture.loadTexture('spritesheet', { useMipmaps: true })
+        spritesheet = texture.loadTexture('spritesheet', { useMipmaps: true });
     }
 
     // Returns the spritesheet texture object!
@@ -197,13 +197,13 @@ const pieces = (function () {
 
             // Miscellaneous
             yellow: getSpriteCoords(pieceWidth, 5,7) // COIN
-        }
+        };
 
         // pieceWidth is how many textures in 1 row.  yColumn starts from the top. 
         function getSpriteCoords(pieceWidth, xPos, yPos) {
             const texX = (xPos - 1) * pieceWidth;
             const texY = 1 - yPos * pieceWidth;
-            return [texX, texY]
+            return [texX, texY];
         }
     }
 
