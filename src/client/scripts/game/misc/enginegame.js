@@ -3,10 +3,11 @@
 
 "use strict";
 
-const enginegame = (function(){
+// eslint-disable-next-line no-unused-vars
+const enginegame = (function() {
 
     /** Whether we are currently in an engine game. */
-    let inEngineGame = false
+    let inEngineGame = false;
     let ourColor; // white/black
     let currentEngine; // name of the current engine used
     let currentEngineMove; // currently best move recommended by the engine
@@ -14,11 +15,11 @@ const enginegame = (function(){
 
     const engineTimeLimitPerMoveMillis = 500; // hard time limit for the engine to think in milliseconds
 
-    function areInEngineGame() { return inEngineGame }
+    function areInEngineGame() { return inEngineGame; }
 
-    function getOurColor() { return ourColor }
+    function getOurColor() { return ourColor; }
 
-    function getCurrentEngine() { return currentEngine }
+    function getCurrentEngine() { return currentEngine; }
 
     /**
      * This has to be called before and separate from {@link initEngineGame}
@@ -26,7 +27,7 @@ const enginegame = (function(){
      * @param {string} color - The color we are in this engine game
      */
     function setColorAndGameID(gameOptions) {
-        inEngineGame = true
+        inEngineGame = true;
         ourColor = gameOptions.youAreColor;
         
     }
@@ -35,14 +36,14 @@ const enginegame = (function(){
      * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
      * @param {Object} gameOptions - An object that contains the properties `currentEngine` and `engineConfig`
      */
-    function initEngineGame (gameOptions) {
+    function initEngineGame(gameOptions) {
         // This make sure it will place us in black's perspective if applicable
-        perspective.resetRotations()
+        perspective.resetRotations();
 
         currentEngine = gameOptions.currentEngine;
         currentEngineMove = undefined;
         engineConfig = gameOptions.engineConfig;
-        if (!currentEngine) return console.error (`Attempting to start game with unknown engine: ${currentEngine}`);
+        if (!currentEngine) return console.error(`Attempting to start game with unknown engine: ${currentEngine}`);
         console.log(`Started engine game with engine ${currentEngine}`);
     }
 
@@ -53,14 +54,14 @@ const enginegame = (function(){
         currentEngine = undefined;
         currentEngineMove = undefined;
         engineConfig = undefined;
-        perspective.resetRotations() // Without this, leaving an engine game of which we were black, won't reset our rotation.
+        perspective.resetRotations(); // Without this, leaving an engine game of which we were black, won't reset our rotation.
     }
 
     /**
      * Tests if it's our turn to move
      * @returns {boolean} *true* if it's currently our turn to move
      */
-    function isItOurTurn() { return game.getGamefile().whosTurn === ourColor }
+    function isItOurTurn() { return game.getGamefile().whosTurn === ourColor; }
 
     /**
      * Tests if we are this color in the engine game.
@@ -81,7 +82,7 @@ const enginegame = (function(){
 
         // Initialize the engine as a webworker
         if (!window.Worker) return console.error('Your browser doesn\'t support web workers.');
-        let engineWorker = new Worker(`../scripts/game/chess/${currentEngine}.js`);
+        const engineWorker = new Worker(`../scripts/game/chess/${currentEngine}.js`);
         currentEngineMove = undefined;
         engineWorker.onmessage = function(e) { 
             currentEngineMove = e.data;
@@ -106,16 +107,16 @@ const enginegame = (function(){
      */
     function makeEngineMove(move) {
         if (!inEngineGame) return;
-        if (!currentEngine) return console.error ("Attempting to make engine move, but no engine loaded!");
+        if (!currentEngine) return console.error("Attempting to make engine move, but no engine loaded!");
         
         const gamefile = game.getGamefile();
-        const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)
+        const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
         const endCoordsToAppendSpecial = math.deepCopyObject(move.endCoords);
-        legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial) // Passes on any special moves flags to the endCoords
+        legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
         move.type = piecemoved.type;
-        movepiece.makeMove(gamefile, move)
+        movepiece.makeMove(gamefile, move);
 
         selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
@@ -140,6 +141,6 @@ const enginegame = (function(){
         submitMove,
         makeEngineMove,
         onGameConclude
-    })
+    });
 
 })();
