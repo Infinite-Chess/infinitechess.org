@@ -13,7 +13,7 @@ const wsutility = require("../wsutility");
  * deleted from here. As soon as a game is over, we can {@link removeUserFromActiveGame()},
  * even though the game may not be deleted/logged yet.
  */
-const membersInActiveGames = {}
+const membersInActiveGames = {};
 
 /**
  * Contains what browsers are currently in a game: `{ browser: gameID }`
@@ -21,7 +21,7 @@ const membersInActiveGames = {}
  * deleted from here. As soon as a game is over, we can {@link removeUserFromActiveGame()}
  * even though the game may not be deleted/logged yet.
  */
-const browsersInActiveGames = {}
+const browsersInActiveGames = {};
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -44,19 +44,19 @@ function addUserToActiveGames(user, id) {
  * @param {string} id - The id of the game they are in.
  */
 function removeUserFromActiveGame(user, gameID) { // { member/browser }
-    if (!user) return console.error("user must be specified when removing user from players in active games.")
-    if (gameID == null) return console.error("gameID must be specified when removing user from players in active games.")
+    if (!user) return console.error("user must be specified when removing user from players in active games.");
+    if (gameID == null) return console.error("gameID must be specified when removing user from players in active games.");
 
     // Only removes them from the game if they belong to a game of that ID.
     // If they DON'T belong to that game, that means they speedily
     // resigned and started a new game, so don't modify this!
     if (user.member) {
-        if (membersInActiveGames[user.member] === gameID) delete membersInActiveGames[user.member]
-        else if (membersInActiveGames[user.member]) console.log("Not removing member from active games because they speedily joined a new game!")
+        if (membersInActiveGames[user.member] === gameID) delete membersInActiveGames[user.member];
+        else if (membersInActiveGames[user.member]) console.log("Not removing member from active games because they speedily joined a new game!");
     } else if (user.browser) {
-        if (browsersInActiveGames[user.browser] === gameID) delete browsersInActiveGames[user.browser]
-        else if (browsersInActiveGames[user.browser]) console.log("Not removing browser from active games because they speedily joined a new game!")
-    } else console.error("Cannot remove user from active games because they don't have a member/browser property!")
+        if (browsersInActiveGames[user.browser] === gameID) delete browsersInActiveGames[user.browser];
+        else if (browsersInActiveGames[user.browser]) console.log("Not removing browser from active games because they speedily joined a new game!");
+    } else console.error("Cannot remove user from active games because they don't have a member/browser property!");
 }
 
 /**
@@ -85,7 +85,7 @@ function isSocketInAnActiveGame(ws) {
  */
 function hasColorInGameSeenConclusion(game, color) {
     const player = game[color]; // { member }  OR  { browser }   (only contains one)
-    if (!player) return console.error(`Invalid color "${color}" when checking if color in game has seen game conclusion!`)
+    if (!player) return console.error(`Invalid color "${color}" when checking if color in game has seen game conclusion!`);
 
     if (player.member) {
         if (membersInActiveGames[player.member] !== game.id) return true;
@@ -114,4 +114,4 @@ module.exports = {
     isSocketInAnActiveGame,
     hasColorInGameSeenConclusion,
     getIDOfGamePlayerIsIn,
-}
+};

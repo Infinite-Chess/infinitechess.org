@@ -30,7 +30,7 @@ function decrementActiveGameCount() {
 
 /** Broadcasts the current game count to all sockets subscribed to the invites list. */
 function broadcastGameCountToInviteSubs() {
-    broadcastToAllInviteSubs("gamecount", activeGameCount)
+    broadcastToAllInviteSubs("gamecount", activeGameCount);
 }
 
 /**
@@ -40,13 +40,13 @@ function broadcastGameCountToInviteSubs() {
  * @returns {number} The active game count
  */
 function getActiveGameCount() {
-    return activeGameCount
+    return activeGameCount;
 }
 
 /** Prints the active game count to the console. */
 function printActiveGameCount() {
     const activeGameCount = getActiveGameCount();
-    console.log(`Active games: ${activeGameCount} ===========================================`)
+    console.log(`Active games: ${activeGameCount} ===========================================`);
 }
 
 
@@ -56,4 +56,4 @@ module.exports = {
     getActiveGameCount,
     printActiveGameCount,
     broadcastGameCountToInviteSubs,
-}
+};

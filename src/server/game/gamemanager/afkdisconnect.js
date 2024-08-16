@@ -7,9 +7,9 @@
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-const { Game } = require('../TypeDefinitions')
+const { Game } = require('../TypeDefinitions');
 const gameutility = require('./gameutility');
-const math1 = require('../math1')
+const math1 = require('../math1');
 const movesscript1 = require('../movesscript1');
 
 
@@ -46,10 +46,10 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
 function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
     if (gameutility.isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
         const opponentColor = math1.getOppositeColor(game.whosTurn);
-        gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn')
+        gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn');
     }
 
-    clearTimeout(game.autoAFKResignTimeoutID)
+    clearTimeout(game.autoAFKResignTimeoutID);
     game.autoAFKResignTimeoutID = undefined;
     game.autoAFKResignTime = undefined;
 }
@@ -78,7 +78,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
     // We can do this because if player is disconnected, they are afk anyway.
     // And if if they reconnect, then they're not afk anymore either.
     if (game.whosTurn === color && gameutility.isAFKTimerActive(game)) {
-        if (game.autoAFKResignTime > timeToAutoLoss) console.error("The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.")
+        if (game.autoAFKResignTime > timeToAutoLoss) console.error("The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.");
         timeToAutoLoss = game.autoAFKResignTime;
         timeBeforeAutoResign = timeToAutoLoss - now;
         cancelAutoAFKResignTimer(game);
@@ -91,8 +91,8 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
     game.disconnect.autoResign[color].wasByChoice = !closureNotByChoice;
 
     // Alert their opponent the time their opponent will be auto-resigned by disconnection.
-    const value = { autoDisconnectResignTime: timeToAutoLoss, wasByChoice: !closureNotByChoice }
-    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value)
+    const value = { autoDisconnectResignTime: timeToAutoLoss, wasByChoice: !closureNotByChoice };
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value);
 }
 
 /**
@@ -117,8 +117,8 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
     /** Whether the timer (not the cushion to start the timer) for auto-resigning is RUNNING! */
     const autoResignTimerWasRunning = gameutility.isAutoResignDisconnectTimerActiveForColor(game, color);
     
-    clearTimeout(game.disconnect.startTimer[color])
-    clearTimeout(game.disconnect.autoResign[color].timeoutID)
+    clearTimeout(game.disconnect.startTimer[color]);
+    clearTimeout(game.disconnect.autoResign[color].timeoutID);
     game.disconnect.startTimer[color] = undefined;
     game.disconnect.autoResign[color].timeoutID = undefined;
     game.disconnect.autoResign[color].timeToAutoLoss = undefined;
@@ -131,7 +131,7 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
     if (!autoResignTimerWasRunning) return; // Opponent was never notified their opponent was afk, skip telling them their opponent has returned.
 
     const opponentColor = math1.getOppositeColor(color);
-    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn')
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn');
 }
 
 //--------------------------------------------------------------------------------------------------------
@@ -140,7 +140,7 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
  * Returns the cushion, in millis, that we give disconnected players to reconnect before we start an auto-resign timer.
  * @returns {number}
  */
-function getDisconnectionForgivenessDuration() { return timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis }
+function getDisconnectionForgivenessDuration() { return timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis; }
 
 
 module.exports = {
@@ -149,4 +149,4 @@ module.exports = {
     cancelDisconnectTimers,
     cancelDisconnectTimer,
     getDisconnectionForgivenessDuration
-}
+};

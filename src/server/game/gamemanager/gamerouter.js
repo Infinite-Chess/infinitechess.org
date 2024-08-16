@@ -10,7 +10,7 @@
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-const { Socket, WebsocketMessage } = require('../TypeDefinitions')
+const { Socket, WebsocketMessage } = require('../TypeDefinitions');
 
 const { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } = require('./gamemanager');
 const { offerDraw, acceptDraw, declineDraw } = require('./onOfferDraw');
@@ -53,7 +53,7 @@ function handleGameRoute(ws, message) {
             offerDraw(ws, game);
             break;
         case 'acceptdraw':
-            acceptDraw(ws, game)
+            acceptDraw(ws, game);
             break;
         case 'declinedraw':
             declineDraw(ws, game);
@@ -68,11 +68,11 @@ function handleGameRoute(ws, message) {
             onReport(ws, game, message.value);
             break;
         default:
-            return console.error(`Unsupported action ${message.action} in game route.`)
+            return console.error(`Unsupported action ${message.action} in game route.`);
     }
 }
 
 
 module.exports = {
     handleGameRoute
-}
+};

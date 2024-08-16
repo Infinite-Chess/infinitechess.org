@@ -7,14 +7,14 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js')
+const { Socket } = require('../TypeDefinitions.js');
 // eslint-disable-next-line no-unused-vars
-const { Invite, isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } = require('./inviteutility.js')
+const { Invite, isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } = require('./inviteutility.js');
 const wsutility = require('../wsutility.js');
 const math1 = require('../math1.js');
 const { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } = require('./invitessubscribers.js');
 
-const { getActiveGameCount } = require('../gamemanager/gamecount')
+const { getActiveGameCount } = require('../gamemanager/gamecount');
 
 //-------------------------------------------------------------------------------------------
 
@@ -55,10 +55,10 @@ const timersBrowser = {};
  */
 function getPublicInvitesListSafe() {
     /** @type {Invite[]} */
-    const deepCopiedInvites = math1.deepCopyObject(invites)
+    const deepCopiedInvites = math1.deepCopyObject(invites);
     // Remove private invites
     for (let i = deepCopiedInvites.length - 1; i >= 0; i--) { // Iterate backwards because we are destructive
-        const thisInvite = deepCopiedInvites[i]
+        const thisInvite = deepCopiedInvites[i];
         if (isInvitePrivate(thisInvite)) deepCopiedInvites.splice(i, 1); // Delete
     }
     // Remove sensitive information
@@ -73,7 +73,7 @@ function getPublicInvitesListSafe() {
 function removeSensitiveInfoFromInvitesList(copyOfInvitesList) {
     return copyOfInvitesList.map(function(thisInvite, index, copyOfInvitesList) {
         return makeInviteSafe(thisInvite);
-    })
+    });
 }
 
 /**
@@ -87,7 +87,7 @@ function addMyPrivateInviteToList(ws, copyOfInvitesList) {
         if (isInvitePublic(invite)) continue; // Next invite, this one isn't private
         if (!isInviteOurs(ws, invite)) continue; // Doesn't belong to us
         const inviteSafeCopy = safelyCopyInvite(invite); // Makes a deep copy and removes sensitive information
-        copyOfInvitesList.push(inviteSafeCopy)
+        copyOfInvitesList.push(inviteSafeCopy);
     }
     return copyOfInvitesList;
 }
@@ -105,7 +105,7 @@ function broadcastInvites() {
     const currentGameCount = getActiveGameCount();
 
     const subscribedClients = getInviteSubscribers();
-    for (let id of Object.keys(subscribedClients)) {
+    for (const id of Object.keys(subscribedClients)) {
         const newInvitesListCopy = math1.deepCopyObject(newInvitesList);
         sendClientInvitesList(subscribedClients[id], { invitesList: newInvitesListCopy, currentGameCount });
     }
@@ -121,9 +121,9 @@ function broadcastInvites() {
  * @param {number} [options.replyto] - The incoming websocket message ID, to include in the reply, if applicable.
  */
 function sendClientInvitesList(ws, { invitesList = getPublicInvitesListSafe(), currentGameCount = getActiveGameCount(), replyto } = {}) {
-    invitesList = addMyPrivateInviteToList(ws, invitesList)
-    const message = { invitesList, currentGameCount }
-    ws.metadata.sendmessage(ws, "invites", "inviteslist", message, replyto) // In order: socket, sub, action, value
+    invitesList = addMyPrivateInviteToList(ws, invitesList);
+    const message = { invitesList, currentGameCount };
+    ws.metadata.sendmessage(ws, "invites", "inviteslist", message, replyto); // In order: socket, sub, action, value
 }
 
 /**
@@ -137,11 +137,11 @@ function addInvite(ws, invite, replyto) {
     invites.push(invite);
 
     if (isInvitePublic(invite)) onPublicInvitesChange();
-    else sendClientInvitesList(ws, { replyto }) // Send them the new list after their invite creation!
+    else sendClientInvitesList(ws, { replyto }); // Send them the new list after their invite creation!
 
     if (printNewInviteCreationsAndDeletions) {
-        if (isInvitePrivate(invite)) console.log(`Created PRIVATE invite for user ${JSON.stringify(invite.owner)}`)
-        else                         console.log(`Created invite for user ${JSON.stringify(invite.owner)}`)
+        if (isInvitePrivate(invite)) console.log(`Created PRIVATE invite for user ${JSON.stringify(invite.owner)}`);
+        else                         console.log(`Created invite for user ${JSON.stringify(invite.owner)}`);
     }
 }
 
@@ -199,7 +199,7 @@ function existingInviteHasID(id) {
  */
 function getInviteAndIndexByID(id) {
     for (let i = 0; i < invites.length; i++) {
-        if (id === invites[i].id) return { invite: invites[i], index: i }
+        if (id === invites[i].id) return { invite: invites[i], index: i };
     }
 }
 
@@ -221,9 +221,9 @@ function findSocketFromOwner(owner) { // { member/browser }
         for (const ws of Object.values(subscribedClients)) {
             if (ws.metadata['browser-id'] === owner.browser) return ws;
         }
-    } else return console.error(`Cannot find socket from owner of invite when owner does not have a member nor browser property! Owner: ${JSON.stringify(owner)}`)
+    } else return console.error(`Cannot find socket from owner of invite when owner does not have a member nor browser property! Owner: ${JSON.stringify(owner)}`);
 
-    console.log(`Unable to find a socket subbed to the invites list that belongs to ${JSON.stringify(owner)}!`)
+    console.log(`Unable to find a socket subbed to the invites list that belongs to ${JSON.stringify(owner)}!`);
 }
 
 /**
@@ -234,7 +234,7 @@ function findSocketFromOwner(owner) { // { member/browser }
  * @param {Socket} ws 
  */
 function subToInvitesList(ws) { // data: { route, action, value, id }
-    if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
+    if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
     // if (ws.metadata.subscriptions.invites) return; // Already subscribed
 
     addSocketToInvitesSubs(ws);
@@ -244,7 +244,7 @@ function subToInvitesList(ws) { // data: { route, action, value, id }
 
 // Set closureNotByChoice to true if you don't immediately want to delete their invite, but say after 5 seconds.
 function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action, value, id }
-    removeSocketFromInvitesSubs(ws)
+    removeSocketFromInvitesSubs(ws);
 
     // One day this could be modified to not delete their existing invite
     // IF THEY have another socket connected!
@@ -257,8 +257,8 @@ function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action
     // The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
     // console.log("Setting a 5-second timer to delete a user's invites!")
 
-    if (ws.metadata.user) timersMember[ws.metadata.user] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws)
-    if (ws.metadata['browser-id']) timersBrowser[ws.metadata['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws)
+    if (ws.metadata.user) timersMember[ws.metadata.user] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws);
+    if (ws.metadata['browser-id']) timersBrowser[ws.metadata['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws);
 }
 
 /**
@@ -267,11 +267,11 @@ function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action
  */
 function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws) {
     if (ws.metadata.user) {
-        clearTimeout(timersMember[ws.metadata.user])
-        delete timersMember[ws.metadata.user]
+        clearTimeout(timersMember[ws.metadata.user]);
+        delete timersMember[ws.metadata.user];
     } if (ws.metadata['browser-id']) {
-        clearTimeout(timersBrowser[ws.metadata['browser-id']])
-        delete timersBrowser[ws.metadata['browser-id']]
+        clearTimeout(timersBrowser[ws.metadata['browser-id']]);
+        delete timersBrowser[ws.metadata['browser-id']];
     }
 }
 
@@ -289,8 +289,8 @@ function deleteUsersExistingInvite(ws) { // Set dontBroadcastChange to true if y
         const invite = invites[i];
         if (!isInviteOurs(ws, invite)) continue;
         if (isInvitePublic(invite)) deleted1PublicInvite = true;
-        invites.splice(i, 1) // Delete the invite.
-        console.log(`Deleted users invite: ${JSON.stringify(invite.owner)}`)
+        invites.splice(i, 1); // Delete the invite.
+        console.log(`Deleted users invite: ${JSON.stringify(invite.owner)}`);
     }
     return deleted1PublicInvite;
 }
@@ -305,11 +305,11 @@ function deleteMembersExistingInvite(ws) {
     if (!member) return; // No username (guest), no invite!
     let deleted1PublicInvite = false;
     for (let i = invites.length - 1; i >= 0; i--) {
-        const invite = invites[i]
+        const invite = invites[i];
         if (member !== invite.owner.member) continue;
         if (isInvitePublic(invite)) deleted1PublicInvite = true;
-        invites.splice(i, 1) // Delete the invite.
-        console.log(`Deleted members invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
+        invites.splice(i, 1); // Delete the invite.
+        console.log(`Deleted members invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
     }
     if (deleted1PublicInvite) onPublicInvitesChange();
 }
@@ -324,11 +324,11 @@ function deleteBrowsersExistingInvite(ws) {
     if (!browser) return; // No browser-id (logged in), no invite!
     let deleted1PublicInvite = false;
     for (let i = invites.length - 1; i >= 0; i--) {
-        const invite = invites[i]
+        const invite = invites[i];
         if (browser !== invite.owner.browser) continue;
         if (isInvitePublic(invite)) deleted1PublicInvite = true;
-        invites.splice(i, 1) // Delete the invite.
-        console.log(`Deleted browsers invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
+        invites.splice(i, 1); // Delete the invite.
+        console.log(`Deleted browsers invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
     }
     if (deleted1PublicInvite) onPublicInvitesChange();
 }
@@ -339,14 +339,14 @@ function deleteBrowsersExistingInvite(ws) {
  * @param {string} usernameLowercase 
  */
 function deleteAllInvitesOfMember(usernameLowercase) {
-    if (usernameLowercase == null) return console.error("Cannot delete all invites of member without their username.")
+    if (usernameLowercase == null) return console.error("Cannot delete all invites of member without their username.");
 
     let publicInviteDeleted = false;
     invites = invites.filter((invite) => { // { id, owner, variant, clock, color, rated, publicity }
-        const inviteMatches = invite.owner.member === usernameLowercase
+        const inviteMatches = invite.owner.member === usernameLowercase;
         if (inviteMatches && isInvitePublic(invite)) publicInviteDeleted = true;
         return !inviteMatches;
-    })
+    });
     if (publicInviteDeleted) onPublicInvitesChange();
 }
 

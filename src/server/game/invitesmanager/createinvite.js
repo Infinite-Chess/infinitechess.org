@@ -12,14 +12,14 @@ const { logEvents } = require('../../middleware/logEvents.js');
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js')
+const { Socket } = require('../TypeDefinitions.js');
 // eslint-disable-next-line no-unused-vars
-const { Invite } = require('./inviteutility.js')
+const { Invite } = require('./inviteutility.js');
 const wsutility = require('../wsutility.js');
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
-const math1 = require('../math1.js')
-const variant1 = require('../variant1.js')
+const math1 = require('../math1.js');
+const variant1 = require('../variant1.js');
 const clockweb = require('../clockweb.js');
 const { getDisplayNameOfPlayer } = require('../gamemanager/gameutility.js');
 const { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } = require('./invitesmanager.js');
@@ -39,12 +39,12 @@ const { isServerRestarting } = require('../updateServerRestart.js');
  * @param {*} messageContents - The incoming socket message that SHOULD contain the invite properties!
  * @param {number} messageID - The ID of the incoming socket message. This is used for the replyto properties on ther reponse.
  */
-async function createInvite (ws, messageContents, messageID) { // invite: { id, owner, variant, clock, color, rated, publicity } 
+async function createInvite(ws, messageContents, messageID) { // invite: { id, owner, variant, clock, color, rated, publicity } 
     if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game'); // Can't create invite because they are already in a game
 
 
     // Make sure they don't already have an existing invite
-    if (userHasInvite(ws)) return sendNotify(ws, 'server.javascript.ws-player_already_has_invite')
+    if (userHasInvite(ws)) return sendNotify(ws, 'server.javascript.ws-player_already_has_invite');
     // This allows them to spam the button without receiving errors.
     // if (userHasInvite(ws)) return;
 
@@ -55,15 +55,15 @@ async function createInvite (ws, messageContents, messageID) { // invite: { id, 
     if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
 
     // Validate invite parameters, detect cheating
-    if (isCreatedInviteExploited(invite)) return reportForExploitingInvite(ws, invite)
+    if (isCreatedInviteExploited(invite)) return reportForExploitingInvite(ws, invite);
 
     // Invite has all legal parameters! Create the invite...
 
     // Who is the owner of the invite?
-    const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] }
+    const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] };
     invite.owner = owner;
 
-    do { invite.id = math1.generateID(5) } while (existingInviteHasID(invite.id))
+    do { invite.id = math1.generateID(5); } while (existingInviteHasID(invite.id));
 
     addInvite(ws, invite);
 }
@@ -82,7 +82,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 
     // Is it an object? (This may pass if it is an array, but arrays won't crash when accessing property names, so it doesn't matter. It will be rejected because it doesn't have the required properties.)
     // We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
-    if (typeof messageContents !== 'object' || messageContents === null) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot create invite when incoming socket message body is not an object!" , replyto)
+    if (typeof messageContents !== 'object' || messageContents === null) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot create invite when incoming socket message body is not an object!" , replyto);
 
     /**
      * What properties should the invite have from the incoming socket message?
@@ -102,10 +102,10 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
     const invite = {};
 
     let id;
-    do { id = math1.generateID(IDLengthOfInvites) } while (existingInviteHasID(messageContents.id))
+    do { id = math1.generateID(IDLengthOfInvites); } while (existingInviteHasID(messageContents.id));
     invite.id = id;
 
-    const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] }
+    const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] };
     invite.owner = owner;
     invite.name = getDisplayNameOfPlayer(owner);
 
@@ -152,13 +152,13 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
  * @param {Invite} invite - The exploited invite
  */
 function reportForExploitingInvite(ws, invite) {
-    ws.metadata.sendmessage(ws, "general", "printerror", "You cannot modify invite parameters (try refreshing).") // In order: socket, sub, action, value
+    ws.metadata.sendmessage(ws, "general", "printerror", "You cannot modify invite parameters (try refreshing)."); // In order: socket, sub, action, value
 
     let logText;
-    if (ws.metadata.user) logText = `User ${ws.metadata.user} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
-    else logText = `Browser ${ws.metadata["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
+    if (ws.metadata.user) logText = `User ${ws.metadata.user} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
+    else logText = `Browser ${ws.metadata["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
 
-    logEvents(logText, 'hackLog.txt', { print: true }) // Log the exploit to the hackLog!
+    logEvents(logText, 'hackLog.txt', { print: true }); // Log the exploit to the hackLog!
 }
 
 /**
@@ -179,7 +179,7 @@ async function isAllowedToCreateInvite(ws) {
     printActiveGameCount();
     const timeUntilRestart = getMinutesUntilServerRestart();
     const message = timeUntilRestart ? 'server.javascript.ws-server_restarting' : 'server.javascript.ws-server_under_maintenance'; 
-    sendNotify(ws, message, timeUntilRestart)
+    sendNotify(ws, message, timeUntilRestart);
 
     return false; // NOT allowed to make an invite!
 }
@@ -187,4 +187,4 @@ async function isAllowedToCreateInvite(ws) {
 
 module.exports = {
     createInvite
-}
+};

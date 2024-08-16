@@ -9,14 +9,14 @@ const { logEvents } = require('../../middleware/logEvents.js');
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js')
+const { Socket } = require('../TypeDefinitions.js');
 // eslint-disable-next-line no-unused-vars
-const { Invite, isInviteOurs } = require('./inviteutility.js')
+const { Invite, isInviteOurs } = require('./inviteutility.js');
 const wsutility = require('../wsutility.js');
 const sendNotify = wsutility.sendNotify;
 const { createGame } = require('../gamemanager/gamemanager.js');
 const { removeSocketFromInvitesSubs } = require('./invitessubscribers.js');
-const { broadcastGameCountToInviteSubs } = require('../gamemanager/gamecount')
+const { broadcastGameCountToInviteSubs } = require('../gamemanager/gamecount');
 const { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } = require('./invitesmanager.js');
 const { isSocketInAnActiveGame } = require('../gamemanager/activeplayers.js');
 
@@ -35,15 +35,15 @@ function acceptInvite(ws, messageContents) { // { id, isPrivate }
 
 
     // Does the invite still exist?
-    const inviteAndIndex = getInviteAndIndexByID(id) // { invite, index }
+    const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index }
     if (!inviteAndIndex) return informThemGameAborted(ws, isPrivate, id);
 
     const { invite, index } = inviteAndIndex;
 
     // Make sure they are not accepting their own.
     if (isInviteOurs(ws, invite)) {
-        const errString = `Player tried to accept their own invite! Socket: ${wsutility.stringifySocketMetadata(ws)}`
-        logEvents(errString, 'hackLog.txt', { print: true }) // Log the exploit to the hackLog!
+        const errString = `Player tried to accept their own invite! Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+        logEvents(errString, 'hackLog.txt', { print: true }); // Log the exploit to the hackLog!
         return sendNotify(ws, "server.javascript.ws-accept_own_invite");
     }
 
@@ -62,7 +62,7 @@ function acceptInvite(ws, messageContents) { // { id, isPrivate }
 
     const player1Socket = findSocketFromOwner(invite.owner); // Could be undefined occasionally
     const player2Socket = ws;
-    createGame(invite, player1Socket, player2Socket)
+    createGame(invite, player1Socket, player2Socket);
 
     // Unsubscribe them both from the invites subscription list.
     if (player1Socket) removeSocketFromInvitesSubs(player1Socket); // Could be undefined occasionally
@@ -107,11 +107,11 @@ function verifyMessageContents(messageContents) {
  */
 function informThemGameAborted(ws, isPrivate, inviteID) {
     const errString = isPrivate ? "server.javascript.ws-invalid_code" : "server.javascript.ws-game_aborted";
-    if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${wsutility.stringifySocketMetadata(ws)}`)
+    if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${wsutility.stringifySocketMetadata(ws)}`);
     return sendNotify(ws, errString);
 }
 
 
 module.exports = {
     acceptInvite
-}
+};

@@ -9,7 +9,7 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-const { Game } = require('../TypeDefinitions')
+const { Game } = require('../TypeDefinitions');
 const { logEvents } = require('../../middleware/logEvents');
 
 //--------------------------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ const { logEvents } = require('../../middleware/logEvents');
  * 
  * THIS MUST ALWAYS MATCH THE CLIENT-SIDE!!!!
  */
-const movesBetweenDrawOffers = 2
+const movesBetweenDrawOffers = 2;
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ function hasColorOfferedDrawTooFast(game, color) {
  * @param {string} color - The color of the player extending the offer
  */
 function openDrawOffer(game, color) {
-    if (isDrawOfferOpen(game)) return logEvents("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt", { print: true })
+    if (isDrawOfferOpen(game)) return logEvents("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt", { print: true });
     game.drawOffers.lastOfferPly[color] = game.moves.length;
     game.drawOffers.state = color;
 }
@@ -91,4 +91,4 @@ module.exports = {
     hasColorOfferedDrawTooFast,
     openDrawOffer,
     closeDrawOffer,
-}
+};

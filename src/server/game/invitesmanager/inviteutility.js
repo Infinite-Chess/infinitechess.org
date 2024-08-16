@@ -5,8 +5,8 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js')
-const math1 = require('../math1.js')
+const { Socket } = require('../TypeDefinitions.js');
+const math1 = require('../math1.js');
 
 //-------------------------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ const math1 = require('../math1.js')
  * @returns {boolean}
  */
 function isInvitePrivate(invite) {
-    return invite.publicity === 'private'
+    return invite.publicity === 'private';
 }
 
 /**
@@ -40,7 +40,7 @@ function isInvitePrivate(invite) {
  * @returns {boolean}
  */
 function isInvitePublic(invite) {
-    return invite.publicity === 'public'
+    return invite.publicity === 'public';
 }
 
 /**
@@ -73,7 +73,7 @@ function safelyCopyInvite(invite) {
  */
 function isInviteOurs(ws, invite) {
     return ws.metadata.user && ws.metadata.user === invite.owner.member
-        || ws.metadata['browser-id'] && ws.metadata['browser-id'] === invite.owner.browser
+        || ws.metadata['browser-id'] && ws.metadata['browser-id'] === invite.owner.browser;
 }
 
 //-------------------------------------------------------------------------------------------
@@ -84,4 +84,4 @@ module.exports = {
     makeInviteSafe,
     safelyCopyInvite,
     isInviteOurs,
-}
+};

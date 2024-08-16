@@ -17,7 +17,7 @@ const { ensureJSONString } = require('../../utility/JSONUtils');
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions')
+const { Socket, Game } = require('../TypeDefinitions');
 const variant1 = require('../variant1');
 const math1 = require('../math1');
 const clockweb = require('../clockweb');
@@ -73,7 +73,7 @@ const gameutility = (function() {
                 state: undefined,
                 lastOfferPly: {}
             },
-        }
+        };
 
         if (!newGame.untimed) { // Set the start time and increment properties
             const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
@@ -143,7 +143,7 @@ const gameutility = (function() {
                 player2Color = 'white';
             }
         }
-        return { white, black, player1Color, player2Color }
+        return { white, black, player1Color, player2Color };
     }
 
     /**
@@ -154,24 +154,24 @@ const gameutility = (function() {
      * @param {Object} options - An object that may contain the option `sendGameInfo`, that when *true* won't send the game information over. Default: *true*
      */
     function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo = true } = {}) {
-        if (!playerSocket) return console.error(`Cannot subscribe client to game when they don't have an open socket! ${game[playerColor]}`)
-        if (!playerColor) return console.error(`Cannot subscribe client to game without a color!`)
+        if (!playerSocket) return console.error(`Cannot subscribe client to game when they don't have an open socket! ${game[playerColor]}`);
+        if (!playerColor) return console.error(`Cannot subscribe client to game without a color!`);
 
         // 1. Attach their socket to the game for receiving updates
         if (playerColor === 'white') {
             // Tell the currently connected window that another window opened
             if (game.whiteSocket) {
-                game.whiteSocket.metadata.sendmessage(game.whiteSocket, 'game','leavegame')
-                unsubClientFromGame(game, game.whiteSocket, { sendMessage: false })
+                game.whiteSocket.metadata.sendmessage(game.whiteSocket, 'game','leavegame');
+                unsubClientFromGame(game, game.whiteSocket, { sendMessage: false });
             }
-            game.whiteSocket = playerSocket
+            game.whiteSocket = playerSocket;
         } else { // 'black'
             // Tell the currently connected window that another window opened
             if (game.blackSocket) {
-                game.blackSocket.metadata.sendmessage(game.blackSocket, 'game','leavegame')
-                unsubClientFromGame(game, game.blackSocket, { sendMessage: false })
+                game.blackSocket.metadata.sendmessage(game.blackSocket, 'game','leavegame');
+                unsubClientFromGame(game, game.blackSocket, { sendMessage: false });
             }
-            game.blackSocket = playerSocket
+            game.blackSocket = playerSocket;
         }
 
         // 2. Modify their socket metadata to add the 'game', subscription,
@@ -179,7 +179,7 @@ const gameutility = (function() {
         playerSocket.metadata.subscriptions.game = {
             id: game.id,
             color: playerColor
-        }
+        };
 
         // 3. Send the game information, unless this is a reconnection,
         // at which point we verify if they are in sync
@@ -198,7 +198,7 @@ const gameutility = (function() {
         if (!ws) return; // Socket undefined, can't unsub.
 
         // 1. Detach their socket from the game so we no longer send updates
-        removePlayerSocketFromGame(game, ws.metadata.subscriptions.game.color)
+        removePlayerSocketFromGame(game, ws.metadata.subscriptions.game.color);
 
         // 2. Remove the game key-value pair from the sockets metadata subscription list.
         delete ws.metadata.subscriptions.game;
@@ -206,7 +206,7 @@ const gameutility = (function() {
         // We inform their opponent they have disconnected inside js when we call this method.
 
         // Tell the client to unsub on their end, IF the socket isn't closing.
-        if (sendMessage && ws.readyState === WebSocket.OPEN) ws.metadata.sendmessage(ws, 'game', 'unsub')
+        if (sendMessage && ws.readyState === WebSocket.OPEN) ws.metadata.sendmessage(ws, 'game', 'unsub');
     }
 
     /**
@@ -218,7 +218,7 @@ const gameutility = (function() {
     function removePlayerSocketFromGame(game, color) {
         if      (color === 'white') game.whiteSocket = undefined;
         else if (color === 'black') game.blackSocket = undefined;
-        else console.error(`Cannot remove player socket from game when their color is ${color}.`)
+        else console.error(`Cannot remove player socket from game when their color is ${color}.`);
     }
 
     /**
@@ -230,7 +230,7 @@ const gameutility = (function() {
      * @param {string} playerColor - The color the are. "white" / "black"
      */
     function sendGameInfoToPlayer(game, playerSocket, playerColor) {
-        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated)
+        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated);
 
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
         const gameOptions = {
@@ -254,35 +254,35 @@ const gameutility = (function() {
             // REMOVE draw offer details from here and put below!
             whiteDrawOfferMove: game.drawOffers.lastOfferPly.white,
             blackDrawOfferMove: game.drawOffers.lastOfferPly.black
-        }
+        };
         // Include additional stuff if relevant
         if (!game.untimed) {
-            gameOptions.timerWhite = game.timerWhite
-            gameOptions.timerBlack = game.timerBlack
-            gameOptions.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt
+            gameOptions.timerWhite = game.timerWhite;
+            gameOptions.timerBlack = game.timerBlack;
+            gameOptions.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt;
         }
 
         // If true, we know it's their opponent that's afk, because this client
         // just refreshed the page and would have cancelled the timer if they were the ones afk.
-        if (isAFKTimerActive(game)) gameOptions.autoAFKResignTime = game.autoAFKResignTime
+        if (isAFKTimerActive(game)) gameOptions.autoAFKResignTime = game.autoAFKResignTime;
 
         // If their opponent has disconnected, send them that info too.
-        const opponentColor = math1.getOppositeColor(playerColor)
+        const opponentColor = math1.getOppositeColor(playerColor);
         if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
             gameOptions.disconnect = {
                 autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
                 wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
-            }
+            };
         }
 
         // SEND DRAW OFFER DETAILS HERE
         // ...
 
         // If the server is restarting, include the time too.
-        const timeServerRestarting = getTimeServerRestarting()
+        const timeServerRestarting = getTimeServerRestarting();
         if (timeServerRestarting !== false) gameOptions.serverRestartingAt = timeServerRestarting;
 
-        playerSocket.metadata.sendmessage(playerSocket, 'game', 'joingame', gameOptions)
+        playerSocket.metadata.sendmessage(playerSocket, 'game', 'joingame', gameOptions);
     }
 
     /**
@@ -296,7 +296,7 @@ const gameutility = (function() {
      */
     function resyncToGame(ws, game, colorPlayingAs, replyToMessageID) {
         // If their socket isn't subscribed, connect them to the game!
-        if (!ws.metadata.subscriptions.game) subscribeClientToGame(game, ws, colorPlayingAs, { sendGameInfo: false })
+        if (!ws.metadata.subscriptions.game) subscribeClientToGame(game, ws, colorPlayingAs, { sendGameInfo: false });
 
         // This function ALREADY sends all the information the client needs to resync!
         sendGameUpdateToColor(game, colorPlayingAs, { replyTo: replyToMessageID });
@@ -308,8 +308,8 @@ const gameutility = (function() {
      * @param {Game} game - The game
      */
     function sendGameUpdateToBothPlayers(game) {
-        sendGameUpdateToColor(game, 'white')
-        sendGameUpdateToColor(game, 'black')
+        sendGameUpdateToColor(game, 'white');
+        sendGameUpdateToColor(game, 'black');
     }
 
     /**
@@ -327,7 +327,7 @@ const gameutility = (function() {
         const messageContents = {
             gameConclusion: game.gameConclusion,
             moves: game.moves, // Send the final move list so they can make sure they're in sync.
-        }
+        };
         // Include timer info if it's timed
         if (!game.untimed) {
             messageContents.timerWhite = game.timerWhite;
@@ -342,22 +342,22 @@ const gameutility = (function() {
         if (game.drawOffers.lastOfferPly.black) messageContents.blackDrawOfferMove = game.drawOffers.lastOfferPly.black;
 
         // If their opponent has disconnected, send them that info too.
-        const opponentColor = math1.getOppositeColor(color)
+        const opponentColor = math1.getOppositeColor(color);
         if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
             messageContents.disconnect = {
                 autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
                 wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
-            }
+            };
         }
 
         // ALSO SEND OPPONENT AFK STUFF
         // ...
 
         // Also send the time the server is restarting, if it is
-        const timeServerRestarting = getTimeServerRestarting()
+        const timeServerRestarting = getTimeServerRestarting();
         if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;
 
-        playerSocket.metadata.sendmessage(playerSocket, "game", "gameupdate", messageContents, replyTo)
+        playerSocket.metadata.sendmessage(playerSocket, "game", "gameupdate", messageContents, replyTo);
     }
 
     /**
@@ -367,7 +367,7 @@ const gameutility = (function() {
      * @returns {string} The display name of the player.
      */
     function getDisplayNameOfPlayer(player) { // { member/browser }
-        return player.member ? getUsernameCaseSensitive(player.member) : "(Guest)"
+        return player.member ? getUsernameCaseSensitive(player.member) : "(Guest)";
     }
 
     /**
@@ -383,16 +383,16 @@ const gameutility = (function() {
 
         // First line of log...
 
-        const playerWhite = game.white.member || `(${game.white.browser})`
-        const playerBlack = game.black.member || `(${game.black.browser})`
-        const playersString = `White: ${playerWhite}. Black: ${playerBlack}.`
+        const playerWhite = game.white.member || `(${game.white.browser})`;
+        const playerBlack = game.black.member || `(${game.black.browser})`;
+        const playersString = `White: ${playerWhite}. Black: ${playerBlack}.`;
 
         const gameToLog = { // This is all the information I want to log. Everything else will be in the ICN.
             id: game.id,
             publicity: game.publicity,
             timerWhite: game.timerWhite,
             timerBlack: game.timerBlack
-        }
+        };
         const stringifiedGame = JSON.stringify(gameToLog);
 
         // Second line of log is the ICN...
@@ -411,8 +411,8 @@ const gameutility = (function() {
          * moves
          * gameRules
          */
-        const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(game.gameConclusion)
-        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated)
+        const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(game.gameConclusion);
+        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated);
         const positionStuff = variant1.getStartingPositionOfVariant({ Variant: game.variant, Date }); // 3 properties: position, positionString, and specialRights.
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
         const metadata = {
@@ -427,8 +427,8 @@ const gameutility = (function() {
             UTCTime,
             Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
             Termination: wincondition1.getTerminationInEnglish(condition)
-        }
-        const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position)
+        };
+        const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position);
         delete gameRules.moveRule;
         metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant1 has gotten the game rules.
         const primedGamefile = {
@@ -439,20 +439,20 @@ const gameutility = (function() {
             startingPosition: positionStuff.positionString, // Technically not needed, as we set `specifyPosition` to false
             moves: game.moves,
             gameRules
-        }
+        };
 
-        let logText = `Players: ${playersString} Game: ${stringifiedGame}` // First line
+        let logText = `Players: ${playersString} Game: ${stringifiedGame}`; // First line
 
         let ICN = 'ICN UNAVAILABLE';
         try {
             ICN = formatconverter1.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition: false });
         } catch (e) {
-            const errText = `Error when logging game and converting to ICN! The primed gamefile:\n${JSON.stringify(primedGamefile)}\n${e.stack}`
-            await logEvents(errText, 'errLog.txt', { print: true })
-            await logEvents(errText, 'hackLog.txt', { print: true })
+            const errText = `Error when logging game and converting to ICN! The primed gamefile:\n${JSON.stringify(primedGamefile)}\n${e.stack}`;
+            await logEvents(errText, 'errLog.txt', { print: true });
+            await logEvents(errText, 'hackLog.txt', { print: true });
         }
     
-        logText += `\n${ICN}` // Add line 2
+        logText += `\n${ICN}`; // Add line 2
         await logEvents(logText, 'gameLog.txt');
     }
 
@@ -493,10 +493,10 @@ const gameutility = (function() {
         const ws = color === 'white' ? game.whiteSocket : game.blackSocket;
         if (!ws) return; // They are not connected, can't send message
         if (sub === 'general') {
-            if (action === 'notify') return sendNotify(ws, value) // The value needs translating
-            if (action === 'notifyerror') return sendNotifyError(ws, value) // The value needs translating
+            if (action === 'notify') return sendNotify(ws, value); // The value needs translating
+            if (action === 'notifyerror') return sendNotifyError(ws, value); // The value needs translating
         }
-        ws.metadata.sendmessage(ws, sub, action, value) // Value doesn't need translating, send normally.
+        ws.metadata.sendmessage(ws, sub, action, value); // Value doesn't need translating, send normally.
     }
 
     /**
@@ -518,7 +518,7 @@ const gameutility = (function() {
         const whiteSocket = game.whiteSocket;
         const blackSocket = game.blackSocket;
         const originalAutoTimeLossTimeoutID = game.autoTimeLossTimeoutID;
-        const originalAutoAFKResignTimeoutID = game.autoAFKResignTimeoutID
+        const originalAutoAFKResignTimeoutID = game.autoAFKResignTimeoutID;
         const originalDeleteTimeoutID = game.deleteTimeoutID;
         const originalDisconnect = game.disconnect;
 
@@ -591,17 +591,17 @@ const gameutility = (function() {
      * @param {Game} game - The game
      */
     function sendUpdatedClockToColor(game, color) {
-        if (color !== 'white' && color !== 'black') return console.error(`color must be white or black! ${color}`)
+        if (color !== 'white' && color !== 'black') return console.error(`color must be white or black! ${color}`);
         if (game.untimed) return; // Don't send clock values in an untimed game
 
         const message = {
             timerWhite: game.timerWhite,
             timerBlack: game.timerBlack,
             timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
-        }
+        };
         const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
         if (!playerSocket) return; // They are not connected, can't send message
-        playerSocket.metadata.sendmessage(playerSocket, "game", "clock", message)
+        playerSocket.metadata.sendmessage(playerSocket, "game", "clock", message);
     }
 
     /**
@@ -610,7 +610,7 @@ const gameutility = (function() {
      * @param {string} color - The color of the player to send the latest move to
      */
     function sendMoveToColor(game, color) {
-        if (color !== 'white' && color !== 'black') return console.error(`colorJustMoved must be white or black! ${color}`)
+        if (color !== 'white' && color !== 'black') return console.error(`colorJustMoved must be white or black! ${color}`);
         
         const message = {
             move: movesscript1.getLastMove(game.moves),
@@ -619,10 +619,10 @@ const gameutility = (function() {
             timerWhite: game.timerWhite,
             timerBlack: game.timerBlack,
             timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
-        }
+        };
         const sendToSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
         if (!sendToSocket) return; // They are not connected, can't send message
-        sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message)
+        sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message);
     }
 
     /**
@@ -653,8 +653,8 @@ const gameutility = (function() {
         sendMoveToColor,
         getDisplayNameOfPlayer,
         cancelDeleteGameTimer
-    })
+    });
 
-})()
+})();
 
 module.exports = gameutility;

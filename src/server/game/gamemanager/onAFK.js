@@ -5,9 +5,9 @@
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions')
+const { Socket, Game } = require('../TypeDefinitions');
 const gameutility = require('./gameutility');
-const math1 = require('../math1')
+const math1 = require('../math1');
 const { onPlayerLostByAbandonment } = require('./gamemanager');
 const { cancelAutoAFKResignTimer } = require('./afkdisconnect');
 
@@ -33,25 +33,25 @@ const durationOfAutoResignTimerMillis = 1000 * 20; // 20 seconds.
 function onAFK(ws, game) {
     // console.log("Client alerted us they are AFK.")
 
-    if (!game) return console.error("Client submitted they are afk when they don't belong in a game.")
+    if (!game) return console.error("Client submitted they are afk when they don't belong in a game.");
     const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
-    if (gameutility.isGameOver(game)) return console.error("Client submitted they are afk when the game is already over. Ignoring.")
+    if (gameutility.isGameOver(game)) return console.error("Client submitted they are afk when the game is already over. Ignoring.");
 
     // Verify it's their turn (can't lose by afk if not)
-    if (game.whosTurn !== color) return console.error("Client submitted they are afk when it's not their turn. Ignoring.")
+    if (game.whosTurn !== color) return console.error("Client submitted they are afk when it's not their turn. Ignoring.");
     
-    if (gameutility.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!")
+    if (gameutility.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!");
 
     const opponentColor = math1.getOppositeColor(color);
 
     // Start a 20s timer to auto terminate the game by abandonment.
-    game.autoAFKResignTimeoutID = setTimeout(onPlayerLostByAbandonment, durationOfAutoResignTimerMillis, game, opponentColor) // The auto resign function should have 2 arguments: The game, and the color that won.
+    game.autoAFKResignTimeoutID = setTimeout(onPlayerLostByAbandonment, durationOfAutoResignTimerMillis, game, opponentColor); // The auto resign function should have 2 arguments: The game, and the color that won.
     game.autoAFKResignTime = Date.now() + durationOfAutoResignTimerMillis;
 
     // Alert their opponent
-    const value = { autoAFKResignTime: game.autoAFKResignTime }
-    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafk', value)
+    const value = { autoAFKResignTime: game.autoAFKResignTime };
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafk', value);
 }
 
 /**
@@ -63,13 +63,13 @@ function onAFK(ws, game) {
 function onAFK_Return(ws, game) {
     // console.log("Client alerted us they no longer AFK.")
 
-    if (!game) return console.error("Client submitted they are back from being afk when they don't belong in a game.")
+    if (!game) return console.error("Client submitted they are back from being afk when they don't belong in a game.");
     const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
-    if (gameutility.isGameOver(game)) return console.error("Client submitted they are back from being afk when the game is already over. Ignoring.")
+    if (gameutility.isGameOver(game)) return console.error("Client submitted they are back from being afk when the game is already over. Ignoring.");
 
     // Verify it's their turn (can't lose by afk if not)
-    if (game.whosTurn !== color) return console.error("Client submitted they are back from being afk when it's not their turn. Ignoring.")
+    if (game.whosTurn !== color) return console.error("Client submitted they are back from being afk when it's not their turn. Ignoring.");
 
     cancelAutoAFKResignTimer(game, { alertOpponent: true });
 }
@@ -77,4 +77,4 @@ function onAFK_Return(ws, game) {
 module.exports = {
     onAFK,
     onAFK_Return
-}
+};

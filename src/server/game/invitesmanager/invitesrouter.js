@@ -20,17 +20,17 @@ function handleInviteRoute(ws, data) { // data: { route, action, value, id }
 
     switch (data.action) {
         case "createinvite":
-            createInvite(ws, data.value, data.id)
+            createInvite(ws, data.value, data.id);
             break;
         case "cancelinvite":
-            cancelInvite(ws, data.value, data.id)
+            cancelInvite(ws, data.value, data.id);
             break;
         case "acceptinvite":
             acceptInvite(ws, data.value);
             break;
         default:
-            console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
-            console.log(`Data: ${JSON.stringify(data)}`)
+            console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+            console.log(`Data: ${JSON.stringify(data)}`);
             return;
     }
 }
@@ -38,4 +38,4 @@ function handleInviteRoute(ws, data) { // data: { route, action, value, id }
 
 module.exports = {
     handleInviteRoute
-}
+};

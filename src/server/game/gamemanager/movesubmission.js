@@ -9,15 +9,15 @@ const { logEvents } = require('../../middleware/logEvents');
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions')
+const { Socket, Game } = require('../TypeDefinitions');
 const gameutility = require('./gameutility');
 const wsutility = require('../wsutility');
-const math1 = require('../math1')
+const math1 = require('../math1');
 const wincondition1 = require('../wincondition1');
 
 const { declineDraw } = require('./onOfferDraw');
 const { resyncToGame } = require('./resync');
-const { getGameByID, pushGameClock, setGameConclusion } = require('./gamemanager');
+const { pushGameClock, setGameConclusion } = require('./gamemanager');
 
 
 /**
@@ -32,8 +32,8 @@ const { getGameByID, pushGameClock, setGameConclusion } = require('./gamemanager
 function submitMove(ws, game, messageContents) {
     // They can't submit a move if they aren't subscribed to a game
     if (!ws.metadata.subscriptions.game) {
-        console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.")
-        ws.metadata.sendmessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.")
+        console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.");
+        ws.metadata.sendmessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.");
         return;
     }
 
@@ -54,8 +54,8 @@ function submitMove(ws, game, messageContents) {
     // Make sure the move number matches up. If not, they're out of sync, resync them!
     const expectedMoveNumber = game.moves.length + 1;
     if (messageContents.moveNumber !== expectedMoveNumber) {
-        const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
-        logEvents(errString, 'hackLog.txt', { print: true })
+        const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+        logEvents(errString, 'hackLog.txt', { print: true });
         return resyncToGame(ws, game);
     }
 
@@ -64,30 +64,30 @@ function submitMove(ws, game, messageContents) {
 
     // Legality checks...
     if (!doesMoveCheckOut(messageContents.move)) {
-        const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
-        console.error(errString)
-        logEvents(errString, 'hackLog.txt')
-        return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid move format.")
+        const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+        console.error(errString);
+        logEvents(errString, 'hackLog.txt');
+        return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid move format.");
     }
     if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
-        const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
-        console.error(errString)
-        logEvents(errString, 'hackLog.txt')
+        const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+        console.error(errString);
+        logEvents(errString, 'hackLog.txt');
         return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid game conclusion.");
     }
     
     game.moves.push(messageContents.move); // Add the move to the list!
     pushGameClock(game); // Flip whos turn and adjust the game properties
-    setGameConclusion(game, messageContents.gameConclusion)
+    setGameConclusion(game, messageContents.gameConclusion);
 
     // console.log(`Accepted a move! Their websocket message data:`)
     // console.log(messageContents)
     // console.log("New move list:")
     // console.log(game.moves);
 
-    declineDraw(ws, game) // Auto-decline any open draw offer on move submissions
+    declineDraw(ws, game); // Auto-decline any open draw offer on move submissions
 
-    if (gameutility.isGameOver(game)) gameutility.sendGameUpdateToColor(game, color)
+    if (gameutility.isGameOver(game)) gameutility.sendGameUpdateToColor(game, color);
     else gameutility.sendUpdatedClockToColor(game, color);
     gameutility.sendMoveToColor(game, opponentColor); // Send their move to their opponent.
 }
@@ -139,4 +139,4 @@ function doesGameConclusionCheckOut(game, gameConclusion, color) {
 
 module.exports = {
     submitMove
-}
+};

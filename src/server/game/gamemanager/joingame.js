@@ -5,7 +5,7 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-const { Game } = require('../TypeDefinitions')
+const { Game } = require('../TypeDefinitions');
 const gameutility = require('./gameutility');
 const { cancelAutoAFKResignTimer, cancelDisconnectTimer } = require('./afkdisconnect');
 
@@ -24,10 +24,10 @@ function onJoinGame(ws, game) {
 
     // Cancel the timer that auto loses them by AFK, IF IT is their turn!
     if (game.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game, { alertOpponent: true });
-    cancelDisconnectTimer(game, colorPlayingAs)
+    cancelDisconnectTimer(game, colorPlayingAs);
 }
 
 
 module.exports = {
     onJoinGame
-}
+};
