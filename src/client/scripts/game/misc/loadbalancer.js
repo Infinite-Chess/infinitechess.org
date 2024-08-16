@@ -24,21 +24,21 @@ const loadbalancer = (function() {
     let idealTimePerFrame = 0;
 
     let timeForLongTasks = 0;
-    let minLongTaskRatio = 1; // Minimum ratio of longTaskDedicatedTime : renderTime. 1 will give them equal time. 0.5 will give long tasks half as much time as rendering.
-    let damping = 1; // Amount of millis to subtract from the calculate timeForLongTasks to allow for the extra time between functions to allow 60fps
+    const minLongTaskRatio = 1; // Minimum ratio of longTaskDedicatedTime : renderTime. 1 will give them equal time. 0.5 will give long tasks half as much time as rendering.
+    const damping = 1; // Amount of millis to subtract from the calculate timeForLongTasks to allow for the extra time between functions to allow 60fps
 
 
     // Amount of time lapsed between connections to the server.  Lower = Less lag but greater server cost.
-    const refreshPeriod = 1000 // Milliseconds
-    const stayConnectedPeriod = 5000
-    const refreshPeriodAFK = 5000 // 5_000 = 5 seconds
+    const refreshPeriod = 1000; // Milliseconds
+    const stayConnectedPeriod = 5000;
+    const refreshPeriodAFK = 5000; // 5_000 = 5 seconds
 
-    let isAFK = false
-    const timeUntilAFK = { normal: 30000, dev: 2000 }  // Seconds of inactivity to pause title screen animation, saving cpu   default: 30
+    let isAFK = false;
+    const timeUntilAFK = { normal: 30000, dev: 2000 }; // Seconds of inactivity to pause title screen animation, saving cpu   default: 30
     let AFKTimeoutID;
 
-    let isHibernating = false
-    const timeUntilHibernation = 1000 * 60 * 60 // 1 hour
+    let isHibernating = false;
+    const timeUntilHibernation = 1000 * 60 * 60; // 1 hour
     // const timeUntilHibernation = 10000 // 10s for dev testing
     let hibernateTimeoutID; // ID of the timer to declare we are hibernating!
 
@@ -85,7 +85,7 @@ const loadbalancer = (function() {
 
         updateMonitorRefreshRate();
 
-        updateAFK()
+        updateAFK();
     }
 
     function updateDeltaTime(runtime) {
@@ -175,12 +175,12 @@ const loadbalancer = (function() {
 
     function restartAFKTimer() {
         clearTimeout(AFKTimeoutID);
-        AFKTimeoutID = setTimeout(onAFK, getTimeUntilAFK())
+        AFKTimeoutID = setTimeout(onAFK, getTimeUntilAFK());
     }
 
     function restartHibernateTimer() {
         clearTimeout(hibernateTimeoutID);
-        hibernateTimeoutID = setTimeout(onHibernate, timeUntilHibernation)
+        hibernateTimeoutID = setTimeout(onHibernate, timeUntilHibernation);
     }
 
     function onAFK() {
@@ -226,7 +226,7 @@ const loadbalancer = (function() {
             // THIS ALSO UNSUBS US
             // timeToDeleteInviteTimeoutID = setTimeout(websocket.unsubFromInvites, timeToDeleteInviteAfterPageHiddenMillis)
             // This ONLY cancels our invite if we have one
-            timeToDeleteInviteTimeoutID = setTimeout(invites.cancel, timeToDeleteInviteAfterPageHiddenMillis)
+            timeToDeleteInviteTimeoutID = setTimeout(invites.cancel, timeToDeleteInviteAfterPageHiddenMillis);
 
         } else {
             windowIsVisible = true;
@@ -261,5 +261,5 @@ const loadbalancer = (function() {
         gisAFK,
         gisHibernating,
         isPageHidden
-    })
+    });
 })();

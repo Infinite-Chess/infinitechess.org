@@ -9,7 +9,7 @@
 
 "use strict";
 
-const bigint = (function(){
+const bigint = (function() {
 
     // factor (scaling factor) is the number that the TRUE-bigint has been multiplied by
     // to get simulated decimal precision!
@@ -46,16 +46,16 @@ const bigint = (function(){
 
     function bigIntToString([bigInt, factor]) {
 
-        let string = bigInt.toString();
+        const string = bigInt.toString();
     
         // If the factor is 1, no need to insert a decimal point
         if (factor === 1n) return string;
     
-        const factorLength = factor.toString().length - 1;  // Subtract 1 because '10' has 1 zero, '100' has 2 zeros, etc.
+        const factorLength = factor.toString().length - 1; // Subtract 1 because '10' has 1 zero, '100' has 2 zeros, etc.
     
         if (string.length <= factorLength) {
             // If the string length is less than or equal to the factor length, pad with zeros and place a decimal at the start
-            const padding = '0'.repeat(factorLength - string.length + 1);  // +1 for the '0.' before the number
+            const padding = '0'.repeat(factorLength - string.length + 1); // +1 for the '0.' before the number
             return '0.' + padding + string;
         } else {
             // Otherwise, insert a decimal point at the appropriate position
@@ -76,10 +76,10 @@ const bigint = (function(){
     // MORE PRECISE version, but SLOWER!
     function bigIntToNumber_HighPrec([bigInt, factor]) {
         const decimal = bigInt % factor; // 259
-        const decimalPart = Number(decimal) / Number(factor) // 259 / 1000 = 0.259
+        const decimalPart = Number(decimal) / Number(factor); // 259 / 1000 = 0.259
 
         const integerBigInt = bigInt / factor; // 15.259 => 15
-        const integerPart = Number(integerBigInt) // 15
+        const integerPart = Number(integerBigInt); // 15
 
         return integerPart + decimalPart; // 15 + 0.259 => 15.259
     }
@@ -91,7 +91,7 @@ const bigint = (function(){
         if (bigint < 0) return NaN;
         const s = bigint.toString(10);
       
-        return s.length + Math.log10("0." + s.substring(0, 15))
+        return s.length + Math.log10("0." + s.substring(0, 15));
     }
 
     // Returns how many digits of the BigInt represents the decimal part,
@@ -110,6 +110,6 @@ const bigint = (function(){
         bigIntToNumber_HighPrec,
         log10,
         getDecimalCountFromScalingFactor
-    })
+    });
 
 })();

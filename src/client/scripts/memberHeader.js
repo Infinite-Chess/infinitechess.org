@@ -5,11 +5,11 @@
 
 "use strict";
 
-const memberHeader = (function(){
+const memberHeader = (function() {
 
     const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 60 * 15; // Milliseconds   15m is the server expire time for access token.
-    const cushionMillis = 10_000
-    const browserIDExpireTimeMillis = 1000 * 60 * 60 * 24 * 7 - 1000*60*60; // 7 days is the expire time for browser id's, WITH SOME cushion! (-1hr)
+    const cushionMillis = 10_000;
+    const browserIDExpireTimeMillis = 1000 * 60 * 60 * 24 * 7 - 1000 * 60 * 60; // 7 days is the expire time for browser id's, WITH SOME cushion! (-1hr)
 
     let requestOut = false;
 
@@ -52,14 +52,14 @@ const memberHeader = (function(){
 
         while (requestOut) await main.sleep(100);
 
-        const currTime = Date.now()
-        const diff = currTime - lastRefreshTime
+        const currTime = Date.now();
+        const diff = currTime - lastRefreshTime;
 
         // If it's expired, invalidate it.
         if (token && diff > (TOKEN_EXPIRE_TIME_MILLIS - cushionMillis)) token = undefined;
 
         // ...then try refreshing if we're logged in.
-        if (!token && areLoggedIn) await refreshToken()
+        if (!token && areLoggedIn) await refreshToken();
         else if (!areLoggedIn && diff > browserIDExpireTimeMillis) await refreshToken(); // Renews browser-id
 
         return token;
@@ -86,37 +86,37 @@ const memberHeader = (function(){
         let OK = false;
 
         fetch('/refresh')
-        .then(response => {
-            if (response.ok) {
-                OK = true;
-            }
-            return response.json();
-        })
-        .then(result => {
-            if (OK) { // Refresh token (from cookie) accepted!
-                token = getCookieValue('token');
-                if (!token) {
-                    console.error("Response from the server did not include a token!");
-                } else {
-                    console.log("Logged in");
+            .then(response => {
+                if (response.ok) {
+                    OK = true;
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (OK) { // Refresh token (from cookie) accepted!
+                    token = getCookieValue('token');
+                    if (!token) {
+                        console.error("Response from the server did not include a token!");
+                    } else {
+                        console.log("Logged in");
+                    }
+
+                    member = result.member;
+                } else { // Unauthorized, don't change any navigation links. Should have given us a browser-id!
+                    console.log(`Server: ${result['message']}`);
+                    areLoggedIn = false;
                 }
 
-                member = result.member;
-            } else { // Unauthorized, don't change any navigation links. Should have given us a browser-id!
-                console.log(`Server: ${result['message']}`);
-                areLoggedIn = false;
-            }
-
-            updateNavigationLinks();
-            lastRefreshTime = Date.now();
-            requestOut = false;
-        })
-        .catch(error => {
+                updateNavigationLinks();
+                lastRefreshTime = Date.now();
+                requestOut = false;
+            })
+            .catch(error => {
             // Handle the error
-            console.error('Error occurred during refreshing of token:', error);
-            // You can also set areLoggedIn to false or perform other error handling logic here
-            requestOut = false;
-        });
+                console.error('Error occurred during refreshing of token:', error);
+                // You can also set areLoggedIn to false or perform other error handling logic here
+                requestOut = false;
+            });
     }
 
     /**
@@ -141,20 +141,20 @@ const memberHeader = (function(){
      * Adds the "lng" query parameter to all navigation links.
      */
     function addLngToNavLinks() {
-      const lng = getCookieValue('i18next');
-      if (!lng) return;
+        const lng = getCookieValue('i18next');
+        if (!lng) return;
     
-      const navLinks = document.querySelectorAll('nav a');
-      navLinks.forEach(link => {
-        link.href = addLngQueryParamToLink(link);
-      });
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.href = addLngQueryParamToLink(link);
+        });
 
-      /** Adds the "lng" query parameter to the ToS link at the bottom, if it exists (it doesn't on the play page) */
-      toslink: {
-        const element_toslink = document.getElementById("toslink");
-        if (!element_toslink) break toslink;
-        element_toslink.href = addLngQueryParamToLink(element_toslink)
-      }
+        /** Adds the "lng" query parameter to the ToS link at the bottom, if it exists (it doesn't on the play page) */
+        toslink: {
+            const element_toslink = document.getElementById("toslink");
+            if (!element_toslink) break toslink;
+            element_toslink.href = addLngQueryParamToLink(element_toslink);
+        }
     }
 
     /**
@@ -210,7 +210,7 @@ const memberHeader = (function(){
         deleteToken,
         areWeLoggedIn,
         waitUntilInitialRequestBack
-    })
+    });
 
 })();
 
@@ -224,7 +224,7 @@ favicon: { // This block auto detects device theme and adjusts the browser icon 
      */
     function switchFavicon(theme) {
         if (theme === 'dark') element_favicon.href = '/img/favicon-dark.png';
-        else favicon.href = '/img/favicon-light.png';
+        else element_favicon.href = '/img/favicon-light.png';
     }
     
     if (!window.matchMedia) break favicon; // Don't create a theme-change event listener if matchMedia isn't supported.
@@ -242,17 +242,17 @@ favicon: { // This block auto detects device theme and adjusts the browser icon 
 }
 
 { // This block auto-removes the "lng" query parameter from the url, visually, without refreshing
-  function removeLngQueryParam() {
+    function removeLngQueryParam() {
     // Create a URL object from the current window location
-    const url = new URL(window.location);
+        const url = new URL(window.location);
   
-    // Remove the "lng" query parameter
-    url.searchParams.delete('lng');
+        // Remove the "lng" query parameter
+        url.searchParams.delete('lng');
   
-    // Update the browser's URL without refreshing the page
-    window.history.replaceState({}, '', url);
-  }
+        // Update the browser's URL without refreshing the page
+        window.history.replaceState({}, '', url);
+    }
  
-  // Remove the "lng" param from the url bar when the DOM content is fully loaded
-  document.addEventListener('DOMContentLoaded', removeLngQueryParam);
+    // Remove the "lng" param from the url bar when the DOM content is fully loaded
+    document.addEventListener('DOMContentLoaded', removeLngQueryParam);
 }

@@ -31,7 +31,11 @@
     "xss": "^1.0.15"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10"
+    "@eslint/js": "^9.9.0",
+    "@types/node": "^20.14.10",
+    "eslint": "^9.9.0",
+    "globals": "^15.9.0",
+    "madge": "^8.0.0"
   },
   "scripts": {
     "build": "node build.mjs",

@@ -408,7 +408,7 @@ black_koth = "Black wins by king of the hill!"
 bug_koth = "This is a bug, please report. Game ended by king of the hill."
 bug_generic = "This is a bug, please report!"
 
-[terms] # Translations are disabled for now, only language is en-US
+[terms]
 title = "Terms of Service"
 warning = ["THIS DOCUMENT IS NOT LEGALLY BINDING. We are only accountable for the English version of this document. This translation is provided solely for general informational purposes. You can access the official English version ", "here", "."]
 consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site."

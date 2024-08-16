@@ -21,85 +21,85 @@ const organizedlines = {
      * @param {gamefile} gamefile - The gamefile
      * @param {Object} [options] - An object that may contain the `appendUndefineds` option. If false, no undefined *null* placeholder pieces will be left for the mesh generation. Defaults to *true*. Set to false if you're planning on regenerating manually.
      */
-    initOrganizedPieceLists: function (gamefile, { appendUndefineds = true} = {}) {
-        if (!gamefile.ourPieces) return console.error("Cannot init the organized lines before ourPieces is defined.")
+    initOrganizedPieceLists: function(gamefile, { appendUndefineds = true} = {}) {
+        if (!gamefile.ourPieces) return console.error("Cannot init the organized lines before ourPieces is defined.");
         
         // console.log("Begin organizing lists...")
 
-        organizedlines.resetOrganizedLists(gamefile)
+        organizedlines.resetOrganizedLists(gamefile);
         // Organize each piece with a callback function.
         // We need .bind(this) to specify our parent object for the callback!
         // Otherwise it would not be able to access our gamefile's properties such as the organized lists to push to.
-        gamefileutility.forEachPieceInGame(gamefile, organizedlines.organizePiece)
+        gamefileutility.forEachPieceInGame(gamefile, organizedlines.organizePiece);
         
         // console.log("Finished organizing lists!")
 
         // Add extra undefined pieces into each type array!
-        organizedlines.initUndefineds(gamefile)
+        organizedlines.initUndefineds(gamefile);
 
-        if (appendUndefineds) organizedlines.appendUndefineds(gamefile)
+        if (appendUndefineds) organizedlines.appendUndefineds(gamefile);
     },
 
     resetOrganizedLists: function(gamefile) {
-        gamefile.piecesOrganizedByKey = {}
-        gamefile.piecesOrganizedByLines = {}
+        gamefile.piecesOrganizedByKey = {};
+        gamefile.piecesOrganizedByLines = {};
 
-        let lines = gamefile.startSnapshot.slidingPossible
-        for (let i = 0; i<lines.length; i++) {
-            gamefile.piecesOrganizedByLines[math.getKeyFromCoords(lines[i])] = {}
+        const lines = gamefile.startSnapshot.slidingPossible;
+        for (let i = 0; i < lines.length; i++) {
+            gamefile.piecesOrganizedByLines[math.getKeyFromCoords(lines[i])] = {};
         }
     },
 
     // Inserts given piece into all the organized piece lists (key, row, column...)
-    organizePiece: function (type, coords, gamefile) {
+    organizePiece: function(type, coords, gamefile) {
         if (!coords) return; // Piece is undefined, skip this one!
 
-        const piece = { type, coords }
+        const piece = { type, coords };
 
         // Organize by key
         // First, turn the coords into a key in the format 'x,y'
-        let key = math.getKeyFromCoords(coords)
+        let key = math.getKeyFromCoords(coords);
         // Is there already a piece there? (Desync)
-        if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`)
+        if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`);
         gamefile.piecesOrganizedByKey[key] = type;
         
         // Organize by line
-        let lines = gamefile.startSnapshot.slidingPossible
-        for (let i = 0; i<lines.length; i++) {
-            const line = lines[i]
-            key = organizedlines.getKeyFromLine(line,coords)
-            const strline = math.getKeyFromCoords(line)
+        const lines = gamefile.startSnapshot.slidingPossible;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            key = organizedlines.getKeyFromLine(line,coords);
+            const strline = math.getKeyFromCoords(line);
             // Is line initialized
-            if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = []
-            gamefile.piecesOrganizedByLines[strline][key].push(piece)
+            if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = [];
+            gamefile.piecesOrganizedByLines[strline][key].push(piece);
         }
         
     },
     
     // Remove specified piece from all the organized piece lists (piecesOrganizedByKey, etc.)
-    removeOrganizedPiece: function (gamefile, coords) {
+    removeOrganizedPiece: function(gamefile, coords) {
 
         // Make the piece key undefined in piecesOrganizedByKey object  
-        let key = math.getKeyFromCoords(coords)
-        if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`)
+        let key = math.getKeyFromCoords(coords);
+        if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`);
         // Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
-        delete gamefile.piecesOrganizedByKey[key] 
+        delete gamefile.piecesOrganizedByKey[key]; 
 
-        let lines = gamefile.startSnapshot.slidingPossible
-        for (let i = 0; i<lines.length; i++) {
-            const line = lines[i]
-            key = organizedlines.getKeyFromLine(line,coords)
-            removePieceFromLine(gamefile.piecesOrganizedByLines[line],key)
+        const lines = gamefile.startSnapshot.slidingPossible;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            key = organizedlines.getKeyFromLine(line,coords);
+            removePieceFromLine(gamefile.piecesOrganizedByLines[line],key);
         }
 
         // Takes a line from a property of an organized piece list, deletes the piece at specified coords
-        function removePieceFromLine (organizedPieces, lineKey) {
-            const line = organizedPieces[lineKey]
+        function removePieceFromLine(organizedPieces, lineKey) {
+            const line = organizedPieces[lineKey];
 
             for (let i = 0; i < line.length; i++) {
-                const thisPieceCoords = line[i].coords
+                const thisPieceCoords = line[i].coords;
                 if (thisPieceCoords[0] === coords[0] && thisPieceCoords[1] === coords[1]) {
-                    line.splice(i, 1) // Delete
+                    line.splice(i, 1); // Delete
                     // If the line length is now 0, remove itself from the organizedPieces
                     if (line.length === 0) delete organizedPieces[lineKey];
                     break;
@@ -110,7 +110,7 @@ const organizedlines = {
 
     initUndefineds: function(gamefile) {
         // Add extra undefined pieces into each type array!
-        pieces.forEachPieceType(init)
+        pieces.forEachPieceType(init);
         function init(listType) {
             const list = gamefile.ourPieces[listType];
             list.undefineds = [];
@@ -127,20 +127,20 @@ const organizedlines = {
      * @param {gamefile} gamefile - The gamefile
      */
     appendUndefineds: function(gamefile) {
-        pieces.forEachPieceType(append)
+        pieces.forEachPieceType(append);
 
         function append(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
 
             const list = gamefile.ourPieces[listType];
-            for (let i = 0; i < pieces.extraUndefineds; i++) organizedlines.insertUndefinedIntoList(list)
+            for (let i = 0; i < pieces.extraUndefineds; i++) organizedlines.insertUndefinedIntoList(list);
         }
     },
 
     areWeShortOnUndefineds: function(gamefile) {
 
         let weShort = false;
-        pieces.forEachPieceType(areWeShort)
+        pieces.forEachPieceType(areWeShort);
 
         function areWeShort(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
@@ -165,19 +165,19 @@ const organizedlines = {
      * - `log`: Whether to log to the console that we're adding more undefineds. Default: *false*
      */
     addMoreUndefineds: function(gamefile, { regenModel = true, log = false } = {}) {
-        if (log) console.log('Adding more placeholder undefined pieces.')
+        if (log) console.log('Adding more placeholder undefined pieces.');
         
-        pieces.forEachPieceType(add)
+        pieces.forEachPieceType(add);
 
         function add(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
 
             const list = gamefile.ourPieces[listType];
             const undefinedCount = list.undefineds.length;
-            for (let i = undefinedCount; i < pieces.extraUndefineds; i++) organizedlines.insertUndefinedIntoList(list)
+            for (let i = undefinedCount; i < pieces.extraUndefineds; i++) organizedlines.insertUndefinedIntoList(list);
         }
 
-        if (regenModel) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs())
+        if (regenModel) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
     },
 
     /**
@@ -202,17 +202,17 @@ const organizedlines = {
 
     insertUndefinedIntoList: function(list) {
         const insertedIndex = list.push(undefined) - 1; // insertedIndex = New length - 1
-        list.undefineds.push(insertedIndex)
+        list.undefineds.push(insertedIndex);
     },
 
-    buildKeyListFromState: function (state) { // state is default piece list organized by type
+    buildKeyListFromState: function(state) { // state is default piece list organized by type
 
         const keyList = { };
 
-        gamefileutility.forEachPieceInPiecesByType(callback, state)
+        gamefileutility.forEachPieceInPiecesByType(callback, state);
 
-        function callback (type, coords) {
-            const key = math.getKeyFromCoords(coords)
+        function callback(type, coords) {
+            const key = math.getKeyFromCoords(coords);
             keyList[key] = type;
         }
 
@@ -224,18 +224,18 @@ const organizedlines = {
      * @param {Object} keyList - Pieces organized by key: `{ '1,2': 'pawnsW' }`
      * @returns {Object} Pieces organized by type: `{ pawnsW: [ [1,2], [2,2], ...]}`
      */
-    buildStateFromKeyList: function (keyList) {
-        const state = organizedlines.getEmptyTypeState()
+    buildStateFromKeyList: function(keyList) {
+        const state = organizedlines.getEmptyTypeState();
 
         // For some reason, does not iterate through inherited properties?
         for (const key in keyList) {
-            const type = keyList[key]
-            const coords = math.getCoordsFromKey(key)
+            const type = keyList[key];
+            const coords = math.getCoordsFromKey(key);
             // Does the type parameter exist?
             // if (!state[type]) state[type] = []
-            if (!state[type]) return console.error(`Error when building state from key list. Type ${type} is undefined!`)
+            if (!state[type]) return console.error(`Error when building state from key list. Type ${type} is undefined!`);
             // Push the coords
-            state[type].push(coords)
+            state[type].push(coords);
         }
 
         return state;
@@ -243,16 +243,16 @@ const organizedlines = {
 
     getEmptyTypeState() {
 
-        const state = {}
+        const state = {};
 
         // White and Black
         for (let i = 0; i < pieces.white.length; i++) {
-            state[pieces.white[i]] = []
-            state[pieces.black[i]] = []
+            state[pieces.white[i]] = [];
+            state[pieces.black[i]] = [];
         }
         // Neutral
         for (let i = 0; i < pieces.neutral.length; i++) {
-            state[pieces.neutral[i]] = []
+            state[pieces.neutral[i]] = [];
         }
 
         return state;
@@ -275,7 +275,7 @@ const organizedlines = {
     getKeyFromLine(step, coords) {
         const C = organizedlines.getCFromLine(step, coords);
         const X = organizedlines.getXFromLine(step, coords);
-        return `${C}|${X}`
+        return `${C}|${X}`;
     },
 
     /**
@@ -287,7 +287,7 @@ const organizedlines = {
      * @returns {number} The C in the line's key: `C|X`
      */
     getCFromLine(step, coords) {
-        return step[0]*coords[1]-step[1]*coords[0]
+        return step[0] * coords[1] - step[1] * coords[0];
     },
 
     /**
@@ -311,7 +311,7 @@ const organizedlines = {
         const lineIsVertical = step[0] === 0;
         const deltaAxis = lineIsVertical ? step[1] : step[0];
         const coordAxis = lineIsVertical ? coords[1] : coords[0];
-        return math.posMod(coordAxis, deltaAxis)
+        return math.posMod(coordAxis, deltaAxis);
     },
 
     /**
@@ -334,7 +334,7 @@ const organizedlines = {
             const slope1 = line1[1] / line1[0]; // Rise/Run
             const line1IsVertical = isNaN(slope1);
             
-            for (let b = a+1; b < slidingPossible.length; b++) {
+            for (let b = a + 1; b < slidingPossible.length; b++) {
                 const line2 = slidingPossible[b]; // [dx,dy]
                 const slope2 = line2[1] / line2[0]; // Rise/Run
                 const line2IsVertical = isNaN(slope2);

@@ -6,7 +6,7 @@
 
 "use strict";
 
-const game = (function(){
+const game = (function() {
 
     /**
      * The currently loaded game. 
@@ -29,18 +29,18 @@ const game = (function(){
     // Initiates textures, buffer models for rendering, and the title screen.
     function init() {
 
-        initTextures() // Load game textures
+        initTextures(); // Load game textures
 
-        guititle.open()
+        guititle.open();
 
-        board.recalcTileWidth_Pixels() // Without this, the first touch tile is NaN
+        board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
     }
 
     // Initiates our textures, and our spritesheet data (where each piece's texture is located)
     function initTextures() {
         board.initTextures();
         pieces.initSpritesheet();
-        pieces.initSpritesheetData()
+        pieces.initSpritesheetData();
     }
 
     function updateVariablesAfterScreenResize() {
@@ -60,8 +60,8 @@ const game = (function(){
         if (input.isKeyDown('m')) options.toggleFPS();
         if (game.getGamefile()?.mesh.locked && input.isKeyDown('z')) main.sforceCalc(true);
 
-        if (gui.getScreen().includes('title')) updateTitleScreen()
-        else updateBoard() // Other screen, board is visible, update everything board related
+        if (gui.getScreen().includes('title')) updateTitleScreen();
+        else updateBoard(); // Other screen, board is visible, update everything board related
 
         onlinegame.update();
 
@@ -70,45 +70,45 @@ const game = (function(){
 
     // Called within update() when on title screen
     function updateTitleScreen() {
-        movement.panBoard() // Animate background if not afk
+        movement.panBoard(); // Animate background if not afk
 
-        invites.update()
+        invites.update();
     }
 
     // Called within update() when we are in a game (not title screen)
     function updateBoard() {
-        if (input.isKeyDown('1')) options.toggleEM() // EDIT MODE TOGGLE
+        if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
         if (input.isKeyDown('escape')) guipause.toggle();
         if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
         if (input.isKeyDown('r')) piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs(), true);
         if (input.isKeyDown('n')) options.toggleNavigationBar();
 
-        clock.update()
+        clock.update();
         miniimage.testIfToggled();
-        animation.update()
+        animation.update();
         if (guipause.areWePaused() && !onlinegame.areInOnlineGame()) return;
 
-        movement.recalcPosition()
-        transition.update()
-        board.recalcVariables() 
-        movesscript.update()
-        arrows.update()
-        selection.update() // Test if a piece was clicked on or moved. Needs to be before updateNavControls()
+        movement.recalcPosition();
+        transition.update();
+        board.recalcVariables(); 
+        movesscript.update();
+        arrows.update();
+        selection.update(); // Test if a piece was clicked on or moved. Needs to be before updateNavControls()
         // We NEED THIS HERE as well as in gameLoop.render() so the game can detect mouse clicks
         // on the miniimages in perspective mode even when the screen isn't being rendered!
-        miniimage.genModel()
-        highlightline.genModel()
-        movement.updateNavControls() // Navigation controls
+        miniimage.genModel();
+        highlightline.genModel();
+        movement.updateNavControls(); // Navigation controls
 
         if (guipause.areWePaused()) return;
 
-        movement.dragBoard() // Calculate new board position if it's being dragged. Needs to be after updateNavControls()
+        movement.dragBoard(); // Calculate new board position if it's being dragged. Needs to be after updateNavControls()
     } 
 
     function render() {
         
         board.render();
-        renderEverythingInGame()
+        renderEverythingInGame();
     }
 
     function renderEverythingInGame() {
@@ -119,7 +119,7 @@ const game = (function(){
         webgl.executeWithDepthFunc_ALWAYS(() => {
             highlights.render(); // Needs to be before and underneath the pieces
             highlightline.render();
-        })
+        });
         
         animation.renderTransparentSquares();
         pieces.renderPiecesInGame(gamefile);
@@ -127,10 +127,10 @@ const game = (function(){
         
         webgl.executeWithDepthFunc_ALWAYS(() => {
             promotionlines.render();
-            selection.renderGhostPiece() // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
-            arrows.renderThem()
-            perspective.renderCrosshair()
-        })
+            selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
+            arrows.renderThem();
+            perspective.renderCrosshair();
+        });
     }
 
     /**
@@ -139,7 +139,7 @@ const game = (function(){
      * @param {gamefile} newGamefile - The gamefile
      */
     function loadGamefile(newGamefile) {
-        if (gamefile) return console.error("Must unloadGame() before loading a new one!")
+        if (gamefile) return console.error("Must unloadGame() before loading a new one!");
 
         gamefile = newGamefile;
 
@@ -153,15 +153,15 @@ const game = (function(){
         // If there are so many hippogonals so as to create issues with discovered attacks, let's use royal capture instead!
         if (organizedlines.areColinearSlidesPresentInGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
 
-        guipromotion.initUI(gamefile.gameRules.promotionsAllowed)
+        guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
         // Regenerate the mesh of all the pieces.
-        piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs())
+        piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
 
         main.enableForceRender(); // Renders the screen EVEN in a local-pause
         guinavigation.update_MoveButtons();
 
-        guigameinfo.updateWhosTurn(gamefile)
+        guigameinfo.updateWhosTurn(gamefile);
         // Immediately conclude the game if we loaded a game that's over already
         if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile, gamefile.gameConclusion);
 
@@ -171,7 +171,7 @@ const game = (function(){
     /** The canvas will no longer render the current game */
     function unloadGame() {
         // Terminate the mesh algorithm.
-        gamefile.mesh.terminateIfGenerating()
+        gamefile.mesh.terminateIfGenerating();
         gamefile = undefined;
 
         selection.unselectPiece();
@@ -182,14 +182,14 @@ const game = (function(){
 
     /** Called when a game is loaded, loads the event listeners for when we are in a game. */
     function initListeners() {
-        document.addEventListener('copy', copypastegame.callbackCopy)
-        document.addEventListener('paste', copypastegame.callbackPaste)
+        document.addEventListener('copy', copypastegame.callbackCopy);
+        document.addEventListener('paste', copypastegame.callbackPaste);
     }
 
     /** Called when a game is unloaded, closes the event listeners for being in a game. */
     function closeListeners() {
-        document.removeEventListener('copy', copypastegame.callbackCopy)
-        document.removeEventListener('paste', copypastegame.callbackPaste)
+        document.removeEventListener('copy', copypastegame.callbackCopy);
+        document.removeEventListener('paste', copypastegame.callbackPaste);
     }
 
 
@@ -202,6 +202,6 @@ const game = (function(){
         render,
         loadGamefile,
         unloadGame
-    })
+    });
 
 })();

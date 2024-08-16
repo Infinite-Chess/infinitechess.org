@@ -7,7 +7,7 @@
 
 "use strict";
 
-const main = (function(){ 
+const main = (function() { 
 
     /**
      * The version of the game code currently running.
@@ -16,16 +16,16 @@ const main = (function(){
      * THIS SHOULD ALWAYS MATCH config/convig/GAME_VERSION
      */
     const GAME_VERSION = "1.4"; // The current version of the game
-    const devBuild = true // If true, the time when the main menu background stops moving is 2 seconds.
+    const devBuild = true; // If true, the time when the main menu background stops moving is 2 seconds.
     const videoMode = false; // If true, doesn't render a few items, making recordings more immersive.
 
     
-    let thisFrameChanged = true // Resets to false every frame. Is set to true if the screen changes at all during updating. This variable is to save cpu rendering when we don't need to redraw the screen. If true we will re-render the screen.
-    let forceRender = false
+    let thisFrameChanged = true; // Resets to false every frame. Is set to true if the screen changes at all during updating. This variable is to save cpu rendering when we don't need to redraw the screen. If true we will re-render the screen.
+    let forceRender = false;
 
     // Set to true when you need to force-calculate the mesh or legal move searching.
     // This will stop spreading it accross multiple frames and instead do it as fast as possible.
-    let forceCalc = false
+    let forceCalc = false;
 
     /** The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen. */
     function renderThisFrame() {
@@ -56,7 +56,7 @@ const main = (function(){
 
         game.init(); // Initiates textures, buffer models for rendering, and the title screen.
 
-        initListeners()
+        initListeners();
 
         onlinegame.askServerIfWeAreInGame();
 
@@ -66,10 +66,9 @@ const main = (function(){
     }
 
     function initListeners() {
-        input.initListeners() // Mouse, touch, & key event listeners
+        input.initListeners(); // Mouse, touch, & key event listeners
 
-        window.addEventListener('beforeunload', function(event) {
-            event = event || window.event;
+        window.addEventListener('beforeunload', function() {
             // console.log('Detecting unload')
 
             // This allows us to control the reason why the socket was closed.
@@ -85,7 +84,7 @@ const main = (function(){
 
     function gameLoop() {
 
-        const loop = function (runtime) {
+        const loop = function(runtime) {
             loadbalancer.update(runtime); // Updates fps, delta time, etc..
     
             game.update(); // Always update the game, even if we're afk. By FAR this is less resource intensive than rendering!
@@ -97,8 +96,8 @@ const main = (function(){
             loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
     
             // Loop again while app is running. This automatically won't be called more times than your screen can refresh per second.
-            requestAnimationFrame(loop)
-        }
+            requestAnimationFrame(loop);
+        };
     
         requestAnimationFrame(loop); // Calls the very first frame. Subsequent loops are called in the loop() function
     }
@@ -110,16 +109,16 @@ const main = (function(){
 
         // console.log("Rendering this frame")
 
-        webgl.clearScreen() // Clear the color buffer and depth buffers
-        game.render()
+        webgl.clearScreen(); // Clear the color buffer and depth buffers
+        game.render();
 
         thisFrameChanged = false; // Reset to false for next frame
     }
 
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text)
-          .then(() => { console.log('Copied to clipboard') })
-          .catch((error) => { console.error('Failed to copy to clipboard', error) })
+            .then(() => { console.log('Copied to clipboard'); })
+            .catch((error) => { console.error('Failed to copy to clipboard', error); });
     }
 
     function sleep(ms) {
@@ -160,5 +159,5 @@ function a(message, object) {
  * an error to the console so you can see the trace.
  */
 function b() {
-    console.error("Generic error")
+    console.error("Generic error");
 }

@@ -2,7 +2,7 @@
 // This script contains many generalized mathematical operations, and javascript 
 // object functions, we've created for the game and its variables
 
-const math1 = (function(){
+const math1 = (function() {
 
     /**
      * Deep copies an entire object, no matter how deep its nested.
@@ -16,9 +16,9 @@ const math1 = (function(){
     function deepCopyObject(src) {
         if (typeof src !== "object" || src === null) return src;
         
-        let copy = Array.isArray(src) ? [] : {}; // Create an empty array or object
+        const copy = Array.isArray(src) ? [] : {}; // Create an empty array or object
         
-        for (let key in src) {
+        for (const key in src) {
             const value = src[key];
             copy[key] = deepCopyObject(value); // Recursively copy each property
         }
@@ -32,9 +32,9 @@ const math1 = (function(){
      * @returns {string} `white` or `black`
      */
     function getOppositeColor(color) {
-        if (color === "white") return "black"
+        if (color === "white") return "black";
         else if (color === "black") return "white";
-        else console.trace(`We should never get the opposite color of an invalid color ${color}!`)
+        else console.trace(`We should never get the opposite color of an invalid color ${color}!`);
     }
 
     /**
@@ -43,8 +43,8 @@ const math1 = (function(){
      * @returns {string} The ID
      */
     function generateID(length) {
-        let result           = '';
-        const characters       = '0123456789abcdefghijklmnopqrstuvwxyz';
+        let result = '';
+        const characters = '0123456789abcdefghijklmnopqrstuvwxyz';
         const charactersLength = characters.length;
         for (let i = 0; i < length; i++) {
             result += characters.charAt(Math.random() * charactersLength);
@@ -63,7 +63,7 @@ const math1 = (function(){
         let id;
         do {
             id = math1.generateID(length);
-        } while (object[id] != null)
+        } while (object[id] != null);
         return id;
     }
 
@@ -81,8 +81,8 @@ const math1 = (function(){
     // Removes specified object from given array. Logs to the console if it fails. The object cannot be an object or array, only a single value.
     function removeObjectFromArray(array, object) { // object can't be an array
         const index = array.indexOf(object);
-        if (index !== -1) array.splice(index, 1)
-        else console.log(`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`)
+        if (index !== -1) array.splice(index, 1);
+        else console.log(`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`);
     }
 
     /**
@@ -162,8 +162,8 @@ const math1 = (function(){
      * @returns {string} The key
      */
     // Receives coords, returns it's key to access it in game.getGamefile().piecesOrganizedByKey object.
-    function getKeyFromCoords (coords) {
-        return `${coords[0]},${coords[1]}`
+    function getKeyFromCoords(coords) {
+        return `${coords[0]},${coords[1]}`;
     }
 
     /**
@@ -269,7 +269,7 @@ const math1 = (function(){
         getCurrentUTCTime,
         convertTimestampToUTCDateUTCTime,
         convertUTCDateUTCTimeToTimeStamp,
-    })
+    });
 })();
 
 module.exports = math1;

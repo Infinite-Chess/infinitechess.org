@@ -10,89 +10,89 @@ const options = (function() {
 
     // When enabled, your view is expanded to show what you normally can't see beyond the edge of the screen.
     // Useful for making sure rendering methods are as expected.
-    let debugMode = false // Must be toggled by calling toggleDeveloperMode()
+    let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
 
-    let navigationVisible = true
+    let navigationVisible = true;
 
-    let theme = 'default' // default/halloween/christmas
-    const validThemes = ['default', 'halloween', 'thanksgiving', 'christmas']
+    let theme = 'default'; // default/halloween/christmas
+    const validThemes = ['default', 'halloween', 'thanksgiving', 'christmas'];
     
     const themes = {
         default: { // White/Grey
-            whiteTiles: [1, 1, 1,  1], // RGBA
-            darkTiles:  [0.78, 0.78, 0.78,  1],
+            whiteTiles: [1, 1, 1, 1], // RGBA
+            darkTiles:  [0.78, 0.78, 0.78, 1],
             // Sandstone Color
             // whiteTiles: [239/255,225/255,199/255,1],
             // darkTiles: [188/255,160/255,136/255,1],
             // Wood Color
             // whiteTiles: [246/255,207/255,167/255,1],
             // darkTiles: [197/255,141/255,88/255,1],
-            selectedPieceHighlightColor: [0, 0.5, 0.5,  0.3],
+            selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
             // selectedPieceHighlightColor: [1, 1, 0,  0.25], // Yellow (for wood theme)
-            legalMovesHighlightColor_Friendly: [0, 0, 1,  0.3],
+            legalMovesHighlightColor_Friendly: [0, 0, 1, 0.3],
             // legalMovesHighlightColor_Friendly: [1, 0.4, 0,  0.35], // Orange (for sandstone theme)
             // legalMovesHighlightColor_Friendly: [1, 0.2, 0,  0.4], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
             legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
             legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
-            lastMoveHighlightColor: [0, 1, 0,  0.25], // 0.17
+            lastMoveHighlightColor: [0, 1, 0, 0.25], // 0.17
             // lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
-            checkHighlightColor: [1, 0, 0,  0.7],
+            checkHighlightColor: [1, 0, 0, 0.7],
             // If this is true, we will render them white,
             // utilizing the more efficient color-less shader program!
             useColoredPieces: false,
-            whitePiecesColor: [1, 1, 1,  1],
-            blackPiecesColor: [1, 1, 1,  1],
-            neutralPiecesColor: [1, 1, 1,  1]
+            whitePiecesColor: [1, 1, 1, 1],
+            blackPiecesColor: [1, 1, 1, 1],
+            neutralPiecesColor: [1, 1, 1, 1]
         },
         halloween: {
-            whiteTiles: [1, 0.65, 0.4,  1], // RGBA
-            darkTiles:  [1, 0.4, 0,  1],
+            whiteTiles: [1, 0.65, 0.4, 1], // RGBA
+            darkTiles:  [1, 0.4, 0, 1],
             selectedPieceHighlightColor: [0, 0, 0, 0.5],
-            legalMovesHighlightColor_Friendly: [0.6, 0, 1,  0.55],
+            legalMovesHighlightColor_Friendly: [0.6, 0, 1, 0.55],
             legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
             legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
-            lastMoveHighlightColor: [0.5, 0.2, 0,  0.75],
-            checkHighlightColor: [1, 0, 0.5,  0.76],
+            lastMoveHighlightColor: [0.5, 0.2, 0, 0.75],
+            checkHighlightColor: [1, 0, 0.5, 0.76],
             useColoredPieces: true,
-            whitePiecesColor: [0.6, 0.5, 0.45,  1],
-            blackPiecesColor: [0.8, 0, 1,  1],
-            neutralPiecesColor: [1, 1, 1,  1]
+            whitePiecesColor: [0.6, 0.5, 0.45, 1],
+            blackPiecesColor: [0.8, 0, 1, 1],
+            neutralPiecesColor: [1, 1, 1, 1]
         },
         thanksgiving: {
             // Sandstone Color
-            whiteTiles: [239/255,225/255,199/255,1],
-            darkTiles: [188/255,160/255,136/255,1],
-            selectedPieceHighlightColor: [0, 0.5, 0.5,  0.3],
-            legalMovesHighlightColor_Friendly: [1, 0.2, 0,  0.35], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
+            whiteTiles: [239 / 255,225 / 255,199 / 255,1],
+            darkTiles: [188 / 255,160 / 255,136 / 255,1],
+            selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
+            legalMovesHighlightColor_Friendly: [1, 0.2, 0, 0.35], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
             legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
             legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
-            lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
-            checkHighlightColor: [1, 0, 0,  0.7],
+            lastMoveHighlightColor: [0.3, 1, 0, 0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
+            checkHighlightColor: [1, 0, 0, 0.7],
             useColoredPieces: false,
-            whitePiecesColor: [1, 1, 1,  1],
-            blackPiecesColor: [1, 1, 1,  1],
-            neutralPiecesColor: [1, 1, 1,  1]
+            whitePiecesColor: [1, 1, 1, 1],
+            blackPiecesColor: [1, 1, 1, 1],
+            neutralPiecesColor: [1, 1, 1, 1]
         },
         christmas: {
             // Sandstone Color
-            whiteTiles: [152/255, 238/255, 255/255, 1],
-            darkTiles: [0/255, 199/255, 238/255, 1],
-            selectedPieceHighlightColor: [0, 0.5, 0.5,  0.3],
-            legalMovesHighlightColor_Friendly: [0, 0, 1,  0.35], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
+            whiteTiles: [152 / 255, 238 / 255, 255 / 255, 1],
+            darkTiles: [0 / 255, 199 / 255, 238 / 255, 1],
+            selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
+            legalMovesHighlightColor_Friendly: [0, 0, 1, 0.35], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
             legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
             legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
-            lastMoveHighlightColor: [0, 0, 0.3,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
-            checkHighlightColor: [1, 0, 0,  0.7],
+            lastMoveHighlightColor: [0, 0, 0.3, 0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
+            checkHighlightColor: [1, 0, 0, 0.7],
             useColoredPieces: true,
-            whitePiecesColor: [0.4, 1, 0.4,  1],
-            blackPiecesColor: [1, 0.2, 0.2,  1],
-            neutralPiecesColor: [1, 1, 1,  1]
+            whitePiecesColor: [0.4, 1, 0.4, 1],
+            blackPiecesColor: [1, 0.2, 0.2, 1],
+            neutralPiecesColor: [1, 1, 1, 1]
         }
-    }
+    };
 
-    let em = false // editMode, allows moving pieces anywhere else on the board!
+    let em = false; // editMode, allows moving pieces anywhere else on the board!
 
-    let fps = false
+    let fps = false;
 
 
     // Function
@@ -115,7 +115,7 @@ const options = (function() {
         camera.onPositionChange();
         perspective.initCrosshairModel();
         piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs()); // This will regenerate the voids model as wireframe
-        statustext.showStatus(`${translations["rendering"]["toggled_debug"]} ` + (debugMode ? translations["rendering"]["on"] : translations["rendering"]["off"]))
+        statustext.showStatus(`${translations["rendering"]["toggled_debug"]} ` + (debugMode ? translations["rendering"]["on"] : translations["rendering"]["off"]));
     }
 
     function disableEM() {
@@ -140,7 +140,7 @@ const options = (function() {
 
         main.renderThisFrame(); // Visual change, render the screen this frame
         em = !em;
-        statustext.showStatus(`${translations["rendering"]["toggled_edit"]} ` + (em ? translations["rendering"]["on"] : translations["rendering"]["off"]))
+        statustext.showStatus(`${translations["rendering"]["toggled_edit"]} ` + (em ? translations["rendering"]["on"] : translations["rendering"]["off"]));
     }
 
     /** Toggles the visibility of the navigation bars. */
@@ -160,17 +160,17 @@ const options = (function() {
 
     function onToggleNavigationBar() {
         if (navigationVisible) {
-            guinavigation.open()
+            guinavigation.open();
             guigameinfo.open();
         }
-        else guinavigation.close()
+        else guinavigation.close();
 
-        camera.updatePIXEL_HEIGHT_OF_NAVS()
+        camera.updatePIXEL_HEIGHT_OF_NAVS();
     }
 
     function getDefaultTiles(isWhite) {
         if (isWhite) return themes[theme].whiteTiles;
-        else         return themes[theme].darkTiles;
+        else return themes[theme].darkTiles;
     }
 
     function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
@@ -192,12 +192,12 @@ const options = (function() {
     }
 
     function setTheme(newTheme) { // default/halloween
-        if (!validateTheme(theme)) console.error(`Cannot change theme to invalid theme ${theme}!`)
+        if (!validateTheme(theme)) console.error(`Cannot change theme to invalid theme ${theme}!`);
 
         theme = newTheme;
         board.updateTheme();
         piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
-        highlights.regenModel()
+        highlights.regenModel();
     }
 
     function toggleChristmasTheme() {
@@ -220,7 +220,7 @@ const options = (function() {
             white: themes[theme].whitePiecesColor, // [r,g,b,a]
             black: themes[theme].blackPiecesColor,
             neutral: themes[theme].neutralPiecesColor
-        }
+        };
     }
 
     // Returns { r, g, b, a } depending on our current theme!
@@ -236,7 +236,7 @@ const options = (function() {
             g: color[1],
             b: color[2],
             a: color[3]
-        }
+        };
     }
 
     // Returns true if our current theme is using custom-colored pieces.
@@ -252,7 +252,7 @@ const options = (function() {
     }
 
     function isThemeDefault() {
-        return theme === "default"
+        return theme === "default";
     }
 
     return Object.freeze({
@@ -279,5 +279,5 @@ const options = (function() {
         isThemeDefault,
         disableEM,
         isFPSOn
-    })
+    });
 })();
