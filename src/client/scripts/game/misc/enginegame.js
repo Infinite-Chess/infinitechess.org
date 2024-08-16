@@ -10,6 +10,7 @@ const enginegame = (function(){
     let ourColor; // white/black
     let currentEngine; // name of the current engine used
     let currentEngineMove; // currently best move recommended by the engine
+    let engineConfig; // json that is sent to the engine, giving it extra config information
 
     const engineTimeLimitPerMoveMillis = 500; // hard time limit for the engine to think in milliseconds
 
@@ -32,7 +33,7 @@ const enginegame = (function(){
 
     /**
      * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
-     * @param {Object} gameOptions - An object that contains the property `currentEngine`
+     * @param {Object} gameOptions - An object that contains the properties `currentEngine` and `engineConfig`
      */
     function initEngineGame (gameOptions) {
         // This make sure it will place us in black's perspective if applicable
@@ -40,6 +41,7 @@ const enginegame = (function(){
 
         currentEngine = gameOptions.currentEngine;
         currentEngineMove = undefined;
+        engineConfig = gameOptions.engineConfig;
         if (!currentEngine) return console.error (`Attempting to start game with unknown engine: ${currentEngine}`);
         console.log(`Started engine game with engine ${currentEngine}`);
     }
@@ -50,6 +52,7 @@ const enginegame = (function(){
         ourColor = undefined;
         currentEngine = undefined;
         currentEngineMove = undefined;
+        engineConfig = undefined;
         perspective.resetRotations() // Without this, leaving an engine game of which we were black, won't reset our rotation.
     }
 
@@ -68,6 +71,8 @@ const enginegame = (function(){
 
     /**
      * This method is called externally when the player submits his move in an engine game
+     * It launches an engine webworker and submits the gamefile to the webworker
+     * Finally, it closes the webworker again and calls makeEngineMove()
      */
     async function submitMove() {
         if (!inEngineGame) return; // Don't do anything if it's not an engine game
@@ -84,7 +89,7 @@ const enginegame = (function(){
         };
 
         // Send the gamefile to the engine web worker
-        engineWorker.postMessage(JSON.parse(JSON.stringify(gamefile)));
+        engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig })));
 
         // give the engine time to think
         await main.sleep(engineTimeLimitPerMoveMillis);

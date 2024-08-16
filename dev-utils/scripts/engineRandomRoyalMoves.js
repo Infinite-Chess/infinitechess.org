@@ -12,7 +12,7 @@
 
 "use strict";
 
-const engineRandomRoyalMoves = (function(){
+const engineRandomRoyalMoves = (function() {
 
     /**
      * Main function of this script. It gets called as soon as the human player submits a move.
@@ -24,11 +24,11 @@ const engineRandomRoyalMoves = (function(){
         try {
             // This code only works if Black has exactly one king or royal centaur
             // For now, it just submits a random move for Black
-            const randomMove = getRandomRoyalMove(gamefile, "black")
-            await main.sleep(500) // unnecessary delay
+            const randomMove = getRandomRoyalMove(gamefile, "black");
+            await main.sleep(500); // unnecessary delay
             return Promise.resolve(randomMove);
         } catch (e) {
-            console.error("You used the engine for an unsupported type of game.")
+            console.error("You used the engine for an unsupported type of game.");
         }
     }
 
@@ -40,7 +40,7 @@ const engineRandomRoyalMoves = (function(){
      * @returns {Move} random legalmove
      */
     function getRandomRoyalMove(gamefile, color) {
-        const royalCoords = gamefileutility.getRoyalCoords(gamefile, color)[0]
+        const royalCoords = gamefileutility.getRoyalCoords(gamefile, color)[0];
         const royalPiece = gamefileutility.getPieceAtCoords(gamefile, royalCoords);
         const moves = legalmoves.calculate(gamefile, royalPiece).individual;
         const randomEndCoords = moves[Math.floor(Math.random() * moves.length)]; // random endcoords from the list of individual moves
@@ -51,6 +51,6 @@ const engineRandomRoyalMoves = (function(){
 
     return Object.freeze({
         runEngine
-    })
+    });
 
 })();

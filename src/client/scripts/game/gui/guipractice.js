@@ -182,6 +182,7 @@ const guipractice = (function(){
             youAreColor: 'white',
             clock: "-",
             currentEngine: "engineCheckmatePractice",
+            engineConfig: {checkmateSelectedID: checkmateSelectedID},
             variantOptions: {
                 turn: "white",
                 fullMove: "1",

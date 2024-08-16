@@ -61,7 +61,8 @@ if (DEV_BUILD) {
         force: true,
         filter: filename => { 
             return (
-                (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) || /(\\|\/)game(\\|\/)chess$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename)
+                (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) || /(\\|\/)game(\\|\/)chess$/.test(filename)) 
+        && !/(\\|\/)css(\\|\/)/.test(filename)
             );
         }
     });
@@ -76,7 +77,7 @@ if (DEV_BUILD) {
 
     for (const file of clientFiles) {
     // If the client script is htmlscript.js or an engine script or not in scripts/game, then minify it and copy it over
-        if (/(\\|\/)htmlscript\.js$/.test(file) || /chess(\\|\/)engine[^\.\\\/]*\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
+        if (/(\\|\/)htmlscript\.js$/.test(file) || /chess(\\|\/)engine[^.\\/]*\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
             const code = await readFile(`./src/client/${file}`, 'utf8');
             const minified = await swc.minify(code, {
                 mangle: true, // Enable variable name mangling
