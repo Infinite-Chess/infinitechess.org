@@ -146,7 +146,7 @@ const engineCheckmatePractice = (function(){
             6: [[200, pawnNorm], [200, pawnNorm]], // pawn
             7: [[14, manhattanNorm], [14, manhattanNorm]], // amazon
             8: [[16, manhattanNorm], [16, manhattanNorm]], // hawk
-            7: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
+            9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
             10: [[16, manhattanNorm], [16, manhattanNorm]], // archbishop
             11: [[16, manhattanNorm], [16, manhattanNorm]], // knightrider
         };
@@ -229,9 +229,6 @@ const engineCheckmatePractice = (function(){
             case "1K1Q1P-1k":
                 distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]] // queen
                 distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]] // king
-                break;
-            case "2AM-1rc":
-                wiggleroom = 1;
                 break;
             case "1K2N7B-1k":
                 distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]] // knight
@@ -787,12 +784,13 @@ const engineCheckmatePractice = (function(){
         // iteratively deeper and deeper search
         for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
             const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, depth, 0);
-            if (true || !squares_are_equal(evaluation.bestMove, globallyBestMove)) {
-                globallyBestMove = evaluation.bestMove;
-                globallyBestScore = evaluation.score;
-                self.postMessage(move_to_gamefile_move(globallyBestMove))
-            }
-            // console.log(`Depth ${depth}, Termination depth: ${evaluation.termination_depth}, Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
+            globallyBestMove = evaluation.bestMove;
+            globallyBestScore = evaluation.score;
+            self.postMessage(move_to_gamefile_move(globallyBestMove))
+            console.log(`Depth ${depth}, Termination depth: ${evaluation.termination_depth}, Best score: ${globallyBestScore}, Best move: ${globallyBestMove}.`);
+            const [test_piecelist, test_coordlist] = make_black_move(globallyBestMove, piecelist, coordlist);
+            console.log(`amazon from ${test_coordlist[0]} may move to ${get_white_piece_candidate_squares(0, test_piecelist, test_coordlist)}`)
+            console.log(`amazon from ${test_coordlist[1]} may move to ${get_white_piece_candidate_squares(1, test_piecelist, test_coordlist)}`)
         }
     }
 
