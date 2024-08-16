@@ -2,6 +2,16 @@
 const globals = require("globals");
 const pluginJs = require("@eslint/js");
 
+/*
+ * I haven't been able to get this to work. It would automatically insert
+ * global variables in our browser environment according to all our game scripts,
+ * eliminating the need for us to enter them manually every new script.
+ * 
+ * But, it's as if eslint just turns completely off if we use this.
+ */
+// const { getAllGameScripts } = require("./build.mjs");
+// const allGameScripts = await getAllGameScripts();
+
 module.exports = [
   pluginJs.configs.recommended,
   {
@@ -41,6 +51,13 @@ module.exports = [
         ...globals.browser, // Defines all browser environment variables for the game code
         // ...globals.commonjs, // Not needed because "sourceType" is defined above
         // Game code scripts are considered public variables
+        memberHeader: "readonly",
+        translations: "readonly", // Injected into the html through ejs
+        htmlscript: "readonly",
+        gl: "readonly",
+        mat4: "readonly",
+        // DOES NOT WORK right now. We have to input them manually
+        // ...allGameScripts, 
         backcompatible: "readonly",
         checkdetection: "readonly",
         checkmate: "readonly",
@@ -91,7 +108,6 @@ module.exports = [
         camera: "readonly",
         checkhighlight: "readonly",
         coin: "readonly",
-        mat4: "readonly",
         highlightline: "readonly",
         highlights: "readonly",
         miniimage: "readonly",
@@ -106,16 +122,12 @@ module.exports = [
         transition: "readonly",
         voids: "readonly",
         webgl: "readonly",
-        gl: "readonly",
-        htmlscript: "readonly",
         input: "readonly",
         main: "readonly",
         websocket: "readonly",
-        memberHeader: "readonly",
         checkmatepractice: "readonly",
         guipractice: "readonly",
         enginegame: "readonly",
-        translations: "readonly", // Injected into the html through ejs
       }
     }
   }

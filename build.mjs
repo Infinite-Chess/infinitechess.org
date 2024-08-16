@@ -11,16 +11,17 @@ import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
 import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
 import { DEV_BUILD } from "./src/server/config/config.js";
+import path from "node:path";
 
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
 const targets = browserslistToTargets(browserslist('defaults'));
 
 /**
- * 
- * @param {string} path 
- * @param {string} ext 
- * @returns {Promise<string[]>}
+ * Recursively retrieves all files with a specific extension from a directory and its subdirectories.
+ * @param {string} path - The directory path where the search will start.
+ * @param {string} ext - The file extension to filter by (e.g., '.js', '.txt').
+ * @returns {Promise<string[]>} - A promise that resolves to an array of file paths with the specified extension.
  */
 async function getExtFiles(path, ext) {
     const filesNFolder = await readdir(path);
@@ -38,6 +39,22 @@ async function getExtFiles(path, ext) {
     }
 
     return files;
+}
+
+/**
+ * Get all Game scripts inside the 'src/client/scripts/game' directory, EXCLUDING 'htmlscript.js'.
+ * Returns an array of only the base names without the '.js' extension or paths.
+ * @returns {Promise<string[]>} - A list of filtered game script file names without the '.js' extension: `['legalmoves','checkdetection'...]`
+ */
+async function getAllGameScripts() {
+    const gameDir = 'src/client/scripts/game';
+    const jsFiles = await getExtFiles(gameDir, '.js');
+    
+    const gameScripts = jsFiles
+        .map(file => path.basename(file, '.js')) // Get the base name without the extension
+        .filter(baseName => baseName !== 'htmlscript'); // Exclude 'htmlscript'
+
+    return gameScripts;
 }
 
 // remove dist
@@ -69,7 +86,7 @@ if (DEV_BUILD) {
 
     // make a list of all client scripts:
     const clientFiles = [];
-    const clientScripts = await getExtFiles("./src/client/scripts", ".js");
+    const clientScripts = await getExtFiles("src/client/scripts", ".js");
     clientFiles.push(...clientScripts.map(v => `scripts/${v}`));
 
     // string containing all code in /game except for htmlscript.js:
@@ -116,3 +133,7 @@ if (DEV_BUILD) {
         await writeFile(`./dist/css/${file}`, code, 'utf8');
     }
 }
+
+export {
+    getAllGameScripts
+};
