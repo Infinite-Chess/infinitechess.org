@@ -34,7 +34,7 @@ function getPatreonPatrons() {
     // Replace their true usernames with replacements
     const patronsWithReplacedNames = patrons.map((patron) => {
         return replacementNames[patron] || patron;
-    })
+    });
 
     return patronsWithReplacedNames;
 }
@@ -42,4 +42,4 @@ function getPatreonPatrons() {
 
 module.exports = {
     getPatreonPatrons
-}
+};

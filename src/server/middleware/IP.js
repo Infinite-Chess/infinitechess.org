@@ -5,7 +5,7 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-const { Socket } = require('../game/TypeDefinitions') // The type definition for websocket objects
+const { Socket } = require('../game/TypeDefinitions'); // The type definition for websocket objects
 
 
 
@@ -16,7 +16,7 @@ const { Socket } = require('../game/TypeDefinitions') // The type definition for
  */
 function getClientIP(req) {
     //const clientIP = req.ip; // This DOES work... but it still often changes.
-    let clientIP = req.headers['x-forwarded-for'] || req.ip; // "x-forwarded-for" is Cloudflare's forwarded ip.
+    const clientIP = req.headers['x-forwarded-for'] || req.ip; // "x-forwarded-for" is Cloudflare's forwarded ip.
 
     if (typeof clientIP !== 'string') return undefined;
     return clientIP;
@@ -34,7 +34,7 @@ function getClientIP_Websocket(req, ws) {
 
     //const clientIP = req.ip; // Undefined
     //const clientIP = ws._socket.remoteAddress; // Changes every request
-    let clientIP = req.headers['x-forwarded-for'] || ws._socket.remoteAddress; // "x-forwarded-for" is Cloudflare's forwarded ip.
+    const clientIP = req.headers['x-forwarded-for'] || ws._socket.remoteAddress; // "x-forwarded-for" is Cloudflare's forwarded ip.
 
     if (typeof clientIP !== 'string') return undefined;
 
@@ -47,4 +47,4 @@ function getClientIP_Websocket(req, ws) {
 module.exports = {
     getClientIP,
     getClientIP_Websocket
-}
+};

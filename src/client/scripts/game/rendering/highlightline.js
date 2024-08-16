@@ -4,7 +4,7 @@
 
 "use strict";
 
-const highlightline = (function(){
+const highlightline = (function() {
 
     /** The buffer model of the legal move lines when zoomed out.
      * @type {BufferModel} */
@@ -25,29 +25,29 @@ const highlightline = (function(){
         if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
         if (!selection.isAPieceSelected()) return;
 
-        const dataLines = []
+        const dataLines = [];
 
         const legalmoves = math.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
         const pieceCoords = selection.getPieceSelected().coords;
-        const worldSpaceCoords = math.convertCoordToWorldSpace(pieceCoords)
+        const worldSpaceCoords = math.convertCoordToWorldSpace(pieceCoords);
 
         const color = math.deepCopyObject(options.getLegalMoveHighlightColor());
         color[3] = 1;
 
         const snapDist = miniimage.gwidthWorld() / 2;
         
-        const a = perspective.distToRenderBoard
+        const a = perspective.distToRenderBoard;
         /** @type {BoundingBox} */
-        let boundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false)
+        let boundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false);
         
-        const mouseLocation = input.getMouseWorldLocation()
+        const mouseLocation = input.getMouseWorldLocation();
 
         let closestDistance;
         let closestPoint;
-        for (var strline in legalmoves.sliding) {
+        for (const strline in legalmoves.sliding) {
             const line = math.getCoordsFromKey(strline);
             const diag = organizedlines.getCFromLine(line, worldSpaceCoords);
-            const lineIsVertical = line[0]===0
+            const lineIsVertical = line[0] === 0;
             
             const corner1 = math.getAABBCornerOfLine(line, true);
             
@@ -67,16 +67,16 @@ const highlightline = (function(){
 
             appendLineToData(dataLines, point1, point2, color);
             
-            const snapPoint = math.closestPointOnLine(point1, point2, mouseLocation)
+            const snapPoint = math.closestPointOnLine(point1, point2, mouseLocation);
             if (!closestDistance) { if (snapPoint.distance > snapDist) continue; }
             else if (snapPoint.distance > closestDistance) {continue;}
-            closestDistance = snapPoint.distance
-            snapPoint.moveset = legalmoves.sliding[strline]
-            snapPoint.line = line
-            closestPoint = snapPoint
+            closestDistance = snapPoint.distance;
+            snapPoint.moveset = legalmoves.sliding[strline];
+            snapPoint.line = line;
+            closestPoint = snapPoint;
         };
         
-        modelLines = buffermodel.createModel_Colored(new Float32Array(dataLines), 2, "LINES")
+        modelLines = buffermodel.createModel_Colored(new Float32Array(dataLines), 2, "LINES");
 
         // Ghost image...
 
@@ -89,12 +89,12 @@ const highlightline = (function(){
         if (!closestPoint) return; // There were no snapping points, the mouse is not next to a line.
         // Generate the ghost image model
 
-        const dataGhost = []
+        const dataGhost = [];
 
         const type = selection.getPieceSelected().type;
 
         const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-        const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation)
+        const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);
 
         const halfWidth = miniimage.gwidthWorld() / 2;
 
@@ -105,11 +105,11 @@ const highlightline = (function(){
 
         const { r, g, b } = options.getColorOfType(type);
 
-        const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, opacityOfGhostImage)
+        const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, opacityOfGhostImage);
 
-        dataGhost.push(...data)
+        dataGhost.push(...data);
         
-        modelGhost = buffermodel.createModel_ColorTextured(new Float32Array(dataGhost), 2, "TRIANGLES", pieces.getSpritesheet())
+        modelGhost = buffermodel.createModel_ColorTextured(new Float32Array(dataGhost), 2, "TRIANGLES", pieces.getSpritesheet());
         
         // If we clicked, teleport to the point on the line closest to the click location.
         // BUT we have to recalculate it in coords format instead of world-space
@@ -122,9 +122,9 @@ const highlightline = (function(){
 
         boundingBox = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
 
-        const line = closestPoint.line
-        const diag = organizedlines.getCFromLine(line, pieceCoords)
-        const lineIsVertical = line[0]===0
+        const line = closestPoint.line;
+        const diag = organizedlines.getCFromLine(line, pieceCoords);
+        const lineIsVertical = line[0] === 0;
 
         const corner1 = math.getAABBCornerOfLine(line, true);
 
@@ -147,36 +147,36 @@ const highlightline = (function(){
             tileMouseFingerOver = tileMouseOver.tile_Int;
         } else tileMouseFingerOver = board.gtile_MouseOver_Int();
 
-        const closestCoordCoords = math.closestPointOnLine(point1, point2, tileMouseFingerOver).coords
+        const closestCoordCoords = math.closestPointOnLine(point1, point2, tileMouseFingerOver).coords;
 
-        const tel = { endCoords: closestCoordCoords, endScale: 1 }
+        const tel = { endCoords: closestCoordCoords, endScale: 1 };
         // console.log("teleporting to " + closestCoordCoords)
-        transition.teleport(tel)
+        transition.teleport(tel);
     }
     
-    function appendLineToData (data, point1, point2, color) {
+    function appendLineToData(data, point1, point2, color) {
 
         const [ r, g, b, a ] = color;
 
         data.push(
             // Vertex               Color
-            point1[0], point1[1],   r, g, b, a,
-            point2[0], point2[1],   r, g, b, a
-        )
+            point1[0], point1[1], r, g, b, a,
+            point2[0], point2[1], r, g, b, a
+        );
     }
     
     function capPointAtSlideLimit(point, slideLimit, positive, lineIsVertical) { // slideLimit = [x,y]
-        const cappingAxis = lineIsVertical ? 1 : 0
-        if (!positive  && point[cappingAxis] < slideLimit[cappingAxis]
+        const cappingAxis = lineIsVertical ? 1 : 0;
+        if (!positive && point[cappingAxis] < slideLimit[cappingAxis]
           || positive && point[cappingAxis] > slideLimit[cappingAxis]) return slideLimit;
-         return point;
+        return point;
     }
 
-    function getPointOfDiagSlideLimit (pieceCoords, moveset, line, positive) { // positive is true if it's the right/top
-        const steps = positive ? moveset[1] : moveset[0]
-        let yDiff = line[1]*steps
-        let xDiff = line[0]*steps
-        return [pieceCoords[0]+xDiff, pieceCoords[1]+yDiff]
+    function getPointOfDiagSlideLimit(pieceCoords, moveset, line, positive) { // positive is true if it's the right/top
+        const steps = positive ? moveset[1] : moveset[0];
+        const yDiff = line[1] * steps;
+        const xDiff = line[0] * steps;
+        return [pieceCoords[0] + xDiff, pieceCoords[1] + yDiff];
     }
 
     // Renders the legal slide move lines, and ghost image if hovering
@@ -195,6 +195,6 @@ const highlightline = (function(){
     return Object.freeze({
         genModel,
         render
-    })
+    });
 
 })();

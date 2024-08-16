@@ -19,7 +19,7 @@ const texture = (function() {
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
         const textureElement = document.getElementById(elementID);
-        if (textureElement == null) return console.error(`Unable to find of document texture element with id '${elementID}'!`)
+        if (textureElement == null) return console.error(`Unable to find of document texture element with id '${elementID}'!`);
 
         const texture = gl.createTexture(); // Create an empty texture object
         gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -30,8 +30,8 @@ const texture = (function() {
         const srcType = gl.UNSIGNED_BYTE;
         gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, textureElement);
 
-        const powerOfTwo = math.isPowerOfTwo(textureElement.offsetWidth) && math.isPowerOfTwo(textureElement.offsetHeight)
-        if (!powerOfTwo && useMipmaps) console.log(`Image ID ${elementID} dimensions is not a power of two! Unable to use mipmaps. Dimensions: ${textureElement.offsetWidth}x${textureElement.offsetHeight}`)
+        const powerOfTwo = math.isPowerOfTwo(textureElement.offsetWidth) && math.isPowerOfTwo(textureElement.offsetHeight);
+        if (!powerOfTwo && useMipmaps) console.log(`Image ID ${elementID} dimensions is not a power of two! Unable to use mipmaps. Dimensions: ${textureElement.offsetWidth}x${textureElement.offsetHeight}`);
 
         // WebGL1 has different requirements for power of 2 images vs non power of 2 images so check if the image is a power of 2 in both dimensions.
         // If it's a power of 2, generate mipmaps.
@@ -51,6 +51,6 @@ const texture = (function() {
 
     return Object.freeze({
         loadTexture
-    })
+    });
 
 })();

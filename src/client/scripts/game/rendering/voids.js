@@ -10,8 +10,8 @@
 
 const voids = {
 
-    color: [0, 0, 0,  1],
-    color_wireframe: [1, 0, 1,  1],
+    color: [0, 0, 0, 1],
+    color_wireframe: [1, 0, 1, 1],
 
     stride: 6, // Using color shader. Stride per VERTEX (2 vertex, 4 color)
     pointsPerSquare_Wireframe: 12, // Compared to  piecesmodel.pointsPerSquare  which is 6 when rendering triangles
@@ -31,7 +31,7 @@ const voids = {
         const rectangleCount = simplifiedMesh.length;
         // console.log(`Void rectangle count: ${rectangleCount}`)
         
-        const inDevMode = options.isDebugModeOn()
+        const inDevMode = options.isDebugModeOn();
         const thisPointsPerSquare = !inDevMode ? piecesmodel.pointsPerSquare : voids.pointsPerSquare_Wireframe;
         const indicesPerPiece = voids.stride * thisPointsPerSquare; // 6 * (6 or 12) depending on wireframe
         const totalElements = rectangleCount * indicesPerPiece;
@@ -45,13 +45,13 @@ const voids = {
         const data32 = gamefile.voidMesh.data32;
         // Iterate through every void and append it's data!
         for (let i = 0; i < rectangleCount; i++) {
-            const thisRect = simplifiedMesh[i]
+            const thisRect = simplifiedMesh[i];
 
             const { startX, startY, endX, endY } = voids.getCoordDataOfRectangle(gamefile, thisRect);
 
-            const colorToUse = !inDevMode ? voids.color           : voids.color_wireframe;
-            const funcToUse =  !inDevMode ? voids.getDataOfSquare : voids.getDataOfSquare_Wireframe;
-            const data = funcToUse(startX, startY, endX, endY, colorToUse)
+            const colorToUse = !inDevMode ? voids.color : voids.color_wireframe;
+            const funcToUse = !inDevMode ? voids.getDataOfSquare : voids.getDataOfSquare_Wireframe;
+            const data = funcToUse(startX, startY, endX, endY, colorToUse);
 
             for (let a = 0; a < data.length; a++) {
                 data64[currIndex] = data[a];
@@ -61,7 +61,7 @@ const voids = {
         }
 
         const mode = inDevMode ? "LINES" : "TRIANGLES";
-        gamefile.voidMesh.model = buffermodel.createModel_Colored(data32, 2, mode)
+        gamefile.voidMesh.model = buffermodel.createModel_Colored(data32, 2, mode);
     },
 
     // The passed in sides should be the center-coordinate value of the square in the corner
@@ -74,7 +74,7 @@ const voids = {
         const height = top - bottom + 1;
         const endX = startX + width;
         const endY = startY + height;
-        return { startX, startY, endX, endY }
+        return { startX, startY, endX, endY };
     },
 
     // Returns an array of the data that can be entered into the buffer model!
@@ -89,7 +89,7 @@ const voids = {
             endX, startY,         r, g, b, a,
             startX, endY,         r, g, b, a,
             endX, endY,           r, g, b, a
-        ]
+        ];
     },
 
     // Returns gl_lines data
@@ -116,7 +116,7 @@ const voids = {
 
             endX, endY,           r, g, b, a,
             endX, startY,         r, g, b, a
-        ]
+        ];
     },
 
     /**
@@ -129,13 +129,13 @@ const voids = {
         const data64 = gamefile.voidMesh.data64;
         const data32 = gamefile.voidMesh.data32;
         for (let i = 0; i < data32.length; i += voids.stride) {
-            data64[i]   += diffXOffset;
-            data64[i+1] += diffYOffset;
-            data32[i]   = data64[i];
-            data32[i+1] = data64[i+1];
+            data64[i] += diffXOffset;
+            data64[i + 1] += diffYOffset;
+            data32[i] = data64[i];
+            data32[i + 1] = data64[i + 1];
         }
 
-        gamefile.voidMesh.model.updateBuffer() // Reinit the model because its data has been updated
+        gamefile.voidMesh.model.updateBuffer(); // Reinit the model because its data has been updated
     },
 
     /**
@@ -156,7 +156,7 @@ const voids = {
         const rectangles = []; // rectangle: { left, right, bottom, top }
         const alreadyMerged = { }; // Set the coordinate key `x,y` to true when a void has been merged
 
-        for (const thisVoid of voidList) {  // [x,y]
+        for (const thisVoid of voidList) { // [x,y]
 
             // Has this void already been merged with another previous?
             const key = math.getKeyFromCoords(thisVoid);
@@ -187,13 +187,13 @@ const voids = {
                         allNeighborsAreVoid = false;
                         break; // Can't merge
                     }
-                    potentialMergers.push(thisKey) // Can merge
+                    potentialMergers.push(thisKey); // Can merge
                 }
                 if (allNeighborsAreVoid) { 
                     left = testX; // Merge!
                     width++;
                     // Add all the merged squares to the already-merged list
-                    potentialMergers.forEach(key => { alreadyMerged[key] = true; })
+                    potentialMergers.forEach(key => { alreadyMerged[key] = true; });
                     continue;
                 }
 
@@ -211,13 +211,13 @@ const voids = {
                         allNeighborsAreVoid = false;
                         break; // Can't merge
                     }
-                    potentialMergers.push(thisKey) // Can merge
+                    potentialMergers.push(thisKey); // Can merge
                 }
                 if (allNeighborsAreVoid) { 
                     right = testX; // Merge!
                     width++;
                     // Add all the merged squares to the already-merged list
-                    potentialMergers.forEach(key => { alreadyMerged[key] = true; })
+                    potentialMergers.forEach(key => { alreadyMerged[key] = true; });
                     continue;
                 }
 
@@ -235,13 +235,13 @@ const voids = {
                         allNeighborsAreVoid = false;
                         break; // Can't merge
                     }
-                    potentialMergers.push(thisKey) // Can merge
+                    potentialMergers.push(thisKey); // Can merge
                 }
                 if (allNeighborsAreVoid) { 
                     bottom = testY; // Merge!
                     height++;
                     // Add all the merged squares to the already-merged list
-                    potentialMergers.forEach(key => { alreadyMerged[key] = true; })
+                    potentialMergers.forEach(key => { alreadyMerged[key] = true; });
                     continue;
                 }
 
@@ -259,20 +259,20 @@ const voids = {
                         allNeighborsAreVoid = false;
                         break; // Can't merge
                     }
-                    potentialMergers.push(thisKey) // Can merge
+                    potentialMergers.push(thisKey); // Can merge
                 }
                 if (allNeighborsAreVoid) { 
                     top = testY; // Merge!
                     height++;
                     // Add all the merged squares to the already-merged list
-                    potentialMergers.forEach(key => { alreadyMerged[key] = true; })
+                    potentialMergers.forEach(key => { alreadyMerged[key] = true; });
                     continue;
                 }
 
                 foundNeighbor = false; // Cannot expand this rectangle! Stop searching
             }
 
-            const rectangle = { left, right, bottom, top }
+            const rectangle = { left, right, bottom, top };
             rectangles.push(rectangle);
         }
 
@@ -290,9 +290,9 @@ const voids = {
             -boardPos[0] + gamefile.mesh.offset[0], // Add the model's offset. 
             -boardPos[1] + gamefile.mesh.offset[1],
             0
-        ] // While separate these are each big decimals, TOGETHER they are small number! That's fast for rendering!
+        ]; // While separate these are each big decimals, TOGETHER they are small number! That's fast for rendering!
         const boardScale = movement.getBoardScale();
-        const scale = [boardScale, boardScale, 1]
+        const scale = [boardScale, boardScale, 1];
 
         gamefile.voidMesh.model.render(position, scale);
     }

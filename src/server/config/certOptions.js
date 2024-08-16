@@ -12,12 +12,12 @@ function getCertOptions() {
         return {
             key: fs.readFileSync(path.join(pathToCertFolder, 'cert.key')),
             cert: fs.readFileSync(path.join(pathToCertFolder, 'cert.pem'))
-        }
+        };
     } else { // Use officially signed certificates for production environment
         return {
             key: fs.readFileSync(path.join(process.env.CERT_PATH, 'privkey.pem')),
             cert: fs.readFileSync(path.join(process.env.CERT_PATH, 'fullchain.pem')),
-        }
+        };
     }
 }
 

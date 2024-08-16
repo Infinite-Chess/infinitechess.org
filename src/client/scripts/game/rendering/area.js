@@ -35,8 +35,8 @@ const area = (function() {
      * @returns {Area} The area object
      */
     function calculateFromCoordsList(coordsList, existingBox) {
-        if (!coordsList) return console.error("Cannot calculate area from an undefined coords list.")
-        if (coordsList.length === 0) return console.error("Cannot calculate area from an empty coords list.")
+        if (!coordsList) return console.error("Cannot calculate area from an undefined coords list.");
+        if (coordsList.length === 0) return console.error("Cannot calculate area from an empty coords list.");
 
         let box = math.getBoxFromCoordsList(coordsList); // Unpadded
         if (existingBox) box = math.mergeBoundingBoxes(box, existingBox); // Unpadded
@@ -50,7 +50,7 @@ const area = (function() {
      * @returns {Area} The area object
      */
     function calculateFromUnpaddedBox(box) {
-        if (!box) return console.error("Cannot calculate area from an undefined box.")
+        if (!box) return console.error("Cannot calculate area from an undefined box.");
 
         const paddedBox = applyPaddingToBox(box);
         return calculateFromBox(paddedBox);
@@ -73,10 +73,10 @@ const area = (function() {
         
         // Round to the furthest away edge of the square.
         const squareCenter = board.gsquareCenter();
-        boxCopy.left -= squareCenter
-        boxCopy.right += 1 - squareCenter
-        boxCopy.bottom -= squareCenter
-        boxCopy.top += 1 - squareCenter
+        boxCopy.left -= squareCenter;
+        boxCopy.right += 1 - squareCenter;
+        boxCopy.bottom -= squareCenter;
+        boxCopy.top += 1 - squareCenter;
 
         /** Start with a copy with zero padding.
          * @type {BoundingBox} */
@@ -87,7 +87,7 @@ const area = (function() {
         if (iterationsToRecalcPadding <= 0) { console.error("iterationsToRecalcPadding must be greater than 0!"); return boxCopy; }
         for (let i = 0; i < iterationsToRecalcPadding; i++) {
 
-            let paddingToUse = scale < movement.getScale_When1TileIs1Pixel_Virtual() ? paddingMiniimage : padding;
+            const paddingToUse = scale < movement.getScale_When1TileIs1Pixel_Virtual() ? paddingMiniimage : padding;
             const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
             const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
 
@@ -96,10 +96,10 @@ const area = (function() {
             const paddingHorz = paddingHorzWorld / scale;
             const paddingVert = paddingVertWorld / scale;
 
-            paddedBox = addPaddingToBoundingBox(boxCopy, paddingHorz, paddingVert)
+            paddedBox = addPaddingToBoundingBox(boxCopy, paddingHorz, paddingVert);
 
             // Prep for next iteration
-            scale = calcScaleToMatchSides(paddedBox)
+            scale = calcScaleToMatchSides(paddedBox);
         }
 
         return paddedBox;
@@ -112,30 +112,30 @@ const area = (function() {
      * @returns {Area} The area object
      */
     function calculateFromBox(box) { // { left, right, bottom, top }
-        if (!box) return console.error("Cannot calculate area from an undefined box.")
+        if (!box) return console.error("Cannot calculate area from an undefined box.");
 
         // The new boardPos is the middle point
         const xHalfLength = (box.right - box.left) / 2;
         const yHalfLength = (box.top - box.bottom) / 2;
         const centerX = box.left + xHalfLength;
         const centerY = box.bottom + yHalfLength;
-        const newBoardPos = [centerX, centerY]
+        const newBoardPos = [centerX, centerY];
 
         // What is the scale required to match the sides?
-        const newScale = calcScaleToMatchSides(box)
+        const newScale = calcScaleToMatchSides(box);
 
         // Now maximize the bounding box to fill entire screen when at position and scale, so that
         // we don't have long thin slices of a bounding box that will fail the math.boxContainsSquare() function EVEN
         // if the square is visible on screen!
-        box = math.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox())
-        math
+        box = math.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
+        math;
         // PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
         return {
             coords: newBoardPos,
             scale: newScale,
             boundingBox: box
-        }
+        };
     }
     
     /**
@@ -145,10 +145,10 @@ const area = (function() {
      * @returns {number} The scale (zoom) required
      */
     function calcScaleToMatchSides(boundingBox) {
-        if (!boundingBox) return console.log("Cannot calc scale to match sides of an undefined box.")
+        if (!boundingBox) return console.log("Cannot calc scale to match sides of an undefined box.");
 
-        const xHalfLength = (boundingBox.right - boundingBox.left) / 2
-        const yHalfLength = (boundingBox.top - boundingBox.bottom) / 2
+        const xHalfLength = (boundingBox.right - boundingBox.left) / 2;
+        const yHalfLength = (boundingBox.top - boundingBox.bottom) / 2;
 
         // What is the scale required to match the sides?
         const xScale = camera.getScreenBoundingBox(false).right / xHalfLength;
@@ -173,19 +173,19 @@ const area = (function() {
             right: boundingBox.right + horzPad,
             bottom: boundingBox.bottom - vertPad,
             top: boundingBox.top + vertPad,
-        }
+        };
     }
 
     function initTelFromCoordsList(coordsList) { // pieces is an array of coords
-        if (!coordsList) return console.error("Cannot init teleport from an undefined coords list.")
-        if (coordsList.length === 0) return console.error("Cannot init teleport from an empty coords list.")
+        if (!coordsList) return console.error("Cannot init teleport from an undefined coords list.");
+        if (coordsList.length === 0) return console.error("Cannot init teleport from an empty coords list.");
 
         const box = math.getBoxFromCoordsList(coordsList); // Unpadded
         initTelFromUnpaddedBox(box);
     }
 
     function initTelFromUnpaddedBox(box) {
-        if (!box) return console.error("Cannot init teleport from an undefined box.")
+        if (!box) return console.error("Cannot init teleport from an undefined box.");
 
         const thisArea = calculateFromUnpaddedBox(box);
         initTelFromArea(thisArea);
@@ -204,7 +204,7 @@ const area = (function() {
         const startCoords = movement.getBoardPos();
         const endCoords = thisArea.coords;
 
-        const currentBoardBoundingBox = board.gboundingBox() // Tile/board space, NOT world-space
+        const currentBoardBoundingBox = board.gboundingBox(); // Tile/board space, NOT world-space
 
         // Will a teleport to this area be a zoom out or in?
         const isAZoomOut = thisArea.scale < movement.getBoardScale();
@@ -212,14 +212,14 @@ const area = (function() {
         let firstArea;
 
         if (isAZoomOut) { // If our current screen isn't within the final area, create new area to teleport to first
-            if (!math.boxContainsSquare(thisAreaBox, startCoords)) firstArea = calculateFromCoordsList([startCoords], thisAreaBox)
+            if (!math.boxContainsSquare(thisAreaBox, startCoords)) firstArea = calculateFromCoordsList([startCoords], thisAreaBox);
             // Version that fits the entire screen on the zoom out
             // if (!math.boxContainsBox(thisAreaBox, currentBoardBoundingBox)) {
             //     const mergedBoxes = math.mergeBoundingBoxes(currentBoardBoundingBox, thisAreaBox);
             //     firstArea = calculateFromBox(mergedBoxes);
             // }
         } else { // zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
-            if (!math.boxContainsSquare(currentBoardBoundingBox, endCoords)) firstArea = calculateFromCoordsList([endCoords], currentBoardBoundingBox)
+            if (!math.boxContainsSquare(currentBoardBoundingBox, endCoords)) firstArea = calculateFromCoordsList([endCoords], currentBoardBoundingBox);
             // Version that fits the entire screen on the zoom out
             // if (!math.boxContainsBox(currentBoardBoundingBox, thisAreaBox)) {
             //     const mergedBoxes = math.mergeBoundingBoxes(currentBoardBoundingBox, thisAreaBox);
@@ -227,11 +227,11 @@ const area = (function() {
             // }
         }
 
-        const tel1 = firstArea ? { endCoords: firstArea.coords, endScale: firstArea.scale } : undefined
-        const tel2 = { endCoords: thisArea.coords, endScale: thisArea.scale }
+        const tel1 = firstArea ? { endCoords: firstArea.coords, endScale: firstArea.scale } : undefined;
+        const tel2 = { endCoords: thisArea.coords, endScale: thisArea.scale };
 
-        if (tel1) transition.teleport(tel1, tel2, ignoreHistory)
-        else      transition.teleport(tel2, null, ignoreHistory)
+        if (tel1) transition.teleport(tel1, tel2, ignoreHistory);
+        else transition.teleport(tel2, null, ignoreHistory);
     }
 
     /**
@@ -241,9 +241,9 @@ const area = (function() {
      * @returns {Area} The area object
      */
     function getAreaOfAllPieces(gamefile) {
-        if (!gamefile) return console.error("Cannot get the area of all pieces of an undefined game.")
-        if (!gamefile.startSnapshot.box) return console.error("Cannot get area of all pieces when gamefile has no startSnapshot.box property!")
-        return calculateFromUnpaddedBox(gamefile.startSnapshot.box)
+        if (!gamefile) return console.error("Cannot get the area of all pieces of an undefined game.");
+        if (!gamefile.startSnapshot.box) return console.error("Cannot get area of all pieces when gamefile has no startSnapshot.box property!");
+        return calculateFromUnpaddedBox(gamefile.startSnapshot.box);
     }
 
     /**
@@ -252,7 +252,7 @@ const area = (function() {
      */
     function initStartingAreaBox(gamefile) {
         const startingPosition = gamefile.startSnapshot.position;
-        const coordsList = gamefileutility.getCoordsOfAllPiecesByKey(startingPosition)
+        const coordsList = gamefileutility.getCoordsOfAllPiecesByKey(startingPosition);
         const box = math.getBoxFromCoordsList(coordsList);
         gamefile.startSnapshot.box = box;
     }

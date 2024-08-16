@@ -6,7 +6,7 @@
 
 "use strict";
 
-const board = (function(){
+const board = (function() {
 
     let tiles_texture; // 2x2 transparent
     let tiles256_texture; // 256x256 transparent. Any color, but greater mouire effect
@@ -50,10 +50,10 @@ const board = (function(){
     let darkTiles;
 
     function initTextures() {
-        tiles_texture = texture.loadTexture('tiles', { useMipmaps: false })
+        tiles_texture = texture.loadTexture('tiles', { useMipmaps: false });
         // This transparent tiles texture gives us freedom of color, but the artifacts are a little heavier
-        tiles256_texture = texture.loadTexture('tiles256', { useMipmaps: false })
-        tilesGrey78_texture = texture.loadTexture('tilesGrey78', { useMipmaps: false })
+        tiles256_texture = texture.loadTexture('tiles256', { useMipmaps: false });
+        tilesGrey78_texture = texture.loadTexture('tilesGrey78', { useMipmaps: false });
     }
 
     function gsquareCenter() {
@@ -95,15 +95,15 @@ const board = (function(){
 
     // Recalculate board velicity, scale, and other common variables.
     function recalcVariables() {
-        recalcTileWidth_Pixels() // This needs to be after recalcPosition(), else dragging & scaling has a spring to it.
+        recalcTileWidth_Pixels(); // This needs to be after recalcPosition(), else dragging & scaling has a spring to it.
         recalcTile_MouseCrosshairOver();
-        recalcTiles_FingersOver()
-        recalcBoundingBox()
+        recalcTiles_FingersOver();
+        recalcBoundingBox();
     }
 
     function recalcTile_MouseCrosshairOver() {
-        recalcTile_MouseOver()
-        recalcTile_CrosshairOver()
+        recalcTile_MouseOver();
+        recalcTile_CrosshairOver();
     }
 
     function recalcTileWidth_Pixels() {
@@ -116,26 +116,26 @@ const board = (function(){
 
     function recalcTile_MouseOver() {
         if (perspective.isMouseLocked()) return;
-        if (perspective.getEnabled()) return setTile_MouseOverToUndefined()
+        if (perspective.getEnabled()) return setTile_MouseOverToUndefined();
 
         const tile_MouseOver_IntAndFloat = getTileMouseOver();
        
-        tile_MouseOver_Float = tile_MouseOver_IntAndFloat.tile_Float
-        tile_MouseOver_Int = tile_MouseOver_IntAndFloat.tile_Int
+        tile_MouseOver_Float = tile_MouseOver_IntAndFloat.tile_Float;
+        tile_MouseOver_Int = tile_MouseOver_IntAndFloat.tile_Int;
     }
 
     function setTile_MouseOverToUndefined() {
-        tile_MouseOver_Float = undefined
-        tile_MouseOver_Int = undefined
+        tile_MouseOver_Float = undefined;
+        tile_MouseOver_Int = undefined;
     }
 
     function recalcTile_CrosshairOver() {
         if (!perspective.isMouseLocked()) return;
 
-        const coords = math.convertWorldSpaceToCoords(input.getMouseWorldLocation())
+        const coords = math.convertWorldSpaceToCoords(input.getMouseWorldLocation());
 
-        tile_MouseOver_Float = coords
-        tile_MouseOver_Int = [Math.floor(coords[0] + squareCenter), Math.floor(coords[1] + squareCenter)]
+        tile_MouseOver_Float = coords;
+        tile_MouseOver_Int = [Math.floor(coords[0] + squareCenter), Math.floor(coords[1] + squareCenter)];
     }
 
     function recalcTiles_FingersOver() {
@@ -143,8 +143,8 @@ const board = (function(){
         tiles_FingersOver_Int = {};
         
         for (let i = 0; i < input.getTouchHelds().length; i++) {
-            const thisTouch = input.getTouchHelds()[i]
-            const touchTileAndFloat = gtileCoordsOver(thisTouch.x, thisTouch.y)
+            const thisTouch = input.getTouchHelds()[i];
+            const touchTileAndFloat = gtileCoordsOver(thisTouch.x, thisTouch.y);
         
             tiles_FingersOver_Float[thisTouch.id] = touchTileAndFloat.tile_Float;
             tiles_FingersOver_Int[thisTouch.id] = touchTileAndFloat.tile_Int;
@@ -155,22 +155,22 @@ const board = (function(){
         const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
         const boardPos = movement.getBoardPos();
-        const tileXFloat = n*x / tileWidth_Pixels + boardPos[0];
-        const tileYFloat = n*y / tileWidth_Pixels + boardPos[1];
+        const tileXFloat = n * x / tileWidth_Pixels + boardPos[0];
+        const tileYFloat = n * y / tileWidth_Pixels + boardPos[1];
     
-        const tile_Float = [tileXFloat, tileYFloat]
-        const tile_Int = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)]
+        const tile_Float = [tileXFloat, tileYFloat];
+        const tile_Int = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)];
 
-        return { tile_Float, tile_Int }
+        return { tile_Float, tile_Int };
     }
 
     // Works whether the mouse is virtual (touch screen) or not
     function getTileMouseOver() {
         const mouseWorld = input.getMouseWorldLocation(); // [x, y]
-        const tile_Float = math.convertWorldSpaceToCoords(mouseWorld)
-        const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)]
+        const tile_Float = math.convertWorldSpaceToCoords(mouseWorld);
+        const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
         
-        return { tile_Float, tile_Int }
+        return { tile_Float, tile_Int };
     }
 
     // Takes in touchID, returns an object of the finger id, and x & y of tile
@@ -179,13 +179,13 @@ const board = (function(){
             id: touchID,
             x: tiles_FingersOver_Float[touchID][0],
             y: tiles_FingersOver_Float[touchID][1]
-        }
+        };
     }
 
     function recalcBoundingBox() {
 
-        boundingBoxFloat = math.getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), camera.getScreenBoundingBox())
-        boundingBox = roundAwayBoundingBox(boundingBoxFloat)
+        boundingBoxFloat = math.getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), camera.getScreenBoundingBox());
+        boundingBox = roundAwayBoundingBox(boundingBoxFloat);
     }
 
     /**
@@ -196,12 +196,12 @@ const board = (function(){
      */
     function roundAwayBoundingBox(src) {
 
-        const left = Math.floor(src.left + squareCenter)
-        const right = Math.ceil(src.right - 1 + squareCenter)
-        const bottom = Math.floor(src.bottom + squareCenter)
-        const top = Math.ceil(src.top - 1 + squareCenter)
+        const left = Math.floor(src.left + squareCenter);
+        const right = Math.ceil(src.right - 1 + squareCenter);
+        const bottom = Math.floor(src.bottom + squareCenter);
+        const top = Math.ceil(src.top - 1 + squareCenter);
         
-        return { left, right, bottom, top }
+        return { left, right, bottom, top };
     }
 
     /**
@@ -220,17 +220,17 @@ const board = (function(){
         const a = perspective.distToRenderBoard;
 
         const startX = inPerspective ? -a : camera.getScreenBoundingBox(false).left;
-        const endX =   inPerspective ? a : camera.getScreenBoundingBox(false).right;
+        const endX = inPerspective ? a : camera.getScreenBoundingBox(false).right;
         const startY = inPerspective ? -a : camera.getScreenBoundingBox(false).bottom;
-        const endY =   inPerspective ? a : camera.getScreenBoundingBox(false).top;
+        const endY = inPerspective ? a : camera.getScreenBoundingBox(false).top;
 
         const boardPos = movement.getBoardPos();
         // This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
-                                                                    // Without "- 1/1000", my computer's texture rendering is slightly off
-        let texCoordStartX = (((boardPos[0] + squareCenter) + startX / boardScale) % 2) / 2 - 1/1000;
-        let texCoordStartY = (((boardPos[1] + squareCenter) + startY / boardScale) % 2) / 2 - 1/1000;
-        let texCoordEndX = texCoordStartX + (endX - startX) / TwoTimesScale;
-        let texCoordEndY = texCoordStartY + (endY - startY) / TwoTimesScale;
+        // Without "- 1/1000", my computer's texture rendering is slightly off
+        const texCoordStartX = (((boardPos[0] + squareCenter) + startX / boardScale) % 2) / 2 - 1 / 1000;
+        const texCoordStartY = (((boardPos[1] + squareCenter) + startY / boardScale) % 2) / 2 - 1 / 1000;
+        const texCoordEndX = texCoordStartX + (endX - startX) / TwoTimesScale;
+        const texCoordEndY = texCoordStartY + (endY - startY) / TwoTimesScale;
 
         const [wr,wg,wb,wa] = whiteTiles;
         // const [dr,dg,db,da] = darkTiles;
@@ -239,39 +239,39 @@ const board = (function(){
         
         const data = [];
 
-        const whiteTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, wr, wg, wb, wa)
+        const whiteTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, wr, wg, wb, wa);
         data.push(...whiteTilesData);
 
         // const darkTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, dr, dg, db, da)
         // data.push(...darkTilesData);
 
         // return buffermodel.createModel_ColorTexture3D(new Float32Array(data))
-        const texture = perspective.getEnabled() ? tiles256_texture : tiles_texture
-        return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", texture)
+        const texture = perspective.getEnabled() ? tiles256_texture : tiles_texture;
+        return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", texture);
     }
 
     // The dark tiles model is a rectangle filling the whole screen, rendered underneath the white tile texture which is transparent.
-    function initDarkTilesModel () {
-        if (!darkTiles) resetColor()
+    function initDarkTilesModel() {
+        if (!darkTiles) resetColor();
 
         const inPerspective = perspective.getEnabled();
-        const dist = perspective.distToRenderBoard
+        const dist = perspective.distToRenderBoard;
         const screenBoundingBox = camera.getScreenBoundingBox(false);
 
-        const startX = inPerspective ? -dist : screenBoundingBox.left
-        const endX =   inPerspective ?  dist : screenBoundingBox.right
-        const startY = inPerspective ? -dist : screenBoundingBox.bottom
-        const endY =   inPerspective ?  dist : screenBoundingBox.top
+        const startX = inPerspective ? -dist : screenBoundingBox.left;
+        const endX =   inPerspective ?  dist : screenBoundingBox.right;
+        const startY = inPerspective ? -dist : screenBoundingBox.bottom;
+        const endY =   inPerspective ?  dist : screenBoundingBox.top;
         // const z = perspective.getEnabled() ? perspectiveMode_z : 0;
         const z = perspective.getEnabled() ? perspectiveMode_z : 0;
 
         const [r,g,b,a] = darkTiles;
 
-        const data = bufferdata.getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a)
-        const dataFloat32 = new Float32Array(data)
+        const data = bufferdata.getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a);
+        const dataFloat32 = new Float32Array(data);
 
         // darkTilesModel = buffermodel.createModel_Color3D(dataFloat32) // { prepDraw, vertexCount, program }
-        darkTilesModel = buffermodel.createModel_Colored(dataFloat32, 3, "TRIANGLES")
+        darkTilesModel = buffermodel.createModel_Colored(dataFloat32, 3, "TRIANGLES");
     }
 
     function renderMainBoard() {
@@ -280,7 +280,7 @@ const board = (function(){
 
         // We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
         // The other option is to regenerate it as much as highlighted squares, with the bounding box.
-        const model = regenBoardModel()
+        const model = regenBoardModel();
 
         // OLD
         // const texture = perspective.getEnabled() ? tilesGrey78_texture : tiles_texture
@@ -294,7 +294,7 @@ const board = (function(){
     }
 
     // Checks if the board position is atleast regenRange-distance away from specified offset
-    function isOffsetOutOfRangeOfRegenRange (offset, regenRange) { // offset: [x,y]
+    function isOffsetOutOfRangeOfRegenRange(offset, regenRange) { // offset: [x,y]
         const boardPos = movement.getBoardPos();
         const xDiff = Math.abs(boardPos[0] - offset[0]);
         const yDiff = Math.abs(boardPos[1] - offset[1]);
@@ -332,9 +332,9 @@ const board = (function(){
         ifThemeArgumentDefined_Set_AndEnableColor(args, 'blackPiecesColor');
         ifThemeArgumentDefined_Set_AndEnableColor(args, 'neutralPiecesColor');
 
-        updateTheme()
-        piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs())
-        highlights.regenModel()
+        updateTheme();
+        piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
+        highlights.regenModel();
     }
 
     function ifThemeArgumentDefined_Set(args, argumentName) { // whiteTiles/selectedPieceHighlightColor...
@@ -350,9 +350,9 @@ const board = (function(){
 
     /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
     function updateTheme() {
-        resetColor()
-        updateSkyColor()
-        updateNavColor()
+        resetColor();
+        updateSkyColor();
+        updateNavColor();
     }
 
     // Updates sky color based on current board color
@@ -367,7 +367,7 @@ const board = (function(){
         const skyG = avgG - dimAmount;
         const skyB = avgB - dimAmount;
 
-        webgl.setClearColor([skyR, skyG, skyB])
+        webgl.setClearColor([skyR, skyG, skyB]);
     }
 
     function updateNavColor() {
@@ -403,27 +403,27 @@ const board = (function(){
             .footer {
                 background: linear-gradient(to bottom, rgba(${navR}, ${navG}, ${navB}, 0.307), rgba(${navR}, ${navG}, ${navB}, 1), rgba(${navR}, ${navG}, ${navB}, 0.84));
             }
-        `)
+        `);
     }
 
     // TEMPORARILY changes the board tiles color! Resets upon leaving game.
     // Used to darken board
     function changeColor(newWhiteTiles, newDarkTiles) {
         main.renderThisFrame();
-        whiteTiles = newWhiteTiles
-        darkTiles = newDarkTiles
-        initDarkTilesModel()
+        whiteTiles = newWhiteTiles;
+        darkTiles = newDarkTiles;
+        initDarkTilesModel();
     }
 
     function resetColor() {
         whiteTiles = options.getDefaultTiles(true); // true for white
         darkTiles = options.getDefaultTiles(false); // false for dark
-        initDarkTilesModel()
+        initDarkTilesModel();
         main.renderThisFrame();
     }
 
-    function darkenColor () {
-        const whiteTiles = options.getDefaultTiles(true);;
+    function darkenColor() {
+        const whiteTiles = options.getDefaultTiles(true); ;
         const darkTiles = options.getDefaultTiles(false);
 
         const darkenBy = 0.09;
@@ -441,15 +441,15 @@ const board = (function(){
     function render() {
         // This prevents tearing when rendering in the same z-level and in perspective.
         webgl.executeWithDepthFunc_ALWAYS(() => {
-            renderSolidCover() // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
-            renderMainBoard()
-            renderFractalBoards()
-        })
+            renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
+            renderMainBoard();
+            renderFractalBoards();
+        });
     }
 
     function renderFractalBoards() {
 
-        const e = -math.getBaseLog10(movement.getBoardScale())
+        const e = -math.getBaseLog10(movement.getBoardScale());
 
         const startE = 0.5; // 0.5   lower = starts coming in quicker
         if (e < startE) return;
@@ -468,15 +468,15 @@ const board = (function(){
         let x = (firstInterval - e) / length; // 0 - 1
         // console.log(`x: ${x}`)
         let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7); // 0.7  the lower the pow, the faster the opacity
-        renderZoomedBoard(zoom, opacity)
+        renderZoomedBoard(zoom, opacity);
 
         // 2nd most-zoomed out board
         firstInterval -= interval;
         if (firstInterval < 0) return;
-        zoom /= Math.pow(10, 3)
+        zoom /= Math.pow(10, 3);
         x = (firstInterval - e) / length; // 0 - 1
         opacity = capOpacity * (-0.5 * Math.cos(2 * x * Math.PI) + 0.5);
-        renderZoomedBoard(zoom, opacity)
+        renderZoomedBoard(zoom, opacity);
     }
 
     // Renders an upside down grey cone centered around the camera, and level with the horizon.
@@ -484,12 +484,12 @@ const board = (function(){
         // const dist = perspective.distToRenderBoard;
         const dist = camera.getZFar() / Math.SQRT2;
         const z = perspective.getEnabled() ? perspectiveMode_z : 0;
-        const cameraZ = camera.getPosition(true)[2]
+        const cameraZ = camera.getPosition(true)[2];
 
-        const r = (whiteTiles[0] + darkTiles[0]) / 2
-        const g = (whiteTiles[1] + darkTiles[1]) / 2
-        const b = (whiteTiles[2] + darkTiles[2]) / 2
-        const a = (whiteTiles[3] + darkTiles[3]) / 2
+        const r = (whiteTiles[0] + darkTiles[0]) / 2;
+        const g = (whiteTiles[1] + darkTiles[1]) / 2;
+        const b = (whiteTiles[2] + darkTiles[2]) / 2;
+        const a = (whiteTiles[3] + darkTiles[3]) / 2;
 
         // const data = new Float32Array([
         //     //     Vertex                                      Color
@@ -504,9 +504,9 @@ const board = (function(){
         const data = bufferdata.getDataBoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
         data.push(...bufferdata.getDataQuad_Color3D(-dist, -dist, dist, dist, z, r, g, b, a)); // Floor of the box
 
-        const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES")
+        const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 
-        model.render()
+        model.render();
     }
 
     function renderZoomedBoard(zoom, opacity) {
@@ -514,8 +514,8 @@ const board = (function(){
         const zoomTimesScale = zoom * movement.getBoardScale();
         const zoomTimesScaleTwo = zoomTimesScale * 2;
 
-        const inPerspective = perspective.getEnabled()
-        const c = perspective.distToRenderBoard
+        const inPerspective = perspective.getEnabled();
+        const c = perspective.distToRenderBoard;
 
         const startX = inPerspective ? -c : camera.getScreenBoundingBox(false).left;
         const endX =   inPerspective ?  c : camera.getScreenBoundingBox(false).right;
@@ -524,35 +524,37 @@ const board = (function(){
 
         const boardPos = movement.getBoardPos();
         // This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
-                                                                    // Without "- 1/1000", my mac's texture rendering is slightly off
-        let texStartX = (((boardPos[0] + squareCenter) / zoom + (startX / zoomTimesScale)) % 2) / 2 - 1/1000;
-        let texStartY = (((boardPos[1] + squareCenter) / zoom + (startY / zoomTimesScale)) % 2) / 2 - 1/1000;
+        // Without "- 1/1000", my mac's texture rendering is slightly off
+        const texStartX = (((boardPos[0] + squareCenter) / zoom + (startX / zoomTimesScale)) % 2) / 2 - 1 / 1000;
+        const texStartY = (((boardPos[1] + squareCenter) / zoom + (startY / zoomTimesScale)) % 2) / 2 - 1 / 1000;
         const texCoordDiffX = (endX - startX) / zoomTimesScaleTwo;
-            const screenTexCoordDiffX = (camera.getScreenBoundingBox(false).right - camera.getScreenBoundingBox(false).left) / zoomTimesScaleTwo
-            const diffWhen1TileIs1Pixel = camera.canvas.width / 2;
-            if (screenTexCoordDiffX > diffWhen1TileIs1Pixel) return; // STOP rendering to avoid glitches! Too small
+        const screenTexCoordDiffX = (camera.getScreenBoundingBox(false).right - camera.getScreenBoundingBox(false).left) / zoomTimesScaleTwo;
+        const diffWhen1TileIs1Pixel = camera.canvas.width / 2;
+        if (screenTexCoordDiffX > diffWhen1TileIs1Pixel) return; // STOP rendering to avoid glitches! Too small
         const texCoordDiffY = (endY - startY) / zoomTimesScaleTwo;
-        let texEndX = texStartX + texCoordDiffX;
-        let texEndY = texStartY + texCoordDiffY;
+        const texEndX = texStartX + texCoordDiffX;
+        const texEndY = texStartY + texCoordDiffY;
 
         const texStartXB = texStartX + 0.5;
         const texEndXB = texEndX + 0.5;
 
         const z = perspective.getEnabled() ? perspectiveMode_z : 0;
 
+        // eslint-disable-next-line prefer-const
         let [wr,wg,wb,wa] = whiteTiles; wa *= opacity;
+        // eslint-disable-next-line prefer-const
         let [dr,dg,db,da] = darkTiles; da *= opacity;
         
         const data = [];
 
-        const dataWhiteTiles = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, wr, wg, wb, wa)
+        const dataWhiteTiles = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, wr, wg, wb, wa);
         data.push(...dataWhiteTiles);
 
-        const dataDarkTiles = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartXB, texStartY, texEndXB, texEndY, dr, dg, db, da)
+        const dataDarkTiles = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartXB, texStartY, texEndXB, texEndY, dr, dg, db, da);
         data.push(...dataDarkTiles);
 
         // const model = buffermodel.createModel_ColorTexture3D(new Float32Array(data));
-        const texture = perspective.getEnabled() ? tiles256_texture : tiles_texture
+        const texture = perspective.getEnabled() ? tiles256_texture : tiles_texture;
         const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", texture);
 
         model.render();
@@ -583,5 +585,5 @@ const board = (function(){
         getTileMouseOver,
         recalcTile_MouseCrosshairOver,
         recalcTiles_FingersOver
-    })
+    });
 })();

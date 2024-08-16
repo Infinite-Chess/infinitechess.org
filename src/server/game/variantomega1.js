@@ -1,5 +1,5 @@
 
-const variant1 = require('./variant1')
+const variant1 = require('./variant1');
 const math1 = require('./math1');
 
 
@@ -8,21 +8,21 @@ const math1 = require('./math1');
 
 'use strict';
 
-const variantomega1 = (function(){
+const variantomega1 = (function() {
 
     /**
      * Inits the gamefile for Joel & Cory's "Omega". Sets the startSnapshot and gameRules properties.
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmega(gamefile, { Variant, UTCDate, UTCTime }) {
-        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega' })
+        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega' });
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
             turn: 'black'
-        }
-        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
+        };
+        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
     }
 
     /**
@@ -30,14 +30,14 @@ const variantomega1 = (function(){
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmegaSquared(gamefile, { Variant, UTCDate, UTCTime }) {
-        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Squared' })
+        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Squared' });
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
             turn: 'black'
-        }
-        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
+        };
+        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
     }
 
     /**
@@ -45,14 +45,14 @@ const variantomega1 = (function(){
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmegaCubed(gamefile, { Variant, UTCDate, UTCTime }) {
-        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Cubed' })
+        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Cubed' });
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
             turn: 'black'
-        }
-        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
+        };
+        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
     }
 
     /**
@@ -60,14 +60,14 @@ const variantomega1 = (function(){
      * @param {gamefile} gamefile - The gamefile
      */
     function initOmegaFourth(gamefile, { Variant, UTCDate, UTCTime }) {
-        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Fourth' })
+        const { position, positionString, specialRights } = variant1.getStartingPositionOfVariant({ Variant: 'Omega_Fourth' });
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
             turn: 'black'
-        }
-        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position)
+        };
+        gamefile.gameRules = variant1.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
     }
 
     /**
@@ -90,7 +90,7 @@ const variantomega1 = (function(){
         // Third pawn wall
         appendPawnTower(startingPos, 9, -dist, dist);
         startingPos[math1.getKeyFromCoords([9,10])] = 'bishopsW'; // Overwrite with bishop
-        setAir(startingPos, [9,11])
+        setAir(startingPos, [9,11]);
 
         // Black king wall
         appendPawnTower(startingPos, 10, -dist, dist);
@@ -115,7 +115,7 @@ const variantomega1 = (function(){
         startingPos[math1.getKeyFromCoords([14,5])] = 'pawnsB';
         startingPos[math1.getKeyFromCoords([14,4])] = 'pawnsW';
 
-        genBishopTunnel(startingPos, 15, 6, dist, dist)
+        genBishopTunnel(startingPos, 15, 6, dist, dist);
 
         surroundPositionInVoidBox(startingPos, { left: -500, right: 500, bottom: -500, top: 500 });
         startingPos[`499,492`] = 'voidsN';
@@ -150,37 +150,37 @@ const variantomega1 = (function(){
             if (endY < startY) return; // Don't do negative pawn towers
           
             for (let y = startY; y <= endY; y++) {
-              const thisCoords = [x,y];
-              const key = math1.getKeyFromCoords(thisCoords);
-              startingPos[key] = "pawnsW";
+                const thisCoords = [x,y];
+                const key = math1.getKeyFromCoords(thisCoords);
+                startingPos[key] = "pawnsW";
             }
         }
           
         function setAir(startingPos, coords) {
             const key = math1.getKeyFromCoords(coords);
-            delete startingPos[key]
+            delete startingPos[key];
         }
           
         function spawnRookTower(startingPos, xStart, yStart, dist) {
             
             // First wall with 4 bishops
             startingPos[math1.getKeyFromCoords([xStart,yStart])] = 'bishopsW';
-            startingPos[math1.getKeyFromCoords([xStart,yStart+1])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([xStart,yStart+2])] = 'bishopsW';
-            startingPos[math1.getKeyFromCoords([xStart,yStart+4])] = 'bishopsW';
-            startingPos[math1.getKeyFromCoords([xStart,yStart+6])] = 'bishopsW';
-            appendPawnTower(startingPos, xStart, yStart+8, dist)
+            startingPos[math1.getKeyFromCoords([xStart,yStart + 1])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([xStart,yStart + 2])] = 'bishopsW';
+            startingPos[math1.getKeyFromCoords([xStart,yStart + 4])] = 'bishopsW';
+            startingPos[math1.getKeyFromCoords([xStart,yStart + 6])] = 'bishopsW';
+            appendPawnTower(startingPos, xStart, yStart + 8, dist);
             
             // Second wall with rook
-            startingPos[math1.getKeyFromCoords([xStart+1,yStart+1])] = 'bishopsW';
-            startingPos[math1.getKeyFromCoords([xStart+1,yStart+3])] = 'bishopsW';
-            startingPos[math1.getKeyFromCoords([xStart+1,yStart+5])] = 'bishopsW';
-            if (yStart+7 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+7])] = 'bishopsW';
-            if (yStart+8 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+8])] = 'rooksB';
+            startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 1])] = 'bishopsW';
+            startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 3])] = 'bishopsW';
+            startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 5])] = 'bishopsW';
+            if (yStart + 7 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 7])] = 'bishopsW';
+            if (yStart + 8 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 8])] = 'rooksB';
             
             // Third pawn wall
-            appendPawnTower(startingPos, xStart+2, yStart+2, dist)
-            if (yStart+7 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+7])] = 'pawnsB';
+            appendPawnTower(startingPos, xStart + 2, yStart + 2, dist);
+            if (yStart + 7 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 7])] = 'pawnsB';
         }
         
         function spawnAllRookTowers(startingPos, xStart, yStart, xEnd, yEnd) {
@@ -195,9 +195,9 @@ const variantomega1 = (function(){
             let y = yStart;
             for (let x = xStart; x < xEnd; x++) {
                 startingPos[math1.getKeyFromCoords([x,y])] = 'pawnsW';
-                startingPos[math1.getKeyFromCoords([x,y+1])] = 'pawnsB';
-                startingPos[math1.getKeyFromCoords([x,y+4])] = 'pawnsW';
-                startingPos[math1.getKeyFromCoords([x,y+5])] = 'pawnsB';
+                startingPos[math1.getKeyFromCoords([x,y + 1])] = 'pawnsB';
+                startingPos[math1.getKeyFromCoords([x,y + 4])] = 'pawnsW';
+                startingPos[math1.getKeyFromCoords([x,y + 5])] = 'pawnsB';
             
                 y++; // Increment y as well!
                 if (y > yEnd) return;
@@ -254,7 +254,7 @@ const variantomega1 = (function(){
             '-9,25':'pawnsB',
             '-9,26':'pawnsW',
             '-9,27':'pawnsB',
-        }
+        };
 
         // Rook towers
 
@@ -310,28 +310,28 @@ const variantomega1 = (function(){
             '5,13': 'pawnsW',
             '5,14': 'pawnsW',
             '5,15': 'pawnsB',
-        }
+        };
 
-        let keys = Object.keys(startOfRookTowers);
+        const keys = Object.keys(startOfRookTowers);
         for (const key of keys) {
-            startingPos[key] = startOfRookTowers[key]
+            startingPos[key] = startOfRookTowers[key];
         }
 
-        appendPawnTower(startingPos, 0, 13, dist)
-        appendPawnTower(startingPos, 2, 13, dist)
-        appendPawnTower(startingPos, 3, 16, dist)
-        appendPawnTower(startingPos, 5, 16, dist)
+        appendPawnTower(startingPos, 0, 13, dist);
+        appendPawnTower(startingPos, 2, 13, dist);
+        appendPawnTower(startingPos, 3, 16, dist);
+        appendPawnTower(startingPos, 5, 16, dist);
 
-        spawnAllRookTowers(startingPos, 6, 3, dist+3, dist)
+        spawnAllRookTowers(startingPos, 6, 3, dist + 3, dist);
 
         // Bishop Cannon Battery
 
         startingPos[math1.getKeyFromCoords([0,-6])] = 'pawnsB';
         startingPos[math1.getKeyFromCoords([0,-7])] = 'pawnsW';
 
-        spawnAllBishopCannons(startingPos, 1, -7, dist, -dist)
+        spawnAllBishopCannons(startingPos, 1, -7, dist, -dist);
 
-        spawnAllWings(startingPos, -1, -7, -dist, -dist)
+        spawnAllWings(startingPos, -1, -7, -dist, -dist);
 
         addVoidSquaresToOmegaFourth(startingPos, -866, 500, 567, -426, -134);
 
@@ -341,60 +341,60 @@ const variantomega1 = (function(){
             if (endY < startY) return; // Don't do negative pawn towers
           
             for (let y = startY; y <= endY; y++) {
-              const thisCoords = [x,y];
-              const key = math1.getKeyFromCoords(thisCoords);
-              startingPos[key] = "pawnsW";
+                const thisCoords = [x,y];
+                const key = math1.getKeyFromCoords(thisCoords);
+                startingPos[key] = "pawnsW";
             }
         }
           
         function setAir(startingPos, coords) {
             const key = math1.getKeyFromCoords(coords);
-            delete startingPos[key]
+            delete startingPos[key];
         }
           
         function spawnRookTower(startingPos, xStart, yStart, dist) {
             
             // First wall with 4 bishops
             startingPos[math1.getKeyFromCoords([xStart,yStart])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([xStart,yStart+1])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([xStart,yStart+2])] = 'pawnsW';
-            if (yStart+3 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart+3])] = 'pawnsB';
-            if (yStart+6 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart+6])] = 'pawnsW';
-            if (yStart+7 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart+7])] = 'pawnsB';
-            if (yStart+8 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart+8])] = 'bishopsW';
-            if (yStart+9 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart+9])] = 'pawnsW';
-            if (yStart+10 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart+10])] = 'bishopsW';
-            if (yStart+12 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart+12])] = 'bishopsW';
-            if (yStart+14 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart+14])] = 'bishopsW';
-            appendPawnTower(startingPos, xStart, yStart+16, dist)
+            startingPos[math1.getKeyFromCoords([xStart,yStart + 1])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([xStart,yStart + 2])] = 'pawnsW';
+            if (yStart + 3 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart + 3])] = 'pawnsB';
+            if (yStart + 6 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart + 6])] = 'pawnsW';
+            if (yStart + 7 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart + 7])] = 'pawnsB';
+            if (yStart + 8 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart + 8])] = 'bishopsW';
+            if (yStart + 9 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart + 9])] = 'pawnsW';
+            if (yStart + 10 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart + 10])] = 'bishopsW';
+            if (yStart + 12 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart + 12])] = 'bishopsW';
+            if (yStart + 14 <= dist) startingPos[math1.getKeyFromCoords([xStart,yStart + 14])] = 'bishopsW';
+            appendPawnTower(startingPos, xStart, yStart + 16, dist);
             
             // Second wall with rook
-            startingPos[math1.getKeyFromCoords([xStart+1,yStart+1])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([xStart+1,yStart+2])] = 'pawnsB';
-            if (yStart+3 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+3])] = 'pawnsW';
-            if (yStart+4 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+4])] = 'pawnsB';
-            if (yStart+7 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+7])] = 'pawnsW';
-            if (yStart+8 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+8])] = 'pawnsB';
-            if (yStart+9 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+9])] = 'bishopsW';
-            if (yStart+11 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+11])] = 'bishopsW';
-            if (yStart+13 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+13])] = 'bishopsW';
-            if (yStart+15 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+15])] = 'bishopsW';
-            if (yStart+16 <= dist) startingPos[math1.getKeyFromCoords([xStart+1,yStart+16])] = 'rooksB';
+            startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 1])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 2])] = 'pawnsB';
+            if (yStart + 3 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 3])] = 'pawnsW';
+            if (yStart + 4 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 4])] = 'pawnsB';
+            if (yStart + 7 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 7])] = 'pawnsW';
+            if (yStart + 8 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 8])] = 'pawnsB';
+            if (yStart + 9 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 9])] = 'bishopsW';
+            if (yStart + 11 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 11])] = 'bishopsW';
+            if (yStart + 13 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 13])] = 'bishopsW';
+            if (yStart + 15 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 15])] = 'bishopsW';
+            if (yStart + 16 <= dist) startingPos[math1.getKeyFromCoords([xStart + 1,yStart + 16])] = 'rooksB';
             
             // Third pawn wall
-            startingPos[math1.getKeyFromCoords([xStart+2,yStart+2])] = 'pawnsW';
-            if (yStart+3 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+3])] = 'pawnsB';
-            if (yStart+4 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+4])] = 'pawnsW';
-            if (yStart+5 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+5])] = 'pawnsB';
-            if (yStart+8 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+8])] = 'pawnsW';
-            if (yStart+9 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+9])] = 'pawnsB';
-            if (yStart+10 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+10])] = 'pawnsW';
-            if (yStart+11 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+11])] = 'pawnsW';
-            if (yStart+12 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+12])] = 'pawnsW';
-            if (yStart+13 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+13])] = 'pawnsW';
-            if (yStart+14 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+14])] = 'pawnsW';
-            if (yStart+15 <= dist) startingPos[math1.getKeyFromCoords([xStart+2,yStart+15])] = 'pawnsB';
-            appendPawnTower(startingPos, xStart+2, yStart+16, dist)
+            startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 2])] = 'pawnsW';
+            if (yStart + 3 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 3])] = 'pawnsB';
+            if (yStart + 4 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 4])] = 'pawnsW';
+            if (yStart + 5 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 5])] = 'pawnsB';
+            if (yStart + 8 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 8])] = 'pawnsW';
+            if (yStart + 9 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 9])] = 'pawnsB';
+            if (yStart + 10 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 10])] = 'pawnsW';
+            if (yStart + 11 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 11])] = 'pawnsW';
+            if (yStart + 12 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 12])] = 'pawnsW';
+            if (yStart + 13 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 13])] = 'pawnsW';
+            if (yStart + 14 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 14])] = 'pawnsW';
+            if (yStart + 15 <= dist) startingPos[math1.getKeyFromCoords([xStart + 2,yStart + 15])] = 'pawnsB';
+            appendPawnTower(startingPos, xStart + 2, yStart + 16, dist);
         }
         
         function spawnAllRookTowers(startingPos, xStart, yStart, xEnd, yEnd) {
@@ -417,52 +417,52 @@ const variantomega1 = (function(){
                 currX += spacing;
                 currY -= spacing;
                 i++;
-            } while (currX < endX && currY > endY)
+            } while (currX < endX && currY > endY);
         }
 
         function genBishopCannon(startingPos, x, y, i) {
 
             // Pawn staples that never change
             startingPos[math1.getKeyFromCoords([x,y])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x,y-1])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x+1,y-1])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x+1,y-2])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x+2,y-2])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x+2,y-3])] = 'pawnsW';
-            if (y-3 - x+3 > -980) startingPos[math1.getKeyFromCoords([x+3,y-3])] = 'pawnsB';
-            if (y-4 - x+3 > -980) startingPos[math1.getKeyFromCoords([x+3,y-4])] = 'pawnsW';
-            if (y-5 - x+4 > -980) startingPos[math1.getKeyFromCoords([x+4,y-4])] = 'pawnsB';
-            if (y-3 - x+4 > -980) startingPos[math1.getKeyFromCoords([x+4,y-5])] = 'pawnsW';
-            if (y-4 - x+5 > -980) startingPos[math1.getKeyFromCoords([x+5,y-3])] = 'pawnsB';
-            if (y-4 - x+5 > -980) startingPos[math1.getKeyFromCoords([x+5,y-4])] = 'pawnsW';
-            if (y-2 - x+6 > -980) startingPos[math1.getKeyFromCoords([x+6,y-2])] = 'pawnsB';
-            if (y-3 - x+6 > -980) startingPos[math1.getKeyFromCoords([x+6,y-3])] = 'pawnsW';
-            if (y-1 - x+7 > -980) startingPos[math1.getKeyFromCoords([x+7,y-1])] = 'pawnsB';
-            if (y-2 - x+7 > -980) startingPos[math1.getKeyFromCoords([x+7,y-2])] = 'pawnsW';
-            if (y+1 - x+7 > -980) startingPos[math1.getKeyFromCoords([x+7,y+1])] = 'pawnsB';
-            if (y+0 - x+7 > -980) startingPos[math1.getKeyFromCoords([x+7,y+0])] = 'pawnsW';
-            if (y-2 - x+8 > -980) startingPos[math1.getKeyFromCoords([x+8,y-2])] = 'bishopsB';
+            startingPos[math1.getKeyFromCoords([x,y - 1])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x + 1,y - 1])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x + 1,y - 2])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x + 2,y - 2])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x + 2,y - 3])] = 'pawnsW';
+            if (y - 3 - x + 3 > -980) startingPos[math1.getKeyFromCoords([x + 3,y - 3])] = 'pawnsB';
+            if (y - 4 - x + 3 > -980) startingPos[math1.getKeyFromCoords([x + 3,y - 4])] = 'pawnsW';
+            if (y - 5 - x + 4 > -980) startingPos[math1.getKeyFromCoords([x + 4,y - 4])] = 'pawnsB';
+            if (y - 3 - x + 4 > -980) startingPos[math1.getKeyFromCoords([x + 4,y - 5])] = 'pawnsW';
+            if (y - 4 - x + 5 > -980) startingPos[math1.getKeyFromCoords([x + 5,y - 3])] = 'pawnsB';
+            if (y - 4 - x + 5 > -980) startingPos[math1.getKeyFromCoords([x + 5,y - 4])] = 'pawnsW';
+            if (y - 2 - x + 6 > -980) startingPos[math1.getKeyFromCoords([x + 6,y - 2])] = 'pawnsB';
+            if (y - 3 - x + 6 > -980) startingPos[math1.getKeyFromCoords([x + 6,y - 3])] = 'pawnsW';
+            if (y - 1 - x + 7 > -980) startingPos[math1.getKeyFromCoords([x + 7,y - 1])] = 'pawnsB';
+            if (y - 2 - x + 7 > -980) startingPos[math1.getKeyFromCoords([x + 7,y - 2])] = 'pawnsW';
+            if (y + 1 - x + 7 > -980) startingPos[math1.getKeyFromCoords([x + 7,y + 1])] = 'pawnsB';
+            if (y + 0 - x + 7 > -980) startingPos[math1.getKeyFromCoords([x + 7,y + 0])] = 'pawnsW';
+            if (y - 2 - x + 8 > -980) startingPos[math1.getKeyFromCoords([x + 8,y - 2])] = 'bishopsB';
             
-            if (y-6 - x+6 > -980) startingPos[math1.getKeyFromCoords([x+6,y-6])] = 'pawnsB';
-            if (y-7 - x+6 > -980) startingPos[math1.getKeyFromCoords([x+6,y-7])] = 'pawnsW';
-            if (y-5 - x+7 > -980) startingPos[math1.getKeyFromCoords([x+7,y-5])] = 'pawnsB';
-            if (y-6 - x+7 > -980) startingPos[math1.getKeyFromCoords([x+7,y-6])] = 'pawnsW';
-            if (y-4 - x+8 > -980) startingPos[math1.getKeyFromCoords([x+8,y-4])] = 'pawnsB';
-            if (y-5 - x+8 > -980) startingPos[math1.getKeyFromCoords([x+8,y-5])] = 'pawnsW';
-            if (y-3 - x+9 > -980) startingPos[math1.getKeyFromCoords([x+9,y-3])] = 'pawnsB';
-            if (y-4 - x+9 > -980) startingPos[math1.getKeyFromCoords([x+9,y-4])] = 'pawnsW';
+            if (y - 6 - x + 6 > -980) startingPos[math1.getKeyFromCoords([x + 6,y - 6])] = 'pawnsB';
+            if (y - 7 - x + 6 > -980) startingPos[math1.getKeyFromCoords([x + 6,y - 7])] = 'pawnsW';
+            if (y - 5 - x + 7 > -980) startingPos[math1.getKeyFromCoords([x + 7,y - 5])] = 'pawnsB';
+            if (y - 6 - x + 7 > -980) startingPos[math1.getKeyFromCoords([x + 7,y - 6])] = 'pawnsW';
+            if (y - 4 - x + 8 > -980) startingPos[math1.getKeyFromCoords([x + 8,y - 4])] = 'pawnsB';
+            if (y - 5 - x + 8 > -980) startingPos[math1.getKeyFromCoords([x + 8,y - 5])] = 'pawnsW';
+            if (y - 3 - x + 9 > -980) startingPos[math1.getKeyFromCoords([x + 9,y - 3])] = 'pawnsB';
+            if (y - 4 - x + 9 > -980) startingPos[math1.getKeyFromCoords([x + 9,y - 4])] = 'pawnsW';
 
             // Generate bishop puzzle pieces.
             // it tells us how many to iteratively gen!
-            const count = i+2;
+            const count = i + 2;
 
-            let puzzleX = x+8;
-            let puzzleY = y+2;
+            let puzzleX = x + 8;
+            let puzzleY = y + 2;
             const upDiag = puzzleY - puzzleX;
             if (upDiag > -990) {
                 for (let a = 1; a <= count; a++) {
                     const isLastIndex = a === count;
-                    genBishopPuzzlePiece(startingPos, puzzleX, puzzleY, isLastIndex)
+                    genBishopPuzzlePiece(startingPos, puzzleX, puzzleY, isLastIndex);
 
                     puzzleX += 1;
                     puzzleY += 1;
@@ -470,7 +470,7 @@ const variantomega1 = (function(){
             }
 
             // White pawn strip
-            let pawnX = x+4;
+            let pawnX = x + 4;
             let pawnY = y;
             for (let a = 0; a < i; a++) {
                 startingPos[math1.getKeyFromCoords([pawnX,pawnY])] = 'pawnsW';
@@ -482,20 +482,20 @@ const variantomega1 = (function(){
 
         function genBishopPuzzlePiece(startingPos, x, y, isLastIndex) {
             startingPos[math1.getKeyFromCoords([x,y])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x,y-1])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x,y-2])] = 'bishopsB';
-            startingPos[math1.getKeyFromCoords([x+1,y-2])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x+1,y-3])] = 'bishopsB';
-            startingPos[math1.getKeyFromCoords([x+2,y-4])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x+2,y-5])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x,y - 1])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x,y - 2])] = 'bishopsB';
+            startingPos[math1.getKeyFromCoords([x + 1,y - 2])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x + 1,y - 3])] = 'bishopsB';
+            startingPos[math1.getKeyFromCoords([x + 2,y - 4])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x + 2,y - 5])] = 'pawnsW';
 
             if (!isLastIndex) return;
 
             // Is last index
-            startingPos[math1.getKeyFromCoords([x+1,y-2])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x+1,y-1])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x+2,y-3])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x+2,y-2])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x + 1,y - 2])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x + 1,y - 1])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x + 2,y - 3])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x + 2,y - 2])] = 'pawnsB';
         }
 
         function spawnAllWings(startingPos, startX, startY, endX, endY) {
@@ -510,87 +510,87 @@ const variantomega1 = (function(){
                 currX -= spacing;
                 currY -= spacing;
                 i++;
-            } while (currX > endX && currY > endY)
+            } while (currX > endX && currY > endY);
         }
 
         function spawnWing(startingPos, x, y, i) {
             startingPos[math1.getKeyFromCoords([x,y])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x,y-1])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-1,y-1])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-1,y-2])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-2,y-2])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-2,y-3])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-3,y-3])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-3,y-4])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-4,y-4])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-4,y-5])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x,y - 1])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 1,y - 1])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 1,y - 2])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 2,y - 2])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 2,y - 3])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 3,y - 3])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 3,y - 4])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 4,y - 4])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 4,y - 5])] = 'pawnsW';
             
             // Generate segments
             // it tells us how many to iteratively gen!
-            const count = i+1;
+            const count = i + 1;
             const segSpacing = 6;
 
-            let segX = x-5;
-            let segY = y-8;
+            let segX = x - 5;
+            let segY = y - 8;
             for (let a = 1; a <= count; a++) {
                 const isLastIndex = a === count;
-                genWingSegment(startingPos, segX, segY, isLastIndex)
+                genWingSegment(startingPos, segX, segY, isLastIndex);
 
                 segX -= segSpacing;
                 segY += segSpacing;
             }
 
-            setAir(startingPos, [x-6,y-8]);
-            setAir(startingPos, [x-6,y-9]);
-            setAir(startingPos, [x-5,y-9]);
-            setAir(startingPos, [x-5,y-10]);
+            setAir(startingPos, [x - 6,y - 8]);
+            setAir(startingPos, [x - 6,y - 9]);
+            setAir(startingPos, [x - 5,y - 9]);
+            setAir(startingPos, [x - 5,y - 10]);
         }
 
         function genWingSegment(startingPos, x, y, isLastIndex) {
-            startingPos[math1.getKeyFromCoords([x,y-2])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x,y-1])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-1,y-1])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-1,y+0])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-2,y+0])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-2,y+1])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-3,y+1])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-3,y+2])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-4,y+2])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-4,y+3])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-5,y+3])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-5,y+4])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x,y - 2])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x,y - 1])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 1,y - 1])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 1,y + 0])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 0])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 1])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 3,y + 1])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 3,y + 2])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 4,y + 2])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 4,y + 3])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 3])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 4])] = 'pawnsB';
 
-            startingPos[math1.getKeyFromCoords([x,y+2])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x,y+3])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-1,y+3])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-1,y+4])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-2,y+4])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-2,y+5])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-2,y+6])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-2,y+7])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-2,y+8])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-2,y+9])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-2,y+10])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-2,y+11])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-3,y+11])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-3,y+12])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-4,y+12])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-4,y+13])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-5,y+11])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-5,y+12])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-5,y+10])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-5,y+9])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-5,y+8])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-5,y+7])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-4,y+7])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-4,y+6])] = 'pawnsW';
-            startingPos[math1.getKeyFromCoords([x-4,y+10])] = 'bishopsW';
+            startingPos[math1.getKeyFromCoords([x,y + 2])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x,y + 3])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 1,y + 3])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 1,y + 4])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 4])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 5])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 6])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 7])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 8])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 9])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 10])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 2,y + 11])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 3,y + 11])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 3,y + 12])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 4,y + 12])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 4,y + 13])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 11])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 12])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 10])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 9])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 8])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 7])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 4,y + 7])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 4,y + 6])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 4,y + 10])] = 'bishopsW';
 
             if (!isLastIndex) return;
 
             // Is last wing segment!
-            startingPos[math1.getKeyFromCoords([x-5,y+6])] = 'pawnsB';
-            startingPos[math1.getKeyFromCoords([x-5,y+5])] = 'pawnsW';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 6])] = 'pawnsB';
+            startingPos[math1.getKeyFromCoords([x - 5,y + 5])] = 'pawnsW';
         }
     }
 
@@ -618,32 +618,32 @@ const variantomega1 = (function(){
     function addVoidSquaresToOmegaFourth(startingPos, left, top, right, bottomright, bottomleft) {
 
         for (let x = left; x <= right; x++) {
-            const key = math1.getKeyFromCoords([x,top])
+            const key = math1.getKeyFromCoords([x,top]);
             startingPos[key] = 'voidsN';
         }
         for (let y = top; y >= bottomright; y--) {
-            const key = math1.getKeyFromCoords([right,y])
+            const key = math1.getKeyFromCoords([right,y]);
             startingPos[key] = 'voidsN';
         }
 
         let y = bottomright;
         for (let x = right; x >= -3; x--) {
-            let key = math1.getKeyFromCoords([x,y])
+            let key = math1.getKeyFromCoords([x,y]);
             startingPos[key] = 'voidsN';
-            key = math1.getKeyFromCoords([x,y-1])
+            key = math1.getKeyFromCoords([x,y - 1]);
             startingPos[key] = 'voidsN';
             y--;
         }
 
         for (let y = top; y >= bottomleft; y--) {
-            const key = math1.getKeyFromCoords([left,y])
+            const key = math1.getKeyFromCoords([left,y]);
             startingPos[key] = 'voidsN';
         }
         y = bottomleft;
         for (let x = left; x <= -4; x++) {
-            let key = math1.getKeyFromCoords([x,y])
+            let key = math1.getKeyFromCoords([x,y]);
             startingPos[key] = 'voidsN';
-            key = math1.getKeyFromCoords([x,y-1])
+            key = math1.getKeyFromCoords([x,y - 1]);
             startingPos[key] = 'voidsN';
             y--;
         }
@@ -658,7 +658,7 @@ const variantomega1 = (function(){
         initOmegaFourth,
         genPositionOfOmegaCubed,
         genPositionOfOmegaFourth
-    })
+    });
 
 })();
 
