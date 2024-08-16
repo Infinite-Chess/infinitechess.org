@@ -75,7 +75,8 @@ sounds_credits = [
 code_heading = "程序"
 code_credits = [
 "由Brandon Jones 和 Colin MacKenzie IV 编写。",
-"由Andreas
+"由Andreas"
+]
 
 [member]
 verify_message = "请检查您的电子邮箱以验证您的账户。"
@@ -407,54 +408,55 @@ bug_koth = "这是一个错误，请报告！游戏被山顶之王结束。"
 bug_generic = "这是一个错误，请报告！"
 
 [terms]
-title = "Terms of Service"
-warning = ["THIS DOCUMENT IS NOT LEGALLY BINDING. We are only accountable for the English version of this document. This translation is provided solely for general informational purposes. You can access the official English version ", "here", "."]
-consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site."
-guardian_consent = "If you are under 18, you must receive consent from a parent or legal guardian to use this site and to create an account."
-parents_header = "Parents"
+title = "服务条款"
+warning = ["此文件不具有法律约束力。我们只对英文版本的文件负责。本翻译仅供一般参考。您可以在此处访问官方英文版本", "这里", "。"]
+consent = "使用本网站即表示您同意遵守以下条款。如果您不同意，您必须立即停止使用本网站。"
+guardian_consent = "如果您未满18岁，您必须获得父母或法定监护人的同意，才能使用本网站并创建账户。"
+parents_header = "父母"
 parents_paragraphs = [
-"There is an algorithm in place for prohibiting users setting their name to common cuss words. At this time there is no method of communication between members on the site.",
-"Currently, members cannot set their own profile picture. There is a plan to allow this feature. At that time we will do our best to prevent innapropriate profile pictures.",
+"本网站有一个算法，用于禁止用户将其名字设置为常见的脏话。目前，网站上用户之间没有交流方式。",
+"目前，会员无法设置自己的个人资料图片。我们计划在未来允许此功能，届时我们将尽最大努力防止不适当的个人资料图片。",
 ]
-fair_play_header = "Fair Play"
-fair_play_paragraph1 = ["You cannot create more than 1 account. If you would like to change the email address associated with your account, ", "contact us."]
-fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
+fair_play_header = "公平游戏"
+fair_play_paragraph1 = ["您不能创建超过一个账户。如果您希望更改与账户关联的电子邮件地址，请", "联系我们。"]
+fair_play_paragraph2 = "为了让游戏保持有趣和公平，您不得："
 fair_play_rules = [
-"Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, etc. This can be done to intentionally break the game, or to give you an advantage.",
-"In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated games)",
-"Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
+"以任何方式修改或操纵代码，包括但不限于：使用控制台命令、本地覆盖、自定义脚本、修改HTTP请求等。这样做可能是为了故意破坏游戏，或给自己带来优势。",
+"在评级游戏中，接受他人或程序的帮助/建议，以决定应该下什么棋。（创建引擎是可以的，并且是鼓励的，但您必须将其使用限制在非评级游戏中。）",
+"通过故意输棋以提升对手的Elo积分，或接受对手故意输棋以提升自己的Elo积分。这会滥用系统，导致根据您的技能水平产生不准确的评级。"
 ]
-cleanliness_header = "Cleanliness"
+cleanliness_header = "清洁"
 cleanliness_rules = [
-"In all your language on the site, you must remain clean, no vulgarity or cursing. You cannot bully, harass, or threaten anyone, or do anything that is illegal. You cannot spam other users or forums.",
-"You cannot not upload imagery to your profile that is innapropriate, suggestive, or gory. Doing so may result in a ban or termination of your account."
+"在网站上使用的所有语言中，您必须保持文明，不得使用粗俗语言或脏话。您不得欺凌、骚扰或威胁他人，或从事任何非法行为。您不得向其他用户或论坛发送垃圾信息。",
+"您不得上传不适当、暗示性或血腥的图像作为您的个人资料图片。这样做可能会导致您被禁止或终止账户。"
 ]
-privacy_header = "Privacy"
+privacy_header = "隐私"
 privacy_rules = [
-"Currently, the only personal information we collect is email. This is with intent to verify users' accounts, and provide a means of proving who they are when they request a password reset. We do not send any promotional emails or offers. We do not share any user's email address with anyone else.",
-"InfiniteChess.org may collect data about your usage on the site, including your ip address. This is intended to help prevent attacks from bots and other unwanted entities, and to keep accurate statistics in the database. This is NOT your home address.",
-"All games you play on this website become public information. If you wish to remain anonymous, do not share your username with friends or family. If this is your desire, it is your responsibility to make sure no one finds out your username is associated with your human identity.",
-"Your account online status, and the approximate last time you were active on the website, is also public information.",
-["While InfiniteChess.org will strive to keep everyone's account and personal information safe to the best of our ability, in the event of a hack or data leak, you may not press charges on us. If a data leak ever happens, users will be notified on the ", "News", "page."],
-"There is no content available on the site for purchase. Any other personal information is not collected.",
-"To have your private information deleted from our servers, you may delete your account through your profile page. The only thing with ties to your username that we will NOT delete, is your game history, because all games are public information.",
+"目前，我们收集的唯一个人信息是电子邮件。这是为了验证用户的账户，并提供在他们请求密码重置时证明身份的手段。我们不会发送任何促销电子邮件或优惠。我们不会与任何人共享用户的电子邮件地址。",
+"InfiniteChess.org可能会收集您在网站上使用的数据，包括您的IP地址。这是为了帮助防止来自机器人的攻击和其他不受欢迎的实体，并保持数据库中的准确统计信息。这不是您的家庭地址。",
+"您在本网站上玩的所有游戏都会成为公共信息。如果您希望保持匿名，请不要与朋友或家人分享您的用户名。如果这是您的愿望，您有责任确保没有人发现您的用户名与您的真实身份相关联。",
+"您的账户在线状态以及您上次在网站上活跃的近似时间也是公共信息。",
+["尽管InfiniteChess.org将尽力在其能力范围内保护每个人的账户和个人信息，但在发生黑客攻击或数据泄露时，您不得向我们提出指控。如果发生数据泄露，用户将在", "新闻", "页面上收到通知。"],
+"网站上没有可购买的内容。我们不收集其他个人信息。",
+"要从我们的服务器中删除您的私人信息，您可以通过个人资料页面删除您的账户。唯一与您的用户名有关且我们不会删除的内容是您的游戏历史记录，因为所有游戏都是公开信息。",
 ]
-cookie_header = "Cookie Policy"
+cookie_header = "Cookie政策"
 cookie_paragraphs = [
-"This site uses cookies, which are small text files that are stored in your browser, and sent to the server when connections are made. The purpose of these cookies are to: Validate your login session, validate your browser belongs to the chess game it says it's in, and to store user game preferences so they can keep their preferences when they re-visit the site. The site does not use 3rd-party cookies, cookies are not shared with external parties.",
-"Cookies are required for this site and game to function correctly. If you do not want the site to store cookies, you must stop using the site. You can navigate to your browsers preferences to delete existing cookies. By continuing to use this site, you are consenting to the use of cookies."
+"本网站使用Cookie，Cookie是存储在您浏览器中的小型文本文件，在连接时发送到服务器。使用这些Cookie的目的是：验证您的登录会话，验证您的浏览器属于它所称的棋局，并存储用户的游戏偏好，以便他们在重新访问网站时可以保留其偏好。该网站不使用第三方Cookie，Cookie不会与外部方共享。",
+"Cookie是本网站和游戏正常运行所必需的。如果您不希望网站存储Cookie，您必须停止使用本网站。您可以进入浏览器偏好设置删除现有的Cookie。继续使用本网站即表示您同意使用Cookie。"
 ]
-conclusion_header = "Conclusion"
+conclusion_header = "结论"
 conclusion_paragraphs = [
-"Any violations of these terms may result in a ban or termination of your account. InfiniteChess.org wants to be able to give everyone the opportunity to play and have fun! But, we reserve the right to, at any time, ban or terminate the accounts of any users, for reasons that need not to be disclosed. Charges may not be pressed against us.",
-["These terms of service may be modified at any point. It is YOUR responsibility to make sure you stay updated on the latest changes! When these terms of service receive an update, that information will be posted on the", "News", "page. If, at the time of a terms-of-service update, you do not agree with the new terms, you must immediately stop using the website. You may delete your account from your profile page. If you delete your account, all your private information and account data will be deleted, EXCEPT we do not delete your game history associated with your username, that is public information."],
-["This site is open source. You may copy or distribute anything on this website as long as you follow the conditions outlined in", "the license terms", "! If this link is broken, it is your responsibility to find the terms."],
-"We cannot guarantee the site will be running 100% of the time. We also cannot guarantee that data will never be corrupted.",
-"You may not perform any illegal activity on the site.",
-["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
+"任何违反这些条款的行为可能导致您被禁止或终止账户。InfiniteChess.org希望能够为每个人提供玩乐的机会！但是，我们保留随时禁止或终止任何用户账户的权利，原因无需披露。您不得向我们提出指控。",
+["这些服务条款可能随时修改。您有责任确保您保持最新！当这些服务条款更新时，该信息将发布在", "新闻", "页面上。如果在服务条款更新时，您不同意新条款，您必须立即停止使用网站。您可以从您的个人资料页面删除账户。如果您删除账户，所有您的私人信息和账户数据将被删除，除了与您的用户名相关的游戏历史记录，因为这是公开信息。"],
+["此网站是开源的。只要您遵循许可条款中规定的条件，您可以复制或分发本网站上的任何内容！", "许可条款", "。如果此链接失效，您有责任找到条款。"],
+"我们不能保证网站将100%时间运行。我们也不能保证数据永远不会被损坏。",
+"您不得在网站上从事任何非法活动。",
+["如果您对这些条款有任何疑问，或对网站有任何其他问题，请", "通过电子邮件联系我们！"]
 ]
-update = "(Last updated: 7/13/24. Added warning that all games played may become public information, including your account's approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
-thanks = "Thank you!"
+update = "(最后更新日期：2024年7月13日。添加了警告，所有玩过的游戏可能成为公共信息，包括您账户上次活跃的大致时间。此外，这些条款可能会随时更新，您有责任确保您保持更新。)"
+thanks = "谢谢！"
+
 
 [login]
 title = "登录"
@@ -497,7 +499,7 @@ account_warning = "如果您尚未验证您的账户，请在您的个人资料�
 [news.july13-2024]
 date = "2024年7月13日"
 tos_update = ["服务条款", "已更新。变更内容：您在网站上玩的所有游戏都可能成为公共信息，包括您的帐户上次活跃的大概时间。条款可能会随时更新，确保您了解最新条款是您的责任。"]
-game_history_warning = "您的游戏历史可能在未来可在您的个人资料中查看。
+game_history_warning = "您的游戏历史可能在未来可在您的个人资料中查看。"
 
 [news.july9-2024]
 date = "2024年7月9日"
