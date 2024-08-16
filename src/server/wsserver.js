@@ -139,9 +139,9 @@ function onConnectionRequest(ws, req) {
 
 
     verifyJWTWebSocket(ws, cookies); // Auto sets ws.metadata.user/role properties!
-    if (cookies['browser-id'] != null) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
+    if (cookies['browser-id']) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
 
-    if (ws.metadata.user == null && ws.metadata['browser-id'] == null) { // Terminate web socket connection request, they NEED authentication!
+    if (!ws.metadata.user && !ws.metadata['browser-id']) { // Terminate web socket connection request, they NEED authentication!
         console.log("Authentication needed for WebSocket connection request. Req headers:");
         console.log(req.headers);
         return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
@@ -307,7 +307,7 @@ function onerror(ws, error) {
  * @param {number} [replyto] If applicable, the id of the socket message this message is a reply to.
  */
 function sendmessage(ws, sub, action, value, replyto) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
-    if (ws == null) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`);
+    if (!ws) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`);
     if (ws.readyState === WebSocket.CLOSED) {
         const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`;
         logEvents(errText, 'errLog.txt', { print: true });
@@ -322,7 +322,7 @@ function sendmessage(ws, sub, action, value, replyto) { // socket, invites, crea
     // Only include an id (and except an echo back) if this is NOT an echo'ing itself!
     const isEcho = action === "echo";
     if (!isEcho) payload.id = generateNumbID(10);
-    if (replyto != null) payload.replyto = replyto;
+    if (typeof replyto === 'number') payload.replyto = replyto;
 
     if (printIncomingAndOutgoingMessages && !isEcho) console.log(`Sending: ${JSON.stringify(payload)}`);
 
@@ -371,7 +371,7 @@ function renewConnection(ws) {
 function cancelTimerOfMessageID(data) { // { sub, action, value, id }
     const echoMessageID = data.value; // If the action is an "echo", the message ID their echo'ing is stored in "value"!
     const timeoutID = echoTimers[echoMessageID];
-    if (timeoutID == null) return false; // Timer doesn't exist. Invalid echo messageID!
+    if (timeoutID === undefined) return false; // Timer doesn't exist. Invalid echo messageID!
     clearTimeout(timeoutID);
     delete echoTimers[echoMessageID];
     return true;
@@ -446,7 +446,7 @@ function memberHasMaxSocketCount(member) {
 }
 
 function terminateAllIPSockets(IP) {
-    if (IP == null) return;
+    if (!IP) return;
     const connectionList = connectedIPs[IP];
     if (!connectionList) return; // IP is defined, but they don't have any sockets to terminate!
     for (const id of connectionList) {
@@ -519,7 +519,7 @@ function handleFeatureNotSupported(ws, description) {
 }
 
 function handleSubbing(ws, value) {
-    if (ws.metadata.subscriptions == null) ws.metadata.subscriptions = {};
+    if (!ws.metadata.subscriptions) ws.metadata.subscriptions = {};
 
     // What are they wanting to subscribe to for updates?
     switch (value) {
@@ -558,7 +558,7 @@ function handleUnsubbing(ws, key, value, closureNotByChoice) {
 
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
 function unsubClientFromAllSubs(ws, closureNotByChoice) {
-    if (ws.metadata.subscriptions == null) return; // No subscriptions
+    if (!ws.metadata.subscriptions) return; // No subscriptions
 
     const subscriptions = ws.metadata.subscriptions;
     const subscriptionsKeys = Object.keys(subscriptions);

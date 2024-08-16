@@ -6,6 +6,7 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const guiplay = (function() {
 
     // Variables
@@ -133,25 +134,21 @@ const guiplay = (function() {
         }
     }
 
-    function callback_playBack(event) {
-        event = event || window.event;
+    function callback_playBack() {
         close();
         guititle.open();
     }
 
-    function callback_online(event) {
-        event = event || window.event;
+    function callback_online() {
         changePlayMode('online');
     }
 
-    function callback_local(event) {
-        event = event || window.event;
+    function callback_local() {
         changePlayMode('local');
     }
 
     // Also starts local games
-    function callback_createInvite(event) {
-        event = event || window.event;
+    function callback_createInvite() {
 
         const gameOptions = {
             variant: element_optionVariant.value,
@@ -171,8 +168,7 @@ const guiplay = (function() {
     }
 
     // Call whenever the Clock or Color inputs change, or play mode changes
-    function callback_updateOptions(event) {
-        event = event || window.event;
+    function callback_updateOptions() {
         
         savePreferredClockOption(element_optionClock.selectedIndex);
         
@@ -187,11 +183,11 @@ const guiplay = (function() {
 
     function savePreferredClockOption(clockIndex) {
         const localOrOnline = modeSelected;
+        // For search results: preferred_local_clock_invite_value preferred_online_clock_invite_value
         localstorage.saveItem(`preferred_${localOrOnline}_clock_invite_value`, clockIndex, math.getTotalMilliseconds({ days: 7 }));
     }
 
-    function callback_joinPrivate(event) {
-        event = event || window.event;
+    function callback_joinPrivate() {
 
         const code = element_textboxPrivate.value.toLowerCase();
 
@@ -203,8 +199,7 @@ const guiplay = (function() {
         invites.accept(code, isPrivate);
     }
 
-    function callback_textboxPrivateEnter(event) {
-        event = event || window.event;
+    function callback_textboxPrivateEnter() {
 
         // 13 is the key code for Enter key
         if (event.keyCode === 13) {
@@ -212,8 +207,7 @@ const guiplay = (function() {
         } else element_joinPrivateMatch.disabled = false; // Re-enable when the code is changed
     }
 
-    function callback_copyInviteCode(event) {
-        event = event || window.event;
+    function callback_copyInviteCode() {
 
         if (!modeSelected.includes('online')) return;
         if (!invites.doWeHave()) return;
@@ -312,7 +306,7 @@ const guiplay = (function() {
     function generateVariantOptionsIfReloadingPrivateCustomGame() {
         if (!onlinegame.getIsPrivate()) return; // Can't play/paste custom position in public matches.
         const gameID = onlinegame.getGameID();
-        if (gameID == null) return console.error("Can't generate variant options when reloading private custom game because gameID isn't defined yet.");
+        if (!gameID) return console.error("Can't generate variant options when reloading private custom game because gameID isn't defined yet.");
         return localstorage.loadItem(gameID);
 
         // The variant options passed into the variant loader needs to contain the following properties:
@@ -347,7 +341,7 @@ const guiplay = (function() {
         const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
             moves: gameOptions.moves,
             variantOptions: gameOptions.variantOptions,
-            gameConclusion: gameOptions.gameConclusion
+            gameConclusion: gameOptions.gameConclusion,
         });
         game.loadGamefile(newGamefile);
 

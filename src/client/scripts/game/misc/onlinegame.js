@@ -7,6 +7,7 @@ const onlinegame = (function() {
 
     /** Whether we are currently in an online game. */
     let inOnlineGame = false;
+    /** The id of the online game we are in, if we are in one. @type {string} */
     let gameID;
     /** Whether the game is a private one (joined from an invite code). */
     let isPrivate;
@@ -68,8 +69,8 @@ const onlinegame = (function() {
 
     /**
      * Returns the game id of the online game we're in.
-     * @returns {number}
-     * */
+     * @returns {string}
+     */
     function getGameID() { return gameID; }
 
     function areInOnlineGame() { return inOnlineGame; }
@@ -268,7 +269,7 @@ const onlinegame = (function() {
 
     function startOpponentDisconnectCountdown({ autoDisconnectResignTime, wasByChoice } = {}) {
         if (!autoDisconnectResignTime) return console.error("Cannot display opponent has disconnected when autoResignTime not specified");
-        if (wasByChoice == null) return console.error("Cannot display opponent has disconnected when wasByChoice not specified");
+        if (wasByChoice === undefined) return console.error("Cannot display opponent has disconnected when wasByChoice not specified");
         // This overwrites the "Opponent is AFK" timer
         stopOpponentAFKCountdown();
         // Cancel the previous one if this is overwriting
@@ -416,7 +417,7 @@ const onlinegame = (function() {
      * @param {Object} messageContents - The contents of the server message, with the properties:
      * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`.
      */
-    function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime }
+    function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime, serverRestartingAt }
         if (!inOnlineGame) return;
         const gamefile = game.getGamefile();
         const claimedGameConclusion = messageContents.gameConclusion;
@@ -441,7 +442,7 @@ const onlinegame = (function() {
         else stopOpponentDisconnectCountdown();
 
         // If the server is restarting, start displaying that info.
-        if (messageContents.serverRestartingAt != null) initServerRestart(messageContents.serverRestartingAt);
+        if (messageContents.serverRestartingAt) initServerRestart(messageContents.serverRestartingAt);
         else resetServerRestarting();
 
         // Must be set before editing the clocks.
@@ -575,7 +576,7 @@ const onlinegame = (function() {
             flashTabNameYOUR_MOVE(true);
             scheduleMoveSound_timeoutID();
         }
-        if (gameOptions.serverRestartingAt != null) initServerRestart(gameOptions.serverRestartingAt);
+        if (gameOptions.serverRestartingAt) initServerRestart(gameOptions.serverRestartingAt);
         
         // These make sure it will place us in black's perspective
         perspective.resetRotations();
