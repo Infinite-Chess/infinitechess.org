@@ -8,7 +8,7 @@
 
 const style = (function() {
 
-    const element_style = document.getElementById('style') // The in-html-doc style element containing css stylings
+    const element_style = document.getElementById('style'); // The in-html-doc style element containing css stylings
 
     // What things require styling that our javascript changes?
     // * The navigation bar, when the theme changes.
@@ -26,7 +26,7 @@ const style = (function() {
 
     // Removes the class, THEN adds it back! This starts over animations
     function reinstateClass(element, className) {
-        removeClass(element, className)
+        removeClass(element, className);
         addClass(element, className);
     }
 
@@ -52,10 +52,10 @@ const style = (function() {
 
     // Fades in the element over the span of 1 second
     function fadeIn1s(element) {
-        revealElement(element) // Make sure the element no longer has the 'display: none' property.
-        reinstateClass(element, 'fade-in-2_3s') // This class contain the fade-in animation that begins immediately upon receiving this property
+        revealElement(element); // Make sure the element no longer has the 'display: none' property.
+        reinstateClass(element, 'fade-in-2_3s'); // This class contain the fade-in animation that begins immediately upon receiving this property
 
-        if (!element.fadeIn1sLayers) element.fadeIn1sLayers = 1
+        if (!element.fadeIn1sLayers) element.fadeIn1sLayers = 1;
         else element.fadeIn1sLayers++;
 
         setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
@@ -63,15 +63,15 @@ const style = (function() {
             if (element.fadeIn1sLayers > 0) return; // The fade-in-1s animation was RENEWED
             delete element.fadeIn1sLayers;
             removeClass(element, 'fade-in-2_3s');
-        }, 1000)
+        }, 1000);
     }
 
     // Fades out the element over the span of 1 second
     function fadeOut1s(element) {
-        revealElement(element)
+        revealElement(element);
         reinstateClass(element,'fade-out-2_3s'); // This class contain the fade-out animation that begins immediately upon receiving this property.
         
-        if (!element.fadeOut1sLayers) element.fadeOut1sLayers = 1
+        if (!element.fadeOut1sLayers) element.fadeOut1sLayers = 1;
         else element.fadeOut1sLayers++;
 
         setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
@@ -80,7 +80,7 @@ const style = (function() {
             delete element.fadeOut1sLayers;
             removeClass(element, 'fade-out-2_3s');
             hideElement(element);
-        }, 1000)
+        }, 1000);
     }
 
     // Other operations
@@ -95,7 +95,7 @@ const style = (function() {
     }
 
     function updateJavascriptStyling() {
-        element_style.innerHTML = navigationStyle /* + "\n\n" + otherStyle */; // Other styles can be appended here later
+        element_style.innerHTML = navigationStyle; // Other styles can be appended here later
     }
 
     /**
@@ -125,6 +125,6 @@ const style = (function() {
         fadeIn1s,
         fadeOut1s,
         getChildrenTextContents
-    })
+    });
 
 })();

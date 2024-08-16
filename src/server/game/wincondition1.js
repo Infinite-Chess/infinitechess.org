@@ -10,7 +10,7 @@ const wincondition1 = (function() {
      * This excludes conclusions such as resignation, time, aborted, and disconnect,
      * which can happen at any point in time.
      */
-    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat']
+    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat'];
 
     /**
      * Calculates if the provided game conclusion is a decisive conclusion.
@@ -40,7 +40,7 @@ const wincondition1 = (function() {
             condition = victor;
             victor = undefined;
         }
-        return { victor, condition }
+        return { victor, condition };
     }
 
     /**
@@ -90,7 +90,7 @@ const wincondition1 = (function() {
         isGameConclusionDecisive,
         getVictorAndConditionFromGameConclusion,
         getTerminationInEnglish,
-    })
+    });
 
 })();
 

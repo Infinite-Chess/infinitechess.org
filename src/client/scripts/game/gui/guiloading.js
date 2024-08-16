@@ -15,11 +15,11 @@ const guiloading = (function() {
         style.fadeIn1s(camera.canvas);
         // Fade in the overlay which contains all our html elements overtop our canvas
         gui.fadeInOverlay1s();
-        setTimeout(style.hideElement, 1000, element_loadingAnimation)
+        setTimeout(style.hideElement, 1000, element_loadingAnimation);
     }
     
     return Object.freeze({
         closeAnimation
-    })
+    });
 
 })();

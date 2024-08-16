@@ -33,26 +33,26 @@ const stats = {
         stats.visibilityWeight++;
 
         stats.setTextContentOfMoves();
-        setTimeout(stats.hideMoves, durationSecs * 1000)
+        setTimeout(stats.hideMoves, durationSecs * 1000);
 
-        if (stats.visibilityWeight === 1) style.revealElement(stats.elementStatusMoves)
+        if (stats.visibilityWeight === 1) style.revealElement(stats.elementStatusMoves);
     },
 
     hideMoves() {
         stats.visibilityWeight--;
-        if (stats.visibilityWeight === 0) style.hideElement(stats.elementStatusMoves)
+        if (stats.visibilityWeight === 0) style.hideElement(stats.elementStatusMoves);
     },
 
     setTextContentOfMoves() {
 
-        const currentPly = game.getGamefile().moveIndex + 1
-        const totalPlyCount = movesscript.getPlyCount(game.getGamefile().moves)
+        const currentPly = game.getGamefile().moveIndex + 1;
+        const totalPlyCount = movesscript.getPlyCount(game.getGamefile().moves);
 
         stats.elementStatusMoves.textContent = `${translations["move_counter"]} ${currentPly}/${totalPlyCount}`;
     },
 
     updateStatsCSS() {
-        stats.element_Statuses.style = `top: ${camera.getPIXEL_HEIGHT_OF_TOP_NAV()}px`
+        stats.element_Statuses.style = `top: ${camera.getPIXEL_HEIGHT_OF_TOP_NAV()}px`;
     },
 
     showPiecesMesh() {

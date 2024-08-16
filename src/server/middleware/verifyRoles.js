@@ -19,7 +19,7 @@ const { getTranslationForReq } = require("../config/setupTranslations");
 function ensureOwner(req, res, next) {
     if (isOwner(req)) return next(); // Valid, you may pass
     if (req.user) { // Logged in, but don't have the right permissions
-        console.log(`Forbid user ${req.user} from accessing an owner-protected resource!`)
+        console.log(`Forbid user ${req.user} from accessing an owner-protected resource!`);
         return res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden", req));
     }
     // NOT logged in... Redirect them to the login page,
@@ -39,7 +39,7 @@ function ensureOwner(req, res, next) {
 function ensurePatron(req, res, next) {
     if (isPatron(req)) return next(); // Pass
     if (req.user) { // Logged in, but don't have the right permissions
-        console.log(`Stopped user ${req.user} from accessing a patron-protected resource.`)
+        console.log(`Stopped user ${req.user} from accessing a patron-protected resource.`);
         return res.status(403).send(getTranslationForReq("server.javascript.ws-unauthorized_patron_page", req));
     }
     // NOT logged in... Redirect them to the login page,
@@ -63,4 +63,4 @@ module.exports = {
     ensurePatron,
     isOwner,
     isPatron
-}
+};

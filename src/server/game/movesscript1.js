@@ -26,7 +26,7 @@ const movesscript1 = (function() {
      * @returns {string} - The color that playd the moveIndex
      */
     function getColorThatPlayedMoveIndex(i, blackMovesFirst) {
-        if (i === -1) return console.error("Cannot get color that played move index when move index is -1.")
+        if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
         const color = i % 2 === 0 ? 'white' : 'black';
         return blackMovesFirst ? math.getOppositeColor(color) : color;
     }
@@ -35,7 +35,7 @@ const movesscript1 = (function() {
         isGameResignable,
         getLastMove,
         getColorThatPlayedMoveIndex
-    })
+    });
 })();
 
-module.exports = movesscript1
+module.exports = movesscript1;

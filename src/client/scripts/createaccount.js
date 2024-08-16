@@ -45,32 +45,32 @@ element_usernameInput.addEventListener('input', () => { // When username field c
     }
 
     updateSubmitButton();
-})
+});
 element_usernameInput.addEventListener('focusout', () => { // Check username availability...
     if (element_usernameInput.value.length === 0 || usernameHasError) return;
 
     fetch(`/createaccount/username/${element_usernameInput.value}`)
-    .then((response) => response.json())
-    .then((result) => { // { allowed, reason }
+        .then((response) => response.json())
+        .then((result) => { // { allowed, reason }
         // We've got the result back from the server,
         // Is this username available to use?
-        if (result.allowed === true) return; // Not in use
+            if (result.allowed === true) return; // Not in use
 
-        // ERROR! In use!
-        usernameHasError = true;
-        createErrorElement('usernameerror', "usernameinputline");
-        // Change input box to red outline
-        element_usernameInput.style.outline = 'solid 1px red';
-        // Reset variable because it now exists.
-        const usernameError = document.getElementById("usernameerror");
+            // ERROR! In use!
+            usernameHasError = true;
+            createErrorElement('usernameerror', "usernameinputline");
+            // Change input box to red outline
+            element_usernameInput.style.outline = 'solid 1px red';
+            // Reset variable because it now exists.
+            const usernameError = document.getElementById("usernameerror");
 
-        // translate the message from the server if a translation is available
-        let result_message = result.reason;
-        if (translations[result_message]) result_message = translations[result_message];
-        usernameError.textContent = result_message;
-        updateSubmitButton();
-    });
-})
+            // translate the message from the server if a translation is available
+            let result_message = result.reason;
+            if (translations[result_message]) result_message = translations[result_message];
+            usernameError.textContent = result_message;
+            updateSubmitButton();
+        });
+});
 
 let emailHasError = false;
 element_emailInput.addEventListener('input', () => { // When email field changes...
@@ -85,7 +85,7 @@ element_emailInput.addEventListener('input', () => { // When email field changes
     if (error) {
         if (!emailError) { // Create empty errorElement
             emailHasError = true;
-            createErrorElement('emailerror', 'emailinputline')
+            createErrorElement('emailerror', 'emailinputline');
             // Change input box to red outline
             element_emailInput.style.outline = 'solid 1px red';
             // Reset variable because it now exists.
@@ -102,29 +102,29 @@ element_emailInput.addEventListener('input', () => { // When email field changes
     }
 
     updateSubmitButton();
-})
+});
 element_emailInput.addEventListener('focusout', () => { // Check email availability...
     // If it's blank, all the server would send back is the createaccount.html again..
     if (element_emailInput.value.length > 1 && !emailHasError) { 
         fetch(`/createaccount/email/${element_emailInput.value}`)
-        .then((response) => response.json())
-        .then((result) => {
+            .then((response) => response.json())
+            .then((result) => {
             // We've got the result back from the server,
             // Is this email available to use?
-            if (result[0] === false) { // Email in use
-                emailHasError = true;
-                createErrorElement('emailerror', 'emailinputline')
-                // Change input box to red outline
-                element_emailInput.style.outline = 'solid 1px red';
-                // Reset variable because it now exists.
-                const emailError = document.getElementById("emailerror");
+                if (result[0] === false) { // Email in use
+                    emailHasError = true;
+                    createErrorElement('emailerror', 'emailinputline');
+                    // Change input box to red outline
+                    element_emailInput.style.outline = 'solid 1px red';
+                    // Reset variable because it now exists.
+                    const emailError = document.getElementById("emailerror");
 
-                emailError.textContent = translations["js-email_inuse"];
-                updateSubmitButton();
-            }
-        });
+                    emailError.textContent = translations["js-email_inuse"];
+                    updateSubmitButton();
+                }
+            });
     }
-})
+});
 
 let passwordHasError = false;
 element_passwordInput.addEventListener('input', () => { // When password field changes...
@@ -163,7 +163,7 @@ element_passwordInput.addEventListener('input', () => { // When password field c
     }
 
     updateSubmitButton();
-})
+});
 
 element_submitButton.addEventListener('click', (event) => {
     event.preventDefault();
@@ -172,7 +172,7 @@ element_submitButton.addEventListener('click', (event) => {
         && element_usernameInput.value
         && element_emailInput.value
         && element_passwordInput.value) sendForm(element_usernameInput.value, element_emailInput.value, element_passwordInput.value);
-})
+});
 
 /**
  * Sends our form data to the createaccount route.
@@ -182,26 +182,26 @@ element_submitButton.addEventListener('click', (event) => {
  */
 function sendForm(username, email, password) {
     let OK = false;
-    let config = {
+    const config = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin', // Allows cookie to be set from this request
         body: JSON.stringify({username, email, password})
     };
     fetch('/createaccount', config)
-    .then((response) => {
-        if (response.ok) OK = true;
-        return response.json();
-    })
-    .then((result) => {
-        if (OK) { // Account created!
+        .then((response) => {
+            if (response.ok) OK = true;
+            return response.json();
+        })
+        .then((result) => {
+            if (OK) { // Account created!
             // We also received the refresh token cookie to start a session.
             // token = getCookieValue('token') // Cookie expires in 60s
-            window.location.href = `/member/${username.toLowerCase()}`;
-        } else { // Conflict, unable to make account. 409 CONFLICT
-            window.location.href = '/409';
-        }
-    });
+                window.location.href = `/member/${username.toLowerCase()}`;
+            } else { // Conflict, unable to make account. 409 CONFLICT
+                window.location.href = '/409';
+            }
+        });
 }
 
 function createErrorElement(id, insertAfter) {

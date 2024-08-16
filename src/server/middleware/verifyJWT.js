@@ -25,16 +25,16 @@ const { Socket } = require('../game/TypeDefinitions.js');
  * @param {Function} next - The function to call, when finished, to continue the middleware waterfall.
  */
 const verifyJWT = (req, res, next) => {
-    const hasAccessToken = verifyAccessToken(req)
-    if (!hasAccessToken) verifyRefreshToken(req)
+    const hasAccessToken = verifyAccessToken(req);
+    if (!hasAccessToken) verifyRefreshToken(req);
 
-    setRole(req)
+    setRole(req);
 
     // Here we can update their last-seen variable!
     // ...
 
     next(); // Continue down the middleware waterfall
-}
+};
 
 /**
  * Reads the request's bearer token (from the authorization header),
@@ -68,7 +68,7 @@ function verifyAccessToken(req) {
  */
 function verifyRefreshToken(req) {
     const cookies = req.cookies;
-    if (!cookies) return console.log('req.cookies was undefined! Is the cookie parser working and before verifyJWT middleware? If they are, it could be that sometimes req.cookies is just undefined.')
+    if (!cookies) return console.log('req.cookies was undefined! Is the cookie parser working and before verifyJWT middleware? If they are, it could be that sometimes req.cookies is just undefined.');
 
     const refreshToken = cookies.jwt;
     if (!refreshToken) return false; // Not logged in, don't set their user property
@@ -99,14 +99,14 @@ function verifyRefreshToken(req) {
  * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. These should be `token`, `jwt` (refresh token), and `browser-id`.
  */
 const verifyJWTWebSocket = (ws, cookies) => {
-    const hasToken = verifyAccessTokenWebSocket(ws, cookies)
-    if (!hasToken) verifyRefreshTokenWebSocket(ws, cookies)
+    const hasToken = verifyAccessTokenWebSocket(ws, cookies);
+    if (!hasToken) verifyRefreshTokenWebSocket(ws, cookies);
 
-    setRoleWebSocket(ws)
+    setRoleWebSocket(ws);
 
     // Here I can update their last-seen variable!
     // ...
-}
+};
 
 /**
  * If they have a valid access token cookie, set's the socket
@@ -156,4 +156,4 @@ function verifyRefreshTokenWebSocket(ws, cookies) {
 module.exports = {
     verifyJWT,
     verifyJWTWebSocket
-}
+};

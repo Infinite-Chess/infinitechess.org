@@ -23,14 +23,14 @@ module.exports = [
       "func-call-spacing": ["error", "never"], // Enforces there be NO space between function CALLS and ()
       "space-infix-ops": ["error", { "int32Hint": false }], // Enforces a space around infix operators, like "=" in assignments
       "no-eval": "error", // Disallows use of `eval()`, as it can lead to security vulnerabilities and performance issues.
-      'indent': ['error', 4, { // 4 spaces per indentation
+      'indent': ['error', 4, { // All indentation must have 4 spaces
         'SwitchCase': 1 // Enforce switch statements to have indentation (they don't by default)
       }],
       "prefer-const": "error", // "let" variables that are never redeclared must be declared as "const"
-      "no-var": "error", // Disallows delcaring variables with "var", as they are function-scoped (not block), so hoisting is very confusing.
+      "no-var": "error", // Disallows declaring variables with "var", as they are function-scoped (not block), so hoisting is very confusing.
       "max-depth": ["warn", 4], // Maximum number of nested blocks allowed.
-      "no-multi-spaces": "error", // Disallows multiple spaces that isn't indentation.
       "eqeqeq": ["error", "always"], // Disallows "!=" and "==" to remove type coercion bugs. Use "!==" and "===" instead.
+      // "no-multi-spaces": "error", // Disallows multiple spaces that isn't indentation.
       // "max-lines": ["warn", 500] // Can choose to enable to place a cap on how big files can be, in lines.
       // "complexity": ["warn", { "max": 10 }] // Can choose to enable to cap the complexity, or number of independant paths, which can lead to methods.
     },
