@@ -273,10 +273,10 @@ const checkdetection = (function() {
      * @param {string} color - The color of friendlies
      * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
      */
-    function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
-        if (!gamefile.inCheck || gamefile.inCheck.length === 0) return false; // Exit if not in check
-        const isOurCheck = color === gamefile.whosTurn;
-        if (!isOurCheck) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
+    function addressExistingChecks (gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
+        if (!gamefile.inCheck) return false; // Exit if not in check
+        
+        if (!isCheckOurs(gamefile, color)) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
         const attackerCount = gamefile.attackers.length;
         if (attackerCount === 0) throw new Error("We are in check, but there is no specified attacker!");
@@ -312,6 +312,18 @@ const checkdetection = (function() {
         delete legalMoves.sliding; // Erase all sliding moves
 
         return true;
+    }
+
+    /**
+     * Detects if a color has one of the registered checks in gamefile
+     * @param {gamefile} gamefile 
+     * @param {String} color 
+     * @returns {Boolean}
+     */
+    function isCheckOurs (gamefile, color) {
+        const royals = gamefileutility.getRoyalCoords(gamefile, color).map(math.getKeyFromCoords)
+        const checkedRoyals = gamefile.inCheck.map(math.getKeyFromCoords)
+        return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length)
     }
 
     /**

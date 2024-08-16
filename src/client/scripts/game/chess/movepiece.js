@@ -248,10 +248,13 @@ const movepiece = (function() {
      * - `doGameOverChecks`: Whether game-over checks such as checkmate, or other win conditions, are performed for this move.
      */
     function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
-        gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
+        gamefile.whosTurn = gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
         if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
         if (pushClock) clock.push();
     }
+
+
+
 
     /**
      * Updates the `inCheck` and `attackers` properties of the gamefile after making a move or rewinding.

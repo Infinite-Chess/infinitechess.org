@@ -139,7 +139,6 @@ const copypastegame = (function() {
          */
 
         if (!longformat.metadata) longformat.metadata = {};
-        if (!longformat.turn) longformat.turn = 'white';
         if (!longformat.fullMove) longformat.fullMove = 1;
         if (!longformat.startingPosition && !longformat.metadata.Variant) { statustext.showStatus(translations["copypaste"]["game_needs_to_specify"], true); return false; }
         if (longformat.startingPosition && !longformat.specialRights) longformat.specialRights = {};
@@ -148,6 +147,7 @@ const copypastegame = (function() {
         if (!verifyWinConditions(longformat.gameRules.winConditions)) return false;
         longformat.gameRules.promotionRanks = longformat.gameRules.promotionRanks || null;
         longformat.gameRules.promotionsAllowed = longformat.gameRules.promotionsAllowed || { white: [], black: [] };
+        longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white', 'black'];
 
         return true;
     }
@@ -182,7 +182,7 @@ const copypastegame = (function() {
 
         /** longformat properties:
          * metadata
-         * turn
+         * turnOrder
          * enpassant
          * moveRule
          * fullMove
@@ -227,7 +227,6 @@ const copypastegame = (function() {
         // The variant options passed into the variant loader needs to contain the following properties:
         // `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
         const variantOptions = {
-            turn: longformat.turn,
             fullMove: longformat.fullMove,
             enpassant: longformat.enpassant,
             moveRule: longformat.moveRule,

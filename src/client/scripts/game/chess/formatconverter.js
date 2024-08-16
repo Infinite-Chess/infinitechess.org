@@ -111,15 +111,20 @@ const formatconverter = (function() {
         }
         if (longformat["metadata"]) shortformat += whitespace;
 
-        // move turn
-        let next_move = "w";
-        if (longformat["turn"] == "black") {
-            shortformat += "b ";
-            next_move = "b";
-        } else if (longformat["turn"] == "white") {
-            shortformat += "w ";
-            next_move = "w";
+        let turnOrder = "";
+        let turnOrderStr = "";
+        if (longformat["gameRules"]) {
+            if (longformat["gameRules"]["turnOrder"]) {
+                turnOrder = longformat["gameRules"]["turnOrder"];
+            }
         }
+
+        turnOrder = turnOrder || ['white', 'black'];
+
+        turnOrderStr = turnOrder.join(":");
+        
+        if (turnOrderStr == "white:black") shortformat += 'w ';
+        else if (turnOrderStr == "black:white") shortformat += 'b ';
 
         // en passant
         if (longformat["enpassant"]) shortformat += `${longformat["enpassant"].toString()} `;
@@ -199,10 +204,11 @@ const formatconverter = (function() {
         }
 
         // Extra gamerules not used will be stringified into the ICN
+        const includedRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions"])
         const extraGameRules = {};
         let added_extras = false;
         for (const key in longformat.gameRules) {
-            if (key === "promotionRanks" || key === "promotionsAllowed" || key === "winConditions") continue; // Skip this key
+            if (includedRules.has(key)) continue;
             extraGameRules[key] = longformat.gameRules[key];
             added_extras = true;
         }
@@ -219,7 +225,7 @@ const formatconverter = (function() {
         }
 
         // moves
-        if (longformat.moves) shortformat += longToShortMoves(longformat.moves, { next_move, fullmove, compact_moves, make_new_lines });
+        if (longformat.moves) shortformat += longToShortMoves(longformat.moves, { turnOrder, fullmove, compact_moves, make_new_lines });
 
         return shortformat;
     }
@@ -230,18 +236,19 @@ const formatconverter = (function() {
      * @param {Object} longmoves 
      * @param {Object} options - Contains the `next_move` and `compact_moves` parameters.
      */
-    function longToShortMoves(longmoves, { next_move, fullmove, make_new_lines, compact_moves }) {
+    function longToShortMoves(longmoves, { turnOrder, fullmove, make_new_lines, compact_moves }) {
         // If the moves are provided like: ['1,2>3,4','5,6>7,8N'], then quick return!
         if (typeof longmoves[0] === 'string') return longmoves.join('|');
 
         let shortmoves = "";
-        for (let i = 0; i < longmoves.length; i++) {
-            const longmove = longmoves[i];
-            if (next_move == "w" && compact_moves == 0) {
+        for (let i = 0; i < longmoves.length; i++){
+            let longmove = longmoves[i];
+            if (i % turnOrder.length == 0 && compact_moves == 0){
                 shortmoves += (!make_new_lines && i != 0 ? " " : "");
                 shortmoves += fullmove.toString() + ". ";
-            } else if (compact_moves == 0) {
-                shortmoves += (i == 0 ? fullmove.toString() + ".   ...   | " : " | ");
+                if (turnOrder.join(":") == 'black:white' && i == 0) {
+                    shortmoves += "   ...   | "; // Back compatability
+                }
             } else {
                 shortmoves += (i == 0 ? "" : "|");
             }
@@ -262,17 +269,14 @@ const formatconverter = (function() {
                 shortmoves += "+";
             }
             shortmoves = shortmoves.trimEnd();
-            if (next_move == "w") {
-                next_move = "b";
-            } else {
-                next_move = "w";
+
+            if (i + 1 % turnOrder.length == 0) {
                 fullmove += 1;
                 if (i != longmoves.length - 1 && compact_moves == 0) {
                     shortmoves += (make_new_lines ? "\n" : " |");
                 }
             }
         }
-
         return shortmoves.trimEnd();
     }
 
@@ -287,28 +291,74 @@ const formatconverter = (function() {
         const longformat = {};
         longformat.gameRules = {};
 
-        // metadata handling. Don't put ": " in metadata fields.
-        const metadata = {};
-        while (shortformat.indexOf("[") > -1) {
-            const start_index = shortformat.indexOf("[");
-            const end_index = shortformat.indexOf("]");
-            if (end_index == -1) throw new Error("Unclosed [ detected");
-            const metadatastring = shortformat.slice(start_index + 1,end_index);
-            shortformat = `${shortformat.slice(0,start_index)}${shortformat.slice(end_index + 1)}`;
-            
-            // new metadata format [Metadata "value"]
-            if (/^[^\s\:]*\s+\"/.test(metadatastring)) {
-                const split_index = metadatastring.search(/\s\"/);
-                metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index + 2, -1);
+
+        let elements = shortformat.match(/[\[\]\"\{\}\(\)\']/g) || []
+        let statements = []
+        let stateIdxs = []
+        let currentIdx = -1
+        let alterformat = shortformat
+        let temp = ''
+        let trace = []
+        let endCharDict = {'[':']', '(':')', '{':'}', '"':'"', "'":"'"}
+
+        for (const element of elements) {
+
+            const elemIdx = alterformat.indexOf(element)
+            currentIdx+=elemIdx+1
+            if (!!trace[0]) temp += alterformat.slice(0, elemIdx)
+            else stateIdxs.push(currentIdx)
+            temp += element
+            alterformat = alterformat.slice(elemIdx+1)
+
+            if (endCharDict[trace[trace.length-1]] == element) {
+                trace.pop();
+            } else if (trace[trace.length-1] == '"' || trace[trace.length-1] === "'") {
+                continue;
+            } else {
+                trace.push(element);
             }
-            // old metadata format [Metadata: value]
-            else {
-                const split_index = metadatastring.indexOf(": ");
-                if (split_index > -1) metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index + 2);
-                else metadata[metadatastring] = "";
+            if (!trace[0]) {
+                statements.push(temp);
+                temp = '';
             }
         }
+        for (const element of trace) console.error(`${element} is not closed`)
+
+        // metadata handling. Don't put ": " in metadata fields.
+        
+        let metadata = {};
         longformat["metadata"] = metadata;
+
+        let i = statements.length - 1;
+        let remove = false;
+        while (i >= 0) {
+            const string = statements[i];
+            const endIdx = stateIdxs[i]+string.length;
+            if (shortformat.slice(stateIdxs[i], endIdx) !== string) throw new Error("Metadata indexs are offset")
+
+            // new metadata format [Metadata "value"]
+            if (/^\[[^\s\:]*\s+\"/.test(string)){
+                let split_index = string.search(/\s\"/);
+                metadata[string.slice(1,split_index)] = string.slice(split_index+2, -2);
+                remove = true
+            }
+            // old metadata format [Metadata: value]
+            else if (/^\[[^\:]*\:\s/.test(string)) {
+                let split_index = string.indexOf(": ");
+                if (split_index > -1) metadata[string.slice(1,split_index)] = string.slice(split_index+2, -1);
+                else metadata[string] = "";
+                remove = true
+            }
+
+            if (remove) {
+                shortformat = `${shortformat.slice(0,stateIdxs[i])}${shortformat.slice(endIdx)}`
+
+                stateIdxs.splice(i,1)
+                statements.splice(i,1)
+            }
+            i--
+        }
+        console.log(metadata)
 
         while (shortformat != "") {
             if (/\s/.test(shortformat[0])) {
@@ -322,8 +372,9 @@ const formatconverter = (function() {
             shortformat = shortformat.slice(index + 1);
 
             // move turn
-            if (!longformat["turn"] && /^(w|b)$/.test(string)) {
-                longformat["turn"] = (string == "b" ? "black" : "white");
+            if (!longformat["gameRules"]["turnOrder"] && /^(w|b)$/.test(string)){
+                if (string == "w") longformat["gameRules"]["turnOrder"] = ["white", "black"]
+                else if (string == "b") longformat["gameRules"]["turnOrder"] = ["black", "white"]
                 continue;
             }
 
@@ -376,8 +427,8 @@ const formatconverter = (function() {
             }
 
             // win condition (has to start with a letter and not include numbers)
-            if (/^(\(?[a-zA-z][^0-9]*)$/.test(string)) {
-                if (!longformat["gameRules"]["winConditions"]) {
+            if(/^(\(?[a-zA-z][^0-9]+)$/.test(string)){
+                if (!longformat["gameRules"]["winConditions"]){
                     longformat["gameRules"]["winConditions"] = {};
                     string = string.replace(/[\(\)]/g,"").split("|");
                     if (string.length == 1) string.push(string[0]);
@@ -665,13 +716,18 @@ const formatconverter = (function() {
             const move = ret["moves"][i];
 
             // update fullmove counter
-            if (ret["turn"]) {
-                if (ret["turn"] == "black" && ret["fullMove"]) {
-                    ret["fullMove"] += 1;
-                }
-                ret["turn"] = (ret["turn"] == "black" ? "white" : "black");
-            } else if (move["type"].slice(-1) == "B" && ret["fullMove"]) {
-                ret["fullMove"] += 1;
+            // Pre turnorder changes
+            // if (ret["turn"]){
+            //     if (ret["turn"] == "black" && ret["fullMove"]){
+            //         ret["fullMove"] += 1;
+            //     }
+            //     ret["turn"] = (ret["turn"] == "black" ? "white" : "black");
+            // } else if(move["type"].slice(-1) == "B" && ret["fullMove"]){
+            //     ret["fullMove"] += 1;
+            // }
+
+            if (i%longformat['gamerules']['turnOrder'].length === 0) {
+                ret['fullMove']++
             }
 
             const startString = move["startCoords"].toString();

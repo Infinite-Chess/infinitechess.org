@@ -91,8 +91,8 @@ function Game() {
     this.black = undefined;
     /** The moves list of the game. Each move is a string that looks like `8,1>16,1`. @type {string[]} */
     this.moves = undefined;
-    /** True if black moves first. */
-    this.blackGoesFirst = undefined;
+    /** The turn order of the game. `["white", "black"]` @type {string[]} */
+    this.turnOrder = undefined
     /** Whos turn it is currently. */
     this.whosTurn = undefined;
     /** If truthy, it's how the game ended. For example, "white checkmate". */

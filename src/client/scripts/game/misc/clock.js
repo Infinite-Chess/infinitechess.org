@@ -165,7 +165,7 @@ const clock = (function() {
         // Add increment
         currentTime[colorTicking] += math.secondsToMillis(startTime.increment);
         // Flip colorTicking
-        colorTicking = !colorTicking ? gamefile.startSnapshot.turn : math.getOppositeColor(colorTicking);
+        colorTicking = gamefile.whosTurn;
 
         timeRemainAtTurnStart = currentTime[colorTicking];
         timeAtTurnStart = Date.now();
