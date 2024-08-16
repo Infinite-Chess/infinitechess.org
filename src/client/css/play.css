@@ -896,7 +896,7 @@ button.join-button, button.copy-button {
 
 
 
-/* Bottom Navigation: Color to move, clocks, player names */
+/* Bottom Navigation: Color to move, clocks, player names, draw offer UI */
 
 .footer {
     position: absolute;
@@ -959,6 +959,8 @@ button.join-button, button.copy-button {
 }
 
 .whosturn {
+    min-width: 0;
+    max-width: 100%;
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -1025,6 +1027,87 @@ button.join-button, button.copy-button {
     .playerwhite, .playerblack {
         display: none;
     }
+}
+
+/* Draw Offer UI (in the bottom nav bar) */
+
+.draw_offer_ui {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 30px;
+    font-family: "Open Sans";
+    font-weight: bold;
+    padding: 15px;
+    gap: 15px;
+    border-radius: 5px;
+    box-sizing: border-box;
+
+    /* Make it not a popup / tsevasa's suggestion */
+    background: none;
+    border-color: transparent;
+    background-color: rgba(0, 0, 0, 0);
+    box-shadow: none;
+}
+
+.draw_offer_ui p.offer_title, .draw_offer_ui button {
+    font-size: min(3.5vw, 35px);
+}
+
+.draw_offer_ui p.offer_title {
+    color: black;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 100%;
+    font-size: 30px;
+    font-family: "Open Sans";
+    font-weight: bold;
+    top: 50%;
+    bottom: 50%;
+}
+
+@media (max-width:700px) {
+    .draw_offer_ui p.offer_title, .draw_offer_ui button {
+        font-size: 20px;
+    }
+}
+
+.draw_offer_ui button {
+    background-color: rgb(255, 255, 255) !important;
+    box-shadow: 0px 0px 7px 1px #727272 !important;
+    border-radius: min(0.9vw, 10px);
+    color: rgb(0, 0, 0);
+    max-width: 54px;
+    height: 100%;
+    aspect-ratio: 1/1;
+    background: rgb(227, 227, 227);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.draw_offer_ui img {
+    position: relative;
+	height: 85%;
+	margin:1px;
+	top: 0px;
+}
+
+/* The accept draw button is naturally smaller */
+.acceptdraw > .icon {
+	height: 95%;
+}
+
+.draw_offer_ui button:hover {
+    /* background-color: rgb(255, 255, 255); */
+    background: linear-gradient(to bottom, white, rgb(219, 219, 219), white);
+}
+
+.draw_offer_ui button:active {
+    /* box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.51); */
+    background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
 
@@ -1295,7 +1378,7 @@ button.join-button, button.copy-button {
     background-color: rgba(0, 0, 0, 0.849);
     padding-bottom: 15vh;
     display: grid;
-    grid-template: repeat(5, min(8vw, 86px)) / repeat(2, min(30vw, 320px));
+    grid-template: repeat(6, min(8vw, 86px)) / repeat(2, min(30vw, 320px));
     gap: min(3vw, 32px);
     justify-content: center;
     align-content: center;
@@ -1329,7 +1412,7 @@ button.join-button, button.copy-button {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
-.pauseUI p.paused, button.paused, button.resume, button.mainmenu {
+.pauseUI p.paused, button.paused, button.resume, button.mainmenu, button.offerdraw {
     grid-column: 1 / 3;
 }
 

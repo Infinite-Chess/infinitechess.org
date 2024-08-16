@@ -1,13 +1,15 @@
 
+const { Game } = require('./TypeDefinitions')
+
 const movesscript1 = (function() {
 
     /**
      * Tests if the game is resignable (atleast 2 moves have been played).
      * If not, then the game is abortable.
-     * @param {gamefile} gamefile - The gamefile
+     * @param {Game} game - The game
      * @returns {boolean} *true* if the game is resignable.
      */
-    function isGameResignable(gamefile) { return gamefile.moves.length > 1; }
+    function isGameResignable(game) { return game.moves.length > 1; }
 
     /**
      * Returns the last, or most recent, move in the provided move list, or undefined if there isn't one.

@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "11"
+version = "12"
 
 [header]
 home = "Home"
@@ -236,7 +236,12 @@ arrows = "Arrows: Defense"
 perspective = "Perspective: Off"
 copy = "Copy Game"
 paste = "Paste Game"
+offer_draw = "Offer Draw"
+accept_draw = "Accept Draw"
 main_menu = "Main Menu"
+
+[play.drawoffer]
+question = "Accept draw offer?"
 
 [play.javascript]
 guest_indicator = "(Guest)"
@@ -354,6 +359,7 @@ allpiecescaptured = "All pieces captured"
 threecheck = "Three-check"
 koth = "King of the hill"
 resignation = "Resignation"
+agreement = "Agreement"
 time = "Time forfeit"
 aborted = "Aborted" # Game was cancelled (no elo exchanged)
 disconnect = "Abandoned" # A player left
@@ -373,6 +379,7 @@ draw_stalemate = "Draw by stalemate!"
 draw_repetition = "Draw by repetition!"
 draw_moverule = ["Draw by the ", "-move-rule!"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Draw by insufficient material!"
+draw_agreement = "Draw by agreement!"
 draw_generic = "Draw!"
 aborted = "Game aborted."
 opponent_checkmate = "You lose by checkmate!"
