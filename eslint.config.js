@@ -11,6 +11,11 @@ const pluginJs = require("@eslint/js");
  */
 // const { getAllGameScripts } = require("./build.mjs");
 // const allGameScripts = await getAllGameScripts();
+// // Convert the array of script names into an object with "readonly" for each
+// const gameScriptsGlobals = allGameScripts.reduce((acc, script) => {
+//   acc[script] = "readonly";
+//   return acc;
+// }, {});
 
 module.exports = [
   pluginJs.configs.recommended,
@@ -57,7 +62,7 @@ module.exports = [
         gl: "readonly",
         mat4: "readonly",
         // DOES NOT WORK right now. We have to input them manually
-        // ...allGameScripts, 
+        // ...gameScriptsGlobals,
         backcompatible: "readonly",
         checkdetection: "readonly",
         checkmate: "readonly",

@@ -346,6 +346,7 @@ const websocket = (function() {
         resetOnreplyFuncs(); // Immediately invoke all functions we wanted to execute upon hearing replies.
 
         onlinegame.setInSyncFalse();
+        guiplay.onSocketClose();
 
         // All closure codes:
 
