@@ -45,6 +45,10 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 const maxSocketsAllowedPerIP = 10;
 const maxSocketsAllowedPerMember = 5;
 
+/** The amount of latency to add to websocket replies, in millis. ONLY USE IN DEV */
+const simulatedLatencyMillis = 2000;
+if (!DEV_BUILD && simulatedLatencyMillis !== 0) throw new Error("Websocket replies' simulatedLatencyMillis must be 0 in production!!");
+
 /**
  * The time, after which we don't hear an expected echo from a websocket,
  * in which it be assumed disconnected, and auto terminated, in milliseconds.
@@ -305,8 +309,13 @@ function onerror(ws, error) {
  * @param {string} action - What type of action the client should take within the subscription route.
  * @param {*} value - The contents of the message.
  * @param {number} [replyto] If applicable, the id of the socket message this message is a reply to.
+ * @param {Object} [options] - Additional options for sending the message.
+ * @param {boolean} [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendmessage(ws, sub, action, value, replyto) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+function sendmessage(ws, sub, action, value, replyto, { skipLatency } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+    // If we're applying simulated latency delay, set a timer to send this message.
+    if (simulatedLatencyMillis !== 0 && !skipLatency) return setTimeout(sendmessage, simulatedLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
+
     if (!ws) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`);
     if (ws.readyState === WebSocket.CLOSED) {
         const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`;
