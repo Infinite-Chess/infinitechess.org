@@ -130,6 +130,9 @@ module.exports = [
         input: "readonly",
         main: "readonly",
         websocket: "readonly",
+        checkmatepractice: "readonly",
+        guipractice: "readonly",
+        enginegame: "readonly",
       }
     }
   }
