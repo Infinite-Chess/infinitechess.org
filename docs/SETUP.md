@@ -96,9 +96,17 @@ If done correctly, you should be met with the following. This means the server h
 
 
 
+## Step 5: Install ESLint ##
+
+Installing the ESLint VSCode extension will help your pull requests be approved quicker, by holding your code semantics to the standards of the project! ESLint will give you errors when you have undefined variables, missing semicolons, and other items, making it easier to catch bugs before runtime!
+
+Go to the extensions tab, search for "eslint", click the one by "Microsoft", then Click "Install"!
+
+<img width="1081" alt="Screen Shot 2024-08-16 at 10 26 33 PM copy" src="https://github.com/user-attachments/assets/7df938ff-da69-4675-934f-4a61e93e69c1">
 
 
-## Step 5 (optional): Setting up the email service ##
+
+## Step 6 (optional): Setting up the email service ##
 
 While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails (planned) until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
 

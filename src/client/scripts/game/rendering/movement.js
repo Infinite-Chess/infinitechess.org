@@ -43,8 +43,8 @@ const movement = (function() {
     // Password for modifying is stored in "passwordForSetting", or is "pidough"
     function setBoardPos(newPos, password) {
         if (password !== passwordForSetting) return newPos;
-        if (!Array.isArray(newPos)) return console.error(`New position must be an array! ${newPos}`)
-        if (isNaN(newPos[0]) || isNaN(newPos[1])) return console.error(`Cannot set position to ${newPos}!`)
+        if (!Array.isArray(newPos)) return console.error(`New position must be an array! ${newPos}`);
+        if (isNaN(newPos[0]) || isNaN(newPos[1])) return console.error(`Cannot set position to ${newPos}!`);
         boardPos = newPos;
         main.renderThisFrame();
     }
@@ -60,9 +60,9 @@ const movement = (function() {
             if (main.devBuild) console.error("Incorrect pass");
             return newScale;
         }
-        if (isNaN(newScale)) return console.error(`Cannot set scale to ${newScale}!`)
+        if (isNaN(newScale)) return console.error(`Cannot set scale to ${newScale}!`);
         if (newScale <= 0) {
-            console.error(`Cannot set scale to ${newScale}!!`)
+            console.error(`Cannot set scale to ${newScale}!!`);
             return console.trace();
         }
 
@@ -121,8 +121,8 @@ const movement = (function() {
     function recalcPosition() {
         if (transition.areWeTeleporting()) return; // Exit if we are teleporting
 
-        panBoard()
-        recalcScale()
+        panBoard();
+        recalcScale();
     }
 
     // Updates board position dependant on panVel
@@ -130,7 +130,7 @@ const movement = (function() {
         if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
         if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
         
-        main.renderThisFrame();  // Visual change, render the screen this frame.
+        main.renderThisFrame(); // Visual change, render the screen this frame.
         boardPos[0] += loadbalancer.getDeltaTime() * panVel[0] / boardScale;
         boardPos[1] += loadbalancer.getDeltaTime() * panVel[1] / boardScale;
     }
@@ -140,27 +140,27 @@ const movement = (function() {
 
         // Dampen the scale change to create a soft zoom limit
         const damp = scaleVel > 0 || boardScale > board.glimitToDampScale() ? 1
-                                            : boardScale / board.glimitToDampScale()
+            : boardScale / board.glimitToDampScale();
 
         main.renderThisFrame(); // Visual change, render the screen this frame.
-        const newScale = boardScale * (1 + loadbalancer.getDeltaTime() * scaleVel * damp)
-        setBoardScale(newScale, passwordForSetting)
+        const newScale = boardScale * (1 + loadbalancer.getDeltaTime() * scaleVel * damp);
+        setBoardScale(newScale, passwordForSetting);
     }
 
     // Called from game.updateBoard()
     function updateNavControls() {
 
-        checkIfBoardDropped() // Needs to be before exiting from teleporting
+        checkIfBoardDropped(); // Needs to be before exiting from teleporting
 
         if (transition.areWeTeleporting()) return; // Exit if teleporting
         if (guipromotion.isUIOpen()) { // User needs to select a promotion piece, dont update navigation
-            decceleratePanVel()
-            deccelerateScaleVel()
+            decceleratePanVel();
+            deccelerateScaleVel();
             return; 
         }
 
         // Mouse clicks
-        checkIfBoardDragged()
+        checkIfBoardDragged();
 
         // Keyboard
         detectPanning(); // Movement (WASD)
@@ -183,7 +183,7 @@ const movement = (function() {
 
         // Drop board
         boardIsGrabbed = 0;
-        boardPosFingerTwoGrabbed = undefined
+        boardPosFingerTwoGrabbed = undefined;
         return;
     }
 
@@ -193,51 +193,51 @@ const movement = (function() {
         if (perspective.getEnabled()) return;
 
         if (boardIsGrabbed === 0) { // Not already grabbed
-            if (input.isMouseDown_Left()) grabBoard_WithMouse()
-            else if (input.getTouchHelds().length > 0) grabBoard_WithFinger()
+            if (input.isMouseDown_Left()) grabBoard_WithMouse();
+            else if (input.getTouchHelds().length > 0) grabBoard_WithFinger();
         }
 
-        else if (boardIsGrabbed === 2) updateBoardPinch() // Fingers have pinched
+        else if (boardIsGrabbed === 2) updateBoardPinch(); // Fingers have pinched
     }
 
     function grabBoard_WithMouse() {
         boardIsGrabbed = 1;
         const tile_MouseOver_Float = board.gtile_MouseOver_Float();
         boardPosMouseGrabbed = [tile_MouseOver_Float[0], tile_MouseOver_Float[1]];
-        erasePanVelocity()
+        erasePanVelocity();
     }
 
-    function erasePanVelocity() { panVel = [0,0] } // Erase all panning velocity
+    function erasePanVelocity() { panVel = [0,0]; } // Erase all panning velocity
 
     function grabBoard_WithFinger() {
         boardIsGrabbed = 2;
-        erasePanVelocity()
-        const fingerOneOrTwo = 1
-        recalcPositionFingerGrabbedBoard(fingerOneOrTwo)
-        if (input.getTouchHelds().length > 1) initBoardPinch()
+        erasePanVelocity();
+        const fingerOneOrTwo = 1;
+        recalcPositionFingerGrabbedBoard(fingerOneOrTwo);
+        if (input.getTouchHelds().length > 1) initBoardPinch();
     }
 
     function recalcPositionFingerGrabbedBoard(fingerOneOrTwo) {
-        if (fingerOneOrTwo === 1) boardPosFingerOneGrabbed = board.gpositionFingerOver(input.getTouchHelds()[0].id)
-        else boardPosFingerTwoGrabbed = board.gpositionFingerOver(input.getTouchHelds()[1].id)
+        if (fingerOneOrTwo === 1) boardPosFingerOneGrabbed = board.gpositionFingerOver(input.getTouchHelds()[0].id);
+        else boardPosFingerTwoGrabbed = board.gpositionFingerOver(input.getTouchHelds()[1].id);
     }
 
     // Called whenever board is pinched. Calculates boardPosFingerTwoGrabbed, scale_WhenBoardPinched, and fingerPixelDist_WhenBoardPinched.
     function initBoardPinch() {
         // Finger 2
-        const fingerOneOrTwo = 2
-        recalcPositionFingerGrabbedBoard(fingerOneOrTwo)
+        const fingerOneOrTwo = 2;
+        recalcPositionFingerGrabbedBoard(fingerOneOrTwo);
 
         scale_WhenBoardPinched = boardScale; // Scale
 
         // Pixel distance...
-        const touch1 = input.getTouchHeldByID(boardPosFingerOneGrabbed.id)
-        const touch2 = input.getTouchHeldByID(boardPosFingerTwoGrabbed.id)
+        const touch1 = input.getTouchHeldByID(boardPosFingerOneGrabbed.id);
+        const touch2 = input.getTouchHeldByID(boardPosFingerTwoGrabbed.id);
 
-        const xDiff = touch1.x - touch2.x
-        const yDiff = touch1.y - touch2.y
+        const xDiff = touch1.x - touch2.x;
+        const yDiff = touch1.y - touch2.y;
 
-        fingerPixelDist_WhenBoardPinched = Math.hypot(xDiff, yDiff)
+        fingerPixelDist_WhenBoardPinched = Math.hypot(xDiff, yDiff);
     }
 
     // Test if fingers have dropped board, or fingers swapped out
@@ -246,23 +246,23 @@ const movement = (function() {
 
         if (boardPosFingerTwoGrabbed === undefined) { // Only 1 grabbed finger 
             if (touchHeldsLength === 1) { // Check if the finger changed
-                if (boardPosFingerOneGrabbed.id !== input.getTouchHelds()[0].id) recalcPositionFingerGrabbedBoard(1)
+                if (boardPosFingerOneGrabbed.id !== input.getTouchHelds()[0].id) recalcPositionFingerGrabbedBoard(1);
             } else if (touchHeldsLength > 1) { // Add finger, or update both if changed
-                const touchHeldsIncludesTouch1 = input.touchHeldsIncludesID(boardPosFingerOneGrabbed.id)
-                if (!touchHeldsIncludesTouch1) recalcPositionFingerGrabbedBoard(1) // Finger changed, update
-                initBoardPinch()
+                const touchHeldsIncludesTouch1 = input.touchHeldsIncludesID(boardPosFingerOneGrabbed.id);
+                if (!touchHeldsIncludesTouch1) recalcPositionFingerGrabbedBoard(1); // Finger changed, update
+                initBoardPinch();
             }
         } else { // 2 grabbed fingers
             if (touchHeldsLength === 1) { // Drop to 1 finger
-                recalcPositionFingerGrabbedBoard(1)
-                boardPosFingerTwoGrabbed = undefined
+                recalcPositionFingerGrabbedBoard(1);
+                boardPosFingerTwoGrabbed = undefined;
             } else if (touchHeldsLength > 1) { // Check if any or both fingers changed, update
-                const touchHeldsIncludesTouch1 = input.touchHeldsIncludesID(boardPosFingerOneGrabbed.id)
-                const touchHeldsIncludesTouch2 = input.touchHeldsIncludesID(boardPosFingerTwoGrabbed.id)
+                const touchHeldsIncludesTouch1 = input.touchHeldsIncludesID(boardPosFingerOneGrabbed.id);
+                const touchHeldsIncludesTouch2 = input.touchHeldsIncludesID(boardPosFingerTwoGrabbed.id);
                 if (!touchHeldsIncludesTouch1 || !touchHeldsIncludesTouch2) { // 1+ changed
-                    const fingerOneOrTwo = 1
-                    recalcPositionFingerGrabbedBoard(fingerOneOrTwo)
-                    initBoardPinch()
+                    const fingerOneOrTwo = 1;
+                    recalcPositionFingerGrabbedBoard(fingerOneOrTwo);
+                    initBoardPinch();
                 }
             }
         }
@@ -279,53 +279,53 @@ const movement = (function() {
                 panning = true;
                 // if (perspective.getEnabled()) panAccel_Perspective(0)
                 // else panVel[0] += loadbalancer.getDeltaTime() * panAccel;
-                panAccel_Perspective(0)
+                panAccel_Perspective(0);
             } if (input.isKeyHeld('a')) {
                 panning = true;
                 // if (perspective.getEnabled()) panAccel_Perspective(180)
                 // else panVel[0] -= loadbalancer.getDeltaTime() * panAccel;
-                panAccel_Perspective(180)
+                panAccel_Perspective(180);
             } if (input.isKeyHeld('w')) {
                 panning = true;
                 // if (perspective.getEnabled()) panAccel_Perspective(90)
                 // else panVel[1] += loadbalancer.getDeltaTime() * panAccel;
-                panAccel_Perspective(90)
+                panAccel_Perspective(90);
             } if (input.isKeyHeld('s')) {
                 panning = true;
                 // if (perspective.getEnabled()) panAccel_Perspective(-90)
                 // else panVel[1] -= loadbalancer.getDeltaTime() * panAccel;
-                panAccel_Perspective(-90)
+                panAccel_Perspective(-90);
             }
         }
         if (panning) { // Make sure velocity hypotenuse hasn't gone over cap
             // Calculate hypotenuse
-            const hyp = Math.hypot(...panVel)
+            const hyp = Math.hypot(...panVel);
             const ratio = panVelCap / hyp;
             if (ratio < 1) { // Too fast, multiply components by the ratio to cap our velocity
                 panVel[0] *= ratio;
                 panVel[1] *= ratio;
             }
-        } else decceleratePanVel()
+        } else decceleratePanVel();
     }
 
     function panAccel_Perspective(angle) {
         const baseAngle = -perspective.getRotZ();
         const dirOfTravel = baseAngle + angle;
 
-        const angleRad = math.toRadians(dirOfTravel)
+        const angleRad = math.toRadians(dirOfTravel);
 
         const XYComponents = math.getXYComponents_FromAngle(angleRad);
 
-        panVel[0] += loadbalancer.getDeltaTime() * panAccel * XYComponents[0]
-        panVel[1] += loadbalancer.getDeltaTime() * panAccel * XYComponents[1]
+        panVel[0] += loadbalancer.getDeltaTime() * panAccel * XYComponents[0];
+        panVel[1] += loadbalancer.getDeltaTime() * panAccel * XYComponents[1];
     }
 
     function decceleratePanVel() {
         if (panVel[0] === 0 && panVel[1] === 0) return; // Already stopped
 
-        const hyp = Math.hypot(...panVel)
+        const hyp = Math.hypot(...panVel);
         const ratio = (hyp - loadbalancer.getDeltaTime() * panAccel) / hyp;
-        if (ratio < 0) panVel = [0,0] // Stop completely before we start going in the opposite direction
+        if (ratio < 0) panVel = [0,0]; // Stop completely before we start going in the opposite direction
         else {
             panVel[0] *= ratio;
             panVel[1] *= ratio;
@@ -362,8 +362,8 @@ const movement = (function() {
         // Mouse wheel
         if (input.getMouseWheel() !== 0) {
             scaleVel -= scrollScaleVel * input.getMouseWheel();
-            if (scaleVel > scrollScaleVelCap) scaleVel = scrollScaleVelCap
-            else if (scaleVel < -scrollScaleVelCap) scaleVel = -scrollScaleVelCap
+            if (scaleVel > scrollScaleVelCap) scaleVel = scrollScaleVelCap;
+            else if (scaleVel < -scrollScaleVelCap) scaleVel = -scrollScaleVelCap;
         }
     }
     
@@ -372,7 +372,7 @@ const movement = (function() {
         
         const randTheta = Math.random() * 2 * Math.PI;
 
-        const XYComponents = math.getXYComponents_FromAngle(randTheta)
+        const XYComponents = math.getXYComponents_FromAngle(randTheta);
 
         panVel[0] = XYComponents[0] * guititle.boardVel;
         panVel[1] = XYComponents[1] * guititle.boardVel;
@@ -380,35 +380,35 @@ const movement = (function() {
 
     // Called if the board is being dragged, calculates new board position.
     function dragBoard() {
-        if (boardIsGrabbed == 1) dragBoard_WithMouse() // Mouse is dragging board
-        else if (boardIsGrabbed == 2) dragBoard_WithFingers() // Finger is dragging board
+        if (boardIsGrabbed === 1) dragBoard_WithMouse(); // Mouse is dragging board
+        else if (boardIsGrabbed === 2) dragBoard_WithFingers(); // Finger is dragging board
     }
 
     // Called when board is being dragged by mouse, calculates new board position.
     function dragBoard_WithMouse() {
-        main.renderThisFrame() // Visual change. Render the screen this frame.
+        main.renderThisFrame(); // Visual change. Render the screen this frame.
         // If scale was 1, what's the new position?
         // => Grabbed position subtract pixelMousePos / pixelsPerTile
         const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-        const newBoardX = boardPosMouseGrabbed[0] - (n*input.getMousePos()[0] / board.gtileWidth_Pixels())
-        const newBoardY = boardPosMouseGrabbed[1] - (n*input.getMousePos()[1] / board.gtileWidth_Pixels())
-        boardPos = [newBoardX, newBoardY]
+        const newBoardX = boardPosMouseGrabbed[0] - (n * input.getMousePos()[0] / board.gtileWidth_Pixels());
+        const newBoardY = boardPosMouseGrabbed[1] - (n * input.getMousePos()[1] / board.gtileWidth_Pixels());
+        boardPos = [newBoardX, newBoardY];
     }
 
     // Called when board is being dragged by touch, calculates new board position.
     function dragBoard_WithFingers() {
-        main.renderThisFrame() // Visual change. Render the screen this frame.
+        main.renderThisFrame(); // Visual change. Render the screen this frame.
 
         const n = perspective.getIsViewingBlackPerspective() ? -1 : 1; // Makes black perspective work
 
         if (boardPosFingerTwoGrabbed === undefined) { // 1 Finger, boardIsGrabbedPos remains the same
             const touch = input.getTouchHelds()[0];
-            const newBoardX = boardPosFingerOneGrabbed.x - (n*touch.x / board.gtileWidth_Pixels())
-            const newBoardY = boardPosFingerOneGrabbed.y - (n*touch.y / board.gtileWidth_Pixels())
+            const newBoardX = boardPosFingerOneGrabbed.x - (n * touch.x / board.gtileWidth_Pixels());
+            const newBoardY = boardPosFingerOneGrabbed.y - (n * touch.y / board.gtileWidth_Pixels());
 
-            input.moveMouse(touch)
+            input.moveMouse(touch);
 
-            boardPos = [newBoardX, newBoardY]
+            boardPos = [newBoardX, newBoardY];
             return;
         }
         
@@ -421,47 +421,47 @@ const movement = (function() {
         const grabMidY = boardPosFingerOneGrabbed.y + grabDiffY / 2;
         
         // Retrieve the touches information, which includes their location on the screen in pixels. Calculate the screen-mid-point between them in pixels.
-        const touchHeld1 = input.getTouchHeldByID(boardPosFingerOneGrabbed.id)
-        const touchHeld2 = input.getTouchHeldByID(boardPosFingerTwoGrabbed.id)
+        const touchHeld1 = input.getTouchHeldByID(boardPosFingerOneGrabbed.id);
+        const touchHeld2 = input.getTouchHeldByID(boardPosFingerTwoGrabbed.id);
         const screenDiffX = touchHeld2.x - touchHeld1.x;
         const screenDiffY = touchHeld2.y - touchHeld1.y;
         const screenMidX = touchHeld1.x + screenDiffX / 2;
         const screenMidY = touchHeld1.y + screenDiffY / 2;
 
         // Make the board position match the mid-point between the 2 touches
-        const newBoardX = grabMidX - n*(screenMidX / board.gtileWidth_Pixels())
-        const newBoardY = grabMidY - n*(screenMidY / board.gtileWidth_Pixels())
-        boardPos = [newBoardX, newBoardY]
+        const newBoardX = grabMidX - n * (screenMidX / board.gtileWidth_Pixels());
+        const newBoardY = grabMidY - n * (screenMidY / board.gtileWidth_Pixels());
+        boardPos = [newBoardX, newBoardY];
         
         // Calculate the new scale by comparing the touches current distance in pixels to their distance when they first started pinching
-        const point1 = [touchHeld1.x, touchHeld1.y]
-        const point2 = [touchHeld2.x, touchHeld2.y]
+        const point1 = [touchHeld1.x, touchHeld1.y];
+        const point2 = [touchHeld2.x, touchHeld2.y];
         const thisPixelDist = math.euclideanDistance(point1, point2);
         let ratio = thisPixelDist / fingerPixelDist_WhenBoardPinched;
 
         // If the scale is greatly zoomed out, start slowing it down
         if (scale_WhenBoardPinched < board.glimitToDampScale() && ratio < 1) {
-            const dampener = scale_WhenBoardPinched / board.glimitToDampScale()
+            const dampener = scale_WhenBoardPinched / board.glimitToDampScale();
             ratio = (ratio - 1) * dampener + 1;
         }
 
-        let newScale = scale_WhenBoardPinched * ratio;
-        setBoardScale(newScale, passwordForSetting)
+        const newScale = scale_WhenBoardPinched * ratio;
+        setBoardScale(newScale, passwordForSetting);
 
-        input.moveMouse(touchHeld1, touchHeld2)
+        input.moveMouse(touchHeld1, touchHeld2);
     }
 
     function eraseMomentum() {
-        panVel = [0,0]
+        panVel = [0,0];
         scaleVel = 0;
     }
 
     // Password for modifying is stored in "passwordForSetting", or is "pidough"
     function setPositionToArea(area, password) {
-        if (!area) console.error("Cannot set position to an undefined area.")
+        if (!area) console.error("Cannot set position to an undefined area.");
 
         const copiedCoords = math.copyCoords(area.coords);
-        setBoardPos(copiedCoords, password)
+        setBoardPos(copiedCoords, password);
         setBoardScale(area.scale, password);
     }
 

@@ -60,7 +60,7 @@ const shaders = (function() {
          * @type {ShaderProgram}
          */
         tintedTextureProgram: undefined, // Renders textures with color
-    }
+    };
     
     /** Initiates the shader programs we will be using.
      * Call this after initiating the webgl context. */
@@ -79,7 +79,7 @@ const shaders = (function() {
     function createColorProgram() {
         const specifyPointSize = false;
         const pointSizeLine = specifyPointSize ? `gl_PointSize = ${(pointSize * camera.getPixelDensity()).toFixed(1)}; // Default: 7.0. Sets the point size of gl.POINTS`
-                                               : '';
+            : '';
         // Vertex shader. For every vertex, applies matrix multiplication to find it's position on the canvas.
         // Attributes receive data from buffer. Uniforms are like global variables, they stay the same.
         const vsSource = `
@@ -320,7 +320,7 @@ const shaders = (function() {
         // and you will have no clue why and spend 30 minutes trying to figure it out.
         gl.useProgram(tintedTextureProgram.program);
         const defaultColor = [1,1,1, 1]; // White
-        gl.uniform4fv(tintedTextureProgram.uniformLocations.uVertexColor, defaultColor)
+        gl.uniform4fv(tintedTextureProgram.uniformLocations.uVertexColor, defaultColor);
 
         return tintedTextureProgram;
     }
@@ -364,9 +364,9 @@ const shaders = (function() {
 
         // Check if it compiled successfully
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            const error = `${translations["failed_compiling_shaders"]} ${gl.getShaderInfoLog(shader)}`
+            const error = `${translations["failed_compiling_shaders"]} ${gl.getShaderInfoLog(shader)}`;
             alert(error);
-            console.error(error)
+            console.error(error);
             gl.deleteShader(shader);
             return null;
         }
@@ -377,6 +377,6 @@ const shaders = (function() {
     return Object.freeze({
         initPrograms,
         programs
-    })
+    });
 
 })();

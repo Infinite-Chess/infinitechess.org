@@ -9,9 +9,9 @@ const app = express();
 const https = require('https');
 const ejs = require('ejs');
 // Other imports
-const configureMiddleware = require('./middleware/middleware')
+const configureMiddleware = require('./middleware/middleware');
 const wsserver = require("./wsserver");
-const gamemanager = require('./game/gamemanager')
+const gamemanager = require('./game/gamemanager');
 const getCertOptions = require('./config/certOptions');
 const { DEV_BUILD } = require('./config/config');
 const { saveMembersIfChangesMade } = require('./controllers/members');
@@ -30,7 +30,7 @@ app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all 
 configureMiddleware(app); // Setup the middleware waterfall
  
 // Start the server
-const HTTPPORT =  DEV_BUILD ? process.env.HTTPPORT_LOCAL : process.env.HTTPPORT;
+const HTTPPORT = DEV_BUILD ? process.env.HTTPPORT_LOCAL : process.env.HTTPPORT;
 const HTTPSPORT = DEV_BUILD ? process.env.HTTPSPORT_LOCAL : process.env.HTTPSPORT;
 app.listen(HTTPPORT, () => console.log(`HTTP listening on port ${HTTPPORT}`));
 httpsServer.listen(HTTPSPORT, () => console.log(`HTTPS listening on port ${HTTPSPORT}`));
@@ -41,8 +41,8 @@ wsserver.start(httpsServer);
 // On closing...
 
 let cleanupDone = false;
-process.on('SIGUSR2', async () => { await handleCleanup('SIGUSR2'); }); // A file was saved (nodemon auto restarts)
-process.on('SIGINT',  async () => { await handleCleanup('SIGINT');  }); // Ctrl>C was pressed (force terminates nodemon)
+process.on('SIGUSR2', async() => { await handleCleanup('SIGUSR2'); }); // A file was saved (nodemon auto restarts)
+process.on('SIGINT', async() => { await handleCleanup('SIGINT'); }); // Ctrl>C was pressed (force terminates nodemon)
 async function handleCleanup(signal) {
     if (cleanupDone) return; // Sometimes this is called twice
     cleanupDone = true;

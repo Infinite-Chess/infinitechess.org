@@ -33,4 +33,4 @@ function getContributors() { return contributors; }
 
 module.exports = {
     getContributors
-}
+};

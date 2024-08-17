@@ -27,7 +27,7 @@ const bufferdata = (function() {
             startY,
             endX,
             endY
-        }
+        };
     }
 
     /**
@@ -47,7 +47,7 @@ const bufferdata = (function() {
             startY,
             endX,
             endY
-        }
+        };
     }
 
     // Takes a bounding box in grid-space, converts it to screen/world-space.
@@ -69,22 +69,22 @@ const bufferdata = (function() {
         const texLocation = pieces.getSpritesheetDataTexLocation(type);
         const texWidth = pieces.getSpritesheetDataPieceWidth();
 
-        const texStartX = texLocation[0]
-        const texStartY = texLocation[1]
+        const texStartX = texLocation[0];
+        const texStartY = texLocation[1];
 
         if (rotation === 1) return { // Regular rotation
             texStartX,
             texStartY,
             texEndX: texStartX + texWidth,
             texEndY: texStartY + texWidth
-        }
+        };
 
         return { // Inverted rotation
             texStartX: texStartX + texWidth,
             texStartY: texStartY + texWidth,
             texEndX: texStartX,
             texEndY: texStartY
-        }
+        };
     }
 
     // Quads...
@@ -99,7 +99,7 @@ const bufferdata = (function() {
             endX, startY,        r, g, b, a,
             startX, endY,        r, g, b, a,
             endX, endY,          r, g, b, a
-        ]
+        ];
     }
 
     function getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a) {
@@ -112,7 +112,7 @@ const bufferdata = (function() {
             endX, startY, z,        r, g, b, a,
             startX, endY, z,        r, g, b, a,
             endX, endY, z,          r, g, b, a
-        ]
+        ];
     }
 
     // Returns an array of the data that can be entered into the buffer model!
@@ -126,7 +126,7 @@ const bufferdata = (function() {
             endX, startY,       texEndX, texStartY,
             startX, endY,       texStartX, texEndY,
             endX, endY,         texEndX, texEndY
-        ]
+        ];
     }
 
     // Returns an array of the data that can be entered into the buffer model!
@@ -140,7 +140,7 @@ const bufferdata = (function() {
             endX, startY, z,       texEndX, texStartY,
             startX, endY, z,       texStartX, texEndY,
             endX, endY, z,         texEndX, texEndY
-        ]
+        ];
     }
 
     // Returns an array of the tinted/colored data that can be entered into the buffer model!
@@ -154,7 +154,7 @@ const bufferdata = (function() {
             endX, startY,       texEndX, texStartY,       r, g, b, a,
             startX, endY,       texStartX, texEndY,       r, g, b, a,
             endX, endY,         texEndX, texEndY,         r, g, b, a
-        ]
+        ];
     }
 
     // Returns an array of the tinted/colored data that can be entered into the buffer model!
@@ -168,7 +168,7 @@ const bufferdata = (function() {
             endX, startY, z,       texEndX, texStartY,       r, g, b, a,
             startX, endY, z,       texStartX, texEndY,       r, g, b, a,
             endX, endY, z,         texEndX, texEndY,         r, g, b, a
-        ]
+        ];
     }
 
     // Rectangles...
@@ -180,14 +180,14 @@ const bufferdata = (function() {
             startX, endY,       r, g, b,  a,
             endX, endY,         r, g, b,  a,
             endX, startY,       r, g, b,  a
-        ]
+        ];
     }
 
     // Circles...
 
     // Hollow circle
     function getDataCircle(x, y, radius, r, g, b, a, resolution) { // res is resolution
-        if (resolution == null) return console.error("Cannot get data of circle with no specified resolution!")
+        if (resolution == null) return console.error("Cannot get data of circle with no specified resolution!");
         if (resolution < 3) return console.error("Resolution must be 3+ to get data of a circle.");
 
         const data = [];
@@ -238,7 +238,7 @@ const bufferdata = (function() {
             startX, startY, startZ,     r, g, b,  a,
             startX, endY, endZ,         r, g, b,  a,
             startX, startY, endZ,       r, g, b,  a
-        ]
+        ];
     }
 
     // A circle, solid color.
@@ -288,34 +288,34 @@ const bufferdata = (function() {
      * @returns {BufferModel} The buffer model
      */
     function getModelCircle3D(x, y, z, radius, resolution, r, g, b, a) {
-        if (resolution < 3) return console.error("Resolution must be 3+ to get data of a fuzz ball.")
+        if (resolution < 3) return console.error("Resolution must be 3+ to get data of a fuzz ball.");
 
-        const data = [x, y, z,    r, g, b, a] // Mid point
+        const data = [x, y, z, r, g, b, a]; // Mid point
 
         for (let i = 0; i <= resolution; i++) { // Add all outer points
             const theta = (i / resolution) * 2 * Math.PI;
             const thisX = x + radius * Math.cos(theta);
             const thisY = y + radius * Math.sin(theta);
-            data.push(thisX, thisY, z,    r, g, b, a)
+            data.push(thisX, thisY, z, r, g, b, a);
         }
 
         // return buffermodel.createModel_Color3D(new Float32Array(data))
-        return buffermodel.createModel_Colored(new Float32Array(data), 3, 'TRIANGLE_FAN')
+        return buffermodel.createModel_Colored(new Float32Array(data), 3, 'TRIANGLE_FAN');
     }
 
     // A circle with color points for the middle and edge. 1 is mid, 2 is outer.
     // Resolution is number of points around on the edge.
     // REQUIRES TRIANGLE_FAN mode to render.
     function getDataFuzzBall3D(x, y, z, radius, resolution, r1, g1, b1, a1, r2, g2, b2, a2) {
-        if (resolution < 3) return console.error("Resolution must be 3+ to get data of a fuzz ball.")
+        if (resolution < 3) return console.error("Resolution must be 3+ to get data of a fuzz ball.");
 
-        const data = [x, y, z,    r1, g1, b1, a1] // Mid point
+        const data = [x, y, z, r1, g1, b1, a1]; // Mid point
 
         for (let i = 0; i <= resolution; i++) { // Add all outer points
             const theta = (i / resolution) * 2 * Math.PI;
             const thisX = x + radius * Math.cos(theta);
             const thisY = y + radius * Math.sin(theta);
-            data.push(...[thisX, thisY, z,    r2, g2, b2, a2])
+            data.push(...[thisX, thisY, z, r2, g2, b2, a2]);
         }
 
         return data;
@@ -433,7 +433,7 @@ const bufferdata = (function() {
         }
 
         // return buffermodel.createModel_Color3D(new Float32Array(data))
-        return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLE_STRIP")
+        return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLE_STRIP");
     }
 
     // Universal...
@@ -441,50 +441,50 @@ const bufferdata = (function() {
     function getDataQuad_Color_FromCoord(coords, color) {
         const { startX, startY, endX, endY } = getCoordDataOfTile(coords);
         const [ r, g, b, a ] = color;
-        return getDataQuad_Color(startX, startY, endX, endY, r, g, b, a)
+        return getDataQuad_Color(startX, startY, endX, endY, r, g, b, a);
     }
 
     // Needs to be translated by the pieces mesh offset before rendering.
     function getDataQuad_Color_FromCoord_WithOffset(offset, coords, color) {
         const { startX, startY, endX, endY } = getCoordDataOfTile_WithOffset(offset, coords);
         const [ r, g, b, a ] = color;
-        return getDataQuad_Color(startX, startY, endX, endY, r, g, b, a)
+        return getDataQuad_Color(startX, startY, endX, endY, r, g, b, a);
     }
 
     function getDataQuad_Color3D_FromCoord(coords, z, color) {
         const { startX, startY, endX, endY } = getCoordDataOfTile(coords);
         const [ r, g, b, a ] = color;
-        return getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a)
+        return getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a);
     }
 
     // Needs to be translated by the pieces mesh offset before rendering.
     function getDataQuad_Color3D_FromCoord_WithOffset(offset, coords, z, color) {
         const { startX, startY, endX, endY } = getCoordDataOfTile_WithOffset(offset, coords);
         const [ r, g, b, a ] = color;
-        return getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a)
+        return getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a);
     }
 
     function getDataQuad_ColorTexture_FromCoordAndType(coords, type, color) {
         const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-        const { texStartX, texStartY, texEndX, texEndY } = getTexDataOfType(type, rotation)
+        const { texStartX, texStartY, texEndX, texEndY } = getTexDataOfType(type, rotation);
         const { startX, startY, endX, endY } = getCoordDataOfTile(coords);
         const { r, g, b, a } = color;
 
-        return getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a)
+        return getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a);
     }
 
     function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
         const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-        const { texStartX, texStartY, texEndX, texEndY } = getTexDataOfType(type, rotation)
+        const { texStartX, texStartY, texEndX, texEndY } = getTexDataOfType(type, rotation);
         const { startX, startY, endX, endY } = getCoordDataOfTile(coords);
         const { r, g, b, a } = color;
 
-        return getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, r, g, b, a)
+        return getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, r, g, b, a);
     }
 
     function getDataQuad_ColorTexture_FromPositionWidthType(x, y, width, type, color) { // Position in world-space
         const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-        const { texStartX, texStartY, texEndX, texEndY } = getTexDataOfType(type, rotation)
+        const { texStartX, texStartY, texEndX, texEndY } = getTexDataOfType(type, rotation);
         const halfWidth = width / 2;
         const startX = x - halfWidth;
         const endX = x + halfWidth;
@@ -492,7 +492,7 @@ const bufferdata = (function() {
         const endY = y + halfWidth;
         const { r, g, b, a } = color;
 
-        return getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a)
+        return getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a);
     }
 
     function getDataRect_FromTileBoundingBox(boundingBox, color) { // { left, right, bottom, top }
@@ -597,6 +597,6 @@ const bufferdata = (function() {
         getDataRect_FromTileBoundingBox,
         rotateDataTexture,
         rotateDataColorTexture
-    })
+    });
 
 })();

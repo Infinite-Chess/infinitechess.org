@@ -5,10 +5,10 @@
 
 "use strict";
 
-const coin = (function () {
+const coin = (function() {
 
     /** Encrypted locations of the coins */
-    const locations = ["xxg","cxhg","dvsi","wnnh","bsfvl","bciph","xwui","lprd","bxksd","brsvd","bnesg","beeud","wst","bqvoe","qmch","jshi","yqyg","rtja","bjohd","lrql","oyqo","bqxv","btqta","bdanl","bjwxi","byhah","zyrk","pdya","vpka","uqxd","tgrk","egzd","bqdhi","gcvh","osae","btrua","bclih","plgh","bfmsl","bsxza"]
+    const locations = ["xxg","cxhg","dvsi","wnnh","bsfvl","bciph","xwui","lprd","bxksd","brsvd","bnesg","beeud","wst","bqvoe","qmch","jshi","yqyg","rtja","bjohd","lrql","oyqo","bqxv","btqta","bdanl","bjwxi","byhah","zyrk","pdya","vpka","uqxd","tgrk","egzd","bqdhi","gcvh","osae","btrua","bclih","plgh","bfmsl","bsxza"];
     /** The string key used for encrypting and decrypting coordinates. */
     const encryption = 'jdhagkleioqcfmnzxyptsuvrw';
 
@@ -23,17 +23,17 @@ const coin = (function () {
      */
     function appDat(gamefile, currIndex, mesh, usingColoredTextures) {
 
-        const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType('yellow') // Coin
+        const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType('yellow'); // Coin
 
-        for (let i = 0; i < locations.length; i+=2) {
+        for (let i = 0; i < locations.length; i += 2) {
 
             const xString = locations[i];
             const x = decryptCoordinate(xString);
 
-            const yString = locations[i+1];
+            const yString = locations[i + 1];
             const y = decryptCoordinate(yString);
 
-            const thisLocation = [x,y]
+            const thisLocation = [x,y];
 
             const coordDataOfPiece = bufferdata.getCoordDataOfTile_WithOffset(gamefile.mesh.offset, thisLocation); // { startX, startY, endX, endY }
             const startX = coordDataOfPiece.startX;
@@ -44,7 +44,7 @@ const coin = (function () {
             const r = 1, g = 1, b = 1, a = 1;
 
             const data = usingColoredTextures ? bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a)
-                                              : bufferdata.getDataQuad_Texture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY)
+                : bufferdata.getDataQuad_Texture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY);
 
             for (let a = 0; a < data.length; a++) {
                 mesh.data32[currIndex] = data[a];
@@ -64,7 +64,7 @@ const coin = (function () {
     function decryptCoordinate(str) {
         let result = 0;
         let base = 1;
-        let isNegative = str.startsWith("b");
+        const isNegative = str.startsWith("b");
 
         if (isNegative) {
             str = str.substring(1);

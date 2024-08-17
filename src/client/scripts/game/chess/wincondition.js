@@ -18,7 +18,7 @@ const wincondition = (function() {
      * This excludes conclusions such as resignation, time, aborted, and disconnect,
      * which can happen at any point in time.
      */
-    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat']
+    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat'];
 
     // The squares in KOTH where if you get your king to you WIN
     const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
@@ -49,9 +49,9 @@ const wincondition = (function() {
 
         // Was the last move capturing a royal piece?
         if (wasLastMoveARoyalCapture(gamefile)) {
-            if      (gamefile.whosTurn === 'white') return 'black royalcapture'
-            else if (gamefile.whosTurn === 'black') return 'white royalcapture'
-            else throw new Error("Cannot determine winning color by wincondition royalcapture!")
+            if      (gamefile.whosTurn === 'white') return 'black royalcapture';
+            else if (gamefile.whosTurn === 'black') return 'white royalcapture';
+            else throw new Error("Cannot determine winning color by wincondition royalcapture!");
         }
 
         return false;
@@ -63,12 +63,12 @@ const wincondition = (function() {
 
         // Are there any royal pieces remaining?
         // Remember that whosTurn has already been flipped since the last move.
-        const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, pieces.royals, gamefile.whosTurn)
+        const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, pieces.royals, gamefile.whosTurn);
 
         if (royalCount === 0) {
-            if      (gamefile.whosTurn === 'white') return 'black allroyalscaptured'
-            else if (gamefile.whosTurn === 'black') return 'white allroyalscaptured'
-            else throw new Error("Cannot determine winning color by wincondition allroyalscaptured!")
+            if      (gamefile.whosTurn === 'white') return 'black allroyalscaptured';
+            else if (gamefile.whosTurn === 'black') return 'white allroyalscaptured';
+            else throw new Error("Cannot determine winning color by wincondition allroyalscaptured!");
         }
 
         return false;
@@ -78,12 +78,12 @@ const wincondition = (function() {
         if (!isOpponentUsingWinCondition(gamefile, 'allpiecescaptured')) return false; // Not using this gamerule
 
         // If the player who's turn it is now has zero pieces left, win!
-        const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn)
+        const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn);
 
         if (count === 0) {
-            if      (gamefile.whosTurn === 'white') return 'black allpiecescaptured'
-            else if (gamefile.whosTurn === 'black') return 'white allpiecescaptured'
-            else throw new Error("Cannot determine winning color by wincondition allpiecescaptured!")
+            if (gamefile.whosTurn === 'white') return 'black allpiecescaptured';
+            else if (gamefile.whosTurn === 'black') return 'white allpiecescaptured';
+            else throw new Error("Cannot determine winning color by wincondition allpiecescaptured!");
         }
 
         return false;
@@ -94,16 +94,16 @@ const wincondition = (function() {
 
         // Was the last move a check?
         if (gamefile.inCheck) {
-            if (gamefile.checksGiven == null) gamefile.checksGiven = { white: 0, black: 0 }
+            if (gamefile.checksGiven == null) gamefile.checksGiven = { white: 0, black: 0 };
             
             if (gamefile.whosTurn === 'white') gamefile.checksGiven.white++;
             else if (gamefile.whosTurn === 'black') gamefile.checksGiven.black++;
             else throw new Error(`Whosturn is invalid when detecting threecheck! Value ${gamefile.whosTurn}`);
 
             if (gamefile.checksGiven[gamefile.whosTurn] === 3) {
-                if      (gamefile.whosTurn === 'white') return 'black threecheck'
-                else if (gamefile.whosTurn === 'black') return 'white threecheck'
-                else throw new Error("Cannot determine winning color by wincondition threecheck!")
+                if (gamefile.whosTurn === 'white') return 'black threecheck';
+                else if (gamefile.whosTurn === 'black') return 'white threecheck';
+                else throw new Error("Cannot determine winning color by wincondition threecheck!");
             }
         }
 
@@ -114,7 +114,7 @@ const wincondition = (function() {
         if (!isOpponentUsingWinCondition(gamefile, 'koth')) return false; // Not using this gamerule
 
         // Was the last move a king move?
-        const lastMove = movesscript.getLastMove(gamefile.moves)
+        const lastMove = movesscript.getLastMove(gamefile.moves);
         if (!lastMove) return false;
         if (!lastMove.type.startsWith('kings')) return false;
 
@@ -131,9 +131,9 @@ const wincondition = (function() {
         }
 
         if (kingInCenter) {
-            if      (gamefile.whosTurn === 'white') return 'black koth'
-            else if (gamefile.whosTurn === 'black') return 'white koth'
-            else return console.log("Cannot determine winning color by wincondition koth!")
+            if      (gamefile.whosTurn === 'white') return 'black koth';
+            else if (gamefile.whosTurn === 'black') return 'white koth';
+            else return console.log("Cannot determine winning color by wincondition koth!");
         }
 
         return false;
@@ -146,7 +146,7 @@ const wincondition = (function() {
      */
     function detectMoveRule(gamefile) {
         if (!gamefile.gameRules.moveRule) return false; // No move-rule being used
-        if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return 'draw moverule'
+        if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return 'draw moverule';
         return false;
     }
 
@@ -190,10 +190,10 @@ const wincondition = (function() {
 
         if (!lastMove.captured) return false; // Last move not a capture
 
-        const trimmedTypeCaptured = math.trimWorBFromType(lastMove.captured)
+        const trimmedTypeCaptured = math.trimWorBFromType(lastMove.captured);
 
         // Does the piece type captured equal any royal piece?
-        return pieces.royals.includes(trimmedTypeCaptured)
+        return pieces.royals.includes(trimmedTypeCaptured);
     }
 
     /**
@@ -205,7 +205,7 @@ const wincondition = (function() {
      * @returns {boolean} *true* if the gameConclusion is decisive.
      */
     function isGameConclusionDecisive(gameConclusion) {
-        if (gameConclusion === false) throw new Error("Should not be checking if gameConclusion is decisive when game isn't over.")
+        if (gameConclusion === false) throw new Error("Should not be checking if gameConclusion is decisive when game isn't over.");
         for (const conclusion of decisiveGameConclusions) {
             if (gameConclusion.includes(conclusion)) return true;
         }
@@ -225,23 +225,23 @@ const wincondition = (function() {
             condition = victor;
             victor = undefined;
         }
-        return { victor, condition }
+        return { victor, condition };
     }
 
-	/**
+    /**
 	 * Returns the game result based on the victor.
 	 *
 	 * @param {string} victor - The victor of the game. Can be 'white', 'black', 'draw', or 'aborted'.
 	 * @returns {string} The result of the game in the format '1-0', '0-1', '0.5-0.5', or '0-0'.
 	 * @throws {Error} Throws an error if the victor is not recognized.
 	 */
-	function getResultFromVictor(victor) {
+    function getResultFromVictor(victor) {
 	    if (victor === 'white') return '1-0';
 	    else if (victor === 'black') return '0-1';
 	    else if (victor === 'draw') return '0.5-0.5';
 	    else if (victor === 'aborted') return '0-0';
 	    throw new Error(`Cannot get game result from strange victor "${victor}"!`);
-	}
+    }
     
     /**
      * Swaps the "checkmate" win condition for "royalcapture" in the gamefile if applicable.
@@ -258,7 +258,7 @@ const wincondition = (function() {
             math.removeObjectFromArray(gamefile.gameRules.winConditions.black, 'checkmate');
             gamefile.gameRules.winConditions.black.push('royalcapture');
         }
-        console.log("Swapped checkmate wincondition for royalcapture.")
+        console.log("Swapped checkmate wincondition for royalcapture.");
     }
 
     /**
@@ -275,10 +275,10 @@ const wincondition = (function() {
                 return translations.termination.stalemate;
             case "repetition":
                 return translations.termination.repetition;
-            case "moverule":
+            case "moverule": { // Contain this case in a block so that it's variables are not hoisted 
                 const numbWholeMovesUntilAutoDraw = gamefile.gameRules.moveRule / 2;
                 return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
-            case "insuffmat":
+            } case "insuffmat":
                 return translations.termination.insuffmat;
             case "royalcapture":
                 return translations.termination.royalcapture;
@@ -317,6 +317,6 @@ const wincondition = (function() {
 	    getResultFromVictor,
         swapCheckmateForRoyalCapture,
         getTerminationInEnglish,
-    })
+    });
 
 })();

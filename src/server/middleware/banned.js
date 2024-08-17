@@ -12,9 +12,9 @@ const bannedPath = path.resolve('database/banned.json');
         IPs: {},
         "browser-ids": {}
     }, null, 2);
-    writeFile_ensureDirectory(bannedPath, content)
-    console.log("Generated banned file")
-})()
+    writeFile_ensureDirectory(bannedPath, content);
+    console.log("Generated banned file");
+})();
 const bannedJSON = require('../../../database/banned.json');
 
 

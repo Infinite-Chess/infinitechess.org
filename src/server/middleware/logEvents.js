@@ -1,12 +1,13 @@
+/* eslint-disable indent */
 const { format } = require('date-fns');
 const { v4: uuid } = require('uuid');
 
-const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 
 const { getClientIP } = require("./IP");
 const wsutility = require('../game/wsutility');
+// eslint-disable-next-line no-unused-vars
 const { Socket } = require('../game/TypeDefinitions');
 const { ensureDirectoryExists } = require('../utility/fileUtils');
 
@@ -21,8 +22,8 @@ const giveLoggedItemsUUID = false;
  * @param {boolean} [options.print] - If true, prints the message to the console as an error.
  * @returns {Promise<void>} - A promise that resolves when the log operation is complete.
  */
-const logEvents = async (message, logName, { print } = {}) => {
-    if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.")
+const logEvents = async(message, logName, { print } = {}) => {
+    if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.");
 
     if (print) console.error(message);
     const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
@@ -31,12 +32,12 @@ const logEvents = async (message, logName, { print } = {}) => {
     
     try {
         const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
-        ensureDirectoryExists(logsPath)
+        ensureDirectoryExists(logsPath);
         await fsPromises.appendFile(path.join(logsPath, logName), logItem);
     } catch (err) {
         console.log(err);
     }
-}
+};
 
 /**
  * Middleware that logs the incoming request, then calls `next()`.
@@ -45,7 +46,7 @@ const logEvents = async (message, logName, { print } = {}) => {
  * @param {Function} next - The function to call, once finished, to continue down the middleware waterfall.
  */
 const logger = (req, res, next) => {
-    const clientIP = getClientIP(req)
+    const clientIP = getClientIP(req);
 
     let logThis = `${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
     // Delete passwords from incoming form data
@@ -59,7 +60,7 @@ const logger = (req, res, next) => {
     logEvents(logThis, 'reqLog.txt');
     
     next(); // Continue to next middleware
-}
+};
 
 /**
  * Logs websocket connection upgrade requests into `wsInLog.txt`
@@ -68,9 +69,9 @@ const logger = (req, res, next) => {
  */
 function logWebsocketStart(req, ws) {
     const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-    const userAgent = req.headers['user-agent']
+    const userAgent = req.headers['user-agent'];
     // const userAgent = ws.metadata.userAgent;
-    let logThis = `Socket: ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
+    const logThis = `Socket: ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
     logEvents(logThis, 'wsInLog.txt');
 }
 
@@ -93,7 +94,7 @@ function logReqWebsocketIn(ws, messageData) {
  */
 function logReqWebsocketOut(ws, messageData) {
     const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-    let logThis = `To socket: ${stringifiedSocketMetadata}\n${messageData}`;
+    const logThis = `To socket: ${stringifiedSocketMetadata}\n${messageData}`;
     logEvents(logThis, 'wsOutLog.txt');
 }
 

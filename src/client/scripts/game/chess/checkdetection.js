@@ -4,7 +4,7 @@
 
 "use strict";
 
-const checkdetection = (function(){
+const checkdetection = (function() {
 
     /**
      * Tests if the provided gamefile is currently in check.
@@ -16,12 +16,12 @@ const checkdetection = (function(){
      */
     function detectCheck(gamefile, color, attackers) {
         // Input validation
-        if (!gamefile) throw new Error("Cannot detect check of an undefined game!")
-        if (color !== 'white' && color !== 'black') throw new Error(`Cannot detect check of the team of color ${color}!`)
-        if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`)
+        if (!gamefile) throw new Error("Cannot detect check of an undefined game!");
+        if (color !== 'white' && color !== 'black') throw new Error(`Cannot detect check of the team of color ${color}!`);
+        if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
 
         // Coordinates of ALL royals of this color!
-        const royalCoords = gamefileutility.getRoyalCoords(gamefile, color) // [ coords1, coords2 ]
+        const royalCoords = gamefileutility.getRoyalCoords(gamefile, color); // [ coords1, coords2 ]
         // Array of coordinates of royal pieces that are in check
         const royalsInCheck = [];
 
@@ -40,9 +40,9 @@ const checkdetection = (function(){
     // If an attackers empty array [] is specified, it will fill it in the format: [ {coords, slidingCheck}, ... ]
     function isSquareBeingAttacked(gamefile, coord, colorOfFriendly, attackers) {
         // Input validation
-        if (!gamefile) throw new Error("Cannot detect if a square of an undefined game is being attacked!")
+        if (!gamefile) throw new Error("Cannot detect if a square of an undefined game is being attacked!");
         if (!coord) return false;
-        if (colorOfFriendly !== 'white' && colorOfFriendly !== 'black') throw new Error(`Cannot detect if an opponent is attacking the square of the team of color ${colorOfFriendly}!`)
+        if (colorOfFriendly !== 'white' && colorOfFriendly !== 'black') throw new Error(`Cannot detect if an opponent is attacking the square of the team of color ${colorOfFriendly}!`);
 
         let atleast1Attacker = false;
 
@@ -63,12 +63,12 @@ const checkdetection = (function(){
     // Checks to see if any piece within a 3-block radius can capture. Ignores sliding movesets.
     // If there is, appends to "attackers".
     // DOES NOT account for pawns. For that use  doesPawnAttackSquare()
-    function doesVicinityAttackSquare (gamefile, coords, color, attackers) {
+    function doesVicinityAttackSquare(gamefile, coords, color, attackers) {
 
         const vicinity = gamefile.vicinity;
-        for (let key in vicinity) {
+        for (const key in vicinity) {
             const thisVicinity = vicinity[key];
-            const thisSquare = math.getCoordsFromKey(key) // Part of the moveset ( [1,2], [2,1] ... )
+            const thisSquare = math.getCoordsFromKey(key); // Part of the moveset ( [1,2], [2,1] ... )
             const actualSquare = [coords[0] + thisSquare[0], coords[1] + thisSquare[1]];
 
             // Fetch the square from our pieces organized by key
@@ -76,14 +76,14 @@ const checkdetection = (function(){
             const typeOnSquare = gamefile.piecesOrganizedByKey[key2];
             if (!typeOnSquare) continue; // Nothing there to capture us
             // Is it the same color?
-            const typeOnSquareColor = math.getPieceColorFromType(typeOnSquare)
+            const typeOnSquareColor = math.getPieceColorFromType(typeOnSquare);
             if (color === typeOnSquareColor) continue; // A friendly can't capture us
 
-            const typeOnSquareConcat = math.trimWorBFromType(typeOnSquare)
+            const typeOnSquareConcat = math.trimWorBFromType(typeOnSquare);
 
             // Is that a match with any piece type on this vicinity square?
             if (thisVicinity.includes(typeOnSquareConcat)) { // This square can be captured
-                if (attackers) appendAttackerToList(attackers, { coords: actualSquare, slidingCheck: false })
+                if (attackers) appendAttackerToList(attackers, { coords: actualSquare, slidingCheck: false });
                 return true; // There'll never be more than 1 short-range/jumping checks!
             }; 
         }
@@ -91,22 +91,22 @@ const checkdetection = (function(){
         return false;
     }
 
-    function doesPawnAttackSquare (gamefile, coords, color, attackers) {
+    function doesPawnAttackSquare(gamefile, coords, color, attackers) {
 
         const oneOrNegOne = color === 'white' ? 1 : -1;
         for (let a = -1; a <= 1; a += 2) {
-            const thisSquare = [coords[0] - a, coords[1] + oneOrNegOne]
+            const thisSquare = [coords[0] - a, coords[1] + oneOrNegOne];
 
-            let key = math.getKeyFromCoords(thisSquare)
-            const pieceOnSquare = gamefile.piecesOrganizedByKey[key]
+            const key = math.getKeyFromCoords(thisSquare);
+            const pieceOnSquare = gamefile.piecesOrganizedByKey[key];
             if (!pieceOnSquare) continue;
 
-            const pieceIsFriendly = color === math.getPieceColorFromType(pieceOnSquare)
+            const pieceIsFriendly = color === math.getPieceColorFromType(pieceOnSquare);
             if (pieceIsFriendly) continue; // Can't capture us
 
-            const pieceIsPawn = pieceOnSquare.startsWith('pawns')
+            const pieceIsPawn = pieceOnSquare.startsWith('pawns');
             if (pieceIsPawn) {
-                if (attackers) appendAttackerToList(attackers, { coords: thisSquare, slidingCheck: false })
+                if (attackers) appendAttackerToList(attackers, { coords: thisSquare, slidingCheck: false });
                 return true; // A pawn can capture on this square. There'll never be more than 1 short-range checks.
             }
         }
@@ -123,13 +123,13 @@ const checkdetection = (function(){
      * @param {Object[]} attackers - A running list of attackers on this square. Any new found attackers will be appended to this this.
      * @returns {boolean} true if this square is under attack
      */
-    function doesSlideAttackSquare (gamefile, coords, color, attackers) {
+    function doesSlideAttackSquare(gamefile, coords, color, attackers) {
 
         let atleast1Attacker = false;
 
         for (const direction of gamefile.startSnapshot.slidingPossible) { // [dx,dy]
-            const directionKey = math.getKeyFromCoords(direction)
-            const key = organizedlines.getKeyFromLine(direction, coords)
+            const directionKey = math.getKeyFromCoords(direction);
+            const key = organizedlines.getKeyFromLine(direction, coords);
             if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[directionKey][key], direction, coords, color, attackers)) atleast1Attacker = true;
         }
 
@@ -157,16 +157,16 @@ const checkdetection = (function(){
         // Iterate through every piece on the line, and test if they can attack our square
         for (const thisPiece of line) { // { coords, type }
 
-            const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
+            const thisPieceColor = math.getPieceColorFromType(thisPiece.type);
             if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
             if (thisPieceColor === 'neutral') continue; // Neutrals can't move, that means they can't make captures, right?
 
-            const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type)
+            const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type);
 
             if (!thisPieceMoveset.sliding) continue; // Piece has no sliding movesets.
             const moveset = thisPieceMoveset.sliding[directionKey];
             if (!moveset) continue; // Piece can't slide in the direction our line is going
-            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor)
+            const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor);
             if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
             if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)) continue; // This piece can't slide so far as to reach us, NEXT piece!
@@ -175,7 +175,7 @@ const checkdetection = (function(){
 
             if (!attackers) return true; // Attackers array isn't being tracked, just insta-return to save compute not finding other attackers!
             foundCheckersCount++;
-            appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true })
+            appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true });
         }
 
         return foundCheckersCount > 0;
@@ -203,17 +203,17 @@ const checkdetection = (function(){
 
     // Time Complexity: O(1).
     // Auto disable this when the win condition is NOT checkmate!
-    function removeMovesThatPutYouInCheck (gamefile, moves, pieceSelected, color) { // moves: { individual: [], horizontal: [], ... }
+    function removeMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) { // moves: { individual: [], horizontal: [], ... }
         if (!wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate')) return;
 
         // There's a couple type of moves that put you in check:
 
         // 1. Sliding moves. Possible they can open a discovered check, or fail to address an existing check.
         // Check these FIRST because in situations where we are in existing check, additional individual moves may be added.
-        removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color)
+        removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color);
 
         // 2. Individual moves. We can iterate through these and use detectCheck() to test them.
-        removeIndividualMovesThatPutYouInCheck(gamefile, moves.individual, pieceSelected, color)
+        removeIndividualMovesThatPutYouInCheck(gamefile, moves.individual, pieceSelected, color);
     }
 
     // Time complexity O(1)
@@ -230,7 +230,7 @@ const checkdetection = (function(){
     // Simulates the move, tests for check, undos the move. Color is the color of the piece we're moving
     function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pieceSelected: { type, index, coords }
         /** @type {Move} */
-        const move = { type: pieceSelected.type, startCoords: math.deepCopyObject(pieceSelected.coords), endCoords: movepiece.stripSpecialMoveTagsFromCoords(destCoords) }
+        const move = { type: pieceSelected.type, startCoords: math.deepCopyObject(pieceSelected.coords), endCoords: movepiece.stripSpecialMoveTagsFromCoords(destCoords) };
         specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, move);
         return movepiece.simulateMove(gamefile, move, color).isCheck;
     }
@@ -246,7 +246,7 @@ const checkdetection = (function(){
      * @param {Piece} pieceSelected - The piece of which the running legal moves are for.
      * @param {string} color - The color of friendlies
      */
-    function removeSlidingMovesThatPutYouInCheck (gamefile, moves, pieceSelected, color) {
+    function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) {
         if (!moves.sliding) return; // No sliding moves to remove
 
         /** List of coordinates of all our royal jumping pieces @type {number[][]} */
@@ -256,12 +256,12 @@ const checkdetection = (function(){
         // There are 2 ways a sliding move can put you in check:
 
         // 1. By not blocking, or capturing an already-existing check.
-        if (addressExistingChecks(gamefile, moves, royalCoords, pieceSelected.coords, color)) return;
+        if (addressExistingChecks(gamefile, moves, gamefile.inCheck, pieceSelected.coords, color)) return;
 
         // 2. By opening a discovered on your king.
         royalCoords.forEach(thisRoyalCoords => { // Don't let the piece open a discovered on ANY of our royals! Not just one.
-            removeSlidingMovesThatOpenDiscovered(gamefile, moves, thisRoyalCoords, pieceSelected, color)
-        })
+            removeSlidingMovesThatOpenDiscovered(gamefile, moves, thisRoyalCoords, pieceSelected, color);
+        });
     }
 
     /**
@@ -273,13 +273,13 @@ const checkdetection = (function(){
      * @param {string} color - The color of friendlies
      * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
      */
-    function addressExistingChecks (gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
-        if (!gamefile.inCheck) return false; // Exit if not in check
+    function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
+        if (!gamefile.inCheck || gamefile.inCheck.length === 0) return false; // Exit if not in check
         const isOurCheck = color === gamefile.whosTurn;
         if (!isOurCheck) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
         const attackerCount = gamefile.attackers.length;
-        if (attackerCount === 0) throw new Error("We are in check, but there is no specified attacker!")
+        if (attackerCount === 0) throw new Error("We are in check, but there is no specified attacker!");
 
         // To know how to address the check, we have to know where the check is coming from.
         // For now, add legal blocks for the first attacker, not the others. Since legal blocks
@@ -295,20 +295,20 @@ const checkdetection = (function(){
 
         // Check if the piece has the ability to capture
         if (!capturingNotPossible && legalmoves.checkIfMoveLegal(legalMoves, selectedPieceCoords, attacker.coords, { ignoreIndividualMoves: true })) {
-            legalMoves.individual.push(attacker.coords) // Can capture!
+            legalMoves.individual.push(attacker.coords); // Can capture!
         }
 
         // 2. Block the check
 
         // If it's a jumping move (not sliding), or if the piece is 1 square away,
         // then there's no way to block.
-        const dist = math.chebyshevDistance(royalCoords[0], attacker.coords)
+        const dist = math.chebyshevDistance(royalCoords[0], attacker.coords);
         if (!attacker.slidingCheck || dist === 1) {
             delete legalMoves.sliding; // Erase all sliding moves
             return true;
         }
         
-        appendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords)
+        appendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords);
         delete legalMoves.sliding; // Erase all sliding moves
 
         return true;
@@ -323,10 +323,10 @@ const checkdetection = (function(){
      * @param {Piece} pieceSelected - The piece with the provided running legal moves
      * @param {string} color - The color of friendlies
      */
-    function removeSlidingMovesThatOpenDiscovered (gamefile, moves, kingCoords, pieceSelected, color) {
+    function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, pieceSelected, color) {
         const selectedPieceCoords = pieceSelected.coords;
         /** A list of line directions that we're sharing with the king! */
-        let sameLines = []; // [ [dx,dy], [dx,dy] ]
+        const sameLines = []; // [ [dx,dy], [dx,dy] ]
         // Only check current possible slides
         for (const line of gamefile.startSnapshot.slidingPossible) { // [dx,dy]
             const lineKey1 = organizedlines.getKeyFromLine(line, kingCoords);
@@ -347,13 +347,13 @@ const checkdetection = (function(){
             const strline = math.getKeyFromCoords(direction1); // 'dx,dy'
             const key = organizedlines.getKeyFromLine(direction1,kingCoords); // 'C|X'
             const line = gamefile.piecesOrganizedByLines[strline][key];
-            const opensDiscovered = doesLineAttackSquare(gamefile, line, direction1, kingCoords, color)
+            const opensDiscovered = doesLineAttackSquare(gamefile, line, direction1, kingCoords, color);
             if (!opensDiscovered) continue;
             // The piece opens a discovered if it were to be gone!
             // checklines.push(line); // For Idon's code below
             // Delete all lines except this one (because if we move off of it we would be in check!)
             for (const direction2 of Object.keys(moves.sliding)) { // 'dx,dy'
-                const direction2NumbArray = math.getCoordsFromKey(direction2) // [dx,dy]
+                const direction2NumbArray = math.getCoordsFromKey(direction2); // [dx,dy]
                 if (math.areCoordsEqual(direction1, direction2NumbArray)) continue; // Same line, it's okay to keep because it wouldn't open a discovered
                 delete moves.sliding[direction2]; // Not same line, delete it because it would open a discovered.
             }
@@ -415,7 +415,7 @@ const checkdetection = (function(){
         // }
 
         // Add the piece back with the EXACT SAME index it had before!!
-        movepiece.addPiece(gamefile, deletedPiece.type, deletedPiece.coords, deletedPiece.index, { updateData: false })
+        movepiece.addPiece(gamefile, deletedPiece.type, deletedPiece.coords, deletedPiece.index, { updateData: false });
     }
 
     // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2
@@ -430,7 +430,7 @@ const checkdetection = (function(){
      */
     function appendBlockingMoves(square1, square2, moves, coords) { // coords is of the selected piece
         // What is the line between our king and the attacking piece?
-        let direction = [square1[0] - square2[0], square1[1] - square2[1]]; // [dx,dy]
+        const direction = [square1[0] - square2[0], square1[1] - square2[1]]; // [dx,dy]
 
         /** The minimum bounding box that contains our 2 squares, at opposite corners. @type {BoundingBox} */
         const box = {
@@ -438,14 +438,14 @@ const checkdetection = (function(){
             right: Math.max(square1[0],square2[0]),
             top: Math.max(square1[1],square2[1]),
             bottom: Math.min(square1[1],square2[1])
-        }
+        };
 
 
         for (const lineKey in moves.sliding) { // 'dx,dy'
-            const line = math.getCoordsFromKey(lineKey) // [dx,dy]
+            const line = math.getCoordsFromKey(lineKey); // [dx,dy]
             const c1 = organizedlines.getCFromLine(line, coords); // Line of our selected piece
-            const c2 = organizedlines.getCFromLine(direction,square2) // Line between our 2 squares
-            const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2) // The intersection point of the 2 lines.
+            const c2 = organizedlines.getCFromLine(direction,square2); // Line between our 2 squares
+            const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2); // The intersection point of the 2 lines.
 
             // Idon us's old code
             // if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
@@ -461,7 +461,7 @@ const checkdetection = (function(){
             if (math.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
 
             // Can our piece legally move there?
-            if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint) // Can block!
+            if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
         }
     }
 
@@ -469,6 +469,6 @@ const checkdetection = (function(){
         detectCheck,
         removeMovesThatPutYouInCheck,
         doesMovePutInCheck
-    })
+    });
 
 })();
