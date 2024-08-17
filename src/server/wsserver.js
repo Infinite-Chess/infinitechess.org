@@ -45,8 +45,11 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 const maxSocketsAllowedPerIP = 10;
 const maxSocketsAllowedPerMember = 5;
 
-/** The amount of latency to add to websocket replies, in millis. ONLY USE IN DEV */
-const simulatedLatencyMillis = 2000;
+/** 
+ * The amount of latency to add to websocket replies, in millis. ONLY USE IN DEV!!
+ * I recommend 2 seconds of latency for testing slow networks.
+ */
+const simulatedLatencyMillis = 0;
 if (!DEV_BUILD && simulatedLatencyMillis !== 0) throw new Error("Websocket replies' simulatedLatencyMillis must be 0 in production!!");
 
 /**
