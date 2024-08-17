@@ -1,4 +1,10 @@
 {
+  "12": {
+    "note": "Corrected opponen_resignation to opponent_resignation",
+    "changes": [
+        "play.javascript.results.opponen_resignation"
+    ]
+  },
   "11": {
     "note": "Changed the structure of play.javascript.termination.moverule",
     "changes": [
