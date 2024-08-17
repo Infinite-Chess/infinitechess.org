@@ -17,6 +17,7 @@
  * @property {string} rated - rated/casual
  */
 
+// eslint-disable-next-line no-unused-vars
 const invites = (function() {
 
     const invitesContainer = document.getElementById('invites');
