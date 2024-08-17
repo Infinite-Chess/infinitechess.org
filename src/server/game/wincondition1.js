@@ -15,7 +15,7 @@ const wincondition1 = (function() {
     /**
      * Calculates if the provided game conclusion is a decisive conclusion.
      * This is any conclusion that can happen after a move is made.
-     * Excludes conclusions like resignation, time, aborted, and disconnect,
+     * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement.
      * which can happen at any point in time.
      * @param {string} gameConclusion - The gameConclusion (e.g. "checkmate", "stalemate", etc.)
      * @returns {boolean} *true* if the gameConclusion is decisive.
@@ -79,6 +79,8 @@ const wincondition1 = (function() {
                 return getTranslation('play.javascript.termination.aborted');
             case "disconnect": // Happens when a player leaves
                 return getTranslation('play.javascript.termination.disconnect');
+            case "agreement":
+                return getTranslation('play.javascript.termination.agreement');
             default:
                 console.error(`Cannot return English termination for unknown condition "${condition}"!`);
                 return 'Unknown';

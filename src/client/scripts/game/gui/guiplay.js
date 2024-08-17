@@ -310,6 +310,7 @@ const guiplay = (function() {
      * `metadata`, `id`, `publicity`, `youAreColor`, `moves`, `timerWhite`,
      * `timerBlack`, `timeNextPlayerLosesAt`, `autoAFKResignTime`,
      * `disconnect`, `gameConclusion`, `serverRestartingAt`
+     * `whiteDrawOfferMove`, `blackDrawOfferMove`
      * 
      * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.
      */
@@ -346,7 +347,7 @@ const guiplay = (function() {
 
     /**
      * Starts a game according to the options provided.
-     * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`
+     * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`, `whiteDrawOfferMove`, `blackDrawOfferMove`
      * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
      */
     function loadGame(gameOptions) {
@@ -363,6 +364,8 @@ const guiplay = (function() {
             moves: gameOptions.moves,
             variantOptions: gameOptions.variantOptions,
             gameConclusion: gameOptions.gameConclusion,
+            drawOfferWhite: gameOptions.whiteDrawOfferMove || 0,
+            drawOfferBlack: gameOptions.blackDrawOfferMove || 0,
         });
         game.loadGamefile(newGamefile);
 

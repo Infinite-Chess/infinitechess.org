@@ -5,7 +5,8 @@
             const translations = <%-JSON.stringify({
                 ...t('play.javascript', {returnObjects: true}),
                 ...t('play.play-menu', {returnObjects: true}),
-                ...t('header.javascript', {returnObjects: true})
+                ...t('header.javascript', {returnObjects: true}),
+                ...t('play.pause', {returnObjects: true})
             })%>;
         </script>
         <!-- Do not modify the next line under any circumstances. It is used by HTMLScriptInjector.js as a reference point of where to inject htmlscript.js -->
@@ -445,6 +446,13 @@
                         <div class="whosturn">
                             <div id="dot" class="dotwhite"></div>
                             <div id="whosturn"><%=t('play.footer.white_to_move')%></div>
+
+                            <!-- Draw Offer UI -->
+                            <div id="draw_offer_ui" class="draw_offer_ui hidden">
+                                <p class="offer_title"><%=t('play.drawoffer.question')%></p>
+                                <button id="acceptdraw" class="acceptdraw button icon"><img src="/img/checkmark.svg" alt="Accept draw offer"></button>
+                                <button id="declinedraw" class="declinedraw button icon"><img src="/img/xmark.svg" alt="Decline draw offer"></button>
+                            </div>
                         </div>
                         <div id="playerblack" class="playerblack"><%=t('play.footer.player_black')%></div>
                         <div id="timer-container-black" class="timerblackcontainer">
@@ -500,6 +508,7 @@
                     <button id="toggleperspective" class="toggleperspective button"><%=t('play.pause.perspective')%></button>
                     <button id="copygame" class="copygame button"><%=t('play.pause.copy')%></button>
                     <button id="pastegame" class="pastegame button"><%=t('play.pause.paste')%></button>
+                    <button id="offerdraw" class="offerdraw button"><%=t('play.pause.offer_draw')%></button>
                     <button id="mainmenu" class="mainmenu button"><%=t('play.pause.main_menu')%></button>
                 </div>
 
