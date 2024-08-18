@@ -163,14 +163,12 @@ const camera = (function() {
     }
 
     function updatePIXEL_HEIGHT_OF_NAVS() {
-        /* eslint-disable indent */
         PIXEL_HEIGHT_OF_TOP_NAV = !options.gnavigationVisible() ? 0
                                        : window.innerWidth > 700 ? 84  // Update with the css stylesheet!
                                        : window.innerWidth > 550 ? window.innerWidth * 0.12
                                        : window.innerWidth > 368 ? 66
                                                                  : window.innerWidth * 0.179;
         PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.gnavigationVisible() ? 0 : 84;
-        /* eslint-enable indent */
         main.renderThisFrame();
 
         stats.updateStatsCSS();

@@ -170,10 +170,8 @@ const invites = (function() {
             const cloc = createDiv(['invite-child'], time);
             newInvite.appendChild(cloc);
 
-            /* eslint-disable indent */
             const uColor = ours ? invite.color === 'White' ? translations["invites"]["you_are_white"] : invite.color === 'Black' ? translations["invites"]["you_are_black"] : translations["invites"]["random"]
                                 : invite.color === 'White' ? translations["invites"]["you_are_black"] : invite.color === 'Black' ? translations["invites"]["you_are_white"] : translations["invites"]["random"];
-            /* eslint-enable indent */
             const color = createDiv(['invite-child'], uColor);
             newInvite.appendChild(color);
 

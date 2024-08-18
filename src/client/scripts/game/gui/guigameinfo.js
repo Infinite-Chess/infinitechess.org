@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 
 /*
  * This script handles the game info bar, during a game,
@@ -78,7 +77,7 @@ const guigameinfo = (function() {
 
         if (onlinegame.areInOnlineGame()) {
 
-          if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["you_checkmate"]
+            if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["you_checkmate"]
                                                                                 : condition === 'time' ? resultTranslations["you_time"]
                                                                                 : condition === 'resignation' ? resultTranslations["you_resignation"]
                                                                                 : condition === 'disconnect' ? resultTranslations["you_disconnect"]
@@ -130,7 +129,7 @@ const guigameinfo = (function() {
             else if (condition === 'stalemate') element_whosturn.textContent = resultTranslations["draw_stalemate"];
             else if (condition === 'repetition') element_whosturn.textContent = resultTranslations["draw_repetition"];
             else if (condition === 'moverule') element_whosturn.textContent = `${resultTranslations["draw_moverule"][0]}${(game.getGamefile().gameRules.moveRule / 2)}${resultTranslations["draw_moverule"][1]}`;
-			else if (condition === 'insuffmat') element_whosturn.textContent = resultTranslations["draw_insuffmat"];
+            else if (condition === 'insuffmat') element_whosturn.textContent = resultTranslations["draw_insuffmat"];
             else {
                 element_whosturn.textContent = resultTranslations["bug_generic"];
                 console.error(`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`);

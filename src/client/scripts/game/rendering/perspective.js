@@ -178,7 +178,6 @@ const perspective = (function() {
 
         const [r,g,b,a] = crosshairColor;
 
-        /* eslint-disable indent */
         const data = new Float32Array([
             //       Vertex         Color
             //              MEDICAL PLUS sign cross hair
@@ -225,7 +224,6 @@ const perspective = (function() {
             //     innerSide,  -innerSide,       r, g, b, a,
             //     -innerSide,  -innerSide,      r, g, b, a,
         ]);
-        /* eslint-enable indent */
         crosshairModel = buffermodel.createModel_Colored(data, 2, "TRIANGLES"); 
     }
 
