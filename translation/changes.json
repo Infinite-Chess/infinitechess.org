@@ -3,9 +3,9 @@
     "note": "Added draw offers.",
     "changes": [
       "play.pause.offer_draw",
-      "play.pause.accept_draw",
       "play.drawoffer.question",
-      "play.javascript.termination.agreement",
+      "play.javascript.offer_draw",
+      "play.javascript.accept_draw",
       "play.javascript.termination.agreement",
       "play.javascript.results.draw_agreement"
     ]

@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "12"
+version = "13"
 
 [header]
 home = "Home"
@@ -237,13 +237,12 @@ perspective = "Perspective: Off"
 copy = "Copy Game"
 paste = "Paste Game"
 offer_draw = "Offer Draw"
-accept_draw = "Accept Draw"
 main_menu = "Main Menu"
 
-[play.drawoffer]
+[play.drawoffer] # The draw offer UI that appears on the bottom bar
 question = "Accept draw offer?"
 
-[play.javascript]
+[play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
 white_to_move = "White to move"
@@ -256,6 +255,8 @@ planned_feature = "This feature is planned!"
 main_menu = "Main Menu"
 resign_game = "Resign Game"
 abort_game = "Abort Game"
+offer_draw = "Offer Draw" # Offer draw button text in the pause menu
+accept_draw = "Accept Draw" # Offer draw button text in the pause menu
 arrows_off = "Arrows: Off"
 arrows_defense = "Arrows: Defense"
 arrows_all = "Arrows: All"
@@ -359,7 +360,7 @@ allpiecescaptured = "All pieces captured"
 threecheck = "Three-check"
 koth = "King of the hill"
 resignation = "Resignation"
-agreement = "Agreement"
+agreement = "Agreement" 
 time = "Time forfeit"
 aborted = "Aborted" # Game was cancelled (no elo exchanged)
 disconnect = "Abandoned" # A player left
