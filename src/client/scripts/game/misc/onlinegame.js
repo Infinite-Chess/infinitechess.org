@@ -381,6 +381,7 @@ const onlinegame = (function() {
         stopOpponentAFKCountdown(); // The opponent is no longer AFK if they were
         flashTabNameYOUR_MOVE(true);
         scheduleMoveSound_timeoutID();
+        guipause.updateTextOfMainMenuButton();
     }
 
     function flashTabNameYOUR_MOVE(on) {

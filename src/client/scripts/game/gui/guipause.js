@@ -33,7 +33,7 @@ const guipause = (function() {
 
     function open() {
         isPaused = true;
-        changeTextOfMainMenuButton();
+        updateTextOfMainMenuButton();
         updatePasteButtonTransparency();
         style.revealElement(element_pauseUI);
         initListeners();
@@ -53,7 +53,12 @@ const guipause = (function() {
         else element_pastegame.classList.remove('opacity-0_5');
     }
 
-    function changeTextOfMainMenuButton() {
+    /**
+     * Updates the text content of the Main Menu button to either say
+     * "Main Menu", "Abort Game", or "Resign Game", whichever is relevant
+     * in the situation.
+     */
+    function updateTextOfMainMenuButton() {
         if (!isPaused) return;
 
         if (!onlinegame.areInOnlineGame() || game.getGamefile().gameConclusion) return element_mainmenu.textContent = translations["main_menu"];
@@ -125,7 +130,7 @@ const guipause = (function() {
         gelement_perspective,
         open,
         toggle,
-        changeTextOfMainMenuButton,
+        updateTextOfMainMenuButton,
         callback_Resume,
         callback_TogglePointers,
     });
