@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const { verifyJWTWebSocket } = require("./middleware/verifyJWT");
 const { rateLimitWebSocket } = require("./middleware/rateLimit");
 const { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } = require('./middleware/logEvents');
-const { DEV_BUILD, HOST_NAME, GAME_VERSION } = require('./config/config');
+const { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } = require('./config/config');
 
 // eslint-disable-next-line no-unused-vars
 const { WebsocketMessage, Socket } = require('./game/TypeDefinitions');
@@ -305,8 +305,13 @@ function onerror(ws, error) {
  * @param {string} action - What type of action the client should take within the subscription route.
  * @param {*} value - The contents of the message.
  * @param {number} [replyto] If applicable, the id of the socket message this message is a reply to.
+ * @param {Object} [options] - Additional options for sending the message.
+ * @param {boolean} [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendmessage(ws, sub, action, value, replyto) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+function sendmessage(ws, sub, action, value, replyto, { skipLatency } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+    // If we're applying simulated latency delay, set a timer to send this message.
+    if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) return setTimeout(sendmessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
+
     if (!ws) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`);
     if (ws.readyState === WebSocket.CLOSED) {
         const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`;

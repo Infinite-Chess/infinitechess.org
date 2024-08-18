@@ -315,6 +315,9 @@ const onlinegame = (function() {
         guititle.close();
         guiplay.close();
         guiplay.startOnlineGame(message);
+        // DELETE AFTER server sends joingame command with onreply code
+        guiplay.unlockCreateInviteButton();
+        guiplay.unlockAcceptInviteButton();
     }
 
     /**

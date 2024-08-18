@@ -1,0 +1,581 @@
+name = "中文" # Name of language
+direction = "ltr" # Change to "rtl" for right to left languages
+version = "11"
+
+[header]
+home = "主页"
+play = "开始"
+news = "消息"
+login = "登录"
+createaccount = "注册"
+
+[footer]
+contact = "联系"
+terms_of_service = "服务条款"
+source_code = "程序"
+language = "语言"
+
+[header.javascript]
+js-profile = "个人账户"
+js-logout = "登出"
+js-login = "登录"
+js-createaccount = "注册"
+
+[member.javascript]
+js-confirm_delete = "您确定要删除账号吗？这无法撤销！要是你确定删除账号，点OK。"
+js-enter_password = "输入密码以永久删除您的账户:"
+
+[index]
+secondary_title = "现场游戏的官方网站！"
+what_is_it_title = "这是什么？"
+what_is_it_pargaraphs = [
+"无限国际象棋是一种棋类变体，没有边界，比你熟悉的8x8棋盘大得多。皇后、车和主教在每一回合中可以移动的距离<em>没有限制</em>。选择任何自然数，直至无限！",
+"由于移动距离没有限制，因此有可能出现末日时钟或将军<em>空白</em>位置的数字由第一个无限序数<strong>omega ω</strong>表示。事实上，研究人员已经发现<strong>任何</strong>可数序数都可以用于将军时钟！",
+"可以想象，起始配置有无数种可能，其中许多可以进行竞技比赛！你的最终目标仍然是将军，这需要新的策略，因为没有墙可以用来困住敌方的国王。游戏通常不会比正常的国际象棋比赛持续更久。兵仍然在第1和第8排晋升！",
+]
+how_to_title = "我要怎么玩?"
+how_to_paragraph = ["当前版本是1.4，你可以在","游戏页面","上进行游戏！"]
+about_title = "关于项目"
+about_paragraphs = [
+"我是Naviary。自从我第一次发现无限国际象棋（这个概念在这个网站出现之前就已经存在），我就对它及其可能性非常感兴趣！直到最近，玩这款游戏一直很困难，需要chess.com会员每次走棋时创建当前棋盘的图像并来回发送。因此，知道并能玩这款游戏的人并不多。",
+["我的目标是建立一种方式，让每个人都可以轻松地玩这个游戏，并建立一个围绕它的社区。我已经花费了无数个小时在这个网站上，维护和开发游戏。我还有很多想法，这些想法会让我忙上一段时间。虽然我希望保持免费游戏，但生活有其需求，如果你能在经济上支持我，请考虑加入我的", "Patreon"],
+]
+patreon_title = "Patreon支持者"
+
+[credits]
+title = "鸣谢"
+copyright = "网站上未列出的任何内容均为 www.InfiniteChess.org 的版权"
+variants_heading = "变体"
+variants_credits = [
+"核心设计者：Andreas Tsevas。",
+"空间设计者：Andreas Tsevas。",
+"经典空间设计者：Andreas Tsevas。",
+"无限平面上的国际象棋（Coaip）设计者：Vickalan。",
+"兵群设计者：Inaccessible Cardinal。",
+"丰富设计者：Clicktuck Suskriberz。",
+"Pawndard设计者：SexiLexi。",
+"Classical+设计者：SexiLexi。",
+"Knightline设计者：Inaccessible Cardinal。",
+"Knighted Chess设计者：cycy98。",
+"设计者：Cory Evans 和 Joel Hamkins。",
+"设计者：Andreas Tsevas。",
+"设计者：Cory Evans 和 Joel Hamkins。",
+"设计者：Cory Evans，Joel Hamkins 和 Norman Lewis Perlmutter。",
+]
+textures_heading = "纹理"
+textures_licensed_under = "纹理使用了"
+textures_credits = [
+"金币设计者：Quolte。",
+]
+sounds_heading = "声音"
+sounds_credits = [
+["部分声音由", "项目提供，使用许可为"],
+"其他声音由Naviary创作。",
+]
+code_heading = "程序"
+code_credits = [
+"由Brandon Jones 和 Colin MacKenzie IV 编写。",
+"由Andreas"
+]
+
+[member]
+verify_message = "请检查您的电子邮箱以验证您的账户。"
+resend_message = ["没有收到邮件？请检查您的垃圾邮件文件夹。另外，", "再次发送。", " 如果仍然找不到，请", "联系我。"]
+verify_confirm = "感谢您！您的账户已验证。"
+rating = "Elo 评级:"
+joined = "加入时间:"
+seen = ["上次在线:", " 前"]
+reveal_info = "显示账号资料"
+account_info_heading = "账号资料"
+email = "电子邮箱:"
+delete_account = "删除账号"
+password_reset_message = ["要更改您的用户名、电子邮件或密码，请", "联系我们。"]
+
+[create-account]
+title = "注册"
+username = "账号:"
+email = "电子邮箱:"
+password = "密码:"
+create_button = "注册"
+agreement = ["我同意", "服务条款", "。"]
+
+[create-account.javascript]
+js-username_specs = "用户名必须至少包含 3 个字符，并且只能包含字母 A-Z 和数字 0-9"
+js-username_tooshort = "用户名必须多于三个字母"
+js-username_wrongenc = "用户名只能包含字母 A-Z 和数字 0-9。"
+js-email_invalid = "这不是一个有效的邮箱"
+js-email_inuse = "这个电子邮箱已经被用了"
+js-pwd_incorrect_format = "密码格式不正确"
+js-pwd_too_short = "密码必须多于六个字母"
+js-pwd_too_long = "密码禁止多于七十二个字母"
+js-pwd_not_pwd = "密码禁止是'password'"
+
+[play.main-menu]
+credits = "鸣谢"
+play = "开始"
+guide = "指南"
+editor = "棋盘编辑器"
+loading = "加载中"
+error = "错误"
+
+[play.guide]
+title = "指南"
+rules = "规则"
+rules_paragraphs = [
+"无限国际象棋的规则与经典国际象棋几乎相同，唯一的区别是棋盘在所有方向上都是无限的！以下是您需要注意的更改和说明：",
+"滑动移动的棋子，如车、主教和皇后，每回合移动的距离没有限制！只要路径畅通无阻，您可以移动数百万格！",
+["在“经典”默认变体中，白兵在第8排晋升，黑兵在第1排晋升。在这张图片中，细黑线表示这一点，它们很微弱，看看您是否能找到它们！兵只需要到达相对的线即可晋升，", "不需要", "越过它。"],
+"棋盘方格不再用字母和数字（例如a1）表示，而是用x和y坐标对来定义。a1方格变成了(1,1)，h8方格变成了(8,8)。在桌面设备上，鼠标悬停的坐标会显示在屏幕顶部。",
+"其他规则与经典国际象棋相同，例如将军、逼和、三次重复、50步规则、王车易位、“吃过路兵”等！"
+]
+careful_heading = "小心!"
+careful_paragraphs = [
+"无限棋盘的开放性意味着很容易利用叉子、钉子和斜线攻击。您的后方通常非常脆弱。小心这样的战术！在保护国王和车的过程中要有创造力！开局策略与经典国际象棋非常不同。",
+"为了增强您的后方，已经创建了许多其他变体。"
+]
+controls_heading = "控制"
+controls_paragraph = "点击并拖动棋盘来移动。滚动鼠标滚轮进行缩放。点击任何棋子，包括对手的棋子，在任何时候查看它们的合法移动！其他控制如下："
+keybinds = [
+" 来移动棋盘。",
+["空格键", " 和 ", "Shift键", " 来缩放。"],
+["Esc键", " 来暂停游戏。"],
+["Tab键", " 切换屏幕边缘的箭头指示器，用于指向屏幕外的棋子。默认情况下，此模式设置为“防御”，显示从当前位置可以移动到您所在位置的棋子的箭头。但按", "Tab键", "可以将此模式切换为“全部”或“关闭”。“全部”模式显示所有在那些直线和斜线上的棋子，无论它们是否可以直线或斜线移动。此设置也可以在暂停菜单中切换。点击这些箭头会将您传送到它们指向的棋子位置。"],
+" 在本地游戏中切换“编辑模式”。这允许您将任何棋子移动到棋盘上的其他位置！非常适合分析。"
+]
+controls_paragraph2 = "这些是您需要了解的主要控制。但如果您需要，这里还有一些额外的操作！"
+keybinds_extra = [
+" 将重置棋子的渲染。如果它们变得不可见，这将非常有用。如果您移动极远的距离（例如1e21），可能会发生此错误。",
+" 将切换导航和游戏信息栏的渲染，这对录制很有用。欢迎在游戏中进行流媒体或制作视频！",
+" 将切换FPS计数器。这显示游戏每秒更新的次数，而不总是显示渲染的帧数，因为游戏在没有可见变化时跳过渲染以节省计算资源。",
+" 将切换图标渲染。这些是在您足够远地缩小时棋子的可点击缩略图。在导入超过50,000个棋子的游戏中，这将自动关闭，因为它是性能瓶颈，但您可以使用 ",
+[" （反引号，或与 ", "相同的键）将切换调试模式。"],
+]
+fairy_heading = "仙子棋子"
+fairy_paragraph = "您已经掌握了玩默认“经典”变体所需的知识。仙子棋子不用于常规国际象棋，但被整合到其他变体中！如果您发现自己在某个变体中遇到了一些以前没见过的棋子，让我们在这里学习它们的工作原理！"
+editing_heading = "棋盘编辑"
+editing_paragraphs = [
+["目前有一个外部 ", "棋盘编辑器", "，可在公共Google表单上使用！它包含使用说明。此工具需要一些基本的Google表单知识。设置后，您将能够通过选项菜单中的“粘贴游戏”按钮创建和导入自定义棋局位置！"],
+"要与朋友玩自定义棋局，请让他们加入私人邀请，然后在开始游戏之前，双方都粘贴游戏代码！",
+"游戏内棋盘编辑器仍在计划中。",
+]
+back = "返回"
+
+[play.guide.pieces]
+chancellor = {name="大臣", description="像车和骑士的组合一样移动。"}
+archbishop = {name="主教骑士", description="像主教和骑士的组合一样移动。"}
+amazon = {name="女皇", description="像皇后和骑士的组合一样移动。这是游戏中最强大的棋子！"}
+guard = {name="护卫", description="像国王一样移动，但不易受将军或将死。"}
+hawk = {name="鹰", description="在任何方向上跳跃2或3格。"}
+centaur = {name="人马", description="像骑士和护卫的组合一样移动。"}
+knightrider = {name="骑士骑士", description="像骑士一样在一个方向上无限跳跃，直到被阻挡。"}
+obstacle = {name="障碍物", description="一个中立棋子（不由任何玩家控制），阻挡移动，但可以被捕获。"}
+void = {name="虚空", description="一个中立棋子（不由任何玩家控制），表示棋盘的缺失。棋子不能穿过或移动到它上面。"}
+
+
+[play.play-menu]
+title = "玩 - 网上"
+colors = "颜色"
+online = "网上"
+local = "本地"
+computer = "计算机"
+variant = "变体"
+Classical = "经典"
+Classical_Plus = "经典+"
+CoaIP = "无限棋盘上的国际象棋"
+Pawndard = "兵棋"
+Knighted_Chess = "骑士国际象棋"
+Knightline = "骑士线"
+Core = "核心"
+Standarch = "标准弧"
+Pawn_Horde = "兵群"
+Space_Classic = "太空经典"
+Space = "太空"
+Obstocean = "障碍海洋"
+Abundance = "丰饶"
+Amazon_Chandelier = "亚马逊吊灯"
+Containment = "遏制"
+Classical_Limit_7 = "经典 - 限制 7"
+CoaIP_Limit_7 = "无限棋盘 - 限制 7"
+Chess = "国际象棋"
+Classical_KOTH = "实验: 经典 - 王者争夺"
+CoaIP_KOTH = "实验: 无限棋盘 - 王者争夺"
+Omega = "展示: 欧米伽"
+Omega_Squared = "展示: 欧米伽²"
+Omega_Cubed = "展示: 欧米伽³"
+Omega_Fourth = "展示: 欧米伽⁴"
+no_clock = "没有表"
+clock = "表"
+minutes = "分钟"
+seconds = "秒"
+infinite_time = "无限时间"
+color = "颜色"
+piece_colors = ["随机", "白", "黑"]
+private = "未发布"
+no = "不"
+yes = "是"
+rated = "评级"
+join_games = "加入现有 - 活跃游戏:"
+private_invite = "私人邀请:"
+your_invite = "您的邀请码:"
+create_invite = "创建邀请"
+join = "加入"
+copy = "复制"
+back = "返回"
+code = "邀请码"
+
+[play.footer]
+white_to_move = "白方走起"
+player_white = "白方"
+player_black = "黑方"
+
+[play.pause]
+title = "暂停"
+resume = "继续"
+arrows = "箭头: 防御"
+perspective = "视角: 关闭"
+copy = "复制棋局"
+paste = "粘贴棋局"
+main_menu = "主页"
+
+[play.javascript]
+guest_indicator = "(游客)"
+you_indicator = "(您)"
+white_to_move = "白方走棋"
+black_to_move = "黑方走棋"
+your_move = "轮到您走棋"
+their_move = "轮到他走棋"
+lost_network = "网络丢失。"
+failed_to_load = "一个或多个资源加载失败。请刷新页面。"
+planned_feature = "此功能已计划！"
+main_menu = "主页"
+resign_game = "认输"
+abort_game = "放弃游戏"
+arrows_off = "箭头: 关闭"
+arrows_defense = "箭头: 防御"
+arrows_all = "箭头: 全部"
+toggled = "切换"
+menu_online = "玩 - 网上"
+menu_local = "玩 - 本地"
+invite_error_digits = "邀请码需要5位数字。"
+invite_copied = "邀请码已复制到剪贴板。"
+move_counter = "步数:"
+constructing_mesh = "构建网格"
+rotating_mesh = "旋转网格"
+lost_connection = "连接丢失。"
+please_wait = "请稍等，正在执行此任务。"
+webgl_unsupported = "您的浏览器不支持WebGL。此游戏需要WebGL才能运行。请更新您的浏览器。"
+bigints_unsupported = "BigInts 不受支持。请升级您的浏览器。\nBigInts 用于使棋盘无限。"
+shaders_failed = "无法初始化着色器程序："
+failed_compiling_shaders = "编译着色器时发生错误："
+
+[play.javascript.copypaste]
+copied_game = "游戏已复制到剪贴板！"
+cannot_paste_in_public = "不能在公共比赛中粘贴游戏！"
+cannot_paste_after_moves = "移动后不能粘贴游戏！"
+clipboard_denied = "剪贴板权限被拒绝。这可能是您的浏览器问题。"
+clipboard_invalid = "剪贴板内容不符合有效的ICN格式。"
+game_needs_to_specify = "游戏需要指定 'Variant' 元数据或 'startingPosition' 属性。"
+invalid_wincon_white = "白方有无效的胜利条件"
+invalid_wincon_black = "黑方有无效的胜利条件"
+pasting_game = "正在粘贴游戏..."
+pasting_in_private = "在私人比赛中粘贴游戏会导致不同步，如果对手没有做同样的操作！"
+piece_count = "棋子数量"
+exceeded = "超过了"
+changed_wincon = "将将死胜利条件更改为royalcapture，并关闭了图标渲染。按 'P' 重新启用（不推荐）。"
+loaded_from_clipboard = "从剪贴板加载了游戏！"
+loaded = "游戏已加载！"
+slidelimit_not_number = "slideLimit 游戏规则必须是数字。收到"
+
+[play.javascript.rendering]
+on = "开启"
+off = "关闭"
+icon_rendering_off = "图标渲染已关闭。"
+icon_rendering_on = "图标渲染已开启。"
+toggled_debug = "调试模式已切换："
+toggled_edit = "编辑模式已切换："
+perspective = "视角"
+perspective_mode_on_desktop = "桌面版支持视角模式！"
+movement_tutorial = "WASD 移动。空格 & Shift 缩放。"
+regenerated_pieces = "重新生成了棋子。"
+
+[play.javascript.invites]
+move_mouse = "移动鼠标以重新连接。"
+unknown_action_received_1 = "未知操作"
+unknown_action_received_2 = "从邀请订阅中接收到的服务器消息！"
+cannot_cancel = "无法取消未定义 ID 的邀请。"
+you_indicator = "(你)"
+you_are_white = "你是白方"
+you_are_black = "你是黑方"
+random = "随机"
+accept = "接受"
+cancel = "取消"
+create_invite = "创建邀请函"
+cancel_invite = "取消邀请函"
+start_game = "开始"
+join_existing_active_games = "加入现有 - 活跃游戏："
+
+[play.javascript.onlinegame]
+afk_warning = "你是AFK."
+opponent_afk = "对手是AFK."
+opponent_disconnected = "对手断开连接了"
+opponent_lost_connection = "对手断开连接了"
+auto_resigning_in = "将很快自动认输"
+auto_aborting_in = "将很快自动中止"
+not_logged_in = "您未登录。请登录以重新连接到此游戏。"
+game_no_longer_exists = "游戏不再存在。"
+another_window_connected = "另一个窗口已连接。"
+server_restarting = "服务器即将重新启动..."
+server_restarting_in = "服务器即将重新启动"
+minute = "分钟"
+minutes = "分钟"
+
+[play.javascript.websocket]
+no_connection = "没有连接"
+reconnected = "重新连接了"
+unable_to_identify_ip = "无法识别IP地址"
+online_play_disabled = "在线游戏已禁用。不支持Cookie。请尝试其他浏览器。"
+too_many_requests = "请求次数过多，请稍后再试。"
+message_too_big = "消息太大。"
+too_many_sockets = "套接字太多。"
+origin_error = "来源错误。"
+connection_closed = "连接意外关闭。服务器消息。"
+please_report_bug = "这不应该发生，请报告此错误！"
+
+[play.javascript.termination] # What caused the termination of the game, in spoken language
+checkmate = "将死"
+stalemate = "僵局"
+repetition = "三次重复"
+moverule = ["", "-回合规则"]  # The game inserts a number inbetween these two strings
+insuffmat = "棋子不足"
+royalcapture = "王被吃"
+allroyalscaptured = "所有王被吃"
+allpiecescaptured = "所有棋子被吃"
+threecheck = "三次将军"
+koth = "山丘之王"
+resignation = "认输"
+time = "超时"
+aborted = "已中止"  # Game was cancelled (no elo exchanged)
+disconnect = "弃赛"  # A player left
+
+[play.javascript.results]
+you_checkmate = "你赢了，将死！"
+you_time = "你超时赢了！"
+you_resignation = "你赢了，对手认输！"
+you_disconnect = "你赢了，对手弃权！"
+you_royalcapture = "你赢了，皇族棋子被捕！"
+you_allroyalscaptured = "你赢了，所有皇族棋子被捕！"
+you_allpiecescaptured = "你赢了，全军覆没！"
+you_threecheck = "你赢了，三步将军！"
+you_koth = "你赢了，山顶王！"
+you_generic = "你赢了！"
+draw_stalemate = "和棋，僵局！"
+draw_repetition = "和棋，局面重复！"
+draw_moverule = ["和棋，", "步规则！"]
+draw_insuffmat = "和棋，因棋子不足！"
+draw_generic = "和棋!"
+aborted = "游戏中止"
+opponent_checkmate = "你输了，将死！"
+opponent_time = "你超时输了！"
+opponent_resignation = "你输了，对手认输！"
+opponent_disconnect = "你输了，对手弃权！"
+opponent_royalcapture = "你输了，皇族棋子被捕！"
+opponent_allroyalscaptured = "你输了，所有皇族棋子被捕！"
+opponent_allpiecescaptured = "你输了，全军覆没！"
+opponent_threecheck = "你输了，被三步将军！"
+opponent_koth = "你输了山顶王！"
+opponent_generic = "你输了!"
+white_checkmate = "白方将死获胜!"
+black_checkmate = "黑方将死获胜!"
+bug_checkmate = "这是一个错误，请报告。游戏以将死结束。"
+white_time = "白方超时胜"
+black_time = "黑方超时胜!"
+bug_time = "这是一个错误，请报告！游戏因超时结束。"
+white_royalcapture = "白方通过捕获皇族棋子获胜！"
+black_royalcapture = "黑方通过捕获皇族棋子获胜！"
+bug_royalcapture = "这是一个错误，请报告！游戏因皇族棋子被捕获而结束。"
+white_allroyalscaptured = "白方通过吃掉所有皇族棋子获胜！"
+black_allroyalscaptured = "黑方通过吃掉所有皇族棋子获胜！"
+bug_allroyalscaptured = "这是一个错误，请报告！游戏因所有皇族棋子被捕获而结束。"
+white_allpiecescaptured = "白方通过吃掉所有棋子获胜！"
+black_allpiecescaptured = "黑方通过吃掉所有棋子获胜！"
+bug_allpiecescaptured = "这是一个错误，请报告！游戏因所有棋子被捕获而结束。"
+white_threecheck = "白方通过三步将军获胜！"
+black_threecheck = "黑方通过三步将军获胜！"
+bug_threecheck = "这是一个错误，请报告！游戏被三步将军结束。"
+white_koth = "白方通过山顶之王获胜！"
+black_koth = "黑方通过山顶之王获胜！"
+bug_koth = "这是一个错误，请报告！游戏被山顶之王结束。"
+bug_generic = "这是一个错误，请报告！"
+
+[terms]
+title = "服务条款"
+warning = ["此文件不具有法律约束力。我们只对英文版本的文件负责。本翻译仅供一般参考。您可以在此处访问官方英文版本", "这里", "。"]
+consent = "使用本网站即表示您同意遵守以下条款。如果您不同意，您必须立即停止使用本网站。"
+guardian_consent = "如果您未满18岁，您必须获得父母或法定监护人的同意，才能使用本网站并创建账户。"
+parents_header = "父母"
+parents_paragraphs = [
+"本网站有一个算法，用于禁止用户将其名字设置为常见的脏话。目前，网站上用户之间没有交流方式。",
+"目前，会员无法设置自己的个人资料图片。我们计划在未来允许此功能，届时我们将尽最大努力防止不适当的个人资料图片。",
+]
+fair_play_header = "公平游戏"
+fair_play_paragraph1 = ["您不能创建超过一个账户。如果您希望更改与账户关联的电子邮件地址，请", "联系我们。"]
+fair_play_paragraph2 = "为了让游戏保持有趣和公平，您不得："
+fair_play_rules = [
+"以任何方式修改或操纵代码，包括但不限于：使用控制台命令、本地覆盖、自定义脚本、修改HTTP请求等。这样做可能是为了故意破坏游戏，或给自己带来优势。",
+"在评级游戏中，接受他人或程序的帮助/建议，以决定应该下什么棋。（创建引擎是可以的，并且是鼓励的，但您必须将其使用限制在非评级游戏中。）",
+"通过故意输棋以提升对手的Elo积分，或接受对手故意输棋以提升自己的Elo积分。这会滥用系统，导致根据您的技能水平产生不准确的评级。"
+]
+cleanliness_header = "清洁"
+cleanliness_rules = [
+"在网站上使用的所有语言中，您必须保持文明，不得使用粗俗语言或脏话。您不得欺凌、骚扰或威胁他人，或从事任何非法行为。您不得向其他用户或论坛发送垃圾信息。",
+"您不得上传不适当、暗示性或血腥的图像作为您的个人资料图片。这样做可能会导致您被禁止或终止账户。"
+]
+privacy_header = "隐私"
+privacy_rules = [
+"目前，我们收集的唯一个人信息是电子邮件。这是为了验证用户的账户，并提供在他们请求密码重置时证明身份的手段。我们不会发送任何促销电子邮件或优惠。我们不会与任何人共享用户的电子邮件地址。",
+"InfiniteChess.org可能会收集您在网站上使用的数据，包括您的IP地址。这是为了帮助防止来自机器人的攻击和其他不受欢迎的实体，并保持数据库中的准确统计信息。这不是您的家庭地址。",
+"您在本网站上玩的所有游戏都会成为公共信息。如果您希望保持匿名，请不要与朋友或家人分享您的用户名。如果这是您的愿望，您有责任确保没有人发现您的用户名与您的真实身份相关联。",
+"您的账户在线状态以及您上次在网站上活跃的近似时间也是公共信息。",
+["尽管InfiniteChess.org将尽力在其能力范围内保护每个人的账户和个人信息，但在发生黑客攻击或数据泄露时，您不得向我们提出指控。如果发生数据泄露，用户将在", "新闻", "页面上收到通知。"],
+"网站上没有可购买的内容。我们不收集其他个人信息。",
+"要从我们的服务器中删除您的私人信息，您可以通过个人资料页面删除您的账户。唯一与您的用户名有关且我们不会删除的内容是您的游戏历史记录，因为所有游戏都是公开信息。",
+]
+cookie_header = "Cookie政策"
+cookie_paragraphs = [
+"本网站使用Cookie，Cookie是存储在您浏览器中的小型文本文件，在连接时发送到服务器。使用这些Cookie的目的是：验证您的登录会话，验证您的浏览器属于它所称的棋局，并存储用户的游戏偏好，以便他们在重新访问网站时可以保留其偏好。该网站不使用第三方Cookie，Cookie不会与外部方共享。",
+"Cookie是本网站和游戏正常运行所必需的。如果您不希望网站存储Cookie，您必须停止使用本网站。您可以进入浏览器偏好设置删除现有的Cookie。继续使用本网站即表示您同意使用Cookie。"
+]
+conclusion_header = "结论"
+conclusion_paragraphs = [
+"任何违反这些条款的行为可能导致您被禁止或终止账户。InfiniteChess.org希望能够为每个人提供玩乐的机会！但是，我们保留随时禁止或终止任何用户账户的权利，原因无需披露。您不得向我们提出指控。",
+["这些服务条款可能随时修改。您有责任确保您保持最新！当这些服务条款更新时，该信息将发布在", "新闻", "页面上。如果在服务条款更新时，您不同意新条款，您必须立即停止使用网站。您可以从您的个人资料页面删除账户。如果您删除账户，所有您的私人信息和账户数据将被删除，除了与您的用户名相关的游戏历史记录，因为这是公开信息。"],
+["此网站是开源的。只要您遵循许可条款中规定的条件，您可以复制或分发本网站上的任何内容！", "许可条款", "。如果此链接失效，您有责任找到条款。"],
+"我们不能保证网站将100%时间运行。我们也不能保证数据永远不会被损坏。",
+"您不得在网站上从事任何非法活动。",
+["如果您对这些条款有任何疑问，或对网站有任何其他问题，请", "通过电子邮件联系我们！"]
+]
+update = "(最后更新日期：2024年7月13日。添加了警告，所有玩过的游戏可能成为公共信息，包括您账户上次活跃的大致时间。此外，这些条款可能会随时更新，您有责任确保您保持更新。)"
+thanks = "谢谢！"
+
+
+[login]
+title = "登录"
+username = "用户名:"
+password = "密码:"
+forgot_password = ["忘记了? ", "给我们发邮件."]
+login_button = "登录"
+
+[error-pages] # Messages shown on some error pages explaining what went wrong
+400_message = "收到无效参数。"
+409_message = ["可能存在冲突的用户名或电子邮件。请", "重新加载", "页面"]
+500_message = "这不应该发生。需要进行一些调试！"
+
+########### NEWS ###########
+
+[news]
+title = "新闻"
+more_dev_logs = ["更多开发者日志在我们的", "Discord", "和在", "chess.com的论坛！"]
+
+[news.aug1-2024] # Update 1.4
+date = "2024年8月1日:"
+text_top = "更新 1.4 发布了！自从我们开源以来，添加了许多协作功能！"
+update_list = [
+"新增了骑士骑行者，它们像骑士一样无限跳跃，直到被障碍物阻挡！'骑士国际象棋' 变体已经升级，将骑士替换为骑士骑行者！",
+"随时点击自己或对手的棋子以查看其可能的移动！",
+"随时右键点击以取消选择当前选中的棋子。",
+"将鼠标悬停在屏幕边缘的箭头指示器上，现在会显示指示的棋子的合法移动！",
+"如果棋盘上没有足够的棋子来强制将死，游戏现在会自动判定平局。",
+"网站已经翻译成法语！您可以通过访问任何页面的页脚来更改语言。",
+"改善了网站的加载时间。",
+"新的网站图标，Ω！它会自动匹配您首选的浅色或深色设备主题。",
+"游戏代码或 ICN 的元数据已重新格式化，更加符合 PGN 标准。",
+"用户现在可以在个人资料页面删除他们的帐户，无需通过电子邮件联系我们。"
+]
+
+[news.july22-2024]
+date = "2024年7月22日"
+account_warning = "如果您尚未验证您的账户，请在您的个人资料页面上进行验证！所有未验证的账户将很快被删除！"
+
+[news.july13-2024]
+date = "2024年7月13日"
+tos_update = ["", "服务条款", "已更新。变更内容：您在网站上玩的所有游戏都可能成为公共信息，包括您的帐户上次活跃的大概时间。条款可能会随时更新，确保您了解最新条款是您的责任。"] # The game inserts a hyperlink inside the 2nd quotes here.
+game_history_warning = "您的游戏历史可能在未来可在您的个人资料中查看。"
+
+[news.july9-2024]
+date = "2024年7月9日"
+text = ["无限棋现在开源！查看并贡献项目，请访问 ", "GitHub！"]
+
+[news.may27-2024]
+date = "2024年5月27日"
+text = "1.3.2更新今天发布！新增了我在最新视频中展示的 Omega^3 和 Omega^4 的展示变体。此外，将军算法现在兼容每边多个国王。"
+
+[news.may24-2024]
+date = "2024年5月24日"
+text = "1.3更新今天发布！这包括指南、悬停导航按钮时的弹出式工具提示以及标题页上的 Discord 和游戏信用链接！"
+
+[news.may14-2024]
+date = "2024年5月14日"
+text_top = "1.3更新今天发布！这包括很多的改进："
+update_list = [
+"切换到 WebSocket，减少对手移动时的延迟。",
+"切换标签不再断开连接。",
+"当您或其他人创建邀请或下棋时，发出声音提示。",
+"加了50步规则",
+"现在在时钟剩余10秒时播放鼓式倒计时效果。",
+"如果您的对手AFK（并发出声音警告），将开始自动认输计时器。"
+]
+text_box = ["还有更多！那些都在我们的", "Discord！"]
+
+[news.jan29-2024]
+date = "2024年1月29日"
+text = "仅以案由一个新视频"
+
+[server.javascript]
+ws-invalid_username = "用户名无效"
+ws-incorrect_password = "密码部队"
+ws-username_and_password_required = "需要用户名和密码"
+ws-username_and_password_string = "用户名和密码必须是字符串"
+ws-login_failure_retry_in = "登录失败"
+ws-seconds = "妙" # unit of time
+ws-second = "妙" # unit of time
+ws-username_length = "用户名必须多于3个字母和少于20字母"
+ws-username_letters = "用户名只能包含字母 A-Z 和数字 0-9。"
+ws-username_taken = "那个用户名已经被用了。"
+ws-username_bad_word = "该用户名包含不允许的词语。"
+ws-email_too_long = "您的电子有限太长。"
+ws-email_invalid = "这个邮箱无效。"
+ws-email_in_use = "这个邮箱已经被用了。"
+ws-you_are_banned = "您被封禁了"
+ws-password_length = "密码必须多于6个字母，并且少于72个字母。"
+ws-password_format = "密码格式不正确"
+ws-password_password = "密码禁止是password"
+ws-refresh_token_not_found_logged_out = "没有成员拥有该刷新令牌 (已经等处)"
+ws-refresh_token_not_found = "没有成员拥有该刷新令牌"
+ws-refresh_token_expired = "未找到刷新令牌（会话过期）"
+ws-refresh_token_invalid = "刷新令牌过期或被篡改"
+ws-member_not_found = "账户未找到"
+ws-forbidden_wrong_account = "禁止。这不是您的账户。"
+ws-deleting_account_not_found = "刪除帳戶失敗。找不到帳戶。"
+ws-server_error = "抱歉，發生伺服器錯誤！請返回。"
+ws-unable_to_identify_client_ip = "無法識別客戶端 IP 地址"
+ws-you_are_banned_by_server = "您被禁用了"
+ws-too_many_requests_to_server = "請求過多。請稍後再試。"
+ws-bad_request = "400"
+ws-not_found = "404"
+ws-forbidden = "403"
+ws-unauthorized_patron_page = "未经授权。此页面仅限会员访问。"
+ws-username_reserved = "用户名已被保留"
+ws-already_in_game = "已在游戏中"
+ws-player_already_has_invite = "玩家已经有邀请"
+ws-invite_cancelled = "邀请已取消"
+ws-accept_own_invite = "不能接受自己的邀请"
+ws-server_restarting = "服务器正在重启"
+ws-minutes = "分钟"
+ws-server_under_maintenance = "服务器正在维护中。请稍后再试！"  # Can be changed at will to change the display message.
+ws-minute = "分钟"
+ws-no_abort_game_over = "游戏结束无法中止"
+ws-no_abort_after_moves = "无法在棋步后中止"
+ws-game_aborted_cheating = "因作弊游戏中止"
+ws-cannot_resign_finished_game = "无法放弃已完成的游戏"
+ws-invalid_code = "无效代码"
+ws-game_aborted = "游戏中止"
