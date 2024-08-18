@@ -215,7 +215,7 @@ const gamefileutility = (function() {
         setTerminationMetadata(gamefile);
 
         selection.unselectPiece();
-        guipause.changeTextOfMainMenuButton();
+        guipause.updateTextOfMainMenuButton();
     }
 
     /**

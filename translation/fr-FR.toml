@@ -1,6 +1,6 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "11"
+version = "12"
 
 [header]
 home = "Accueil"
@@ -377,7 +377,7 @@ draw_generic = "Égalité!"
 aborted = "Partie annulée."
 opponent_checkmate = "Défaite par échec-et-mat !"
 opponent_time = "Défaite par le temps!"
-opponen_resignation = "Défaite par abandon !"
+opponent_resignation = "Défaite par abandon !"
 opponent_disconnect = "Défaite par déconnexion !"
 opponent_royalcapture = "Défaite par perte du Roi !"
 opponent_allroyalscaptured = "Défaite par perte de tous les Rois!"
@@ -498,7 +498,7 @@ account_warning = "Si vous n'avez pas vérifié votre compte, faites le dès mai
 
 [news.july13-2024]
 date = "13 Juillet 2024:"
-tos_update = ["Les ", "Conditions d'Utilisation", " ont été mises à jour. Changements: Toutes les parties que vous jouez sur le site peuvent devenir publiques, et il en va de même pour la durée approximative depuis votre dernière activité. Les conditions d'utilisations peuvent être modifiées à tout instant, et il est de votre responsabilité de vous assurez que vous êtes à jour sur ces dernières."]
+tos_update = ["Les ", "Conditions d'Utilisation", " ont été mises à jour. Changements: Toutes les parties que vous jouez sur le site peuvent devenir publiques, et il en va de même pour la durée approximative depuis votre dernière activité. Les conditions d'utilisations peuvent être modifiées à tout instant, et il est de votre responsabilité de vous assurez que vous êtes à jour sur ces dernières."]  # The game inserts a hyperlink inside the 2nd quotes here.
 game_history_warning = "L'historique de vos parties pourrait être accessible depuis votre profil dans le futur ."
 
 [news.july9-2024]
