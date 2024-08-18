@@ -88,8 +88,8 @@ const guipause = (function() {
     }
 
     function onReceiveOpponentsMove() {
-        changeTextOfMainMenuButton();
-        updateDrawOfferButton()
+        updateTextOfMainMenuButton();
+        updateDrawOfferButton();
     }
 
     /**
