@@ -498,7 +498,7 @@ account_warning = "Jeśli twoje konto nie jest zweryfikowane, zrób to na swoim 
 
 [news.july13-2024]
 date = "13 lipca 2024:"
-tos_update = ["", "Warunki korzystania z usługi", " zostały zaktualizowane. Zmiany: Wszystkie gry, które zagrasz na stronie, a także twój ostatni czas logowania, zostanie informacją publiczną. Warunki mogą zostać zaktualizowane w dowolnym momencie, i że twoją odpowiedzialnością jest zapoznać się ze zmianami."]
+tos_update = ["", "Warunki korzystania z usługi", " zostały zaktualizowane. Zmiany: Wszystkie gry, które zagrasz na stronie, a także twój ostatni czas logowania, zostanie informacją publiczną. Warunki mogą zostać zaktualizowane w dowolnym momencie, i że twoją odpowiedzialnością jest zapoznać się ze zmianami."] # The game inserts a hyperlink inside the 2nd quotes here.
 game_history_warning = "W przyszłości twoja historia gier będzie widoczna na twoim profilu."
 
 [news.july9-2024]
