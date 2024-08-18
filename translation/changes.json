@@ -1,4 +1,15 @@
 {
+  "13": {
+    "note": "Added draw offers.",
+    "changes": [
+      "play.pause.offer_draw",
+      "play.pause.accept_draw",
+      "play.drawoffer.question",
+      "play.javascript.termination.agreement",
+      "play.javascript.termination.agreement",
+      "play.javascript.results.draw_agreement"
+    ]
+  },
   "12": {
     "note": "Corrected opponen_resignation to opponent_resignation",
     "changes": [

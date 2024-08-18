@@ -47,7 +47,7 @@ const perspective = (function() {
         if (enabled) return console.error("Should not be enabling perspective when it is already enabled.");
         enabled = true;
 
-        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["on"]}`;
+        guipause.getelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["on"]}`;
 
         guipause.callback_Resume();
 
@@ -69,7 +69,7 @@ const perspective = (function() {
         // document.exitPointerLock()
         guipause.callback_Resume();
 
-        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["off"]}`;
+        guipause.getelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["off"]}`;
         
         resetRotations();
         

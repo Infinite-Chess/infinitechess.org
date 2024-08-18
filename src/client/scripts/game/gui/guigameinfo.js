@@ -70,7 +70,7 @@ const guigameinfo = (function() {
 
     // Updates the whosTurn text to say who won!
     function gameEnd(conclusion) {
-        // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect
+        // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 
         const { victor, condition } = wincondition.getVictorAndConditionFromGameConclusion(conclusion);
 	    const resultTranslations = translations["results"];
@@ -91,7 +91,8 @@ const guigameinfo = (function() {
             else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? resultTranslations["draw_stalemate"]
                                                                      : condition === 'repetition' ? resultTranslations["draw_repetition"]
                                                                      : condition === 'moverule' ? `${resultTranslations["draw_moverule"][0]}${(game.getGamefile().gameRules.moveRule / 2)}${resultTranslations["draw_moverule"][1]}`
-																	 : condition === 'insuffmat' ? resultTranslations["draw_insuffmat"]
+																	                                   : condition === 'insuffmat' ? resultTranslations["draw_insuffmat"]
+                                                                     : condition === 'agreement' ? resultTranslations["draw_agreement"]
                                                                      : resultTranslations["draw_generic"];
             else if (condition === 'aborted') element_whosturn.textContent = resultTranslations["aborted"];
             else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["opponent_checkmate"]
