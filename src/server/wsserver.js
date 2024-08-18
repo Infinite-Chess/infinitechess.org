@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const { verifyJWTWebSocket } = require("./middleware/verifyJWT");
 const { rateLimitWebSocket } = require("./middleware/rateLimit");
 const { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } = require('./middleware/logEvents');
-const { DEV_BUILD, HOST_NAME, GAME_VERSION } = require('./config/config');
+const { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } = require('./config/config');
 
 // eslint-disable-next-line no-unused-vars
 const { WebsocketMessage, Socket } = require('./game/TypeDefinitions');
@@ -44,13 +44,6 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 
 const maxSocketsAllowedPerIP = 10;
 const maxSocketsAllowedPerMember = 5;
-
-/** 
- * The amount of latency to add to websocket replies, in millis. ONLY USE IN DEV!!
- * I recommend 2 seconds of latency for testing slow networks.
- */
-const simulatedLatencyMillis = 0;
-if (!DEV_BUILD && simulatedLatencyMillis !== 0) throw new Error("Websocket replies' simulatedLatencyMillis must be 0 in production!!");
 
 /**
  * The time, after which we don't hear an expected echo from a websocket,
@@ -317,7 +310,7 @@ function onerror(ws, error) {
  */
 function sendmessage(ws, sub, action, value, replyto, { skipLatency } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
     // If we're applying simulated latency delay, set a timer to send this message.
-    if (simulatedLatencyMillis !== 0 && !skipLatency) return setTimeout(sendmessage, simulatedLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
+    if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) return setTimeout(sendmessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
 
     if (!ws) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`);
     if (ws.readyState === WebSocket.CLOSED) {
