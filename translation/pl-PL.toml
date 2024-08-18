@@ -34,7 +34,7 @@ what_is_it_pargaraphs = [
 "Jak możesz sobie wyobrazić, istnieją nieskończone możliwości ustawień początkowych, które możesz wykorzystać do gry kompetetywnej! Celem w grze dalej jest szach-mat, który wymaga nowych taktyk, gdyż nie ma ścian, które w zwykłej grze mogłyby zatrzymać króla",
 ] # Paragraph 2 needs translation
 how_to_title = "Jak zagrać?"
-how_to_paragraph = ["Obecna wersja (1.3.2) jest dostępna na stronie ","Graj"," !"]
+how_to_paragraph = ["Obecna wersja (1.4) jest dostępna na stronie ","Graj"," !"]
 about_title = "O projekcie"
 about_paragraphs = [
 "Jestem Naviary. Od kiedy odkryłem Nieskończone Szachy (koncept istniał długo przed tą stroną), byłem bardzo zaintrygowany jego możliwościami. Od dawna granie w tą wersję było bardzo trudne, gdyż wymagało od graczy na chess.com wysyłania zdjęć planszy po każdym zagranym ruchu. Ze względu na to, niewielu ludzi było w stanie zagrać w Nieskończone Szachy, a sam sposób gry był bardzo mało popularny",
@@ -464,7 +464,7 @@ account_warning = "If you have not verified your account, please do so on your p
 
 [news.july13-2024]
 date = "July 13, 2024:"
-tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."]
+tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."] # The game inserts a hyperlink inside the 2nd quotes here.
 game_history_warning = "Your game history may become available on your profile at a future time."
 
 [news.july9-2024]
