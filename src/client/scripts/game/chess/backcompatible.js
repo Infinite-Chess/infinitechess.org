@@ -163,3 +163,5 @@ const backcompatible = (function() {
     }); 
 
 })();
+
+export { backcompatible };

@@ -656,3 +656,5 @@ const websocket = (function() {
     });
 
 })();
+
+export { websocket }

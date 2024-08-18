@@ -297,3 +297,5 @@ const voids = {
         gamefile.voidMesh.model.render(position, scale);
     }
 };
+
+export { voids }

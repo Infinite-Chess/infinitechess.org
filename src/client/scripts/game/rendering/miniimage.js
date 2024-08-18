@@ -182,3 +182,5 @@ const miniimage = (function() {
     });
 
 })();
+
+export { miniimage };

@@ -347,3 +347,5 @@ const movesscript = (function() {
     });
 
 })();
+
+export { movesscript };

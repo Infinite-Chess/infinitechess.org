@@ -200,3 +200,5 @@ const guipromotion = (function() {
     });
 
 })();
+
+export { guipromotion };

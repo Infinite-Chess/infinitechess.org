@@ -67,3 +67,5 @@ const promotionlines = {
         return buffermodel.createModel_Colored(data, 2, "TRIANGLES");
     }
 };
+
+export { promotionlines }

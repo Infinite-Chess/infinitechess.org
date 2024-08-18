@@ -196,3 +196,5 @@ const webgl = (function() {
         queryWebGLContextInfo
     });
 })();
+
+export { webgl };

@@ -315,3 +315,5 @@ const guinavigation = (function() {
     });
 
 })();
+
+export { guinavigation };

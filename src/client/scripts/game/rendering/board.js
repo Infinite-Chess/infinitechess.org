@@ -587,3 +587,5 @@ const board = (function() {
         recalcTiles_FingersOver
     });
 })();
+
+export { board }

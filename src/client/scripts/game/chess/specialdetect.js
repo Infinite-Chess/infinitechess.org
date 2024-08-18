@@ -299,3 +299,5 @@ const specialdetect = (function() {
         transferSpecialFlags_FromCoordsToCoords
     });
 })();
+
+export { specialdetect };

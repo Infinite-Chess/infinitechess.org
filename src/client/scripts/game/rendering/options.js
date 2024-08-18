@@ -281,3 +281,5 @@ const options = (function() {
         isFPSOn
     });
 })();
+
+export { options }

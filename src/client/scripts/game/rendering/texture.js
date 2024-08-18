@@ -54,3 +54,5 @@ const texture = (function() {
     });
 
 })();
+
+export { texture }

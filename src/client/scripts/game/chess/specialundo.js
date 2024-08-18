@@ -111,3 +111,5 @@ const specialundo = {
         return true; // Special move has been undo'd!
     }
 };
+
+export { specialundo };

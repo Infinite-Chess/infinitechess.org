@@ -531,3 +531,5 @@ const movepiece = (function() {
     });
 
 })();
+
+export { movepiece };

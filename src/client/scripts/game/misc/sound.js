@@ -407,3 +407,5 @@ const sound = (function() {
     });
 
 })();
+
+export { sound };

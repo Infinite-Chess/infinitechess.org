@@ -105,3 +105,5 @@ const guiguide = (function() {
     });
 
 })();
+
+export { guiguide };

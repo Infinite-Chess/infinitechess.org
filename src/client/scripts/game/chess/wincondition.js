@@ -320,3 +320,5 @@ const wincondition = (function() {
     });
 
 })();
+
+export { wincondition };

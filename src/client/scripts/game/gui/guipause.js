@@ -131,3 +131,5 @@ const guipause = (function() {
     });
 
 })();
+
+export { guipause };

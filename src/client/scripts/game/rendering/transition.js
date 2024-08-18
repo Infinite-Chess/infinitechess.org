@@ -261,3 +261,5 @@ const transition = (function() {
         panTel
     });
 })();
+
+export { transition }

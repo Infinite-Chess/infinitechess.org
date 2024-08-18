@@ -93,3 +93,5 @@ const statustext = (function() {
     });
 
 })();
+
+export { statustext };

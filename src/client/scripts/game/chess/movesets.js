@@ -203,3 +203,5 @@ const movesets = (function() {
     });
 
 })();
+
+export { movesets };

@@ -114,3 +114,5 @@ const specialmove = {
     // MUST require there be an enpassant tag!
     getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag]; },
 };
+
+export { specialmove };

@@ -311,3 +311,5 @@ const selection = (function() {
         arePremoving
     });
 })();
+
+export { selection };

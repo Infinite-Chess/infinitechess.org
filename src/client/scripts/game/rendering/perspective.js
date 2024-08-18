@@ -275,3 +275,5 @@ const perspective = (function() {
     });
 
 })();
+
+export { perspective }

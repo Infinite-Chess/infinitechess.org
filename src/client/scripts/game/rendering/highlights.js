@@ -409,3 +409,5 @@ const highlights = (function() {
     });
 
 })();
+
+export { highlights };

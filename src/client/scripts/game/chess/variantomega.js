@@ -657,3 +657,5 @@ const variantomega = (function() {
     });
 
 })();
+
+export { variantomega };

@@ -199,3 +199,5 @@ const insufficientmaterial = (function() {
     });
 
 })();
+
+export { insufficientmaterial };

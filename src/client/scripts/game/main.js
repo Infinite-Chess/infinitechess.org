@@ -140,6 +140,7 @@ const main = (function() {
     });
 })();
 
+export { main }
 
 /**
  * With a very short and fast-to-type name, prints

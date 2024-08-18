@@ -600,3 +600,5 @@ const bufferdata = (function() {
     });
 
 })();
+
+export { bufferdata }

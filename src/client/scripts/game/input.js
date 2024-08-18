@@ -652,3 +652,5 @@ const input = (function() {
     });
 
 })();
+
+export { input }

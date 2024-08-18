@@ -263,3 +263,5 @@ const loadbalancer = (function() {
         isPageHidden
     });
 })();
+
+export { loadbalancer };

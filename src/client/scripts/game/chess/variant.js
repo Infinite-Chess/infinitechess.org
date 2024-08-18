@@ -915,3 +915,5 @@ const variant = (function() {
     });
 
 })();
+
+export { variant };

@@ -474,3 +474,5 @@ const guiplay = (function() {
     });
 
 })();
+
+export { guiplay };

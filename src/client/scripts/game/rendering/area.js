@@ -268,3 +268,5 @@ const area = (function() {
     });
 
 })();
+
+export { area }

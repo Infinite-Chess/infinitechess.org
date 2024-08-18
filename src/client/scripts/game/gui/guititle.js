@@ -69,3 +69,5 @@ const guititle = (function() {
     });
 
 })();
+
+export { guititle };

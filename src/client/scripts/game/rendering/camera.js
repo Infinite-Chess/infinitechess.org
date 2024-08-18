@@ -304,3 +304,5 @@ const camera = (function() {
     });
 
 })();
+
+export { camera }

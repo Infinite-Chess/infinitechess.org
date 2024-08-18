@@ -777,3 +777,5 @@ const onlinegame = (function() {
     });
 
 })();
+
+export { onlinegame };

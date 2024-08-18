@@ -479,3 +479,5 @@ const copypastegame = (function() {
     });
 
 })();
+
+export { copypastegame };

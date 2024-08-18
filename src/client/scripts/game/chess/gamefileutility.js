@@ -500,3 +500,5 @@ const gamefileutility = (function() {
     });
 
 })();
+
+export { gamefileutility };

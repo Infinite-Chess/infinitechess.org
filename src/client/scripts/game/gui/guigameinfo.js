@@ -146,3 +146,5 @@ const guigameinfo = (function() {
     });
 
 })();
+
+export { guigameinfo };

@@ -400,3 +400,5 @@ const legalmoves = (function() {
     });
 
 })();
+
+export { legalmoves };

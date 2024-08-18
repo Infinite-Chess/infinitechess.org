@@ -380,3 +380,5 @@ const shaders = (function() {
     });
 
 })();
+
+export { shaders }

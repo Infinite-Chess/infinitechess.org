@@ -443,3 +443,5 @@ const clock = (function() {
     });
 
 })();
+
+export { clock };

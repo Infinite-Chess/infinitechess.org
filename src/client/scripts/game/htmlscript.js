@@ -151,3 +151,5 @@ const htmlscript = (function() {
     });
 
 })();
+
+export { htmlscript }

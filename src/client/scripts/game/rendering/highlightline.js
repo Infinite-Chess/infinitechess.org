@@ -198,3 +198,5 @@ const highlightline = (function() {
     });
 
 })();
+
+export { highlightline };

@@ -486,3 +486,5 @@ const movement = (function() {
         setPositionToArea
     });
 })();
+
+export { movement };

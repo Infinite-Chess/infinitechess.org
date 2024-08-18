@@ -205,3 +205,5 @@ const game = (function() {
     });
 
 })();
+
+export { game };

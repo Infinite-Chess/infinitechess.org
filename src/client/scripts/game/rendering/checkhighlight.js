@@ -54,3 +54,5 @@ const checkhighlight = (function() {
     });
 
 })();
+
+export { checkhighlight }

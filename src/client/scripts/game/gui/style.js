@@ -128,3 +128,5 @@ const style = (function() {
     });
 
 })();
+
+export { style };

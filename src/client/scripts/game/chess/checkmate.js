@@ -219,3 +219,5 @@ const checkmate = (function() {
         detectCheckmateOrDraw,
     });
 })();
+
+export { checkmate };

@@ -1084,3 +1084,5 @@ const math = (function() {
         convertUTCDateUTCTimeToTimeStamp,
     });
 })();
+
+export { math }

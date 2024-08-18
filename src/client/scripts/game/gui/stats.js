@@ -113,3 +113,5 @@ const stats = {
         style.hideElement(stats.elementStatusMoveLooking);
     }
 };
+
+export { stats };

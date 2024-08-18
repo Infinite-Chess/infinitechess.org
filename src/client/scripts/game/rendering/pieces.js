@@ -235,3 +235,5 @@ const pieces = (function() {
     });
 
 })();
+
+export { pieces }

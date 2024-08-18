@@ -472,3 +472,5 @@ const checkdetection = (function() {
     });
 
 })();
+
+export { checkdetection };

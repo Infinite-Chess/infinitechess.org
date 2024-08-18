@@ -23,3 +23,5 @@ const guiloading = (function() {
     });
 
 })();
+
+export { guiloading };

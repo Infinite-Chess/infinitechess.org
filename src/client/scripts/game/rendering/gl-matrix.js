@@ -2084,3 +2084,5 @@ const mat4 = (function () {
   });
 
 })();
+
+export { mat4 };

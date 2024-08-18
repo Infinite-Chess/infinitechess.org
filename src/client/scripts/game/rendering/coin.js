@@ -109,3 +109,5 @@ const coin = (function() {
     });
 
 })();
+
+export { coin }

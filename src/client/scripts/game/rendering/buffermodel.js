@@ -379,3 +379,5 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
         this.changeTexture = function changeTexture(newTexture) { textureToRender = newTexture; };
     }
 }
+
+export { BufferModel }

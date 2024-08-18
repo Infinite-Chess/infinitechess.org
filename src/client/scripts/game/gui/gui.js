@@ -61,3 +61,5 @@ const gui = (function() {
     });
 
 })();
+
+export { gui };

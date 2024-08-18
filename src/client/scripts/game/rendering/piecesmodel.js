@@ -687,3 +687,5 @@ const piecesmodel = {
         delete gamefile.mesh.rotatedModel;
     }
 };
+
+export { piecesmodel }

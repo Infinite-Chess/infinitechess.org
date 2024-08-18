@@ -255,3 +255,5 @@ const animation = (function() {
         getDurationMillisOfMoveAnimation
     });
 })();
+
+export { animation }
