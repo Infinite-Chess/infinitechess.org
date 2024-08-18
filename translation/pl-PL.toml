@@ -464,7 +464,7 @@ account_warning = "If you have not verified your account, please do so on your p
 
 [news.july13-2024]
 date = "July 13, 2024:"
-tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."]
+tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."] # The game inserts a hyperlink inside the 2nd quotes here.
 game_history_warning = "Your game history may become available on your profile at a future time."
 
 [news.july9-2024]
