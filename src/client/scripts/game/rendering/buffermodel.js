@@ -1,3 +1,8 @@
+// Import Start
+import { texture } from './texture.js'
+import { mat4 } from './gl-matrix.js'
+// Import End
+
 
 // This script contains all the functions used to generate renderable buffer models of the
 // game objects that the shader programs can use. It receives the object's vertex data to do so.
@@ -380,4 +385,4 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
     }
 }
 
-export { BufferModel }
+export { buffermodel }

@@ -1,3 +1,8 @@
+// Import Start
+import { main } from './main.js'
+import { sound } from './misc/sound.js'
+// Import End
+
 
 /*
  * The server injects this script directly into the html document

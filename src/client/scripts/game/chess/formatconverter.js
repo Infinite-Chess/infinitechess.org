@@ -1,3 +1,6 @@
+// Import Start
+// Import End
+
 
 /*
  * Universal Infinite Chess Notation [Converter] and Interface

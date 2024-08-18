@@ -1,3 +1,7 @@
+// Import Start
+import { camera } from './camera.js'
+// Import End
+
 
 /**
  * This script stores our global WebGL rendering context,

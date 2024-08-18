@@ -1,3 +1,7 @@
+// Import Start
+import { gui } from './gui.js'
+// Import End
+
 
 // This script is able to stop the loading animation as soon as the page fully loads.
 

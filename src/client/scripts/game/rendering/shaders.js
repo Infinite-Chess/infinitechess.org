@@ -1,3 +1,8 @@
+// Import Start
+import { main } from '../main.js'
+import { mat4 } from './gl-matrix.js'
+// Import End
+
 
 // This script handles the creation of, and stores our shaders.
 

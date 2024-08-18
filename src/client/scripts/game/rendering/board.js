@@ -1,3 +1,19 @@
+// Import Start
+import { webgl } from './webgl.js'
+import { texture } from './texture.js'
+import { highlights } from './highlights.js'
+import { style } from '../gui/style.js'
+import { bufferdata } from './bufferdata.js'
+import { main } from '../main.js'
+import { perspective } from './perspective.js'
+import { movement } from './movement.js'
+import { options } from './options.js'
+import { piecesmodel } from './piecesmodel.js'
+import { camera } from './camera.js'
+import { math } from './math.js'
+import { buffermodel } from './buffermodel.js'
+// Import End
+
 
 /*
  * This script renders the board, and changes it's color.

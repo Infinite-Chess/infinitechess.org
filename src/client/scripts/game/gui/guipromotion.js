@@ -1,3 +1,9 @@
+// Import Start
+import { perspective } from '../rendering/perspective.js'
+import { selection } from '../chess/selection.js'
+import { style } from './style.js'
+// Import End
+
 
 /*
  * This script handles our promotion menu, when

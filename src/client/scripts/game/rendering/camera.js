@@ -1,3 +1,13 @@
+// Import Start
+import { perspective } from './perspective.js'
+import { main } from '../main.js'
+import { miniimage } from './miniimage.js'
+import { game } from '../chess/game.js'
+import { stats } from '../gui/stats.js'
+import { options } from './options.js'
+import { mat4 } from './gl-matrix.js'
+// Import End
+
 
 // This script handles and stores the matrixes of our shader programs, which
 // store the location of the camera, and contains data about our canvas and window.

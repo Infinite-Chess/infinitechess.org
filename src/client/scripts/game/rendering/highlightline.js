@@ -1,3 +1,19 @@
+// Import Start
+import { input } from '../input.js'
+import { bufferdata } from './bufferdata.js'
+import { perspective } from './perspective.js'
+import { miniimage } from './miniimage.js'
+import { board } from './board.js'
+import { transition } from './transition.js'
+import { organizedlines } from '../chess/organizedlines.js'
+import { options } from './options.js'
+import { selection } from '../chess/selection.js'
+import { camera } from './camera.js'
+import { pieces } from './pieces.js'
+import { math } from './math.js'
+import { buffermodel } from './buffermodel.js'
+// Import End
+
 
 // This script renders our single-line legal sliding moves
 // when we are zoomed out far.

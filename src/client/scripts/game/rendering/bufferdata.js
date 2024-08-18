@@ -1,3 +1,10 @@
+// Import Start
+import { board } from './board.js'
+import { pieces } from './pieces.js'
+import { movement } from './movement.js'
+import { buffermodel } from './buffermodel.js'
+// Import End
+
 
 /*
  * This script contains methods for obtaining the vertex data

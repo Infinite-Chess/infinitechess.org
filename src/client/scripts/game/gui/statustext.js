@@ -1,3 +1,6 @@
+// Import Start
+// Import End
+
 // This script handles the showing and hiding of status message at the bottom of the page
 
 "use strict";

@@ -1,3 +1,9 @@
+// Import Start
+import { variant } from './variant.js'
+import { formatconverter } from './formatconverter.js'
+import { movesscript } from './movesscript.js'
+// Import End
+
 
 /**
  * Converts pre-1.3 old gamefile code into the new internal format.

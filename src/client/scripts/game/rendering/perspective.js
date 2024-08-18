@@ -1,3 +1,15 @@
+// Import Start
+import { guipause } from '../gui/guipause.js'
+import { webgl } from './webgl.js'
+import { main } from '../main.js'
+import { piecesmodel } from './piecesmodel.js'
+import { camera } from './camera.js'
+import { board } from './board.js'
+import { statustext } from '../gui/statustext.js'
+import { buffermodel } from './buffermodel.js'
+import { mat4 } from './gl-matrix.js'
+// Import End
+
 // This script handles our perspective mode!
 // Also rendering our crosshair
 

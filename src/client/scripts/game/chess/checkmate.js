@@ -1,3 +1,10 @@
+// Import Start
+import { wincondition } from './wincondition.js'
+import { gamefileutility } from './gamefileutility.js'
+import { pieces } from '../rendering/pieces.js'
+import { legalmoves } from './legalmoves.js'
+// Import End
+
 
 /**
  * This script contains our checkmate algorithm,

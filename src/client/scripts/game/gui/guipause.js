@@ -1,3 +1,15 @@
+// Import Start
+import { onlinegame } from '../misc/onlinegame.js'
+import { style } from './style.js'
+import { main } from '../main.js'
+import { game } from '../chess/game.js'
+import { arrows } from '../rendering/arrows.js'
+import { clock } from '../misc/clock.js'
+import { guinavigation } from './guinavigation.js'
+import { statustext } from './statustext.js'
+import { guititle } from './guititle.js'
+// Import End
+
 
 /*
  * This script handles our Pause menu

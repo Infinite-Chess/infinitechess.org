@@ -1,3 +1,11 @@
+// Import Start
+import { style } from '../gui/style.js'
+import { onlinegame } from './onlinegame.js'
+import { game } from '../chess/game.js'
+import { sound } from './sound.js'
+import { math } from './math.js'
+// Import End
+
 // This script keeps track of both players timer, updates them,
 // and ends game if somebody loses on time.
 

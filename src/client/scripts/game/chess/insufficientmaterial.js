@@ -1,3 +1,9 @@
+// Import Start
+import { wincondition } from './wincondition.js'
+import { math } from '../misc/math.js'
+import { movesscript } from './movesscript.js'
+// Import End
+
 // Draw detection by insufficient material
 
 "use strict";

@@ -1,3 +1,7 @@
+// Import Start
+import { bufferdata } from './bufferdata.js'
+// Import End
+
 
 /*
  * This script generates the vertex data of the hidden coins

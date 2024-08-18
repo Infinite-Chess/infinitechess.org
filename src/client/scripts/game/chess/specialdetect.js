@@ -1,3 +1,9 @@
+// Import Start
+import { gamefileutility } from './gamefileutility.js'
+import { organizedlines } from './organizedlines.js'
+import { math } from '../misc/math.js'
+// Import End
+
 
 // This detects if special moves are legal.
 // Does NOT execute the moves!

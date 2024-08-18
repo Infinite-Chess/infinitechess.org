@@ -1,3 +1,8 @@
+// Import Start
+import { main } from '../main.js'
+import { selection } from '../chess/selection.js'
+// Import End
+
 
 // This is the parent gui script of all gui scripts.
 // Here we remember what page we're on,

@@ -1,3 +1,16 @@
+// Import Start
+import { webgl } from './rendering/webgl.js'
+import { loadbalancer } from './misc/loadbalancer.js'
+import { input } from './input.js'
+import { onlinegame } from './misc/onlinegame.js'
+import { localstorage } from './misc/localstorage.js'
+import { game } from './chess/game.js'
+import { shaders } from './rendering/shaders.js'
+import { browsersupport } from './misc/browsersupport.js'
+import { camera } from './rendering/camera.js'
+import { invites } from './misc/invites.js'
+// Import End
+
 
 /*
  * This is the main script. This is where the game begins running when the document calls main()

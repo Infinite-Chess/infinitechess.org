@@ -1,3 +1,10 @@
+// Import Start
+import { main } from './main.js'
+import { statustext } from './gui/statustext.js'
+import { invites } from './misc/invites.js'
+import { onlinegame } from './misc/onlinegame.js'
+// Import End
+
 
 /**
  * This script creates websockets connected to the server,

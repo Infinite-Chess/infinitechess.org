@@ -1,3 +1,9 @@
+// Import Start
+import { gamefileutility } from './gamefileutility.js'
+import { movepiece } from './movepiece.js'
+import { animation } from '../rendering/animation.js'
+// Import End
+
 
 // This script returns the functions for UNDOING special moves
 

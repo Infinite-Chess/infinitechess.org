@@ -1,3 +1,11 @@
+// Import Start
+import { transition } from './transition.js'
+import { movement } from './movement.js'
+import { camera } from './camera.js'
+import { board } from './board.js'
+import { math } from './math.js'
+// Import End
+
 
 /**
  * This script handles the calculation of the "Area"s on screen that

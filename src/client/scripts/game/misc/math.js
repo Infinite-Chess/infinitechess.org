@@ -1,3 +1,11 @@
+// Import Start
+import { perspective } from '../rendering/perspective.js'
+import { movement } from '../rendering/movement.js'
+import { options } from '../rendering/options.js'
+import { camera } from '../rendering/camera.js'
+import { board } from '../rendering/board.js'
+// Import End
+
 
 /*
  * This script contains many utility mathematical operations, and javascript 

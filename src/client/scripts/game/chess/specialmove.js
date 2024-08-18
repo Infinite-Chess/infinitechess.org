@@ -1,3 +1,10 @@
+// Import Start
+import { gamefileutility } from './gamefileutility.js'
+import { math } from '../misc/math.js'
+import { animation } from '../rendering/animation.js'
+import { movepiece } from './movepiece.js'
+// Import End
+
 
 // This script returns the functions for EXECUTING special moves
 

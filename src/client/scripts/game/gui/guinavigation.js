@@ -1,3 +1,9 @@
+// Import Start
+import { board } from 'game/rendering/board.js'
+import { movesscript } from 'game/chess/movesscript.js'
+import { area } from 'game/rendering/area.js'
+// Import End
+
 
 /*
  * This script handles the navigation bar, in a game,

@@ -1,3 +1,11 @@
+// Import Start
+import { movement } from './movement.js'
+import { options } from './options.js'
+import { piecesmodel } from './piecesmodel.js'
+import { math } from './math.js'
+import { buffermodel } from './buffermodel.js'
+// Import End
+
 
 /**
  * This generates and renders the mesh of the void squares

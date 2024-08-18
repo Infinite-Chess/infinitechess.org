@@ -1,3 +1,12 @@
+// Import Start
+import { legalmoves } from './legalmoves.js'
+import { movepiece } from './movepiece.js'
+import { gamefileutility } from './gamefileutility.js'
+import { specialdetect } from './specialdetect.js'
+import { organizedlines } from './organizedlines.js'
+import { math } from '../misc/math.js'
+// Import End
+
 // This script is used to test if given gamefiles are in check,
 // also for simulating which moves would lead to check and removed from the list of legal moves.
 // We also detect checkmate, stalemate, and repetition here.

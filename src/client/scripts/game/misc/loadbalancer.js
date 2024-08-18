@@ -1,3 +1,9 @@
+// Import Start
+import { websocket } from '../websocket.js'
+import { invites } from './invites.js'
+import { onlinegame } from './onlinegame.js'
+// Import End
+
 
 // This script keeps track of our deltaTime, FPS
 // and decides how many milliseconds per frame

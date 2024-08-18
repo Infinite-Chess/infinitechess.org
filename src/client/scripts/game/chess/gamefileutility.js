@@ -1,3 +1,17 @@
+// Import Start
+import { guipause } from '../gui/guipause.js'
+import { guigameinfo } from '../gui/guigameinfo.js'
+import { onlinegame } from '../misc/onlinegame.js'
+import { sound } from '../misc/sound.js'
+import { wincondition } from './wincondition.js'
+import { clock } from '../misc/clock.js'
+import { selection } from './selection.js'
+import { board } from '../rendering/board.js'
+import { pieces } from '../rendering/pieces.js'
+import { math } from '../misc/math.js'
+import { movesscript } from './movesscript.js'
+// Import End
+
 
 /*
  * This script contains many utility methods for working with gamefiles

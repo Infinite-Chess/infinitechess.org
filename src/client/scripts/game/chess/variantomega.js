@@ -1,3 +1,8 @@
+// Import Start
+import { variant } from './variant.js'
+import { math } from '../misc/math.js'
+// Import End
+
 
 // This extends variant.js, containing the init methods
 // and generation aglorithms for all positions omega and above (showcasings)

@@ -1,3 +1,20 @@
+// Import Start
+import { input } from '../input.js'
+import { math } from './math.js'
+import { onlinegame } from './onlinegame.js'
+import { highlights } from './highlights.js'
+import { main } from '../main.js'
+import { stats } from '../gui/stats.js'
+import { perspective } from './perspective.js'
+import { guinavigation } from '../gui/guinavigation.js'
+import { selection } from '../chess/selection.js'
+import { piecesmodel } from './piecesmodel.js'
+import { camera } from './camera.js'
+import { board } from './board.js'
+import { statustext } from '../gui/statustext.js'
+import { guigameinfo } from '../gui/guigameinfo.js'
+// Import End
+
 
 // This script contains adjustable options such as
 // *Board color

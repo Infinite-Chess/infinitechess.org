@@ -1,3 +1,11 @@
+// Import Start
+import { bufferdata } from './bufferdata.js'
+import { game } from '../chess/game.js'
+import { movement } from './movement.js'
+import { math } from './math.js'
+import { buffermodel } from './buffermodel.js'
+// Import End
+
 /*
  * This script renders the red glow surrounding
  * royal pieces currently in check.

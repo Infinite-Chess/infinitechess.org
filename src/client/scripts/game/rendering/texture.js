@@ -1,3 +1,7 @@
+// Import Start
+import { math } from './math.js'
+// Import End
+
 
 /*
  * This script loads textures

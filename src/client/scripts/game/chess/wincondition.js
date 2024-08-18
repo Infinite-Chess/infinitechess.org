@@ -1,3 +1,12 @@
+// Import Start
+import { insufficientmaterial } from './insufficientmaterial.js'
+import { gamefileutility } from './gamefileutility.js'
+import { checkmate } from './checkmate.js'
+import { pieces } from '../rendering/pieces.js'
+import { math } from '../misc/math.js'
+import { movesscript } from './movesscript.js'
+// Import End
+
 
 /*
  * This script contains the methods for calculating if the

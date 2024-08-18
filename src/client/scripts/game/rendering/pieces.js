@@ -1,3 +1,14 @@
+// Import Start
+import { bufferdata } from './bufferdata.js'
+import { perspective } from './perspective.js'
+import { miniimage } from './miniimage.js'
+import { movement } from './movement.js'
+import { piecesmodel } from './piecesmodel.js'
+import { voids } from './voids.js'
+import { board } from './board.js'
+import { buffermodel } from './buffermodel.js'
+// Import End
+
 
 // This script contains our list of all possible piece types,
 // spritesheet data,

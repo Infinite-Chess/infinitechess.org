@@ -1,3 +1,12 @@
+// Import Start
+import { movepiece } from './movepiece.js'
+import { gamefileutility } from './gamefileutility.js'
+import { specialdetect } from './specialdetect.js'
+import { organizedlines } from './organizedlines.js'
+import { math } from '../misc/math.js'
+import { checkdetection } from './checkdetection.js'
+// Import End
+
 
 /*
  * This script calculates legal moves

@@ -1,3 +1,10 @@
+// Import Start
+import { board } from './board.js'
+import { game } from '../chess/game.js'
+import { movement } from './movement.js'
+import { buffermodel } from './buffermodel.js'
+// Import End
+
 // This script handles the rendering of our promotion lines
 
 "use strict";

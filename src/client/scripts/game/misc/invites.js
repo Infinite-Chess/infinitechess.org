@@ -1,3 +1,12 @@
+// Import Start
+import { websocket } from 'game/websocket.js'
+import { localstorage } from 'game/misc/localstorage.js'
+import { sound } from 'game/misc/sound.js'
+import { clock } from 'game/misc/clock.js'
+import { guiplay } from 'game/gui/guiplay.js'
+import { statustext } from 'game/gui/statustext.js'
+// Import End
+
 
 /*
  * This script manages the invites on the Play page.

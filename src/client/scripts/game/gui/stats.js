@@ -1,3 +1,8 @@
+// Import Start
+import { movesscript } from '../chess/movesscript.js'
+import { style } from './style.js'
+// Import End
+
 
 /**
  * This script renders the statis in the corner of the screen.

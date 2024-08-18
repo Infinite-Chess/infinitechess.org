@@ -1,3 +1,22 @@
+// Import Start
+import { websocket } from 'game/websocket.js'
+import { guigameinfo } from 'game/gui/guigameinfo.js'
+import { area } from 'game/rendering/area.js'
+import { onlinegame } from 'game/misc/onlinegame.js'
+import { localstorage } from 'game/misc/localstorage.js'
+import { main } from 'game/main.js'
+import { math } from 'game/misc/math.js'
+import { style } from 'game/gui/style.js'
+import { game } from 'game/chess/game.js'
+import { sound } from 'game/misc/sound.js'
+import { clock } from 'game/misc/clock.js'
+import { movement } from 'game/rendering/movement.js'
+import { options } from 'game/rendering/options.js'
+import { statustext } from 'game/gui/statustext.js'
+import { invites } from 'game/misc/invites.js'
+import { guititle } from 'game/gui/guititle.js'
+// Import End
+
 
 /*
  * This script handles our Play page, containing

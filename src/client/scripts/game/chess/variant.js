@@ -1,3 +1,14 @@
+// Import Start
+import { specialundo } from './specialundo.js'
+import { legalmoves } from './legalmoves.js'
+import { formatconverter } from './formatconverter.js'
+import { specialdetect } from './specialdetect.js'
+import { specialmove } from './specialmove.js'
+import { variantomega } from './variantomega.js'
+import { options } from '../rendering/options.js'
+import { math } from '../misc/math.js'
+// Import End
+
 
 // This script stores our variants,
 // and prepares them when a game is generated
