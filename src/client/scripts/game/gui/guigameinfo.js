@@ -98,7 +98,7 @@ const guigameinfo = (function() {
             else if (condition === 'aborted') element_whosturn.textContent = resultTranslations["aborted"];
             else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["opponent_checkmate"]
                                                              : condition === 'time' ? resultTranslations["opponent_time"]
-                                                             : condition === 'resignation' ? resultTranslations["opponen_resignation"]
+                                                             : condition === 'resignation' ? resultTranslations["opponent_resignation"]
                                                              : condition === 'disconnect' ? resultTranslations["opponent_disconnect"]
                                                              : condition === 'royalcapture' ? resultTranslations["opponent_royalcapture"]
                                                              : condition === 'allroyalscaptured' ? resultTranslations["opponent_allroyalscaptured"]
