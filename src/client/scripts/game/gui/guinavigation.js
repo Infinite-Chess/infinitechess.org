@@ -1,7 +1,12 @@
 // Import Start
-import { board } from 'game/rendering/board.js'
-import { movesscript } from 'game/chess/movesscript.js'
-import { area } from 'game/rendering/area.js'
+import { board } from '../rendering/board.js'
+import { movesscript } from '../chess/movesscript.js'
+import { movement } from '../rendering/movement.js';
+import { game } from '../chess/game.js';
+import { style } from './style.js';
+import { input } from '../input.js';
+import { guipause } from './guipause.js';
+import { area } from '../rendering/area.js'
 // Import End
 
 

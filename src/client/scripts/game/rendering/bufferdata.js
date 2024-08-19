@@ -2,6 +2,7 @@
 import { board } from './board.js'
 import { pieces } from './pieces.js'
 import { movement } from './movement.js'
+import { perspective } from './perspective.js'
 import { buffermodel } from './buffermodel.js'
 // Import End
 

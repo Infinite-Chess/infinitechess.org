@@ -2,7 +2,8 @@
 import { movement } from './movement.js'
 import { options } from './options.js'
 import { piecesmodel } from './piecesmodel.js'
-import { math } from './math.js'
+import { math } from '../misc/math.js'
+import { game } from '../chess/game.js'
 import { buffermodel } from './buffermodel.js'
 // Import End
 

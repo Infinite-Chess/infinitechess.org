@@ -9,6 +9,8 @@ import { shaders } from './rendering/shaders.js'
 import { browsersupport } from './misc/browsersupport.js'
 import { camera } from './rendering/camera.js'
 import { invites } from './misc/invites.js'
+import { websocket } from './websocket.js'
+import { guiloading } from './gui/guiloading.js'
 // Import End
 
 

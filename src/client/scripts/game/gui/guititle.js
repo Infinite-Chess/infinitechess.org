@@ -3,6 +3,7 @@ import { style } from './style.js'
 import { gui } from './gui.js'
 import { movement } from '../rendering/movement.js'
 import { guiguide } from './guiguide.js'
+import { perspective } from '../rendering/perspective.js'
 import { guiplay } from './guiplay.js'
 // Import End
 

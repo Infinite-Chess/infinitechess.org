@@ -16,6 +16,9 @@ import { perspective } from '../rendering/perspective.js'
 import { transition } from '../rendering/transition.js'
 import { board } from '../rendering/board.js'
 import { pieces } from '../rendering/pieces.js'
+import { movement } from '../rendering/movement.js'
+import { movesscript } from './movesscript.js'
+import { options } from '../rendering/options.js'
 import { statustext } from '../gui/statustext.js'
 // Import End
 

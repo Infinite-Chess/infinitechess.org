@@ -157,4 +157,7 @@ const htmlscript = (function() {
 
 })();
 
+// WARNING VERY HACKY
+globalThis.htmlscript = htmlscript
+
 export { htmlscript }

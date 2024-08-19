@@ -3,7 +3,7 @@ import { perspective } from './perspective.js'
 import { area } from './area.js'
 import { main } from '../main.js'
 import { movement } from './movement.js'
-import { math } from './math.js'
+import { math } from '../misc/math.js'
 // Import End
 
 // This class handles the smooth animation of teleporting from one location to another

@@ -7,6 +7,7 @@ import { formatconverter } from './formatconverter.js'
 import { game } from './game.js'
 import { backcompatible } from './backcompatible.js'
 import { variant } from './variant.js'
+import { gamefile } from './gamefile.js'
 import { statustext } from '../gui/statustext.js'
 // Import End
 

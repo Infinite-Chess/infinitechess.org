@@ -1,5 +1,7 @@
 // Import Start
-import { texture } from './texture.js'
+import { shaders } from "./shaders.js";
+import { math } from "../misc/math.js";
+import { gl } from "./webgl.js";
 import { mat4 } from './gl-matrix.js'
 // Import End
 

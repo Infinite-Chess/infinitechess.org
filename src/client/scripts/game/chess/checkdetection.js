@@ -4,6 +4,7 @@ import { movepiece } from './movepiece.js'
 import { gamefileutility } from './gamefileutility.js'
 import { specialdetect } from './specialdetect.js'
 import { organizedlines } from './organizedlines.js'
+import { wincondition } from './wincondition.js'
 import { math } from '../misc/math.js'
 // Import End
 

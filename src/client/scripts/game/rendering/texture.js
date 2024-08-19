@@ -1,5 +1,6 @@
 // Import Start
-import { math } from './math.js'
+import { gl } from './webgl.js';
+import { math } from '../misc/math.js'
 // Import End
 
 

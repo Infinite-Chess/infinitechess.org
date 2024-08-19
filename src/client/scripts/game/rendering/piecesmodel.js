@@ -1,7 +1,7 @@
 // Import Start
-import { loadbalancer } from './loadbalancer.js'
-import { math } from './math.js'
-import { onlinegame } from './onlinegame.js'
+import { loadbalancer } from '../misc/loadbalancer.js'
+import { math } from '../misc/math.js'
+import { onlinegame } from '../misc/onlinegame.js'
 import { bufferdata } from './bufferdata.js'
 import { main } from '../main.js'
 import { gamefileutility } from '../chess/gamefileutility.js'
@@ -11,6 +11,8 @@ import { coin } from './coin.js'
 import { voids } from './voids.js'
 import { pieces } from './pieces.js'
 import { statustext } from '../gui/statustext.js'
+import { movement } from './movement.js'
+import { perspective } from './perspective.js'
 import { buffermodel } from './buffermodel.js'
 // Import End
 

@@ -1,6 +1,5 @@
 // Import Start
-import { main } from '../main.js'
-import { mat4 } from './gl-matrix.js'
+import { gl } from './webgl.js'
 // Import End
 
 

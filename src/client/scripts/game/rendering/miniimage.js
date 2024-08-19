@@ -10,6 +10,9 @@ import { options } from './options.js'
 import { pieces } from './pieces.js'
 import { statustext } from '../gui/statustext.js'
 import { buffermodel } from './buffermodel.js'
+import { game } from '../chess/game.js'
+import { area } from './area.js'
+import { math } from '../misc/math.js'
 // Import End
 
 // This script handles the rendering of the mini images of our pieces when we're zoomed out

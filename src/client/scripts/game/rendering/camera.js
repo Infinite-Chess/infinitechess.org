@@ -6,6 +6,9 @@ import { game } from '../chess/game.js'
 import { stats } from '../gui/stats.js'
 import { options } from './options.js'
 import { mat4 } from './gl-matrix.js'
+import { gl } from './webgl.js'
+import { shaders } from './shaders.js'
+import { math } from '../misc/math.js';
 // Import End
 
 

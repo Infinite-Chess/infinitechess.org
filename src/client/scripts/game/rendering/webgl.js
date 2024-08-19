@@ -201,4 +201,4 @@ const webgl = (function() {
     });
 })();
 
-export { webgl };
+export { webgl, gl};

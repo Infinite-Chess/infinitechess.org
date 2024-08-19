@@ -1,6 +1,8 @@
 // Import Start
 import { main } from '../main.js'
 import { selection } from '../chess/selection.js'
+import { guipromotion } from './guipromotion.js'
+import { style } from './style.js'
 // Import End
 
 

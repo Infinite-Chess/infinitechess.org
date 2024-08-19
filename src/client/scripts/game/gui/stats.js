@@ -1,6 +1,9 @@
 // Import Start
 import { movesscript } from '../chess/movesscript.js'
 import { style } from './style.js'
+import { options } from '../rendering/options.js';
+import { main } from '../main.js';
+import { camera } from '../rendering/camera.js';
 // Import End
 
 

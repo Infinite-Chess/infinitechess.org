@@ -5,7 +5,8 @@ import { formatconverter } from './formatconverter.js'
 import { specialdetect } from './specialdetect.js'
 import { specialmove } from './specialmove.js'
 import { variantomega } from './variantomega.js'
-import { options } from '../rendering/options.js'
+import { movesets } from './movesets.js'
+import { pieces } from '../rendering/pieces.js'
 import { math } from '../misc/math.js'
 // Import End
 

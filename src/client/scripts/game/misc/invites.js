@@ -1,10 +1,13 @@
 // Import Start
-import { websocket } from 'game/websocket.js'
-import { localstorage } from 'game/misc/localstorage.js'
-import { sound } from 'game/misc/sound.js'
-import { clock } from 'game/misc/clock.js'
-import { guiplay } from 'game/gui/guiplay.js'
-import { statustext } from 'game/gui/statustext.js'
+import { websocket } from '../websocket.js'
+import { localstorage } from './localstorage.js'
+import { sound } from './sound.js'
+import { clock } from './clock.js'
+import { guiplay } from '../gui/guiplay.js'
+import { loadbalancer } from './loadbalancer.js'
+import { math } from './math.js'
+import { style } from '../gui/style.js'
+import { statustext } from '../gui/statustext.js'
 // Import End
 
 

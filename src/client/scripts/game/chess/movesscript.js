@@ -5,6 +5,7 @@ import { main } from '../main.js'
 import { stats } from '../gui/stats.js'
 import { guinavigation } from '../gui/guinavigation.js'
 import { selection } from './selection.js'
+import { input } from '../input.js'
 import { statustext } from '../gui/statustext.js'
 // Import End
 

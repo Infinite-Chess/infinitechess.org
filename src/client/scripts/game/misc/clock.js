@@ -1,8 +1,9 @@
 // Import Start
 import { style } from '../gui/style.js'
-import { onlinegame } from './onlinegame.js'
+import { onlinegame } from '../misc/onlinegame.js'
 import { game } from '../chess/game.js'
-import { sound } from './sound.js'
+import { sound } from '../misc/sound.js'
+import { movesscript } from '../chess/movesscript.js'
 import { math } from './math.js'
 // Import End
 

@@ -1,6 +1,7 @@
 // Import Start
 import { wincondition } from './wincondition.js'
 import { math } from '../misc/math.js'
+import { gamefileutility } from './gamefileutility.js';
 import { movesscript } from './movesscript.js'
 // Import End
 

@@ -4,6 +4,7 @@ import { gamefileutility } from './gamefileutility.js'
 import { specialdetect } from './specialdetect.js'
 import { organizedlines } from './organizedlines.js'
 import { math } from '../misc/math.js'
+import { pieces } from '../rendering/pieces.js'
 import { checkdetection } from './checkdetection.js'
 // Import End
 

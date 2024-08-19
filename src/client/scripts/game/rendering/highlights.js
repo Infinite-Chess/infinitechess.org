@@ -10,7 +10,9 @@ import { options } from './options.js'
 import { selection } from '../chess/selection.js'
 import { camera } from './camera.js'
 import { board } from './board.js'
-import { math } from './math.js'
+import { math } from '../misc/math.js'
+import { movesscript } from '../chess/movesscript.js'
+import { game } from '../chess/game.js'
 import { buffermodel } from './buffermodel.js'
 // Import End
 
