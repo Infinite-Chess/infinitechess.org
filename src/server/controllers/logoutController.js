@@ -2,7 +2,7 @@
 const { findMemberFromRefreshToken, deleteRefreshToken, getUsernameCaseSensitive } = require('./members');
 const websocketserver = require('../wsserver');
 const invitesmanager = require('../game/invitesmanager');
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { getTranslationForReq } = require('../utility/translate');
 
 const handleLogout = async(req, res) => {
     // On client, also delete the accessToken

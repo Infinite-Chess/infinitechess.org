@@ -1,5 +1,5 @@
 
-const { getTranslationForReq } = require('../config/setupTranslations.js');
+const { getTranslationForReq } = require('../utility/translate.js');
 const { logEvents } = require('../middleware/logEvents.js');
 const { getUsernameCaseSensitive, getVerified, setVerified, doesVerificationIDMatch } = require('./members.js');
 
