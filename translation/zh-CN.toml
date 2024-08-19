@@ -1,6 +1,7 @@
 name = "中文" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "11"
+version = "12"
+maintainer = "Its Me"
 
 [header]
 home = "主页"
@@ -214,6 +215,7 @@ private = "未发布"
 no = "不"
 yes = "是"
 rated = "评级"
+casual = "休闲"
 join_games = "加入现有 - 活跃游戏:"
 private_invite = "私人邀请:"
 your_invite = "您的邀请码:"

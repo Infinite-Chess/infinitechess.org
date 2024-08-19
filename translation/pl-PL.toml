@@ -1,6 +1,7 @@
 name = "Polski" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "11"
+version = "12"
+maintainer = "apsurt"
 
 [header]
 home = "Strona Główna"
@@ -377,7 +378,7 @@ draw_generic = "Remis!"
 aborted = "Gra porzucona."
 opponent_checkmate = "Przegrałeś przez szacha-mata!"
 opponent_time = "Przegrałeś na czas!"
-opponen_resignation = "Przegrałeś przez poddanie się!"
+opponent_resignation = "Przegrałeś przez poddanie się!"
 opponent_disconnect = "Przegrałeś przez porzucenie!"
 opponent_royalcapture = "Przegrałeś przez królewskie zbicie!"
 opponent_allroyalscaptured = "Przegrałeś przez zbicie całej rodziny królewskiej!"
