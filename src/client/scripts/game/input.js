@@ -122,7 +122,7 @@ const input = (function() {
         mouseIsSupported = false;
         console.log("Mouse is not supported on this device. Disabling perspective mode.");
 
-        guipause.gelement_perspective().classList.add('opacity-0_5');
+        guipause.getelement_perspective().classList.add('opacity-0_5');
     }
 
     function initListeners_Touch() {

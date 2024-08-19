@@ -1,4 +1,18 @@
 {
+  "13": {
+    "note": "Added draw offers. Deleted ws-player_already_has_invite, ws-accept_own_invite, and ws-invite_cancelled",
+    "changes": [
+      "play.pause.offer_draw",
+      "play.drawoffer.question",
+      "play.javascript.offer_draw",
+      "play.javascript.accept_draw",
+      "play.javascript.termination.agreement",
+      "play.javascript.results.draw_agreement",
+      "server.javascript.ws-player_already_has_invite",
+      "server.javascript.ws-accept_own_invite",
+      "server.javascript.ws-invite_cancelled"
+    ]
+  },
   "12": {
     "note": "Corrected opponen_resignation to opponent_resignation",
     "changes": [

@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 
 /*
  * This script handles the game info bar, during a game,
@@ -70,7 +69,7 @@ const guigameinfo = (function() {
 
     // Updates the whosTurn text to say who won!
     function gameEnd(conclusion) {
-        // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect
+        // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 
         const { victor, condition } = wincondition.getVictorAndConditionFromGameConclusion(conclusion);
 	    const resultTranslations = translations["results"];
@@ -78,7 +77,7 @@ const guigameinfo = (function() {
 
         if (onlinegame.areInOnlineGame()) {
 
-          if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["you_checkmate"]
+            if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["you_checkmate"]
                                                                                 : condition === 'time' ? resultTranslations["you_time"]
                                                                                 : condition === 'resignation' ? resultTranslations["you_resignation"]
                                                                                 : condition === 'disconnect' ? resultTranslations["you_disconnect"]
@@ -91,7 +90,8 @@ const guigameinfo = (function() {
             else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? resultTranslations["draw_stalemate"]
                                                                      : condition === 'repetition' ? resultTranslations["draw_repetition"]
                                                                      : condition === 'moverule' ? `${resultTranslations["draw_moverule"][0]}${(game.getGamefile().gameRules.moveRule / 2)}${resultTranslations["draw_moverule"][1]}`
-																	 : condition === 'insuffmat' ? resultTranslations["draw_insuffmat"]
+																	                                   : condition === 'insuffmat' ? resultTranslations["draw_insuffmat"]
+                                                                     : condition === 'agreement' ? resultTranslations["draw_agreement"]
                                                                      : resultTranslations["draw_generic"];
             else if (condition === 'aborted') element_whosturn.textContent = resultTranslations["aborted"];
             else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["opponent_checkmate"]
@@ -129,7 +129,7 @@ const guigameinfo = (function() {
             else if (condition === 'stalemate') element_whosturn.textContent = resultTranslations["draw_stalemate"];
             else if (condition === 'repetition') element_whosturn.textContent = resultTranslations["draw_repetition"];
             else if (condition === 'moverule') element_whosturn.textContent = `${resultTranslations["draw_moverule"][0]}${(game.getGamefile().gameRules.moveRule / 2)}${resultTranslations["draw_moverule"][1]}`;
-			else if (condition === 'insuffmat') element_whosturn.textContent = resultTranslations["draw_insuffmat"];
+            else if (condition === 'insuffmat') element_whosturn.textContent = resultTranslations["draw_insuffmat"];
             else {
                 element_whosturn.textContent = resultTranslations["bug_generic"];
                 console.error(`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`);
