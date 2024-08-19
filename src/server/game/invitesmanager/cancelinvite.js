@@ -31,7 +31,7 @@ function cancelInvite(ws, messageContents, replyto) { // Value should be the ID 
     const id = messageContents; // id of invite to delete
 
     const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index } | undefined
-    if (!inviteAndIndex) return; // Already cancelled, they must have joined a game
+    if (!inviteAndIndex) return ws.metadata.sendmessage(ws, undefined, undefined, undefined, replyto); // Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
     
     const { invite, index } = inviteAndIndex;
 

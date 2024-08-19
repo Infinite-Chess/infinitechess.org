@@ -338,9 +338,6 @@ const onlinegame = (function() {
         guititle.close();
         guiplay.close();
         guiplay.startOnlineGame(message);
-        // Our button can sometimes still be locked if we click "Cancel Invite" right after it's accepted and we enter a game, cause then the server doesn't send us an "already cancelled" response (as intended) so we don't know when to unlock it.
-        // We don't need to unlock the virtual Accept Invite button here because the server will always send the "already in a game" message, so we unlock it then.
-        guiplay.unlockCreateInviteButton();
     }
 
     /**
