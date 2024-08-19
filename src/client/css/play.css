@@ -445,6 +445,7 @@ canvas {
     display: flex;
     width: 13%;
     flex-shrink: 0;
+    cursor: pointer;
 }
 
 .guide svg {
