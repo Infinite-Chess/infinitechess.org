@@ -7,8 +7,32 @@
 const i18next = require("i18next");
 
 const defaultLanguage = 'en-US';
+/** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
+const supportedLanguages = [];
 
 function getDefaultLanguage() { return defaultLanguage; }
+function setSupportedLanguages(list) { supportedLanguages === list; }
+
+/**
+ * Determines the language to be used for serving an HTML file to a request.
+ * The language is determined in the following order of precedence:
+ * 1. The 'lng' query parameter.
+ * 2. The 'i18next' cookie.
+ * 3. A default language if neither the query parameter nor the cookie is present.
+ * The selected language is validated against supported languages.
+ * @param {Object} req - The Express request object.
+ * @returns {string} The language to be used.
+ */
+function getLanguageToServe(req) {
+    let language = req.query.lng || req.cookies.i18next || req.i18n.resolvedLanguage;
+    if (!supportedLanguages.includes(language)) { // Query param language not supported
+        language = req.cookies.i18next;
+    }
+    if (!supportedLanguages.includes(language)) { // Cookie language not supported
+        language = req.i18n.resolvedLanguage;
+    }
+    return language;
+}
 
 /**
  * Retrieves the translation for a given key and language.
@@ -38,6 +62,8 @@ function getTranslationForReq(key, req, options = {}) {
 }
 
 module.exports = {
+    setSupportedLanguages,
+    getLanguageToServe,
     getDefaultLanguage,
     getTranslation,
     getTranslationForReq,

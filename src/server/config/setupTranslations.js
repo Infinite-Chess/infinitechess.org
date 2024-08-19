@@ -5,33 +5,9 @@ const path = require("path");
 const ejs = require("ejs");
 const middleware = require("i18next-http-middleware");
 const xss = require("xss");
-const { getDefaultLanguage } = require("../utility/translate");
+const { getDefaultLanguage, setSupportedLanguages } = require("../utility/translate");
 
 const translationsFolder = "./translation";
-
-/** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
-const supportedLanguages = [];
-
-/**
- * Determines the language to be used for serving an HTML file to a request.
- * The language is determined in the following order of precedence:
- * 1. The 'lng' query parameter.
- * 2. The 'i18next' cookie.
- * 3. A default language if neither the query parameter nor the cookie is present.
- * The selected language is validated against supported languages.
- * @param {Object} req - The Express request object.
- * @returns {string} The language to be used.
- */
-function getLanguageToServe(req) {
-    let language = req.query.lng || req.cookies.i18next || req.i18n.resolvedLanguage;
-    if (!supportedLanguages.includes(language)) { // Query param language not supported
-        language = req.cookies.i18next;
-    }
-    if (!supportedLanguages.includes(language)) { // Cookie language not supported
-        language = req.i18n.resolvedLanguage;
-    }
-    return language;
-}
 
 /**
  * Templates without any external data other than translations.
@@ -217,6 +193,7 @@ function loadTranslationsFolder(folder) {
     const changelog = JSON.parse(
         fs.readFileSync(path.join(folder, "changes.json")).toString(),
     );
+    const supportedLanguages = [];
     files
         .filter(function y(x) {
             return x.endsWith(".toml");
@@ -233,6 +210,8 @@ function loadTranslationsFolder(folder) {
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
+
+    setSupportedLanguages(supportedLanguages);
 
     return resources;
 }
@@ -313,6 +292,5 @@ function initTranslations() {
 }
 
 module.exports = {
-    getLanguageToServe,
     initTranslations,
 };
