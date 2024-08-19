@@ -1,6 +1,7 @@
 name = "Français" # Name of language
 direction = "ltr"
 version = "12"
+maintainer = "Life Enjoyer"
 
 [header]
 home = "Accueil"

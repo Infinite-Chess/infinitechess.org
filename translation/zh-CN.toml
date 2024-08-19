@@ -1,6 +1,7 @@
 name = "中文" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "11"
+version = "12"
+maintainer = "Its Me"
 
 [header]
 home = "主页"
