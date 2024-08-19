@@ -45,7 +45,7 @@ function addUserToActiveGames(user, id) {
  */
 function removeUserFromActiveGame(user, gameID) { // { member/browser }
     if (!user) return console.error("user must be specified when removing user from players in active games.");
-    if (gameID == null) return console.error("gameID must be specified when removing user from players in active games.");
+    if (!gameID) return console.error("gameID must be specified when removing user from players in active games.");
 
     // Only removes them from the game if they belong to a game of that ID.
     // If they DON'T belong to that game, that means they speedily

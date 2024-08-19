@@ -5,13 +5,14 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const guipause = (function() {
 
     /** The number of half moves allowed before we can make an additional draw offer. */
-    let movesBetweenDrawOffers = 2
+    const movesBetweenDrawOffers = 2;
 
     // Pause UI
-    let isPaused = false
+    let isPaused = false;
     const element_pauseUI = document.getElementById('pauseUI');
     const element_resume = document.getElementById('resume');
     const element_pointers = document.getElementById('togglepointers');
@@ -49,8 +50,7 @@ const guipause = (function() {
 
     function updatePasteButtonTransparency() {
         const moves = game.getGamefile().moves;
-        const movesLength = moves.length;
-        const legalInPrivateMatch = onlinegame.getIsPrivate() && (movesLength === 0 || moves[0].length === 1 && moves[0][0] == null);
+        const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
 
         if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
         else                                                      element_pastegame.classList.remove('opacity-0_5');
@@ -100,7 +100,7 @@ const guipause = (function() {
     function updateTextOfMainMenuButton() {
         if (!isPaused) return;
 
-        if (!onlinegame.areInOnlineGame() || gamefileutility.isGameOver()) return element_mainmenu.textContent = translations["main_menu"];
+        if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations["main_menu"];
 
         if (movesscript.isGameResignable(game.getGamefile())) return element_mainmenu.textContent = translations["resign_game"];
 
@@ -127,17 +127,15 @@ const guipause = (function() {
         element_perspective.removeEventListener('click', callback_Perspective);
     }
 
-    function callback_Resume(event) {
+    function callback_Resume() {
         if (!isPaused) return;
-        event = event || window.event;
         isPaused = false;
         style.hideElement(element_pauseUI);
         closeListeners();
         main.renderThisFrame();
     }
 
-    function callback_MainMenu(event) {
-        event = event || window.event;
+    function callback_MainMenu() {
         onlinegame.onMainMenuPress();
         onlinegame.closeOnlineGame();
         callback_Resume();
@@ -148,7 +146,7 @@ const guipause = (function() {
     }
 
     // Called when the draw offer button is clicked
-    function callback_OfferDraw(event) {
+    function callback_OfferDraw() {
         if (!movesscript.isGameResignable(game.getGamefile())) return statustext.showStatus("Can't offer draw.");
 
         // Do we need to extend a draw offer or accept one?
@@ -157,8 +155,7 @@ const guipause = (function() {
         else statustext.showStatus("Can't offer draw.");
     }
 
-    function callback_TogglePointers(event) {
-        event = event || window.event;
+    function callback_TogglePointers() {
         main.renderThisFrame();
         let mode = arrows.getMode();
         mode++;
@@ -171,8 +168,7 @@ const guipause = (function() {
         if (!isPaused) statustext.showStatus(translations["toggled"] + " " + text);
     }
 
-    function callback_Perspective(event) {
-        event = event || window.event;
+    function callback_Perspective() {
         perspective.toggle();
     }
     

@@ -31,9 +31,7 @@ function cancelInvite(ws, messageContents, replyto) { // Value should be the ID 
     const id = messageContents; // id of invite to delete
 
     const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index } | undefined
-    if (!inviteAndIndex) return sendNotify(ws, "server.javascript.ws-invite_cancelled"); // Already cancelled
-    // This allows them to spam the button without receiving errors.
-    //if (!inviteAndIndex) return;
+    if (!inviteAndIndex) return; // Already cancelled, they must have joined a game
     
     const { invite, index } = inviteAndIndex;
 
@@ -44,7 +42,7 @@ function cancelInvite(ws, messageContents, replyto) { // Value should be the ID 
         return ws.metadata.sendmessage(ws, "general", "printerror", "You are forbidden to delete this invite.", replyto);
     }
 
-    deleteInviteByIndex(ws, invite, index, replyto);
+    deleteInviteByIndex(ws, invite, index, { replyto });
 }
 
 

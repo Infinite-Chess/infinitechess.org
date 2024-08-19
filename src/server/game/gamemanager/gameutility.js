@@ -45,9 +45,10 @@ const gameutility = (function() {
      * @param {string} id - The unique identifier to give this game.
      * @param {Socket | undefined} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
      * @param {Socket} player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+     * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
      * @returns {Game} The new game.
      */
-    function newGame(inviteOptions, id, player1Socket, player2Socket) {
+    function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
         /** @type {Game} */
         const newGame = {
             id,
@@ -97,7 +98,7 @@ const gameutility = (function() {
         // Auto-subscribe the players to this game!
         // This will link their socket to this game, modify their
         // metadata.subscriptions, and send them the game info!
-        subscribeClientToGame(newGame, player2Socket, player2Color);
+        subscribeClientToGame(newGame, player2Socket, player2Color, { replyto });
         // Occasionally, player 1's (invite owner) socket will be closed.
         if (player1Socket) subscribeClientToGame(newGame, player1Socket, player1Color);
 
@@ -152,8 +153,10 @@ const gameutility = (function() {
      * @param {Object} playerSocket - Their websocket.
      * @param {string} playerColor - What color they are playing in this game. "white" / "black"
      * @param {Object} options - An object that may contain the option `sendGameInfo`, that when *true* won't send the game information over. Default: *true*
+     * @param {boolean} options.sendGameInfo
+     * @param {number} options.replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
      */
-    function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo = true } = {}) {
+    function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo = true, replyto } = {}) {
         if (!playerSocket) return console.error(`Cannot subscribe client to game when they don't have an open socket! ${game[playerColor]}`);
         if (!playerColor) return console.error(`Cannot subscribe client to game without a color!`);
 
@@ -183,7 +186,7 @@ const gameutility = (function() {
 
         // 3. Send the game information, unless this is a reconnection,
         // at which point we verify if they are in sync
-        if (sendGameInfo) sendGameInfoToPlayer(game, playerSocket, playerColor);
+        if (sendGameInfo) sendGameInfoToPlayer(game, playerSocket, playerColor, replyto);
     }
 
     /**
@@ -228,8 +231,9 @@ const gameutility = (function() {
      * @param {Game} game - The game they're in.
      * @param {Socket} playerSocket - Their websocket
      * @param {string} playerColor - The color the are. "white" / "black"
+     * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
      */
-    function sendGameInfoToPlayer(game, playerSocket, playerColor) {
+    function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
         const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated);
 
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
@@ -282,7 +286,7 @@ const gameutility = (function() {
         const timeServerRestarting = getTimeServerRestarting();
         if (timeServerRestarting !== false) gameOptions.serverRestartingAt = timeServerRestarting;
 
-        playerSocket.metadata.sendmessage(playerSocket, 'game', 'joingame', gameOptions);
+        playerSocket.metadata.sendmessage(playerSocket, 'game', 'joingame', gameOptions, replyto);
     }
 
     /**
@@ -521,6 +525,7 @@ const gameutility = (function() {
         const originalAutoAFKResignTimeoutID = game.autoAFKResignTimeoutID;
         const originalDeleteTimeoutID = game.deleteTimeoutID;
         const originalDisconnect = game.disconnect;
+        const originalDrawOffers = game.drawOffers;
 
         // We can't print normal websockets because they contain self-referencing.
         if (whiteSocket) game.whiteSocket = wsutility.stringifySocketMetadata(whiteSocket);
@@ -538,6 +543,7 @@ const gameutility = (function() {
         game.autoAFKResignTimeoutID = originalAutoAFKResignTimeoutID;
         game.deleteTimeoutID = originalDeleteTimeoutID;
         game.disconnect = originalDisconnect;
+        game.drawOffers = originalDrawOffers;
 
         return stringifiedGame;
     }

@@ -241,6 +241,7 @@ const invites = (function() {
         activeInvites = undefined;
         weHaveInvite = false;
         ourInviteID = undefined;
+        element_inviteCodeCode.textContent = '';
         // Passing in an empty list resets the local scope variables for next time.
         if (recentUsersInLastList) playBaseIfNewInvite([]);
     }
@@ -352,8 +353,8 @@ const invites = (function() {
         if (guiplay.getModeSelected() === 'local') return;
 
         if (!weHaveInvite) {
-            guiplay.getElement_joinPrivate().classList.remove('hidden');
-            guiplay.getElement_inviteCode().classList.add('hidden');
+            guiplay.showElement_joinPrivate();
+            guiplay.hideElement_inviteCode();
             return;
         }
 
@@ -363,16 +364,16 @@ const invites = (function() {
         // then display our invite code text!
 
         if (privateInviteID) {
-            guiplay.getElement_joinPrivate().classList.add('hidden');
-            guiplay.getElement_inviteCode().classList.remove('hidden');
+            guiplay.hideElement_joinPrivate();
+            guiplay.showElement_inviteCode();
             element_inviteCodeCode.textContent = privateInviteID.toUpperCase();
             return;
         }
 
         // Else our invite is NOT private, only show the "Private Invite:" display.
 
-        guiplay.getElement_joinPrivate().classList.remove('hidden');
-        guiplay.getElement_inviteCode().classList.add('hidden');
+        guiplay.showElement_joinPrivate();
+        guiplay.hideElement_inviteCode();
     }
 
     function updateActiveGameCount(newCount) {

@@ -72,8 +72,10 @@ const guiplay = (function() {
      */
     function getModeSelected() { return modeSelected; }
 
-    function getElement_joinPrivate() { return element_joinPrivate; }
-    function getElement_inviteCode() { return element_inviteCode; }
+    function hideElement_joinPrivate() { style.hideElement(element_joinPrivate); }
+    function showElement_joinPrivate() { style.revealElement(element_joinPrivate); }
+    function hideElement_inviteCode() { style.hideElement(element_inviteCode); }
+    function showElement_inviteCode() { style.revealElement(element_inviteCode); }
 
     function open() {
         pageIsOpen = true;
@@ -89,6 +91,7 @@ const guiplay = (function() {
         pageIsOpen = false;
         style.hideElement(element_PlaySelection);
         style.hideElement(element_menuExternalLinks);
+        hideElement_inviteCode();
         closeListeners();
         // This will auto-cancel our existing invite
         // IT ALSO clears the existing invites in the document!
@@ -137,7 +140,7 @@ const guiplay = (function() {
             element_optionCardRated.classList.remove('hidden');
             element_optionCardPrivate.classList.remove('hidden');
             const localStorageClock = localstorage.loadItem('preferred_online_clock_invite_value');
-            element_optionClock.selectedIndex = localStorageClock != null ? localStorageClock : indexOf10m; // 10m+4s
+            element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOf10m; // 10m+4s
             element_joinPrivate.classList.remove('hidden');
             // callback_updateOptions()
         } else if (mode === 'local') {
@@ -155,7 +158,7 @@ const guiplay = (function() {
             element_optionCardRated.classList.add('hidden');
             element_optionCardPrivate.classList.add('hidden');
             const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
-            element_optionClock.selectedIndex = localStorageClock != null ? localStorageClock : indexOfInfiniteTime; // Infinite Time
+            element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
             element_joinPrivate.classList.add('hidden');
             element_inviteCode.classList.add('hidden');
         }
@@ -457,8 +460,10 @@ const guiplay = (function() {
 
     return Object.freeze({
         isOpen,
-        getElement_joinPrivate,
-        getElement_inviteCode,
+        hideElement_joinPrivate,
+        showElement_joinPrivate,
+        hideElement_inviteCode,
+        showElement_inviteCode,
         getModeSelected,
         open,
         close,

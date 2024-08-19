@@ -26,7 +26,7 @@ function handleInviteRoute(ws, data) { // data: { route, action, value, id }
             cancelInvite(ws, data.value, data.id);
             break;
         case "acceptinvite":
-            acceptInvite(ws, data.value);
+            acceptInvite(ws, data.value, data.id);
             break;
         default:
             console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);

@@ -12,6 +12,11 @@ const onlinegame = (function() {
     /** Whether the game is a private one (joined from an invite code). */
     let isPrivate;
     let ourColor; // white/black
+    /**
+     * Different from gamefile.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
+     * has been called, which IS ONLY called once the SERVER tells us the result of the game, not us!
+     */
+    let gameHasConcluded;
 
     /**
      * Whether we are in sync with the game on the server.
@@ -78,6 +83,13 @@ const onlinegame = (function() {
     function getIsPrivate() { return isPrivate; }
 
     function getOurColor() { return ourColor; }
+
+    /**
+     * Different from {@link gamefileutility.isGameOver}, because this only returns true if {@link gamefileutility.concludeGame}
+     * has been called, which IS ONLY called once the SERVER tells us the result of the game, not us!
+     * @returns {boolean}
+     */
+    function hasGameConcluded() { return gameHasConcluded; }
 
     function setInSyncFalse() { inSync = false; }
 
@@ -236,14 +248,14 @@ const onlinegame = (function() {
                 initServerRestart(data.value);
                 break;
             case "drawoffer": { // message contents: { blackOfferMove, whiteOfferMove }
-                guidrawoffer.openDrawOffer()
-                const gamefile = game.getGamefile()
+                guidrawoffer.openDrawOffer();
+                const gamefile = game.getGamefile();
                 const moves = data.value; // { blackOfferMove, whiteOfferMove }
-                gamefile.drawOfferBlack = moves.blackOfferMove
-                gamefile.drawOfferWhite = moves.whiteOfferMove
+                gamefile.drawOfferBlack = moves.blackOfferMove;
+                gamefile.drawOfferWhite = moves.whiteOfferMove;
                 break;
             } case "declinedraw":
-                statustext.showStatus(`Opponent declined draw offer.`)
+                statustext.showStatus(`Opponent declined draw offer.`);
                 break;
             default:
                 statustext.showStatus(`${translations["invites"]["unknown_action_received_1"]} ${message.action} ${translations["invites"]["unknown_action_received_2"]}`, true);
@@ -326,9 +338,9 @@ const onlinegame = (function() {
         guititle.close();
         guiplay.close();
         guiplay.startOnlineGame(message);
-        // DELETE AFTER server sends joingame command with onreply code
+        // Our button can sometimes still be locked if we click "Cancel Invite" right after it's accepted and we enter a game, cause then the server doesn't send us an "already cancelled" response (as intended) so we don't know when to unlock it.
+        // We don't need to unlock the virtual Accept Invite button here because the server will always send the "already in a game" message, so we unlock it then.
         guiplay.unlockCreateInviteButton();
-        guiplay.unlockAcceptInviteButton();
     }
 
     /**
@@ -468,8 +480,8 @@ const onlinegame = (function() {
 
         if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile);
 
-        gamefile.drawOfferWhite = messageContents.whiteDrawOfferMove
-        gamefile.drawOfferBlack = messageContents.blackDrawOfferMove
+        gamefile.drawOfferWhite = messageContents.whiteDrawOfferMove;
+        gamefile.drawOfferBlack = messageContents.blackDrawOfferMove;
     }
 
     /**
@@ -570,21 +582,21 @@ const onlinegame = (function() {
     }
 
     function offerDraw() {
-        const gamefile = game.getGamefile()
-        if (gamefile.moves.length < 2) throw new Error("Somehow we tried to extend a draw offer when there's < 2 moves played!")
+        const gamefile = game.getGamefile();
+        if (gamefile.moves.length < 2) throw new Error("Somehow we tried to extend a draw offer when there's < 2 moves played!");
             
-        websocket.sendmessage('game', 'offerdraw')
-        if ( getOurColor() === "white" ) gamefile.drawOfferWhite = gamefile.moves.length
-        if ( getOurColor() === "black" ) gamefile.drawOfferBlack = gamefile.moves.length
+        websocket.sendmessage('game', 'offerdraw');
+        if ( getOurColor() === "white" ) gamefile.drawOfferWhite = gamefile.moves.length;
+        if ( getOurColor() === "black" ) gamefile.drawOfferBlack = gamefile.moves.length;
     }
 
     function acceptDraw() {
-        websocket.sendmessage('game', 'acceptdraw')
+        websocket.sendmessage('game', 'acceptdraw');
     }
 
     function declineDraw() {
         if (!guidrawoffer.areWeAcceptingDraw()) return; // there isn't a draw to decline (we hope)
-        guipause.updateDrawOfferButton()
+        guipause.updateDrawOfferButton();
         websocket.sendmessage('game', 'declinedraw');
         statustext.showStatus(`Draw declined`, false, 2);
     }
@@ -599,6 +611,7 @@ const onlinegame = (function() {
         ourColor = gameOptions.youAreColor;
         gameID = gameOptions.id;
         isPrivate = gameOptions.publicity === 'private';
+        gameHasConcluded = false;
     }
 
     /**
@@ -627,6 +640,7 @@ const onlinegame = (function() {
         isPrivate = undefined;
         ourColor = undefined;
         inSync = false;
+        gameHasConcluded = undefined;
         resetAFKValues();
         resetServerRestarting();
         cancelFlashTabTimer();
@@ -675,7 +689,7 @@ const onlinegame = (function() {
         websocket.sendmessage('game', 'submitmove', data, true);
 
         // onlinegame.declineDraw() not needed, server-sided
-        if (guidrawoffer.areWeAcceptingDraw()) guidrawoffer.closeDrawOffer()
+        if (guidrawoffer.areWeAcceptingDraw()) guidrawoffer.closeDrawOffer();
         
         rescheduleAlertServerWeAFK();
     }
@@ -684,7 +698,7 @@ const onlinegame = (function() {
     function onMainMenuPress() {
         if (!inOnlineGame) return;
         const gamefile = game.getGamefile();
-        if (gamefileutility.isGameOver(gamefile)) {
+        if (gameHasConcluded) { // The server has concluded the game, not us
             if (websocket.getSubs().game) {
                 websocket.sendmessage('general','unsub','game');
                 websocket.getSubs().game = false;
@@ -793,6 +807,7 @@ const onlinegame = (function() {
         resetServerRestarting();
         deleteCustomVariantOptions();
         guidrawoffer.closeDrawOffer();
+        gameHasConcluded = true;
     }
 
     return Object.freeze({
@@ -818,7 +833,8 @@ const onlinegame = (function() {
         offerDraw,
         acceptDraw,
         declineDraw,
-        onGameConclude
+        onGameConclude,
+        hasGameConcluded
     });
 
 })();

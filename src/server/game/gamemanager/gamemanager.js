@@ -42,10 +42,11 @@ const timeBeforeGameDeletionMillis = 1000 * 15; // 15 seconds
  * @param {Object} invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`, `publicity`.
  * @param {Socket | undefined} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
  * @param {Socket} player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+ * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
-function createGame(invite, player1Socket, player2Socket) { // Player 1 is the invite owner.
+function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1 is the invite owner.
     const gameID = math1.genUniqueID(5, activeGames);
-    const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket);
+    const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
     if (!player1Socket) {
         // Player 1 (invite owner)'s socket closed before their invite was deleted.
         // Immediately start the auto-resign by disconnection timer

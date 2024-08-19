@@ -94,20 +94,31 @@ function addMyPrivateInviteToList(ws, copyOfInvitesList) {
 
 // When a PUBLIC invite is added or removed..
 
-/** Call when a public invite is added or deleted. */
-function onPublicInvitesChange() { // The message that this broadcast is the reply to
-    broadcastInvites();
+/** 
+ * Call when a public invite is added or deleted. 
+ * @param {Socket} ws - The websocket that trigerred this public invites change.
+ * @param {number} [replyto] - The ID of the incoming websocket message that triggered this method
+ */
+function onPublicInvitesChange(ws, replyto) { // The message that this broadcast is the reply to
+    broadcastInvites(ws, replyto);
 }
 
-/** Broadcasts the invites list out to all subbed clients. */
-function broadcastInvites() {
+/**
+ * Broadcasts the invites list out to all subbed clients.
+ * @param {Socket} ws - The websocket that trigerred this broadcast. Used to include the replyto id for ONLY THEIR message.
+ * @param {number} [replyto] - The ID of the incoming websocket message that triggered this broadcast
+ */
+function broadcastInvites(ws, replyto) {
     const newInvitesList = getPublicInvitesListSafe();
     const currentGameCount = getActiveGameCount();
 
     const subscribedClients = getInviteSubscribers();
-    for (const id of Object.keys(subscribedClients)) {
+    for (const subbedSocket of Object.values(subscribedClients)) {
         const newInvitesListCopy = math1.deepCopyObject(newInvitesList);
-        sendClientInvitesList(subscribedClients[id], { invitesList: newInvitesListCopy, currentGameCount });
+        // Only include the replyto code with the invite list if this socket is
+        // THE SAME SOCKET as the one that triggered this broadcast.
+        const includedReplyTo = ws === subbedSocket ? replyto : undefined;
+        sendClientInvitesList(subbedSocket, { invitesList: newInvitesListCopy, currentGameCount, replyto: includedReplyTo });
     }
 }
 
@@ -136,7 +147,7 @@ function sendClientInvitesList(ws, { invitesList = getPublicInvitesListSafe(), c
 function addInvite(ws, invite, replyto) {
     invites.push(invite);
 
-    if (isInvitePublic(invite)) onPublicInvitesChange();
+    if (isInvitePublic(invite)) onPublicInvitesChange(ws, replyto);
     else sendClientInvitesList(ws, { replyto }); // Send them the new list after their invite creation!
 
     if (printNewInviteCreationsAndDeletions) {
@@ -161,7 +172,7 @@ function deleteInviteByIndex(ws, invite, index, { dontBroadcast, replyto } = {})
     invites.splice(index, 1); // Delete the invite
 
     if (!dontBroadcast) {
-        if (isInvitePublic(invite)) onPublicInvitesChange();
+        if (isInvitePublic(invite)) onPublicInvitesChange(ws, replyto);
         else sendClientInvitesList(ws, { replyto }); // Send them the new list after their invite cancellation!
     }
 

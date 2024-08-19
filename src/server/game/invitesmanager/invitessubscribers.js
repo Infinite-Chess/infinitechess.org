@@ -31,11 +31,10 @@ function getInviteSubscribers() { return subscribedClients; }
  * Broadcasts a message to all invites subscribers.
  * @param {string} action - The action of the socket message (i.e. "inviteslist")
  * @param {*} message - The message contents
- * @param {number} [replyTo] If applicable, in the incoming socket message this message is the reply to.
  */
-function broadcastToAllInviteSubs(action, message, replyTo) {
+function broadcastToAllInviteSubs(action, message) {
     for (const ws of Object.values(subscribedClients)) {
-        ws.metadata.sendmessage(ws, "invites", action, message, replyTo); // In order: socket, sub, action, value
+        ws.metadata.sendmessage(ws, "invites", action, message); // In order: socket, sub, action, value
     }
 }
 
@@ -55,10 +54,11 @@ function addSocketToInvitesSubs(ws) {
 
 /**
  * Removes a socket from the invite subscriber list.
+ * DOES NOT delete any of their existing invites! That should be done before.
  * @param {Socket} ws 
  */
 function removeSocketFromInvitesSubs(ws) {
-    if (ws == null) return console.error("Can't remove socket from invites subs list because it's undefined!");
+    if (!ws) return console.error("Can't remove socket from invites subs list because it's undefined!");
 
     const socketID = ws.metadata.id;
     if (!subscribedClients[socketID]) return console.error("Cannot unsub socket from invites list because they aren't subbed!");

@@ -37,25 +37,26 @@ const { isServerRestarting } = require('../updateServerRestart.js');
  * if new invites are allowed, before we create it.
  * @param {Socket} ws - Their socket
  * @param {*} messageContents - The incoming socket message that SHOULD contain the invite properties!
- * @param {number} messageID - The ID of the incoming socket message. This is used for the replyto properties on ther reponse.
+ * @param {number} replyto - The incoming websocket message ID, to include in the reply
  */
-async function createInvite(ws, messageContents, messageID) { // invite: { id, owner, variant, clock, color, rated, publicity } 
-    if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game'); // Can't create invite because they are already in a game
-
+async function createInvite(ws, messageContents, replyto) { // invite: { id, owner, variant, clock, color, rated, publicity } 
+    if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto }); // Can't create invite because they are already in a game
 
     // Make sure they don't already have an existing invite
-    if (userHasInvite(ws)) return sendNotify(ws, 'server.javascript.ws-player_already_has_invite');
-    // This allows them to spam the button without receiving errors.
-    // if (userHasInvite(ws)) return;
+    if (userHasInvite(ws)) {
+        ws.metadata.sendmessage(ws, 'general', 'printerror', "Can't create an invite when you have one already.", replyto);
+        logEvents("Player already has existing invite, can't create another!", 'errLog.txt', { print: true });
+        return;
+    }
 
     // Are we restarting the server soon (invites not allowed)?
-    if (!await isAllowedToCreateInvite(ws)) return;
+    if (!await isAllowedToCreateInvite(ws, replyto)) return; // Our response will have already been sent
     
-    const invite = getInviteFromWebsocketMessageContents(ws, messageContents, messageID);
+    const invite = getInviteFromWebsocketMessageContents(ws, messageContents, replyto);
     if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
 
     // Validate invite parameters, detect cheating
-    if (isCreatedInviteExploited(invite)) return reportForExploitingInvite(ws, invite);
+    if (isCreatedInviteExploited(invite)) return reportForExploitingInvite(ws, invite, replyto); // Our response will have already been sent
 
     // Invite has all legal parameters! Create the invite...
 
@@ -65,7 +66,7 @@ async function createInvite(ws, messageContents, messageID) { // invite: { id, o
 
     do { invite.id = math1.generateID(5); } while (existingInviteHasID(invite.id));
 
-    addInvite(ws, invite);
+    addInvite(ws, invite, replyto);
 }
 
 /**
@@ -150,13 +151,13 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
  * Logs an incident of exploiting invite properties to the hack log.
  * @param {Socket} ws - The socket that exploited invite creation
  * @param {Invite} invite - The exploited invite
+ * @param {number} replyto - The incoming websocket message ID, to include in the reply
  */
-function reportForExploitingInvite(ws, invite) {
-    ws.metadata.sendmessage(ws, "general", "printerror", "You cannot modify invite parameters (try refreshing)."); // In order: socket, sub, action, value
+function reportForExploitingInvite(ws, invite, replyto) {
+    ws.metadata.sendmessage(ws, "general", "printerror", "You cannot modify invite parameters. If this was not intentional, try hard-refreshing the page.", replyto); // In order: socket, sub, action, value
 
-    let logText;
-    if (ws.metadata.user) logText = `User ${ws.metadata.user} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
-    else logText = `Browser ${ws.metadata["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
+    const logText = ws.metadata.user ? `User ${ws.metadata.user} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
+                                     : `Browser ${ws.metadata["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
 
     logEvents(logText, 'hackLog.txt', { print: true }); // Log the exploit to the hackLog!
 }
@@ -165,9 +166,10 @@ function reportForExploitingInvite(ws, invite) {
  * Returns true if the user is allowed to create a new invite at this time,
  * depending on whether the server is about to restart, or they have the owner role.
  * @param {Socket} ws - The socket attempting to create a new invite
+ * @param {number} replyto - The incoming websocket message ID, to include in the reply
  * @returns {Promise<boolean>} true if invite creation is allowed
  */
-async function isAllowedToCreateInvite(ws) {
+async function isAllowedToCreateInvite(ws, replyto) {
     if (!await isServerRestarting()) return true; // Server not restarting, all new invites are allowed!
 
     // Server is restarting... Do we have admin perms to create an invite anyway?
@@ -179,7 +181,7 @@ async function isAllowedToCreateInvite(ws) {
     printActiveGameCount();
     const timeUntilRestart = getMinutesUntilServerRestart();
     const message = timeUntilRestart ? 'server.javascript.ws-server_restarting' : 'server.javascript.ws-server_under_maintenance'; 
-    sendNotify(ws, message, timeUntilRestart);
+    sendNotify(ws, message, { number: timeUntilRestart, replyto });
 
     return false; // NOT allowed to make an invite!
 }

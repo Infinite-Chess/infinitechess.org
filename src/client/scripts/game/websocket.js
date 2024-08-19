@@ -478,7 +478,7 @@ const websocket = (function() {
      */
     async function sendmessage(route, action, value, isUserAction, onreplyFunc) { // invites, createinvite, inviteinfo
         if (!await establishSocket()) {
-            // if (isUserAction) statustext.showStatus(translations["websocket"]["too_many_requests"])
+            if (isUserAction) statustext.showStatus(translations["websocket"]["too_many_requests"]);
             if (onreplyFunc) onreplyFunc(); // Execute this now
             return false;
         }
@@ -631,8 +631,7 @@ const websocket = (function() {
         invites.clear({ recentUsersInLastList: true });
         if (subs.invites === false) return; // Already unsubbed
         subs.invites = false;
-        const id = math.generateNumbID(10);
-        sendmessage("general", "unsub", "invites", id);
+        sendmessage("general", "unsub", "invites");
     }
 
     window.addEventListener('pageshow', function(event) {

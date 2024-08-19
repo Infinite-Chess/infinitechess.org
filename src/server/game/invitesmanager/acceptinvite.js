@@ -25,26 +25,28 @@ const { isSocketInAnActiveGame } = require('../gamemanager/activeplayers.js');
  * Attempts to accept an invite of given id.
  * @param {Socket} ws - The socket performing this action
  * @param {*} messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
+ * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function acceptInvite(ws, messageContents) { // { id, isPrivate }
+function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
-    if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game");
+    if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game", { replyto });
 
-    if (!verifyMessageContents(messageContents)) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot cancel invite when incoming socket message body is in an invalid format!");
+    if (!verifyMessageContents(messageContents)) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot cancel invite when incoming socket message body is in an invalid format!", replyto);
     const { id, isPrivate } = messageContents;
 
 
     // Does the invite still exist?
     const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index }
-    if (!inviteAndIndex) return informThemGameAborted(ws, isPrivate, id);
+    if (!inviteAndIndex) return informThemGameAborted(ws, isPrivate, id, replyto);
 
     const { invite, index } = inviteAndIndex;
 
     // Make sure they are not accepting their own.
     if (isInviteOurs(ws, invite)) {
+        ws.metadata.sendmessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
         const errString = `Player tried to accept their own invite! Socket: ${wsutility.stringifySocketMetadata(ws)}`;
-        logEvents(errString, 'hackLog.txt', { print: true }); // Log the exploit to the hackLog!
-        return sendNotify(ws, "server.javascript.ws-accept_own_invite");
+        logEvents(errString, 'errLog.txt', { print: true });
+        return;
     }
 
     // Make sure it's legal for them to accept. (Not legal if they are a guest and the invite is RATED)
@@ -62,7 +64,7 @@ function acceptInvite(ws, messageContents) { // { id, isPrivate }
 
     const player1Socket = findSocketFromOwner(invite.owner); // Could be undefined occasionally
     const player2Socket = ws;
-    createGame(invite, player1Socket, player2Socket);
+    createGame(invite, player1Socket, player2Socket, replyto);
 
     // Unsubscribe them both from the invites subscription list.
     if (player1Socket) removeSocketFromInvitesSubs(player1Socket); // Could be undefined occasionally
@@ -102,13 +104,13 @@ function verifyMessageContents(messageContents) {
  * was invalid, if they entered a private invite code.
  * @param {Socket} ws 
  * @param {boolean} isPrivate 
- * @param {*} inviteID 
- * @returns 
+ * @param {string} inviteID 
+ * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function informThemGameAborted(ws, isPrivate, inviteID) {
+function informThemGameAborted(ws, isPrivate, inviteID, replyto) {
     const errString = isPrivate ? "server.javascript.ws-invalid_code" : "server.javascript.ws-game_aborted";
     if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${wsutility.stringifySocketMetadata(ws)}`);
-    return sendNotify(ws, errString);
+    return sendNotify(ws, errString, { replyto });
 }
 
 

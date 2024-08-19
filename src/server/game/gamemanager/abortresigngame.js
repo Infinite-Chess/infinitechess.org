@@ -25,10 +25,15 @@ function abortGame(ws, game) {
     if (!game) return console.error("Can't abort a game when player isn't in one.");
     const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
+    // Any time they click "Abort Game", they leave the game to the Main Menu, unsubbing, whether or not it ends up being legal.
+    gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
+
     // Is it legal?...
 
-    if (game.gameConclusion === 'aborted') return; // Opponent aborted first.
-    else if (gameutility.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
+    if (game.gameConclusion === 'aborted') { // Opponent aborted first.
+        onRequestRemovalFromPlayersInActiveGames(ws, game);
+        return;
+    } else if (gameutility.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
         console.error("Player tried to abort game when the game is already over!");
         sendNotify(ws, "server.javascript.ws-no_abort_game_over");
         gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
@@ -44,8 +49,6 @@ function abortGame(ws, game) {
 
     // Abort
 
-    gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
-
     setGameConclusion(game, 'aborted');
     onRequestRemovalFromPlayersInActiveGames(ws, game);
     const opponentColor = math1.getOppositeColor(colorPlayingAs);
@@ -60,6 +63,9 @@ function abortGame(ws, game) {
 function resignGame(ws, game) {
     if (!game) return console.error("Can't resign a game when player isn't in one.");
 
+    // Any time they click "Resign Game", they leave the game to the Main Menu, unsubbing, whether or not it ends up being legal.
+    gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
+
     // Is it legal?...
 
     if (gameutility.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
@@ -73,8 +79,6 @@ function resignGame(ws, game) {
     if (!movesscript1.isGameResignable(game)) console.error("Player tried to resign game when there's less than 2 moves played! Ignoring..");
 
     // Resign
-
-    gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
 
     const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
     const opponentColor = math1.getOppositeColor(ourColor);
