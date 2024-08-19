@@ -221,10 +221,6 @@ const websocket = (function() {
         // Not an echo...
 
         const sub = message.sub;
-        if (sub == null) {
-            console.error("Server should not be sending us socket data without subscription data! Message:");
-            return console.log(message);
-        }
 
         // Send our echo here! We always send an echo to every message EXCEPT echos themselves!
         sendmessage("general", "echo", message.id);
@@ -233,6 +229,8 @@ const websocket = (function() {
         executeOnreplyFunc(message.replyto);
 
         switch (sub) { // Route the message where it needs to go
+            case undefined: // Basically a null message. They look like: { id, replyto }. This allows us to execute any on-reply func for the message we sent.
+                break;
             case "general":
                 ongeneralmessage(message.action, message.value);
                 break;
@@ -308,7 +306,7 @@ const websocket = (function() {
      * @param {string} GAME_VERSION - The game version the server is currently running.
      */
     function handleHardRefresh(GAME_VERSION) { // New update!
-        if (GAME_VERSION == null) throw new Error("Can't hard refresh with no expected version.");
+        if (!GAME_VERSION) throw new Error("Can't hard refresh with no expected version.");
 
         const reloadInfo = {
             timeLastHardRefreshed: Date.now(),
@@ -454,7 +452,7 @@ const websocket = (function() {
      * @param {number} timeMillis - The time to remain in timeout, in milliseconds.
      */
     function enterTimeout(timeMillis) {
-        if (timeMillis == null) return console.error("Cannot enter timeout for an undefined amount of time!");
+        if (timeMillis === undefined) return console.error("Cannot enter timeout for an undefined amount of time!");
         if (inTimeout) return; // Already in timeout, don't spam timers!
         inTimeout = true;
         setTimeout(leaveTimeout, timeMillis);
@@ -478,7 +476,7 @@ const websocket = (function() {
      */
     async function sendmessage(route, action, value, isUserAction, onreplyFunc) { // invites, createinvite, inviteinfo
         if (!await establishSocket()) {
-            // if (isUserAction) statustext.showStatus(translations["websocket"]["too_many_requests"])
+            if (isUserAction) statustext.showStatus(translations["websocket"]["too_many_requests"]);
             if (onreplyFunc) onreplyFunc(); // Execute this now
             return false;
         }
@@ -536,7 +534,7 @@ const websocket = (function() {
     /** When we receive an incoming message with the `replyto` property specified,
      * we execute the on-reply function for that message we sent. */
     function executeOnreplyFunc(id) {
-        if (id == null) return;
+        if (id === undefined) return;
         if (!onreplyFuncs[id]) return;
         onreplyFuncs[id]();
         delete onreplyFuncs[id];
@@ -631,8 +629,7 @@ const websocket = (function() {
         invites.clear({ recentUsersInLastList: true });
         if (subs.invites === false) return; // Already unsubbed
         subs.invites = false;
-        const id = math.generateNumbID(10);
-        sendmessage("general", "unsub", "invites", id);
+        sendmessage("general", "unsub", "invites");
     }
 
     window.addEventListener('pageshow', function(event) {
