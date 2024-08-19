@@ -5,7 +5,7 @@ const { isIPBanned } = require('./banned');
 const { DEV_BUILD, ARE_RATE_LIMITING } = require('../config/config');
 // eslint-disable-next-line no-unused-vars
 const { Socket } = require("../game/TypeDefinitions");
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { getTranslationForReq } = require('../utility/translate');
 
 // For rate limiting a client...
 

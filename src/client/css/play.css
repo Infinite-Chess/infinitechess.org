@@ -91,6 +91,10 @@ main {
     right: 0;
 }
 
+button {
+    cursor: pointer;
+}
+
 
 
 /* Loading Page */
@@ -874,6 +878,7 @@ canvas {
     justify-content: space-between;
     margin: 0.4em;
     border-radius: 0.3em;
+    cursor: pointer;
 }
 
 .invite .invite-child {
@@ -1044,7 +1049,6 @@ button.join-button, button.copy-button {
     background-color: rgb(255, 255, 255);
     box-shadow: 0px 0px 7px 0px rgba(0, 0, 0, 0.878);
     transition: transform 0.15s;
-    cursor: pointer;
     -webkit-tap-highlight-color: transparent; /* No more blue highlight when tapping buttons on mobile */
 }
 

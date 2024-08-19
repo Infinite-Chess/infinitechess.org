@@ -1,4 +1,4 @@
-const { getTranslation } = require('../config/setupTranslations');
+const { getTranslation } = require('../utility/translate');
 
 const wincondition1 = (function() {
 

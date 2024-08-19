@@ -63,7 +63,19 @@ const guipause = (function() {
 
         if (!game.areInNonLocalGame() || game.getGamefile().gameConclusion) return element_mainmenu.textContent = translations["main_menu"];
 
-        if (movesscript.isGameResignable(game.getGamefile())) return element_mainmenu.textContent = translations["resign_game"];
+        if (movesscript.isGameResignable(game.getGamefile())) {
+            // If the text currently says "Abort Game", freeze the button for 0.5 seconds in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
+            if (element_mainmenu.textContent === translations["abort_game"]) {
+                element_mainmenu.disabled = true;
+                element_mainmenu.classList.add('opacity-0_5');
+                setTimeout(() => {
+                    element_mainmenu.disabled = false;
+                    element_mainmenu.classList.remove('opacity-0_5');
+                }, 1000);
+            }
+            element_mainmenu.textContent = translations["resign_game"];
+            return;
+        }
 
         return element_mainmenu.textContent = translations["abort_game"];
     }

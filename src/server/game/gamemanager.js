@@ -20,8 +20,7 @@ const formatconverter1 = require('./formatconverter1');
 const statlogger = require('./statlogger');
 const { executeSafely_async } = require('../utility/errorGuard');
 const { ensureJSONString } = require('../utility/JSONUtils');
-
-const { getTranslation } = require('../config/setupTranslations');
+const { getTranslation } = require('../utility/translate');
 
 const gamemanager = (function() {
 
