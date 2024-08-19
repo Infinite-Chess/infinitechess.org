@@ -682,6 +682,7 @@ canvas {
     justify-content: space-between;
     margin: 0.4em;
     border-radius: 0.3em;
+    cursor: pointer;
 }
 
 .invite .invite-child {
