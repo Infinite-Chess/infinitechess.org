@@ -202,6 +202,16 @@ const memberHeader = (function() {
     }
 
     /**
+     * This is called when a web socket connection closes due
+     * to us logging out, this updates the header bar hyperlinks.
+     */
+    function onLogOut() {
+        areLoggedIn = false;
+        deleteToken();
+        updateNavigationLinks();
+    }
+
+    /**
      * Deletes the current token from memory.
      */
     function deleteToken() {
@@ -218,6 +228,7 @@ const memberHeader = (function() {
         getMember,
         getCookieValue,
         deleteCookie,
+        onLogOut,
         deleteToken,
         areWeLoggedIn,
         waitUntilInitialRequestBack
