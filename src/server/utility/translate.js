@@ -1,4 +1,9 @@
 
+/**
+ * This script retrieves the translation for the code and language specified.
+ * This has no other dependancies.
+ */
+
 const i18next = require("i18next");
 
 const defaultLanguage = 'en-US';
