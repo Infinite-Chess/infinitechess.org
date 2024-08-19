@@ -1,6 +1,7 @@
 name = "Polski" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "12"
+maintainer = "apsurt"
 
 [header]
 home = "Strona Główna"

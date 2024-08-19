@@ -7,7 +7,7 @@ const { handleRefreshToken } = require("../controllers/refreshTokenController");
 const { handleLogout } = require("../controllers/logoutController");
 const { verifyAccount } = require("../controllers/verifyAccountController");
 const { ensureOwner, ensurePatron } = require("../middleware/verifyRoles");
-const { getLanguageToServe } = require("../config/setupTranslations");
+const { getLanguageToServe } = require("../utility/translate");
 
 const htmlDirectory = path.join(__dirname, "../../../dist/views");
 

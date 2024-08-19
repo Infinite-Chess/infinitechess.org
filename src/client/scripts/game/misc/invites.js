@@ -144,13 +144,13 @@ const invites = (function() {
                 }
             }
 
-            const c = ['invite', 'button'];
+            const classes = ['invite', 'button', 'unselectable'];
             const isPrivate = invite.publicity === 'private';
             if (isPrivate) privateInviteID = invite.id;
-            if (ours && !isPrivate) c.push('ours');
-            else if (ours && isPrivate) c.push('private');
+            if (ours && !isPrivate) classes.push('ours');
+            else if (ours && isPrivate) classes.push('private');
 
-            const newInvite = createDiv(c, undefined, invite.id);
+            const newInvite = createDiv(classes, undefined, invite.id);
 
             // <div class="invite-child">Playername (elo)</div>
             // <div class="invite-child">Standard</div>
