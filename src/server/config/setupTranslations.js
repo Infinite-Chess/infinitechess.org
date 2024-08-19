@@ -5,12 +5,12 @@ const path = require("path");
 const ejs = require("ejs");
 const middleware = require("i18next-http-middleware");
 const xss = require("xss");
+const { getDefaultLanguage } = require("../utility/translate");
 
 const translationsFolder = "./translation";
 
 /** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
 const supportedLanguages = [];
-const defaultLanguage = 'en-US';
 
 /**
  * Determines the language to be used for serving an HTML file to a request.
@@ -145,9 +145,9 @@ function html_escape_object(object) {
 function html_escape(value) {
     switch (typeof value) {
         case "object":
-            if (value.constructor.name == `Object`) {
+            if (value.constructor.name === 'Object') {
                 return html_escape_object(value);
-            } else if (value.constructor.name == `Array`) {
+            } else if (value.constructor.name === 'Array') {
                 return html_escape_array(value);
             } else {
                 throw "Unhandled object type while escaping";
@@ -305,43 +305,14 @@ function initTranslations() {
         preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
         resources: translations,
         defaultNS: "default",
-        fallbackLng: defaultLanguage,
+        fallbackLng: getDefaultLanguage(),
     // debug: true // Enable debug mode to see logs for missing keys and other details
     });
 
     translateStaticTemplates(translations); // Compiles static files
 }
 
-/**
- * Retrieves the translation for a given key and language.
- * @param {string} key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
- * @param {string} language - The language code for the translation. Default: `"en-US"`
- * @param {Object} [options={}] - Additional options for the translation.
- * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
- * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
- * @returns {string} The translated string.
- */
-function getTranslation(key, language = defaultLanguage, options = {}) {
-    options.lng = language;
-    return i18next.t(key, options);
-}
-
-/**
- * Retrieves the translation for a given key and req. It reads the req's cookies for its preferred language.
- * @param {string} key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
- * @param {Object} req - The request object
- * @param {Object} [options={}] - Additional options for the translation.
- * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
- * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
- * @returns {string} The translated string.
- */
-function getTranslationForReq(key, req, options = {}) {
-    return getTranslation(key, req.cookies?.i18next, options);
-}
-
 module.exports = {
     getLanguageToServe,
     initTranslations,
-    getTranslation,
-    getTranslationForReq
 };
