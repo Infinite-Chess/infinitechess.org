@@ -12,7 +12,7 @@ const WebSocket = require('ws');
 // Middleware & other imports
 const { getUsernameCaseSensitive } = require('../../controllers/members');
 const { logEvents } = require('../../middleware/logEvents');
-const { getTranslation } = require('../../config/setupTranslations');
+const { getTranslation } = require('../../utility/translate');
 const { ensureJSONString } = require('../../utility/JSONUtils');
 
 // Custom imports
