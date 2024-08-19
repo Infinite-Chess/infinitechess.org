@@ -106,7 +106,9 @@ const memberHeader = (function() {
                     console.log(`Server: ${result['message']}`);
                     areLoggedIn = false;
                 }
-
+                // Delete the token cookie after reading it, so it doesn't bleed
+                // into future page refreshes, even after we have logged out
+                deleteCookie('token');
                 updateNavigationLinks();
                 lastRefreshTime = Date.now();
                 requestOut = false;
@@ -192,6 +194,14 @@ const memberHeader = (function() {
     }
 
     /**
+     * Deletes a document cookie.
+     * @param {string} cookieName - The name of the cookie you would like to delete.
+     */
+    function deleteCookie(cookieName) {
+        document.cookie = cookieName + '=; Max-Age=-99999999;';  
+    }
+
+    /**
      * Deletes the current token from memory.
      */
     function deleteToken() {
@@ -207,6 +217,7 @@ const memberHeader = (function() {
         getAccessToken,
         getMember,
         getCookieValue,
+        deleteCookie,
         deleteToken,
         areWeLoggedIn,
         waitUntilInitialRequestBack
