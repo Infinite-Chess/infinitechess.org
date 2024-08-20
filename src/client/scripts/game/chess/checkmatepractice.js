@@ -94,7 +94,7 @@ const checkmatepractice = (function() {
                     const key = math.getKeyFromCoords([x,y]);
 
                     // check if square is occupied and white bishop parity is fulfilled
-                    if (!(key in startingPosition) && !(piece == "bishopsW" && (x + y) % 2 != whitebishopparity)) {
+                    if (!(key in startingPosition) && !(piece === "bishopsW" && (x + y) % 2 !== whitebishopparity)) {
                         startingPosition[key] = piece;
                         amount -= 1;
                     }
@@ -130,9 +130,9 @@ const checkmatepractice = (function() {
         const [sx,sy] = math.getCoordsFromKey(square);
         for (const key in startingPosition) {
             const [x,y] = math.getCoordsFromKey(key);
-            if (x == sx || y == sy || Math.abs(sx - x) == Math.abs(sy - y)) return false;
+            if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
             if (startingPosition[key] === "knightridersW") {
-                if (Math.abs(sx - x) == 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) == Math.abs(sy - y)) {
+                if (Math.abs(sx - x) === 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) === Math.abs(sy - y)) {
                     return false;
                 }
             }
