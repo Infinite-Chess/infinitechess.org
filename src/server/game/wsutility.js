@@ -63,12 +63,14 @@ const wsutility = (function() {
     }
 
     /**
-     * Sends a message to the client through the websocket, to be displayed on-screen.
-     * @param {Socket} ws - The socket
-     * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
-     * @param {number} [number] - A number to include with special messages, if applicable. Typically a number of minutes.
+     * Sends a notification message to the client through the WebSocket connection, to be displayed on-screen.
+     * @param {Socket} ws - The WebSocket connection object.
+     * @param {string} translationCode - The code corresponding to the message that needs to be retrieved for language-specific translation. For example, `"server.javascript.ws-already_in_game"`.
+     * @param {Object} options - An object containing additional options.
+     * @param {number} options.replyto - The ID of the incoming WebSocket message to which this message is replying.
+     * @param {number} [options.number] - A number to include with special messages if applicable, typically representing a duration in minutes.
      */
-    function sendNotify(ws, translationCode, number) {
+    function sendNotify(ws, translationCode, { replyto, number } = {}) {
         const i18next = ws.metadata.i18next;
         let text = getTranslation(translationCode, i18next);
         // Special case: number of minutes to be displayed upon server restart
@@ -77,7 +79,7 @@ const wsutility = (function() {
             const minutes_plurality = minutes === 1 ? getTranslation("server.javascript.ws-minute", i18next) : getTranslation("server.javascript.ws-minutes", i18next);
             text += ` ${minutes} ${minutes_plurality}.`;
         }
-        ws.metadata.sendmessage(ws, "general", "notify", text);
+        ws.metadata.sendmessage(ws, "general", "notify", text, replyto);
     }
 
     /**

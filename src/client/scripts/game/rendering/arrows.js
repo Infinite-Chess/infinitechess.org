@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 // This script handles the rendering of arrows poointing to pieces off-screen
 // and detects if they are clicked
 
