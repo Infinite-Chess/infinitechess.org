@@ -772,13 +772,13 @@ const onlinegame = (function() {
 
     /** Called when an online game is concluded (termination shown on-screen) */
     function onGameConclude() {
+        gameHasConcluded = true; // This NEEDS to be above drawoffers.reset(), as that relies on this!
         cancelAFKTimer();
         cancelFlashTabTimer();
         cancelMoveSound();
         resetServerRestarting();
         deleteCustomVariantOptions();
         drawoffers.reset();
-        gameHasConcluded = true;
     }
 
     return Object.freeze({

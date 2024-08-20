@@ -89,6 +89,7 @@ const drawoffers = (function() {
         isAcceptingDraw = false;
         websocket.sendmessage('game', 'acceptdraw');
         guidrawoffer.close();
+        guipause.updateDrawOfferButton();
     }
 
     /**
@@ -133,6 +134,7 @@ const drawoffers = (function() {
         plyOfLastOfferedDraw = undefined;
         isAcceptingDraw = false;
         guidrawoffer.close();
+        guipause.updateDrawOfferButton();
     }
 
     return Object.freeze({

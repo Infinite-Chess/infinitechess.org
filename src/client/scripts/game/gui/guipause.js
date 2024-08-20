@@ -59,7 +59,6 @@ const guipause = (function() {
      */
     function updateDrawOfferButton() {
         if (!isPaused) return; // Not paused, no point in updating button, because it's updated as soon as we pause the game
-
         // Should it say "offer draw" or "accept draw"?
         if (drawoffers.areWeAcceptingDraw()) {
             element_offerDraw.innerText = translations.accept_draw; // "Accept Draw"
