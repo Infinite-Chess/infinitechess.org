@@ -72,7 +72,7 @@ const guipause = (function() {
     }
 
     function onReceiveOpponentsMove() {
-        updateTextOfMainMenuButton();
+        updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable: true });
         updateDrawOfferButton();
     }
 
@@ -80,15 +80,19 @@ const guipause = (function() {
      * Updates the text content of the Main Menu button to either say
      * "Main Menu", "Abort Game", or "Resign Game", whichever is relevant
      * in the situation.
+     * @param {Object} options - Additional options
+     * @param {boolean} [options.freezeResignButtonIfNoLongerAbortable] - If true, and the main menu changes from "Abort" to "Resign",
+     * we will disable it and grey it out for 1 second so the player doesn't accidentally click resign when they wanted to abort.
+     * This should only be true when called from onReceiveOpponentsMove(), not on open()
      */
-    function updateTextOfMainMenuButton() {
+    function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
         if (!isPaused) return;
 
         if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations["main_menu"];
 
         if (movesscript.isGameResignable(game.getGamefile())) {
-            // If the text currently says "Abort Game", freeze the button for 0.5 seconds in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
-            if (element_mainmenu.textContent === translations["abort_game"]) {
+            // If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
+            if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations["abort_game"]) {
                 element_mainmenu.disabled = true;
                 element_mainmenu.classList.add('opacity-0_5');
                 setTimeout(() => {
