@@ -1554,7 +1554,7 @@ a {
 .tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after {
     visibility: visible;
     opacity: 1;
-    transition-delay: 1s; /* Delay the tooltip appearance */
+    transition-delay: 0.5s; /* Delay the tooltip appearance. KEEP THE SAME AS IN TOOLTIPS.JS */
     z-index: 1;
 }
 
