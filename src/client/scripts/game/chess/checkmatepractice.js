@@ -59,7 +59,7 @@ const checkmatepractice = (function() {
 
 
     function getCompletedCheckmates() {
-        if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage); // Initialize
+        if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
         return completedCheckmates;
     }
 
