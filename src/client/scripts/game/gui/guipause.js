@@ -5,9 +5,8 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const guipause = (function() {
-
-    // Variables
 
     // Pause UI
     let isPaused = false;
@@ -17,6 +16,7 @@ const guipause = (function() {
     const element_copygame = document.getElementById('copygame');
     const element_pastegame = document.getElementById('pastegame');
     const element_mainmenu = document.getElementById('mainmenu');
+    const element_offerDraw = document.getElementById('offerdraw');
     const element_perspective = document.getElementById('toggleperspective');
     
     // Functions
@@ -27,7 +27,7 @@ const guipause = (function() {
      */
     function areWePaused() { return isPaused; }
 
-    function gelement_perspective() {
+    function getelement_perspective() {
         return element_perspective;
     }
 
@@ -35,6 +35,7 @@ const guipause = (function() {
         isPaused = true;
         updateTextOfMainMenuButton();
         updatePasteButtonTransparency();
+        updateDrawOfferButton();
         style.revealElement(element_pauseUI);
         initListeners();
     }
@@ -46,11 +47,33 @@ const guipause = (function() {
 
     function updatePasteButtonTransparency() {
         const moves = game.getGamefile().moves;
-        const movesLength = moves.length;
-        const legalInPrivateMatch = onlinegame.getIsPrivate() && (movesLength === 0 || moves[0].length === 1 && moves[0][0] == null);
+        const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
 
         if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
-        else element_pastegame.classList.remove('opacity-0_5');
+        else                                                      element_pastegame.classList.remove('opacity-0_5');
+    }
+
+    /**
+     * Update the draw offer button's text content to either say "Offer Draw"
+     * or "Accept Draw", and update its transparency depending on whether it's legal.
+     */
+    function updateDrawOfferButton() {
+        if (!isPaused) return; // Not paused, no point in updating button, because it's updated as soon as we pause the game
+        // Should it say "offer draw" or "accept draw"?
+        if (drawoffers.areWeAcceptingDraw()) {
+            element_offerDraw.innerText = translations.accept_draw; // "Accept Draw"
+            element_offerDraw.classList.remove('opacity-0_5');
+            return;
+        } else element_offerDraw.innerText = translations.offer_draw; // "Offer Draw"
+
+        // Update transparency
+        if (drawoffers.isOfferingDrawLegal()) element_offerDraw.classList.remove('opacity-0_5');
+        else element_offerDraw.classList.add('opacity-0_5');
+    }
+
+    function onReceiveOpponentsMove() {
+        updateTextOfMainMenuButton();
+        updateDrawOfferButton();
     }
 
     /**
@@ -61,7 +84,7 @@ const guipause = (function() {
     function updateTextOfMainMenuButton() {
         if (!isPaused) return;
 
-        if (!onlinegame.areInOnlineGame() || game.getGamefile().gameConclusion) return element_mainmenu.textContent = translations["main_menu"];
+        if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations["main_menu"];
 
         if (movesscript.isGameResignable(game.getGamefile())) {
             // If the text currently says "Abort Game", freeze the button for 0.5 seconds in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
@@ -77,7 +100,7 @@ const guipause = (function() {
             return;
         }
 
-        return element_mainmenu.textContent = translations["abort_game"];
+        element_mainmenu.textContent = translations["abort_game"];
     }
 
     function initListeners() {
@@ -86,6 +109,7 @@ const guipause = (function() {
         element_copygame.addEventListener('click', copypastegame.callbackCopy);
         element_pastegame.addEventListener('click', copypastegame.callbackPaste);
         element_mainmenu.addEventListener('click', callback_MainMenu);
+        element_offerDraw.addEventListener('click', callback_OfferDraw);
         element_perspective.addEventListener('click', callback_Perspective);
     }
 
@@ -95,20 +119,19 @@ const guipause = (function() {
         element_copygame.removeEventListener('click', copypastegame.callbackCopy);
         element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
         element_mainmenu.removeEventListener('click', callback_MainMenu);
+        element_offerDraw.removeEventListener('click', callback_OfferDraw);
         element_perspective.removeEventListener('click', callback_Perspective);
     }
 
-    function callback_Resume(event) {
+    function callback_Resume() {
         if (!isPaused) return;
-        event = event || window.event;
         isPaused = false;
         style.hideElement(element_pauseUI);
         closeListeners();
         main.renderThisFrame();
     }
 
-    async function callback_MainMenu(event) {
-        event = event || window.event;
+    function callback_MainMenu() {
         onlinegame.onMainMenuPress();
         onlinegame.closeOnlineGame();
         callback_Resume();
@@ -118,30 +141,41 @@ const guipause = (function() {
         guititle.open();
     }
 
-    function callback_TogglePointers(event) {
-        event = event || window.event;
+    /** Called when the Offer Draw button is clicked in the pause menu */
+    function callback_OfferDraw() {
+        // Are we accepting a draw?
+        if (drawoffers.areWeAcceptingDraw()) return drawoffers.callback_AcceptDraw();
+
+        // No accepting. Is it legal to extend, then?
+        if (drawoffers.isOfferingDrawLegal()) return drawoffers.extendOffer();
+
+        statustext.showStatus("Can't offer draw.");
+    }
+
+    function callback_TogglePointers() {
         main.renderThisFrame();
         let mode = arrows.getMode();
         mode++;
         if (mode > 2) mode = 0;
         arrows.setMode(mode);
         const text = mode === 0 ? translations["arrows_off"]
-            : mode === 1 ? translations["arrows_defense"]
-                : translations["arrows_all"];
+                   : mode === 1 ? translations["arrows_defense"]
+                                : translations["arrows_all"];
         element_pointers.textContent = text;
         if (!isPaused) statustext.showStatus(translations["toggled"] + " " + text);
     }
 
-    function callback_Perspective(event) {
-        event = event || window.event;
+    function callback_Perspective() {
         perspective.toggle();
     }
     
     return Object.freeze({
         areWePaused,
-        gelement_perspective,
+        getelement_perspective,
         open,
         toggle,
+        updateDrawOfferButton,
+        onReceiveOpponentsMove,
         updateTextOfMainMenuButton,
         callback_Resume,
         callback_TogglePointers,
