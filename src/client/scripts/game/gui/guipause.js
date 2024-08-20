@@ -144,10 +144,18 @@ const guipause = (function() {
     /** Called when the Offer Draw button is clicked in the pause menu */
     function callback_OfferDraw() {
         // Are we accepting a draw?
-        if (drawoffers.areWeAcceptingDraw()) return drawoffers.callback_AcceptDraw();
+        if (drawoffers.areWeAcceptingDraw()) {
+            drawoffers.callback_AcceptDraw();
+            callback_Resume();
+            return;
+        }
 
-        // No accepting. Is it legal to extend, then?
-        if (drawoffers.isOfferingDrawLegal()) return drawoffers.extendOffer();
+        // Not accepting. Is it legal to extend, then?
+        if (drawoffers.isOfferingDrawLegal()) {
+            drawoffers.extendOffer();
+            callback_Resume();
+            return;
+        }
 
         statustext.showStatus("Can't offer draw.");
     }
