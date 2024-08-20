@@ -248,7 +248,7 @@ const onlinegame = (function() {
             case "serverrestart":
                 initServerRestart(data.value);
                 break;
-            case "drawoffer": { // message contents: { blackOfferMove, whiteOfferMove }
+            case "drawoffer": {
                 drawoffers.onOpponentExtendedOffer();
                 break;
             } case "declinedraw":
