@@ -1025,7 +1025,9 @@ button.join-button, button.copy-button {
         font-size: 18px;
         border-radius: 9px;
     }
-
+    .draw_offer_ui {
+        padding: 0 0.5em;
+    }
 }
 
 @media only screen and (max-width: 502px) {
@@ -1038,81 +1040,37 @@ button.join-button, button.copy-button {
 /* Draw Offer UI (in the bottom nav bar) */
 
 .draw_offer_ui {
-    height: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 30px;
-    font-family: "Open Sans";
-    font-weight: bold;
-    padding: 15px;
-    gap: 15px;
-    border-radius: 5px;
-    box-sizing: border-box;
-
-    /* Make it not a popup / tsevasa's suggestion */
-    background: none;
-    border-color: transparent;
-    background-color: rgba(0, 0, 0, 0);
-    box-shadow: none;
+    gap: 0.3em;
+    height: 100%;
 }
 
-.draw_offer_ui p.offer_title, .draw_offer_ui button {
-    font-size: min(3.5vw, 35px);
-}
-
-.draw_offer_ui p.offer_title {
-    color: black;
-    text-align: center;
-    vertical-align: middle;
-    line-height: 100%;
-    font-size: 30px;
-    font-family: "Open Sans";
-    font-weight: bold;
-    top: 50%;
-    bottom: 50%;
-}
-
-@media (max-width:700px) {
-    .draw_offer_ui p.offer_title, .draw_offer_ui button {
-        font-size: 20px;
-    }
+.draw_offer_ui .offer_title {
+    font-size: 0.9em;
 }
 
 .draw_offer_ui button {
-    background-color: rgb(255, 255, 255) !important;
-    box-shadow: 0px 0px 7px 1px #727272 !important;
-    border-radius: min(0.9vw, 10px);
-    color: rgb(0, 0, 0);
-    max-width: 54px;
-    height: 100%;
-    aspect-ratio: 1/1;
-    background: rgb(227, 227, 227);
+    background-color: white;
+    border-radius: 1em;
+    width: 4em;
+    height: 4em;
     display: flex;
     justify-content: center;
     align-items: center;
+    border: 2px solid grey;
+    font-size: 0.45em;
 }
 
-.draw_offer_ui img {
-    position: relative;
-	height: 85%;
-	margin:1px;
-	top: 0px;
-}
-
-/* The accept draw button is naturally smaller */
-.acceptdraw > .icon {
-	height: 95%;
+.draw_offer_ui svg {
+    height: 90%;
 }
 
 .draw_offer_ui button:hover {
-    /* background-color: rgb(255, 255, 255); */
-    background: linear-gradient(to bottom, white, rgb(219, 219, 219), white);
+    background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
 .draw_offer_ui button:active {
-    /* box-shadow: 0 0 15px 0 rgba(255, 255, 255, 0.51); */
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 

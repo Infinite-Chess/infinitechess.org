@@ -350,7 +350,7 @@ const guiplay = (function() {
 
     /**
      * Starts a game according to the options provided.
-     * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`, `whiteDrawOfferMove`, `blackDrawOfferMove`
+     * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`
      * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
      */
     function loadGame(gameOptions) {
@@ -366,9 +366,7 @@ const guiplay = (function() {
         const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
             moves: gameOptions.moves,
             variantOptions: gameOptions.variantOptions,
-            gameConclusion: gameOptions.gameConclusion,
-            drawOfferWhite: gameOptions.whiteDrawOfferMove || 0,
-            drawOfferBlack: gameOptions.blackDrawOfferMove || 0,
+            gameConclusion: gameOptions.gameConclusion
         });
         game.loadGamefile(newGamefile);
 
