@@ -34,7 +34,9 @@ const drawoffers = (function() {
      */
     function isOfferingDrawLegal() {
         const gamefile = game.getGamefile();
+        if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
         if (!movesscript.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
+        if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
         if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
         return true; // Is legal to EXTEND
     }
@@ -64,6 +66,7 @@ const drawoffers = (function() {
         guidrawoffer.open();
         sound.playSound_base(); //playSound_drawOffer()
         isAcceptingDraw = true;
+        guipause.updateDrawOfferButton();
     }
 
     /**
@@ -75,6 +78,7 @@ const drawoffers = (function() {
         const gamefile = game.getGamefile();
         plyOfLastOfferedDraw = gamefile.moves.length;
         statustext.showStatus(`Waiting for opponent to accept...`);
+        guipause.updateDrawOfferButton();
     }
 
     /**
@@ -107,6 +111,16 @@ const drawoffers = (function() {
         isAcceptingDraw = false;
     }
 
+    /**
+     * Called when an online game concludes or is closed. Closes any open draw
+     * offer and resets all draw for values for future games.
+     */
+    function reset() {
+        plyOfLastOfferedDraw = undefined;
+        isAcceptingDraw = false;
+        guidrawoffer.close();
+    }
+
     return Object.freeze({
         isOfferingDrawLegal,
         areWeAcceptingDraw,
@@ -114,6 +128,7 @@ const drawoffers = (function() {
         callback_declineDraw,
         onOpponentExtendedOffer,
         extendOffer,
+        reset,
     });
 
 })();

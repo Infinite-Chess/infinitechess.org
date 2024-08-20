@@ -3,6 +3,7 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const onlinegame = (function() {
 
     /** Whether we are currently in an online game. */
@@ -322,8 +323,7 @@ const onlinegame = (function() {
         // {
         //     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
         //     id, clock, publicity, youAreColor, timerWhite,
-        //     timerBlack, moves, autoAFKResignTime, disconnect, gameConclusion, 
-        //     blackDrawOfferMove, whiteDrawOfferMove
+        //     timerBlack, moves, autoAFKResignTime, disconnect, gameConclusion
         // }
 
         // We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
@@ -614,8 +614,8 @@ const onlinegame = (function() {
         resetAFKValues();
         resetServerRestarting();
         cancelFlashTabTimer();
-        guidrawoffer.closeDrawOffer(); // if it's open somehow, close it anyway
         perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
+        drawoffers.reset();
     }
 
     function resetAFKValues() {
@@ -775,7 +775,7 @@ const onlinegame = (function() {
         cancelMoveSound();
         resetServerRestarting();
         deleteCustomVariantOptions();
-        guidrawoffer.closeDrawOffer();
+        drawoffers.reset();
         gameHasConcluded = true;
     }
 

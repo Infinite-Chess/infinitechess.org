@@ -36,8 +36,7 @@ function offerDraw(ws, game) {
 
     // Alert their opponent
     const opponentColor = math1.getOppositeColor(color);
-    const value = { offererColor: color, whiteOfferMove: game.drawOffers.lastOfferPly.white, blackOfferMove: game.drawOffers.lastOfferPly.black };
-    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'drawoffer', value);
+    gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'drawoffer');
 }
 
 /** 
