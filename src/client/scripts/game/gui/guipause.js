@@ -8,9 +8,6 @@
 // eslint-disable-next-line no-unused-vars
 const guipause = (function() {
 
-    /** The number of half moves allowed before we can make an additional draw offer. */
-    const movesBetweenDrawOffers = 2;
-
     // Pause UI
     let isPaused = false;
     const element_pauseUI = document.getElementById('pauseUI');
