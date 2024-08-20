@@ -114,6 +114,7 @@ js-pwd_not_pwd = "Password must not be 'password'"
 [play.main-menu]
 credits = "Credits"
 play = "Play"
+practice = "Practice"
 guide = "Guide"
 editor = "Board Editor"
 loading = "LOADING"
@@ -172,6 +173,18 @@ knightrider = {name="Knightrider", description="Hops like a knight infinitely in
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
+[play.practice-menu]
+title = "Practice"
+checkmates = "Checkmates"
+tactics = "Tactics"
+play = "Play"
+back = "Back"
+versus = "vs"
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
+insane = "Insane"
+difficulty = "Difficulty"
 
 [play.play-menu]
 title = "Play - Online"
@@ -275,10 +288,12 @@ webgl_unsupported = "Your browser does not support WebGL. This game requires tha
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
+menu_checkmate = "Practice - Checkmates"
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
 cannot_paste_in_public = "Cannot paste game in a public match!"
+cannot_paste_in_engine = "Cannot paste game in an engine match!"
 cannot_paste_after_moves = "Cannot paste game after moves are made!"
 clipboard_denied = "Clipboard permission denied. This might be your browser."
 clipboard_invalid = "Clipboard is not in valid ICN notation."
