@@ -13,8 +13,8 @@
 
     const tooltips = document.querySelectorAll(tooltipClasses_Dotted.join(', '));
 
-    /** The time, in the css, it takes for a tooltip to appear. */
-    const tooltipDelayMillis = 1000;
+    /** The time, in the css, it takes for a tooltip to appear. KEEP THE SAME AS IN PLAY.CSS */
+    const tooltipDelayMillis = 500;
     /** The time, after the tooltip class is deleted (clicked button),
      * in which it will be added again if we're still hovering over. */
     const timeToReAddTooltipClassAfterDeletionMillis = 2000;
