@@ -1630,14 +1630,14 @@ a {
     transform: rotate(180deg);
 }
 
-.unselectable {
-    user-select: none; /* Makes the whole div unselectable (would ruin the experience)  */
+.unselectable { /* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
+    user-select: none; 
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
 }
 
-.selectable {
+.selectable { /* Makes text inside the elements with the .unselectable class re-selectable */
     user-select: text;
     -moz-user-select: text;
     -webkit-user-select: text;
