@@ -158,11 +158,11 @@ const checkmatepractice = (function() {
 
     /** Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! */
     function eraseCheckmatePracticeProgress() {
-        if (!completedCheckmates) return console.error("Cannot erase checkmate progress when completedCheckmates was never initialized!");
-        completedCheckmates.length = 0;
         localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
-        guipractice.updateCheckmatesBeaten(); // Delete the 'beaten' class from all
         console.log("DELETED all checkmate practice progress.");
+        if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
+        completedCheckmates.length = 0;
+        guipractice.updateCheckmatesBeaten(); // Delete the 'beaten' class from all
     }
 
     /** Called when an engine game ends */
