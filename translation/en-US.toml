@@ -115,14 +115,14 @@ js-pwd_not_pwd = "Password must not be 'password'"
 
 [play]
 title = "Infinite Chess - Play" # The tab title
+loading = "LOADING"
+error = "ERROR"
 
 [play.main-menu]
 credits = "Credits"
 play = "Play"
 guide = "Guide"
 editor = "Board Editor"
-loading = "LOADING"
-error = "ERROR"
 
 [play.guide]
 title = "Guide"

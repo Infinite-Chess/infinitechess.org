@@ -1,10 +1,14 @@
 {
   "14": {
-    "note": "Added translations for the tab titles. Added [play] and play.title on lines 116 & 117",
+    "note": "Added translations for the tab titles. Added [play] and play.title on lines 116 & 117. Changed play.main-menu.loading to play.loading, and changed play.main-menu.error to play.error",
     "changes": [
       "index.title",
       "member.title",
-      "play.title"
+      "play.title",
+      "play.main-menu.loading",
+      "play.main-menu.error",
+      "play.loading",
+      "play.error"
     ]
   },
   "13": {
