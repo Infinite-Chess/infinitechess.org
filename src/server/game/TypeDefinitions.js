@@ -140,7 +140,7 @@ function Game() {
             /** The last ply (half-move) BLACK extended a draw offer, if they have, otherwise undefined. @type {number | undefined} */
             black: undefined,
         },
-    }
+    };
 
     /** Contains information about which sides are
      * about to lose by disconnection. */

@@ -29,6 +29,7 @@ const formatconverter1 = require('../formatconverter1');
 const movesscript1 = require('../movesscript1');
 
 const { getTimeServerRestarting } = require('../timeServerRestarts');
+const { doesColorHaveExtendedDrawOffer, getLastOfferPlyOfColor } = require('./drawoffers');
 
 const gameutility = (function() {
 
@@ -237,6 +238,7 @@ const gameutility = (function() {
         const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated);
 
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
+        const opponentColor = math1.getOppositeColor(playerColor);
         const gameOptions = {
             metadata: {
                 Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
@@ -255,9 +257,10 @@ const gameutility = (function() {
             youAreColor: playerColor,
             moves: game.moves,
             gameConclusion: game.gameConclusion,
-            // REMOVE draw offer details from here and put below!
-            whiteDrawOfferMove: game.drawOffers.lastOfferPly.white,
-            blackDrawOfferMove: game.drawOffers.lastOfferPly.black
+            drawOffer: {
+                unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
+                lastOfferPly: getLastOfferPlyOfColor(game, playerColor) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
+            }
         };
         // Include additional stuff if relevant
         if (!game.untimed) {
@@ -271,16 +274,12 @@ const gameutility = (function() {
         if (isAFKTimerActive(game)) gameOptions.autoAFKResignTime = game.autoAFKResignTime;
 
         // If their opponent has disconnected, send them that info too.
-        const opponentColor = math1.getOppositeColor(playerColor);
-        if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
+        if (game.disconnect.autoResign[opponentColor].timeToAutoLoss !== undefined) {
             gameOptions.disconnect = {
                 autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
                 wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
             };
         }
-
-        // SEND DRAW OFFER DETAILS HERE
-        // ...
 
         // If the server is restarting, include the time too.
         const timeServerRestarting = getTimeServerRestarting();
@@ -342,12 +341,10 @@ const gameutility = (function() {
         if (isAFKTimerActive(game)) messageContents.autoAFKResignTime = game.autoAFKResignTime;
         // SEND THEM INFO ABOUT OPEN DRAW OFFERS
         // ...
-        if (game.drawOffers.lastOfferPly.white) messageContents.whiteDrawOfferMove = game.drawOffers.lastOfferPly.white;
-        if (game.drawOffers.lastOfferPly.black) messageContents.blackDrawOfferMove = game.drawOffers.lastOfferPly.black;
 
         // If their opponent has disconnected, send them that info too.
         const opponentColor = math1.getOppositeColor(color);
-        if (game.disconnect.autoResign[opponentColor].timeToAutoLoss != null) {
+        if (game.disconnect.autoResign[opponentColor].timeToAutoLoss !== undefined) {
             messageContents.disconnect = {
                 autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
                 wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
@@ -564,7 +561,7 @@ const gameutility = (function() {
      */
     function isAFKTimerActive(game) {
         // If this is defined, then the timer is defined.
-        return game.autoAFKResignTime != null;
+        return game.autoAFKResignTime !== undefined;
     }
     
     /**
@@ -576,7 +573,7 @@ const gameutility = (function() {
      */
     function isDisconnectTimerActiveForColor(game, color) {
         // If these are defined, then the timer is defined.
-        return game.disconnect.startTimer[color] != null || game.disconnect.autoResign[color].timeToAutoLoss != null;
+        return game.disconnect.startTimer[color] !== undefined || game.disconnect.autoResign[color].timeToAutoLoss !== undefined;
     }
     
     /**
@@ -589,7 +586,7 @@ const gameutility = (function() {
      */
     function isAutoResignDisconnectTimerActiveForColor(game, color) {
         // If these are defined, then the timer is defined.
-        return game.disconnect.autoResign[color].timeToAutoLoss != null;
+        return game.disconnect.autoResign[color].timeToAutoLoss !== undefined;
     }
 
     /**

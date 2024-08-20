@@ -312,8 +312,7 @@ const guiplay = (function() {
      * @param {Object} gameOptions - An object that contains the properties
      * `metadata`, `id`, `publicity`, `youAreColor`, `moves`, `timerWhite`,
      * `timerBlack`, `timeNextPlayerLosesAt`, `autoAFKResignTime`,
-     * `disconnect`, `gameConclusion`, `serverRestartingAt`
-     * `whiteDrawOfferMove`, `blackDrawOfferMove`
+     * `disconnect`, `gameConclusion`, `serverRestartingAt`, `drawOffer`
      * 
      * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.
      */
@@ -326,6 +325,7 @@ const guiplay = (function() {
         onlinegame.initOnlineGame(gameOptions);
         clock.set(gameOptions.clock, { timerWhite: gameOptions.timerWhite, timerBlack: gameOptions.timerBlack, timeNextPlayerLosesAt: gameOptions.timeNextPlayerLosesAt });
         guigameinfo.revealPlayerNames(gameOptions);
+        drawoffers.set(gameOptions.drawOffer);
     }
 
     function generateVariantOptionsIfReloadingPrivateCustomGame() {

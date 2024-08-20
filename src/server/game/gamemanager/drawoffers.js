@@ -82,6 +82,17 @@ function closeDrawOffer(game) {
     game.drawOffers.state = undefined;
 }
 
+/**
+ * Returns the last ply move the provided color has offered a draw,
+ * if they have, otherwise undefined.
+ * @param {Game} game
+ * @param {string} color
+ * @returns {number | undefined}
+ */
+function getLastOfferPlyOfColor(game, color) {
+    return game.drawOffers.lastOfferPly[color];
+}
+
 //--------------------------------------------------------------------------------------------------------
 
 module.exports = {
@@ -91,4 +102,5 @@ module.exports = {
     hasColorOfferedDrawTooFast,
     openDrawOffer,
     closeDrawOffer,
+    getLastOfferPlyOfColor,
 };

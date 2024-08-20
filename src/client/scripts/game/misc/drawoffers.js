@@ -112,6 +112,20 @@ const drawoffers = (function() {
     }
 
     /**
+     * Set the current draw offer values according to the information provided.
+     * This is called after a page refresh when we're in a game.
+     * @param {Object} drawOffer - An object that looks like: `{ unconfirmed, lastOfferPly }`, where `unconfirmed` is
+     * a boolean that's true if the opponent has an open draw offer we have not yet confirmed/rejected,
+     * and `lastOfferPly` is the last move ply WE EXTENDED an offer, if we have, otherwise undefined.
+     */
+    function set(drawOffer) {
+        plyOfLastOfferedDraw = drawOffer.lastOfferPly;
+        if (!drawOffer.unconfirmed) return; // No open draw offer
+        // Open draw offer!!
+        onOpponentExtendedOffer();
+    }
+
+    /**
      * Called when an online game concludes or is closed. Closes any open draw
      * offer and resets all draw for values for future games.
      */
@@ -128,6 +142,7 @@ const drawoffers = (function() {
         callback_declineDraw,
         onOpponentExtendedOffer,
         extendOffer,
+        set,
         reset,
     });
 
