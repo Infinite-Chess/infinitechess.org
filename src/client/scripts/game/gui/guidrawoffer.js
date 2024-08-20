@@ -1,82 +1,50 @@
 
 /*
- * This script handles our Draw offer menu
+ * This script opens and closes our Draw Offer UI
+ * on the bottom navigation bar.
+ * 
+ * It does NOT calculate if extending an offer is legal,
+ * nor does it keep track of our current offers!
  */
 
 "use strict";
 
-const guidrawoffer = (function(){
+// eslint-disable-next-line no-unused-vars
+const guidrawoffer = (function() {
 
-    // Variables
-    // Draw Offer UI
-    let isAcceptingDraw = false
-    const element_draw_offer_ui = document.getElementById('draw_offer_ui')
-    const element_acceptDraw = document.getElementById('acceptdraw')
-    const element_declineDraw = document.getElementById('declinedraw')
-    const element_whosturn = document.getElementById('whosturn')
+    const element_draw_offer_ui = document.getElementById('draw_offer_ui');
+    const element_acceptDraw = document.getElementById('acceptdraw');
+    const element_declineDraw = document.getElementById('declinedraw');
+    const element_whosturn = document.getElementById('whosturn');
 
-    // Functions
-
-    /**
-     * Returns *true* if the user is deciding on accepting draw.
-     * @returns {boolean}
-     */
-    function areWeAcceptingDraw() { return isAcceptingDraw; }
-
-    /** Open a draw offer from our opponent */
-    function openDrawOffer() {
-        isAcceptingDraw = true;
-        style.revealElement(element_draw_offer_ui)
-        style.hideElement(element_whosturn)
-        sound.playSound_base() //playSound_drawOffer()
-        initDrawOfferListeners()
-        guipause.updateDrawOfferButton()
+    
+    /** Reveals the draw offer UI on the bottom navigation bar */
+    function open() {
+        style.revealElement(element_draw_offer_ui);
+        style.hideElement(element_whosturn);
+        initDrawOfferListeners();
     }
 
-    function closeDrawOffer() {
-        isAcceptingDraw = false;
-        guipause.updateDrawOfferButton();
-        style.hideElement(element_draw_offer_ui)
-        style.revealElement(element_whosturn)
-        closeDrawOfferListeners()
+    /** Hides the draw offer UI on the bottom navigation bar */
+    function close() {
+        style.hideElement(element_draw_offer_ui);
+        style.revealElement(element_whosturn);
+        closeDrawOfferListeners();
     }
 
     function initDrawOfferListeners() {
-        element_acceptDraw.addEventListener('click', callback_AcceptDraw)
-        element_declineDraw.addEventListener('click', callback_DeclineDraw)
+        element_acceptDraw.addEventListener('click', drawoffers.callback_AcceptDraw);
+        element_declineDraw.addEventListener('click', drawoffers.callback_declineDraw);
     }
 
     function closeDrawOfferListeners() {
-        element_acceptDraw.removeEventListener('click', callback_AcceptDraw)
-        element_declineDraw.removeEventListener('click', callback_DeclineDraw)
-    }
-
-    function extendDrawOffer() {
-        onlinegame.offerDraw()
-        guipause.callback_Resume()
-        statustext.showStatus(`Waiting for opponent to accept...`)
-    }
-
-    function callback_AcceptDraw(event) {
-        if (gamefileutility.isGameOver()) return; // Can't accept draw when game over
-        onlinegame.acceptDraw()
-        closeDrawOffer()
-    }
-
-    function callback_DeclineDraw(event) {
-        onlinegame.declineDraw()
-        const gamefile = game.getGamefile();
-        closeDrawOffer()
-        statustext.showStatus(`Draw declined`, false, 2)
+        element_acceptDraw.removeEventListener('click', drawoffers.callback_AcceptDraw);
+        element_declineDraw.removeEventListener('click', drawoffers.callback_declineDraw);
     }
 
     return Object.freeze({
-        areWeAcceptingDraw,
-        openDrawOffer,
-        closeDrawOffer,
-        extendDrawOffer,
-        callback_AcceptDraw,
-        callback_DeclineDraw
-    })
+        open,
+        close,
+    });
 
 })();

@@ -56,35 +56,23 @@ const guipause = (function() {
         else                                                      element_pastegame.classList.remove('opacity-0_5');
     }
 
+    /**
+     * Update the draw offer button's text content to either say "Offer Draw"
+     * or "Accept Draw", and update its transparency depending on whether it's legal.
+     */
     function updateDrawOfferButton() {
         if (!isPaused) return; // Not paused, no point in updating button, because it's updated as soon as we pause the game
 
         // Should it say "offer draw" or "accept draw"?
-        if (guidrawoffer.areWeAcceptingDraw()) element_offerDraw.innerText = translations.accept_draw;
-        else element_offerDraw.innerText = translations.offer_draw;
-
-        // Update transparency...
-
-        const gamefile = game.getGamefile();
-
-        if (guidrawoffer.areWeAcceptingDraw()) {
-            if (!gamefileutility.isGameOver(gamefile)) element_offerDraw.classList.remove('opacity-0_5');
+        if (drawoffers.areWeAcceptingDraw()) {
+            element_offerDraw.innerText = translations.accept_draw; // "Accept Draw"
+            element_offerDraw.classList.remove('opacity-0_5');
             return;
-        }
+        } else element_offerDraw.innerText = translations.offer_draw; // "Offer Draw"
 
-        if (isNaN(parseInt(gamefile.drawOfferWhite))) gamefile.drawOfferWhite = 0;
-        if (isNaN(parseInt(gamefile.drawOfferBlack))) gamefile.drawOfferBlack = 0;
-
-        if (isOfferingDrawLegal()) element_offerDraw.classList.remove('opacity-0_5');
+        // Update transparency
+        if (drawoffers.isOfferingDrawLegal()) element_offerDraw.classList.remove('opacity-0_5');
         else element_offerDraw.classList.add('opacity-0_5');
-    }
-
-    function isOfferingDrawLegal() {
-        const gamefile = game.getGamefile();
-        const ourDrawOfferMove = onlinegame.getOurColor() === "white" ? gamefile.drawOfferWhite : gamefile.drawOfferBlack;
-        const movesLength = gamefile.moves.length;
-        const ourRecentOffers = movesLength - ourDrawOfferMove < movesBetweenDrawOffers;
-        return onlinegame.areInOnlineGame() && !ourRecentOffers && movesscript.isGameResignable(gamefile) && !gamefileutility.isGameOver(gamefile);
     }
 
     function onReceiveOpponentsMove() {
@@ -157,14 +145,15 @@ const guipause = (function() {
         guititle.open();
     }
 
-    // Called when the draw offer button is clicked
+    /** Called when the Offer Draw button is clicked in the pause menu */
     function callback_OfferDraw() {
-        if (!movesscript.isGameResignable(game.getGamefile())) return statustext.showStatus("Can't offer draw.");
+        // Are we accepting a draw?
+        if (drawoffers.areWeAcceptingDraw()) return drawoffers.callback_AcceptDraw();
 
-        // Do we need to extend a draw offer or accept one?
-        if (!guidrawoffer.areWeAcceptingDraw() && isOfferingDrawLegal()) guidrawoffer.extendDrawOffer();
-        else if (guidrawoffer.areWeAcceptingDraw()) guidrawoffer.callback_AcceptDraw();
-        else statustext.showStatus("Can't offer draw.");
+        // No accepting. Is it legal to extend, then?
+        if (drawoffers.isOfferingDrawLegal()) return drawoffers.extendOffer();
+
+        statustext.showStatus("Can't offer draw.");
     }
 
     function callback_TogglePointers() {
@@ -174,8 +163,8 @@ const guipause = (function() {
         if (mode > 2) mode = 0;
         arrows.setMode(mode);
         const text = mode === 0 ? translations["arrows_off"]
-            : mode === 1 ? translations["arrows_defense"]
-                : translations["arrows_all"];
+                   : mode === 1 ? translations["arrows_defense"]
+                                : translations["arrows_all"];
         element_pointers.textContent = text;
         if (!isPaused) statustext.showStatus(translations["toggled"] + " " + text);
     }
