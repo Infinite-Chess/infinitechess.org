@@ -416,7 +416,7 @@ const websocket = (function() {
                 // ...
                 break; // Don't resub
             case "Logged out":
-                memberHeader.deleteToken();
+                memberHeader.onLogOut(); // Updates the header bar navigation links
                 resubAll(); // Instantly reconnects.
                 break;
             case "Too Many Requests. Try again soon.":
