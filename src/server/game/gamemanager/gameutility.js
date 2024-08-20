@@ -29,7 +29,7 @@ const formatconverter1 = require('../formatconverter1');
 const movesscript1 = require('../movesscript1');
 
 const { getTimeServerRestarting } = require('../timeServerRestarts');
-const { doesColorHaveExtendedDrawOffer, getLastOfferPlyOfColor } = require('./drawoffers');
+const { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } = require('./drawoffers');
 
 const gameutility = (function() {
 
@@ -71,10 +71,7 @@ const gameutility = (function() {
                     black: {}
                 }
             },
-            drawOffers: {
-                state: undefined,
-                lastOfferPly: {}
-            },
+            drawOffers: { lastOfferPly: {} },
         };
 
         if (!newGame.untimed) { // Set the start time and increment properties
@@ -259,7 +256,7 @@ const gameutility = (function() {
             gameConclusion: game.gameConclusion,
             drawOffer: {
                 unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
-                lastOfferPly: getLastOfferPlyOfColor(game, playerColor) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
+                lastOfferPly: getLastDrawOfferPlyOfColor(game, playerColor) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
             }
         };
         // Include additional stuff if relevant
@@ -327,9 +324,14 @@ const gameutility = (function() {
         const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
         if (!playerSocket) return; // Not connected, cant send message
 
+        const opponentColor = math1.getOppositeColor(color);
         const messageContents = {
             gameConclusion: game.gameConclusion,
             moves: game.moves, // Send the final move list so they can make sure they're in sync.
+            drawOffer: {
+                unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
+                lastOfferPly: getLastDrawOfferPlyOfColor(game, color) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
+            }
         };
         // Include timer info if it's timed
         if (!game.untimed) {
@@ -339,20 +341,14 @@ const gameutility = (function() {
         }
         // Include other relevant stuff if defined
         if (isAFKTimerActive(game)) messageContents.autoAFKResignTime = game.autoAFKResignTime;
-        // SEND THEM INFO ABOUT OPEN DRAW OFFERS
-        // ...
 
         // If their opponent has disconnected, send them that info too.
-        const opponentColor = math1.getOppositeColor(color);
         if (game.disconnect.autoResign[opponentColor].timeToAutoLoss !== undefined) {
             messageContents.disconnect = {
                 autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
                 wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
             };
         }
-
-        // ALSO SEND OPPONENT AFK STUFF
-        // ...
 
         // Also send the time the server is restarting, if it is
         const timeServerRestarting = getTimeServerRestarting();

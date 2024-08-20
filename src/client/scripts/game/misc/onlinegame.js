@@ -201,7 +201,7 @@ const onlinegame = (function() {
                 const message = data.value; // { timerWhite, timerBlack, timeNextPlayerLosesAtAt }
                 clock.edit(message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt); // Edit the clocks
                 break;
-            } case "gameupdate": // When the game has ended by time/disconnect/resignation/aborted
+            } case "gameupdate": // When the game has ended by time/disconnect/resignation/aborted, OR we are resyncing to the game.
                 handleServerGameUpdate(data.value);
                 break;
             case "unsub": // The game has been deleted, server no longer sending update
@@ -435,9 +435,9 @@ const onlinegame = (function() {
      * Called when the server sends us the conclusion of the game when it ends,
      * OR we just need to resync! The game may not always be over.
      * @param {Object} messageContents - The contents of the server message, with the properties:
-     * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`.
+     * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`, `offerDraw`
      */
-    function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime }
+    function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime, offerDraw }
         if (!inOnlineGame) return;
         const gamefile = game.getGamefile();
         const claimedGameConclusion = messageContents.gameConclusion;
@@ -464,6 +464,8 @@ const onlinegame = (function() {
         // If the server is restarting, start displaying that info.
         if (messageContents.serverRestartingAt) initServerRestart(messageContents.serverRestartingAt);
         else resetServerRestarting();
+
+        drawoffers.set(messageContents.drawOffer);
 
         // Must be set before editing the clocks.
         gamefile.gameConclusion = claimedGameConclusion;

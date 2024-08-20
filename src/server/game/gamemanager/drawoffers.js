@@ -89,7 +89,7 @@ function closeDrawOffer(game) {
  * @param {string} color
  * @returns {number | undefined}
  */
-function getLastOfferPlyOfColor(game, color) {
+function getLastDrawOfferPlyOfColor(game, color) {
     return game.drawOffers.lastOfferPly[color];
 }
 
@@ -102,5 +102,5 @@ module.exports = {
     hasColorOfferedDrawTooFast,
     openDrawOffer,
     closeDrawOffer,
-    getLastOfferPlyOfColor,
+    getLastDrawOfferPlyOfColor,
 };
