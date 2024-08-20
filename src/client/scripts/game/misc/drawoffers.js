@@ -63,9 +63,9 @@ const drawoffers = (function() {
 
     /** Is called when we receive a draw offer from our opponent */
     function onOpponentExtendedOffer() {
+        isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
         guidrawoffer.open();
         sound.playSound_base(); //playSound_drawOffer()
-        isAcceptingDraw = true;
         guipause.updateDrawOfferButton();
     }
 
@@ -86,9 +86,9 @@ const drawoffers = (function() {
      * the draw offer UI on the bottom navigation bar.
      */
     function callback_AcceptDraw() {
+        isAcceptingDraw = false;
         websocket.sendmessage('game', 'acceptdraw');
         guidrawoffer.close();
-        isAcceptingDraw = false;
     }
 
     /**

@@ -30,11 +30,13 @@ const guigameinfo = (function() {
     }
 
     function revealPlayerNames(gameOptions) {
-        const white = gameOptions.metadata.White;
-        const black = gameOptions.metadata.Black;
-        // If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
-        element_playerWhite.textContent = onlinegame.areWeColor('white') && white === translations["guest_indicator"] ? translations["you_indicator"] : white;
-        element_playerBlack.textContent = onlinegame.areWeColor('black') && black === translations["guest_indicator"] ? translations["you_indicator"] : black;
+        if (gameOptions) {
+            const white = gameOptions.metadata.White;
+            const black = gameOptions.metadata.Black;
+            // If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
+            element_playerWhite.textContent = onlinegame.areWeColor('white') && white === translations["guest_indicator"] ? translations["you_indicator"] : white;
+            element_playerBlack.textContent = onlinegame.areWeColor('black') && black === translations["guest_indicator"] ? translations["you_indicator"] : black;
+        }
         style.revealElement(element_playerWhite);
         style.revealElement(element_playerBlack);
     }

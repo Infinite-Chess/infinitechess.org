@@ -272,6 +272,7 @@ const camera = (function() {
         initPerspective(); // The projection matrix needs to be recalculated every screen resize
         perspective.initCrosshairModel();
         main.renderThisFrame(); // Visual change. Render the screen this frame.
+        guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
         // console.log('Resized window.')
     }
 

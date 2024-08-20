@@ -96,7 +96,7 @@ const input = (function() {
     // Called within the main() function
     function initListeners() {
 
-        window.addEventListener("resize", () => { camera.onScreenResize(); });
+        window.addEventListener("resize", camera.onScreenResize );
 
         initListeners_Touch();
         initListeners_Mouse();
