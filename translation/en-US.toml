@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "13"
+version = "14"
 maintainer = "Naviary"
 
 [header]
@@ -27,6 +27,7 @@ js-confirm_delete = "Are you sure you want to delete your account? This CANNOT b
 js-enter_password = "Enter your password to PERMANENTLY delete your account:"
 
 [index]
+title = "Infinite Chess | Home - The Official Website" # The tab title
 secondary_title = "The official website for playing live!"
 what_is_it_title = "What is it?"
 what_is_it_pargaraphs = [
@@ -80,6 +81,7 @@ code_credits = [
 ]
 
 [member]
+title = "Member" # The tab name
 verify_message = "Please check your email to verify your account."
 resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message me."]
 verify_confirm = "Thank you! Your account has been verified."
@@ -93,7 +95,7 @@ delete_account = "Delete account"
 password_reset_message = ["To change your username, email or password, ", "contact us."]
 
 [create-account]
-title = "Create Account"
+title = "Create Account" # The tab name
 username = "Username:"
 email = "Email:"
 password = "Password:"
@@ -110,6 +112,9 @@ js-pwd_incorrect_format = "Password is in an incorrect format"
 js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
 js-pwd_not_pwd = "Password must not be 'password'"
+
+[play]
+title = "Infinite Chess - Play" # The tab title
 
 [play.main-menu]
 credits = "Credits"
@@ -468,7 +473,7 @@ update = "(Last updated: 7/13/24. Added warning that all games played may become
 thanks = "Thank you!"
 
 [login]
-title = "Log In"
+title = "Log In" # The tab name
 username = "Username:"
 password = "Password:"
 forgot_password = ["Forgot? ", "Email us."]
@@ -482,7 +487,7 @@ login_button = "Log In"
 ########### NEWS ###########
 
 [news]
-title = "News"
+title = "News" # The tab name
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
 
 [news.aug1-2024] # Update 1.4

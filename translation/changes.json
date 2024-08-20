@@ -1,4 +1,12 @@
 {
+  "14": {
+    "note": "Added translations for the tab titles. Added [play] and play.title on lines 116 & 117",
+    "changes": [
+      "index.title",
+      "member.title",
+      "play.title"
+    ]
+  },
   "13": {
     "note": "Added draw offers. Deleted ws-player_already_has_invite, ws-accept_own_invite, and ws-invite_cancelled",
     "changes": [
