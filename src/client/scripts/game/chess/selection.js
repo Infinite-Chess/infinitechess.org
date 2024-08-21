@@ -40,7 +40,7 @@ const selection = (function() {
      * Returns *true* if a piece is currently selected.
      * @returns {boolean}
      */
-    function isAPieceSelected() { return pieceSelected != null; }
+    function isAPieceSelected() { return pieceSelected !== undefined; }
 
     /**
      * Returns true if we have selected an opponents piece to view their moves
@@ -178,7 +178,9 @@ const selection = (function() {
 
         // if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
         if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
-        if (options.getEM() && pieceClickedType === 'voidsN') return; // Don't select voids.
+        const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
+        if (!options.getEM() && clickedPieceColor === 'neutral') return; // Don't select neutrals, unless we're in edit mode
+        if (pieceClickedType === 'voidsN') return; // NEVER select voids, EVEN in edit mode.
 
         const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare);
 
@@ -276,7 +278,7 @@ const selection = (function() {
      * Updates the {@link hoverSquareLegal} variable.
      */
     function updateHoverSquareLegal() {
-        if (pieceSelected == null) {
+        if (!pieceSelected) {
             hoverSquareLegal = false;
             return;
         }

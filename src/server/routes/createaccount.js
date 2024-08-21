@@ -5,7 +5,7 @@ const path = require('path');
 
 const createaccountController = require('../controllers/createaccountController');
 const { getRegisterData, checkEmailAssociated, checkUsernameAvailable } = require('../controllers/createaccountController');
-const { getLanguageToServe } = require("../config/setupTranslations");
+const { getLanguageToServe } = require("../utility/translate");
 
 
 

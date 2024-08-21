@@ -10,6 +10,16 @@ const DEV_BUILD = true;
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
 const ARE_RATE_LIMITING = true; // Set to false to temporarily get around it, during development.
+if (!DEV_BUILD && !ARE_RATE_LIMITING) throw new Error("ARE_RATE_LIMITING must be true in production!!");
+
+/** 
+ * The amount of latency to add to websocket replies, in millis. ONLY USE IN DEV!!
+ * I recommend 2 seconds of latency for testing slow networks.
+ */
+const simulatedWebsocketLatencyMillis = 0;
+if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simulatedWebsocketLatencyMillis must be 0 in production!!");
+
+
 
 /** The domain name of the production website. */
 const HOST_NAME = 'www.infinitechess.org';
@@ -34,6 +44,7 @@ const allowedOrigins = [ // Allowed sites
 module.exports = {
     DEV_BUILD,
     ARE_RATE_LIMITING,
+    simulatedWebsocketLatencyMillis,
     HOST_NAME,
     GAME_VERSION,
     useOriginWhitelist,

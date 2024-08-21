@@ -11,6 +11,11 @@ const pluginJs = require("@eslint/js");
  */
 // const { getAllGameScripts } = require("./build.mjs");
 // const allGameScripts = await getAllGameScripts();
+// // Convert the array of script names into an object with "readonly" for each
+// const gameScriptsGlobals = allGameScripts.reduce((acc, script) => {
+//   acc[script] = "readonly";
+//   return acc;
+// }, {});
 
 module.exports = [
   pluginJs.configs.recommended,
@@ -34,7 +39,8 @@ module.exports = [
       "space-infix-ops": ["error", { "int32Hint": false }], // Enforces a space around infix operators, like "=" in assignments
       "no-eval": "error", // Disallows use of `eval()`, as it can lead to security vulnerabilities and performance issues.
       'indent': ['error', 4, { // All indentation must have 4 spaces
-        'SwitchCase': 1 // Enforce switch statements to have indentation (they don't by default)
+        'SwitchCase': 1, // Enforce switch statements to have indentation (they don't by default)
+        "ignoredNodes": ["ConditionalExpression","ArrayExpression"] // Ignore conditional expressions "?" & ":" over multiple lines, AND array contents over multiple lines!
       }],
       "prefer-const": "error", // "let" variables that are never redeclared must be declared as "const"
       "no-var": "error", // Disallows declaring variables with "var", as they are function-scoped (not block), so hoisting is very confusing.
@@ -58,7 +64,7 @@ module.exports = [
         gl: "readonly",
         mat4: "readonly",
         // DOES NOT WORK right now. We have to input them manually
-        // ...allGameScripts, 
+        // ...gameScriptsGlobals,
         backcompatible: "readonly",
         checkdetection: "readonly",
         checkmate: "readonly",
@@ -89,6 +95,7 @@ module.exports = [
         guiplay: "readonly",
         guipromotion: "readonly",
         guititle: "readonly",
+        guidrawoffer: "readonly",
         stats: "readonly",
         statustext: "readonly",
         style: "readonly",
@@ -126,6 +133,7 @@ module.exports = [
         input: "readonly",
         main: "readonly",
         websocket: "readonly",
+        drawoffers: "readonly",
       }
     }
   }
