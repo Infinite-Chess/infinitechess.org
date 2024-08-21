@@ -296,6 +296,23 @@ const formatconverter = (function() {
         const longformat = {};
         longformat.gameRules = {};
 
+        // Extra gamerules, included inside { }, MUST BE PARSED BEFORE the metadata,
+        // because they may include more [ and ], which is what the metadata parser eats!
+        const indexOfGameRulesStart = shortformat.indexOf('{');
+        if (indexOfGameRulesStart !== -1) {
+            const indexOfGameRulesEnd = shortformat.lastIndexOf('}');
+            if (indexOfGameRulesEnd === -1) throw new Error("Unclosed extra gamerules!");
+
+            const stringifiedExtraGamerules = shortformat.substring(indexOfGameRulesStart, indexOfGameRulesEnd + 1);
+            // Splice the extra gamerules out of the ICN, so that its nested [ and ] don't break the metadata parser
+            shortformat = shortformat.substring(0, indexOfGameRulesStart) + shortformat.substring(indexOfGameRulesEnd + 1, shortformat.length);
+            
+            if (!isJson(stringifiedExtraGamerules)) throw new Error("Extra optional arguments not in JSON format");
+
+            const parsedGameRules = JSON.parse(stringifiedExtraGamerules);
+            Object.assign(longformat.gameRules, parsedGameRules); // Copy over the parsed gamerules to the longformat
+        }
+
         // metadata handling. Don't put ": " in metadata fields.
         const metadata = {};
         while (shortformat.indexOf("[") > -1) {
@@ -327,7 +344,6 @@ const formatconverter = (function() {
             let index = shortformat.search(/\s/);
             if (index == -1) index = shortformat.length;
             let string = shortformat.slice(0,index);
-            const removed_char = shortformat.slice(index,index + 1);
             shortformat = shortformat.slice(index + 1);
 
             // move turn
@@ -408,27 +424,6 @@ const formatconverter = (function() {
                     }
                     continue;
                 }
-            }
-
-            // Other gameRules are included in the FEN. Parse them into an object
-            if (string[0] === '{') {
-                string += removed_char;
-                while (true) {
-                    if (isJson(string)) {
-                        break;
-                    } else if (shortformat == "") {
-                        throw new Error("Extra optional arguments not in JSON format");
-                    }
-                    let index_loc = shortformat.search(/\s/);
-                    if (index_loc == -1) index_loc = shortformat.length;
-                    string += shortformat.slice(0,index_loc + 1);
-                    shortformat = shortformat.slice(index_loc + 1);
-                }
-                const parsed = JSON.parse(string);
-                for (const key in parsed) {
-                    longformat.gameRules[key] = parsed[key];
-                }
-                continue;
             }
 
             // position
