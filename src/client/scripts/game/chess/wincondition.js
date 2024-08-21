@@ -241,7 +241,7 @@ const wincondition = (function() {
 	    else if (victor === 'draw') return '0.5-0.5';
 	    else if (victor === 'aborted') return '0-0';
 	    throw new Error(`Cannot get game result from strange victor "${victor}"!`);
-	  }
+    }
 
     /**
      * If the game is multiplayer, or if anyone gets multiple turns in a row, then that allows capturing
@@ -255,20 +255,9 @@ const wincondition = (function() {
      */
     function isCheckmateCompatibleWithGame(gamefile) {
         if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
-
         if (organizedlines.areColinearSlidesPresentInGame(gamefile)) return false; // Logic surrounding making opening discovered attacks illegal is a nightmare.
-
         if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
-
-        // If one player ever gets 2 turns in a row, then that also allows the capture of the king.
-        const turnOrder = gamefile.gameRules.turnOrder;
-        for (let i = 0; i < turnOrder.length; i++) {
-            const thisColor = turnOrder[i];
-            const nextColorIndex = i === turnOrder.length - 1 ? 0 : i+1; // If the color is last, then the next color is the first color of the turn order.
-            const nextColor = turnOrder[nextColorIndex];
-            if (thisColor === nextColor) return false;
-        }
-
+        if (movesscript.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
         return true; // Checkmate compatible!
     }
     

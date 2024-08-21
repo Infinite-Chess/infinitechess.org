@@ -417,7 +417,12 @@ const gamefileutility = (function() {
         return console.error(`Could not find piece type ${piece.type} with index ${piece.index} when calculating its index in all the pieces!`);
     }
 
-    // Returns an array containing the coordinates of ALL royal pieces of specified color.
+    /**
+     * Returns an array containing the coordinates of ALL royal pieces of the specified color.
+     * @param {gamefile} gamefile 
+     * @param {string} color 
+     * @returns {number[][]}
+     */
     function getRoyalCoords(gamefile, color) {
         const royals = pieces.royals; // ['kings', ...]
         const WorB = math.getWorBFromColor(color);

@@ -48,8 +48,7 @@ const statustext = (function() {
         } else {
             statusText.classList.remove('ok');
             statusText.classList.add('error');
-            console.error();
-            console.trace(text);
+            console.error(text);
         }
     }
 

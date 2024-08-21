@@ -491,7 +491,7 @@ const onlinegame = (function() {
         // and the rest of the moves list matches, don't modify our moves,
         // just re-submit our move!
         const hasOneMoreMoveThanServer = gamefile.moves.length === moves.length + 1;
-        const finalMoveIsOurMove = gamefile.moves.length > 0 && movesscript.getColorThatPlayedMoveIndex(gamefile.moves.length - 1, gamefile.gameRules.turnOrder) === ourColor;
+        const finalMoveIsOurMove = gamefile.moves.length > 0 && movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) === ourColor;
         const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1) || gamefile.moves.length > 1 && moves.length > 0 && gamefile.moves[gamefile.moves.length - 2].compact === moves[moves.length - 1];
         if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
             console.log("Sending our move again after resyncing..");
@@ -530,7 +530,7 @@ const onlinegame = (function() {
             const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
             const move = movepiece.calculateMoveFromShortmove(gamefile, thisShortmove);
 
-            const colorThatPlayedThisMove = movesscript.getColorThatPlayedMoveIndex(i, gamefile.gameRules.turnOrder);
+            const colorThatPlayedThisMove = movesscript.getColorThatPlayedMoveIndex(gamefile, i);
             const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
 
 

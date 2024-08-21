@@ -9,7 +9,7 @@
 const copypastegame = (function() {
 
     /** Enable to only copy a single position without all the moves prior */
-    const copySinglePosition = true; 
+    const copySinglePosition = false; 
 
     /**
      * A list of metadata properties that are retained from the current game when pasting an external game.
@@ -224,7 +224,7 @@ const copypastegame = (function() {
         delete longformat.metadata.Termination; // New format
 
         // The variant options passed into the variant loader needs to contain the following properties:
-        // `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
+        // `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
         const variantOptions = {
             fullMove: longformat.fullMove,
             enpassant: longformat.enpassant,

@@ -62,7 +62,7 @@ const gameutility = (function() {
             incrementMillis: null,
             rated: inviteOptions.rated === "Rated",
             moves: [],
-            turnOrder: variant1.getGameRulesOfVariant({Variant:inviteOptions.variant}).turnOrder,
+            turnOrder: variant1.getGameRulesOfVariant({ Variant: inviteOptions.variant }).turnOrder,
             gameConclusion: false,
             disconnect: {
                 startTimer: {},
@@ -91,7 +91,7 @@ const gameutility = (function() {
         newGame.black = black;
 
         // Set whos turn
-        newGame.whosTurn = newGame.turnOrder[0]
+        newGame.whosTurn = newGame.turnOrder[0];
 
         // Auto-subscribe the players to this game!
         // This will link their socket to this game, modify their
@@ -426,15 +426,11 @@ const gameutility = (function() {
             Termination: wincondition1.getTerminationInEnglish(condition)
         };
         const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position);
-        const turn = gameRules.turnOrder[0];
-        delete gameRules.turnOrder;
-        const moveRuleString = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
         delete gameRules.moveRule;
         metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant1 has gotten the game rules.
         const primedGamefile = {
             metadata,
-            turn,
-            moveRule: moveRuleString,
+            moveRule: gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined,
             fullMove: 1,
             startingPosition: positionStuff.positionString, // Technically not needed, as we set `specifyPosition` to false
             moves: game.moves,

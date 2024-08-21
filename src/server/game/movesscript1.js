@@ -1,5 +1,5 @@
 
-const { Game } = require('./TypeDefinitions')
+const { Game } = require('./TypeDefinitions');
 
 const movesscript1 = (function() {
 
@@ -24,13 +24,14 @@ const movesscript1 = (function() {
     /**
      * Returns the color of the player that played that moveIndex within the moves list.
      * Returns error if index -1
+     * @param {Game} game
      * @param {number} i - The moveIndex
-     * @returns {string} - The color that playd the moveIndex
+     * @returns {string} - The color that played the moveIndex
      */
-    function getColorThatPlayedMoveIndex(i, turnOrder) {
+    function getColorThatPlayedMoveIndex(game, i) {
         if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
-        const color = turnOrder[i % turnOrder.length]
-        return color
+        const turnOrder = game.turnOrder;
+        return turnOrder[i % turnOrder.length];
     }
     
     return Object.freeze({

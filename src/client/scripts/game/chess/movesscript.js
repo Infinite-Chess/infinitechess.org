@@ -309,12 +309,13 @@ const movesscript = (function() {
     /**
      * Returns the color of the player that played that moveIndex within the moves list.
      * Returns error if index is -1
+     * @param {gamefile} gamefile 
      * @param {number} i - The moveIndex
-     * @param {string[]} turnOrder 
      * @returns {string} - The color that playd the moveIndex
      */
-    function getColorThatPlayedMoveIndex(i, turnOrder) {
+    function getColorThatPlayedMoveIndex(gamefile, i) {
         if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
+        const turnOrder = gamefile.gameRules.turnOrder;
         const loopIndex = i % turnOrder.length;
         return turnOrder[loopIndex];
     }
@@ -326,7 +327,24 @@ const movesscript = (function() {
      * @returns {string} 'white' / 'black'
      */
     function getWhosTurnAtMoveIndex(gamefile, moveIndex) {
-        return getColorThatPlayedMoveIndex(moveIndex + 1, gamefile.gameRules.turnOrder);
+        return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
+    }
+
+    /**
+     * Returns true if any player in the turn order ever gets to turn in a row.
+     * @param {gamefile} gamefile
+     * @returns {boolean}
+     */
+    function doesAnyPlayerGet2TurnsInARow(gamefile) {
+        // If one player ever gets 2 turns in a row, then that also allows the capture of the king.
+        const turnOrder = gamefile.gameRules.turnOrder;
+        for (let i = 0; i < turnOrder.length; i++) {
+            const thisColor = turnOrder[i];
+            const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.
+            const nextColor = turnOrder[nextColorIndex];
+            if (thisColor === nextColor) return true;
+        }
+        return false;
     }
 
     return Object.freeze({
@@ -352,6 +370,7 @@ const movesscript = (function() {
         isGameResignable,
         getColorThatPlayedMoveIndex,
         getWhosTurnAtMoveIndex,
+        doesAnyPlayerGet2TurnsInARow,
     });
 
 })();

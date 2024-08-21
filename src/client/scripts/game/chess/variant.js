@@ -134,7 +134,6 @@ const variant = (function() {
             position,
             positionString,
             specialRights,
-            turn: options.gameRules.turnOrder[0],
             fullMove: options.fullMove || 1
         };
         if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
