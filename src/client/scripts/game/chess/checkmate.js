@@ -23,9 +23,8 @@ const checkmate = (function() {
         // know the game is not over yet...
 
         const whosTurn = gamefile.whosTurn;
-        const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
-        for (let i = 0; i < whiteOrBlack.length; i++) {
-            const thisType = whiteOrBlack[i];
+        const teamTypes = pieces[whosTurn];
+        for (const thisType of teamTypes) {
             const thesePieces = gamefile.ourPieces[thisType];
             for (let a = 0; a < thesePieces.length; a++) {
                 const coords = thesePieces[a];
@@ -43,8 +42,8 @@ const checkmate = (function() {
         // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
         const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate');
         if (gamefile.inCheck && usingCheckmate) {
-            if (whosTurn === 'white') return 'black checkmate'; // Black wins
-            else return 'white checkmate'; // White wins
+            const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+            return `${colorThatWon} checkmate`;
         } else return 'draw stalemate';
     }
 
@@ -161,20 +160,24 @@ const checkmate = (function() {
 
     /**
      * Tests if the provided gamefile has had a repetition draw.
+     * 
+     * Complexity O(m) where m is the move count since the last pawn push or capture!
      * @param {gamefile} gamefile - The gamefile
      * @returns {boolean} *true* if there has been a repetition draw
      */
-    // Complexity O(m) where m is the move count since
-    // the last pawn push or capture!
     function detectRepetitionDraw(gamefile) {
         const moveList = gamefile.moves;
 
         const deficit = { }; // `x,y,type`
         const surplus = { }; // `x,y,type`
 
+        // TODO: Make sure that all special rights, and gamefile's en passant values,
+        // match, in order for positions to be counted as equal!!!!!
+
         let equalPositionsFound = 0;
 
         let index = moveList.length - 1;
+        let indexOfLastEqualPositionFound = index + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
         while (index >= 0) {
 
             // Moves are in the format: { type, startCoords, endCoords, captured: 'type'}
@@ -198,12 +201,21 @@ const checkmate = (function() {
             if (deficit[key]) delete deficit[key];
             else surplus[key] = true;
 
-            // If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
-            const deficitKeys = Object.keys(deficit);
-            const surplusKeys = Object.keys(surplus);
-            if (deficitKeys.length === 0 && surplusKeys.length === 0) {
-                equalPositionsFound++;
-                if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
+            checkEqualPosition: {
+                // Has a full turn cycle ocurred since the last increment of equalPositionsFound?
+                // If so, we can't count this as an equal position, because it will break it in multiplayer games,
+                // or if we have multiple turns in a row.
+                const indexDiff = indexOfLastEqualPositionFound - index;
+                if (indexDiff < gamefile.gameRules.turnOrder.length) break checkEqualPosition; // Hasn't been a full turn cycle yet, don't increment the counter
+
+                // If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
+                const deficitKeys = Object.keys(deficit);
+                const surplusKeys = Object.keys(surplus);
+                if (deficitKeys.length === 0 && surplusKeys.length === 0) {
+                    equalPositionsFound++;
+                    indexOfLastEqualPositionFound = index;
+                    if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
+                }
             }
 
             // Prep for next iteration, decrement index.
