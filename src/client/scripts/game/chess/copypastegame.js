@@ -58,7 +58,6 @@ const copypastegame = (function() {
 
         primedGamefile.metadata = gamefile.metadata;
         primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant] || primedGamefile.metadata.Variant; // Convert the variant metadata code to spoken language if translation is available
-        primedGamefile.turn = gamefile.startSnapshot.turn;
         primedGamefile.enpassant = gamefile.startSnapshot.enpassant;
         if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
         primedGamefile.fullMove = gamefile.startSnapshot.fullMove;
@@ -182,7 +181,6 @@ const copypastegame = (function() {
 
         /** longformat properties:
          * metadata
-         * turnOrder
          * enpassant
          * moveRule
          * fullMove

@@ -213,11 +213,7 @@ const movesscript = (function() {
      * @returns {string} Whos turn it is, 'white' or 'black'
      */
     function getWhosTurnAtFront(gamefile) {
-        let testLength = gamefile.moves.length;
-        if (gamefile.startSnapshot.turn === 'black') testLength++;
-
-        const movesMod2 = testLength % 2;
-        return movesMod2 === 0 ? 'white' : 'black';
+        return gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
     }
 
     /**

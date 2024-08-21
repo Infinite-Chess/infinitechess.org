@@ -253,9 +253,6 @@ const movepiece = (function() {
         if (pushClock) clock.push();
     }
 
-
-
-
     /**
      * Updates the `inCheck` and `attackers` properties of the gamefile after making a move or rewinding.
 
