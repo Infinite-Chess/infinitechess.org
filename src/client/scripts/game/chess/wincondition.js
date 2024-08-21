@@ -36,7 +36,6 @@ const wincondition = (function() {
             || detectAllroyalscaptured(gamefile)
             || detectThreecheck(gamefile)
             || detectKoth(gamefile)
-
             || checkmate.detectCheckmateOrDraw(gamefile) // Also checks for repetition draw!
             // This needs to be last so that a draw isn't enforced in a true win
             || detectMoveRule(gamefile) // 50-move-rule
@@ -49,9 +48,8 @@ const wincondition = (function() {
 
         // Was the last move capturing a royal piece?
         if (wasLastMoveARoyalCapture(gamefile)) {
-            if      (gamefile.whosTurn === 'white') return 'black royalcapture';
-            else if (gamefile.whosTurn === 'black') return 'white royalcapture';
-            else throw new Error("Cannot determine winning color by wincondition royalcapture!");
+            const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+            return `${colorThatWon} royalcapture`;
         }
 
         return false;
@@ -66,9 +64,8 @@ const wincondition = (function() {
         const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, pieces.royals, gamefile.whosTurn);
 
         if (royalCount === 0) {
-            if      (gamefile.whosTurn === 'white') return 'black allroyalscaptured';
-            else if (gamefile.whosTurn === 'black') return 'white allroyalscaptured';
-            else throw new Error("Cannot determine winning color by wincondition allroyalscaptured!");
+            const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+            return `${colorThatWon} allroyalscaptured`;
         }
 
         return false;
@@ -81,9 +78,8 @@ const wincondition = (function() {
         const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn);
 
         if (count === 0) {
-            if (gamefile.whosTurn === 'white') return 'black allpiecescaptured';
-            else if (gamefile.whosTurn === 'black') return 'white allpiecescaptured';
-            else throw new Error("Cannot determine winning color by wincondition allpiecescaptured!");
+            const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+            return `${colorThatWon} allpiecescaptured`;
         }
 
         return false;
@@ -131,9 +127,8 @@ const wincondition = (function() {
         }
 
         if (kingInCenter) {
-            if      (gamefile.whosTurn === 'white') return 'black koth';
-            else if (gamefile.whosTurn === 'black') return 'white koth';
-            else return console.log("Cannot determine winning color by wincondition koth!");
+            const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+            return `${colorThatWon} koth`;
         }
 
         return false;
@@ -242,6 +237,24 @@ const wincondition = (function() {
 	    else if (victor === 'aborted') return '0-0';
 	    throw new Error(`Cannot get game result from strange victor "${victor}"!`);
     }
+
+    /**
+     * If the game is multiplayer, or if anyone gets multiple turns in a row, then that allows capturing
+     * of the kings no matter the win conditions, by way of one person opening a discovered on turn 1, and
+     * another person capturing the king on turn 2 => CHECKMATE NOT COMPATIBLE!
+     * 
+     * Checkmate is also not compatible with games with colinear lines present, because the logic surrounding
+     * making opening discovered attacks illegal is a nightmare.
+     * @param {gamefile} gamefile
+     * @returns {boolean} true if the gamefile is checkmate compatible
+     */
+    function isCheckmateCompatibleWithGame(gamefile) {
+        if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
+        if (organizedlines.areColinearSlidesPresentInGame(gamefile)) return false; // Logic surrounding making opening discovered attacks illegal is a nightmare.
+        if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
+        if (movesscript.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
+        return true; // Checkmate compatible!
+    }
     
     /**
      * Swaps the "checkmate" win condition for "royalcapture" in the gamefile if applicable.
@@ -300,7 +313,7 @@ const wincondition = (function() {
             case "disconnect": // Happens when a player leaves
                 return translations.termination.disconnect;
             case "agreement": // Draw by agreement
-                return translations.termination.agreement
+                return translations.termination.agreement;
             default:
                 console.error(`Cannot return English termination for unknown condition "${condition}"!`);
                 return 'Unknown';
@@ -317,6 +330,7 @@ const wincondition = (function() {
         isGameConclusionDecisive,
         getVictorAndConditionFromGameConclusion,
 	    getResultFromVictor,
+        isCheckmateCompatibleWithGame,
         swapCheckmateForRoyalCapture,
         getTerminationInEnglish,
     });

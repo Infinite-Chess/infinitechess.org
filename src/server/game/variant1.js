@@ -13,8 +13,6 @@ const variant1 = (function() {
 
     /** Variants names the game works with */
     const validVariants = ["Classical","Core","Standarch","Space_Classic","CoaIP","Pawn_Horde","Space","Obstocean","Abundance","Amazon_Chandelier","Containment","Classical_Limit_7","CoaIP_Limit_7","Chess","Classical_KOTH","CoaIP_KOTH","Omega","Omega_Squared","Omega_Cubed","Omega_Fourth","Classical_Plus","Pawndard","Knightline","Knighted_Chess"];
-    /** A list of all variants where black moves first */
-    const blackMovesFirstGames = ['Omega','Omega_Squared','Omega_Cubed','Omega_Fourth'];
 
     /**
      * Tests if the provided variant is a valid variant
@@ -23,15 +21,6 @@ const variant1 = (function() {
      */
     function isVariantValid(variantName) {
         return validVariants.includes(variantName);
-    }
-
-    /**
-     * Determines if the provided variant is a variant where black moves first
-     * @param {string} variantName - The name of the variant
-     * @returns {boolean} *true* if black moves first
-     */
-    function isVariantAVariantWhereBlackStarts(variantName) {
-        return blackMovesFirstGames.includes(variantName);
     }
 
     /**
@@ -48,6 +37,8 @@ const variant1 = (function() {
         if (options) initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options); // Ignores the "Variant" metadata, and just uses the specified startingPosition
         else initStartSnapshotAndGamerules(gamefile, metadata); // Default (built-in variant, not pasted)
 
+        gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
+
         initExistingTypes(gamefile);
         initPieceMovesets(gamefile);
         initSlidingMoves(gamefile);
@@ -60,10 +51,16 @@ const variant1 = (function() {
      */
     function initExistingTypes(gamefile) {
         const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
-        const rawtypes = new Set();
+        
+        // Makes sure all possible pieces are accounted for. even when they dont start with them
+        const promotiontypes = [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black];
+        
+        // Promotion types already have teams stripped
+        const rawtypes = new Set(promotiontypes);
         for (const tpiece of teamtypes) {
-            rawtypes.add(math1.trimWorBFromType(tpiece)); // Make a set wit the team colour trimmed
+            rawtypes.add(math1.trimWorBFromType(tpiece)); // Make a set with the team color trimmed
         }
+
         gamefile.startSnapshot.existingTypes = rawtypes;
     }
 
@@ -136,11 +133,12 @@ const variant1 = (function() {
             specialRights = result.specialRights;
         } else positionString = formatconverter1.LongToShort_Position(options.startingPosition, options.specialRights);
 
+        options.gameRules.turnOrder = options.gameRules.turnOrder || getDefaultTurnOrder();
+
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
-            turn: options.turn || 'white',
             fullMove: options.fullMove || 1
         };
         if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
@@ -149,6 +147,7 @@ const variant1 = (function() {
             gamefile.startSnapshot.moveRuleState = Number(state);
             options.gameRules.moveRule = Number(max);
         }
+        
         gamefile.gameRules = options.gameRules;
     }
 
@@ -262,13 +261,16 @@ const variant1 = (function() {
             promotionRanks,
             promotionsAllowed: modifications.promotionsAllowed || getPromotionsAllowed(modifications.position, promotionRanks),
             winConditions: modifications.winConditions || getDefaultWinConditions(),
-            moveRule: modifications.moveRule || 100
-        };
+            moveRule: modifications.moveRule || 100,
+            turnOrder: modifications.turnOrder || getDefaultTurnOrder(),
+        }
         if (modifications.slideLimit != null) gameRules.slideLimit = modifications.slideLimit;
         if (modifications.moveRule === null) delete gameRules.moveRule;
         return gameRules;
     }
 
+    function getDefaultTurnOrder() { return ['white', 'black']; }
+    function getTurnOrderOfOmega() { return ['black', 'white']; }
     function getDefaultWinConditions() { return { white: ['checkmate'], black: ['checkmate'] }; }
     function getRoyalCaptureWinConditions() { return { white: ['royalcapture'], black: ['royalcapture'] }; }
     function getWinConditionsOfThreeCheck() { return { white: ['checkmate','threecheck'], black: ['checkmate','threecheck'] }; }
@@ -375,7 +377,7 @@ const variant1 = (function() {
                 return getStartSnapshotPosition({ positionString })
                 */
             default:
-                throw new Error('Unknown variant.');
+                throw new Error(`Unknown variant "${Variant}"`);
         }
     }
 
@@ -401,9 +403,9 @@ const variant1 = (function() {
      */
     function getPositionStringOfKnightedChess(UTCDate, UTCTime) {
         const UTCTimeStamp = UTCDate ? math1.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime) : Date.now();
-        // UTC timestamp for Jul 21, 2024, 9:33 PM
+        // UTC timestamp for Aug 1, 2024, 12:00AM
         // Original, oldest version. NO knightrider
-        if (UTCTimeStamp < 1721619205980) return 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+';
+        if (UTCTimeStamp < 1722470400000) return 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+';
         // Latest version, with knightrider
         else return 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|NR2,1|NR7,1|nr2,8|nr7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+';
     }
@@ -456,8 +458,8 @@ const variant1 = (function() {
                 return getGameRules({ position });
             case "Standarch":
                 return getGameRules({ position });
-            case "Space_Classic": { // Contain this case in a block so that it's variables are not hoisted 
-                const UTCTimeStamp = math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+            case "Space_Classic": { // Contain this case in a block so that it's variables are not hoisted
+                const UTCTimeStamp = math1.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
                 const promotionRanks = UTCTimeStamp < 1709017200000 ? [4,-3] : undefined; // undefined will use default [8,1]
                 return getGameRules({ promotionRanks, position });
@@ -494,14 +496,14 @@ const variant1 = (function() {
             case "Knighted_Chess":
                 return getGameRules({ position });
             case "Omega": // Joel & Cory's version
-                return getGameRules({ promotionRanks: null, moveRule: null, position });
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
             case "Omega_Squared":
-                return getGameRules({ promotionRanks: null, moveRule: null, position });
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
             case "Omega_Cubed":
-                return getGameRules({ promotionRanks: null, moveRule: null, position });
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
             case "Omega_Fourth":
-                return getGameRules({ promotionRanks: null, moveRule: null, winConditions: getRoyalCaptureWinConditions(), position });
-                // Removed...
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
+            // Removed...
             /*
             case "Standarch - 3 Check":
                 return getGameRules({ winConditions: getWinConditionsOfThreeCheck(), position });
@@ -509,7 +511,7 @@ const variant1 = (function() {
                 return getGameRules({ winConditions: getWinConditionsOfThreeCheck(), position });
                 */
             default:
-                throw new Error('Unknown variant.');
+                throw new Error(`Unknown variant "${Variant}"`);
         }
     }
 
@@ -907,7 +909,6 @@ const variant1 = (function() {
         getBareMinimumGameRules,
         getStartingPositionOfVariant,
         getDefaultWinConditions,
-        isVariantAVariantWhereBlackStarts,
         isVariantValid,
         getPromotionsAllowed
     });

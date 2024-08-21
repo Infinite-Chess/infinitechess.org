@@ -46,8 +46,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         moveRuleState: undefined,
         /** This is the full-move number at the start of the game. Used for converting to ICN notation. */
         fullMove: undefined,
-        /** Whos turn it was at the beginning of the game. */
-        turn: undefined,
+        /** The number of players in this game (the number of unique colors in the turn order) */
+        playerCount: undefined,
         /** The count of pieces the game started with. */
         pieceCount: undefined,
         /** The bounding box surrounding the starting position, without padding.
@@ -69,6 +69,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
             black: undefined,
         },
         slideLimit: undefined,
+
+        /** An array of teams: `['white','black']` @type {string[]} */
+        turnOrder: undefined,
+
         /** How many plies (half-moves) may pass until a draw is automatically pronounced! */
         moveRule: undefined
     };
@@ -174,7 +178,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
      * which is whos turn it was at the *beginning* of the game. */
-    this.whosTurn = this.startSnapshot.turn;
+    this.whosTurn = this.gameRules.turnOrder[0];
     /** If the currently-viewed move is in check, this will be a list of coordinates
      * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {number[][]} */
     this.inCheck = false;
