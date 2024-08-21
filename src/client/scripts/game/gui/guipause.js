@@ -72,7 +72,7 @@ const guipause = (function() {
     }
 
     function onReceiveOpponentsMove() {
-        updateTextOfMainMenuButton();
+        updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable: true });
         updateDrawOfferButton();
     }
 
@@ -80,15 +80,19 @@ const guipause = (function() {
      * Updates the text content of the Main Menu button to either say
      * "Main Menu", "Abort Game", or "Resign Game", whichever is relevant
      * in the situation.
+     * @param {Object} options - Additional options
+     * @param {boolean} [options.freezeResignButtonIfNoLongerAbortable] - If true, and the main menu changes from "Abort" to "Resign",
+     * we will disable it and grey it out for 1 second so the player doesn't accidentally click resign when they wanted to abort.
+     * This should only be true when called from onReceiveOpponentsMove(), not on open()
      */
-    function updateTextOfMainMenuButton() {
+    function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
         if (!isPaused) return;
 
         if (!game.areInNonLocalGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations["main_menu"];
 
         if (movesscript.isGameResignable(game.getGamefile())) {
-            // If the text currently says "Abort Game", freeze the button for 0.5 seconds in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
-            if (element_mainmenu.textContent === translations["abort_game"]) {
+            // If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
+            if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations["abort_game"]) {
                 element_mainmenu.disabled = true;
                 element_mainmenu.classList.add('opacity-0_5');
                 setTimeout(() => {
@@ -144,10 +148,18 @@ const guipause = (function() {
     /** Called when the Offer Draw button is clicked in the pause menu */
     function callback_OfferDraw() {
         // Are we accepting a draw?
-        if (drawoffers.areWeAcceptingDraw()) return drawoffers.callback_AcceptDraw();
+        if (drawoffers.areWeAcceptingDraw()) {
+            drawoffers.callback_AcceptDraw();
+            callback_Resume();
+            return;
+        }
 
-        // No accepting. Is it legal to extend, then?
-        if (drawoffers.isOfferingDrawLegal()) return drawoffers.extendOffer();
+        // Not accepting. Is it legal to extend, then?
+        if (drawoffers.isOfferingDrawLegal()) {
+            drawoffers.extendOffer();
+            callback_Resume();
+            return;
+        }
 
         statustext.showStatus("Can't offer draw.");
     }
