@@ -6,7 +6,7 @@ const { removeMember, getAllUsernames, getVerified, getJoinDate, getUsernameCase
 const { testPasswordForRequest } = require('../controllers/authController');
 const { removeAllRoles } = require('../controllers/roles');
 const { logEvents } = require('../middleware/logEvents');
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { getTranslationForReq } = require('../utility/translate');
 
 // Automatic deletion of accounts...
 

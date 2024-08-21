@@ -1,13 +1,15 @@
 
+const { Game } = require('./TypeDefinitions')
+
 const movesscript1 = (function() {
 
     /**
      * Tests if the game is resignable (atleast 2 moves have been played).
      * If not, then the game is abortable.
-     * @param {gamefile} gamefile - The gamefile
+     * @param {Game} game - The game
      * @returns {boolean} *true* if the game is resignable.
      */
-    function isGameResignable(gamefile) { return gamefile.moves.length > 1; }
+    function isGameResignable(game) { return game.moves.length > 1; }
 
     /**
      * Returns the last, or most recent, move in the provided move list, or undefined if there isn't one.
@@ -25,10 +27,10 @@ const movesscript1 = (function() {
      * @param {number} i - The moveIndex
      * @returns {string} - The color that playd the moveIndex
      */
-    function getColorThatPlayedMoveIndex(i, blackMovesFirst) {
+    function getColorThatPlayedMoveIndex(i, turnOrder) {
         if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
-        const color = i % 2 === 0 ? 'white' : 'black';
-        return blackMovesFirst ? math.getOppositeColor(color) : color;
+        const color = turnOrder[i % turnOrder.length]
+        return color
     }
     
     return Object.freeze({

@@ -9,7 +9,7 @@
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Log In</title>
+        <title><%=t('login.title')%></title>
         <link rel='stylesheet' href='/css/login.css'>
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
@@ -29,11 +29,11 @@
                 <a href="/news">
                     <p><%=t('header.news')%></p>
                 </a>
-                <a href="/login">
-                    <p class="currPage"><%=t('header.login')%></p>
+                <a href="/login" id="loginlink">
+                    <p id="logintext" class="currPage"><%=t('header.login')%></p>
                 </a>
-                <a href="/createaccount">
-                    <p><%=t('header.createaccount')%></p>
+                <a href="/createaccount" id="createaccountlink">
+                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
                 </a>
             </nav>
         </header>

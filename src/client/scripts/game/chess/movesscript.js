@@ -314,12 +314,13 @@ const movesscript = (function() {
      * Returns the color of the player that played that moveIndex within the moves list.
      * Returns error if index -1
      * @param {number} i - The moveIndex
+     * @param {string[]} turnOrder 
      * @returns {string} - The color that playd the moveIndex
      */
-    function getColorThatPlayedMoveIndex(i, blackMovesFirst) {
+    function getColorThatPlayedMoveIndex(i, turnOrder) {
         if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
-        const color = i % 2 === 0 ? 'white' : 'black';
-        return blackMovesFirst ? math.getOppositeColor(color) : color;
+        const color = turnOrder[i % turnOrder.length]
+        return color
     }
 
     return Object.freeze({

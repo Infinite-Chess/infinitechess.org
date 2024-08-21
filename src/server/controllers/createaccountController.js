@@ -15,7 +15,7 @@ const { sendEmailConfirmation } = require('./sendMail');
 const { addMember, getMemberData, doesMemberExist, isEmailAvailable } = require('./members.js');
 const { logEvents } = require('../middleware/logEvents');
 const { isEmailBanned } = require('../middleware/banned');
-const { getTranslationForReq } = require('../config/setupTranslations.js');
+const { getTranslationForReq } = require('../utility/translate');
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.

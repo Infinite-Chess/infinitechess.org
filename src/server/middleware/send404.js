@@ -1,5 +1,5 @@
 const path = require('path');
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { getTranslationForReq } = require('../utility/translate');
 
 function send404(req, res) {
     res.status(404);

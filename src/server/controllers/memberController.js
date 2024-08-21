@@ -11,7 +11,7 @@ const { format, formatDistance } = require('date-fns');
 const { getVerified, setVerified, getInfo, getUsernameCaseSensitive, getJoinDate, getLastSeen, getElo, getEmail } = require('./members.js');
 const { sendEmailConfirmation } = require('../controllers/sendMail');
 const { logEvents } = require('../middleware/logEvents');
-const { getTranslationForReq } = require('../config/setupTranslations.js');
+const { getTranslationForReq } = require('../utility/translate');
 
 // Route
 // Fetched by member script.

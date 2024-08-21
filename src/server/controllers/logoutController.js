@@ -1,8 +1,8 @@
 
 const { findMemberFromRefreshToken, deleteRefreshToken, getUsernameCaseSensitive } = require('./members');
 const websocketserver = require('../wsserver');
-const invitesmanager = require('../game/invitesmanager');
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { deleteAllInvitesOfMember } = require('../game/invitesmanager/invitesmanager');
+const { getTranslationForReq } = require('../utility/translate');
 
 const handleLogout = async(req, res) => {
     // On client, also delete the accessToken
@@ -21,7 +21,7 @@ const handleLogout = async(req, res) => {
     deleteRefreshToken(foundMemberKey, refreshToken);
 
     websocketserver.closeAllSocketsOfMember(foundMemberKey, 1008, "Logged out");
-    invitesmanager.deleteAllInvitesOfMember(foundMemberKey);
+    deleteAllInvitesOfMember(foundMemberKey);
 
     console.log(`Logged out member ${getUsernameCaseSensitive(foundMemberKey)}`);
     res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });

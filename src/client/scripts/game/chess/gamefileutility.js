@@ -215,15 +215,16 @@ const gamefileutility = (function() {
         setTerminationMetadata(gamefile);
 
         selection.unselectPiece();
-        guipause.changeTextOfMainMenuButton();
+        guipause.updateTextOfMainMenuButton();
     }
 
     /**
      * Returns true if the game is over (gameConclusion is truthy).
      * If the game is over, it will be a string. If not, it will be false.
-     * @param {gamefile} gamefile 
+     * @param {gamefile} gamefile - The gamefile. If not specified, this is game.getGamefile()
+     * @returns {boolean} true if over
      */
-    function isGameOver(gamefile) {
+    function isGameOver(gamefile = game.getGamefile()) {
         if (gamefile.gameConclusion) return true;
         return false;
     }
