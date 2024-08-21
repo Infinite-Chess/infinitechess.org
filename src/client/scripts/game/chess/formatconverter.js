@@ -296,74 +296,28 @@ const formatconverter = (function() {
         const longformat = {};
         longformat.gameRules = {};
 
-
-        const elements = shortformat.match(/[\[\]\"\{\}\(\)\']/g) || [];
-        const statements = [];
-        const stateIdxs = [];
-        let currentIdx = -1;
-        let alterformat = shortformat;
-        let temp = '';
-        const trace = [];
-        const endCharDict = {'[':']', '(':')', '{':'}', '"':'"', "'":"'"};
-
-        for (const element of elements) {
-
-            const elemIdx = alterformat.indexOf(element);
-            currentIdx += elemIdx + 1;
-            if (trace[0]) temp += alterformat.slice(0, elemIdx);
-            else stateIdxs.push(currentIdx);
-            temp += element;
-            alterformat = alterformat.slice(elemIdx + 1);
-
-            if (endCharDict[trace[trace.length - 1]] === element) {
-                trace.pop();
-            } else if (trace[trace.length - 1] === '"' || trace[trace.length - 1] === "'") {
-                continue;
-            } else {
-                trace.push(element);
-            }
-            if (!trace[0]) {
-                statements.push(temp);
-                temp = '';
-            }
-        }
-        for (const element of trace) console.error(`${element} is not closed`);
-
         // metadata handling. Don't put ": " in metadata fields.
-        
         const metadata = {};
-        longformat.metadata = metadata;
-
-        let i = statements.length - 1;
-        let remove = false;
-        while (i >= 0) {
-            const string = statements[i];
-            const endIdx = stateIdxs[i] + string.length;
-            if (shortformat.slice(stateIdxs[i], endIdx) !== string) throw new Error("Metadata indexs are offset");
-
+        while (shortformat.indexOf("[") > -1) {
+            const start_index = shortformat.indexOf("[");
+            const end_index = shortformat.indexOf("]");
+            if (end_index == -1) throw new Error("Unclosed [ detected");
+            const metadatastring = shortformat.slice(start_index + 1,end_index);
+            shortformat = `${shortformat.slice(0,start_index)}${shortformat.slice(end_index + 1)}`;
+            
             // new metadata format [Metadata "value"]
-            if (/^\[[^\s\:]*\s+\"/.test(string)) {
-                const split_index = string.search(/\s\"/);
-                metadata[string.slice(1,split_index)] = string.slice(split_index + 2, -2);
-                remove = true;
+            if (/^[^\s\:]*\s+\"/.test(metadatastring)) {
+                const split_index = metadatastring.search(/\s\"/);
+                metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index + 2, -1);
             }
             // old metadata format [Metadata: value]
-            else if (/^\[[^\:]*\:\s/.test(string)) {
-                const split_index = string.indexOf(": ");
-                if (split_index > -1) metadata[string.slice(1,split_index)] = string.slice(split_index+2, -1);
-                else metadata[string] = "";
-                remove = true;
+            else {
+                const split_index = metadatastring.indexOf(": ");
+                if (split_index > -1) metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index + 2);
+                else metadata[metadatastring] = "";
             }
-
-            if (remove) {
-                shortformat = `${shortformat.slice(0,stateIdxs[i])}${shortformat.slice(endIdx)}`;
-
-                stateIdxs.splice(i,1);
-                statements.splice(i,1);
-            }
-            i--;
         }
-        console.log(metadata);
+        longformat.metadata = metadata;
 
         while (shortformat != "") {
             if (/\s/.test(shortformat[0])) {
@@ -377,9 +331,17 @@ const formatconverter = (function() {
             shortformat = shortformat.slice(index + 1);
 
             // move turn
-            if (!longformat.gameRules.turnOrder && /^(w|b)$/.test(string)) {
-                if (string == "w") longformat.gameRules.turnOrder = ["white", "black"];
-                else if (string == "b") longformat.gameRules.turnOrder = ["black", "white"];
+            if (!longformat.turn && /^[a-z](:[a-z])*$/.test(string)) {
+                if (string === 'w') string = 'w:b'; // 'w' is short for 'w:b'
+                else if (string === 'b') string = 'b:w'; // 'b' is short for 'b:w'
+                const turnOrderArray = string.split(':'); // ['w','b']
+                const turnOrder = []; // ['white', 'black']
+                for (const colorAbbrev of turnOrderArray) {
+                    if (colorAbbrev === 'w') turnOrder.push('white');
+                    else if (colorAbbrev === 'b') turnOrder.push('black');
+                    else throw new Error(`Unknown color abbreviation "${colorAbbrev}" when parsing turn order while pasting game!`);
+                }
+                longformat.gameRules.turnOrder = turnOrder;
                 continue;
             }
 
