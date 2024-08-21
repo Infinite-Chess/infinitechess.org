@@ -13,7 +13,7 @@
  * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
  */
 
-const legalmoves = (function(){
+const legalmoves = (function() {
 
     /**
      * Calculates the area around you in which jumping pieces can land on you from that distance.
@@ -25,30 +25,30 @@ const legalmoves = (function(){
      * @returns {Object} The vicinity object
      */
     function genVicinity(gamefile) {
-        const vicinity = {}
-        if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.")
+        const vicinity = {};
+        if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.");
 
         // For every piece moveset...
         for (let i = 0; i < pieces.white.length; i++) {
-            const thisPieceType = pieces.white[i]
-            var thisPieceIndividualMoveset
+            const thisPieceType = pieces.white[i];
+            let thisPieceIndividualMoveset;
             if (getPieceMoveset(gamefile, thisPieceType).individual) thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
-            else thisPieceIndividualMoveset = []
+            else thisPieceIndividualMoveset = [];
 
             // For each individual move...
             for (let a = 0; a < thisPieceIndividualMoveset.length; a++) {
-                const thisIndividualMove = thisPieceIndividualMoveset[a]
+                const thisIndividualMove = thisPieceIndividualMoveset[a];
                 
                 // Convert the move into a key
-                const key = math.getKeyFromCoords(thisIndividualMove)
+                const key = math.getKeyFromCoords(thisIndividualMove);
 
                 // Make sure the key's already initialized
                 if (!vicinity[key]) vicinity[key] = [];
 
-                const pieceTypeConcat = math.trimWorBFromType(thisPieceType) // Remove the 'W'/'B' from end of type
+                const pieceTypeConcat = math.trimWorBFromType(thisPieceType); // Remove the 'W'/'B' from end of type
 
                 // Make sure the key contains the piece type that can capture from that distance
-                if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat)
+                if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat);
             }
         }
         return vicinity;
@@ -61,7 +61,7 @@ const legalmoves = (function(){
      * @returns {Object} A moveset object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
      */
     function getPieceMoveset(gamefile, pieceType) {
-        pieceType = math.trimWorBFromType(pieceType) // Remove the 'W'/'B' from end of type
+        pieceType = math.trimWorBFromType(pieceType); // Remove the 'W'/'B' from end of type
         const movesetFunc = gamefile.pieceMovesets[pieceType];
         if (!movesetFunc) return {}; // Piece doesn't have a specified moveset (could be neutral). Return empty.
         return movesetFunc(); // Calling these parameters as a function returns their moveset.
@@ -75,30 +75,30 @@ const legalmoves = (function(){
      * @returns {LegalMoves} The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
      */
     function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piece: { type, coords }
-        if (piece.index == null) throw new Error("To calculate a piece's legal moves, we must have the index property.")
-        const coords = piece.coords
+        if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
+        const coords = piece.coords;
         const type = piece.type;
         const trimmedType = math.trimWorBFromType(type);
-        const color = math.getPieceColorFromType(type) // Color of piece calculating legal moves of
+        const color = math.getPieceColorFromType(type); // Color of piece calculating legal moves of
 
         // if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
 
-        const thisPieceMoveset = getPieceMoveset(gamefile, type) // Default piece moveset
+        const thisPieceMoveset = getPieceMoveset(gamefile, type); // Default piece moveset
 
         let legalIndividualMoves = [];
-        let legalSliding = {};
+        const legalSliding = {};
 
         if (!onlyCalcSpecials) {
 
             // Legal jumping/individual moves
     
-            shiftIndividualMovesetByCoords(thisPieceMoveset.individual, coords)
-            legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color)
+            shiftIndividualMovesetByCoords(thisPieceMoveset.individual, coords);
+            legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color);
             
             // Legal sliding moves
             if (thisPieceMoveset.sliding) {
-                let lines = gamefile.startSnapshot.slidingPossible;
-                for (let i=0; i<lines.length; i++) {
+                const lines = gamefile.startSnapshot.slidingPossible;
+                for (let i = 0; i < lines.length; i++) {
                     const line = lines[i];
                     if (!thisPieceMoveset.sliding[line]) continue;
                     const key = organizedlines.getKeyFromLine(line,coords);
@@ -109,14 +109,14 @@ const legalmoves = (function(){
         }
         
         // Add any special moves!
-        if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves)
+        if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves);
 
-        let moves = {
+        const moves = {
             individual: legalIndividualMoves,
             sliding: legalSliding
-        }
+        };
         
-        checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color)
+        checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
 
         return moves;
     }
@@ -129,29 +129,29 @@ const legalmoves = (function(){
     function shiftIndividualMovesetByCoords(indivMoveset, coords) {
         if (!indivMoveset) return;
         indivMoveset.forEach((indivMove) => {
-            indivMove[0] += coords[0]
-            indivMove[1] += coords[1]
-        })
+            indivMove[0] += coords[0];
+            indivMove[1] += coords[1];
+        });
     }
 
     // Accepts array of moves, returns new array with illegal moves removed due to pieces occupying.
-    function moves_RemoveOccupiedByFriendlyPieceOrVoid (gamefile, individualMoves, color) {
+    function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, color) {
         if (!individualMoves) return; // No jumping moves possible
 
         for (let i = individualMoves.length - 1; i >= 0; i--) {
-            const thisMove = individualMoves[i]
+            const thisMove = individualMoves[i];
 
             // Is there a piece on this square?
-            const pieceAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisMove)
+            const pieceAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisMove);
             if (!pieceAtSquare) continue; // Next move if there is no square here
 
             // Do the colors match?
-            const pieceAtSquareColor = math.getPieceColorFromType(pieceAtSquare)
+            const pieceAtSquareColor = math.getPieceColorFromType(pieceAtSquare);
 
             // If they match colors, move is illegal because we cannot capture friendly pieces. Remove the move.
             // ALSO remove if it's a void!
             if (color === pieceAtSquareColor
-             || pieceAtSquare === 'voidsN') individualMoves.splice(i, 1)
+             || pieceAtSquare === 'voidsN') individualMoves.splice(i, 1);
         }
 
         return individualMoves;
@@ -166,37 +166,37 @@ const legalmoves = (function(){
      * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
      * @param {string} color - The color of friendlies
      */
-    function slide_CalcLegalLimit (line, direction, slideMoveset, coords, color) {
+    function slide_CalcLegalLimit(line, direction, slideMoveset, coords, color) {
 
         if (!slideMoveset) return; // Return undefined if there is no slide moveset
 
         // The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
         // For most we'll be comparing the x values, only exception is the vertical lines.
-        const axis = direction[0] == 0 ? 1 : 0 
+        const axis = direction[0] === 0 ? 1 : 0; 
         const limit = math.copyCoords(slideMoveset);
         // Iterate through all pieces on same line
         for (let i = 0; i < line.length; i++) {
             // What are the coords of this piece?
-            const thisPiece = line[i] // { type, coords }
-            const thisPieceSteps = Math.floor((thisPiece.coords[axis]-coords[axis])/direction[axis])
-            const thisPieceColor = math.getPieceColorFromType(thisPiece.type)
-            const isFriendlyPiece = color === thisPieceColor
+            const thisPiece = line[i]; // { type, coords }
+            const thisPieceSteps = Math.floor((thisPiece.coords[axis] - coords[axis]) / direction[axis]);
+            const thisPieceColor = math.getPieceColorFromType(thisPiece.type);
+            const isFriendlyPiece = color === thisPieceColor;
             const isVoid = thisPiece.type === 'voidsN';
             // Is the piece to the left of us or right of us?
             if (thisPieceSteps < 0) { // To our left
 
                 // What would our new left slide limit be? If it's an opponent, it's legal to capture it.
-                const newLeftSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps + 1 : thisPieceSteps
+                const newLeftSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps + 1 : thisPieceSteps;
                 // If the piece x is closer to us than our current left slide limit, update it
-                if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit
+                if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
 
             } else if (thisPieceSteps > 0) { // To our right
 
                 // What would our new right slide limit be? If it's an opponent, it's legal to capture it.
-                const newRightSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps - 1 : thisPieceSteps
+                const newRightSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps - 1 : thisPieceSteps;
                 // If the piece x is closer to us than our current left slide limit, update it
-                if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit
+                if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
 
             } // else this is us, don't do anything.
         }
@@ -232,12 +232,12 @@ const legalmoves = (function(){
             }
         }
 
-        for (var strline in legalMoves.sliding) {
-            let line = math.getCoordsFromKey(strline); // 'dx,dy'
-            let limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
+        for (const strline in legalMoves.sliding) {
+            const line = math.getCoordsFromKey(strline); // 'dx,dy'
+            const limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
 
-            let selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);
-            let clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
+            const selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);
+            const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
             if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
             if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords)) continue;
@@ -269,38 +269,38 @@ const legalmoves = (function(){
         movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateData: false, updateProperties: false, simulated: true });
 
         // Make sure a piece exists on the start coords
-        const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveCopy.startCoords) // { type, index, coords }
+        const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveCopy.startCoords); // { type, index, coords }
         if (!piecemoved) {
-            console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveCopy)}`)
-            return rewindGameAndReturnReason('No piece exists at start coords.')
+            console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveCopy)}`);
+            return rewindGameAndReturnReason('No piece exists at start coords.');
         }
 
         // Make sure it's the same color as your opponent.
-        const colorOfPieceMoved = math.getPieceColorFromType(piecemoved.type)
+        const colorOfPieceMoved = math.getPieceColorFromType(piecemoved.type);
         if (colorOfPieceMoved !== gamefile.whosTurn) {
-            console.log(`Opponent's move is illegal because you can't move a non-friendly piece. Move: ${JSON.stringify(moveCopy)}`)
+            console.log(`Opponent's move is illegal because you can't move a non-friendly piece. Move: ${JSON.stringify(moveCopy)}`);
             return rewindGameAndReturnReason("Can't move a non-friendly piece.");
         }
 
         // If there is a promotion, make sure that's legal
         if (moveCopy.promotion) {
             if (!piecemoved.type.startsWith('pawns')) {
-                console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveCopy)}`)
+                console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveCopy)}`);
                 return rewindGameAndReturnReason("Can't promote a non-pawn.");
             }
-            const colorPromotedTo = math.getPieceColorFromType(moveCopy.promotion)
+            const colorPromotedTo = math.getPieceColorFromType(moveCopy.promotion);
             if (gamefile.whosTurn !== colorPromotedTo) {
-                console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveCopy)}`)
+                console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveCopy)}`);
                 return rewindGameAndReturnReason("Can't promote to opposite color.");
             }
             const strippedPromotion = math.trimWorBFromType(moveCopy.promotion);
             if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(strippedPromotion)) {
-                console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveCopy)}`)
+                console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveCopy)}`);
                 return rewindGameAndReturnReason('Specified promotion is illegal.');
             }
         } else { // No promotion, make sure they AREN'T moving to a promotion rank! That's also illegal.
             if (specialdetect.isPawnPromotion(gamefile, piecemoved.type, moveCopy.endCoords)) {
-                console.log(`Opponent's move is illegal because they didn't promote at the promotion line. Move: ${JSON.stringify(moveCopy)}`)
+                console.log(`Opponent's move is illegal because they didn't promote at the promotion line. Move: ${JSON.stringify(moveCopy)}`);
                 return rewindGameAndReturnReason("Didn't promote when moved to promotion line.");
             }
         }
@@ -309,7 +309,7 @@ const legalmoves = (function(){
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
         // This should pass on any special moves tags at the same time.
         if (!legalmoves.checkIfMoveLegal(legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
-            console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveCopy)}`)
+            console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveCopy)}`);
             return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
         }
 
@@ -318,9 +318,9 @@ const legalmoves = (function(){
         // such as time, aborted, resignation, disconnect)
         if (claimedGameConclusion === false || wincondition.isGameConclusionDecisive(claimedGameConclusion)) {
             const color = math.getPieceColorFromType(piecemoved.type);
-            const infoAboutSimulatedMove = movepiece.simulateMove(gamefile, moveCopy, color, { doGameOverChecks: true }) // { isCheck, gameConclusion }
+            const infoAboutSimulatedMove = movepiece.simulateMove(gamefile, moveCopy, color, { doGameOverChecks: true }); // { isCheck, gameConclusion }
             if (infoAboutSimulatedMove.gameConclusion !== claimedGameConclusion) {
-                console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${infoAboutSimulatedMove.gameConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`)
+                console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${infoAboutSimulatedMove.gameConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`);
                 return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${infoAboutSimulatedMove.gameConclusion}`);
             }
         }
@@ -361,10 +361,10 @@ const legalmoves = (function(){
         // return step >= slideMoveset[0] && step <= slideMoveset[1];
 
 
-        const axis = direction[0] === 0 ? 1 : 0
+        const axis = direction[0] === 0 ? 1 : 0;
         const coordMag = coords[axis];
-        const min = slideMoveset[0] * direction[axis] + pieceCoords[axis]
-        const max = slideMoveset[1] * direction[axis] + pieceCoords[axis]
+        const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
+        const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
 
         return coordMag >= min && coordMag <= max;
     }
@@ -374,10 +374,10 @@ const legalmoves = (function(){
      * @param {LegalMoves} moves 
      * @returns {boolean} 
      */
-    function hasAtleast1Move (moves) { // { individual, horizontal, vertical, ... }
+    function hasAtleast1Move(moves) { // { individual, horizontal, vertical, ... }
         
         if (moves.individual.length > 0) return true;
-        for (var line in moves.sliding)
+        for (const line in moves.sliding)
             if (doesSlideHaveWidth(moves.sliding[line])) return true;
 
         function doesSlideHaveWidth(slide) { // [-Infinity, Infinity]
@@ -397,6 +397,6 @@ const legalmoves = (function(){
         hasAtleast1Move,
         slide_CalcLegalLimit,
         isOpponentsMoveLegal
-    })
+    });
 
 })();

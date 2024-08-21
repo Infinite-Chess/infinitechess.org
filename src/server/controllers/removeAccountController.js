@@ -6,7 +6,7 @@ const { removeMember, getAllUsernames, getVerified, getJoinDate, getUsernameCase
 const { testPasswordForRequest } = require('../controllers/authController');
 const { removeAllRoles } = require('../controllers/roles');
 const { logEvents } = require('../middleware/logEvents');
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { getTranslationForReq } = require('../utility/translate');
 
 // Automatic deletion of accounts...
 
@@ -27,13 +27,13 @@ async function removeAccount(req, res) {
 
     // Check to make sure they're logged in
     if (req.user !== usernameLowercase) {
-        logEvents(`User ${req.user} tried to delete account of ${usernameLowercase}!!`, 'hackLog.txt', { print: true })
+        logEvents(`User ${req.user} tried to delete account of ${usernameLowercase}!!`, 'hackLog.txt', { print: true });
         return res.status(403).json({'message' : getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req) });
     }
 
     // The delete account request doesn't come with the username
     // already in the body, so we set that here.
-	req.body.username = req.params.member;
+    req.body.username = req.params.member;
     if (!(await testPasswordForRequest(req, res))) {
         logEvents(`Incorrect password for user ${getUsernameCaseSensitive(usernameLowercase)} attempting to remove account!`, "loginAttempts.txt", { print: true });
         return; // It will have already sent a response
@@ -41,7 +41,7 @@ async function removeAccount(req, res) {
 
     removeAllRoles(req.user); // Remove roles
     if (removeMember(req.user)) {
-        logEvents(`User ${usernameLowercase} deleted their account.`, "deletedAccounts.txt", { print: true })
+        logEvents(`User ${usernameLowercase} deleted their account.`, "deletedAccounts.txt", { print: true });
         return res.send('OK'); // 200 is default code
     } else {
         logEvents(`Can't delete ${usernameLowercase}'s account. They do not exist.`, 'hackLog.txt', { print: true });
@@ -57,7 +57,7 @@ async function removeAccount(req, res) {
 function removeAccountByUsername(usernameLowercase, reason) {
     removeAllRoles(usernameLowercase);
     if (removeMember(usernameLowercase)) {
-        logEvents(`User ${usernameLowercase} was deleted for '${reason}'`, "deletedAccounts.txt", { print: true })
+        logEvents(`User ${usernameLowercase} was deleted for '${reason}'`, "deletedAccounts.txt", { print: true });
     } else {
         logEvents(`User ${usernameLowercase} was attempted to be removed for '${reason}' but failed`, 'hackLog.txt', { print: true });
     }
@@ -76,17 +76,17 @@ function removeOldUnverifiedMembers() {
     const allUserNames = getAllUsernames(); // An array of all usernames
 
     for (const username of allUserNames) {
-        if(getVerified(username) !== false) continue;  // Are verified, or they don't exist
+        if (getVerified(username) !== false) continue; // Are verified, or they don't exist
         // Are not verified...
         
         // Calculate the time since the user joined
         const timeJoined = getJoinDate(username); // A date object
         const timeSinceJoined = now - timeJoined; // Milliseconds (Date - Date = number)
 
-        if(timeSinceJoined < maxExistenceTimeForUnverifiedAccountMillis) continue; // Account isn't old enough.
+        if (timeSinceJoined < maxExistenceTimeForUnverifiedAccountMillis) continue; // Account isn't old enough.
 
         // Delete account...
-        removeAccountByUsername(username, `Unverified for more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days`)
+        removeAccountByUsername(username, `Unverified for more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days`);
     }
 }
 

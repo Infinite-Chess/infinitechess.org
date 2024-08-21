@@ -8,7 +8,7 @@
 
 /** The `Move` custom type. This should not be called, it is for JSDoc dropdown info. */
 function Move() {
-    console.error('This Move constructor should NEVER be called! It is purely for useful JSDoc dropdown info when working with the `Move` type.')
+    console.error('This Move constructor should NEVER be called! It is purely for useful JSDoc dropdown info when working with the `Move` type.');
 
     /** The type of piece moved (e.g. `queensW`). */
     this.type = undefined;
@@ -48,12 +48,12 @@ function Move() {
         attackers: undefined,
         /** The gamefile's `gameConclusion` property before this move was made. */
         gameConclusion: undefined,
-    }
+    };
     /** The move in most compact notation: `8,7>8,8Q` */
     this.compact = undefined;
 }
 
-const movesscript = (function(){
+const movesscript = (function() {
 
     /** Tests if the arrow keys have been pressed, signaling to rewind/forward the game. */
     function update() {
@@ -65,13 +65,13 @@ const movesscript = (function(){
     function testIfRewindMove() {
         if (!input.isKeyDown('arrowleft')) return;
         if (guinavigation.isRewindButtonLocked()) return;
-        rewindMove()
+        rewindMove();
     }
 
     /** Tests if the right arrow key has been pressed, signaling to forward the game. */
     function testIfForwardMove() {
         if (!input.isKeyDown('arrowright')) return;
-        forwardMove()
+        forwardMove();
     }
 
     /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
@@ -81,13 +81,13 @@ const movesscript = (function(){
 
         main.renderThisFrame();
 
-        movepiece.rewindMove(game.getGamefile(), { removeMove: false })
+        movepiece.rewindMove(game.getGamefile(), { removeMove: false });
         
         selection.unselectPiece();
 
-        guinavigation.update_MoveButtons()
+        guinavigation.update_MoveButtons();
 
-        stats.showMoves()
+        stats.showMoves();
     }
 
     /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
@@ -95,16 +95,16 @@ const movesscript = (function(){
         if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
         if (!isIncrementingLegal(game.getGamefile())) return stats.showMoves();
 
-        const move = getMoveOneForward()
+        const move = getMoveOneForward();
 
         // Only leave animate and updateData as true
-        movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false })
+        movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false });
 
         // transition.teleportToLastMove()
 
-        guinavigation.update_MoveButtons()
+        guinavigation.update_MoveButtons();
 
-        stats.showMoves()
+        stats.showMoves();
     }
 
     /**
@@ -114,7 +114,7 @@ const movesscript = (function(){
      */
     function getMoveOneForward() {
         const moveIndex = game.getGamefile().moveIndex;
-        const incrementedIndex = moveIndex + 1
+        const incrementedIndex = moveIndex + 1;
         return getMoveFromIndex(game.getGamefile().moves, incrementedIndex);
     }
 
@@ -124,7 +124,7 @@ const movesscript = (function(){
      * @returns {boolean}
      */
     function isIncrementingLegal(gamefile) {
-        if (gamefile == null) throw new Error("Cannot ask if incrementing moves is legal when there's no gamefile.")
+        if (gamefile == null) throw new Error("Cannot ask if incrementing moves is legal when there's no gamefile.");
 
         const incrementedIndex = gamefile.moveIndex + 1;
         return !isIndexOutOfRange(gamefile.moves, incrementedIndex);
@@ -136,7 +136,7 @@ const movesscript = (function(){
      * @returns {boolean}
      */
     function isDecrementingLegal(gamefile) {
-        if (gamefile == null) throw new Error("Cannot ask if decrementing moves is legal when there's no gamefile.")
+        if (gamefile == null) throw new Error("Cannot ask if decrementing moves is legal when there's no gamefile.");
 
         const decrementedIndex = gamefile.moveIndex - 1;
         return !isIndexOutOfRange(gamefile.moves, decrementedIndex);
@@ -148,7 +148,7 @@ const movesscript = (function(){
      * @param {number} index - The index
      * @returns {boolean} *true* if the index is out of range
      */
-    function isIndexOutOfRange(moves, index) { return index < -1 || index >= moves.length }
+    function isIndexOutOfRange(moves, index) { return index < -1 || index >= moves.length; }
 
     /**
      * Returns the very last move played in the moves list, if there is one. Otherwise, returns undefined.
@@ -158,7 +158,7 @@ const movesscript = (function(){
     function getLastMove(moves) {
         const finalIndex = moves.length - 1;
         if (finalIndex < 0) return;
-        return moves[finalIndex]
+        return moves[finalIndex];
     }
 
     // 
@@ -171,7 +171,7 @@ const movesscript = (function(){
     function getCurrentMove(gamefile) {
         const index = gamefile.moveIndex;
         if (index < 0) return;
-        return gamefile.moves[index]
+        return gamefile.moves[index];
     }
 
     /**
@@ -181,8 +181,8 @@ const movesscript = (function(){
      * @returns {Move} The move at the specified index
      */
     function getMoveFromIndex(moves, index) { // [index1, plyIndex]
-        if (isIndexOutOfRange(moves, index)) return console.error("Cannot get next move when index overflow")
-        return moves[index]
+        if (isIndexOutOfRange(moves, index)) return console.error("Cannot get next move when index overflow");
+        return moves[index];
     }
 
     /**
@@ -246,7 +246,7 @@ const movesscript = (function(){
      * @param {Move[]} moves - The moves list
      */
     function deleteLastMove(moves) {
-        if (moves.length === 0) return console.error("Cannot delete last move when there are none")
+        if (moves.length === 0) return console.error("Cannot delete last move when there are none");
         moves.pop();
     }
 
@@ -257,7 +257,7 @@ const movesscript = (function(){
      */
     function areMovesIn2DFormat(longmoves) {
         if (longmoves.length === 0) return false; // Empty, assume they are in the new 1D format
-        return Array.isArray(longmoves[0])
+        return Array.isArray(longmoves[0]);
     }
 
     /**
@@ -269,7 +269,7 @@ const movesscript = (function(){
      * @returns {Move[]} Moves converted to the new 1D array format
      */
     function convertMovesTo1DFormat(moves, results) {
-        results.turn = 'white'
+        results.turn = 'white';
         const moves1D = [];
         for (let a = 0; a < moves.length; a++) {
             const thisPair = moves[a];
@@ -287,7 +287,7 @@ const movesscript = (function(){
      * @param {gamefile} gamefile - The gamefile
      */
     function flagLastMoveAsCheck(gamefile) {
-        if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.")
+        if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.");
         const lastMove = getLastMove(gamefile.moves);
         lastMove.check = true;
     }
@@ -317,7 +317,7 @@ const movesscript = (function(){
      * @returns {string} - The color that playd the moveIndex
      */
     function getColorThatPlayedMoveIndex(i, blackMovesFirst) {
-        if (i === -1) return console.error("Cannot get color that played move index when move index is -1.")
+        if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
         const color = i % 2 === 0 ? 'white' : 'black';
         return blackMovesFirst ? math.getOppositeColor(color) : color;
     }
@@ -344,6 +344,6 @@ const movesscript = (function(){
         convertMovesTo1DFormat,
         isGameResignable,
         getColorThatPlayedMoveIndex
-    })
+    });
 
 })();

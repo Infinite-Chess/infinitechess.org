@@ -5,7 +5,7 @@ const { findMemberFromRefreshToken, getUsernameCaseSensitive, updateLastSeen } =
 const { logEvents } = require('../middleware/logEvents');
 const { isBrowserIDBanned } = require('../middleware/banned');
 const { generateID } = require("../game/math1");
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { getTranslationForReq } = require('../utility/translate');
 
 /**
  * How long until the cookie containing their new access token
@@ -53,30 +53,30 @@ const handleRefreshToken = (req, res) => {
 
             // SEND the token as a cookie!
             res.cookie('token', accessToken, { sameSite: 'None', secure: true, maxAge: expireTimeOfTokenCookieMillis }); // 10 second time limit. SAVE it in memory.
-            res.json({ member: getUsernameCaseSensitive(foundMemberKey) })
-            console.log(`Refreshed access token for member ${foundMemberKey}. --------`)
+            res.json({ member: getUsernameCaseSensitive(foundMemberKey) });
+            console.log(`Refreshed access token for member ${foundMemberKey}. --------`);
 
             // Update their last-seen variable
             updateLastSeen(foundMemberKey);
         }
     );
-}
+};
 
 // ASSUMES they are not logged in
 // If they have an existing browser id, it renews it for 7 more days.
 // If they don't, it gives them a new browser id for 7 day.
 function assignOrRenewBrowserID(req, res) {
-    if (req.cookies['browser-id'] == null) giveBrowserID(res)
-    else refreshBrowserID(req, res)
+    if (req.cookies['browser-id'] == null) giveBrowserID(res);
+    else refreshBrowserID(req, res);
 }
 
 function giveBrowserID(res) {
 
-    const id = generateID(12)
+    const id = generateID(12);
 
     //console.log(`Assigning new browser-id: ${id} --------`)
 
-    const cookieName = 'browser-id'
+    const cookieName = 'browser-id';
     const age = expireOfBrowserIDCookieMillis; // 1 day
 
     // READABLE by the server with web socket connections, AND by javascript. MAX AGE IN MILLIS NOT SECS
@@ -87,10 +87,10 @@ function giveBrowserID(res) {
 
 function refreshBrowserID(req, res) {
 
-    const cookieName = 'browser-id'
-    const id = req.cookies[cookieName]
+    const cookieName = 'browser-id';
+    const id = req.cookies[cookieName];
 
-    if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id)
+    if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
     //console.log(`Renewing browser-id: ${id}`)
 
@@ -104,7 +104,7 @@ function refreshBrowserID(req, res) {
 
 function makeBrowserIDPermanent(req, res, browserID) {
 
-    const cookieName = 'browser-id'
+    const cookieName = 'browser-id';
 
     const age = Number.MAX_SAFE_INTEGER;
 
@@ -117,4 +117,4 @@ function makeBrowserIDPermanent(req, res, browserID) {
     logEvents(logThis, 'bannedIPLog.txt', { print: true });
 }
 
-module.exports = { handleRefreshToken }
+module.exports = { handleRefreshToken };

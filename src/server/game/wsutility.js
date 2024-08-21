@@ -2,9 +2,10 @@
 // This script contains generalized methods for working with websocket objects,
 // thus the only dependancies it has are for the type definitions.
 
-const { getTranslation } = require('../config/setupTranslations');
+const { getTranslation } = require('../utility/translate');
 const { ensureJSONString } = require('../utility/JSONUtils');
-const { Socket } = require('./TypeDefinitions')
+// eslint-disable-next-line no-unused-vars
+const { Socket } = require('./TypeDefinitions');
 
 const wsutility = (function() {
 
@@ -22,7 +23,7 @@ const wsutility = (function() {
     function stringifySocketMetadata(ws) {
         // Removes the recursion from the metadata, making it safe to stringify.
         const simplifiedMetadata = getSimplifiedMetadata(ws);
-        return ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:')
+        return ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
     }
 
     /**
@@ -35,11 +36,11 @@ const wsutility = (function() {
      * @returns {Object} A new object containing simplified metadata.
      */
     function getSimplifiedMetadata(ws) {
-        if (!ws) return console.error("Cannot get simplified metadata of an undefined websocket!")
+        if (!ws) return console.error("Cannot get simplified metadata of an undefined websocket!");
 
         const metadata = ws.metadata;
-        if (!metadata) return console.error("We should not be simplifying a websockets metadata when it is undefined!")
-        const metadataCopy = {}
+        if (!metadata) return console.error("We should not be simplifying a websockets metadata when it is undefined!");
+        const metadataCopy = {};
         if (metadata.user) metadataCopy.user = metadata.user;
         if (metadata.role) metadataCopy.role = metadata.role;
         if (metadata['browser-id']) metadataCopy['browser-id'] = metadata['browser-id'];
@@ -47,7 +48,7 @@ const wsutility = (function() {
         if (metadata.IP) metadataCopy.IP = metadata.IP;
         //if (metadata.id) metadataCopy.id = metadata.id;
         if (metadata.subscriptions) metadataCopy.subscriptions = metadata.subscriptions;
-        return metadataCopy
+        return metadataCopy;
     }
 
     /**
@@ -56,18 +57,20 @@ const wsutility = (function() {
      * @returns {Object} An object that contains either the `member` or `browser` property.
      */
     function getOwnerFromSocket(ws) {
-        if (ws.metadata.user) return { member: ws.metadata.user }
-        else if (ws.metadata['browser-id']) return { browser: ws.metadata['browser-id']}
-        else return console.error(`Cannot get owner info from socket in gamesweb.js when socket doesn't contain authentication! Metadata: ${wsutility.stringifySocketMetadata(ws)}`)
+        if (ws.metadata.user) return { member: ws.metadata.user };
+        else if (ws.metadata['browser-id']) return { browser: ws.metadata['browser-id']};
+        else return console.error(`Cannot get owner info from socket in gamesweb.js when socket doesn't contain authentication! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
     }
 
     /**
-     * Sends a message to the client through the websocket, to be displayed on-screen.
-     * @param {Socket} ws - The socket
-     * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
-     * @param {number} [number] - A number to include with special messages, if applicable. Typically a number of minutes.
+     * Sends a notification message to the client through the WebSocket connection, to be displayed on-screen.
+     * @param {Socket} ws - The WebSocket connection object.
+     * @param {string} translationCode - The code corresponding to the message that needs to be retrieved for language-specific translation. For example, `"server.javascript.ws-already_in_game"`.
+     * @param {Object} options - An object containing additional options.
+     * @param {number} options.replyto - The ID of the incoming WebSocket message to which this message is replying.
+     * @param {number} [options.number] - A number to include with special messages if applicable, typically representing a duration in minutes.
      */
-    function sendNotify(ws, translationCode, number) {
+    function sendNotify(ws, translationCode, { replyto, number } = {}) {
         const i18next = ws.metadata.i18next;
         let text = getTranslation(translationCode, i18next);
         // Special case: number of minutes to be displayed upon server restart
@@ -76,7 +79,7 @@ const wsutility = (function() {
             const minutes_plurality = minutes === 1 ? getTranslation("server.javascript.ws-minute", i18next) : getTranslation("server.javascript.ws-minutes", i18next);
             text += ` ${minutes} ${minutes_plurality}.`;
         }
-        ws.metadata.sendmessage(ws, "general", "notify", text)
+        ws.metadata.sendmessage(ws, "general", "notify", text, replyto);
     }
 
     /**
@@ -85,7 +88,7 @@ const wsutility = (function() {
      * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
      */
     function sendNotifyError(ws, translationCode) {
-        ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.i18next))
+        ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.i18next));
     }
 
     return Object.freeze({
@@ -94,7 +97,7 @@ const wsutility = (function() {
         getOwnerFromSocket,
         sendNotify,
         sendNotifyError
-    })
+    });
 })();
 
-module.exports = wsutility
+module.exports = wsutility;

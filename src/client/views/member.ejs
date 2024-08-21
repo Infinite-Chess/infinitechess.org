@@ -10,11 +10,13 @@
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Member</title>
+        <title><%=t('member.title')%></title>
         <link rel='stylesheet' href='/css/member.css'>
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <script defer src="/scripts/memberHeader.js"></script>
+        <script defer src="/scripts/member.js"></script>
     </head>
     <body>
         <header>
@@ -70,7 +72,6 @@
                 </div>
                 <p id="change" class="hidden center"><%=t('member.password_reset_message.0')%><a href="mailto:infinitechess.org@gmail.com"><%=t('member.password_reset_message.1')%></a></p>
             </div>
-            <script src="/scripts/member.js"></script>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
     </body>

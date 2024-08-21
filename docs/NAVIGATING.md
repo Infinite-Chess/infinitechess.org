@@ -13,7 +13,7 @@ Everything starts running from [server.js](../src/server/server.js)!
 
 This configures and starts our http, https, and websocket servers, and it cleans up on closing.
 
-[src/server/game](../src/server/game/) contains the server-side code for running online play, including the [invites-manager](../src/server/game/invitesmanager.js) and the [game-manager](../src/server/game/gamemanager.js).
+[src/server/game](../src/server/game/) contains the server-side code for running online play, including the invites manager and game manager!
 
 Both of these managers use websockets to broadcast changes out to the clients in real-time.
 

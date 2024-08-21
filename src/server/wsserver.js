@@ -1,14 +1,17 @@
 const WebSocket = require('ws');
-const { verifyJWTWebSocket } = require("./middleware/verifyJWT")
-const { rateLimitWebSocket } = require("./middleware/rateLimit")
+const { verifyJWTWebSocket } = require("./middleware/verifyJWT");
+const { rateLimitWebSocket } = require("./middleware/rateLimit");
 const { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } = require('./middleware/logEvents');
-const { DEV_BUILD, HOST_NAME, GAME_VERSION } = require('./config/config');
+const { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } = require('./config/config');
 
-const { WebsocketMessage, Socket } = require('./game/TypeDefinitions')
+// eslint-disable-next-line no-unused-vars
+const { WebsocketMessage, Socket } = require('./game/TypeDefinitions');
 const { genUniqueID, generateNumbID } = require('./game/math1');
 const wsutility = require('./game/wsutility');
-const invitesmanager = require('./game/invitesmanager')
-const gamemanager = require('./game/gamemanager');
+const { handleGameRoute } = require('./game/gamemanager/gamerouter');
+const { handleInviteRoute } = require('./game/invitesmanager/invitesrouter');
+const { unsubClientFromGameBySocket } = require('./game/gamemanager/gamemanager');
+const { subToInvitesList, unsubFromInvitesList, userHasInvite } = require('./game/invitesmanager/invitesmanager');
 
 const { ensureJSONString } = require('./utility/JSONUtils');
 const { executeSafely } = require('./utility/errorGuard');
@@ -82,8 +85,8 @@ const timeOfInactivityToRenewConnection = 10000;
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
 // If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
 // so IMMEDIATELY tell their opponent they disconnected!
-const closureCodesNotByChoice = [1006]
-const closureReasonsNotByChoice = ["Connection expired", "Logged out", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."]
+const closureCodesNotByChoice = [1006];
+const closureReasonsNotByChoice = ["Connection expired", "Logged out", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."];
 
 
 /**
@@ -121,52 +124,50 @@ function onConnectionRequest(ws, req) {
     // 3. Message too big
     // In ALL these cases, we are terminating all the IPs sockets for now!
     if (!rateLimitWebSocket(req, ws)) { // Connection not allowed
-        return terminateAllIPSockets(ws.metadata.IP)
+        return terminateAllIPSockets(ws.metadata.IP);
     };
 
     // Check if ip has too many connections
     if (clientHasMaxSocketCount(ws.metadata.IP)) {
-        console.log(`Client IP ${ws.metadata.IP} has too many sockets! Not connecting this one.`)
-        return ws.close(1009, 'Too Many Sockets')
+        console.log(`Client IP ${ws.metadata.IP} has too many sockets! Not connecting this one.`);
+        return ws.close(1009, 'Too Many Sockets');
     }
     if (memberHasMaxSocketCount(ws.metadata.user)) {
-        console.log(`Member ${ws.metadata.user} has too many sockets! Not connecting this one.`)
-        return ws.close(1009, 'Too Many Sockets')
+        console.log(`Member ${ws.metadata.user} has too many sockets! Not connecting this one.`);
+        return ws.close(1009, 'Too Many Sockets');
     }
 
     // Initialize who they are. Member? Browser ID?...
 
 
     verifyJWTWebSocket(ws, cookies); // Auto sets ws.metadata.user/role properties!
-    if (cookies['browser-id'] != null) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
+    if (cookies['browser-id']) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
 
-    if (ws.metadata.user == null && ws.metadata['browser-id'] == null) { // Terminate web socket connection request, they NEED authentication!
-        console.log("Authentication needed for WebSocket connection request. Req headers:")
+    if (!ws.metadata.user && !ws.metadata['browser-id']) { // Terminate web socket connection request, they NEED authentication!
+        console.log("Authentication needed for WebSocket connection request. Req headers:");
         console.log(req.headers);
-        return ws.close(1008, 'Authentication needed') // Code 1008 is Policy Violation
+        return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
     }
 
-    const id = giveWebsocketUniqueID(ws) // Sets the ws.metadata.id property of the websocket
+    const id = giveWebsocketUniqueID(ws); // Sets the ws.metadata.id property of the websocket
 
     websocketConnections[id] = ws; // Add the connection to our list of all websocket connections
-    addConnectionToConnectedIPs(ws.metadata.IP, id) // Add the conenction to THIS IP's list of connections (so we can cap on a per-IP basis)
-    addConnectionToConnectedMembers(ws.metadata.user, id)
+    addConnectionToConnectedIPs(ws.metadata.IP, id); // Add the conenction to THIS IP's list of connections (so we can cap on a per-IP basis)
+    addConnectionToConnectedMembers(ws.metadata.user, id);
 
     // Log the request
     logWebsocketStart(req, ws);
 
     if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
 
-    ws.on('message', (message) => { executeSafely(onmessage, 'Error caught within websocket on-message event:', req, ws, message) })
-    ws.on('close', (code, reason) => { executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason) })
-    ws.on('error', (error) => { executeSafely(onerror, 'Error caught within websocket on-error event:', ws, error) })
+    ws.on('message', (message) => { executeSafely(onmessage, 'Error caught within websocket on-message event:', req, ws, message); });
+    ws.on('close', (code, reason) => { executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason); });
+    ws.on('error', (error) => { executeSafely(onerror, 'Error caught within websocket on-error event:', ws, error); });
 
     // We include the sendmessage function on the websocket to avoid circular dependancy with these scripts!
     ws.metadata.sendmessage = sendmessage;
 
-    ws.metadata.clearafter = setTimeout(closeWebSocketConnection, maxWebSocketAgeMillis, ws, 1000, 'Connection expired') // Code 1000 for normal closure
-
-    invitesmanager.giveSocketMetadataHasInviteFunc(ws)
+    ws.metadata.clearafter = setTimeout(closeWebSocketConnection, maxWebSocketAgeMillis, ws, 1000, 'Connection expired'); // Code 1000 for normal closure
 
     // Send the current game vesion, so they will know whether to refresh.
     sendmessage(ws, 'general', 'gameversion', GAME_VERSION);
@@ -197,21 +198,25 @@ function onmessage(req, ws, rawMessage) {
     } catch (error) {
         if (!rateLimitWebSocket(req, ws)) return; // Don't miss rate limiting
         logReqWebsocketIn(ws, rawMessage); // Log it anyway before quitting
-        const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
+        const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
         console.error(errText);
         logEvents(errText, 'hackLog.txt');
         return sendmessage(ws, 'general', 'printerror', `Invalid JSON format!`);
     }
 
+    // Is the parsed message body an object? If not, accessing properties would give us a crash.
+    // We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
+    if (typeof message !== 'object' || message === null) return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid websocket message.");
+
     const isEcho = message.action === "echo";
     if (isEcho) {
-        const validEcho = cancelTimerOfMessageID(message) // Cancel timer to assume they've disconnected
+        const validEcho = cancelTimerOfMessageID(message); // Cancel timer to assume they've disconnected
         if (!validEcho) {
             if (!rateLimitWebSocket(req, ws)) return; // Don't miss rate limiting
             logReqWebsocketIn(ws, rawMessage); // Log the request anyway.
             const errText = `User detected sending invalid echo! Message: ${JSON.stringify(message)}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`;
-            console.error(errText)
-            logEvents(errText, 'errLog.txt')
+            console.error(errText);
+            logEvents(errText, 'errLog.txt');
         }
         return;
     }
@@ -224,29 +229,30 @@ function onmessage(req, ws, rawMessage) {
     // Log the request.
     logReqWebsocketIn(ws, rawMessage);
 
-    if (printIncomingAndOutgoingMessages && !isEcho) console.log("Received message: " + JSON.stringify(message))
+    if (printIncomingAndOutgoingMessages && !isEcho) console.log("Received message: " + JSON.stringify(message));
 
     // Send our echo here! We always send an echo to every message except echos themselves.
-    if (ws.metadata.sendmessage) ws.metadata.sendmessage(ws, "general", "echo", message.id)
+    if (ws.metadata.sendmessage) ws.metadata.sendmessage(ws, "general", "echo", message.id);
 
     // Route them to their specified location
     switch (message.route) {
         case "general":
-            handleGeneralMessage(ws, message) // { route, action, value, id }
+            handleGeneralMessage(ws, message); // { route, action, value, id }
             break;
         case "invites":
             // Forward them to invites subscription to handle their action!
-            invitesmanager.handleIncomingMessage(ws, message); // { route, action, value, id }
+            handleInviteRoute(ws, message); // { route, action, value, id }
             break;
         case "game":
             // Forward them to our games module to handle their action
-            gamemanager.handleIncomingMessage(ws, message);
+            handleGameRoute(ws, message);
             break;
-        default:
-            const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
-            logEvents(errText, 'hackLog.txt', { print: true })
+        default: { // Surround this case in a block so it's variables are not hoisted
+            const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+            logEvents(errText, 'hackLog.txt', { print: true });
             sendmessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
             return;
+        }
     }
 }
 
@@ -255,7 +261,7 @@ function onmessage(req, ws, rawMessage) {
  * @param {Socket} ws - The websocket
  */
 function informSocketToHardRefresh(ws) {
-    console.log(`Informing socket to hard refresh! ${wsutility.stringifySocketMetadata(ws)}`)
+    console.log(`Informing socket to hard refresh! ${wsutility.stringifySocketMetadata(ws)}`);
     sendmessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
 
@@ -263,9 +269,9 @@ function onclose(ws, code, reason) {
     reason = reason.toString();
 
     // Delete connection from object.
-    const id = ws.metadata.id
+    const id = ws.metadata.id;
     delete websocketConnections[id];
-    removeConnectionFromConnectedIPs(ws.metadata.IP, id)
+    removeConnectionFromConnectedIPs(ws.metadata.IP, id);
     removeConnectionFromConnectedMembers(ws.metadata.user, id);
 
     // What if the code is 1000, and reason is "Connection closed by client"?
@@ -278,17 +284,18 @@ function onclose(ws, code, reason) {
     // They would want to keep their invite, AND remain in their game!
     const closureNotByChoice = wasSocketClosureNotByTheirChoice(code, reason);
 
-    gamemanager.onSocketClosure(ws, { closureNotByChoice })
-
     // Unsubscribe them from all. NO LIST. It doesn't matter if they want to keep their invite or remain
     // connected to their game, without a websocket to send updates to, there's no point in any SUBSCRIPTION service!
+    // Unsubbing them from their game will start their auto-resignation timer.
     unsubClientFromAllSubs(ws, closureNotByChoice);
 
     // Cancel the timer to auto delete it at the end of its life
-    clearTimeout(ws.metadata.clearafter)
-    if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`)
+    clearTimeout(ws.metadata.clearafter);
+    if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`);
 
     cancelRenewConnectionTimer(ws);
+
+    if (reason === 'No echo heard') console.log(`Socket closed from no echo heard. ${wsutility.stringifySocketMetadata(ws)}`)
 }
 
 function onerror(ws, error) {
@@ -303,11 +310,16 @@ function onerror(ws, error) {
  * @param {string} action - What type of action the client should take within the subscription route.
  * @param {*} value - The contents of the message.
  * @param {number} [replyto] If applicable, the id of the socket message this message is a reply to.
+ * @param {Object} [options] - Additional options for sending the message.
+ * @param {boolean} [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendmessage(ws, sub, action, value, replyto) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
-    if (ws == null) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`)
+function sendmessage(ws, sub, action, value, replyto, { skipLatency } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+    // If we're applying simulated latency delay, set a timer to send this message.
+    if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) return setTimeout(sendmessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
+
+    if (!ws) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`);
     if (ws.readyState === WebSocket.CLOSED) {
-        const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`
+        const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`;
         logEvents(errText, 'errLog.txt', { print: true });
         return;
     }
@@ -316,22 +328,22 @@ function sendmessage(ws, sub, action, value, replyto) { // socket, invites, crea
         sub, // general/error/invites/game
         action, // sub/unsub/createinvite/cancelinvite/acceptinvite
         value // sublist/inviteslist/move
-    }
+    };
     // Only include an id (and except an echo back) if this is NOT an echo'ing itself!
-    const isEcho = action === "echo"
+    const isEcho = action === "echo";
     if (!isEcho) payload.id = generateNumbID(10);
-    if (replyto != null) payload.replyto = replyto;
+    if (typeof replyto === 'number') payload.replyto = replyto;
 
-    if (printIncomingAndOutgoingMessages && !isEcho) console.log(`Sending: ${JSON.stringify(payload)}`)
+    if (printIncomingAndOutgoingMessages && !isEcho) console.log(`Sending: ${JSON.stringify(payload)}`);
 
     // Set a timer. At the end, just assume we've disconnected and start again.
     // This will be canceled if we here the echo in time.
-    if (!isEcho) echoTimers[payload.id] = setTimeout(closeWebSocketConnection, timeToWaitForEchoMillis, ws, 1014, "No echo heard", payload.id) // Code 1014 is Bad Gateway
+    if (!isEcho) echoTimers[payload.id] = setTimeout(closeWebSocketConnection, timeToWaitForEchoMillis, ws, 1014, "No echo heard", payload.id); // Code 1014 is Bad Gateway
     //console.log(`Set timer of message id "${id}"`)
 
     const stringifiedPayload = JSON.stringify(payload);
     ws.send(stringifiedPayload);
-    if (!isEcho) logReqWebsocketOut(ws, stringifiedPayload)
+    if (!isEcho) logReqWebsocketOut(ws, stringifiedPayload);
 
     rescheduleRenewConnection(ws);
 }
@@ -346,13 +358,13 @@ function rescheduleRenewConnection(ws) {
     cancelRenewConnectionTimer(ws);
     // Only reset the timer if they are subscribed to a game,
     // or they have an open invite!
-    if (!ws.metadata.subscriptions.game && !ws.metadata.hasInvite()) return;
+    if (!ws.metadata.subscriptions.game && !userHasInvite(ws)) return;
 
-    ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws)
+    ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws);
 }
 
 function cancelRenewConnectionTimer(ws) {
-    clearTimeout(ws.metadata.renewConnectionTimeoutID)
+    clearTimeout(ws.metadata.renewConnectionTimeoutID);
     ws.metadata.renewConnectionTimeoutID = undefined;
 }
 
@@ -368,10 +380,10 @@ function renewConnection(ws) {
 // This wil cancel the timer that assumes they've disconnected after a few seconds!
 function cancelTimerOfMessageID(data) { // { sub, action, value, id }
     const echoMessageID = data.value; // If the action is an "echo", the message ID their echo'ing is stored in "value"!
-    const timeoutID = echoTimers[echoMessageID]
-    if (timeoutID == null) return false; // Timer doesn't exist. Invalid echo messageID!
+    const timeoutID = echoTimers[echoMessageID];
+    if (timeoutID === undefined) return false; // Timer doesn't exist. Invalid echo messageID!
     clearTimeout(timeoutID);
-    delete echoTimers[echoMessageID]
+    delete echoTimers[echoMessageID];
     return true;
 }
 
@@ -401,7 +413,7 @@ function addConnectionToConnectedMembers(member, socketID) {
 function removeConnectionFromConnectedIPs(IP, id) {
     const connectionList = connectedIPs[IP];
     if (!connectionList) return;
-    if (connectedIPs[IP].length === 0) return console.log("connectedIPs[IP] is DEFINED [], yet EMPTY! If it's empty, it should have been deleted!")
+    if (connectedIPs[IP].length === 0) return console.log("connectedIPs[IP] is DEFINED [], yet EMPTY! If it's empty, it should have been deleted!");
     // Check if the value exists in the array
     const index = connectionList.indexOf(id);
     if (index === -1) return;
@@ -421,7 +433,7 @@ function removeConnectionFromConnectedMembers(member, socketID) {
     if (!member) return; // Not logged in
     const membersSocketIDsList = connectedMembers[member];
     const indexOfSocketID = membersSocketIDsList.indexOf(socketID);
-    membersSocketIDsList.splice(indexOfSocketID, 1)
+    membersSocketIDsList.splice(indexOfSocketID, 1);
     if (membersSocketIDsList.length === 0) delete connectedMembers[member];
 }
 
@@ -440,17 +452,22 @@ function clientHasMaxSocketCount(IP) {
  * @returns {boolean} *true* if they have too many sockets.
  */
 function memberHasMaxSocketCount(member) {
-    return connectedMembers[member]?.length >= maxSocketsAllowedPerMember
+    return connectedMembers[member]?.length >= maxSocketsAllowedPerMember;
 }
 
+/**
+ * 
+ * @param {string} IP 
+ * @returns 
+ */
 function terminateAllIPSockets(IP) {
-    if (IP == null) return;
+    if (!IP) return;
     const connectionList = connectedIPs[IP];
     if (!connectionList) return; // IP is defined, but they don't have any sockets to terminate!
     for (const id of connectionList) {
         //console.log(`Terminating 1.. id ${id}`)
         const ws = websocketConnections[id];
-        ws.close(1009, 'Message Too Big') // Perhaps this will be a duplicate close action? Because rateLimit.js also can also close the socket.
+        ws.close(1009, 'Message Too Big'); // Perhaps this will be a duplicate close action? Because rateLimit.js also can also close the socket.
     }
 
     // console.log(`Terminated all of IP ${IP}`)
@@ -463,14 +480,14 @@ function closeWebSocketConnection(ws, code, message, messageID) {
     }
     //console.log(`Closing web socket connection.. Code ${code}. Message "${message}"`)
     const readyStateClosed = ws.readyState === WebSocket.CLOSED;
-    if (readyStateClosed && message === "Connection expired") return console.log(`Web socket already closed! This function should not have been run. Code ${code}. Message ${message}`)
+    if (readyStateClosed && message === "Connection expired") return console.log(`Web socket already closed! This function should not have been run. Code ${code}. Message ${message}`);
     else if (readyStateClosed) return;
-    ws.close(code, message)
+    ws.close(code, message);
 }
 
 function getCookiesFromWebsocket(req) { // req is the WEBSOCKET on-connection request!
     //console.log(req.cookies) // UNDEFINED FOR WebSocket connections!!
-    const rawCookies = req.headers?.cookie // In the format: "invite-tag=etg5b3bu; jwt=9732fIESLGIESLF"
+    const rawCookies = req.headers?.cookie; // In the format: "invite-tag=etg5b3bu; jwt=9732fIESLGIESLF"
     const cookies = {};
     if (!rawCookies || typeof rawCookies !== 'string') return cookies;
 
@@ -482,8 +499,8 @@ function getCookiesFromWebsocket(req) { // req is the WEBSOCKET on-connection re
             cookies[name] = value;
         });
     } catch (e) {
-        const errText = `Websocket connection request contained cookies in an invalid format!! Cookies: ${ensureJSONString(rawCookies)}\n${e.stack}`
-        logEvents(errText, 'hackLog.txt', { print: true })
+        const errText = `Websocket connection request contained cookies in an invalid format!! Cookies: ${ensureJSONString(rawCookies)}\n${e.stack}`;
+        logEvents(errText, 'hackLog.txt', { print: true });
     }
 
     return cookies;
@@ -502,61 +519,65 @@ function handleGeneralMessage(ws, data) { // data: { route, action, value, id }
         case 'feature-not-supported':
             handleFeatureNotSupported(ws, data.value);
             break;
-        default:
-            const errText = `UNKNOWN web socket received action in general route! ${data.action}. Socket: ${wsutility.stringifySocketMetadata(ws)}`
+        default: { // Surround this case in a block so that it's variables are not hoisted
+            const errText = `UNKNOWN web socket received action in general route! ${data.action}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
             logEvents(errText, 'hackLog.txt', { print: true });
-            sendmessage(ws, 'general', 'printerror', `Unknown action "${data.action}" in route general.`)
+            sendmessage(ws, 'general', 'printerror', `Unknown action "${data.action}" in route general.`);
             return;
+        }
     }
 }
 
 function handleFeatureNotSupported(ws, description) {
-    const errText = `Client unsupported feature: ${ensureJSONString(description)}   Socket: ${wsutility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`
-    logEvents(errText, 'featuresUnsupported.txt', { print: true })
+    const errText = `Client unsupported feature: ${ensureJSONString(description)}   Socket: ${wsutility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`;
+    logEvents(errText, 'featuresUnsupported.txt', { print: true });
 }
 
 function handleSubbing(ws, value) {
-    if (ws.metadata.subscriptions == null) ws.metadata.subscriptions = {};
+    if (!ws.metadata.subscriptions) ws.metadata.subscriptions = {};
 
     // What are they wanting to subscribe to for updates?
     switch (value) {
         case "invites":
             // Subscribe them to the invites list
-            invitesmanager.subClientToList(ws)
+            subToInvitesList(ws);
             break;
-        default:
-            const errText = `Cannot subscribe user to strange new subscription list ${value}! Socket: ${wsutility.stringifySocketMetadata(ws)}`
+        default: { // Surround this case in a block so that it's variables are not hoisted
+            const errText = `Cannot subscribe user to strange new subscription list ${value}! Socket: ${wsutility.stringifySocketMetadata(ws)}`;
             logEvents(errText, 'hackLog.txt', { print: true });
-            sendmessage(ws, 'general', 'printerror', `Cannot subscribe to "${value}" list!`)
+            sendmessage(ws, 'general', 'printerror', `Cannot subscribe to "${value}" list!`);
             return;
+        }
     }
 }
 
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function handleUnsubbing(ws, key, value, closureNotByChoice) {
+function handleUnsubbing(ws, key, subscription, closureNotByChoice) { // subscription: game: { id, color }
     // What are they wanting to unsubscribe from updates from?
     switch (key) {
         case "invites":
             // Unsubscribe them from the invites list
-            invitesmanager.unsubClientFromList(ws, closureNotByChoice)
+            unsubFromInvitesList(ws, closureNotByChoice);
             break;
         case "game":
-            gamemanager.unsubClientFromGame(ws, { sendMessage: false }) // info: { id: gameID, color: ourColor }
+            // If the unsub is not by choice (network interruption instead of closing tab), then we give them
+            // a 5 second cushion before starting an auto-resignation timer
+            unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
             break;
-        default:
-            const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`
-            console.error(errText);
-            logEvents(errText, 'hackLog.txt');
-            return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`)
+        default: { // Surround this case in a block so that it's variables are not hoisted
+            const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+            logEvents(errText, 'hackLog.txt', { print: true });
+            return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`);
+        }
     }
 }
 
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
 function unsubClientFromAllSubs(ws, closureNotByChoice) {
-    if (ws.metadata.subscriptions == null) return; // No subscriptions
+    if (!ws.metadata.subscriptions) return; // No subscriptions
 
-    const subscriptions = ws.metadata.subscriptions
-    const subscriptionsKeys = Object.keys(subscriptions)
+    const subscriptions = ws.metadata.subscriptions;
+    const subscriptionsKeys = Object.keys(subscriptions);
     for (const key of subscriptionsKeys) {
         const thisSubscription = subscriptions[key]; // invites/game
         handleUnsubbing(ws, key, thisSubscription, closureNotByChoice);
@@ -576,7 +597,7 @@ const wsserver = (function() {
         WebSocketServer = new WebSocket.Server({ server: httpsServer }); // Create a WebSocket server instance
         // WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
         WebSocketServer.on('connection', (ws, req) => {
-            executeSafely(onConnectionRequest, 'Error caught within websocket on-connection request:', ws, req)
+            executeSafely(onConnectionRequest, 'Error caught within websocket on-connection request:', ws, req);
         }); // Event handler for new WebSocket connections
     }
 
@@ -589,15 +610,15 @@ const wsserver = (function() {
     function closeAllSocketsOfMember(member, closureCode, closureReason) {
         connectedMembers[member]?.slice().forEach(socketID => { // slice() makes a copy of it
             const ws = websocketConnections[socketID];
-            closeWebSocketConnection(ws, closureCode, closureReason)
-        })
+            closeWebSocketConnection(ws, closureCode, closureReason);
+        });
     }
 
     return Object.freeze({
         start,
         closeAllSocketsOfMember
-    })
+    });
 
 })();
 
-module.exports = wsserver
+module.exports = wsserver;

@@ -14,8 +14,8 @@ const secureRedirect = require('./secureRedirect');
 const errorHandler = require('./errorHandler');
 const { logger } = require('./logEvents');
 const { verifyJWT } = require('./verifyJWT');
-const { rateLimit } = require('./rateLimit')
-const { protectedStatic } = require('./protectedStatic')
+const { rateLimit } = require('./rateLimit');
+const { protectedStatic } = require('./protectedStatic');
 
 // External translation middleware
 const i18next = require('i18next');
@@ -49,10 +49,10 @@ function configureMiddleware(app) {
     app.use(credentials); // Handle credentials check. Must be before CORS.
 
     app.use(
-      middleware.handle(i18next, {
-        removeLngFromUrl: false
-      })
-    )
+        middleware.handle(i18next, {
+            removeLngFromUrl: false
+        })
+    );
 
     /**
      * Cross Origin Resource Sharing
@@ -98,7 +98,7 @@ function configureMiddleware(app) {
     app.use('/member', require('../routes/member'));
 
     // If we've reached this point, send our 404 page.
-    app.all('*', require('./send404'))
+    app.all('*', require('./send404'));
 
     // Custom error handling. Comes after 404.
     app.use(errorHandler);

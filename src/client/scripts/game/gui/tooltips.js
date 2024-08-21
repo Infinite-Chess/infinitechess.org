@@ -8,13 +8,13 @@
 
 (function() {
 
-    const tooltipClasses = ['tooltip-dl', 'tooltip-d', 'tooltip-dr']
+    const tooltipClasses = ['tooltip-dl', 'tooltip-d', 'tooltip-dr'];
     const tooltipClasses_Dotted = tooltipClasses.map(classname => { return '.' + classname; });
 
     const tooltips = document.querySelectorAll(tooltipClasses_Dotted.join(', '));
 
-    /** The time, in the css, it takes for a tooltip to appear. */
-    const tooltipDelayMillis = 1000;
+    /** The time, in the css, it takes for a tooltip to appear. KEEP THE SAME AS IN PLAY.CSS */
+    const tooltipDelayMillis = 500;
     /** The time, after the tooltip class is deleted (clicked button),
      * in which it will be added again if we're still hovering over. */
     const timeToReAddTooltipClassAfterDeletionMillis = 2000;
@@ -113,7 +113,7 @@
 
         function resetTimerToAddClass() {
             cancelTimerToAddClass();
-            addBackClassTimeoutID = setTimeout(addBackClass, timeToReAddTooltipClassAfterDeletionMillis)
+            addBackClassTimeoutID = setTimeout(addBackClass, timeToReAddTooltipClassAfterDeletionMillis);
         }
 
         function addBackClass() {
@@ -123,7 +123,7 @@
             cancelTimerToAddClass();
             tooltip.classList.add(tooltipThisHas);
             removedClass = false;
-            if (isHovering) onTooltipVisible()
+            if (isHovering) onTooltipVisible();
         }
 
         tooltip.addEventListener('mouseenter', () => {
@@ -131,7 +131,7 @@
             cancelFastTransitionExpiryTimer();
 
             if (fastTransitionMode) onTooltipVisible();
-            else hoveringTimer = setTimeout(onTooltipVisible, tooltipDelayMillis)
+            else hoveringTimer = setTimeout(onTooltipVisible, tooltipDelayMillis);
         });
 
         tooltip.addEventListener('mouseleave', function() {
@@ -142,7 +142,7 @@
 
             if (tooltipVisible) {
                 enableFastTransition();
-                fastTransitionTimeoutID = setTimeout(disableFastTransition, fastTransitionCooldownMillis)
+                fastTransitionTimeoutID = setTimeout(disableFastTransition, fastTransitionCooldownMillis);
             }
 
             tooltipVisible = false;
@@ -152,12 +152,12 @@
             isHolding = true;
             removeClass();
             resetTimerToAddClass();
-        })
+        });
 
         tooltip.addEventListener('mouseup', function() {
             isHolding = false;
             removeClass();
             resetTimerToAddClass();
-        })
+        });
     });
 })();

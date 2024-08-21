@@ -9,11 +9,12 @@
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Log In</title>
+        <title><%=t('login.title')%></title>
         <link rel='stylesheet' href='/css/login.css'>
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <script defer src="/scripts/memberHeader.js"></script>
         <script defer src="/scripts/login.js"></script>
     </head>
     <body>
@@ -28,15 +29,12 @@
                 <a href="/news">
                     <p><%=t('header.news')%></p>
                 </a>
-                <a href="/login">
-                    <p class="currPage"><%=t('header.login')%></p>
+                <a href="/login" id="loginlink">
+                    <p id="logintext" class="currPage"><%=t('header.login')%></p>
                 </a>
-                <a href="/createaccount">
-                    <p><%=t('header.createaccount')%></p>
+                <a href="/createaccount" id="createaccountlink">
+                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
                 </a>
-                <!-- This script is only used on this page to monitor whether
-                 the browser icon should be light or dark theme -->
-                <script src="/scripts/memberHeader.js"></script>
             </nav>
         </header>
         <main>

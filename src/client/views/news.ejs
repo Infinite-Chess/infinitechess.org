@@ -9,11 +9,12 @@
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>News</title>
+        <title><%=t('news.title')%></title>
         <link rel='stylesheet' href='/css/news.css'>
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <script defer src="/scripts/memberHeader.js"></script>
     </head>
     <body>
         <header>
@@ -33,7 +34,6 @@
                 <a href="/createaccount" id="createaccountlink">
                     <p id="createaccounttext"><%=t('header.createaccount')%></p>
                 </a>
-                <script src="/scripts/memberHeader.js"></script>
             </nav>
         </header>
         <main>

@@ -10,18 +10,18 @@
 
 const bcrypt = require('bcrypt');
 
-const { handleLogin } = require('./authController')
-const { sendEmailConfirmation } = require('./sendMail')
-const { addMember, getMemberData, doesMemberExist, isEmailAvailable } = require('./members.js')
+const { handleLogin } = require('./authController');
+const { sendEmailConfirmation } = require('./sendMail');
+const { addMember, getMemberData, doesMemberExist, isEmailAvailable } = require('./members.js');
 const { logEvents } = require('../middleware/logEvents');
 const { isEmailBanned } = require('../middleware/banned');
-const { getTranslationForReq } = require('../config/setupTranslations.js');
+const { getTranslationForReq } = require('../utility/translate');
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
  * 
  * However, the following have been used:
- * admin, amazon, google, tesla, epic, epicgames, usa, america
+ * admin
  */
 const reservedUsernames = [
     'infinitechess',
@@ -74,16 +74,17 @@ const profainWords = [
 ];
 
 // Called when create account form submitted
-const createNewMember = async (req, res) => {
+const createNewMember = async(req, res) => {
     if (!req.body) {
-        console.log(`User sent a bad create account request missing the whole body!`)
+        console.log(`User sent a bad create account request missing the whole body!`);
         return res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
     }
     // First make sure we have all 3 variables.
+    // eslint-disable-next-line prefer-const
     let { username, email, password } = req.body;
     if (!username || !email || !password) {
-        console.error('We received request to create new member without all supplied username, email, and password!')
-        return res.status(400).redirect('/400') // Bad request
+        console.error('We received request to create new member without all supplied username, email, and password!');
+        return res.status(400).redirect('/400'); // Bad request
     }
 
     // Make the email lowercase, so we don't run into problems with seeing if capitalized emails are taken!
@@ -96,16 +97,16 @@ const createNewMember = async (req, res) => {
     if (doEmailFormatChecks(email, req, res) !== true) return;
     if (doPasswordFormatChecks(password, req, res) !== true) return;
 
-    await generateAccount({ username, email, password })
+    await generateAccount({ username, email, password });
 
     // SEND EMAIL CONFIRMATION
-    const memberData = getMemberData(usernameLowercase)
+    const memberData = getMemberData(usernameLowercase);
     sendEmailConfirmation(memberData);
 
     // GENERATE ACCESS AND REFRESH TOKENS! They just created an account, so log them in!
     // This will handle our response/redirect
     handleLogin(req, res);
-}
+};
 
 /**
  * Generate an account only from the provided username, email, and password.
@@ -134,13 +135,12 @@ async function generateAccount({ username, email, password, autoVerify }) {
         elo: 1200,
         // , bio: ''
     };
-    if (!autoVerify) newMember.verified = [false, generateID(24)]
+    if (!autoVerify) newMember.verified = [false, generateID(24)];
     
     // Without 'await' this returns a promise.
-    const success = addMember(usernameLowercase, newMember)
-    if (!success) return res.status(500).redirect('/500') // Server error (username already exists)
+    if (!addMember(usernameLowercase, newMember)) return; // Failure to create (username taken). If we do proper checks this point should NEVER happen.
     
-    const logTxt = `Created new member: ${newMember.username}`
+    const logTxt = `Created new member: ${newMember.username}`;
     logEvents(logTxt, 'newMemberLog.txt', { print: true });
 }
 
@@ -160,7 +160,7 @@ function getRegisterData(req, res) {
  * @param {number} length - The length of the desired random string
  * @returns {string} The random ID
  */
-const generateID = function (length) {
+const generateID = function(length) {
     let result = '';
     const characters = '0123456789abcdefghijklmnopqrstuvwxyz';
     const charactersLength = characters.length;
@@ -168,7 +168,7 @@ const generateID = function (length) {
         result += characters.charAt(Math.random() * charactersLength);
     }
     return result;
-}
+};
 
 // Route
 // Returns whether the email parameter is associated with an account. Called from inside the createaccount script.
@@ -176,7 +176,7 @@ const generateID = function (length) {
 const checkEmailAssociated = (req, res) => {
     if (isEmailAvailable(req.params.email.toLowerCase())) res.json([true]);
     else res.json([false]);
-}
+};
 
 /**
  * Route handler to check if a username is available to use (not taken, reserved, or baaaad word).
@@ -201,7 +201,7 @@ function checkUsernameAvailable(req, res) {
     });
 }
 
-const doUsernameFormatChecks = function (username, req, res) {
+const doUsernameFormatChecks = function(username, req, res) {
     // First we check the username's length
     if (username.length < 3 || username.length > 20) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_length", req) });
     // Then the format
@@ -218,53 +218,54 @@ const doUsernameFormatChecks = function (username, req, res) {
     // Lastly check for profain words
     if (checkProfanity(usernameLowercase)) return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-username_bad_word", req) });
     return true; // Everything's good, no conflicts!
-}
+};
 
-const onlyLettersAndNumbers = function (string) {
+const onlyLettersAndNumbers = function(string) {
     if (!string) return true;
     return /^[a-zA-Z0-9]+$/.test(string);
-}
+};
 
 // Returns true if bad word is found
-const checkProfanity = function (string) {
-    for (let i = 0; i < profainWords.length; i++) {
-        profanity = profainWords[i];
+const checkProfanity = function(string) {
+    for (const profanity of profainWords) {
         if (string.includes(profanity)) return true;
     }
     return false;
-}
+};
 
-const doEmailFormatChecks = function (string, req, res) {
+const doEmailFormatChecks = function(string, req, res) {
     if (string.length > 320) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_too_long", req) }); // Max email length
     if (!isValidEmail(string)) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_invalid", req) });
-    if(!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-email_in_use", req) });
+    if (!isEmailAvailable(string.toLowerCase())) return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-email_in_use", req) });
     if (isEmailBanned(string)) {
         const errMessage = `Banned user with email ${string.toLowerCase()} tried to recreate their account!`;
-        logEvents(errMessage, 'bannedIPLog.txt', { print: true })
+        logEvents(errMessage, 'bannedIPLog.txt', { print: true });
         return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-you_are_banned", req) });
     }
     return true;
-}
+};
 
-const isValidEmail = function (string) {
+const isValidEmail = function(string) {
     // Credit for the regex: https://stackoverflow.com/a/201378
+    // eslint-disable-next-line no-control-regex
     const regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
     return regex.test(string);
-}
+};
 
-const doPasswordFormatChecks = function (password, req, res) {
+const doPasswordFormatChecks = function(password, req, res) {
     // First we check password length
     if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_length", req) });
     if (!isValidPassword(password)) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_format", req) });
     if (password.toLowerCase() === 'password') return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_password", req) });
     return true;
-}
+};
 
-const isValidPassword = function (string) {
+const isValidPassword = function(string) {
+    // eslint-disable-next-line no-useless-escape
     const regex = /^[a-zA-Z0-9!@#$%^&*\?]+$/;
     if (regex.test(string) === true) return true;
     return false;
-}
+};
 
 module.exports = {
     createNewMember,

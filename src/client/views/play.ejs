@@ -17,20 +17,17 @@
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
-        <title>Infinite Chess - Play</title>
+        <title><%=t('play.title')%></title>
         <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
         <!-- Custom fonts: Merriweather, Open Sans -->
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-        <!-- Preloads so that when elements inherit new css properties, we don't have to wait to fetch the resource.
-         Right now this only preloads the png, because we don't know if avif or webp is supported. -->
-        <link rel="preload" href="/img/game/promotions.png" as="image" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
 
-        <script defer src="/scripts/validation.js" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
         <!-- All clientside game scripts are inject here -->
 
+        <script defer src="/scripts/memberHeader.js"></script>
     </head>
     <!-- The onload event listener to call main.start() is now within the htmlscript! -->
     <body>
@@ -59,9 +56,9 @@
 
             <div id="loading-animation" class="animation-container">
                 <div id="loading-glow" class="loading-glow loadingGlowAnimation"></div>
-                <span id="loading-text" class="loading-text pulsing"><%=t('play.main-menu.loading')%></span>
+                <span id="loading-text" class="loading-text pulsing"><%=t('play.loading')%></span>
                 <div id="loading-error" class="loading-error hidden">
-                    <h1><%=t('play.main-menu.error')%></h1>
+                    <h1><%=t('play.error')%></h1>
                     <p id="loading-error-text"></p>
                 </div>
                 <div class="checkerboard"></div>
@@ -448,6 +445,21 @@
                         <div class="whosturn">
                             <div id="dot" class="dotwhite"></div>
                             <div id="whosturn"><%=t('play.footer.white_to_move')%></div>
+
+                            <!-- Draw Offer UI -->
+                            <div id="draw_offer_ui" class="draw_offer_ui hidden">
+                                <p class="offer_title"><%=t('play.drawoffer.question')%></p>
+                                <button id="acceptdraw" class="acceptdraw button icon" alt="Accept draw offer">
+                                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none">
+                                        <path d="M19 7.34189C18.6095 6.95136 17.9763 6.95136 17.5858 7.34189L10.3407 14.587C9.95016 14.9775 9.31699 14.9775 8.92647 14.587L6.38507 12.0456C5.99454 11.6551 5.36138 11.6551 4.97085 12.0456C4.58033 12.4361 4.58033 13.0693 4.97085 13.4598L7.51774 16C8.68969 17.1689 10.5869 17.1677 11.7574 15.9974L19 8.7561C19.3905 8.36558 19.3905 7.73241 19 7.34189Z" fill="#0F0F0F"/>
+                                    </svg>
+                                </button>
+                                <button id="declinedraw" class="declinedraw button icon" alt="Decline draw offer">
+                                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none">
+                                        <path d="M17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L13.4142 12L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L12 13.4142L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L10.5858 12L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L12 10.5858L17.2929 5.29289Z" fill="#000000"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         <div id="playerblack" class="playerblack"><%=t('play.footer.player_black')%></div>
                         <div id="timer-container-black" class="timerblackcontainer">
@@ -503,6 +515,7 @@
                     <button id="toggleperspective" class="toggleperspective button"><%=t('play.pause.perspective')%></button>
                     <button id="copygame" class="copygame button"><%=t('play.pause.copy')%></button>
                     <button id="pastegame" class="pastegame button"><%=t('play.pause.paste')%></button>
+                    <button id="offerdraw" class="offerdraw button"><%=t('play.pause.offer_draw')%></button>
                     <button id="mainmenu" class="mainmenu button"><%=t('play.pause.main_menu')%></button>
                 </div>
 

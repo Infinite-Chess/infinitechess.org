@@ -5,7 +5,7 @@ const path = require('path');
 
 const { getMemberData,requestConfirmEmail } = require('../controllers/memberController');
 const { removeAccount } = require('../controllers/removeAccountController');
-const { getLanguageToServe } = require("../config/setupTranslations")
+const { getLanguageToServe } = require("../utility/translate");
 
 
 router.get('/:member', (req, res) => {
@@ -15,8 +15,8 @@ router.get('/:member', (req, res) => {
 
 router.get('/:member/data', getMemberData);
 
-router.get('/:member/send-email', requestConfirmEmail)
+router.get('/:member/send-email', requestConfirmEmail);
 
-router.delete('/:member/delete', removeAccount)
+router.delete('/:member/delete', removeAccount);
 
 module.exports = router;
