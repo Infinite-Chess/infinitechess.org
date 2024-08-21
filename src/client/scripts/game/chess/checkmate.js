@@ -42,8 +42,8 @@ const checkmate = (function() {
         // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
         const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate');
         if (gamefile.inCheck && usingCheckmate) {
-            if (whosTurn === 'white') return 'black checkmate'; // Black wins
-            else return 'white checkmate'; // White wins
+            const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+            return `${colorThatWon} checkmate`;
         } else return 'draw stalemate';
     }
 
