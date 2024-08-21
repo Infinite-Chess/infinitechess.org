@@ -17,7 +17,7 @@
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
-        <title>Infinite Chess - Play</title>
+        <title><%=t('play.title')%></title>
         <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
@@ -56,9 +56,9 @@
 
             <div id="loading-animation" class="animation-container">
                 <div id="loading-glow" class="loading-glow loadingGlowAnimation"></div>
-                <span id="loading-text" class="loading-text pulsing"><%=t('play.main-menu.loading')%></span>
+                <span id="loading-text" class="loading-text pulsing"><%=t('play.loading')%></span>
                 <div id="loading-error" class="loading-error hidden">
-                    <h1><%=t('play.main-menu.error')%></h1>
+                    <h1><%=t('play.error')%></h1>
                     <p id="loading-error-text"></p>
                 </div>
                 <div class="checkerboard"></div>
