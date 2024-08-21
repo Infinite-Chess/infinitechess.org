@@ -111,20 +111,18 @@ const formatconverter = (function() {
         }
         if (longformat["metadata"]) shortformat += whitespace;
 
-        let turnOrder = "";
-        let turnOrderStr = "";
-        if (longformat["gameRules"]) {
-            if (longformat["gameRules"]["turnOrder"]) {
-                turnOrder = longformat["gameRules"]["turnOrder"];
-            }
+        // Turn order
+        const turnOrderArray = []; // ['w','b']
+        if (!longformat.gameRules.turnOrder) throw new Error("turnOrder gamerule MUST be present when compressing a game.");
+        for (const color of longformat.gameRules.turnOrder) {
+            if (color === 'white') turnOrderArray.push('w');
+            else if (color === 'black') turnOrderArray.push('b');
+            else throw new Error(`Invalid color '${color}' when parsing turn order when copying game!`);
         }
-
-        turnOrder = turnOrder || ['white', 'black'];
-
-        turnOrderStr = turnOrder.join(":");
-        
-        if (turnOrderStr == "white:black") shortformat += 'w ';
-        else if (turnOrderStr == "black:white") shortformat += 'b ';
+        let turn_order = turnOrderArray.join(':'); // 'w:b'
+        if (turn_order === 'w:b') turn_order = 'w'; // Short for 'w:b'
+        else if (turn_order === 'b:w') turn_order = 'b'; // Short for 'b:w'
+        shortformat += turn_order + ' ';
 
         // en passant
         if (longformat["enpassant"]) shortformat += `${longformat["enpassant"].toString()} `;
@@ -204,11 +202,11 @@ const formatconverter = (function() {
         }
 
         // Extra gamerules not used will be stringified into the ICN
-        const includedRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions"])
+        const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder"]);
         const extraGameRules = {};
         let added_extras = false;
         for (const key in longformat.gameRules) {
-            if (includedRules.has(key)) continue;
+            if (excludedGameRules.has(key)) continue;
             extraGameRules[key] = longformat.gameRules[key];
             added_extras = true;
         }
@@ -225,7 +223,7 @@ const formatconverter = (function() {
         }
 
         // moves
-        if (longformat.moves) shortformat += longToShortMoves(longformat.moves, { turnOrder, fullmove, compact_moves, make_new_lines });
+        if (longformat.moves) shortformat += longToShortMoves(longformat.moves, { turnOrderArray, fullmove, compact_moves, make_new_lines });
 
         return shortformat;
     }
@@ -234,23 +232,27 @@ const formatconverter = (function() {
      * Converts moves from either the format `[{ startCoords, endCoords }, ...]` or `['1,2>3,4','5,6>7,8N']`
      * to short string format `1,2>3,4|5,6>7,8N`
      * @param {Object} longmoves 
-     * @param {Object} options - Contains the `next_move` and `compact_moves` parameters.
+     * @param {Object} options - Additional options
+     * @param {string} options.turnOrderArray - ['w','b']
+     * @param {string} options.fullmove
+     * @param {string} options.make_new_lines
+     * @param {string} options.compact_moves
      */
-    function longToShortMoves(longmoves, { turnOrder, fullmove, make_new_lines, compact_moves }) {
+    function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines, compact_moves }) {
         // If the moves are provided like: ['1,2>3,4','5,6>7,8N'], then quick return!
         if (typeof longmoves[0] === 'string') return longmoves.join('|');
 
+        let turnIndex = 0;
         let shortmoves = "";
-        for (let i = 0; i < longmoves.length; i++){
-            let longmove = longmoves[i];
-            if (i % turnOrder.length == 0 && compact_moves == 0){
-                shortmoves += (!make_new_lines && i != 0 ? " " : "");
-                shortmoves += fullmove.toString() + ". ";
-                if (turnOrder.join(":") == 'black:white' && i == 0) {
-                    shortmoves += "   ...   | "; // Back compatability
-                }
-            } else {
-                shortmoves += (i == 0 ? "" : "|");
+        for (let i = 0; i < longmoves.length; i++) {
+            const longmove = longmoves[i];
+            if (compact_moves === 0) {
+                if (turnIndex === 0) {
+                    shortmoves += (!make_new_lines && i !== 0 ? " " : "");
+                    shortmoves += fullmove + ". ";
+                } else shortmoves += " | ";
+            } else { // compact_moves > 0
+                shortmoves += (i === 0 ? "" : "|");
             }
             shortmoves += (longmove["type"] && (compact_moves == 0 || compact_moves == 1) ? LongToShort_Piece(longmove["type"]) : "");
             shortmoves += longmove["startCoords"].toString();
@@ -270,9 +272,12 @@ const formatconverter = (function() {
             }
             shortmoves = shortmoves.trimEnd();
 
-            if (i + 1 % turnOrder.length == 0) {
+            // Prep for next iteration by adjusting the turn index
+            turnIndex++;
+            if (turnIndex > turnOrderArray.length - 1) { // Wrap around back to first turn
+                turnIndex = 0;
                 fullmove += 1;
-                if (i != longmoves.length - 1 && compact_moves == 0) {
+                if (i !== longmoves.length - 1 && compact_moves === 0) {
                     shortmoves += (make_new_lines ? "\n" : " |");
                 }
             }
