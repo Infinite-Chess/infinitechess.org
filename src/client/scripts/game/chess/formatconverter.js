@@ -101,15 +101,15 @@ const formatconverter = (function() {
         const metadata_keys_used = {};
         for (const key of metadata_key_ordering) {
             if (longformat.metadata[key]) {
-                shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
+                shortformat += `[${key} "${longformat.metadata[key]}"]${whitespace}`;
                 metadata_keys_used[key] = true;
             }
         }
         // append the rest of the metadata
-        for (const key in longformat["metadata"]) {
-            if (longformat.metadata[key] && !metadata_keys_used[key]) shortformat += `[${key} "${longformat["metadata"][key]}"]${whitespace}`;
+        for (const key in longformat.metadata) {
+            if (longformat.metadata[key] && !metadata_keys_used[key]) shortformat += `[${key} "${longformat.metadata[key]}"]${whitespace}`;
         }
-        if (longformat["metadata"]) shortformat += whitespace;
+        if (longformat.metadata) shortformat += whitespace;
 
         // Turn order
         const turnOrderArray = []; // ['w','b']
@@ -125,25 +125,25 @@ const formatconverter = (function() {
         shortformat += turn_order + ' ';
 
         // en passant
-        if (longformat["enpassant"]) shortformat += `${longformat["enpassant"].toString()} `;
+        if (longformat.enpassant) shortformat += `${longformat.enpassant.toString()} `;
 
         // X move rule
-        if (longformat["moveRule"]) shortformat += `${longformat["moveRule"].toString()} `;
+        if (longformat.moveRule) shortformat += `${longformat.moveRule.toString()} `;
 
         // full move counter
         let fullmove = 1;
-        if (longformat["fullMove"]) {
-            shortformat += `${longformat["fullMove"].toString()} `;
-            fullmove = parseInt(longformat["fullMove"]);
+        if (longformat.fullMove) {
+            shortformat += `${longformat.fullMove.toString()} `;
+            fullmove = parseInt(longformat.fullMove);
         }
 
         // promotion lines, currently assumes that "promotionRanks" is always defined as a list of length 2, if it is defined
-        if (longformat["gameRules"]) {
-            if (longformat["gameRules"]["promotionRanks"]) {
+        if (longformat.gameRules) {
+            if (longformat.gameRules.promotionRanks) {
                 shortformat += "(";
-                if (longformat["gameRules"]["promotionRanks"][0] != null) {
-                    const promotionListWhite = (longformat["gameRules"]["promotionsAllowed"] ? longformat["gameRules"]["promotionsAllowed"]["white"] : null);
-                    shortformat += longformat["gameRules"]["promotionRanks"][0];
+                if (longformat.gameRules.promotionRanks[0] != null) {
+                    const promotionListWhite = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed.white : null);
+                    shortformat += longformat.gameRules.promotionRanks[0];
                     if (promotionListWhite) {
                         if (!(promotionListWhite.length == 4 && promotionListWhite.includes("rooks") && promotionListWhite.includes("queens") && promotionListWhite.includes("bishops") && promotionListWhite.includes("knights"))) {
                             shortformat += ";";
@@ -155,9 +155,9 @@ const formatconverter = (function() {
                     }
                 }
                 shortformat += "|";
-                if (longformat["gameRules"]["promotionRanks"][1] != null) {
-                    const promotionListBlack = (longformat["gameRules"]["promotionsAllowed"] ? longformat["gameRules"]["promotionsAllowed"]["black"] : null);
-                    shortformat += longformat["gameRules"]["promotionRanks"][1];
+                if (longformat.gameRules.promotionRanks[1] != null) {
+                    const promotionListBlack = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed.black : null);
+                    shortformat += longformat.gameRules.promotionRanks[1];
                     if (promotionListBlack) {
                         if (!(promotionListBlack.length == 4 && promotionListBlack.includes("rooks") && promotionListBlack.includes("queens") && promotionListBlack.includes("bishops") && promotionListBlack.includes("knights"))) {
                             shortformat += ";";
@@ -173,10 +173,10 @@ const formatconverter = (function() {
         }
 
         // win condition
-        if (longformat["gameRules"]) {
-            if (longformat["gameRules"]["winConditions"]) {
-                const whitewins = longformat["gameRules"]["winConditions"]["white"];
-                const blackwins = longformat["gameRules"]["winConditions"]["black"];
+        if (longformat.gameRules) {
+            if (longformat.gameRules.winConditions) {
+                const whitewins = longformat.gameRules.winConditions.white;
+                const blackwins = longformat.gameRules.winConditions.black;
                 if (whitewins && blackwins) {
                     let wins_are_equal = true;
                     if (whitewins.length == blackwins.length) {
@@ -219,7 +219,7 @@ const formatconverter = (function() {
             } else { // Already in short format!
                 shortformat += longformat.startingPosition;
             }
-            if (longformat["moves"]) shortformat += `${whitespace}${whitespace}`; // Add more spacing for the next part
+            if (longformat.moves) shortformat += `${whitespace}${whitespace}`; // Add more spacing for the next part
         }
 
         // moves
@@ -254,20 +254,20 @@ const formatconverter = (function() {
             } else { // compact_moves > 0
                 shortmoves += (i === 0 ? "" : "|");
             }
-            shortmoves += (longmove["type"] && (compact_moves == 0 || compact_moves == 1) ? LongToShort_Piece(longmove["type"]) : "");
-            shortmoves += longmove["startCoords"].toString();
+            shortmoves += (longmove.type && (compact_moves == 0 || compact_moves == 1) ? LongToShort_Piece(longmove.type) : "");
+            shortmoves += longmove.startCoords.toString();
             shortmoves += (compact_moves == 0 ? " " : "");
-            shortmoves += (longmove["captured"] && (compact_moves == 0 || compact_moves == 1) ? "x" : ">");
+            shortmoves += (longmove.captured && (compact_moves == 0 || compact_moves == 1) ? "x" : ">");
             shortmoves += (compact_moves == 0 ? " " : "");
-            shortmoves += longmove["endCoords"].toString();
+            shortmoves += longmove.endCoords.toString();
             shortmoves += (compact_moves == 0 ? " " : "");
-            if (longmove["promotion"]) {
+            if (longmove.promotion) {
                 shortmoves += (compact_moves == 0 || compact_moves == 1 ? "=" : "");
-                shortmoves += LongToShort_Piece(longmove["promotion"]);
+                shortmoves += LongToShort_Piece(longmove.promotion);
             }
-            if (longmove["mate"] && (compact_moves == 0 || compact_moves == 1)) {
+            if (longmove.mate && (compact_moves == 0 || compact_moves == 1)) {
                 shortmoves += "#";
-            } else if (longmove["check"] && (compact_moves == 0 || compact_moves == 1)) {
+            } else if (longmove.check && (compact_moves == 0 || compact_moves == 1)) {
                 shortmoves += "+";
             }
             shortmoves = shortmoves.trimEnd();
@@ -297,27 +297,27 @@ const formatconverter = (function() {
         longformat.gameRules = {};
 
 
-        let elements = shortformat.match(/[\[\]\"\{\}\(\)\']/g) || []
-        let statements = []
-        let stateIdxs = []
-        let currentIdx = -1
-        let alterformat = shortformat
-        let temp = ''
-        let trace = []
-        let endCharDict = {'[':']', '(':')', '{':'}', '"':'"', "'":"'"}
+        const elements = shortformat.match(/[\[\]\"\{\}\(\)\']/g) || [];
+        const statements = [];
+        const stateIdxs = [];
+        let currentIdx = -1;
+        let alterformat = shortformat;
+        let temp = '';
+        const trace = [];
+        const endCharDict = {'[':']', '(':')', '{':'}', '"':'"', "'":"'"};
 
         for (const element of elements) {
 
-            const elemIdx = alterformat.indexOf(element)
-            currentIdx+=elemIdx+1
-            if (!!trace[0]) temp += alterformat.slice(0, elemIdx)
-            else stateIdxs.push(currentIdx)
-            temp += element
-            alterformat = alterformat.slice(elemIdx+1)
+            const elemIdx = alterformat.indexOf(element);
+            currentIdx += elemIdx + 1;
+            if (trace[0]) temp += alterformat.slice(0, elemIdx);
+            else stateIdxs.push(currentIdx);
+            temp += element;
+            alterformat = alterformat.slice(elemIdx + 1);
 
-            if (endCharDict[trace[trace.length-1]] == element) {
+            if (endCharDict[trace[trace.length - 1]] === element) {
                 trace.pop();
-            } else if (trace[trace.length-1] == '"' || trace[trace.length-1] === "'") {
+            } else if (trace[trace.length - 1] === '"' || trace[trace.length - 1] === "'") {
                 continue;
             } else {
                 trace.push(element);
@@ -327,43 +327,43 @@ const formatconverter = (function() {
                 temp = '';
             }
         }
-        for (const element of trace) console.error(`${element} is not closed`)
+        for (const element of trace) console.error(`${element} is not closed`);
 
         // metadata handling. Don't put ": " in metadata fields.
         
-        let metadata = {};
-        longformat["metadata"] = metadata;
+        const metadata = {};
+        longformat.metadata = metadata;
 
         let i = statements.length - 1;
         let remove = false;
         while (i >= 0) {
             const string = statements[i];
-            const endIdx = stateIdxs[i]+string.length;
-            if (shortformat.slice(stateIdxs[i], endIdx) !== string) throw new Error("Metadata indexs are offset")
+            const endIdx = stateIdxs[i] + string.length;
+            if (shortformat.slice(stateIdxs[i], endIdx) !== string) throw new Error("Metadata indexs are offset");
 
             // new metadata format [Metadata "value"]
-            if (/^\[[^\s\:]*\s+\"/.test(string)){
-                let split_index = string.search(/\s\"/);
-                metadata[string.slice(1,split_index)] = string.slice(split_index+2, -2);
-                remove = true
+            if (/^\[[^\s\:]*\s+\"/.test(string)) {
+                const split_index = string.search(/\s\"/);
+                metadata[string.slice(1,split_index)] = string.slice(split_index + 2, -2);
+                remove = true;
             }
             // old metadata format [Metadata: value]
             else if (/^\[[^\:]*\:\s/.test(string)) {
-                let split_index = string.indexOf(": ");
+                const split_index = string.indexOf(": ");
                 if (split_index > -1) metadata[string.slice(1,split_index)] = string.slice(split_index+2, -1);
                 else metadata[string] = "";
-                remove = true
+                remove = true;
             }
 
             if (remove) {
-                shortformat = `${shortformat.slice(0,stateIdxs[i])}${shortformat.slice(endIdx)}`
+                shortformat = `${shortformat.slice(0,stateIdxs[i])}${shortformat.slice(endIdx)}`;
 
-                stateIdxs.splice(i,1)
-                statements.splice(i,1)
+                stateIdxs.splice(i,1);
+                statements.splice(i,1);
             }
-            i--
+            i--;
         }
-        console.log(metadata)
+        console.log(metadata);
 
         while (shortformat != "") {
             if (/\s/.test(shortformat[0])) {
@@ -377,54 +377,54 @@ const formatconverter = (function() {
             shortformat = shortformat.slice(index + 1);
 
             // move turn
-            if (!longformat["gameRules"]["turnOrder"] && /^(w|b)$/.test(string)){
-                if (string == "w") longformat["gameRules"]["turnOrder"] = ["white", "black"]
-                else if (string == "b") longformat["gameRules"]["turnOrder"] = ["black", "white"]
+            if (!longformat.gameRules.turnOrder && /^(w|b)$/.test(string)) {
+                if (string == "w") longformat.gameRules.turnOrder = ["white", "black"];
+                else if (string == "b") longformat.gameRules.turnOrder = ["black", "white"];
                 continue;
             }
 
             // en passant
-            if (!longformat["enpassant"] && /^(-?[0-9]+,-?[0-9]+)$/.test(string)) {
-                longformat["enpassant"] = [parseInt(string.split(",")[0]), parseInt(string.split(",")[1])];
+            if (!longformat.enpassant && /^(-?[0-9]+,-?[0-9]+)$/.test(string)) {
+                longformat.enpassant = [parseInt(string.split(",")[0]), parseInt(string.split(",")[1])];
                 continue;
             }
 
             // X move rule
-            if (!longformat["moveRule"] && /^([0-9]+\/[0-9]+)$/.test(string)) {
-                longformat["moveRule"] = string;
+            if (!longformat.moveRule && /^([0-9]+\/[0-9]+)$/.test(string)) {
+                longformat.moveRule = string;
                 continue;
             }
 
             // full move counter
-            if (!longformat["fullMove"] && /^([0-9]+)$/.test(string)) {
-                longformat["fullMove"] = parseInt(string);
+            if (!longformat.fullMove && /^([0-9]+)$/.test(string)) {
+                longformat.fullMove = parseInt(string);
                 continue;
             }
 
             // promotion lines
             if (/^\(((()|([^\(\)\|]*\|)-?[0-9]+)|(\|\)$))/.test(string)) {
-                if (!longformat["gameRules"]["promotionRanks"]) {
+                if (!longformat.gameRules.promotionRanks) {
                     string = string.replace(/[\(\)]+/g,"").split("|"); // ["8","1"]
                     if (string.length !== 2) throw new Error('Promotion ranks needs exactly 2 values');
-                    longformat["gameRules"]["promotionRanks"] = [];
-                    longformat["gameRules"]["promotionsAllowed"] = { white: [], black: [] };
+                    longformat.gameRules.promotionRanks = [];
+                    longformat.gameRules.promotionsAllowed = { white: [], black: [] };
                     for (let i = 0; i < 2; i++) {
                         const color = (i == 0 ? "white" : "black");
                         if (string[i] != "" && string[i] != null) {
                             const promotionLine = (string[i].indexOf(";") == -1 ? parseInt(string[i]) : parseInt(string[i].split(";")[0]));
                             if (isNaN(promotionLine)) throw new Error('Promotion rank is NaN');
-                            longformat["gameRules"]["promotionRanks"].push(promotionLine);
+                            longformat.gameRules.promotionRanks.push(promotionLine);
                             string[i] = string[i].split(";");
                             if (string[i].length == 1) {
-                                longformat["gameRules"]["promotionsAllowed"][color] = ["queens","rooks","bishops","knights"];
+                                longformat.gameRules.promotionsAllowed[color] = ["queens","rooks","bishops","knights"];
                             } else {
-                                longformat["gameRules"]["promotionsAllowed"][color] = [];
+                                longformat.gameRules.promotionsAllowed[color] = [];
                                 for (const promotionpiece of string[i][1].split(",")) {
-                                    longformat["gameRules"]["promotionsAllowed"][color].push(ShortToLong_Piece(promotionpiece).slice(0,-1));
+                                    longformat.gameRules.promotionsAllowed[color].push(ShortToLong_Piece(promotionpiece).slice(0,-1));
                                 }
                             }
                         } else {
-                            longformat["gameRules"]["promotionRanks"].push(undefined);
+                            longformat.gameRules.promotionRanks.push(undefined);
                         }
                     }
                     continue;
@@ -432,16 +432,16 @@ const formatconverter = (function() {
             }
 
             // win condition (has to start with a letter and not include numbers)
-            if(/^(\(?[a-zA-z][^0-9]+)$/.test(string)){
-                if (!longformat["gameRules"]["winConditions"]){
-                    longformat["gameRules"]["winConditions"] = {};
+            if (/^(\(?[a-zA-z][^0-9]+)$/.test(string)) {
+                if (!longformat.gameRules.winConditions) {
+                    longformat.gameRules.winConditions = {};
                     string = string.replace(/[\(\)]/g,"").split("|");
                     if (string.length == 1) string.push(string[0]);
                     for (let i = 0; i < 2; i++) {
                         const color = (i == 0 ? "white" : "black");
-                        longformat["gameRules"]["winConditions"][color] = [];
+                        longformat.gameRules.winConditions[color] = [];
                         for (const wincon of string[i].split(",")) {
-                            longformat["gameRules"]["winConditions"][color].push(wincon);
+                            longformat.gameRules.winConditions[color].push(wincon);
                         }
                     }
                     continue;
@@ -464,16 +464,16 @@ const formatconverter = (function() {
                 }
                 const parsed = JSON.parse(string);
                 for (const key in parsed) {
-                    longformat["gameRules"][key] = parsed[key];
+                    longformat.gameRules[key] = parsed[key];
                 }
                 continue;
             }
 
             // position
-            if (!longformat["startingPosition"] && /^([a-zA-z]+-?[0-9]+,-?[0-9]+\+?($|\|))/.test(string)) {
+            if (!longformat.startingPosition && /^([a-zA-z]+-?[0-9]+,-?[0-9]+\+?($|\|))/.test(string)) {
                 const { startingPosition, specialRights } = getStartingPositionAndSpecialRightsFromShortPosition(string);
-                longformat["specialRights"] = specialRights;
-                longformat["startingPosition"] = startingPosition;
+                longformat.specialRights = specialRights;
+                longformat.startingPosition = startingPosition;
                 longformat.shortposition = string;
                 continue;
             }
@@ -716,9 +716,9 @@ const formatconverter = (function() {
         
         if (!longformat.moves || longformat.moves.length === 0) return longformat;
         const ret = modify_input ? longformat : deepCopyObject(longformat);
-        let enpassantcoordinates = (ret["enpassant"] ? ret["enpassant"] : "");
-        for (let i = 0; i < Math.min(halfmoves, ret["moves"].length); i++) {
-            const move = ret["moves"][i];
+        let enpassantcoordinates = (ret.enpassant ? ret.enpassant : "");
+        for (let i = 0; i < Math.min(halfmoves, ret.moves.length); i++) {
+            const move = ret.moves[i];
 
             // update fullmove counter
             // Pre turnorder changes
@@ -731,61 +731,61 @@ const formatconverter = (function() {
             //     ret["fullMove"] += 1;
             // }
 
-            if (i%longformat['gamerules']['turnOrder'].length === 0) {
-                ret['fullMove']++
+            if (i%longformat.gamerules.turnOrder.length === 0) {
+                ret.fullMove++;
             }
 
-            const startString = move["startCoords"].toString();
-            const endString = move["endCoords"].toString();
+            const startString = move.startCoords.toString();
+            const endString = move.endCoords.toString();
 
             // update coordinates in starting position
-            if (move["promotion"]) {
-                ret["startingPosition"][endString] = `${move["promotion"]}`;
+            if (move.promotion) {
+                ret.startingPosition[endString] = `${move.promotion}`;
             } else {
-                ret["startingPosition"][endString] = `${ret["startingPosition"][startString]}`;
+                ret.startingPosition[endString] = `${ret.startingPosition[startString]}`;
             }
-            delete ret["startingPosition"][startString];
-            if (ret["specialRights"]) {
-                delete ret["specialRights"][startString];
-                delete ret["specialRights"][endString];
+            delete ret.startingPosition[startString];
+            if (ret.specialRights) {
+                delete ret.specialRights[startString];
+                delete ret.specialRights[endString];
             }
 
             // update move rule
-            if (ret["moveRule"]) {
-                const slashindex = ret["moveRule"].indexOf("/");
-                if (move["captured"] || move["type"].slice(0, -1) == "pawns") {
-                    ret["moveRule"] = `0/${ret["moveRule"].slice(slashindex + 1)}`;
+            if (ret.moveRule) {
+                const slashindex = ret.moveRule.indexOf("/");
+                if (move.captured || move.type.slice(0, -1) == "pawns") {
+                    ret.moveRule = `0/${ret.moveRule.slice(slashindex + 1)}`;
                 } else {
-                    ret["moveRule"] = `${(parseInt(ret["moveRule"].slice(0,slashindex)) + 1).toString()}/${ret["moveRule"].slice(slashindex + 1)}`;
+                    ret.moveRule = `${(parseInt(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
                 }
             }
 
             // delete captured piece en passant
-            if (move["enpassant"]) {
-                delete ret["startingPosition"][enpassantcoordinates];
-                if (ret["specialRights"]) delete ret["specialRights"][enpassantcoordinates];
+            if (move.enpassant) {
+                delete ret.startingPosition[enpassantcoordinates];
+                if (ret.specialRights) delete ret.specialRights[enpassantcoordinates];
             }
 
             // update en passant
-            if (move["type"].slice(0, -1) == "pawns" && Math.abs(move["startCoords"][1] - move["endCoords"][1]) > 1 ) {
-                ret["enpassant"] = [move["endCoords"][0], Math.round(0.5 * (move["startCoords"][1] + move["endCoords"][1]))];
+            if (move.type.slice(0, -1) == "pawns" && Math.abs(move.startCoords[1] - move.endCoords[1]) > 1 ) {
+                ret.enpassant = [move.endCoords[0], Math.round(0.5 * (move.startCoords[1] + move.endCoords[1]))];
             } else {
-                delete ret["enpassant"];
+                delete ret.enpassant;
             }
 
             // update coords of castled piece
-            if (move["castle"]) {
-                const castleString = move["castle"]["coord"][0].toString() + "," + move["castle"]["coord"][1].toString();
-                ret["startingPosition"][`${(parseInt(move["endCoords"][0]) - move["castle"]["dir"]).toString()},${move["endCoords"][1].toString()}`] = `${ret["startingPosition"][castleString]}`;
-                delete ret["startingPosition"][castleString];
-                if (ret["specialRights"]) delete ret["specialRights"][castleString];
+            if (move.castle) {
+                const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
+                ret.startingPosition[`${(parseInt(move.endCoords[0]) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
+                delete ret.startingPosition[castleString];
+                if (ret.specialRights) delete ret.specialRights[castleString];
             }
 
             // save move coords for potential en passant
             enpassantcoordinates = endString;
         }
-        delete ret["moves"];
-        ret["moves"] = [];
+        delete ret.moves;
+        ret.moves = [];
         return ret;
     }
 
@@ -795,8 +795,8 @@ const formatconverter = (function() {
      * @returns {string} Output string in compact ICN notation
      */
     function LongToShort_CompactMove(longmove) {
-        const promotedPiece = (longmove["promotion"] ? LongToShort_Piece(longmove["promotion"]) : "");
-        return `${longmove["startCoords"].toString()}>${longmove["endCoords"].toString()}${promotedPiece}`;
+        const promotedPiece = (longmove.promotion ? LongToShort_Piece(longmove.promotion) : "");
+        return `${longmove.startCoords.toString()}>${longmove.endCoords.toString()}${promotedPiece}`;
     }
 
     /**
@@ -820,10 +820,10 @@ const formatconverter = (function() {
         // ShortToLong_Piece() will already throw an error if the piece abbreviation is invalid.
         const promotedPiece = (/[a-zA-Z]+/.test(shortmove) ? ShortToLong_Piece(shortmove.match(/[a-zA-Z]+/)) : "");
         const longmove = { compact: shortmove };
-        longmove["startCoords"] = coords[0];
-        longmove["endCoords"] = coords[1];
+        longmove.startCoords = coords[0];
+        longmove.endCoords = coords[1];
         if (promotedPiece != "") {
-            longmove["promotion"] = promotedPiece;
+            longmove.promotion = promotedPiece;
         }
         return longmove;
     }
