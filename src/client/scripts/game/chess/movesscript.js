@@ -213,7 +213,7 @@ const movesscript = (function() {
      * @returns {string} Whos turn it is, 'white' or 'black'
      */
     function getWhosTurnAtFront(gamefile) {
-        return gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
+        return getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
     }
 
     /**
@@ -308,15 +308,25 @@ const movesscript = (function() {
 
     /**
      * Returns the color of the player that played that moveIndex within the moves list.
-     * Returns error if index -1
+     * Returns error if index is -1
      * @param {number} i - The moveIndex
      * @param {string[]} turnOrder 
      * @returns {string} - The color that playd the moveIndex
      */
     function getColorThatPlayedMoveIndex(i, turnOrder) {
         if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
-        const color = turnOrder[i % turnOrder.length]
-        return color
+        const loopIndex = i % turnOrder.length;
+        return turnOrder[loopIndex];
+    }
+
+    /**
+     * Returns the color whos turn it is after the specified move index was played.
+     * @param {gamefile} gamefile - The gamefile
+     * @param {number} moveIndex - The move index we want to get whos turn it was then.
+     * @returns {string} 'white' / 'black'
+     */
+    function getWhosTurnAtMoveIndex(gamefile, moveIndex) {
+        return getColorThatPlayedMoveIndex(moveIndex + 1, gamefile.gameRules.turnOrder);
     }
 
     return Object.freeze({
@@ -340,7 +350,8 @@ const movesscript = (function() {
         areMovesIn2DFormat,
         convertMovesTo1DFormat,
         isGameResignable,
-        getColorThatPlayedMoveIndex
+        getColorThatPlayedMoveIndex,
+        getWhosTurnAtMoveIndex,
     });
 
 })();

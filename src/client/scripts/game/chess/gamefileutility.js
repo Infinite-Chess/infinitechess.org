@@ -461,17 +461,6 @@ const gamefileutility = (function() {
         return royalCount;
     }
 
-    /**
-     * 
-     * @param {gamefile} gamefile - The gamefile
-     * @param {number} moveIndex - The move index we want to get whos turn it was then.
-     * @returns {string} 'white' / 'black'
-     */
-    function getWhosTurnAtMoveIndex(gamefile, moveIndex) {
-        const loopIndex = (moveIndex + 1) % gamefile.gameRules.turnOrder.length
-        return gamefile.gameRules.turnOrder[loopIndex]
-    }
-
     return Object.freeze({
         pieceCountToDisableCheckmate,
         getPieceCountOfType,
@@ -495,7 +484,6 @@ const gamefileutility = (function() {
         getRoyalCoords,
         getRoyalCountOfColor,
         getPieceCountOfGame,
-        getWhosTurnAtMoveIndex,
         isGameOver,
     });
 
