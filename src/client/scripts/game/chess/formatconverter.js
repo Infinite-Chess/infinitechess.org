@@ -674,23 +674,9 @@ const formatconverter = (function() {
         if (!longformat.moves || longformat.moves.length === 0) return longformat;
         const ret = modify_input ? longformat : deepCopyObject(longformat);
         let enpassantcoordinates = (ret.enpassant ? ret.enpassant : "");
+        ret.fullMove = longformat.fullMove + Math.floor(ret.moves.length / longformat.gameRules.turnOrder.length);
         for (let i = 0; i < Math.min(halfmoves, ret.moves.length); i++) {
             const move = ret.moves[i];
-
-            // update fullmove counter
-            // Pre turnorder changes
-            // if (ret["turn"]){
-            //     if (ret["turn"] == "black" && ret["fullMove"]){
-            //         ret["fullMove"] += 1;
-            //     }
-            //     ret["turn"] = (ret["turn"] == "black" ? "white" : "black");
-            // } else if(move["type"].slice(-1) == "B" && ret["fullMove"]){
-            //     ret["fullMove"] += 1;
-            // }
-
-            if (i%longformat.gamerules.turnOrder.length === 0) {
-                ret.fullMove++;
-            }
 
             const startString = move.startCoords.toString();
             const endString = move.endCoords.toString();

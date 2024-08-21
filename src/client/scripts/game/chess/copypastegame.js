@@ -5,10 +5,11 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const copypastegame = (function() {
 
     /** Enable to only copy a single position without all the moves prior */
-    const copySinglePosition = false; 
+    const copySinglePosition = true; 
 
     /**
      * A list of metadata properties that are retained from the current game when pasting an external game.
