@@ -347,7 +347,7 @@ const formatconverter = (function() {
             shortformat = shortformat.slice(index + 1);
 
             // move turn
-            if (!longformat.turn && /^[a-z](:[a-z])*$/.test(string)) {
+            if (!longformat.gameRules.turnOrder && /^[a-z](:[a-z])*$/.test(string)) {
                 if (string === 'w') string = 'w:b'; // 'w' is short for 'w:b'
                 else if (string === 'b') string = 'b:w'; // 'b' is short for 'b:w'
                 const turnOrderArray = string.split(':'); // ['w','b']

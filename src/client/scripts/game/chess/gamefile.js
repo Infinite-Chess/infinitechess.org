@@ -48,8 +48,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         fullMove: undefined,
         /** The number of players in this game (the number of unique colors in the turn order) */
         playerCount: undefined,
-        /** Whos turn it was at the beginning of the game. */
-        turn: undefined,
         /** The count of pieces the game started with. */
         pieceCount: undefined,
         /** The bounding box surrounding the starting position, without padding.
