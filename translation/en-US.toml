@@ -1,6 +1,7 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "12"
+version = "14"
+maintainer = "Naviary"
 
 [header]
 home = "Home"
@@ -26,6 +27,7 @@ js-confirm_delete = "Are you sure you want to delete your account? This CANNOT b
 js-enter_password = "Enter your password to PERMANENTLY delete your account:"
 
 [index]
+title = "Infinite Chess | Home - The Official Website" # The tab title
 secondary_title = "The official website for playing live!"
 what_is_it_title = "What is it?"
 what_is_it_pargaraphs = [
@@ -79,6 +81,7 @@ code_credits = [
 ]
 
 [member]
+title = "Member" # The tab name
 verify_message = "Please check your email to verify your account."
 resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message me."]
 verify_confirm = "Thank you! Your account has been verified."
@@ -92,7 +95,7 @@ delete_account = "Delete account"
 password_reset_message = ["To change your username, email or password, ", "contact us."]
 
 [create-account]
-title = "Create Account"
+title = "Create Account" # The tab name
 username = "Username:"
 email = "Email:"
 password = "Password:"
@@ -110,13 +113,16 @@ js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
 js-pwd_not_pwd = "Password must not be 'password'"
 
+[play]
+title = "Infinite Chess - Play" # The tab title
+loading = "LOADING"
+error = "ERROR"
+
 [play.main-menu]
 credits = "Credits"
 play = "Play"
 guide = "Guide"
 editor = "Board Editor"
-loading = "LOADING"
-error = "ERROR"
 
 [play.guide]
 title = "Guide"
@@ -236,9 +242,13 @@ arrows = "Arrows: Defense"
 perspective = "Perspective: Off"
 copy = "Copy Game"
 paste = "Paste Game"
+offer_draw = "Offer Draw"
 main_menu = "Main Menu"
 
-[play.javascript]
+[play.drawoffer] # The draw offer UI that appears on the bottom bar
+question = "Accept draw offer?"
+
+[play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
 white_to_move = "White to move"
@@ -251,6 +261,8 @@ planned_feature = "This feature is planned!"
 main_menu = "Main Menu"
 resign_game = "Resign Game"
 abort_game = "Abort Game"
+offer_draw = "Offer Draw" # Offer draw button text in the pause menu
+accept_draw = "Accept Draw" # Offer draw button text in the pause menu
 arrows_off = "Arrows: Off"
 arrows_defense = "Arrows: Defense"
 arrows_all = "Arrows: All"
@@ -354,6 +366,7 @@ allpiecescaptured = "All pieces captured"
 threecheck = "Three-check"
 koth = "King of the hill"
 resignation = "Resignation"
+agreement = "Agreement" 
 time = "Time forfeit"
 aborted = "Aborted" # Game was cancelled (no elo exchanged)
 disconnect = "Abandoned" # A player left
@@ -373,6 +386,7 @@ draw_stalemate = "Draw by stalemate!"
 draw_repetition = "Draw by repetition!"
 draw_moverule = ["Draw by the ", "-move-rule!"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Draw by insufficient material!"
+draw_agreement = "Draw by agreement!"
 draw_generic = "Draw!"
 aborted = "Game aborted."
 opponent_checkmate = "You lose by checkmate!"
@@ -459,7 +473,7 @@ update = "(Last updated: 7/13/24. Added warning that all games played may become
 thanks = "Thank you!"
 
 [login]
-title = "Log In"
+title = "Log In" # The tab name
 username = "Username:"
 password = "Password:"
 forgot_password = ["Forgot? ", "Email us."]
@@ -473,7 +487,7 @@ login_button = "Log In"
 ########### NEWS ###########
 
 [news]
-title = "News"
+title = "News" # The tab name
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
 
 [news.aug1-2024] # Update 1.4
@@ -498,7 +512,7 @@ account_warning = "If you have not verified your account, please do so on your p
 
 [news.july13-2024]
 date = "July 13, 2024:"
-tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."]
+tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."] # The game inserts a hyperlink inside the 2nd quotes here.
 game_history_warning = "Your game history may become available on your profile at a future time."
 
 [news.july9-2024]
@@ -566,9 +580,6 @@ ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."
 ws-unauthorized_patron_page = "Unauthorized. This page is patron-exclusive."
 ws-already_in_game = "You are already in a game."
-ws-player_already_has_invite = "Player already has an open invite."
-ws-invite_cancelled = "Invite already cancelled."
-ws-accept_own_invite = "Silly goose. You can't accept your own invite!"
 ws-server_restarting = "The server is restarting in" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
 ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
 ws-minutes = "minutes" # unit of time

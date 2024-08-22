@@ -93,8 +93,10 @@ const guiplay = (function() {
      */
     function getModeSelected() { return modeSelected; }
 
-    function getElement_joinPrivate() { return element_joinPrivate; }
-    function getElement_inviteCode() { return element_inviteCode; }
+    function hideElement_joinPrivate() { style.hideElement(element_joinPrivate); }
+    function showElement_joinPrivate() { style.revealElement(element_joinPrivate); }
+    function hideElement_inviteCode() { style.hideElement(element_inviteCode); }
+    function showElement_inviteCode() { style.revealElement(element_inviteCode); }
 
     function open() {
         pageIsOpen = true;
@@ -110,6 +112,7 @@ const guiplay = (function() {
         pageIsOpen = false;
         style.hideElement(element_PlaySelection);
         style.hideElement(element_menuExternalLinks);
+        hideElement_inviteCode();
         closeListeners();
         // This will auto-cancel our existing invite
         // IT ALSO clears the existing invites in the document!
@@ -158,7 +161,7 @@ const guiplay = (function() {
             element_optionCardRated.classList.remove('hidden');
             element_optionCardPrivate.classList.remove('hidden');
             const localStorageClock = localstorage.loadItem('preferred_online_clock_invite_value');
-            element_optionClock.selectedIndex = localStorageClock != null ? localStorageClock : indexOf10m; // 10m+4s
+            element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOf10m; // 10m+4s
             element_joinPrivate.classList.remove('hidden');
             // callback_updateOptions()
         } else if (mode === 'local') {
@@ -176,7 +179,7 @@ const guiplay = (function() {
             element_optionCardRated.classList.add('hidden');
             element_optionCardPrivate.classList.add('hidden');
             const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
-            element_optionClock.selectedIndex = localStorageClock != null ? localStorageClock : indexOfInfiniteTime; // Infinite Time
+            element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
             element_joinPrivate.classList.add('hidden');
             element_inviteCode.classList.add('hidden');
         }
@@ -330,7 +333,7 @@ const guiplay = (function() {
      * @param {Object} gameOptions - An object that contains the properties
      * `metadata`, `id`, `publicity`, `youAreColor`, `moves`, `timerWhite`,
      * `timerBlack`, `timeNextPlayerLosesAt`, `autoAFKResignTime`,
-     * `disconnect`, `gameConclusion`, `serverRestartingAt`
+     * `disconnect`, `gameConclusion`, `serverRestartingAt`, `drawOffer`
      * 
      * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.
      */
@@ -343,6 +346,7 @@ const guiplay = (function() {
         onlinegame.initOnlineGame(gameOptions);
         clock.set(gameOptions.clock, { timerWhite: gameOptions.timerWhite, timerBlack: gameOptions.timerBlack, timeNextPlayerLosesAt: gameOptions.timeNextPlayerLosesAt });
         guigameinfo.revealPlayerNames(gameOptions);
+        drawoffers.set(gameOptions.drawOffer);
     }
 
     function generateVariantOptionsIfReloadingPrivateCustomGame() {
@@ -352,9 +356,8 @@ const guiplay = (function() {
         return localstorage.loadItem(gameID);
 
         // The variant options passed into the variant loader needs to contain the following properties:
-        // `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
+        // `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
         // const variantOptions = {
-        //     turn: longformat.turn,
         //     fullMove: longformat.fullMove,
         //     enpassant: longformat.enpassant,
         //     moveRule: longformat.moveRule,
@@ -383,7 +386,7 @@ const guiplay = (function() {
         const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
             moves: gameOptions.moves,
             variantOptions: gameOptions.variantOptions,
-            gameConclusion: gameOptions.gameConclusion,
+            gameConclusion: gameOptions.gameConclusion
         });
         game.loadGamefile(newGamefile);
 
@@ -475,8 +478,10 @@ const guiplay = (function() {
 
     return Object.freeze({
         isOpen,
-        getElement_joinPrivate,
-        getElement_inviteCode,
+        hideElement_joinPrivate,
+        showElement_joinPrivate,
+        hideElement_inviteCode,
+        showElement_inviteCode,
         getModeSelected,
         open,
         close,

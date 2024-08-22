@@ -175,11 +175,9 @@ const piecesmodel = {
         }
         main.enableForceRender(); // Renders the screen EVEN in a local-pause
 
-        /* eslint-disable indent */
         mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
                                : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
         //                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
-        /* eslint-enable indent */
 
         math.copyPropertiesToObject(mesh, gamefile.mesh);
         

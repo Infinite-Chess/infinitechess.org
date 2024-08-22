@@ -20,8 +20,6 @@ const variant = (function() {
 
     /** Variants names the game works with */
     const validVariants = ["Classical","Core","Standarch","Space_Classic","CoaIP","Pawn_Horde","Space","Obstocean","Abundance","Amazon_Chandelier","Containment","Classical_Limit_7","CoaIP_Limit_7","Chess","Classical_KOTH","CoaIP_KOTH","Omega","Omega_Squared","Omega_Cubed","Omega_Fourth","Classical_Plus","Pawndard","Knightline","Knighted_Chess"];
-    /** A list of all variants where black moves first */
-    const blackMovesFirstGames = ['Omega','Omega_Squared','Omega_Cubed','Omega_Fourth'];
 
     /**
      * Tests if the provided variant is a valid variant
@@ -30,15 +28,6 @@ const variant = (function() {
      */
     function isVariantValid(variantName) {
         return validVariants.includes(variantName);
-    }
-
-    /**
-     * Determines if the provided variant is a variant where black moves first
-     * @param {string} variantName - The name of the variant
-     * @returns {boolean} *true* if black moves first
-     */
-    function isVariantAVariantWhereBlackStarts(variantName) {
-        return blackMovesFirstGames.includes(variantName);
     }
 
     /**
@@ -54,6 +43,8 @@ const variant = (function() {
     function setupVariant(gamefile, metadata, options) {
         if (options) initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options); // Ignores the "Variant" metadata, and just uses the specified startingPosition
         else initStartSnapshotAndGamerules(gamefile, metadata); // Default (built-in variant, not pasted)
+
+        gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
 
         initExistingTypes(gamefile);
         initPieceMovesets(gamefile);
@@ -74,7 +65,7 @@ const variant = (function() {
         // Promotion types already have teams stripped
         const rawtypes = new Set(promotiontypes);
         for (const tpiece of teamtypes) {
-            rawtypes.add(math.trimWorBFromType(tpiece)); // Make a set wit the team colour trimmed
+            rawtypes.add(math.trimWorBFromType(tpiece)); // Make a set with the team color trimmed
         }
 
         gamefile.startSnapshot.existingTypes = rawtypes;
@@ -149,11 +140,12 @@ const variant = (function() {
             specialRights = result.specialRights;
         } else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
 
+        options.gameRules.turnOrder = options.gameRules.turnOrder || getDefaultTurnOrder();
+
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights,
-            turn: options.turn || 'white',
             fullMove: options.fullMove || 1
         };
         if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
@@ -162,6 +154,7 @@ const variant = (function() {
             gamefile.startSnapshot.moveRuleState = Number(state);
             options.gameRules.moveRule = Number(max);
         }
+        
         gamefile.gameRules = options.gameRules;
     }
 
@@ -275,13 +268,16 @@ const variant = (function() {
             promotionRanks,
             promotionsAllowed: modifications.promotionsAllowed || getPromotionsAllowed(modifications.position, promotionRanks),
             winConditions: modifications.winConditions || getDefaultWinConditions(),
-            moveRule: modifications.moveRule || 100
-        };
+            moveRule: modifications.moveRule || 100,
+            turnOrder: modifications.turnOrder || getDefaultTurnOrder(),
+        }
         if (modifications.slideLimit != null) gameRules.slideLimit = modifications.slideLimit;
         if (modifications.moveRule === null) delete gameRules.moveRule;
         return gameRules;
     }
 
+    function getDefaultTurnOrder() { return ['white', 'black']; }
+    function getTurnOrderOfOmega() { return ['black', 'white']; }
     function getDefaultWinConditions() { return { white: ['checkmate'], black: ['checkmate'] }; }
     function getRoyalCaptureWinConditions() { return { white: ['royalcapture'], black: ['royalcapture'] }; }
     function getWinConditionsOfThreeCheck() { return { white: ['checkmate','threecheck'], black: ['checkmate','threecheck'] }; }
@@ -388,7 +384,7 @@ const variant = (function() {
                 return getStartSnapshotPosition({ positionString })
                 */
             default:
-                throw new Error('Unknown variant.');
+                throw new Error(`Unknown variant "${Variant}"`);
         }
     }
 
@@ -461,7 +457,6 @@ const variant = (function() {
     function getGameRulesOfVariant({ Variant, UTCDate = math.getCurrentUTCDate(), UTCTime = math.getCurrentUTCTime() }, position) {
         
         if (!position) position = getStartingPositionOfVariant({ Variant }).position;
-        console.log(Variant);
         
         switch (Variant) {
             case "Classical":
@@ -508,14 +503,14 @@ const variant = (function() {
             case "Knighted_Chess":
                 return getGameRules({ position });
             case "Omega": // Joel & Cory's version
-                return getGameRules({ promotionRanks: null, moveRule: null, position });
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
             case "Omega_Squared":
-                return getGameRules({ promotionRanks: null, moveRule: null, position });
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
             case "Omega_Cubed":
-                return getGameRules({ promotionRanks: null, moveRule: null, position });
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
             case "Omega_Fourth":
-                return getGameRules({ promotionRanks: null, moveRule: null, winConditions: getRoyalCaptureWinConditions(), position });
-                // Removed...
+                return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
+            // Removed...
             /*
             case "Standarch - 3 Check":
                 return getGameRules({ winConditions: getWinConditionsOfThreeCheck(), position });
@@ -523,7 +518,7 @@ const variant = (function() {
                 return getGameRules({ winConditions: getWinConditionsOfThreeCheck(), position });
                 */
             default:
-                throw new Error('Unknown variant.');
+                throw new Error(`Unknown variant "${Variant}"`);
         }
     }
 
@@ -921,7 +916,6 @@ const variant = (function() {
         getBareMinimumGameRules,
         getStartingPositionOfVariant,
         getDefaultWinConditions,
-        isVariantAVariantWhereBlackStarts,
         isVariantValid,
         getPromotionsAllowed
     });

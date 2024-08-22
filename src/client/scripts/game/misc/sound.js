@@ -26,7 +26,8 @@ const sound = (function() {
         violin_staccato_c4: [38.82, 40.82],
         marimba_c2: [40.82, 42.82],
         marimba_c2_soft: [42.82, 44.82],
-        base_staccato_c2: [44.82, 46.82]
+        base_staccato_c2: [44.82, 46.82],
+        // draw_offer: [46.89, 48.526]   Only present for the sound spritesheet in dev-utils that includes the draw offer sound
     };
 
     /** @type {AudioContext} */
@@ -351,6 +352,10 @@ const sound = (function() {
         return playSound('draw', { volume: 0.7, delay });
     }
 
+    // function playSound_drawOffer(delay) {
+    //     return playSound('draw_offer', { volume: 0.7, delay })
+    // }
+
     function playSound_loss(delay) {
         return playSound('loss', { volume: 0.7, delay });
     }
@@ -400,6 +405,7 @@ const sound = (function() {
         playSound_lowtime,
         playSound_win,
         playSound_draw,
+        // playSound_drawOffer,
         playSound_loss,
         playSound_drum,
         playSound_tick,

@@ -224,11 +224,7 @@ const movesscript = (function() {
      * @returns {string} Whos turn it is, 'white' or 'black'
      */
     function getWhosTurnAtFront(gamefile) {
-        let testLength = gamefile.moves.length;
-        if (gamefile.startSnapshot.turn === 'black') testLength++;
-
-        const movesMod2 = testLength % 2;
-        return movesMod2 === 0 ? 'white' : 'black';
+        return getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
     }
 
     /**
@@ -323,14 +319,43 @@ const movesscript = (function() {
 
     /**
      * Returns the color of the player that played that moveIndex within the moves list.
-     * Returns error if index -1
+     * Returns error if index is -1
+     * @param {gamefile} gamefile 
      * @param {number} i - The moveIndex
      * @returns {string} - The color that playd the moveIndex
      */
-    function getColorThatPlayedMoveIndex(i, blackMovesFirst) {
+    function getColorThatPlayedMoveIndex(gamefile, i) {
         if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
-        const color = i % 2 === 0 ? 'white' : 'black';
-        return blackMovesFirst ? math.getOppositeColor(color) : color;
+        const turnOrder = gamefile.gameRules.turnOrder;
+        const loopIndex = i % turnOrder.length;
+        return turnOrder[loopIndex];
+    }
+
+    /**
+     * Returns the color whos turn it is after the specified move index was played.
+     * @param {gamefile} gamefile - The gamefile
+     * @param {number} moveIndex - The move index we want to get whos turn it was then.
+     * @returns {string} 'white' / 'black'
+     */
+    function getWhosTurnAtMoveIndex(gamefile, moveIndex) {
+        return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
+    }
+
+    /**
+     * Returns true if any player in the turn order ever gets to turn in a row.
+     * @param {gamefile} gamefile
+     * @returns {boolean}
+     */
+    function doesAnyPlayerGet2TurnsInARow(gamefile) {
+        // If one player ever gets 2 turns in a row, then that also allows the capture of the king.
+        const turnOrder = gamefile.gameRules.turnOrder;
+        for (let i = 0; i < turnOrder.length; i++) {
+            const thisColor = turnOrder[i];
+            const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.
+            const nextColor = turnOrder[nextColorIndex];
+            if (thisColor === nextColor) return true;
+        }
+        return false;
     }
 
     return Object.freeze({
@@ -354,7 +379,9 @@ const movesscript = (function() {
         areMovesIn2DFormat,
         convertMovesTo1DFormat,
         isGameResignable,
-        getColorThatPlayedMoveIndex
+        getColorThatPlayedMoveIndex,
+        getWhosTurnAtMoveIndex,
+        doesAnyPlayerGet2TurnsInARow,
     });
 
 })();

@@ -29,7 +29,6 @@ const backcompatible = (function() {
         
         /** What properties do we need in the new format?
          * metadata
-         * turn
          * enpassant
          * moveRule
          * fullMove
@@ -43,7 +42,6 @@ const backcompatible = (function() {
 
         converted.metadata = {};
         if (longformat.variant) converted.metadata.Variant = longformat.variant;
-        converted.turn = 'white';
         converted.fullMove = 1;
         if (longformat.startingPosition) {
             converted.startingPosition = longformat.startingPosition;
@@ -53,10 +51,9 @@ const backcompatible = (function() {
             // If it's a black-moves-first game, then the `turn` property of the results will be set to black.
             const results = {};
             const moveslong = movesscript.convertMovesTo1DFormat(longformat.moves, results); // Long format still, needs to be compressed
-            converted.turn = results.turn;
-
+            const turnOrderArray = results.turn === 'black' ? ['b','w'] : ['w','b'];
             const options = {
-                next_move: converted.turn === 'white' ? 'w' : 'b',
+                turnOrderArray,
                 fullmove: converted.fullMove,
                 make_new_lines: false,
                 compact_moves: 2

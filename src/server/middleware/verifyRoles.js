@@ -5,7 +5,7 @@
  * access to protected resources.
  */
 
-const { getTranslationForReq } = require("../config/setupTranslations");
+const { getTranslationForReq } = require("../utility/translate");
 
 
 /**

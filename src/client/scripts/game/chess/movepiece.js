@@ -266,7 +266,7 @@ const movepiece = (function() {
      * - `doGameOverChecks`: Whether game-over checks such as checkmate, or other win conditions, are performed for this move.
      */
     function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
-        gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
+        gamefile.whosTurn = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
         if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
         if (pushClock) clock.push();
     }
@@ -282,7 +282,7 @@ const movepiece = (function() {
 
         let attackers = undefined;
         // Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
-        const whosTurnItWasAtMoveIndex = gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
+        const whosTurnItWasAtMoveIndex = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
         const oppositeColor = math.getOppositeColor(whosTurnItWasAtMoveIndex);
         if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 

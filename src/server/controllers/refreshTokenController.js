@@ -5,7 +5,7 @@ const { findMemberFromRefreshToken, getUsernameCaseSensitive, updateLastSeen } =
 const { logEvents } = require('../middleware/logEvents');
 const { isBrowserIDBanned } = require('../middleware/banned');
 const { generateID } = require("../game/math1");
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { getTranslationForReq } = require('../utility/translate');
 
 /**
  * How long until the cookie containing their new access token

@@ -1,5 +1,5 @@
 
-const { getTranslationForReq } = require('../config/setupTranslations');
+const { getTranslationForReq } = require('../utility/translate');
 const { logEvents } = require('./logEvents');
 
 function errorHandler(err, req, res, next) {

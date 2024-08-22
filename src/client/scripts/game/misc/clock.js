@@ -12,6 +12,7 @@ import { math } from './math.js'
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const clock = (function() {
 
     const element_timerWhite = document.getElementById('timer-white');
@@ -110,14 +111,8 @@ const clock = (function() {
 
         untimed = isClockValueInfinite(clock);
 
-        if (untimed) { // Hide clock elements
-            style.hideElement(element_timerContainerWhite);
-            style.hideElement(element_timerContainerBlack);
-            return;
-        } else { // Reveal clock elements
-            style.revealElement(element_timerContainerWhite);
-            style.revealElement(element_timerContainerBlack);
-        }
+        if (untimed) return hideClocks();
+        else showClocks();
 
         // Edit the closk if we're re-loading an online game
         if (currentTimes) edit(currentTimes.timerWhite, currentTimes.timerBlack, currentTimes.timeNextPlayerLosesAt);
@@ -127,6 +122,16 @@ const clock = (function() {
         }
 
         updateTextContent();
+    }
+
+    function hideClocks() {
+        style.hideElement(element_timerContainerWhite);
+        style.hideElement(element_timerContainerBlack);
+    }
+
+    function showClocks() {
+        style.revealElement(element_timerContainerWhite);
+        style.revealElement(element_timerContainerBlack);
     }
 
     /**
@@ -174,7 +179,7 @@ const clock = (function() {
         // Add increment
         currentTime[colorTicking] += math.secondsToMillis(startTime.increment);
         // Flip colorTicking
-        colorTicking = !colorTicking ? gamefile.startSnapshot.turn : math.getOppositeColor(colorTicking);
+        colorTicking = gamefile.whosTurn;
 
         timeRemainAtTurnStart = currentTime[colorTicking];
         timeAtTurnStart = Date.now();
@@ -449,6 +454,8 @@ const clock = (function() {
         isClockValueInfinite,
         printClocks,
         isGameUntimed,
+        hideClocks,
+        showClocks,
     });
 
 })();

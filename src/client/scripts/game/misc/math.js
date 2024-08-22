@@ -253,7 +253,8 @@ const math = (function() {
     /**
      * Deep copies an entire object, no matter how deep its nested.
      * No properties will contain references to the source object.
-     * Use this instead of structuredClone() when that throws an error due to nested functions.
+     * Use this instead of structuredClone() because of browser support,
+     * or when that throws an error due to functions contained within the src.
      * 
      * SLOW. Avoid using for very massive objects.
      * @param {Object | string | number | bigint | boolean} src - The source object

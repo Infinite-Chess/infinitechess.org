@@ -59,7 +59,7 @@ const perspective = (function() {
         if (enabled) return console.error("Should not be enabling perspective when it is already enabled.");
         enabled = true;
 
-        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["on"]}`;
+        guipause.getelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["on"]}`;
 
         guipause.callback_Resume();
 
@@ -81,7 +81,7 @@ const perspective = (function() {
         // document.exitPointerLock()
         guipause.callback_Resume();
 
-        guipause.gelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["off"]}`;
+        guipause.getelement_perspective().textContent = `${translations["rendering"]["perspective"]}: ${translations["rendering"]["off"]}`;
         
         resetRotations();
         
@@ -190,7 +190,6 @@ const perspective = (function() {
 
         const [r,g,b,a] = crosshairColor;
 
-        /* eslint-disable indent */
         const data = new Float32Array([
             //       Vertex         Color
             //              MEDICAL PLUS sign cross hair
@@ -237,7 +236,6 @@ const perspective = (function() {
             //     innerSide,  -innerSide,       r, g, b, a,
             //     -innerSide,  -innerSide,      r, g, b, a,
         ]);
-        /* eslint-enable indent */
         crosshairModel = buffermodel.createModel_Colored(data, 2, "TRIANGLES"); 
     }
 
