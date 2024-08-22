@@ -174,7 +174,7 @@ function removeOutdated(object, changelog) {
 
     let key_strings = [];
     for (const key of filtered_keys) {
-        key_strings = key_strings.concat(changelog[key]["changes"]);
+        key_strings = key_strings.concat(changelog[key].changes);
     }
     // Remove duplicate
     key_strings = Array.from(new Set(key_strings));
@@ -242,7 +242,7 @@ function translateStaticTemplates(translations) {
   
     const languages_list = [];
     for (const language of languages) {
-        languages_list.push({ code: language, name: translations[language]['default'].name });
+        languages_list.push({ code: language, name: translations[language].default.name });
     }
   
     const templatesPath = path.join(__dirname, "..", "..", "..", "dist", "views");

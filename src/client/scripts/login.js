@@ -68,7 +68,7 @@ const sendLogin = (username, password) => {
                 }
                 updateSubmitButton();
 
-                loginErrorElement.textContent = result['message'];
+                loginErrorElement.textContent = result.message;
                 element_submitButton.disabled = false;
             }
         });
