@@ -48,7 +48,7 @@ const stats = {
         const currentPly = game.getGamefile().moveIndex + 1;
         const totalPlyCount = movesscript.getPlyCount(game.getGamefile().moves);
 
-        stats.elementStatusMoves.textContent = `${translations["move_counter"]} ${currentPly}/${totalPlyCount}`;
+        stats.elementStatusMoves.textContent = `${translations.move_counter} ${currentPly}/${totalPlyCount}`;
     },
 
     updateStatsCSS() {
@@ -62,7 +62,7 @@ const stats = {
 
     updatePiecesMesh(percent) {
         const percentString = math.decimalToPercent(percent);
-        stats.elementStatusPiecesMesh.textContent = `${translations["constructing_mesh"]} ${percentString}`;
+        stats.elementStatusPiecesMesh.textContent = `${translations.constructing_mesh} ${percentString}`;
     },
 
     hidePiecesMesh() {
@@ -91,7 +91,7 @@ const stats = {
 
     updateRotateMesh(percent) {
         const percentString = math.decimalToPercent(percent);
-        stats.elementStatusRotateMesh.textContent = `${translations["rotating_mesh"]} ${percentString}`;
+        stats.elementStatusRotateMesh.textContent = `${translations.rotating_mesh} ${percentString}`;
     },
 
     hideRotateMesh() {

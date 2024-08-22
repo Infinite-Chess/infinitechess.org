@@ -305,7 +305,7 @@ const clock = (function() {
      */
     function getClockFromKey(key) { // ssss+ss  converted to  15m+15s
         const minutesAndIncrement = getMinutesAndIncrementFromClock(key);
-        if (minutesAndIncrement === null) return translations["no_clock"];
+        if (minutesAndIncrement === null) return translations.no_clock;
         return `${minutesAndIncrement.minutes}m+${minutesAndIncrement.increment}s`;
     }
 

@@ -18,6 +18,15 @@ const expireOfBrowserIDCookieMillis = 1000 * 60 * 60 * 24 * 7; // 7 days
 // Route
 // Returns a new access token if refresh token hasn't expired.
 // Called by a fetch(). ALWAYS RETURN a json!
+
+/**
+ * Called when the browser fetches /refresh. This reads any refresh token cookie present,
+ * and gives them a new access token if they are signed in.
+ * If they are not, it gives them a browser-id cookie to verify their identity.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const handleRefreshToken = (req, res) => {
     const cookies = req.cookies;
     // If we have cookies AND there's a jwt property..
@@ -66,7 +75,7 @@ const handleRefreshToken = (req, res) => {
 // If they have an existing browser id, it renews it for 7 more days.
 // If they don't, it gives them a new browser id for 7 day.
 function assignOrRenewBrowserID(req, res) {
-    if (req.cookies['browser-id'] == null) giveBrowserID(res);
+    if (!req.cookies['browser-id']) giveBrowserID(res);
     else refreshBrowserID(req, res);
 }
 
@@ -74,15 +83,15 @@ function giveBrowserID(res) {
 
     const id = generateID(12);
 
-    //console.log(`Assigning new browser-id: ${id} --------`)
+    // console.log(`Assigning new browser-id: ${id} --------`);
 
     const cookieName = 'browser-id';
     const age = expireOfBrowserIDCookieMillis; // 1 day
 
     // READABLE by the server with web socket connections, AND by javascript. MAX AGE IN MILLIS NOT SECS
-    //res.cookie(cookieName, id, { sameSite: 'None', secure: true, maxAge: age }); // 60 second time limit. SAVE it in memory.
+    //res.cookie(cookieName, id, { sameSite: 'None', secure: true, maxAge: age });
     // Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
-    res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: age }); // 60 second time limit. SAVE it in memory.
+    res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: age });
 }
 
 function refreshBrowserID(req, res) {
@@ -92,14 +101,14 @@ function refreshBrowserID(req, res) {
 
     if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
-    //console.log(`Renewing browser-id: ${id}`)
+    // console.log(`Renewing browser-id: ${id}`);
 
     const age = expireOfBrowserIDCookieMillis;
 
     // READABLE by the server with web socket connections, AND by javascript. MAX AGE IN MILLIS NOT SECS
-    // res.cookie(cookieName, id, { sameSite: 'None', secure: true, maxAge: age }); // 60 second time limit. SAVE it in memory.
+    // res.cookie(cookieName, id, { sameSite: 'None', secure: true, maxAge: age });
     // Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
-    res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: age }); // 60 second time limit. SAVE it in memory.
+    res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: age });
 }
 
 function makeBrowserIDPermanent(req, res, browserID) {
@@ -109,12 +118,16 @@ function makeBrowserIDPermanent(req, res, browserID) {
     const age = Number.MAX_SAFE_INTEGER;
 
     // READABLE by the server with web socket connections, AND by javascript. MAX AGE IN MILLIS NOT SECS
-    // res.cookie(cookieName, id, { sameSite: 'None', secure: true, maxAge: age }); // 60 second time limit. SAVE it in memory.
+    // res.cookie(cookieName, id, { sameSite: 'None', secure: true, maxAge: age });
     // Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
-    res.cookie(cookieName, browserID, { httpOnly: true, sameSite: 'None', secure: true, maxAge: age }); // 60 second time limit. SAVE it in memory.
+    res.cookie(cookieName, browserID, { httpOnly: true, sameSite: 'None', secure: true, maxAge: age });
 
     const logThis = `Making banned browser-id PERMANENT: ${browserID} !!!!!!!!!!!!!!!!!!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
     logEvents(logThis, 'bannedIPLog.txt', { print: true });
 }
 
-module.exports = { handleRefreshToken };
+
+
+module.exports = {
+    handleRefreshToken,
+};

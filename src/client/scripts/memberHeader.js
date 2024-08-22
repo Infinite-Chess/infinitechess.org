@@ -5,6 +5,7 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const memberHeader = (function() {
 
     const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 60 * 15; // Milliseconds   15m is the server expire time for access token.
@@ -30,7 +31,7 @@ const memberHeader = (function() {
      * @returns {boolean}
      */
     function haveWeSentInitialRequest() {
-        return lastRefreshTime != null;
+        return lastRefreshTime !== undefined;
     }
 
     // If we're logged in, the log in button will change to their profile,
@@ -70,7 +71,7 @@ const memberHeader = (function() {
      * to see if we're logged in, is back.
      */
     async function waitUntilInitialRequestBack() {
-        while (lastRefreshTime == null) {
+        while (lastRefreshTime === undefined) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
     }
@@ -83,6 +84,7 @@ const memberHeader = (function() {
      */
     function refreshToken() {
         requestOut = true;
+        lastRefreshTime = undefined; // Set as undefined, because waitUntilInitialRequestBack() relies on it being undefined
         let OK = false;
 
         fetch('/refresh')
@@ -103,7 +105,7 @@ const memberHeader = (function() {
 
                     member = result.member;
                 } else { // Unauthorized, don't change any navigation links. Should have given us a browser-id!
-                    console.log(`Server: ${result['message']}`);
+                    console.log(`Server: ${result.message}`);
                     areLoggedIn = false;
                 }
                 // Delete the token cookie after reading it, so it doesn't bleed
@@ -225,6 +227,7 @@ const memberHeader = (function() {
 
     return Object.freeze({
         getAccessToken,
+        refreshToken,
         getMember,
         getCookieValue,
         deleteCookie,
