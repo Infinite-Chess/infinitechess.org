@@ -46,6 +46,7 @@ module.exports = [
       "no-var": "error", // Disallows declaring variables with "var", as they are function-scoped (not block), so hoisting is very confusing.
       "max-depth": ["warn", 4], // Maximum number of nested blocks allowed.
       "eqeqeq": ["error", "always"], // Disallows "!=" and "==" to remove type coercion bugs. Use "!==" and "===" instead.
+      'dot-notation': 'error', // Forces dot notation `.` instead of bracket notation `[""]` wherever possible
       // "no-multi-spaces": "error", // Disallows multiple spaces that isn't indentation.
       // "max-lines": ["warn", 500] // Can choose to enable to place a cap on how big files can be, in lines.
       // "complexity": ["warn", { "max": 10 }] // Can choose to enable to cap the complexity, or number of independant paths, which can lead to methods.

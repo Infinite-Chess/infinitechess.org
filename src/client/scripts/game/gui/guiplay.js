@@ -335,9 +335,8 @@ const guiplay = (function() {
         return localstorage.loadItem(gameID);
 
         // The variant options passed into the variant loader needs to contain the following properties:
-        // `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
+        // `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
         // const variantOptions = {
-        //     turn: longformat.turn,
         //     fullMove: longformat.fullMove,
         //     enpassant: longformat.enpassant,
         //     moveRule: longformat.moveRule,
