@@ -37,7 +37,7 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
     }
 
     const perpetratingMoveIndex = game.moves.length - 1;
-    const colorThatPlayedPerpetratingMove = movesscript1.getColorThatPlayedMoveIndex(perpetratingMoveIndex, game.blackGoesFirst);
+    const colorThatPlayedPerpetratingMove = movesscript1.getColorThatPlayedMoveIndex(game, perpetratingMoveIndex);
     if (colorThatPlayedPerpetratingMove === ourColor) {
         const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
         logEvents(errString, 'hackLog.txt', { print: true });
