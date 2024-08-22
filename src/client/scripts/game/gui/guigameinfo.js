@@ -81,33 +81,33 @@ const guigameinfo = (function() {
         style.hideElement(element_dot);
 
         if (game.areInNonLocalGame()) {
-            if (game.areWeColorInNonLocalGame(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["you_checkmate"]
-                                                                                : condition === 'time' ? resultTranslations["you_time"]
-                                                                                : condition === 'resignation' ? resultTranslations["you_resignation"]
-                                                                                : condition === 'disconnect' ? resultTranslations["you_disconnect"]
-                                                                                : condition === 'royalcapture' ? resultTranslations["you_royalcapture"]
-                                                                                : condition === 'allroyalscaptured' ? resultTranslations["you_allroyalscaptured"]
-                                                                                : condition === 'allpiecescaptured' ? resultTranslations["you_allpiecescaptured"]
-                                                                                : condition === 'threecheck' ? resultTranslations["you_threecheck"]
-                                                                                : condition === 'koth' ? resultTranslations["you_koth"]
-                                                                                : resultTranslations["you_generic"];
-            else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? resultTranslations["draw_stalemate"]
-                                                                     : condition === 'repetition' ? resultTranslations["draw_repetition"]
-                                                                     : condition === 'moverule' ? `${resultTranslations["draw_moverule"][0]}${(game.getGamefile().gameRules.moveRule / 2)}${resultTranslations["draw_moverule"][1]}`
-																	                                   : condition === 'insuffmat' ? resultTranslations["draw_insuffmat"]
-                                                                     : condition === 'agreement' ? resultTranslations["draw_agreement"]
-                                                                     : resultTranslations["draw_generic"];
-            else if (condition === 'aborted') element_whosturn.textContent = resultTranslations["aborted"];
-            else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? resultTranslations["opponent_checkmate"]
-                                                             : condition === 'time' ? resultTranslations["opponent_time"]
-                                                             : condition === 'resignation' ? resultTranslations["opponent_resignation"]
-                                                             : condition === 'disconnect' ? resultTranslations["opponent_disconnect"]
-                                                             : condition === 'royalcapture' ? resultTranslations["opponent_royalcapture"]
-                                                             : condition === 'allroyalscaptured' ? resultTranslations["opponent_allroyalscaptured"]
-                                                             : condition === 'allpiecescaptured' ? resultTranslations["opponent_allpiecescaptured"]
-                                                             : condition === 'threecheck' ? resultTranslations["opponent_threecheck"]
-                                                             : condition === 'koth' ? resultTranslations["opponent_koth"]
-                                                             : resultTranslations["opponent_generic"];
+            if (game.areWeColorInNonLocalGame(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
+                                                                                : condition === 'time' ? resultTranslations.you_time
+                                                                                : condition === 'resignation' ? resultTranslations.you_resignation
+                                                                                : condition === 'disconnect' ? resultTranslations.you_disconnect
+                                                                                : condition === 'royalcapture' ? resultTranslations.you_royalcapture
+                                                                                : condition === 'allroyalscaptured' ? resultTranslations.you_allroyalscaptured
+                                                                                : condition === 'allpiecescaptured' ? resultTranslations.you_allpiecescaptured
+                                                                                : condition === 'threecheck' ? resultTranslations.you_threecheck
+                                                                                : condition === 'koth' ? resultTranslations.you_koth
+                                                                                : resultTranslations.you_generic;
+            else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
+                                                                     : condition === 'repetition' ? resultTranslations.draw_repetition
+                                                                     : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(game.getGamefile().gameRules.moveRule / 2)}${resultTranslations.draw_moverule[1]}`
+																	                                   : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
+                                                                     : condition === 'agreement' ? resultTranslations.draw_agreement
+                                                                     : resultTranslations.draw_generic;
+            else if (condition === 'aborted') element_whosturn.textContent = resultTranslations.aborted;
+            else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.opponent_checkmate
+                                                             : condition === 'time' ? resultTranslations.opponent_time
+                                                             : condition === 'resignation' ? resultTranslations.opponent_resignation
+                                                             : condition === 'disconnect' ? resultTranslations.opponent_disconnect
+                                                             : condition === 'royalcapture' ? resultTranslations.opponent_royalcapture
+                                                             : condition === 'allroyalscaptured' ? resultTranslations.opponent_allroyalscaptured
+                                                             : condition === 'allpiecescaptured' ? resultTranslations.opponent_allpiecescaptured
+                                                             : condition === 'threecheck' ? resultTranslations.opponent_threecheck
+                                                             : condition === 'koth' ? resultTranslations.opponent_koth
+                                                             : resultTranslations.opponent_generic;
         } else { // Local game
             if (condition === 'checkmate') element_whosturn.textContent = victor === 'white' ? resultTranslations.white_checkmate
                                                                        : victor === 'black' ? resultTranslations.black_checkmate
