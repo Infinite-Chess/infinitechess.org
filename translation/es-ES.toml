@@ -36,48 +36,48 @@ what_is_it_pargaraphs = [
 "Como puedes imaginar, hay infinitas posibilidades para la posición de início, ¡Muchas de las cuales puedes jugar competitivamente! Tu objetivo final sigue siendo el jaque mate, que requiere nuevas estrategias, dado que ya no hay muros para atrapar al rey rival. Las partidas no suelen durar mas que las de ajedrez normal. ¡Los Peones siguen coronando en las filas 1 y 8!",
 ]
 how_to_title = "¿Como Puedo Jugar?"
-how_to_paragraph = ["¡La actual versión es la 1.4, y esta disponible en la pagina","Jugar!"]
+how_to_paragraph = ["¡La actual versión es la 1.4, y esta disponible en la pagina ","Jugar","!"]
 about_title = "Sobre el proyecto"
 about_paragraphs = [
 "Soy Naviary. Desde que descubrí Infinte Chess (el concepto existe desde hace mucho antes que esta web), ¡Me han intrigado sus posibilidades! Hasta hace muy poco, jugar ha sido bastante complicado, usuarios de chess.com tenían que crear imagenes del tablero actual y enviarlas entre ellos cada jugada. Debido a esto, no mucha gente conoce o ha sido capaz de jugar a esto.",
 ["Es mi objetivo crear una manera de hacerlo facilmente jugable por todo el mundo, y crear una comunidad rodeandolo. He invertido incontables horas de mi tiempo en esta web, manteniendo y desarrollando el juego. Aún tengo muchas más ideas que me mantendrán ocupado durante un tiempo. Aunque deseo mantener este proyecto gratis, la vida tiene requerimientos, y para ayudarme financiariamente por favor considera unirte a mi ", "Patreon"]
 ]
-patreon_title = "Contribuidores en Pateron"
+patreon_title = "Contribuidores en Patreon"
 
 [credits]
-title = "Creditos"
-copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
-variants_heading = "Variants"
+title = "Créditos"
+copyright = "Qualquier cosa presente en la web que no este en la siguiente lista tiene copyright de www.InfiniteChess.org"
+variants_heading = "Variantes"
 variants_credits = [
-"Core designed by Andreas Tsevas.",
-"Space designed by Andreas Tsevas.",
-"Space Classic designed by Andreas Tsevas.",
-"Coaip (Chess on an Infinite Plane) designed by Vickalan.",
-"Pawn Horde designed by Inaccessible Cardinal.",
-"Abundance designed by Clicktuck Suskriberz.",
-"Pawndard by SexyLexi.",
-"Classical+ by SexyLexi.",
-"Knightline by Inaccessible Cardinal.",
-"Knighted Chess by cycy98.",
-"designed by Cory Evans and Joel Hamkins.",
-"designed by Andreas Tsevas.",
-"designed by Cory Evans and Joel Hamkins.",
-"designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
+"Core diseñado por Andreas Tsevas.",
+"Space diseñado por Andreas Tsevas.",
+"Space Classic diseñado por Andreas Tsevas.",
+"Coaip (Chess on an Infinite Plane) diseñado por Vickalan.",
+"Pawn Horde diseñado por Inaccessible Cardinal.",
+"Abundance diseñado por Clicktuck Suskriberz.",
+"Pawndard hecho por SexyLexi.",
+"Classical+ hecho por SexyLexi.",
+"Knightline hecho por Inaccessible Cardinal.",
+"Knighted Chess hecho por cycy98.",
+"diseñado por Cory Evans y Joel Hamkins.",
+"diseñado por Andreas Tsevas.",
+"diseñado por Cory Evans y Joel Hamkins.",
+"diseñado por Cory Evans, Joel Hamkins, y Norman Lewis Perlmutter.",
 ]
-textures_heading = "Textures"
-textures_licensed_under = "textures licensed under the"
+textures_heading = "Texturas"
+textures_licensed_under = "texturas bajo la licencia"
 textures_credits = [
-"Gold coin by Quolte.",
+"Gold coin por Quolte",
 ]
-sounds_heading = "Sounds"
+sounds_heading = "Sonidos"
 sounds_credits = [
-["Some sounds are provided by the", "project under the"],
-"Other sounds created by Naviary.",
+["Algunos sonidos han sido proporcionados por el projecto", "bajo la licencia"],
+"Otros sonidos creados por Naviary.",
 ]
-code_heading = "Code"
+code_heading = "Codigo"
 code_credits = [
-"by Brandon Jones and Colin MacKenzie IV.",
-"by Andreas Tsevas and Naviary.",
+"por Brandon Jones y Colin MacKenzie IV.",
+"por Andreas Tsevas y Naviary.",
 ]
 
 [member]
