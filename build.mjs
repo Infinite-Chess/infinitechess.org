@@ -121,7 +121,9 @@ if (!BUNDLE_FILES) {
         compress: true,
         sourceMap: false
     });
-    await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
+
+    const collapsedcode = minifiedgame.code.replace(/\n/gm , ';')
+    await writeFile(`./dist/scripts/game/app.js`, collapsedcode, 'utf8');
   
     // overwrite play.ejs by injecting all needed scripts into it:
     await writeFile(`./dist/views/play.ejs`, injectScriptIntoPlayEjs(`./dist/scripts/game/app.js`), 'utf8');
