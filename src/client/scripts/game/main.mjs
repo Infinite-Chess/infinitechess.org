@@ -22,6 +22,7 @@ import { guiloading } from './gui/guiloading.mjs'
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const main = (function() { 
 
     /**

@@ -190,8 +190,8 @@ const arrows = (function() {
             }
 
             const dirs = {};
-            if (right) dirs["r"] = right;
-            if (left) dirs["l"] = left;
+            if (right) dirs.r = right;
+            if (left) dirs.l = left;
             return dirs;
         }
 

@@ -84,14 +84,14 @@ const insufficientmaterial = (function() {
     function isScenarioInsuffMat(scenario) {
         // find out if we are in the 1 king vs 1 king, or in the 0 kings vs 1 king situation, and set scenrariosForInsuffMat accordingly
         let scenrariosForInsuffMat;
-        if (scenario["kingsB"] === 1) {
-            if (scenario["kingsW"] === 1) {
+        if (scenario.kingsB === 1) {
+            if (scenario.kingsW === 1) {
                 scenrariosForInsuffMat = insuffmatScenarios_1K1k;
-                delete scenario["kingsW"];
-                delete scenario["kingsB"];
-            } else if (!scenario["kingsW"]) {
+                delete scenario.kingsW;
+                delete scenario.kingsB;
+            } else if (!scenario.kingsW) {
                 scenrariosForInsuffMat = insuffmatScenarios_0K1k;
-                delete scenario["kingsB"];
+                delete scenario.kingsB;
             } else {
                 scenrariosForInsuffMat = insuffmatScenarios_special;
             }
@@ -175,8 +175,8 @@ const insufficientmaterial = (function() {
         }
 
         // add bishop tuples to scenario, and make sure the first entry of the bishop lists is the largest one
-        if (sum_tuple_coords(bishopsW_count) != 0) scenario["bishopsW"] = ordered_tuple_descending(bishopsW_count);
-        if (sum_tuple_coords(bishopsB_count) != 0) scenario["bishopsB"] = ordered_tuple_descending(bishopsB_count);
+        if (sum_tuple_coords(bishopsW_count) != 0) scenario.bishopsW = ordered_tuple_descending(bishopsW_count);
+        if (sum_tuple_coords(bishopsB_count) != 0) scenario.bishopsB = ordered_tuple_descending(bishopsB_count);
 
         // Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
         // This is fully enough for the checkmate practice mode, for now

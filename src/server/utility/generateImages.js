@@ -17,14 +17,14 @@ function loadImageConfig(img, format, effort) {
     let config;
     // Make sure format exists
     if (format in optimised_images[img]) {
-        config = optimised_images[img]["avif"];
+        config = optimised_images[img].avif;
     } else {
         config = {};
     }
 
     // If effor is not set overriede with effort variable
     if (!("effort" in config)) {
-        config["effort"] = effort;
+        config.effort = effort;
     }
 
     return config;

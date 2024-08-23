@@ -102,11 +102,11 @@ const guipause = (function() {
     function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
         if (!isPaused) return;
 
-        if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations["main_menu"];
+        if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
 
         if (movesscript.isGameResignable(game.getGamefile())) {
             // If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
-            if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations["abort_game"]) {
+            if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations.abort_game) {
                 element_mainmenu.disabled = true;
                 element_mainmenu.classList.add('opacity-0_5');
                 setTimeout(() => {
@@ -114,11 +114,11 @@ const guipause = (function() {
                     element_mainmenu.classList.remove('opacity-0_5');
                 }, 1000);
             }
-            element_mainmenu.textContent = translations["resign_game"];
+            element_mainmenu.textContent = translations.resign_game;
             return;
         }
 
-        element_mainmenu.textContent = translations["abort_game"];
+        element_mainmenu.textContent = translations.abort_game;
     }
 
     function initListeners() {
@@ -184,11 +184,11 @@ const guipause = (function() {
         mode++;
         if (mode > 2) mode = 0;
         arrows.setMode(mode);
-        const text = mode === 0 ? translations["arrows_off"]
-                   : mode === 1 ? translations["arrows_defense"]
-                                : translations["arrows_all"];
+        const text = mode === 0 ? translations.arrows_off
+                   : mode === 1 ? translations.arrows_defense
+                                : translations.arrows_all;
         element_pointers.textContent = text;
-        if (!isPaused) statustext.showStatus(translations["toggled"] + " " + text);
+        if (!isPaused) statustext.showStatus(translations.toggled + " " + text);
     }
 
     function callback_Perspective() {

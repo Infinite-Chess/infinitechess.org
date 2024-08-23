@@ -69,7 +69,7 @@ function refreshAndUpdateNav() {
                 element_createaccountText.textContent = translations["js-logout"];
 
             } else { // Unauthorized, don't change any navigation links
-                console.log(result['message']);
+                console.log(result.message);
                 loadMemberData();
             }
         });
@@ -98,7 +98,7 @@ function loadMemberData(loggedInAs) {
         credentials: 'same-origin', // Allows cookie to be set from this request
     };
     // If we're logged in, include authorization
-    if (token) config.headers['Authorization'] = `Bearer ${token}`;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
 
     fetch(`/member/${member}/data`, config)
         .then((response) => {

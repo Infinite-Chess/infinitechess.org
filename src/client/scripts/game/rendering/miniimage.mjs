@@ -75,8 +75,8 @@ const miniimage = (function() {
         disabled = !disabled;
         main.renderThisFrame();
 
-        if (disabled) statustext.showStatus(translations["rendering"]["icon_rendering_off"]);
-        else statustext.showStatus(translations["rendering"]["icon_rendering_on"]);
+        if (disabled) statustext.showStatus(translations.rendering.icon_rendering_off);
+        else statustext.showStatus(translations.rendering.icon_rendering_on);
     }
 
     // Called within update section

@@ -20,7 +20,7 @@ const browsersupport = (function() {
             BigInt(123); // Try to initialize a BigInt
         } catch (e) {
             console.error('BigInts are not supported.');
-            alert(translations["bigints_unsupported"]);
+            alert(translations.bigints_unsupported);
             throw new Error('Browser not supported.');
         }
     }

@@ -51,7 +51,7 @@ const invites = (function() {
 
     function update() {
         if (!guiplay.onPlayPage()) return; // Not on the play screen
-        if (loadbalancer.gisHibernating()) statustext.showStatus(translations["invites"]["move_mouse"], false, 0.1);
+        if (loadbalancer.gisHibernating()) statustext.showStatus(translations.invites.move_mouse, false, 0.1);
     }
 
     function unsubIfWeNotHave() {
@@ -77,7 +77,7 @@ const invites = (function() {
                 updateActiveGameCount(data.value);
                 break;
             default:
-                statustext.showStatus(`${translations["invites"]["unknown_action_received_1"]} ${data.action} ${translations["invites"]["unknown_action_received_2"]}`, true);
+                statustext.showStatus(`${translations.invites.unknown_action_received_1} ${data.action} ${translations.invites.unknown_action_received_2}`, true);
                 break;
         }
     }
@@ -97,7 +97,7 @@ const invites = (function() {
 
     function cancel(id = ourInviteID) {
         if (!weHaveInvite) return;
-        if (!id) return statustext.showStatus(translations["invites"]["cannot_cancel"], true);
+        if (!id) return statustext.showStatus(translations.invites.cannot_cancel, true);
 
         deleteInviteTagInLocalStorage();
 
@@ -171,7 +171,7 @@ const invites = (function() {
             // <div class="invite-child">Casual</div>
             // <div class="invite-child accept">Accept</div>
 
-            const n = ours ? translations["invites"]["you_indicator"] : invite.name;
+            const n = ours ? translations.invites.you_indicator : invite.name;
             const name = createDiv(['invite-child'], n);
             newInvite.appendChild(name);
 
@@ -182,15 +182,15 @@ const invites = (function() {
             const cloc = createDiv(['invite-child'], time);
             newInvite.appendChild(cloc);
 
-            const uColor = ours ? invite.color === 'White' ? translations["invites"]["you_are_white"] : invite.color === 'Black' ? translations["invites"]["you_are_black"] : translations["invites"]["random"]
-                                : invite.color === 'White' ? translations["invites"]["you_are_black"] : invite.color === 'Black' ? translations["invites"]["you_are_white"] : translations["invites"]["random"];
+            const uColor = ours ? invite.color === 'White' ? translations.invites.you_are_white : invite.color === 'Black' ? translations.invites.you_are_black : translations.invites.random
+                                : invite.color === 'White' ? translations.invites.you_are_black : invite.color === 'Black' ? translations.invites.you_are_white : translations.invites.random;
             const color = createDiv(['invite-child'], uColor);
             newInvite.appendChild(color);
 
             const rated = createDiv(['invite-child'], translations[invite.rated]);
             newInvite.appendChild(rated);
 
-            const a = ours ? translations["invites"]["cancel"] : translations["invites"]["accept"];
+            const a = ours ? translations.invites.cancel : translations.invites.accept;
             const accept = createDiv(['invite-child', 'accept'], a);
             newInvite.appendChild(accept);
 
@@ -357,8 +357,8 @@ const invites = (function() {
 
     function updateCreateInviteButton() {
         if (guiplay.getModeSelected() !== 'online') return;
-        if (weHaveInvite) guiplay.setElement_CreateInviteTextContent(translations["invites"]["cancel_invite"]);
-        else              guiplay.setElement_CreateInviteTextContent(translations["invites"]["create_invite"]);
+        if (weHaveInvite) guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);
+        else              guiplay.setElement_CreateInviteTextContent(translations.invites.create_invite);
     }
 
     function updatePrivateInviteCode(privateInviteID) { // If undefined, we know we don't have a "private" invite
@@ -390,7 +390,7 @@ const invites = (function() {
 
     function updateActiveGameCount(newCount) {
         if (newCount == null) return;
-        element_joinExisting.textContent = `${translations["invites"]["join_existing_active_games"]} ${newCount}`;
+        element_joinExisting.textContent = `${translations.invites.join_existing_active_games} ${newCount}`;
     }
 
     function doWeHave() {

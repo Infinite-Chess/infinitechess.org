@@ -151,12 +151,12 @@ const guiplay = (function() {
 
         modeSelected = mode;
         if (mode === 'online') {
-            element_playName.textContent = translations["menu_online"];
+            element_playName.textContent = translations.menu_online;
             element_online.classList.add('selected');
             element_local.classList.remove('selected');
             element_online.classList.remove('not-selected');
             element_local.classList.add('not-selected');
-            element_createInvite.textContent = translations["invites"]["create_invite"];
+            element_createInvite.textContent = translations.invites.create_invite;
             element_optionCardColor.classList.remove('hidden');
             element_optionCardRated.classList.remove('hidden');
             element_optionCardPrivate.classList.remove('hidden');
@@ -169,12 +169,12 @@ const guiplay = (function() {
             // can click "Start Game" at any point. But it will be re-disabled if we click "online" rapidly,
             // because it was still locked from us still waiting for the server's repsponse to our last create/cancel command.
             enableCreateInviteButton();
-            element_playName.textContent = translations["menu_local"];
+            element_playName.textContent = translations.menu_local;
             element_online.classList.remove('selected');
             element_local.classList.add('selected');
             element_online.classList.add('not-selected');
             element_local.classList.remove('not-selected');
-            element_createInvite.textContent = translations["invites"]["start_game"];
+            element_createInvite.textContent = translations.invites.start_game;
             element_optionCardColor.classList.add('hidden');
             element_optionCardRated.classList.add('hidden');
             element_optionCardPrivate.classList.add('hidden');
@@ -242,7 +242,7 @@ const guiplay = (function() {
 
         const code = element_textboxPrivate.value.toLowerCase();
 
-        if (code.length !== 5) return statustext.showStatus(translations["invite_error_digits"]);
+        if (code.length !== 5) return statustext.showStatus(translations.invite_error_digits);
 
         element_joinPrivateMatch.disabled = true; // Re-enable when the code is changed
         
@@ -268,7 +268,7 @@ const guiplay = (function() {
         const code = invites.gelement_iCodeCode().textContent;
         
         main.copyToClipboard(code);
-        statustext.showStatus(translations["invite_copied"]);
+        statustext.showStatus(translations.invite_copied);
     }
 
     function initListeners_Invites() {

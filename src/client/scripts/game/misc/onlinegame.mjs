@@ -171,8 +171,8 @@ const onlinegame = (function() {
     }
 
     function displayWeAFK(secsRemaining) {
-        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["auto_resigning_in"] : translations["onlinegame"]["auto_aborting_in"];
-        statustext.showStatusForDuration(`${translations["onlinegame"]["afk_warning"]} ${resigningOrAborting} ${secsRemaining}...`, 1000);
+        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+        statustext.showStatusForDuration(`${translations.onlinegame.afk_warning} ${resigningOrAborting} ${secsRemaining}...`, 1000);
         const nextSecsRemaining = secsRemaining - 1;
         if (nextSecsRemaining === 0) return; // Stop
         const timeRemainUntilAFKLoss = afk.timeWeLoseFromAFK - Date.now();
@@ -232,7 +232,7 @@ const onlinegame = (function() {
                 inSync = false;
                 break;
             case "login": // Not logged in error
-                statustext.showStatus(translations["onlinegame"]["not_logged_in"], true, 100);
+                statustext.showStatus(translations.onlinegame.not_logged_in, true, 100);
                 websocket.getSubs().game = false;
                 inSync = false;
                 clock.stop();
@@ -241,13 +241,13 @@ const onlinegame = (function() {
                 board.darkenColor();
                 break;
             case "nogame": // Game is deleted / no longer exists
-                statustext.showStatus(translations["onlinegame"]["game_no_longer_exists"], false, 1.5);
+                statustext.showStatus(translations.onlinegame.game_no_longer_exists, false, 1.5);
                 websocket.getSubs().game = false;
                 inSync = false;
                 gamefileutility.concludeGame(game.getGamefile(), 'aborted', { requestRemovalFromActiveGames: false });
                 break;
             case "leavegame": // Another window connected
-                statustext.showStatus(translations["onlinegame"]["another_window_connected"]);
+                statustext.showStatus(translations.onlinegame.another_window_connected);
                 websocket.getSubs().game = false;
                 inSync = false;
                 closeOnlineGame();
@@ -278,7 +278,7 @@ const onlinegame = (function() {
                 statustext.showStatus(`Opponent declined draw offer.`);
                 break;
             default:
-                statustext.showStatus(`${translations["invites"]["unknown_action_received_1"]} ${message.action} ${translations["invites"]["unknown_action_received_2"]}`, true);
+                statustext.showStatus(`${translations.invites.unknown_action_received_1} ${message.action} ${translations.invites.unknown_action_received_2}`, true);
                 break;
         }
     }
@@ -300,8 +300,8 @@ const onlinegame = (function() {
     }
 
     function displayOpponentAFK(secsRemaining) {
-        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["auto_resigning_in"] : translations["onlinegame"]["auto_aborting_in"];
-        statustext.showStatusForDuration(`${translations["onlinegame"]["opponent_afk"]} ${resigningOrAborting} ${secsRemaining}...`, 1000);
+        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+        statustext.showStatusForDuration(`${translations.onlinegame.opponent_afk} ${resigningOrAborting} ${secsRemaining}...`, 1000);
         const nextSecsRemaining = secsRemaining - 1;
         if (nextSecsRemaining === 0) return; // Stop
         const timeRemainUntilAFKLoss = afk.timeOpponentLoseFromAFK - Date.now();
@@ -329,8 +329,8 @@ const onlinegame = (function() {
     }
 
     function displayOpponentDisconnect(secsRemaining, wasByChoice) {
-        const opponent_disconnectedOrLostConnection = wasByChoice ? translations["onlinegame"]["opponent_disconnected"] : translations["onlinegame"]["opponent_lost_connection"];
-        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations["onlinegame"]["auto_resigning_in"] : translations["onlinegame"]["auto_aborting_in"];
+        const opponent_disconnectedOrLostConnection = wasByChoice ? translations.onlinegame.opponent_disconnected : translations.onlinegame.opponent_lost_connection;
+        const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
         // The "You are AFK" message should overwrite, be on top of, this message,
         // so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
         if (!afk.timeWeLoseFromAFK) statustext.showStatusForDuration(`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`, 1000);
@@ -763,12 +763,12 @@ const onlinegame = (function() {
     /** Displays the next "Server restaring..." message, and schedules the next one. */
     function displayServerRestarting(minutesLeft) {
         if (minutesLeft === 0) {
-            statustext.showStatus(translations["onlinegame"]["server_restarting"], false, 2);
+            statustext.showStatus(translations.onlinegame.server_restarting, false, 2);
             serverRestart.time = false;
             return; // Print no more server restarting messages
         }
-        const minutes_plurality = minutesLeft === 1 ? translations["onlinegame"]["minute"] : translations["onlinegame"]["minutes"];
-        statustext.showStatus(`${translations["onlinegame"]["server_restarting_in"]} ${minutesLeft} ${minutes_plurality}...`, false, 2);
+        const minutes_plurality = minutesLeft === 1 ? translations.onlinegame.minute : translations.onlinegame.minutes;
+        statustext.showStatus(`${translations.onlinegame.server_restarting_in} ${minutesLeft} ${minutes_plurality}...`, false, 2);
         let nextKeyMinute;
         for (const keyMinute of serverRestart.keyMinutes) {
             if (keyMinute < minutesLeft) {
