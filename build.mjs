@@ -9,8 +9,9 @@ import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
-import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
-import { DEV_BUILD } from "./src/server/config/config.js";
+import { injectScriptIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
+import { BUNDLE_FILES } from "./src/server/config/config.js";
+import esbuild from 'esbuild'
 import path from "node:path";
 
 // Targetted browsers for CSS transpilation
@@ -63,14 +64,14 @@ await remove("./dist", {
     force: true,
 });
 
-if (DEV_BUILD) {
+if (!BUNDLE_FILES) {
     // in dev mode, copy all clientside files over to dist and exit
     await copy("./src/client", "./dist", {
         recursive: true,
         force: true
     });
     // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+    await writeFile(`./dist/views/play.ejs`,injectScriptIntoPlayEjs(`./dist/scripts/game/htmlscript.mjs`), 'utf8');
 } else {
     // in prod mode, copy all clientside files over to dist, except for those contained in scripts
     await copy("./src/client", "./dist", {
@@ -84,29 +85,37 @@ if (DEV_BUILD) {
     // make a list of all client scripts:
     const clientFiles = [];
     const clientScripts = await getExtFiles("src/client/scripts", ".js");
-    clientFiles.push(...clientScripts.map(v => `scripts/${v}`));
+    clientFiles.push(...clientScripts.map(v => `scripts/${v}`).filter(file => !/scripts(\\|\/)+game(\\|\/)/.test(file)));
 
-    // string containing all code in /game except for htmlscript.js:
-    let gamecode = ""; 
+    // string containing all code in /game except for htmlscript.js: 
 
     for (const file of clientFiles) {
     // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
-        if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
-            const code = await readFile(`./src/client/${file}`, 'utf8');
-            const minified = await swc.minify(code, {
-                mangle: true, // Enable variable name mangling
-                compress: true, // Enable compression
-                sourceMap: false
-            });
-            await writeFile(`./dist/${file}`, minified.code, 'utf8');
-        }
+        //if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
+        const code = await readFile(`./src/client/${file}`, 'utf8');
+        const minified = await swc.minify(code, {
+            mangle: true, // Enable variable name mangling
+            compress: true, // Enable compression
+            sourceMap: false
+        });
+        await writeFile(`./dist/${file}`, minified.code, 'utf8');
+        //}
         // Collect the code of all js files in /game except for htmlscript.js:
-        else {
-            gamecode += await readFile(`./src/client/${file}`, 'utf8');
-        }
+        // else {
+        //     gamecode += await readFile(`./src/client/${file}`, 'utf8');
+        // }
     }
 
-    // Combine all gamecode files into app.js
+    await esbuild.build({
+            bundle: true,
+            entryPoints: ['src/client/scripts/game/htmlscript.mjs'],
+            outfile: './dist/scripts/game/app.js'
+        }
+    )
+
+    const gamecode = await readFile(`./dist/scripts/game/app.js`, 'utf-8')
+
+    //Combine all gamecode files into app.js
     const minifiedgame = await swc.minify(gamecode, {
         mangle: true,
         compress: true,
@@ -115,7 +124,7 @@ if (DEV_BUILD) {
     await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
   
     // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+    await writeFile(`./dist/views/play.ejs`, injectScriptIntoPlayEjs(`./dist/scripts/game/app.js`), 'utf8');
   
     // Make a list of all css files
     const cssFiles = await getExtFiles("./src/client/css", ".css");

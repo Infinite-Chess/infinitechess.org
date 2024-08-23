@@ -2,7 +2,7 @@
 import { input } from '../input.mjs'
 import { bufferdata } from './bufferdata.mjs'
 import { perspective } from './perspective.mjs'
-import { miniimage } from './miniimage.js'
+import { miniimage } from './miniimage.mjs'
 import { board } from './board.mjs'
 import { transition } from './transition.mjs'
 import { organizedlines } from '../chess/organizedlines.mjs'

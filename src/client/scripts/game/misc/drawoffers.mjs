@@ -1,3 +1,13 @@
+// Import Start
+import { guidrawoffer } from '../gui/guidrawoffer.mjs';
+import { statustext } from '../gui/statustext.mjs';
+import { websocket } from '../websocket.mjs';
+import { guipause } from '../gui/guipause.mjs';
+import { sound } from './sound.mjs';
+import { movesscript } from '../chess/movesscript.mjs';
+import { onlinegame } from './onlinegame.mjs';
+import { game } from '../chess/game.mjs'
+// Import End
 
 /**
  * This script stores the logic surrounding draw extending and acceptance
@@ -149,3 +159,5 @@ const drawoffers = (function() {
     });
 
 })();
+
+export { drawoffers }

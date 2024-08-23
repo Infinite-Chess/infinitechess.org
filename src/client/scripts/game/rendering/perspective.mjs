@@ -7,6 +7,7 @@ import { camera } from './camera.mjs'
 import { board } from './board.mjs'
 import { statustext } from '../gui/statustext.mjs'
 import { buffermodel } from './buffermodel.mjs'
+import { onlinegame } from '../misc/onlinegame.mjs'
 import { mat4 } from './gl-matrix.mjs'
 // Import End
 

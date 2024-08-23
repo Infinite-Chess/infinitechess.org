@@ -2,6 +2,7 @@
 import { wincondition } from './wincondition.mjs'
 import { gamefileutility } from './gamefileutility.mjs'
 import { pieces } from '../rendering/pieces.mjs'
+import { movesscript } from './movesscript.mjs'
 import { legalmoves } from './legalmoves.mjs'
 // Import End
 

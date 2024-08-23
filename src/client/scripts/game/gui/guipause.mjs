@@ -4,9 +4,11 @@ import { style } from './style.mjs'
 import { main } from '../main.mjs'
 import { game } from '../chess/game.mjs'
 import { arrows } from '../rendering/arrows.mjs'
-import { clock } from '../misc/clock.js'
+import { clock } from '../misc/clock.mjs'
 import { guinavigation } from './guinavigation.mjs'
 import { statustext } from './statustext.mjs'
+import { copypastegame } from '../chess/copypastegame.mjs'
+import { drawoffers } from '../misc/drawoffers.mjs'
 import { guititle } from './guititle.mjs'
 // Import End
 

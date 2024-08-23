@@ -2,7 +2,7 @@
 import { websocket } from '../websocket.mjs'
 import { localstorage } from './localstorage.mjs'
 import { sound } from './sound.mjs'
-import { clock } from './clock.js'
+import { clock } from './clock.mjs'
 import { guiplay } from '../gui/guiplay.mjs'
 import { loadbalancer } from './loadbalancer.mjs'
 import { math } from './math.mjs'

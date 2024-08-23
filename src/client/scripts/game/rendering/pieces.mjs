@@ -1,7 +1,7 @@
 // Import Start
 import { bufferdata } from './bufferdata.mjs'
 import { perspective } from './perspective.mjs'
-import { miniimage } from './miniimage.js'
+import { miniimage } from './miniimage.mjs'
 import { movement } from './movement.mjs'
 import { piecesmodel } from './piecesmodel.mjs'
 import { voids } from './voids.mjs'

@@ -11,6 +11,7 @@ import { selection } from '../chess/selection.mjs'
 import { piecesmodel } from './piecesmodel.mjs'
 import { camera } from './camera.mjs'
 import { board } from './board.mjs'
+import { game } from '../chess/game.mjs'
 import { statustext } from '../gui/statustext.mjs'
 import { guigameinfo } from '../gui/guigameinfo.mjs'
 // Import End

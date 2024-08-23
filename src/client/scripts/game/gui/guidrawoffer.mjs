@@ -1,3 +1,9 @@
+// Import Start
+import { style } from './style.mjs';
+import { guigameinfo } from './guigameinfo.mjs';
+import { drawoffers } from '../misc/drawoffers.mjs';
+import { clock } from '../misc/clock.mjs'
+// Import End
 
 /*
  * This script opens and closes our Draw Offer UI
@@ -96,3 +102,5 @@ const guidrawoffer = (function() {
     });
 
 })();
+
+export { guidrawoffer }

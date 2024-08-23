@@ -85,7 +85,6 @@ const htmlscript = (function() {
     // If there's an error in loading, stop the loading animation
     // ...
 
-    let loadingErrorOcurred = false;
     let lostNetwork = false;
 
     function callback_LoadingError(event) {

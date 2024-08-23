@@ -1,7 +1,7 @@
 // Import Start
 import { perspective } from './perspective.mjs'
 import { main } from '../main.mjs'
-import { miniimage } from './miniimage.js'
+import { miniimage } from './miniimage.mjs'
 import { game } from '../chess/game.mjs'
 import { stats } from '../gui/stats.mjs'
 import { options } from './options.mjs'

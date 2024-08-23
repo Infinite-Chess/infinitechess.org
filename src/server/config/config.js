@@ -7,6 +7,8 @@
  */
 const DEV_BUILD = true;
 
+const BUNDLE_FILES = !DEV_BUILD || false;
+
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
 const ARE_RATE_LIMITING = true; // Set to false to temporarily get around it, during development.
@@ -43,6 +45,7 @@ const allowedOrigins = [ // Allowed sites
 
 module.exports = {
     DEV_BUILD,
+    BUNDLE_FILES,
     ARE_RATE_LIMITING,
     simulatedWebsocketLatencyMillis,
     HOST_NAME,

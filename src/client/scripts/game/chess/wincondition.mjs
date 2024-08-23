@@ -4,6 +4,7 @@ import { gamefileutility } from './gamefileutility.mjs'
 import { checkmate } from './checkmate.mjs'
 import { pieces } from '../rendering/pieces.mjs'
 import { math } from '../misc/math.mjs'
+import { organizedlines } from './organizedlines.mjs'
 import { movesscript } from './movesscript.mjs'
 // Import End
 
