@@ -9,8 +9,8 @@ import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
-import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
-import { DEV_BUILD } from "./src/server/config/config.js";
+import { DEV_BUILD } from "./src/server/config/config.mjs";
+import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.mjs";
 import path from "node:path";
 
 // Targetted browsers for CSS transpilation

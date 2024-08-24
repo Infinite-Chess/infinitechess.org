@@ -4,7 +4,7 @@
   "description": "infinitechess.org server",
   "author": "Naviary",
   "license": "AGPL",
-  "main": "src/server/server.js",
+  "main": "src/server/server.mjs",
   "dependencies": {
     "@swc/core": "^1.7.0",
     "bcrypt": "^5.1.1",

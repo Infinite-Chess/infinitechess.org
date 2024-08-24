@@ -1,0 +1,107 @@
+
+/**
+ * This module configures the middleware waterfall of our server
+ */
+
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
+
+// Middleware
+import cookieParser from 'cookie-parser';
+import { credentials } from './credentials.mjs'
+import { secureRedirect } from './secureRedirect.mjs'
+import { errorHandler } from './errorHandler.mjs'
+import { logger } from './logEvents.mjs';
+import { verifyJWT } from './verifyJWT.mjs';
+import { rateLimit } from './rateLimit.mjs';
+import { protectedStatic } from './protectedStatic.mjs';
+
+// External translation middleware
+import i18next from 'i18next';
+import middleware from 'i18next-http-middleware';
+
+// Other imports
+import { useOriginWhitelist } from '../config/config.mjs';
+
+/**
+ * Configures the Middleware Waterfall
+ * 
+ * app.use adds the provided function to EVERY SINGLE router and incoming connection.
+ * Each middleware function must call next() to go to the next middleware.
+ * Connections that do not pass one middleware will not continue.
+ * 
+ * @param {object} app - The express application instance.
+ */
+function configureMiddleware(app) {
+
+    // Note: requests that are rate limited will not be logged, to mitigate slow-down during a DDOS.
+    app.use(rateLimit);
+
+    // This allows us to retrieve json-received-data as a parameter/data!
+    // The logger can't log the request body without this
+    app.use(express.json());
+
+    app.use(logger); // Log the request
+
+    app.use(secureRedirect); // Redirects http to secure https
+
+    app.use(credentials); // Handle credentials check. Must be before CORS.
+
+    app.use(
+        middleware.handle(i18next, {
+            removeLngFromUrl: false
+        })
+    );
+
+    /**
+     * Cross Origin Resource Sharing
+     * 
+     * This allows 3rd party middleware. Without this, other sites will get an
+     * error when retreiving data on your site to serve to their customers.
+     * Be careful, incorrectly setting will block our own customers.
+     * For many applications though, you don't want it open to the public,
+     * but perhaps you do want search engines to have access?
+     * 
+     * Does this create a 'Access-Control-Allow-Origin' header?
+     */
+    const options = useOriginWhitelist ? require('../config/corsOptions.mjs') : undefined;
+    app.use(cors(options));
+
+    /**
+     * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
+     * (e.g. when the content-type header is 'application/x-www-form-urlencoded')
+     */
+    app.use(express.urlencoded({ extended: false}));
+
+    app.use(cookieParser());
+
+    // Serve public assets. (e.g. css, scripts, images, audio)
+    app.use(express.static(path.join(__dirname, '..', '..', '..', 'dist'))); // Serve public assets
+
+    /**
+     * Sets the req.user and req.role properties if they have an authorization
+     * header (contains access token) or refresh cookie (contains refresh token).
+     * Don't send unauthorized people private stuff without the proper role.
+     */
+    app.use(verifyJWT);
+
+    // Serve protected assets. Needs to be after verifying their jwt and setting their role
+    app.use(protectedStatic);
+
+    // Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
+    app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, 'cert/.well-known/acme-challenge')));
+
+    // Provide a route
+    app.use('/', require('../routes/root.mjs'));
+    app.use('/createaccount(.html)?', require('../routes/createaccount.mjs'));
+    app.use('/member', require('../routes/member.mjs'));
+
+    // If we've reached this point, send our 404 page.
+    app.all('*', require('./send404.mjs'));
+
+    // Custom error handling. Comes after 404.
+    app.use(errorHandler);
+}
+
+export { configureMiddleware };
