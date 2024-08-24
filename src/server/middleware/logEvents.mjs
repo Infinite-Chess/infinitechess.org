@@ -1,15 +1,18 @@
 import { format } from 'date-fns';
-import { v4: uuid } from 'uuid';
-
-import fsPromises from 'fs'.promises;
+import { v4 } from 'uuid';
+const uuid = v4
+import { promises } from 'fs';
+const fsPromises = promises
 import path from 'path';
 
-const { getClientIP } = require("./IP.mjs");
+import { getClientIP } from "./IP.mjs";
 import { wsutility } from '../game/wsutility.mjs'
 // eslint-disable-next-line no-unused-vars
 import { Socket } from '../game/TypeDefinitions.mjs';
 import { ensureDirectoryExists } from '../utility/fileUtils.mjs';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const giveLoggedItemsUUID = false;
 

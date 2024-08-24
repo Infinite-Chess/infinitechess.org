@@ -2,6 +2,10 @@ import sharp from "sharp";
 import { cpSync } from "node:fs";
 import path from "path";
 
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 // Effort values
 // Reduce to improve start times
 const webp_effort = 6; // 0-6

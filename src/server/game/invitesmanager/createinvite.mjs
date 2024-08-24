@@ -14,14 +14,15 @@ import { logEvents } from '../../middleware/logEvents.mjs';
 // eslint-disable-next-line no-unused-vars
 import { Socket } from '../TypeDefinitions.mjs';
 // eslint-disable-next-line no-unused-vars
-import { Invite } from './inviteutility.mjs';
+/** @typedef {import('./inviteutility.mjs').Invite} Invite */
 import { wsutility } from '../wsutility.mjs'
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
-import { math1 } from '../math1.mjs/index.js'
+import { math1 } from '../math1.mjs'
 import { variant1 } from '../variant1.mjs'
 import { clockweb } from '../clockweb.mjs'
-import { getDisplayNameOfPlayer } from '../gamemanager/gameutility.mjs';
+import { gameutility } from '../gamemanager/gameutility.mjs';
+const { getDisplayNameOfPlayer } = gameutility
 import { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } from './invitesmanager.mjs';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.mjs';
 import { printActiveGameCount } from '../gamemanager/gamecount.mjs';

@@ -9,6 +9,10 @@ import path from 'path';
 import fs from 'fs';
 import { writeFile } from '../utility/lockFile.mjs';
 
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 import { writeFile_ensureDirectory } from '../utility/fileUtils.mjs';
 
 const rolesPath = path.resolve('database/roles.json');
@@ -22,7 +26,7 @@ const rolesPath = path.resolve('database/roles.json');
     writeFile_ensureDirectory(rolesPath, content);
     console.log("Generated roles file");
 })();
-import { roles } from '../../../database/roles.json'
+import roles from '../../../database/roles.json' with { 'type': 'json' }
 
 let rolesHaveBeenEdited = false; // Set to true if we need to save the members after a change
 const intervalToSaveRolesMillis = 10000; // 10 seconds.

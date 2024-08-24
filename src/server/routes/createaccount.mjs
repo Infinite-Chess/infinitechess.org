@@ -3,11 +3,13 @@ import express from 'express';
 const router = express.Router();
 import path from 'path';
 
-import { createaccountController } from '../controllers/createaccountController'
-import { getRegisterData, checkEmailAssociated, checkUsernameAvailable } from '../controllers/createaccountController';
-const { getLanguageToServe } = require("../utility/translate.mjs");
+import * as createaccountController from '../controllers/createaccountController.mjs'
+import { getRegisterData, checkEmailAssociated, checkUsernameAvailable } from '../controllers/createaccountController.mjs';
+import { getLanguageToServe } from '../utility/translate.mjs';
 
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 router.get('/', (req, res) => {
     const language = getLanguageToServe(req);

@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 import { findMemberFromRefreshToken, getUsernameCaseSensitive, updateLastSeen } from './members.mjs';
 import { logEvents } from '../middleware/logEvents.mjs';
 import { isBrowserIDBanned } from '../middleware/banned.mjs';
-import { generateID } from '../game/math1.mjs';
+import { math1 } from '../game/math1.mjs';
+const { generateID } = math1
 import { getTranslationForReq } from '../utility/translate.mjs';
 
 /**

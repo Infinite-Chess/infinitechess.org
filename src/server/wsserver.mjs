@@ -1,12 +1,14 @@
-import WebSocket from 'ws';
-const { verifyJWTWebSocket } = require("./middleware/verifyJWT.mjs");
-const { rateLimitWebSocket } = require("./middleware/rateLimit.mjs");
+import {WebSocketServer as Server, WebSocket} from 'ws';
+import { verifyJWTWebSocket } from './middleware/verifyJWT.mjs';
+import { rateLimitWebSocket } from './middleware/rateLimit.mjs';
 import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from './middleware/logEvents.mjs';
 import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.mjs';
 
 // eslint-disable-next-line no-unused-vars
-import { WebsocketMessage, Socket } from './game/TypeDefinitions.mjs';
-import { genUniqueID, generateNumbID } from './game/math1.mjs';
+import { Socket } from './game/TypeDefinitions.mjs';
+/** @typedef {import('./game/TypeDefinitions.mjs').WebsocketMessage} WebsocketMessage */
+import { math1 } from './game/math1.mjs';
+const {genUniqueID, generateNumbID} = math1
 import { wsutility } from './game/wsutility.mjs'
 import { handleGameRoute } from './game/gamemanager/gamerouter.mjs';
 import { handleInviteRoute } from './game/invitesmanager/invitesrouter.mjs';
@@ -15,7 +17,6 @@ import { subToInvitesList, unsubFromInvitesList, userHasInvite } from './game/in
 
 import { ensureJSONString } from './utility/JSONUtils.mjs';
 import { executeSafely } from './utility/errorGuard.mjs';
-
 
 let WebSocketServer;
 
@@ -593,7 +594,7 @@ function wasSocketClosureNotByTheirChoice(code, reason) {
 const wsserver = (function() {
 
     function start(httpsServer) {
-        WebSocketServer = new WebSocket.Server({ server: httpsServer }); // Create a WebSocket server instance
+        WebSocketServer = new Server({ server: httpsServer }); // Create a WebSocket server instance
         // WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
         WebSocketServer.on('connection', (ws, req) => {
             executeSafely(onConnectionRequest, 'Error caught within websocket on-connection request:', ws, req);

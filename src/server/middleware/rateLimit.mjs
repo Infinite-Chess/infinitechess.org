@@ -1,10 +1,10 @@
 import { logEvents } from './logEvents.mjs';
-const { getClientIP, getClientIP_Websocket } = require("./IP.mjs");
+import { getClientIP, getClientIP_Websocket } from './IP.mjs';
 
 import { isIPBanned } from './banned.mjs';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.mjs';
 // eslint-disable-next-line no-unused-vars
-const { Socket } = require("../game/TypeDefinitions.mjs");
+import { Socket } from '../game/TypeDefinitions.mjs';
 import { getTranslationForReq } from '../utility/translate.mjs';
 
 // For rate limiting a client...

@@ -1,7 +1,11 @@
 
 import express from 'express';
 import path from 'path';
-const { isOwner, isPatron } = require("./verifyRoles.mjs");
+import { isOwner, isPatron } from "./verifyRoles.mjs";
+
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function protectedStatic(req, res, next) {
     // If express.static does not find a file, it will return a function we need call to move on!

@@ -10,7 +10,7 @@ import { gameutility } from './gameutility.mjs'
 import { wsutility } from '../wsutility.mjs'
 import { math1 } from '../math1.mjs'
 import { movesscript1 } from '../movesscript1.mjs'
-import { statlogger } from '../statlogger'
+import { statlogger } from '../statlogger.mjs'
 import { executeSafely_async } from '../../utility/errorGuard.mjs';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.mjs';

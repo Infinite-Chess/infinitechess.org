@@ -10,7 +10,8 @@ import { logEvents } from '../../middleware/logEvents.mjs';
 // eslint-disable-next-line no-unused-vars
 import { Socket } from '../TypeDefinitions.mjs';
 // eslint-disable-next-line no-unused-vars
-import { Invite, isInviteOurs } from './inviteutility.mjs';
+import { isInviteOurs } from './inviteutility.mjs';
+/** @typedef {import('./inviteutility.mjs').Invite} Invite */
 import { wsutility } from '../wsutility.mjs'
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;

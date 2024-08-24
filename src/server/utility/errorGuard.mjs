@@ -4,7 +4,7 @@
  * catching any errors that may occur, logging them to the error log.
  */
 
-const { logEvents } = require("../middleware/logEvents.mjs");
+import { logEvents } from '../middleware/logEvents.mjs';
 
 
 /**

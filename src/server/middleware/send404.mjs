@@ -1,6 +1,10 @@
 import path from 'path';
 import { getTranslationForReq } from '../utility/translate.mjs';
 
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 function send404(req, res) {
     res.status(404);
     if (req.accepts('html')) {

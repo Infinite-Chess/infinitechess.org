@@ -5,7 +5,7 @@
  * access to protected resources.
  */
 
-const { getTranslationForReq } = require("../utility/translate.mjs");
+import { getTranslationForReq } from "../utility/translate.mjs";
 
 
 /**

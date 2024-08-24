@@ -10,9 +10,9 @@
 
 import { wsutility } from '../wsutility.mjs'
 
-const { createInvite } = require("./createinvite.mjs");
-const { cancelInvite } = require("./cancelinvite.mjs");
-const { acceptInvite } = require("./acceptinvite.mjs");
+import { createInvite } from './createinvite.mjs';
+import { cancelInvite } from './cancelinvite.mjs';
+import { acceptInvite } from './acceptinvite.mjs';
 
 
 function handleInviteRoute(ws, data) { // data: { route, action, value, id }

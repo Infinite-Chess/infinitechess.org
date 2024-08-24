@@ -5,7 +5,11 @@ import path from "path";
 import ejs from "ejs";
 import middleware from "i18next-http-middleware";
 import { FilterXSS } from "xss";
-const { getDefaultLanguage, setSupportedLanguages } = "../utility/translate.mjs";
+import { getDefaultLanguage, setSupportedLanguages } from "../utility/translate.mjs";
+
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const translationsFolder = "./translation";
 

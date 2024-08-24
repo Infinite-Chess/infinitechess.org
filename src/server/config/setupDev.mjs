@@ -1,8 +1,9 @@
 import { DEV_BUILD } from './config.mjs';
-import { generateAccount } from '../controllers/createaccountController';
-import { giveRole_Owner, giveRole_Patron } from '../controllers/roles';
+import { generateAccount } from '../controllers/createaccountController.mjs';
+import { giveRole_Owner, giveRole_Patron } from '../controllers/roles.mjs';
 import { doesMemberExist } from '../controllers/members.mjs';
 import { ensureEnvFile } from './env.mjs';
+import dotenv from 'dotenv'
 import { ensureSelfSignedCertificate } from './generateCert.mjs';
 
 function initDevEnvironment() {
@@ -21,7 +22,7 @@ function initDevEnvironment() {
 function callDotenvConfig() {
     // Load the .env file contents into process.env
     // This needs to be as early as possible
-    require('dotenv').config(); 
+    dotenv.config(); 
 }
 
 function createDevelopmentAccounts() {

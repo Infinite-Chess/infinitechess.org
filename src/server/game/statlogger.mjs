@@ -2,11 +2,14 @@
 import path from 'path';
 import fs from 'fs';
 import { writeFile } from '../utility/lockFile.mjs';
-import { math1 } from './math1.mjs/index.js'
+import { math1 } from './math1.mjs'
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.mjs';
 // eslint-disable-next-line no-unused-vars
 import { Game } from './TypeDefinitions.mjs';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const statsPath = path.resolve('database/stats.json');
 (function ensureStatsFileExists() {
@@ -22,7 +25,8 @@ const statsPath = path.resolve('database/stats.json');
     writeFile_ensureDirectory(statsPath, content);
     console.log("Generated stats file");
 })();
-const stats = require(`../../../database/stats.json`);
+
+import stats from '../../../database/stats.json' with {'type':'json'};
 // {
 //     gamesPlayed: {
 //         allTime: {

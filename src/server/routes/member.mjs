@@ -7,6 +7,9 @@ import { getMemberData,requestConfirmEmail } from '../controllers/memberControll
 import { removeAccount } from '../controllers/removeAccountController.mjs';
 import { getLanguageToServe } from "../utility/translate.mjs";
 
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 router.get('/:member', (req, res) => {
     const language = getLanguageToServe(req);

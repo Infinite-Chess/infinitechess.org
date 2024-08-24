@@ -8,7 +8,7 @@
  */
 
 
-const { broadcastToAllInviteSubs } = require("../invitesmanager/invitessubscribers.mjs");
+import { broadcastToAllInviteSubs } from '../invitesmanager/invitessubscribers.mjs';
 
 
 /** The number of currently active (not over) games. */

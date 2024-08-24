@@ -6,7 +6,7 @@
  * And we resend requests account verification emails.
  */
 
-import locale from 'date-fns/locale';
+import locale from 'date-fns/locale/index.js';
 import { format, formatDistance } from 'date-fns';
 import { getVerified, setVerified, getInfo, getUsernameCaseSensitive, getJoinDate, getLastSeen, getElo, getEmail } from './members.mjs';
 import { sendEmailConfirmation } from '../controllers/sendMail.mjs';

@@ -4,7 +4,7 @@
  * This has no other dependancies.
  */
 
-const i18next = require("i18next");
+import i18next from "i18next";
 
 const defaultLanguage = 'en-US';
 /** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */

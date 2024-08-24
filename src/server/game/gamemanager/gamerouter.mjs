@@ -10,11 +10,11 @@
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-import { Socket, WebsocketMessage } from '../TypeDefinitions.mjs';
-
+import { Socket } from '../TypeDefinitions.mjs';
+/** @typedef {import('../TypeDefinitions.mjs').WebsocketMessage} WebsocketMessage */
 import { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.mjs';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.mjs';
-import { abortGame, resignGame } from './abortresigngame';
+import { abortGame, resignGame } from './abortresigngame.mjs';
 import { onAFK, onAFK_Return } from './onAFK.mjs';
 import { onReport } from './cheatreport.mjs';
 import { resyncToGame } from './resync.mjs';

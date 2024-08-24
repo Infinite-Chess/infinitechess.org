@@ -24,6 +24,14 @@ import middleware from 'i18next-http-middleware';
 // Other imports
 import { useOriginWhitelist } from '../config/config.mjs';
 
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+import { router as rootRouter } from '../routes/root.mjs';
+import { router as accountRouter } from '../routes/createaccount.mjs';
+import { router as memberRouter } from '../routes/member.mjs';
+import { send404 } from './send404.mjs';
 /**
  * Configures the Middleware Waterfall
  * 
@@ -93,12 +101,12 @@ function configureMiddleware(app) {
     app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, 'cert/.well-known/acme-challenge')));
 
     // Provide a route
-    app.use('/', require('../routes/root.mjs'));
-    app.use('/createaccount(.html)?', require('../routes/createaccount.mjs'));
-    app.use('/member', require('../routes/member.mjs'));
+    app.use('/', rootRouter);
+    app.use('/createaccount(.html)?', accountRouter);
+    app.use('/member', memberRouter);
 
     // If we've reached this point, send our 404 page.
-    app.all('*', require('./send404.mjs'));
+    app.all('*', send404);
 
     // Custom error handling. Comes after 404.
     app.use(errorHandler);

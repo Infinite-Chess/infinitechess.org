@@ -43,7 +43,7 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
  * done when a new invite is attempted to be created.
  * `{ allowinvites: true, restartIn: false }`
  */
-let allowinvites = require(allowinvitesPath);
+let allowinvites = await import(allowinvitesPath, {with: {'type':'json'}});
 /**
  * The minimum time required between new reads of allowinvites.json.
  * 

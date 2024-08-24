@@ -9,7 +9,7 @@
 
 import jwt from 'jsonwebtoken';
 import { findMemberFromRefreshToken, doesMemberExist } from '../controllers/members.mjs';
-import { setRole, setRoleWebSocket } from '../controllers/roles.js';
+import { setRole, setRoleWebSocket } from '../controllers/roles.mjs';
 // eslint-disable-next-line no-unused-vars
 import { Socket } from '../game/TypeDefinitions.mjs';
 

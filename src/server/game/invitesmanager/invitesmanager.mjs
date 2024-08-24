@@ -9,9 +9,10 @@
 // eslint-disable-next-line no-unused-vars
 import { Socket } from '../TypeDefinitions.mjs';
 // eslint-disable-next-line no-unused-vars
-import { Invite, isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.mjs';
+import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.mjs';
+/** @typedef {import('./inviteutility.mjs').Invite} Invite */
 import { wsutility } from '../wsutility.mjs'
-import { math1 } from '../math1.mjs/index.js'
+import { math1 } from '../math1.mjs'
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.mjs';
 
 import { getActiveGameCount } from '../gamemanager/gamecount.mjs';

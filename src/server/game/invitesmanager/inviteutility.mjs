@@ -6,7 +6,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import { Socket } from '../TypeDefinitions.mjs';
-import { math1 } from '../math1.mjs/index.js'
+import { math1 } from '../math1.mjs'
 
 //-------------------------------------------------------------------------------------------
 

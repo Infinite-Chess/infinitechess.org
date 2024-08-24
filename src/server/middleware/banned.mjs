@@ -15,7 +15,7 @@ const bannedPath = path.resolve('database/banned.json');
     writeFile_ensureDirectory(bannedPath, content);
     console.log("Generated banned file");
 })();
-import { bannedJSON } from '../../../database/banned.json'
+import bannedJSON from '../../../database/banned.json' with { 'type': 'json' }
 
 
 

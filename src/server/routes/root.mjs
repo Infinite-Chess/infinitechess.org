@@ -1,13 +1,16 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const path = require("path");
+import path from "path";
 
-const { handleLogin } = require("../controllers/authController.mjs");
-const { handleRefreshToken } = require("../controllers/refreshTokenController.mjs");
-const { handleLogout } = require("../controllers/logoutController.mjs");
-const { verifyAccount } = require("../controllers/verifyAccountController.mjs");
-const { ensureOwner, ensurePatron } = require("../middleware/verifyRoles.mjs");
-const { getLanguageToServe } = require("../utility/translate.mjs");
+import { handleLogin } from '../controllers/authController.mjs';
+import { handleRefreshToken } from '../controllers/refreshTokenController.mjs';
+import { handleLogout } from '../controllers/logoutController.mjs';
+import { verifyAccount } from '../controllers/verifyAccountController.mjs';
+import { ensureOwner, ensurePatron } from '../middleware/verifyRoles.mjs';
+import { getLanguageToServe } from '../utility/translate.mjs';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const htmlDirectory = path.join(__dirname, "../../../dist/views");
 

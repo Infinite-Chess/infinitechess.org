@@ -5,6 +5,10 @@ import { writeFile } from '../utility/lockFile.mjs';
 import { logEvents } from '../middleware/logEvents.mjs';
 import { writeFile_ensureDirectory } from '../utility/fileUtils.mjs';
 
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const membersFilePath = path.resolve('database/members.json');
 (function ensureMembersFileExists() {
     if (fs.existsSync(membersFilePath)) return; // Already exists
@@ -12,7 +16,7 @@ const membersFilePath = path.resolve('database/members.json');
     writeFile_ensureDirectory(membersFilePath, content);
     console.log("Generated members file");
 })();
-import { members } from '../../../database/members.json'
+import members from '../../../database/members.json' with { 'type': 'json' }
 
 /**
  * An object with refresh tokens for the keys, and for
