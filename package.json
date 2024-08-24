@@ -4,7 +4,8 @@
   "description": "infinitechess.org server",
   "author": "Naviary",
   "license": "AGPL",
-  "main": "src/server/server.mjs",
+  "main": "src/server/server.js",
+  "type": "module",
   "dependencies": {
     "@swc/core": "^1.7.0",
     "bcrypt": "^5.1.1",
@@ -38,7 +39,7 @@
     "madge": "^8.0.0"
   },
   "scripts": {
-    "build": "node build.mjs",
+    "build": "node build.js",
     "watch": "nodemon",
     "start": "node .",
     "build-images": "node src/server/utility/generateImages.js",
