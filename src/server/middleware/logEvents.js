@@ -8,7 +8,7 @@ import path from 'path';
 import { getClientIP } from "./IP.js";
 import { wsutility } from '../game/wsutility.js'
 // eslint-disable-next-line no-unused-vars
-import { Socket } from '../game/TypeDefinitions.js';
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
 import { fileURLToPath } from 'node:url';
 

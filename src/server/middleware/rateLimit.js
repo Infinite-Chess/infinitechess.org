@@ -4,7 +4,7 @@ import { getClientIP, getClientIP_Websocket } from './IP.js';
 import { isIPBanned } from './banned.js';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
 // eslint-disable-next-line no-unused-vars
-import { Socket } from '../game/TypeDefinitions.js';
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 import { getTranslationForReq } from '../utility/translate.js';
 
 // For rate limiting a client...

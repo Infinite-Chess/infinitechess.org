@@ -7,7 +7,7 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-import { Socket } from '../TypeDefinitions.js';
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 // eslint-disable-next-line no-unused-vars
 import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
 /** @typedef {import('./inviteutility.js').Invite} Invite */

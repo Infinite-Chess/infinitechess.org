@@ -6,7 +6,7 @@ import { math1 } from './math1.js'
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 // eslint-disable-next-line no-unused-vars
-import { Game } from './TypeDefinitions.js';
+/** @typedef {import('./TypeDefinitions.js').Game} Game */
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

@@ -10,7 +10,7 @@
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-import { Socket } from '../TypeDefinitions.js';
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
 /** @typedef {import('../TypeDefinitions.js').WebsocketMessage} WebsocketMessage */
 import { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';

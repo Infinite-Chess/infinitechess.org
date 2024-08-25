@@ -5,7 +5,7 @@
 import { getTranslation } from '../utility/translate.js';
 import { ensureJSONString } from '../utility/JSONUtils.js';
 // eslint-disable-next-line no-unused-vars
-import { Socket } from './TypeDefinitions.js';
+/** @typedef {import('./TypeDefinitions.js').Socket} Socket */
 
 const wsutility = (function() {
 

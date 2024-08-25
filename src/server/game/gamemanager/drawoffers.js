@@ -9,7 +9,7 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-import { Game } from '../TypeDefinitions.js';
+/** @typedef {import('../TypeDefinitions.js').Game} Game */
 import { logEvents } from '../../middleware/logEvents.js';
 
 //--------------------------------------------------------------------------------------------------------

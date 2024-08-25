@@ -5,7 +5,7 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-import { Game } from '../TypeDefinitions.js';
+/** @typedef {import('../TypeDefinitions.js').Game} Game */
 import { gameutility } from './gameutility.js'
 import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
 

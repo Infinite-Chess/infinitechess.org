@@ -16,6 +16,7 @@ const membersFilePath = path.resolve('database/members.json');
     writeFile_ensureDirectory(membersFilePath, content);
     console.log("Generated members file");
 })();
+
 import members from '../../../database/members.json' with { 'type': 'json' }
 
 /**

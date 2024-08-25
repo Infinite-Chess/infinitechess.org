@@ -5,7 +5,8 @@
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-import { Socket, Game } from '../TypeDefinitions.js';
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
+/** @typedef {import('../TypeDefinitions.js').Game} Game*/
 import { gameutility } from './gameutility.js'
 import { wsutility } from '../wsutility.js'
 const sendNotify = wsutility.sendNotify;

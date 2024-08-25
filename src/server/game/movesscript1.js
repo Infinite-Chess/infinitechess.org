@@ -1,5 +1,5 @@
 
-import { Game } from './TypeDefinitions.js';
+/** @typedef {import('./TypeDefinitions.js').Game} Game */
 
 const movesscript1 = (function() {
 

@@ -7,7 +7,7 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-import { Socket } from '../TypeDefinitions.js';
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 import { wsutility } from '../wsutility.js'
 
 /**

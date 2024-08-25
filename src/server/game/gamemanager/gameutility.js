@@ -17,7 +17,8 @@ import { ensureJSONString } from '../../utility/JSONUtils.js';
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-import { Socket, Game } from '../TypeDefinitions.js';
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
+/** @typedef {import('../TypeDefinitions.js').Game} Game*/
 import { variant1 } from '../variant1.js'
 import { math1 } from '../math1.js'
 import { clockweb } from '../clockweb.js'

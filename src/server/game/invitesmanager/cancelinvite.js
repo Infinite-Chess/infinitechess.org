@@ -8,7 +8,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-import { Socket } from '../TypeDefinitions.js';
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 // eslint-disable-next-line no-unused-vars
 import { isInviteOurs } from './inviteutility.js';
 /** @typedef {import('./inviteutility.js').Invite} Invite */

@@ -5,7 +5,7 @@ import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } f
 import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
 
 // eslint-disable-next-line no-unused-vars
-import { Socket } from './game/TypeDefinitions.js';
+/** @typedef {import('./game/TypeDefinitions.js').Socket} Socket */
 /** @typedef {import('./game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage */
 import { math1 } from './game/math1.js';
 const {genUniqueID, generateNumbID} = math1

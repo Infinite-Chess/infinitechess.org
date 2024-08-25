@@ -5,7 +5,7 @@
  */
 
 // eslint-disable-next-line no-unused-vars
-import { Socket } from '../game/TypeDefinitions.js'; // The type definition for websocket objects
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */ // The type definition for websocket objects
 
 
 
