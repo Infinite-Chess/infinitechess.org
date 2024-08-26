@@ -1,11 +1,12 @@
 
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
-const { findMemberFromRefreshToken, getUsernameCaseSensitive, updateLastSeen } = require('./members');
-const { logEvents } = require('../middleware/logEvents');
-const { isBrowserIDBanned } = require('../middleware/banned');
-const { generateID } = require("../game/math1");
-const { getTranslationForReq } = require('../utility/translate');
+import { findMemberFromRefreshToken, getUsernameCaseSensitive, updateLastSeen } from './members.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { isBrowserIDBanned } from '../middleware/banned.js';
+import math1 from '../game/math1.js';
+const { generateID } = math1;
+import { getTranslationForReq } from '../utility/translate.js';
 
 /**
  * How long until the cookie containing their new access token
@@ -128,6 +129,6 @@ function makeBrowserIDPermanent(req, res, browserID) {
 
 
 
-module.exports = {
+export {
     handleRefreshToken,
 };

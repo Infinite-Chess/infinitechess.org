@@ -8,7 +8,7 @@
  */
 
 
-const { broadcastToAllInviteSubs } = require("../invitesmanager/invitessubscribers");
+import { broadcastToAllInviteSubs } from '../invitesmanager/invitessubscribers.js';
 
 
 /** The number of currently active (not over) games. */
@@ -50,7 +50,7 @@ function printActiveGameCount() {
 }
 
 
-module.exports = {
+export {
     incrementActiveGameCount,
     decrementActiveGameCount,
     getActiveGameCount,

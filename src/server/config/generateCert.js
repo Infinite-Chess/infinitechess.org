@@ -1,7 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const forge = require('node-forge');
-const { ensureDirectoryExists } = require('../utility/fileUtils');
+import fs from 'fs';
+import path from 'path';
+import forge from 'node-forge';
+import { ensureDirectoryExists } from '../utility/fileUtils.js';
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const certDir = path.join(__dirname, '..', '..', '..', 'cert');
 
@@ -65,6 +68,6 @@ function ensureSelfSignedCertificate() {
 
 
 // Export the function for external use
-module.exports = {
+export {
     ensureSelfSignedCertificate
 };

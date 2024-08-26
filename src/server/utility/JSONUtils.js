@@ -19,4 +19,4 @@ function ensureJSONString(input, errorMessage) {
     }
 }
 
-module.exports = { ensureJSONString };
+export { ensureJSONString };

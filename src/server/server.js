@@ -1,22 +1,22 @@
 
 // Ensure our workspace is ready for the dev environment
-const { initDevEnvironment } = require('./config/setupDev');
+import { initDevEnvironment } from './config/setupDev.js';
 initDevEnvironment();
 
 // Dependancy/built-in imports
-const express = require('express');
+import express from 'express';
 const app = express();
-const https = require('https');
-const ejs = require('ejs');
+import https from 'https';
+import ejs from 'ejs';
 // Other imports
-const configureMiddleware = require('./middleware/middleware');
-const wsserver = require("./wsserver");
-const getCertOptions = require('./config/certOptions');
-const { DEV_BUILD } = require('./config/config');
-const { saveMembersIfChangesMade } = require('./controllers/members');
-const { saveRolesIfChangesMade } = require('./controllers/roles');
-const { initTranslations } = require('./config/setupTranslations');
-const { logAllGames } = require('./game/gamemanager/gamemanager');
+import configureMiddleware from './middleware/middleware.js';
+import wsserver from './wsserver.js';
+import getCertOptions from './config/certOptions.js';
+import { DEV_BUILD } from './config/config.js';
+import { saveMembersIfChangesMade } from './controllers/members.js';
+import { saveRolesIfChangesMade } from './controllers/roles.js';
+import { initTranslations } from './config/setupTranslations.js';
+import { logAllGames } from './game/gamemanager/gamemanager.js';
 
 // Initiate translations
 initTranslations();

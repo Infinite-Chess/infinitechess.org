@@ -1,12 +1,16 @@
 
-const path = require('path');
-const fs = require('fs');
-const { writeFile } = require('../utility/lockFile.js');
-const math1 = require('./math1.js');
+import path from 'path';
+import fs from 'fs';
+import { readFile, writeFile } from '../utility/lockFile.js';
+import math1 from './math1.js'
 
-const { writeFile_ensureDirectory } = require('../utility/fileUtils');
-// eslint-disable-next-line no-unused-vars
-const { Game } = require('./TypeDefinitions');
+import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** @typedef {import('./TypeDefinitions.js').Game} Game */
+
 
 const statsPath = path.resolve('database/stats.json');
 (function ensureStatsFileExists() {
@@ -22,7 +26,8 @@ const statsPath = path.resolve('database/stats.json');
     writeFile_ensureDirectory(statsPath, content);
     console.log("Generated stats file");
 })();
-const stats = require(`../../../database/stats.json`);
+
+const stats = await readFile('database/stats.json', 'Unable to read stats.json on startup.');
 // {
 //     gamesPlayed: {
 //         allTime: {
@@ -118,4 +123,4 @@ const statlogger = (function() {
     });
 })();
 
-module.exports = statlogger;
+export default statlogger;

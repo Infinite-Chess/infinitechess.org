@@ -9,8 +9,8 @@ import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
-import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
 import { DEV_BUILD } from "./src/server/config/config.js";
+import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
 import path from "node:path";
 
 // Targetted browsers for CSS transpilation
@@ -93,7 +93,7 @@ if (DEV_BUILD) {
     let gamecode = ""; 
 
     for (const file of clientFiles) {
-    // If the client script is htmlscript.js or an engine script or not in scripts/game, then minify it and copy it over
+        // If the client script is htmlscript.js or an engine script or not in scripts/game, then minify it and copy it over
         if (/(\\|\/)htmlscript\.js$/.test(file) || /chess(\\|\/)engine[^.\\/]*\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
             const code = await readFile(`./src/client/${file}`, 'utf8');
             const minified = await swc.minify(code, {

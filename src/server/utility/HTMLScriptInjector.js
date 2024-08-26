@@ -8,9 +8,12 @@
  * (We wouldn't get useful JSDoc dropdown info otherwise)
  */
 
-const fs = require("fs");
-const path = require("path");
-const glob = require("glob");
+import fs from "fs";
+import path from "path";
+import { glob } from "glob";
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Injects a JavaScript file's content into an HTML or EJS file
@@ -34,7 +37,7 @@ function injectScript(htmlFilePath, jsFilePath, injectAfterTag, stringInjection 
     let modifiedHTML = htmlData.replace(injectAfterTag, `${injectAfterTag}${scriptTag}`);
 
     // Inject the string of the optional argument "stringInjection" into the HTML file, if applicable
-    if (Object.keys(stringInjection).length != 0) {
+    if (Object.keys(stringInjection).length) {
         modifiedHTML = modifiedHTML.replace(stringInjection.injectafter, `${stringInjection.injectafter}${stringInjection.string}`);
     }
     return modifiedHTML;
@@ -67,6 +70,6 @@ function injectScriptsIntoPlayEjs() {
     });
 }
 
-module.exports = {
+export {
     injectScriptsIntoPlayEjs,
 };

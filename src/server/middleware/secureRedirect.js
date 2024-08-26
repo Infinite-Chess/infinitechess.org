@@ -1,4 +1,4 @@
-const { DEV_BUILD } = require('../config/config');
+import { DEV_BUILD } from '../config/config.js';
 
 /**
  * Middleware that redirects all http requests to https
@@ -18,4 +18,4 @@ const secureRedirect = (req, res, next) => {
     res.redirect(`https://${req.hostname}${httpsPort}${req.url}`);
 };
 
-module.exports = secureRedirect;
+export default secureRedirect;

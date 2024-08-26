@@ -12,12 +12,15 @@
  */
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const { getGameByID } = require('./gamemanager');
+import gameutility from './gameutility.js';
+import { getGameByID } from './gamemanager.js';
+import { cancelDisconnectTimer } from './afkdisconnect.js';
 
-const { cancelDisconnectTimer } = require('./afkdisconnect');
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 /**
  * Resyncs a client's websocket to a game. The client already
@@ -51,6 +54,6 @@ function resyncToGame(ws, game, gameID, replyToMessageID) {
     cancelDisconnectTimer(game, colorPlayingAs);
 }
 
-module.exports = {
+export {
     resyncToGame
 };

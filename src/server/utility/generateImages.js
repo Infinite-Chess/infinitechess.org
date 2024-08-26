@@ -1,6 +1,9 @@
-const sharp = require("sharp");
-const { cpSync } = require("node:fs");
-const path = require("path");
+import sharp from "sharp";
+import { cpSync } from "node:fs";
+import path from "path";
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Effort values
 // Reduce to improve start times

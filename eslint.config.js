@@ -1,6 +1,6 @@
 /* eslint-disable indent */
-const globals = require("globals");
-const pluginJs = require("@eslint/js");
+import globals from "globals";
+import pluginJs from "@eslint/js";
 
 /*
  * I haven't been able to get this to work. It would automatically insert
@@ -9,7 +9,7 @@ const pluginJs = require("@eslint/js");
  * 
  * But, it's as if eslint just turns completely off if we use this.
  */
-// const { getAllGameScripts } = require("./build.mjs");
+// import { getAllGameScripts } from "./build.mjs";
 // const allGameScripts = await getAllGameScripts();
 // // Convert the array of script names into an object with "readonly" for each
 // const gameScriptsGlobals = allGameScripts.reduce((acc, script) => {
@@ -17,7 +17,7 @@ const pluginJs = require("@eslint/js");
 //   return acc;
 // }, {});
 
-module.exports = [
+export default [
   pluginJs.configs.recommended,
   {
     rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above

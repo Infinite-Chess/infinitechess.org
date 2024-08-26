@@ -1,7 +1,7 @@
 name = "Polski" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "12"
-maintainer = "apsurt"
+version = "14"
+maintainer = "Apsurt"
 
 [header]
 home = "Strona Główna"
@@ -27,6 +27,7 @@ js-confirm_delete = "Czy napewno chcesz usunąć swoje konto? Usunięcie konta j
 js-enter_password = "Wpisz swoje hasło, aby usunąć konto NA ZAWSZE"
 
 [index]
+title = "Infinite Chess | Strona Główna - Oficjalna Strona"
 secondary_title = "Oficjalna strona do gry online!"
 what_is_it_title = "Jak to działa?"
 what_is_it_pargaraphs = [
@@ -80,6 +81,7 @@ code_credits = [
 ]
 
 [member]
+title = "Twój Profil"
 verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację."
 resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu lub ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do nas."]
 verify_confirm = "Dziękujemy! Twoje konto zostało zarejestrowane pomyślnie."
@@ -111,13 +113,16 @@ js-pwd_too_short = "Hasło musi posiadać przynajmniej 6 znaków"
 js-pwd_too_long = "Hasło nie może być dłuższe niż 72 znaki"
 js-pwd_not_pwd = "Hasło nie może być 'password'"
 
+[play]
+title = "Infinite Chess - Graj"
+loading = "ŁADOWANIE"
+error = "BŁĄD"
+
 [play.main-menu]
 credits = "Podziękowania"
 play = "Graj"
 guide = "Poradnik"
 editor = "Edytor planszy"
-loading = "ŁADOWANIE"
-error = "BŁĄD"
 
 [play.guide]
 title = "Poradnik"
@@ -237,7 +242,11 @@ arrows = "Strzałki: Obrona"
 perspective = "Perspektywa: Wyłączona"
 copy = "Skopiuj Grę"
 paste = "Wklej Grę"
+offer_draw = "Remis"
 main_menu = "Strona Główna"
+
+[play.drawoffer]
+question = "Akceptujesz remis?"
 
 [play.javascript]
 guest_indicator = "(Gość)"
@@ -252,6 +261,8 @@ planned_feature = "W planach!"
 main_menu = "Strona Główna"
 resign_game = "Poddaj się"
 abort_game = "Porzuć grę"
+offer_draw = "Remis"
+accept_draw = "Zaakceptuj remis"
 arrows_off = "Strzałki: Wyłączone"
 arrows_defense = "Strzałki: Obrona"
 arrows_all = "Strzałki: Wszystkie"
@@ -280,7 +291,7 @@ game_needs_to_specify = "Gra musi określić metadatę 'Wariant', bądź właśc
 invalid_wincon_white = "Biały gracz ma nieprawidłową zasadę wygranej"
 invalid_wincon_black = "Czarny gracz ma nieprawidłową zasadę wygranej"
 pasting_game = "Wklejanie gry..."
-pasting_in_private = ""
+pasting_in_private = "Wklejenie gry w prywatnym meczu spowoduje desynchronizację jeśli twój przeciwnik nie zrobi tego samego!"
 piece_count = "Liczba figur"
 exceeded = "przekroczono"
 changed_wincon = "Zmieniono zasadę wygranej na royalcapture i wyłączono wyświetlanie ikon. Wciśnij 'P' by włączyć z powrotem (nie zalecane)."
@@ -355,6 +366,7 @@ allpiecescaptured = "Wszystkie figury zbite"
 threecheck = "Potrójny szach"
 koth = "Król wzgórza"
 resignation = "Poddanie się"
+agreement = "Remis"
 time = "Koniec czasu"
 aborted = "Przerwanie" # Game was cancelled (no elo exchanged)
 disconnect = "Porzucenie" # A player left
@@ -374,6 +386,7 @@ draw_stalemate = "Remis przez pata!"
 draw_repetition = "Remis przez powtórzenie pozycji!"
 draw_moverule = ["Remis przez zasadę ", " ruchów!"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Remis przez niewystarczający materiał!"
+draw_agreement = "Remis!"
 draw_generic = "Remis!"
 aborted = "Gra porzucona."
 opponent_checkmate = "Przegrałeś przez szacha-mata!"
@@ -567,9 +580,6 @@ ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."
 ws-unauthorized_patron_page = "Brak wstępu. Ta strona jest tylko dla wspierających."
 ws-already_in_game = "Jestś już w grze."
-ws-player_already_has_invite = "Grasz ma już aktywne zaproszenie."
-ws-invite_cancelled = "Zaproszenie zostało już anulowane."
-ws-accept_own_invite = "Głuptasie! Nie możesz zaakceptować własnego zaproszenia!"
 ws-server_restarting = "Restart serwera za" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
 ws-server_under_maintenance = "Trwają prace nad serwerem. Wróć później!" # Can be changed at will to change the display message.
 ws-minutes = "minut" # unit of time

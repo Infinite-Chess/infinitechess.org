@@ -8,27 +8,27 @@
 
 
 // Middleware imports
-const { logEvents } = require('../../middleware/logEvents.js');
+import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js');
-// eslint-disable-next-line no-unused-vars
-const { Invite } = require('./inviteutility.js');
-const wsutility = require('../wsutility.js');
-const sendNotify = wsutility.sendNotify;
-const sendNotifyError = wsutility.sendNotifyError;
-const math1 = require('../math1.js');
-const variant1 = require('../variant1.js');
-const clockweb = require('../clockweb.js');
-const { getDisplayNameOfPlayer } = require('../gamemanager/gameutility.js');
-const { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } = require('./invitesmanager.js');
-const { isSocketInAnActiveGame } = require('../gamemanager/activeplayers.js');
-const { printActiveGameCount } = require('../gamemanager/gamecount.js');
-const { getMinutesUntilServerRestart } = require('../timeServerRestarts.js');
-const { isServerRestarting } = require('../updateServerRestart.js');
+import wsutility from '../wsutility.js';
+const { sendNotify, sendNotifyError } = wsutility;
+import math1 from '../math1.js';
+import variant1 from '../variant1.js';
+import clockweb from '../clockweb.js';
+import gameutility from '../gamemanager/gameutility.js';
+const { getDisplayNameOfPlayer } = gameutility;
+import { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } from './invitesmanager.js';
+import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
+import { printActiveGameCount } from '../gamemanager/gamecount.js';
+import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
+import { isServerRestarting } from '../updateServerRestart.js';
 
-
+/**
+ * Type Definitions
+ * @typedef {import('./inviteutility.js').Invite} Invite
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ */
 
 /**
  * Creates a new invite from their websocket message.
@@ -187,6 +187,6 @@ async function isAllowedToCreateInvite(ws, replyto) {
 }
 
 
-module.exports = {
+export {
     createInvite
 };

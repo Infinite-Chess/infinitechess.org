@@ -5,7 +5,7 @@
  * access to protected resources.
  */
 
-const { getTranslationForReq } = require("../utility/translate");
+import { getTranslationForReq } from "../utility/translate.js";
 
 
 /**
@@ -58,7 +58,7 @@ function isPatron(req) {
 
 
 
-module.exports = {
+export {
     ensureOwner,
     ensurePatron,
     isOwner,

@@ -1,4 +1,4 @@
-const { getTranslation } = require('../utility/translate');
+import { getTranslation } from '../utility/translate.js';
 
 const wincondition1 = (function() {
 
@@ -96,4 +96,4 @@ const wincondition1 = (function() {
 
 })();
 
-module.exports = wincondition1;
+export default wincondition1;

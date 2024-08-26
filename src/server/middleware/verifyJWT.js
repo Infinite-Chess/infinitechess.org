@@ -7,11 +7,11 @@
  * if they are logged in.
  */
 
-const jwt = require('jsonwebtoken');
-const { findMemberFromRefreshToken, doesMemberExist } = require('../controllers/members');
-const { setRole, setRoleWebSocket } = require('../controllers/roles.js');
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require('../game/TypeDefinitions.js');
+import jwt from 'jsonwebtoken';
+import { findMemberFromRefreshToken, doesMemberExist } from '../controllers/members.js';
+import { setRole, setRoleWebSocket } from '../controllers/roles.js';
+
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
 
 /**
@@ -153,7 +153,7 @@ function verifyRefreshTokenWebSocket(ws, cookies) {
 
 
 
-module.exports = {
+export {
     verifyJWT,
     verifyJWTWebSocket
 };

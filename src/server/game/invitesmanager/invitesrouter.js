@@ -8,11 +8,11 @@
  */
 
 
-const wsutility = require('../wsutility.js');
+import wsutility from '../wsutility.js';
 
-const { createInvite } = require("./createinvite");
-const { cancelInvite } = require("./cancelinvite");
-const { acceptInvite } = require("./acceptinvite");
+import { createInvite } from './createinvite.js';
+import { cancelInvite } from './cancelinvite.js';
+import { acceptInvite } from './acceptinvite.js';
 
 
 function handleInviteRoute(ws, data) { // data: { route, action, value, id }
@@ -36,6 +36,6 @@ function handleInviteRoute(ws, data) { // data: { route, action, value, id }
 }
 
 
-module.exports = {
+export {
     handleInviteRoute
 };
