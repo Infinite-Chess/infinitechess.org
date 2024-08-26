@@ -34,7 +34,7 @@ const drawoffers = (function() {
      */
     function isOfferingDrawLegal() {
         const gamefile = game.getGamefile();
-        if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local/engine games
+        if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
         if (!movesscript.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
         if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
         if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer

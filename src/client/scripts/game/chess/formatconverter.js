@@ -1020,7 +1020,6 @@ const formatconverter = (function() {
     // }
 
     return Object.freeze({
-        ShortToLong_Piece,
         LongToShort_Format,
         ShortToLong_Format,
         GameToPosition,

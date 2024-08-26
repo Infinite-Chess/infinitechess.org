@@ -405,9 +405,7 @@ const arrows = (function() {
 
         const data = [];
         const pieceColor = math.getPieceColorFromType(type);
-        let opponentColor;
-        if (game.areInNonLocalGame()) opponentColor = math.getOppositeColor(game.getOurColorInNonLocalGame());
-        else opponentColor = math.getOppositeColor(gamefile.whosTurn);
+        const opponentColor = onlinegame.areInOnlineGame() ? math.getOppositeColor(onlinegame.getOurColor()) : math.getOppositeColor(gamefile.whosTurn);
         const isOpponentPiece = pieceColor === opponentColor;
         const isOurTurn = gamefile.whosTurn === pieceColor;
         const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });

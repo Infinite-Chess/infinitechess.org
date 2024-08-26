@@ -279,7 +279,7 @@ canvas {
     left: 0;
     right: 0;
     display: grid;
-    grid-template: min(16vw, 173px, calc(var(--vh-sub-nav) * 0.184)) repeat(4, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) / 1fr min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) 1fr;
+    grid-template: min(16vw, 173px, calc(var(--vh-sub-nav) * 0.184)) repeat(3, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) / 1fr min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) 1fr;
     gap: min(2vw, 22px, calc(var(--vh-sub-nav) * 0.023));
     padding-bottom: min(10vw, 108px, calc(var(--vh-sub-nav) * 0.115));
     justify-content: center;
@@ -540,198 +540,6 @@ canvas {
 }
 
 
-/* Practice Page: Practice selection screen */
-
-.practice-selection {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: grid;
-    grid-template: repeat(2, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) / repeat(6, min(13vw, 141px, calc(var(--vh-sub-nav) * 0.15)));
-    gap: min(1.5vw, 16px, calc(var(--vh-sub-nav) * 0.0173));
-    justify-content: center;
-    align-content: center;
-    margin-bottom: 8vh;
-}
-
-.practice-selection button {
-    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
-}
-
-.practice-selection button:hover {
-    background: linear-gradient(to bottom, white, rgb(242, 242, 242), white);
-}
-
-.practice-selection button:active {
-    background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
-}
-
-.practice-selection .practice-name {
-    grid-column: 1 / 7;
-    align-self: center;
-    justify-self: center;
-    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
-}
-
-.practice-selection .checkmate-practice {
-    grid-column: 1 / 4;
-}
-
-.practice-selection .tactics-practice {
-    grid-column: 4 / 7;
-}
-
-.practice-selection .practice-play {
-    grid-column: 1 / 4;
-    background: linear-gradient(to bottom, white, rgb(226, 226, 226), white);
-}
-
-.practice-selection .practice-back {
-    grid-column: 4 / 7;
-}
-
-.practice-selection .selected {
-    box-shadow: none;
-}
-
-.practice-box {
-    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
-    grid-column: 1 / 7;
-    display: flex;
-    flex-direction: column;
-}
-
-.practice-head {
-    font-family: Verdana;
-    background: linear-gradient(to bottom, white, rgb(229, 229, 229), white);
-    border-bottom: 2px solid rgb(168, 168, 168);
-    border-radius: min(1.3vw, 30px, calc(var(--vh-sub-nav) * 0.015));
-    display: flex;
-    justify-content: center;
-    align-content: center;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-}
-
-.checkmate-list {
-    font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-}
-
-.checkmate {
-    display: flex;
-    align-items: center;
-    font-size: min(1.7vw, 18px, calc(var(--vh-sub-nav) * 0.020));
-    justify-content: center; /* OR: space-between */
-    margin: 0.3em;
-    border-radius: 0.3em;
-    border-width: 0em;
-    height: 3em;
-}
-
-.checkmate {
-    background-color: rgba(199, 199, 199, 1);
-}
-
-.checkmate.selected {
-    outline-style: solid;
-    outline-width: 0.25em;
-    outline-offset: -0.15em;
-}
-
-.checkmate.beaten {
-    background-color: rgba(0, 128, 0, 0.3);
-}
-
-.checkmate:hover {
-    background-color: rgba(168, 168, 168, 0.8);
-    cursor: pointer;
-}
-
-.checkmate:active {
-    background-color: rgba(157, 156, 156, 0.8);
-}
-
-.checkmate.beaten:hover {
-    background-color: rgba(0, 128, 0, 0.2);
-}
-
-.checkmate-child {
-    padding: 0 0.3em;
-    margin: 0.8em;
-}
-
-.checkmate-progress-bar {
-    width: 75%;
-    margin-right: 2%;
-}
-
-.completion-mark {
-    width: 10%;
-    height: 100%;
-}
-
-/* Add the checkmark */
-.checkmate.beaten .completion-mark {
-    background-image: url('/img/game/checkmatepractice/checkmark.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
-}
-
-.piecelistW {
-    display: flex;
-    justify-content: center;
-    width: 40%;
-    margin-right: 5%;
-}
-
-.checkmate-child.versus {
-    width: 5%;
-}
-
-.piecelistB {
-    display: flex;
-    justify-content: center;
-    width: 10%;
-}
-
-.checkmate-difficulty {
-    display: flex;
-    justify-content: center;
-    align-content: center;
-    width: 20%;
-}
-
-.checkmatepiececontainer {
-    background-image: url("/img/game/spritesheet64_cburnett.png");
-    background-repeat: no-repeat;
-    background-size: 0;
-    padding: 0.02em;
-    margin: 0.25em;
-    border-radius: 1em;
-}
-
-.checkmatepiececontainer.collated {
-    margin-left: -0.65em;
-}
-
-.checkmatepiececontainer.collated-strong {
-    margin-left: -1.75em;
-}
-
-.checkmatepiece {
-    width: 3em;
-    height: 3em;
-    background-image: inherit;
-    background-repeat: no-repeat;
-    /* NEEDS TO BE as many times greater than 100% as there are pieces in a row in the spritesheet! 8 pieces => 800% */
-    background-size: 800%; 
-}
 
 /* Play Page: Invite creation screen */
 
@@ -1656,11 +1464,6 @@ a {
     display: none;
 }
 
-/** Not visible, but takes up same space on the doc */
-.invisible {
-    visibility: hidden;
-}
-
 .opacity-0_5 {
     opacity: 0.5;
 }
@@ -1673,14 +1476,14 @@ a {
     transform: rotate(180deg);
 }
 
-.unselectable { /* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
-    user-select: none; 
+.unselectable {
+    user-select: none; /* Makes the whole div unselectable (would ruin the experience)  */
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
 }
 
-.selectable { /* Makes text inside the elements with the .unselectable class re-selectable */
+.selectable {
     user-select: text;
     -moz-user-select: text;
     -webkit-user-select: text;
