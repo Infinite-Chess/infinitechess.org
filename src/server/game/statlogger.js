@@ -1,7 +1,7 @@
 
 import path from 'path';
 import fs from 'fs';
-import { writeFile } from '../utility/lockFile.js';
+import { readFile, writeFile } from '../utility/lockFile.js';
 import math1 from './math1.js'
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
@@ -27,7 +27,7 @@ const statsPath = path.resolve('database/stats.json');
     console.log("Generated stats file");
 })();
 
-import stats from '../../../database/stats.json' with {'type':'json'};
+const stats = await readFile('database/stats.json', 'Unable to read stats.json on startup.');
 // {
 //     gamesPlayed: {
 //         allTime: {

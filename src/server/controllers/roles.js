@@ -7,7 +7,7 @@
 
 import path from 'path';
 import fs from 'fs';
-import { writeFile } from '../utility/lockFile.js';
+import { readFile, writeFile } from '../utility/lockFile.js';
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
@@ -26,7 +26,7 @@ const rolesPath = path.resolve('database/roles.json');
     writeFile_ensureDirectory(rolesPath, content);
     console.log("Generated roles file");
 })();
-import roles from '../../../database/roles.json' with { 'type': 'json' }
+const roles = await readFile('database/roles.json', 'Unable to read roles.json on startup.');
 
 let rolesHaveBeenEdited = false; // Set to true if we need to save the members after a change
 const intervalToSaveRolesMillis = 10000; // 10 seconds.

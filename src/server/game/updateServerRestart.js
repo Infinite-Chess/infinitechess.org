@@ -43,7 +43,7 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
  * done when a new invite is attempted to be created.
  * `{ allowinvites: true, restartIn: false }`
  */
-let allowinvites = await readFile(allowinvitesPath);
+let allowinvites = await readFile(allowinvitesPath, 'Unable to read allowinvites.json on startup.');
 /**
  * The minimum time required between new reads of allowinvites.json.
  * 
@@ -86,10 +86,7 @@ const updateAllowInvites = (function() {
         // console.log("Reading allowinvites.json!")
     
         // If this is not called with 'await', it returns a promise.
-        const newAllowInvitesValue = await readFile(
-            allowinvitesPath,
-            `Error locking & reading allowinvites.json after receiving a created invite!`
-        );
+        const newAllowInvitesValue = await readFile(allowinvitesPath, `Error locking & reading allowinvites.json after receiving a created invite!`);
 
         timeLastReadAllowInvites = Date.now();
     

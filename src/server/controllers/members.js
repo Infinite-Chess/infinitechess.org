@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 
-import { writeFile } from '../utility/lockFile.js';
+import { readFile, writeFile } from '../utility/lockFile.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
@@ -16,7 +16,7 @@ const membersFilePath = path.resolve('database/members.json');
     console.log("Generated members file");
 })();
 
-import members from '../../../database/members.json' with { 'type': 'json' }
+const members = await readFile('database/members.json', 'Unable to read members.json on startup.');
 
 /**
  * An object with refresh tokens for the keys, and for
