@@ -31,6 +31,7 @@ import { router as rootRouter } from '../routes/root.js';
 import { router as accountRouter } from '../routes/createaccount.js';
 import { router as memberRouter } from '../routes/member.js';
 import send404 from './send404.js';
+import corsOptions from '../config/corsOptions.js';
 /**
  * Configures the Middleware Waterfall
  * 
@@ -72,7 +73,7 @@ function configureMiddleware(app) {
      * 
      * Does this create a 'Access-Control-Allow-Origin' header?
      */
-    const options = useOriginWhitelist ? require('../config/corsOptions.js') : undefined;
+    const options = useOriginWhitelist ? corsOptions : undefined;
     app.use(cors(options));
 
     /**
