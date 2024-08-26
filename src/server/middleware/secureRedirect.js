@@ -18,4 +18,4 @@ const secureRedirect = (req, res, next) => {
     res.redirect(`https://${req.hostname}${httpsPort}${req.url}`);
 };
 
-export { secureRedirect };
+export default secureRedirect;

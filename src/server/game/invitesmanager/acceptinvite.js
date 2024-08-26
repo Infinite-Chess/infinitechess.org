@@ -8,12 +8,8 @@
 import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
-// eslint-disable-next-line no-unused-vars
 import { isInviteOurs } from './inviteutility.js';
-/** @typedef {import('./inviteutility.js').Invite} Invite */
-import { wsutility } from '../wsutility.js'
+import wsutility from '../wsutility.js'
 const sendNotify = wsutility.sendNotify;
 import { createGame } from '../gamemanager/gamemanager.js';
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
@@ -21,6 +17,9 @@ import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 
+// Type import
+/** @typedef {import('./inviteutility.js').Invite} Invite */
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 
 /**
  * Attempts to accept an invite of given id.

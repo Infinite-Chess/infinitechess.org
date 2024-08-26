@@ -7,12 +7,11 @@
 // eslint-disable-next-line no-unused-vars
 /** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
 /** @typedef {import('../TypeDefinitions.js').Game} Game*/
-import { gameutility } from './gameutility.js'
-import { wsutility } from '../wsutility.js'
-const sendNotify = wsutility.sendNotify;
-const sendNotifyError = wsutility.sendNotifyError;
-import { movesscript1 } from '../movesscript1.js'
-import { math1 } from '../math1.js'
+import gameutility from './gameutility.js'
+import wsutility from '../wsutility.js'
+const { sendNotify, sendNotifyError } = wsutility
+import movesscript1 from '../movesscript1.js'
+import math1 from '../math1.js'
 import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
 
 //--------------------------------------------------------------------------------------------------------

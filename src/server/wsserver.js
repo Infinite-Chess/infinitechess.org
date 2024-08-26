@@ -5,11 +5,10 @@ import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } f
 import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
 
 // eslint-disable-next-line no-unused-vars
-/** @typedef {import('./game/TypeDefinitions.js').Socket} Socket */
-/** @typedef {import('./game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage */
-import { math1 } from './game/math1.js';
+
+import math1 from './game/math1.js';
 const {genUniqueID, generateNumbID} = math1
-import { wsutility } from './game/wsutility.js'
+import wsutility from './game/wsutility.js'
 import { handleGameRoute } from './game/gamemanager/gamerouter.js';
 import { handleInviteRoute } from './game/invitesmanager/invitesrouter.js';
 import { unsubClientFromGameBySocket } from './game/gamemanager/gamemanager.js';
@@ -17,6 +16,9 @@ import { subToInvitesList, unsubFromInvitesList, userHasInvite } from './game/in
 
 import { ensureJSONString } from './utility/JSONUtils.js';
 import { executeSafely } from './utility/errorGuard.js';
+
+/** @typedef {import('./game/TypeDefinitions.js').Socket} Socket */
+/** @typedef {import('./game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage */
 
 let WebSocketServer;
 
@@ -621,4 +623,4 @@ const wsserver = (function() {
 
 })();
 
-export { wsserver };
+export default wsserver;

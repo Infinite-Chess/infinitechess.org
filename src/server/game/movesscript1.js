@@ -41,4 +41,4 @@ const movesscript1 = (function() {
     });
 })();
 
-export { movesscript1 };
+export default movesscript1;

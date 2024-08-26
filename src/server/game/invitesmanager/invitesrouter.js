@@ -8,7 +8,7 @@
  */
 
 
-import { wsutility } from '../wsutility.js'
+import wsutility from '../wsutility.js'
 
 import { createInvite } from './createinvite.js';
 import { cancelInvite } from './cancelinvite.js';

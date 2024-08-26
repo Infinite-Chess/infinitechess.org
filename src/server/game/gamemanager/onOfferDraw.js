@@ -4,14 +4,14 @@
  * draw offers in online games.
  */
 
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').Game} Game*/
-import { gameutility } from './gameutility.js'
-import { math1 } from '../math1.js'
-import { movesscript1 } from '../movesscript1.js'
+import gameutility from './gameutility.js'
+import math1 from '../math1.js'
+import movesscript1 from '../movesscript1.js'
 import { setGameConclusion } from './gamemanager.js';
 import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
+
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
+/** @typedef {import('../TypeDefinitions.js').Game} Game*/
 
 //--------------------------------------------------------------------------------------------------------
 

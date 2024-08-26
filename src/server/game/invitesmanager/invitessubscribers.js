@@ -6,9 +6,9 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
-// eslint-disable-next-line no-unused-vars
+import wsutility from '../wsutility.js'
+
 /** @typedef {import('../TypeDefinitions.js').Socket} Socket */
-import { wsutility } from '../wsutility.js'
 
 /**
  * List of clients currently subscribed to invites list events, with their

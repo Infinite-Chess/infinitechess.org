@@ -16,21 +16,22 @@ import { getTranslation } from '../../utility/translate.js';
 import { ensureJSONString } from '../../utility/JSONUtils.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').Game} Game*/
-import { variant1 } from '../variant1.js'
-import { math1 } from '../math1.js'
-import { clockweb } from '../clockweb.js'
-import { wsutility } from '../wsutility.js'
+import variant1 from '../variant1.js'
+import math1 from '../math1.js'
+import clockweb from '../clockweb.js'
+import wsutility from '../wsutility.js'
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
-import { wincondition1 } from '../wincondition1.js'
-import { formatconverter1 } from '../formatconverter1.js'
-import { movesscript1 } from '../movesscript1.js'
+import wincondition1 from '../wincondition1.js'
+import formatconverter1 from '../formatconverter1.js'
+import movesscript1 from '../movesscript1.js'
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
+
+// Type imports
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
+/** @typedef {import('../TypeDefinitions.js').Game} Game*/
 
 const gameutility = (function() {
 
@@ -656,4 +657,4 @@ const gameutility = (function() {
 
 })();
 
-export { gameutility };
+export default gameutility;

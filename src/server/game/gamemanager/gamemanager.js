@@ -5,13 +5,12 @@
 
 // Custom imports
 // eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').Game} Game*/
-import { gameutility } from './gameutility.js'
-import { wsutility } from '../wsutility.js'
-import { math1 } from '../math1.js'
-import { movesscript1 } from '../movesscript1.js'
-import { statlogger } from '../statlogger.js'
+
+import gameutility from './gameutility.js'
+import wsutility from '../wsutility.js'
+import math1 from '../math1.js'
+import movesscript1 from '../movesscript1.js'
+import statlogger from '../statlogger.js'
 import { executeSafely_async } from '../../utility/errorGuard.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
@@ -19,6 +18,10 @@ import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers,
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
+
+// Type imports
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
+/** @typedef {import('../TypeDefinitions.js').Game} Game*/
 
 //--------------------------------------------------------------------------------------------------------
 

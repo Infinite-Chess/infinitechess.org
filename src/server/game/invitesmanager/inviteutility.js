@@ -4,9 +4,9 @@
  * with single invites, not multiple
  */
 
-// eslint-disable-next-line no-unused-vars
+import math1 from '../math1.js'
+
 /** @typedef {import('../TypeDefinitions.js').Socket} Socket */
-import { math1 } from '../math1.js'
 
 //-------------------------------------------------------------------------------------------
 

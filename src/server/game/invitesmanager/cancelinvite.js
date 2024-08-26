@@ -12,7 +12,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 // eslint-disable-next-line no-unused-vars
 import { isInviteOurs } from './inviteutility.js';
 /** @typedef {import('./inviteutility.js').Invite} Invite */
-import { wsutility } from '../wsutility.js'
+import wsutility from '../wsutility.js'
 const sendNotify = wsutility.sendNotify;
 const sendNotifyError = wsutility.sendNotifyError;
 

@@ -6,16 +6,14 @@
  * and broadcasts changes out to the clients.
  */
 
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
-// eslint-disable-next-line no-unused-vars
 import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
-/** @typedef {import('./inviteutility.js').Invite} Invite */
-import { wsutility } from '../wsutility.js'
-import { math1 } from '../math1.js'
+import wsutility from '../wsutility.js'
+import math1 from '../math1.js'
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
-
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
+
+/** @typedef {import('./inviteutility.js').Invite} Invite */
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 
 //-------------------------------------------------------------------------------------------
 

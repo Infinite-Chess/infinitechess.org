@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { findMemberFromRefreshToken, getUsernameCaseSensitive, updateLastSeen } from './members.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { isBrowserIDBanned } from '../middleware/banned.js';
-import { math1 } from '../game/math1.js';
+import math1 from '../game/math1.js';
 const { generateID } = math1
 import { getTranslationForReq } from '../utility/translate.js';
 

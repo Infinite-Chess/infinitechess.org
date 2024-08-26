@@ -13,4 +13,4 @@ const pieces1 = (function() {
 
 })();
 
-export { pieces1 };
+export default pieces1;

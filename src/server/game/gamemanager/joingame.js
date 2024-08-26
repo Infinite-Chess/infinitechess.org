@@ -4,11 +4,10 @@
  * message, and if so, sends them the game info
  */
 
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Game} Game */
-import { gameutility } from './gameutility.js'
+import gameutility from './gameutility.js'
 import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
 
+/** @typedef {import('../TypeDefinitions.js').Game} Game */
 
 /**
  * The method that fires when a client sends the 'joingame' command after refreshing the page.

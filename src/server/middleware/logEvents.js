@@ -5,7 +5,7 @@ import { promises as fsPromises } from 'fs';
 import path from 'path';
 
 import { getClientIP } from "./IP.js";
-import { wsutility } from '../game/wsutility.js';
+import wsutility from '../game/wsutility.js';
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
 import { fileURLToPath } from 'node:url';
 

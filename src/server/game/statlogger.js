@@ -2,12 +2,12 @@
 import path from 'path';
 import fs from 'fs';
 import { writeFile } from '../utility/lockFile.js';
-import { math1 } from './math1.js'
+import math1 from './math1.js'
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('./TypeDefinitions.js').Game} Game */
 import { fileURLToPath } from 'node:url';
+
+/** @typedef {import('./TypeDefinitions.js').Game} Game */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -122,4 +122,4 @@ const statlogger = (function() {
     });
 })();
 
-export { statlogger };
+export default statlogger;
