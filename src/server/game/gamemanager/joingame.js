@@ -4,7 +4,7 @@
  * message, and if so, sends them the game info
  */
 
-import gameutility from './gameutility.js'
+import gameutility from './gameutility.js';
 import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
 
 /** @typedef {import('../TypeDefinitions.js').Game} Game */

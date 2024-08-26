@@ -1,4 +1,3 @@
-/** @module TypeDefinitions */
 
 // This script contains many of our useful
 // type definitions for web sockets and our game.
@@ -173,7 +172,6 @@ function Game() {
     this.deleteTimeoutID = undefined;
 }
 
-/** @exports */
 export {
     Socket,
     //WebsocketMessage, // Type definitions declared in this manner don't need to be exported for some reason? Other scripts can still import it

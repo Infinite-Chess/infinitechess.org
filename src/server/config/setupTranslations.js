@@ -8,7 +8,6 @@ import { FilterXSS } from "xss";
 import { getDefaultLanguage, setSupportedLanguages } from "../utility/translate.js";
 
 import { fileURLToPath } from 'node:url';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const translationsFolder = "./translation";

@@ -7,13 +7,14 @@ import path from 'path';
 import { getClientIP } from "./IP.js";
 import wsutility from '../game/wsutility.js';
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
-import { fileURLToPath } from 'node:url';
 
+import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
 const giveLoggedItemsUUID = false;
 
-/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file.

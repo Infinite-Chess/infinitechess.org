@@ -8,9 +8,9 @@
  * NOR does it send any websocket messages.
  */
 
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Game} Game */
 import { logEvents } from '../../middleware/logEvents.js';
+
+/** @typedef {import('../TypeDefinitions.js').Game} Game */
 
 //--------------------------------------------------------------------------------------------------------
 

@@ -5,11 +5,12 @@ import { writeFile } from '../utility/lockFile.js';
 import math1 from './math1.js'
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
+
 import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @typedef {import('./TypeDefinitions.js').Game} Game */
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const statsPath = path.resolve('database/stats.json');
 (function ensureStatsFileExists() {

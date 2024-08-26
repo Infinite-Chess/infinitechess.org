@@ -10,7 +10,7 @@
 import jwt from 'jsonwebtoken';
 import { findMemberFromRefreshToken, doesMemberExist } from '../controllers/members.js';
 import { setRole, setRoleWebSocket } from '../controllers/roles.js';
-// eslint-disable-next-line no-unused-vars
+
 /** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
 

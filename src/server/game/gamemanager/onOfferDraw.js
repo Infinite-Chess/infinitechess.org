@@ -4,14 +4,17 @@
  * draw offers in online games.
  */
 
-import gameutility from './gameutility.js'
-import math1 from '../math1.js'
-import movesscript1 from '../movesscript1.js'
+import gameutility from './gameutility.js';
+import math1 from '../math1.js';
+import movesscript1 from '../movesscript1.js';
 import { setGameConclusion } from './gamemanager.js';
 import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
 
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').Game} Game*/
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 //--------------------------------------------------------------------------------------------------------
 

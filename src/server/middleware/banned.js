@@ -17,7 +17,7 @@ const bannedPath = path.resolve('database/banned.json');
     console.log("Generated banned file");
 })();
 
-const bannedJSON = readFile(bannedPath);
+const bannedJSON = await readFile(bannedPath);
 
 
 function isEmailBanned(email) {

@@ -8,7 +8,6 @@ import { removeAccount } from '../controllers/removeAccountController.js';
 import { getLanguageToServe } from "../utility/translate.js";
 
 import { fileURLToPath } from 'node:url';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 router.get('/:member', (req, res) => {

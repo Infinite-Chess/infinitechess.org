@@ -9,11 +9,11 @@ import path from 'path';
 import fs from 'fs';
 import { writeFile } from '../utility/lockFile.js';
 
-import { fileURLToPath } from 'node:url';
+import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
+import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
 const rolesPath = path.resolve('database/roles.json');
 (function ensureRolesFileExists() {

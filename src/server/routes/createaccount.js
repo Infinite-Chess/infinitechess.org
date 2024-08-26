@@ -3,8 +3,7 @@ import express from 'express';
 const router = express.Router();
 import path from 'path';
 
-import * as createaccountController from '../controllers/createaccountController.js'
-import { getRegisterData, checkEmailAssociated, checkUsernameAvailable } from '../controllers/createaccountController.js';
+import { getRegisterData, checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createaccountController.js';
 import { getLanguageToServe } from '../utility/translate.js';
 
 import { fileURLToPath } from 'node:url';
@@ -16,7 +15,7 @@ router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'createaccount.html'));
 });
 
-router.post('/', createaccountController.createNewMember);
+router.post('/', createNewMember);
 
 // Data needed for the createaccount page, fetched from the script
 router.get('/data', getRegisterData);

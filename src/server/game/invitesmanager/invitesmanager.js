@@ -6,14 +6,17 @@
  * and broadcasts changes out to the clients.
  */
 
+import wsutility from '../wsutility.js';
+import math1 from '../math1.js';
 import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
-import wsutility from '../wsutility.js'
-import math1 from '../math1.js'
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
 
-/** @typedef {import('./inviteutility.js').Invite} Invite */
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
+/**
+ * Type Definitions
+ * @typedef {import('./inviteutility.js').Invite} Invite 
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ */
 
 //-------------------------------------------------------------------------------------------
 

@@ -7,14 +7,17 @@
 import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-import gameutility from './gameutility.js'
-import math1 from '../math1.js'
-import movesscript1 from '../movesscript1.js'
+import gameutility from './gameutility.js';
+import math1 from '../math1.js';
+import movesscript1 from '../movesscript1.js';
 import { setGameConclusion } from './gamemanager.js';
 
-// Type imports
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').Game} Game*/
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {  import('../TypeDefinitions.js').Game} Game
+ */
+
 
 /**
  * 

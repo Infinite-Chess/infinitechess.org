@@ -11,22 +11,24 @@
 import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-import wsutility from '../wsutility.js'
-const { sendNotify, sendNotifyError } = wsutility
-import math1 from '../math1.js'
-import variant1 from '../variant1.js'
-import clockweb from '../clockweb.js'
+import wsutility from '../wsutility.js';
+const { sendNotify, sendNotifyError } = wsutility;
+import math1 from '../math1.js';
+import variant1 from '../variant1.js';
+import clockweb from '../clockweb.js';
 import gameutility from '../gamemanager/gameutility.js';
-const { getDisplayNameOfPlayer } = gameutility
+const { getDisplayNameOfPlayer } = gameutility;
 import { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { isServerRestarting } from '../updateServerRestart.js';
 
-// Type imports
-/** @typedef {import('./inviteutility.js').Invite} Invite */
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
+/**
+ * Type Definitions
+ * @typedef {import('./inviteutility.js').Invite} Invite
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ */
 
 /**
  * Creates a new invite from their websocket message.

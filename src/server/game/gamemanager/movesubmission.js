@@ -8,19 +8,20 @@
 import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-import gameutility from './gameutility.js'
-import wsutility from '../wsutility.js'
-import math1 from '../math1.js'
-import wincondition1 from '../wincondition1.js'
+import gameutility from './gameutility.js';
+import wsutility from '../wsutility.js';
+import math1 from '../math1.js';
+import wincondition1 from '../wincondition1.js';
 
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
 
-// Type imports
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').Game} Game*/
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 /**
  * 

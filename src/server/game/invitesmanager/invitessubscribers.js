@@ -6,7 +6,7 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
-import wsutility from '../wsutility.js'
+import wsutility from '../wsutility.js';
 
 /** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 

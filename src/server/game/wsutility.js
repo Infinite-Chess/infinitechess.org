@@ -4,7 +4,8 @@
 
 import { getTranslation } from '../utility/translate.js';
 import { ensureJSONString } from '../utility/JSONUtils.js';
-/** @typedef { import('./TypeDefinitions.js').Socket } Socket */
+
+/** @typedef {import('./TypeDefinitions.js').Socket} Socket */
 
 const wsutility = (function() {
 

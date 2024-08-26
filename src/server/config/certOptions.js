@@ -21,4 +21,4 @@ function getCertOptions() {
     }
 }
 
-export { getCertOptions };
+export default getCertOptions;

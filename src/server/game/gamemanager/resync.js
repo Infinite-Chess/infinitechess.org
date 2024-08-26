@@ -12,14 +12,15 @@
  */
 
 // Custom imports
-import gameutility from './gameutility.js'
+import gameutility from './gameutility.js';
 import { getGameByID } from './gamemanager.js';
-
 import { cancelDisconnectTimer } from './afkdisconnect.js';
 
-// Type imports
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').Game} Game*/
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 /**
  * Resyncs a client's websocket to a game. The client already

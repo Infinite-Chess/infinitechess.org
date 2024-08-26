@@ -9,9 +9,9 @@ const app = express();
 import https from 'https';
 import ejs from 'ejs';
 // Other imports
-import configureMiddleware from './middleware/middleware.js'
+import configureMiddleware from './middleware/middleware.js';
 import wsserver from './wsserver.js';
-import { getCertOptions } from './config/certOptions.js'
+import getCertOptions from './config/certOptions.js';
 import { DEV_BUILD } from './config/config.js';
 import { saveMembersIfChangesMade } from './controllers/members.js';
 import { saveRolesIfChangesMade } from './controllers/roles.js';

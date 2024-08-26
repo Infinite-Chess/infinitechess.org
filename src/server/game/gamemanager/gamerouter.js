@@ -7,11 +7,6 @@
  * online games is gamemanager
  */
 
-
-// Custom imports
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').WebsocketMessage} WebsocketMessage */
 import { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
 import { abortGame, resignGame } from './abortresigngame.js';
@@ -20,6 +15,12 @@ import { onReport } from './cheatreport.js';
 import { resyncToGame } from './resync.js';
 import { submitMove } from './movesubmission.js';
 import { onJoinGame } from './joingame.js';
+
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').WebsocketMessage} WebsocketMessage
+ */
 
 
 /**

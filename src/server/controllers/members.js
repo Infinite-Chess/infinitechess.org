@@ -6,7 +6,6 @@ import { logEvents } from '../middleware/logEvents.js';
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const membersFilePath = path.resolve('database/members.json');

@@ -1,24 +1,24 @@
-import {WebSocketServer as Server, WebSocket} from 'ws';
+import { WebSocketServer as Server, WebSocket } from 'ws';
 import { verifyJWTWebSocket } from './middleware/verifyJWT.js';
 import { rateLimitWebSocket } from './middleware/rateLimit.js';
 import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from './middleware/logEvents.js';
 import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
 
-// eslint-disable-next-line no-unused-vars
-
 import math1 from './game/math1.js';
-const {genUniqueID, generateNumbID} = math1
-import wsutility from './game/wsutility.js'
+const { genUniqueID, generateNumbID } = math1;
+import wsutility from './game/wsutility.js';
 import { handleGameRoute } from './game/gamemanager/gamerouter.js';
 import { handleInviteRoute } from './game/invitesmanager/invitesrouter.js';
 import { unsubClientFromGameBySocket } from './game/gamemanager/gamemanager.js';
 import { subToInvitesList, unsubFromInvitesList, userHasInvite } from './game/invitesmanager/invitesmanager.js';
-
 import { ensureJSONString } from './utility/JSONUtils.js';
 import { executeSafely } from './utility/errorGuard.js';
 
-/** @typedef {import('./game/TypeDefinitions.js').Socket} Socket */
-/** @typedef {import('./game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage */
+/**
+ * Type Definitions
+ * @typedef {import('./game/TypeDefinitions.js').Socket} Socket
+ * @typedef {import('./game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
+ */
 
 let WebSocketServer;
 
@@ -297,7 +297,7 @@ function onclose(ws, code, reason) {
 
     cancelRenewConnectionTimer(ws);
 
-    if (reason === 'No echo heard') console.log(`Socket closed from no echo heard. ${wsutility.stringifySocketMetadata(ws)}`)
+    if (reason === 'No echo heard') console.log(`Socket closed from no echo heard. ${wsutility.stringifySocketMetadata(ws)}`);
 }
 
 function onerror(ws, error) {

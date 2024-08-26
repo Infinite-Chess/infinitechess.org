@@ -1,9 +1,9 @@
+import dotenv from 'dotenv';
 import { DEV_BUILD } from './config.js';
 import { generateAccount } from '../controllers/createaccountController.js';
 import { giveRole_Owner, giveRole_Patron } from '../controllers/roles.js';
 import { doesMemberExist } from '../controllers/members.js';
 import { ensureEnvFile } from './env.js';
-import dotenv from 'dotenv'
 import { ensureSelfSignedCertificate } from './generateCert.js';
 
 function initDevEnvironment() {

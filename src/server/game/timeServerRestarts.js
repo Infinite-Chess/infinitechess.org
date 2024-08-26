@@ -51,4 +51,4 @@ export {
     setTimeServerRestarting,
     cancelServerRestart,
     getMinutesUntilServerRestart
-}
+};

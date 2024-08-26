@@ -4,7 +4,7 @@
  * with single invites, not multiple
  */
 
-import math1 from '../math1.js'
+import math1 from '../math1.js';
 
 /** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 

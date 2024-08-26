@@ -7,9 +7,9 @@
 
 // Custom imports
 
-import gameutility from './gameutility.js'
-import math1 from '../math1.js'
-import movesscript1 from '../movesscript1.js'
+import gameutility from './gameutility.js';
+import math1 from '../math1.js';
+import movesscript1 from '../movesscript1.js';
 
 // Type imports
 /** @typedef {import('../TypeDefinitions.js').Game} Game */

@@ -7,16 +7,17 @@
 import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
-// eslint-disable-next-line no-unused-vars
 import { isInviteOurs } from './inviteutility.js';
-/** @typedef {import('./inviteutility.js').Invite} Invite */
-import wsutility from '../wsutility.js'
-const sendNotify = wsutility.sendNotify;
-const sendNotifyError = wsutility.sendNotifyError;
+import wsutility from '../wsutility.js';
+const { sendNotify, sendNotifyError }  = wsutility;
 
 import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
+
+/** 
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('./inviteutility.js').Invite} Invite
+ */
 
 
 

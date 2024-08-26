@@ -1,6 +1,6 @@
 
 import { findMemberFromRefreshToken, deleteRefreshToken, getUsernameCaseSensitive } from './members.js';
-import websocketserver from '../wsserver.js'
+import websocketserver from '../wsserver.js';
 import { deleteAllInvitesOfMember } from '../game/invitesmanager/invitesmanager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 

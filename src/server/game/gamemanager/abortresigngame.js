@@ -3,16 +3,18 @@
  * This script handles the abortings and resignations of online games
  */
 
-// Custom imports
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket*/
-/** @typedef {import('../TypeDefinitions.js').Game} Game*/
-import gameutility from './gameutility.js'
-import wsutility from '../wsutility.js'
-const { sendNotify, sendNotifyError } = wsutility
-import movesscript1 from '../movesscript1.js'
-import math1 from '../math1.js'
+import gameutility from './gameutility.js';
+import wsutility from '../wsutility.js';
+const { sendNotify, sendNotifyError } = wsutility;
+import movesscript1 from '../movesscript1.js';
+import math1 from '../math1.js';
 import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
+
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 //--------------------------------------------------------------------------------------------------------
 

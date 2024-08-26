@@ -23,15 +23,15 @@ import middleware from 'i18next-http-middleware';
 
 // Other imports
 import { useOriginWhitelist } from '../config/config.js';
-
-import { fileURLToPath } from 'node:url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 import { router as rootRouter } from '../routes/root.js';
 import { router as accountRouter } from '../routes/createaccount.js';
 import { router as memberRouter } from '../routes/member.js';
 import send404 from './send404.js';
 import corsOptions from '../config/corsOptions.js';
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /**
  * Configures the Middleware Waterfall
  * 

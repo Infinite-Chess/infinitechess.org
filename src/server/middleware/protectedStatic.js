@@ -4,7 +4,6 @@ import path from 'path';
 import { isOwner, isPatron } from "./verifyRoles.js";
 
 import { fileURLToPath } from 'node:url';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function protectedStatic(req, res, next) {
