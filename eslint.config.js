@@ -134,6 +134,9 @@ export default [
         main: "readonly",
         websocket: "readonly",
         drawoffers: "readonly",
+        checkmatepractice: "readonly",
+        guipractice: "readonly",
+        enginegame: "readonly",
       }
     }
   }
