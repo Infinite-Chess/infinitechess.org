@@ -77,7 +77,10 @@ if (DEV_BUILD) {
         recursive: true,
         force: true,
         filter: filename => { 
-            return (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename);
+            return (
+                (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) || /(\\|\/)game(\\|\/)chess$/.test(filename)) 
+        && !/(\\|\/)css(\\|\/)/.test(filename)
+            
         }
     });
 
@@ -90,8 +93,8 @@ if (DEV_BUILD) {
     let gamecode = ""; 
 
     for (const file of clientFiles) {
-    // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
-        if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
+        // If the client script is htmlscript.js or an engine script or not in scripts/game, then minify it and copy it over
+        if (/(\\|\/)htmlscript\.js$/.test(file) || /chess(\\|\/)engine[^.\\/]*\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
             const code = await readFile(`./src/client/${file}`, 'utf8');
             const minified = await swc.minify(code, {
                 mangle: true, // Enable variable name mangling
