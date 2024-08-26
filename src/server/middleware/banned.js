@@ -22,15 +22,15 @@ const bannedJSON = readFile(bannedPath);
 
 function isEmailBanned(email) {
     const emailLowercase = email.toLowerCase();
-    return bannedJSON.emails[emailLowercase] !== null;
+    return bannedJSON.emails[emailLowercase] !== undefined;
 }
 
 function isIPBanned(ip) {
-    return bannedJSON.IPs[ip] !== null;
+    return bannedJSON.IPs[ip] !== undefined;
 }
 
 function isBrowserIDBanned(browserID) {
-    return bannedJSON['browser-ids'][browserID] !== null;
+    return bannedJSON['browser-ids'][browserID] !== undefined;
 }
 
 export {
