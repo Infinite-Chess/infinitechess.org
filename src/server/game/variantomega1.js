@@ -1,6 +1,6 @@
 
-import { variant1 } from './variant1.js'
-import { math1 } from './math1.js'
+import variant1 from './variant1.js';
+import math1 from './math1.js';
 
 
 // This extends variant.js, containing the init methods
@@ -662,4 +662,4 @@ const variantomega1 = (function() {
 
 })();
 
-export { variantomega1 };
+export default variantomega1;

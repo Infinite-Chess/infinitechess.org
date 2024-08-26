@@ -9,9 +9,9 @@ import cors from 'cors';
 
 // Middleware
 import cookieParser from 'cookie-parser';
-import { credentials } from './credentials.js'
-import { secureRedirect } from './secureRedirect.js'
-import { errorHandler } from './errorHandler.js'
+import credentials from './credentials.js';
+import secureRedirect from './secureRedirect.js';
+import errorHandler from './errorHandler.js';
 import { logger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
@@ -25,13 +25,12 @@ import middleware from 'i18next-http-middleware';
 import { useOriginWhitelist } from '../config/config.js';
 
 import { fileURLToPath } from 'node:url';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { router as rootRouter } from '../routes/root.js';
 import { router as accountRouter } from '../routes/createaccount.js';
 import { router as memberRouter } from '../routes/member.js';
-import { send404 } from './send404.js';
+import send404 from './send404.js';
 /**
  * Configures the Middleware Waterfall
  * 
@@ -112,4 +111,4 @@ function configureMiddleware(app) {
     app.use(errorHandler);
 }
 
-export { configureMiddleware };
+export default configureMiddleware;

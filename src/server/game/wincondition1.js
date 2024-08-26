@@ -96,4 +96,4 @@ const wincondition1 = (function() {
 
 })();
 
-export { wincondition1 };
+export default wincondition1;

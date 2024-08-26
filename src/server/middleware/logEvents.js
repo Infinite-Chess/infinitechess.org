@@ -1,20 +1,19 @@
 import { format } from 'date-fns';
-import { v4 } from 'uuid';
-const uuid = v4
-import { promises } from 'fs';
-const fsPromises = promises
+import { v4 as uuid } from 'uuid';
+
+import { promises as fsPromises } from 'fs';
 import path from 'path';
 
 import { getClientIP } from "./IP.js";
-import { wsutility } from '../game/wsutility.js'
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
+import { wsutility } from '../game/wsutility.js';
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const giveLoggedItemsUUID = false;
+
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file.

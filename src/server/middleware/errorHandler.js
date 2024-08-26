@@ -11,4 +11,4 @@ function errorHandler(err, req, res, next) {
     res.status(500).send(messageForClient); // 500: Server error
 }
 
-export { errorHandler };
+export default errorHandler;

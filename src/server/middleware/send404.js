@@ -2,7 +2,6 @@ import path from 'path';
 import { getTranslationForReq } from '../utility/translate.js';
 
 import { fileURLToPath } from 'node:url';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function send404(req, res) {
@@ -16,4 +15,4 @@ function send404(req, res) {
     }
 }
 
-export { send404 };
+export default send404;

@@ -4,8 +4,7 @@
  * requests and websocket connection requests.
  */
 
-// eslint-disable-next-line no-unused-vars
-/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */ // The type definition for websocket objects
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket // The type definition for websocket objects */ 
 
 
 
