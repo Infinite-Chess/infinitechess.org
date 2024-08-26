@@ -2,10 +2,10 @@
 // This script contains generalized methods for working with websocket objects,
 // thus the only dependancies it has are for the type definitions.
 
-const { getTranslation } = require('../utility/translate');
-const { ensureJSONString } = require('../utility/JSONUtils');
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require('./TypeDefinitions');
+import { getTranslation } from '../utility/translate.js';
+import { ensureJSONString } from '../utility/JSONUtils.js';
+
+/** @typedef {import('./TypeDefinitions.js').Socket} Socket */
 
 const wsutility = (function() {
 
@@ -100,4 +100,4 @@ const wsutility = (function() {
     });
 })();
 
-module.exports = wsutility;
+export default wsutility;

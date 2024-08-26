@@ -6,12 +6,13 @@
  */
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const math1 = require('../math1');
-const movesscript1 = require('../movesscript1');
 
+import gameutility from './gameutility.js';
+import math1 from '../math1.js';
+import movesscript1 from '../movesscript1.js';
+
+// Type imports
+/** @typedef {import('../TypeDefinitions.js').Game} Game */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -143,7 +144,7 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
 function getDisconnectionForgivenessDuration() { return timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis; }
 
 
-module.exports = {
+export {
     cancelAutoAFKResignTimer,
     startDisconnectTimer,
     cancelDisconnectTimers,

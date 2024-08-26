@@ -5,21 +5,23 @@
  */
 
 // Middleware imports
-const { logEvents } = require('../../middleware/logEvents.js');
+import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js');
-// eslint-disable-next-line no-unused-vars
-const { Invite, isInviteOurs } = require('./inviteutility.js');
-const wsutility = require('../wsutility.js');
-const sendNotify = wsutility.sendNotify;
-const { createGame } = require('../gamemanager/gamemanager.js');
-const { removeSocketFromInvitesSubs } = require('./invitessubscribers.js');
-const { broadcastGameCountToInviteSubs } = require('../gamemanager/gamecount');
-const { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } = require('./invitesmanager.js');
-const { isSocketInAnActiveGame } = require('../gamemanager/activeplayers.js');
+import { isInviteOurs } from './inviteutility.js';
+import wsutility from '../wsutility.js';
+const { sendNotify }  = wsutility;
+import { createGame } from '../gamemanager/gamemanager.js';
+import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
+import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
+import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } from './invitesmanager.js';
+import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 
+/**
+ * Type Definitions
+ * @typedef {import('./inviteutility.js').Invite} Invite
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ */
 
 /**
  * Attempts to accept an invite of given id.
@@ -114,6 +116,6 @@ function informThemGameAborted(ws, isPrivate, inviteID, replyto) {
 }
 
 
-module.exports = {
+export {
     acceptInvite
 };

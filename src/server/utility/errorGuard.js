@@ -4,7 +4,7 @@
  * catching any errors that may occur, logging them to the error log.
  */
 
-const { logEvents } = require("../middleware/logEvents");
+import { logEvents } from '../middleware/logEvents.js';
 
 
 /**
@@ -45,7 +45,7 @@ async function executeSafely_async(callback, errorMessage, ...args) {
     return true; // No error
 }
 
-module.exports = {
+export {
     executeSafely,
     executeSafely_async
 };

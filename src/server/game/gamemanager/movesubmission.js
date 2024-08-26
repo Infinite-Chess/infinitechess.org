@@ -5,20 +5,23 @@
  */
 
 // Middleware imports
-const { logEvents } = require('../../middleware/logEvents');
+import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const wsutility = require('../wsutility');
-const math1 = require('../math1');
-const wincondition1 = require('../wincondition1');
+import gameutility from './gameutility.js';
+import wsutility from '../wsutility.js';
+import math1 from '../math1.js';
+import wincondition1 from '../wincondition1.js';
 
-const { declineDraw } = require('./onOfferDraw');
-const { resyncToGame } = require('./resync');
-const { pushGameClock, setGameConclusion } = require('./gamemanager');
+import { declineDraw } from './onOfferDraw.js';
+import { resyncToGame } from './resync.js';
+import { pushGameClock, setGameConclusion } from './gamemanager.js';
 
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 /**
  * 
@@ -137,6 +140,6 @@ function doesGameConclusionCheckOut(game, gameConclusion, color) {
 }
 
 
-module.exports = {
+export {
     submitMove
 };

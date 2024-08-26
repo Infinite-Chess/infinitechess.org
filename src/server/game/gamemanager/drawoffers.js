@@ -8,9 +8,9 @@
  * NOR does it send any websocket messages.
  */
 
-// eslint-disable-next-line no-unused-vars
-const { Game } = require('../TypeDefinitions');
-const { logEvents } = require('../../middleware/logEvents');
+import { logEvents } from '../../middleware/logEvents.js';
+
+/** @typedef {import('../TypeDefinitions.js').Game} Game */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -95,7 +95,7 @@ function getLastDrawOfferPlyOfColor(game, color) {
 
 //--------------------------------------------------------------------------------------------------------
 
-module.exports = {
+export {
     movesBetweenDrawOffers,
     isDrawOfferOpen,
     doesColorHaveExtendedDrawOffer,

@@ -4,18 +4,20 @@
  */
 
 // Middleware imports
-const { logEvents } = require('../../middleware/logEvents.js');
+import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js');
-// eslint-disable-next-line no-unused-vars
-const { Invite, isInviteOurs } = require('./inviteutility.js');
-const wsutility = require('../wsutility.js');
-const sendNotify = wsutility.sendNotify;
-const sendNotifyError = wsutility.sendNotifyError;
+import { isInviteOurs } from './inviteutility.js';
+import wsutility from '../wsutility.js';
+const { sendNotify, sendNotifyError }  = wsutility;
 
-const { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } = require('./invitesmanager.js');
+import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
+
+/** 
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('./inviteutility.js').Invite} Invite
+ */
 
 
 
@@ -46,6 +48,6 @@ function cancelInvite(ws, messageContents, replyto) { // Value should be the ID 
 }
 
 
-module.exports = {
+export {
     cancelInvite
 };

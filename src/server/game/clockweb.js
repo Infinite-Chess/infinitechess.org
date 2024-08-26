@@ -39,4 +39,4 @@ const clockweb = (function() {
 
 })();
 
-module.exports = clockweb;
+export default clockweb;

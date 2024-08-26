@@ -1,6 +1,6 @@
 
-const { getTranslationForReq } = require('../utility/translate');
-const { logEvents } = require('./logEvents');
+import { getTranslationForReq } from '../utility/translate.js';
+import { logEvents } from './logEvents.js';
 
 function errorHandler(err, req, res, next) {
     const errMessage = `${err.stack}`;
@@ -11,4 +11,4 @@ function errorHandler(err, req, res, next) {
     res.status(500).send(messageForClient); // 500: Server error
 }
 
-module.exports = errorHandler;
+export default errorHandler;

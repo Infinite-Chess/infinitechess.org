@@ -1,7 +1,7 @@
 
-const nodemailer = require('nodemailer');
-const { DEV_BUILD, HOST_NAME } = require('../config/config');
-const { logEvents } = require('../middleware/logEvents');
+import nodemailer from 'nodemailer';
+import { DEV_BUILD, HOST_NAME } from '../config/config.js';
+import { logEvents } from '../middleware/logEvents.js';
 
 /**
  * Sends an account verification email to the specified member
@@ -72,4 +72,4 @@ const sendEmailConfirmation = function(newMember) {
     });
 };
 
-module.exports = { sendEmailConfirmation };
+export { sendEmailConfirmation };

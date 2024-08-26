@@ -41,7 +41,7 @@ const allowedOrigins = [ // Allowed sites
     'https://www.google.com'
 ];
 
-module.exports = {
+export {
     DEV_BUILD,
     ARE_RATE_LIMITING,
     simulatedWebsocketLatencyMillis,
