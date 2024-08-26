@@ -93,7 +93,7 @@ const updateAllowInvites = (function() {
 
         timeLastReadAllowInvites = Date.now();
     
-        if (newAllowInvitesValue === null) { // Not defined, error in reading. Probably file is locked
+        if (newAllowInvitesValue === undefined) { // Not defined, error in reading. Probably file is locked
             console.error(`There was an error reading allowinvites.json. Not updating it in memory.`);
             return;
         }
