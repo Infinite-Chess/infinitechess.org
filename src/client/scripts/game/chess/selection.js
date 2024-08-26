@@ -77,7 +77,7 @@ const selection = (function() {
     function update() {
         // Guard clauses...
         const gamefile = game.getGamefile();
-        // if (game.areInNonLocalGame() && !game.isItOurTurnInNonLocalGame()) return; // Not our turn
+        // if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn
         if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
         if (pawnIsPromoting) { // Do nothing else this frame but wait for a promotion piece to be selected
             if (promoteTo) makePromotionMove();
@@ -201,10 +201,9 @@ const selection = (function() {
         legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected);
 
         const pieceColor = math.getPieceColorFromType(pieceSelected.type);
-        if (game.areInNonLocalGame()) isOpponentPiece = pieceColor !== game.getOurColorInNonLocalGame();
-        else isOpponentPiece = pieceColor !== game.getGamefile().whosTurn;
-
-        isPremove = !isOpponentPiece && (game.areInNonLocalGame() && !game.isItOurTurnInNonLocalGame());
+        isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
+        /* Local Game */ : pieceColor !== game.getGamefile().whosTurn;
+        isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 
         highlights.regenModel(); // Generate the buffer model for the blue legal move fields.
     }
@@ -261,7 +260,6 @@ const selection = (function() {
 
         movepiece.makeMove(game.getGamefile(), move);
         onlinegame.sendMove();
-        enginegame.submitMove();
 
         unselectPiece();
     }
