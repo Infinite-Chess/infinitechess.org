@@ -20,7 +20,7 @@ import variant1 from '../variant1.js';
 import math1 from '../math1.js';
 import clockweb from '../clockweb.js';
 import wsutility from '../wsutility.js';
-const { sendNotify, sendNotifyError } = wsutility.sendNotify;
+const { sendNotify, sendNotifyError } = wsutility;
 import wincondition1 from '../wincondition1.js';
 import formatconverter1 from '../formatconverter1.js';
 import movesscript1 from '../movesscript1.js';
