@@ -1,8 +1,8 @@
 // Import Start
-import { wincondition } from '../chess/wincondition.js'
-import { style } from './style.js'
-import { game } from '../chess/game.js';
-import { onlinegame } from '../misc/onlinegame.js'
+import wincondition from '../chess/wincondition.js';
+import style from './style.js';
+import game from '../chess/game.js';
+import onlinegame from '../misc/onlinegame.js';
 // Import End
 
 /* eslint-disable indent */
@@ -158,4 +158,4 @@ const guigameinfo = (function() {
 
 })();
 
-export { guigameinfo };
+export default guigameinfo;

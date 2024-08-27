@@ -1,11 +1,11 @@
 // Import Start
-import { movepiece } from './movepiece.js'
-import { gamefileutility } from './gamefileutility.js'
-import { specialdetect } from './specialdetect.js'
-import { organizedlines } from './organizedlines.js'
-import { math } from '../misc/math.js'
-import { pieces } from '../rendering/pieces.js'
-import { checkdetection } from './checkdetection.js'
+import movepiece from './movepiece.js';
+import gamefileutility from './gamefileutility.js';
+import specialdetect from './specialdetect.js';
+import organizedlines from './organizedlines.js';
+import math from '../misc/math.js';
+import pieces from '../rendering/pieces.js';
+import checkdetection from './checkdetection.js';
 // Import End
 
 
@@ -411,4 +411,4 @@ const legalmoves = (function() {
 
 })();
 
-export { legalmoves };
+export default legalmoves;

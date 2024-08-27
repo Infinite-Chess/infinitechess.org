@@ -1038,4 +1038,4 @@ const formatconverter = (function() {
     
 })();
 
-export { formatconverter };
+export default formatconverter;

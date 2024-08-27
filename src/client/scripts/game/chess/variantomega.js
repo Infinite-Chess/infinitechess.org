@@ -1,6 +1,6 @@
 // Import Start
-import { variant } from './variant.js'
-import { math } from '../misc/math.js'
+import variant from './variant.js';
+import math from '../misc/math.js';
 // Import End
 
 
@@ -663,4 +663,4 @@ const variantomega = (function() {
 
 })();
 
-export { variantomega };
+export default variantomega;

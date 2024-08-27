@@ -1,10 +1,10 @@
 // Import Start
-import { bufferdata } from './bufferdata.js'
-import { game } from '../chess/game.js'
-import { movement } from './movement.js'
-import { math } from '../misc/math.js'
-import { options } from './options.js'
-import { buffermodel } from './buffermodel.js'
+import bufferdata from './bufferdata.js';
+import game from '../chess/game.js';
+import movement from './movement.js';
+import math from '../misc/math.js';
+import options from './options.js';
+import buffermodel from './buffermodel.js';
 // Import End
 
 /*
@@ -64,4 +64,4 @@ const checkhighlight = (function() {
 
 })();
 
-export { checkhighlight }
+export default checkhighlight

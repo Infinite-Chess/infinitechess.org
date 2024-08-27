@@ -1,36 +1,36 @@
 // Import Start
-import { onlinegame } from '../misc/onlinegame.js'
-import { main } from '../main.js'
-import { gui } from '../gui/gui.js'
-import { gamefileutility } from './gamefileutility.js'
-import { arrows } from '../rendering/arrows.js'
-import { guipromotion } from '../gui/guipromotion.js'
-import { guinavigation } from '../gui/guinavigation.js'
-import { pieces } from '../rendering/pieces.js'
-import { invites } from '../misc/invites.js'
-import { guititle } from '../gui/guititle.js'
-import { organizedlines } from './organizedlines.js'
-import { guipause } from '../gui/guipause.js'
-import { input } from '../input.js'
-import { miniimage } from '../rendering/miniimage.js'
-import { clock } from '../misc/clock.js'
-import { piecesmodel } from '../rendering/piecesmodel.js'
-import { movement } from '../rendering/movement.js'
-import { selection } from './selection.js'
-import { camera } from '../rendering/camera.js'
-import { board } from '../rendering/board.js'
-import { movesscript } from './movesscript.js'
-import { animation } from '../rendering/animation.js'
-import { webgl } from '../rendering/webgl.js'
-import { perspective } from '../rendering/perspective.js'
-import { highlightline } from '../rendering/highlightline.js'
-import { transition } from '../rendering/transition.js'
-import { wincondition } from './wincondition.js'
-import { options } from '../rendering/options.js'
-import { copypastegame } from './copypastegame.js'
-import { highlights } from '../rendering/highlights.js'
-import { promotionlines } from '../rendering/promotionlines.js'
-import { guigameinfo } from '../gui/guigameinfo.js'
+import onlinegame from '../misc/onlinegame.js';
+import main from '../main.js';
+import gui from '../gui/gui.js';
+import gamefileutility from './gamefileutility.js';
+import arrows from '../rendering/arrows.js';
+import guipromotion from '../gui/guipromotion.js';
+import guinavigation from '../gui/guinavigation.js';
+import pieces from '../rendering/pieces.js';
+import invites from '../misc/invites.js';
+import guititle from '../gui/guititle.js';
+import organizedlines from './organizedlines.js';
+import guipause from '../gui/guipause.js';
+import input from '../input.js';
+import miniimage from '../rendering/miniimage.js';
+import clock from '../misc/clock.js';
+import piecesmodel from '../rendering/piecesmodel.js';
+import movement from '../rendering/movement.js';
+import selection from './selection.js';
+import camera from '../rendering/camera.js';
+import board from '../rendering/board.js';
+import movesscript from './movesscript.js';
+import animation from '../rendering/animation.js';
+import webgl from '../rendering/webgl.js';
+import perspective from '../rendering/perspective.js';
+import highlightline from '../rendering/highlightline.js';
+import transition from '../rendering/transition.js';
+import wincondition from './wincondition.js';
+import options from '../rendering/options.js';
+import copypastegame from './copypastegame.js';
+import highlights from '../rendering/highlights.js';
+import promotionlines from '../rendering/promotionlines.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
 
@@ -241,4 +241,4 @@ const game = (function() {
 
 })();
 
-export { game };
+export default game;

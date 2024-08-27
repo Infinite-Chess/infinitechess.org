@@ -1,13 +1,13 @@
 // Import Start
-import { websocket } from '../websocket.js'
-import { localstorage } from './localstorage.js'
-import { sound } from './sound.js'
-import { clock } from './clock.js'
-import { guiplay } from '../gui/guiplay.js'
-import { loadbalancer } from './loadbalancer.js'
-import { math } from './math.js'
-import { style } from '../gui/style.js'
-import { statustext } from '../gui/statustext.js'
+import websocket from '../websocket.js';
+import localstorage from './localstorage.js';
+import sound from './sound.js';
+import clock from './clock.js';
+import guiplay from '../gui/guiplay.js';
+import loadbalancer from './loadbalancer.js';
+import math from './math.js';
+import style from '../gui/style.js';
+import statustext from '../gui/statustext.js';
 // Import End
 
 
@@ -429,4 +429,4 @@ const invites = (function() {
 
 })();
 
-export { invites };
+export default invites;

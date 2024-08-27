@@ -5,7 +5,7 @@
  * access to protected resources.
  */
 
-import { getTranslationForReq } from "../utility/translate.js";
+import { getTranslationForReq } from '../utility/translate.js';
 
 
 /**

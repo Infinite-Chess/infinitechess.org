@@ -1,7 +1,7 @@
 // Import Start
-import { gamefileutility } from './gamefileutility.js'
-import { organizedlines } from './organizedlines.js'
-import { math } from '../misc/math.js'
+import gamefileutility from './gamefileutility.js';
+import organizedlines from './organizedlines.js';
+import math from '../misc/math.js';
 // Import End
 
 
@@ -306,4 +306,4 @@ const specialdetect = (function() {
     });
 })();
 
-export { specialdetect };
+export default specialdetect;

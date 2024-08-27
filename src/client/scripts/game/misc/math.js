@@ -1,9 +1,9 @@
 // Import Start
-import { perspective } from '../rendering/perspective.js'
-import { movement } from '../rendering/movement.js'
-import { options } from '../rendering/options.js'
-import { camera } from '../rendering/camera.js'
-import { board } from '../rendering/board.js'
+import perspective from '../rendering/perspective.js';
+import movement from '../rendering/movement.js';
+import options from '../rendering/options.js';
+import camera from '../rendering/camera.js';
+import board from '../rendering/board.js';
 // Import End
 
 
@@ -1094,4 +1094,4 @@ const math = (function() {
     });
 })();
 
-export { math }
+export default math

@@ -1,8 +1,8 @@
 // Import Start
-import { style } from './style.js';
-import { guigameinfo } from './guigameinfo.js';
-import { drawoffers } from '../misc/drawoffers.js';
-import { clock } from '../misc/clock.js'
+import style from './style.js';
+import guigameinfo from './guigameinfo.js';
+import drawoffers from '../misc/drawoffers.js';
+import clock from '../misc/clock.js';
 // Import End
 
 /*
@@ -103,4 +103,4 @@ const guidrawoffer = (function() {
 
 })();
 
-export { guidrawoffer }
+export default guidrawoffer

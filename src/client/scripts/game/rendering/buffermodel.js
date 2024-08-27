@@ -1,8 +1,8 @@
 // Import Start
-import { shaders } from "./shaders.js";
-import { math } from "../misc/math.js";
-import { gl } from "./webgl.js";
-import { mat4 } from './gl-matrix.js'
+import shaders from './shaders.js';
+import math from '../misc/math.js';
+import { gl } from './webgl.js';
+import mat4 from './gl-matrix.js';
 // Import End
 
 
@@ -387,4 +387,4 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
     }
 }
 
-export { buffermodel }
+export default buffermodel

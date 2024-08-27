@@ -10,7 +10,7 @@
 
 import fs from "fs";
 import path from "path";
-import { glob } from "glob";
+import { glob } from 'glob';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

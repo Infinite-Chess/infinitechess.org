@@ -1,10 +1,10 @@
 // Import Start
-import { main } from './main.js'
-import { statustext } from './gui/statustext.js'
-import { invites } from './misc/invites.js'
-import { math } from './misc/math.js'
-import { guiplay } from './gui/guiplay.js'
-import { onlinegame } from './misc/onlinegame.js'
+import main from './main.js';
+import statustext from './gui/statustext.js';
+import invites from './misc/invites.js';
+import math from './misc/math.js';
+import guiplay from './gui/guiplay.js';
+import onlinegame from './misc/onlinegame.js';
 // Import End
 
 
@@ -701,4 +701,4 @@ const websocket = (function() {
 
 })();
 
-export { websocket }
+export default websocket

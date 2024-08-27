@@ -1,6 +1,6 @@
 // Import Start
 import { gl } from './webgl.js';
-import { math } from '../misc/math.js'
+import math from '../misc/math.js';
 // Import End
 
 
@@ -60,4 +60,4 @@ const texture = (function() {
 
 })();
 
-export { texture }
+export default texture

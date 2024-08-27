@@ -1,12 +1,12 @@
 // Import Start
-import { guidrawoffer } from '../gui/guidrawoffer.js';
-import { statustext } from '../gui/statustext.js';
-import { websocket } from '../websocket.js';
-import { guipause } from '../gui/guipause.js';
-import { sound } from './sound.js';
-import { movesscript } from '../chess/movesscript.js';
-import { onlinegame } from './onlinegame.js';
-import { game } from '../chess/game.js'
+import guidrawoffer from '../gui/guidrawoffer.js';
+import statustext from '../gui/statustext.js';
+import websocket from '../websocket.js';
+import guipause from '../gui/guipause.js';
+import sound from './sound.js';
+import movesscript from '../chess/movesscript.js';
+import onlinegame from './onlinegame.js';
+import game from '../chess/game.js';
 // Import End
 
 /**
@@ -160,4 +160,4 @@ const drawoffers = (function() {
 
 })();
 
-export { drawoffers }
+export default drawoffers

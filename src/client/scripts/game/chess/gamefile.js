@@ -1,10 +1,10 @@
 // Import start
-import { organizedlines } from './organizedlines.js';
-import { movepiece } from './movepiece.js';
-import { gamefileutility } from './gamefileutility.js';
-import { area } from '../rendering/area.js';
-import { variant } from './variant.js';
-import { math } from '../misc/math.js'
+import organizedlines from './organizedlines.js';
+import movepiece from './movepiece.js';
+import gamefileutility from './gamefileutility.js';
+import area from '../rendering/area.js';
+import variant from './variant.js';
+import math from '../misc/math.js';
 // Import End
 
 // This script when called as a function using the new keyword, will return a new gamefile.
@@ -211,4 +211,4 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     organizedlines.addMoreUndefineds(this, { regenModel: false });
 };
 
-export { gamefile }
+export default gamefile

@@ -132,4 +132,4 @@ const style = (function() {
 
 })();
 
-export { style };
+export default style;

@@ -1,16 +1,16 @@
 // Import Start
-import { webgl } from './rendering/webgl.js'
-import { loadbalancer } from './misc/loadbalancer.js'
-import { input } from './input.js'
-import { onlinegame } from './misc/onlinegame.js'
-import { localstorage } from './misc/localstorage.js'
-import { game } from './chess/game.js'
-import { shaders } from './rendering/shaders.js'
-import { browsersupport } from './misc/browsersupport.js'
-import { camera } from './rendering/camera.js'
-import { invites } from './misc/invites.js'
-import { websocket } from './websocket.js'
-import { guiloading } from './gui/guiloading.js'
+import webgl from './rendering/webgl.js';
+import loadbalancer from './misc/loadbalancer.js';
+import input from './input.js';
+import onlinegame from './misc/onlinegame.js';
+import localstorage from './misc/localstorage.js';
+import game from './chess/game.js';
+import shaders from './rendering/shaders.js';
+import browsersupport from './misc/browsersupport.js';
+import camera from './rendering/camera.js';
+import invites from './misc/invites.js';
+import websocket from './websocket.js';
+import guiloading from './gui/guiloading.js';
 // Import End
 
 
@@ -156,7 +156,7 @@ const main = (function() {
     });
 })();
 
-export { main }
+export default main
 
 /**
  * With a very short and fast-to-type name, prints

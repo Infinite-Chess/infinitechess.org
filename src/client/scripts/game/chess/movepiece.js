@@ -1,19 +1,19 @@
 // Import Start
-import { legalmoves } from './legalmoves.js'
-import { main } from '../main.js'
-import { gamefileutility } from './gamefileutility.js'
-import { specialdetect } from './specialdetect.js'
-import { arrows } from '../rendering/arrows.js'
-import { wincondition } from './wincondition.js'
-import { clock } from '../misc/clock.js'
-import { organizedlines } from './organizedlines.js'
-import { animation } from '../rendering/animation.js'
-import { guinavigation } from '../gui/guinavigation.js'
-import { piecesmodel } from '../rendering/piecesmodel.js'
-import { guigameinfo } from '../gui/guigameinfo.js'
-import { math } from '../misc/math.js'
-import { movesscript } from './movesscript.js'
-import { checkdetection } from './checkdetection.js'
+import legalmoves from './legalmoves.js';
+import main from '../main.js';
+import gamefileutility from './gamefileutility.js';
+import specialdetect from './specialdetect.js';
+import arrows from '../rendering/arrows.js';
+import wincondition from './wincondition.js';
+import clock from '../misc/clock.js';
+import organizedlines from './organizedlines.js';
+import animation from '../rendering/animation.js';
+import guinavigation from '../gui/guinavigation.js';
+import piecesmodel from '../rendering/piecesmodel.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import math from '../misc/math.js';
+import movesscript from './movesscript.js';
+import checkdetection from './checkdetection.js';
 // Import End
 
 // Here lies the universal methods for moving pieces, forward or rewinding.
@@ -550,4 +550,4 @@ const movepiece = (function() {
 
 })();
 
-export { movepiece };
+export default movepiece;

@@ -9,7 +9,7 @@ import pluginJs from "@eslint/js";
  * 
  * But, it's as if eslint just turns completely off if we use this.
  */
-// import { getAllGameScripts } from "./build.mjs";
+// import { getAllGameScripts } from './build.mjs';
 // const allGameScripts = await getAllGameScripts();
 // // Convert the array of script names into an object with "readonly" for each
 // const gameScriptsGlobals = allGameScripts.reduce((acc, script) => {

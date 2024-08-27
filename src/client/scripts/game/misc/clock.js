@@ -1,10 +1,10 @@
 // Import Start
-import { style } from '../gui/style.js'
-import { onlinegame } from './onlinegame.js'
-import { game } from '../chess/game.js'
-import { sound } from './sound.js'
-import { movesscript } from '../chess/movesscript.js'
-import { math } from './math.js'
+import style from '../gui/style.js';
+import onlinegame from './onlinegame.js';
+import game from '../chess/game.js';
+import sound from './sound.js';
+import movesscript from '../chess/movesscript.js';
+import math from './math.js';
 // Import End
 
 // This script keeps track of both players timer, updates them,
@@ -460,4 +460,4 @@ const clock = (function() {
 
 })();
 
-export { clock };
+export default clock;

@@ -1,24 +1,24 @@
 // Import Start
-import { legalmoves } from '../chess/legalmoves.js'
-import { localstorage } from './localstorage.js'
-import { gamefileutility } from '../chess/gamefileutility.js'
-import { guinavigation } from '../gui/guinavigation.js'
-import { drawoffers } from './drawoffers.js'
-import { guititle } from '../gui/guititle.js'
-import { clock } from './clock.js'
-import { math } from './math.js'
-import { statustext } from '../gui/statustext.js'
-import { movepiece } from '../chess/movepiece.js'
-import { game } from '../chess/game.js'
-import { specialdetect } from '../chess/specialdetect.js'
-import { selection } from '../chess/selection.js'
-import { board } from '../rendering/board.js'
-import { movesscript } from '../chess/movesscript.js'
-import { websocket } from '../websocket.js'
-import { perspective } from '../rendering/perspective.js'
-import { sound } from './sound.js'
-import { guiplay } from '../gui/guiplay.js'
-import { guigameinfo } from '../gui/guigameinfo.js'
+import legalmoves from '../chess/legalmoves.js';
+import localstorage from './localstorage.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import guinavigation from '../gui/guinavigation.js';
+import drawoffers from './drawoffers.js';
+import guititle from '../gui/guititle.js';
+import clock from './clock.js';
+import math from './math.js';
+import statustext from '../gui/statustext.js';
+import movepiece from '../chess/movepiece.js';
+import game from '../chess/game.js';
+import specialdetect from '../chess/specialdetect.js';
+import selection from '../chess/selection.js';
+import board from '../rendering/board.js';
+import movesscript from '../chess/movesscript.js';
+import websocket from '../websocket.js';
+import perspective from '../rendering/perspective.js';
+import sound from './sound.js';
+import guiplay from '../gui/guiplay.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
 
@@ -830,4 +830,4 @@ const onlinegame = (function() {
 
 })();
 
-export { onlinegame };
+export default onlinegame;

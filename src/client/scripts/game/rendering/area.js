@@ -1,10 +1,10 @@
 // Import Start
-import { transition } from './transition.js'
-import { movement } from './movement.js'
-import { camera } from './camera.js'
-import { board } from './board.js'
-import { gamefileutility } from '../chess/gamefileutility.js'
-import { math } from '../misc/math.js'
+import transition from './transition.js';
+import movement from './movement.js';
+import camera from './camera.js';
+import board from './board.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import math from '../misc/math.js';
 // Import End
 
 
@@ -278,4 +278,4 @@ const area = (function() {
 
 })();
 
-export { area }
+export default area

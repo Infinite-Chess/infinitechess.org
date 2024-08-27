@@ -2088,4 +2088,4 @@ const mat4 = (function () {
 
 })();
 
-export { mat4 };
+export default mat4;

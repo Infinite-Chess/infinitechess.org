@@ -1,7 +1,7 @@
 // Import Start
-import { gui } from './gui.js'
-import { camera } from '../rendering/camera.js'
-import { style } from './style.js'
+import gui from './gui.js';
+import camera from '../rendering/camera.js';
+import style from './style.js';
 // Import End
 
 
@@ -30,4 +30,4 @@ const guiloading = (function() {
 
 })();
 
-export { guiloading };
+export default guiloading;

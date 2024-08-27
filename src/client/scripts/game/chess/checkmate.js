@@ -1,9 +1,9 @@
 // Import Start
-import { wincondition } from './wincondition.js'
-import { gamefileutility } from './gamefileutility.js'
-import { pieces } from '../rendering/pieces.js'
-import { movesscript } from './movesscript.js'
-import { legalmoves } from './legalmoves.js'
+import wincondition from './wincondition.js';
+import gamefileutility from './gamefileutility.js';
+import pieces from '../rendering/pieces.js';
+import movesscript from './movesscript.js';
+import legalmoves from './legalmoves.js';
 // Import End
 
 
@@ -240,4 +240,4 @@ const checkmate = (function() {
     });
 })();
 
-export { checkmate };
+export default checkmate;

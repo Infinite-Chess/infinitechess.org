@@ -1,14 +1,14 @@
 // Import Start
-import { math } from '../misc/math.js'
-import { onlinegame } from '../misc/onlinegame.js'
-import { localstorage } from '../misc/localstorage.js'
-import { main } from '../main.js'
-import { formatconverter } from './formatconverter.js'
-import { game } from './game.js'
-import { backcompatible } from './backcompatible.js'
-import { variant } from './variant.js'
-import { gamefile } from './gamefile.js'
-import { statustext } from '../gui/statustext.js'
+import math from '../misc/math.js';
+import onlinegame from '../misc/onlinegame.js';
+import localstorage from '../misc/localstorage.js';
+import main from '../main.js';
+import formatconverter from './formatconverter.js';
+import game from './game.js';
+import backcompatible from './backcompatible.js';
+import variant from './variant.js';
+import gamefile from './gamefile.js';
+import statustext from '../gui/statustext.js';
 // Import End
 
 
@@ -491,4 +491,4 @@ const copypastegame = (function() {
 
 })();
 
-export { copypastegame };
+export default copypastegame;

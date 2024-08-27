@@ -1,22 +1,22 @@
 // Import Start
-import { websocket } from '../websocket.js'
-import { guigameinfo } from './guigameinfo.js'
-import { area } from '../rendering/area.js'
-import { onlinegame } from '../misc/onlinegame.js'
-import { localstorage } from '../misc/localstorage.js'
-import { main } from '../main.js'
-import { math } from '../misc/math.js'
-import { style } from './style.js'
-import { game } from '../chess/game.js'
-import { sound } from '../misc/sound.js'
-import { clock } from '../misc/clock.js'
-import { movement } from '../rendering/movement.js'
-import { options } from '../rendering/options.js'
-import { statustext } from './statustext.js'
-import { invites } from '../misc/invites.js'
-import { gui } from './gui.js'
-import { gamefile } from '../chess/gamefile.js'
-import { guititle } from './guititle.js'
+import websocket from '../websocket.js';
+import guigameinfo from './guigameinfo.js';
+import area from '../rendering/area.js';
+import onlinegame from '../misc/onlinegame.js';
+import localstorage from '../misc/localstorage.js';
+import main from '../main.js';
+import math from '../misc/math.js';
+import style from './style.js';
+import game from '../chess/game.js';
+import sound from '../misc/sound.js';
+import clock from '../misc/clock.js';
+import movement from '../rendering/movement.js';
+import options from '../rendering/options.js';
+import statustext from './statustext.js';
+import invites from '../misc/invites.js';
+import gui from './gui.js';
+import gamefile from '../chess/gamefile.js';
+import guititle from './guititle.js';
 // Import End
 
 
@@ -501,4 +501,4 @@ const guiplay = (function() {
 
 })();
 
-export { guiplay };
+export default guiplay;

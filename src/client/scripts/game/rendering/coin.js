@@ -1,5 +1,5 @@
 // Import Start
-import { bufferdata } from './bufferdata.js'
+import bufferdata from './bufferdata.js';
 // Import End
 
 
@@ -114,4 +114,4 @@ const coin = (function() {
 
 })();
 
-export { coin }
+export default coin

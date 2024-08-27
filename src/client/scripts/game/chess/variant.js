@@ -1,13 +1,13 @@
 // Import Start
-import { specialundo } from './specialundo.js'
-import { legalmoves } from './legalmoves.js'
-import { formatconverter } from './formatconverter.js'
-import { specialdetect } from './specialdetect.js'
-import { specialmove } from './specialmove.js'
-import { variantomega } from './variantomega.js'
-import { movesets } from './movesets.js'
-import { pieces } from '../rendering/pieces.js'
-import { math } from '../misc/math.js'
+import specialundo from './specialundo.js';
+import legalmoves from './legalmoves.js';
+import formatconverter from './formatconverter.js';
+import specialdetect from './specialdetect.js';
+import specialmove from './specialmove.js';
+import variantomega from './variantomega.js';
+import movesets from './movesets.js';
+import pieces from '../rendering/pieces.js';
+import math from '../misc/math.js';
 // Import End
 
 
@@ -922,4 +922,4 @@ const variant = (function() {
 
 })();
 
-export { variant };
+export default variant;

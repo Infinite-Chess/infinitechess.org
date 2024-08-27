@@ -1,8 +1,8 @@
 // Import Start
-import { gamefileutility } from './gamefileutility.js'
-import { pieces } from '../rendering/pieces.js'
-import { math } from '../misc/math.js'
-import { piecesmodel } from '../rendering/piecesmodel.js'
+import gamefileutility from './gamefileutility.js';
+import pieces from '../rendering/pieces.js';
+import math from '../misc/math.js';
+import piecesmodel from '../rendering/piecesmodel.js';
 // Import End
 
 
@@ -354,4 +354,4 @@ const organizedlines = {
     }
 };
 
-export { organizedlines };
+export default organizedlines;

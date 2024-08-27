@@ -82,4 +82,4 @@ const localstorage = (function() {
     });
 })();
 
-export { localstorage };
+export default localstorage;

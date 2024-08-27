@@ -5,12 +5,12 @@
 //                  but all game scripts in /src/client/scripts/game are concatenated into app.js.
 //                  Further, all scripts are minified with the use of terser.
 
-import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
+import { readdir, cp as copy, rm as remove, readFile, writeFile } from 'node:fs/promises';
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
-import { injectScriptIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
-import { BUNDLE_FILES } from "./src/server/config/config.js";
+import { injectScriptIntoPlayEjs } from './src/server/utility/HTMLScriptInjector.js';
+import { BUNDLE_FILES } from './src/server/config/config.js';
 import esbuild from 'esbuild';
 import path from "node:path";
 

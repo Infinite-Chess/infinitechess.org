@@ -207,4 +207,4 @@ const movesets = (function() {
 
 })();
 
-export { movesets };
+export default movesets;

@@ -1,15 +1,15 @@
 // Import Start
-import { bufferdata } from './bufferdata.js'
-import { perspective } from './perspective.js'
-import { miniimage } from './miniimage.js'
-import { movement } from './movement.js'
-import { piecesmodel } from './piecesmodel.js'
-import { voids } from './voids.js'
-import { board } from './board.js'
-import { texture } from './texture.js'
-import { onlinegame } from '../misc/onlinegame.js'
-import { options } from './options.js'
-import { buffermodel } from './buffermodel.js'
+import bufferdata from './bufferdata.js';
+import perspective from './perspective.js';
+import miniimage from './miniimage.js';
+import movement from './movement.js';
+import piecesmodel from './piecesmodel.js';
+import voids from './voids.js';
+import board from './board.js';
+import texture from './texture.js';
+import onlinegame from '../misc/onlinegame.js';
+import options from './options.js';
+import buffermodel from './buffermodel.js';
 // Import End
 
 
@@ -250,4 +250,4 @@ const pieces = (function() {
 
 })();
 
-export { pieces }
+export default pieces

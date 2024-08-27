@@ -1,7 +1,7 @@
 // Import Start
-import { gamefileutility } from './gamefileutility.js'
-import { movepiece } from './movepiece.js'
-import { animation } from '../rendering/animation.js'
+import gamefileutility from './gamefileutility.js';
+import movepiece from './movepiece.js';
+import animation from '../rendering/animation.js';
 // Import End
 
 
@@ -118,4 +118,4 @@ const specialundo = {
     }
 };
 
-export { specialundo };
+export default specialundo;

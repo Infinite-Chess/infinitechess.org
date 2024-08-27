@@ -1,7 +1,7 @@
 // Import Start
-import { variant } from './variant.js'
-import { formatconverter } from './formatconverter.js'
-import { movesscript } from './movesscript.js'
+import variant from './variant.js';
+import formatconverter from './formatconverter.js';
+import movesscript from './movesscript.js';
 // Import End
 
 
@@ -167,4 +167,4 @@ const backcompatible = (function() {
 
 })();
 
-export { backcompatible };
+export default backcompatible;

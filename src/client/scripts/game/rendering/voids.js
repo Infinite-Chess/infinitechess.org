@@ -1,10 +1,10 @@
 // Import Start
-import { movement } from './movement.js'
-import { options } from './options.js'
-import { piecesmodel } from './piecesmodel.js'
-import { math } from '../misc/math.js'
-import { game } from '../chess/game.js'
-import { buffermodel } from './buffermodel.js'
+import movement from './movement.js';
+import options from './options.js';
+import piecesmodel from './piecesmodel.js';
+import math from '../misc/math.js';
+import game from '../chess/game.js';
+import buffermodel from './buffermodel.js';
 // Import End
 
 
@@ -307,4 +307,4 @@ const voids = {
     }
 };
 
-export { voids }
+export default voids

@@ -97,4 +97,4 @@ const statustext = (function() {
 
 })();
 
-export { statustext };
+export default statustext;

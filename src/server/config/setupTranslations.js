@@ -1,11 +1,11 @@
 import i18next from "i18next";
-import { parse } from "smol-toml";
+import { parse } from 'smol-toml';
 import fs from "fs";
 import path from "path";
 import ejs from "ejs";
 import middleware from "i18next-http-middleware";
-import { FilterXSS } from "xss";
-import { getDefaultLanguage, setSupportedLanguages } from "../utility/translate.js";
+import { FilterXSS } from 'xss';
+import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

@@ -1,7 +1,7 @@
 
 import express from 'express';
 import path from 'path';
-import { isOwner, isPatron } from "./verifyRoles.js";
+import { isOwner, isPatron } from './verifyRoles.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

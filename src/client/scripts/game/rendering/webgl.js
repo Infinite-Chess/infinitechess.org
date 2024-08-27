@@ -1,5 +1,5 @@
 // Import Start
-import { camera } from './camera.js'
+import camera from './camera.js';
 // Import End
 
 
@@ -201,4 +201,6 @@ const webgl = (function() {
     });
 })();
 
-export { webgl, gl};
+export default webgl;
+
+export { gl };

@@ -42,4 +42,4 @@ const browsersupport = (function() {
 
 })();
 
-export { browsersupport };
+export default browsersupport;

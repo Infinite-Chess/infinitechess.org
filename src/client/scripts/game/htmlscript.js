@@ -1,6 +1,6 @@
 // Import Start
-import { main } from './main.js'
-import { sound } from './misc/sound.js'
+import main from './main.js';
+import sound from './misc/sound.js';
 // Import End
 
 
@@ -156,4 +156,4 @@ const htmlscript = (function() {
 
 })();
 
-export { htmlscript }
+export default htmlscript

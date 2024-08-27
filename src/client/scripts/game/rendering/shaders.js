@@ -1,5 +1,5 @@
 // Import Start
-import { gl } from './webgl.js'
+import { gl } from './webgl.js';
 // Import End
 
 
@@ -385,4 +385,4 @@ const shaders = (function() {
 
 })();
 
-export { shaders }
+export default shaders

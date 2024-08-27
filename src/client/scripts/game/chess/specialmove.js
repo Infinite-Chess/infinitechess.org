@@ -1,8 +1,8 @@
 // Import Start
-import { gamefileutility } from './gamefileutility.js'
-import { math } from '../misc/math.js'
-import { animation } from '../rendering/animation.js'
-import { movepiece } from './movepiece.js'
+import gamefileutility from './gamefileutility.js';
+import math from '../misc/math.js';
+import animation from '../rendering/animation.js';
+import movepiece from './movepiece.js';
 // Import End
 
 
@@ -122,4 +122,4 @@ const specialmove = {
     getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag]; },
 };
 
-export { specialmove };
+export default specialmove;

@@ -1,12 +1,12 @@
 // Import Start
-import { movepiece } from './movepiece.js';
-import { math } from '../misc/math.js';
-import { main } from '../main.js';
-import { stats } from '../gui/stats.js';
-import { guinavigation } from '../gui/guinavigation.js';
-import { selection } from './selection.js';
-import { input } from '../input.js';
-import { statustext } from '../gui/statustext.js';
+import movepiece from './movepiece.js';
+import math from '../misc/math.js';
+import main from '../main.js';
+import stats from '../gui/stats.js';
+import guinavigation from '../gui/guinavigation.js';
+import selection from './selection.js';
+import input from '../input.js';
+import statustext from '../gui/statustext.js';
 // Import End
 
 
@@ -386,4 +386,4 @@ const movesscript = (function() {
 
 })();
 
-export { movesscript };
+export default movesscript;

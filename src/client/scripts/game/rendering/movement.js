@@ -1,13 +1,13 @@
 // Import Start
-import { loadbalancer } from '../misc/loadbalancer.js'
-import { input } from '../input.js'
-import { perspective } from './perspective.js'
-import { main } from '../main.js'
-import { board } from './board.js'
-import { math } from '../misc/math.js'
-import { transition } from './transition.js'
-import { guipromotion } from '../gui/guipromotion.js'
-import { guititle } from '../gui/guititle.js'
+import loadbalancer from '../misc/loadbalancer.js';
+import input from '../input.js';
+import perspective from './perspective.js';
+import main from '../main.js';
+import board from './board.js';
+import math from '../misc/math.js';
+import transition from './transition.js';
+import guipromotion from '../gui/guipromotion.js';
+import guititle from '../gui/guititle.js';
 // Import End
 
 
@@ -499,4 +499,4 @@ const movement = (function() {
     });
 })();
 
-export { movement };
+export default movement;

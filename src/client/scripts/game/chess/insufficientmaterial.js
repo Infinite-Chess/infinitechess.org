@@ -1,8 +1,8 @@
 // Import Start
-import { wincondition } from './wincondition.js'
-import { math } from '../misc/math.js'
-import { gamefileutility } from './gamefileutility.js';
-import { movesscript } from './movesscript.js'
+import wincondition from './wincondition.js';
+import math from '../misc/math.js';
+import gamefileutility from './gamefileutility.js';
+import movesscript from './movesscript.js';
 // Import End
 
 // Draw detection by insufficient material
@@ -207,4 +207,4 @@ const insufficientmaterial = (function() {
 
 })();
 
-export { insufficientmaterial };
+export default insufficientmaterial;

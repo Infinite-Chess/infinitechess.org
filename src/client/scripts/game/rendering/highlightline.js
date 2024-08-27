@@ -1,18 +1,18 @@
 // Import Start
-import { input } from '../input.js'
-import { bufferdata } from './bufferdata.js'
-import { perspective } from './perspective.js'
-import { miniimage } from './miniimage.js'
-import { board } from './board.js'
-import { transition } from './transition.js'
-import { organizedlines } from '../chess/organizedlines.js'
-import { options } from './options.js'
-import { selection } from '../chess/selection.js'
-import { camera } from './camera.js'
-import { pieces } from './pieces.js'
-import { math } from '../misc/math.js'
-import { movement } from './movement.js'
-import { buffermodel } from './buffermodel.js'
+import input from '../input.js';
+import bufferdata from './bufferdata.js';
+import perspective from './perspective.js';
+import miniimage from './miniimage.js';
+import board from './board.js';
+import transition from './transition.js';
+import organizedlines from '../chess/organizedlines.js';
+import options from './options.js';
+import selection from '../chess/selection.js';
+import camera from './camera.js';
+import pieces from './pieces.js';
+import math from '../misc/math.js';
+import movement from './movement.js';
+import buffermodel from './buffermodel.js';
 // Import End
 
 
@@ -216,4 +216,4 @@ const highlightline = (function() {
 
 })();
 
-export { highlightline };
+export default highlightline;
