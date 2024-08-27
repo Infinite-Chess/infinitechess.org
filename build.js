@@ -11,7 +11,7 @@ import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
 import { injectScriptIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
 import { BUNDLE_FILES } from "./src/server/config/config.js";
-import esbuild from 'esbuild'
+import esbuild from 'esbuild';
 import path from "node:path";
 
 // Targetted browsers for CSS transpilation
@@ -71,7 +71,7 @@ if (!BUNDLE_FILES) {
         force: true
     });
     // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`,injectScriptIntoPlayEjs(`./dist/scripts/game/htmlscript.mjs`), 'utf8');
+    await writeFile(`./dist/views/play.ejs`,injectScriptIntoPlayEjs(`./dist/scripts/game/htmlscript.js`, true), 'utf8');
 } else {
     // in prod mode, copy all clientside files over to dist, except for those contained in scripts
     await copy("./src/client", "./dist", {
@@ -107,13 +107,12 @@ if (!BUNDLE_FILES) {
     }
 
     await esbuild.build({
-            bundle: true,
-            entryPoints: ['src/client/scripts/game/htmlscript.mjs'],
-            outfile: './dist/scripts/game/app.js'
-        }
-    )
+        bundle: true,
+        entryPoints: ['src/client/scripts/game/htmlscript.js'],
+        outfile: './dist/scripts/game/app.js'
+    });
 
-    const gamecode = await readFile(`./dist/scripts/game/app.js`, 'utf-8')
+    const gamecode = await readFile(`./dist/scripts/game/app.js`, 'utf-8');
 
     //Combine all gamecode files into app.js
     const minifiedgame = await swc.minify(gamecode, {
@@ -122,8 +121,7 @@ if (!BUNDLE_FILES) {
         sourceMap: false
     });
 
-    const collapsedcode = minifiedgame.code.replace(/\n/gm , ';')
-    await writeFile(`./dist/scripts/game/app.js`, collapsedcode, 'utf8');
+    await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
   
     // overwrite play.ejs by injecting all needed scripts into it:
     await writeFile(`./dist/views/play.ejs`, injectScriptIntoPlayEjs(`./dist/scripts/game/app.js`), 'utf8');
