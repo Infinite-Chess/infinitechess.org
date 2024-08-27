@@ -1,5 +1,5 @@
 
-const madge = require('madge');
+import madge from 'madge';
 
 const pathOfFileToGenerateDependancyGraphFor = 'src/server/server.js';
 const nameToGiveDependancyGraph = 'dependancyGraph.svg';

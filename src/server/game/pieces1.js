@@ -13,4 +13,4 @@ const pieces1 = (function() {
 
 })();
 
-module.exports = pieces1;
+export default pieces1;

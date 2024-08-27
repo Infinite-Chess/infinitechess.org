@@ -7,19 +7,20 @@
  * online games is gamemanager
  */
 
+import { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
+import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
+import { abortGame, resignGame } from './abortresigngame.js';
+import { onAFK, onAFK_Return } from './onAFK.js';
+import { onReport } from './cheatreport.js';
+import { resyncToGame } from './resync.js';
+import { submitMove } from './movesubmission.js';
+import { onJoinGame } from './joingame.js';
 
-// Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket, WebsocketMessage } = require('../TypeDefinitions');
-
-const { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } = require('./gamemanager');
-const { offerDraw, acceptDraw, declineDraw } = require('./onOfferDraw');
-const { abortGame, resignGame } = require('./abortresigngame');
-const { onAFK, onAFK_Return } = require('./onAFK');
-const { onReport } = require('./cheatreport');
-const { resyncToGame } = require('./resync');
-const { submitMove } = require('./movesubmission');
-const { onJoinGame } = require('./joingame');
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').WebsocketMessage} WebsocketMessage
+ */
 
 
 /**
@@ -73,6 +74,6 @@ function handleGameRoute(ws, message) {
 }
 
 
-module.exports = {
+export {
     handleGameRoute
 };

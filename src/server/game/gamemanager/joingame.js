@@ -4,11 +4,10 @@
  * message, and if so, sends them the game info
  */
 
-// eslint-disable-next-line no-unused-vars
-const { Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const { cancelAutoAFKResignTimer, cancelDisconnectTimer } = require('./afkdisconnect');
+import gameutility from './gameutility.js';
+import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
 
+/** @typedef {import('../TypeDefinitions.js').Game} Game */
 
 /**
  * The method that fires when a client sends the 'joingame' command after refreshing the page.
@@ -28,6 +27,6 @@ function onJoinGame(ws, game) {
 }
 
 
-module.exports = {
+export {
     onJoinGame
 };

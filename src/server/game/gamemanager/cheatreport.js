@@ -4,15 +4,20 @@
  */
 
 // Middleware imports
-const { logEvents } = require('../../middleware/logEvents');
+import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const math1 = require('../math1');
-const movesscript1 = require('../movesscript1');
-const { setGameConclusion } = require('./gamemanager');
+import gameutility from './gameutility.js';
+import math1 from '../math1.js';
+import movesscript1 from '../movesscript1.js';
+import { setGameConclusion } from './gamemanager.js';
+
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {  import('../TypeDefinitions.js').Game} Game
+ */
+
 
 /**
  * 
@@ -65,6 +70,6 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
 }
 
 
-module.exports = {
+export {
     onReport
 };

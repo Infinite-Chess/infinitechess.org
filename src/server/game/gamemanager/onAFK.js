@@ -4,12 +4,16 @@
  */
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const math1 = require('../math1');
-const { onPlayerLostByAbandonment } = require('./gamemanager');
-const { cancelAutoAFKResignTimer } = require('./afkdisconnect');
+import gameutility from './gameutility.js';
+import math1 from '../math1.js';
+import { onPlayerLostByAbandonment } from './gamemanager.js';
+import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
+
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -74,7 +78,7 @@ function onAFK_Return(ws, game) {
     cancelAutoAFKResignTimer(game, { alertOpponent: true });
 }
 
-module.exports = {
+export {
     onAFK,
     onAFK_Return
 };

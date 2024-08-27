@@ -1,11 +1,14 @@
-const i18next = require("i18next");
-const { parse } = require("smol-toml");
-const fs = require("fs");
-const path = require("path");
-const ejs = require("ejs");
-const middleware = require("i18next-http-middleware");
-const xss = require("xss");
-const { getDefaultLanguage, setSupportedLanguages } = require("../utility/translate");
+import i18next from "i18next";
+import { parse } from "smol-toml";
+import fs from "fs";
+import path from "path";
+import ejs from "ejs";
+import middleware from "i18next-http-middleware";
+import { FilterXSS } from "xss";
+import { getDefaultLanguage, setSupportedLanguages } from "../utility/translate.js";
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const translationsFolder = "./translation";
 
@@ -97,7 +100,7 @@ const xss_options = {
     }*/
     },
 };
-const custom_xss = new xss.FilterXSS(xss_options);
+const custom_xss = new FilterXSS(xss_options);
 
 function html_escape_array(array) {
     const escaped = [];
@@ -291,6 +294,6 @@ function initTranslations() {
     translateStaticTemplates(translations); // Compiles static files
 }
 
-module.exports = {
+export {
     initTranslations,
 };

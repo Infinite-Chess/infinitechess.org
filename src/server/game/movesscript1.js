@@ -1,5 +1,5 @@
 
-const { Game } = require('./TypeDefinitions');
+/** @typedef {import('./TypeDefinitions.js').Game} Game */
 
 const movesscript1 = (function() {
 
@@ -41,4 +41,4 @@ const movesscript1 = (function() {
     });
 })();
 
-module.exports = movesscript1;
+export default movesscript1;

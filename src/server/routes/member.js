@@ -1,12 +1,14 @@
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const path = require('path');
+import path from 'path';
 
-const { getMemberData,requestConfirmEmail } = require('../controllers/memberController');
-const { removeAccount } = require('../controllers/removeAccountController');
-const { getLanguageToServe } = require("../utility/translate");
+import { getMemberData,requestConfirmEmail } from '../controllers/memberController.js';
+import { removeAccount } from '../controllers/removeAccountController.js';
+import { getLanguageToServe } from "../utility/translate.js";
 
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 router.get('/:member', (req, res) => {
     const language = getLanguageToServe(req);
@@ -19,4 +21,4 @@ router.get('/:member/send-email', requestConfirmEmail);
 
 router.delete('/:member/delete', removeAccount);
 
-module.exports = router;
+export { router };

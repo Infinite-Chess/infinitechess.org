@@ -31,6 +31,6 @@ function refreshGitHubContributorsList() {
 function getContributors() { return contributors; }
 
 
-module.exports = {
+export {
     getContributors
 };

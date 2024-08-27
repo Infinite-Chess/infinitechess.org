@@ -7,29 +7,32 @@
  */
 
 // System imports
-const WebSocket = require('ws');
+import WebSocket from 'ws';
 
 // Middleware & other imports
-const { getUsernameCaseSensitive } = require('../../controllers/members');
-const { logEvents } = require('../../middleware/logEvents');
-const { getTranslation } = require('../../utility/translate');
-const { ensureJSONString } = require('../../utility/JSONUtils');
+import { getUsernameCaseSensitive } from '../../controllers/members.js';
+import { logEvents } from '../../middleware/logEvents.js';
+import { getTranslation } from '../../utility/translate.js';
+import { ensureJSONString } from '../../utility/JSONUtils.js';
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions');
-const variant1 = require('../variant1');
-const math1 = require('../math1');
-const clockweb = require('../clockweb');
-const wsutility = require('../wsutility');
-const sendNotify = wsutility.sendNotify;
-const sendNotifyError = wsutility.sendNotifyError;
-const wincondition1 = require('../wincondition1');
-const formatconverter1 = require('../formatconverter1');
-const movesscript1 = require('../movesscript1');
+import variant1 from '../variant1.js';
+import math1 from '../math1.js';
+import clockweb from '../clockweb.js';
+import wsutility from '../wsutility.js';
+const { sendNotify, sendNotifyError } = wsutility.sendNotify;
+import wincondition1 from '../wincondition1.js';
+import formatconverter1 from '../formatconverter1.js';
+import movesscript1 from '../movesscript1.js';
 
-const { getTimeServerRestarting } = require('../timeServerRestarts');
-const { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } = require('./drawoffers');
+import { getTimeServerRestarting } from '../timeServerRestarts.js';
+import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
+
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 const gameutility = (function() {
 
@@ -655,4 +658,4 @@ const gameutility = (function() {
 
 })();
 
-module.exports = gameutility;
+export default gameutility;

@@ -43,7 +43,7 @@ const allowedOrigins = [ // Allowed sites
     'https://www.google.com'
 ];
 
-module.exports = {
+export {
     DEV_BUILD,
     BUNDLE_FILES,
     ARE_RATE_LIMITING,
