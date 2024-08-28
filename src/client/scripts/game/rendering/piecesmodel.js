@@ -157,11 +157,9 @@ const piecesmodel = {
         }
         main.enableForceRender(); // Renders the screen EVEN in a local-pause
 
-        /* eslint-disable indent */
         mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
                                : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
         //                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
-        /* eslint-enable indent */
 
         math.copyPropertiesToObject(mesh, gamefile.mesh);
         
@@ -177,7 +175,7 @@ const piecesmodel = {
 
         voids.regenModel(gamefile);
 
-        if (giveStatus) statustext.showStatus(translations["rendering"]["regenerated_pieces"], false, 0.5);
+        if (giveStatus) statustext.showStatus(translations.rendering.regenerated_pieces, false, 0.5);
         
         main.renderThisFrame();
         main.enableForceRender(); // Renders the screen EVEN in a local-pause

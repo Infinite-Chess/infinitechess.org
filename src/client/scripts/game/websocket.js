@@ -18,6 +18,7 @@
  * @property {number} replyto - The ID of the message this message is the reply to, if specified.
  */
 
+// eslint-disable-next-line no-unused-vars
 const websocket = (function() {
     
     /** The websocket object we will use to send and receive messages from the server. */
@@ -62,6 +63,12 @@ const websocket = (function() {
     const printAllIncomingMessages = true;
     const alsoPrintIncomingEchos = false;
 
+    /**
+     * The last time the server closed our socket connection request because
+     * we were missing a browser-id cookie, in millis since the Unix Epoch.
+     */
+    let lastTimeWeGotAuthorizationNeededMessage;
+
 
     function getSubs() {
         return subs;
@@ -96,14 +103,14 @@ const websocket = (function() {
         while (!success && !zeroSubs()) {
             // Request came back with an error
             noConnection = true;
-            statustext.showStatusForDuration(translations["websocket"]["no_connection"], timeToResubAfterNetworkLossMillis);
+            statustext.showStatusForDuration(translations.websocket.no_connection, timeToResubAfterNetworkLossMillis);
             onlinegame.onLostConnection();
             invites.clearIfOnPlayPage(); // Erase on-screen invites.
             await main.sleep(timeToResubAfterNetworkLossMillis);
             success = await openSocket();
         }
         // This is the only instance where we've reconnected.
-        if (success && noConnection) statustext.showStatusForDuration(translations["websocket"]["reconnected"], 1000);
+        if (success && noConnection) statustext.showStatusForDuration(translations.websocket.reconnected, 1000);
         noConnection = false;
         cancelAllTimerIDsToCancelOnNewSocket();
 
@@ -153,7 +160,7 @@ const websocket = (function() {
      * and keeps stating that until we successfully open a websocket. */
     function httpLostConnection() {
         noConnection = true;
-        statustext.showStatusForDuration(translations["websocket"]["no_connection"], timeToWaitForHTTPMillis);
+        statustext.showStatusForDuration(translations.websocket.no_connection, timeToWaitForHTTPMillis);
         reqOut = setTimeout(httpLostConnection, timeToWaitForHTTPMillis); // Keep saying we lost connection if we haven't heard back yet
         //console.log("Reset http timer")
     }
@@ -190,7 +197,7 @@ const websocket = (function() {
         if (!socket) return;
         console.log(`Renewing connection after we haven't received an echo for ${timeToWaitForEchoMillis} milliseconds...`);
         noConnection = true;
-        statustext.showStatusForDuration(translations["websocket"]["no_connection"], timeToWaitForHTTPMillis);
+        statustext.showStatusForDuration(translations.websocket.no_connection, timeToWaitForHTTPMillis);
         socket.close(1000, "Connection closed by client. Renew.");
     }
 
@@ -221,10 +228,6 @@ const websocket = (function() {
         // Not an echo...
 
         const sub = message.sub;
-        if (sub == null) {
-            console.error("Server should not be sending us socket data without subscription data! Message:");
-            return console.log(message);
-        }
 
         // Send our echo here! We always send an echo to every message EXCEPT echos themselves!
         sendmessage("general", "echo", message.id);
@@ -233,6 +236,8 @@ const websocket = (function() {
         executeOnreplyFunc(message.replyto);
 
         switch (sub) { // Route the message where it needs to go
+            case undefined: // Basically a null message. They look like: { id, replyto }. This allows us to execute any on-reply func for the message we sent.
+                break;
             case "general":
                 ongeneralmessage(message.action, message.value);
                 break;
@@ -308,7 +313,7 @@ const websocket = (function() {
      * @param {string} GAME_VERSION - The game version the server is currently running.
      */
     function handleHardRefresh(GAME_VERSION) { // New update!
-        if (GAME_VERSION == null) throw new Error("Can't hard refresh with no expected version.");
+        if (!GAME_VERSION) throw new Error("Can't hard refresh with no expected version.");
 
         const reloadInfo = {
             timeLastHardRefreshed: Date.now(),
@@ -346,6 +351,7 @@ const websocket = (function() {
         resetOnreplyFuncs(); // Immediately invoke all functions we wanted to execute upon hearing replies.
 
         onlinegame.setInSyncFalse();
+        guiplay.onSocketClose();
 
         // All closure codes:
 
@@ -403,46 +409,41 @@ const websocket = (function() {
                 resubAll(); // Instantly reconnects.
                 break;
             case "Unable to identify client IP address":
-                statustext.showStatus(`${translations["websocket"]["unable_to_identify_ip"]} ${translations["websocket"]["please_report_bug"]}`, true, 100);
+                statustext.showStatus(`${translations.websocket.unable_to_identify_ip} ${translations.websocket.please_report_bug}`, true, 100);
                 invites.clearIfOnPlayPage(); // Erase on-screen invites.
                 break; // Don't resub
-            case "Authentication needed":
-                // Alert the user they don't have authentication
-                statustext.showStatus(translations["websocket"]["online_play_disabled"]);
-                invites.clearIfOnPlayPage(); // Erase on-screen invites.
-                // Perhaps tell the play page to not try to open another socket?
-                // Because this error will repeatedly pop up.
-                // ...
+            case "Authentication needed": // We don't have a browser-id cookie
+                onAuthenticationNeeded();
                 break; // Don't resub
             case "Logged out":
-                memberHeader.deleteToken();
+                memberHeader.onLogOut(); // Updates the header bar navigation links
                 resubAll(); // Instantly reconnects.
                 break;
             case "Too Many Requests. Try again soon.":
-                statustext.showStatusForDuration(translations["websocket"]["too_many_requests"], timeToResubAfterTooManyRequestsMillis);
+                statustext.showStatusForDuration(translations.websocket.too_many_requests, timeToResubAfterTooManyRequestsMillis);
                 enterTimeout(timeToResubAfterTooManyRequestsMillis); // After timeout is over, we then resubscribe!
                 break;
             case "Message Too Big":
-                statustext.showStatus(`${translations["websocket"]["message_too_big"]} ${translations["websocket"]["please_report_bug"]}`, true, 3);
+                statustext.showStatus(`${translations.websocket.message_too_big} ${translations.websocket.please_report_bug}`, true, 3);
                 enterTimeout(timeToResubAfterMessageTooBigMillis);
                 break;
             case "Too Many Sockets":
-                statustext.showStatus(`${translations["websocket"]["too_many_sockets"]} ${translations["websocket"]["please_report_bug"]}`, true, 3);
+                statustext.showStatus(`${translations.websocket.too_many_sockets} ${translations.websocket.please_report_bug}`, true, 3);
                 setTimeout(resubAll, timeToResubAfterTooManyRequestsMillis);
                 break;
             case "Origin Error":
-                statustext.showStatus(`${translations["websocket"]["origin_error"]} ${translations["websocket"]["please_report_bug"]}`, true, 3);
+                statustext.showStatus(`${translations.websocket.origin_error} ${translations.websocket.please_report_bug}`, true, 3);
                 invites.clearIfOnPlayPage(); // Erase on-screen invites.
                 enterTimeout(timeToResubAfterTooManyRequestsMillis); // After timeout is over, we then resubscribe!
                 break;
             case "No echo heard": // Client took too long to respond, assumed connection is broken
                 // statustext.showStatus("No echo. If this keeps appearing, report this bug to Naviary!")
                 noConnection = true;
-                statustext.showStatusForDuration(translations["websocket"]["no_connection"], timeToWaitForHTTPMillis);
+                statustext.showStatusForDuration(translations.websocket.no_connection, timeToWaitForHTTPMillis);
                 resubAll(); // Instantly reconnects.
                 break;
             default:
-                statustext.showStatus(`${translations["websocket"]["connection_closed"]} "${trimmedReason}" ${translations["websocket"]["please_report_bug"]}`, true, 100);
+                statustext.showStatus(`${translations.websocket.connection_closed} "${trimmedReason}" ${translations.websocket.please_report_bug}`, true, 100);
                 console.error("Unknown reason why the WebSocket connection was closed. Not reopening or resubscribing.");
         }
     }
@@ -453,7 +454,7 @@ const websocket = (function() {
      * @param {number} timeMillis - The time to remain in timeout, in milliseconds.
      */
     function enterTimeout(timeMillis) {
-        if (timeMillis == null) return console.error("Cannot enter timeout for an undefined amount of time!");
+        if (timeMillis === undefined) return console.error("Cannot enter timeout for an undefined amount of time!");
         if (inTimeout) return; // Already in timeout, don't spam timers!
         inTimeout = true;
         setTimeout(leaveTimeout, timeMillis);
@@ -477,7 +478,7 @@ const websocket = (function() {
      */
     async function sendmessage(route, action, value, isUserAction, onreplyFunc) { // invites, createinvite, inviteinfo
         if (!await establishSocket()) {
-            // if (isUserAction) statustext.showStatus(translations["websocket"]["too_many_requests"])
+            if (isUserAction) statustext.showStatus(translations.websocket.too_many_requests);
             if (onreplyFunc) onreplyFunc(); // Execute this now
             return false;
         }
@@ -535,7 +536,7 @@ const websocket = (function() {
     /** When we receive an incoming message with the `replyto` property specified,
      * we execute the on-reply function for that message we sent. */
     function executeOnreplyFunc(id) {
-        if (id == null) return;
+        if (id === undefined) return;
         if (!onreplyFuncs[id]) return;
         onreplyFuncs[id]();
         delete onreplyFuncs[id];
@@ -630,8 +631,7 @@ const websocket = (function() {
         invites.clear({ recentUsersInLastList: true });
         if (subs.invites === false) return; // Already unsubbed
         subs.invites = false;
-        const id = math.generateNumbID(10);
-        sendmessage("general", "unsub", "invites", id);
+        sendmessage("general", "unsub", "invites");
     }
 
     window.addEventListener('pageshow', function(event) {
@@ -645,6 +645,42 @@ const websocket = (function() {
             // console.log("Page was accessed normally.");
         }
     });
+
+    /**
+     * This is called when the server closes our websocket connection upgrade request
+     * due to us not having a browser-id cookie or being logged in.
+     * This can happen rarely if we leave the Play page open for a whole week, long
+     * enough for our browser-id cookie to expire, since we haven't renewed it yet.
+     * Normally, visiting/refreshing the page will refresh the cookie.
+     */
+    async function onAuthenticationNeeded() {
+        invites.clearIfOnPlayPage(); // Erase on-screen invites.
+
+        // If this is the second time we're getting this message,
+        // that means that cookies aren't working on this browser.
+        const now = Date.now();
+        if (lastTimeWeGotAuthorizationNeededMessage !== undefined) {
+            const difference = now - lastTimeWeGotAuthorizationNeededMessage;
+            if (difference < 1000 * 60 * 60 * 24) {
+                statustext.showStatus(translations.websocket.online_play_disabled);
+                lastTimeWeGotAuthorizationNeededMessage = now;
+                // Perhaps tell the play page to not try to open another socket?
+                // Because this error will repeatedly pop up.
+                // ...
+                return;
+            }
+        }
+        lastTimeWeGotAuthorizationNeededMessage = now;
+
+        // This is the first time we're hearing this.
+        // Don't worry, cookies are probably still supported,
+        // we just have to request a new browser-id cookie before we
+        // reopen our socket.
+
+        memberHeader.refreshToken();
+        await memberHeader.waitUntilInitialRequestBack();
+        resubAll();
+    }
 
     return Object.freeze({
         closeSocket,

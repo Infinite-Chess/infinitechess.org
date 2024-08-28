@@ -40,6 +40,6 @@ function getPatreonPatrons() {
 }
 
 
-module.exports = {
+export {
     getPatreonPatrons
 };

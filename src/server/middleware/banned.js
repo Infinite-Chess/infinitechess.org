@@ -1,7 +1,8 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
 
-const { writeFile_ensureDirectory } = require('../utility/fileUtils');
+import { readFile } from '../utility/lockFile.js';
+import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
 const bannedPath = path.resolve('database/banned.json');
 (function ensureBannedFileExists() {
@@ -15,26 +16,24 @@ const bannedPath = path.resolve('database/banned.json');
     writeFile_ensureDirectory(bannedPath, content);
     console.log("Generated banned file");
 })();
-const bannedJSON = require('../../../database/banned.json');
 
+const bannedJSON = await readFile(bannedPath, 'Unable to read banned.json on startup.');
 
 
 function isEmailBanned(email) {
     const emailLowercase = email.toLowerCase();
-    return bannedJSON.emails[emailLowercase] != null;
+    return bannedJSON.emails[emailLowercase] !== undefined;
 }
 
 function isIPBanned(ip) {
-    return bannedJSON.IPs[ip] != null;
+    return bannedJSON.IPs[ip] !== undefined;
 }
 
 function isBrowserIDBanned(browserID) {
-    return bannedJSON['browser-ids'][browserID] != null;
+    return bannedJSON['browser-ids'][browserID] !== undefined;
 }
 
-
-
-module.exports = {
+export {
     isEmailBanned,
     isIPBanned,
     isBrowserIDBanned

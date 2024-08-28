@@ -2,11 +2,11 @@
  * This module handles account deletion.
  */
 
-const { removeMember, getAllUsernames, getVerified, getJoinDate, getUsernameCaseSensitive } = require('../controllers/members');
-const { testPasswordForRequest } = require('../controllers/authController');
-const { removeAllRoles } = require('../controllers/roles');
-const { logEvents } = require('../middleware/logEvents');
-const { getTranslationForReq } = require('../config/setupTranslations');
+import { removeMember, getAllUsernames, getVerified, getJoinDate, getUsernameCaseSensitive } from './members.js';
+import { testPasswordForRequest } from './authController.js';
+import { removeAllRoles } from './roles.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { getTranslationForReq } from '../utility/translate.js';
 
 // Automatic deletion of accounts...
 
@@ -94,7 +94,7 @@ removeOldUnverifiedMembers(); // Call once on startup.
 setInterval(removeOldUnverifiedMembers, intervalForRemovalOfOldUnverifiedAccountsMillis); // Repeatedly call once a day
 
 
-module.exports = {
+export {
     removeAccount,
     removeAccountByUsername
 };

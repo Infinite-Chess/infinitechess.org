@@ -7,16 +7,16 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
 const guinavigation = (function() {
 
-    // Variables
+    const element_Navigation = document.getElementById('navigation');
     
     // Navigation
     const element_Recenter = document.getElementById('recenter');
     const element_Expand = document.getElementById('expand');
     const element_Back = document.getElementById('back');
 
-    const element_Navigation = document.getElementById('navigation'); // Container for both the x & y
     const element_CoordsX = document.getElementById('x');
     const element_CoordsY = document.getElementById('y');
 

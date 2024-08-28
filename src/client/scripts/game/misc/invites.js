@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 
 /*
  * This script manages the invites on the Play page.
@@ -18,6 +17,7 @@
  * @property {string} rated - rated/casual
  */
 
+// eslint-disable-next-line no-unused-vars
 const invites = (function() {
 
     const invitesContainer = document.getElementById('invites');
@@ -39,7 +39,7 @@ const invites = (function() {
 
     function update() {
         if (!guiplay.onPlayPage()) return; // Not on the play screen
-        if (loadbalancer.gisHibernating()) statustext.showStatus(translations["invites"]["move_mouse"], false, 0.1);
+        if (loadbalancer.gisHibernating()) statustext.showStatus(translations.invites.move_mouse, false, 0.1);
     }
 
     function unsubIfWeNotHave() {
@@ -51,6 +51,9 @@ const invites = (function() {
     // Should be called by websocket script when it receives a
     // message that the server says is for the "invites" subscription
     function onmessage(data) { // { sub, action, value, id }
+        // Any incoming message will have no effect if we're not on the invites page.
+        // This can happen if we have slow network and leave the invites screen before the server sends us an invites-related message.
+        if (!guiplay.isOpen()) return;
 
         switch (data.action) {
             case "inviteslist":
@@ -62,7 +65,7 @@ const invites = (function() {
                 updateActiveGameCount(data.value);
                 break;
             default:
-                statustext.showStatus(`${translations["invites"]["unknown_action_received_1"]} ${data.action} ${translations["invites"]["unknown_action_received_2"]}`, true);
+                statustext.showStatus(`${translations.invites.unknown_action_received_1} ${data.action} ${translations.invites.unknown_action_received_2}`, true);
                 break;
         }
     }
@@ -72,17 +75,26 @@ const invites = (function() {
 
         generateTagForInvite(inviteOptions);
 
-        // Lock the create invite button
-        guiplay.setElement_CreateInviteEnabled(false);
-        const idToCancelButtonEnabling = setTimeout(() => { guiplay.setElement_CreateInviteEnabled(true); });
+        guiplay.lockCreateInviteButton();
 
-        const onreplyFunc = () => {
-            // Unlock
-            guiplay.setElement_CreateInviteEnabled(true);
-            clearTimeout(idToCancelButtonEnabling);
-        };
+        // The function to execute when we hear back the server's response
+        const onreplyFunc = guiplay.unlockCreateInviteButton;
 
         websocket.sendmessage("invites", "createinvite", inviteOptions, true, onreplyFunc);
+    }
+
+    function cancel(id = ourInviteID) {
+        if (!weHaveInvite) return;
+        if (!id) return statustext.showStatus(translations.invites.cannot_cancel, true);
+
+        deleteInviteTagInLocalStorage();
+
+        guiplay.lockCreateInviteButton();
+
+        // The function to execute when we hear back the server's response
+        const onreplyFunc = guiplay.unlockCreateInviteButton;
+
+        websocket.sendmessage("invites", "cancelinvite", id, true, onreplyFunc);
     }
 
     // Generates a tag id for the invite parameters before we send off action "createinvite" to the server
@@ -94,26 +106,6 @@ const invites = (function() {
         localstorage.saveItem('invite-tag', tag);
 
         inviteOptions.tag = tag;
-    }
-
-    function cancel(id = ourInviteID, isUserAction = false) {
-        if (!weHaveInvite) return;
-        if (!id) return statustext.showStatus(translations["invites"]["cannot_cancel"], true);
-
-        deleteInviteTagInLocalStorage();
-
-        // Lock the create invite button
-        guiplay.setElement_CreateInviteEnabled(false);
-        const idToCancelButtonEnabling = setTimeout(() => { guiplay.setElement_CreateInviteEnabled(true); });
-
-        const onreplyFunc = () => {
-            // Unlock
-            guiplay.setElement_CreateInviteEnabled(true);
-            clearTimeout(idToCancelButtonEnabling);
-        };
-
-        // Request server to delete current invite
-        websocket.sendmessage("invites", "cancelinvite", id, isUserAction, onreplyFunc);
     }
     
     function deleteInviteTagInLocalStorage() {
@@ -152,13 +144,13 @@ const invites = (function() {
                 }
             }
 
-            const c = ['invite', 'button'];
+            const classes = ['invite', 'button', 'unselectable'];
             const isPrivate = invite.publicity === 'private';
             if (isPrivate) privateInviteID = invite.id;
-            if (ours && !isPrivate) c.push('ours');
-            else if (ours && isPrivate) c.push('private');
+            if (ours && !isPrivate) classes.push('ours');
+            else if (ours && isPrivate) classes.push('private');
 
-            const newInvite = createDiv(c, undefined, invite.id);
+            const newInvite = createDiv(classes, undefined, invite.id);
 
             // <div class="invite-child">Playername (elo)</div>
             // <div class="invite-child">Standard</div>
@@ -167,7 +159,7 @@ const invites = (function() {
             // <div class="invite-child">Casual</div>
             // <div class="invite-child accept">Accept</div>
 
-            const n = ours ? translations["invites"]["you_indicator"] : invite.name;
+            const n = ours ? translations.invites.you_indicator : invite.name;
             const name = createDiv(['invite-child'], n);
             newInvite.appendChild(name);
 
@@ -178,15 +170,15 @@ const invites = (function() {
             const cloc = createDiv(['invite-child'], time);
             newInvite.appendChild(cloc);
 
-            const uColor = ours ? invite.color === 'White' ? translations["invites"]["you_are_white"] : invite.color === 'Black' ? translations["invites"]["you_are_black"] : translations["invites"]["random"]
-                                : invite.color === 'White' ? translations["invites"]["you_are_black"] : invite.color === 'Black' ? translations["invites"]["you_are_white"] : translations["invites"]["random"]
+            const uColor = ours ? invite.color === 'White' ? translations.invites.you_are_white : invite.color === 'Black' ? translations.invites.you_are_black : translations.invites.random
+                                : invite.color === 'White' ? translations.invites.you_are_black : invite.color === 'Black' ? translations.invites.you_are_white : translations.invites.random;
             const color = createDiv(['invite-child'], uColor);
             newInvite.appendChild(color);
 
             const rated = createDiv(['invite-child'], translations[invite.rated]);
             newInvite.appendChild(rated);
 
-            const a = ours ? translations["invites"]["cancel"] : translations["invites"]["accept"];
+            const a = ours ? translations.invites.cancel : translations.invites.accept;
             const accept = createDiv(['invite-child', 'accept'], a);
             newInvite.appendChild(accept);
 
@@ -201,6 +193,9 @@ const invites = (function() {
         updatePrivateInviteCode(privateInviteID);
 
         guiplay.initListeners_Invites();
+
+        // If we are on "Local" and have an existing invite, IMMEDIATELY cancel it! This can happen with slow network.
+        if (weHaveInvite && guiplay.getModeSelected() !== 'online') cancel();
     }
 
     /**
@@ -246,6 +241,7 @@ const invites = (function() {
         activeInvites = undefined;
         weHaveInvite = false;
         ourInviteID = undefined;
+        element_inviteCodeCode.textContent = '';
         // Passing in an empty list resets the local scope variables for next time.
         if (recentUsersInLastList) playBaseIfNewInvite([]);
     }
@@ -314,7 +310,13 @@ const invites = (function() {
 
     function accept(inviteID, isPrivate) {
         const inviteinfo = { id: inviteID, isPrivate };
-        websocket.sendmessage("invites", "acceptinvite", inviteinfo, true);
+
+        guiplay.lockAcceptInviteButton();
+
+        // The function to execute when we hear back the server's response
+        const onreplyFunc = guiplay.unlockAcceptInviteButton;
+
+        websocket.sendmessage("invites", "acceptinvite", inviteinfo, true, onreplyFunc);
     }
 
     // A callback that gui fires when an invite document element is clicked!
@@ -322,8 +324,12 @@ const invites = (function() {
         const invite = getInviteFromElement(element);
         const isOurs = isInviteOurs(invite);
 
-        if (isOurs) cancel(invite.id, true);
-        else accept(invite.id, true);
+        if (isOurs) {
+            // Only cancel if the Create Invite button isn't disabled
+            if (!guiplay.isCreateInviteButtonLocked()) cancel(invite.id);
+        } else { // Not our invite, accept the one we clicked
+            if (!guiplay.isAcceptInviteButtonLocked()) accept(invite.id, true);
+        }
     }
 
     function getInviteFromID(id) {
@@ -339,16 +345,16 @@ const invites = (function() {
 
     function updateCreateInviteButton() {
         if (guiplay.getModeSelected() !== 'online') return;
-        if (weHaveInvite) guiplay.setElement_CreateInviteTextContent(translations["invites"]["cancel_invite"]);
-        else              guiplay.setElement_CreateInviteTextContent(translations["invites"]["create_invite"]);
+        if (weHaveInvite) guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);
+        else              guiplay.setElement_CreateInviteTextContent(translations.invites.create_invite);
     }
 
     function updatePrivateInviteCode(privateInviteID) { // If undefined, we know we don't have a "private" invite
         if (guiplay.getModeSelected() === 'local') return;
 
         if (!weHaveInvite) {
-            guiplay.getElement_joinPrivate().classList.remove('hidden');
-            guiplay.getElement_inviteCode().classList.add('hidden');
+            guiplay.showElement_joinPrivate();
+            guiplay.hideElement_inviteCode();
             return;
         }
 
@@ -358,21 +364,21 @@ const invites = (function() {
         // then display our invite code text!
 
         if (privateInviteID) {
-            guiplay.getElement_joinPrivate().classList.add('hidden');
-            guiplay.getElement_inviteCode().classList.remove('hidden');
+            guiplay.hideElement_joinPrivate();
+            guiplay.showElement_inviteCode();
             element_inviteCodeCode.textContent = privateInviteID.toUpperCase();
             return;
         }
 
         // Else our invite is NOT private, only show the "Private Invite:" display.
 
-        guiplay.getElement_joinPrivate().classList.remove('hidden');
-        guiplay.getElement_inviteCode().classList.add('hidden');
+        guiplay.showElement_joinPrivate();
+        guiplay.hideElement_inviteCode();
     }
 
     function updateActiveGameCount(newCount) {
         if (newCount == null) return;
-        element_joinExisting.textContent = `${translations["invites"]["join_existing_active_games"]} ${newCount}`;
+        element_joinExisting.textContent = `${translations.invites.join_existing_active_games} ${newCount}`;
     }
 
     function doWeHave() {

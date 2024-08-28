@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 // This script handles the rendering of arrows poointing to pieces off-screen
 // and detects if they are clicked
 
@@ -168,8 +167,8 @@ const arrows = (function() {
             }
 
             const dirs = {};
-            if (right) dirs["r"] = right;
-            if (left) dirs["l"] = left;
+            if (right) dirs.r = right;
+            if (left) dirs.l = left;
             return dirs;
         }
 

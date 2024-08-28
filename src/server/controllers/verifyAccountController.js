@@ -1,7 +1,7 @@
 
-const { getTranslationForReq } = require('../config/setupTranslations.js');
-const { logEvents } = require('../middleware/logEvents.js');
-const { getUsernameCaseSensitive, getVerified, setVerified, doesVerificationIDMatch } = require('./members.js');
+import { getTranslationForReq } from '../utility/translate.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { getUsernameCaseSensitive, getVerified, setVerified, doesVerificationIDMatch } from './members.js';
 
 // Called when clicked on verification link in email.
 // CAN redirect!
@@ -58,4 +58,4 @@ const verifyAccount = async function(req, res) {
     res.redirect(`/member/${usernameLowercase}`);
 };
 
-module.exports = { verifyAccount };
+export { verifyAccount };

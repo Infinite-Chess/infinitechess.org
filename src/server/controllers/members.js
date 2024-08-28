@@ -1,9 +1,12 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
 
-const { writeFile } = require('../utility/lockFile.js');
-const { logEvents } = require('../middleware/logEvents');
-const { writeFile_ensureDirectory } = require('../utility/fileUtils.js');
+import { readFile, writeFile } from '../utility/lockFile.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const membersFilePath = path.resolve('database/members.json');
 (function ensureMembersFileExists() {
@@ -12,7 +15,8 @@ const membersFilePath = path.resolve('database/members.json');
     writeFile_ensureDirectory(membersFilePath, content);
     console.log("Generated members file");
 })();
-const members = require('../../../database/members.json');
+
+const members = await readFile('database/members.json', 'Unable to read members.json on startup.');
 
 /**
  * An object with refresh tokens for the keys, and for
@@ -394,7 +398,7 @@ async function saveMembersIfChangesMade() {
 
 
 
-module.exports = {
+export {
     doesMemberExist,
     getUsernameCaseSensitive,
     getAllUsernames,

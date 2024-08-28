@@ -1,6 +1,6 @@
-const fs = require('fs');
-const crypto = require('crypto');
-const dotenv = require('dotenv');
+import fs from 'fs';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
 
 const envPath = '.env';
 
@@ -41,4 +41,4 @@ function generateSecret(length) {
 }
 
 
-module.exports = { ensureEnvFile };
+export { ensureEnvFile };

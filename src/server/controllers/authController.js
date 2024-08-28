@@ -5,13 +5,13 @@
  * and updates basic variables in their profile after logging in.
  */
 
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
-const { getUsernameCaseSensitive, getHashedPassword, addRefreshToken, incrementLoginCount, updateLastSeen } = require('./members');
-const { getClientIP } = require('../middleware/IP');
-const { logEvents } = require('../middleware/logEvents');
-const { getTranslationForReq } = require('../config/setupTranslations');
+import { getUsernameCaseSensitive, getHashedPassword, addRefreshToken, incrementLoginCount, updateLastSeen } from './members.js';
+import { getClientIP } from '../middleware/IP.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { getTranslationForReq } from '../utility/translate.js';
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
@@ -329,7 +329,7 @@ function onCorrectPassword(browserAgent) {
     delete loginAttemptData[browserAgent];
 }
 
-module.exports = {
+export {
     handleLogin,
     testPasswordForRequest
 };

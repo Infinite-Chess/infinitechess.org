@@ -1,6 +1,9 @@
-const sharp = require("sharp");
-const { cpSync } = require("node:fs");
-const path = require("path");
+import sharp from "sharp";
+import { cpSync } from "node:fs";
+import path from "path";
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Effort values
 // Reduce to improve start times
@@ -17,14 +20,14 @@ function loadImageConfig(img, format, effort) {
     let config;
     // Make sure format exists
     if (format in optimised_images[img]) {
-        config = optimised_images[img]["avif"];
+        config = optimised_images[img].avif;
     } else {
         config = {};
     }
 
     // If effor is not set overriede with effort variable
     if (!("effort" in config)) {
-        config["effort"] = effort;
+        config.effort = effort;
     }
 
     return config;

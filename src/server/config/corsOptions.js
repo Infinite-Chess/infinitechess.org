@@ -1,5 +1,5 @@
 
-const { allowedOrigins } = require('./config'); // Whitelist
+import { allowedOrigins } from './config.js'; // Whitelist
 
 /**
  * CORS configuration options to control which requests are allowed to interact with the server.
@@ -24,4 +24,4 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
  
-module.exports = corsOptions;
+export default corsOptions;

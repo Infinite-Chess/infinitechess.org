@@ -2,7 +2,7 @@
 
 This guide gives you several pointers on how to navigate the project. The entire source code of the project is located in [src](../src/).
 
-It is assumed you have already gone through the [Setup](./SETUP.md) process. Whenever you run `npx nodemon`, [build.mjs](../build.mjs) automatically deploys all clientside assets of the project from [src](../src/) to the newly created folder `dist`, and an infinite chess server at `https://localhost:3443` is launched.
+It is assumed you have already gone through the [Setup](./SETUP.md) process. Whenever you run `npx nodemon`, [build.js](../build.js) automatically deploys all clientside assets of the project from [src](../src/) to the newly created folder `dist`, and an infinite chess server at `https://localhost:3443` is launched.
 
 
 ## Server ##
@@ -13,7 +13,7 @@ Everything starts running from [server.js](../src/server/server.js)!
 
 This configures and starts our http, https, and websocket servers, and it cleans up on closing.
 
-[src/server/game](../src/server/game/) contains the server-side code for running online play, including the [invites-manager](../src/server/game/invitesmanager.js) and the [game-manager](../src/server/game/gamemanager.js).
+[src/server/game](../src/server/game/) contains the server-side code for running online play, including the invites manager and game manager!
 
 Both of these managers use websockets to broadcast changes out to the clients in real-time.
 

@@ -37,10 +37,8 @@ const gui = (function() {
         style.fadeIn1s(element_overlay);
     }
 
-    function callback_featurePlanned(event) {
-        event = event || window.event;
-
-        statustext.showStatus(translations["planned_feature"]);
+    function callback_featurePlanned() {
+        statustext.showStatus(translations.planned_feature);
     }
 
     function makeOverlayUnselectable() {

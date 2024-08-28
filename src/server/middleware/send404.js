@@ -1,5 +1,8 @@
-const path = require('path');
-const { getTranslationForReq } = require('../config/setupTranslations');
+import path from 'path';
+import { getTranslationForReq } from '../utility/translate.js';
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function send404(req, res) {
     res.status(404);
@@ -12,4 +15,4 @@ function send404(req, res) {
     }
 }
 
-module.exports = send404;
+export default send404;

@@ -8,14 +8,14 @@
  * a specific username or email is available.
  */
 
-const bcrypt = require('bcrypt');
+import bcrypt from 'bcrypt';
 
-const { handleLogin } = require('./authController');
-const { sendEmailConfirmation } = require('./sendMail');
-const { addMember, getMemberData, doesMemberExist, isEmailAvailable } = require('./members.js');
-const { logEvents } = require('../middleware/logEvents');
-const { isEmailBanned } = require('../middleware/banned');
-const { getTranslationForReq } = require('../config/setupTranslations.js');
+import { handleLogin } from './authController.js';
+import { sendEmailConfirmation } from './sendMail.js';
+import { addMember, getMemberData, doesMemberExist, isEmailAvailable } from './members.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { isEmailBanned } from '../middleware/banned.js';
+import { getTranslationForReq } from '../utility/translate.js';
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
@@ -267,7 +267,7 @@ const isValidPassword = function(string) {
     return false;
 };
 
-module.exports = {
+export {
     createNewMember,
     getRegisterData,
     checkEmailAssociated,

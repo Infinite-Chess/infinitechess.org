@@ -1,11 +1,11 @@
-const { logEvents } = require('./logEvents');
-const { getClientIP, getClientIP_Websocket } = require("./IP");
+import { logEvents } from './logEvents.js';
+import { getClientIP, getClientIP_Websocket } from './IP.js';
 
-const { isIPBanned } = require('./banned');
-const { DEV_BUILD, ARE_RATE_LIMITING } = require('../config/config');
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require("../game/TypeDefinitions");
-const { getTranslationForReq } = require('../config/setupTranslations');
+import { isIPBanned } from './banned.js';
+import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
+import { getTranslationForReq } from '../utility/translate.js';
+
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
 // For rate limiting a client...
 
@@ -244,7 +244,7 @@ function logAttackEnd() {
     logEvents(logText, 'hackLog.txt', { print: true });
 }
 
-module.exports = {
+export {
     rateLimit,
     rateLimitWebSocket
 };

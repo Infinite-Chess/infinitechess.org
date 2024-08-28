@@ -1,6 +1,6 @@
-const path = require('path');
-const fs = require('fs');
-const { DEV_BUILD } = require('./config');
+import path from 'path';
+import fs from 'fs';
+import { DEV_BUILD } from './config.js';
 const pathToCertFolder = path.resolve("cert"); // Resolve results in an absolute path
 
 /**
@@ -21,4 +21,4 @@ function getCertOptions() {
     }
 }
 
-module.exports = getCertOptions;
+export default getCertOptions;

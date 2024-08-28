@@ -1,37 +1,16 @@
-const i18next = require("i18next");
-const { parse } = require("smol-toml");
-const fs = require("fs");
-const path = require("path");
-const ejs = require("ejs");
-const middleware = require("i18next-http-middleware");
-const xss = require("xss");
+import i18next from "i18next";
+import { parse } from "smol-toml";
+import fs from "fs";
+import path from "path";
+import ejs from "ejs";
+import middleware from "i18next-http-middleware";
+import { FilterXSS } from "xss";
+import { getDefaultLanguage, setSupportedLanguages } from "../utility/translate.js";
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const translationsFolder = "./translation";
-
-/** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
-const supportedLanguages = [];
-const defaultLanguage = 'en-US';
-
-/**
- * Determines the language to be used for serving an HTML file to a request.
- * The language is determined in the following order of precedence:
- * 1. The 'lng' query parameter.
- * 2. The 'i18next' cookie.
- * 3. A default language if neither the query parameter nor the cookie is present.
- * The selected language is validated against supported languages.
- * @param {Object} req - The Express request object.
- * @returns {string} The language to be used.
- */
-function getLanguageToServe(req) {
-    let language = req.query.lng || req.cookies.i18next || req.i18n.resolvedLanguage;
-    if (!supportedLanguages.includes(language)) { // Query param language not supported
-        language = req.cookies.i18next;
-    }
-    if (!supportedLanguages.includes(language)) { // Cookie language not supported
-        language = req.i18n.resolvedLanguage;
-    }
-    return language;
-}
 
 /**
  * Templates without any external data other than translations.
@@ -121,7 +100,7 @@ const xss_options = {
     }*/
     },
 };
-const custom_xss = new xss.FilterXSS(xss_options);
+const custom_xss = new FilterXSS(xss_options);
 
 function html_escape_array(array) {
     const escaped = [];
@@ -145,9 +124,9 @@ function html_escape_object(object) {
 function html_escape(value) {
     switch (typeof value) {
         case "object":
-            if (value.constructor.name == `Object`) {
+            if (value.constructor.name === 'Object') {
                 return html_escape_object(value);
-            } else if (value.constructor.name == `Array`) {
+            } else if (value.constructor.name === 'Array') {
                 return html_escape_array(value);
             } else {
                 throw "Unhandled object type while escaping";
@@ -198,7 +177,7 @@ function removeOutdated(object, changelog) {
 
     let key_strings = [];
     for (const key of filtered_keys) {
-        key_strings = key_strings.concat(changelog[key]["changes"]);
+        key_strings = key_strings.concat(changelog[key].changes);
     }
     // Remove duplicate
     key_strings = Array.from(new Set(key_strings));
@@ -217,6 +196,7 @@ function loadTranslationsFolder(folder) {
     const changelog = JSON.parse(
         fs.readFileSync(path.join(folder, "changes.json")).toString(),
     );
+    const supportedLanguages = [];
     files
         .filter(function y(x) {
             return x.endsWith(".toml");
@@ -233,6 +213,8 @@ function loadTranslationsFolder(folder) {
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
+
+    setSupportedLanguages(supportedLanguages);
 
     return resources;
 }
@@ -263,7 +245,7 @@ function translateStaticTemplates(translations) {
   
     const languages_list = [];
     for (const language of languages) {
-        languages_list.push({ code: language, name: translations[language]['default'].name });
+        languages_list.push({ code: language, name: translations[language].default.name });
     }
   
     const templatesPath = path.join(__dirname, "..", "..", "..", "dist", "views");
@@ -305,43 +287,13 @@ function initTranslations() {
         preload: Object.keys(translations), // List of languages to preload to make sure they are loaded before rendering views
         resources: translations,
         defaultNS: "default",
-        fallbackLng: defaultLanguage,
+        fallbackLng: getDefaultLanguage(),
     // debug: true // Enable debug mode to see logs for missing keys and other details
     });
 
     translateStaticTemplates(translations); // Compiles static files
 }
 
-/**
- * Retrieves the translation for a given key and language.
- * @param {string} key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
- * @param {string} language - The language code for the translation. Default: `"en-US"`
- * @param {Object} [options={}] - Additional options for the translation.
- * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
- * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
- * @returns {string} The translated string.
- */
-function getTranslation(key, language = defaultLanguage, options = {}) {
-    options.lng = language;
-    return i18next.t(key, options);
-}
-
-/**
- * Retrieves the translation for a given key and req. It reads the req's cookies for its preferred language.
- * @param {string} key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
- * @param {Object} req - The request object
- * @param {Object} [options={}] - Additional options for the translation.
- * @param {string} [options.lng] - Language override (will be set to the `language` parameter).
- * @param {Object} [options.defaultValue] - Default value to return if the key is not found.
- * @returns {string} The translated string.
- */
-function getTranslationForReq(key, req, options = {}) {
-    return getTranslation(key, req.cookies?.i18next, options);
-}
-
-module.exports = {
-    getLanguageToServe,
+export {
     initTranslations,
-    getTranslation,
-    getTranslationForReq
 };

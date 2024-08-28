@@ -5,11 +5,15 @@
  * And contains logic for setting a request's role.
  */
 
-const path = require('path');
-const fs = require('fs');
-const { writeFile } = require('../utility/lockFile.js');
+import path from 'path';
+import fs from 'fs';
+import { readFile, writeFile } from '../utility/lockFile.js';
 
-const { writeFile_ensureDirectory } = require('../utility/fileUtils');
+import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 
 const rolesPath = path.resolve('database/roles.json');
 (function ensureRolesFileExists() {
@@ -22,7 +26,7 @@ const rolesPath = path.resolve('database/roles.json');
     writeFile_ensureDirectory(rolesPath, content);
     console.log("Generated roles file");
 })();
-const roles = require('../../../database/roles.json');
+const roles = await readFile('database/roles.json', 'Unable to read roles.json on startup.');
 
 let rolesHaveBeenEdited = false; // Set to true if we need to save the members after a change
 const intervalToSaveRolesMillis = 10000; // 10 seconds.
@@ -123,7 +127,7 @@ function removeAllRoles(user) {
     rolesHaveBeenEdited = true; // Flag to be saved
 }
 
-module.exports = {
+export {
     saveRolesIfChangesMade,
     setRole,
     setRoleWebSocket,

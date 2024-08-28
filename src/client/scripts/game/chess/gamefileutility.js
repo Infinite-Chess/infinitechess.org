@@ -198,15 +198,16 @@ const gamefileutility = (function() {
         setTerminationMetadata(gamefile);
 
         selection.unselectPiece();
-        guipause.changeTextOfMainMenuButton();
+        guipause.updateTextOfMainMenuButton();
     }
 
     /**
      * Returns true if the game is over (gameConclusion is truthy).
      * If the game is over, it will be a string. If not, it will be false.
-     * @param {gamefile} gamefile 
+     * @param {gamefile} gamefile - The gamefile. If not specified, this is game.getGamefile()
+     * @returns {boolean} true if over
      */
-    function isGameOver(gamefile) {
+    function isGameOver(gamefile = game.getGamefile()) {
         if (gamefile.gameConclusion) return true;
         return false;
     }
@@ -399,7 +400,12 @@ const gamefileutility = (function() {
         return console.error(`Could not find piece type ${piece.type} with index ${piece.index} when calculating its index in all the pieces!`);
     }
 
-    // Returns an array containing the coordinates of ALL royal pieces of specified color.
+    /**
+     * Returns an array containing the coordinates of ALL royal pieces of the specified color.
+     * @param {gamefile} gamefile 
+     * @param {string} color 
+     * @returns {number[][]}
+     */
     function getRoyalCoords(gamefile, color) {
         const royals = pieces.royals; // ['kings', ...]
         const WorB = math.getWorBFromColor(color);
@@ -443,18 +449,6 @@ const gamefileutility = (function() {
         return royalCount;
     }
 
-    /**
-     * 
-     * @param {gamefile} gamefile - The gamefile
-     * @param {number} moveIndex - The move index we want to get whos turn it was then.
-     * @returns {string} 'white' / 'black'
-     */
-    function getWhosTurnAtMoveIndex(gamefile, moveIndex) {
-        let mod2 = Math.abs(moveIndex % 2);
-        if (gamefile.startSnapshot.turn === 'black') mod2++;
-        return mod2 === 1 ? 'white' : 'black';
-    }
-
     return Object.freeze({
         pieceCountToDisableCheckmate,
         getPieceCountOfType,
@@ -478,7 +472,6 @@ const gamefileutility = (function() {
         getRoyalCoords,
         getRoyalCountOfColor,
         getPieceCountOfGame,
-        getWhosTurnAtMoveIndex,
         isGameOver,
     });
 

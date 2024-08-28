@@ -1,13 +1,16 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const path = require("path");
+import path from "path";
 
-const { handleLogin } = require("../controllers/authController");
-const { handleRefreshToken } = require("../controllers/refreshTokenController");
-const { handleLogout } = require("../controllers/logoutController");
-const { verifyAccount } = require("../controllers/verifyAccountController");
-const { ensureOwner, ensurePatron } = require("../middleware/verifyRoles");
-const { getLanguageToServe } = require("../config/setupTranslations");
+import { handleLogin } from '../controllers/authController.js';
+import { handleRefreshToken } from '../controllers/refreshTokenController.js';
+import { handleLogout } from '../controllers/logoutController.js';
+import { verifyAccount } from '../controllers/verifyAccountController.js';
+import { ensureOwner, ensurePatron } from '../middleware/verifyRoles.js';
+import { getLanguageToServe } from '../utility/translate.js';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const htmlDirectory = path.join(__dirname, "../../../dist/views");
 
@@ -103,4 +106,4 @@ router.post("/setlanguage", (req, res) => {
     res.send(""); // Doesn't work without this for some reason
 });
 
-module.exports = router;
+export { router };

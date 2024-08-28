@@ -1,24 +1,25 @@
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const path = require('path');
+import path from 'path';
 
-const createaccountController = require('../controllers/createaccountController');
-const { getRegisterData, checkEmailAssociated, checkUsernameAvailable } = require('../controllers/createaccountController');
-const { getLanguageToServe } = require("../config/setupTranslations");
+import { getRegisterData, checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createaccountController.js';
+import { getLanguageToServe } from '../utility/translate.js';
 
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 router.get('/', (req, res) => {
     const language = getLanguageToServe(req);
     res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'createaccount.html'));
 });
 
-router.post('/', createaccountController.createNewMember);
+router.post('/', createNewMember);
 
 // Data needed for the createaccount page, fetched from the script
 router.get('/data', getRegisterData);
 router.get('/username/:username', checkUsernameAvailable);
 router.get('/email/:email', checkEmailAssociated);
 
-module.exports = router;
+export { router };

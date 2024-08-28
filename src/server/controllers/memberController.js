@@ -6,12 +6,12 @@
  * And we resend requests account verification emails.
  */
 
-const locale = require('date-fns/locale');
-const { format, formatDistance } = require('date-fns');
-const { getVerified, setVerified, getInfo, getUsernameCaseSensitive, getJoinDate, getLastSeen, getElo, getEmail } = require('./members.js');
-const { sendEmailConfirmation } = require('../controllers/sendMail');
-const { logEvents } = require('../middleware/logEvents');
-const { getTranslationForReq } = require('../config/setupTranslations.js');
+import locale from 'date-fns/locale/index.js';
+import { format, formatDistance } from 'date-fns';
+import { getVerified, setVerified, getInfo, getUsernameCaseSensitive, getJoinDate, getLastSeen, getElo, getEmail } from './members.js';
+import { sendEmailConfirmation } from './sendMail.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { getTranslationForReq } from '../utility/translate.js';
 
 // Route
 // Fetched by member script.
@@ -88,7 +88,7 @@ const requestConfirmEmail = (req, res) => {
     }
 };
 
-module.exports = {
+export {
     getMemberData,
     requestConfirmEmail
 };
