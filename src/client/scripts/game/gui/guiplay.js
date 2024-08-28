@@ -15,6 +15,7 @@ import options from '../rendering/options.js';
 import statustext from './statustext.js';
 import invites from '../misc/invites.js';
 import gui from './gui.js';
+import drawoffers from '../misc/drawoffers.js';
 import gamefile from '../chess/gamefile.js';
 import guititle from './guititle.js';
 // Import End

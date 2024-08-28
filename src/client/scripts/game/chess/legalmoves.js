@@ -6,6 +6,7 @@ import organizedlines from './organizedlines.js';
 import math from '../misc/math.js';
 import pieces from '../rendering/pieces.js';
 import checkdetection from './checkdetection.js';
+import wincondition from './wincondition.js';
 // Import End
 
 

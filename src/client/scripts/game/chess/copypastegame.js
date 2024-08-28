@@ -8,6 +8,8 @@ import game from './game.js';
 import backcompatible from './backcompatible.js';
 import variant from './variant.js';
 import gamefile from './gamefile.js';
+import wincondition from './wincondition.js';
+import gamefileutility from './gamefileutility.js';
 import statustext from '../gui/statustext.js';
 // Import End
 

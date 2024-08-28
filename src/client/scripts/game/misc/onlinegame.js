@@ -18,6 +18,11 @@ import websocket from '../websocket.js';
 import perspective from '../rendering/perspective.js';
 import sound from './sound.js';
 import guiplay from '../gui/guiplay.js';
+import input from '../input.js';
+import loadbalancer from './loadbalancer.js';
+import main from '../main.js';
+import formatconverter from '../chess/formatconverter.js';
+import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 

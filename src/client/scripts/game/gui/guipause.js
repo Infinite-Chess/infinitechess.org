@@ -10,6 +10,7 @@ import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
 import drawoffers from '../misc/drawoffers.js';
 import guititle from './guititle.js';
+import movesscript from '../chess/movesscript.js';
 // Import End
 
 
