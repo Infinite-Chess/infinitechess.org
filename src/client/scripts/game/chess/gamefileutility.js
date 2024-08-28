@@ -84,8 +84,7 @@ const gamefileutility = (function() {
                 // First it inserts the type of piece into the callback, then coords of piece 
                 callback(thisPieceType, math.getCoordsFromKey(key)); 
             }
-        }
-        if (ignoreVoids) {
+        } else if (ignoreVoids) {
             for (const key in state) {
                 const thisPieceType = state[key];
                 if (thisPieceType.startsWith('voids')) continue;
