@@ -76,29 +76,12 @@ const gamefileutility = (function() {
 
         // Position with 372K pieces takes 80ms to key,
         // WHETHER that's using Object.keys(), or the time until the first iteration of "for (let key in state)"
-
-        if (ignoreNeutrals) {
-            for (const key in state) {
-                const thisPieceType = state[key];
-                if (thisPieceType.endsWith('N')) continue;
-                // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
-            }
-        }
-        if (ignoreVoids) {
-            for (const key in state) {
-                const thisPieceType = state[key];
-                if (thisPieceType.startsWith('voids')) continue;
-                // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
-            }
-        } else {
-            for (const key in state) {
-                const thisPieceType = state[key];
-                // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
-            }
-        }
+	for (const key in state){
+		const thisPieceType = state[key];
+		if (ignoreNeutrals && thisPieceType.endsWith('N')) continue;
+		if (ignoreVoids && thisPieceType.startsWith('voids')) continue;
+		callback(thisPieceType, math.getCoordsFromKey(key)); 
+	}
     }
 
     /**
