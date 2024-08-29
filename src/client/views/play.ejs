@@ -10,39 +10,9 @@
         </script>
         <!-- Do not modify the next line under any circumstances. It is used by HTMLScriptInjector.js as a reference point of where to inject js -->
         <!-- js inject here -->
-        <!-- Cant just use htmlscript here as modules are deferred -->
-        <script>
-        var loadingErrorOcurred = false;
-        function callback_LoadingError(event) {
-            // const type = event.type; // Event type: "error"/"abort"
-            // const target = event.target; // Element that triggered the event
-            // const elementType = target?.tagName.toLowerCase();
-            // const sourceURL = target?.src || target?.href; // URL of the resource that failed to load
-            // console.error(`Event ${type} ocurred loading ${elementType} at ${sourceURL}.`);
-            if (loadingErrorOcurred) return; // We only need to show the error text once
-            loadingErrorOcurred = true;
-            
-            // Hide the "LOADING" text
-            const element_loadingText = document.getElementById('loading-text');
-            element_loadingText.classList.add('hidden'); // This applies a 'display: none' rule
-    
-            // Show the ERROR text
-            const element_loadingError = document.getElementById('loading-error');
-            const element_loadingErrorText = document.getElementById('loading-error-text');
-            element_loadingError.classList.remove('hidden');
-            element_loadingErrorText.textContent = lostNetwork ? translations["lost_network"] : translations["failed_to_load"];
-    
-            // Remove the glowing in the background animation
-            const element_loadingGlow = document.getElementById('loading-glow');
-            element_loadingGlow.classList.remove('loadingGlowAnimation');
-            element_loadingGlow.classList.add('loading-glow-error');
-        }
-    
-        // Removes the onerror event listener from the "this" object.
-        function removeOnerror() {
-            this.onerror = null;
-        }
-        </script>
+
+        <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
+        <!-- All clientside game scripts inject here -->
 
         <!-- Javascript will add future styles in here -->
         <style id="style"></style>
@@ -51,14 +21,11 @@
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
         <title><%=t('play.title')%></title>
-        <link rel='stylesheet' href='/css/play.css' onerror="callback_LoadingError(event)" onload="(() => { removeOnerror.call(this); })()">
+        <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
         <!-- Custom fonts: Merriweather, Open Sans -->
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-
-        <!-- Do not modify the next line under any circumstances. It is used by the HTMLScriptInjector.js as a reference point of where to add all other game scripts -->
-        <!-- All clientside game scripts inject here -->
         
         <script defer src="/scripts/memberHeader.js"></script>
     </head>
@@ -561,12 +528,12 @@
 
             <!-- Game images -->
             <img id="tiles" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAACXBIWXMAADXUAAA11AFeZeUIAAAAFElEQVQImWP4////fwYY+P///38AR8oH+QG3t1YAAAAASUVORK5CYII="
-            width="0" onerror="callback_LoadingError(event)" onload="(() => { removeOnerror.call(this); })()">
+            width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
             <img id="tilesGrey78" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAADXUAAA11AFeZeUIAAAAF0lEQVQImWP8////yZMnGU6cOPH//38ASt0Kr4co274AAAAASUVORK5CYII="
-            width="0" onerror="callback_LoadingError(event)" onload="(() => { removeOnerror.call(this); })()">
+            width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
             <!-- This transparent tiles texture gives us freedom of color, but the moiré effect is heavier -->
-            <img id="tiles256" src="/img/game/tiles/tiles256.png" width="0" onerror="callback_LoadingError(event)" onload="(() => { removeOnerror.call(this); })()">
-            <img id="spritesheet" src="/img/game/spritesheet64_cburnett.png" width="0" onerror="callback_LoadingError(event)" onload="(() => { removeOnerror.call(this); })()">
+            <img id="tiles256" src="/img/game/tiles/tiles256.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
+            <img id="spritesheet" src="/img/game/spritesheet64_cburnett.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()">
         </main>
     </body>
 </html>

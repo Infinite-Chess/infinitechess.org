@@ -10,7 +10,6 @@
 
 import fs from "fs";
 import path from "path";
-import { glob } from 'glob';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,14 +52,15 @@ function injectScript(htmlFilePath, scriptTag, injectAfterTag) {
  * @param {string} injectAfterTag  
  * @param {Object} [options] 
  */
-function injectScriptIntoPlayEjs(file, isModule = false) {
+function injectScriptIntoPlayEjs(file, injectAfterTag, isModule = false, isHtml = false) {
     const htmlFilePath = path.join(__dirname, "..", "..", "..", "dist", "views", "play.ejs");
     const jsFilePath = file.split(/(\\|\/)+/).slice(4).join("");
     const moduleType = isModule ? 'type="module"' : '';
+    const loadingErrors = isHtml ? '' : 'defer onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"';
 
-    const HTML_scriptcall_p1 = `<script defer ${moduleType} src="/${jsFilePath}" onerror="callback_LoadingError(event)" onload="(() => { removeOnerror.call(this); })()"></script>`;
+    const HTML_scriptcall_p1 = `<script ${moduleType} src="/${jsFilePath}" ${loadingErrors}></script>`;
 
-    return injectScript(htmlFilePath, HTML_scriptcall_p1, "<!-- All clientside game scripts inject here -->");
+    return injectScript(htmlFilePath, HTML_scriptcall_p1, injectAfterTag);
 }
 
 export {

@@ -71,7 +71,9 @@ if (!BUNDLE_FILES) {
         force: true
     });
     // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`,injectScriptIntoPlayEjs(`./dist/scripts/game/htmlscript.js`, true), 'utf8');
+    await writeFile(`./dist/views/play.ejs`, 
+        injectScriptIntoPlayEjs(`./dist/scripts/game/main.js`, "<!-- All clientside game scripts inject here -->", true), 
+        'utf8');
 } else {
     // in prod mode, copy all clientside files over to dist, except for those contained in scripts
     await copy("./src/client", "./dist", {
@@ -85,7 +87,8 @@ if (!BUNDLE_FILES) {
     // make a list of all client scripts:
     const clientFiles = [];
     const clientScripts = await getExtFiles("src/client/scripts", ".js");
-    clientFiles.push(...clientScripts.map(v => `scripts/${v}`).filter(file => !/scripts(\\|\/)+game(\\|\/)/.test(file)));
+    clientFiles.push(...clientScripts.map(v => `scripts/${v}`)
+        .filter(file => !/scripts(\\|\/)+game(\\|\/)/.test(file) || /\/htmlscript\.js$/.test(file)));
 
     // string containing all code in /game except for htmlscript.js: 
 
@@ -108,7 +111,7 @@ if (!BUNDLE_FILES) {
 
     await esbuild.build({
         bundle: true,
-        entryPoints: ['src/client/scripts/game/htmlscript.js'],
+        entryPoints: ['src/client/scripts/game/main.js'],
         outfile: './dist/scripts/game/app.js'
     });
 
@@ -124,7 +127,9 @@ if (!BUNDLE_FILES) {
     await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
   
     // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`, injectScriptIntoPlayEjs(`./dist/scripts/game/app.js`), 'utf8');
+    await writeFile(`./dist/views/play.ejs`, 
+        injectScriptIntoPlayEjs(`./dist/scripts/game/app.js`,"<!-- All clientside game scripts inject here -->"), 
+        'utf8');
   
     // Make a list of all css files
     const cssFiles = await getExtFiles("./src/client/css", ".css");
@@ -139,6 +144,10 @@ if (!BUNDLE_FILES) {
         await writeFile(`./dist/css/${file}`, code, 'utf8');
     }
 }
+
+await writeFile(`./dist/views/play.ejs`, 
+    injectScriptIntoPlayEjs(`./dist/scripts/game/htmlscript.js`,"<!-- js inject here -->", false, true), 
+    'utf8');
 
 export {
     getAllGameScripts

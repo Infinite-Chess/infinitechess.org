@@ -1,3 +1,4 @@
+import input from "../input";
 
 /**
  * This script creates event listeners for managing the current classes

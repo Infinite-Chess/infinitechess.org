@@ -7,6 +7,8 @@ import style from './style.js';
 import input from '../input.js';
 import guipause from './guipause.js';
 import area from '../rendering/area.js';
+import transition from '../rendering/transition.js';
+import gamefileutility from '../chess/gamefileutility.js';
 // Import End
 
 

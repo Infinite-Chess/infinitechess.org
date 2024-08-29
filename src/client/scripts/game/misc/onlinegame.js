@@ -26,12 +26,10 @@ import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
-
 // This module keeps trap of the data of the onlinegame we are currently in.
 
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const onlinegame = (function() {
 
     /** Whether we are currently in an online game. */

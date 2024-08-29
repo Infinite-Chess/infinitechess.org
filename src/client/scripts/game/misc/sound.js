@@ -1,6 +1,5 @@
 // Import Start
 import main from '../main.js';
-import htmlscript from '../htmlscript.js';
 // Import End
 
 // This script controls the playing of our sound effects
@@ -418,5 +417,7 @@ const sound = (function() {
     });
 
 })();
+
+globalThis.sound = sound;
 
 export default sound;

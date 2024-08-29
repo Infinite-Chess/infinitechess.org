@@ -13,6 +13,7 @@ import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import math from '../misc/math.js';
 import buffermodel from './buffermodel.js';
+import game from '../chess/game.js';
 // Import End
 
 

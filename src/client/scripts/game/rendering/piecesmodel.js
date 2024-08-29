@@ -14,6 +14,7 @@ import statustext from '../gui/statustext.js';
 import movement from './movement.js';
 import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
+import options from './options.js';
 // Import End
 
 

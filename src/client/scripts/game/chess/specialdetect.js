@@ -2,6 +2,8 @@
 import gamefileutility from './gamefileutility.js';
 import organizedlines from './organizedlines.js';
 import math from '../misc/math.js';
+import wincondition from './wincondition.js';
+import checkdetection from './checkdetection.js';
 // Import End
 
 

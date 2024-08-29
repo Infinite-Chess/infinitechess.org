@@ -2,6 +2,7 @@
 import variant from './variant.js';
 import formatconverter from './formatconverter.js';
 import movesscript from './movesscript.js';
+import math from '../misc/math.js';
 // Import End
 
 

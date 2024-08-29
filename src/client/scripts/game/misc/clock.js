@@ -5,6 +5,7 @@ import game from '../chess/game.js';
 import sound from './sound.js';
 import movesscript from '../chess/movesscript.js';
 import math from './math.js';
+import gamefileutility from '../chess/gamefileutility.js';
 // Import End
 
 // This script keeps track of both players timer, updates them,

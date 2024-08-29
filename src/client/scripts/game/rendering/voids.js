@@ -5,6 +5,7 @@ import piecesmodel from './piecesmodel.js';
 import math from '../misc/math.js';
 import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
+import board from './board.js';
 // Import End
 
 

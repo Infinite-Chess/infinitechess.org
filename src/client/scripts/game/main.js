@@ -11,6 +11,7 @@ import camera from './rendering/camera.js';
 import invites from './misc/invites.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
+import math from './misc/math.js';
 // Import End
 
 
@@ -156,7 +157,13 @@ const main = (function() {
     });
 })();
 
-export default main
+console.log('main load');
+
+globalThis.main = main;
+globalThis.a = a;
+globalThis.b = b;
+
+export default main;
 
 /**
  * With a very short and fast-to-type name, prints

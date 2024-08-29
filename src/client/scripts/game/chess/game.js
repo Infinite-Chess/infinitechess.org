@@ -9,7 +9,6 @@ import guinavigation from '../gui/guinavigation.js';
 import pieces from '../rendering/pieces.js';
 import invites from '../misc/invites.js';
 import guititle from '../gui/guititle.js';
-import organizedlines from './organizedlines.js';
 import guipause from '../gui/guipause.js';
 import input from '../input.js';
 import miniimage from '../rendering/miniimage.js';

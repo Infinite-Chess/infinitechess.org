@@ -7,6 +7,7 @@ import guinavigation from '../gui/guinavigation.js';
 import selection from './selection.js';
 import input from '../input.js';
 import statustext from '../gui/statustext.js';
+import game from './game.js';
 // Import End
 
 
@@ -18,6 +19,7 @@ import statustext from '../gui/statustext.js';
 // Custom type definitions...
 
 /** The `Move` custom type. This should not be called, it is for JSDoc dropdown info. */
+// eslint-disable-next-line no-unused-vars
 function Move() {
     console.error('This Move constructor should NEVER be called! It is purely for useful JSDoc dropdown info when working with the `Move` type.');
 

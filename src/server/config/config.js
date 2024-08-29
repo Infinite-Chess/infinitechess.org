@@ -7,7 +7,9 @@
  */
 const DEV_BUILD = true;
 
-const BUNDLE_FILES = !DEV_BUILD || false;
+const BUNDLE_FILES = true;
+
+if (!DEV_BUILD && !BUNDLE_FILES) throw new Error("BUNDLE_FILES must be true in production!!");
 
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
@@ -20,8 +22,6 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) throw new Error("ARE_RATE_LIMITING must be
  */
 const simulatedWebsocketLatencyMillis = 0;
 if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simulatedWebsocketLatencyMillis must be 0 in production!!");
-
-
 
 /** The domain name of the production website. */
 const HOST_NAME = 'www.infinitechess.org';

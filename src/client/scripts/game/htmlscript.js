@@ -1,8 +1,4 @@
-// Import Start
-import main from './main.js';
-import sound from './misc/sound.js';
-// Import End
-
+/* eslint-disable no-undef */
 
 /*
  * The server injects this script directly into the html document
@@ -86,7 +82,7 @@ const htmlscript = (function() {
     // ...
 
     let lostNetwork = false;
-
+    let loadingErrorOcurred = false;
     function callback_LoadingError(event) {
         // const type = event.type; // Event type: "error"/"abort"
         // const target = event.target; // Element that triggered the event
@@ -139,12 +135,12 @@ const htmlscript = (function() {
         lostNetwork = false;
         if (loadingErrorOcurred) window.location.reload(); // Refresh the page
     }
-
     // When the document is loaded, start the game!
 
     window.addEventListener('load', function() {
         if (loadingErrorOcurred) return; // Page never finished loading, don't start the game.
         closeLoadingScreenListeners(); // Remove document event listeners for the loading screen
+        console.log('html load');
         main.start(); // Start the game!
     });
 
@@ -156,4 +152,4 @@ const htmlscript = (function() {
 
 })();
 
-export default htmlscript
+globalThis.htmlscript = htmlscript;

@@ -9,6 +9,7 @@ import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';
 import shaders from './shaders.js';
 import math from '../misc/math.js';
+import guidrawoffer from '../gui/guidrawoffer.js';
 // Import End
 
 
@@ -317,4 +318,4 @@ const camera = (function() {
 
 })();
 
-export default camera
+export default camera;

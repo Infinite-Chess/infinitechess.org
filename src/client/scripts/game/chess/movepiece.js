@@ -14,6 +14,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import math from '../misc/math.js';
 import movesscript from './movesscript.js';
 import checkdetection from './checkdetection.js';
+import formatconverter from './formatconverter.js';
 // Import End
 
 // Here lies the universal methods for moving pieces, forward or rewinding.

@@ -10,6 +10,7 @@ import board from '../rendering/board.js';
 import pieces from '../rendering/pieces.js';
 import math from '../misc/math.js';
 import movesscript from './movesscript.js';
+import game from './game.js';
 // Import End
 
 
