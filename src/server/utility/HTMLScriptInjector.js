@@ -28,6 +28,9 @@ function injectafter(string, after, injectString) {
  */
 function injectScript(htmlFilePath, scriptTag, injectAfterTag) {
     const htmlData = fs.readFileSync(htmlFilePath, "utf8");
+    if (!htmlData.match(injectAfterTag)) {
+        console.error(`No match for tag ${injectAfterTag}`);
+    }
     const modifiedHTML = injectafter(htmlData, injectAfterTag, scriptTag);
 
     // // Read the JavaScript file
@@ -47,22 +50,29 @@ function injectScript(htmlFilePath, scriptTag, injectAfterTag) {
     return modifiedHTML;
 }
 
+function injectHtmlScript() {
+    const htmlFilePath = path.join(__dirname, "..", "..", "..", "dist", "views", "play.ejs");
+    const jsFilePath = path.join(__dirname, "..", "..", "..", "dist", "scripts", "game", "htmlscript.js");
+    const HTML_scriptcall = `<script>${fs.readFileSync(jsFilePath)}</script>`;
+    return injectScript(htmlFilePath, HTML_scriptcall, '<!-- js inject here -->');
+}
+
 /**
  * @param {string} file
  * @param {string} injectAfterTag  
  * @param {Object} [options] 
  */
-function injectScriptIntoPlayEjs(file, injectAfterTag, isModule = false, isHtml = false) {
+function injectScriptIntoPlayEjs(file, injectAfterTag, isModule = false) {
     const htmlFilePath = path.join(__dirname, "..", "..", "..", "dist", "views", "play.ejs");
     const jsFilePath = file.split(/(\\|\/)+/).slice(4).join("");
     const moduleType = isModule ? 'type="module"' : '';
-    const loadingErrors = isHtml ? '' : 'defer onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"';
 
-    const HTML_scriptcall_p1 = `<script ${moduleType} src="/${jsFilePath}" ${loadingErrors}></script>`;
+    const HTML_scriptcall = `<script ${moduleType} src="/${jsFilePath}" defer onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>`;
 
-    return injectScript(htmlFilePath, HTML_scriptcall_p1, injectAfterTag);
+    return injectScript(htmlFilePath, HTML_scriptcall, injectAfterTag);
 }
 
 export {
     injectScriptIntoPlayEjs,
+    injectHtmlScript,
 };

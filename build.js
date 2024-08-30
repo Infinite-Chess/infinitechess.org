@@ -9,7 +9,7 @@ import { readdir, cp as copy, rm as remove, readFile, writeFile } from 'node:fs/
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
-import { injectScriptIntoPlayEjs } from './src/server/utility/HTMLScriptInjector.js';
+import { injectScriptIntoPlayEjs, injectHtmlScript } from './src/server/utility/HTMLScriptInjector.js';
 import { BUNDLE_FILES } from './src/server/config/config.js';
 import esbuild from 'esbuild';
 import path from "node:path";
@@ -87,14 +87,13 @@ if (!BUNDLE_FILES) {
     // make a list of all client scripts:
     const clientFiles = [];
     const clientScripts = await getExtFiles("src/client/scripts", ".js");
+    // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
     clientFiles.push(...clientScripts.map(v => `scripts/${v}`)
         .filter(file => !/scripts(\\|\/)+game(\\|\/)/.test(file) || /\/htmlscript\.js$/.test(file)));
 
     // string containing all code in /game except for htmlscript.js: 
 
     for (const file of clientFiles) {
-    // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
-        //if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
         const code = await readFile(`./src/client/${file}`, 'utf8');
         const minified = await swc.minify(code, {
             mangle: true, // Enable variable name mangling
@@ -146,7 +145,7 @@ if (!BUNDLE_FILES) {
 }
 
 await writeFile(`./dist/views/play.ejs`, 
-    injectScriptIntoPlayEjs(`./dist/scripts/game/htmlscript.js`,"<!-- js inject here -->", false, true), 
+    injectHtmlScript(), 
     'utf8');
 
 export {
