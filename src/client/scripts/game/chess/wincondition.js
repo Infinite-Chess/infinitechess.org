@@ -8,6 +8,10 @@ import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
 
 /*
  * This script contains the methods for calculating if the

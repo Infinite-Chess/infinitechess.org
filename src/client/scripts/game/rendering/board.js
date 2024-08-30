@@ -16,6 +16,11 @@ import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
 // Import End
 
+/** 
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ */
 
 /*
  * This script renders the board, and changes it's color.

@@ -6,6 +6,10 @@ import piecesmodel from '../rendering/piecesmodel.js';
 import options from '../rendering/options.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
 
 /*
  * This script manages the organized lines of all pieces in the current game.

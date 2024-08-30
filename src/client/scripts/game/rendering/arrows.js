@@ -20,6 +20,11 @@ import movesscript from '../chess/movesscript.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
+
 /* eslint-disable indent */
 // This script handles the rendering of arrows poointing to pieces off-screen
 // and detects if they are clicked

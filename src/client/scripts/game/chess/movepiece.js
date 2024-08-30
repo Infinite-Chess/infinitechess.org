@@ -17,6 +17,13 @@ import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('./movepiece.js').Piece} Piece
+*/
+
 // Here lies the universal methods for moving pieces, forward or rewinding.
 
 "use strict";

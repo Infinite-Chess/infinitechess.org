@@ -17,6 +17,11 @@ import buffermodel from './buffermodel.js';
 import options from './options.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+*/
 
 // This contains the functions for generating, modifying,
 // and rendering the mesh of the pieces of a gamefile

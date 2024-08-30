@@ -32,6 +32,10 @@ import promotionlines from '../rendering/promotionlines.js';
 import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
 
 /**
  * This script stores our currently loaded game,

@@ -7,6 +7,12 @@ import variant from './variant.js';
 import math from '../misc/math.js';
 // Import End
 
+/** 
+ * Type Definitions
+ * @typedef {import('../rendering/buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ */
+
 // This script when called as a function using the new keyword, will return a new gamefile.
 
 'use strict';
@@ -211,4 +217,5 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     organizedlines.addMoreUndefineds(this, { regenModel: false });
 };
 
-export default gamefile
+export { gamefile };
+export default gamefile;

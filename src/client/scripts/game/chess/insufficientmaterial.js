@@ -5,6 +5,11 @@ import gamefileutility from './gamefileutility.js';
 import movesscript from './movesscript.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
+
 // Draw detection by insufficient material
 
 "use strict";

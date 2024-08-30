@@ -6,6 +6,10 @@ import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 /*
  * This script contains methods for obtaining the vertex data

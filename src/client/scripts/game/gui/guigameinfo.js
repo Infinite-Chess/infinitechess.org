@@ -5,7 +5,10 @@ import game from '../chess/game.js';
 import onlinegame from '../misc/onlinegame.js';
 // Import End
 
-/* eslint-disable indent */
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+*/
 
 /*
  * This script handles the game info bar, during a game,
@@ -14,7 +17,6 @@ import onlinegame from '../misc/onlinegame.js';
 
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const guigameinfo = (function() {
 
     // Variables

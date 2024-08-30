@@ -15,6 +15,11 @@ import area from './area.js';
 import math from '../misc/math.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
+
 // This script handles the rendering of the mini images of our pieces when we're zoomed out
 
 "use strict";

@@ -6,6 +6,11 @@ import movesscript from './movesscript.js';
 import legalmoves from './legalmoves.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+*/
 
 /**
  * This script contains our checkmate algorithm,

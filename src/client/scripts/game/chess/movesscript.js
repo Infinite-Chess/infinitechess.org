@@ -10,6 +10,10 @@ import statustext from '../gui/statustext.js';
 import game from './game.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
 
 // This contains methods for working with the gamefile's moves list,
 // and detects if we're rewinding or fast-forwarding to view the game's history.
@@ -387,5 +391,5 @@ const movesscript = (function() {
     });
 
 })();
-
+export { Move };
 export default movesscript;

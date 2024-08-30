@@ -8,6 +8,10 @@ import buffermodel from './buffermodel.js';
 import board from './board.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+*/
 
 /**
  * This generates and renders the mesh of the void squares

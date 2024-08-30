@@ -9,6 +9,12 @@ import checkdetection from './checkdetection.js';
 import wincondition from './wincondition.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('./movepiece.js').Piece} Piece
+*/
 
 /*
  * This script calculates legal moves

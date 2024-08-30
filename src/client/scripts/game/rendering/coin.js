@@ -2,6 +2,10 @@
 import bufferdata from './bufferdata.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+*/
 
 /*
  * This script generates the vertex data of the hidden coins

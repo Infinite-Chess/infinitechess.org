@@ -22,6 +22,12 @@ import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
+ * @typedef {import('./movepiece.js').Piece} Piece
+ */
 
 // This script tests for piece selection and keeps track of the selected piece,
 // including the legal moves it has available.

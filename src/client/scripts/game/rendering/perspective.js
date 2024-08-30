@@ -14,6 +14,11 @@ import input from '../input.js';
 import selection from '../chess/selection.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
+
 // This script handles our perspective mode!
 // Also rendering our crosshair
 

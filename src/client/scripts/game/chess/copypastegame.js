@@ -13,6 +13,10 @@ import gamefileutility from './gamefileutility.js';
 import statustext from '../gui/statustext.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
 
 /*
  * This script handles copying and pasting games

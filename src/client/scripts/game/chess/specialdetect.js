@@ -6,6 +6,11 @@ import wincondition from './wincondition.js';
 import checkdetection from './checkdetection.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+*/
 
 // This detects if special moves are legal.
 // Does NOT execute the moves!

@@ -5,6 +5,11 @@ import movement from './movement.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
+
 // This script handles the rendering of our promotion lines
 
 "use strict";

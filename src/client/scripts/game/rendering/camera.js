@@ -12,6 +12,11 @@ import math from '../misc/math.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
+ */
 
 // This script handles and stores the matrixes of our shader programs, which
 // store the location of the camera, and contains data about our canvas and window.

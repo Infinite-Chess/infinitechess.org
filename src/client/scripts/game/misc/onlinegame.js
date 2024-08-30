@@ -26,6 +26,13 @@ import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../chess/movesscript.js').Move} Move
+ * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
+*/
+
 // This module keeps trap of the data of the onlinegame we are currently in.
 
 "use strict";

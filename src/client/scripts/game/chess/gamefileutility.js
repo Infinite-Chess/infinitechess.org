@@ -13,6 +13,11 @@ import movesscript from './movesscript.js';
 import game from './game.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movepiece.js').Piece} Piece
+*/
 
 /*
  * This script contains many utility methods for working with gamefiles

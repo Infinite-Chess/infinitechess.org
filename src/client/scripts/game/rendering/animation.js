@@ -11,6 +11,11 @@ import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('../chess/movesscript.js').Move} Move
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 // This script handles the smooth animation when moving a piece from one coord to another
 // Also plays our sounds!

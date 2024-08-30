@@ -10,6 +10,10 @@ import pieces from '../rendering/pieces.js';
 import math from '../misc/math.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
 
 // This script stores our variants,
 // and prepares them when a game is generated

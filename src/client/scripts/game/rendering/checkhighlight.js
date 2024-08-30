@@ -7,6 +7,11 @@ import options from './options.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
+
 /*
  * This script renders the red glow surrounding
  * royal pieces currently in check.

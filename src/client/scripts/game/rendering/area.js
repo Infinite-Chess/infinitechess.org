@@ -7,6 +7,11 @@ import gamefileutility from '../chess/gamefileutility.js';
 import math from '../misc/math.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+*/
 
 /**
  * This script handles the calculation of the "Area"s on screen that

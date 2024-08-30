@@ -16,6 +16,12 @@ import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
+/**
+ * Type Definitions
+ * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ */
 
 // This script handles the rendering of legal jumping (no sliding) moves,
 // and also hilights the last move played.
