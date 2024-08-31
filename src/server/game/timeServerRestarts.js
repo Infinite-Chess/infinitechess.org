@@ -46,9 +46,9 @@ function getMinutesUntilServerRestart() {
 }
 
 
-module.exports = {
+export {
     getTimeServerRestarting,
     setTimeServerRestarting,
     cancelServerRestart,
     getMinutesUntilServerRestart
-}
+};

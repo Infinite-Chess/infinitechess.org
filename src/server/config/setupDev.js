@@ -1,9 +1,10 @@
-const { DEV_BUILD } = require('./config');
-const { generateAccount } = require('../controllers/createaccountController');
-const { giveRole_Owner, giveRole_Patron } = require('../controllers/roles');
-const { doesMemberExist } = require('../controllers/members');
-const { ensureEnvFile } = require('./env');
-const { ensureSelfSignedCertificate } = require('./generateCert');
+import dotenv from 'dotenv';
+import { DEV_BUILD } from './config.js';
+import { generateAccount } from '../controllers/createaccountController.js';
+import { giveRole_Owner, giveRole_Patron } from '../controllers/roles.js';
+import { doesMemberExist } from '../controllers/members.js';
+import { ensureEnvFile } from './env.js';
+import { ensureSelfSignedCertificate } from './generateCert.js';
 
 function initDevEnvironment() {
     if (!DEV_BUILD) return callDotenvConfig(); // Production
@@ -21,7 +22,7 @@ function initDevEnvironment() {
 function callDotenvConfig() {
     // Load the .env file contents into process.env
     // This needs to be as early as possible
-    require('dotenv').config(); 
+    dotenv.config(); 
 }
 
 function createDevelopmentAccounts() {
@@ -39,6 +40,6 @@ function createDevelopmentAccounts() {
 }
 
 
-module.exports = {
+export {
     initDevEnvironment
 };

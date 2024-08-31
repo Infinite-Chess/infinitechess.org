@@ -272,4 +272,4 @@ const math1 = (function() {
     });
 })();
 
-module.exports = math1;
+export default math1;

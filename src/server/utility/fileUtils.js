@@ -4,8 +4,8 @@
  * reading files and creating directories.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Reads a file if it exists, otherwise returns null.
@@ -40,7 +40,7 @@ function writeFile_ensureDirectory(filePath, content) {
     fs.writeFileSync(filePath, content);
 }
 
-module.exports = {
+export {
     readFileIfExists,
     ensureDirectoryExists,
     writeFile_ensureDirectory

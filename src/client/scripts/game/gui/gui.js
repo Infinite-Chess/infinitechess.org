@@ -38,7 +38,7 @@ const gui = (function() {
     }
 
     function callback_featurePlanned() {
-        statustext.showStatus(translations["planned_feature"]);
+        statustext.showStatus(translations.planned_feature);
     }
 
     function makeOverlayUnselectable() {

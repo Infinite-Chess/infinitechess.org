@@ -1,6 +1,6 @@
 
-const variant1 = require('./variant1');
-const math1 = require('./math1');
+import variant1 from './variant1.js';
+import math1 from './math1.js';
 
 
 // This extends variant.js, containing the init methods
@@ -662,4 +662,4 @@ const variantomega1 = (function() {
 
 })();
 
-module.exports = variantomega1;
+export default variantomega1;

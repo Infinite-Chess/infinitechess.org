@@ -6,15 +6,17 @@
  * and broadcasts changes out to the clients.
  */
 
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js');
-// eslint-disable-next-line no-unused-vars
-const { Invite, isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } = require('./inviteutility.js');
-const wsutility = require('../wsutility.js');
-const math1 = require('../math1.js');
-const { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } = require('./invitessubscribers.js');
+import wsutility from '../wsutility.js';
+import math1 from '../math1.js';
+import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
+import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
+import { getActiveGameCount } from '../gamemanager/gamecount.js';
 
-const { getActiveGameCount } = require('../gamemanager/gamecount');
+/**
+ * Type Definitions
+ * @typedef {import('./inviteutility.js').Invite} Invite 
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ */
 
 //-------------------------------------------------------------------------------------------
 
@@ -363,7 +365,7 @@ function deleteAllInvitesOfMember(usernameLowercase) {
 
 //-------------------------------------------------------------------------------------------
 
-module.exports = {
+export {
     subToInvitesList,
     unsubFromInvitesList,
     deleteAllInvitesOfMember,

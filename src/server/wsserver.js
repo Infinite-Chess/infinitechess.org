@@ -1,21 +1,24 @@
-const WebSocket = require('ws');
-const { verifyJWTWebSocket } = require("./middleware/verifyJWT");
-const { rateLimitWebSocket } = require("./middleware/rateLimit");
-const { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } = require('./middleware/logEvents');
-const { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } = require('./config/config');
+import { WebSocketServer as Server, WebSocket } from 'ws';
+import { verifyJWTWebSocket } from './middleware/verifyJWT.js';
+import { rateLimitWebSocket } from './middleware/rateLimit.js';
+import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from './middleware/logEvents.js';
+import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
 
-// eslint-disable-next-line no-unused-vars
-const { WebsocketMessage, Socket } = require('./game/TypeDefinitions');
-const { genUniqueID, generateNumbID } = require('./game/math1');
-const wsutility = require('./game/wsutility');
-const { handleGameRoute } = require('./game/gamemanager/gamerouter');
-const { handleInviteRoute } = require('./game/invitesmanager/invitesrouter');
-const { unsubClientFromGameBySocket } = require('./game/gamemanager/gamemanager');
-const { subToInvitesList, unsubFromInvitesList, userHasInvite } = require('./game/invitesmanager/invitesmanager');
+import math1 from './game/math1.js';
+const { genUniqueID, generateNumbID } = math1;
+import wsutility from './game/wsutility.js';
+import { handleGameRoute } from './game/gamemanager/gamerouter.js';
+import { handleInviteRoute } from './game/invitesmanager/invitesrouter.js';
+import { unsubClientFromGameBySocket } from './game/gamemanager/gamemanager.js';
+import { subToInvitesList, unsubFromInvitesList, userHasInvite } from './game/invitesmanager/invitesmanager.js';
+import { ensureJSONString } from './utility/JSONUtils.js';
+import { executeSafely } from './utility/errorGuard.js';
 
-const { ensureJSONString } = require('./utility/JSONUtils');
-const { executeSafely } = require('./utility/errorGuard');
-
+/**
+ * Type Definitions
+ * @typedef {import('./game/TypeDefinitions.js').Socket} Socket
+ * @typedef {import('./game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
+ */
 
 let WebSocketServer;
 
@@ -144,8 +147,7 @@ function onConnectionRequest(ws, req) {
     if (cookies['browser-id']) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
 
     if (!ws.metadata.user && !ws.metadata['browser-id']) { // Terminate web socket connection request, they NEED authentication!
-        console.log("Authentication needed for WebSocket connection request. Req headers:");
-        console.log(req.headers);
+        console.log("Authentication needed for WebSocket connection request!!");
         return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
     }
 
@@ -295,7 +297,7 @@ function onclose(ws, code, reason) {
 
     cancelRenewConnectionTimer(ws);
 
-    if (reason === 'No echo heard') console.log(`Socket closed from no echo heard. ${wsutility.stringifySocketMetadata(ws)}`)
+    if (reason === 'No echo heard') console.log(`Socket closed from no echo heard. ${wsutility.stringifySocketMetadata(ws)}`);
 }
 
 function onerror(ws, error) {
@@ -594,7 +596,7 @@ function wasSocketClosureNotByTheirChoice(code, reason) {
 const wsserver = (function() {
 
     function start(httpsServer) {
-        WebSocketServer = new WebSocket.Server({ server: httpsServer }); // Create a WebSocket server instance
+        WebSocketServer = new Server({ server: httpsServer }); // Create a WebSocket server instance
         // WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
         WebSocketServer.on('connection', (ws, req) => {
             executeSafely(onConnectionRequest, 'Error caught within websocket on-connection request:', ws, req);
@@ -621,4 +623,4 @@ const wsserver = (function() {
 
 })();
 
-module.exports = wsserver;
+export default wsserver;

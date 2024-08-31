@@ -6,9 +6,9 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require('../TypeDefinitions.js');
-const wsutility = require('../wsutility.js');
+import wsutility from '../wsutility.js';
+
+/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 
 /**
  * List of clients currently subscribed to invites list events, with their
@@ -73,7 +73,7 @@ function removeSocketFromInvitesSubs(ws) {
 
 
 
-module.exports = {
+export {
     getInviteSubscribers,
     broadcastToAllInviteSubs,
     addSocketToInvitesSubs,

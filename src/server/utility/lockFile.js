@@ -9,9 +9,9 @@
  * try to read/write the members file at the same time.
  */
 
-const lockfile = require('proper-lockfile');
-const fs = require('fs');
-const { logEvents } = require('../middleware/logEvents');
+import lockfile from 'proper-lockfile';
+import fs from 'fs';
+import { logEvents } from '../middleware/logEvents.js';
 
 // Locks the file while reading, then immediately unlocks and returns the data.
 // MUST BE CALLED WITH 'await' or this returns a promise!
@@ -86,7 +86,7 @@ const editFile = async(path, callback, errorString) => {
     return status;
 };
 
-module.exports = {
+export {
     readFile,
     writeFile,
     editFile

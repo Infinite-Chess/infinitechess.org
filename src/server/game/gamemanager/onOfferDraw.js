@@ -4,13 +4,17 @@
  * draw offers in online games.
  */
 
-// eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const math1 = require('../math1');
-const movesscript1 = require('../movesscript1');
-const { setGameConclusion } = require('./gamemanager');
-const { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } = require('./drawoffers');
+import gameutility from './gameutility.js';
+import math1 from '../math1.js';
+import movesscript1 from '../movesscript1.js';
+import { setGameConclusion } from './gamemanager.js';
+import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
+
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -91,7 +95,7 @@ function declineDraw(ws, game) {
 
 //--------------------------------------------------------------------------------------------------------
 
-module.exports = {
+export {
     offerDraw,
     acceptDraw,
     declineDraw,

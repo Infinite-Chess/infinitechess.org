@@ -3,7 +3,7 @@
  * This script keeps track of the ID's of games members and browsers are currently in.
  */
 
-const wsutility = require("../wsutility");
+import wsutility from '../wsutility.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -108,7 +108,7 @@ function getIDOfGamePlayerIsIn(player) {
 
 //--------------------------------------------------------------------------------------------------------
 
-module.exports = {
+export {
     addUserToActiveGames,
     removeUserFromActiveGame,
     isSocketInAnActiveGame,

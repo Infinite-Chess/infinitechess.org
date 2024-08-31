@@ -1,8 +1,8 @@
 
-const formatconverter1 = require('./formatconverter1');
-const variantomega1 = require('./variantomega1');
-const math1 = require('./math1');
-const pieces1 = require('./pieces1');
+import formatconverter1 from './formatconverter1.js';
+import variantomega1 from './variantomega1.js';
+import math1 from './math1.js';
+import pieces1 from './pieces1.js';
 
 // This script stores our variants,
 // and prepares them when a game is generated
@@ -263,7 +263,7 @@ const variant1 = (function() {
             winConditions: modifications.winConditions || getDefaultWinConditions(),
             moveRule: modifications.moveRule || 100,
             turnOrder: modifications.turnOrder || getDefaultTurnOrder(),
-        }
+        };
         if (modifications.slideLimit != null) gameRules.slideLimit = modifications.slideLimit;
         if (modifications.moveRule === null) delete gameRules.moveRule;
         return gameRules;
@@ -915,4 +915,4 @@ const variant1 = (function() {
 
 })();
 
-module.exports = variant1;
+export default variant1;

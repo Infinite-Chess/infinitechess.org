@@ -3,26 +3,34 @@
  * This module configures the middleware waterfall of our server
  */
 
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
 
 // Middleware
-const cookieParser = require('cookie-parser');
-const credentials = require('./credentials');
-const secureRedirect = require('./secureRedirect');
-const errorHandler = require('./errorHandler');
-const { logger } = require('./logEvents');
-const { verifyJWT } = require('./verifyJWT');
-const { rateLimit } = require('./rateLimit');
-const { protectedStatic } = require('./protectedStatic');
+import cookieParser from 'cookie-parser';
+import credentials from './credentials.js';
+import secureRedirect from './secureRedirect.js';
+import errorHandler from './errorHandler.js';
+import { logger } from './logEvents.js';
+import { verifyJWT } from './verifyJWT.js';
+import { rateLimit } from './rateLimit.js';
+import { protectedStatic } from './protectedStatic.js';
 
 // External translation middleware
-const i18next = require('i18next');
-const middleware = require('i18next-http-middleware');
+import i18next from 'i18next';
+import middleware from 'i18next-http-middleware';
 
 // Other imports
-const { useOriginWhitelist } = require('../config/config');
+import { useOriginWhitelist } from '../config/config.js';
+import { router as rootRouter } from '../routes/root.js';
+import { router as accountRouter } from '../routes/createaccount.js';
+import { router as memberRouter } from '../routes/member.js';
+import send404 from './send404.js';
+import corsOptions from '../config/corsOptions.js';
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Configures the Middleware Waterfall
@@ -65,7 +73,7 @@ function configureMiddleware(app) {
      * 
      * Does this create a 'Access-Control-Allow-Origin' header?
      */
-    const options = useOriginWhitelist ? require('../config/corsOptions') : undefined;
+    const options = useOriginWhitelist ? corsOptions : undefined;
     app.use(cors(options));
 
     /**
@@ -93,15 +101,15 @@ function configureMiddleware(app) {
     app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, 'cert/.well-known/acme-challenge')));
 
     // Provide a route
-    app.use('/', require('../routes/root'));
-    app.use('/createaccount(.html)?', require('../routes/createaccount'));
-    app.use('/member', require('../routes/member'));
+    app.use('/', rootRouter);
+    app.use('/createaccount(.html)?', accountRouter);
+    app.use('/member', memberRouter);
 
     // If we've reached this point, send our 404 page.
-    app.all('*', require('./send404'));
+    app.all('*', send404);
 
     // Custom error handling. Comes after 404.
     app.use(errorHandler);
 }
 
-module.exports = configureMiddleware;
+export default configureMiddleware;

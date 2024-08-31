@@ -79,7 +79,7 @@ const webgl = (function() {
             gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
         }
         if (!gl) { // Experimental also failed to init
-            alert(translations["webgl_unsupported"]);
+            alert(translations.webgl_unsupported);
             throw new Error("WebGL not supported.");
         }
     

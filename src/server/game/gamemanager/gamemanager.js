@@ -4,20 +4,25 @@
  */
 
 // Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const wsutility = require('../wsutility');
-const math1 = require('../math1');
-const movesscript1 = require('../movesscript1');
-const statlogger = require('../statlogger');
-const { executeSafely_async } = require('../../utility/errorGuard');
 
-const { getTimeServerRestarting } = require('../timeServerRestarts');
-const { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } = require('./afkdisconnect');
-const { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } = require('./gamecount');
-const { closeDrawOffer } = require('./drawoffers');
-const { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } = require('./activeplayers');
+import gameutility from './gameutility.js';
+import wsutility from '../wsutility.js';
+import math1 from '../math1.js';
+import movesscript1 from '../movesscript1.js';
+import statlogger from '../statlogger.js';
+import { executeSafely_async } from '../../utility/errorGuard.js';
+
+import { getTimeServerRestarting } from '../timeServerRestarts.js';
+import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
+import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
+import { closeDrawOffer } from './drawoffers.js';
+import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
+
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -426,7 +431,7 @@ function broadCastGameRestarting() {
 
 //--------------------------------------------------------------------------------------------------------
 
-module.exports = {
+export {
     createGame,
     unsubClientFromGameBySocket,
     onPlayerLostByAbandonment,

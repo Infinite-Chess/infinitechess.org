@@ -1,17 +1,20 @@
-const { format } = require('date-fns');
-const { v4: uuid } = require('uuid');
+import { format } from 'date-fns';
+import { v4 as uuid } from 'uuid';
 
-const fsPromises = require('fs').promises;
-const path = require('path');
+import { promises as fsPromises } from 'fs';
+import path from 'path';
 
-const { getClientIP } = require("./IP");
-const wsutility = require('../game/wsutility');
-// eslint-disable-next-line no-unused-vars
-const { Socket } = require('../game/TypeDefinitions');
-const { ensureDirectoryExists } = require('../utility/fileUtils');
+import { getClientIP } from "./IP.js";
+import wsutility from '../game/wsutility.js';
+import { ensureDirectoryExists } from '../utility/fileUtils.js';
 
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
 const giveLoggedItemsUUID = false;
+
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file.
@@ -97,7 +100,7 @@ function logReqWebsocketOut(ws, messageData) {
     logEvents(logThis, 'wsOutLog.txt');
 }
 
-module.exports = {
+export {
     logEvents,
     logger,
     logWebsocketStart,

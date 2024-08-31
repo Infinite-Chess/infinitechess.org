@@ -3,16 +3,18 @@
  * This script handles the abortings and resignations of online games
  */
 
-// Custom imports
-// eslint-disable-next-line no-unused-vars
-const { Socket, Game } = require('../TypeDefinitions');
-const gameutility = require('./gameutility');
-const wsutility = require('../wsutility');
-const sendNotify = wsutility.sendNotify;
-const sendNotifyError = wsutility.sendNotifyError;
-const movesscript1 = require('../movesscript1');
-const math1 = require('../math1');
-const { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } = require('./gamemanager');
+import gameutility from './gameutility.js';
+import wsutility from '../wsutility.js';
+const { sendNotify, sendNotifyError } = wsutility;
+import movesscript1 from '../movesscript1.js';
+import math1 from '../math1.js';
+import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
+
+/**
+ * Type Definitions
+ * @typedef {import('../TypeDefinitions.js').Socket} Socket
+ * @typedef {import('../TypeDefinitions.js').Game} Game
+ */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -89,7 +91,7 @@ function resignGame(ws, game) {
 }
 
 
-module.exports = {
+export {
     abortGame,
     resignGame,
 };
