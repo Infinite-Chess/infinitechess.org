@@ -81,26 +81,26 @@ code_credits = [
 ]
 
 [member]
-title = "Member" # The tab name
-verify_message = "Please check your email to verify your account."
-resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message me."]
-verify_confirm = "Thank you! Your account has been verified."
-rating = "Elo rating:"
-joined = "Joined:"
-seen = ["Seen:", " ago"]
-reveal_info = "Show Account Info"
-account_info_heading = "Account Info"
-email = "Email:"
-delete_account = "Delete account"
-password_reset_message = ["To change your username, email or password, ", "contact us."]
+title = "Miembro" # The tab name
+verify_message = "Por favor comprueba tu e-mail para verificar tu cuenta"
+resend_message = ["¿El e-mail no ha llegado? Comprueba la carpeta de spam. También puedes, ", "mandarlo otra vez.", "Si no puedes encontrarlo, ", "mandame un mensaje."]
+verify_confirm = "¡Gracias! Tu cuenta ha sido verificada."
+rating = "Rating Elo:"
+joined = "Se unió:"
+seen = ["Visto hace:", ""]
+reveal_info = "Mostrar información de la Cuenta"
+account_info_heading = "Información de la Cuenta"
+email = "E-mail:"
+delete_account = "Eliminar cuenta"
+password_reset_message = ["Para cambiar tu nombre de usuario, e-mail o contraseña, ", "contacta con nosotros."]
 
 [create-account]
-title = "Create Account" # The tab name
-username = "Username:"
-email = "Email:"
-password = "Password:"
-create_button = "Create Account"
-agreement = ["I agree to the ", "Terms of Service", "."]  # the middle entry is a hyperlink, the others are not
+title = "Crear Cuenta" # The tab name
+username = "Nombre de Usuario:"
+email = "E-mail:"
+password = "contraseña:"
+create_button = "Crear Cuenta"
+agreement = ["Acepto los ", "Terminos de Servicio", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
 js-username_specs = "Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9"
