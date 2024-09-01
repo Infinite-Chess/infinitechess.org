@@ -669,4 +669,4 @@ const input = (function() {
 
 })();
 
-export default input
+export default input;

@@ -276,7 +276,7 @@ const variant = (function() {
             winConditions: modifications.winConditions || getDefaultWinConditions(),
             moveRule: modifications.moveRule || 100,
             turnOrder: modifications.turnOrder || getDefaultTurnOrder(),
-        }
+        };
         if (modifications.slideLimit != null) gameRules.slideLimit = modifications.slideLimit;
         if (modifications.moveRule === null) delete gameRules.moveRule;
         return gameRules;
@@ -516,7 +516,7 @@ const variant = (function() {
                 return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
             case "Omega_Fourth":
                 return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
-            // Removed...
+                // Removed...
             /*
             case "Standarch - 3 Check":
                 return getGameRules({ winConditions: getWinConditionsOfThreeCheck(), position });

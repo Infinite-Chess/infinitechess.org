@@ -541,4 +541,4 @@ const arrows = (function() {
 
 })();
 
-export default arrows
+export default arrows;

@@ -284,4 +284,4 @@ const area = (function() {
 
 })();
 
-export default area
+export default area;

@@ -119,4 +119,4 @@ const coin = (function() {
 
 })();
 
-export default coin
+export default coin;

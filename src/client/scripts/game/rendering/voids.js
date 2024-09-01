@@ -313,4 +313,4 @@ const voids = {
     }
 };
 
-export default voids
+export default voids;

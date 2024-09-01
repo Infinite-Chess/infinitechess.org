@@ -711,4 +711,4 @@ const piecesmodel = {
     }
 };
 
-export default piecesmodel
+export default piecesmodel;

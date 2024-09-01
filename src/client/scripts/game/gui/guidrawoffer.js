@@ -103,4 +103,4 @@ const guidrawoffer = (function() {
 
 })();
 
-export default guidrawoffer
+export default guidrawoffer;

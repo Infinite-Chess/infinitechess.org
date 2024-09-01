@@ -386,4 +386,4 @@ const shaders = (function() {
 
 })();
 
-export default shaders
+export default shaders;

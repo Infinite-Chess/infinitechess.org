@@ -614,4 +614,4 @@ const bufferdata = (function() {
 
 })();
 
-export default bufferdata
+export default bufferdata;

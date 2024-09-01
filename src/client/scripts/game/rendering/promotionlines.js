@@ -81,4 +81,4 @@ const promotionlines = {
     }
 };
 
-export default promotionlines
+export default promotionlines;

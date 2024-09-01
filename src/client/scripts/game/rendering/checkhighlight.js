@@ -70,4 +70,4 @@ const checkhighlight = (function() {
 
 })();
 
-export default checkhighlight
+export default checkhighlight;

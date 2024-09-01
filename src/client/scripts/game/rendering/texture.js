@@ -60,4 +60,4 @@ const texture = (function() {
 
 })();
 
-export default texture
+export default texture;

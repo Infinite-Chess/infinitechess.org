@@ -296,4 +296,4 @@ const perspective = (function() {
 
 })();
 
-export default perspective
+export default perspective;

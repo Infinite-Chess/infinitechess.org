@@ -272,4 +272,4 @@ const transition = (function() {
     });
 })();
 
-export default transition
+export default transition;

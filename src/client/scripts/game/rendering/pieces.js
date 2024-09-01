@@ -251,4 +251,4 @@ const pieces = (function() {
 
 })();
 
-export default pieces
+export default pieces;

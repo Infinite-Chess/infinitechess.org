@@ -612,4 +612,4 @@ const board = (function() {
     });
 })();
 
-export default board
+export default board;

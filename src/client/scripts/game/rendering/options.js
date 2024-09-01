@@ -301,4 +301,4 @@ const options = (function() {
     });
 })();
 
-export default options
+export default options;
