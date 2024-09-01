@@ -111,7 +111,8 @@ if (!BUNDLE_FILES) {
     await esbuild.build({
         bundle: true,
         entryPoints: ['src/client/scripts/game/main.js'],
-        outfile: './dist/scripts/game/app.js'
+        outfile: './dist/scripts/game/app.js',
+        legalComments: 'none' // Even skips copyright noticies, such as in gl-matrix
     });
 
     const gamecode = await readFile(`./dist/scripts/game/app.js`, 'utf-8');
