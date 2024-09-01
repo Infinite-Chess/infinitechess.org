@@ -1,6 +1,6 @@
 
 /*
- * This is the main script. This is where the game begins running when the document calls main()
+ * This is the main script. This is where the game begins running when the htmlscript calls start()
  * This initiates the gl context, calls for the initiating of the shader programs, camera,
  * and input listeners, and begins the game loop.
  */
@@ -19,6 +19,9 @@ import invites from './misc/invites.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import math from './misc/math.js';
+// The ONLY reason we export tooltips is so that it can be tied into the
+// dependancy tree of our game, otherwise it won't be included.
+import tooltips from './gui/tooltips.js';
 // Import End
 
 "use strict";
@@ -156,14 +159,6 @@ const main = (function() {
     });
 })();
 
-console.log('main load');
-
-globalThis.main = main;
-globalThis.a = a;
-globalThis.b = b;
-
-export default main;
-
 /**
  * With a very short and fast-to-type name, prints
  * a deep-cloned copy of the object to the console.
@@ -184,3 +179,11 @@ function a(message, object) {
 function b() {
     console.error("Generic error");
 }
+
+
+
+globalThis.main = main;
+globalThis.a = a;
+globalThis.b = b;
+
+export default main;
