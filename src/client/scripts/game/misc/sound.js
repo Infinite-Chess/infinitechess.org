@@ -419,6 +419,7 @@ const sound = (function() {
 
 })();
 
+// We set this variable on the global object so that htmlscript can access them within the html document.
 globalThis.sound = sound;
 
 export default sound;

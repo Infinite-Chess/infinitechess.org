@@ -180,8 +180,7 @@ function b() {
     console.error("Generic error");
 }
 
-
-
+// We set these variables on the global object so that htmlscript can access them within the html document.
 globalThis.main = main;
 globalThis.a = a;
 globalThis.b = b;
