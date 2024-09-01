@@ -11,7 +11,7 @@ const DEV_BUILD = true;
  * Whether we bundle and minify files to send to the client
  * Only disable for debugging and development
  */
-const BUNDLE_FILES = false;
+const BUNDLE_FILES = !DEV_BUILD || false; // Change false to true to always enable.
 if (!DEV_BUILD && !BUNDLE_FILES) throw new Error("BUNDLE_FILES must be true in production!!");
 
 /** Whether we are currently rate limiting connections.
