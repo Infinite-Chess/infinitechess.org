@@ -1,3 +1,10 @@
+
+/*
+ * This script contains many utility methods for working with gamefiles
+ * and *should* (theoretically) have zero dependancies,
+ * except for maybe the math script.
+ */
+
 // Import Start
 import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
@@ -19,11 +26,6 @@ import game from './game.js';
  * @typedef {import('./movepiece.js').Piece} Piece
 */
 
-/*
- * This script contains many utility methods for working with gamefiles
- * and *should* (theoretically) have zero dependancies,
- * except for maybe the math script.
- */
 
 "use strict";
 

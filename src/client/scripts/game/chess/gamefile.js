@@ -1,3 +1,6 @@
+
+// This script when called as a function using the new keyword, will return a new gamefile.
+
 // Import start
 import organizedlines from './organizedlines.js';
 import movepiece from './movepiece.js';
@@ -13,7 +16,6 @@ import math from '../misc/math.js';
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
  */
 
-// This script when called as a function using the new keyword, will return a new gamefile.
 
 'use strict';
 

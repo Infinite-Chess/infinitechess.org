@@ -1,3 +1,9 @@
+
+/*
+ * This script renders the red glow surrounding
+ * royal pieces currently in check.
+ */
+
 // Import Start
 import bufferdata from './bufferdata.js';
 import game from '../chess/game.js';
@@ -10,11 +16,6 @@ import buffermodel from './buffermodel.js';
 /**
  * Type Definitions
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- */
-
-/*
- * This script renders the red glow surrounding
- * royal pieces currently in check.
  */
 
 "use strict";

@@ -1,3 +1,11 @@
+
+/**
+ * This generates and renders the mesh of the void squares
+ * in the game.
+ * It combines as many voids as possible to reduce
+ * the mesh complexity.
+ */
+
 // Import Start
 import movement from './movement.js';
 import options from './options.js';
@@ -12,13 +20,6 @@ import board from './board.js';
  * Type Definitions 
  * @typedef {import('../chess/gamefile.js').gamefile} gamefile
 */
-
-/**
- * This generates and renders the mesh of the void squares
- * in the game.
- * It combines as many voids as possible to reduce
- * the mesh complexity.
- */
 
 "use strict";
 

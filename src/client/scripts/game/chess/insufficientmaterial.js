@@ -1,3 +1,5 @@
+// Draw detection by insufficient material
+
 // Import Start
 import wincondition from './wincondition.js';
 import math from '../misc/math.js';
@@ -9,8 +11,6 @@ import movesscript from './movesscript.js';
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
 */
-
-// Draw detection by insufficient material
 
 "use strict";
 

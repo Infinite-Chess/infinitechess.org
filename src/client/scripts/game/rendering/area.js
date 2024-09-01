@@ -1,3 +1,11 @@
+
+/**
+ * This script handles the calculation of the "Area"s on screen that
+ * will contain the desired list of piece coordinates when at a specific
+ * camera position and scale (zoom), which can be used to tell
+ * {@link transition} where to teleport to.
+ */
+
 // Import Start
 import transition from './transition.js';
 import movement from './movement.js';
@@ -12,13 +20,6 @@ import math from '../misc/math.js';
  * @typedef {import('../chess/gamefile.js').gamefile} gamefile
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
 */
-
-/**
- * This script handles the calculation of the "Area"s on screen that
- * will contain the desired list of piece coordinates when at a specific
- * camera position and scale (zoom), which can be used to tell
- * {@link transition} where to teleport to.
- */
 
 "use strict";
 

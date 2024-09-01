@@ -1,3 +1,11 @@
+
+/*
+ * This script manages the organized lines of all pieces in the current game.
+ * For example, pieces organized by type, coordinate, vertical, horizontal, diagonal, etc.
+ * 
+ * These dramatically increase speed of legal move calculation.
+ */
+
 // Import Start
 import gamefileutility from './gamefileutility.js';
 import pieces from '../rendering/pieces.js';
@@ -11,12 +19,6 @@ import options from '../rendering/options.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
 */
 
-/*
- * This script manages the organized lines of all pieces in the current game.
- * For example, pieces organized by type, coordinate, vertical, horizontal, diagonal, etc.
- * 
- * These dramatically increase speed of legal move calculation.
- */
 
 "use strict";
 

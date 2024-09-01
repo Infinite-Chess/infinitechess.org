@@ -1,3 +1,6 @@
+
+// Here lies the universal methods for moving pieces, forward or rewinding.
+
 // Import Start
 import legalmoves from './legalmoves.js';
 import main from '../main.js';
@@ -23,8 +26,6 @@ import formatconverter from './formatconverter.js';
  * @typedef {import('./movesscript.js').Move} Move
  * @typedef {import('./movepiece.js').Piece} Piece
 */
-
-// Here lies the universal methods for moving pieces, forward or rewinding.
 
 "use strict";
 

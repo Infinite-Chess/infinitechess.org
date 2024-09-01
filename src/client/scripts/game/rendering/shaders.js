@@ -1,10 +1,10 @@
+
+// This script handles the creation of, and stores our shaders.
+
 // Import Start
 import { gl } from './webgl.js';
 import camera from './camera.js';
 // Import End
-
-
-// This script handles the creation of, and stores our shaders.
 
 "use strict";
 

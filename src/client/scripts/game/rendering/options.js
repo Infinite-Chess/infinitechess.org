@@ -1,3 +1,9 @@
+
+// This script contains adjustable options such as
+// *Board color
+// *Highlight color
+// etc
+
 // Import Start
 import input from '../input.js';
 import math from '../misc/math.js';
@@ -16,11 +22,6 @@ import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
-
-// This script contains adjustable options such as
-// *Board color
-// *Highlight color
-// etc
 
 "use strict";
 

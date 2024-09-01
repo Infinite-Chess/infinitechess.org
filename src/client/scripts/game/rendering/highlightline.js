@@ -1,3 +1,7 @@
+
+// This script renders our single-line legal sliding moves
+// when we are zoomed out far.
+
 // Import Start
 import input from '../input.js';
 import bufferdata from './bufferdata.js';
@@ -20,9 +24,6 @@ import buffermodel from './buffermodel.js';
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
  */
-
-// This script renders our single-line legal sliding moves
-// when we are zoomed out far.
 
 "use strict";
 

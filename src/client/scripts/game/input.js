@@ -1,3 +1,7 @@
+
+// This script handles all our event listeners for our input actions,
+// and keeps track of what inputs were received every frame.
+
 // Import Start
 import guipause from './gui/guipause.js';
 import bufferdata from './rendering/bufferdata.js';
@@ -13,10 +17,6 @@ import math from './misc/math.js';
 import arrows from './rendering/arrows.js';
 import buffermodel from './rendering/buffermodel.js';
 // Import End
-
-
-// This script handles all our event listeners for our input actions,
-// and keeps track of what inputs were received every frame.
 
 "use strict";
 

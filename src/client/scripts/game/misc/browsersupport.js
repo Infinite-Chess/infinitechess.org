@@ -1,6 +1,3 @@
-// Import Start
-// Import End
-
 
 /*
  * This script will check if the current browser supports all

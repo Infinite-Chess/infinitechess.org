@@ -1,3 +1,9 @@
+
+/*
+ * This script renders the board, and changes it's color.
+ * We also keep track of what tile the mouse is currently hovering over.
+ */
+
 // Import Start
 import webgl from './webgl.js';
 import texture from './texture.js';
@@ -20,11 +26,6 @@ import game from '../chess/game.js';
  * Type Definitions
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
- */
-
-/*
- * This script renders the board, and changes it's color.
- * We also keep track of what tile the mouse is currently hovering over.
  */
 
 "use strict";

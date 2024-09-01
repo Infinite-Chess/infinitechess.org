@@ -1,6 +1,3 @@
-// Import Start
-// Import End
-
 /* eslint-disable */
 /*!
 @fileoverview gl-matrix - High performance matrix and vector operations

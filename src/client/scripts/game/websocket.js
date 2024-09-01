@@ -1,3 +1,9 @@
+
+/**
+ * This script creates websockets connected to the server,
+ * sends and receives incoming messages.
+ */
+
 // Import Start
 import main from './main.js';
 import statustext from './gui/statustext.js';
@@ -7,12 +13,6 @@ import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame.js';
 import localstorage from './misc/localstorage.js';
 // Import End
-
-
-/**
- * This script creates websockets connected to the server,
- * sends and receives incoming messages.
- */
 
 "use strict";
 
@@ -701,4 +701,4 @@ const websocket = (function() {
 
 })();
 
-export default websocket
+export default websocket;

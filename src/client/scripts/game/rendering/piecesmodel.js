@@ -1,3 +1,7 @@
+
+// This contains the functions for generating, modifying,
+// and rendering the mesh of the pieces of a gamefile
+
 // Import Start
 import loadbalancer from '../misc/loadbalancer.js';
 import math from '../misc/math.js';
@@ -22,9 +26,6 @@ import options from './options.js';
  * @typedef {import('../chess/gamefile.js').gamefile} gamefile
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
 */
-
-// This contains the functions for generating, modifying,
-// and rendering the mesh of the pieces of a gamefile
 
 "use strict";
 

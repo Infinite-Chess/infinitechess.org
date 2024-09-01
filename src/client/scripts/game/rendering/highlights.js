@@ -1,3 +1,7 @@
+
+// This script handles the rendering of legal jumping (no sliding) moves,
+// and also hilights the last move played.
+
 // Import Start
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
@@ -22,9 +26,6 @@ import buffermodel from './buffermodel.js';
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
  */
-
-// This script handles the rendering of legal jumping (no sliding) moves,
-// and also hilights the last move played.
 
 "use strict";
 

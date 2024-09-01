@@ -1,3 +1,7 @@
+
+// This script handles the smooth animation when moving a piece from one coord to another
+// Also plays our sounds!
+
 // Import Start
 import bufferdata from './bufferdata.js';
 import main from '../main.js';
@@ -16,9 +20,6 @@ import buffermodel from './buffermodel.js';
  * @typedef {import('../chess/movesscript.js').Move} Move
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  */
-
-// This script handles the smooth animation when moving a piece from one coord to another
-// Also plays our sounds!
 
 "use strict";
 

@@ -1,12 +1,12 @@
-// Import Start
-import { gl } from './webgl.js';
-import math from '../misc/math.js';
-// Import End
-
 
 /*
  * This script loads textures
  */
+
+// Import Start
+import { gl } from './webgl.js';
+import math from '../misc/math.js';
+// Import End
 
 const texture = (function() {
 

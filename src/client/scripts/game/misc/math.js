@@ -1,11 +1,3 @@
-// Import Start
-import perspective from '../rendering/perspective.js';
-import movement from '../rendering/movement.js';
-import options from '../rendering/options.js';
-import camera from '../rendering/camera.js';
-import board from '../rendering/board.js';
-// Import End
-
 
 /*
  * This script contains many utility mathematical operations, and javascript 
@@ -15,6 +7,13 @@ import board from '../rendering/board.js';
  * 
  * In theory, should should have ZERO dependancies.
  */
+
+// Import Start
+import perspective from '../rendering/perspective.js';
+import movement from '../rendering/movement.js';
+import camera from '../rendering/camera.js';
+import board from '../rendering/board.js';
+// Import End
 
 "use strict";
 
@@ -1094,4 +1093,4 @@ const math = (function() {
     });
 })();
 
-export default math
+export default math;

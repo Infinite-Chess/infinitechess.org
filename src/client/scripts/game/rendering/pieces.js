@@ -1,3 +1,9 @@
+
+// This script contains our list of all possible piece types,
+// spritesheet data,
+// and contains the functions for rendering the main pieces,
+// ghost piece, and mini icons!
+
 // Import Start
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
@@ -12,11 +18,6 @@ import options from './options.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
-
-// This script contains our list of all possible piece types,
-// spritesheet data,
-// and contains the functions for rendering the main pieces,
-// ghost piece, and mini icons!
 
 "use strict";
 

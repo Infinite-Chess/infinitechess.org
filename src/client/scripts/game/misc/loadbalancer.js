@@ -1,3 +1,12 @@
+
+// This script keeps track of our deltaTime, FPS
+// and decides how many milliseconds per frame
+// large tasks like mesh generation receive.
+
+// This currently does NOT decrease dedicated ms when MULTIPLE long tasks are running.
+// Currently the only long task is the mesh generation of all the pieces
+// (the checkmate algorithm is no longer asynchronious)
+
 // Import Start
 import websocket from '../websocket.js';
 import invites from './invites.js';
@@ -7,15 +16,6 @@ import input from '../input.js';
 import main from '../main.js';
 import onlinegame from './onlinegame.js';
 // Import End
-
-
-// This script keeps track of our deltaTime, FPS
-// and decides how many milliseconds per frame
-// large tasks like mesh generation receive.
-
-// This currently does NOT decrease dedicated ms when MULTIPLE long tasks are running.
-// Currently the only long task is the mesh generation of all the pieces
-// (the checkmate algorithm is no longer asynchronious)
 
 'use strict';
 

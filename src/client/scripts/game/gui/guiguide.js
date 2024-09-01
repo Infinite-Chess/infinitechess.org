@@ -1,12 +1,12 @@
-// Import Start
-import guititle from './guititle.js';
-import style from './style.js';
-// Import End
-
 
 /*
  * This script handles the Guide
  */
+
+// Import Start
+import guititle from './guititle.js';
+import style from './style.js';
+// Import End
 
 const guiguide = (function() {
 

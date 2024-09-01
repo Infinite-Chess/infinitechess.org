@@ -1,3 +1,8 @@
+
+/*
+ * This script manages the invites on the Play page.
+ */
+
 // Import Start
 import websocket from '../websocket.js';
 import localstorage from './localstorage.js';
@@ -10,11 +15,6 @@ import style from '../gui/style.js';
 import input from '../input.js';
 import statustext from '../gui/statustext.js';
 // Import End
-
-
-/*
- * This script manages the invites on the Play page.
- */
 
 "use strict";
 
@@ -30,7 +30,6 @@ import statustext from '../gui/statustext.js';
  * @property {string} rated - rated/casual
  */
 
-// eslint-disable-next-line no-unused-vars
 const invites = (function() {
 
     const invitesContainer = document.getElementById('invites');

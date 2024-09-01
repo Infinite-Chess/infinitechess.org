@@ -1,3 +1,6 @@
+
+// This script returns the functions for UNDOING special moves
+
 // Import Start
 import gamefileutility from './gamefileutility.js';
 import movepiece from './movepiece.js';
@@ -6,7 +9,6 @@ import math from '../misc/math.js';
 // Import End
 
 
-// This script returns the functions for UNDOING special moves
 
 "use strict";
 

@@ -1,3 +1,10 @@
+
+/*
+ * This script handles the navigation bar, in a game,
+ * along the top of the screen, containing the teleporation
+ * buttons, rewind move, forward move, and pause buttons.
+ */
+
 // Import Start
 import board from '../rendering/board.js';
 import movesscript from '../chess/movesscript.js';
@@ -11,16 +18,8 @@ import transition from '../rendering/transition.js';
 import gamefileutility from '../chess/gamefileutility.js';
 // Import End
 
-
-/*
- * This script handles the navigation bar, in a game,
- * along the top of the screen, containing the teleporation
- * buttons, rewind move, forward move, and pause buttons.
- */
-
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const guinavigation = (function() {
 
     const element_Navigation = document.getElementById('navigation');

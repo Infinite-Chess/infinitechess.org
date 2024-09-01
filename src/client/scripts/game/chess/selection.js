@@ -1,3 +1,7 @@
+
+// This script tests for piece selection and keeps track of the selected piece,
+// including the legal moves it has available.
+
 // Import Start
 import guipause from '../gui/guipause.js';
 import legalmoves from './legalmoves.js';
@@ -29,8 +33,6 @@ import statustext from '../gui/statustext.js';
  * @typedef {import('./movepiece.js').Piece} Piece
  */
 
-// This script tests for piece selection and keeps track of the selected piece,
-// including the legal moves it has available.
 
 "use strict";
 

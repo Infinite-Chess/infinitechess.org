@@ -1,3 +1,7 @@
+
+// This contains methods for working with the gamefile's moves list,
+// and detects if we're rewinding or fast-forwarding to view the game's history.
+
 // Import Start
 import movepiece from './movepiece.js';
 import math from '../misc/math.js';
@@ -15,15 +19,12 @@ import game from './game.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
 */
 
-// This contains methods for working with the gamefile's moves list,
-// and detects if we're rewinding or fast-forwarding to view the game's history.
 
 "use strict";
 
 // Custom type definitions...
 
 /** The `Move` custom type. This should not be called, it is for JSDoc dropdown info. */
-// eslint-disable-next-line no-unused-vars
 function Move() {
     console.error('This Move constructor should NEVER be called! It is purely for useful JSDoc dropdown info when working with the `Move` type.');
 
@@ -391,5 +392,6 @@ const movesscript = (function() {
     });
 
 })();
+
 export { Move };
 export default movesscript;

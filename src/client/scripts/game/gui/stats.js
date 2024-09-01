@@ -1,3 +1,9 @@
+
+/**
+ * This script renders the statis in the corner of the screen.
+ * (Similar to Minecraft's f3 menu)
+ */
+
 // Import Start
 import movesscript from '../chess/movesscript.js';
 import style from './style.js';
@@ -7,12 +13,6 @@ import camera from '../rendering/camera.js';
 import game from '../chess/game.js';
 import math from '../misc/math.js';
 // Import End
-
-
-/**
- * This script renders the statis in the corner of the screen.
- * (Similar to Minecraft's f3 menu)
- */
 
 "use strict";
 

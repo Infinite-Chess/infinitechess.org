@@ -1,3 +1,9 @@
+
+/**
+ * This script contains our checkmate algorithm,
+ * and 3-fold repetition algorithm.
+ */
+
 // Import Start
 import wincondition from './wincondition.js';
 import gamefileutility from './gamefileutility.js';
@@ -11,11 +17,6 @@ import legalmoves from './legalmoves.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
  * @typedef {import('./movesscript.js').Move} Move
 */
-
-/**
- * This script contains our checkmate algorithm,
- * and 3-fold repetition algorithm.
- */
 
 "use strict";
 

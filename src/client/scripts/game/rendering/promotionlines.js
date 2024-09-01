@@ -1,3 +1,6 @@
+
+// This script handles the rendering of our promotion lines
+
 // Import Start
 import board from './board.js';
 import game from '../chess/game.js';
@@ -9,8 +12,6 @@ import buffermodel from './buffermodel.js';
  * Type Definitions
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  */
-
-// This script handles the rendering of our promotion lines
 
 "use strict";
 

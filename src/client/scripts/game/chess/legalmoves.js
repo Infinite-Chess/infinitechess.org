@@ -1,3 +1,8 @@
+
+/*
+ * This script calculates legal moves
+ */
+
 // Import Start
 import movepiece from './movepiece.js';
 import gamefileutility from './gamefileutility.js';
@@ -16,9 +21,6 @@ import wincondition from './wincondition.js';
  * @typedef {import('./movepiece.js').Piece} Piece
 */
 
-/*
- * This script calculates legal moves
- */
 
 "use strict";
 

@@ -1,3 +1,7 @@
+
+// This class handles the smooth animation of teleporting from one location to another
+// when clicking on our Expand, Recenter, or Undo Transition buttons.
+
 // Import Start
 import perspective from './perspective.js';
 import area from './area.js';
@@ -6,9 +10,6 @@ import movement from './movement.js';
 import math from '../misc/math.js';
 import camera from './camera.js';
 // Import End
-
-// This class handles the smooth animation of teleporting from one location to another
-// when clicking on our Expand, Recenter, or Undo Transition buttons.
 
 "use strict";
 

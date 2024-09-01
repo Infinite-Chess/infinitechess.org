@@ -1,6 +1,3 @@
-// Import Start
-// Import End
-
 
 /*
  * Universal Infinite Chess Notation [Converter] and Interface
@@ -14,7 +11,6 @@
 
 'use strict';
 
-// eslint-disable-next-line no-unused-vars
 const formatconverter = (function() {
     
     const pieceDictionary = {

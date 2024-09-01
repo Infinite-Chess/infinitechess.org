@@ -1,3 +1,11 @@
+
+/*
+ * This script contains methods for obtaining the vertex data
+ * of many common shapes.
+ * This vertex data can then be used in the construction
+ * of a buffer model for rendering.
+ */
+
 // Import Start
 import board from './board.js';
 import pieces from './pieces.js';
@@ -9,13 +17,6 @@ import buffermodel from './buffermodel.js';
 /**
  * Type Definitions
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- */
-
-/*
- * This script contains methods for obtaining the vertex data
- * of many common shapes.
- * This vertex data can then be used in the construction
- * of a buffer model for rendering.
  */
 
 "use strict";

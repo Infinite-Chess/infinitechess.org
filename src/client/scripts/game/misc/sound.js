@@ -1,8 +1,9 @@
+
+// This script controls the playing of our sound effects
+
 // Import Start
 import main from '../main.js';
 // Import End
-
-// This script controls the playing of our sound effects
 
 "use strict";
 

@@ -1,3 +1,7 @@
+
+// This script keeps track of both players timer, updates them,
+// and ends game if somebody loses on time.
+
 // Import Start
 import style from '../gui/style.js';
 import onlinegame from './onlinegame.js';
@@ -7,13 +11,8 @@ import movesscript from '../chess/movesscript.js';
 import math from './math.js';
 import gamefileutility from '../chess/gamefileutility.js';
 // Import End
-
-// This script keeps track of both players timer, updates them,
-// and ends game if somebody loses on time.
-
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const clock = (function() {
 
     const element_timerWhite = document.getElementById('timer-white');

@@ -1,12 +1,12 @@
-// Import Start
-import camera from './camera.js';
-// Import End
-
 
 /**
  * This script stores our global WebGL rendering context,
  * and other utility methods.
  */
+
+// Import Start
+import camera from './camera.js';
+// Import End
 
 /**
  * The WebGL rendering context. This is our web-based render engine.

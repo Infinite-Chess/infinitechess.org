@@ -1,3 +1,10 @@
+
+/*
+ * This is the main script. This is where the game begins running when the document calls main()
+ * This initiates the gl context, calls for the initiating of the shader programs, camera,
+ * and input listeners, and begins the game loop.
+ */
+
 // Import Start
 import webgl from './rendering/webgl.js';
 import loadbalancer from './misc/loadbalancer.js';
@@ -14,16 +21,8 @@ import guiloading from './gui/guiloading.js';
 import math from './misc/math.js';
 // Import End
 
-
-/*
- * This is the main script. This is where the game begins running when the document calls main()
- * This initiates the gl context, calls for the initiating of the shader programs, camera,
- * and input listeners, and begins the game loop.
- */
-
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const main = (function() { 
 
     /**

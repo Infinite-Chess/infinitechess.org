@@ -1,3 +1,6 @@
+
+// This module keeps trap of the data of the onlinegame we are currently in.
+
 // Import Start
 import legalmoves from '../chess/legalmoves.js';
 import localstorage from './localstorage.js';
@@ -32,8 +35,6 @@ import guigameinfo from '../gui/guigameinfo.js';
  * @typedef {import('../chess/movesscript.js').Move} Move
  * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
 */
-
-// This module keeps trap of the data of the onlinegame we are currently in.
 
 "use strict";
 

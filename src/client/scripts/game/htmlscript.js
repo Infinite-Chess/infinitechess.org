@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 
 /*
  * The server injects this script directly into the html document
@@ -13,7 +12,7 @@
 'use strict';
 
 const htmlscript = (function() {
-    
+
     // Listen for the first user gesture...
 
     // *true* if the user has started interacting with the page,
@@ -31,9 +30,11 @@ const htmlscript = (function() {
         atleastOneUserGesture = true;
         document.removeEventListener('mousedown', callback_OnUserGesture);
         document.removeEventListener('click', callback_OnUserGesture);
+        // eslint-disable-next-line no-undef
         if (audioContextDefined) sound.getAudioContext().resume();
         else window.addEventListener('load', () => { // resume() the Audio Context as soon as the page loads
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
+            // eslint-disable-next-line no-undef
             sound.getAudioContext()?.resume();
         });
     }
@@ -66,11 +67,13 @@ const htmlscript = (function() {
         if (document.readyState === 'complete') sendAudioContextToScript();
         else window.addEventListener('load', () => { // Send our audio context to our sound script.
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
+            // eslint-disable-next-line no-undef
             sound.initAudioContext(audioContext, audioDecodedBuffer);
             audioContextDefined = true;
         });
         function sendAudioContextToScript() {
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
+            // eslint-disable-next-line no-undef
             sound.initAudioContext(audioContext, audioDecodedBuffer);
             audioContextDefined = true;
         }
@@ -81,8 +84,9 @@ const htmlscript = (function() {
     // If there's an error in loading, stop the loading animation
     // ...
 
-    let lostNetwork = false;
     let loadingErrorOcurred = false;
+    let lostNetwork = false;
+
     function callback_LoadingError(event) {
         // const type = event.type; // Event type: "error"/"abort"
         // const target = event.target; // Element that triggered the event
@@ -140,7 +144,7 @@ const htmlscript = (function() {
     window.addEventListener('load', function() {
         if (loadingErrorOcurred) return; // Page never finished loading, don't start the game.
         closeLoadingScreenListeners(); // Remove document event listeners for the loading screen
-        console.log('html load');
+        // eslint-disable-next-line no-undef
         main.start(); // Start the game!
     });
 

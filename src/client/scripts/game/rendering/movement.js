@@ -1,3 +1,6 @@
+
+// This script stores our board position and scale and controls our panning and zooming.
+
 // Import Start
 import loadbalancer from '../misc/loadbalancer.js';
 import input from '../input.js';
@@ -10,8 +13,6 @@ import guipromotion from '../gui/guipromotion.js';
 import guititle from '../gui/guititle.js';
 // Import End
 
-
-// This script stores our board position and scale and controls our panning and zooming.
 
 "use strict";
 

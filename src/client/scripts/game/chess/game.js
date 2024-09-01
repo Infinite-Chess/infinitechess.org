@@ -1,3 +1,9 @@
+
+/**
+ * This script stores our currently loaded game,
+ * and holds our update and render methods.
+ */
+
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
 import main from '../main.js';
@@ -35,11 +41,6 @@ import guigameinfo from '../gui/guigameinfo.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
-*/
-
-/**
- * This script stores our currently loaded game,
- * and holds our update and render methods.
  */
 
 "use strict";

@@ -1,3 +1,9 @@
+
+/*
+ * This script handles our Play page, containing
+ * our invite creation menu.
+ */
+
 // Import Start
 import websocket from '../websocket.js';
 import guigameinfo from './guigameinfo.js';
@@ -20,15 +26,8 @@ import gamefile from '../chess/gamefile.js';
 import guititle from './guititle.js';
 // Import End
 
-
-/*
- * This script handles our Play page, containing
- * our invite creation menu.
- */
-
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const guiplay = (function() {
 
     // Variables

@@ -1,3 +1,8 @@
+
+/*
+ * This script handles our Pause menu
+ */
+
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
 import style from './style.js';
@@ -14,14 +19,8 @@ import movesscript from '../chess/movesscript.js';
 import perspective from '../rendering/perspective.js';
 // Import End
 
-
-/*
- * This script handles our Pause menu
- */
-
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const guipause = (function() {
 
     // Pause UI

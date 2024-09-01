@@ -1,3 +1,6 @@
+
+// This script handles the rendering of the mini images of our pieces when we're zoomed out
+
 // Import Start
 import webgl from './webgl.js';
 import input from '../input.js';
@@ -19,8 +22,6 @@ import math from '../misc/math.js';
  * Type Definitions
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  */
-
-// This script handles the rendering of the mini images of our pieces when we're zoomed out
 
 "use strict";
 
