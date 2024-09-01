@@ -101,30 +101,9 @@ if (!BUNDLE_FILES) {
             sourceMap: false
         });
         await writeFile(`./dist/${file}`, minified.code, 'utf8');
-        //}
-        // Collect the code of all js files in /game except for htmlscript.js:
-        // else {
-        //     gamecode += await readFile(`./src/client/${file}`, 'utf8');
-        // }
     }
 
-    await esbuild.build({
-        bundle: true,
-        entryPoints: ['src/client/scripts/game/main.js'],
-        outfile: './dist/scripts/game/app.js',
-        legalComments: 'none' // Even skips copyright noticies, such as in gl-matrix
-    });
-
-    const gamecode = await readFile(`./dist/scripts/game/app.js`, 'utf-8');
-
-    //Combine all gamecode files into app.js
-    const minifiedgame = await swc.minify(gamecode, {
-        mangle: true,
-        compress: true,
-        sourceMap: false
-    });
-
-    await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
+    await compressGameScriptsIntoAppJS();
   
     // overwrite play.ejs by injecting all needed scripts into it:
     await writeFile(`./dist/views/play.ejs`, 
@@ -148,6 +127,30 @@ if (!BUNDLE_FILES) {
 await writeFile(`./dist/views/play.ejs`, 
     injectHtmlScript(), 
     'utf8');
+
+/**
+ * This takes all game scripts (excluding htmlscript), and merges them
+ * all into one script, name 'app.js'.
+ */
+async function compressGameScriptsIntoAppJS() {
+    // esbuild takes all the ESM scripts that make up our game (excluding htmlscript),
+    // and auto-turns them into normal CJS scripts, and merges them all into one app.js
+    await esbuild.build({
+        bundle: true,
+        entryPoints: ['src/client/scripts/game/main.js'],
+        outfile: './dist/scripts/game/app.js',
+        legalComments: 'none' // Even skips copyright noticies, such as in gl-matrix
+    });
+
+    // swc takes the existing app.js and compresses/minifies it!
+    const gamecode = await readFile(`./dist/scripts/game/app.js`, 'utf-8');
+    const minifiedgame = await swc.minify(gamecode, {
+        mangle: true,
+        compress: true,
+        sourceMap: false
+    });
+    await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
+}
 
 export {
     getAllGameScripts
