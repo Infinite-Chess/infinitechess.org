@@ -7,6 +7,7 @@ import guipause from '../gui/guipause.js';
 import legalmoves from './legalmoves.js';
 import input from '../input.js';
 import math from '../misc/math.js';
+import enginegame from '../misc/enginegame.js';
 import onlinegame from '../misc/onlinegame.js';
 import movepiece from './movepiece.js';
 import main from '../main.js';

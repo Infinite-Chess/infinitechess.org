@@ -4,6 +4,25 @@
  * our practice selection menu.
  */
 
+// Import Start
+import main from '../main.js';
+import sound from '../misc/sound.js';
+import game from '../chess/game.js';
+import checkmatepractice from '../chess/checkmatepractice.js';
+import variant from '../chess/variant.js';
+import movement from '../rendering/movement.js';
+import gamefile from '../chess/gamefile.js';
+import gui from '../gui/gui.js';
+import guititle from '../gui/guititle.js';
+import style from '../gui/style.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import area from '../rendering/area.js';
+import math from '../misc/math.js';
+import enginegame from '../misc/enginegame.js';
+import clock from '../misc/clock.js';
+import options from '../rendering/options.js';
+// Import End
+
 "use strict";
 
 const guipractice = (function() {
@@ -82,7 +101,7 @@ const guipractice = (function() {
     function changePracticeMode(mode) { // checkmate-practice / tactics-practice
         modeSelected = mode;
         if (mode === 'checkmate-practice') {
-            element_practiceName.textContent = translations["menu_checkmate"];
+            element_practiceName.textContent = translations.menu_checkmate;
             element_checkmatePractice.classList.add('selected');
             element_tacticsPractice.classList.remove('selected');
             // callback_updateOptions()
@@ -246,3 +265,5 @@ const guipractice = (function() {
     });
 
 })();
+
+export default guipractice;

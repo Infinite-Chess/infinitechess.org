@@ -3,9 +3,19 @@
  * This script handles checkmate practice logic
  */
 
+// Import Start
+import formatconverter from '../chess/formatconverter.js';
+import game from '../chess/game.js';
+import wincondition from '../chess/wincondition.js';
+import gui from '../gui/gui.js';
+import guipractice from '../gui/guipractice.js';
+import localstorage from '../misc/localstorage.js';
+import math from '../misc/math.js';
+import enginegame from '../misc/enginegame.js';
+// Import End
+
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const checkmatepractice = (function() {
 
     const validCheckmates = [
@@ -186,3 +196,5 @@ const checkmatepractice = (function() {
         eraseCheckmatePracticeProgress
     });
 })();
+
+export default checkmatepractice;

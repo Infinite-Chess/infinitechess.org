@@ -1,9 +1,20 @@
 
 // This module keeps track of the data of the engine game we are currently in.
 
+// Import Start
+import main from '../main.js';
+import game from '../chess/game.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import legalmoves from '../chess/legalmoves.js';
+import selection from '../chess/selection.js';
+import movepiece from '../chess/movepiece.js';
+import checkmatepractice from '../chess/checkmatepractice.js';
+import math from '../misc/math.js';
+import perspective from '../rendering/perspective.js';
+// Import End
+
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const enginegame = (function() {
 
     /** Whether we are currently in an engine game. */
@@ -144,3 +155,5 @@ const enginegame = (function() {
     });
 
 })();
+
+export default enginegame;

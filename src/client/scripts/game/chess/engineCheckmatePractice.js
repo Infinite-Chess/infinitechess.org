@@ -32,7 +32,6 @@ const engineCheckmatePractice = (function() {
     // the real coordinates of the black royal piece in the gamefile
     let gamefile_royal_coords;
 
-    /* eslint-disable indent */
     // Black royal piece properties. The black royal piece is always at square [0,0]
     const king_moves = [ 
         [-1,  1], [0,  1], [1,  1],
@@ -46,7 +45,6 @@ const engineCheckmatePractice = (function() {
         [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1],
                   [-1, -2],          [1, -2]
     ];
-    /* eslint-enable indent */
 
     let royal_moves; // king_moves or centaur_moves
     let royal_type; // "k" or "rc"
@@ -819,12 +817,12 @@ const engineCheckmatePractice = (function() {
     function runEngine(gamefile) {
         try {
             // get real coordinates and parse type of black royal piece
-            if (gamefile.ourPieces["kingsB"].length !== 0) {
-                gamefile_royal_coords = gamefile.ourPieces["kingsB"][0];
+            if (gamefile.ourPieces.kingsB.length !== 0) {
+                gamefile_royal_coords = gamefile.ourPieces.kingsB[0];
                 royal_moves = king_moves;
                 royal_type = "k";
-            } else if (gamefile.ourPieces["royalCentaursB"].length !== 0) {
-                gamefile_royal_coords = gamefile.ourPieces["royalCentaursB"][0];
+            } else if (gamefile.ourPieces.royalCentaursB.length !== 0) {
+                gamefile_royal_coords = gamefile.ourPieces.royalCentaursB[0];
                 royal_moves = centaur_moves;
                 royal_type = "rc";
             } else {

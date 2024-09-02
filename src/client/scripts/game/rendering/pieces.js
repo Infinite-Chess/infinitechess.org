@@ -16,6 +16,7 @@ import texture from './texture.js';
 import onlinegame from '../misc/onlinegame.js';
 import options from './options.js';
 import buffermodel from './buffermodel.js';
+import game from '../chess/game.js';
 // Import End
 
 

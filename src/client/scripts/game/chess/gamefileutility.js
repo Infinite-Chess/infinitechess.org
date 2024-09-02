@@ -10,6 +10,7 @@ import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import onlinegame from '../misc/onlinegame.js';
 import sound from '../misc/sound.js';
+import enginegame from '../misc/enginegame.js';
 import wincondition from './wincondition.js';
 import clock from '../misc/clock.js';
 import selection from './selection.js';

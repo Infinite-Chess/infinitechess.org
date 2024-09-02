@@ -12,6 +12,7 @@
 import math from '../misc/math.js';
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../misc/localstorage.js';
+import enginegame from '../misc/enginegame.js';
 import main from '../main.js';
 import formatconverter from './formatconverter.js';
 import game from './game.js';
@@ -107,7 +108,7 @@ const copypastegame = (function() {
         if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && game.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
         // Make sure we're not in an engine match
-        if (enginegame.areInEngineGame()) return statustext.showStatus(translations["copypaste"]["cannot_paste_in_engine"])
+        if (enginegame.areInEngineGame()) return statustext.showStatus(translations.copypaste.cannot_paste_in_engine);
 
         // Do we have clipboard permission?
         let clipboard;

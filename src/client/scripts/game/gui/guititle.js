@@ -6,6 +6,7 @@
 // Import Start
 import style from './style.js';
 import gui from './gui.js';
+import guipractice from './guipractice.js';
 import movement from '../rendering/movement.js';
 import guiguide from './guiguide.js';
 import perspective from '../rendering/perspective.js';
@@ -70,8 +71,8 @@ const guititle = (function() {
 
     function callback_Practice(event) {
         event = event || window.event;
-        close()
-        guipractice.open()
+        close();
+        guipractice.open();
     }
 
     function callback_Guide(event) {
