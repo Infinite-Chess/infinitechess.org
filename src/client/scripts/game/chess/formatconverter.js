@@ -1029,7 +1029,8 @@ const formatconverter = (function() {
         getStartingPositionAndSpecialRightsFromShortPosition,
         generateSpecialRights,
         convertShortMovesToLong,
-        longToShortMoves
+        longToShortMoves,
+        ShortToLong_Piece
     });
     
 })();
