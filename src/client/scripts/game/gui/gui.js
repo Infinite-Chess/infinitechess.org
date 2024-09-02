@@ -1,8 +1,4 @@
 
-// This is the parent gui script of all gui scripts.
-// Here we remember what page we're on,
-// and we have a reference to the overlay element above the entire canvas.
-
 // Import Start
 import main from '../main.js';
 import selection from '../chess/selection.js';
@@ -13,6 +9,11 @@ import statustext from './statustext.js';
 
 "use strict";
 
+/**
+ * This is the parent gui script of all gui scripts.
+ * Here we remember what page we're on,
+ * and we have a reference to the overlay element above the entire canvas.
+ */
 const gui = (function() {
 
     // Variables

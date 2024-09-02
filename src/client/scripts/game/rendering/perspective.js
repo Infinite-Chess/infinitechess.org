@@ -1,7 +1,4 @@
 
-// This script handles our perspective mode!
-// Also rendering our crosshair
-
 // Import Start
 import guipause from '../gui/guipause.js';
 import webgl from './webgl.js';
@@ -25,6 +22,10 @@ import selection from '../chess/selection.js';
 
 "use strict";
 
+/**
+ * This script handles our perspective mode!
+ * Also rendering our crosshair
+ */
 const perspective = (function() {
 
     let enabled = false;

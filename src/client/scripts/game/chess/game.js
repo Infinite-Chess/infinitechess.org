@@ -1,9 +1,4 @@
 
-/**
- * This script stores our currently loaded game,
- * and holds our update and render methods.
- */
-
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
@@ -46,6 +41,10 @@ import guigameinfo from '../gui/guigameinfo.js';
 
 "use strict";
 
+/**
+ * This script stores our currently loaded game,
+ * and holds our update and render methods.
+ */
 const game = (function() {
 
     /**

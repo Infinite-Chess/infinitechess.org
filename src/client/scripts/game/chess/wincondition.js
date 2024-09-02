@@ -1,18 +1,13 @@
 
-/*
- * This script contains the methods for calculating if the
- * game is over by the win condition used, for all win
- * conditions except for checkmate, stalemate, and repetition.
- */
-
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from './gamefileutility.js';
 import checkmate from './checkmate.js';
-import pieces from '../rendering/pieces.js';
-import math from '../misc/math.js';
 import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
+import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -20,10 +15,13 @@ import movesscript from './movesscript.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
 */
 
-
 "use strict";
 
-// Module
+/**
+ * This script contains the methods for calculating if the
+ * game is over by the win condition used, for all win
+ * conditions except for checkmate, stalemate, and repetition.
+ */
 const wincondition = (function() {
 
     /** Valid win conditions in the gamerules. */
@@ -77,7 +75,7 @@ const wincondition = (function() {
 
         // Are there any royal pieces remaining?
         // Remember that whosTurn has already been flipped since the last move.
-        const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, pieces.royals, gamefile.whosTurn);
+        const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, typeutil.royals, gamefile.whosTurn);
 
         if (royalCount === 0) {
             const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -168,7 +166,7 @@ const wincondition = (function() {
      * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
      */
     function isOpponentUsingWinCondition(gamefile, winCondition) {
-        const oppositeColor = math.getOppositeColor(gamefile.whosTurn);
+        const oppositeColor = colorutil.getOppositeColor(gamefile.whosTurn);
         return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
     }
 
@@ -201,10 +199,10 @@ const wincondition = (function() {
 
         if (!lastMove.captured) return false; // Last move not a capture
 
-        const trimmedTypeCaptured = math.trimWorBFromType(lastMove.captured);
+        const trimmedTypeCaptured = colorutil.trimColorExtensionFromType(lastMove.captured);
 
         // Does the piece type captured equal any royal piece?
-        return pieces.royals.includes(trimmedTypeCaptured);
+        return typeutil.royals.includes(trimmedTypeCaptured);
     }
 
     /**
@@ -280,11 +278,11 @@ const wincondition = (function() {
     function swapCheckmateForRoyalCapture(gamefile) {
         // Check if the game is using the "royalcapture" win condition
         if (doesColorHaveWinCondition(gamefile, 'white', 'checkmate')) {
-            math.removeObjectFromArray(gamefile.gameRules.winConditions.white, 'checkmate');
+            jsutil.removeObjectFromArray(gamefile.gameRules.winConditions.white, 'checkmate');
             gamefile.gameRules.winConditions.white.push('royalcapture');
         }
         if (doesColorHaveWinCondition(gamefile, 'black', 'checkmate')) {
-            math.removeObjectFromArray(gamefile.gameRules.winConditions.black, 'checkmate');
+            jsutil.removeObjectFromArray(gamefile.gameRules.winConditions.black, 'checkmate');
             gamefile.gameRules.winConditions.black.push('royalcapture');
         }
         console.log("Swapped checkmate wincondition for royalcapture.");

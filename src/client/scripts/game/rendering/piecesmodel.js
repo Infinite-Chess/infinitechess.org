@@ -1,7 +1,4 @@
 
-// This contains the functions for generating, modifying,
-// and rendering the mesh of the pieces of a gamefile
-
 // Import Start
 import loadbalancer from '../misc/loadbalancer.js';
 import math from '../misc/math.js';
@@ -19,6 +16,9 @@ import movement from './movement.js';
 import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 import options from './options.js';
+import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -29,6 +29,10 @@ import options from './options.js';
 
 "use strict";
 
+/**
+ * This contains the functions for generating, modifying,
+ * and rendering the mesh of the pieces of a gamefile
+ */
 const piecesmodel = {
 
     strideWithTexture: 4, // Using texture shader. Stride per VERTEX
@@ -100,7 +104,7 @@ const piecesmodel = {
         stats.showPiecesMesh();
 
         // Iterates through every single piece and performs specified function on said piece
-        await pieces.forEachPieceType_Async(concatBufferData, { ignoreVoids: true });
+        await typeutil.forEachPieceType_Async(concatBufferData, { ignoreVoids: true });
 
         // Adds pieces of that type's buffer to the overall data
         async function concatBufferData(pieceType) {
@@ -110,7 +114,7 @@ const piecesmodel = {
             const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(pieceType, rotation);
 
             if (colorArgs) {
-                const pieceColor = math.getPieceColorFromType(pieceType);
+                const pieceColor = colorutil.getPieceColorFromType(pieceType);
                 const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
                 // var's are FUNCTION-scoped!
                 /* eslint-disable no-var */
@@ -186,7 +190,7 @@ const piecesmodel = {
                                : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
         //                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
 
-        math.copyPropertiesToObject(mesh, gamefile.mesh);
+        jsutil.copyPropertiesToObject(mesh, gamefile.mesh);
         
         // If we are also in perspective mode, init the rotated model as well!
         if (perspective.getEnabled()) await piecesmodel.initRotatedPiecesModel(game.getGamefile(), true); // ignoreLock
@@ -330,7 +334,7 @@ const piecesmodel = {
         let data;
         if (gamefile.mesh.usingColoredTextures) {
             const colorArgs = options.getPieceRegenColorArgs();
-            const pieceColor = math.getPieceColorFromType(type);
+            const pieceColor = colorutil.getPieceColorFromType(type);
             const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
             const [r,g,b,a] = colorArray;
 

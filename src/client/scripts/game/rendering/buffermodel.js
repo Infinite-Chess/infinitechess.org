@@ -1,12 +1,9 @@
 
-// This script contains all the functions used to generate renderable buffer models of the
-// game objects that the shader programs can use. It receives the object's vertex data to do so.
-
 // Import Start
 import shaders from './shaders.js';
-import math from '../misc/math.js';
 import { gl } from './webgl.js';
 import mat4 from './gl-matrix.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /**
@@ -16,6 +13,10 @@ import mat4 from './gl-matrix.js';
 
 "use strict";
 
+/**
+ * This script contains all the functions used to generate renderable buffer models of the
+ * game objects that the shader programs can use. It receives the object's vertex data to do so.
+ */
 const buffermodel = (function() {
 
     /** Valid primitives to render. */
@@ -300,7 +301,7 @@ const buffermodel = (function() {
  * @returns {BufferModel} The buffer model, ready to be rendered!
  */
 function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // data: Float32Array
-    if (!math.isFloat32Array(data)) return console.error("Cannot create a buffer model without a Float32Array!");
+    if (!jsutil.isFloat32Array(data)) return console.error("Cannot create a buffer model without a Float32Array!");
     // Make sure the length of our data looks good (divisible by the stride)
     if (data.length % stride !== 0) return console.error("Data length is not divisible by stride when generating a buffer model! Perhaps did you pass in the wrong numPositionComponents, or use the wrong constructor?");
     if (!buffermodel.validRenderModes.includes(mode)) return console.error(`Mode "${mode}" is not an accepted value!`);

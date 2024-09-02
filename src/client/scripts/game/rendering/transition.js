@@ -1,7 +1,4 @@
 
-// This class handles the smooth animation of teleporting from one location to another
-// when clicking on our Expand, Recenter, or Undo Transition buttons.
-
 // Import Start
 import perspective from './perspective.js';
 import area from './area.js';
@@ -13,6 +10,10 @@ import camera from './camera.js';
 
 "use strict";
 
+/**
+ * This class handles the smooth animation of teleporting from one location to another
+ * when clicking on our Expand, Recenter, or Undo Transition buttons.
+ */
 const transition = (function() {
 
     const teleportHistory = [];

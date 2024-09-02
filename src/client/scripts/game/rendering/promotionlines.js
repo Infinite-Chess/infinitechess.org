@@ -1,6 +1,4 @@
 
-// This script handles the rendering of our promotion lines
-
 // Import Start
 import board from './board.js';
 import game from '../chess/game.js';
@@ -15,7 +13,7 @@ import buffermodel from './buffermodel.js';
 
 "use strict";
 
-// Module
+/** This script handles the rendering of our promotion lines. */
 const promotionlines = {
 
     startEnd: [-3, 12],

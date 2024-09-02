@@ -1,6 +1,4 @@
 
-// Here lies the universal methods for moving pieces, forward or rewinding.
-
 // Import Start
 import legalmoves from './legalmoves.js';
 import main from '../main.js';
@@ -18,6 +16,9 @@ import math from '../misc/math.js';
 import movesscript from './movesscript.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
+import colorutil from '../misc/colorutil.js';
+import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -38,6 +39,7 @@ import formatconverter from './formatconverter.js';
  * @property {number} index - The index of the piece within the gamefile's piece list.
  */
 
+/** Here lies the universal methods for moving pieces, forward or rewinding. */
 const movepiece = (function() {
 
     /**
@@ -61,7 +63,7 @@ const movepiece = (function() {
         const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
         if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
         move.type = piece.type;
-        const trimmedType = math.trimWorBFromType(move.type); // "queens"
+        const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
         
         storeRewindInfoOnMove(gamefile, move, piece.index, { simulated }); // Keep track if important stuff to remember, for rewinding the game if we undo moves
 
@@ -109,15 +111,15 @@ const movepiece = (function() {
 
         if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
         if (!rewindInfoAlreadyPresent) {
-            rewindInfo.inCheck = math.deepCopyObject(gamefile.inCheck);
+            rewindInfo.inCheck = jsutil.deepCopyObject(gamefile.inCheck);
             rewindInfo.gameConclusion = gamefile.gameConclusion;
-            if (gamefile.attackers) rewindInfo.attackers = math.deepCopyObject(gamefile.attackers);
+            if (gamefile.attackers) rewindInfo.attackers = jsutil.deepCopyObject(gamefile.attackers);
             if (gamefile.enpassant) rewindInfo.enpassant = gamefile.enpassant;
             if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
             if (gamefile.checksGiven) rewindInfo.checksGiven = gamefile.checksGiven;
-            let key = math.getKeyFromCoords(move.startCoords);
+            let key = coordutil.getKeyFromCoords(move.startCoords);
             if (gamefile.specialRights[key]) rewindInfo.specialRightStart = true;
-            key = math.getKeyFromCoords(move.endCoords);
+            key = coordutil.getKeyFromCoords(move.endCoords);
             if (gamefile.specialRights[key]) rewindInfo.specialRightEnd = true;
         }
 
@@ -133,9 +135,9 @@ const movepiece = (function() {
      */
     function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoords) {
         delete gamefile.enpassant;
-        let key = math.getKeyFromCoords(startCoords);
+        let key = coordutil.getKeyFromCoords(startCoords);
         delete gamefile.specialRights[key]; // We also delete its special move right for ANY piece moved
-        key = math.getKeyFromCoords(endCoords);
+        key = coordutil.getKeyFromCoords(endCoords);
         delete gamefile.specialRights[key]; // We also delete the captured pieces specialRights for ANY move.
     }
 
@@ -212,7 +214,7 @@ const movepiece = (function() {
             if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
 
             // Remove the undefined from the undefineds list
-            const deleteSuccussful = math.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
+            const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
             if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
 
             list[desiredIndex] = coords;
@@ -292,7 +294,7 @@ const movepiece = (function() {
         let attackers = undefined;
         // Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
         const whosTurnItWasAtMoveIndex = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
-        const oppositeColor = math.getOppositeColor(whosTurnItWasAtMoveIndex);
+        const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
         if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 
         gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
@@ -371,7 +373,7 @@ const movepiece = (function() {
         const legalSpecialMoves = legalmoves.calculate(gamefile, selectedPiece, { onlyCalcSpecials: true }).individual;
         for (let i = 0; i < legalSpecialMoves.length; i++) {
             const thisCoord = legalSpecialMoves[i];
-            if (!math.areCoordsEqual(thisCoord, move.endCoords)) continue;
+            if (!coordutil.areCoordsEqual(thisCoord, move.endCoords)) continue;
             // Matched coordinates! Transfer any special move tags
             specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, move);
             break;
@@ -439,7 +441,7 @@ const movepiece = (function() {
     function rewindMove(gamefile, { updateData = true, removeMove = true, animate = true } = {}) {
 
         const move = movesscript.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
-        const trimmedType = math.trimWorBFromType(move.type);
+        const trimmedType = colorutil.trimColorExtensionFromType(move.type);
 
         let isSpecialMove = false;
         if (gamefile.specialUndos[trimmedType]) isSpecialMove = gamefile.specialUndos[trimmedType](gamefile, move, { updateData, animate });
@@ -453,11 +455,11 @@ const movepiece = (function() {
             gamefile.moveRuleState = move.rewindInfo.moveRuleState;
             gamefile.checksGiven = move.rewindInfo.checksGiven;
             if (move.rewindInfo.specialRightStart) { // Restore their special right
-                const key = math.getKeyFromCoords(move.startCoords);
+                const key = coordutil.getKeyFromCoords(move.startCoords);
                 gamefile.specialRights[key] = true;
             }
             if (move.rewindInfo.specialRightEnd) { // Restore their special right
-                const key = math.getKeyFromCoords(move.endCoords);
+                const key = coordutil.getKeyFromCoords(move.endCoords);
                 gamefile.specialRights[key] = true;
             }
             gamefile.gameConclusion = move.rewindInfo.gameConclusion; // Simulated moves may or may not have performed game over checks.

@@ -1,7 +1,4 @@
 
-// This script stores our variants,
-// and prepares them when a game is generated
-
 // Import Start
 import specialundo from './specialundo.js';
 import legalmoves from './legalmoves.js';
@@ -10,8 +7,11 @@ import specialdetect from './specialdetect.js';
 import specialmove from './specialmove.js';
 import variantomega from './variantomega.js';
 import movesets from './movesets.js';
-import pieces from '../rendering/pieces.js';
-import math from '../misc/math.js';
+import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
+import timeutil from '../misc/timeutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -19,9 +19,12 @@ import math from '../misc/math.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
 */
 
-
 "use strict";
 
+/**
+ * This script stores our variants,
+ * and prepares them when a game is generated
+ */
 const variant = (function() {
 
     /** Variants names the game works with */
@@ -71,7 +74,7 @@ const variant = (function() {
         // Promotion types already have teams stripped
         const rawtypes = new Set(promotiontypes);
         for (const tpiece of teamtypes) {
-            rawtypes.add(math.trimWorBFromType(tpiece)); // Make a set with the team color trimmed
+            rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
         }
 
         gamefile.startSnapshot.existingTypes = rawtypes;
@@ -104,7 +107,7 @@ const variant = (function() {
             Object.keys(moveset.sliding).forEach( slide => { slides.add(slide); });
         }
         const temp = [];
-        slides.forEach(slideline => { temp.push(math.getCoordsFromKey(slideline)); });
+        slides.forEach(slideline => { temp.push(coordutil.getCoordsFromKey(slideline)); });
         return temp;
     }
 
@@ -401,7 +404,7 @@ const variant = (function() {
      * @returns {string} The position in compressed short form
      */
     function getPositionStringOfSpaceClassic(UTCDate, UTCTime) {
-        const UTCTimeStamp = UTCDate ? math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime) : Date.now();
+        const UTCTimeStamp = UTCDate ? timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime) : Date.now();
         // Original, oldest version.   UTC timestamp for Feb 27, 2024, 7:00
         if (UTCTimeStamp < 1709017200000) return "p-3,15+|q4,15|p11,15+|p-4,14+|b4,14|p12,14+|p-5,13+|r2,13|b4,13|r6,13|p13,13+|p3,5+|p4,5+|p5,5+|n3,4|k4,4|n5,4|p-6,3+|p1,3+|p2,3+|p3,3+|p4,3+|p5,3+|p6,3+|p7,3+|p-8,2+|p-7,2+|p15,2+|p16,2+|p-9,1+|p17,1+|P-9,0+|P17,0+|P-8,-1+|P-7,-1+|P15,-1+|P16,-1+|P1,-2+|P2,-2+|P3,-2+|P4,-2+|P5,-2+|P6,-2+|P7,-2+|P14,-2+|N3,-3|K4,-3|N5,-3|P3,-4+|P4,-4+|P5,-4+|P-5,-12+|R2,-12|B4,-12|R6,-12|P13,-12+|P-4,-13+|B4,-13|P12,-13+|P-3,-14+|Q4,-14|P11,-14+";
         // Latest version
@@ -415,7 +418,7 @@ const variant = (function() {
      * @returns {string} The position in compressed short form
      */
     function getPositionStringOfKnightedChess(UTCDate, UTCTime) {
-        const UTCTimeStamp = UTCDate ? math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime) : Date.now();
+        const UTCTimeStamp = UTCDate ? timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime) : Date.now();
         // UTC timestamp for Aug 1, 2024, 12:00AM
         // Original, oldest version. NO knightrider
         if (UTCTimeStamp < 1722470400000) return 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+';
@@ -460,7 +463,7 @@ const variant = (function() {
      * @param {Object} [position] - The starting position of the game, organized by key `{ '1,2': 'queensB' }`, if it's already known. If not provided, it will be calculated.
      * @returns {Object} The gamerules object for the variant.
      */
-    function getGameRulesOfVariant({ Variant, UTCDate = math.getCurrentUTCDate(), UTCTime = math.getCurrentUTCTime() }, position) {
+    function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }, position) {
         
         if (!position) position = getStartingPositionOfVariant({ Variant }).position;
         
@@ -472,7 +475,7 @@ const variant = (function() {
             case "Standarch":
                 return getGameRules({ position });
             case "Space_Classic": { // Contain this case in a block so that it's variables are not hoisted 
-                const UTCTimeStamp = math.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+                const UTCTimeStamp = timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
                 // UTC timestamp for Feb 27, 2024, 7:00  (Original, oldest version)
                 const promotionRanks = UTCTimeStamp < 1709017200000 ? [4,-3] : undefined; // undefined will use default [8,1]
                 return getGameRules({ promotionRanks, position });
@@ -537,7 +540,7 @@ const variant = (function() {
      */
     function getPromotionsAllowed(position, promotionRanks) {
         // We can't promote to royals or pawns, whether we started the game with them.
-        const unallowedPromotes = math.deepCopyObject(pieces.royals); // ['kings', 'royalQueens', 'royalCentaurs']
+        const unallowedPromotes = jsutil.deepCopyObject(typeutil.royals); // ['kings', 'royalQueens', 'royalCentaurs']
         unallowedPromotes.push('pawns'); // ['kings', 'royalQueens', 'royalCentaurs', 'pawns']
 
         const white = [];
@@ -548,7 +551,7 @@ const variant = (function() {
         for (const key in position) {
             const thisPieceType = position[key];
             if (thisPieceType.endsWith('N')) continue; // Skip
-            const trimmedType = math.trimWorBFromType(thisPieceType); // Slices off W/B at the end
+            const trimmedType = colorutil.trimColorExtensionFromType(thisPieceType); // Slices off W/B at the end
             if (unallowedPromotes.includes(trimmedType)) continue; // Not allowed
             if (white.includes(trimmedType)) continue; // Already added
             // Only add if the color's promotion rank is defined
@@ -895,15 +898,15 @@ const variant = (function() {
 
     //     // const count = 250000; // 5 Seconds   ~1500 piece game
     //     // for (let i = 12; i <= count; i++) {
-    //     //     let key = math.getKeyFromCoords([i, 2])
+    //     //     let key = coordutil.getKeyFromCoords([i, 2])
     //     //     piecesByKey[key] = 'pawnsW';
-    //     //     key = math.getKeyFromCoords([i, 7])
+    //     //     key = coordutil.getKeyFromCoords([i, 7])
     //     //     piecesByKey[key] = 'pawnsB';
     //     // }
     //     // for (let i = -3; i >= -count; i--) {
-    //     //     let key = math.getKeyFromCoords([i, 2])
+    //     //     let key = coordutil.getKeyFromCoords([i, 2])
     //     //     piecesByKey[key] = 'pawnsW';
-    //     //     key = math.getKeyFromCoords([i, 7])
+    //     //     key = coordutil.getKeyFromCoords([i, 7])
     //     //     piecesByKey[key] = 'pawnsB';
     //     // }
 

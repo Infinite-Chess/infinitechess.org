@@ -1,5 +1,9 @@
 
-/*
+'use strict';
+
+/* global main, sound */
+
+/**
  * The server injects this script directly into the html document
  * before serving that.
  * This is so we can execute code that needs to be executed preferrably
@@ -8,10 +12,6 @@
  * 
  * This is also what calls our main() function when the page fully loads.
  */
-
-'use strict';
-
-/* global main, sound */
 // eslint-disable-next-line no-unused-vars
 const htmlscript = (function() {
 

@@ -1,11 +1,4 @@
 
-/**
- * This script handles the calculation of the "Area"s on screen that
- * will contain the desired list of piece coordinates when at a specific
- * camera position and scale (zoom), which can be used to tell
- * {@link transition} where to teleport to.
- */
-
 // Import Start
 import transition from './transition.js';
 import movement from './movement.js';
@@ -13,6 +6,7 @@ import camera from './camera.js';
 import board from './board.js';
 import gamefileutility from '../chess/gamefileutility.js';
 import math from '../misc/math.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -32,6 +26,12 @@ import math from '../misc/math.js';
  * @property {Object} boundingBox - The bounding box that contains the area of interest.
  */
 
+/**
+ * This script handles the calculation of the "Area"s on screen that
+ * will contain the desired list of piece coordinates when at a specific
+ * camera position and scale (zoom), which can be used to tell
+ * {@link transition} where to teleport to.
+ */
 const area = (function() {
 
     const padding = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
@@ -79,7 +79,7 @@ const area = (function() {
      */
     function applyPaddingToBox(box) { // { left, right, bottom, top }
         if (!box) { console.error("Cannot apply padding to an undefined box."); return box; }
-        const boxCopy = math.deepCopyObject(box);
+        const boxCopy = jsutil.deepCopyObject(box);
         
         const topNavHeight = camera.getPIXEL_HEIGHT_OF_TOP_NAV();
         const bottomNavHeight = camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV();
@@ -95,7 +95,7 @@ const area = (function() {
 
         /** Start with a copy with zero padding.
          * @type {BoundingBox} */
-        let paddedBox = math.deepCopyObject(boxCopy);
+        let paddedBox = jsutil.deepCopyObject(boxCopy);
         let scale = calcScaleToMatchSides(paddedBox);
 
         // Iterate until we have desired padding

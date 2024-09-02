@@ -1,10 +1,4 @@
 
-/*
- * This script contains many utility methods for working with gamefiles
- * and *should* (theoretically) have zero dependancies,
- * except for maybe the math script.
- */
-
 // Import Start
 import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
@@ -15,10 +9,12 @@ import wincondition from './wincondition.js';
 import clock from '../misc/clock.js';
 import selection from './selection.js';
 import board from '../rendering/board.js';
-import pieces from '../rendering/pieces.js';
-import math from '../misc/math.js';
 import movesscript from './movesscript.js';
 import game from './game.js';
+import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -27,9 +23,13 @@ import game from './game.js';
  * @typedef {import('./movepiece.js').Piece} Piece
 */
 
-
 "use strict";
 
+/**
+ * This script contains many utility methods for working with gamefiles
+ * and *should* (theoretically) have zero dependancies,
+ * except for maybe the math script.
+ */
 const gamefileutility = (function() {
 
     /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
@@ -62,10 +62,10 @@ const gamefileutility = (function() {
     function forEachPieceInPiecesByType(callback, typeList, ignoreVoids, gamefile) { // typeList = pieces organized by type 
         if (!typeList) return console.log("Cannot iterate through each piece in an undefined typeList!");
 
-        for (let i = 0; i < pieces.white.length; i++) {
+        for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
 
-            const thisWhiteType = pieces.white[i];
-            const thisBlackType = pieces.black[i];
+            const thisWhiteType = typeutil.colorsTypes.white[i];
+            const thisBlackType = typeutil.colorsTypes.black[i];
 
             const theseWhitePieces = typeList[thisWhiteType];
             const theseBlackPieces = typeList[thisBlackType];
@@ -74,9 +74,9 @@ const gamefileutility = (function() {
             if (theseWhitePieces) for (let a = 0; a < theseWhitePieces.length; a++) callback(thisWhiteType, theseWhitePieces[a], gamefile); 
             if (theseBlackPieces) for (let a = 0; a < theseBlackPieces.length; a++) callback(thisBlackType, theseBlackPieces[a], gamefile); 
         }
-        for (let i = 0; i < pieces.neutral.length; i++) {
+        for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
 
-            const thisNeutralType = pieces.neutral[i];
+            const thisNeutralType = typeutil.colorsTypes.neutral[i];
             if (ignoreVoids && thisNeutralType.startsWith('voids')) continue;
 
             const theseNeutralPieces = typeList[thisNeutralType];
@@ -105,20 +105,20 @@ const gamefileutility = (function() {
                 const thisPieceType = state[key];
                 if (thisPieceType.endsWith('N')) continue;
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
+                callback(thisPieceType, coordutil.getCoordsFromKey(key)); 
             }
         } else if (ignoreVoids) {
             for (const key in state) {
                 const thisPieceType = state[key];
                 if (thisPieceType.startsWith('voids')) continue;
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
+                callback(thisPieceType, coordutil.getCoordsFromKey(key)); 
             }
         } else {
             for (const key in state) {
                 const thisPieceType = state[key];
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
+                callback(thisPieceType, coordutil.getCoordsFromKey(key)); 
             }
         }
     }
@@ -133,7 +133,7 @@ const gamefileutility = (function() {
     function deleteIndexFromPieceList(list, pieceIndex) {
         list[pieceIndex] = undefined;
         // Keep track of where the undefined indices are! Have an "undefineds" array property.
-        const insertIndex = math.binarySearch_findSplitPoint(list.undefineds, pieceIndex);
+        const insertIndex = jsutil.binarySearch_findSplitPoint(list.undefineds, pieceIndex);
         list.undefineds.splice(insertIndex, 0, pieceIndex);
     }
 
@@ -153,7 +153,7 @@ const gamefileutility = (function() {
             if (!thisPieceCoords) continue;
 
             // Does this piece match the coords? If so, return the piece index.
-            if (math.areCoordsEqual_noValidate(thisPieceCoords, coords)) return i;
+            if (coordutil.areCoordsEqual_noValidate(thisPieceCoords, coords)) return i;
         }
         console.error("Unable to find index of piece!");
     }
@@ -177,7 +177,7 @@ const gamefileutility = (function() {
      * @returns {string | undefined} The type of the piece, if there is one, otherwise undefined
      */
     function getPieceTypeAtCoords(gamefile, coords) {
-        const key = math.getKeyFromCoords(coords);
+        const key = coordutil.getKeyFromCoords(coords);
         return gamefile.piecesOrganizedByKey[key];
     }
 
@@ -273,7 +273,7 @@ const gamefileutility = (function() {
     // Returns a list of all the jumping royal it comes across of a specific color.
     function getJumpingRoyalCoords(gamefile, color) {
         const state = gamefile.ourPieces;
-        const jumpingRoyals = pieces.jumpingRoyals;
+        const jumpingRoyals = typeutil.jumpingRoyals;
 
         const royalCoordsList = []; // A running list of all the jumping royals of this color
 
@@ -304,7 +304,7 @@ const gamefileutility = (function() {
     // Returns the total counted amount.
     // IGNORES UNDEFINEDS
     function getCountOfTypesFromPiecesByType(piecesByType, arrayOfPieces, color) { // arrayOfPieces = ['kings', 'royalCentaurs', ...]
-        const WorB = math.getWorBFromColor(color);
+        const WorB = colorutil.getColorExtensionFromColor(color);
 
         let count = 0;
         for (let i = 0; i < arrayOfPieces.length; i++) {
@@ -350,7 +350,7 @@ const gamefileutility = (function() {
     function getPieceCount(piecesByType) {
         let pieceCount = 0;
 
-        pieces.forEachPieceType(appendCount);
+        typeutil.forEachPieceType(appendCount);
 
         function appendCount(type) {
             pieceCount += piecesByType[type].length;
@@ -362,7 +362,7 @@ const gamefileutility = (function() {
     function getPieceCountOfColorFromPiecesByType(piecesByType, color) {
         let pieceCount = 0;
 
-        pieces.forEachPieceTypeOfColor(color, appendCount);
+        typeutil.forEachPieceTypeOfColor(color, appendCount);
 
         function appendCount(type) {
             const thisTypeList = piecesByType[type];
@@ -417,7 +417,7 @@ const gamefileutility = (function() {
         let foundPiece = false;
 
         // We need to use the same iteration function that our regenPiecesModel() uses!
-        pieces.forEachPieceType(iterate);
+        typeutil.forEachPieceType(iterate);
 
         function iterate(listType) {
             if (foundPiece) return;
@@ -447,8 +447,8 @@ const gamefileutility = (function() {
      * @returns {number[][]}
      */
     function getRoyalCoords(gamefile, color) {
-        const royals = pieces.royals; // ['kings', ...]
-        const WorB = math.getWorBFromColor(color);
+        const royals = typeutil.royals; // ['kings', ...]
+        const WorB = colorutil.getColorExtensionFromColor(color);
 
         const piecesByType = gamefile.ourPieces;
         const royalCoords = [];
@@ -474,15 +474,15 @@ const gamefileutility = (function() {
 	 * @returns {number} the count of the royal pieces of color `color`
 	 */
     function getRoyalCountOfColor(piecesByKey, color) {
-        const royals = pieces.royals; // ['kings', ...]
-        const WorB = math.getWorBFromColor(color);
+        const royals = typeutil.royals; // ['kings', ...]
+        const WorB = colorutil.getColorExtensionFromColor(color);
 
         let royalCount = 0;
         for (const key in piecesByKey) {
             const type = piecesByKey[key];
-            const thisColor = math.getPieceColorFromType(type);
+            const thisColor = colorutil.getPieceColorFromType(type);
             if (!thisColor.endsWith(WorB)) return; // Different color
-            const strippedType = math.trimWorBFromType(type);
+            const strippedType = colorutil.trimColorExtensionFromType(type);
             if (!royals.includes(strippedType)) continue; // Not royalty
             royalCount++;
         }

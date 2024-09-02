@@ -1,7 +1,4 @@
 
-// This script handles all our event listeners for our input actions,
-// and keeps track of what inputs were received every frame.
-
 // Import Start
 import guipause from './gui/guipause.js';
 import bufferdata from './rendering/bufferdata.js';
@@ -17,10 +14,15 @@ import board from './rendering/board.js';
 import math from './misc/math.js';
 import arrows from './rendering/arrows.js';
 import buffermodel from './rendering/buffermodel.js';
+import jsutil from './misc/jsutil.js';
 // Import End
 
 "use strict";
 
+/**
+ * This script handles all our event listeners for our input actions,
+ * and keeps track of what inputs were received every frame.
+ */
 const input = (function() {
 
     const overlayElement = document.getElementById('overlay'); // <div> element overtop the canvas. This is what detects all clicks and touches.
@@ -531,7 +533,7 @@ const input = (function() {
     }
 
     function removeMouseDown_Left() {
-        math.removeObjectFromArray(mouseDowns, leftMouseKey);
+        jsutil.removeObjectFromArray(mouseDowns, leftMouseKey);
     }
 
     function isMouseHeld_Left() {

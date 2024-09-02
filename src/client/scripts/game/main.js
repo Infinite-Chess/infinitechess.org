@@ -1,10 +1,4 @@
 
-/*
- * This is the main script. This is where the game begins running when the htmlscript calls start()
- * This initiates the gl context, calls for the initiating of the shader programs, camera,
- * and input listeners, and begins the game loop.
- */
-
 // Import Start
 import webgl from './rendering/webgl.js';
 import loadbalancer from './misc/loadbalancer.js';
@@ -18,15 +12,20 @@ import camera from './rendering/camera.js';
 import invites from './misc/invites.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
-import math from './misc/math.js';
 // The ONLY reason we import tooltips is so that it can be tied into the
 // dependancy tree of our game, otherwise it won't be included, since NOTHING depends on it,
 // yet it needs to be an ESM because IT depends on input.js!
 import tooltips from './gui/tooltips.js';
+import jsutil from './misc/jsutil.js';
 // Import End
 
 "use strict";
 
+/**
+ * This is the main script. This is where the game begins running when the htmlscript calls start()
+ * This initiates the gl context, calls for the initiating of the shader programs, camera,
+ * and input listeners, and begins the game loop.
+ */
 const main = (function() { 
 
     /**
@@ -170,7 +169,7 @@ const main = (function() {
 function a(message, object) {
     if (!message) throw new Error("Cannot log an object without a message");
     console.log(message);
-    console.log(math.deepCopyObject(object));
+    console.log(jsutil.deepCopyObject(object));
 }
 
 /**

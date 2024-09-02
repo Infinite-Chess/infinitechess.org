@@ -1,12 +1,6 @@
 
-// This script contains adjustable options such as
-// *Board color
-// *Highlight color
-// etc
-
 // Import Start
 import input from '../input.js';
-import math from '../misc/math.js';
 import enginegame from '../misc/enginegame.js';
 import onlinegame from '../misc/onlinegame.js';
 import highlights from './highlights.js';
@@ -21,11 +15,17 @@ import board from './board.js';
 import game from '../chess/game.js';
 import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
-
 
 "use strict";
 
+/**
+ * This script contains adjustable options such as
+ * *Board color
+ * *Highlight color
+ * etc
+ */
 const options = (function() {
 
     // When enabled, your view is expanded to show what you normally can't see beyond the edge of the screen.
@@ -249,7 +249,7 @@ const options = (function() {
         const colorArgs = getPieceRegenColorArgs(); // { white, black, neutral }
         if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
 
-        const pieceColor = math.getPieceColorFromType(type); // white/black/neutral
+        const pieceColor = colorutil.getPieceColorFromType(type); // white/black/neutral
         const color = colorArgs[pieceColor]; // [r,g,b,a]
 
         return {

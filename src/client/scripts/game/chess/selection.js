@@ -1,12 +1,8 @@
 
-// This script tests for piece selection and keeps track of the selected piece,
-// including the legal moves it has available.
-
 // Import Start
 import guipause from '../gui/guipause.js';
 import legalmoves from './legalmoves.js';
 import input from '../input.js';
-import math from '../misc/math.js';
 import enginegame from '../misc/enginegame.js';
 import onlinegame from '../misc/onlinegame.js';
 import movepiece from './movepiece.js';
@@ -25,6 +21,7 @@ import movement from '../rendering/movement.js';
 import movesscript from './movesscript.js';
 import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /**
@@ -34,9 +31,12 @@ import statustext from '../gui/statustext.js';
  * @typedef {import('./movepiece.js').Piece} Piece
  */
 
-
 "use strict";
 
+/**
+ * This script tests for piece selection and keeps track of the selected piece,
+ * including the legal moves it has available.
+ */
 const selection = (function() {
 
     /** The currently selected piece, if there is one: `{ type, index, coords }` @type {Piece} */
@@ -150,12 +150,12 @@ const selection = (function() {
         tag: if (pieceClickedType) {
 
             // Did we click a friendly piece?
-            // const selectedPieceColor = math.getPieceColorFromType(pieceSelected.type)
-            // const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
+            // const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected.type)
+            // const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
             // if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
 
             // If it clicked iteself, deselect.
-            if (math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
+            if (coordutil.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
                 unselectPiece();
             } else if (hoverSquareLegal) { // This piece is capturable, don't select it instead
                 break tag;
@@ -178,7 +178,7 @@ const selection = (function() {
 
         // Check if the move is a pawn promotion
         if (specialdetect.isPawnPromotion(gamefile, pieceSelected.type, coordsClicked)) {
-            const color = math.getPieceColorFromType(pieceSelected.type);
+            const color = colorutil.getPieceColorFromType(pieceSelected.type);
             guipromotion.open(color);
             pawnIsPromoting = coordsClicked;
             return;
@@ -211,7 +211,7 @@ const selection = (function() {
 
         // if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
         if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
-        const clickedPieceColor = math.getPieceColorFromType(pieceClickedType);
+        const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
         if (!options.getEM() && clickedPieceColor === 'neutral') return; // Don't select neutrals, unless we're in edit mode
         if (pieceClickedType === 'voidsN') return; // NEVER select voids, EVEN in edit mode.
 
@@ -233,7 +233,8 @@ const selection = (function() {
         // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
         legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected);
 
-        const pieceColor = math.getPieceColorFromType(pieceSelected.type);
+        let isOpponentPiece;
+        const pieceColor = colorutil.getPieceColorFromType(pieceSelected.type);
         if (game.areInNonLocalGame()) isOpponentPiece = pieceColor !== game.getOurColorInNonLocalGame();
         else isOpponentPiece = pieceColor !== game.getGamefile().whosTurn;
 
@@ -320,10 +321,10 @@ const selection = (function() {
 
         const gamefile = game.getGamefile();
         const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
-        const hoverSquareIsSameColor = typeAtHoverCoords && math.getPieceColorFromType(pieceSelected.type) === math.getPieceColorFromType(typeAtHoverCoords);
+        const hoverSquareIsSameColor = typeAtHoverCoords && colorutil.getPieceColorFromType(pieceSelected.type) === colorutil.getPieceColorFromType(typeAtHoverCoords);
         const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
         // The next boolean ensures that only pieces of the same color as the current player's turn can have a ghost piece:
-        const selectionColorAgreesWithMoveTurn = math.getPieceColorFromType(pieceSelected.type) === gamefile.whosTurn;
+        const selectionColorAgreesWithMoveTurn = colorutil.getPieceColorFromType(pieceSelected.type) === gamefile.whosTurn;
         // This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
         hoverSquareLegal = (selectionColorAgreesWithMoveTurn && !isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor);
     }

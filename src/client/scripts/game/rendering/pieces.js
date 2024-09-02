@@ -1,9 +1,4 @@
 
-// This script contains our list of all possible piece types,
-// spritesheet data,
-// and contains the functions for rendering the main pieces,
-// ghost piece, and mini icons!
-
 // Import Start
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
@@ -19,21 +14,15 @@ import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
 // Import End
 
-
 "use strict";
 
+/**
+ * This script contains our list of all possible piece types,
+ * spritesheet data,
+ * and contains the functions for rendering the main pieces,
+ * ghost piece, and mini icons!
+ */
 const pieces = (function() {
-
-    // All piece names we have a texture for on our spritesheet (except voids).
-    // They are arranged in this order for faster checkmate/draw detection.
-    const white = ['kingsW', 'giraffesW', 'camelsW', 'zebrasW', 'knightridersW','amazonsW', 'queensW', 'royalQueensW', 'hawksW', 'chancellorsW', 'archbishopsW', 'centaursW', 'royalCentaursW', 'knightsW', 'guardsW', 'rooksW', 'bishopsW', 'pawnsW'];
-    const black = ['kingsB', 'giraffesB', 'camelsB', 'zebrasB', 'knightridersB', 'amazonsB', 'queensB', 'royalQueensB', 'hawksB', 'chancellorsB', 'archbishopsB', 'centaursB', 'royalCentaursB', 'knightsB', 'guardsB', 'rooksB', 'bishopsB', 'pawnsB'];
-    const neutral = ['obstaclesN', 'voidsN'];
-
-    /** A list of the royal pieces, without the color appended. */
-    const royals = ['kings', 'royalQueens', 'royalCentaurs'];
-    /** A list of the royals that are compatible with checkmate. */
-    const jumpingRoyals = ['kings', 'royalCentaurs'];
 
     let spritesheet; // Texture. 8x8 containing every texture of every piece, black and white.
     let spritesheetData; // Contains where each piece is located in the spritesheet (texture coord)
@@ -85,53 +74,6 @@ const pieces = (function() {
         const data = bufferdata.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
         const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", pieces.getSpritesheet());
         model.render();
-    }
-
-    /**
-     * Iterates through every single piece TYPE in the game state, and performs specified function on the type.
-     * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
-     * @param {Object} [options] An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
-     */
-    function forEachPieceType(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
-        for (let i = 0; i < white.length; i++) {
-            // We iterate through black types first so that the white icons render on top!
-            callback(black[i]);
-            callback(white[i]);
-        }
-        if (ignoreNeutrals) return;
-        for (let i = 0; i < neutral.length; i++) {
-            const type = neutral[i];
-            if (ignoreVoids && type.startsWith('voids')) continue;
-            callback(type);
-        }
-    }
-
-    /**
-     * A variant of `forEachPieceType()` that allows an asynchronious callback function to be used.
-     * 
-     * Iterates through every single piece TYPE in the game state, and performs specified function on the type
-     * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
-     * @param {Object} [options] An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
-     */
-    async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
-        for (let i = 0; i < white.length; i++) {
-            // We iterate through black types first so that the white icons render on top!
-            await callback(black[i]);
-            await callback(white[i]);
-        }
-        if (ignoreNeutrals) return;
-        for (let i = 0; i < neutral.length; i++) {
-            const type = neutral[i];
-            if (ignoreVoids && type.startsWith('voids')) continue;
-            await callback(type);
-        }
-    }
-
-    // Iterates through every single piece TYPE in the game state of specified COLOR,
-    // and performs specified function on the type
-    function forEachPieceTypeOfColor(color, callback) {
-        if (color !== 'white' && color !== 'black') throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`);
-        for (let i = 0; i < white.length; i++) callback(pieces[color][i]);
     }
 
     function initSpritesheet() {
@@ -232,17 +174,9 @@ const pieces = (function() {
     }
 
     return Object.freeze({
-        white,
-        black,
-        neutral,
-        royals,
-        jumpingRoyals,
         extraUndefineds,
         renderPiecesInGame,
         renderGhostPiece,
-        forEachPieceType,
-        forEachPieceType_Async,
-        forEachPieceTypeOfColor,
         initSpritesheet,
         getSpritesheet,
         initSpritesheetData,

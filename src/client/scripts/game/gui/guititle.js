@@ -1,8 +1,4 @@
 
-/*
- * This script handles our Title Screen
- */
-
 // Import Start
 import style from './style.js';
 import gui from './gui.js';
@@ -15,6 +11,9 @@ import guiplay from './guiplay.js';
 
 "use strict";
 
+/**
+ * This script handles our Title Screen
+ */
 const guititle = (function() {
 
     // Variables

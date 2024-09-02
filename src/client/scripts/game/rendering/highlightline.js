@@ -1,7 +1,4 @@
 
-// This script renders our single-line legal sliding moves
-// when we are zoomed out far.
-
 // Import Start
 import input from '../input.js';
 import bufferdata from './bufferdata.js';
@@ -17,6 +14,8 @@ import pieces from './pieces.js';
 import math from '../misc/math.js';
 import movement from './movement.js';
 import buffermodel from './buffermodel.js';
+import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /**
@@ -27,6 +26,10 @@ import buffermodel from './buffermodel.js';
 
 "use strict";
 
+/**
+ * This script renders our single-line legal sliding moves
+ * when we are zoomed out far.
+ */
 const highlightline = (function() {
 
     /** The buffer model of the legal move lines when zoomed out.
@@ -50,11 +53,11 @@ const highlightline = (function() {
 
         const dataLines = [];
 
-        const legalmoves = math.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
+        const legalmoves = jsutil.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
         const pieceCoords = selection.getPieceSelected().coords;
         const worldSpaceCoords = math.convertCoordToWorldSpace(pieceCoords);
 
-        const color = math.deepCopyObject(options.getLegalMoveHighlightColor());
+        const color = jsutil.deepCopyObject(options.getLegalMoveHighlightColor());
         color[3] = 1;
 
         const snapDist = miniimage.gwidthWorld() / 2;
@@ -68,7 +71,7 @@ const highlightline = (function() {
         let closestDistance;
         let closestPoint;
         for (const strline in legalmoves.sliding) {
-            const line = math.getCoordsFromKey(strline);
+            const line = coordutil.getCoordsFromKey(strline);
             const diag = organizedlines.getCFromLine(line, worldSpaceCoords);
             const lineIsVertical = line[0] === 0;
             

@@ -1,6 +1,4 @@
 
-// This script handles the rendering of the mini images of our pieces when we're zoomed out
-
 // Import Start
 import webgl from './webgl.js';
 import input from '../input.js';
@@ -16,6 +14,7 @@ import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
 import area from './area.js';
 import math from '../misc/math.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /**
@@ -25,6 +24,8 @@ import math from '../misc/math.js';
 
 "use strict";
 
+/** This script handles the rendering of the mini images of our pieces when we're zoomed out
+ */
 const miniimage = (function() {
 
     const width = 36; // Default: 36. Width of ghost-pieces when zoomed out, in virtual pixels
@@ -111,7 +112,7 @@ const miniimage = (function() {
         // While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
         // We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
 
-        pieces.forEachPieceType(concatBufferData, { ignoreVoids: true });
+        typeutil.forEachPieceType(concatBufferData, { ignoreVoids: true });
         
         // Adds pieces of that type's buffer to the overall data
         function concatBufferData(pieceType) {

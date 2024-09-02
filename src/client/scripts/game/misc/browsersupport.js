@@ -1,10 +1,9 @@
 
-/*
+/**
  * This script will check if the current browser supports all
  * it needs to for the game to function, and if not, it will
  * inform the user to upgrade their browser.
  */
-
 const browsersupport = (function() {
 
     function checkBrowserSupport() {

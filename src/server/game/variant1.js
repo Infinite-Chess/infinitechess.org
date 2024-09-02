@@ -882,15 +882,15 @@ const variant1 = (function() {
 
     //     // const count = 250000; // 5 Seconds   ~1500 piece game
     //     // for (let i = 12; i <= count; i++) {
-    //     //     let key = math.getKeyFromCoords([i, 2])
+    //     //     let key = coordutil.getKeyFromCoords([i, 2])
     //     //     piecesByKey[key] = 'pawnsW';
-    //     //     key = math.getKeyFromCoords([i, 7])
+    //     //     key = coordutil.getKeyFromCoords([i, 7])
     //     //     piecesByKey[key] = 'pawnsB';
     //     // }
     //     // for (let i = -3; i >= -count; i--) {
-    //     //     let key = math.getKeyFromCoords([i, 2])
+    //     //     let key = coordutil.getKeyFromCoords([i, 2])
     //     //     piecesByKey[key] = 'pawnsW';
-    //     //     key = math.getKeyFromCoords([i, 7])
+    //     //     key = coordutil.getKeyFromCoords([i, 7])
     //     //     piecesByKey[key] = 'pawnsB';
     //     // }
 

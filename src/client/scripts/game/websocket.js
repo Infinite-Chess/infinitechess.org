@@ -1,17 +1,13 @@
 
-/**
- * This script creates websockets connected to the server,
- * sends and receives incoming messages.
- */
-
 // Import Start
 import main from './main.js';
 import statustext from './gui/statustext.js';
 import invites from './misc/invites.js';
-import math from './misc/math.js';
 import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame.js';
 import localstorage from './misc/localstorage.js';
+import timeutil from './misc/timeutil.js';
+import uuid from './misc/uuid.js';
 // Import End
 
 "use strict";
@@ -28,6 +24,10 @@ import localstorage from './misc/localstorage.js';
  * @property {number} replyto - The ID of the message this message is the reply to, if specified.
  */
 
+/**
+ * This script creates websockets connected to the server,
+ * sends and receives incoming messages.
+ */
 const websocket = (function() {
     
     /** The websocket object we will use to send and receive messages from the server. */
@@ -338,7 +338,7 @@ const websocket = (function() {
         saveInfo(reloadInfo);
         location.reload(true);
 
-        function saveInfo(info) { localstorage.saveItem('hardrefreshinfo', info, math.getTotalMilliseconds({ days: 1 })); }
+        function saveInfo(info) { localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ days: 1 })); }
     }
 
     function sendFeatureNotSupported(description) {
@@ -500,7 +500,7 @@ const websocket = (function() {
             value, // sublist/inviteinfo
         };
         const isEcho = action === "echo";
-        if (!isEcho) payload.id = math.generateNumbID(10);
+        if (!isEcho) payload.id = uuid.generateNumbID(10);
 
         if (printAllSentMessages && main.devBuild) {
             if (isEcho) { if (alsoPrintSentEchos) console.log(`Sending: ${JSON.stringify(payload)}`); }
