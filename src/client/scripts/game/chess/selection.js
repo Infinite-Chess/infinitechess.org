@@ -21,6 +21,7 @@ import movesscript from './movesscript.js';
 import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 import colorutil from '../misc/colorutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /**
