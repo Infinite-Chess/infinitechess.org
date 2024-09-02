@@ -1,7 +1,4 @@
 
-// This script contains all the functions used to generate renderable buffer models of the
-// game objects that the shader programs can use. It receives the object's vertex data to do so.
-
 // Import Start
 import shaders from './shaders.js';
 import math from '../misc/math.js';
@@ -16,6 +13,10 @@ import mat4 from './gl-matrix.js';
 
 "use strict";
 
+/**
+ * This script contains all the functions used to generate renderable buffer models of the
+ * game objects that the shader programs can use. It receives the object's vertex data to do so.
+ */
 const buffermodel = (function() {
 
     /** Valid primitives to render. */

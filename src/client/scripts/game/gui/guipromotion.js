@@ -1,9 +1,4 @@
 
-/*
- * This script handles our promotion menu, when
- * pawns reach the promotion line.
- */
-
 // Import Start
 import perspective from '../rendering/perspective.js';
 import selection from '../chess/selection.js';
@@ -12,6 +7,10 @@ import style from './style.js';
 
 "use strict";
 
+/**
+ * This script handles our promotion menu, when
+ * pawns reach the promotion line.
+ */
 const guipromotion = (function() {
 
     // Variables

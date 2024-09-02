@@ -1,7 +1,4 @@
 
-// This detects if special moves are legal.
-// Does NOT execute the moves!
-
 // Import Start
 import gamefileutility from './gamefileutility.js';
 import organizedlines from './organizedlines.js';
@@ -17,9 +14,12 @@ import colorutil from '../misc/colorutil.js';
  * @typedef {import('./movesscript.js').Move} Move
 */
 
-
 "use strict";
 
+/**
+ * This detects if special moves are legal.
+ * Does NOT execute the moves!
+ */
 const specialdetect = (function() {
 
     /** All types of special moves that exist, for iterating through. */

@@ -1,7 +1,4 @@
 
-// This script handles the rendering of arrows poointing to pieces off-screen
-// and detects if they are clicked
-
 // Import Start
 import legalmoves from '../chess/legalmoves.js';
 import input from '../input.js';
@@ -32,6 +29,10 @@ import colorutil from '../misc/colorutil.js';
 
 "use strict";
 
+/**
+ * This script handles the rendering of arrows poointing to pieces off-screen
+ * and detects if they are clicked
+ */
 const arrows = (function() {
 
     /** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */

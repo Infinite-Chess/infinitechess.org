@@ -1,6 +1,4 @@
 
-// This script stores our board position and scale and controls our panning and zooming.
-
 // Import Start
 import loadbalancer from '../misc/loadbalancer.js';
 import input from '../input.js';
@@ -13,9 +11,9 @@ import guipromotion from '../gui/guipromotion.js';
 import guititle from '../gui/guititle.js';
 // Import End
 
-
 "use strict";
 
+/** This script stores our board position and scale and controls our panning and zooming. */
 const movement = (function() {
 
     const panAccel = 50; // Acceleration of board panning   Default: 50

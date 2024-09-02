@@ -1,9 +1,4 @@
 
-// This script contains our list of all possible piece types,
-// spritesheet data,
-// and contains the functions for rendering the main pieces,
-// ghost piece, and mini icons!
-
 // Import Start
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
@@ -18,9 +13,14 @@ import options from './options.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
-
 "use strict";
 
+/**
+ * This script contains our list of all possible piece types,
+ * spritesheet data,
+ * and contains the functions for rendering the main pieces,
+ * ghost piece, and mini icons!
+ */
 const pieces = (function() {
 
     let spritesheet; // Texture. 8x8 containing every texture of every piece, black and white.

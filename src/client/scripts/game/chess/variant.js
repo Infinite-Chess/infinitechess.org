@@ -1,7 +1,4 @@
 
-// This script stores our variants,
-// and prepares them when a game is generated
-
 // Import Start
 import specialundo from './specialundo.js';
 import legalmoves from './legalmoves.js';
@@ -20,9 +17,12 @@ import typeutil from '../misc/typeutil.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
 */
 
-
 "use strict";
 
+/**
+ * This script stores our variants,
+ * and prepares them when a game is generated
+ */
 const variant = (function() {
 
     /** Variants names the game works with */

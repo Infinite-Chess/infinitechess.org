@@ -1,9 +1,4 @@
 
-/**
- * This script stores our global WebGL rendering context,
- * and other utility methods.
- */
-
 // Import Start
 import camera from './camera.js';
 // Import End
@@ -14,6 +9,10 @@ import camera from './camera.js';
  */
 let gl; // The WebGL context. Is initiated in initGL()
 
+/**
+ * This script stores our global WebGL rendering context,
+ * and other utility methods.
+ */
 const webgl = (function() {
 
     /**

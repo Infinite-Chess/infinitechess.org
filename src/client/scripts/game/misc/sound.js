@@ -1,12 +1,11 @@
 
-// This script controls the playing of our sound effects
-
 // Import Start
 import main from '../main.js';
 // Import End
 
 "use strict";
 
+/** This script controls the playing of our sound effects. */
 const sound = (function() {
 
     /** The timestamps where each game sound effect starts and ends inside our sound spritesheet. */

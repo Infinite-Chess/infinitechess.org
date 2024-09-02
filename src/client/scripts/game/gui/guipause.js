@@ -1,8 +1,4 @@
 
-/*
- * This script handles our Pause menu
- */
-
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
 import style from './style.js';
@@ -21,6 +17,9 @@ import perspective from '../rendering/perspective.js';
 
 "use strict";
 
+/**
+ * This script handles our Pause menu
+ */
 const guipause = (function() {
 
     // Pause UI

@@ -1,8 +1,4 @@
 
-/*
- * This script handles copying and pasting games
- */
-
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
@@ -25,6 +21,9 @@ import statustext from '../gui/statustext.js';
 
 "use strict";
 
+/**
+ * This script handles copying and pasting games
+ */
 const copypastegame = (function() {
 
     /** Enable to only copy a single position without all the moves prior */

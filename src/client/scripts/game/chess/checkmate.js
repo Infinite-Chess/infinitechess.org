@@ -1,9 +1,4 @@
 
-/**
- * This script contains our checkmate algorithm,
- * and 3-fold repetition algorithm.
- */
-
 // Import Start
 import wincondition from './wincondition.js';
 import gamefileutility from './gamefileutility.js';
@@ -20,6 +15,10 @@ import typeutil from '../misc/typeutil.js';
 
 "use strict";
 
+/**
+ * This script contains our checkmate algorithm,
+ * and 3-fold repetition algorithm.
+ */
 const checkmate = (function() {
 
     /**

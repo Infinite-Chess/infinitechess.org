@@ -1,6 +1,4 @@
 
-// This script returns the functions for EXECUTING special moves
-
 // Import Start
 import gamefileutility from './gamefileutility.js';
 import math from '../misc/math.js';
@@ -8,10 +6,9 @@ import animation from '../rendering/animation.js';
 import movepiece from './movepiece.js';
 // Import End
 
-
-
 "use strict";
 
+/** This script returns the functions for EXECUTING special moves */
 const specialmove = {
 
     // This returns the functions for executing special moves,

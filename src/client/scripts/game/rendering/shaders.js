@@ -1,6 +1,4 @@
 
-// This script handles the creation of, and stores our shaders.
-
 // Import Start
 import { gl } from './webgl.js';
 import camera from './camera.js';
@@ -17,6 +15,7 @@ import camera from './camera.js';
  * @property {Object} uniformLocations - An object containing the uniform locations on the gpu. This info is needed before rendering with this program.
  */
 
+/** This script handles the creation of, and stores our shaders. */
 const shaders = (function() {
 
     /** The size of GL_POINTS in **physical** pixels, not virtual.

@@ -1,13 +1,10 @@
 
-/*
- * This script loads textures
- */
-
 // Import Start
 import { gl } from './webgl.js';
 import math from '../misc/math.js';
 // Import End
 
+/** This script loads textures. */
 const texture = (function() {
 
     // Init a texture from an element from the document. Can be called from any script.

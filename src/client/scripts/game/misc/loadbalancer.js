@@ -1,12 +1,4 @@
 
-// This script keeps track of our deltaTime, FPS
-// and decides how many milliseconds per frame
-// large tasks like mesh generation receive.
-
-// This currently does NOT decrease dedicated ms when MULTIPLE long tasks are running.
-// Currently the only long task is the mesh generation of all the pieces
-// (the checkmate algorithm is no longer asynchronious)
-
 // Import Start
 import websocket from '../websocket.js';
 import invites from './invites.js';
@@ -19,6 +11,15 @@ import onlinegame from './onlinegame.js';
 
 'use strict';
 
+/**
+ * This script keeps track of our deltaTime, FPS
+ * and decides how many milliseconds per frame
+ * large tasks like mesh generation receive.
+ * 
+ * This currently does NOT decrease dedicated ms when MULTIPLE long tasks are running.
+ * Currently the only long task is the mesh generation of all the pieces
+ * (the checkmate algorithm is no longer asynchronious)
+ */
 const loadbalancer = (function() {
 
     let runTime; // In millis since the start of the program (updated at the beginning of each frame)

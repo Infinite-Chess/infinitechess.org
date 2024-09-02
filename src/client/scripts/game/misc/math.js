@@ -1,13 +1,4 @@
 
-/*
- * This script contains many utility mathematical operations, and javascript 
- * object functions, we've created for the game and its variables.
- * 
- * Many deal with coordinates, or bounding boxes.
- * 
- * In theory, should should have ZERO dependancies.
- */
-
 // Import Start
 import perspective from '../rendering/perspective.js';
 import movement from '../rendering/movement.js';
@@ -28,6 +19,14 @@ import board from '../rendering/board.js';
  * @property {number} top - The y-coordinate of the top side of the box.
  */
 
+/**
+ * This script contains many utility mathematical operations, and javascript 
+ * object functions, we've created for the game and its variables.
+ * 
+ * Many deal with coordinates, or bounding boxes.
+ * 
+ * In theory, should should have ZERO dependancies.
+ */
 const math = (function() {
 
     /**
@@ -130,7 +129,7 @@ const math = (function() {
      * @returns {BoundingBox} The minimum bounding box
      */
     function getBoxFromCoordsList(coordsList) { // Array of coordinates in the form [x,y]
-        if (coordsList == null) return console.error("Coords not specified when calculating the bounding box of a coordinate list!");
+        if (coordsList === undefined) return console.error("Coords not specified when calculating the bounding box of a coordinate list!");
         else if (coordsList.length === 0) return console.error("Cannot calculate the bounding box of 0 coordinates!");
 
         const box = {};

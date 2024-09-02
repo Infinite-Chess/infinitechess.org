@@ -1,8 +1,4 @@
 
-/**
- * Converts pre-1.3 old gamefile code into the new internal format.
- */
-
 // Import Start
 import variant from './variant.js';
 import formatconverter from './formatconverter.js';
@@ -12,6 +8,9 @@ import math from '../misc/math.js';
 
 'use script';
 
+/**
+ * Converts pre-1.3 old gamefile code into the new internal format.
+ */
 const backcompatible = (function() {
 
     /**

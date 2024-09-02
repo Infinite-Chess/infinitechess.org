@@ -1,6 +1,4 @@
 
-// Here lies the universal methods for moving pieces, forward or rewinding.
-
 // Import Start
 import legalmoves from './legalmoves.js';
 import main from '../main.js';
@@ -39,6 +37,7 @@ import colorutil from '../misc/colorutil.js';
  * @property {number} index - The index of the piece within the gamefile's piece list.
  */
 
+/** Here lies the universal methods for moving pieces, forward or rewinding. */
 const movepiece = (function() {
 
     /**

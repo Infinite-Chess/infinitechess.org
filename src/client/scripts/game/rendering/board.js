@@ -1,9 +1,4 @@
 
-/*
- * This script renders the board, and changes it's color.
- * We also keep track of what tile the mouse is currently hovering over.
- */
-
 // Import Start
 import webgl from './webgl.js';
 import texture from './texture.js';
@@ -30,6 +25,10 @@ import game from '../chess/game.js';
 
 "use strict";
 
+/**
+ * This script renders the board, and changes it's color.
+ * We also keep track of what tile the mouse is currently hovering over.
+ */
 const board = (function() {
 
     let tiles_texture; // 2x2 transparent

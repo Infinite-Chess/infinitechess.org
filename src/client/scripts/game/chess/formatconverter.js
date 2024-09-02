@@ -1,5 +1,7 @@
 
-/*
+'use strict';
+
+/**
  * Universal Infinite Chess Notation [Converter] and Interface
  * by Andreas Tsevas and Naviary
  * https://github.com/tsevasa/infinite-chess-notation
@@ -8,9 +10,6 @@
  * compact ICN (Infinite Chess Noation) and back, still human-readable,
  * but taking less space to describe positions.
  */
-
-'use strict';
-
 const formatconverter = (function() {
     
     const pieceDictionary = {

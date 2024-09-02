@@ -1,7 +1,4 @@
 
-// This script handles all our event listeners for our input actions,
-// and keeps track of what inputs were received every frame.
-
 // Import Start
 import guipause from './gui/guipause.js';
 import bufferdata from './rendering/bufferdata.js';
@@ -20,6 +17,10 @@ import buffermodel from './rendering/buffermodel.js';
 
 "use strict";
 
+/**
+ * This script handles all our event listeners for our input actions,
+ * and keeps track of what inputs were received every frame.
+ */
 const input = (function() {
 
     const overlayElement = document.getElementById('overlay'); // <div> element overtop the canvas. This is what detects all clicks and touches.

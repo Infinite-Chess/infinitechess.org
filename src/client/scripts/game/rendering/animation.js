@@ -1,7 +1,4 @@
 
-// This script handles the smooth animation when moving a piece from one coord to another
-// Also plays our sounds!
-
 // Import Start
 import bufferdata from './bufferdata.js';
 import main from '../main.js';
@@ -23,6 +20,10 @@ import buffermodel from './buffermodel.js';
 
 "use strict";
 
+/**
+ * This script handles the smooth animation when moving a piece from one coord to another
+ * Also plays our sounds!
+ */
 const animation = (function() {
 
     const z = 0.01;

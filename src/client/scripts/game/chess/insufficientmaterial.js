@@ -1,4 +1,3 @@
-// Draw detection by insufficient material
 
 // Import Start
 import wincondition from './wincondition.js';
@@ -15,6 +14,7 @@ import colorutil from '../misc/colorutil.js';
 
 "use strict";
 
+/** This script detects draws by insufficient material. */
 const insufficientmaterial = (function() {
 
     // Lists of scenarios that lead to a draw by insufficient material

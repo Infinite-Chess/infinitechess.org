@@ -1,9 +1,4 @@
 
-/*
- * This script handles our Play page, containing
- * our invite creation menu.
- */
-
 // Import Start
 import websocket from '../websocket.js';
 import guigameinfo from './guigameinfo.js';
@@ -28,6 +23,10 @@ import guititle from './guititle.js';
 
 "use strict";
 
+/**
+ * This script handles our Play page, containing
+ * our invite creation menu.
+ */
 const guiplay = (function() {
 
     // Variables

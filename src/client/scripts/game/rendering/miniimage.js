@@ -1,6 +1,4 @@
 
-// This script handles the rendering of the mini images of our pieces when we're zoomed out
-
 // Import Start
 import webgl from './webgl.js';
 import input from '../input.js';
@@ -26,6 +24,8 @@ import typeutil from '../misc/typeutil.js';
 
 "use strict";
 
+/** This script handles the rendering of the mini images of our pieces when we're zoomed out
+ */
 const miniimage = (function() {
 
     const width = 36; // Default: 36. Width of ghost-pieces when zoomed out, in virtual pixels

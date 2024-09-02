@@ -1,10 +1,4 @@
 
-/*
- * This script contains the methods for calculating if the
- * game is over by the win condition used, for all win
- * conditions except for checkmate, stalemate, and repetition.
- */
-
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from './gamefileutility.js';
@@ -21,10 +15,13 @@ import typeutil from '../misc/typeutil.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
 */
 
-
 "use strict";
 
-// Module
+/**
+ * This script contains the methods for calculating if the
+ * game is over by the win condition used, for all win
+ * conditions except for checkmate, stalemate, and repetition.
+ */
 const wincondition = (function() {
 
     /** Valid win conditions in the gamerules. */

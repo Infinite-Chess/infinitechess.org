@@ -1,10 +1,4 @@
 
-/*
- * This is the main script. This is where the game begins running when the htmlscript calls start()
- * This initiates the gl context, calls for the initiating of the shader programs, camera,
- * and input listeners, and begins the game loop.
- */
-
 // Import Start
 import webgl from './rendering/webgl.js';
 import loadbalancer from './misc/loadbalancer.js';
@@ -27,6 +21,11 @@ import tooltips from './gui/tooltips.js';
 
 "use strict";
 
+/**
+ * This is the main script. This is where the game begins running when the htmlscript calls start()
+ * This initiates the gl context, calls for the initiating of the shader programs, camera,
+ * and input listeners, and begins the game loop.
+ */
 const main = (function() { 
 
     /**

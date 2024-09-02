@@ -1,8 +1,4 @@
 
-/*
- * This script generates the vertex data of the hidden coins
- */
-
 // Import Start
 import bufferdata from './bufferdata.js';
 // Import End
@@ -14,6 +10,9 @@ import bufferdata from './bufferdata.js';
 
 "use strict";
 
+/**
+ * This script generates the vertex data of the hidden coins
+ */
 const coin = (function() {
 
     /** Encrypted locations of the coins */

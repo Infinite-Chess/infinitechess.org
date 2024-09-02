@@ -1,8 +1,4 @@
 
-// This script is used to test if given gamefiles are in check,
-// also for simulating which moves would lead to check and removed from the list of legal moves.
-// We also detect checkmate, stalemate, and repetition here.
-
 // Import Start
 import legalmoves from './legalmoves.js';
 import movepiece from './movepiece.js';
@@ -25,6 +21,11 @@ import colorutil from '../misc/colorutil.js';
 
 "use strict";
 
+/**
+ * This script is used to test if given gamefiles are in check,
+ * also for simulating which moves would lead to check and removed from the list of legal moves.
+ * We also detect checkmate, stalemate, and repetition here.
+ */
 const checkdetection = (function() {
 
     /**

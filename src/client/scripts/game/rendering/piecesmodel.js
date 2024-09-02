@@ -1,7 +1,4 @@
 
-// This contains the functions for generating, modifying,
-// and rendering the mesh of the pieces of a gamefile
-
 // Import Start
 import loadbalancer from '../misc/loadbalancer.js';
 import math from '../misc/math.js';
@@ -31,6 +28,10 @@ import typeutil from '../misc/typeutil.js';
 
 "use strict";
 
+/**
+ * This contains the functions for generating, modifying,
+ * and rendering the mesh of the pieces of a gamefile
+ */
 const piecesmodel = {
 
     strideWithTexture: 4, // Using texture shader. Stride per VERTEX

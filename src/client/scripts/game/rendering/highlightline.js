@@ -1,7 +1,4 @@
 
-// This script renders our single-line legal sliding moves
-// when we are zoomed out far.
-
 // Import Start
 import input from '../input.js';
 import bufferdata from './bufferdata.js';
@@ -27,6 +24,10 @@ import buffermodel from './buffermodel.js';
 
 "use strict";
 
+/**
+ * This script renders our single-line legal sliding moves
+ * when we are zoomed out far.
+ */
 const highlightline = (function() {
 
     /** The buffer model of the legal move lines when zoomed out.

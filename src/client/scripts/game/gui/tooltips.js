@@ -1,4 +1,7 @@
+
+// Import Start
 import input from "../input.js";
+// Import End
 
 /**
  * This script creates event listeners for managing the current classes
@@ -6,7 +9,6 @@ import input from "../input.js";
  * If you hover for a tooltip, following tooltips pop up instantly,
  * until you go a little but without viewing another tooltip.
  */
-
 (function() {
 
     const tooltipClasses = ['tooltip-dl', 'tooltip-d', 'tooltip-dr'];

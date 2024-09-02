@@ -1,11 +1,12 @@
 
-// This script handles reading, saving, and deleting expired
-// browser local storage data for us!
-// Without it, things we save NEVER expire or are deleted.
-// (unless the user clears their browser cache)
-
 'use strict';
 
+/**
+ * This script handles reading, saving, and deleting expired
+ * browser local storage data for us!
+ * Without it, things we save NEVER expire or are deleted.
+ * (unless the user clears their browser cache)
+ */
 const localstorage = (function() {
 
     const printSavesAndDeletes = false;

@@ -1,9 +1,4 @@
 
-/*
- * This script handles the game info bar, during a game,
- * displaying the clocks, and whos turn it currently is.
- */
-
 // Import Start
 import wincondition from '../chess/wincondition.js';
 import style from './style.js';
@@ -18,6 +13,10 @@ import onlinegame from '../misc/onlinegame.js';
 
 "use strict";
 
+/**
+ * This script handles the game info bar, during a game,
+ * displaying the clocks, and whos turn it currently is.
+ */
 const guigameinfo = (function() {
 
     // Variables

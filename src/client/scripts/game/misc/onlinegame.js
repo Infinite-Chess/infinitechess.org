@@ -1,6 +1,4 @@
 
-// This module keeps trap of the data of the onlinegame we are currently in.
-
 // Import Start
 import legalmoves from '../chess/legalmoves.js';
 import localstorage from './localstorage.js';
@@ -39,6 +37,7 @@ import colorutil from './colorutil.js';
 
 "use strict";
 
+/** This module keeps trap of the data of the onlinegame we are currently in. */
 const onlinegame = (function() {
 
     /** Whether we are currently in an online game. */

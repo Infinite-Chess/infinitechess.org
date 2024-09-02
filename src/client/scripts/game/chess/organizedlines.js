@@ -1,11 +1,4 @@
 
-/*
- * This script manages the organized lines of all pieces in the current game.
- * For example, pieces organized by type, coordinate, vertical, horizontal, diagonal, etc.
- * 
- * These dramatically increase speed of legal move calculation.
- */
-
 // Import Start
 import gamefileutility from './gamefileutility.js';
 import pieces from '../rendering/pieces.js';
@@ -24,7 +17,12 @@ import typeutil from '../misc/typeutil.js';
 
 "use strict";
 
-// Module
+/**
+ * This script manages the organized lines of all pieces in the current game.
+ * For example, pieces organized by type, coordinate, vertical, horizontal, diagonal, etc.
+ * 
+ * These dramatically increase speed of legal move calculation.
+ */
 const organizedlines = {
     /**
      * Organizes all the pieces of the specified game into many different lists,

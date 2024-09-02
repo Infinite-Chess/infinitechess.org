@@ -1,9 +1,4 @@
 
-// This script contains adjustable options such as
-// *Board color
-// *Highlight color
-// etc
-
 // Import Start
 import input from '../input.js';
 import onlinegame from '../misc/onlinegame.js';
@@ -22,9 +17,14 @@ import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../misc/colorutil.js';
 // Import End
 
-
 "use strict";
 
+/**
+ * This script contains adjustable options such as
+ * *Board color
+ * *Highlight color
+ * etc
+ */
 const options = (function() {
 
     // When enabled, your view is expanded to show what you normally can't see beyond the edge of the screen.

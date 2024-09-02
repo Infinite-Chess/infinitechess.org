@@ -1,11 +1,4 @@
 
-/**
- * This script handles the calculation of the "Area"s on screen that
- * will contain the desired list of piece coordinates when at a specific
- * camera position and scale (zoom), which can be used to tell
- * {@link transition} where to teleport to.
- */
-
 // Import Start
 import transition from './transition.js';
 import movement from './movement.js';
@@ -32,6 +25,12 @@ import math from '../misc/math.js';
  * @property {Object} boundingBox - The bounding box that contains the area of interest.
  */
 
+/**
+ * This script handles the calculation of the "Area"s on screen that
+ * will contain the desired list of piece coordinates when at a specific
+ * camera position and scale (zoom), which can be used to tell
+ * {@link transition} where to teleport to.
+ */
 const area = (function() {
 
     const padding = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)

@@ -71,6 +71,10 @@ function Move() {
     this.compact = undefined;
 }
 
+/**
+ * This contains methods for working with the gamefile's moves list,
+ * and detects if we're rewinding or fast-forwarding to view the game's history.
+ */
 const movesscript = (function() {
 
     /** Tests if the arrow keys have been pressed, signaling to rewind/forward the game. */

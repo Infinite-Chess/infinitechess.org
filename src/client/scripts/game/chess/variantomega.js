@@ -1,7 +1,4 @@
 
-// This extends variant.js, containing the init methods
-// and generation aglorithms for all positions omega and above (showcasings)
-
 // Import Start
 import variant from './variant.js';
 import math from '../misc/math.js';
@@ -13,9 +10,12 @@ import math from '../misc/math.js';
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
 */
 
-
 'use strict';
 
+/**
+ * This extends variant.js, containing the init methods
+ * and generation aglorithms for all positions omega and above (showcasings)
+ */
 const variantomega = (function() {
 
     /**

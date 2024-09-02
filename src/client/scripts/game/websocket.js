@@ -1,9 +1,4 @@
 
-/**
- * This script creates websockets connected to the server,
- * sends and receives incoming messages.
- */
-
 // Import Start
 import main from './main.js';
 import statustext from './gui/statustext.js';
@@ -28,6 +23,10 @@ import localstorage from './misc/localstorage.js';
  * @property {number} replyto - The ID of the message this message is the reply to, if specified.
  */
 
+/**
+ * This script creates websockets connected to the server,
+ * sends and receives incoming messages.
+ */
 const websocket = (function() {
     
     /** The websocket object we will use to send and receive messages from the server. */

@@ -1,8 +1,4 @@
 
-/*
- * This script manages the invites on the Play page.
- */
-
 // Import Start
 import websocket from '../websocket.js';
 import localstorage from './localstorage.js';
@@ -30,6 +26,7 @@ import statustext from '../gui/statustext.js';
  * @property {string} rated - rated/casual
  */
 
+/** This script manages the invites on the Play page. */
 const invites = (function() {
 
     const invitesContainer = document.getElementById('invites');

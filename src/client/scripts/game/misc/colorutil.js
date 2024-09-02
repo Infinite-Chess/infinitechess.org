@@ -1,11 +1,9 @@
 
-// Import Start
-
-// Import End
-
 /**
  * This scripts contains utility methods for working with colors,
  * such as getting the opposite color, trimming the color from type, etc.
+ * 
+ * ZERO depancies.
  */
 const colorutil = (function() {
 

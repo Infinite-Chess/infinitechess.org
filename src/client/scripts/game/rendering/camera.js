@@ -1,13 +1,4 @@
 
-// This script handles and stores the matrixes of our shader programs, which
-// store the location of the camera, and contains data about our canvas and window.
-// Note that our camera is going to be at a FIXED location no matter what our board
-// location is or our scale is, the camera remains still while the board moves beneath us.
-
-// viewMatrix  is the camera location and rotation.
-// projMatrix  needed for perspective mode rendering (is even enabled in 2D view).
-// worldMatrix  is custom for each rendered object, translating it how desired.
-
 // Import Start
 import perspective from './perspective.js';
 import main from '../main.js';
@@ -30,6 +21,16 @@ import guidrawoffer from '../gui/guidrawoffer.js';
 
 "use strict";
 
+/**
+ * This script handles and stores the matrixes of our shader programs, which
+ * store the location of the camera, and contains data about our canvas and window.
+ * Note that our camera is going to be at a FIXED location no matter what our board
+ * location is or our scale is, the camera remains still while the board moves beneath us.
+ * 
+ * viewMatrix  is the camera location and rotation.
+ * projMatrix  needed for perspective mode rendering (is even enabled in 2D view).
+ * worldMatrix  is custom for each rendered object, translating it how desired.
+ */
 const camera = (function() {
     
     // This will NEVER change! The camera stays while the board position is what moves!

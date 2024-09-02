@@ -1,10 +1,4 @@
 
-/*
- * This script contains many utility methods for working with gamefiles
- * and *should* (theoretically) have zero dependancies,
- * except for maybe the math script.
- */
-
 // Import Start
 import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
@@ -27,9 +21,13 @@ import typeutil from '../misc/typeutil.js';
  * @typedef {import('./movepiece.js').Piece} Piece
 */
 
-
 "use strict";
 
+/**
+ * This script contains many utility methods for working with gamefiles
+ * and *should* (theoretically) have zero dependancies,
+ * except for maybe the math script.
+ */
 const gamefileutility = (function() {
 
     /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */

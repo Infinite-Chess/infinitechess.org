@@ -1,12 +1,4 @@
 
-/**
- * This script stores the logic surrounding draw extending and acceptance
- * in online games, client-side.
- * 
- * It also keeps track of the last ply (half-move) we extended a draw offer,
- * if we have done so, in the current online game.
- */
-
 // Import Start
 import guidrawoffer from '../gui/guidrawoffer.js';
 import statustext from '../gui/statustext.js';
@@ -17,8 +9,16 @@ import movesscript from '../chess/movesscript.js';
 import onlinegame from './onlinegame.js';
 import game from '../chess/game.js';
 // Import End
+
 'use strict';
 
+/**
+ * This script stores the logic surrounding draw extending and acceptance
+ * in online games, client-side.
+ * 
+ * It also keeps track of the last ply (half-move) we extended a draw offer,
+ * if we have done so, in the current online game.
+ */
 const drawoffers = (function() {
 
     /**

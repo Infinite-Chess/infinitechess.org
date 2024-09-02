@@ -1,9 +1,4 @@
 
-/*
- * This script renders the red glow surrounding
- * royal pieces currently in check.
- */
-
 // Import Start
 import bufferdata from './bufferdata.js';
 import game from '../chess/game.js';
@@ -20,6 +15,10 @@ import buffermodel from './buffermodel.js';
 
 "use strict";
 
+/**
+ * This script renders the red glow surrounding
+ * royal pieces currently in check.
+ */
 const checkhighlight = (function() {
 
     function render() {

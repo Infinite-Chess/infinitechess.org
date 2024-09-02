@@ -1,7 +1,4 @@
 
-// This script handles the rendering of legal jumping (no sliding) moves,
-// and also hilights the last move played.
-
 // Import Start
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
@@ -29,6 +26,10 @@ import buffermodel from './buffermodel.js';
 
 "use strict";
 
+/**
+ * This script handles the rendering of legal jumping (no sliding) moves,
+ * and also hilights the last move played.
+ */
 const highlights = (function() {
 
     const highlightedMovesRegenRange = 10_000; // Not every highlighted move can be calculated every frame because it's infinite. So we render them out to a specified distance. This is NOT that specified distance. This is the distance to at which to call the function to recalculate the model of the highlighted moves (the out-of-bounds)

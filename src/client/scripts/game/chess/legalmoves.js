@@ -1,8 +1,4 @@
 
-/*
- * This script calculates legal moves
- */
-
 // Import Start
 import movepiece from './movepiece.js';
 import gamefileutility from './gamefileutility.js';
@@ -27,12 +23,16 @@ import typeutil from '../misc/typeutil.js';
 
 // Custom type definitions...
 
-/** An object containing all the legal moves of a piece.
+/**
+ * An object containing all the legal moves of a piece.
  * @typedef {Object} LegalMoves
  * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
  * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
  */
 
+/**
+ * This script calculates legal moves
+ */
 const legalmoves = (function() {
 
     /**
