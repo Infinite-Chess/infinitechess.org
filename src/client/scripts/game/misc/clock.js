@@ -5,8 +5,8 @@ import onlinegame from './onlinegame.js';
 import game from '../chess/game.js';
 import sound from './sound.js';
 import movesscript from '../chess/movesscript.js';
-import math from './math.js';
 import gamefileutility from '../chess/gamefileutility.js';
+import timeutil from './timeutil.js';
 // Import End
 
 "use strict";
@@ -107,7 +107,7 @@ const clock = (function() {
         const clockPartsSplit = getMinutesAndIncrementFromClock(clock); // { minutes, increment }
         if (clockPartsSplit !== null) {
             startTime.minutes = clockPartsSplit.minutes;
-            startTime.millis = math.minutesToMillis(startTime.minutes);
+            startTime.millis = timeutil.minutesToMillis(startTime.minutes);
             startTime.increment = clockPartsSplit.increment;
         }
 
@@ -179,7 +179,7 @@ const clock = (function() {
         if (!movesscript.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 
         // Add increment
-        currentTime[colorTicking] += math.secondsToMillis(startTime.increment);
+        currentTime[colorTicking] += timeutil.secondsToMillis(startTime.increment);
         // Flip colorTicking
         colorTicking = gamefile.whosTurn;
 

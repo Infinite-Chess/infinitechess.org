@@ -7,6 +7,7 @@ import math from './misc/math.js';
 import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame.js';
 import localstorage from './misc/localstorage.js';
+import timeutil from './misc/timeutil.js';
 // Import End
 
 "use strict";
@@ -337,7 +338,7 @@ const websocket = (function() {
         saveInfo(reloadInfo);
         location.reload(true);
 
-        function saveInfo(info) { localstorage.saveItem('hardrefreshinfo', info, math.getTotalMilliseconds({ days: 1 })); }
+        function saveInfo(info) { localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ days: 1 })); }
     }
 
     function sendFeatureNotSupported(description) {

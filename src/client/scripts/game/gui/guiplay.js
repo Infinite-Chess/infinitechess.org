@@ -6,7 +6,6 @@ import area from '../rendering/area.js';
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../misc/localstorage.js';
 import main from '../main.js';
-import math from '../misc/math.js';
 import style from './style.js';
 import game from '../chess/game.js';
 import sound from '../misc/sound.js';
@@ -19,6 +18,7 @@ import gui from './gui.js';
 import drawoffers from '../misc/drawoffers.js';
 import gamefile from '../chess/gamefile.js';
 import guititle from './guititle.js';
+import timeutil from '../misc/timeutil.js';
 // Import End
 
 "use strict";
@@ -234,7 +234,7 @@ const guiplay = (function() {
     function savePreferredClockOption(clockIndex) {
         const localOrOnline = modeSelected;
         // For search results: preferred_local_clock_invite_value preferred_online_clock_invite_value
-        localstorage.saveItem(`preferred_${localOrOnline}_clock_invite_value`, clockIndex, math.getTotalMilliseconds({ days: 7 }));
+        localstorage.saveItem(`preferred_${localOrOnline}_clock_invite_value`, clockIndex, timeutil.getTotalMilliseconds({ days: 7 }));
     }
 
     function callback_joinPrivate() {
@@ -379,8 +379,8 @@ const guiplay = (function() {
         movement.eraseMomentum();
         options.disableEM();
 
-        gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || math.getCurrentUTCDate();
-        gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || math.getCurrentUTCTime();
+        gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || timeutil.getCurrentUTCDate();
+        gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || timeutil.getCurrentUTCTime();
 
         const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
             moves: gameOptions.moves,
