@@ -9,7 +9,7 @@ import { readdir, cp as copy, rm as remove, readFile, writeFile } from 'node:fs/
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
-import { injectScriptIntoPlayEjs, injectHtmlScript } from './src/server/utility/HTMLScriptInjector.js';
+import { insertScriptLinkIntoHTML, insertScriptIntoHTML } from './src/server/utility/HTMLScriptInjector.js';
 import { BUNDLE_FILES } from './src/server/config/config.js';
 import esbuild from 'esbuild';
 import path from "node:path";
@@ -64,16 +64,21 @@ await remove("./dist", {
     force: true,
 });
 
+/** The relative path to play.ejs */
+const playEJSPath = './dist/views/play.ejs';
+
 if (!BUNDLE_FILES) {
     // in dev mode, copy all clientside files over to dist and exit
     await copy("./src/client", "./dist", {
         recursive: true,
         force: true
     });
-    // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`, 
-        injectScriptIntoPlayEjs(`./dist/scripts/game/main.js`, "<!-- All clientside game scripts inject here -->", true), 
-        'utf8');
+
+    // Overwrite play.ejs, inserting the game script links into it
+    const playEJS2 = await readFile(playEJSPath, 'utf8');
+    const newPlayEJS2 = insertScriptLinkIntoHTML(playEJS2, '/scripts/game/main.js', true, { type: 'module', onerror: 'htmlscript.callback_LoadingError(event)', onload: 'htmlscript.removeOnerror.call(this);' });
+    await writeFile(playEJSPath, newPlayEJS2, 'utf8');
+
 } else {
     // in prod mode, copy all clientside files over to dist, except for those contained in scripts
     await copy("./src/client", "./dist", {
@@ -104,11 +109,11 @@ if (!BUNDLE_FILES) {
     }
 
     await compressGameScriptsIntoAppJS();
-  
-    // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`, 
-        injectScriptIntoPlayEjs(`./dist/scripts/game/app.js`,"<!-- All clientside game scripts inject here -->"), 
-        'utf8');
+
+    // Overwrite play.ejs, inserting the game script link 'app.js' into it
+    const playEJS = await readFile(playEJSPath, 'utf8');
+    const newPlayEJS = insertScriptLinkIntoHTML(playEJS, '/scripts/game/app.js', true, { onerror: 'htmlscript.callback_LoadingError(event)', onload: '(() => { htmlscript.removeOnerror.call(this); })()' });
+    await writeFile(playEJSPath, newPlayEJS, 'utf8');
   
     // Make a list of all css files
     const cssFiles = await getExtFiles("./src/client/css", ".css");
@@ -124,9 +129,11 @@ if (!BUNDLE_FILES) {
     }
 }
 
-await writeFile(`./dist/views/play.ejs`, 
-    injectHtmlScript(), 
-    'utf8');
+// Overwrite play.ejs, inserting the link for htmlscript.js into it
+const playEJS = await readFile(playEJSPath, 'utf8');
+const htmlscriptJS = await readFile('./dist/scripts/game/htmlscript.js');
+const newPlayEJS = insertScriptIntoHTML(playEJS, htmlscriptJS, {}, '<!-- htmlscript inject here -->');
+await writeFile(playEJSPath, newPlayEJS, 'utf8');
 
 /**
  * This takes all game scripts (excluding htmlscript), and merges them

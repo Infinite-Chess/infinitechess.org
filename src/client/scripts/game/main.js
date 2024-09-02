@@ -19,8 +19,9 @@ import invites from './misc/invites.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
 import math from './misc/math.js';
-// The ONLY reason we export tooltips is so that it can be tied into the
-// dependancy tree of our game, otherwise it won't be included.
+// The ONLY reason we import tooltips is so that it can be tied into the
+// dependancy tree of our game, otherwise it won't be included, since NOTHING depends on it,
+// yet it needs to be an ESM because IT depends on input.js!
 import tooltips from './gui/tooltips.js';
 // Import End
 

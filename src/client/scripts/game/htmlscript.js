@@ -11,6 +11,8 @@
 
 'use strict';
 
+/* global main, sound */
+// eslint-disable-next-line no-unused-vars
 const htmlscript = (function() {
 
     // Listen for the first user gesture...
@@ -30,11 +32,9 @@ const htmlscript = (function() {
         atleastOneUserGesture = true;
         document.removeEventListener('mousedown', callback_OnUserGesture);
         document.removeEventListener('click', callback_OnUserGesture);
-        // eslint-disable-next-line no-undef
         if (audioContextDefined) sound.getAudioContext().resume();
         else window.addEventListener('load', () => { // resume() the Audio Context as soon as the page loads
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
-            // eslint-disable-next-line no-undef
             sound.getAudioContext()?.resume();
         });
     }
@@ -67,13 +67,11 @@ const htmlscript = (function() {
         if (document.readyState === 'complete') sendAudioContextToScript();
         else window.addEventListener('load', () => { // Send our audio context to our sound script.
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
-            // eslint-disable-next-line no-undef
             sound.initAudioContext(audioContext, audioDecodedBuffer);
             audioContextDefined = true;
         });
         function sendAudioContextToScript() {
             if (loadingErrorOcurred) return; // Page never finished loading, don't reference sound script.
-            // eslint-disable-next-line no-undef
             sound.initAudioContext(audioContext, audioDecodedBuffer);
             audioContextDefined = true;
         }
@@ -115,7 +113,8 @@ const htmlscript = (function() {
 
     // Removes the onerror event listener from the "this" object.
     function removeOnerror() {
-        this.onerror = null;
+        this.removeAttribute('onerror');
+        this.removeAttribute('onload');
     }
 
     // Add event listeners for when connection is dropped when loading
@@ -139,12 +138,12 @@ const htmlscript = (function() {
         lostNetwork = false;
         if (loadingErrorOcurred) window.location.reload(); // Refresh the page
     }
+    
     // When the document is loaded, start the game!
 
     window.addEventListener('load', function() {
         if (loadingErrorOcurred) return; // Page never finished loading, don't start the game.
         closeLoadingScreenListeners(); // Remove document event listeners for the loading screen
-        // eslint-disable-next-line no-undef
         main.start(); // Start the game!
     });
 
@@ -155,5 +154,3 @@ const htmlscript = (function() {
     });
 
 })();
-
-globalThis.htmlscript = htmlscript;

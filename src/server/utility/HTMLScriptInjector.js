@@ -1,78 +1,74 @@
 /**
- * This module is called by build.mjs to inject javascript code into play.ejs.
- * Currently, htmlscript.js is injected in full into play.ejs.
- * Also, calls to the game scripts in /src/client/scripts/game are injected into play.ejs.
- *
- * We keep the javascript separate in development, so as
- * to not break Intellisense's sense of the javascript project.
- * (We wouldn't get useful JSDoc dropdown info otherwise)
+ * This module accepts HTML strings and either injects a link
+ * to a script, or the script text itself, into it.
  */
 
-import fs from "fs";
-import path from "path";
 
-import { fileURLToPath } from 'node:url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-function injectafter(string, after, injectString) {
-    return string.replace(after, `${after}${injectString}`);
+/**
+ * Injects a string after a certain string segment found within a source string.
+ * @param {string} src - The source string
+ * @param {string} after - The string segment for which the first match is found within the src, where the inject string will be inserted.
+ * @param {string} inject - The string to inject
+ * @returns {string} The injected string. If no match was found, the string will have not changed.
+ */
+function injectStringIntoStringAfter(src, after, inject) {
+    return src.replace(after, `${after}${inject}`);
 }
 
 /**
- * Injects a JavaScript file's content into an HTML or EJS file
- * after a specified tag, returning the new content.
- * @param {string} htmlFilePath - The path of the html/ejs document in the project
- * @param {string} jsFilePath - The path of the javascript file containing the desired javascript code to inject.
- * @param {string} injectAfterTag - The HTML tag after which the JavaScript code will be injected (typically the `<head>`).
- * @returns {string} modifiedHTML - Modified html.
+ * Takes an html document as a string, inserts a script tag into its head, with the src being the scriptPath,
+ * and any corresponding attributes provided.
+ * @param {string} HTML - The html string
+ * @param {string} src - The path for which the client should request this script at
+ * @param {boolean} defer - Whether or not to defer the execution of the script until the document fully loads.
+ * @param {Object} [attributes] An object with attribute-value pairs to insert into the script tag.
+ * @returns {string} - The modified HTML string with the inserted script tag.
  */
-function injectScript(htmlFilePath, scriptTag, injectAfterTag) {
-    const htmlData = fs.readFileSync(htmlFilePath, "utf8");
-    if (!htmlData.match(injectAfterTag)) {
-        console.error(`No match for tag ${injectAfterTag}`);
+function insertScriptLinkIntoHTML(HTML, src, defer, attributes = {}) {
+    let scriptTag = `<script`; // Start of the tag
+    if (defer) scriptTag += ' defer'; // Add the defer attribute first if required
+    scriptTag += ` src="${src}"`; // Then add the src attribute
+    for (const [key, value] of Object.entries(attributes)) scriptTag += ` ${key}="${value}"`; // Add any additional attributes
+    scriptTag += '></script>'; // Close the script tag
+
+    // Find the position to insert the script tag
+    const headEndIndex = HTML.indexOf('</head>');
+    if (headEndIndex === -1) throw new Error(`Cannot insert script of src '${src}' into HTML when it doesn't contain a head!`);
+    
+    // Insert the script tag at the determined position and return the modified HTML
+    return HTML.slice(0, headEndIndex) + scriptTag + HTML.slice(headEndIndex);
+}
+
+/**
+ * Takes an HTML document as a string, inserts a script tag into its head, 
+ * with the script content being the provided JavaScript code, and any corresponding attributes provided.
+ * @param {string} HTML - The HTML string.
+ * @param {string} JS - The JavaScript code to be inserted directly into the script tag.
+ * @param {Object} [attributes] - An object with attribute-value pairs to insert into the script tag.
+ * @param {string} [after] - The string instance to insert the script after the first occurrence of, if we need it at a specific place.
+ * @returns {string} - The modified HTML string with the inserted script tag containing the JavaScript code.
+ */
+function insertScriptIntoHTML(HTML, JS, attributes = {}, after) {
+    let scriptTag = `<script`; // Start of the script tag
+    for (const [key, value] of Object.entries(attributes)) scriptTag += ` ${key}="${value}"`; // Add any additional attributes
+    scriptTag += `>${JS}</script>`; // Add the JavaScript code and close the script tag
+
+    // Determine the insertion point
+    let insertionIndex = after ? HTML.indexOf(after) + after.length // If 'after' is provided and exists in the HTML, insert after the first occurrence of 'after'
+                               : insertionIndex = HTML.indexOf('</head>'); // Otherwise, insert before the closing </head> tag
+
+    if (insertionIndex === -1) { // Throw an error if we don't know where to insert
+        if (after) throw new Error(`Cannot inject script into HTML when it doesn't contain the string '${after}'!`);
+        else throw new Error(`Cannot inject script into HTML when it doesn't contain a head,!`);
     }
-    const modifiedHTML = injectafter(htmlData, injectAfterTag, scriptTag);
 
-    // // Read the JavaScript file
-    // const jsData = fs.readFileSync(jsFilePath, "utf8");
-    // // Create a script tag with the JavaScript content
-    // const scriptTag = `<script>${jsData}</script>`;
-
-    // // Read the HTML file and inject the script tag
-    // const htmlData = fs.readFileSync(htmlFilePath, "utf8");
-    // // Inject the script tag before the specified closing tag
-    // let modifiedHTML = htmlData.replace(injectAfterTag, `${injectAfterTag}${scriptTag}`);
-
-    // Inject the string of the optional argument "stringInjection" into the HTML file, if applicable
-    // if (Object.keys(stringInjection).length) {
-    //     modifiedHTML = modifiedHTML.replace(stringInjection.injectafter, `${stringInjection.injectafter}${stringInjection.string}`);
-    // }
-    return modifiedHTML;
+    // Insert the script tag at the determined position and return the modified HTML
+    return HTML.slice(0, insertionIndex) + scriptTag + HTML.slice(insertionIndex);
 }
 
-function injectHtmlScript() {
-    const htmlFilePath = path.join(__dirname, "..", "..", "..", "dist", "views", "play.ejs");
-    const jsFilePath = path.join(__dirname, "..", "..", "..", "dist", "scripts", "game", "htmlscript.js");
-    const HTML_scriptcall = `<script>${fs.readFileSync(jsFilePath)}</script>`;
-    return injectScript(htmlFilePath, HTML_scriptcall, '<!-- js inject here -->');
-}
 
-/**
- * @param {string} file
- * @param {string} injectAfterTag  
- * @param {Object} [options] 
- */
-function injectScriptIntoPlayEjs(file, injectAfterTag, isModule = false) {
-    const htmlFilePath = path.join(__dirname, "..", "..", "..", "dist", "views", "play.ejs");
-    const jsFilePath = file.split(/(\\|\/)+/).slice(4).join("");
-    const moduleType = isModule ? 'type="module"' : '';
-
-    const HTML_scriptcall = `<script ${moduleType} src="/${jsFilePath}" defer onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>`;
-
-    return injectScript(htmlFilePath, HTML_scriptcall, injectAfterTag);
-}
 
 export {
-    injectScriptIntoPlayEjs,
-    injectHtmlScript,
+    insertScriptLinkIntoHTML,
+    insertScriptIntoHTML,
 };
