@@ -9,6 +9,7 @@ import wincondition from './wincondition.js';
 import math from '../misc/math.js';
 import colorutil from '../misc/colorutil.js';
 import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -91,11 +92,11 @@ const checkdetection = (function() {
         const vicinity = gamefile.vicinity;
         for (const key in vicinity) {
             const thisVicinity = vicinity[key];
-            const thisSquare = math.getCoordsFromKey(key); // Part of the moveset ( [1,2], [2,1] ... )
+            const thisSquare = coordutil.getCoordsFromKey(key); // Part of the moveset ( [1,2], [2,1] ... )
             const actualSquare = [coords[0] + thisSquare[0], coords[1] + thisSquare[1]];
 
             // Fetch the square from our pieces organized by key
-            const key2 = math.getKeyFromCoords(actualSquare);
+            const key2 = coordutil.getKeyFromCoords(actualSquare);
             const typeOnSquare = gamefile.piecesOrganizedByKey[key2];
             if (!typeOnSquare) continue; // Nothing there to capture us
             // Is it the same color?
@@ -120,7 +121,7 @@ const checkdetection = (function() {
         for (let a = -1; a <= 1; a += 2) {
             const thisSquare = [coords[0] - a, coords[1] + oneOrNegOne];
 
-            const key = math.getKeyFromCoords(thisSquare);
+            const key = coordutil.getKeyFromCoords(thisSquare);
             const pieceOnSquare = gamefile.piecesOrganizedByKey[key];
             if (!pieceOnSquare) continue;
 
@@ -151,7 +152,7 @@ const checkdetection = (function() {
         let atleast1Attacker = false;
 
         for (const direction of gamefile.startSnapshot.slidingPossible) { // [dx,dy]
-            const directionKey = math.getKeyFromCoords(direction);
+            const directionKey = coordutil.getKeyFromCoords(direction);
             const key = organizedlines.getKeyFromLine(direction, coords);
             if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[directionKey][key], direction, coords, color, attackers)) atleast1Attacker = true;
         }
@@ -174,7 +175,7 @@ const checkdetection = (function() {
     function doesLineAttackSquare(gamefile, line, direction, coords, color, attackers) {
         if (!line) return false; // This line doesn't exist, then obviously no pieces can attack our square
 
-        const directionKey = math.getKeyFromCoords(direction); // 'dx,dy'
+        const directionKey = coordutil.getKeyFromCoords(direction); // 'dx,dy'
         let foundCheckersCount = 0;
 
         // Iterate through every piece on the line, and test if they can attack our square
@@ -214,7 +215,7 @@ const checkdetection = (function() {
     function appendAttackerToList(attackers, attacker) {
         for (let i = 0; i < attackers.length; i++) {
             const thisAttacker = attackers[i]; // { coords, slidingCheck }
-            if (!math.areCoordsEqual(thisAttacker.coords, attacker.coords)) continue; // Not the same piece
+            if (!coordutil.areCoordsEqual(thisAttacker.coords, attacker.coords)) continue; // Not the same piece
             // The same piece...
             // Upgrade the slidingCheck to true, if applicable.
             if (attacker.slidingCheck) thisAttacker.slidingCheck = true;
@@ -379,7 +380,7 @@ const checkdetection = (function() {
         // let checklines = []; // For Idon's code below
         // For every line direction we share with the king...
         for (const direction1 of sameLines) { // [dx,dy]
-            const strline = math.getKeyFromCoords(direction1); // 'dx,dy'
+            const strline = coordutil.getKeyFromCoords(direction1); // 'dx,dy'
             const key = organizedlines.getKeyFromLine(direction1,kingCoords); // 'C|X'
             const line = gamefile.piecesOrganizedByLines[strline][key];
             const opensDiscovered = doesLineAttackSquare(gamefile, line, direction1, kingCoords, color);
@@ -388,8 +389,8 @@ const checkdetection = (function() {
             // checklines.push(line); // For Idon's code below
             // Delete all lines except this one (because if we move off of it we would be in check!)
             for (const direction2 of Object.keys(moves.sliding)) { // 'dx,dy'
-                const direction2NumbArray = math.getCoordsFromKey(direction2); // [dx,dy]
-                if (math.areCoordsEqual(direction1, direction2NumbArray)) continue; // Same line, it's okay to keep because it wouldn't open a discovered
+                const direction2NumbArray = coordutil.getCoordsFromKey(direction2); // [dx,dy]
+                if (coordutil.areCoordsEqual(direction1, direction2NumbArray)) continue; // Same line, it's okay to keep because it wouldn't open a discovered
                 delete moves.sliding[direction2]; // Not same line, delete it because it would open a discovered.
             }
 
@@ -418,7 +419,7 @@ const checkdetection = (function() {
 
         //             const steps = [0,0]
         //             for (const strline in moves.sliding) {
-        //                 const line = math.getCoordsFromKey(strline);
+        //                 const line = coordutil.getCoordsFromKey(strline);
         //                 if (!math.areLinesCollinear([line, baseLine])) continue;
         //                 const gcd = math.GCD(line[0], line[1]);
         //                 let rslides = [Math.floor(moves.sliding[strline][0]/lcm*gcd),Math.floor(moves.sliding[strline][1]/lcm*gcd)];
@@ -429,7 +430,7 @@ const checkdetection = (function() {
         //             const line = [baseLine[0]*lcm,baseLine[1]*lcm]
 
         //             if (!gamefile.startSnapshot.slidingPossible.includes(line)) {
-        //                 const strline = math.getKeyFromCoords(line) 
+        //                 const strline = coordutil.getKeyFromCoords(line) 
         //                 tempslides[strline] = steps
         //             } else {
         //                 for (i=steps[0]; i<=steps[1]; i++) {
@@ -443,7 +444,7 @@ const checkdetection = (function() {
         //             // Could probably blank regular attacks too
         //         }
         //     } else if (checklines.length === 1) {
-        //         const strline = math.getKeyFromCoords(checklines[0])
+        //         const strline = coordutil.getKeyFromCoords(checklines[0])
         //         if (!moves.sliding[strline]) break r;
         //         tempslides[strline] = moves.sliding[strline] 
         //     }
@@ -477,7 +478,7 @@ const checkdetection = (function() {
 
 
         for (const lineKey in moves.sliding) { // 'dx,dy'
-            const line = math.getCoordsFromKey(lineKey); // [dx,dy]
+            const line = coordutil.getCoordsFromKey(lineKey); // [dx,dy]
             const c1 = organizedlines.getCFromLine(line, coords); // Line of our selected piece
             const c2 = organizedlines.getCFromLine(direction,square2); // Line between our 2 squares
             const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2); // The intersection point of the 2 lines.
@@ -491,9 +492,9 @@ const checkdetection = (function() {
             // Naviary's new code
             if (blockPoint === null) continue; // None (or infinite) intersection points!
             if (!math.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.
-            if (!math.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
-            if (math.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
-            if (math.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
+            if (!coordutil.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
+            if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
+            if (coordutil.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
 
             // Can our piece legally move there?
             if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!

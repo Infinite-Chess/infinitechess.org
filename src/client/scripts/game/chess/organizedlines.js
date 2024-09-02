@@ -7,6 +7,7 @@ import piecesmodel from '../rendering/piecesmodel.js';
 import options from '../rendering/options.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -60,7 +61,7 @@ const organizedlines = {
 
         const lines = gamefile.startSnapshot.slidingPossible;
         for (let i = 0; i < lines.length; i++) {
-            gamefile.piecesOrganizedByLines[math.getKeyFromCoords(lines[i])] = {};
+            gamefile.piecesOrganizedByLines[coordutil.getKeyFromCoords(lines[i])] = {};
         }
     },
 
@@ -72,7 +73,7 @@ const organizedlines = {
 
         // Organize by key
         // First, turn the coords into a key in the format 'x,y'
-        let key = math.getKeyFromCoords(coords);
+        let key = coordutil.getKeyFromCoords(coords);
         // Is there already a piece there? (Desync)
         if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`);
         gamefile.piecesOrganizedByKey[key] = type;
@@ -82,7 +83,7 @@ const organizedlines = {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             key = organizedlines.getKeyFromLine(line,coords);
-            const strline = math.getKeyFromCoords(line);
+            const strline = coordutil.getKeyFromCoords(line);
             // Is line initialized
             if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = [];
             gamefile.piecesOrganizedByLines[strline][key].push(piece);
@@ -94,7 +95,7 @@ const organizedlines = {
     removeOrganizedPiece: function(gamefile, coords) {
 
         // Make the piece key undefined in piecesOrganizedByKey object  
-        let key = math.getKeyFromCoords(coords);
+        let key = coordutil.getKeyFromCoords(coords);
         if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`);
         // Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
         delete gamefile.piecesOrganizedByKey[key]; 
@@ -226,7 +227,7 @@ const organizedlines = {
         gamefileutility.forEachPieceInPiecesByType(callback, state);
 
         function callback(type, coords) {
-            const key = math.getKeyFromCoords(coords);
+            const key = coordutil.getKeyFromCoords(coords);
             keyList[key] = type;
         }
 
@@ -244,7 +245,7 @@ const organizedlines = {
         // For some reason, does not iterate through inherited properties?
         for (const key in keyList) {
             const type = keyList[key];
-            const coords = math.getCoordsFromKey(key);
+            const coords = coordutil.getCoordsFromKey(key);
             // Does the type parameter exist?
             // if (!state[type]) state[type] = []
             if (!state[type]) return console.error(`Error when building state from key list. Type ${type} is undefined!`);

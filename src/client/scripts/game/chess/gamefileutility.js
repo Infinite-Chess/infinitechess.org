@@ -8,12 +8,12 @@ import wincondition from './wincondition.js';
 import clock from '../misc/clock.js';
 import selection from './selection.js';
 import board from '../rendering/board.js';
-import math from '../misc/math.js';
 import movesscript from './movesscript.js';
 import game from './game.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -104,20 +104,20 @@ const gamefileutility = (function() {
                 const thisPieceType = state[key];
                 if (thisPieceType.endsWith('N')) continue;
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
+                callback(thisPieceType, coordutil.getCoordsFromKey(key)); 
             }
         } else if (ignoreVoids) {
             for (const key in state) {
                 const thisPieceType = state[key];
                 if (thisPieceType.startsWith('voids')) continue;
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
+                callback(thisPieceType, coordutil.getCoordsFromKey(key)); 
             }
         } else {
             for (const key in state) {
                 const thisPieceType = state[key];
                 // First it inserts the type of piece into the callback, then coords of piece 
-                callback(thisPieceType, math.getCoordsFromKey(key)); 
+                callback(thisPieceType, coordutil.getCoordsFromKey(key)); 
             }
         }
     }
@@ -152,7 +152,7 @@ const gamefileutility = (function() {
             if (!thisPieceCoords) continue;
 
             // Does this piece match the coords? If so, return the piece index.
-            if (math.areCoordsEqual_noValidate(thisPieceCoords, coords)) return i;
+            if (coordutil.areCoordsEqual_noValidate(thisPieceCoords, coords)) return i;
         }
         console.error("Unable to find index of piece!");
     }
@@ -176,7 +176,7 @@ const gamefileutility = (function() {
      * @returns {string | undefined} The type of the piece, if there is one, otherwise undefined
      */
     function getPieceTypeAtCoords(gamefile, coords) {
-        const key = math.getKeyFromCoords(coords);
+        const key = coordutil.getKeyFromCoords(coords);
         return gamefile.piecesOrganizedByKey[key];
     }
 

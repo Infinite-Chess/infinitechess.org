@@ -1,9 +1,9 @@
 
 // Import Start
 import gamefileutility from './gamefileutility.js';
-import math from '../misc/math.js';
 import animation from '../rendering/animation.js';
 import movepiece from './movepiece.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 "use strict";
@@ -52,7 +52,7 @@ const specialmove = {
         const pieceToCastleWith = gamefileutility.getPieceAtCoords(gamefile, specialTag.coord);
         const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
         // Delete the rook's special move rights
-        const key = math.getKeyFromCoords(pieceToCastleWith.coords);
+        const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
         delete gamefile.specialRights[key];
         movepiece.movePiece(gamefile, pieceToCastleWith, landSquare, { updateData }); // Make normal move
 

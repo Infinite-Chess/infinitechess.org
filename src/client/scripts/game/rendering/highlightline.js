@@ -15,6 +15,7 @@ import math from '../misc/math.js';
 import movement from './movement.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /**
@@ -70,7 +71,7 @@ const highlightline = (function() {
         let closestDistance;
         let closestPoint;
         for (const strline in legalmoves.sliding) {
-            const line = math.getCoordsFromKey(strline);
+            const line = coordutil.getCoordsFromKey(strline);
             const diag = organizedlines.getCFromLine(line, worldSpaceCoords);
             const lineIsVertical = line[0] === 0;
             

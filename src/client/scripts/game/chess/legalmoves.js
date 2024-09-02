@@ -10,6 +10,7 @@ import wincondition from './wincondition.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -61,7 +62,7 @@ const legalmoves = (function() {
                 const thisIndividualMove = thisPieceIndividualMoveset[a];
                 
                 // Convert the move into a key
-                const key = math.getKeyFromCoords(thisIndividualMove);
+                const key = coordutil.getKeyFromCoords(thisIndividualMove);
 
                 // Make sure the key's already initialized
                 if (!vicinity[key]) vicinity[key] = [];
@@ -238,7 +239,7 @@ const legalmoves = (function() {
      */
     function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividualMoves } = {}) {
         // Return if it's the same exact square
-        if (math.areCoordsEqual(startCoords, endCoords)) return false;
+        if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
 
         // Do one of the individual moves match?
         if (!ignoreIndividualMoves) {
@@ -246,7 +247,7 @@ const legalmoves = (function() {
             const length = !individual ? 0 : individual.length;
             for (let i = 0; i < length; i++) {
                 const thisIndividual = individual[i];
-                if (!math.areCoordsEqual(endCoords, thisIndividual)) continue;
+                if (!coordutil.areCoordsEqual(endCoords, thisIndividual)) continue;
                 // Subtle way of passing on the TAG of all special moves!
                 specialdetect.transferSpecialFlags_FromCoordsToCoords(thisIndividual, endCoords);
                 return true;
@@ -254,7 +255,7 @@ const legalmoves = (function() {
         }
 
         for (const strline in legalMoves.sliding) {
-            const line = math.getCoordsFromKey(strline); // 'dx,dy'
+            const line = coordutil.getCoordsFromKey(strline); // 'dx,dy'
             const limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
 
             const selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);

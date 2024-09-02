@@ -3,8 +3,8 @@
 import gamefileutility from './gamefileutility.js';
 import movepiece from './movepiece.js';
 import animation from '../rendering/animation.js';
-import math from '../misc/math.js';
 import colorutil from '../misc/colorutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 "use strict";
@@ -56,7 +56,7 @@ const specialundo = {
         // Restore the rook's special move rights if this is a simulated move
         // (the kings special move rights are restored within checkdetection.doesMovePutInCheck())
         if (!updateData) {
-            const key = math.getKeyFromCoords(specialTag.coord);
+            const key = coordutil.getKeyFromCoords(specialTag.coord);
             gamefile.specialRights[key] = true;
         }
 

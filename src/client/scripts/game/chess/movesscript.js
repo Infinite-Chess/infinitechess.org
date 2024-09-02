@@ -4,7 +4,6 @@
 
 // Import Start
 import movepiece from './movepiece.js';
-import math from '../misc/math.js';
 import main from '../main.js';
 import stats from '../gui/stats.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -254,7 +253,7 @@ const movesscript = (function() {
      */
     function hasPieceMoved(gamefile, coords) {
         for (const thisMove of gamefile.moves) {
-            if (math.areCoordsEqual(thisMove.endCoords, coords)) return true;
+            if (coordutil.areCoordsEqual(thisMove.endCoords, coords)) return true;
         }
         return false;
     }

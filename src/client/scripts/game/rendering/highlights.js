@@ -16,6 +16,7 @@ import movesscript from '../chess/movesscript.js';
 import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /**
@@ -124,7 +125,7 @@ const highlights = (function() {
         const oldOffset = jsutil.deepCopyObject(model_Offset);
         // This is the range at which we will always regen this model. Prevents gittering.
         model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange);
-        if (!math.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
+        if (!coordutil.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
 
         // Used to limit the data/highlights of infinitely sliding moves to the area on your screen.
         if (isRenderRangeBoundingBoxOutOfRange()) {
@@ -269,7 +270,7 @@ const highlights = (function() {
         const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coords, z, color); // Square / dot highlighting 1 legal move
 
         for (const strline of lineSet) {
-            const line = math.getCoordsFromKey(strline); // [dx,dy]
+            const line = coordutil.getCoordsFromKey(strline); // [dx,dy]
             const C = organizedlines.getCFromLine(line, coords);
 
             const corner1 = math.getAABBCornerOfLine(line, true); // "right"

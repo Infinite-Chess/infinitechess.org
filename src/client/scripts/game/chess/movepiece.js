@@ -18,6 +18,7 @@ import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 import colorutil from '../misc/colorutil.js';
 import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -116,9 +117,9 @@ const movepiece = (function() {
             if (gamefile.enpassant) rewindInfo.enpassant = gamefile.enpassant;
             if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
             if (gamefile.checksGiven) rewindInfo.checksGiven = gamefile.checksGiven;
-            let key = math.getKeyFromCoords(move.startCoords);
+            let key = coordutil.getKeyFromCoords(move.startCoords);
             if (gamefile.specialRights[key]) rewindInfo.specialRightStart = true;
-            key = math.getKeyFromCoords(move.endCoords);
+            key = coordutil.getKeyFromCoords(move.endCoords);
             if (gamefile.specialRights[key]) rewindInfo.specialRightEnd = true;
         }
 
@@ -134,9 +135,9 @@ const movepiece = (function() {
      */
     function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoords) {
         delete gamefile.enpassant;
-        let key = math.getKeyFromCoords(startCoords);
+        let key = coordutil.getKeyFromCoords(startCoords);
         delete gamefile.specialRights[key]; // We also delete its special move right for ANY piece moved
-        key = math.getKeyFromCoords(endCoords);
+        key = coordutil.getKeyFromCoords(endCoords);
         delete gamefile.specialRights[key]; // We also delete the captured pieces specialRights for ANY move.
     }
 
@@ -372,7 +373,7 @@ const movepiece = (function() {
         const legalSpecialMoves = legalmoves.calculate(gamefile, selectedPiece, { onlyCalcSpecials: true }).individual;
         for (let i = 0; i < legalSpecialMoves.length; i++) {
             const thisCoord = legalSpecialMoves[i];
-            if (!math.areCoordsEqual(thisCoord, move.endCoords)) continue;
+            if (!coordutil.areCoordsEqual(thisCoord, move.endCoords)) continue;
             // Matched coordinates! Transfer any special move tags
             specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, move);
             break;
@@ -454,11 +455,11 @@ const movepiece = (function() {
             gamefile.moveRuleState = move.rewindInfo.moveRuleState;
             gamefile.checksGiven = move.rewindInfo.checksGiven;
             if (move.rewindInfo.specialRightStart) { // Restore their special right
-                const key = math.getKeyFromCoords(move.startCoords);
+                const key = coordutil.getKeyFromCoords(move.startCoords);
                 gamefile.specialRights[key] = true;
             }
             if (move.rewindInfo.specialRightEnd) { // Restore their special right
-                const key = math.getKeyFromCoords(move.endCoords);
+                const key = coordutil.getKeyFromCoords(move.endCoords);
                 gamefile.specialRights[key] = true;
             }
             gamefile.gameConclusion = move.rewindInfo.gameConclusion; // Simulated moves may or may not have performed game over checks.

@@ -7,11 +7,11 @@ import specialdetect from './specialdetect.js';
 import specialmove from './specialmove.js';
 import variantomega from './variantomega.js';
 import movesets from './movesets.js';
-import math from '../misc/math.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
 import timeutil from '../misc/timeutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -107,7 +107,7 @@ const variant = (function() {
             Object.keys(moveset.sliding).forEach( slide => { slides.add(slide); });
         }
         const temp = [];
-        slides.forEach(slideline => { temp.push(math.getCoordsFromKey(slideline)); });
+        slides.forEach(slideline => { temp.push(coordutil.getCoordsFromKey(slideline)); });
         return temp;
     }
 
@@ -898,15 +898,15 @@ const variant = (function() {
 
     //     // const count = 250000; // 5 Seconds   ~1500 piece game
     //     // for (let i = 12; i <= count; i++) {
-    //     //     let key = math.getKeyFromCoords([i, 2])
+    //     //     let key = coordutil.getKeyFromCoords([i, 2])
     //     //     piecesByKey[key] = 'pawnsW';
-    //     //     key = math.getKeyFromCoords([i, 7])
+    //     //     key = coordutil.getKeyFromCoords([i, 7])
     //     //     piecesByKey[key] = 'pawnsB';
     //     // }
     //     // for (let i = -3; i >= -count; i--) {
-    //     //     let key = math.getKeyFromCoords([i, 2])
+    //     //     let key = coordutil.getKeyFromCoords([i, 2])
     //     //     piecesByKey[key] = 'pawnsW';
-    //     //     key = math.getKeyFromCoords([i, 7])
+    //     //     key = coordutil.getKeyFromCoords([i, 7])
     //     //     piecesByKey[key] = 'pawnsB';
     //     // }
 

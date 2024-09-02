@@ -2,11 +2,11 @@
 // Import Start
 import gamefileutility from './gamefileutility.js';
 import organizedlines from './organizedlines.js';
-import math from '../misc/math.js';
 import wincondition from './wincondition.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../misc/colorutil.js';
 import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -246,7 +246,7 @@ const specialdetect = (function() {
      * @returns {boolean} *true* if it has it's special move rights.
      */
     function doesPieceHaveSpecialRight(gamefile, coords) {
-        const key = math.getKeyFromCoords(coords);
+        const key = coordutil.getKeyFromCoords(coords);
         return gamefile.specialRights[key];
     }
 

@@ -3,7 +3,6 @@
 import guipause from '../gui/guipause.js';
 import legalmoves from './legalmoves.js';
 import input from '../input.js';
-import math from '../misc/math.js';
 import onlinegame from '../misc/onlinegame.js';
 import movepiece from './movepiece.js';
 import main from '../main.js';
@@ -155,7 +154,7 @@ const selection = (function() {
             // if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
 
             // If it clicked iteself, deselect.
-            if (math.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
+            if (coordutil.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
                 unselectPiece();
             } else if (hoverSquareLegal) { // This piece is capturable, don't select it instead
                 break tag;

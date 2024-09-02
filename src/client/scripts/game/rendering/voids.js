@@ -3,10 +3,10 @@
 import movement from './movement.js';
 import options from './options.js';
 import piecesmodel from './piecesmodel.js';
-import math from '../misc/math.js';
 import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
 import board from './board.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -163,7 +163,7 @@ const voids = {
 
         const voidHash = { };
         for (const thisVoid of voidList) {
-            const key = math.getKeyFromCoords(thisVoid);
+            const key = coordutil.getKeyFromCoords(thisVoid);
             voidHash[key] = true;
         }
 
@@ -173,7 +173,7 @@ const voids = {
         for (const thisVoid of voidList) { // [x,y]
 
             // Has this void already been merged with another previous?
-            const key = math.getKeyFromCoords(thisVoid);
+            const key = coordutil.getKeyFromCoords(thisVoid);
             if (alreadyMerged[key]) continue; // Next void
             alreadyMerged[key] = true; // Set this void to true for next iteration
 
@@ -195,7 +195,7 @@ const voids = {
                 for (let a = 0; a < height; a++) { // Start from bottom and go up
                     const thisTestY = bottom + a;
                     const thisCoord = [testX, thisTestY];
-                    const thisKey = math.getKeyFromCoords(thisCoord);
+                    const thisKey = coordutil.getKeyFromCoords(thisCoord);
                     const isVoid = voidHash[thisKey];
                     if (!isVoid || alreadyMerged[thisKey]) {
                         allNeighborsAreVoid = false;
@@ -219,7 +219,7 @@ const voids = {
                 for (let a = 0; a < height; a++) { // Start from bottom and go up
                     const thisTestY = bottom + a;
                     const thisCoord = [testX, thisTestY];
-                    const thisKey = math.getKeyFromCoords(thisCoord);
+                    const thisKey = coordutil.getKeyFromCoords(thisCoord);
                     const isVoid = voidHash[thisKey];
                     if (!isVoid || alreadyMerged[thisKey]) {
                         allNeighborsAreVoid = false;
@@ -243,7 +243,7 @@ const voids = {
                 for (let a = 0; a < width; a++) { // Start from bottom and go up
                     const thisTestX = left + a;
                     const thisCoord = [thisTestX, testY];
-                    const thisKey = math.getKeyFromCoords(thisCoord);
+                    const thisKey = coordutil.getKeyFromCoords(thisCoord);
                     const isVoid = voidHash[thisKey];
                     if (!isVoid || alreadyMerged[thisKey]) {
                         allNeighborsAreVoid = false;
@@ -267,7 +267,7 @@ const voids = {
                 for (let a = 0; a < width; a++) { // Start from bottom and go up
                     const thisTestX = left + a;
                     const thisCoord = [thisTestX, testY];
-                    const thisKey = math.getKeyFromCoords(thisCoord);
+                    const thisKey = coordutil.getKeyFromCoords(thisCoord);
                     const isVoid = voidHash[thisKey];
                     if (!isVoid || alreadyMerged[thisKey]) {
                         allNeighborsAreVoid = false;

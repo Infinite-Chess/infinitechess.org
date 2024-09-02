@@ -1,10 +1,10 @@
 
 // Import Start
 import wincondition from './wincondition.js';
-import math from '../misc/math.js';
 import gamefileutility from './gamefileutility.js';
 import movesscript from './movesscript.js';
 import colorutil from '../misc/colorutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -171,7 +171,7 @@ const insufficientmaterial = (function() {
             const piece = gamefile.piecesOrganizedByKey[key];
             if (piece === "obstaclesN") continue;
             else if (colorutil.trimColorExtensionFromType(piece) === "bishops") {
-                const parity = sum_tuple_coords(math.getCoordsFromKey(key)) % 2;
+                const parity = sum_tuple_coords(coordutil.getCoordsFromKey(key)) % 2;
                 const color = colorutil.getColorExtensionFromType(piece);
                 if (color === "W") bishopsW_count[parity] += 1;
                 else if (color === "B") bishopsB_count[parity] += 1;
