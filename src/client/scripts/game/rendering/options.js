@@ -1,6 +1,7 @@
 
 // Import Start
 import input from '../input.js';
+import enginegame from '../misc/enginegame.js';
 import onlinegame from '../misc/onlinegame.js';
 import highlights from './highlights.js';
 import main from '../main.js';
@@ -156,6 +157,7 @@ const options = (function() {
         // Make sure it's legal
         const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
         if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
+        if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
 
         main.renderThisFrame(); // Visual change, render the screen this frame
         em = !em;

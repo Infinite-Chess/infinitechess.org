@@ -11,6 +11,7 @@ import texture from './texture.js';
 import onlinegame from '../misc/onlinegame.js';
 import options from './options.js';
 import buffermodel from './buffermodel.js';
+import game from '../chess/game.js';
 // Import End
 
 "use strict";
@@ -59,7 +60,7 @@ const pieces = (function() {
         const scale = [boardScale, boardScale, 1];
 
         let modelToUse;
-        if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
+        if (game.areWeColorInNonLocalGame('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
         else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
 
         modelToUse.render(position, scale);

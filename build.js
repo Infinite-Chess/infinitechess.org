@@ -85,16 +85,19 @@ if (!BUNDLE_FILES) {
         recursive: true,
         force: true,
         filter: filename => { 
-            return (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename)) && !/(\\|\/)css(\\|\/)/.test(filename);
+            return (
+                (!/(\\|\/)scripts(\\|\/)/.test(filename) || /(\\|\/)game$/.test(filename) || /(\\|\/)game(\\|\/)chess$/.test(filename)) 
+        && !/(\\|\/)css(\\|\/)/.test(filename)
+            );
         }
     });
 
     // make a list of all client scripts:
     const clientFiles = [];
     const clientScripts = await getExtFiles("src/client/scripts", ".js");
-    // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
+    // If the client script is htmlscript.js, or an engine, or not in scripts/game, then minify it and copy it over
     clientFiles.push(...clientScripts.map(v => `scripts/${v}`)
-        .filter(file => !/scripts(\\|\/)+game(\\|\/)/.test(file) || /\/htmlscript\.js$/.test(file)));
+        .filter(file => /(\\|\/)htmlscript\.js$/.test(file) || /chess(\\|\/)engine[^.\\/]*\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file)));
 
     // string containing all code in /game except for htmlscript.js: 
 
