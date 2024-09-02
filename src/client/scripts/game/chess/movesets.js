@@ -1,6 +1,7 @@
-
 /*
  * This script contains the movesets for all pieces except specials (pawns, castling)
+ * 
+ * ZERO dependancies
  */
 
 'use strict';
@@ -203,3 +204,5 @@ const movesets = (function() {
     });
 
 })();
+
+export default movesets;

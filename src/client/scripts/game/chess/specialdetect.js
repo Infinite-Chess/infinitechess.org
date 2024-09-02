@@ -2,6 +2,21 @@
 // This detects if special moves are legal.
 // Does NOT execute the moves!
 
+// Import Start
+import gamefileutility from './gamefileutility.js';
+import organizedlines from './organizedlines.js';
+import math from '../misc/math.js';
+import wincondition from './wincondition.js';
+import checkdetection from './checkdetection.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+*/
+
+
 "use strict";
 
 const specialdetect = (function() {
@@ -299,3 +314,5 @@ const specialdetect = (function() {
         transferSpecialFlags_FromCoordsToCoords
     });
 })();
+
+export default specialdetect;

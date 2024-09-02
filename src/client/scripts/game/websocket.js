@@ -4,6 +4,16 @@
  * sends and receives incoming messages.
  */
 
+// Import Start
+import main from './main.js';
+import statustext from './gui/statustext.js';
+import invites from './misc/invites.js';
+import math from './misc/math.js';
+import guiplay from './gui/guiplay.js';
+import onlinegame from './misc/onlinegame.js';
+import localstorage from './misc/localstorage.js';
+// Import End
+
 "use strict";
 
 // Custom type definitions...
@@ -18,7 +28,6 @@
  * @property {number} replyto - The ID of the message this message is the reply to, if specified.
  */
 
-// eslint-disable-next-line no-unused-vars
 const websocket = (function() {
     
     /** The websocket object we will use to send and receive messages from the server. */
@@ -691,3 +700,5 @@ const websocket = (function() {
     });
 
 })();
+
+export default websocket;

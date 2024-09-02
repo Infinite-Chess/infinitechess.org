@@ -1,5 +1,17 @@
 // Draw detection by insufficient material
 
+// Import Start
+import wincondition from './wincondition.js';
+import math from '../misc/math.js';
+import gamefileutility from './gamefileutility.js';
+import movesscript from './movesscript.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
+
 "use strict";
 
 const insufficientmaterial = (function() {
@@ -199,3 +211,5 @@ const insufficientmaterial = (function() {
     });
 
 })();
+
+export default insufficientmaterial;

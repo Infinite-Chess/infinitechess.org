@@ -2,6 +2,22 @@
 // This script handles all our event listeners for our input actions,
 // and keeps track of what inputs were received every frame.
 
+// Import Start
+import guipause from './gui/guipause.js';
+import bufferdata from './rendering/bufferdata.js';
+import onlinegame from './misc/onlinegame.js';
+import perspective from './rendering/perspective.js';
+import main from './main.js';
+import movement from './rendering/movement.js';
+import options from './rendering/options.js';
+import selection from './chess/selection.js';
+import camera from './rendering/camera.js';
+import board from './rendering/board.js';
+import math from './misc/math.js';
+import arrows from './rendering/arrows.js';
+import buffermodel from './rendering/buffermodel.js';
+// Import End
+
 "use strict";
 
 const input = (function() {
@@ -652,3 +668,5 @@ const input = (function() {
     });
 
 })();
+
+export default input;

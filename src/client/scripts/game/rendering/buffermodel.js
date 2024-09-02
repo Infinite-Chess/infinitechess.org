@@ -2,6 +2,18 @@
 // This script contains all the functions used to generate renderable buffer models of the
 // game objects that the shader programs can use. It receives the object's vertex data to do so.
 
+// Import Start
+import shaders from './shaders.js';
+import math from '../misc/math.js';
+import { gl } from './webgl.js';
+import mat4 from './gl-matrix.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
+ */
+
 "use strict";
 
 const buffermodel = (function() {
@@ -379,3 +391,5 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
         this.changeTexture = function changeTexture(newTexture) { textureToRender = newTexture; };
     }
 }
+export { BufferModel };
+export default buffermodel;

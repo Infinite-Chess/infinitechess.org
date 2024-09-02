@@ -5,12 +5,13 @@
 //                  but all game scripts in /src/client/scripts/game are concatenated into app.js.
 //                  Further, all scripts are minified with the use of terser.
 
-import { readdir, cp as copy, rm as remove, readFile, writeFile } from "node:fs/promises";
+import { readdir, cp as copy, rm as remove, readFile, writeFile } from 'node:fs/promises';
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
-import { DEV_BUILD } from "./src/server/config/config.js";
-import { injectScriptsIntoPlayEjs } from "./src/server/utility/HTMLScriptInjector.js";
+import { insertScriptLinkIntoHTML, insertScriptIntoHTML } from './src/server/utility/HTMLScriptInjector.js';
+import { BUNDLE_FILES } from './src/server/config/config.js';
+import esbuild from 'esbuild';
 import path from "node:path";
 
 // Targetted browsers for CSS transpilation
@@ -63,14 +64,21 @@ await remove("./dist", {
     force: true,
 });
 
-if (DEV_BUILD) {
+/** The relative path to play.ejs */
+const playEJSPath = './dist/views/play.ejs';
+
+if (!BUNDLE_FILES) {
     // in dev mode, copy all clientside files over to dist and exit
     await copy("./src/client", "./dist", {
         recursive: true,
         force: true
     });
-    // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+
+    // Overwrite play.ejs, inserting the game script links into it
+    const playEJS2 = await readFile(playEJSPath, 'utf8');
+    const newPlayEJS2 = insertScriptLinkIntoHTML(playEJS2, '/scripts/game/main.js', true, { type: 'module', onerror: 'htmlscript.callback_LoadingError(event)', onload: 'htmlscript.removeOnerror.call(this);' });
+    await writeFile(playEJSPath, newPlayEJS2, 'utf8');
+
 } else {
     // in prod mode, copy all clientside files over to dist, except for those contained in scripts
     await copy("./src/client", "./dist", {
@@ -84,38 +92,28 @@ if (DEV_BUILD) {
     // make a list of all client scripts:
     const clientFiles = [];
     const clientScripts = await getExtFiles("src/client/scripts", ".js");
-    clientFiles.push(...clientScripts.map(v => `scripts/${v}`));
+    // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
+    clientFiles.push(...clientScripts.map(v => `scripts/${v}`)
+        .filter(file => !/scripts(\\|\/)+game(\\|\/)/.test(file) || /\/htmlscript\.js$/.test(file)));
 
-    // string containing all code in /game except for htmlscript.js:
-    let gamecode = ""; 
+    // string containing all code in /game except for htmlscript.js: 
 
     for (const file of clientFiles) {
-    // If the client script is htmlscript.js or not in scripts/game, then minify it and copy it over
-        if (/\/htmlscript\.js$/.test(file) || !/scripts(\\|\/)+game(\\|\/)/.test(file) ) {
-            const code = await readFile(`./src/client/${file}`, 'utf8');
-            const minified = await swc.minify(code, {
-                mangle: true, // Enable variable name mangling
-                compress: true, // Enable compression
-                sourceMap: false
-            });
-            await writeFile(`./dist/${file}`, minified.code, 'utf8');
-        }
-        // Collect the code of all js files in /game except for htmlscript.js:
-        else {
-            gamecode += await readFile(`./src/client/${file}`, 'utf8');
-        }
+        const code = await readFile(`./src/client/${file}`, 'utf8');
+        const minified = await swc.minify(code, {
+            mangle: true, // Enable variable name mangling
+            compress: true, // Enable compression
+            sourceMap: false
+        });
+        await writeFile(`./dist/${file}`, minified.code, 'utf8');
     }
 
-    // Combine all gamecode files into app.js
-    const minifiedgame = await swc.minify(gamecode, {
-        mangle: true,
-        compress: true,
-        sourceMap: false
-    });
-    await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
-  
-    // overwrite play.ejs by injecting all needed scripts into it:
-    await writeFile(`./dist/views/play.ejs`, injectScriptsIntoPlayEjs(), 'utf8');
+    await compressGameScriptsIntoAppJS();
+
+    // Overwrite play.ejs, inserting the game script link 'app.js' into it
+    const playEJS = await readFile(playEJSPath, 'utf8');
+    const newPlayEJS = insertScriptLinkIntoHTML(playEJS, '/scripts/game/app.js', true, { onerror: 'htmlscript.callback_LoadingError(event)', onload: '(() => { htmlscript.removeOnerror.call(this); })()' });
+    await writeFile(playEJSPath, newPlayEJS, 'utf8');
   
     // Make a list of all css files
     const cssFiles = await getExtFiles("./src/client/css", ".css");
@@ -129,6 +127,36 @@ if (DEV_BUILD) {
         // Write into /dist
         await writeFile(`./dist/css/${file}`, code, 'utf8');
     }
+}
+
+// Overwrite play.ejs, inserting the link for htmlscript.js into it
+const playEJS = await readFile(playEJSPath, 'utf8');
+const htmlscriptJS = await readFile('./dist/scripts/game/htmlscript.js');
+const newPlayEJS = insertScriptIntoHTML(playEJS, htmlscriptJS, {}, '<!-- htmlscript inject here -->');
+await writeFile(playEJSPath, newPlayEJS, 'utf8');
+
+/**
+ * This takes all game scripts (excluding htmlscript), and merges them
+ * all into one script, name 'app.js'.
+ */
+async function compressGameScriptsIntoAppJS() {
+    // esbuild takes all the ESM scripts that make up our game (excluding htmlscript),
+    // and auto-turns them into normal CJS scripts, and merges them all into one app.js
+    await esbuild.build({
+        bundle: true,
+        entryPoints: ['src/client/scripts/game/main.js'],
+        outfile: './dist/scripts/game/app.js',
+        legalComments: 'none' // Even skips copyright noticies, such as in gl-matrix
+    });
+
+    // swc takes the existing app.js and compresses/minifies it!
+    const gamecode = await readFile(`./dist/scripts/game/app.js`, 'utf-8');
+    const minifiedgame = await swc.minify(gamecode, {
+        mangle: true,
+        compress: true,
+        sourceMap: false
+    });
+    await writeFile(`./dist/scripts/game/app.js`, minifiedgame.code, 'utf8');
 }
 
 export {

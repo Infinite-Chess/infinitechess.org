@@ -3,6 +3,13 @@
  * Converts pre-1.3 old gamefile code into the new internal format.
  */
 
+// Import Start
+import variant from './variant.js';
+import formatconverter from './formatconverter.js';
+import movesscript from './movesscript.js';
+import math from '../misc/math.js';
+// Import End
+
 'use script';
 
 const backcompatible = (function() {
@@ -160,3 +167,5 @@ const backcompatible = (function() {
     }); 
 
 })();
+
+export default backcompatible;

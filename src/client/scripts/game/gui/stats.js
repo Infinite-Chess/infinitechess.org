@@ -4,6 +4,16 @@
  * (Similar to Minecraft's f3 menu)
  */
 
+// Import Start
+import movesscript from '../chess/movesscript.js';
+import style from './style.js';
+import options from '../rendering/options.js';
+import main from '../main.js';
+import camera from '../rendering/camera.js';
+import game from '../chess/game.js';
+import math from '../misc/math.js';
+// Import End
+
 "use strict";
 
 // Module
@@ -113,3 +123,5 @@ const stats = {
         style.hideElement(stats.elementStatusMoveLooking);
     }
 };
+
+export default stats;

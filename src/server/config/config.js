@@ -7,6 +7,13 @@
  */
 const DEV_BUILD = true;
 
+/** 
+ * Whether we bundle and minify files to send to the client
+ * Only disable for debugging and development
+ */
+const BUNDLE_FILES = !DEV_BUILD || false; // Change false to true to always enable.
+if (!DEV_BUILD && !BUNDLE_FILES) throw new Error("BUNDLE_FILES must be true in production!!");
+
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */
 const ARE_RATE_LIMITING = true; // Set to false to temporarily get around it, during development.
@@ -18,8 +25,6 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) throw new Error("ARE_RATE_LIMITING must be
  */
 const simulatedWebsocketLatencyMillis = 0;
 if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simulatedWebsocketLatencyMillis must be 0 in production!!");
-
-
 
 /** The domain name of the production website. */
 const HOST_NAME = 'www.infinitechess.org';
@@ -43,6 +48,7 @@ const allowedOrigins = [ // Allowed sites
 
 export {
     DEV_BUILD,
+    BUNDLE_FILES,
     ARE_RATE_LIMITING,
     simulatedWebsocketLatencyMillis,
     HOST_NAME,

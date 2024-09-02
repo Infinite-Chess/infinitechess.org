@@ -5,6 +5,28 @@
  * except for maybe the math script.
  */
 
+// Import Start
+import guipause from '../gui/guipause.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import onlinegame from '../misc/onlinegame.js';
+import sound from '../misc/sound.js';
+import wincondition from './wincondition.js';
+import clock from '../misc/clock.js';
+import selection from './selection.js';
+import board from '../rendering/board.js';
+import pieces from '../rendering/pieces.js';
+import math from '../misc/math.js';
+import movesscript from './movesscript.js';
+import game from './game.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movepiece.js').Piece} Piece
+*/
+
+
 "use strict";
 
 const gamefileutility = (function() {
@@ -492,3 +514,5 @@ const gamefileutility = (function() {
     });
 
 })();
+
+export default gamefileutility;

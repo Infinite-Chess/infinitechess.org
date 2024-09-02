@@ -1,13 +1,32 @@
 
 /*
- * This is the main script. This is where the game begins running when the document calls main()
+ * This is the main script. This is where the game begins running when the htmlscript calls start()
  * This initiates the gl context, calls for the initiating of the shader programs, camera,
  * and input listeners, and begins the game loop.
  */
 
+// Import Start
+import webgl from './rendering/webgl.js';
+import loadbalancer from './misc/loadbalancer.js';
+import input from './input.js';
+import onlinegame from './misc/onlinegame.js';
+import localstorage from './misc/localstorage.js';
+import game from './chess/game.js';
+import shaders from './rendering/shaders.js';
+import browsersupport from './misc/browsersupport.js';
+import camera from './rendering/camera.js';
+import invites from './misc/invites.js';
+import websocket from './websocket.js';
+import guiloading from './gui/guiloading.js';
+import math from './misc/math.js';
+// The ONLY reason we import tooltips is so that it can be tied into the
+// dependancy tree of our game, otherwise it won't be included, since NOTHING depends on it,
+// yet it needs to be an ESM because IT depends on input.js!
+import tooltips from './gui/tooltips.js';
+// Import End
+
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const main = (function() { 
 
     /**
@@ -141,7 +160,6 @@ const main = (function() {
     });
 })();
 
-
 /**
  * With a very short and fast-to-type name, prints
  * a deep-cloned copy of the object to the console.
@@ -162,3 +180,10 @@ function a(message, object) {
 function b() {
     console.error("Generic error");
 }
+
+// We set these variables on the global object so that htmlscript can access them within the html document.
+globalThis.main = main;
+globalThis.a = a;
+globalThis.b = b;
+
+export default main;

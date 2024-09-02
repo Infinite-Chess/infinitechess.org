@@ -2,6 +2,25 @@
 // This script handles the smooth animation when moving a piece from one coord to another
 // Also plays our sounds!
 
+// Import Start
+import bufferdata from './bufferdata.js';
+import main from '../main.js';
+import sound from '../misc/sound.js';
+import movement from './movement.js';
+import options from './options.js';
+import board from './board.js';
+import pieces from './pieces.js';
+import math from '../misc/math.js';
+import perspective from './perspective.js';
+import buffermodel from './buffermodel.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('../chess/movesscript.js').Move} Move
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
+
 "use strict";
 
 const animation = (function() {
@@ -255,3 +274,5 @@ const animation = (function() {
         getDurationMillisOfMoveAnimation
     });
 })();
+
+export default animation;

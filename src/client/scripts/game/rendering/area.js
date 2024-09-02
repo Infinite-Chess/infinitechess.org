@@ -6,6 +6,21 @@
  * {@link transition} where to teleport to.
  */
 
+// Import Start
+import transition from './transition.js';
+import movement from './movement.js';
+import camera from './camera.js';
+import board from './board.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import math from '../misc/math.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+*/
+
 "use strict";
 
 /**
@@ -268,3 +283,5 @@ const area = (function() {
     });
 
 })();
+
+export default area;

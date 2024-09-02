@@ -6,6 +6,21 @@
  * the mesh complexity.
  */
 
+// Import Start
+import movement from './movement.js';
+import options from './options.js';
+import piecesmodel from './piecesmodel.js';
+import math from '../misc/math.js';
+import game from '../chess/game.js';
+import buffermodel from './buffermodel.js';
+import board from './board.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+*/
+
 "use strict";
 
 const voids = {
@@ -297,3 +312,5 @@ const voids = {
         gamefile.voidMesh.model.render(position, scale);
     }
 };
+
+export default voids;

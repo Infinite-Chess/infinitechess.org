@@ -2,6 +2,31 @@
 // This script handles the rendering of legal jumping (no sliding) moves,
 // and also hilights the last move played.
 
+// Import Start
+import bufferdata from './bufferdata.js';
+import perspective from './perspective.js';
+import main from '../main.js';
+import checkhighlight from './checkhighlight.js';
+import arrows from './arrows.js';
+import organizedlines from '../chess/organizedlines.js';
+import movement from './movement.js';
+import options from './options.js';
+import selection from '../chess/selection.js';
+import camera from './camera.js';
+import board from './board.js';
+import math from '../misc/math.js';
+import movesscript from '../chess/movesscript.js';
+import game from '../chess/game.js';
+import buffermodel from './buffermodel.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ */
+
 "use strict";
 
 const highlights = (function() {
@@ -409,3 +434,5 @@ const highlights = (function() {
     });
 
 })();
+
+export default highlights;

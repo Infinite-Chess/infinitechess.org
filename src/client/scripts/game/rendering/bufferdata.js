@@ -6,6 +6,19 @@
  * of a buffer model for rendering.
  */
 
+// Import Start
+import board from './board.js';
+import pieces from './pieces.js';
+import movement from './movement.js';
+import perspective from './perspective.js';
+import buffermodel from './buffermodel.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
+
 "use strict";
 
 const bufferdata = (function() {
@@ -600,3 +613,5 @@ const bufferdata = (function() {
     });
 
 })();
+
+export default bufferdata;

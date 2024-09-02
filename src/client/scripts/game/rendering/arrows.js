@@ -1,5 +1,33 @@
+
 // This script handles the rendering of arrows poointing to pieces off-screen
 // and detects if they are clicked
+
+// Import Start
+import legalmoves from '../chess/legalmoves.js';
+import input from '../input.js';
+import highlights from './highlights.js';
+import onlinegame from '../misc/onlinegame.js';
+import bufferdata from './bufferdata.js';
+import perspective from './perspective.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import game from '../chess/game.js';
+import transition from './transition.js';
+import organizedlines from '../chess/organizedlines.js';
+import movement from './movement.js';
+import options from './options.js';
+import selection from '../chess/selection.js';
+import camera from './camera.js';
+import board from './board.js';
+import math from '../misc/math.js';
+import pieces from './pieces.js';
+import movesscript from '../chess/movesscript.js';
+import buffermodel from './buffermodel.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 "use strict";
 
@@ -513,3 +541,4 @@ const arrows = (function() {
 
 })();
 
+export default arrows;

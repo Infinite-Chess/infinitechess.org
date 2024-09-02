@@ -3,6 +3,15 @@
  * This script generates the vertex data of the hidden coins
  */
 
+// Import Start
+import bufferdata from './bufferdata.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ */
+
 "use strict";
 
 const coin = (function() {
@@ -109,3 +118,5 @@ const coin = (function() {
     });
 
 })();
+
+export default coin;

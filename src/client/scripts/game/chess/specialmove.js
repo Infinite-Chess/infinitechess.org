@@ -1,6 +1,15 @@
 
 // This script returns the functions for EXECUTING special moves
 
+// Import Start
+import gamefileutility from './gamefileutility.js';
+import math from '../misc/math.js';
+import animation from '../rendering/animation.js';
+import movepiece from './movepiece.js';
+// Import End
+
+
+
 "use strict";
 
 const specialmove = {
@@ -114,3 +123,5 @@ const specialmove = {
     // MUST require there be an enpassant tag!
     getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag]; },
 };
+
+export default specialmove;

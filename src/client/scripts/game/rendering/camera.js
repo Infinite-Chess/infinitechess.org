@@ -8,6 +8,26 @@
 // projMatrix  needed for perspective mode rendering (is even enabled in 2D view).
 // worldMatrix  is custom for each rendered object, translating it how desired.
 
+// Import Start
+import perspective from './perspective.js';
+import main from '../main.js';
+import miniimage from './miniimage.js';
+import game from '../chess/game.js';
+import stats from '../gui/stats.js';
+import options from './options.js';
+import mat4 from './gl-matrix.js';
+import { gl } from './webgl.js';
+import shaders from './shaders.js';
+import math from '../misc/math.js';
+import guidrawoffer from '../gui/guidrawoffer.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
+ */
+
 "use strict";
 
 const camera = (function() {
@@ -303,3 +323,5 @@ const camera = (function() {
     });
 
 })();
+
+export default camera;

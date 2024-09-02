@@ -2,6 +2,24 @@
 // This script stores our variants,
 // and prepares them when a game is generated
 
+// Import Start
+import specialundo from './specialundo.js';
+import legalmoves from './legalmoves.js';
+import formatconverter from './formatconverter.js';
+import specialdetect from './specialdetect.js';
+import specialmove from './specialmove.js';
+import variantomega from './variantomega.js';
+import movesets from './movesets.js';
+import pieces from '../rendering/pieces.js';
+import math from '../misc/math.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
+
+
 "use strict";
 
 const variant = (function() {
@@ -258,7 +276,7 @@ const variant = (function() {
             winConditions: modifications.winConditions || getDefaultWinConditions(),
             moveRule: modifications.moveRule || 100,
             turnOrder: modifications.turnOrder || getDefaultTurnOrder(),
-        }
+        };
         if (modifications.slideLimit != null) gameRules.slideLimit = modifications.slideLimit;
         if (modifications.moveRule === null) delete gameRules.moveRule;
         return gameRules;
@@ -498,7 +516,7 @@ const variant = (function() {
                 return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
             case "Omega_Fourth":
                 return getGameRules({ promotionRanks: null, moveRule: null, position, turnOrder: getTurnOrderOfOmega() });
-            // Removed...
+                // Removed...
             /*
             case "Standarch - 3 Check":
                 return getGameRules({ winConditions: getWinConditionsOfThreeCheck(), position });
@@ -909,3 +927,5 @@ const variant = (function() {
     });
 
 })();
+
+export default variant;

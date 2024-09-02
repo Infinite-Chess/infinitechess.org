@@ -15,7 +15,7 @@ let serverRestartingAt = false;
  * Returns the time the server is restarting at, if it is, in milliseconds after the Unix Opoch, otherwise false.
  * @returns {number | false}
  */
-function getTimeServerRestarting() { return serverRestartingAt }
+function getTimeServerRestarting() { return serverRestartingAt; }
 
 /**
  * Sets the time the server is restarting at, in milliseconds after the Unix Opoch.
@@ -38,8 +38,8 @@ function getMinutesUntilServerRestart() {
     const now = Date.now(); // Current time in milliseconds
     const millisLeft = serverRestartingAt - now;
 
-    const minutesLeft = millisLeft / (1000 * 60)
-    const ceiled = Math.ceil(minutesLeft)
+    const minutesLeft = millisLeft / (1000 * 60);
+    const ceiled = Math.ceil(minutesLeft);
     const returnThis = ceiled > 0 ? ceiled : 0;
 
     return returnThis; // Convert to minutes
