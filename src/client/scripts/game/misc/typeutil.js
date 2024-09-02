@@ -40,48 +40,46 @@ const typeutil = (function() {
     /**
      * Iterates through every single piece TYPE in the game state, and performs specified function on the type.
      * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
-     * @param {Object} [options] An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
+     * @param {Object} [options] - An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
      */
     function forEachPieceType(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
-        for (let i = 0; i < colorsTypes.white.length; i++) {
-            // We iterate through black types first so that the white icons render on top!
-            callback(colorsTypes.black[i]);
-            callback(colorsTypes.white[i]);
-        }
-        if (ignoreNeutrals) return;
-        for (let i = 0; i < colorsTypes.neutral.length; i++) {
-            const type = colorsTypes.neutral[i];
-            if (ignoreVoids && type.startsWith('voids')) continue;
-            callback(type);
-        }
+        // Iterate through all colors in reverse order.
+        // We do it in reverse so that white mini images
+        // are rendered on top of black ones.
+        Object.keys(colorsTypes).reverse().forEach(color => {
+            if (ignoreNeutrals && color === 'neutral') return; // Skip 'neutral' if ignoreNeutrals is true
+            colorsTypes[color].forEach(type => {
+                if (ignoreVoids && type.startsWith('voids')) return; // Skip voids if ignoreVoids is true
+                callback(type);
+            });
+        });
     }
 
     /**
-     * A variant of {@link forEachPieceType} that allows an asynchronious callback function to be used.
+     * A variant of {@link forEachPieceType} that allows an asynchronous callback function to be used.
      * 
-     * Iterates through every single piece TYPE in the game state, and performs specified function on the type
+     * Iterates through every single piece TYPE in the game state and performs the specified function on the type.
      * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
-     * @param {Object} [options] An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
+     * @param {Object} [options] - An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
      */
     async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
-        for (let i = 0; i < colorsTypes.white.length; i++) {
-            // We iterate through black types first so that the white icons render on top!
-            await callback(colorsTypes.black[i]);
-            await callback(colorsTypes.white[i]);
-        }
-        if (ignoreNeutrals) return;
-        for (let i = 0; i < colorsTypes.neutral.length; i++) {
-            const type = colorsTypes.neutral[i];
-            if (ignoreVoids && type.startsWith('voids')) continue;
-            await callback(type);
+        // Iterate through all colors in reverse order.
+        for (const color of Object.keys(colorsTypes).reverse()) {
+            if (ignoreNeutrals && color === 'neutral') continue; // Skip 'neutral' if ignoreNeutrals is true
+            for (const type of colorsTypes[color]) {
+                if (ignoreVoids && type.startsWith('voids')) continue; // Skip voids if ignoreVoids is true
+                await callback(type);
+            }
         }
     }
 
     // Iterates through every single piece TYPE in the game state of specified COLOR,
     // and performs specified function on the type
     function forEachPieceTypeOfColor(color, callback) {
-        if (color !== 'white' && color !== 'black') throw new Error(`Cannot iterate through each piece type of invalid color: ${color}!`);
-        for (let i = 0; i < colorsTypes.white.length; i++) callback(typeutil[color][i]);
+        if (colorutil.isValidColor_NoNeutral(color)) throw new Error(`Cannot iterate through each piece type of invalid color '${color}'!`);
+        for (let i = 0; i < types.length; i++) {
+            callback(colorsTypes[color][i]);
+        }
     }
 
 

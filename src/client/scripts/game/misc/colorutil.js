@@ -19,7 +19,23 @@ const colorutil = (function() {
     /** All color-extensions that are compatible with the game. */
     const validColorExtensions = [...validColorExtensions_NoNeutral, 'N'];
 
+    /**
+     * Checks if a given color is a valid color.
+     * @param {string} color - The color to check.
+     * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
+     */
+    function isValidColor(color) {
+        return validColors.includes(color);
+    }
 
+    /**
+     * Checks if a given color is a valid color, EXCLUDING NEUTRALS, they will be marked as invalid.
+     * @param {string} color - The color to check.
+     * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
+     */
+    function isValidColor_NoNeutral(color) {
+        return validColors_NoNeutral.includes(color);
+    }
 
     /**
      * Returns the color of the provided piece type
@@ -78,6 +94,8 @@ const colorutil = (function() {
         validColorExtensions,
         validColors_NoNeutral,
         validColorExtensions_NoNeutral,
+        isValidColor,
+        isValidColor_NoNeutral,
         getPieceColorFromType,
         getColorFromWorB,
         getOppositeColor,
