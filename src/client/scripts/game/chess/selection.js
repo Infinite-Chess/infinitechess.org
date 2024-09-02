@@ -2,6 +2,38 @@
 // This script tests for piece selection and keeps track of the selected piece,
 // including the legal moves it has available.
 
+// Import Start
+import guipause from '../gui/guipause.js';
+import legalmoves from './legalmoves.js';
+import input from '../input.js';
+import math from '../misc/math.js';
+import onlinegame from '../misc/onlinegame.js';
+import movepiece from './movepiece.js';
+import main from '../main.js';
+import gamefileutility from './gamefileutility.js';
+import game from './game.js';
+import specialdetect from './specialdetect.js';
+import guipromotion from '../gui/guipromotion.js';
+import highlights from '../rendering/highlights.js';
+import formatconverter from './formatconverter.js';
+import perspective from '../rendering/perspective.js';
+import transition from '../rendering/transition.js';
+import board from '../rendering/board.js';
+import pieces from '../rendering/pieces.js';
+import movement from '../rendering/movement.js';
+import movesscript from './movesscript.js';
+import options from '../rendering/options.js';
+import statustext from '../gui/statustext.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
+ * @typedef {import('./movepiece.js').Piece} Piece
+ */
+
+
 "use strict";
 
 const selection = (function() {
@@ -315,3 +347,5 @@ const selection = (function() {
         arePremoving
     });
 })();
+
+export default selection;

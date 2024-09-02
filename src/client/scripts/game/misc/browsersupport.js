@@ -38,3 +38,5 @@ const browsersupport = (function() {
     });
 
 })();
+
+export default browsersupport;

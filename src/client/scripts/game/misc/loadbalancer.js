@@ -7,6 +7,16 @@
 // Currently the only long task is the mesh generation of all the pieces
 // (the checkmate algorithm is no longer asynchronious)
 
+// Import Start
+import websocket from '../websocket.js';
+import invites from './invites.js';
+import math from './math.js';
+import stats from '../gui/stats.js';
+import input from '../input.js';
+import main from '../main.js';
+import onlinegame from './onlinegame.js';
+// Import End
+
 'use strict';
 
 const loadbalancer = (function() {
@@ -268,3 +278,5 @@ const loadbalancer = (function() {
         isPageHidden
     });
 })();
+
+export default loadbalancer;

@@ -1,9 +1,43 @@
 
 // This module keeps trap of the data of the onlinegame we are currently in.
 
+// Import Start
+import legalmoves from '../chess/legalmoves.js';
+import localstorage from './localstorage.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import guinavigation from '../gui/guinavigation.js';
+import drawoffers from './drawoffers.js';
+import guititle from '../gui/guititle.js';
+import clock from './clock.js';
+import math from './math.js';
+import statustext from '../gui/statustext.js';
+import movepiece from '../chess/movepiece.js';
+import game from '../chess/game.js';
+import specialdetect from '../chess/specialdetect.js';
+import selection from '../chess/selection.js';
+import board from '../rendering/board.js';
+import movesscript from '../chess/movesscript.js';
+import websocket from '../websocket.js';
+import perspective from '../rendering/perspective.js';
+import sound from './sound.js';
+import guiplay from '../gui/guiplay.js';
+import input from '../input.js';
+import loadbalancer from './loadbalancer.js';
+import main from '../main.js';
+import formatconverter from '../chess/formatconverter.js';
+import guipause from '../gui/guipause.js';
+import guigameinfo from '../gui/guigameinfo.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../chess/movesscript.js').Move} Move
+ * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
+*/
+
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const onlinegame = (function() {
 
     /** Whether we are currently in an online game. */
@@ -806,3 +840,5 @@ const onlinegame = (function() {
     });
 
 })();
+
+export default onlinegame;

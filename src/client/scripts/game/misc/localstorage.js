@@ -78,3 +78,5 @@ const localstorage = (function() {
         eraseAll
     });
 })();
+
+export default localstorage;

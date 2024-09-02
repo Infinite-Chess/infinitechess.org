@@ -1,4 +1,31 @@
+
 // Here lies the universal methods for moving pieces, forward or rewinding.
+
+// Import Start
+import legalmoves from './legalmoves.js';
+import main from '../main.js';
+import gamefileutility from './gamefileutility.js';
+import specialdetect from './specialdetect.js';
+import arrows from '../rendering/arrows.js';
+import wincondition from './wincondition.js';
+import clock from '../misc/clock.js';
+import organizedlines from './organizedlines.js';
+import animation from '../rendering/animation.js';
+import guinavigation from '../gui/guinavigation.js';
+import piecesmodel from '../rendering/piecesmodel.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import math from '../misc/math.js';
+import movesscript from './movesscript.js';
+import checkdetection from './checkdetection.js';
+import formatconverter from './formatconverter.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('./movepiece.js').Piece} Piece
+*/
 
 "use strict";
 
@@ -531,3 +558,5 @@ const movepiece = (function() {
     });
 
 })();
+
+export default movepiece;

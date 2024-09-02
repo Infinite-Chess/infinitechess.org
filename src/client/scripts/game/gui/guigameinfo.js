@@ -4,9 +4,20 @@
  * displaying the clocks, and whos turn it currently is.
  */
 
+// Import Start
+import wincondition from '../chess/wincondition.js';
+import style from './style.js';
+import game from '../chess/game.js';
+import onlinegame from '../misc/onlinegame.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+*/
+
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const guigameinfo = (function() {
 
     // Variables
@@ -150,3 +161,5 @@ const guigameinfo = (function() {
     });
 
 })();
+
+export default guigameinfo;

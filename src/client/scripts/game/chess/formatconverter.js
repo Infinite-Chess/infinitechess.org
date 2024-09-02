@@ -11,7 +11,6 @@
 
 'use strict';
 
-// eslint-disable-next-line no-unused-vars
 const formatconverter = (function() {
     
     const pieceDictionary = {
@@ -1002,7 +1001,7 @@ const formatconverter = (function() {
     //     console.log(`\n\nCompressing of a variant's starting position example:\n\n${JSON.stringify(b)}`)
 
     //     // Speed test, put large position in "longposition.txt"
-    //     const fs = require('fs'); // supported in Node.js
+    //     import fs from 'fs'; // supported in Node.js
     //     fs.readFile("longposition.txt", (err, data) => {
     //         if (err) return;
     //         const gameExampleLong = JSON.parse(data);
@@ -1020,7 +1019,6 @@ const formatconverter = (function() {
     // }
 
     return Object.freeze({
-        ShortToLong_Piece,
         LongToShort_Format,
         ShortToLong_Format,
         GameToPosition,
@@ -1035,3 +1033,5 @@ const formatconverter = (function() {
     });
     
 })();
+
+export default formatconverter;

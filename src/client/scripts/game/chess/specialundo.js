@@ -1,6 +1,15 @@
 
 // This script returns the functions for UNDOING special moves
 
+// Import Start
+import gamefileutility from './gamefileutility.js';
+import movepiece from './movepiece.js';
+import animation from '../rendering/animation.js';
+import math from '../misc/math.js';
+// Import End
+
+
+
 "use strict";
 
 const specialundo = {
@@ -111,3 +120,5 @@ const specialundo = {
         return true; // Special move has been undo'd!
     }
 };
+
+export default specialundo;

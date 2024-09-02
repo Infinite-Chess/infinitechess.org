@@ -3,6 +3,14 @@
 // Here we remember what page we're on,
 // and we have a reference to the overlay element above the entire canvas.
 
+// Import Start
+import main from '../main.js';
+import selection from '../chess/selection.js';
+import guipromotion from './guipromotion.js';
+import style from './style.js';
+import statustext from './statustext.js';
+// Import End
+
 "use strict";
 
 const gui = (function() {
@@ -59,3 +67,5 @@ const gui = (function() {
     });
 
 })();
+
+export default gui;

@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import { readFile, writeFile } from '../utility/lockFile.js';
-import math1 from './math1.js'
+import math1 from './math1.js';
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 

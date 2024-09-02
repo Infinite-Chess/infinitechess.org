@@ -3,9 +3,28 @@
  * This script handles copying and pasting games
  */
 
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ */
+
+// Import Start
+import math from '../misc/math.js';
+import onlinegame from '../misc/onlinegame.js';
+import localstorage from '../misc/localstorage.js';
+import main from '../main.js';
+import formatconverter from './formatconverter.js';
+import game from './game.js';
+import backcompatible from './backcompatible.js';
+import variant from './variant.js';
+import gamefile from './gamefile.js';
+import wincondition from './wincondition.js';
+import gamefileutility from './gamefileutility.js';
+import statustext from '../gui/statustext.js';
+// Import End
+
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const copypastegame = (function() {
 
     /** Enable to only copy a single position without all the moves prior */
@@ -480,3 +499,5 @@ const copypastegame = (function() {
     });
 
 })();
+
+export default copypastegame;

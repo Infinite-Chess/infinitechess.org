@@ -2,6 +2,24 @@
 // This contains methods for working with the gamefile's moves list,
 // and detects if we're rewinding or fast-forwarding to view the game's history.
 
+// Import Start
+import movepiece from './movepiece.js';
+import math from '../misc/math.js';
+import main from '../main.js';
+import stats from '../gui/stats.js';
+import guinavigation from '../gui/guinavigation.js';
+import selection from './selection.js';
+import input from '../input.js';
+import statustext from '../gui/statustext.js';
+import game from './game.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
+
+
 "use strict";
 
 // Custom type definitions...
@@ -374,3 +392,6 @@ const movesscript = (function() {
     });
 
 })();
+
+export { Move };
+export default movesscript;

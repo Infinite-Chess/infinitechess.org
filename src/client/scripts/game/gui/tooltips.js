@@ -1,3 +1,4 @@
+import input from "../input.js";
 
 /**
  * This script creates event listeners for managing the current classes
@@ -161,3 +162,7 @@
         });
     });
 })();
+
+// The ONLY reason we export is so that tooltips can be tied into the dependancy tree of our game,
+// otherwise esbuild won't include it.
+export default null;

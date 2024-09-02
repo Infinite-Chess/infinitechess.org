@@ -20,9 +20,9 @@ import variant1 from '../variant1.js';
 import math1 from '../math1.js';
 import clockweb from '../clockweb.js';
 import wsutility from '../wsutility.js';
-const { sendNotify, sendNotifyError } = wsutility.sendNotify;
+const { sendNotify, sendNotifyError } = wsutility;
 import wincondition1 from '../wincondition1.js';
-import formatconverter1 from '../formatconverter1.js';
+import formatconverter from '../../../client/scripts/game/chess/formatconverter.js';
 import movesscript1 from '../movesscript1.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
@@ -444,7 +444,7 @@ const gameutility = (function() {
 
         let ICN = 'ICN UNAVAILABLE';
         try {
-            ICN = formatconverter1.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition: false });
+            ICN = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition: false });
         } catch (e) {
             const errText = `Error when logging game and converting to ICN! The primed gamefile:\n${JSON.stringify(primedGamefile)}\n${e.stack}`;
             await logEvents(errText, 'errLog.txt', { print: true });

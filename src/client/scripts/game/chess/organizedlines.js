@@ -6,6 +6,20 @@
  * These dramatically increase speed of legal move calculation.
  */
 
+// Import Start
+import gamefileutility from './gamefileutility.js';
+import pieces from '../rendering/pieces.js';
+import math from '../misc/math.js';
+import piecesmodel from '../rendering/piecesmodel.js';
+import options from '../rendering/options.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
+
+
 "use strict";
 
 // Module
@@ -346,3 +360,5 @@ const organizedlines = {
         return false;
     }
 };
+
+export default organizedlines;

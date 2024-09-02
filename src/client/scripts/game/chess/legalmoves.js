@@ -3,6 +3,25 @@
  * This script calculates legal moves
  */
 
+// Import Start
+import movepiece from './movepiece.js';
+import gamefileutility from './gamefileutility.js';
+import specialdetect from './specialdetect.js';
+import organizedlines from './organizedlines.js';
+import math from '../misc/math.js';
+import pieces from '../rendering/pieces.js';
+import checkdetection from './checkdetection.js';
+import wincondition from './wincondition.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('./movepiece.js').Piece} Piece
+*/
+
+
 "use strict";
 
 // Custom type definitions...
@@ -400,3 +419,5 @@ const legalmoves = (function() {
     });
 
 })();
+
+export default legalmoves;

@@ -1,6 +1,21 @@
+
 /*
  * This script renders the red glow surrounding
  * royal pieces currently in check.
+ */
+
+// Import Start
+import bufferdata from './bufferdata.js';
+import game from '../chess/game.js';
+import movement from './movement.js';
+import math from '../misc/math.js';
+import options from './options.js';
+import buffermodel from './buffermodel.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  */
 
 "use strict";
@@ -54,3 +69,5 @@ const checkhighlight = (function() {
     });
 
 })();
+
+export default checkhighlight;

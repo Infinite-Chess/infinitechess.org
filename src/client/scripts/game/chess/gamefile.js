@@ -1,6 +1,22 @@
 
 // This script when called as a function using the new keyword, will return a new gamefile.
 
+// Import start
+import organizedlines from './organizedlines.js';
+import movepiece from './movepiece.js';
+import gamefileutility from './gamefileutility.js';
+import area from '../rendering/area.js';
+import variant from './variant.js';
+import math from '../misc/math.js';
+// Import End
+
+/** 
+ * Type Definitions
+ * @typedef {import('../rendering/buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ */
+
+
 'use strict';
 
 /**
@@ -203,3 +219,5 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     organizedlines.addMoreUndefineds(this, { regenModel: false });
 };
 
+export { gamefile };
+export default gamefile;

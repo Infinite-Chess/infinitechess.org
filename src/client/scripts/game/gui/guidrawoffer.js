@@ -7,9 +7,15 @@
  * nor does it keep track of our current offers!
  */
 
+// Import Start
+import style from './style.js';
+import guigameinfo from './guigameinfo.js';
+import drawoffers from '../misc/drawoffers.js';
+import clock from '../misc/clock.js';
+// Import End
+
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
 const guidrawoffer = (function() {
 
     const element_draw_offer_ui = document.getElementById('draw_offer_ui');
@@ -96,3 +102,5 @@ const guidrawoffer = (function() {
     });
 
 })();
+
+export default guidrawoffer;

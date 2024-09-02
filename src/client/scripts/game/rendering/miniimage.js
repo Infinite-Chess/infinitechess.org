@@ -1,4 +1,27 @@
+
 // This script handles the rendering of the mini images of our pieces when we're zoomed out
+
+// Import Start
+import webgl from './webgl.js';
+import input from '../input.js';
+import perspective from './perspective.js';
+import bufferdata from './bufferdata.js';
+import main from '../main.js';
+import transition from './transition.js';
+import movement from './movement.js';
+import options from './options.js';
+import pieces from './pieces.js';
+import statustext from '../gui/statustext.js';
+import buffermodel from './buffermodel.js';
+import game from '../chess/game.js';
+import area from './area.js';
+import math from '../misc/math.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 "use strict";
 
@@ -182,3 +205,5 @@ const miniimage = (function() {
     });
 
 })();
+
+export default miniimage;

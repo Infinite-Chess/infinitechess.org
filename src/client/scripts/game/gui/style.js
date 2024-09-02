@@ -161,3 +161,5 @@ const style = (function() {
     });
 
 })();
+
+export default style;

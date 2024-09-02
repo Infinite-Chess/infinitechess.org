@@ -4,6 +4,20 @@
  * and 3-fold repetition algorithm.
  */
 
+// Import Start
+import wincondition from './wincondition.js';
+import gamefileutility from './gamefileutility.js';
+import pieces from '../rendering/pieces.js';
+import movesscript from './movesscript.js';
+import legalmoves from './legalmoves.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+*/
+
 "use strict";
 
 const checkmate = (function() {
@@ -231,3 +245,5 @@ const checkmate = (function() {
         detectCheckmateOrDraw,
     });
 })();
+
+export default checkmate;

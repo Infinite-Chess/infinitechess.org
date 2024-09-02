@@ -8,6 +8,13 @@
  * In theory, should should have ZERO dependancies.
  */
 
+// Import Start
+import perspective from '../rendering/perspective.js';
+import movement from '../rendering/movement.js';
+import camera from '../rendering/camera.js';
+import board from '../rendering/board.js';
+// Import End
+
 "use strict";
 
 // Custom defined types...
@@ -1085,3 +1092,5 @@ const math = (function() {
         convertUTCDateUTCTimeToTimeStamp,
     });
 })();
+
+export default math;

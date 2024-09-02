@@ -1,4 +1,9 @@
+
 // This script controls the playing of our sound effects
+
+// Import Start
+import main from '../main.js';
+// Import End
 
 "use strict";
 
@@ -413,3 +418,8 @@ const sound = (function() {
     });
 
 })();
+
+// We set this variable on the global object so that htmlscript can access them within the html document.
+globalThis.sound = sound;
+
+export default sound;

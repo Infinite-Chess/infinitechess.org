@@ -4,6 +4,10 @@
  * and other utility methods.
  */
 
+// Import Start
+import camera from './camera.js';
+// Import End
+
 /**
  * The WebGL rendering context. This is our web-based render engine.
  * @type {WebGLRenderingContext}
@@ -196,3 +200,7 @@ const webgl = (function() {
         queryWebGLContextInfo
     });
 })();
+
+export default webgl;
+
+export { gl };

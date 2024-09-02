@@ -3,6 +3,11 @@
  * This script loads textures
  */
 
+// Import Start
+import { gl } from './webgl.js';
+import math from '../misc/math.js';
+// Import End
+
 const texture = (function() {
 
     // Init a texture from an element from the document. Can be called from any script.
@@ -54,3 +59,5 @@ const texture = (function() {
     });
 
 })();
+
+export default texture;

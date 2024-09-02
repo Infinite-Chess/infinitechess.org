@@ -5,6 +5,22 @@
  * conditions except for checkmate, stalemate, and repetition.
  */
 
+// Import Start
+import insufficientmaterial from './insufficientmaterial.js';
+import gamefileutility from './gamefileutility.js';
+import checkmate from './checkmate.js';
+import pieces from '../rendering/pieces.js';
+import math from '../misc/math.js';
+import organizedlines from './organizedlines.js';
+import movesscript from './movesscript.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
+
+
 "use strict";
 
 // Module
@@ -336,3 +352,5 @@ const wincondition = (function() {
     });
 
 })();
+
+export default wincondition;

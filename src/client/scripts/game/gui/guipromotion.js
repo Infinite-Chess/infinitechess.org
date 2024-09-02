@@ -4,6 +4,12 @@
  * pawns reach the promotion line.
  */
 
+// Import Start
+import perspective from '../rendering/perspective.js';
+import selection from '../chess/selection.js';
+import style from './style.js';
+// Import End
+
 "use strict";
 
 const guipromotion = (function() {
@@ -200,3 +206,5 @@ const guipromotion = (function() {
     });
 
 })();
+
+export default guipromotion;

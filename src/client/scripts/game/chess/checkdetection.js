@@ -1,6 +1,26 @@
+
 // This script is used to test if given gamefiles are in check,
 // also for simulating which moves would lead to check and removed from the list of legal moves.
 // We also detect checkmate, stalemate, and repetition here.
+
+// Import Start
+import legalmoves from './legalmoves.js';
+import movepiece from './movepiece.js';
+import gamefileutility from './gamefileutility.js';
+import specialdetect from './specialdetect.js';
+import organizedlines from './organizedlines.js';
+import wincondition from './wincondition.js';
+import math from '../misc/math.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
+ * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ */
 
 "use strict";
 
@@ -484,3 +504,5 @@ const checkdetection = (function() {
     });
 
 })();
+
+export default checkdetection;

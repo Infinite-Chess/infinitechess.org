@@ -4,6 +4,21 @@
 // and contains the functions for rendering the main pieces,
 // ghost piece, and mini icons!
 
+// Import Start
+import bufferdata from './bufferdata.js';
+import perspective from './perspective.js';
+import miniimage from './miniimage.js';
+import movement from './movement.js';
+import piecesmodel from './piecesmodel.js';
+import voids from './voids.js';
+import board from './board.js';
+import texture from './texture.js';
+import onlinegame from '../misc/onlinegame.js';
+import options from './options.js';
+import buffermodel from './buffermodel.js';
+// Import End
+
+
 "use strict";
 
 const pieces = (function() {
@@ -235,3 +250,5 @@ const pieces = (function() {
     });
 
 })();
+
+export default pieces;
