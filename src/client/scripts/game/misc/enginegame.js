@@ -9,8 +9,8 @@ import legalmoves from '../chess/legalmoves.js';
 import selection from '../chess/selection.js';
 import movepiece from '../chess/movepiece.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import math from '../misc/math.js';
 import perspective from '../rendering/perspective.js';
+import jsutil from './jsutil.js';
 // Import End
 
 "use strict";
@@ -123,7 +123,7 @@ const enginegame = (function() {
         const gamefile = game.getGamefile();
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
-        const endCoordsToAppendSpecial = math.deepCopyObject(move.endCoords);
+        const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
         legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
         move.type = piecemoved.type;

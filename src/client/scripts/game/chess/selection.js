@@ -22,6 +22,7 @@ import movesscript from './movesscript.js';
 import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 import colorutil from '../misc/colorutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /**
@@ -233,7 +234,6 @@ const selection = (function() {
         // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
         legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected);
 
-        let isOpponentPiece;
         const pieceColor = colorutil.getPieceColorFromType(pieceSelected.type);
         if (game.areInNonLocalGame()) isOpponentPiece = pieceColor !== game.getOurColorInNonLocalGame();
         else isOpponentPiece = pieceColor !== game.getGamefile().whosTurn;

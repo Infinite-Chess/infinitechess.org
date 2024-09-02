@@ -17,10 +17,10 @@ import guititle from '../gui/guititle.js';
 import style from '../gui/style.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import area from '../rendering/area.js';
-import math from '../misc/math.js';
 import enginegame from '../misc/enginegame.js';
 import clock from '../misc/clock.js';
 import options from '../rendering/options.js';
+import timeutil from '../misc/timeutil.js';
 // Import End
 
 "use strict";
@@ -232,8 +232,8 @@ const guipractice = (function() {
         movement.eraseMomentum();
         options.disableEM();
 
-        gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || math.getCurrentUTCDate();
-        gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || math.getCurrentUTCTime();
+        gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || timeutil.getCurrentUTCDate();
+        gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || timeutil.getCurrentUTCTime();
 
         const variantOptions = gameOptions.variantOptions;
         const newGamefile = new gamefile(gameOptions.metadata, { variantOptions });

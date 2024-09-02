@@ -345,8 +345,8 @@ const checkdetection = (function() {
      * @returns {boolean} true if atleast one of our royals is included in the gamefile's list of royals in check this turn
      */
     function isColorInCheck(gamefile, color) {
-        const royals = gamefileutility.getRoyalCoords(gamefile, color).map(math.getKeyFromCoords); // ['x,y','x,y']
-        const checkedRoyals = gamefile.inCheck.map(math.getKeyFromCoords); // ['x,y','x,y']
+        const royals = gamefileutility.getRoyalCoords(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+        const checkedRoyals = gamefile.inCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
         return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length);
     }
 

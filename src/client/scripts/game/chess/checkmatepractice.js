@@ -10,8 +10,9 @@ import wincondition from '../chess/wincondition.js';
 import gui from '../gui/gui.js';
 import guipractice from '../gui/guipractice.js';
 import localstorage from '../misc/localstorage.js';
-import math from '../misc/math.js';
 import enginegame from '../misc/enginegame.js';
+import colorutil from '../misc/colorutil.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 "use strict";
@@ -95,13 +96,13 @@ const checkmatepractice = (function() {
 
             // place amount many pieces of type piece
             while (amount != 0) {
-                if (math.getPieceColorFromType(piece) === "white") {
+                if (colorutil.getPieceColorFromType(piece) === "white") {
                     if (blackpieceplaced) return console.error("Must place all white pieces before placing black pieces.");
 
                     // randomly generate white piece coordinates near origin in square from -5 to 5
                     const x = Math.floor(Math.random() * 11) - 5;
                     const y = Math.floor(Math.random() * 11) - 5;
-                    const key = math.getKeyFromCoords([x,y]);
+                    const key = coordutil.getKeyFromCoords([x,y]);
 
                     // check if square is occupied and white bishop parity is fulfilled
                     if (!(key in startingPosition) && !(piece === "bishopsW" && (x + y) % 2 !== whitebishopparity)) {
@@ -112,7 +113,7 @@ const checkmatepractice = (function() {
                     // randomly generate black piece coordinates at a distance
                     const x = Math.floor(Math.random() * 3) + 12;
                     const y = Math.floor(Math.random() * 35) - 17;
-                    const key = math.getKeyFromCoords([x,y]);
+                    const key = coordutil.getKeyFromCoords([x,y]);
                     // check if square is occupied or potentially threatened
                     if (!(key in startingPosition) && squareNotInSight(key, startingPosition)) {
                         startingPosition[key] = piece;
@@ -137,9 +138,9 @@ const checkmatepractice = (function() {
      * @returns {boolean} true or false, depending on if the square is in sight or not
      */
     function squareNotInSight(square, startingPosition) {
-        const [sx,sy] = math.getCoordsFromKey(square);
+        const [sx,sy] = coordutil.getCoordsFromKey(square);
         for (const key in startingPosition) {
-            const [x,y] = math.getCoordsFromKey(key);
+            const [x,y] = coordutil.getCoordsFromKey(key);
             if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
             if (startingPosition[key] === "knightridersW") {
                 if (Math.abs(sx - x) === 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) === Math.abs(sy - y)) {
