@@ -72,7 +72,7 @@ const variant = (function() {
         // Promotion types already have teams stripped
         const rawtypes = new Set(promotiontypes);
         for (const tpiece of teamtypes) {
-            rawtypes.add(colorutil.trimWorBFromType(tpiece)); // Make a set with the team color trimmed
+            rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
         }
 
         gamefile.startSnapshot.existingTypes = rawtypes;
@@ -549,7 +549,7 @@ const variant = (function() {
         for (const key in position) {
             const thisPieceType = position[key];
             if (thisPieceType.endsWith('N')) continue; // Skip
-            const trimmedType = colorutil.trimWorBFromType(thisPieceType); // Slices off W/B at the end
+            const trimmedType = colorutil.trimColorExtensionFromType(thisPieceType); // Slices off W/B at the end
             if (unallowedPromotes.includes(trimmedType)) continue; // Not allowed
             if (white.includes(trimmedType)) continue; // Already added
             // Only add if the color's promotion rank is defined

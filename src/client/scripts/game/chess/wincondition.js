@@ -202,7 +202,7 @@ const wincondition = (function() {
 
         if (!lastMove.captured) return false; // Last move not a capture
 
-        const trimmedTypeCaptured = colorutil.trimWorBFromType(lastMove.captured);
+        const trimmedTypeCaptured = colorutil.trimColorExtensionFromType(lastMove.captured);
 
         // Does the piece type captured equal any royal piece?
         return typeutil.royals.includes(trimmedTypeCaptured);

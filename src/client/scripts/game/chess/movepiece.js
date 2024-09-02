@@ -62,7 +62,7 @@ const movepiece = (function() {
         const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
         if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
         move.type = piece.type;
-        const trimmedType = colorutil.trimWorBFromType(move.type); // "queens"
+        const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
         
         storeRewindInfoOnMove(gamefile, move, piece.index, { simulated }); // Keep track if important stuff to remember, for rewinding the game if we undo moves
 
@@ -440,7 +440,7 @@ const movepiece = (function() {
     function rewindMove(gamefile, { updateData = true, removeMove = true, animate = true } = {}) {
 
         const move = movesscript.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
-        const trimmedType = colorutil.trimWorBFromType(move.type);
+        const trimmedType = colorutil.trimColorExtensionFromType(move.type);
 
         let isSpecialMove = false;
         if (gamefile.specialUndos[trimmedType]) isSpecialMove = gamefile.specialUndos[trimmedType](gamefile, move, { updateData, animate });

@@ -212,7 +212,7 @@ const organizedlines = {
 
         if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
         
-        const trimmedType = colorutil.trimWorBFromType(type);
+        const trimmedType = colorutil.trimColorExtensionFromType(type);
         return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
     },
 

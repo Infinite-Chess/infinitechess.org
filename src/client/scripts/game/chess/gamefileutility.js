@@ -303,7 +303,7 @@ const gamefileutility = (function() {
     // Returns the total counted amount.
     // IGNORES UNDEFINEDS
     function getCountOfTypesFromPiecesByType(piecesByType, arrayOfPieces, color) { // arrayOfPieces = ['kings', 'royalCentaurs', ...]
-        const WorB = colorutil.getWorBFromColor(color);
+        const WorB = colorutil.getColorExtensionFromColor(color);
 
         let count = 0;
         for (let i = 0; i < arrayOfPieces.length; i++) {
@@ -447,7 +447,7 @@ const gamefileutility = (function() {
      */
     function getRoyalCoords(gamefile, color) {
         const royals = typeutil.royals; // ['kings', ...]
-        const WorB = colorutil.getWorBFromColor(color);
+        const WorB = colorutil.getColorExtensionFromColor(color);
 
         const piecesByType = gamefile.ourPieces;
         const royalCoords = [];
@@ -474,14 +474,14 @@ const gamefileutility = (function() {
 	 */
     function getRoyalCountOfColor(piecesByKey, color) {
         const royals = typeutil.royals; // ['kings', ...]
-        const WorB = colorutil.getWorBFromColor(color);
+        const WorB = colorutil.getColorExtensionFromColor(color);
 
         let royalCount = 0;
         for (const key in piecesByKey) {
             const type = piecesByKey[key];
             const thisColor = colorutil.getPieceColorFromType(type);
             if (!thisColor.endsWith(WorB)) return; // Different color
-            const strippedType = colorutil.trimWorBFromType(type);
+            const strippedType = colorutil.trimColorExtensionFromType(type);
             if (!royals.includes(strippedType)) continue; // Not royalty
             royalCount++;
         }

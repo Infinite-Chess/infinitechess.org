@@ -170,9 +170,9 @@ const insufficientmaterial = (function() {
         for (const key in gamefile.piecesOrganizedByKey) {
             const piece = gamefile.piecesOrganizedByKey[key];
             if (piece === "obstaclesN") continue;
-            else if (colorutil.trimWorBFromType(piece) === "bishops") {
+            else if (colorutil.trimColorExtensionFromType(piece) === "bishops") {
                 const parity = sum_tuple_coords(math.getCoordsFromKey(key)) % 2;
-                const color = colorutil.getWorBFromType(piece);
+                const color = colorutil.getColorExtensionFromType(piece);
                 if (color === "W") bishopsW_count[parity] += 1;
                 else if (color === "B") bishopsB_count[parity] += 1;
             }

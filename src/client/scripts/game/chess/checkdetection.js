@@ -100,7 +100,7 @@ const checkdetection = (function() {
             const typeOnSquareColor = colorutil.getPieceColorFromType(typeOnSquare);
             if (color === typeOnSquareColor) continue; // A friendly can't capture us
 
-            const typeOnSquareConcat = colorutil.trimWorBFromType(typeOnSquare);
+            const typeOnSquareConcat = colorutil.trimColorExtensionFromType(typeOnSquare);
 
             // Is that a match with any piece type on this vicinity square?
             if (thisVicinity.includes(typeOnSquareConcat)) { // This square can be captured

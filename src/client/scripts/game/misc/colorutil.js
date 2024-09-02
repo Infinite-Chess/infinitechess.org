@@ -38,23 +38,42 @@ const colorutil = (function() {
     }
 
     /**
+     * Checks if a given color extension code is valid.
+     * @param {string} colorExtension - 'W' or 'B' or 'N'
+     * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
+     */
+    function isValidColorExtension(colorExtension) {
+        return validColorExtensions.includes(colorExtension);
+    }
+
+    /**
+     * Checks if a given color extension code is valid, EXCLUDING 'N', that will be marked as invalid.
+     * @param {string} colorExtension - The color to check.
+     * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
+     */
+    function isValidColorExtension_NoNeutral(colorExtension) {
+        return validColorExtensions_NoNeutral.includes(colorExtension);
+    }
+
+    /**
      * Returns the color of the provided piece type
      * @param {string} type - The type of the piece (e.g., "pawnsW")
      * @returns {string | undefined} The color of the piece, "white", "black", or "neutral", or undefined if not valid
      */
     function getPieceColorFromType(type) {
-        // If the last letter of the piece type is 'W', the piece is white.
-        if (type.endsWith('W')) return "white";
-        else if (type.endsWith('B')) return "black";
-        else if (type.endsWith('N')) return "neutral";
-        else throw new Error(`Cannot get the color of piece with type ${type}`);
+        const colorExtension = getColorExtensionFromType(type);
+        return getColorFromExtension(colorExtension);
     }
 
-    function getColorFromWorB(WorB) {
-        if (WorB === 'W') return 'white';
-        else if (WorB === 'B') return 'black';
-        else if (WorB === 'N') return 'neutral';
-        throw new Error(`Cannot return color when WorB is not W, B, or N! Received: "${WorB}"`);
+    /**
+     * Returns the color associated with the given piece type color extension.
+     * @param {string} colorExtention - The color extension: "W" / "B" / "N"
+     * @returns {string} - The color (e.g. "white"/"black"/"neutral")
+     */
+    function getColorFromExtension(colorExtention) {
+        const index = validColorExtensions.indexOf(colorExtention);
+        if (index === -1) throw new Error(`Cannot get the color of invalid color extension "${colorExtention}"!`);
+        return validColors[index];
     }
 
     /**
@@ -68,16 +87,20 @@ const colorutil = (function() {
         else throw new Error(`Cannot return the opposite color of color ${color}!`);
     }
 
-    // REQUIRES the type of piece to be valid, and have a W or B at the end!
-    function getWorBFromType(type) {
+    /**
+     * Returns the color extension code at the end of a piece type string.
+     * REQUIRES the type of piece to be valid, and have a W or B at the end!
+     * @param {string} type - "queensW"
+     * @returns {string} The color extension: "W"
+     */
+    function getColorExtensionFromType(type) {
         return type.charAt(type.length - 1);
     }
 
-    function getWorBFromColor(color) {
-        if (color === 'white') return 'W';
-        else if (color === 'black') return 'B';
-        else if (color === 'neutral') return 'N';
-        else throw new Error(`Cannot return WorB from strange color ${color}!`);
+    function getColorExtensionFromColor(color) {
+        const index = validColors.indexOf(color);
+        if (index === -1) throw new Error(`Cannot get the extension of invalid color "${color}"!`);
+        return validColorExtensions[index];
     }
 
     /**
@@ -85,7 +108,7 @@ const colorutil = (function() {
      * @param {string} type - The type of piece (eg "pawnsW").
      * @returns {string} The trimmed type.
      */
-    function trimWorBFromType(type) {
+    function trimColorExtensionFromType(type) {
         return type.slice(0, -1); // Returns a new string that starts from the first character (index 0) and excludes the last character (because of -1).
     }
 
@@ -96,12 +119,14 @@ const colorutil = (function() {
         validColorExtensions_NoNeutral,
         isValidColor,
         isValidColor_NoNeutral,
+        isValidColorExtension,
+        isValidColorExtension_NoNeutral,
         getPieceColorFromType,
-        getColorFromWorB,
+        getColorFromExtension,
         getOppositeColor,
-        getWorBFromType,
-        getWorBFromColor,
-        trimWorBFromType
+        getColorExtensionFromType,
+        getColorExtensionFromColor,
+        trimColorExtensionFromType,
     });
 
 })();

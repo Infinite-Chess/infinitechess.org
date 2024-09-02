@@ -89,7 +89,7 @@ const specialundo = {
         // Detect promotion
         if (move.promotion) { // Was a promotion move
             // Delete promoted piece
-            const WorB = colorutil.getWorBFromType(movedPiece.type);
+            const WorB = colorutil.getColorExtensionFromType(movedPiece.type);
             movepiece.deletePiece(gamefile, movedPiece, { updateData });
             // Replace pawn back where it originally was
             const type = "pawns" + WorB;

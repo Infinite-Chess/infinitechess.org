@@ -65,7 +65,7 @@ const legalmoves = (function() {
                 // Make sure the key's already initialized
                 if (!vicinity[key]) vicinity[key] = [];
 
-                const pieceTypeConcat = colorutil.trimWorBFromType(thisPieceType); // Remove the 'W'/'B' from end of type
+                const pieceTypeConcat = colorutil.trimColorExtensionFromType(thisPieceType); // Remove the 'W'/'B' from end of type
 
                 // Make sure the key contains the piece type that can capture from that distance
                 if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat);
@@ -81,7 +81,7 @@ const legalmoves = (function() {
      * @returns {Object} A moveset object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
      */
     function getPieceMoveset(gamefile, pieceType) {
-        pieceType = colorutil.trimWorBFromType(pieceType); // Remove the 'W'/'B' from end of type
+        pieceType = colorutil.trimColorExtensionFromType(pieceType); // Remove the 'W'/'B' from end of type
         const movesetFunc = gamefile.pieceMovesets[pieceType];
         if (!movesetFunc) return {}; // Piece doesn't have a specified moveset (could be neutral). Return empty.
         return movesetFunc(); // Calling these parameters as a function returns their moveset.
@@ -98,7 +98,7 @@ const legalmoves = (function() {
         if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
         const coords = piece.coords;
         const type = piece.type;
-        const trimmedType = colorutil.trimWorBFromType(type);
+        const trimmedType = colorutil.trimColorExtensionFromType(type);
         const color = colorutil.getPieceColorFromType(type); // Color of piece calculating legal moves of
 
         // if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
@@ -313,7 +313,7 @@ const legalmoves = (function() {
                 console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveCopy)}`);
                 return rewindGameAndReturnReason("Can't promote to opposite color.");
             }
-            const strippedPromotion = colorutil.trimWorBFromType(moveCopy.promotion);
+            const strippedPromotion = colorutil.trimColorExtensionFromType(moveCopy.promotion);
             if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(strippedPromotion)) {
                 console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveCopy)}`);
                 return rewindGameAndReturnReason('Specified promotion is illegal.');
