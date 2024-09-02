@@ -8,6 +8,7 @@ import organizedlines from './organizedlines.js';
 import math from '../misc/math.js';
 import wincondition from './wincondition.js';
 import checkdetection from './checkdetection.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /** 
@@ -85,8 +86,8 @@ const specialdetect = (function() {
         const rightCoord = [right, y];
         const leftPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, leftCoord);
         const rightPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, rightCoord);
-        const leftColor = leftPieceType ? math.getPieceColorFromType(leftPieceType) : undefined;
-        const rightColor = rightPieceType ? math.getPieceColorFromType(rightPieceType) : undefined;
+        const leftColor = leftPieceType ? colorutil.getPieceColorFromType(leftPieceType) : undefined;
+        const rightColor = rightPieceType ? colorutil.getPieceColorFromType(rightPieceType) : undefined;
 
         if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns')) leftLegal = false;
         if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns')) rightLegal = false;
@@ -96,7 +97,7 @@ const specialdetect = (function() {
         // AND The square the king passes through must not be a check.
         // The square the king lands on will be tested later, within  legalmoves.calculate()
 
-        const oppositeColor = math.getOppositeColor(color);
+        const oppositeColor = colorutil.getOppositeColor(color);
         if (wincondition.doesColorHaveWinCondition(gamefile, oppositeColor, 'checkmate')) {
             if (gamefile.inCheck) return; // Not legal if in check
 
@@ -170,7 +171,7 @@ const specialdetect = (function() {
             if (!pieceAtCoords) continue; // No piece, skip
     
             // There is a piece. Make sure it's a different color
-            const colorOfPiece = math.getPieceColorFromType(pieceAtCoords);
+            const colorOfPiece = colorutil.getPieceColorFromType(pieceAtCoords);
             if (color === colorOfPiece) continue; // Same color, don't add the capture
 
             // Make sure it isn't a void
@@ -224,7 +225,7 @@ const specialdetect = (function() {
         // cannot capture nothing en passant
         if (!capturedPieceType) return;
         // cannot capture own piece en passant
-        if (color === math.getPieceColorFromType(capturedPieceType)) return;
+        if (color === colorutil.getPieceColorFromType(capturedPieceType)) return;
 
         // It is capturable en passant!
 
@@ -260,7 +261,7 @@ const specialdetect = (function() {
         if (!type.startsWith('pawns')) return false;
         if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
-        const color = math.getPieceColorFromType(type);
+        const color = colorutil.getPieceColorFromType(type);
         const promotionRank = color === 'white' ? gamefile.gameRules.promotionRanks[0]
             : color === 'black' ? gamefile.gameRules.promotionRanks[1]
                 : undefined; // Can neutral pawns promote???

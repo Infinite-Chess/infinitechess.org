@@ -11,6 +11,7 @@ import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import wincondition from './wincondition.js';
 import math from '../misc/math.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /** 
@@ -96,10 +97,10 @@ const checkdetection = (function() {
             const typeOnSquare = gamefile.piecesOrganizedByKey[key2];
             if (!typeOnSquare) continue; // Nothing there to capture us
             // Is it the same color?
-            const typeOnSquareColor = math.getPieceColorFromType(typeOnSquare);
+            const typeOnSquareColor = colorutil.getPieceColorFromType(typeOnSquare);
             if (color === typeOnSquareColor) continue; // A friendly can't capture us
 
-            const typeOnSquareConcat = math.trimWorBFromType(typeOnSquare);
+            const typeOnSquareConcat = colorutil.trimWorBFromType(typeOnSquare);
 
             // Is that a match with any piece type on this vicinity square?
             if (thisVicinity.includes(typeOnSquareConcat)) { // This square can be captured
@@ -121,7 +122,7 @@ const checkdetection = (function() {
             const pieceOnSquare = gamefile.piecesOrganizedByKey[key];
             if (!pieceOnSquare) continue;
 
-            const pieceIsFriendly = color === math.getPieceColorFromType(pieceOnSquare);
+            const pieceIsFriendly = color === colorutil.getPieceColorFromType(pieceOnSquare);
             if (pieceIsFriendly) continue; // Can't capture us
 
             const pieceIsPawn = pieceOnSquare.startsWith('pawns');
@@ -177,7 +178,7 @@ const checkdetection = (function() {
         // Iterate through every piece on the line, and test if they can attack our square
         for (const thisPiece of line) { // { coords, type }
 
-            const thisPieceColor = math.getPieceColorFromType(thisPiece.type);
+            const thisPieceColor = colorutil.getPieceColorFromType(thisPiece.type);
             if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
             if (thisPieceColor === 'neutral') continue; // Neutrals can't move, that means they can't make captures, right?
 

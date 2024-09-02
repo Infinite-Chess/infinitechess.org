@@ -19,6 +19,7 @@ import movement from './movement.js';
 import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 import options from './options.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /** 
@@ -110,7 +111,7 @@ const piecesmodel = {
             const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(pieceType, rotation);
 
             if (colorArgs) {
-                const pieceColor = math.getPieceColorFromType(pieceType);
+                const pieceColor = colorutil.getPieceColorFromType(pieceType);
                 const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
                 // var's are FUNCTION-scoped!
                 /* eslint-disable no-var */
@@ -330,7 +331,7 @@ const piecesmodel = {
         let data;
         if (gamefile.mesh.usingColoredTextures) {
             const colorArgs = options.getPieceRegenColorArgs();
-            const pieceColor = math.getPieceColorFromType(type);
+            const pieceColor = colorutil.getPieceColorFromType(type);
             const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
             const [r,g,b,a] = colorArray;
 

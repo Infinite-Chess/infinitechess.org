@@ -18,6 +18,7 @@ import math from '../misc/math.js';
 import movesscript from './movesscript.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /** 
@@ -61,7 +62,7 @@ const movepiece = (function() {
         const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
         if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
         move.type = piece.type;
-        const trimmedType = math.trimWorBFromType(move.type); // "queens"
+        const trimmedType = colorutil.trimWorBFromType(move.type); // "queens"
         
         storeRewindInfoOnMove(gamefile, move, piece.index, { simulated }); // Keep track if important stuff to remember, for rewinding the game if we undo moves
 
@@ -292,7 +293,7 @@ const movepiece = (function() {
         let attackers = undefined;
         // Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
         const whosTurnItWasAtMoveIndex = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
-        const oppositeColor = math.getOppositeColor(whosTurnItWasAtMoveIndex);
+        const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
         if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 
         gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
@@ -439,7 +440,7 @@ const movepiece = (function() {
     function rewindMove(gamefile, { updateData = true, removeMove = true, animate = true } = {}) {
 
         const move = movesscript.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
-        const trimmedType = math.trimWorBFromType(move.type);
+        const trimmedType = colorutil.trimWorBFromType(move.type);
 
         let isSpecialMove = false;
         if (gamefile.specialUndos[trimmedType]) isSpecialMove = gamefile.specialUndos[trimmedType](gamefile, move, { updateData, animate });

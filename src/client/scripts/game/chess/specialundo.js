@@ -6,6 +6,7 @@ import gamefileutility from './gamefileutility.js';
 import movepiece from './movepiece.js';
 import animation from '../rendering/animation.js';
 import math from '../misc/math.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 
@@ -88,7 +89,7 @@ const specialundo = {
         // Detect promotion
         if (move.promotion) { // Was a promotion move
             // Delete promoted piece
-            const WorB = math.getWorBFromType(movedPiece.type);
+            const WorB = colorutil.getWorBFromType(movedPiece.type);
             movepiece.deletePiece(gamefile, movedPiece, { updateData });
             // Replace pawn back where it originally was
             const type = "pawns" + WorB;

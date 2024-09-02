@@ -6,7 +6,6 @@
 
 // Import Start
 import input from '../input.js';
-import math from '../misc/math.js';
 import onlinegame from '../misc/onlinegame.js';
 import highlights from './highlights.js';
 import main from '../main.js';
@@ -20,6 +19,7 @@ import board from './board.js';
 import game from '../chess/game.js';
 import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 
@@ -247,7 +247,7 @@ const options = (function() {
         const colorArgs = getPieceRegenColorArgs(); // { white, black, neutral }
         if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
 
-        const pieceColor = math.getPieceColorFromType(type); // white/black/neutral
+        const pieceColor = colorutil.getPieceColorFromType(type); // white/black/neutral
         const color = colorArgs[pieceColor]; // [r,g,b,a]
 
         return {

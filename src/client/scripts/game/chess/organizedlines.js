@@ -12,6 +12,7 @@ import pieces from '../rendering/pieces.js';
 import math from '../misc/math.js';
 import piecesmodel from '../rendering/piecesmodel.js';
 import options from '../rendering/options.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /** 
@@ -206,11 +207,11 @@ const organizedlines = {
     isTypeATypeWereAppendingUndefineds(gamefile, type) {
         if (!gamefile.gameRules.promotionsAllowed) throw new Error("promotionsAllowed needs to be defined before appending undefineds to the piece lists!");
 
-        const color = math.getPieceColorFromType(type);
+        const color = colorutil.getPieceColorFromType(type);
 
         if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
         
-        const trimmedType = math.trimWorBFromType(type);
+        const trimmedType = colorutil.trimWorBFromType(type);
         return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
     },
 

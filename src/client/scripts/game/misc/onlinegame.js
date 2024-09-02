@@ -27,6 +27,7 @@ import main from '../main.js';
 import formatconverter from '../chess/formatconverter.js';
 import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
+import colorutil from './colorutil.js';
 // Import End
 
 /** 
@@ -730,7 +731,7 @@ const onlinegame = (function() {
     }
 
     function getOpponentColor() {
-        return math.getOppositeColor(ourColor);
+        return colorutil.getOppositeColor(ourColor);
     }
 
     /**

@@ -13,6 +13,7 @@ import pieces from '../rendering/pieces.js';
 import math from '../misc/math.js';
 import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /** 
@@ -168,7 +169,7 @@ const wincondition = (function() {
      * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
      */
     function isOpponentUsingWinCondition(gamefile, winCondition) {
-        const oppositeColor = math.getOppositeColor(gamefile.whosTurn);
+        const oppositeColor = colorutil.getOppositeColor(gamefile.whosTurn);
         return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
     }
 
@@ -201,7 +202,7 @@ const wincondition = (function() {
 
         if (!lastMove.captured) return false; // Last move not a capture
 
-        const trimmedTypeCaptured = math.trimWorBFromType(lastMove.captured);
+        const trimmedTypeCaptured = colorutil.trimWorBFromType(lastMove.captured);
 
         // Does the piece type captured equal any royal piece?
         return pieces.royals.includes(trimmedTypeCaptured);

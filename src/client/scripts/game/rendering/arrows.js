@@ -22,6 +22,7 @@ import math from '../misc/math.js';
 import pieces from './pieces.js';
 import movesscript from '../chess/movesscript.js';
 import buffermodel from './buffermodel.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /**
@@ -432,8 +433,8 @@ const arrows = (function() {
         // Calculate the mesh...
 
         const data = [];
-        const pieceColor = math.getPieceColorFromType(type);
-        const opponentColor = onlinegame.areInOnlineGame() ? math.getOppositeColor(onlinegame.getOurColor()) : math.getOppositeColor(gamefile.whosTurn);
+        const pieceColor = colorutil.getPieceColorFromType(type);
+        const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
         const isOpponentPiece = pieceColor === opponentColor;
         const isOurTurn = gamefile.whosTurn === pieceColor;
         const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });

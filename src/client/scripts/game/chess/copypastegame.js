@@ -413,7 +413,7 @@ const copypastegame = (function() {
 
     // // Makes sure that with no royal win condition there are no royals of specified color
     // function verifyNoRoyals(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is zero royals
     //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, color)
@@ -424,7 +424,7 @@ const copypastegame = (function() {
 
     // // makes sure that the starting position is valid with checkmate! Exactly 1 jumping royal piece (not sliding)
     // function verifyCheckmate(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
         
     //     // Check to make sure there is exactly 1 jumping royal! (not sliding)
     //     const jumpingRoyalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.jumpingRoyals, oppositeColor)
@@ -438,7 +438,7 @@ const copypastegame = (function() {
     // }
 
     // function verifyRoyalcapture(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
     //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)
@@ -448,7 +448,7 @@ const copypastegame = (function() {
     // }
 
     // function verifyAllroyalscaptured(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
     //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)
@@ -458,7 +458,7 @@ const copypastegame = (function() {
     // }
 
     // function verifyAllpiecescaptured(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 piece!
     //     const pieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(piecesOrganizedByType, oppositeColor)
@@ -468,7 +468,7 @@ const copypastegame = (function() {
     // }
 
     // function verifyThreecheck(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
     //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)

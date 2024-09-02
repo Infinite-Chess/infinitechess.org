@@ -18,6 +18,7 @@ import pieces from '../rendering/pieces.js';
 import math from '../misc/math.js';
 import movesscript from './movesscript.js';
 import game from './game.js';
+import colorutil from '../misc/colorutil.js';
 // Import End
 
 /** 
@@ -302,7 +303,7 @@ const gamefileutility = (function() {
     // Returns the total counted amount.
     // IGNORES UNDEFINEDS
     function getCountOfTypesFromPiecesByType(piecesByType, arrayOfPieces, color) { // arrayOfPieces = ['kings', 'royalCentaurs', ...]
-        const WorB = math.getWorBFromColor(color);
+        const WorB = colorutil.getWorBFromColor(color);
 
         let count = 0;
         for (let i = 0; i < arrayOfPieces.length; i++) {
@@ -446,7 +447,7 @@ const gamefileutility = (function() {
      */
     function getRoyalCoords(gamefile, color) {
         const royals = pieces.royals; // ['kings', ...]
-        const WorB = math.getWorBFromColor(color);
+        const WorB = colorutil.getWorBFromColor(color);
 
         const piecesByType = gamefile.ourPieces;
         const royalCoords = [];
@@ -473,14 +474,14 @@ const gamefileutility = (function() {
 	 */
     function getRoyalCountOfColor(piecesByKey, color) {
         const royals = pieces.royals; // ['kings', ...]
-        const WorB = math.getWorBFromColor(color);
+        const WorB = colorutil.getWorBFromColor(color);
 
         let royalCount = 0;
         for (const key in piecesByKey) {
             const type = piecesByKey[key];
-            const thisColor = math.getPieceColorFromType(type);
+            const thisColor = colorutil.getPieceColorFromType(type);
             if (!thisColor.endsWith(WorB)) return; // Different color
-            const strippedType = math.trimWorBFromType(type);
+            const strippedType = colorutil.trimWorBFromType(type);
             if (!royals.includes(strippedType)) continue; // Not royalty
             royalCount++;
         }
