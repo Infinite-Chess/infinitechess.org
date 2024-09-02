@@ -1,5 +1,5 @@
 
-import formatconverter1 from './formatconverter1.js';
+import formatconverter from '../../client/scripts/game/chess/formatconverter.js'; 
 import variantomega1 from './variantomega1.js';
 import math1 from './math1.js';
 import pieces1 from './pieces1.js';
@@ -131,7 +131,7 @@ const variant1 = (function() {
             positionString = result.positionString;
             position = result.position;
             specialRights = result.specialRights;
-        } else positionString = formatconverter1.LongToShort_Position(options.startingPosition, options.specialRights);
+        } else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
 
         options.gameRules.turnOrder = options.gameRules.turnOrder || getDefaultTurnOrder();
 
@@ -422,15 +422,15 @@ const variant1 = (function() {
     function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush, castleWith }) {
         if (positionString) {
             if (!startingPosition) {
-                const positionAndRights = formatconverter1.getStartingPositionAndSpecialRightsFromShortPosition(positionString);
+                const positionAndRights = formatconverter.getStartingPositionAndSpecialRightsFromShortPosition(positionString);
                 startingPosition = positionAndRights.startingPosition;
                 specialRights = positionAndRights.specialRights;
             }
         } else if (startingPosition && specialRights) {
-            positionString = formatconverter1.LongToShort_Position(startingPosition, specialRights);
+            positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
         } else if (startingPosition) {
-            specialRights = formatconverter1.generateSpecialRights(startingPosition, pawnDoublePush, castleWith);
-            positionString = formatconverter1.LongToShort_Position(startingPosition, specialRights);
+            specialRights = formatconverter.generateSpecialRights(startingPosition, pawnDoublePush, castleWith);
+            positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
         } else {
             return console.error("Not enough information to calculate the positionString, position, and specialRights of variant.");
         }
