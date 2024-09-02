@@ -45,8 +45,10 @@ const guigameinfo = (function() {
             const white = gameOptions.metadata.White;
             const black = gameOptions.metadata.Black;
             // If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
-            element_playerWhite.textContent = onlinegame.areWeColor('white') && white === translations.guest_indicator ? translations.you_indicator : white;
-            element_playerBlack.textContent = onlinegame.areWeColor('black') && black === translations.guest_indicator ? translations.you_indicator : black;
+            element_playerWhite.textContent = game.areWeColorInNonLocalGame('white')
+                                          && white === translations.guest_indicator ? translations.you_indicator : white;
+            element_playerBlack.textContent = game.areWeColorInNonLocalGame('black')
+                                          && black === translations.guest_indicator ? translations.you_indicator : black;
         }
         style.revealElement(element_playerWhite);
         style.revealElement(element_playerBlack);
@@ -64,8 +66,8 @@ const guigameinfo = (function() {
             throw new Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
 
         let textContent = "";
-        if (onlinegame.areInOnlineGame()) {
-            const ourTurn = onlinegame.isItOurTurn(gamefile);
+        if (game.areInNonLocalGame()) {
+            const ourTurn = game.isItOurTurnInNonLocalGame();
             textContent = ourTurn ? translations.your_move : translations.their_move;
         } else textContent = color === "white" ? translations.white_to_move : translations.black_to_move;
 
@@ -89,9 +91,8 @@ const guigameinfo = (function() {
 	    const resultTranslations = translations.results;
         style.hideElement(element_dot);
 
-        if (onlinegame.areInOnlineGame()) {
-
-            if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
+        if (game.areInNonLocalGame()) {
+            if (game.areWeColorInNonLocalGame(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
                                                                                 : condition === 'time' ? resultTranslations.you_time
                                                                                 : condition === 'resignation' ? resultTranslations.you_resignation
                                                                                 : condition === 'disconnect' ? resultTranslations.you_disconnect

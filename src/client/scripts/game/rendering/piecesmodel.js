@@ -82,7 +82,7 @@ const piecesmodel = {
             usingColoredTextures
         };
 
-        const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
+        const weAreBlack = (game.areInNonLocalGame() && game.areWeColorInNonLocalGame("black"));
         const rotation = weAreBlack ? -1 : 1;
 
         let currIndex = 0;
@@ -321,7 +321,7 @@ const piecesmodel = {
         const stridePerPiece = gamefile.mesh.stride * piecesmodel.pointsPerSquare;
         const i = index * stridePerPiece;
 
-        const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
+        const weAreBlack = (game.areInNonLocalGame() && game.areWeColorInNonLocalGame("black"));
         const rotation = weAreBlack ? -1 : 1;
 
         const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);
@@ -495,7 +495,7 @@ const piecesmodel = {
         // main.startTimer()
 
         // Amount to transition the points
-        const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
+        const weAreBlack = (game.areInNonLocalGame() && game.areWeColorInNonLocalGame("black"));
         const texWidth = weAreBlack ? -pieces.getSpritesheetDataPieceWidth() : pieces.getSpritesheetDataPieceWidth();
 
         gamefile.mesh.rotatedData64 = new Float64Array(gamefile.mesh.data32.length); // Empty it for re-initialization

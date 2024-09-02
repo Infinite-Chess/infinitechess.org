@@ -137,6 +137,10 @@ const loadbalancer = (function() {
         return timeForLongTasks;
     }
 
+	function getMonitorRefreshRate() {
+		return monitorRefreshRate;
+	}
+
     // Calculates the amount of time this frame took to render.
     function timeAnimationFrame() {
         // How much time did this frame take?
@@ -264,6 +268,7 @@ const loadbalancer = (function() {
         getDeltaTime,
         update,
         getLongTaskTime,
+		getMonitorRefreshRate,
         timeAnimationFrame,
         refreshPeriod,
         refreshPeriodAFK,
