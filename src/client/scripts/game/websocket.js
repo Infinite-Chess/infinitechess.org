@@ -3,11 +3,11 @@
 import main from './main.js';
 import statustext from './gui/statustext.js';
 import invites from './misc/invites.js';
-import math from './misc/math.js';
 import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame.js';
 import localstorage from './misc/localstorage.js';
 import timeutil from './misc/timeutil.js';
+import uuid from './misc/uuid.js';
 // Import End
 
 "use strict";
@@ -500,7 +500,7 @@ const websocket = (function() {
             value, // sublist/inviteinfo
         };
         const isEcho = action === "echo";
-        if (!isEcho) payload.id = math.generateNumbID(10);
+        if (!isEcho) payload.id = uuid.generateNumbID(10);
 
         if (printAllSentMessages && main.devBuild) {
             if (isEcho) { if (alsoPrintSentEchos) console.log(`Sending: ${JSON.stringify(payload)}`); }

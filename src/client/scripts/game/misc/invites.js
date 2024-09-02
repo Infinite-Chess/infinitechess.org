@@ -6,10 +6,10 @@ import sound from './sound.js';
 import clock from './clock.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
-import math from './math.js';
 import style from '../gui/style.js';
 import input from '../input.js';
 import statustext from '../gui/statustext.js';
+import uuid from './uuid.js';
 // Import End
 
 "use strict";
@@ -109,7 +109,7 @@ const invites = (function() {
     // Generates a tag id for the invite parameters before we send off action "createinvite" to the server
     function generateTagForInvite(inviteOptions) {
         // Create and send invite with a tag so we know which ones ours
-        const tag = math.generateID(8);
+        const tag = uuid.generateID(8);
 
         // NEW browser storage method!
         localstorage.saveItem('invite-tag', tag);
