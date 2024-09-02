@@ -3,11 +3,11 @@
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from './gamefileutility.js';
 import checkmate from './checkmate.js';
-import math from '../misc/math.js';
 import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -278,11 +278,11 @@ const wincondition = (function() {
     function swapCheckmateForRoyalCapture(gamefile) {
         // Check if the game is using the "royalcapture" win condition
         if (doesColorHaveWinCondition(gamefile, 'white', 'checkmate')) {
-            math.removeObjectFromArray(gamefile.gameRules.winConditions.white, 'checkmate');
+            jsutil.removeObjectFromArray(gamefile.gameRules.winConditions.white, 'checkmate');
             gamefile.gameRules.winConditions.white.push('royalcapture');
         }
         if (doesColorHaveWinCondition(gamefile, 'black', 'checkmate')) {
-            math.removeObjectFromArray(gamefile.gameRules.winConditions.black, 'checkmate');
+            jsutil.removeObjectFromArray(gamefile.gameRules.winConditions.black, 'checkmate');
             gamefile.gameRules.winConditions.black.push('royalcapture');
         }
         console.log("Swapped checkmate wincondition for royalcapture.");

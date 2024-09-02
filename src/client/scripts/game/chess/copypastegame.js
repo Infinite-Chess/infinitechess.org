@@ -5,7 +5,6 @@
  */
 
 // Import Start
-import math from '../misc/math.js';
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../misc/localstorage.js';
 import main from '../main.js';
@@ -17,6 +16,7 @@ import gamefile from './gamefile.js';
 import wincondition from './wincondition.js';
 import gamefileutility from './gamefileutility.js';
 import statustext from '../gui/statustext.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 "use strict";
@@ -73,7 +73,7 @@ const copypastegame = (function() {
          * gameRules
          */
 
-        const gameRulesCopy = math.deepCopyObject(gamefile.gameRules);
+        const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
 
         primedGamefile.metadata = gamefile.metadata;
         primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant] || primedGamefile.metadata.Variant; // Convert the variant metadata code to spoken language if translation is available
@@ -275,11 +275,11 @@ const copypastegame = (function() {
             const whiteHasCheckmate = newGamefile.gameRules.winConditions.white.includes('checkmate');
             const blackHasCheckmate = newGamefile.gameRules.winConditions.black.includes('checkmate');
             if (whiteHasCheckmate) {
-                math.removeObjectFromArray(newGamefile.gameRules.winConditions.white, 'checkmate', true);
+                jsutil.removeObjectFromArray(newGamefile.gameRules.winConditions.white, 'checkmate', true);
                 newGamefile.gameRules.winConditions.white.push('royalcapture');
             }
             if (blackHasCheckmate) {
-                math.removeObjectFromArray(newGamefile.gameRules.winConditions.black, 'checkmate', true);
+                jsutil.removeObjectFromArray(newGamefile.gameRules.winConditions.black, 'checkmate', true);
                 newGamefile.gameRules.winConditions.black.push('royalcapture');
             }
         }

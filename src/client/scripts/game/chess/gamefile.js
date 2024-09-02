@@ -7,7 +7,7 @@ import movepiece from './movepiece.js';
 import gamefileutility from './gamefileutility.js';
 import area from '../rendering/area.js';
 import variant from './variant.js';
-import math from '../misc/math.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -176,7 +176,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     // JSDoc stuff over...
 
     // this.metadata = metadata; // Breaks the above JSDoc
-    math.copyPropertiesToObject(metadata, this.metadata);
+    jsutil.copyPropertiesToObject(metadata, this.metadata);
 
     // Init things related to the variant, and the startSnapshot of the position
     variant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
@@ -188,9 +188,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     /** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
     this.moveIndex = -1;
     /** If enpassant is allowed at the front of the game, this defines the coordinates. */
-    this.enpassant = math.deepCopyObject(this.startSnapshot.enpassant);
+    this.enpassant = jsutil.deepCopyObject(this.startSnapshot.enpassant);
     /** An object containing the information if each individual piece has its special move rights. */
-    this.specialRights = math.deepCopyObject(this.startSnapshot.specialRights);
+    this.specialRights = jsutil.deepCopyObject(this.startSnapshot.specialRights);
     /** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
      * which is whos turn it was at the *beginning* of the game. */

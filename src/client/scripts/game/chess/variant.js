@@ -10,6 +10,7 @@ import movesets from './movesets.js';
 import math from '../misc/math.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -538,7 +539,7 @@ const variant = (function() {
      */
     function getPromotionsAllowed(position, promotionRanks) {
         // We can't promote to royals or pawns, whether we started the game with them.
-        const unallowedPromotes = math.deepCopyObject(typeutil.royals); // ['kings', 'royalQueens', 'royalCentaurs']
+        const unallowedPromotes = jsutil.deepCopyObject(typeutil.royals); // ['kings', 'royalQueens', 'royalCentaurs']
         unallowedPromotes.push('pawns'); // ['kings', 'royalQueens', 'royalCentaurs', 'pawns']
 
         const white = [];

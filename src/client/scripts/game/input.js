@@ -13,6 +13,7 @@ import board from './rendering/board.js';
 import math from './misc/math.js';
 import arrows from './rendering/arrows.js';
 import buffermodel from './rendering/buffermodel.js';
+import jsutil from './misc/jsutil.js';
 // Import End
 
 "use strict";
@@ -531,7 +532,7 @@ const input = (function() {
     }
 
     function removeMouseDown_Left() {
-        math.removeObjectFromArray(mouseDowns, leftMouseKey);
+        jsutil.removeObjectFromArray(mouseDowns, leftMouseKey);
     }
 
     function isMouseHeld_Left() {

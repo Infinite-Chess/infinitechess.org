@@ -14,6 +14,7 @@ import pieces from './pieces.js';
 import math from '../misc/math.js';
 import movement from './movement.js';
 import buffermodel from './buffermodel.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /**
@@ -51,11 +52,11 @@ const highlightline = (function() {
 
         const dataLines = [];
 
-        const legalmoves = math.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
+        const legalmoves = jsutil.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
         const pieceCoords = selection.getPieceSelected().coords;
         const worldSpaceCoords = math.convertCoordToWorldSpace(pieceCoords);
 
-        const color = math.deepCopyObject(options.getLegalMoveHighlightColor());
+        const color = jsutil.deepCopyObject(options.getLegalMoveHighlightColor());
         color[3] = 1;
 
         const snapDist = miniimage.gwidthWorld() / 2;

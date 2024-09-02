@@ -13,6 +13,7 @@ import movesscript from './movesscript.js';
 import game from './game.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -131,7 +132,7 @@ const gamefileutility = (function() {
     function deleteIndexFromPieceList(list, pieceIndex) {
         list[pieceIndex] = undefined;
         // Keep track of where the undefined indices are! Have an "undefineds" array property.
-        const insertIndex = math.binarySearch_findSplitPoint(list.undefineds, pieceIndex);
+        const insertIndex = jsutil.binarySearch_findSplitPoint(list.undefineds, pieceIndex);
         list.undefineds.splice(insertIndex, 0, pieceIndex);
     }
 

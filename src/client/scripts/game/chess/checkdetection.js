@@ -8,6 +8,7 @@ import organizedlines from './organizedlines.js';
 import wincondition from './wincondition.js';
 import math from '../misc/math.js';
 import colorutil from '../misc/colorutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -253,7 +254,7 @@ const checkdetection = (function() {
     // Simulates the move, tests for check, undos the move. Color is the color of the piece we're moving
     function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pieceSelected: { type, index, coords }
         /** @type {Move} */
-        const move = { type: pieceSelected.type, startCoords: math.deepCopyObject(pieceSelected.coords), endCoords: movepiece.stripSpecialMoveTagsFromCoords(destCoords) };
+        const move = { type: pieceSelected.type, startCoords: jsutil.deepCopyObject(pieceSelected.coords), endCoords: movepiece.stripSpecialMoveTagsFromCoords(destCoords) };
         specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, move);
         return movepiece.simulateMove(gamefile, move, color).isCheck;
     }
@@ -372,7 +373,7 @@ const checkdetection = (function() {
         if (sameLines.length === 0) return;
 
         // Delete the piece, and add it back when we're done!
-        const deletedPiece = math.deepCopyObject(pieceSelected);
+        const deletedPiece = jsutil.deepCopyObject(pieceSelected);
         movepiece.deletePiece(gamefile, pieceSelected, { updateData: false });
         
         // let checklines = []; // For Idon's code below

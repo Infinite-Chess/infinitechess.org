@@ -20,6 +20,7 @@ import pieces from './pieces.js';
 import movesscript from '../chess/movesscript.js';
 import buffermodel from './buffermodel.js';
 import colorutil from '../misc/colorutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /**
@@ -133,7 +134,7 @@ const arrows = (function() {
             footerPad = a;
         }
 
-        const paddedBoundingBox = math.deepCopyObject(boundingBoxFloat);
+        const paddedBoundingBox = jsutil.deepCopyObject(boundingBoxFloat);
         if (!perspective.getEnabled()) {
             paddedBoundingBox.top -= math.convertWorldSpaceToGrid(headerPad);
             paddedBoundingBox.bottom += math.convertWorldSpaceToGrid(footerPad);
@@ -162,7 +163,7 @@ const arrows = (function() {
                 if (boardSlidesStart > intsects[0] || boardSlidesEnd < intsects[0]) continue;
                 const pieces = calcPiecesOffScreen(line, gamefile.piecesOrganizedByLines[linestr][key]);
 
-                if (math.isEmpty(pieces)) continue;
+                if (jsutil.isEmpty(pieces)) continue;
 
                 if (!slideArrows[linestr]) slideArrows[linestr] = {};
                 
@@ -288,7 +289,7 @@ const arrows = (function() {
         for (const strline in arrows) {
             if (attacklines.includes(strline)) continue;
             removeTypesWithIncorrectMoveset(arrows[strline],strline);
-            if (math.isEmpty(arrows[strline])) delete arrows[strline];
+            if (jsutil.isEmpty(arrows[strline])) delete arrows[strline];
         }
 
         function removeTypesWithIncorrectMoveset(object, direction) { // horzRight, vertical/diagonalUp
@@ -298,7 +299,7 @@ const arrows = (function() {
                     const type = object[key][side].type;
                     if (!doesTypeHaveMoveset(gamefile, type, direction)) delete object[key][side];
                 }
-                if (math.isEmpty(object[key])) delete object[key];
+                if (jsutil.isEmpty(object[key])) delete object[key];
             }
         }
 

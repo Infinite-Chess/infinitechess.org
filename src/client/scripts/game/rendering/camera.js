@@ -9,8 +9,8 @@ import options from './options.js';
 import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';
 import shaders from './shaders.js';
-import math from '../misc/math.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /**
@@ -84,7 +84,7 @@ const camera = (function() {
 
     // Returns devMode-sensitive camera position.
     function getPosition(ignoreDevmode) {
-        return math.deepCopyObject(!ignoreDevmode && options.isDebugModeOn() ? position_devMode : position);
+        return jsutil.deepCopyObject(!ignoreDevmode && options.isDebugModeOn() ? position_devMode : position);
     }
 
     function getZFar() {
@@ -117,7 +117,7 @@ const camera = (function() {
     }
 
     function getCanvasRect() {
-        return math.deepCopyObject(canvasRect);
+        return jsutil.deepCopyObject(canvasRect);
     }
 
     // Returns the bounding box of the screen in world-space, NOT tile/board space.
@@ -129,7 +129,7 @@ const camera = (function() {
      * @returns {BoundingBox} The bounding box of the screen
      */
     function getScreenBoundingBox(devMode) {
-        return math.deepCopyObject(devMode ? screenBoundingBox_devMode : screenBoundingBox);
+        return jsutil.deepCopyObject(devMode ? screenBoundingBox_devMode : screenBoundingBox);
     }
 
     /**
@@ -137,7 +137,7 @@ const camera = (function() {
      * @returns {Float32Array} The view matrix
      */
     function getViewMatrix() {
-        return math.copyFloat32Array(viewMatrix);
+        return jsutil.copyFloat32Array(viewMatrix);
     }
 
     // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)

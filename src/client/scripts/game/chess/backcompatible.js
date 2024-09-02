@@ -3,7 +3,7 @@
 import variant from './variant.js';
 import formatconverter from './formatconverter.js';
 import movesscript from './movesscript.js';
-import math from '../misc/math.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 'use script';
@@ -102,7 +102,7 @@ const backcompatible = (function() {
         }
 
         console.log("longformat after converting to new format:");
-        console.log(math.deepCopyObject(converted));
+        console.log(jsutil.deepCopyObject(converted));
 
         return converted;
     }

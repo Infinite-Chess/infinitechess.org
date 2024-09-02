@@ -12,11 +12,11 @@ import camera from './rendering/camera.js';
 import invites from './misc/invites.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
-import math from './misc/math.js';
 // The ONLY reason we import tooltips is so that it can be tied into the
 // dependancy tree of our game, otherwise it won't be included, since NOTHING depends on it,
 // yet it needs to be an ESM because IT depends on input.js!
 import tooltips from './gui/tooltips.js';
+import jsutil from './misc/jsutil.js';
 // Import End
 
 "use strict";
@@ -169,7 +169,7 @@ const main = (function() {
 function a(message, object) {
     if (!message) throw new Error("Cannot log an object without a message");
     console.log(message);
-    console.log(math.deepCopyObject(object));
+    console.log(jsutil.deepCopyObject(object));
 }
 
 /**

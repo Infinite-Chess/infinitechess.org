@@ -18,6 +18,7 @@ import buffermodel from './buffermodel.js';
 import options from './options.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -189,7 +190,7 @@ const piecesmodel = {
                                : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
         //                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
 
-        math.copyPropertiesToObject(mesh, gamefile.mesh);
+        jsutil.copyPropertiesToObject(mesh, gamefile.mesh);
         
         // If we are also in perspective mode, init the rotated model as well!
         if (perspective.getEnabled()) await piecesmodel.initRotatedPiecesModel(game.getGamefile(), true); // ignoreLock

@@ -6,6 +6,7 @@ import camera from './camera.js';
 import board from './board.js';
 import gamefileutility from '../chess/gamefileutility.js';
 import math from '../misc/math.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -78,7 +79,7 @@ const area = (function() {
      */
     function applyPaddingToBox(box) { // { left, right, bottom, top }
         if (!box) { console.error("Cannot apply padding to an undefined box."); return box; }
-        const boxCopy = math.deepCopyObject(box);
+        const boxCopy = jsutil.deepCopyObject(box);
         
         const topNavHeight = camera.getPIXEL_HEIGHT_OF_TOP_NAV();
         const bottomNavHeight = camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV();
@@ -94,7 +95,7 @@ const area = (function() {
 
         /** Start with a copy with zero padding.
          * @type {BoundingBox} */
-        let paddedBox = math.deepCopyObject(boxCopy);
+        let paddedBox = jsutil.deepCopyObject(boxCopy);
         let scale = calcScaleToMatchSides(paddedBox);
 
         // Iterate until we have desired padding

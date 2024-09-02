@@ -9,6 +9,7 @@ import checkdetection from './checkdetection.js';
 import wincondition from './wincondition.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -280,10 +281,10 @@ const legalmoves = (function() {
         }
         // Don't modify the original move. This is because while it's simulated,
         // more properties are added such as `rewindInfo`.
-        const moveCopy = math.deepCopyObject(move);
+        const moveCopy = jsutil.deepCopyObject(move);
 
-        const inCheckB4Forwarding = math.deepCopyObject(gamefile.inCheck);
-        const attackersB4Forwarding = math.deepCopyObject(gamefile.attackers);
+        const inCheckB4Forwarding = jsutil.deepCopyObject(gamefile.inCheck);
+        const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.attackers);
 
         const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
         movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateData: false, updateProperties: false, simulated: true });

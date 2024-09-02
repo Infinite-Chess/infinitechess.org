@@ -15,6 +15,7 @@ import math from '../misc/math.js';
 import movesscript from '../chess/movesscript.js';
 import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /**
@@ -120,7 +121,7 @@ const highlights = (function() {
     function updateOffsetAndBoundingBoxOfRenderRange() {
         let changeMade = false;
 
-        const oldOffset = math.deepCopyObject(model_Offset);
+        const oldOffset = jsutil.deepCopyObject(model_Offset);
         // This is the range at which we will always regen this model. Prevents gittering.
         model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange);
         if (!math.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
@@ -296,11 +297,11 @@ const highlights = (function() {
     function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, vertexData) {
         
         // Right moveset
-        concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], math.deepCopyObject(vertexData));
+        concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], jsutil.deepCopyObject(vertexData));
         
         // Left moveset
         const negStep = [step[0] * -1, step[1] * -1];
-        concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), math.deepCopyObject(vertexData));
+        concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), jsutil.deepCopyObject(vertexData));
     }
 
     /**

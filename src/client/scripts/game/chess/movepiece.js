@@ -17,6 +17,7 @@ import movesscript from './movesscript.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 import colorutil from '../misc/colorutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -109,9 +110,9 @@ const movepiece = (function() {
 
         if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
         if (!rewindInfoAlreadyPresent) {
-            rewindInfo.inCheck = math.deepCopyObject(gamefile.inCheck);
+            rewindInfo.inCheck = jsutil.deepCopyObject(gamefile.inCheck);
             rewindInfo.gameConclusion = gamefile.gameConclusion;
-            if (gamefile.attackers) rewindInfo.attackers = math.deepCopyObject(gamefile.attackers);
+            if (gamefile.attackers) rewindInfo.attackers = jsutil.deepCopyObject(gamefile.attackers);
             if (gamefile.enpassant) rewindInfo.enpassant = gamefile.enpassant;
             if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
             if (gamefile.checksGiven) rewindInfo.checksGiven = gamefile.checksGiven;
@@ -212,7 +213,7 @@ const movepiece = (function() {
             if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
 
             // Remove the undefined from the undefineds list
-            const deleteSuccussful = math.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
+            const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
             if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
 
             list[desiredIndex] = coords;

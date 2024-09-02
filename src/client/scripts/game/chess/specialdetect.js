@@ -6,6 +6,7 @@ import math from '../misc/math.js';
 import wincondition from './wincondition.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../misc/colorutil.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -279,7 +280,7 @@ const specialdetect = (function() {
     function transferSpecialFlags_FromCoordsToMove(coords, move) {
         for (const special of allSpecials) {
             if (coords[special]) {
-                move[special] = math.deepCopyObject(coords[special]);
+                move[special] = jsutil.deepCopyObject(coords[special]);
             }
         }
     }
@@ -291,7 +292,7 @@ const specialdetect = (function() {
      */
     function transferSpecialFlags_FromMoveToCoords(move, coords) {
         for (const special of allSpecials) {
-            if (move[special]) coords[special] = math.deepCopyObject(move[special]);
+            if (move[special]) coords[special] = jsutil.deepCopyObject(move[special]);
         }
     }
 
@@ -302,7 +303,7 @@ const specialdetect = (function() {
      */
     function transferSpecialFlags_FromCoordsToCoords(srcCoords, destCoords) {
         for (const special of allSpecials) {
-            if (srcCoords[special] != null) destCoords[special] = math.deepCopyObject(srcCoords[special]);
+            if (srcCoords[special] != null) destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
         }
     }
 

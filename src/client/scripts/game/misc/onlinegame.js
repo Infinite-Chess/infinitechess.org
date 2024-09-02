@@ -7,7 +7,6 @@ import guinavigation from '../gui/guinavigation.js';
 import drawoffers from './drawoffers.js';
 import guititle from '../gui/guititle.js';
 import clock from './clock.js';
-import math from './math.js';
 import statustext from '../gui/statustext.js';
 import movepiece from '../chess/movepiece.js';
 import game from '../chess/game.js';
@@ -26,6 +25,7 @@ import formatconverter from '../chess/formatconverter.js';
 import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from './colorutil.js';
+import jsutil from './jsutil.js';
 // Import End
 
 /** 
@@ -412,7 +412,7 @@ const onlinegame = (function() {
 
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
-        const endCoordsToAppendSpecial = math.deepCopyObject(move.endCoords);
+        const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
         legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
         move.type = piecemoved.type;

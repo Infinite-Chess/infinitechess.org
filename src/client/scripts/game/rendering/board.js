@@ -15,6 +15,7 @@ import camera from './camera.js';
 import math from '../misc/math.js';
 import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -100,7 +101,7 @@ const board = (function() {
      * @returns {BoundingBox} The board bounding box
      */
     function gboundingBoxFloat() {
-        return math.deepCopyObject(boundingBoxFloat);
+        return jsutil.deepCopyObject(boundingBoxFloat);
     }
 
     /**
@@ -109,7 +110,7 @@ const board = (function() {
      * @returns {BoundingBox} The board bounding box
      */
     function gboundingBox() {
-        return math.deepCopyObject(boundingBox);
+        return jsutil.deepCopyObject(boundingBox);
     }
 
     function glimitToDampScale() {
