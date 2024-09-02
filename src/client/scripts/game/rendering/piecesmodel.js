@@ -20,6 +20,7 @@ import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 import options from './options.js';
 import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /** 
@@ -101,7 +102,7 @@ const piecesmodel = {
         stats.showPiecesMesh();
 
         // Iterates through every single piece and performs specified function on said piece
-        await pieces.forEachPieceType_Async(concatBufferData, { ignoreVoids: true });
+        await typeutil.forEachPieceType_Async(concatBufferData, { ignoreVoids: true });
 
         // Adds pieces of that type's buffer to the overall data
         async function concatBufferData(pieceType) {

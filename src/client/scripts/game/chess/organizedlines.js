@@ -13,6 +13,7 @@ import math from '../misc/math.js';
 import piecesmodel from '../rendering/piecesmodel.js';
 import options from '../rendering/options.js';
 import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /** 
@@ -125,7 +126,7 @@ const organizedlines = {
 
     initUndefineds: function(gamefile) {
         // Add extra undefined pieces into each type array!
-        pieces.forEachPieceType(init);
+        typeutil.forEachPieceType(init);
         function init(listType) {
             const list = gamefile.ourPieces[listType];
             list.undefineds = [];
@@ -142,7 +143,7 @@ const organizedlines = {
      * @param {gamefile} gamefile - The gamefile
      */
     appendUndefineds: function(gamefile) {
-        pieces.forEachPieceType(append);
+        typeutil.forEachPieceType(append);
 
         function append(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
@@ -155,7 +156,7 @@ const organizedlines = {
     areWeShortOnUndefineds: function(gamefile) {
 
         let weShort = false;
-        pieces.forEachPieceType(areWeShort);
+        typeutil.forEachPieceType(areWeShort);
 
         function areWeShort(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
@@ -182,7 +183,7 @@ const organizedlines = {
     addMoreUndefineds: function(gamefile, { regenModel = true, log = false } = {}) {
         if (log) console.log('Adding more placeholder undefined pieces.');
         
-        pieces.forEachPieceType(add);
+        typeutil.forEachPieceType(add);
 
         function add(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
@@ -261,13 +262,13 @@ const organizedlines = {
         const state = {};
 
         // White and Black
-        for (let i = 0; i < pieces.white.length; i++) {
-            state[pieces.white[i]] = [];
-            state[pieces.black[i]] = [];
+        for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
+            state[typeutil.colorsTypes.white[i]] = [];
+            state[typeutil.colorsTypes.black[i]] = [];
         }
         // Neutral
-        for (let i = 0; i < pieces.neutral.length; i++) {
-            state[pieces.neutral[i]] = [];
+        for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
+            state[typeutil.colorsTypes.neutral[i]] = [];
         }
 
         return state;

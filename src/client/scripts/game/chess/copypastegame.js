@@ -416,7 +416,7 @@ const copypastegame = (function() {
     //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is zero royals
-    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, color)
+    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, color)
     //     if (royalCount > 0) return displayError(`${color.toUpperCase()} does not need royalty for the win conditions ${oppositeColor} has!`);
         
     //     return true;
@@ -427,7 +427,7 @@ const copypastegame = (function() {
     //     const oppositeColor = colorutil.getOppositeColor(color)
         
     //     // Check to make sure there is exactly 1 jumping royal! (not sliding)
-    //     const jumpingRoyalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.jumpingRoyals, oppositeColor)
+    //     const jumpingRoyalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.jumpingRoyals, oppositeColor)
     //     if (jumpingRoyalCount !== 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'checkmate', ${oppositeColor.toUpperCase()} should have exactly 1 king or royal centuar! Counted: ${jumpingRoyalCount}`)
 
     //     // Also make sure there are no royal queens! We can't calculate checkmate with sliding pieces.
@@ -441,7 +441,7 @@ const copypastegame = (function() {
     //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
-    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)
+    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
     //     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'royalcapture', ${oppositeColor.toUpperCase()} should have atleast 1 royal! Counted: ${royalCount}`)
         
     //     return true;
@@ -451,7 +451,7 @@ const copypastegame = (function() {
     //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
-    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)
+    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
     //     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'allroyalscaptured', ${oppositeColor.toUpperCase()} should have exactly atleast 1 royal! Counted: ${royalCount}`)
         
     //     return true;
@@ -471,7 +471,7 @@ const copypastegame = (function() {
     //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
-    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)
+    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
     //     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'threecheck', ${oppositeColor.toUpperCase()} should have exactly atleast 1 royal! Counted: ${royalCount}`)
         
     //     return true;

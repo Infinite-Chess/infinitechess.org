@@ -7,9 +7,9 @@
 // Import Start
 import wincondition from './wincondition.js';
 import gamefileutility from './gamefileutility.js';
-import pieces from '../rendering/pieces.js';
 import movesscript from './movesscript.js';
 import legalmoves from './legalmoves.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /** 
@@ -37,7 +37,7 @@ const checkmate = (function() {
         // know the game is not over yet...
 
         const whosTurn = gamefile.whosTurn;
-        const teamTypes = pieces[whosTurn];
+        const teamTypes = typeutil.colorsTypes[whosTurn];
         for (const thisType of teamTypes) {
             const thesePieces = gamefile.ourPieces[thisType];
             for (let a = 0; a < thesePieces.length; a++) {
@@ -98,7 +98,7 @@ const checkmate = (function() {
     //     // console.log('Begin checking for checkmate!')
     //     // main.startTimer()
 
-    //     const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
+    //     const whiteOrBlack = whosTurn === 'white' ? typeutil.colorsTypes.white : typeutil.colorsTypes.black;
     //     for (let i = 0; i < whiteOrBlack.length; i++) {
     //         const thisType = whiteOrBlack[i];
     //         const thesePieces = gamefile.ourPieces[thisType]

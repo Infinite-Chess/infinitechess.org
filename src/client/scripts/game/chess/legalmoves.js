@@ -9,10 +9,10 @@ import gamefileutility from './gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import math from '../misc/math.js';
-import pieces from '../rendering/pieces.js';
 import checkdetection from './checkdetection.js';
 import wincondition from './wincondition.js';
 import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /** 
@@ -49,8 +49,8 @@ const legalmoves = (function() {
         if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.");
 
         // For every piece moveset...
-        for (let i = 0; i < pieces.white.length; i++) {
-            const thisPieceType = pieces.white[i];
+        for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
+            const thisPieceType = typeutil.colorsTypes.white[i];
             let thisPieceIndividualMoveset;
             if (getPieceMoveset(gamefile, thisPieceType).individual) thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
             else thisPieceIndividualMoveset = [];

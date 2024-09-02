@@ -9,6 +9,18 @@
  */
 const colorutil = (function() {
 
+    /** All colors that are compatible with the game, EXCLUDING 'neutral'. */
+    const validColors_NoNeutral = ['white','black'];
+    /** All color-extensions that are compatible with the game, EXCLUDING 'neutral'. */
+    const validColorExtensions_NoNeutral = ['W','B'];
+
+    /** All colors that are compatible with the game. */
+    const validColors = [...validColors_NoNeutral, 'neutral'];
+    /** All color-extensions that are compatible with the game. */
+    const validColorExtensions = [...validColorExtensions_NoNeutral, 'N'];
+
+
+
     /**
      * Returns the color of the provided piece type
      * @param {string} type - The type of the piece (e.g., "pawnsW")
@@ -62,6 +74,10 @@ const colorutil = (function() {
     }
 
     return Object.freeze({
+        validColors,
+        validColorExtensions,
+        validColors_NoNeutral,
+        validColorExtensions_NoNeutral,
         getPieceColorFromType,
         getColorFromWorB,
         getOppositeColor,

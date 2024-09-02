@@ -14,11 +14,11 @@ import wincondition from './wincondition.js';
 import clock from '../misc/clock.js';
 import selection from './selection.js';
 import board from '../rendering/board.js';
-import pieces from '../rendering/pieces.js';
 import math from '../misc/math.js';
 import movesscript from './movesscript.js';
 import game from './game.js';
 import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /** 
@@ -62,10 +62,10 @@ const gamefileutility = (function() {
     function forEachPieceInPiecesByType(callback, typeList, ignoreVoids, gamefile) { // typeList = pieces organized by type 
         if (!typeList) return console.log("Cannot iterate through each piece in an undefined typeList!");
 
-        for (let i = 0; i < pieces.white.length; i++) {
+        for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
 
-            const thisWhiteType = pieces.white[i];
-            const thisBlackType = pieces.black[i];
+            const thisWhiteType = typeutil.colorsTypes.white[i];
+            const thisBlackType = typeutil.colorsTypes.black[i];
 
             const theseWhitePieces = typeList[thisWhiteType];
             const theseBlackPieces = typeList[thisBlackType];
@@ -74,9 +74,9 @@ const gamefileutility = (function() {
             if (theseWhitePieces) for (let a = 0; a < theseWhitePieces.length; a++) callback(thisWhiteType, theseWhitePieces[a], gamefile); 
             if (theseBlackPieces) for (let a = 0; a < theseBlackPieces.length; a++) callback(thisBlackType, theseBlackPieces[a], gamefile); 
         }
-        for (let i = 0; i < pieces.neutral.length; i++) {
+        for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
 
-            const thisNeutralType = pieces.neutral[i];
+            const thisNeutralType = typeutil.colorsTypes.neutral[i];
             if (ignoreVoids && thisNeutralType.startsWith('voids')) continue;
 
             const theseNeutralPieces = typeList[thisNeutralType];
@@ -272,7 +272,7 @@ const gamefileutility = (function() {
     // Returns a list of all the jumping royal it comes across of a specific color.
     function getJumpingRoyalCoords(gamefile, color) {
         const state = gamefile.ourPieces;
-        const jumpingRoyals = pieces.jumpingRoyals;
+        const jumpingRoyals = typeutil.jumpingRoyals;
 
         const royalCoordsList = []; // A running list of all the jumping royals of this color
 
@@ -349,7 +349,7 @@ const gamefileutility = (function() {
     function getPieceCount(piecesByType) {
         let pieceCount = 0;
 
-        pieces.forEachPieceType(appendCount);
+        typeutil.forEachPieceType(appendCount);
 
         function appendCount(type) {
             pieceCount += piecesByType[type].length;
@@ -361,7 +361,7 @@ const gamefileutility = (function() {
     function getPieceCountOfColorFromPiecesByType(piecesByType, color) {
         let pieceCount = 0;
 
-        pieces.forEachPieceTypeOfColor(color, appendCount);
+        typeutil.forEachPieceTypeOfColor(color, appendCount);
 
         function appendCount(type) {
             const thisTypeList = piecesByType[type];
@@ -416,7 +416,7 @@ const gamefileutility = (function() {
         let foundPiece = false;
 
         // We need to use the same iteration function that our regenPiecesModel() uses!
-        pieces.forEachPieceType(iterate);
+        typeutil.forEachPieceType(iterate);
 
         function iterate(listType) {
             if (foundPiece) return;
@@ -446,7 +446,7 @@ const gamefileutility = (function() {
      * @returns {number[][]}
      */
     function getRoyalCoords(gamefile, color) {
-        const royals = pieces.royals; // ['kings', ...]
+        const royals = typeutil.royals; // ['kings', ...]
         const WorB = colorutil.getWorBFromColor(color);
 
         const piecesByType = gamefile.ourPieces;
@@ -473,7 +473,7 @@ const gamefileutility = (function() {
 	 * @returns {number} the count of the royal pieces of color `color`
 	 */
     function getRoyalCountOfColor(piecesByKey, color) {
-        const royals = pieces.royals; // ['kings', ...]
+        const royals = typeutil.royals; // ['kings', ...]
         const WorB = colorutil.getWorBFromColor(color);
 
         let royalCount = 0;

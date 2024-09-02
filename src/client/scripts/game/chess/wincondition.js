@@ -9,11 +9,11 @@
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from './gamefileutility.js';
 import checkmate from './checkmate.js';
-import pieces from '../rendering/pieces.js';
 import math from '../misc/math.js';
 import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
 import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /** 
@@ -78,7 +78,7 @@ const wincondition = (function() {
 
         // Are there any royal pieces remaining?
         // Remember that whosTurn has already been flipped since the last move.
-        const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, pieces.royals, gamefile.whosTurn);
+        const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, typeutil.royals, gamefile.whosTurn);
 
         if (royalCount === 0) {
             const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -205,7 +205,7 @@ const wincondition = (function() {
         const trimmedTypeCaptured = colorutil.trimWorBFromType(lastMove.captured);
 
         // Does the piece type captured equal any royal piece?
-        return pieces.royals.includes(trimmedTypeCaptured);
+        return typeutil.royals.includes(trimmedTypeCaptured);
     }
 
     /**

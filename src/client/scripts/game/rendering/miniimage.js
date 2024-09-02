@@ -16,6 +16,7 @@ import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
 import area from './area.js';
 import math from '../misc/math.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /**
@@ -111,7 +112,7 @@ const miniimage = (function() {
         // While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
         // We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
 
-        pieces.forEachPieceType(concatBufferData, { ignoreVoids: true });
+        typeutil.forEachPieceType(concatBufferData, { ignoreVoids: true });
         
         // Adds pieces of that type's buffer to the overall data
         function concatBufferData(pieceType) {
