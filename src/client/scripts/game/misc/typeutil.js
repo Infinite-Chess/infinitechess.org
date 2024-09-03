@@ -19,10 +19,10 @@ const typeutil = (function() {
     /** All neutral types the game is compatible with. */
     const neutralTypes = ['obstacles', 'voids'];
 
-    /** A list of the royal pieces, without the color appended. */
-    const royals = ['kings', 'royalQueens', 'royalCentaurs'];
     /** A list of the royals that are compatible with checkmate. */
     const jumpingRoyals = ['kings', 'royalCentaurs'];
+    /** A list of the royal pieces, without the color appended. */
+    const royals = [...jumpingRoyals, 'royalQueens'];
 
     /**
      * An object containing each color in the game, and all piece types associated with that color:
@@ -79,7 +79,6 @@ const typeutil = (function() {
             callback(colorsTypes[color][i]);
         }
     }
-
 
     return Object.freeze({
         colorsTypes,
