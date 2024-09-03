@@ -147,7 +147,7 @@ const highlightline = (function() {
         let point1;
         let point2;
 
-        boundingBox = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
+        boundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
 
         const line = closestPoint.line;
         const diag = organizedlines.getCFromLine(line, pieceCoords);

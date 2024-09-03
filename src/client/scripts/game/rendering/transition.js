@@ -4,9 +4,9 @@ import perspective from './perspective.js';
 import area from './area.js';
 import main from '../main.js';
 import movement from './movement.js';
-import math from '../misc/math.js';
 import camera from './camera.js';
 import space from '../misc/space.js';
+import board from './board.js';
 // Import End
 
 "use strict";
@@ -245,7 +245,7 @@ const transition = (function() {
             const thisArea = {
                 coords: previousTel.endCoords,
                 scale: previousTel.endScale,
-                boundingBox: math.getBoundingBoxOfBoard(previousTel.endCoords, previousTel.endScale, camera.getScreenBoundingBox())
+                boundingBox: board.getBoundingBoxOfBoard(previousTel.endCoords, previousTel.endScale, camera.getScreenBoundingBox())
             };
             area.initTelFromArea(thisArea, true);
         }

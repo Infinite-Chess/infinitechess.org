@@ -209,7 +209,7 @@ const board = (function() {
 
     function recalcBoundingBox() {
 
-        boundingBoxFloat = math.getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), camera.getScreenBoundingBox());
+        boundingBoxFloat = board.getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), camera.getScreenBoundingBox());
         boundingBox = roundAwayBoundingBox(boundingBoxFloat);
     }
 
@@ -585,6 +585,50 @@ const board = (function() {
         model.render();
     }
 
+    /**
+     * Calculates the bounding box of the board visible on screen,
+     * when the camera is at the specified position.
+     * This is different from the bounding box of the canvas, because
+     * this is effected by the camera's scale (zoom) property.
+     * 
+     * Returns in float form. To round away from the origin to encapsulate
+     * the whole of all tiles atleast partially visible, further use {@link board.roundAwayBoundingBox}
+     * @param {number[]} [position] - The position of the camera.
+     * @param {number} [scale] - The scale (zoom) of the camera.
+     * @returns {BoundingBox} The bounding box
+     */
+    function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale()) {
+
+        const distToHorzEdgeDivScale = camera.getScreenBoundingBox().right / scale;
+
+        const left = position[0] - distToHorzEdgeDivScale;
+        const right = position[0] + distToHorzEdgeDivScale;
+
+        const distToVertEdgeDivScale = camera.getScreenBoundingBox().top / scale;
+
+        const bottom = position[1] - distToVertEdgeDivScale;
+        const top = position[1] + distToVertEdgeDivScale;
+
+        return { left, right, bottom, top };
+    }
+
+    /**
+     * Returns the expected render range bounding box when we're in perspective mode.
+     * @param {number} rangeOfView - The distance in tiles (when scale is 1) to render the legal move fields in perspective mode.
+     * @returns {BoundingBox} The perspective mode render range bounding box
+     */
+    function generatePerspectiveBoundingBox(rangeOfView) { // ~18
+        const coords = movement.getBoardPos();
+        const renderDistInSquares = rangeOfView / movement.getBoardScale();
+
+        return {
+            left: coords[0] - renderDistInSquares,
+            right: coords[0] + renderDistInSquares,
+            bottom: coords[1] - renderDistInSquares,
+            top: coords[1] + renderDistInSquares,
+        };
+    }
+
 
     return Object.freeze({
         gsquareCenter,
@@ -609,7 +653,9 @@ const board = (function() {
         render,
         getTileMouseOver,
         recalcTile_MouseCrosshairOver,
-        recalcTiles_FingersOver
+        recalcTiles_FingersOver,
+        getBoundingBoxOfBoard,
+        generatePerspectiveBoundingBox,
     });
 })();
 

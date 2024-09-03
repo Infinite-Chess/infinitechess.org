@@ -1,9 +1,4 @@
 
-// Import Start
-import movement from '../rendering/movement.js';
-import camera from '../rendering/camera.js';
-// Import End
-
 "use strict";
 
 // Custom defined types...
@@ -18,12 +13,9 @@ import camera from '../rendering/camera.js';
  */
 
 /**
- * This script contains many utility mathematical operations, and javascript 
- * object functions, we've created for the game and its variables.
+ * This script contains many utility mathematical operations.
  * 
- * Many deal with coordinates, or bounding boxes.
- * 
- * In theory, should should have ZERO dependancies.
+ * ZERO dependancies.
  */
 const math = (function() {
 
@@ -171,33 +163,6 @@ const math = (function() {
         };
         return mergedBox;
     }
-
-        /**
-         * Calculates the bounding box of the board visible on screen,
-         * when the camera is at the specified position.
-         * This is different from the bounding box of the canvas, because
-         * this is effected by the camera's scale (zoom) property.
-         * 
-         * Returns in float form. To round away from the origin to encapsulate
-         * the whole of all tiles atleast partially visible, further use {@link board.roundAwayBoundingBox}
-         * @param {number[]} [position] - The position of the camera.
-         * @param {number} [scale] - The scale (zoom) of the camera.
-         * @returns {BoundingBox} The bounding box
-         */
-        function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale()) {
-
-            const distToHorzEdgeDivScale = camera.getScreenBoundingBox().right / scale;
-
-            const left = position[0] - distToHorzEdgeDivScale;
-            const right = position[0] + distToHorzEdgeDivScale;
-
-            const distToVertEdgeDivScale = camera.getScreenBoundingBox().top / scale;
-
-            const bottom = position[1] - distToVertEdgeDivScale;
-            const top = position[1] + distToVertEdgeDivScale;
-
-            return { left, right, bottom, top };
-        }
 
     /**
      * Computes the positive modulus of two numbers.
@@ -427,24 +392,6 @@ const math = (function() {
     }
 
     /**
-     * Returns the expected render range bounding box when we're in perspective mode.
-     * @param {number} rangeOfView - The distance in tiles (when scale is 1) to render the legal move fields in perspective mode.
-     * @returns {BoundingBox} The perspective mode render range bounding box
-     */
-    function generatePerspectiveBoundingBox(rangeOfView) { // ~18
-
-        const coords = movement.getBoardPos();
-        const renderDistInSquares = rangeOfView / movement.getBoardScale();
-
-        return {
-            left: coords[0] - renderDistInSquares,
-            right: coords[0] + renderDistInSquares,
-            bottom: coords[1] - renderDistInSquares,
-            top: coords[1] + renderDistInSquares,
-        };
-    }
-
-    /**
      * Makes a deep copy of the provided coordinates
      * @param {number[]} coords - [x,y]
      * @returns Copied coords
@@ -539,7 +486,6 @@ const math = (function() {
         getBaseLog10,
         clamp,
         closestPointOnLine,
-        getBoundingBoxOfBoard,
         getAABBCornerOfLine,
         getCornerOfBoundingBox,
         getLineIntersectionEntryTile,
@@ -548,7 +494,6 @@ const math = (function() {
         manhattanDistance,
         chebyshevDistance,
         toRadians,
-        generatePerspectiveBoundingBox,
         copyCoords,
         roundAwayFromZero,
         PseudoRandomGenerator,

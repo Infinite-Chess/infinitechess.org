@@ -143,7 +143,7 @@ const area = (function() {
         // Now maximize the bounding box to fill entire screen when at position and scale, so that
         // we don't have long thin slices of a bounding box that will fail the math.boxContainsSquare() function EVEN
         // if the square is visible on screen!
-        box = math.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
+        box = board.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
         math;
         // PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
