@@ -1,7 +1,7 @@
 
 'use strict';
 
-/* global main, sound */
+/* global sound */
 
 /**
  * The server injects this script directly into the html document
@@ -144,13 +144,12 @@ const htmlscript = (function() {
     window.addEventListener('load', function() {
         if (loadingErrorOcurred) return; // Page never finished loading, don't start the game.
         closeLoadingScreenListeners(); // Remove document event listeners for the loading screen
-        main.start(); // Start the game!
     });
 
     return Object.freeze({
         callback_LoadingError,
         removeOnerror,
-        hasUserGesturedAtleastOnce
+        hasUserGesturedAtleastOnce,
     });
 
 })();

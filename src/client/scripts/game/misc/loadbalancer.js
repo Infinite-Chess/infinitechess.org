@@ -60,6 +60,11 @@ const loadbalancer = (function() {
     // const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 10; // 10 seconds
     let timeToDeleteInviteTimeoutID;
 
+    // Set to true when you need to force-calculate the mesh or legal move searching.
+    // This will stop spreading it accross multiple frames and instead do it as fast as possible.
+    let forceCalc = false;
+
+
 
     // Millis since the start of the program
     function getRunTime() {
@@ -258,7 +263,13 @@ const loadbalancer = (function() {
         timeToDeleteInviteTimeoutID = undefined;
     }
 
+    function getForceCalc() {
+        return forceCalc;
+    }
 
+    function setForceCalc(value) {
+        forceCalc = value;
+    }
 
     return Object.freeze({
         getRunTime,
@@ -271,7 +282,9 @@ const loadbalancer = (function() {
         stayConnectedPeriod,
         gisAFK,
         gisHibernating,
-        isPageHidden
+        isPageHidden,
+        getForceCalc,
+        setForceCalc,
     });
 })();
 

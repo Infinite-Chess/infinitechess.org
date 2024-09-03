@@ -1,7 +1,6 @@
 
 // Import Start
 import perspective from './perspective.js';
-import main from '../main.js';
 import miniimage from './miniimage.js';
 import game from '../chess/game.js';
 import stats from '../gui/stats.js';

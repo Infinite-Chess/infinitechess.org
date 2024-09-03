@@ -129,9 +129,9 @@ const checkmate = (function() {
     //                     stats.hideMoveLooking();
     //                     return;
     //                 }
-    //                 if (main.gforceCalc()) {
+    //                 if (loadbalancer.getForceCalc()) {
     //                     pieceLimitToRecalcTime = Infinity;
-    //                     main.sforceCalc(false);
+    //                     loadbalancer.setForceCalc(false);
     //                 }
     //             }
     //         }

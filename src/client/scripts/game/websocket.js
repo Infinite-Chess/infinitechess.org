@@ -1,6 +1,5 @@
 
 // Import Start
-import main from './main.js';
 import statustext from './gui/statustext.js';
 import invites from './misc/invites.js';
 import guiplay from './gui/guiplay.js';
@@ -332,7 +331,7 @@ const websocket = (function() {
         };
         const preexistingHardRefreshInfo = localstorage.loadItem('hardrefreshinfo');
         if (preexistingHardRefreshInfo?.expectedVersion === GAME_VERSION) { // Don't hard-refresh, we've already tried for this version.
-            if (!preexistingHardRefreshInfo.sentNotSupported) sendFeatureNotSupported(`location.reload(true) failed to hard refresh. Server version: ${GAME_VERSION}. Still running: ${main.GAME_VERSION}`);
+            if (!preexistingHardRefreshInfo.sentNotSupported) sendFeatureNotSupported(`location.reload(true) failed to hard refresh. Server version: ${GAME_VERSION}. Still running: ${config.GAME_VERSION}`);
             preexistingHardRefreshInfo.sentNotSupported = true;
             saveInfo(preexistingHardRefreshInfo);
             return;

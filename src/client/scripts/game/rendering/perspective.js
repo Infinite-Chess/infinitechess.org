@@ -2,7 +2,6 @@
 // Import Start
 import guipause from '../gui/guipause.js';
 import webgl from './webgl.js';
-import main from '../main.js';
 import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import board from './board.js';

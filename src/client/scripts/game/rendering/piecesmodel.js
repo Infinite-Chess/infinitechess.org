@@ -4,7 +4,6 @@ import loadbalancer from '../misc/loadbalancer.js';
 import math from '../misc/math.js';
 import onlinegame from '../misc/onlinegame.js';
 import bufferdata from './bufferdata.js';
-import main from '../main.js';
 import gamefileutility from '../chess/gamefileutility.js';
 import game from '../chess/game.js';
 import stats from '../gui/stats.js';
@@ -154,9 +153,9 @@ const piecesmodel = {
                     piecesSinceLastCheck = 0;
                     await sleepIfUsedTooMuchTime();
                     if (gamefile.mesh.terminate) return;
-                    if (main.gforceCalc()) {
+                    if (loadbalancer.getForceCalc()) {
                         pieceLimitToRecalcTime = Infinity;
-                        main.sforceCalc(false);
+                        loadbalancer.setForceCalc(false);
                     }
                 }
             }
@@ -475,8 +474,6 @@ const piecesmodel = {
         }
 
         voids.shiftModel(gamefile, diffXOffset, diffYOffset);
-
-        // main.stopTimer((time) => console.log(`Shifting model finished! ${time} milliseconds!`))
     },
 
     /**
@@ -496,7 +493,6 @@ const piecesmodel = {
         frametracker.onVisualChange();
 
         // console.log('Begin rotating model..')
-        // main.startTimer()
 
         // Amount to transition the points
         const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
@@ -587,9 +583,9 @@ const piecesmodel = {
                     piecesSinceLastCheck = 0;
                     await sleepIfUsedTooMuchTime();
                     if (gamefile.mesh.terminate) return;
-                    if (main.gforceCalc()) {
+                    if (loadbalancer.getForceCalc()) {
                         pieceLimitToRecalcTime = Infinity;
-                        main.sforceCalc(false);
+                        loadbalancer.setForceCalc(false);
                     }
                 }
             }
@@ -666,9 +662,9 @@ const piecesmodel = {
                     piecesSinceLastCheck = 0;
                     await sleepIfUsedTooMuchTime();
                     if (gamefile.mesh.terminate) return;
-                    if (main.gforceCalc()) {
+                    if (loadbalancer.getForceCalc()) {
                         pieceLimitToRecalcTime = Infinity;
-                        main.sforceCalc(false);
+                        loadbalancer.setForceCalc(false);
                     }
                 }
             }
@@ -695,8 +691,6 @@ const piecesmodel = {
         // gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
         gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet())
             : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet());
-
-        // main.stopTimer((time) => console.log(`Rotating model finished! ${time} milliseconds!`))
 
         gamefile.mesh.locked--;
         gamefile.mesh.isGenerating--;
