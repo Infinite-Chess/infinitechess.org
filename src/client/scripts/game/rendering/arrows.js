@@ -21,6 +21,7 @@ import buffermodel from './buffermodel.js';
 import colorutil from '../misc/colorutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
+import space from '../misc/space.js';
 // Import End
 
 /**
@@ -118,14 +119,14 @@ const arrows = (function() {
         // How do we find out what pieces are off-screen?
 
         // If any part of the square is on screen, this box rounds to it.
-        const boundingBox = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
+        const boundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
         // Same as above, but doesn't round
-        const boundingBoxFloat = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat(); 
+        const boundingBoxFloat = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat(); 
 
         const slideArrows = {};
 
-        let headerPad = perspective.getEnabled() ? 0 : math.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_TOP_NAV());
-        let footerPad = perspective.getEnabled() ? 0 : math.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV());
+        let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_TOP_NAV());
+        let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV());
 
         // Reverse header and footer pads if we're viewing blacks side
         if (perspective.getIsViewingBlackPerspective() && !perspective.getEnabled()) {
@@ -136,8 +137,8 @@ const arrows = (function() {
 
         const paddedBoundingBox = jsutil.deepCopyObject(boundingBoxFloat);
         if (!perspective.getEnabled()) {
-            paddedBoundingBox.top -= math.convertWorldSpaceToGrid(headerPad);
-            paddedBoundingBox.bottom += math.convertWorldSpaceToGrid(footerPad);
+            paddedBoundingBox.top -= space.convertWorldSpaceToGrid(headerPad);
+            paddedBoundingBox.bottom += space.convertWorldSpaceToGrid(footerPad);
         }
 
         const gamefile = game.getGamefile();
@@ -314,7 +315,7 @@ const arrows = (function() {
         const worldHalfWidth = worldWidth / 2;
 
         // Convert to world-space
-        const worldCoords = math.convertCoordToWorldSpace(renderCoords);
+        const worldCoords = space.convertCoordToWorldSpace(renderCoords);
 
         const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
         const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);

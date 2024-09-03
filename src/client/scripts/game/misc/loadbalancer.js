@@ -4,9 +4,9 @@ import websocket from '../websocket.js';
 import invites from './invites.js';
 import stats from '../gui/stats.js';
 import input from '../input.js';
-import main from '../main.js';
 import onlinegame from './onlinegame.js';
 import jsutil from './jsutil.js';
+import config from '../config.js';
 // Import End
 
 'use strict';
@@ -60,6 +60,11 @@ const loadbalancer = (function() {
     // const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 10; // 10 seconds
     let timeToDeleteInviteTimeoutID;
 
+    // Set to true when you need to force-calculate the mesh or legal move searching.
+    // This will stop spreading it accross multiple frames and instead do it as fast as possible.
+    let forceCalc = false;
+
+
 
     // Millis since the start of the program
     function getRunTime() {
@@ -71,7 +76,7 @@ const loadbalancer = (function() {
     }
 
     function getTimeUntilAFK() {
-        return main.devBuild ? timeUntilAFK.dev : timeUntilAFK.normal;
+        return config.DEV_BUILD ? timeUntilAFK.dev : timeUntilAFK.normal;
     }
 
     function gisAFK() {
@@ -262,7 +267,13 @@ const loadbalancer = (function() {
         timeToDeleteInviteTimeoutID = undefined;
     }
 
+    function getForceCalc() {
+        return forceCalc;
+    }
 
+    function setForceCalc(value) {
+        forceCalc = value;
+    }
 
     return Object.freeze({
         getRunTime,
@@ -276,7 +287,9 @@ const loadbalancer = (function() {
         stayConnectedPeriod,
         gisAFK,
         gisHibernating,
-        isPageHidden
+        isPageHidden,
+        getForceCalc,
+        setForceCalc,
     });
 })();
 

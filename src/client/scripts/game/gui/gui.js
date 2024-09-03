@@ -1,10 +1,10 @@
 
 // Import Start
-import main from '../main.js';
 import selection from '../chess/selection.js';
 import guipromotion from './guipromotion.js';
 import style from './style.js';
 import statustext from './statustext.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 "use strict";
@@ -24,11 +24,10 @@ const gui = (function() {
 
     element_overlay.addEventListener('click', callback_CancelPromotionIfUIOpen);
 
-    function callback_CancelPromotionIfUIOpen(event) {
-        event = event || window.event;
+    function callback_CancelPromotionIfUIOpen() {
         if (!guipromotion.isUIOpen()) return;
         selection.unselectPiece();
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     }
 
     // Functions

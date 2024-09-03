@@ -5,7 +5,6 @@ import texture from './texture.js';
 import highlights from './highlights.js';
 import style from '../gui/style.js';
 import bufferdata from './bufferdata.js';
-import main from '../main.js';
 import input from '../input.js';
 import perspective from './perspective.js';
 import movement from './movement.js';
@@ -16,6 +15,8 @@ import math from '../misc/math.js';
 import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
 import jsutil from '../misc/jsutil.js';
+import space from '../misc/space.js';
+import frametracker from './frametracker.js';
 // Import End
 
 /** 
@@ -156,7 +157,7 @@ const board = (function() {
     function recalcTile_CrosshairOver() {
         if (!perspective.isMouseLocked()) return;
 
-        const coords = math.convertWorldSpaceToCoords(input.getMouseWorldLocation());
+        const coords = space.convertWorldSpaceToCoords(input.getMouseWorldLocation());
 
         tile_MouseOver_Float = coords;
         tile_MouseOver_Int = [Math.floor(coords[0] + squareCenter), Math.floor(coords[1] + squareCenter)];
@@ -191,7 +192,7 @@ const board = (function() {
     // Works whether the mouse is virtual (touch screen) or not
     function getTileMouseOver() {
         const mouseWorld = input.getMouseWorldLocation(); // [x, y]
-        const tile_Float = math.convertWorldSpaceToCoords(mouseWorld);
+        const tile_Float = space.convertWorldSpaceToCoords(mouseWorld);
         const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
         
         return { tile_Float, tile_Int };
@@ -208,7 +209,7 @@ const board = (function() {
 
     function recalcBoundingBox() {
 
-        boundingBoxFloat = math.getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), camera.getScreenBoundingBox());
+        boundingBoxFloat = board.getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), camera.getScreenBoundingBox());
         boundingBox = roundAwayBoundingBox(boundingBoxFloat);
     }
 
@@ -433,7 +434,7 @@ const board = (function() {
     // TEMPORARILY changes the board tiles color! Resets upon leaving game.
     // Used to darken board
     function changeColor(newWhiteTiles, newDarkTiles) {
-        main.renderThisFrame();
+        frametracker.onVisualChange();
         whiteTiles = newWhiteTiles;
         darkTiles = newDarkTiles;
         initDarkTilesModel();
@@ -443,7 +444,7 @@ const board = (function() {
         whiteTiles = options.getDefaultTiles(true); // true for white
         darkTiles = options.getDefaultTiles(false); // false for dark
         initDarkTilesModel();
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     }
 
     function darkenColor() {
@@ -584,6 +585,50 @@ const board = (function() {
         model.render();
     }
 
+    /**
+     * Calculates the bounding box of the board visible on screen,
+     * when the camera is at the specified position.
+     * This is different from the bounding box of the canvas, because
+     * this is effected by the camera's scale (zoom) property.
+     * 
+     * Returns in float form. To round away from the origin to encapsulate
+     * the whole of all tiles atleast partially visible, further use {@link board.roundAwayBoundingBox}
+     * @param {number[]} [position] - The position of the camera.
+     * @param {number} [scale] - The scale (zoom) of the camera.
+     * @returns {BoundingBox} The bounding box
+     */
+    function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale()) {
+
+        const distToHorzEdgeDivScale = camera.getScreenBoundingBox().right / scale;
+
+        const left = position[0] - distToHorzEdgeDivScale;
+        const right = position[0] + distToHorzEdgeDivScale;
+
+        const distToVertEdgeDivScale = camera.getScreenBoundingBox().top / scale;
+
+        const bottom = position[1] - distToVertEdgeDivScale;
+        const top = position[1] + distToVertEdgeDivScale;
+
+        return { left, right, bottom, top };
+    }
+
+    /**
+     * Returns the expected render range bounding box when we're in perspective mode.
+     * @param {number} rangeOfView - The distance in tiles (when scale is 1) to render the legal move fields in perspective mode.
+     * @returns {BoundingBox} The perspective mode render range bounding box
+     */
+    function generatePerspectiveBoundingBox(rangeOfView) { // ~18
+        const coords = movement.getBoardPos();
+        const renderDistInSquares = rangeOfView / movement.getBoardScale();
+
+        return {
+            left: coords[0] - renderDistInSquares,
+            right: coords[0] + renderDistInSquares,
+            bottom: coords[1] - renderDistInSquares,
+            top: coords[1] + renderDistInSquares,
+        };
+    }
+
 
     return Object.freeze({
         gsquareCenter,
@@ -608,7 +653,9 @@ const board = (function() {
         render,
         getTileMouseOver,
         recalcTile_MouseCrosshairOver,
-        recalcTiles_FingersOver
+        recalcTiles_FingersOver,
+        getBoundingBoxOfBoard,
+        generatePerspectiveBoundingBox,
     });
 })();
 

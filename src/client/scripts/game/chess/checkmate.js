@@ -129,9 +129,9 @@ const checkmate = (function() {
     //                     stats.hideMoveLooking();
     //                     return;
     //                 }
-    //                 if (main.gforceCalc()) {
+    //                 if (loadbalancer.getForceCalc()) {
     //                     pieceLimitToRecalcTime = Infinity;
-    //                     main.sforceCalc(false);
+    //                     loadbalancer.setForceCalc(false);
     //                 }
     //             }
     //         }
@@ -144,7 +144,7 @@ const checkmate = (function() {
     //         // console.log(`Too much! Sleeping.. Used ${performance.now() - startTime} of our allocated ${maxTimeToSpend}`)
     //         const percentComplete = piecesComplete / ourPieceCount;
     //         stats.updateMoveLooking(percentComplete);
-    //         await main.sleep(0);
+    //         await thread.sleep(0);
     //         startTime = performance.now();
     //         timeToStop = startTime + loadbalancer.getLongTaskTime();
     //     }

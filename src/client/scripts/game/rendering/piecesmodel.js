@@ -4,7 +4,6 @@ import loadbalancer from '../misc/loadbalancer.js';
 import math from '../misc/math.js';
 import onlinegame from '../misc/onlinegame.js';
 import bufferdata from './bufferdata.js';
-import main from '../main.js';
 import gamefileutility from '../chess/gamefileutility.js';
 import game from '../chess/game.js';
 import stats from '../gui/stats.js';
@@ -19,6 +18,8 @@ import options from './options.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
+import frametracker from './frametracker.js';
+import thread from '../misc/thread.js';
 // Import End
 
 /** 
@@ -152,9 +153,9 @@ const piecesmodel = {
                     piecesSinceLastCheck = 0;
                     await sleepIfUsedTooMuchTime();
                     if (gamefile.mesh.terminate) return;
-                    if (main.gforceCalc()) {
+                    if (loadbalancer.getForceCalc()) {
                         pieceLimitToRecalcTime = Infinity;
-                        main.sforceCalc(false);
+                        loadbalancer.setForceCalc(false);
                     }
                 }
             }
@@ -167,7 +168,7 @@ const piecesmodel = {
             // console.log(`Too much! Sleeping.. Used ${performance.now() - startTime} of our allocated ${maxTimeToSpend}`)
             const percentComplete = piecesComplete / totalPieceCount;
             stats.updatePiecesMesh(percentComplete);
-            await main.sleep(0);
+            await thread.sleep(0);
             startTime = performance.now();
             timeToStop = startTime + loadbalancer.getLongTaskTime();
         }
@@ -184,7 +185,6 @@ const piecesmodel = {
             gamefile.mesh.isGenerating--;
             return;
         }
-        main.enableForceRender(); // Renders the screen EVEN in a local-pause
 
         mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
                                : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
@@ -206,8 +206,7 @@ const piecesmodel = {
 
         if (giveStatus) statustext.showStatus(translations.rendering.regenerated_pieces, false, 0.5);
         
-        main.renderThisFrame();
-        main.enableForceRender(); // Renders the screen EVEN in a local-pause
+        frametracker.onVisualChange();
 
         gamefile.mesh.locked--;
         gamefile.mesh.isGenerating--;
@@ -426,7 +425,7 @@ const piecesmodel = {
      */
     shiftPiecesModel: function(gamefile) {
         console.log("Shifting pieces model..");
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         // console.log('Begin shifting model..')
 
@@ -475,8 +474,6 @@ const piecesmodel = {
         }
 
         voids.shiftModel(gamefile, diffXOffset, diffYOffset);
-
-        // main.stopTimer((time) => console.log(`Shifting model finished! ${time} milliseconds!`))
     },
 
     /**
@@ -493,10 +490,9 @@ const piecesmodel = {
         gamefile.mesh.isGenerating++;
 
         console.log("Rotating pieces model..");
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         // console.log('Begin rotating model..')
-        // main.startTimer()
 
         // Amount to transition the points
         const weAreBlack = (game.areInNonLocalGame() && game.areWeColorInNonLocalGame("black"));
@@ -587,9 +583,9 @@ const piecesmodel = {
                     piecesSinceLastCheck = 0;
                     await sleepIfUsedTooMuchTime();
                     if (gamefile.mesh.terminate) return;
-                    if (main.gforceCalc()) {
+                    if (loadbalancer.getForceCalc()) {
                         pieceLimitToRecalcTime = Infinity;
-                        main.sforceCalc(false);
+                        loadbalancer.setForceCalc(false);
                     }
                 }
             }
@@ -666,9 +662,9 @@ const piecesmodel = {
                     piecesSinceLastCheck = 0;
                     await sleepIfUsedTooMuchTime();
                     if (gamefile.mesh.terminate) return;
-                    if (main.gforceCalc()) {
+                    if (loadbalancer.getForceCalc()) {
                         pieceLimitToRecalcTime = Infinity;
-                        main.sforceCalc(false);
+                        loadbalancer.setForceCalc(false);
                     }
                 }
             }
@@ -681,7 +677,7 @@ const piecesmodel = {
             // console.log(`Too much! Sleeping.. Used ${performance.now() - startTime} of our allocated ${maxTimeToSpend}`)
             const percentComplete = piecesComplete / totalPieceCount;
             stats.updateRotateMesh(percentComplete);
-            await main.sleep(0);
+            await thread.sleep(0);
             startTime = performance.now();
             timeToStop = startTime + loadbalancer.getLongTaskTime();
         }
@@ -696,11 +692,9 @@ const piecesmodel = {
         gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet())
             : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet());
 
-        // main.stopTimer((time) => console.log(`Rotating model finished! ${time} milliseconds!`))
-
         gamefile.mesh.locked--;
         gamefile.mesh.isGenerating--;
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     },
 
     /**

@@ -1,8 +1,6 @@
 
 // Import Start
-
 import colorutil from "./colorutil.js";
-
 // Import End
 
 /**
@@ -18,6 +16,15 @@ const typeutil = (function() {
      * as we should check if the kings have a legal move first.
      */
     const types = ['kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'knights', 'guards', 'rooks', 'bishops', 'pawns'];
+    /** All neutral types the game is compatible with. */
+    const neutralTypes = ['obstacles', 'voids'];
+
+    /** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
+    const jumpingRoyals = ['kings', 'royalCentaurs'];
+    /** A list of the royals that are NOT compatible with checkmate, but must use royalcapture. */
+    const slidingRoyals = ['royalQueens'];
+    /** A list of the royal pieces, without the color appended. */
+    const royals = [...jumpingRoyals, ...slidingRoyals];
 
     /**
      * An object containing each color in the game, and all piece types associated with that color:
@@ -28,14 +35,7 @@ const typeutil = (function() {
         const colorExtension = colorutil.validColorExtensions_NoNeutral[index];
         colorsTypes[color] = types.map(type => type + colorExtension);
     });
-    colorsTypes.neutral = ['obstaclesN', 'voidsN'];
-
-    /** A list of the royal pieces, without the color appended. */
-    const royals = ['kings', 'royalQueens', 'royalCentaurs'];
-    /** A list of the royals that are compatible with checkmate. */
-    const jumpingRoyals = ['kings', 'royalCentaurs'];
-
-
+    colorsTypes.neutral = neutralTypes.map(type => type + colorutil.colorExtensionOfNeutrals);
 
     /**
      * Iterates through every single piece TYPE in the game state, and performs specified function on the type.
@@ -47,7 +47,7 @@ const typeutil = (function() {
         // We do it in reverse so that white mini images
         // are rendered on top of black ones.
         Object.keys(colorsTypes).reverse().forEach(color => {
-            if (ignoreNeutrals && color === 'neutral') return; // Skip 'neutral' if ignoreNeutrals is true
+            if (ignoreNeutrals && color === colorutil.colorOfNeutrals) return; // Skip 'neutral' if ignoreNeutrals is true
             colorsTypes[color].forEach(type => {
                 if (ignoreVoids && type.startsWith('voids')) return; // Skip voids if ignoreVoids is true
                 callback(type);
@@ -65,7 +65,7 @@ const typeutil = (function() {
     async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
         // Iterate through all colors in reverse order.
         for (const color of Object.keys(colorsTypes).reverse()) {
-            if (ignoreNeutrals && color === 'neutral') continue; // Skip 'neutral' if ignoreNeutrals is true
+            if (ignoreNeutrals && color === colorutil.colorOfNeutrals) continue; // Skip 'neutral' if ignoreNeutrals is true
             for (const type of colorsTypes[color]) {
                 if (ignoreVoids && type.startsWith('voids')) continue; // Skip voids if ignoreVoids is true
                 await callback(type);
@@ -81,7 +81,6 @@ const typeutil = (function() {
             callback(colorsTypes[color][i]);
         }
     }
-
 
     return Object.freeze({
         colorsTypes,

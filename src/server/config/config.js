@@ -33,7 +33,7 @@ const HOST_NAME = 'www.infinitechess.org';
  * The latest version of the game.
  * If the client is ever using an old version, we will tell them to hard-refresh.
  * 
- * THIS SHOULD ALWAYS MATCH protected-owner/scripts/game/main/GAME_VERSION
+ * THIS SHOULD ALWAYS MATCH src/client/scripts/game/config.GAME_VERSION
  */
 const GAME_VERSION = "1.4";
 

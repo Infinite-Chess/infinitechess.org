@@ -20,12 +20,12 @@ import sound from './sound.js';
 import guiplay from '../gui/guiplay.js';
 import input from '../input.js';
 import loadbalancer from './loadbalancer.js';
-import main from '../main.js';
 import formatconverter from '../chess/formatconverter.js';
 import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from './colorutil.js';
 import jsutil from './jsutil.js';
+import config from '../config.js';
 // Import End
 
 /** 
@@ -680,7 +680,7 @@ const onlinegame = (function() {
 
     function sendMove() {
         if (!inOnlineGame || !inSync) return; // Don't do anything if it's a local game
-        if (main.devBuild) console.log("Sending our move..");
+        if (config.DEV_BUILD) console.log("Sending our move..");
 
         const gamefile = game.getGamefile();
 

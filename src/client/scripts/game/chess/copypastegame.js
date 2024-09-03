@@ -8,7 +8,6 @@
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../misc/localstorage.js';
 import enginegame from '../misc/enginegame.js';
-import main from '../main.js';
 import formatconverter from './formatconverter.js';
 import game from './game.js';
 import backcompatible from './backcompatible.js';
@@ -18,6 +17,7 @@ import wincondition from './wincondition.js';
 import gamefileutility from './gamefileutility.js';
 import statustext from '../gui/statustext.js';
 import jsutil from '../misc/jsutil.js';
+import docutil from '../misc/docutil.js';
 // Import End
 
 "use strict";
@@ -50,7 +50,7 @@ const copypastegame = (function() {
         const specifyPosition = !largeGame;
         const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
           
-        main.copyToClipboard(shortformat);
+        docutil.copyToClipboard(shortformat);
         statustext.showStatus(translations.copypaste.copied_game);
     }
 

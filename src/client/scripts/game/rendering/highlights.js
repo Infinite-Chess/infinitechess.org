@@ -2,7 +2,6 @@
 // Import Start
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
-import main from '../main.js';
 import checkhighlight from './checkhighlight.js';
 import arrows from './arrows.js';
 import organizedlines from '../chess/organizedlines.js';
@@ -17,6 +16,7 @@ import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
+import frametracker from './frametracker.js';
 // Import End
 
 /**
@@ -90,8 +90,8 @@ const highlights = (function() {
     // Regenerates the model for all highlighted squares. Expensive, minimize calling this.
     function regenModel() {
         if (!selection.isAPieceSelected()) return;
-        main.renderThisFrame();
-        // console.log("Regenerating legal moves model..")
+        frametracker.onVisualChange();
+        console.log("Regenerating legal moves model..");
 
         updateOffsetAndBoundingBoxOfRenderRange();
 

@@ -4,13 +4,13 @@
 
 // Import Start
 import movepiece from './movepiece.js';
-import main from '../main.js';
 import stats from '../gui/stats.js';
 import guinavigation from '../gui/guinavigation.js';
 import selection from './selection.js';
 import input from '../input.js';
 import statustext from '../gui/statustext.js';
 import game from './game.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 /** 
@@ -100,7 +100,7 @@ const movesscript = (function() {
         if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
         if (!isDecrementingLegal(game.getGamefile())) return stats.showMoves();
 
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         movepiece.rewindMove(game.getGamefile(), { removeMove: false });
         

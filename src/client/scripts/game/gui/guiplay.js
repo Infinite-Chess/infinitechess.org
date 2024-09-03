@@ -5,7 +5,6 @@ import guigameinfo from './guigameinfo.js';
 import area from '../rendering/area.js';
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../misc/localstorage.js';
-import main from '../main.js';
 import style from './style.js';
 import game from '../chess/game.js';
 import sound from '../misc/sound.js';
@@ -19,6 +18,8 @@ import drawoffers from '../misc/drawoffers.js';
 import gamefile from '../chess/gamefile.js';
 import guititle from './guititle.js';
 import timeutil from '../misc/timeutil.js';
+import frametracker from '../rendering/frametracker.js';
+import docutil from '../misc/docutil.js';
 // Import End
 
 "use strict";
@@ -266,7 +267,7 @@ const guiplay = (function() {
 
         const code = invites.gelement_iCodeCode().textContent;
         
-        main.copyToClipboard(code);
+        docutil.copyToClipboard(code);
         statustext.showStatus(translations.invite_copied);
     }
 
@@ -375,7 +376,7 @@ const guiplay = (function() {
     function loadGame(gameOptions) {
         console.log("Loading game with game options:");
         console.log(gameOptions);
-        main.renderThisFrame();
+        frametracker.onVisualChange();
         movement.eraseMomentum();
         options.disableEM();
 

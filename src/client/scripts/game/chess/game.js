@@ -2,7 +2,6 @@
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
-import main from '../main.js';
 import gui from '../gui/gui.js';
 import gamefileutility from './gamefileutility.js';
 import arrows from '../rendering/arrows.js';
@@ -32,6 +31,7 @@ import copypastegame from './copypastegame.js';
 import highlights from '../rendering/highlights.js';
 import promotionlines from '../rendering/promotionlines.js';
 import guigameinfo from '../gui/guigameinfo.js';
+import loadbalancer from '../misc/loadbalancer.js';
 // Import End
 
 /** 
@@ -145,7 +145,7 @@ const game = (function() {
         if (input.isKeyDown('`')) options.toggleDeveloperMode();
         // if (input.isKeyDown('enter')) options.toggleChristmasTheme()
         if (input.isKeyDown('m')) options.toggleFPS();
-        if (game.getGamefile()?.mesh.locked && input.isKeyDown('z')) main.sforceCalc(true);
+        if (game.getGamefile()?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 
         if (gui.getScreen().includes('title')) updateTitleScreen();
         else updateBoard(); // Other screen, board is visible, update everything board related
@@ -245,7 +245,6 @@ const game = (function() {
         // Regenerate the mesh of all the pieces.
         piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
 
-        main.enableForceRender(); // Renders the screen EVEN in a local-pause
         guinavigation.update_MoveButtons();
 
         guigameinfo.updateWhosTurn(gamefile);

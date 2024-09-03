@@ -3,9 +3,9 @@
 import bufferdata from './bufferdata.js';
 import game from '../chess/game.js';
 import movement from './movement.js';
-import math from '../misc/math.js';
 import options from './options.js';
 import buffermodel from './buffermodel.js';
+import space from '../misc/space.js';
 // Import End
 
 /**
@@ -47,7 +47,7 @@ const checkhighlight = (function() {
 
             // This currently doesn't work for squareCenters other than 0.5. I will need to add + 0.5 - board.gsquareCenter()
             // Create a math function for returning the world-space point of the CENTER of the provided coordinate!
-            const worldSpaceCoord = math.convertCoordToWorldSpace(thisRoyalInCheckCoords);
+            const worldSpaceCoord = space.convertCoordToWorldSpace(thisRoyalInCheckCoords);
             const x = worldSpaceCoord[0];
             const y = worldSpaceCoord[1];
             const outRad = 0.65 * movement.getBoardScale();
