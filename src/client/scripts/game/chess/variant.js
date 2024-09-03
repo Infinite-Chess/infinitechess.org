@@ -17,7 +17,7 @@ import coordutil from '../misc/coordutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
-*/
+ */
 
 "use strict";
 

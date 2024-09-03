@@ -16,6 +16,7 @@ import movement from './movement.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
+import space from '../misc/space.js';
 // Import End
 
 /**
@@ -55,7 +56,7 @@ const highlightline = (function() {
 
         const legalmoves = jsutil.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
         const pieceCoords = selection.getPieceSelected().coords;
-        const worldSpaceCoords = math.convertCoordToWorldSpace(pieceCoords);
+        const worldSpaceCoords = space.convertCoordToWorldSpace(pieceCoords);
 
         const color = jsutil.deepCopyObject(options.getLegalMoveHighlightColor());
         color[3] = 1;
@@ -80,7 +81,7 @@ const highlightline = (function() {
             let point1 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
             if (!point1) continue;
             const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
-            const leftLimitPointWorld = math.convertCoordToWorldSpace(leftLimitPointCoord);
+            const leftLimitPointWorld = space.convertCoordToWorldSpace(leftLimitPointCoord);
             point1 = capPointAtSlideLimit(point1, leftLimitPointWorld, false, lineIsVertical);
 
             const corner2 = math.getAABBCornerOfLine(line, false);
@@ -88,7 +89,7 @@ const highlightline = (function() {
             let point2 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner2);
             if (!point2) continue; // I hate this
             const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, true);
-            const rightLimitPointWorld = math.convertCoordToWorldSpace(rightLimitPointCoord);
+            const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
             point2 = capPointAtSlideLimit(point2, rightLimitPointWorld, true, lineIsVertical);
 
             appendLineToData(dataLines, point1, point2, color);

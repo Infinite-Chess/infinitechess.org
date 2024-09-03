@@ -6,6 +6,7 @@ import main from '../main.js';
 import movement from './movement.js';
 import math from '../misc/math.js';
 import camera from './camera.js';
+import space from '../misc/space.js';
 // Import End
 
 "use strict";
@@ -71,9 +72,9 @@ const transition = (function() {
 
         if (isZoomOut) {
             startWorldSpace = [0,0];
-            endWorldSpace = math.convertCoordToWorldSpace(startCoords, endCoords, endScale);
+            endWorldSpace = space.convertCoordToWorldSpace(startCoords, endCoords, endScale);
         } else { // Is a zoom-in
-            startWorldSpace = math.convertCoordToWorldSpace(endCoords);
+            startWorldSpace = space.convertCoordToWorldSpace(endCoords);
             endWorldSpace = [0,0];
         }
 

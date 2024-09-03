@@ -16,6 +16,7 @@ import math from '../misc/math.js';
 import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
 import jsutil from '../misc/jsutil.js';
+import space from '../misc/space.js';
 // Import End
 
 /** 
@@ -156,7 +157,7 @@ const board = (function() {
     function recalcTile_CrosshairOver() {
         if (!perspective.isMouseLocked()) return;
 
-        const coords = math.convertWorldSpaceToCoords(input.getMouseWorldLocation());
+        const coords = space.convertWorldSpaceToCoords(input.getMouseWorldLocation());
 
         tile_MouseOver_Float = coords;
         tile_MouseOver_Int = [Math.floor(coords[0] + squareCenter), Math.floor(coords[1] + squareCenter)];
@@ -191,7 +192,7 @@ const board = (function() {
     // Works whether the mouse is virtual (touch screen) or not
     function getTileMouseOver() {
         const mouseWorld = input.getMouseWorldLocation(); // [x, y]
-        const tile_Float = math.convertWorldSpaceToCoords(mouseWorld);
+        const tile_Float = space.convertWorldSpaceToCoords(mouseWorld);
         const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
         
         return { tile_Float, tile_Int };

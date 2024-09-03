@@ -19,10 +19,12 @@ const typeutil = (function() {
     /** All neutral types the game is compatible with. */
     const neutralTypes = ['obstacles', 'voids'];
 
-    /** A list of the royals that are compatible with checkmate. */
+    /** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
     const jumpingRoyals = ['kings', 'royalCentaurs'];
+    /** A list of the royals that are NOT compatible with checkmate, but must use royalcapture. */
+    const slidingRoyals = ['royalQueens'];
     /** A list of the royal pieces, without the color appended. */
-    const royals = [...jumpingRoyals, 'royalQueens'];
+    const royals = [...jumpingRoyals, ...slidingRoyals];
 
     /**
      * An object containing each color in the game, and all piece types associated with that color:

@@ -1,9 +1,7 @@
 
 // Import Start
-import perspective from '../rendering/perspective.js';
 import movement from '../rendering/movement.js';
 import camera from '../rendering/camera.js';
-import board from '../rendering/board.js';
 // Import End
 
 "use strict";
@@ -173,32 +171,33 @@ const math = (function() {
         };
         return mergedBox;
     }
-    /**
-     * Calculates the bounding box of the board visible on screen,
-     * when the camera is at the specified position.
-     * This is different from the bounding box of the canvas, because
-     * this is effected by the camera's scale (zoom) property.
-     * 
-     * Returns in float form. To round away from the origin to encapsulate
-     * the whole of all tiles atleast partially visible, further use {@link board.roundAwayBoundingBox}
-     * @param {number[]} [position] - The position of the camera.
-     * @param {number} [scale] - The scale (zoom) of the camera.
-     * @returns {BoundingBox} The bounding box
-     */
-    function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale()) {
 
-        const distToHorzEdgeDivScale = camera.getScreenBoundingBox().right / scale;
+        /**
+         * Calculates the bounding box of the board visible on screen,
+         * when the camera is at the specified position.
+         * This is different from the bounding box of the canvas, because
+         * this is effected by the camera's scale (zoom) property.
+         * 
+         * Returns in float form. To round away from the origin to encapsulate
+         * the whole of all tiles atleast partially visible, further use {@link board.roundAwayBoundingBox}
+         * @param {number[]} [position] - The position of the camera.
+         * @param {number} [scale] - The scale (zoom) of the camera.
+         * @returns {BoundingBox} The bounding box
+         */
+        function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale()) {
 
-        const left = position[0] - distToHorzEdgeDivScale;
-        const right = position[0] + distToHorzEdgeDivScale;
+            const distToHorzEdgeDivScale = camera.getScreenBoundingBox().right / scale;
 
-        const distToVertEdgeDivScale = camera.getScreenBoundingBox().top / scale;
+            const left = position[0] - distToHorzEdgeDivScale;
+            const right = position[0] + distToHorzEdgeDivScale;
 
-        const bottom = position[1] - distToVertEdgeDivScale;
-        const top = position[1] + distToVertEdgeDivScale;
+            const distToVertEdgeDivScale = camera.getScreenBoundingBox().top / scale;
 
-        return { left, right, bottom, top };
-    }
+            const bottom = position[1] - distToVertEdgeDivScale;
+            const top = position[1] + distToVertEdgeDivScale;
+
+            return { left, right, bottom, top };
+        }
 
     /**
      * Computes the positive modulus of two numbers.
@@ -250,61 +249,6 @@ const math = (function() {
         return Math.log(value) / Math.log(10);
     }
 
-    function convertWorldSpaceToCoords(worldCoords) {
-
-        const boardPos = movement.getBoardPos();
-        const boardScale = movement.getBoardScale();
-        const xCoord = worldCoords[0] / boardScale + boardPos[0];
-        const yCoord = worldCoords[1] / boardScale + boardPos[1];
-
-        return [xCoord, yCoord];
-    }
-
-    function convertWorldSpaceToCoords_Rounded(worldCoords) {
-
-        const boardPos = movement.getBoardPos();
-        const boardScale = movement.getBoardScale();
-        const xCoord = worldCoords[0] / boardScale + boardPos[0];
-        const yCoord = worldCoords[1] / boardScale + boardPos[1];
-
-        const squareCenter = board.gsquareCenter();
-        return [Math.floor(xCoord + squareCenter), Math.floor(yCoord + squareCenter)];
-    }
-
-    // Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.gsquareCenter().
-    function convertCoordToWorldSpace(coords, position = movement.getBoardPos(), scale = movement.getBoardScale()) {
-
-        const worldX = (coords[0] - position[0] + 0.5 - board.gsquareCenter()) * scale;
-        const worldY = (coords[1] - position[1] + 0.5 - board.gsquareCenter()) * scale;
-
-        return [worldX, worldY];
-    }
-
-    // Returns [x,y], primed to add to buffer data.
-    // This function is used to calculate highlightline buffer data!
-    // It works by, if the coord is off screen, snapping it to the nearest screen edge! 
-    // We can't render arbitrarily far so let's stop at the edge of the screen.
-    function convertCoordToWorldSpace_ClampEdge(coords) {
-
-        const boardPos = movement.getBoardPos();
-        const boardScale = movement.getBoardScale();
-        let worldX = (coords[0] - boardPos[0] + 0.5 - board.gsquareCenter()) * boardScale;
-        let worldY = (coords[1] - boardPos[1] + 0.5 - board.gsquareCenter()) * boardScale;
-
-        const inPerspective = perspective.getEnabled();
-
-        const a = perspective.distToRenderBoard;
-        /** @type {BoundingBox} */
-        const boundingBox = inPerspective ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false);
-
-        if      (worldX < boundingBox.left) worldX = inPerspective ? -perspective.distToRenderBoard : camera.getScreenBoundingBox(false).left;
-        else if (worldX > boundingBox.right) worldX = inPerspective ? perspective.distToRenderBoard : camera.getScreenBoundingBox(false).right;
-        if      (worldY < boundingBox.bottom) worldY = inPerspective ? -perspective.distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
-        else if (worldY > boundingBox.top) worldY = inPerspective ? perspective.distToRenderBoard : camera.getScreenBoundingBox(false).top;
-
-        return [worldX, worldY];
-    }
-
     /**
      * Clamps a value between a minimum and a maximum value.
      * @param {number} min - The minimum value.
@@ -349,14 +293,6 @@ const math = (function() {
             coords: closestPoint,
             distance: euclideanDistance(closestPoint, point)
         };
-    }
-
-    function convertPixelsToWorldSpace_Virtual(value) {
-        return (value / camera.getCanvasHeightVirtualPixels()) * (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom);
-    }
-
-    function convertWorldSpaceToPixels_Virtual(value) {
-        return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels();
     }
 
     /**
@@ -448,10 +384,6 @@ const math = (function() {
         const stepChebyshev = Math.max(step[0], step[1]);
         return Math.floor(chebyshevDist / stepChebyshev);
     }
-
-    function convertWorldSpaceToGrid(value) {
-        return value / movement.getBoardScale();
-    }
     
     /**
      * Returns the hypotenuse distance between the 2 points.
@@ -490,7 +422,9 @@ const math = (function() {
         return Math.max(xDistance, yDistance);
     }
 
-    function toRadians(angleDegrees) { return angleDegrees * (Math.PI / 180); }
+    function toRadians(angleDegrees) {
+        return angleDegrees * (Math.PI / 180);
+    }
 
     /**
      * Returns the expected render range bounding box when we're in perspective mode.
@@ -603,20 +537,13 @@ const math = (function() {
         areLinesCollinear,
         isOrthogonalDistanceGreaterThanValue,
         getBaseLog10,
-        convertWorldSpaceToCoords,
-        convertWorldSpaceToCoords_Rounded,
-        convertCoordToWorldSpace,
-        convertCoordToWorldSpace_ClampEdge,
         clamp,
         closestPointOnLine,
         getBoundingBoxOfBoard,
-        convertPixelsToWorldSpace_Virtual,
-        convertWorldSpaceToPixels_Virtual,
         getAABBCornerOfLine,
         getCornerOfBoundingBox,
         getLineIntersectionEntryTile,
         getLineSteps,
-        convertWorldSpaceToGrid,
         euclideanDistance,
         manhattanDistance,
         chebyshevDistance,

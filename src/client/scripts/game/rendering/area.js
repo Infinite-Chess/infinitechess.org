@@ -7,6 +7,7 @@ import board from './board.js';
 import gamefileutility from '../chess/gamefileutility.js';
 import math from '../misc/math.js';
 import jsutil from '../misc/jsutil.js';
+import space from '../misc/space.js';
 // Import End
 
 /** 
@@ -106,8 +107,8 @@ const area = (function() {
             const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
             const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
 
-            const paddingHorzWorld = math.convertPixelsToWorldSpace_Virtual(paddingHorzPixels);
-            const paddingVertWorld = math.convertPixelsToWorldSpace_Virtual(paddingVertPixels);
+            const paddingHorzWorld = space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels);
+            const paddingVertWorld = space.convertPixelsToWorldSpace_Virtual(paddingVertPixels);
             const paddingHorz = paddingHorzWorld / scale;
             const paddingVert = paddingVertWorld / scale;
 
