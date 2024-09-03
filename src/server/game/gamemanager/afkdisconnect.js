@@ -8,8 +8,8 @@
 // Custom imports
 
 import gameutility from './gameutility.js';
-import math1 from '../math1.js';
 import movesscript1 from '../movesscript1.js';
+import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 
 // Type imports
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
@@ -46,7 +46,7 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
  */
 function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
     if (gameutility.isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
-        const opponentColor = math1.getOppositeColor(game.whosTurn);
+        const opponentColor = colorutil.getOppositeColor(game.whosTurn);
         gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn');
     }
 
@@ -85,7 +85,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
         cancelAutoAFKResignTimer(game);
     }
 
-    const opponentColor = math1.getOppositeColor(color);
+    const opponentColor = colorutil.getOppositeColor(color);
 
     game.disconnect.autoResign[color].timeoutID = setTimeout(onAutoResignFunc, timeBeforeAutoResign, game, opponentColor);
     game.disconnect.autoResign[color].timeToAutoLoss = timeToAutoLoss;
@@ -131,7 +131,7 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
 
     if (!autoResignTimerWasRunning) return; // Opponent was never notified their opponent was afk, skip telling them their opponent has returned.
 
-    const opponentColor = math1.getOppositeColor(color);
+    const opponentColor = colorutil.getOppositeColor(color);
     gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn');
 }
 

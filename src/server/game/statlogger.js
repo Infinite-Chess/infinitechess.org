@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import { readFile, writeFile } from '../utility/lockFile.js';
-import math1 from './math1.js';
+import timeutil from '../../client/scripts/game/misc/timeutil.js';
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
@@ -56,9 +56,9 @@ const statlogger = (function() {
         if (game.moves.length < 2) return;
 
         // What is the current month?
-        const month = math1.getCurrentMonth(); // 'yyyy-mm'
+        const month = timeutil.getCurrentMonth(); // 'yyyy-mm'
         // What is the current day?
-        const day = math1.getCurrentDay(); // 'yyyy-mm-dd'
+        const day = timeutil.getCurrentDay(); // 'yyyy-mm-dd'
         // What variant was played?
         const variant = game.variant;
 

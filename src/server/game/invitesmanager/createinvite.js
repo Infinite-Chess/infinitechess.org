@@ -13,7 +13,6 @@ import { logEvents } from '../../middleware/logEvents.js';
 // Custom imports
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
-import math1 from '../math1.js';
 import variant1 from '../variant1.js';
 import clockweb from '../clockweb.js';
 import gameutility from '../gamemanager/gameutility.js';
@@ -23,6 +22,7 @@ import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { isServerRestarting } from '../updateServerRestart.js';
+import uuid from '../../../client/scripts/game/misc/uuid.js';
 
 /**
  * Type Definitions
@@ -64,7 +64,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
     const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] };
     invite.owner = owner;
 
-    do { invite.id = math1.generateID(5); } while (existingInviteHasID(invite.id));
+    do { invite.id = uuid.generateID(5); } while (existingInviteHasID(invite.id));
 
     addInvite(ws, invite, replyto);
 }
@@ -103,7 +103,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
     const invite = {};
 
     let id;
-    do { id = math1.generateID(IDLengthOfInvites); } while (existingInviteHasID(messageContents.id));
+    do { id = uuid.generateID(IDLengthOfInvites); } while (existingInviteHasID(messageContents.id));
     invite.id = id;
 
     const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] };

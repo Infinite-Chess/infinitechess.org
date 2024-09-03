@@ -7,8 +7,8 @@ import gameutility from './gameutility.js';
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
 import movesscript1 from '../movesscript1.js';
-import math1 from '../math1.js';
 import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
+import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 
 /**
  * Type Definitions
@@ -53,7 +53,7 @@ function abortGame(ws, game) {
 
     setGameConclusion(game, 'aborted');
     onRequestRemovalFromPlayersInActiveGames(ws, game);
-    const opponentColor = math1.getOppositeColor(colorPlayingAs);
+    const opponentColor = colorutil.getOppositeColor(colorPlayingAs);
     gameutility.sendGameUpdateToColor(game, opponentColor);
 }
 
@@ -83,7 +83,7 @@ function resignGame(ws, game) {
     // Resign
 
     const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-    const opponentColor = math1.getOppositeColor(ourColor);
+    const opponentColor = colorutil.getOppositeColor(ourColor);
     const gameConclusion = `${opponentColor} resignation`;
     setGameConclusion(game, gameConclusion);
     onRequestRemovalFromPlayersInActiveGames(ws, game);

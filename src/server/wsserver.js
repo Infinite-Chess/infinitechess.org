@@ -4,8 +4,8 @@ import { rateLimitWebSocket } from './middleware/rateLimit.js';
 import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from './middleware/logEvents.js';
 import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
 
-import math1 from './game/math1.js';
-const { genUniqueID, generateNumbID } = math1;
+import uuid from '../client/scripts/game/misc/uuid.js';
+const { genUniqueID, generateNumbID } = uuid;
 import wsutility from './game/wsutility.js';
 import { handleGameRoute } from './game/gamemanager/gamerouter.js';
 import { handleInviteRoute } from './game/invitesmanager/invitesrouter.js';

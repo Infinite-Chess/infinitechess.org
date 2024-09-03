@@ -5,9 +5,9 @@
 
 // Custom imports
 import gameutility from './gameutility.js';
-import math1 from '../math1.js';
 import { onPlayerLostByAbandonment } from './gamemanager.js';
 import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
+import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 
 /**
  * Type Definitions
@@ -47,7 +47,7 @@ function onAFK(ws, game) {
     
     if (gameutility.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!");
 
-    const opponentColor = math1.getOppositeColor(color);
+    const opponentColor = colorutil.getOppositeColor(color);
 
     // Start a 20s timer to auto terminate the game by abandonment.
     game.autoAFKResignTimeoutID = setTimeout(onPlayerLostByAbandonment, durationOfAutoResignTimerMillis, game, opponentColor); // The auto resign function should have 2 arguments: The game, and the color that won.

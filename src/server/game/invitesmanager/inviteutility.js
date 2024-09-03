@@ -4,7 +4,7 @@
  * with single invites, not multiple
  */
 
-import math1 from '../math1.js';
+import jsutil from '../../../client/scripts/game/misc/jsutil.js';
 
 /** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 
@@ -61,7 +61,7 @@ function makeInviteSafe(invite) {
  * @returns {Invite}
  */
 function safelyCopyInvite(invite) {
-    const inviteDeepCopy = math1.deepCopyObject(invite);
+    const inviteDeepCopy = jsutil.deepCopyObject(invite);
     return makeInviteSafe(inviteDeepCopy);
 }
 
