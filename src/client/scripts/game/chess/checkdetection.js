@@ -183,7 +183,7 @@ const checkdetection = (function() {
 
             const thisPieceColor = colorutil.getPieceColorFromType(thisPiece.type);
             if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
-            if (thisPieceColor === 'neutral') continue; // Neutrals can't move, that means they can't make captures, right?
+            if (thisPieceColor === colorutil.colorOfNeutrals) continue; // Neutrals can't move, that means they can't make captures, right?
 
             const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type);
 
@@ -228,7 +228,7 @@ const checkdetection = (function() {
     // Time Complexity: O(1).
     // Auto disable this when the win condition is NOT checkmate!
     function removeMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) { // moves: { individual: [], horizontal: [], ... }
-        if (color === 'neutral') return; // Neutral pieces can't be in check
+        if (color === colorutil.colorOfNeutrals) return; // Neutral pieces can't be in check
         if (!wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate')) return;
 
         // There's a couple type of moves that put you in check:

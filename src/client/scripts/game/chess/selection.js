@@ -212,7 +212,7 @@ const selection = (function() {
         // if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
         if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
         const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
-        if (!options.getEM() && clickedPieceColor === 'neutral') return; // Don't select neutrals, unless we're in edit mode
+        if (!options.getEM() && clickedPieceColor === colorutil.colorOfNeutrals) return; // Don't select neutrals, unless we're in edit mode
         if (pieceClickedType === 'voidsN') return; // NEVER select voids, EVEN in edit mode.
 
         const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare);
