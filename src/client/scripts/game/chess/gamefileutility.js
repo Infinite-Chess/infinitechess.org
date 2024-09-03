@@ -4,6 +4,7 @@ import guipause from '../gui/guipause.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import onlinegame from '../misc/onlinegame.js';
 import sound from '../misc/sound.js';
+import enginegame from '../misc/enginegame.js';
 import wincondition from './wincondition.js';
 import clock from '../misc/clock.js';
 import selection from './selection.js';
@@ -221,13 +222,14 @@ const gamefileutility = (function() {
         board.darkenColor();
         guigameinfo.gameEnd(gamefile.gameConclusion);
         onlinegame.onGameConclude();
+        enginegame.onGameConclude();
 
         const delayToPlayConcludeSoundSecs = 0.65;
-        if (!onlinegame.areInOnlineGame()) {
+        if (!game.areInNonLocalGame()) {
             if (!gamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
             else sound.playSound_draw(delayToPlayConcludeSoundSecs);
-        } else { // In online game
-            if (gamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs);
+        } else { // In non-local game
+            if (gamefile.gameConclusion.includes(game.getOurColorInNonLocalGame())) sound.playSound_win(delayToPlayConcludeSoundSecs);
             else if (gamefile.gameConclusion.includes('draw') || gamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs);
             else sound.playSound_loss(delayToPlayConcludeSoundSecs);
         }

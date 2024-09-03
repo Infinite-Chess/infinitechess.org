@@ -3,7 +3,6 @@
 import legalmoves from '../chess/legalmoves.js';
 import input from '../input.js';
 import highlights from './highlights.js';
-import onlinegame from '../misc/onlinegame.js';
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
 import gamefileutility from '../chess/gamefileutility.js';
@@ -438,7 +437,9 @@ const arrows = (function() {
 
         const data = [];
         const pieceColor = colorutil.getPieceColorFromType(type);
-        const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
+        let opponentColor;
+        if (game.areInNonLocalGame()) opponentColor = colorutil.getOppositeColor(game.getOurColorInNonLocalGame());
+        else opponentColor = colorutil.getOppositeColor(gamefile.whosTurn);
         const isOpponentPiece = pieceColor === opponentColor;
         const isOurTurn = gamefile.whosTurn === pieceColor;
         const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });

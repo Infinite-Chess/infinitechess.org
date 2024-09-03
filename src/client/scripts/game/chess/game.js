@@ -1,6 +1,7 @@
 
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
+import enginegame from '../misc/enginegame.js';
 import gui from '../gui/gui.js';
 import gamefileutility from './gamefileutility.js';
 import arrows from '../rendering/arrows.js';
@@ -60,8 +61,56 @@ const game = (function() {
         return gamefile;
     }
 
+    /**
+     * Checks if we are currently in a game
+     * @returns {boolean}
+     */
     function areInGame() {
         return gamefile != null;
+    }
+
+    /**
+     * Checks if we are currently in a game that is not a local game
+     * @returns {boolean}
+     */
+    function areInNonLocalGame() {
+        return onlinegame.areInOnlineGame() || enginegame.areInEngineGame();
+    }
+
+    /**
+     * Checks if we control a specific color in a game that is not a local game
+     * @param {String} color - "white" or "black"
+     * @returns {boolean}
+     */
+    function areWeColorInNonLocalGame(color) {
+        return onlinegame.areWeColor(color) || enginegame.areWeColor(color);
+    }
+
+    /**
+     * Checks if we control a specific color in a game that is not a local game
+     * @param {String} color - "white" or "black"
+     * @returns {String}
+     */
+    function getOurColorInNonLocalGame() {
+        if (onlinegame.areInOnlineGame()) return onlinegame.getOurColor();
+        else if (enginegame.areInEngineGame()) return enginegame.getOurColor();
+        else return undefined;
+    }
+
+    /**
+     * Checks if it is currently our turn to move in a game that is not a local game
+     * @returns {boolean}
+     */
+    function isItOurTurnInNonLocalGame() {
+        return onlinegame.isItOurTurn() || enginegame.isItOurTurn();
+    }
+
+    /**
+     * Gets called when a game that is a not local game needs to be closed. Closes onlinegames and enginegames.
+     */
+    function closeNonLocalGame() {
+        onlinegame.closeOnlineGame();
+        enginegame.closeEngineGame();
     }
 
     // Initiates textures, buffer models for rendering, and the title screen.
@@ -124,7 +173,7 @@ const game = (function() {
         clock.update();
         miniimage.testIfToggled();
         animation.update();
-        if (guipause.areWePaused() && !onlinegame.areInOnlineGame()) return;
+        if (guipause.areWePaused() && !areInNonLocalGame()) return;
 
         movement.recalcPosition();
         transition.update();
@@ -233,6 +282,11 @@ const game = (function() {
     return Object.freeze({
         getGamefile,
         areInGame,
+        areInNonLocalGame,
+        areWeColorInNonLocalGame,
+        getOurColorInNonLocalGame,
+        isItOurTurnInNonLocalGame,
+        closeNonLocalGame,
         init,
         updateVariablesAfterScreenResize,
         update,

@@ -63,8 +63,8 @@ const guipause = (function() {
         const moves = game.getGamefile().moves;
         const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
 
-        if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
-        else                                                      element_pastegame.classList.remove('opacity-0_5');
+        if ((game.areInNonLocalGame() && !legalInPrivateMatch)) element_pastegame.classList.add('opacity-0_5');
+        else                                                    element_pastegame.classList.remove('opacity-0_5');
     }
 
     /**
@@ -102,7 +102,7 @@ const guipause = (function() {
     function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
         if (!isPaused) return;
 
-        if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
+        if (!game.areInNonLocalGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
 
         if (movesscript.isGameResignable(game.getGamefile())) {
             // If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
@@ -151,7 +151,7 @@ const guipause = (function() {
 
     function callback_MainMenu() {
         onlinegame.onMainMenuPress();
-        onlinegame.closeOnlineGame();
+        game.closeNonLocalGame();
         callback_Resume();
         game.unloadGame();
         clock.reset();
