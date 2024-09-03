@@ -5,7 +5,6 @@
  */
 
 // Import Start
-import main from '../main.js';
 import sound from '../misc/sound.js';
 import game from '../chess/game.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
@@ -21,6 +20,7 @@ import enginegame from '../misc/enginegame.js';
 import clock from '../misc/clock.js';
 import options from '../rendering/options.js';
 import timeutil from '../misc/timeutil.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 "use strict";
@@ -228,7 +228,7 @@ const guipractice = (function() {
     function loadGame(gameOptions) {
         console.log("Loading practice checkmate with game options:");
         console.log(gameOptions);
-        main.renderThisFrame();
+        frametracker.onVisualChange();
         movement.eraseMomentum();
         options.disableEM();
 

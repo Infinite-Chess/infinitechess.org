@@ -2,7 +2,6 @@
 // This module keeps track of the data of the engine game we are currently in.
 
 // Import Start
-import main from '../main.js';
 import game from '../chess/game.js';
 import gamefileutility from '../chess/gamefileutility.js';
 import legalmoves from '../chess/legalmoves.js';
@@ -11,6 +10,7 @@ import movepiece from '../chess/movepiece.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 import perspective from '../rendering/perspective.js';
 import jsutil from './jsutil.js';
+import thread from './thread.js';
 // Import End
 
 "use strict";
@@ -104,7 +104,7 @@ const enginegame = (function() {
         engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig })));
 
         // give the engine time to think
-        await main.sleep(engineTimeLimitPerMoveMillis);
+        await thread.sleep(engineTimeLimitPerMoveMillis);
 
         // terminate the webworker and make the recommended engine move
         engineWorker.terminate();
