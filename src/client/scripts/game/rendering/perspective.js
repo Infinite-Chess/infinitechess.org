@@ -13,6 +13,8 @@ import mat4 from './gl-matrix.js';
 import game from '../chess/game.js';
 import input from '../input.js';
 import selection from '../chess/selection.js';
+import frametracker from './frametracker.js';
+import config from '../config.js';
 // Import End
 
 /**
@@ -85,10 +87,9 @@ const perspective = (function() {
 
     function disable() {
         if (!enabled) return;
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         enabled = false;
-        main.enableForceRender();
         // document.exitPointerLock()
         guipause.callback_Resume();
 
@@ -252,7 +253,7 @@ const perspective = (function() {
 
     function renderCrosshair() {
         if (!enabled) return;
-        if (main.videoMode) return; // Don't render while recording
+        if (config.VIDEO_MODE) return; // Don't render while recording
         if (crosshairModel == null) return console.error("Crosshair model is null but it should have been defined when toggling on perspective!");
 
         const perspectiveViewMatrixCopy = camera.getViewMatrix();

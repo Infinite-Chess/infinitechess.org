@@ -1,6 +1,6 @@
 
 // Import Start
-import main from '../main.js';
+import thread from './thread.js';
 // Import End
 
 "use strict";
@@ -307,7 +307,7 @@ const sound = (function() {
         if (timeSinceLastMoveSoundPlayed >= millisBetwMoveSounds) return;
 
         const timeLeft = millisBetwMoveSounds - timeSinceLastMoveSoundPlayed;
-        await main.sleep(timeLeft);
+        await thread.sleep(timeLeft);
     }
 
     function playSound_capture(distanceMoved, dampen) {

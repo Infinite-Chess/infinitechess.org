@@ -51,7 +51,7 @@ const memberHeader = (function() {
      */
     async function getAccessToken() {
 
-        while (requestOut) await main.sleep(100);
+        while (requestOut) await sleep(100);
 
         const currTime = Date.now();
         const diff = currTime - lastRefreshTime;
@@ -218,6 +218,18 @@ const memberHeader = (function() {
      */
     function deleteToken() {
         token = undefined;
+    }
+
+    /**
+     * Pauses the current function execution for the given amount of time, allowing
+     * other functions in the call stack to execute before it resumes.
+     * 
+     * This function returns a promise that resolves after the specified number of milliseconds.
+     * @param {number} ms - The number of milliseconds to sleep before continuing execution.
+     * @returns {Promise<void>} A promise that resolves after the specified delay.
+     */
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     refreshToken();

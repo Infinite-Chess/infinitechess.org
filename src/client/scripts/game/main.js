@@ -15,8 +15,10 @@ import guiloading from './gui/guiloading.js';
 // The ONLY reason we import tooltips is so that it can be tied into the
 // dependancy tree of our game, otherwise it won't be included, since NOTHING depends on it,
 // yet it needs to be an ESM because IT depends on input.js!
+// eslint-disable-next-line no-unused-vars
 import tooltips from './gui/tooltips.js';
 import jsutil from './misc/jsutil.js';
+import frametracker from './rendering/frametracker.js';
 // Import End
 
 "use strict";
@@ -28,34 +30,11 @@ import jsutil from './misc/jsutil.js';
  */
 const main = (function() { 
 
-    /**
-     * The version of the game code currently running.
-     * If this is old, the server will instruct us to refresh.
-     * 
-     * THIS SHOULD ALWAYS MATCH config/convig/GAME_VERSION
-     */
-    const GAME_VERSION = "1.4"; // The current version of the game
-    const devBuild = true; // If true, the time when the main menu background stops moving is 2 seconds.
-    const videoMode = false; // If true, doesn't render a few items, making recordings more immersive.
-
-    
-    let thisFrameChanged = true; // Resets to false every frame. Is set to true if the screen changes at all during updating. This variable is to save cpu rendering when we don't need to redraw the screen. If true we will re-render the screen.
-    let forceRender = false;
-
     // Set to true when you need to force-calculate the mesh or legal move searching.
     // This will stop spreading it accross multiple frames and instead do it as fast as possible.
     let forceCalc = false;
 
-    /** The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen. */
-    function renderThisFrame() {
-        thisFrameChanged = true;
-    }
-
-    /** Enables the next render frame which NOTHING can prevent. (The pause menu pauses rendering) */
-    function enableForceRender() {
-        forceRender = true;
-    }
-
+    
     function gforceCalc() {
         return forceCalc;
     }
@@ -122,40 +101,21 @@ const main = (function() {
     }
 
     function render() {
-        if (forceRender) thisFrameChanged = true;
-        if (!thisFrameChanged) return; // Only render the world though if any visual on the screen changed! This is to save cpu when there's no page interaction or we're afk.
-        forceRender = false;
+        if (!frametracker.doWeRenderNextFrame()) return; // Only render the world though if any visual on the screen changed! This is to save cpu when there's no page interaction or we're afk.
 
         // console.log("Rendering this frame")
 
         webgl.clearScreen(); // Clear the color buffer and depth buffers
         game.render();
 
-        thisFrameChanged = false; // Reset to false for next frame
-    }
-
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text)
-            .then(() => { console.log('Copied to clipboard'); })
-            .catch((error) => { console.error('Failed to copy to clipboard', error); });
-    }
-
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        frametracker.onFrameRender();
     }
 
 
     return Object.freeze({
-        GAME_VERSION,
-        devBuild,
-        videoMode,
         gforceCalc, // get
-        renderThisFrame,
-        enableForceRender,
         sforceCalc, // set
         start,
-        copyToClipboard,
-        sleep
     });
 })();
 

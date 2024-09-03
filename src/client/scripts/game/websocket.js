@@ -8,6 +8,8 @@ import onlinegame from './misc/onlinegame.js';
 import localstorage from './misc/localstorage.js';
 import timeutil from './misc/timeutil.js';
 import uuid from './misc/uuid.js';
+import config from './config.js';
+import thread from './misc/thread.js';
 // Import End
 
 "use strict";
@@ -97,8 +99,8 @@ const websocket = (function() {
         if (inTimeout) return false;
 
         while (openingSocket || (socket && socket.readyState !== WebSocket.OPEN)) {
-            if (main.devBuild) console.log("Waiting for the socket to be established or closed..");
-            await main.sleep(100); // NEVER open more than 1 socket!
+            if (config.DEV_BUILD) console.log("Waiting for the socket to be established or closed..");
+            await thread.sleep(100); // NEVER open more than 1 socket!
         }
         if (socket && socket.readyState === WebSocket.OPEN) return true;
 
@@ -115,7 +117,7 @@ const websocket = (function() {
             statustext.showStatusForDuration(translations.websocket.no_connection, timeToResubAfterNetworkLossMillis);
             onlinegame.onLostConnection();
             invites.clearIfOnPlayPage(); // Erase on-screen invites.
-            await main.sleep(timeToResubAfterNetworkLossMillis);
+            await thread.sleep(timeToResubAfterNetworkLossMillis);
             success = await openSocket();
         }
         // This is the only instance where we've reconnected.
@@ -227,7 +229,7 @@ const websocket = (function() {
 
         const isEcho = message.action === "echo";
 
-        if (printAllIncomingMessages && main.devBuild) {
+        if (printAllIncomingMessages && config.DEV_BUILD) {
             if (isEcho) { if (alsoPrintIncomingEchos) console.log(`Incoming message: ${JSON.stringify(message)}`); }
             else console.log(`Incoming message: ${JSON.stringify(message)}`);
         }
@@ -287,7 +289,7 @@ const websocket = (function() {
                 break;
             case "gameversion":
                 // If the current version doesn't match, hard refresh.
-                if (value !== main.GAME_VERSION) handleHardRefresh(value);
+                if (value !== config.GAME_VERSION) handleHardRefresh(value);
                 break;
             default:
                 console.log(`We don't know how to treat this server action in general route: Action "${action}". Value: ${value}`);
@@ -352,7 +354,7 @@ const websocket = (function() {
      * @param {Event} event - The 'close' event fired.
      */
     function onclose(event) {
-        if (main.devBuild) console.log('WebSocket connection closed:', event.code, event.reason);
+        if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
         const wasFullyOpen = socket !== undefined; // Socket is only defined when it FULLY opens (and not immediatly closes from no network)
 
         socket = undefined;
@@ -502,7 +504,7 @@ const websocket = (function() {
         const isEcho = action === "echo";
         if (!isEcho) payload.id = uuid.generateNumbID(10);
 
-        if (printAllSentMessages && main.devBuild) {
+        if (printAllSentMessages && config.DEV_BUILD) {
             if (isEcho) { if (alsoPrintSentEchos) console.log(`Sending: ${JSON.stringify(payload)}`); }
             else console.log(`Sending: ${JSON.stringify(payload)}`);
         }
@@ -610,7 +612,7 @@ const websocket = (function() {
      * Games will have to be resynced.
      */
     async function resubAll() {
-        if (main.devBuild) console.log("Resubbing all..");
+        if (config.DEV_BUILD) console.log("Resubbing all..");
 
         if (zeroSubs()) {
             noConnection = false; // We don't care if we are no longer connected if we don't even need an open socket.

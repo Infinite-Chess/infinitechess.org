@@ -4,9 +4,9 @@ import websocket from '../websocket.js';
 import invites from './invites.js';
 import stats from '../gui/stats.js';
 import input from '../input.js';
-import main from '../main.js';
 import onlinegame from './onlinegame.js';
 import jsutil from './jsutil.js';
+import config from '../config.js';
 // Import End
 
 'use strict';
@@ -71,7 +71,7 @@ const loadbalancer = (function() {
     }
 
     function getTimeUntilAFK() {
-        return main.devBuild ? timeUntilAFK.dev : timeUntilAFK.normal;
+        return config.DEV_BUILD ? timeUntilAFK.dev : timeUntilAFK.normal;
     }
 
     function gisAFK() {

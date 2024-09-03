@@ -19,6 +19,8 @@ import options from './options.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
+import frametracker from './frametracker.js';
+import thread from '../misc/thread.js';
 // Import End
 
 /** 
@@ -167,7 +169,7 @@ const piecesmodel = {
             // console.log(`Too much! Sleeping.. Used ${performance.now() - startTime} of our allocated ${maxTimeToSpend}`)
             const percentComplete = piecesComplete / totalPieceCount;
             stats.updatePiecesMesh(percentComplete);
-            await main.sleep(0);
+            await thread.sleep(0);
             startTime = performance.now();
             timeToStop = startTime + loadbalancer.getLongTaskTime();
         }
@@ -184,7 +186,6 @@ const piecesmodel = {
             gamefile.mesh.isGenerating--;
             return;
         }
-        main.enableForceRender(); // Renders the screen EVEN in a local-pause
 
         mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
                                : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
@@ -206,8 +207,7 @@ const piecesmodel = {
 
         if (giveStatus) statustext.showStatus(translations.rendering.regenerated_pieces, false, 0.5);
         
-        main.renderThisFrame();
-        main.enableForceRender(); // Renders the screen EVEN in a local-pause
+        frametracker.onVisualChange();
 
         gamefile.mesh.locked--;
         gamefile.mesh.isGenerating--;
@@ -426,7 +426,7 @@ const piecesmodel = {
      */
     shiftPiecesModel: function(gamefile) {
         console.log("Shifting pieces model..");
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         // console.log('Begin shifting model..')
 
@@ -493,7 +493,7 @@ const piecesmodel = {
         gamefile.mesh.isGenerating++;
 
         console.log("Rotating pieces model..");
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         // console.log('Begin rotating model..')
         // main.startTimer()
@@ -681,7 +681,7 @@ const piecesmodel = {
             // console.log(`Too much! Sleeping.. Used ${performance.now() - startTime} of our allocated ${maxTimeToSpend}`)
             const percentComplete = piecesComplete / totalPieceCount;
             stats.updateRotateMesh(percentComplete);
-            await main.sleep(0);
+            await thread.sleep(0);
             startTime = performance.now();
             timeToStop = startTime + loadbalancer.getLongTaskTime();
         }
@@ -700,7 +700,7 @@ const piecesmodel = {
 
         gamefile.mesh.locked--;
         gamefile.mesh.isGenerating--;
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     },
 
     /**

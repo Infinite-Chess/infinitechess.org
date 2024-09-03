@@ -2,11 +2,11 @@
 // Import Start
 import perspective from './perspective.js';
 import area from './area.js';
-import main from '../main.js';
 import movement from './movement.js';
 import camera from './camera.js';
 import space from '../misc/space.js';
 import board from './board.js';
+import frametracker from './frametracker.js';
 // Import End
 
 "use strict";
@@ -101,7 +101,7 @@ const transition = (function() {
 
         if (!isTeleporting) return; // Return if not currently teleporting
 
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         const elapsedTime = performance.now() - startTime;
         if (elapsedTime >= speed) {

@@ -196,7 +196,6 @@ const game = (function() {
         // Regenerate the mesh of all the pieces.
         piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
 
-        main.enableForceRender(); // Renders the screen EVEN in a local-pause
         guinavigation.update_MoveButtons();
 
         guigameinfo.updateWhosTurn(gamefile);

@@ -3,12 +3,13 @@
 import loadbalancer from '../misc/loadbalancer.js';
 import input from '../input.js';
 import perspective from './perspective.js';
-import main from '../main.js';
 import board from './board.js';
 import math from '../misc/math.js';
 import transition from './transition.js';
 import guipromotion from '../gui/guipromotion.js';
 import guititle from '../gui/guititle.js';
+import frametracker from './frametracker.js';
+import config from '../config.js';
 // Import End
 
 "use strict";
@@ -57,7 +58,7 @@ const movement = (function() {
         if (!Array.isArray(newPos)) return console.error(`New position must be an array! ${newPos}`);
         if (isNaN(newPos[0]) || isNaN(newPos[1])) return console.error(`Cannot set position to ${newPos}!`);
         boardPos = newPos;
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     }
 
     // Should be a single value, so this isn't a reference to memory location is it?
@@ -68,7 +69,7 @@ const movement = (function() {
     // Password for modifying is stored in "passwordForSetting", or is "pidough"
     function setBoardScale(newScale, password) {
         if (password !== passwordForSetting) {
-            if (main.devBuild) console.error("Incorrect pass");
+            if (config.DEV_BUILD) console.error("Incorrect pass");
             return newScale;
         }
         if (isNaN(newScale)) return console.error(`Cannot set scale to ${newScale}!`);
@@ -92,11 +93,11 @@ const movement = (function() {
         else scaleIsLess1Pixel_Virtual = false;
         // scaleIsLess1Pixel_Virtual = true;
         
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     }
 
     function setPanVelCap(newPanVelCap) {
-        if (!main.devBuild) return; // DO NOT set the panVelCap if not in dev mode!!
+        if (!config.DEV_BUILD) return; // DO NOT set the panVelCap if not in dev mode!!
         panVelCap = newPanVelCap;
     }
 
@@ -141,7 +142,7 @@ const movement = (function() {
         if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
         if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
         
-        main.renderThisFrame(); // Visual change, render the screen this frame.
+        frametracker.onVisualChange(); // Visual change, render the screen this frame.
         boardPos[0] += loadbalancer.getDeltaTime() * panVel[0] / boardScale;
         boardPos[1] += loadbalancer.getDeltaTime() * panVel[1] / boardScale;
     }
@@ -153,7 +154,7 @@ const movement = (function() {
         const damp = scaleVel > 0 || boardScale > board.glimitToDampScale() ? 1
             : boardScale / board.glimitToDampScale();
 
-        main.renderThisFrame(); // Visual change, render the screen this frame.
+        frametracker.onVisualChange(); // Visual change, render the screen this frame.
         const newScale = boardScale * (1 + loadbalancer.getDeltaTime() * scaleVel * damp);
         setBoardScale(newScale, passwordForSetting);
     }
@@ -397,7 +398,7 @@ const movement = (function() {
 
     // Called when board is being dragged by mouse, calculates new board position.
     function dragBoard_WithMouse() {
-        main.renderThisFrame(); // Visual change. Render the screen this frame.
+        frametracker.onVisualChange(); // Visual change. Render the screen this frame.
         // If scale was 1, what's the new position?
         // => Grabbed position subtract pixelMousePos / pixelsPerTile
         const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
@@ -408,7 +409,7 @@ const movement = (function() {
 
     // Called when board is being dragged by touch, calculates new board position.
     function dragBoard_WithFingers() {
-        main.renderThisFrame(); // Visual change. Render the screen this frame.
+        frametracker.onVisualChange(); // Visual change. Render the screen this frame.
 
         const n = perspective.getIsViewingBlackPerspective() ? -1 : 1; // Makes black perspective work
 

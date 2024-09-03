@@ -4,7 +4,6 @@ import guipause from './gui/guipause.js';
 import bufferdata from './rendering/bufferdata.js';
 import onlinegame from './misc/onlinegame.js';
 import perspective from './rendering/perspective.js';
-import main from './main.js';
 import movement from './rendering/movement.js';
 import options from './rendering/options.js';
 import selection from './chess/selection.js';
@@ -14,6 +13,7 @@ import arrows from './rendering/arrows.js';
 import buffermodel from './rendering/buffermodel.js';
 import jsutil from './misc/jsutil.js';
 import space from './misc/space.js';
+import frametracker from './rendering/frametracker.js';
 // Import End
 
 "use strict";
@@ -290,7 +290,7 @@ const input = (function() {
             // We need to re-render if the mouse ever moves because rendering methods test if the mouse is hovering over
             // pieces to change their opacity. The exception is if we're paused.
             const renderThisFrame = !guipause.areWePaused() && (arrows.getMode() !== 0 || movement.isScaleLess1Pixel_Virtual() || selection.isAPieceSelected() || perspective.getEnabled());
-            if (renderThisFrame) main.renderThisFrame();
+            if (renderThisFrame) frametracker.onVisualChange();
             
             const mouseCoords = convertCoords_CenterOrigin(event);
             mousePos = mouseCoords;

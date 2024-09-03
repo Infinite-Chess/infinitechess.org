@@ -5,7 +5,6 @@ import texture from './texture.js';
 import highlights from './highlights.js';
 import style from '../gui/style.js';
 import bufferdata from './bufferdata.js';
-import main from '../main.js';
 import input from '../input.js';
 import perspective from './perspective.js';
 import movement from './movement.js';
@@ -17,6 +16,7 @@ import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
 import jsutil from '../misc/jsutil.js';
 import space from '../misc/space.js';
+import frametracker from './frametracker.js';
 // Import End
 
 /** 
@@ -434,7 +434,7 @@ const board = (function() {
     // TEMPORARILY changes the board tiles color! Resets upon leaving game.
     // Used to darken board
     function changeColor(newWhiteTiles, newDarkTiles) {
-        main.renderThisFrame();
+        frametracker.onVisualChange();
         whiteTiles = newWhiteTiles;
         darkTiles = newDarkTiles;
         initDarkTilesModel();
@@ -444,7 +444,7 @@ const board = (function() {
         whiteTiles = options.getDefaultTiles(true); // true for white
         darkTiles = options.getDefaultTiles(false); // false for dark
         initDarkTilesModel();
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     }
 
     function darkenColor() {

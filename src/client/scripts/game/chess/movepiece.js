@@ -1,7 +1,6 @@
 
 // Import Start
 import legalmoves from './legalmoves.js';
-import main from '../main.js';
 import gamefileutility from './gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import arrows from '../rendering/arrows.js';
@@ -12,13 +11,13 @@ import animation from '../rendering/animation.js';
 import guinavigation from '../gui/guinavigation.js';
 import piecesmodel from '../rendering/piecesmodel.js';
 import guigameinfo from '../gui/guigameinfo.js';
-import math from '../misc/math.js';
 import movesscript from './movesscript.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 import colorutil from '../misc/colorutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 /** 
@@ -91,7 +90,7 @@ const movepiece = (function() {
 
         if (updateData) {
             guinavigation.update_MoveButtons();
-            main.renderThisFrame();
+            frametracker.onVisualChange();
         }
 
         if (!simulated) arrows.clearListOfHoveredPieces();
@@ -425,7 +424,7 @@ const movepiece = (function() {
         if (gamefile.moveIndex < moveIndex) return console.error("Cannot rewind game to index when we need to forward instead.");
         while (gamefile.moveIndex > moveIndex) rewindMove(gamefile, { animate: false, updateData, removeMove });
         guigameinfo.updateWhosTurn(gamefile);
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     }
 
     /**
@@ -481,7 +480,7 @@ const movepiece = (function() {
 
         if (updateData) {
             guinavigation.update_MoveButtons();
-            main.renderThisFrame();
+            frametracker.onVisualChange();
         }
     }
 

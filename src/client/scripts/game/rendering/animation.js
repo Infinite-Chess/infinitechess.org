@@ -1,7 +1,6 @@
 
 // Import Start
 import bufferdata from './bufferdata.js';
-import main from '../main.js';
 import sound from '../misc/sound.js';
 import movement from './movement.js';
 import options from './options.js';
@@ -10,6 +9,7 @@ import pieces from './pieces.js';
 import math from '../misc/math.js';
 import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
+import frametracker from './frametracker.js';
 // Import End
 
 /**
@@ -107,8 +107,7 @@ const animation = (function() {
     function update() {
         if (animations.length === 0) return;
 
-        main.renderThisFrame();
-        // main.enableForceRender()
+        frametracker.onVisualChange();
 
         for (let i = animations.length - 1; i >= 0; i--) {
             const thisAnimation = animations[i];

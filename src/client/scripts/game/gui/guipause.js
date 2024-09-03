@@ -2,7 +2,6 @@
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
 import style from './style.js';
-import main from '../main.js';
 import game from '../chess/game.js';
 import arrows from '../rendering/arrows.js';
 import clock from '../misc/clock.js';
@@ -13,6 +12,7 @@ import drawoffers from '../misc/drawoffers.js';
 import guititle from './guititle.js';
 import movesscript from '../chess/movesscript.js';
 import perspective from '../rendering/perspective.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 "use strict";
@@ -146,7 +146,7 @@ const guipause = (function() {
         isPaused = false;
         style.hideElement(element_pauseUI);
         closeListeners();
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     }
 
     function callback_MainMenu() {
@@ -179,7 +179,7 @@ const guipause = (function() {
     }
 
     function callback_TogglePointers() {
-        main.renderThisFrame();
+        frametracker.onVisualChange();
         let mode = arrows.getMode();
         mode++;
         if (mode > 2) mode = 0;

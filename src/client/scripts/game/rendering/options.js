@@ -3,7 +3,6 @@
 import input from '../input.js';
 import onlinegame from '../misc/onlinegame.js';
 import highlights from './highlights.js';
-import main from '../main.js';
 import stats from '../gui/stats.js';
 import perspective from './perspective.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -15,6 +14,7 @@ import game from '../chess/game.js';
 import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../misc/colorutil.js';
+import frametracker from './frametracker.js';
 // Import End
 
 "use strict";
@@ -129,7 +129,7 @@ const options = (function() {
     }
 
     function toggleDeveloperMode() {
-        main.renderThisFrame(); // Visual change, render the screen this frame
+        frametracker.onVisualChange(); // Visual change, render the screen this frame
         debugMode = !debugMode;
         camera.onPositionChange();
         perspective.initCrosshairModel();
@@ -157,7 +157,7 @@ const options = (function() {
         const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
         if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 
-        main.renderThisFrame(); // Visual change, render the screen this frame
+        frametracker.onVisualChange(); // Visual change, render the screen this frame
         em = !em;
         statustext.showStatus(`${translations.rendering.toggled_edit} ` + (em ? translations.rendering.on : translations.rendering.off));
     }

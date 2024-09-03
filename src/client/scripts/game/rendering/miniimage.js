@@ -4,7 +4,6 @@ import webgl from './webgl.js';
 import input from '../input.js';
 import perspective from './perspective.js';
 import bufferdata from './bufferdata.js';
-import main from '../main.js';
 import transition from './transition.js';
 import movement from './movement.js';
 import options from './options.js';
@@ -15,6 +14,7 @@ import game from '../chess/game.js';
 import area from './area.js';
 import typeutil from '../misc/typeutil.js';
 import space from '../misc/space.js';
+import frametracker from './frametracker.js';
 // Import End
 
 /**
@@ -80,7 +80,7 @@ const miniimage = (function() {
         // Toggled
         
         disabled = !disabled;
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         if (disabled) statustext.showStatus(translations.rendering.icon_rendering_off);
         else statustext.showStatus(translations.rendering.icon_rendering_on);

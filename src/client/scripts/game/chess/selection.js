@@ -5,7 +5,6 @@ import legalmoves from './legalmoves.js';
 import input from '../input.js';
 import onlinegame from '../misc/onlinegame.js';
 import movepiece from './movepiece.js';
-import main from '../main.js';
 import gamefileutility from './gamefileutility.js';
 import game from './game.js';
 import specialdetect from './specialdetect.js';
@@ -22,6 +21,8 @@ import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 import colorutil from '../misc/colorutil.js';
 import coordutil from '../misc/coordutil.js';
+import frametracker from '../rendering/frametracker.js';
+import config from '../config.js';
 // Import End
 
 /**
@@ -228,7 +229,7 @@ const selection = (function() {
      * @param {*} coords - The coordinates of the piece.
      */
     function selectPiece(type, index, coords) {
-        main.renderThisFrame();
+        frametracker.onVisualChange();
         pieceSelected = { type, index, coords };
         // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
         legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected);
@@ -275,7 +276,7 @@ const selection = (function() {
         pawnIsPromoting = false;
         promoteTo = undefined;
         guipromotion.close(); // Close the promotion UI
-        main.renderThisFrame();
+        frametracker.onVisualChange();
     }
 
     /**
@@ -328,7 +329,7 @@ const selection = (function() {
 
     /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
     function renderGhostPiece() {
-        if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || main.videoMode) return;
+        if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || !input.isMouseSupported() || config.VIDEO_MODE) return;
         pieces.renderGhostPiece(pieceSelected.type, hoverSquare);
     }
 

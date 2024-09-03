@@ -11,6 +11,7 @@ import { gl } from './webgl.js';
 import shaders from './shaders.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../misc/jsutil.js';
+import frametracker from './frametracker.js';
 // Import End
 
 /**
@@ -190,7 +191,7 @@ const camera = (function() {
                                        : window.innerWidth > 368 ? 66
                                                                  : window.innerWidth * 0.179;
         PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.gnavigationVisible() ? 0 : 84;
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         stats.updateStatsCSS();
     }
@@ -292,7 +293,7 @@ const camera = (function() {
     function onScreenResize() {
         initPerspective(); // The projection matrix needs to be recalculated every screen resize
         perspective.initCrosshairModel();
-        main.renderThisFrame(); // Visual change. Render the screen this frame.
+        frametracker.onVisualChange(); // Visual change. Render the screen this frame.
         guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
         // console.log('Resized window.')
     }
