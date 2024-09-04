@@ -8,7 +8,6 @@
 import sound from '../misc/sound.js';
 import game from '../chess/game.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import variant from '../chess/variant.js';
 import movement from '../rendering/movement.js';
 import gamefile from '../chess/gamefile.js';
 import gui from '../gui/gui.js';
@@ -21,6 +20,7 @@ import clock from '../misc/clock.js';
 import options from '../rendering/options.js';
 import timeutil from '../misc/timeutil.js';
 import frametracker from '../rendering/frametracker.js';
+import variant from '../variants/variant.js';
 // Import End
 
 "use strict";
@@ -207,11 +207,7 @@ const guipractice = (function() {
                 fullMove: "1",
                 startingPosition: startingPosition,
                 specialRights: {},
-                gameRules: {
-                    promotionRanks: null,
-                    promotionsAllowed: {"white":[],"black":[]},
-                    winConditions: variant.getDefaultWinConditions()
-                }
+                gameRules: variant.getBareMinimumGameRules()
             }
         };
         enginegame.setColorAndGameID(gameOptions);

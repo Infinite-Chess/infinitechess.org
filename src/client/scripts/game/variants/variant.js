@@ -305,6 +305,17 @@ const variant = (function() {
     }
 
     /**
+     * Returns the bare-minimum gamerules a game needs to function.
+     * @returns {GameRules} The gameRules object
+     */
+    function getBareMinimumGameRules() {
+        return jsutil.deepCopyObject({
+            winConditions: defaultWinConditions,
+            turnOrder: defaultTurnOrder
+        });
+    }
+
+    /**
      * Returns the `promotionsAllowed` property of the variant's gamerules.
      * You can promote to whatever pieces the game starts with.
      * @param {Object} position - The starting position of the game, organized by key `{ '1,2': 'queensB' }`
@@ -364,6 +375,7 @@ const variant = (function() {
         isVariantValid,
         getStartingPositionOfVariant,
         getGameRulesOfVariant,
+        getBareMinimumGameRules,
         getPromotionsAllowed,
     });
 
