@@ -153,6 +153,7 @@ const guipromotion = (function() {
      * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
      */
     function initUI(promotionsAllowed) { // {  }
+        promotionsAllowed = promotionsAllowed || { white: [], black: [] };
         const white = promotionsAllowed.white; // ['queens','bishops']
         const black = promotionsAllowed.black;
 

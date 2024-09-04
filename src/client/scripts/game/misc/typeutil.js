@@ -42,7 +42,7 @@ const typeutil = (function() {
      * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
      * @param {Object} [options] - An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
      */
-    function forEachPieceType(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
+    function forEachPieceType(callback, { ignoreNeutrals, ignoreVoids } = {}) { // Callback needs to have 1 parameter: type
         // Iterate through all colors in reverse order.
         // We do it in reverse so that white mini images
         // are rendered on top of black ones.

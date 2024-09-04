@@ -8,7 +8,7 @@ import specialmove from './specialmove.js';
 import movesets from './movesets.js';
 import colorutil from '../misc/colorutil.js';
 import coordutil from '../misc/coordutil.js';
-import variant2 from './variant2.js';
+import variant from '../variants/variant.js';
 // Import End
 
 /** 
@@ -22,7 +22,7 @@ import variant2 from './variant2.js';
  * This script stores our variants,
  * and prepares them when a game is generated
  */
-const variant = (function() {
+const initvariant = (function() {
 
     /**
      * Initializes the startSnapshot and gameRules properties of the provided gamefile.
@@ -54,7 +54,7 @@ const variant = (function() {
         const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
         
         // Makes sure all possible pieces are accounted for. even when they dont start with them
-        const promotiontypes = [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black];
+        const promotiontypes = gamefile.gameRules.promotionsAllowed ? [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black] : [];
         
         // Promotion types already have teams stripped
         const rawtypes = new Set(promotiontypes);
@@ -128,13 +128,11 @@ const variant = (function() {
         let position = options.startingPosition;
         let specialRights = options.specialRights;
         if (!options.startingPosition) {
-            const result = variant2.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime });
+            const result = variant.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime });
             positionString = result.positionString;
             position = result.position;
             specialRights = result.specialRights;
         } else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
-
-        options.gameRules.turnOrder = options.gameRules.turnOrder || variant2.getDefaultTurnOrder();
 
         gamefile.startSnapshot = {
             position,
@@ -161,13 +159,13 @@ const variant = (function() {
      */
     function initStartSnapshotAndGamerules(gamefile, { Variant, UTCDate, UTCTime }) {
 
-        const { position, positionString, specialRights } = variant2.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }); 
+        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }); 
         gamefile.startSnapshot = {
             position,
             positionString,
             specialRights
         };
-        gamefile.gameRules = variant2.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
+        gamefile.gameRules = variant.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
 
         // console.log(jsutil.deepCopyObject(position));
         // console.log(jsutil.deepCopyObject(positionString));
@@ -235,4 +233,4 @@ const variant = (function() {
 
 })();
 
-export default variant;
+export default initvariant;
