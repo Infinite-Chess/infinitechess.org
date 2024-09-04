@@ -30,7 +30,7 @@ const movesscript1 = (function() {
      */
     function getColorThatPlayedMoveIndex(game, i) {
         if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
-        const turnOrder = game.turnOrder;
+        const turnOrder = game.gameRules.turnOrder;
         return turnOrder[i % turnOrder.length];
     }
     

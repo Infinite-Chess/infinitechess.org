@@ -188,7 +188,7 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
 function pushGameClock(game) {
     // if (!game.whosTurn) return; // Game is over
     const colorWhoJustMoved = game.whosTurn; // white/black
-    game.whosTurn = game.turnOrder[(game.moves.length) % game.turnOrder.length];
+    game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
     if (game.untimed) return; // Don't adjust the times if the game isn't timed.
 
     if (!movesscript1.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played

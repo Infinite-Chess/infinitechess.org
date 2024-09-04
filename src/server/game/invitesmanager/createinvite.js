@@ -13,7 +13,6 @@ import { logEvents } from '../../middleware/logEvents.js';
 // Custom imports
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
-import variant1 from '../variant1.js';
 import clockweb from '../clockweb.js';
 import gameutility from '../gamemanager/gameutility.js';
 const { getDisplayNameOfPlayer } = gameutility;
@@ -23,6 +22,7 @@ import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { isServerRestarting } from '../updateServerRestart.js';
 import uuid from '../../../client/scripts/game/misc/uuid.js';
+import variant from '../../../client/scripts/game/variants/variant.js';
 
 /**
  * Type Definitions
@@ -135,7 +135,7 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
     if (typeof invite.publicity !== 'string') return true;
     if (typeof invite.tag !== 'string') return true;
 
-    if (!variant1.isVariantValid(invite.variant)) return true;
+    if (!variant.isVariantValid(invite.variant)) return true;
 
     if (!clockweb.isClockValueValid(invite.clock)) return true;
 
