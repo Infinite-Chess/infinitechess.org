@@ -7,10 +7,10 @@
  */
 
 import wsutility from '../wsutility.js';
-import math1 from '../math1.js';
 import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
+import jsutil from '../../../client/scripts/game/misc/jsutil.js';
 
 /**
  * Type Definitions
@@ -57,7 +57,7 @@ const timersBrowser = {};
  */
 function getPublicInvitesListSafe() {
     /** @type {Invite[]} */
-    const deepCopiedInvites = math1.deepCopyObject(invites);
+    const deepCopiedInvites = jsutil.deepCopyObject(invites);
     // Remove private invites
     for (let i = deepCopiedInvites.length - 1; i >= 0; i--) { // Iterate backwards because we are destructive
         const thisInvite = deepCopiedInvites[i];
@@ -116,7 +116,7 @@ function broadcastInvites(ws, replyto) {
 
     const subscribedClients = getInviteSubscribers();
     for (const subbedSocket of Object.values(subscribedClients)) {
-        const newInvitesListCopy = math1.deepCopyObject(newInvitesList);
+        const newInvitesListCopy = jsutil.deepCopyObject(newInvitesList);
         // Only include the replyto code with the invite list if this socket is
         // THE SAME SOCKET as the one that triggered this broadcast.
         const includedReplyTo = ws === subbedSocket ? replyto : undefined;

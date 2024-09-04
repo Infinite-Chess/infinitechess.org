@@ -1,9 +1,9 @@
 
 // Import Start
-import variant from './variant.js';
 import formatconverter from './formatconverter.js';
 import movesscript from './movesscript.js';
 import jsutil from '../misc/jsutil.js';
+import variant from '../variants/variant.js';
 // Import End
 
 'use script';

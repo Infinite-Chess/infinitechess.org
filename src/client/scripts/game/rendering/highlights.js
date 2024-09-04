@@ -91,7 +91,7 @@ const highlights = (function() {
     function regenModel() {
         if (!selection.isAPieceSelected()) return;
         frametracker.onVisualChange();
-        console.log("Regenerating legal moves model..");
+        // console.log("Regenerating legal moves model..");
 
         updateOffsetAndBoundingBoxOfRenderRange();
 

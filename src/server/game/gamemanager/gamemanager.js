@@ -7,7 +7,6 @@
 
 import gameutility from './gameutility.js';
 import wsutility from '../wsutility.js';
-import math1 from '../math1.js';
 import movesscript1 from '../movesscript1.js';
 import statlogger from '../statlogger.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
@@ -17,6 +16,8 @@ import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers,
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
+import uuid from '../../../client/scripts/game/misc/uuid.js';
+import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 
 /**
  * Type Definitions
@@ -50,13 +51,13 @@ const timeBeforeGameDeletionMillis = 1000 * 15; // 15 seconds
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
 function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1 is the invite owner.
-    const gameID = math1.genUniqueID(5, activeGames);
+    const gameID = uuid.genUniqueID(5, activeGames);
     const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
     if (!player1Socket) {
         // Player 1 (invite owner)'s socket closed before their invite was deleted.
         // Immediately start the auto-resign by disconnection timer
         const player2Color = gameutility.doesSocketBelongToGame_ReturnColor(game, player2Socket);
-        const player1Color = math1.getOppositeColor(player2Color);
+        const player1Color = colorutil.getOppositeColor(player2Color);
         startDisconnectTimer(game, player1Color, false, onPlayerLostByDisconnect);
     }
 
@@ -168,7 +169,7 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
     if (game.deleteTimeoutID === undefined) return; // Not scheduled to be deleted
     // Is the opponent still in the players in active games list? (has not seen the game results)
     const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-    const opponentColor = math1.getOppositeColor(color);
+    const opponentColor = colorutil.getOppositeColor(color);
     if (!hasColorInGameSeenConclusion(game, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
 
     // console.log("Deleting game immediately, instead of waiting 15 seconds, because both players have seen the game conclusion and requested to be removed from the players in active games list.")
@@ -187,7 +188,7 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
 function pushGameClock(game) {
     // if (!game.whosTurn) return; // Game is over
     const colorWhoJustMoved = game.whosTurn; // white/black
-    game.whosTurn = game.turnOrder[(game.moves.length) % game.turnOrder.length];
+    game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
     if (game.untimed) return; // Don't adjust the times if the game isn't timed.
 
     if (!movesscript1.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
@@ -304,7 +305,7 @@ function onPlayerLostOnTime(game) {
 
     // Who lost on time?
     const loser = game.whosTurn;
-    const winner = math1.getOppositeColor(loser);
+    const winner = colorutil.getOppositeColor(loser);
 
     setGameConclusion(game, `${winner} time`);
 

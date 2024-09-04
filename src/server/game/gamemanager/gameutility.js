@@ -16,8 +16,6 @@ import { getTranslation } from '../../utility/translate.js';
 import { ensureJSONString } from '../../utility/JSONUtils.js';
 
 // Custom imports
-import variant1 from '../variant1.js';
-import math1 from '../math1.js';
 import clockweb from '../clockweb.js';
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
@@ -27,6 +25,10 @@ import movesscript1 from '../movesscript1.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
+import timeutil from '../../../client/scripts/game/misc/timeutil.js';
+import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import variant from '../../../client/scripts/game/variants/variant.js';
+import jsutil from '../../../client/scripts/game/misc/jsutil.js';
 
 /**
  * Type Definitions
@@ -65,7 +67,7 @@ const gameutility = (function() {
             incrementMillis: null,
             rated: inviteOptions.rated === "Rated",
             moves: [],
-            turnOrder: variant1.getGameRulesOfVariant({ Variant: inviteOptions.variant }).turnOrder,
+            gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant }),
             gameConclusion: false,
             disconnect: {
                 startTimer: {},
@@ -79,8 +81,8 @@ const gameutility = (function() {
 
         if (!newGame.untimed) { // Set the start time and increment properties
             const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
-            newGame.startTimeMillis = math1.minutesToMillis(minutes);
-            newGame.incrementMillis = math1.secondsToMillis(increment);
+            newGame.startTimeMillis = timeutil.minutesToMillis(minutes);
+            newGame.incrementMillis = timeutil.secondsToMillis(increment);
             // Set the clocks
             newGame.timerWhite = newGame.startTimeMillis;
             newGame.timerBlack = newGame.startTimeMillis;
@@ -94,7 +96,7 @@ const gameutility = (function() {
         newGame.black = black;
 
         // Set whos turn
-        newGame.whosTurn = newGame.turnOrder[0];
+        newGame.whosTurn = newGame.gameRules.turnOrder[0];
 
         // Auto-subscribe the players to this game!
         // This will link their socket to this game, modify their
@@ -235,10 +237,10 @@ const gameutility = (function() {
      * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
      */
     function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
-        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated);
+        const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
 
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
-        const opponentColor = math1.getOppositeColor(playerColor);
+        const opponentColor = colorutil.getOppositeColor(playerColor);
         const gameOptions = {
             metadata: {
                 Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
@@ -327,7 +329,7 @@ const gameutility = (function() {
         const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
         if (!playerSocket) return; // Not connected, cant send message
 
-        const opponentColor = math1.getOppositeColor(color);
+        const opponentColor = colorutil.getOppositeColor(color);
         const messageContents = {
             gameConclusion: game.gameConclusion,
             moves: game.moves, // Send the final move list so they can make sure they're in sync.
@@ -412,14 +414,13 @@ const gameutility = (function() {
          * gameRules
          */
         const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(game.gameConclusion);
-        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated);
-        const positionStuff = variant1.getStartingPositionOfVariant({ Variant: game.variant, Date }); // 3 properties: position, positionString, and specialRights.
+        const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
         const metadata = {
             Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
             Site: "https://www.infinitechess.org/",
             Round: "-",
-            Variant: game.variant, // Don't translate yet, as variant1 needs the variant code to fetch gamerules.
+            Variant: game.variant, // Don't translate yet, as variant.js needs the variant code to fetch gamerules.
             White: getDisplayNameOfPlayer(game.white),
             Black: getDisplayNameOfPlayer(game.black),
             TimeControl: game.clock,
@@ -428,14 +429,14 @@ const gameutility = (function() {
             Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
             Termination: wincondition1.getTerminationInEnglish(condition)
         };
-        const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position);
+        const gameRules = jsutil.deepCopyObject(game.gameRules);
+        const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
         delete gameRules.moveRule;
-        metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant1 has gotten the game rules.
+        metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant.js has gotten the game rules.
         const primedGamefile = {
             metadata,
-            moveRule: gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined,
+            moveRule,
             fullMove: 1,
-            startingPosition: positionStuff.positionString, // Technically not needed, as we set `specifyPosition` to false
             moves: game.moves,
             gameRules
         };

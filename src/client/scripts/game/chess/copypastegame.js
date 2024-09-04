@@ -11,7 +11,6 @@ import enginegame from '../misc/enginegame.js';
 import formatconverter from './formatconverter.js';
 import game from './game.js';
 import backcompatible from './backcompatible.js';
-import variant from './variant.js';
 import gamefile from './gamefile.js';
 import wincondition from './wincondition.js';
 import gamefileutility from './gamefileutility.js';
@@ -160,16 +159,15 @@ const copypastegame = (function() {
          * gameRules
          */
 
-        if (!longformat.metadata) longformat.metadata = {};
-        if (!longformat.fullMove) longformat.fullMove = 1;
+        if (!longformat.metadata) throw new Error("formatconvert must specify metadata when copying game.");
+        if (!longformat.fullMove) throw new Error("formatconvert must specify fullMove when copying game.");
         if (!longformat.startingPosition && !longformat.metadata.Variant) { statustext.showStatus(translations.copypaste.game_needs_to_specify, true); return false; }
-        if (longformat.startingPosition && !longformat.specialRights) longformat.specialRights = {};
-        if (!longformat.gameRules) longformat.gameRules = variant.getBareMinimumGameRules();
-        longformat.gameRules.winConditions = longformat.gameRules.winConditions || variant.getDefaultWinConditions();
+        if (longformat.startingPosition && !longformat.specialRights) throw new Error("formatconvert must specify specialRights when copying game, IF startingPosition is provided.");
+        if (!longformat.gameRules) throw new Error("Pasted game doesn't specify gameRules! This is an error of the format converter, it should always return default gameRules if it's not specified in the pasted ICN.");
+        if (!longformat.gameRules.winConditions) throw new Error("Pasted game doesn't specify winConditions! This is an error of the format converter, it should always return default win conditions if it's not specified in the pasted ICN.");
         if (!verifyWinConditions(longformat.gameRules.winConditions)) return false;
-        longformat.gameRules.promotionRanks = longformat.gameRules.promotionRanks || null;
-        longformat.gameRules.promotionsAllowed = longformat.gameRules.promotionsAllowed || { white: [], black: [] };
-        longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white', 'black'];
+        if (longformat.gameRules.promotionRanks && !longformat.gameRules.promotionsAllowed) throw new Error("Pasted game specifies promotion lines, but no promotions allowed! This is an error of the format converter, it should always return default promotions if it's not specified in the pasted ICN.");
+        if (!longformat.gameRules.turnOrder) throw new Error("Pasted game doesn't specify turn order! This is an error of the format converter, it should always return default turn order if it's not specified in the pasted ICN.");
 
         return true;
     }

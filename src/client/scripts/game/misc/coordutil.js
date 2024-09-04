@@ -21,7 +21,6 @@ const coordutil = (function() {
      * @param {number[]} coords - The coordinates
      * @returns {string} The key
      */
-    // Receives coords, returns it's key to access it in game.getGamefile().piecesOrganizedByKey object.
     function getKeyFromCoords(coords) {
         return `${coords[0]},${coords[1]}`;
     }

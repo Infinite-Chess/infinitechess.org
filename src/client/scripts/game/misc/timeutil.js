@@ -115,6 +115,29 @@ const timeutil = (function() {
     
         return totalMilliseconds;
     }
+    
+    /**
+     * Gets the current month in 'yyyy-mm' format.
+     * @returns {string} The current month in 'yyyy-mm' format.
+     */
+    function getCurrentMonth() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Add 1 because getMonth() returns 0-11
+        return `${year}-${month}`;
+    }
+
+    /**
+     * Gets the current day in 'yyyy-mm-dd' format.
+     * @returns {string} The current day in 'yyyy-mm-dd' format.
+     */
+    function getCurrentDay() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
     return Object.freeze({
         minutesToMillis,
@@ -123,7 +146,9 @@ const timeutil = (function() {
         getCurrentUTCTime,
         convertTimestampToUTCDateUTCTime,
         convertUTCDateUTCTimeToTimeStamp,
-        getTotalMilliseconds
+        getTotalMilliseconds,
+        getCurrentMonth,
+        getCurrentDay,
     });
     
 })();

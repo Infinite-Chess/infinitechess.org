@@ -62,7 +62,7 @@ const math1 = (function() {
     function genUniqueID(length, object) { // object contains the key value list where the keys are the ids we want to not have duplicates of.
         let id;
         do {
-            id = math1.generateID(length);
+            id = generateID(length);
         } while (object[id] != null);
         return id;
     }

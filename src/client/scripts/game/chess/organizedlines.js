@@ -205,7 +205,7 @@ const organizedlines = {
      * @returns {boolean} *true* if we need to append placeholders for this type.
      */
     isTypeATypeWereAppendingUndefineds(gamefile, type) {
-        if (!gamefile.gameRules.promotionsAllowed) throw new Error("promotionsAllowed needs to be defined before appending undefineds to the piece lists!");
+        if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
         const color = colorutil.getPieceColorFromType(type);
 

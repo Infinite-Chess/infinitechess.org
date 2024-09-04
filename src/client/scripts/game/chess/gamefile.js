@@ -6,7 +6,7 @@ import organizedlines from './organizedlines.js';
 import movepiece from './movepiece.js';
 import gamefileutility from './gamefileutility.js';
 import area from '../rendering/area.js';
-import variant from './variant.js';
+import initvariant from './initvariant.js';
 import jsutil from '../misc/jsutil.js';
 // Import End
 
@@ -14,6 +14,8 @@ import jsutil from '../misc/jsutil.js';
  * Type Definitions
  * @typedef {import('../rendering/buffermodel.js').BufferModel} BufferModel
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('../variants/variant.js').GameRules} GameRules
  */
 
 
@@ -75,6 +77,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         slidingPossible: undefined
     };
     
+    /** @type {GameRules} */
     this.gameRules = {
         winConditions: undefined,
         promotionRanks: undefined,
@@ -179,7 +182,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     jsutil.copyPropertiesToObject(metadata, this.metadata);
 
     // Init things related to the variant, and the startSnapshot of the position
-    variant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
+    initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
     /** The number of half-moves played since the last capture or pawn push. */
     this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
     area.initStartingAreaBox(this);
