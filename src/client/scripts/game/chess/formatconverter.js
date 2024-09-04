@@ -440,10 +440,14 @@ const formatconverter = (function() {
                 const moves = convertShortMovesToLong(shortmoves);
                 if (moves.length > 0) longformat.moves = moves;
                 if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { white: ['checkmate'], black: ['checkmate'] }; // Default win conditions if none specified
+                longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white','black']; // Default turn order if none specified
+                longformat.fullMove = longformat.fullMove || 1;
                 return longformat;
             }
         }
         if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { white: ['checkmate'], black: ['checkmate'] }; // Default win conditions if none specified
+        longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white','black']; // Default turn order if none specified
+        longformat.fullMove = longformat.fullMove || 1;
         return longformat;
     }
 

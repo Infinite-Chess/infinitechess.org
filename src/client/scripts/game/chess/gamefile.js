@@ -14,6 +14,8 @@ import jsutil from '../misc/jsutil.js';
  * Type Definitions
  * @typedef {import('../rendering/buffermodel.js').BufferModel} BufferModel
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('../variants/variant.js').GameRules} GameRules
  */
 
 
@@ -75,6 +77,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
         slidingPossible: undefined
     };
     
+    /** @type {GameRules} */
     this.gameRules = {
         winConditions: undefined,
         promotionRanks: undefined,
