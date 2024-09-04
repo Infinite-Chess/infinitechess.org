@@ -430,11 +430,12 @@ const gameutility = (function() {
             Termination: wincondition1.getTerminationInEnglish(condition)
         };
         const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position);
+        const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
         delete gameRules.moveRule;
         metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant1 has gotten the game rules.
         const primedGamefile = {
             metadata,
-            moveRule: gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined,
+            moveRule,
             fullMove: 1,
             startingPosition: positionStuff.positionString, // Technically not needed, as we set `specifyPosition` to false
             moves: game.moves,

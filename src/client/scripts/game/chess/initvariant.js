@@ -22,7 +22,7 @@ import variant2 from './variant2.js';
  * This script stores our variants,
  * and prepares them when a game is generated
  */
-const variant = (function() {
+const initvariant = (function() {
 
     /**
      * Initializes the startSnapshot and gameRules properties of the provided gamefile.
@@ -235,4 +235,4 @@ const variant = (function() {
 
 })();
 
-export default variant;
+export default initvariant;

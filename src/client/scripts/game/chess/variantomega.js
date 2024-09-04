@@ -1,8 +1,5 @@
 
-// Import Start
-import variant from './variant.js';
 import coordutil from '../misc/coordutil.js';
-// Import End
 
 /** 
  * Type Definitions 
@@ -13,70 +10,9 @@ import coordutil from '../misc/coordutil.js';
 'use strict';
 
 /**
- * This extends variant.js, containing the init methods
- * and generation aglorithms for all positions omega and above (showcasings)
+ * This extends variant.js, containing the generation aglorithms for Omega^3 and Omega^4
  */
 const variantomega = (function() {
-
-    /**
-     * Inits the gamefile for Joel & Cory's "Omega". Sets the startSnapshot and gameRules properties.
-     * @param {gamefile} gamefile - The gamefile
-     */
-    function initOmega(gamefile, { Variant, UTCDate, UTCTime }) {
-        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega' });
-        gamefile.startSnapshot = {
-            position,
-            positionString,
-            specialRights,
-            turn: 'black'
-        };
-        gamefile.gameRules = variant.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
-    }
-
-    /**
-     * Inits the gamefile for Andreas Tsevas's "Omega_Squared". Sets the startSnapshot and gameRules properties.
-     * @param {gamefile} gamefile - The gamefile
-     */
-    function initOmegaSquared(gamefile, { Variant, UTCDate, UTCTime }) {
-        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega_Squared' });
-        gamefile.startSnapshot = {
-            position,
-            positionString,
-            specialRights,
-            turn: 'black'
-        };
-        gamefile.gameRules = variant.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
-    }
-
-    /**
-     * Inits the gamefile for the Omega_Cubed position. Sets the startSnapshot and gameRules properties.
-     * @param {gamefile} gamefile - The gamefile
-     */
-    function initOmegaCubed(gamefile, { Variant, UTCDate, UTCTime }) {
-        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega_Cubed' });
-        gamefile.startSnapshot = {
-            position,
-            positionString,
-            specialRights,
-            turn: 'black'
-        };
-        gamefile.gameRules = variant.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
-    }
-
-    /**
-     * Inits the gamefile for the Omega_Fourth position. Sets the startSnapshot and gameRules properties.
-     * @param {gamefile} gamefile - The gamefile
-     */
-    function initOmegaFourth(gamefile, { Variant, UTCDate, UTCTime }) {
-        const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant: 'Omega_Fourth' });
-        gamefile.startSnapshot = {
-            position,
-            positionString,
-            specialRights,
-            turn: 'black'
-        };
-        gamefile.gameRules = variant.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
-    }
 
     /**
      * Generates the Omega^3 position example

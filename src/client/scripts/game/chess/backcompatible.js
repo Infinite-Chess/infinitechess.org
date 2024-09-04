@@ -1,6 +1,6 @@
 
 // Import Start
-import variant from './variant.js';
+import initvariant from './initvariant.js';
 import formatconverter from './formatconverter.js';
 import movesscript from './movesscript.js';
 import jsutil from '../misc/jsutil.js';
@@ -96,7 +96,7 @@ const backcompatible = (function() {
             if (longformat.promotionRanks) {
                 newGameRules.promotionRanks = [longformat.promotionRanks[1], longformat.promotionRanks[0]];
                 // The old gamefiles did not specify promotions allowed, because it's determined by the pieces the game starts with
-                newGameRules.promotionsAllowed = variant.getPromotionsAllowed(longformat.startingPosition, newGameRules.promotionRanks);
+                newGameRules.promotionsAllowed = variant2.getPromotionsAllowed(longformat.startingPosition, newGameRules.promotionRanks);
             }
             converted.gameRules = newGameRules;
         }

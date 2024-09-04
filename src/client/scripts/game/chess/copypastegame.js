@@ -10,13 +10,13 @@ import localstorage from '../misc/localstorage.js';
 import formatconverter from './formatconverter.js';
 import game from './game.js';
 import backcompatible from './backcompatible.js';
-import variant from './variant.js';
 import gamefile from './gamefile.js';
 import wincondition from './wincondition.js';
 import gamefileutility from './gamefileutility.js';
 import statustext from '../gui/statustext.js';
 import jsutil from '../misc/jsutil.js';
 import docutil from '../misc/docutil.js';
+import variant2 from './variant2.js';
 // Import End
 
 "use strict";
@@ -160,8 +160,8 @@ const copypastegame = (function() {
         if (!longformat.fullMove) longformat.fullMove = 1;
         if (!longformat.startingPosition && !longformat.metadata.Variant) { statustext.showStatus(translations.copypaste.game_needs_to_specify, true); return false; }
         if (longformat.startingPosition && !longformat.specialRights) longformat.specialRights = {};
-        if (!longformat.gameRules) longformat.gameRules = variant.getBareMinimumGameRules();
-        longformat.gameRules.winConditions = longformat.gameRules.winConditions || variant.getDefaultWinConditions();
+        if (!longformat.gameRules) longformat.gameRules = variant2.getBareMinimumGameRules();
+        longformat.gameRules.winConditions = longformat.gameRules.winConditions || variant2.getDefaultWinConditions();
         if (!verifyWinConditions(longformat.gameRules.winConditions)) return false;
         longformat.gameRules.promotionRanks = longformat.gameRules.promotionRanks || null;
         longformat.gameRules.promotionsAllowed = longformat.gameRules.promotionsAllowed || { white: [], black: [] };
