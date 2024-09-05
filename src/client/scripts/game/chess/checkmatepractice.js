@@ -13,6 +13,7 @@ import localstorage from '../misc/localstorage.js';
 import enginegame from '../misc/enginegame.js';
 import colorutil from '../misc/colorutil.js';
 import coordutil from '../misc/coordutil.js';
+import winconutil from '../misc/winconutil.js';
 // Import End
 
 "use strict";
@@ -182,7 +183,7 @@ const checkmatepractice = (function() {
         if (gui.getScreen() !== 'checkmate practice') return; // No
 
         // Did we win or lose?
-        const victor = wincondition.getVictorAndConditionFromGameConclusion(game.getGamefile().gameConclusion).victor;
+        const victor = winconutil.getVictorAndConditionFromGameConclusion(game.getGamefile().gameConclusion).victor;
         if (!enginegame.areWeColor(victor)) return; // Lost
 
         // Add the checkmate to the list of completed!
