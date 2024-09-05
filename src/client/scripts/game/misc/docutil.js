@@ -43,10 +43,19 @@ const docutil = (function() {
         return window.matchMedia("(pointer: fine)").matches;
     }
 
+    /**
+     * Returns true if the current device supports touch events.
+     * @returns {boolean}
+     */
+    function isTouchSupported() {
+        return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
+    }
+
     return Object.freeze({
         isLocalEnvironment,
         copyToClipboard,
         isMouseSupported,
+        isTouchSupported,
     });
 
 })();
