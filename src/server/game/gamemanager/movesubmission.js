@@ -132,7 +132,7 @@ function doesGameConclusionCheckOut(game, gameConclusion, color) {
 
     // If conclusion is "aborted", victor will not be specified.
     const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
-    if (!winconutil.isGameConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
+    if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
     // Game conclusion is decisive...
     // We can't submit a move where our opponent wins
     const oppositeColor = colorutil.getOppositeColor(color);

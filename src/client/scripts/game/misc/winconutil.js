@@ -42,6 +42,20 @@ const winconutil = (function() {
     function isGameConclusionDecisive(gameConclusion) {
         if (gameConclusion === false) throw new Error('Should not be be testing if game conclusion is decisive when game is not over!');
         const condition = getVictorAndConditionFromGameConclusion(gameConclusion).condition;
+        return isConclusionDecisive(condition);
+    }
+
+    /**
+     * A variant of {@link isGameConclusionDecisive} with the game conclusion PRE-SPLIT to remove the victor from the first half of it!
+     * 
+     * Calculates if the provided conclusion is a decisive conclusion.
+     * This is any conclusion that can happen after a move is made.
+     * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
+     * which can happen at any point in time.
+     * @param {string} gameConclusion - The gameConclusion
+     * @returns {boolean} *true* if the gameConclusion is decisive.
+     */
+    function isConclusionDecisive(condition) {
         return decisiveGameConclusions.includes(condition);
     }
 
@@ -78,6 +92,7 @@ const winconutil = (function() {
     return Object.freeze({
         isWinConditionValid,
         isGameConclusionDecisive,
+        isConclusionDecisive,
         getVictorAndConditionFromGameConclusion,
 	    getResultFromVictor,
     });
