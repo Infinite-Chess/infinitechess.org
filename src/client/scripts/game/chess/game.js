@@ -32,6 +32,7 @@ import highlights from '../rendering/highlights.js';
 import promotionlines from '../rendering/promotionlines.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import loadbalancer from '../misc/loadbalancer.js';
+import gamerules from '../variants/gamerules.js';
 // Import End
 
 /** 
@@ -238,7 +239,7 @@ const game = (function() {
         } else miniimage.enable();
 
         // Do we need to convert any checkmate win conditions to royalcapture?
-        if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
+        if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
 
         guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 

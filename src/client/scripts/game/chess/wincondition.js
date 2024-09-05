@@ -1,4 +1,5 @@
 
+
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from './gamefileutility.js';
@@ -7,13 +8,14 @@ import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
-import jsutil from '../misc/jsutil.js';
 // Import End
 
-/** 
- * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
-*/
+// Type Definitions...
+
+/** @typedef {import('./gamefile.js').gamefile} gamefile */
+/* eslint-disable no-unused-vars */
+import { GameRules } from '../variants/gamerules.js';
+/* eslint-enable no-unused-vars */
 
 "use strict";
 
@@ -23,16 +25,6 @@ import jsutil from '../misc/jsutil.js';
  * conditions except for checkmate, stalemate, and repetition.
  */
 const wincondition = (function() {
-
-    /** Valid win conditions in the gamerules. */
-    const validWinConditions = ['checkmate','royalcapture','allroyalscaptured','allpiecescaptured','threecheck','koth'];
-    
-    /**
-     * List of all win conditions that happen after a move being made.
-     * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement.
-     * which can happen at any point in time.
-     */
-    const decisiveGameConclusions = [...validWinConditions, 'stalemate', 'repetition', 'moverule', 'insuffmat'];
 
     // The squares in KOTH where if you get your king to you WIN
     const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
@@ -48,7 +40,6 @@ const wincondition = (function() {
         return detectAllpiecescaptured(gamefile)
             || detectRoyalCapture(gamefile)
             || detectAllroyalscaptured(gamefile)
-            || detectThreecheck(gamefile)
             || detectKoth(gamefile)
             || checkmate.detectCheckmateOrDraw(gamefile) // Also checks for repetition draw!
             // This needs to be last so that a draw isn't enforced in a true win
@@ -58,7 +49,7 @@ const wincondition = (function() {
     }
 
     function detectRoyalCapture(gamefile) {
-        if (!isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule
+        if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule
 
         // Was the last move capturing a royal piece?
         if (wasLastMoveARoyalCapture(gamefile)) {
@@ -70,7 +61,7 @@ const wincondition = (function() {
     }
 
     function detectAllroyalscaptured(gamefile) {
-        if (!isOpponentUsingWinCondition(gamefile, 'allroyalscaptured')) return false; // Not using this gamerule
+        if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'allroyalscaptured')) return false; // Not using this gamerule
         if (!wasLastMoveARoyalCapture(gamefile)) return false; // Last move wasn't a royal capture.
 
         // Are there any royal pieces remaining?
@@ -86,7 +77,7 @@ const wincondition = (function() {
     }
 
     function detectAllpiecescaptured(gamefile) {
-        if (!isOpponentUsingWinCondition(gamefile, 'allpiecescaptured')) return false; // Not using this gamerule
+        if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'allpiecescaptured')) return false; // Not using this gamerule
 
         // If the player who's turn it is now has zero pieces left, win!
         const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn);
@@ -99,29 +90,8 @@ const wincondition = (function() {
         return false;
     }
 
-    function detectThreecheck(gamefile) {
-        if (!isOpponentUsingWinCondition(gamefile, 'threecheck')) return false; // Not using this gamerule
-
-        // Was the last move a check?
-        if (gamefile.inCheck) {
-            if (gamefile.checksGiven == null) gamefile.checksGiven = { white: 0, black: 0 };
-            
-            if (gamefile.whosTurn === 'white') gamefile.checksGiven.white++;
-            else if (gamefile.whosTurn === 'black') gamefile.checksGiven.black++;
-            else throw new Error(`Whosturn is invalid when detecting threecheck! Value ${gamefile.whosTurn}`);
-
-            if (gamefile.checksGiven[gamefile.whosTurn] === 3) {
-                if (gamefile.whosTurn === 'white') return 'black threecheck';
-                else if (gamefile.whosTurn === 'black') return 'white threecheck';
-                else throw new Error("Cannot determine winning color by wincondition threecheck!");
-            }
-        }
-
-        return false;
-    }
-
     function detectKoth(gamefile) {
-        if (!isOpponentUsingWinCondition(gamefile, 'koth')) return false; // Not using this gamerule
+        if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'koth')) return false; // Not using this gamerule
 
         // Was the last move a king move?
         const lastMove = movesscript.getLastMove(gamefile.moves);
@@ -159,39 +129,6 @@ const wincondition = (function() {
         return false;
     }
 
-    /**
-     * Tests if the player who JUST played a move can win from the specified win condition.
-     * @param {gamefile} gamefile - The gamefile containing game data.
-     * @param {string} winCondition - The win condition to check against.
-     * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
-     */
-    function isOpponentUsingWinCondition(gamefile, winCondition) {
-        const oppositeColor = colorutil.getOppositeColor(gamefile.whosTurn);
-        return gamefile.gameRules.winConditions[oppositeColor].includes(winCondition);
-    }
-
-    /**
-     * Checks if a specified color has a given win condition.
-     * @param {gamefile} gamefile - The gamefile.
-     * @param {string} color - The color to check (e.g., 'white', 'black').
-     * @param {string} winCondition - The win condition for.
-     * @returns {boolean} True if the specified color has the given win condition, otherwise false.
-     */
-    function doesColorHaveWinCondition(gamefile, color, winCondition) {
-        return gamefile.gameRules.winConditions[color].includes(winCondition);
-    }
-
-    /**
-     * Gets the count of win conditions for a specified color in the gamefile.
-     * @param {gamefile} gamefile - The gamefile.
-     * @param {string} color - The color to check (e.g., 'white', 'black').
-     * @returns {number} The number of win conditions for the specified color. Returns 0 if the color is not defined.
-     */
-    function getWinConditionCountOfColor(gamefile, color) {
-        if (gamefile.gameRules.winConditions[color] == null) return 0; // Color not defined.
-        return gamefile.gameRules.winConditions[color].length;
-    }
-
     // Returns true if the very last move captured a royal piece.
     function wasLastMoveARoyalCapture(gamefile) {
         const lastMove = movesscript.getLastMove(gamefile.moves);
@@ -203,53 +140,6 @@ const wincondition = (function() {
 
         // Does the piece type captured equal any royal piece?
         return typeutil.royals.includes(trimmedTypeCaptured);
-    }
-
-    /**
-     * Calculates if the provided game conclusion is a decisive conclusion.
-     * This is any conclusion that can happen after a move is made.
-     * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
-     * which can happen at any point in time.
-     * @param {string} gameConclusion - The gameConclusion
-     * @returns {boolean} *true* if the gameConclusion is decisive.
-     */
-    function isGameConclusionDecisive(gameConclusion) {
-        if (gameConclusion === false) throw new Error("Should not be checking if gameConclusion is decisive when game isn't over.");
-        for (const conclusion of decisiveGameConclusions) {
-            if (gameConclusion.includes(conclusion)) return true;
-        }
-        return false;
-    }
-
-    /**
-     * Calculates the victor and condition properties from the specified game conclusion.
-     * For example, "white checkmate" => `{ victor: 'white', condition: 'checkmate' }`.
-     * If the game was aborted, victor will be undefined.
-     * @param {string} gameConclusion - The gameConclusion of the gamefile. Examples: 'white checkmate' / 'draw stalemate'  
-     * @returns {Object} An object containing 2 properties: `victor` and `condition`
-     */
-    function getVictorAndConditionFromGameConclusion(gameConclusion) {
-        let [victor, condition] = gameConclusion.split(' ');
-        if (victor === 'aborted') { // If the conclusion is "aborted", then the victor isn't specified.
-            condition = victor;
-            victor = undefined;
-        }
-        return { victor, condition };
-    }
-
-    /**
-	 * Returns the game result based on the victor.
-	 *
-	 * @param {string} victor - The victor of the game. Can be 'white', 'black', 'draw', or 'aborted'.
-	 * @returns {string} The result of the game in the format '1-0', '0-1', '0.5-0.5', or '0-0'.
-	 * @throws {Error} Throws an error if the victor is not recognized.
-	 */
-    function getResultFromVictor(victor) {
-	    if (victor === 'white') return '1-0';
-	    else if (victor === 'black') return '0-1';
-	    else if (victor === 'draw') return '0.5-0.5';
-	    else if (victor === 'aborted') return '0-0';
-	    throw new Error(`Cannot get game result from strange victor "${victor}"!`);
     }
 
     /**
@@ -269,83 +159,23 @@ const wincondition = (function() {
         if (movesscript.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
         return true; // Checkmate compatible!
     }
-    
-    /**
-     * Swaps the "checkmate" win condition for "royalcapture" in the gamefile if applicable.
-     *
-     * @param {gamefile} gamefile - The gamefile containing game data.
-     */
-    function swapCheckmateForRoyalCapture(gamefile) {
-        // Check if the game is using the "royalcapture" win condition
-        if (doesColorHaveWinCondition(gamefile, 'white', 'checkmate')) {
-            jsutil.removeObjectFromArray(gamefile.gameRules.winConditions.white, 'checkmate');
-            gamefile.gameRules.winConditions.white.push('royalcapture');
-        }
-        if (doesColorHaveWinCondition(gamefile, 'black', 'checkmate')) {
-            jsutil.removeObjectFromArray(gamefile.gameRules.winConditions.black, 'checkmate');
-            gamefile.gameRules.winConditions.black.push('royalcapture');
-        }
-        console.log("Swapped checkmate wincondition for royalcapture.");
-    }
 
     /**
      * Returns the termination of the game in english language.
-     * @param {gamefile} gamefile
+     * @param {GameRules} gameRules
      * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
      */
-    function getTerminationInEnglish(gamefile, condition) {
-        // Modify these values in translation/en-US.toml
-        switch (condition) {
-            case "checkmate":
-                return translations.termination.checkmate;
-            case "stalemate":
-                return translations.termination.stalemate;
-            case "repetition":
-                return translations.termination.repetition;
-            case "moverule": { // Contain this case in a block so that it's variables are not hoisted 
-                const numbWholeMovesUntilAutoDraw = gamefile.gameRules.moveRule / 2;
-                return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
-            } case "insuffmat":
-                return translations.termination.insuffmat;
-            case "royalcapture":
-                return translations.termination.royalcapture;
-            case "allroyalscaptured":
-                return translations.termination.allroyalscaptured;
-            case "allpiecescaptured":
-                return translations.termination.allpiecescaptured;
-            case "threecheck":
-                return translations.termination.threecheck;
-            case "koth":
-                return translations.termination.koth;
-            // Non-decisive "decisive" conclusions
-            case "resignation":
-                return translations.termination.resignation;
-            case "time":
-                return translations.termination.time;
-            case "aborted": // Happens within the first 2 moves
-                return translations.termination.aborted;
-            case "disconnect": // Happens when a player leaves
-                return translations.termination.disconnect;
-            case "agreement": // Draw by agreement
-                return translations.termination.agreement;
-            default:
-                console.error(`Cannot return English termination for unknown condition "${condition}"!`);
-                return 'Unknown';
+    function getTerminationInEnglish(gameRules, condition) {
+        if (condition === 'moverule') { // One exception
+            const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
+            return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
         }
+        return translations.termination[condition];
     }
 
     return Object.freeze({
-        validWinConditions,
         getGameConclusion,
-        detectThreecheck,
-        isOpponentUsingWinCondition,
-        doesColorHaveWinCondition,
-        getWinConditionCountOfColor,
-        isGameConclusionDecisive,
-        getVictorAndConditionFromGameConclusion,
-	    getResultFromVictor,
         isCheckmateCompatibleWithGame,
-        swapCheckmateForRoyalCapture,
         getTerminationInEnglish,
     });
 

@@ -7,7 +7,6 @@
 
 import gameutility from './gameutility.js';
 import wsutility from '../wsutility.js';
-import movesscript1 from '../movesscript1.js';
 import statlogger from '../statlogger.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
 
@@ -191,7 +190,7 @@ function pushGameClock(game) {
     game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
     if (game.untimed) return; // Don't adjust the times if the game isn't timed.
 
-    if (!movesscript1.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
+    if (!gameutility.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
 
     const now = Date.now();
     const timeSpent = now - game.timeAtTurnStart;
@@ -220,7 +219,7 @@ function pushGameClock(game) {
 function stopGameClock(game) {
     if (game.untimed) return;
 
-    if (!movesscript1.isGameResignable(game)) {
+    if (!gameutility.isGameResignable(game)) {
         game.whosTurn = undefined;
         return; 
     }
@@ -329,7 +328,7 @@ function onPlayerLostByDisconnect(game, colorWon) {
 
     if (gameutility.isGameOver(game)) return console.error("We should have cancelled the auto-loss-by-disconnection timer when the game ended!");
 
-    if (movesscript1.isGameResignable(game)) {
+    if (gameutility.isGameResignable(game)) {
         console.log("Someone has lost by disconnection!");
         setGameConclusion(game, `${colorWon} disconnect`);
     } else {
@@ -351,7 +350,7 @@ function onPlayerLostByDisconnect(game, colorWon) {
 function onPlayerLostByAbandonment(game, colorWon) {
     if (!colorWon) return console.log("Cannot lose player by abandonment when colorWon is undefined");
 
-    if (movesscript1.isGameResignable(game)) {
+    if (gameutility.isGameResignable(game)) {
         console.log("Someone has lost by abandonment!");
         setGameConclusion(game, `${colorWon} disconnect`);
     } else {

@@ -19,9 +19,7 @@ import { ensureJSONString } from '../../utility/JSONUtils.js';
 import clockweb from '../clockweb.js';
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
-import wincondition1 from '../wincondition1.js';
 import formatconverter from '../../../client/scripts/game/chess/formatconverter.js';
-import movesscript1 from '../movesscript1.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
@@ -29,12 +27,17 @@ import timeutil from '../../../client/scripts/game/misc/timeutil.js';
 import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 import variant from '../../../client/scripts/game/variants/variant.js';
 import jsutil from '../../../client/scripts/game/misc/jsutil.js';
+import winconutil from '../../../client/scripts/game/misc/winconutil.js';
+
+// Type Definitions...
 
 /**
- * Type Definitions
  * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+/* eslint-disable no-unused-vars */
+import { GameRules } from '../../../client/scripts/game/variants/gamerules.js';
+/* eslint-enable no-unused-vars */
 
 const gameutility = (function() {
 
@@ -413,9 +416,10 @@ const gameutility = (function() {
          * moves
          * gameRules
          */
-        const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(game.gameConclusion);
+        const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
         const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
+        const gameRules = jsutil.deepCopyObject(game.gameRules);
         const metadata = {
             Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
             Site: "https://www.infinitechess.org/",
@@ -426,10 +430,9 @@ const gameutility = (function() {
             TimeControl: game.clock,
             UTCDate,
             UTCTime,
-            Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
-            Termination: wincondition1.getTerminationInEnglish(condition)
+            Result: winconutil.getResultFromVictor(victor),
+            Termination: getTerminationInEnglish(gameRules, condition)
         };
-        const gameRules = jsutil.deepCopyObject(game.gameRules);
         const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
         delete gameRules.moveRule;
         metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant.js has gotten the game rules.
@@ -615,7 +618,7 @@ const gameutility = (function() {
         if (color !== 'white' && color !== 'black') return console.error(`colorJustMoved must be white or black! ${color}`);
         
         const message = {
-            move: movesscript1.getLastMove(game.moves),
+            move: getLastMove(game),
             gameConclusion: game.gameConclusion,
             moveNumber: game.moves.length,
             timerWhite: game.timerWhite,
@@ -633,6 +636,51 @@ const gameutility = (function() {
      */
     function cancelDeleteGameTimer(game) {
         clearTimeout(game.deleteTimeoutID);
+    }
+
+    /**
+     * Tests if the game is resignable (atleast 2 moves have been played).
+     * If not, then the game is abortable.
+     * @param {Game} game - The game
+     * @returns {boolean} *true* if the game is resignable.
+     */
+    function isGameResignable(game) { return game.moves.length > 1; }
+
+    /**
+     * Returns the last, or most recent, move in the provided game's move list, or undefined if there isn't one.
+     * @param {Game} game - The moves list, with the moves in most compact notation: `1,2>3,4N`
+     * @returns {string | undefined} The move, in most compact notation, or undefined if there isn't one.
+     */
+    function getLastMove(game) {
+        const moves = game.moves;
+        if (moves.length === 0) return;
+        return moves[moves.length - 1];
+    }
+
+    /**
+     * Returns the color of the player that played that moveIndex within the moves list.
+     * Returns error if index -1
+     * @param {Game} game
+     * @param {number} i - The moveIndex
+     * @returns {string} - The color that played the moveIndex
+     */
+    function getColorThatPlayedMoveIndex(game, i) {
+        if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
+        const turnOrder = game.gameRules.turnOrder;
+        return turnOrder[i % turnOrder.length];
+    }
+
+    /**
+     * Returns the termination of the game in english language.
+     * @param {GameRules} gameRules
+     * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
+     */
+    function getTerminationInEnglish(gameRules, condition) {
+        if (condition === 'moverule') { // One exception
+            const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
+            return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;
+        }
+        return getTranslation(`play.javascript.termination.${condition}`);
     }
 
     return Object.freeze({
@@ -654,7 +702,9 @@ const gameutility = (function() {
         sendUpdatedClockToColor,
         sendMoveToColor,
         getDisplayNameOfPlayer,
-        cancelDeleteGameTimer
+        cancelDeleteGameTimer,
+        isGameResignable,
+        getColorThatPlayedMoveIndex,
     });
 
 })();

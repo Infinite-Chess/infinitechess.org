@@ -10,12 +10,12 @@ import { logEvents } from '../../middleware/logEvents.js';
 // Custom imports
 import gameutility from './gameutility.js';
 import wsutility from '../wsutility.js';
-import wincondition1 from '../wincondition1.js';
 
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import winconutil from '../../../client/scripts/game/misc/winconutil.js';
 
 /**
  * Type Definitions
@@ -131,8 +131,8 @@ function doesGameConclusionCheckOut(game, gameConclusion, color) {
     if (typeof gameConclusion !== 'string') return false;
 
     // If conclusion is "aborted", victor will not be specified.
-    const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(gameConclusion);
-    if (!wincondition1.isGameConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
+    const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+    if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
     // Game conclusion is decisive...
     // We can't submit a move where our opponent wins
     const oppositeColor = colorutil.getOppositeColor(color);

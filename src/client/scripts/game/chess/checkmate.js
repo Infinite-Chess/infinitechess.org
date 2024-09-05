@@ -53,7 +53,7 @@ const checkmate = (function() {
         // We made it through every single piece without finding a single move.
         // So is this draw or checkmate? Depends on whether the current state is check!
         // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
-        const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate');
+        const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate');
         if (gamefile.inCheck && usingCheckmate) {
             const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
             return `${colorThatWon} checkmate`;
@@ -162,7 +162,7 @@ const checkmate = (function() {
     //     // We made it through every single piece without finding a single move.
     //     // So is this draw or checkmate? Depends on whether the current state is check!
     //     // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
-    //     const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate')
+    //     const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate')
     //     if (gamefile.inCheck && usingCheckmate) {
 
     //         if (whosTurn === 'white') return 'black checkmate' // Black wins

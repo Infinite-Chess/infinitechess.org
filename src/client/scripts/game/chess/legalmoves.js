@@ -6,11 +6,11 @@ import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import math from '../misc/math.js';
 import checkdetection from './checkdetection.js';
-import wincondition from './wincondition.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
+import winconutil from '../misc/winconutil.js';
 // Import End
 
 /** 
@@ -338,7 +338,7 @@ const legalmoves = (function() {
         // Check the resulting game conclusion from the move and if that lines up with the opponents claim.
         // Only do so if the win condition is decisive (exclude win conditions declared by the server,
         // such as time, aborted, resignation, disconnect)
-        if (claimedGameConclusion === false || wincondition.isGameConclusionDecisive(claimedGameConclusion)) {
+        if (claimedGameConclusion === false || winconutil.isGameConclusionDecisive(claimedGameConclusion)) {
             const color = colorutil.getPieceColorFromType(piecemoved.type);
             const infoAboutSimulatedMove = movepiece.simulateMove(gamefile, moveCopy, color, { doGameOverChecks: true }); // { isCheck, gameConclusion }
             if (infoAboutSimulatedMove.gameConclusion !== claimedGameConclusion) {
