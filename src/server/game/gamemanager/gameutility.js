@@ -19,7 +19,6 @@ import { ensureJSONString } from '../../utility/JSONUtils.js';
 import clockweb from '../clockweb.js';
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
-import wincondition1 from '../wincondition1.js';
 import formatconverter from '../../../client/scripts/game/chess/formatconverter.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
@@ -30,11 +29,15 @@ import variant from '../../../client/scripts/game/variants/variant.js';
 import jsutil from '../../../client/scripts/game/misc/jsutil.js';
 import winconutil from '../../../client/scripts/game/misc/winconutil.js';
 
+// Type Definitions...
+
 /**
- * Type Definitions
  * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+/* eslint-disable no-unused-vars */
+import { GameRules } from '../../../client/scripts/game/variants/gamerules.js';
+/* eslint-enable no-unused-vars */
 
 const gameutility = (function() {
 
@@ -416,6 +419,7 @@ const gameutility = (function() {
         const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
         const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
+        const gameRules = jsutil.deepCopyObject(game.gameRules);
         const metadata = {
             Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
             Site: "https://www.infinitechess.org/",
@@ -427,9 +431,8 @@ const gameutility = (function() {
             UTCDate,
             UTCTime,
             Result: winconutil.getResultFromVictor(victor),
-            Termination: wincondition1.getTerminationInEnglish(condition)
+            Termination: getTerminationInEnglish(gameRules, condition)
         };
-        const gameRules = jsutil.deepCopyObject(game.gameRules);
         const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
         delete gameRules.moveRule;
         metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant.js has gotten the game rules.
@@ -665,6 +668,19 @@ const gameutility = (function() {
         if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
         const turnOrder = game.gameRules.turnOrder;
         return turnOrder[i % turnOrder.length];
+    }
+
+    /**
+     * Returns the termination of the game in english language.
+     * @param {GameRules} gameRules
+     * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
+     */
+    function getTerminationInEnglish(gameRules, condition) {
+        if (condition === 'moverule') { // One exception
+            const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
+            return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;
+        }
+        return getTranslation(`play.javascript.termination.${condition}`);
     }
 
     return Object.freeze({

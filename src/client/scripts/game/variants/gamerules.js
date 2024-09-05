@@ -1,4 +1,4 @@
-import jsutil from "../misc/jsutil";
+import jsutil from "../misc/jsutil.js";
 
 /**
  * This script contains the gameRules constructor,

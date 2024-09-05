@@ -1,4 +1,5 @@
 
+
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from './gamefileutility.js';
@@ -7,14 +8,14 @@ import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
-import jsutil from '../misc/jsutil.js';
-import gamerules from '../variants/gamerules.js';
 // Import End
 
-/** 
- * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
-*/
+// Type Definitions...
+
+/** @typedef {import('./gamefile.js').gamefile} gamefile */
+/* eslint-disable no-unused-vars */
+import { GameRules } from '../variants/gamerules.js';
+/* eslint-enable no-unused-vars */
 
 "use strict";
 
@@ -161,48 +162,15 @@ const wincondition = (function() {
 
     /**
      * Returns the termination of the game in english language.
-     * @param {gamefile} gamefile
+     * @param {GameRules} gameRules
      * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
      */
-    function getTerminationInEnglish(gamefile, condition) {
-        // Modify these values in translation/en-US.toml
-        switch (condition) {
-            case "checkmate":
-                return translations.termination.checkmate;
-            case "stalemate":
-                return translations.termination.stalemate;
-            case "repetition":
-                return translations.termination.repetition;
-            case "moverule": { // Contain this case in a block so that it's variables are not hoisted 
-                const numbWholeMovesUntilAutoDraw = gamefile.gameRules.moveRule / 2;
-                return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
-            } case "insuffmat":
-                return translations.termination.insuffmat;
-            case "royalcapture":
-                return translations.termination.royalcapture;
-            case "allroyalscaptured":
-                return translations.termination.allroyalscaptured;
-            case "allpiecescaptured":
-                return translations.termination.allpiecescaptured;
-            case "threecheck":
-                return translations.termination.threecheck;
-            case "koth":
-                return translations.termination.koth;
-            // Non-decisive "decisive" conclusions
-            case "resignation":
-                return translations.termination.resignation;
-            case "time":
-                return translations.termination.time;
-            case "aborted": // Happens within the first 2 moves
-                return translations.termination.aborted;
-            case "disconnect": // Happens when a player leaves
-                return translations.termination.disconnect;
-            case "agreement": // Draw by agreement
-                return translations.termination.agreement;
-            default:
-                console.error(`Cannot return English termination for unknown condition "${condition}"!`);
-                return 'Unknown';
+    function getTerminationInEnglish(gameRules, condition) {
+        if (condition === 'moverule') { // One exception
+            const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
+            return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
         }
+        return translations.termination[condition];
     }
 
     return Object.freeze({
