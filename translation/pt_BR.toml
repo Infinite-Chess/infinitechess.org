@@ -36,7 +36,7 @@ what_is_it_pargaraphs = [
 "Como você pode imaginar, existem infinitas possibilidades de posições iniciais, muitas das quais você pode jogar competitivamente! Seu objetivo final ainda é o xeque-mate, o que requer novas táticas, visto que não há paredes contra as quais possa prender o rei inimigo. Os jogos tipicamente não duram muito mais do que os jogos normais de xadrez. Peões ainda promovem nas fileiras 1 & 8!",
 ]
 how_to_title = "Como eu posso jogar?"
-how_to_paragraph = ["A versão atual é a 1.3.2 na página ","Jogar","!"]
+how_to_paragraph = ["A versão atual é a 1.4 na página ","Jogar","!"]
 about_title = "Sobre o Projeto"
 about_paragraphs = [
 "Eu sou Naviary. Desde que descobri o Infinite Chess (o conceito existia muito antes deste site), fiquei muito intrigado com ele e suas possibilidades! Até pouco tempo atrás, jogar era bastante difícil, exigindo que os membros do chess.com criassem imagens do tabuleiro atual e as enviassem de um lado para o outro a cada jogada realizada. Devido a isso, poucas pessoas conhecem ou conseguiram jogar.",
