@@ -1,5 +1,4 @@
 
-// Import Start
 import formatconverter from '../chess/formatconverter.js';
 import omega3generator from './omega3generator.js';
 import omega4generator from './omega4generator.js';
@@ -7,7 +6,12 @@ import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
 import timeutil from '../misc/timeutil.js';
-// Import End
+
+// Type Definitions...
+
+/* eslint-disable no-unused-vars */
+import { GameRules } from './gamerules.js';
+/* eslint-enable no-unused-vars */
 
 "use strict";
 
@@ -369,55 +373,4 @@ const variant = (function() {
 
 })();
 
-
-
-
-
-/** The GameRules type definition. */
-function GameRules() {
-    console.error("This GameRules constructor should NEVER be called! It is purely for JSDoc dropdown info.");
-
-    // REQUIRED gamerules...
-
-    /** An object containing lists of what win conditions each color can win by. This is REQUIRED. */
-    this.winConditions = {
-        /** A list of win conditions white can win by. REQUIRED. @type {string[]} */
-        white: undefined,
-        /** A list of win conditions black can win by. REQUIRED. @type {string[]} */
-        black: undefined,
-    };
-    /** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. */
-    this.turnOrder = undefined;
-
-    // Gamerules that also have dedicated slots in ICN notation...
-
-    /**
-     * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
-     * If one side can't promote, their rank is `null`.
-     * If neither side can promote, this should be left as undefined.
-     * @type {number[]}
-     */
-    this.promotionRanks = undefined;
-    /**
-     * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
-     * If one color can't promote, their list should be left undefined.
-     * If no color can promote, this should be left undefined.
-     */
-    this.promotionsAllowed = {
-        /** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
-        white: undefined,
-        /** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
-        black: undefined,
-    };
-    /** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. */
-    this.moveRule = undefined;
-
-    // Gamerules that DON'T have a dedicated slot in ICN notation...
-
-    /** The maximum number of steps any sliding piece can take. */
-    this.slideLimit = undefined;
-}
-
-
 export default variant;
-export { GameRules };

@@ -14,6 +14,8 @@ import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
+import winconutil from '../misc/winconutil.js';
+import gamerules from '../variants/gamerules.js';
 // Import End
 
 /** 
@@ -216,7 +218,7 @@ const gamefileutility = (function() {
     function concludeGame(gamefile, conclusion = gamefile.gameConclusion, { requestRemovalFromActiveGames = true } = {}) {
         gamefile.gameConclusion = conclusion;
         if (requestRemovalFromActiveGames) onlinegame.requestRemovalFromPlayersInActiveGames();
-        if (wincondition.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
+        if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
         clock.stop();
         board.darkenColor();
         guigameinfo.gameEnd(gamefile.gameConclusion);
@@ -257,15 +259,12 @@ const gamefileutility = (function() {
     function setTerminationMetadata(gamefile) {
         if (!gamefile.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
-        const victorAndCondition = wincondition.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
+        const victorAndCondition = winconutil.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
         const condition = wincondition.getTerminationInEnglish(gamefile, victorAndCondition.condition);
         gamefile.metadata.Termination = condition;
     
         const victor = victorAndCondition.victor; // white/black/draw/undefined
-        gamefile.metadata.Result = victor === 'white' ? '1-0'
-            : victor === 'black' ? '0-1'
-                : victor === 'draw' ? '1/2-1/2'
-                    : '0-0'; // Aborted
+        gamefile.metadata.Result = winconutil.getResultFromVictor(victor);
     }
 
     // Returns a list of all the jumping royal it comes across of a specific color.
@@ -487,6 +486,17 @@ const gamefileutility = (function() {
         return royalCount;
     }
 
+    /**
+     * Tests if the player who JUST played a move can win from the specified win condition.
+     * @param {gamefile} gamefile - The gamefile containing game data.
+     * @param {string} winCondition - The win condition to check against.
+     * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
+     */
+    function isOpponentUsingWinCondition(gamefile, winCondition) {
+        const oppositeColor = colorutil.getOppositeColor(gamefile.whosTurn);
+        return gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, winCondition);
+    }
+
     return Object.freeze({
         pieceCountToDisableCheckmate,
         getPieceCountOfType,
@@ -511,6 +521,7 @@ const gamefileutility = (function() {
         getRoyalCountOfColor,
         getPieceCountOfGame,
         isGameOver,
+        isOpponentUsingWinCondition,
     });
 
 })();

@@ -1,23 +1,21 @@
 
 // This script when called as a function using the new keyword, will return a new gamefile.
 
-// Import start
 import organizedlines from './organizedlines.js';
 import movepiece from './movepiece.js';
 import gamefileutility from './gamefileutility.js';
 import area from '../rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../misc/jsutil.js';
-// Import End
 
-/** 
- * Type Definitions
- * @typedef {import('../rendering/buffermodel.js').BufferModel} BufferModel
- * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
- * @typedef {import('./movesscript.js').Move} Move
- * @typedef {import('../variants/variant.js').GameRules} GameRules
- */
+// Type Definitions...
 
+/** @typedef {import('../misc/math.js').BoundingBox} BoundingBox */
+/* eslint-disable no-unused-vars */
+import { BufferModel } from '../rendering/buffermodel.js';
+import { Move } from './movesscript.js';
+import { GameRules } from '../variants/gamerules.js';
+/* eslint-enable no-unused-vars */
 
 'use strict';
 

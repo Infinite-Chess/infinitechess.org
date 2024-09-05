@@ -28,6 +28,7 @@ import timeutil from '../../../client/scripts/game/misc/timeutil.js';
 import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 import variant from '../../../client/scripts/game/variants/variant.js';
 import jsutil from '../../../client/scripts/game/misc/jsutil.js';
+import winconutil from '../../../client/scripts/game/misc/winconutil.js';
 
 /**
  * Type Definitions
@@ -412,7 +413,7 @@ const gameutility = (function() {
          * moves
          * gameRules
          */
-        const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(game.gameConclusion);
+        const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
         const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
         const metadata = {
@@ -425,7 +426,7 @@ const gameutility = (function() {
             TimeControl: game.clock,
             UTCDate,
             UTCTime,
-            Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
+            Result: winconutil.getResultFromVictor(victor),
             Termination: wincondition1.getTerminationInEnglish(condition)
         };
         const gameRules = jsutil.deepCopyObject(game.gameRules);

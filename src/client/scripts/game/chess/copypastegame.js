@@ -16,6 +16,7 @@ import gamefileutility from './gamefileutility.js';
 import statustext from '../gui/statustext.js';
 import jsutil from '../misc/jsutil.js';
 import docutil from '../misc/docutil.js';
+import winconutil from '../misc/winconutil.js';
 // Import End
 
 "use strict";
@@ -172,7 +173,7 @@ const copypastegame = (function() {
     function verifyWinConditions(winConditions) {
         for (let i = 0; i < winConditions.white.length; i++) {
             const winCondition = winConditions.white[i];
-            if (wincondition.validWinConditions.includes(winCondition)) continue;
+            if (winconutil.isWinConditionValid(winCondition)) continue;
             // Not valid
             statustext.showStatus(`${translations.copypaste.invalid_wincon_white} "${winCondition}".`, true);
             return false;
@@ -180,7 +181,7 @@ const copypastegame = (function() {
 
         for (let i = 0; i < winConditions.black.length; i++) {
             const winCondition = winConditions.black[i];
-            if (wincondition.validWinConditions.includes(winCondition)) continue;
+            if (winconutil.isWinConditionValid(winCondition)) continue;
             // Not valid
             statustext.showStatus(`${translations.copypaste.invalid_wincon_black} "${winCondition}".`, true);
             return false;

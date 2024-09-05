@@ -1,9 +1,9 @@
 
 // Import Start
-import wincondition from '../chess/wincondition.js';
 import style from './style.js';
 import game from '../chess/game.js';
 import onlinegame from '../misc/onlinegame.js';
+import winconutil from '../misc/winconutil.js';
 // Import End
 
 /** 
@@ -84,7 +84,7 @@ const guigameinfo = (function() {
     function gameEnd(conclusion) {
         // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 
-        const { victor, condition } = wincondition.getVictorAndConditionFromGameConclusion(conclusion);
+        const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	    const resultTranslations = translations.results;
         style.hideElement(element_dot);
 

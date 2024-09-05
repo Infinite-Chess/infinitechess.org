@@ -2,11 +2,11 @@
 // Import Start
 import gamefileutility from './gamefileutility.js';
 import organizedlines from './organizedlines.js';
-import wincondition from './wincondition.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../misc/colorutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
+import gamerules from '../variants/gamerules.js';
 // Import End
 
 /** 
@@ -99,7 +99,7 @@ const specialdetect = (function() {
         // The square the king lands on will be tested later, within  legalmoves.calculate()
 
         const oppositeColor = colorutil.getOppositeColor(color);
-        if (wincondition.doesColorHaveWinCondition(gamefile, oppositeColor, 'checkmate')) {
+        if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, 'checkmate')) {
             if (gamefile.inCheck) return; // Not legal if in check
 
             // Simulate the space in-between
