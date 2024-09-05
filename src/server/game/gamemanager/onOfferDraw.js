@@ -5,7 +5,6 @@
  */
 
 import gameutility from './gameutility.js';
-import movesscript1 from '../movesscript1.js';
 import { setGameConclusion } from './gamemanager.js';
 import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
 import colorutil from '../../../client/scripts/game/misc/colorutil.js';
@@ -32,7 +31,7 @@ function offerDraw(ws, game) {
     if (gameutility.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
     if (isDrawOfferOpen(game)) return console.error(`${color.toUpperCase()} tried to offer a draw when the game already has a draw offer!`);
     if (hasColorOfferedDrawTooFast(game, color)) return console.error("Client tried to offer a draw too fast.");
-    if (!movesscript1.isGameResignable(game)) return console.error("Client tried to offer a draw on the first 2 moves");
+    if (!gameutility.isGameResignable(game)) return console.error("Client tried to offer a draw on the first 2 moves");
 
     // Extend the draw offer!
 

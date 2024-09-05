@@ -8,7 +8,6 @@
 // Custom imports
 
 import gameutility from './gameutility.js';
-import movesscript1 from '../movesscript1.js';
 import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 
 // Type imports
@@ -68,7 +67,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
     // console.log(`Starting disconnect timer to auto resign player ${color}.`)
 
     const now = Date.now();
-    const resignable = movesscript1.isGameResignable(game);
+    const resignable = gameutility.isGameResignable(game);
 
     let timeBeforeAutoResign = closureNotByChoice && resignable ? timeBeforeAutoResignByDisconnectMillis_NotByChoice : timeBeforeAutoResignByDisconnectMillis;
     // console.log(`Time before auto resign: ${timeBeforeAutoResign}`)
