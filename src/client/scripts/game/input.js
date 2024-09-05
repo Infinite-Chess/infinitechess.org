@@ -314,7 +314,7 @@ const input = (function() {
             addMouseWheel(event);
         });
 
-        document.addEventListener("mousedown", (event) => {
+        overlayElement.addEventListener("mousedown", (event) => {
             // We clicked with the mouse, so make the simulated touch click undefined.
             // This makes things work with devices that have both a mouse and touch.
             touchClicked = false;
