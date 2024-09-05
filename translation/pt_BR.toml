@@ -448,7 +448,7 @@ cleanliness_rules = [
 privacy_header = "Privacidade"
 privacy_rules = [
 "Atualmente, as únicas informações pessoais que coletamos são o e-mail. A intenção é verificar as contas dos usuários e fornecer um meio de provar quem eles são quando solicitam uma redefinição de senha. Não enviamos nenhum e-mail promocional ou ofertas. Não compartilhamos o endereço de e-mail de nenhum usuário com ninguém.",
-"InfiniteChess.org may collect data about your usage on the site, including your ip address. This is intended to help prevent attacks from bots and other unwanted entities, and to keep accurate statistics in the database. This is NOT your home address.",
+"InfiniteChess.org pode coletar dados sobre seu uso no site, incluindo seu endereço IP. O objetivo é ajudar a prevenir ataques de bots e outras entidades indesejadas e manter estatísticas precisas no banco de dados. Este NÃO é o seu endereço residencial.",
 "Todos os jogos que você joga neste site se tornam informações públicas. Se desejar permanecer anônimo, não compartilhe seu nome de usuário com amigos ou familiares. Se esse for o seu desejo, é sua responsabilidade garantir que ninguém descubra que seu nome de usuário está associado à sua identidade humana.",
 "O status on-line de sua conta e a última vez que esteve ativo no site também são informações públicas.",
 ["Embora o InfiniteChess.org se esforce para manter a conta e as informações pessoais de todos seguras da melhor forma possível, no caso de uma invasão ou vazamento de dados, você não pode nos acusar. Se ocorrer um vazamento de dados, os usuários serão notificados na página ", "Notícias", "."],
@@ -474,7 +474,7 @@ thanks = "Muito obrigado!"
 
 [login]
 title = "Entrar"
-username = "Nome de Usuário:"
+username = "Nome de usuário:"
 password = "Senha:"
 forgot_password = ["Esqueceu a senha? ", "Envie um e-mail."]
 login_button = "Entrar"
