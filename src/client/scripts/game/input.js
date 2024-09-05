@@ -14,6 +14,7 @@ import buffermodel from './rendering/buffermodel.js';
 import jsutil from './misc/jsutil.js';
 import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
+import docutil from './misc/docutil.js';
 // Import End
 
 "use strict";
@@ -131,9 +132,7 @@ const input = (function() {
     }
 
     function checkIfMouseNotSupported() {
-        // "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
-        // See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
-        if (window.matchMedia("(pointer: fine)").matches) return;
+        if (docutil.isMouseSupported()) return;
         
         // Mouse not supported
         
@@ -305,20 +304,17 @@ const input = (function() {
         });
 
         overlayElement.addEventListener('wheel', (event) => {
-            event = event || window.event;
             addMouseWheel(event);
         });
 
-        // This wheel event is ONLY for perspective mode, and it attached to the document instead of overlay!
+        // This wheel event is ONLY for perspective mode, and it attached to the document instead of overlay, because that is what the mouse is locked to.
         document.addEventListener('wheel', (event) => {
-            event = event || window.event;
             if (!perspective.getEnabled()) return;
             if (!perspective.isMouseLocked()) return;
             addMouseWheel(event);
         });
 
-        overlayElement.addEventListener("mousedown", (event) => {
-            event = event || window.event;
+        document.addEventListener("mousedown", (event) => {
             // We clicked with the mouse, so make the simulated touch click undefined.
             // This makes things work with devices that have both a mouse and touch.
             touchClicked = false;

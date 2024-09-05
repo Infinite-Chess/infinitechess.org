@@ -33,9 +33,20 @@ const docutil = (function() {
             .catch((error) => { console.error('Failed to copy to clipboard', error); });
     }
 
+    /**
+     * Returns true if the current device has a mouse pointer.
+     * @returns {boolean}
+     */
+    function isMouseSupported() {
+        // "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
+        // See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
+        return window.matchMedia("(pointer: fine)").matches;
+    }
+
     return Object.freeze({
         isLocalEnvironment,
         copyToClipboard,
+        isMouseSupported,
     });
 
 })();
