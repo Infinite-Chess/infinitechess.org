@@ -158,24 +158,6 @@ const wincondition = (function() {
         if (movesscript.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
         return true; // Checkmate compatible!
     }
-    
-    /**
-     * Swaps the "checkmate" win condition for "royalcapture" in the gamefile if applicable.
-     *
-     * @param {gamefile} gamefile - The gamefile containing game data.
-     */
-    function swapCheckmateForRoyalCapture(gamefile) {
-        // Check if the game is using the "royalcapture" win condition
-        if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, 'white', 'checkmate')) {
-            jsutil.removeObjectFromArray(gamefile.gameRules.winConditions.white, 'checkmate');
-            gamefile.gameRules.winConditions.white.push('royalcapture');
-        }
-        if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, 'black', 'checkmate')) {
-            jsutil.removeObjectFromArray(gamefile.gameRules.winConditions.black, 'checkmate');
-            gamefile.gameRules.winConditions.black.push('royalcapture');
-        }
-        console.log("Swapped checkmate wincondition for royalcapture.");
-    }
 
     /**
      * Returns the termination of the game in english language.
@@ -226,7 +208,6 @@ const wincondition = (function() {
     return Object.freeze({
         getGameConclusion,
         isCheckmateCompatibleWithGame,
-        swapCheckmateForRoyalCapture,
         getTerminationInEnglish,
     });
 

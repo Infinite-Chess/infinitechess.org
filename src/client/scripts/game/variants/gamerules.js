@@ -1,9 +1,8 @@
+import jsutil from "../misc/jsutil";
 
 /**
  * This script contains the gameRules constructor,
  * and contains utility methods for working with them.
- * 
- * ZERO dependancies.
  */
 const gamerules = (function() {
 
@@ -28,10 +27,28 @@ const gamerules = (function() {
         if (!gameRules.winConditions[color]) return 0; // Color not defined.
         return gameRules.winConditions[color].length;
     }
+    
+    /**
+     * Swaps the "checkmate" win condition for "royalcapture" in the gameRules if applicable.
+     * @param {GameRules} gameRules
+     */
+    function swapCheckmateForRoyalCapture(gameRules) {
+        // Check if the game is using the "royalcapture" win condition
+        if (gamerules.doesColorHaveWinCondition(gameRules, 'white', 'checkmate')) {
+            jsutil.removeObjectFromArray(gameRules.winConditions.white, 'checkmate');
+            gameRules.winConditions.white.push('royalcapture');
+        }
+        if (gamerules.doesColorHaveWinCondition(gameRules, 'black', 'checkmate')) {
+            jsutil.removeObjectFromArray(gameRules.winConditions.black, 'checkmate');
+            gameRules.winConditions.black.push('royalcapture');
+        }
+        console.log("Swapped checkmate wincondition for royalcapture.");
+    }
 
     return Object.freeze({
         doesColorHaveWinCondition,
-        getWinConditionCountOfColor
+        getWinConditionCountOfColor,
+        swapCheckmateForRoyalCapture,
     });
 
 })();
@@ -44,7 +61,7 @@ const gamerules = (function() {
 
 
 
-/** The GameRules type definition. */
+/** An object containing the gamerules of a gamefile. */
 function GameRules() {
     console.error("This GameRules constructor should NEVER be called! It is purely for JSDoc dropdown info.");
 
