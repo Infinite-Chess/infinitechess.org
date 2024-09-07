@@ -510,6 +510,12 @@ paragraph3 = [
     "discord", # The website inserts a hyperlink over this text
     "!"
 ]
+paragraph4 = "v.1.4.1 has also been released!"
+list = [
+    "Draw offers have been added! Find the offer draw button in the pause menu!",
+    "Added languages for the following: Chinese, Polish, Portuguese!",
+    "Fixed bug where spamming the Create Invite button gave you messages such as you already have an invite, or you can't accept your own invite."
+]
 
 [news.aug1-2024] # Update 1.4
 date = "August 1, 2024:"
