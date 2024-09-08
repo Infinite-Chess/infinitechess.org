@@ -24,7 +24,9 @@ import guiloading from './gui/guiloading.js';
 // yet it needs to be an ESM because IT depends on input.js!
 // eslint-disable-next-line no-unused-vars
 import tooltips from './gui/tooltips.js';
+import input2 from './input2.js';
 import frametracker from './rendering/frametracker.js';
+import gamecontroller from './misc/gamecontroller.js';
 // Import End
 
 "use strict";
@@ -52,7 +54,8 @@ function start() {
 }
 
 function initListeners() {
-    input.initListeners(); // Mouse, touch, & key event listeners
+    // input.initListeners(); // Mouse, touch, & key event listeners
+    gamecontroller.create();
 
     window.addEventListener('beforeunload', function() {
         // console.log('Detecting unload')
@@ -77,7 +80,8 @@ function gameLoop() {
 
         render(); // Render everything
         
-        input.resetKeyEvents(); // Key events should be reset as soon as possible after updating, so we don't miss any. Then again, all events are fired at the end of the animation frame anyway.
+        // input.resetKeyEvents(); // Key events should be reset as soon as possible after updating, so we don't miss any. Then again, all events are fired at the end of the animation frame anyway.
+        gamecontroller.onFrameEnd();
 
         loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
 

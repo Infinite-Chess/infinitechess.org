@@ -32,6 +32,7 @@ import promotionlines from '../rendering/promotionlines.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import gamerules from '../variants/gamerules.js';
+import gamecontroller from '../misc/gamecontroller.js';
 // Import End
 
 /** 
@@ -94,10 +95,7 @@ const game = (function() {
 
     // Update the game every single frame
     function update() {
-        if (input.isKeyDown('`')) options.toggleDeveloperMode();
-        // if (input.isKeyDown('enter')) options.toggleChristmasTheme()
-        if (input.isKeyDown('m')) options.toggleFPS();
-        if (game.getGamefile()?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+        gamecontroller.update();
 
         if (gui.getScreen().includes('title')) updateTitleScreen();
         else updateBoard(); // Other screen, board is visible, update everything board related
