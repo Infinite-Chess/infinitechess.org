@@ -490,8 +490,8 @@ login_button = "Log In"
 title = "News" # The tab name
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
 
-[news.sept9-2024]
-date = "Sept 9, 2024:"
+[news.sept11-2024]
+date = "Sept 11, 2024:"
 paragraph1 = [
     "The first-ever Infinite Chess tournament is now open for sign-ups!!! It will be played on the Classical variant, and the time control will be 10m+6s (this will be added soon). The winner will be given a special flare and/or role on the ",
     "community discord", # The website inserts a hyperlink over this text
