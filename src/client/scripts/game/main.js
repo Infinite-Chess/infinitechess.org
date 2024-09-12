@@ -99,5 +99,4 @@ function render() {
     frametracker.onFrameRender();
 }
 
-
-start(); // Starts the game (only run when the page is loaded)
+globalThis.main = { start };
