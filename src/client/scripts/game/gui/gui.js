@@ -14,58 +14,53 @@ import frametracker from '../rendering/frametracker.js';
  * Here we remember what page we're on,
  * and we have a reference to the overlay element above the entire canvas.
  */
-const gui = (function() {
 
-    // Variables
+// Variables
 
-    let screen = ''; // Current screen location in the game.  title/online/computer/local/board  
+let screen = ''; // Current screen location in the game.  title/online/computer/local/board  
 
-    const element_overlay = document.getElementById('overlay');
+const element_overlay = document.getElementById('overlay');
 
-    element_overlay.addEventListener('click', callback_CancelPromotionIfUIOpen);
+element_overlay.addEventListener('click', callback_CancelPromotionIfUIOpen);
 
-    function callback_CancelPromotionIfUIOpen() {
-        if (!guipromotion.isUIOpen()) return;
-        selection.unselectPiece();
-        frametracker.onVisualChange();
-    }
+function callback_CancelPromotionIfUIOpen() {
+    if (!guipromotion.isUIOpen()) return;
+    selection.unselectPiece();
+    frametracker.onVisualChange();
+}
 
-    // Functions
+// Functions
 
-    function getScreen() {
-        return screen;
-    }
+function getScreen() {
+    return screen;
+}
 
-    function setScreen(value) {
-        screen = value;
-    }
-    
-    // Fades-in the overlay element over 1 second
-    function fadeInOverlay1s() {
-        style.fadeIn1s(element_overlay);
-    }
+function setScreen(value) {
+    screen = value;
+}
 
-    function callback_featurePlanned() {
-        statustext.showStatus(translations.planned_feature);
-    }
+// Fades-in the overlay element over 1 second
+function fadeInOverlay1s() {
+    style.fadeIn1s(element_overlay);
+}
 
-    function makeOverlayUnselectable() {
-        element_overlay.classList.add('unselectable');
-    }
+function callback_featurePlanned() {
+    statustext.showStatus(translations.planned_feature);
+}
 
-    function makeOverlaySelectable() {
-        element_overlay.classList.remove('unselectable');
-    }
+function makeOverlayUnselectable() {
+    element_overlay.classList.add('unselectable');
+}
 
-    return Object.freeze({
-        fadeInOverlay1s,
-        getScreen,
-        setScreen,
-        callback_featurePlanned,
-        makeOverlayUnselectable,
-        makeOverlaySelectable
-    });
+function makeOverlaySelectable() {
+    element_overlay.classList.remove('unselectable');
+}
 
-})();
-
-export default gui;
+export default {
+    fadeInOverlay1s,
+    getScreen,
+    setScreen,
+    callback_featurePlanned,
+    makeOverlayUnselectable,
+    makeOverlaySelectable
+};
