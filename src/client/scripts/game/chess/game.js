@@ -96,7 +96,7 @@ function update() {
     if (input.isKeyDown('`')) options.toggleDeveloperMode();
     // if (input.isKeyDown('enter')) options.toggleChristmasTheme()
     if (input.isKeyDown('m')) options.toggleFPS();
-    if (game.getGamefile()?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+    if (getGamefile()?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 
     if (gui.getScreen().includes('title')) updateTitleScreen();
     else updateBoard(); // Other screen, board is visible, update everything board related
@@ -118,7 +118,7 @@ function updateBoard() {
     if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
     if (input.isKeyDown('escape')) guipause.toggle();
     if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
-    if (input.isKeyDown('r')) piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs(), true);
+    if (input.isKeyDown('r')) piecesmodel.regenModel(getGamefile(), options.getPieceRegenColorArgs(), true);
     if (input.isKeyDown('n')) options.toggleNavigationBar();
 
     clock.update();
@@ -194,7 +194,7 @@ function loadGamefile(newGamefile) {
     guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
     // Regenerate the mesh of all the pieces.
-    piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
+    piecesmodel.regenModel(getGamefile(), options.getPieceRegenColorArgs());
 
     guinavigation.update_MoveButtons();
 
