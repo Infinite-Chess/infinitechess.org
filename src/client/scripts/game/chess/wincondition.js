@@ -13,9 +13,7 @@ import typeutil from '../misc/typeutil.js';
 // Type Definitions...
 
 /** @typedef {import('./gamefile.js').gamefile} gamefile */
-/* eslint-disable no-unused-vars */
-import { GameRules } from '../variants/gamerules.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('../variants/gamerules.js'.GameRules) GameRules*/
 
 "use strict";
 

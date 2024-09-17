@@ -327,9 +327,9 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
     }
 
     // Test if that piece's legal moves contain the destinationCoords.
-    const legalMoves = legalmoves.calculate(gamefile, piecemoved);
+    const legalMoves = calculate(gamefile, piecemoved);
     // This should pass on any special moves tags at the same time.
-    if (!legalmoves.checkIfMoveLegal(legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
+    if (!checkIfMoveLegal(legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
         console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveCopy)}`);
         return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
     }

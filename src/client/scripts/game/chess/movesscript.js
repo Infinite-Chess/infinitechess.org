@@ -10,6 +10,7 @@ import selection from './selection.js';
 import input from '../input.js';
 import statustext from '../gui/statustext.js';
 import game from './game.js';
+import coordutil from '../misc/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 // Import End
 
@@ -367,7 +368,7 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
     return false;
 }
 
-//Type export
+//Type export DO NOT USE
 export { Move };
 
 export default {

@@ -11,11 +11,9 @@ import jsutil from '../misc/jsutil.js';
 // Type Definitions...
 
 /** @typedef {import('../misc/math.js').BoundingBox} BoundingBox */
-/* eslint-disable no-unused-vars */
-import { BufferModel } from '../rendering/buffermodel.js';
-import { Move } from './movesscript.js';
-import { GameRules } from '../variants/gamerules.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./movesscript.js').Move} Move */
+/** @typedef {import('../rendering/buffermodel.js').BufferModel} BufferModel */
+/** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 
 'use strict';
 
@@ -220,7 +218,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     organizedlines.addMoreUndefineds(this, { regenModel: false });
 };
 
-// Typedef export
+// Typedef export DO NOT USE
 export { gamefile };
 
 export default gamefile;

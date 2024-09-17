@@ -8,10 +8,7 @@ import jsutil from '../misc/jsutil.js';
 import timeutil from '../misc/timeutil.js';
 
 // Type Definitions...
-
-/* eslint-disable no-unused-vars */
-import { GameRules } from './gamerules.js';
-/* eslint-enable no-unused-vars */
+/** @typedef {import('./gamerules.js').GameRules} GameRules */
 
 "use strict";
 
