@@ -220,5 +220,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     organizedlines.addMoreUndefineds(this, { regenModel: false });
 };
 
+// Typedef export
 export { gamefile };
+
 export default gamefile;
