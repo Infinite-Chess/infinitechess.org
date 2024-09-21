@@ -97,7 +97,7 @@ const createNewMember = async(req, res) => {
     if (doEmailFormatChecks(email, req, res) !== true) return;
     if (doPasswordFormatChecks(password, req, res) !== true) return;
 
-    await generateAccount({ username, email, password });
+    if (!(await generateAccount({ username, email, password }))) return; // Account generation failed because the account already exists. This can happen if they spam the button.
 
     // SEND EMAIL CONFIRMATION
     const memberData = getMemberData(usernameLowercase);
@@ -116,6 +116,7 @@ const createNewMember = async(req, res) => {
  * @param {string} param0.email - The email for the new account.
  * @param {string} param0.password - The password for the new account.
  * @param {boolean} param0.autoVerify - Whether to auto-verify this account.
+ * @returns {boolean} true if the account creation was successful (will fail if already existant)
  */
 async function generateAccount({ username, email, password, autoVerify }) {
     const usernameLowercase = username.toLowerCase();
@@ -138,10 +139,12 @@ async function generateAccount({ username, email, password, autoVerify }) {
     if (!autoVerify) newMember.verified = [false, generateID(24)];
     
     // Without 'await' this returns a promise.
-    if (!addMember(usernameLowercase, newMember)) return; // Failure to create (username taken). If we do proper checks this point should NEVER happen.
+    if (!addMember(usernameLowercase, newMember)) return false; // Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS CAN STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
     
     const logTxt = `Created new member: ${newMember.username}`;
     logEvents(logTxt, 'newMemberLog.txt', { print: true });
+
+    return true;
 }
 
 // This function returns info for creating an account.

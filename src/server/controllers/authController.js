@@ -289,8 +289,8 @@ function resetTimerToDeleteBrowserAgent(browserAgent) {
  * @param {string} browserAgent - The browser agent string.
  */
 function cancelTimerToDeleteBrowserAgent(browserAgent) {
-    clearTimeout(loginAttemptData[browserAgent].deleteTimeoutID);
-    delete loginAttemptData[browserAgent].deleteTimeoutID;
+    clearTimeout(loginAttemptData[browserAgent]?.deleteTimeoutID);
+    delete loginAttemptData[browserAgent]?.deleteTimeoutID;
 }
 
 /**
