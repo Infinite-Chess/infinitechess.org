@@ -11,6 +11,17 @@ import timeutil from './timeutil.js';
 
 "use strict";
 
+function TeamClock(time, color) {
+    /** @type {HTMLElement} */
+    this.element_timer = document.getElementById(`timer-${color}`);
+    /** @type {HTMLElement} */
+    this.element_timerContainer = document.getElementById(`timer-container-${color}`);
+    /** @type {string} */
+    this.color = undefined;
+    /** @type {Number} */
+    this.currentTime = time;
+}
+
 /**
  * This script keeps track of both players timer, updates them,
  * and ends game if somebody loses on time.
