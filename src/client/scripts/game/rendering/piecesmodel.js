@@ -712,7 +712,6 @@ export default {
     movebufferdata,
     deletebufferdata,
     overwritebufferdata,
-    getPieceIndexInData,
     printbufferdataOnCoords,
     printbufferdataOnIndex,
     shiftPiecesModel,

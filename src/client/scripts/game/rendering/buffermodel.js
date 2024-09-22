@@ -273,8 +273,6 @@ function getUniformValueType(value) {
 }
 
 export default {
-    validRenderModes,
-    DRAW_HINT,
     createModel_Textured,
     createModel_Colored,
     createModel_ColorTextured,

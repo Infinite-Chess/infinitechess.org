@@ -591,7 +591,7 @@ function renderZoomedBoard(zoom, opacity) {
  * this is effected by the camera's scale (zoom) property.
  * 
  * Returns in float form. To round away from the origin to encapsulate
- * the whole of all tiles atleast partially visible, further use {@link board.roundAwayBoundingBox}
+ * the whole of all tiles atleast partially visible, further use {@link roundAwayBoundingBox}
  * @param {number[]} [position] - The position of the camera.
  * @param {number} [scale] - The scale (zoom) of the camera.
  * @returns {BoundingBox} The bounding box
