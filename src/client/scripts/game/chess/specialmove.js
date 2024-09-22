@@ -120,10 +120,5 @@ function getEnPassantSquare(moveStartCoords, moveEndCoords) {
 function getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag]; }
 
 export default {
-    getFunctions,
-    kings,
-    pawns,
-    isPawnMoveADoublePush,
-    getEnPassantSquare,
-    getEnpassantCaptureCoords,
+    getFunctions
 };

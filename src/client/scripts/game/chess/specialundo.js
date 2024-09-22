@@ -119,7 +119,4 @@ function pawns(gamefile, move, { updateData = true, animate = true } = {}) {
 
 export default {
     getFunctions,
-    kings,
-    pawns,
-    
 };

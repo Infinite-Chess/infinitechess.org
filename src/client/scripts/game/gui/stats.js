@@ -118,14 +118,8 @@ function hideRotateMesh() {
 //     elementStatusMoveLooking.textContent = `Looking for moves... ${percentString}`;
 // },
 
-function hideMoveLooking() {
-    style.hideElement(elementStatusMoveLooking);
-}
-
 export default {
     showMoves,
-    hideMoves,
-    setTextContentOfMoves,
     updateStatsCSS,
     showPiecesMesh,
     updatePiecesMesh,
@@ -136,5 +130,4 @@ export default {
     showRotateMesh,
     updateRotateMesh,
     hideRotateMesh,
-    hideMoveLooking
 };

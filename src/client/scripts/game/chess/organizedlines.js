@@ -363,19 +363,12 @@ function areColinearSlidesPresentInGame(gamefile) {
 
 export default {
     initOrganizedPieceLists,
-    resetOrganizedLists,
     organizePiece,
     removeOrganizedPiece,
-    initUndefineds,
-    appendUndefineds,
     areWeShortOnUndefineds,
     addMoreUndefineds,
-    insertUndefinedIntoList,
-    buildKeyListFromState,
     buildStateFromKeyList,
-    getEmptyTypeState,
     getKeyFromLine,
     getCFromLine,
-    getXFromLine,
     areColinearSlidesPresentInGame,
 };
