@@ -27,6 +27,7 @@ js-confirm_delete = "您确定要删除账号吗？这无法撤销！要是你�
 js-enter_password = "输入密码以永久删除您的账户:"
 
 [index]
+title = "无限棋 | 首页 - 官方网站"  # The tab title
 secondary_title = "现场游戏的官方网站！"
 what_is_it_title = "这是什么？"
 what_is_it_pargaraphs = [
@@ -80,6 +81,7 @@ code_credits = [
 ]
 
 [member]
+title = "会员" # The tab name
 verify_message = "请检查您的电子邮箱以验证您的账户。"
 resend_message = ["没有收到邮件？请检查您的垃圾邮件文件夹。另外，", "再次发送。", " 如果仍然找不到，请", "联系我。"]
 verify_confirm = "感谢您！您的账户已验证。"
@@ -110,6 +112,11 @@ js-pwd_incorrect_format = "密码格式不正确"
 js-pwd_too_short = "密码必须多于六个字母"
 js-pwd_too_long = "密码禁止多于七十二个字母"
 js-pwd_not_pwd = "密码禁止是'password'"
+
+[play]
+title = "无限棋 - 对局"  # The tab title
+loading = "加载中"
+error = "错误"
 
 [play.main-menu]
 credits = "鸣谢"
