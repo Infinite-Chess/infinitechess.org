@@ -593,34 +593,28 @@ function wasSocketClosureNotByTheirChoice(code, reason) {
 }
 
 
-const wsserver = (function() {
+function start(httpsServer) {
+    WebSocketServer = new Server({ server: httpsServer }); // Create a WebSocket server instance
+    // WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
+    WebSocketServer.on('connection', (ws, req) => {
+        executeSafely(onConnectionRequest, 'Error caught within websocket on-connection request:', ws, req);
+    }); // Event handler for new WebSocket connections
+}
 
-    function start(httpsServer) {
-        WebSocketServer = new Server({ server: httpsServer }); // Create a WebSocket server instance
-        // WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
-        WebSocketServer.on('connection', (ws, req) => {
-            executeSafely(onConnectionRequest, 'Error caught within websocket on-connection request:', ws, req);
-        }); // Event handler for new WebSocket connections
-    }
-
-    /**
-     * Closes all sockets a given member has open.
-     * @param {string} member - The member's username, in lowercase.
-     * @param {number} closureCode - The code of the socket closure, sent to the client.
-     * @param {string} closureReason - The closure reason, sent to the client.
-     */
-    function closeAllSocketsOfMember(member, closureCode, closureReason) {
-        connectedMembers[member]?.slice().forEach(socketID => { // slice() makes a copy of it
-            const ws = websocketConnections[socketID];
-            closeWebSocketConnection(ws, closureCode, closureReason);
-        });
-    }
-
-    return Object.freeze({
-        start,
-        closeAllSocketsOfMember
+/**
+ * Closes all sockets a given member has open.
+ * @param {string} member - The member's username, in lowercase.
+ * @param {number} closureCode - The code of the socket closure, sent to the client.
+ * @param {string} closureReason - The closure reason, sent to the client.
+ */
+function closeAllSocketsOfMember(member, closureCode, closureReason) {
+    connectedMembers[member]?.slice().forEach(socketID => { // slice() makes a copy of it
+        const ws = websocketConnections[socketID];
+        closeWebSocketConnection(ws, closureCode, closureReason);
     });
+}
 
-})();
-
-export default wsserver;
+export default {
+    start,
+    closeAllSocketsOfMember
+};

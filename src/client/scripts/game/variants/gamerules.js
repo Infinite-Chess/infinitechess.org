@@ -4,62 +4,45 @@ import jsutil from "../misc/jsutil.js";
  * This script contains the gameRules constructor,
  * and contains utility methods for working with them.
  */
-const gamerules = (function() {
 
-    /**
-     * Checks if a specified color has a given win condition.
-     * @param {GameRules} gameRules
-     * @param {string} color - The color to check (e.g., 'white', 'black').
-     * @param {string} winCondition - The win condition for.
-     * @returns {boolean} True if the specified color has the given win condition, otherwise false.
-     */
-    function doesColorHaveWinCondition(gameRules, color, winCondition) {
-        return gameRules.winConditions[color].includes(winCondition);
+/**
+ * Checks if a specified color has a given win condition.
+ * @param {GameRules} gameRules
+ * @param {string} color - The color to check (e.g., 'white', 'black').
+ * @param {string} winCondition - The win condition for.
+ * @returns {boolean} True if the specified color has the given win condition, otherwise false.
+ */
+function doesColorHaveWinCondition(gameRules, color, winCondition) {
+    return gameRules.winConditions[color].includes(winCondition);
+}
+
+/**
+ * Gets the count of win conditions for a specified color in the gamefile.
+ * @param {GameRules} gameRules
+ * @param {string} color - The color to check (e.g., 'white', 'black').
+ * @returns {number} The number of win conditions for the specified color. Returns 0 if the color is not defined.
+ */
+function getWinConditionCountOfColor(gameRules, color) {
+    if (!gameRules.winConditions[color]) return 0; // Color not defined.
+    return gameRules.winConditions[color].length;
+}
+
+/**
+ * Swaps the "checkmate" win condition for "royalcapture" in the gameRules if applicable.
+ * @param {GameRules} gameRules
+ */
+function swapCheckmateForRoyalCapture(gameRules) {
+    // Check if the game is using the "royalcapture" win condition
+    if (doesColorHaveWinCondition(gameRules, 'white', 'checkmate')) {
+        jsutil.removeObjectFromArray(gameRules.winConditions.white, 'checkmate');
+        gameRules.winConditions.white.push('royalcapture');
     }
-
-    /**
-     * Gets the count of win conditions for a specified color in the gamefile.
-     * @param {GameRules} gameRules
-     * @param {string} color - The color to check (e.g., 'white', 'black').
-     * @returns {number} The number of win conditions for the specified color. Returns 0 if the color is not defined.
-     */
-    function getWinConditionCountOfColor(gameRules, color) {
-        if (!gameRules.winConditions[color]) return 0; // Color not defined.
-        return gameRules.winConditions[color].length;
+    if (doesColorHaveWinCondition(gameRules, 'black', 'checkmate')) {
+        jsutil.removeObjectFromArray(gameRules.winConditions.black, 'checkmate');
+        gameRules.winConditions.black.push('royalcapture');
     }
-    
-    /**
-     * Swaps the "checkmate" win condition for "royalcapture" in the gameRules if applicable.
-     * @param {GameRules} gameRules
-     */
-    function swapCheckmateForRoyalCapture(gameRules) {
-        // Check if the game is using the "royalcapture" win condition
-        if (gamerules.doesColorHaveWinCondition(gameRules, 'white', 'checkmate')) {
-            jsutil.removeObjectFromArray(gameRules.winConditions.white, 'checkmate');
-            gameRules.winConditions.white.push('royalcapture');
-        }
-        if (gamerules.doesColorHaveWinCondition(gameRules, 'black', 'checkmate')) {
-            jsutil.removeObjectFromArray(gameRules.winConditions.black, 'checkmate');
-            gameRules.winConditions.black.push('royalcapture');
-        }
-        console.log("Swapped checkmate wincondition for royalcapture.");
-    }
-
-    return Object.freeze({
-        doesColorHaveWinCondition,
-        getWinConditionCountOfColor,
-        swapCheckmateForRoyalCapture,
-    });
-
-})();
-
-
-
-
-
-
-
-
+    console.log("Swapped checkmate wincondition for royalcapture.");
+}
 
 /** An object containing the gamerules of a gamefile. */
 function GameRules() {
@@ -108,5 +91,10 @@ function GameRules() {
 
 
 
-export default gamerules;
+export default {
+    doesColorHaveWinCondition,
+    getWinConditionCountOfColor,
+    swapCheckmateForRoyalCapture,
+};
+// Type export DO NOT USE
 export { GameRules };
