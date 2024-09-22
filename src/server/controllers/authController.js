@@ -5,6 +5,30 @@
  * and updates basic variables in their profile after logging in.
  */
 
+
+        /*&@@@@@@@@@@@@@@@@&#/         
+      #&#/#@@@@@/&@%@@(@%&@@@*%@/      
+     @@%((*@&@&@@&,/*%@@#&@@@/#%@(     
+    @@&#((/@&&@@@@@%@@@&%@&@((#%%@(    
+   &@&##(((#&&&&%,* @,%#&&@(((##%&@/   
+  &@&&#((((##(@&&&&&&&&&&%#(((##%%@@   
+  @&@%##########&%%##%((########%#&&@  
+ (@&&#######%###&&&&&&%%%#######%%%&@, 
+ @&@%##%#%#%%%##@&&%&&%%%%######%%%&@/ 
+ @&%%##########%&&&&&&%%%###(###%%%&&& 
+.@&%#(/((####%%%&&&&&&###(///*-/(#%&@@ 
+,%%#(/((((((((((#####%(((((/////(((##& 
+.&%(./@&%#(/** ##*,,,,.*#(.-/(*#%&&.%@ 
+.&%(.@&&%%%%%%&&@@#/((&@@&%%%%%* (&*%@ 
+.&%#/ #&&@@&&@%#@&@%@@@ . &%&@,..#.%%@ 
+.&%#( @ ..... @%@#, ,@@   &% ... @,%%@ 
+.&%%#/* . @.. &.. @ . @.. @ ..@..&*(%& 
+.&%%#(, .... #@*../.. @ . @ ..@..%/(%& 
+.&%%#(/.. @ ..*..#@...@ . &. .. .%(#%& 
+.&%%##(.. @ ..*..,... @   @%%%(*%/##%& 
+,&%%###.,(%@@&&%@@#... @&&%%&#@,((##*/
+
+
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -289,8 +313,8 @@ function resetTimerToDeleteBrowserAgent(browserAgent) {
  * @param {string} browserAgent - The browser agent string.
  */
 function cancelTimerToDeleteBrowserAgent(browserAgent) {
-    clearTimeout(loginAttemptData[browserAgent].deleteTimeoutID);
-    delete loginAttemptData[browserAgent].deleteTimeoutID;
+    clearTimeout(loginAttemptData[browserAgent]?.deleteTimeoutID);
+    delete loginAttemptData[browserAgent]?.deleteTimeoutID;
 }
 
 /**
