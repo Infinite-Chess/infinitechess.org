@@ -237,7 +237,11 @@ arrows = "箭头: 防御"
 perspective = "视角: 关闭"
 copy = "复制棋局"
 paste = "粘贴棋局"
+offer_draw = "提和"
 main_menu = "主页"
+
+[play.drawoffer] # The draw offer UI that appears on the bottom bar
+question = "接受和棋提议"
 
 [play.javascript]
 guest_indicator = "(游客)"
@@ -252,6 +256,8 @@ planned_feature = "此功能已计划！"
 main_menu = "主页"
 resign_game = "认输"
 abort_game = "放弃游戏"
+offer_draw = "提和" # Offer draw button text in the pause menu
+accept_draw = "接受和棋" # Offer draw button text in the pause menu
 arrows_off = "箭头: 关闭"
 arrows_defense = "箭头: 防御"
 arrows_all = "箭头: 全部"
@@ -355,6 +361,7 @@ allpiecescaptured = "所有棋子被吃"
 threecheck = "三次将军"
 koth = "山丘之王"
 resignation = "认输"
+agreement = "同意" 
 time = "超时"
 aborted = "已中止"  # Game was cancelled (no elo exchanged)
 disconnect = "弃赛"  # A player left
@@ -374,6 +381,7 @@ draw_stalemate = "和棋，僵局！"
 draw_repetition = "和棋，局面重复！"
 draw_moverule = ["和棋，", "步规则！"]
 draw_insuffmat = "和棋，因棋子不足！"
+draw_agreement = "协议和棋"
 draw_generic = "和棋!"
 aborted = "游戏中止"
 opponent_checkmate = "你输了，将死！"
