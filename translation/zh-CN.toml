@@ -1,7 +1,7 @@
 name = "中文" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "12"
-maintainer = "Its Me"
+version = "15"
+maintainer = "Heinrich Xiao"
 
 [header]
 home = "主页"
@@ -27,6 +27,7 @@ js-confirm_delete = "您确定要删除账号吗？这无法撤销！要是你�
 js-enter_password = "输入密码以永久删除您的账户:"
 
 [index]
+title = "无限棋 | 首页 - 官方网站"  # The tab title
 secondary_title = "现场游戏的官方网站！"
 what_is_it_title = "这是什么？"
 what_is_it_pargaraphs = [
@@ -80,6 +81,7 @@ code_credits = [
 ]
 
 [member]
+title = "会员" # The tab name
 verify_message = "请检查您的电子邮箱以验证您的账户。"
 resend_message = ["没有收到邮件？请检查您的垃圾邮件文件夹。另外，", "再次发送。", " 如果仍然找不到，请", "联系我。"]
 verify_confirm = "感谢您！您的账户已验证。"
@@ -110,6 +112,11 @@ js-pwd_incorrect_format = "密码格式不正确"
 js-pwd_too_short = "密码必须多于六个字母"
 js-pwd_too_long = "密码禁止多于七十二个字母"
 js-pwd_not_pwd = "密码禁止是'password'"
+
+[play]
+title = "无限棋 - 对局"  # The tab title
+loading = "加载中"
+error = "错误"
 
 [play.main-menu]
 credits = "鸣谢"
@@ -237,7 +244,11 @@ arrows = "箭头: 防御"
 perspective = "视角: 关闭"
 copy = "复制棋局"
 paste = "粘贴棋局"
+offer_draw = "提和"
 main_menu = "主页"
+
+[play.drawoffer] # The draw offer UI that appears on the bottom bar
+question = "接受和棋提议"
 
 [play.javascript]
 guest_indicator = "(游客)"
@@ -252,6 +263,8 @@ planned_feature = "此功能已计划！"
 main_menu = "主页"
 resign_game = "认输"
 abort_game = "放弃游戏"
+offer_draw = "提和" # Offer draw button text in the pause menu
+accept_draw = "接受和棋" # Offer draw button text in the pause menu
 arrows_off = "箭头: 关闭"
 arrows_defense = "箭头: 防御"
 arrows_all = "箭头: 全部"
@@ -355,6 +368,7 @@ allpiecescaptured = "所有棋子被吃"
 threecheck = "三次将军"
 koth = "山丘之王"
 resignation = "认输"
+agreement = "同意" 
 time = "超时"
 aborted = "已中止"  # Game was cancelled (no elo exchanged)
 disconnect = "弃赛"  # A player left
@@ -374,6 +388,7 @@ draw_stalemate = "和棋，僵局！"
 draw_repetition = "和棋，局面重复！"
 draw_moverule = ["和棋，", "步规则！"]
 draw_insuffmat = "和棋，因棋子不足！"
+draw_agreement = "协议和棋"
 draw_generic = "和棋!"
 aborted = "游戏中止"
 opponent_checkmate = "你输了，将死！"
@@ -478,6 +493,32 @@ login_button = "登录"
 title = "新闻"
 more_dev_logs = ["更多开发者日志在我们的", "Discord", "和在", "chess.com的论坛！"]
 
+[news.sept11-2024]
+date = "2024年9月11日:"
+paragraph1 = [
+    "首届无限棋锦标赛现已开放报名！！！比赛将采用经典变体，时间控制为10分钟加6秒（此功能将很快添加）。获胜者将在 ",
+    "社区Discord", # The website inserts a hyperlink over this text
+    " 上获得特殊标识和/或角色！"
+],
+paragraph2 = [
+    "这是 ",
+    "报名表格", # The website inserts a hyperlink over this text
+    "！报名截止日期是 ",
+    "2024年9月27日（星期五）！", # The website bolds this text
+    " 完整规则请查看 ",
+    "这里", # The website inserts a hyperlink over this text
+    "。有关锦标赛的最新动态，请加入 ",
+    "Discord", # The website inserts a hyperlink over this text
+    "！"
+]
+paragraph3 = "更新 v.1.4.1 已发布！"
+list = [
+    "已添加和棋提议功能！在暂停菜单中找到提议和棋按钮！",
+    "已添加以下语言支持：中文、波兰语、葡萄牙语！",
+    "修复了一个错误：重复点击创建邀请按钮时会收到如您已拥有邀请或无法接受自己的邀请等消息。"
+]
+
+
 [news.aug1-2024] # Update 1.4
 date = "2024年8月1日:"
 text_top = "更新 1.4 发布了！自从我们开源以来，添加了许多协作功能！"
@@ -568,9 +609,6 @@ ws-forbidden = "403"
 ws-unauthorized_patron_page = "未经授权。此页面仅限会员访问。"
 ws-username_reserved = "用户名已被保留"
 ws-already_in_game = "已在游戏中"
-ws-player_already_has_invite = "玩家已经有邀请"
-ws-invite_cancelled = "邀请已取消"
-ws-accept_own_invite = "不能接受自己的邀请"
 ws-server_restarting = "服务器正在重启"
 ws-minutes = "分钟"
 ws-server_under_maintenance = "服务器正在维护中。请稍后再试！"  # Can be changed at will to change the display message.
