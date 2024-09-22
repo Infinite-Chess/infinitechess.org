@@ -1,6 +1,6 @@
 name = "中文" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "13"
+version = "14"
 maintainer = "Its Me"
 
 [header]
