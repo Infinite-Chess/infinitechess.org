@@ -32,6 +32,7 @@ import promotionlines from '../rendering/promotionlines.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import gamerules from '../variants/gamerules.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /** 
@@ -94,6 +95,7 @@ function updateVariablesAfterScreenResize() {
 // Update the game every single frame
 function update() {
     if (input.isKeyDown('`')) options.toggleDeveloperMode();
+    if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
     // if (input.isKeyDown('enter')) options.toggleChristmasTheme()
     if (input.isKeyDown('m')) options.toggleFPS();
     if (getGamefile()?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
