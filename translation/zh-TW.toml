@@ -1,0 +1,147 @@
+name = "中文" # Name of language
+direction = "ltr" # Change to "rtl" for right to left languages
+version = "15"
+maintainer = "Heinrich Xiao"
+
+[header]
+home = "主頁"
+play = "開始"
+news = "消息"
+login = "登入"
+createaccount = "註冊"
+
+[footer]
+contact = "聯絡"
+terms_of_service = "服務條款"
+source_code = "程式碼"
+language = "語言"
+
+[header.javascript]
+js-profile = "個人帳戶"
+js-logout = "登出"
+js-login = "登入"
+js-createaccount = "註冊"
+
+[member.javascript]
+js-confirm_delete = "您確定要刪除帳戶嗎？這無法撤銷！如果您確定刪除帳戶，請點擊OK。"
+js-enter_password = "輸入密碼以永久刪除您的帳戶："
+
+[index]
+title = "無限棋 | 首頁 - 官方網站"  # The tab title
+secondary_title = "現場遊戲的官方網站！"
+what_is_it_title = "這是什麼？"
+what_is_it_pargaraphs = [
+"無限國際象棋是一種棋類變體，沒有邊界，比您熟悉的8x8棋盤大得多。皇后、車和主教在每一回合中可以移動的距離<em>沒有限制</em>。選擇任何自然數，直至無限！",
+"由於移動距離沒有限制，因此有可能出現末日時鐘或將軍<em>空白</em>位置的數字由第一個無限序數<strong>omega ω</strong>表示。事實上，研究人員已經發現<strong>任何</strong>可數序數都可以用於將軍時鐘！",
+"可以想像，起始配置有無數種可能，其中許多可以進行競技比賽！您的最終目標仍然是將軍，這需要新的策略，因為沒有牆可以用來困住敵方的國王。遊戲通常不會比正常的國際象棋比賽持續更久。兵仍然在第1和第8排晉升！",
+]
+how_to_title = "我要怎麼玩？"
+how_to_paragraph = ["當前版本是1.4，您可以在","遊戲頁面","上進行遊戲！"]
+about_title = "關於項目"
+about_paragraphs = [
+"我是Naviary。自從我第一次發現無限國際象棋（這個概念在這個網站出現之前就已經存在），我就對它及其可能性非常感興趣！直到最近，玩這款遊戲一直很困難，需要chess.com會員每次走棋時創建當前棋盤的圖像並來回發送。因此，知道並能玩這款遊戲的人並不多。",
+["我的目標是建立一種方式，讓每個人都可以輕鬆地玩這個遊戲，並建立一個圍繞它的社區。我已經花費了無數個小時在這個網站上，維護和開發遊戲。我還有很多想法，這些想法會讓我忙上一段時間。雖然我希望保持免費遊戲，但生活有其需求，如果您能在經濟上支持我，請考慮加入我的", "Patreon"],
+]
+patreon_title = "Patreon支持者"
+
+[credits]
+title = "鳴謝"
+copyright = "網站上未列出的任何內容均為 www.InfiniteChess.org 的版權"
+variants_heading = "變體"
+variants_credits = [
+"核心設計者：Andreas Tsevas。",
+"空間設計者：Andreas Tsevas。",
+"經典空間設計者：Andreas Tsevas。",
+"無限平面上的國際象棋（Coaip）設計者：Vickalan。",
+"兵群設計者：Inaccessible Cardinal。",
+"豐饒設計者：Clicktuck Suskriberz。",
+"Pawndard設計者：SexiLexi。",
+"Classical+設計者：SexiLexi。",
+"Knightline設計者：Inaccessible Cardinal。",
+"Knighted Chess設計者：cycy98。",
+"設計者：Cory Evans 和 Joel Hamkins。",
+"設計者：Andreas Tsevas。",
+"設計者：Cory Evans 和 Joel Hamkins。",
+"設計者：Cory Evans，Joel Hamkins 和 Norman Lewis Perlmutter。",
+]
+textures_heading = "紋理"
+textures_licensed_under = "紋理使用了"
+textures_credits = [
+"金幣設計者：Quolte。",
+]
+sounds_heading = "聲音"
+sounds_credits = [
+["部分聲音由", "項目提供，使用許可為"],
+"其他聲音由Naviary創作。",
+]
+code_heading = "程式碼"
+code_credits = [
+"由Brandon Jones 和 Colin MacKenzie IV 編寫。",
+"由Andreas"
+]
+
+[member]
+title = "會員" # The tab name
+verify_message = "請檢查您的電子郵件以驗證您的帳戶。"
+resend_message = ["沒有收到郵件？請檢查您的垃圾郵件文件夾。另外，", "再次發送。", " 如果仍然找不到，請", "聯絡我。"]
+verify_confirm = "感謝您！您的帳戶已驗證。"
+rating = "Elo 評級:"
+joined = "加入時間:"
+seen = ["上次上線:", " 前"]
+reveal_info = "顯示帳戶資料"
+account_info_heading = "帳戶資料"
+email = "電子郵件:"
+delete_account = "刪除帳戶"
+password_reset_message = ["要更改您的用戶名、電子郵件或密碼，請", "聯絡我們。"]
+
+[create-account]
+title = "註冊"
+username = "帳戶:"
+email = "電子郵件:"
+password = "密碼:"
+create_button = "註冊"
+agreement = ["我同意", "服務條款", "。"]
+
+[create-account.javascript]
+js-username_specs = "用戶名必須至少包含 3 個字元，並且只能包含字母 A-Z 和數字 0-9"
+js-username_tooshort = "用戶名必須多於三個字母"
+js-username_wrongenc = "用戶名只能包含字母 A-Z 和數字 0-9。"
+js-email_invalid = "這不是一個有效的電子郵件"
+js-email_inuse = "這個電子郵件已經被使用了"
+js-pwd_incorrect_format = "密碼格式不正確"
+js-pwd_too_short = "密碼必須多於六個字元"
+js-pwd_too_long = "密碼禁止多於七十二個字元"
+js-pwd_not_pwd = "密碼禁止是'password'"
+
+[play]
+title = "無限棋 - 對局"  # The tab title
+loading = "載入中"
+error = "錯誤"
+
+[play.main-menu]
+credits = "鳴謝"
+play = "開始"
+guide = "指南"
+editor = "棋盤編輯器"
+loading = "載入中"
+error = "錯誤"
+
+[play.guide]
+title = "指南"
+rules = "規則"
+rules_paragraphs = [
+"無限國際象棋的規則與經典國際象棋幾乎相同，唯一的區別是棋盤在所有方向上都是無限的！以下是您需要注意的更改和說明：",
+"滑動移動的棋子，如車、主教和皇后，每回合移動的距離沒有限制！只要路徑暢通無阻，您可以移動數百萬格！",
+["在“經典”預設變體中，白兵在第8排晉升，黑兵在第1排晉升。在這張圖片中，細黑線表示這一點，它們很微弱，看看您是否能找到它們！兵只需要到達相對的線即可晉升，", "不需要", "越過它。"],
+"棋盤格子不再用字母和數字（例如a1）表示，而是用x和y座標對來定義。a1格子變成了(1,1)，h8格子變成了(8,8)。在桌面設備上，滑鼠懸停的座標會顯示在螢幕頂部。",
+"其他規則與經典國際象棋相同，例如將軍、逼和、三次重複、50步規則、王車易位、“吃過路兵”等！"
+]
+careful_heading = "小心!"
+careful_paragraphs = [
+"無限棋盤的開放性意味著很容易利用叉子、釘子和斜線攻擊。您的後方通常非常脆弱。小心這樣的戰術！在保護國王和車的同時，尋找大範圍威脅敵方棋子的機會！",
+]
+open_heading = "不要害怕“開放”"
+open_paragraphs = [
+"雖然棋盤是無限的，但遊戲通常與經典國際象棋一樣迅速結束！大多數策略仍然是基於您熟悉的棋子和它們的能力，但在大多數變體中，這些棋子的移動範圍更廣。",
+]
+
