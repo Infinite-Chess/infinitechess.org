@@ -5,6 +5,7 @@ import path from "path";
 import ejs from "ejs";
 import middleware from "i18next-http-middleware";
 import { FilterXSS } from 'xss';
+import { marked } from 'marked';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 
 import { fileURLToPath } from 'node:url';
@@ -197,19 +198,17 @@ function loadTranslationsFolder(folder) {
         fs.readFileSync(path.join(folder, "changes.json")).toString(),
     );
     const supportedLanguages = [];
+		const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).sort((a, b) => {
+			const dateA = new Date(a.replace('.md', ''));
+			const dateB = new Date(b.replace('.md', ''));
+			return dateB - dateA;
+		});
     files
         .filter(function y(x) {
             return x.endsWith(".toml");
         })
         .forEach((file) => {
             const languageCode = file.replace(".toml", "");
-						const newsFiles = fs.readdirSync(path.join(folder, 'news', languageCode)).sort((a, b) => {
-							const dateA = new Date(a.replace('.md', ''));
-							const dateB = new Date(b.replace('.md', ''));
-							return dateB - dateA;
-						});
-						console.log(newsFiles);
-						
             resources[languageCode] = {
                 default: html_escape(
                     removeOutdated(
@@ -217,8 +216,9 @@ function loadTranslationsFolder(folder) {
                         changelog,
                     ),
                 ),
-								// news: fs.existsSync(newsFilePath) ? fs.readFileSync(newsFilePath) : defaultNews
+								news: newsFiles.map(filePath => marked.parse(fs.existsSync(path.join(folder, 'news', languageCode, filePath)) ? fs.readFileSync(path.join(folder, 'news', languageCode, filePath)).toString() : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath)).toString())).join('\n<br>\n') // I will refactor this later
             };
+					console.log(resources[languageCode].news)
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
 
