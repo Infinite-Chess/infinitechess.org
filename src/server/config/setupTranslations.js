@@ -216,7 +216,10 @@ function loadTranslationsFolder(folder) {
                         changelog,
                     ),
                 ),
-								news: newsFiles.map(filePath => marked.parse(fs.existsSync(path.join(folder, 'news', languageCode, filePath)) ? fs.readFileSync(path.join(folder, 'news', languageCode, filePath)).toString() : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath)).toString())).join('\n<br>\n') // I will refactor this later
+								news: newsFiles.map(filePath => {
+									const fullPath = path.join(folder, 'news', languageCode, filePath);
+									return marked.parse(fs.existsSync(fullPath) ? fs.readFileSync(fullPath).toString() : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath)).toString());
+								}).join('\n<br>\n')
             };
 					console.log(resources[languageCode].news)
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
