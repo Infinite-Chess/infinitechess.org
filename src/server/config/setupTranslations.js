@@ -197,14 +197,20 @@ function loadTranslationsFolder(folder) {
         fs.readFileSync(path.join(folder, "changes.json")).toString(),
     );
     const supportedLanguages = [];
-		const defaultNews = fs.readFileSync(path.join(folder+"/news",getDefaultLanguage()+".html"));
     files
         .filter(function y(x) {
             return x.endsWith(".toml");
         })
         .forEach((file) => {
             const languageCode = file.replace(".toml", "");
-						const newsFilePath = path.join(folder+"/news",file.replace(".toml", ".html"));
+						const newsFiles = fs.readdirSync(folder+"/news/"+languageCode);
+						newsFiles.sort((a, b) => {
+							const dateA = new Date(a.replace('.md', ''));
+							const dateB = new Date(b.replace('.md', ''));
+							return dateB - dateA;
+						});
+						console.log(newsFiles);
+						
             resources[languageCode] = {
                 default: html_escape(
                     removeOutdated(
@@ -212,7 +218,7 @@ function loadTranslationsFolder(folder) {
                         changelog,
                     ),
                 ),
-								news: fs.existsSync(newsFilePath) ? fs.readFileSync(newsFilePath) : defaultNews
+								// news: fs.existsSync(newsFilePath) ? fs.readFileSync(newsFilePath) : defaultNews
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
