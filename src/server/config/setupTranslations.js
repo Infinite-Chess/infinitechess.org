@@ -203,8 +203,7 @@ function loadTranslationsFolder(folder) {
         })
         .forEach((file) => {
             const languageCode = file.replace(".toml", "");
-						const newsFiles = fs.readdirSync(path.join(folder, 'news', languageCode));
-						newsFiles.sort((a, b) => {
+						const newsFiles = fs.readdirSync(path.join(folder, 'news', languageCode)).sort((a, b) => {
 							const dateA = new Date(a.replace('.md', ''));
 							const dateB = new Date(b.replace('.md', ''));
 							return dateB - dateA;
