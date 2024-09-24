@@ -197,12 +197,14 @@ function loadTranslationsFolder(folder) {
         fs.readFileSync(path.join(folder, "changes.json")).toString(),
     );
     const supportedLanguages = [];
+		const defaultNews = fs.readFileSync(path.join(folder+"/news",getDefaultLanguage()+".html"));
     files
         .filter(function y(x) {
             return x.endsWith(".toml");
         })
         .forEach((file) => {
             const languageCode = file.replace(".toml", "");
+						const newsFilePath = path.join(folder+"/news",file.replace(".toml", ".html"));
             resources[languageCode] = {
                 default: html_escape(
                     removeOutdated(
@@ -210,6 +212,7 @@ function loadTranslationsFolder(folder) {
                         changelog,
                     ),
                 ),
+								news: fs.existsSync(newsFilePath) ? fs.readFileSync(newsFilePath) : defaultNews
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
@@ -267,6 +270,7 @@ function translateStaticTemplates(translations) {
                         },
                         languages: languages_list,
                         language: language,
+												newsHTML: translations[language].news,
                         viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
                     },
                 ),
