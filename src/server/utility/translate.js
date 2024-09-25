@@ -11,7 +11,7 @@ const defaultLanguage = 'en-US';
 const supportedLanguages = [];
 
 function getDefaultLanguage() { return defaultLanguage; }
-function setSupportedLanguages(list) { supportedLanguages === list; }
+function setSupportedLanguages(list) { supportedLanguages.push(...list); }
 
 /**
  * Determines the language to be used for serving an HTML file to a request.
