@@ -8,10 +8,10 @@ import i18next from "i18next";
 
 const defaultLanguage = 'en-US';
 /** Our supported languages (those with a TOML file) will be auto-appended here by {@link loadTranslationsFolder}. */
-const supportedLanguages = [];
+let supportedLanguages = [];
 
 function getDefaultLanguage() { return defaultLanguage; }
-function setSupportedLanguages(list) { supportedLanguages.push(...list); }
+function setSupportedLanguages(list) { supportedLanguages = list; }
 
 /**
  * Determines the language to be used for serving an HTML file to a request.
