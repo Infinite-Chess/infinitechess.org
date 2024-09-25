@@ -5,8 +5,12 @@ import path from "path";
 import ejs from "ejs";
 import middleware from "i18next-http-middleware";
 import { FilterXSS } from 'xss';
-import { marked } from 'marked';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
+
+import { marked } from 'marked';
+marked.use({
+	breaks: true
+});
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -218,7 +222,9 @@ function loadTranslationsFolder(folder) {
                 ),
 								news: newsFiles.map(filePath => {
 									const fullPath = path.join(folder, 'news', languageCode, filePath);
-									return marked.parse((fs.existsSync(fullPath) ? fs.readFileSync(fullPath) : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString());
+									return marked.parse((fs.existsSync(fullPath) ? 
+										fs.readFileSync(fullPath) : 
+										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString());
 								}).join('\n<br><br><br>\n')
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
