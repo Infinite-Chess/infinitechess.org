@@ -221,7 +221,6 @@ function loadTranslationsFolder(folder) {
 									return marked.parse((fs.existsSync(fullPath) ? fs.readFileSync(fullPath) : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString());
 								}).join('\n<br><br><br>\n')
             };
-					console.log(resources[languageCode].news)
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
 
