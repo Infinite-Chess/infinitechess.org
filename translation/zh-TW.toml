@@ -7,40 +7,40 @@ maintainer = "Heinrich Xiao"
 home = "主頁"
 play = "開始"
 news = "消息"
-login = "登入"
-createaccount = "註冊"
+login = "登錄"
+createaccount = "注冊"
 
 [footer]
-contact = "聯絡"
+contact = "聯系"
 terms_of_service = "服務條款"
-source_code = "程式碼"
+source_code = "程序"
 language = "語言"
 
 [header.javascript]
-js-profile = "個人帳戶"
+js-profile = "個人賬戶"
 js-logout = "登出"
-js-login = "登入"
-js-createaccount = "註冊"
+js-login = "登錄"
+js-createaccount = "注冊"
 
 [member.javascript]
-js-confirm_delete = "您確定要刪除帳戶嗎？這無法撤銷！如果您確定刪除帳戶，請點擊OK。"
-js-enter_password = "輸入密碼以永久刪除您的帳戶："
+js-confirm_delete = "您確定要刪除賬號嗎？這無法撤銷！要是你確定刪除賬號，點OK。"
+js-enter_password = "輸入密碼以永久刪除您的賬戶:"
 
 [index]
 title = "無限棋 | 首頁 - 官方網站"  # The tab title
-secondary_title = "現場遊戲的官方網站！"
+secondary_title = "現場游戲的官方網站！"
 what_is_it_title = "這是什麼？"
 what_is_it_pargaraphs = [
-"無限國際象棋是一種棋類變體，沒有邊界，比您熟悉的8x8棋盤大得多。皇后、車和主教在每一回合中可以移動的距離<em>沒有限制</em>。選擇任何自然數，直至無限！",
+"無限國際象棋是一種棋類變體，沒有邊界，比你熟悉的8x8棋盤大得多。皇后、車和主教在每一回合中可以移動的距離<em>沒有限制</em>。選擇任何自然數，直至無限！",
 "由於移動距離沒有限制，因此有可能出現末日時鐘或將軍<em>空白</em>位置的數字由第一個無限序數<strong>omega ω</strong>表示。事實上，研究人員已經發現<strong>任何</strong>可數序數都可以用於將軍時鐘！",
-"可以想像，起始配置有無數種可能，其中許多可以進行競技比賽！您的最終目標仍然是將軍，這需要新的策略，因為沒有牆可以用來困住敵方的國王。遊戲通常不會比正常的國際象棋比賽持續更久。兵仍然在第1和第8排晉升！",
+"可以想象，起始配置有無數種可能，其中許多可以進行競技比賽！你的最終目標仍然是將軍，這需要新的策略，因為沒有牆可以用來困住敵方的國王。游戲通常不會比正常的國際象棋比賽持續更久。兵仍然在第1和第8排晉升！",
 ]
-how_to_title = "我要怎麼玩？"
-how_to_paragraph = ["當前版本是1.4，您可以在","遊戲頁面","上進行遊戲！"]
+how_to_title = "我要怎麼玩?"
+how_to_paragraph = ["當前版本是1.4，你可以在","游戲頁面","上進行游戲！"]
 about_title = "關於項目"
 about_paragraphs = [
-"我是Naviary。自從我第一次發現無限國際象棋（這個概念在這個網站出現之前就已經存在），我就對它及其可能性非常感興趣！直到最近，玩這款遊戲一直很困難，需要chess.com會員每次走棋時創建當前棋盤的圖像並來回發送。因此，知道並能玩這款遊戲的人並不多。",
-["我的目標是建立一種方式，讓每個人都可以輕鬆地玩這個遊戲，並建立一個圍繞它的社區。我已經花費了無數個小時在這個網站上，維護和開發遊戲。我還有很多想法，這些想法會讓我忙上一段時間。雖然我希望保持免費遊戲，但生活有其需求，如果您能在經濟上支持我，請考慮加入我的", "Patreon"],
+"我是Naviary。自從我第一次發現無限國際象棋（這個概念在這個網站出現之前就已經存在），我就對它及其可能性非常感興趣！直到最近，玩這款游戲一直很困難，需要chess.com會員每次走棋時創建當前棋盤的圖像並來回發送。因此，知道並能玩這款游戲的人並不多。",
+["我的目標是建立一種方式，讓每個人都可以輕鬆地玩這個游戲，並建立一個圍繞它的社區。我已經花費了無數個小時在這個網站上，維護和開發游戲。我還有很多想法，這些想法會讓我忙上一段時間。雖然我希望保持免費游戲，但生活有其需求，如果你能在經濟上支持我，請考慮加入我的", "Patreon"],
 ]
 patreon_title = "Patreon支持者"
 
@@ -54,7 +54,7 @@ variants_credits = [
 "經典空間設計者：Andreas Tsevas。",
 "無限平面上的國際象棋（Coaip）設計者：Vickalan。",
 "兵群設計者：Inaccessible Cardinal。",
-"豐饒設計者：Clicktuck Suskriberz。",
+"豐富設計者：Clicktuck Suskriberz。",
 "Pawndard設計者：SexiLexi。",
 "Classical+設計者：SexiLexi。",
 "Knightline設計者：Inaccessible Cardinal。",
@@ -74,7 +74,7 @@ sounds_credits = [
 ["部分聲音由", "項目提供，使用許可為"],
 "其他聲音由Naviary創作。",
 ]
-code_heading = "程式碼"
+code_heading = "程序"
 code_credits = [
 "由Brandon Jones 和 Colin MacKenzie IV 編寫。",
 "由Andreas"
@@ -82,40 +82,40 @@ code_credits = [
 
 [member]
 title = "會員" # The tab name
-verify_message = "請檢查您的電子郵件以驗證您的帳戶。"
-resend_message = ["沒有收到郵件？請檢查您的垃圾郵件文件夾。另外，", "再次發送。", " 如果仍然找不到，請", "聯絡我。"]
-verify_confirm = "感謝您！您的帳戶已驗證。"
+verify_message = "請檢查您的電子郵箱以驗証您的賬戶。"
+resend_message = ["沒有收到郵件？請檢查您的垃圾郵件文件夾。另外，", "再次發送。", " 如果仍然找不到，請", "聯系我。"]
+verify_confirm = "感謝您！您的賬戶已驗証。"
 rating = "Elo 評級:"
 joined = "加入時間:"
-seen = ["上次上線:", " 前"]
-reveal_info = "顯示帳戶資料"
-account_info_heading = "帳戶資料"
-email = "電子郵件:"
-delete_account = "刪除帳戶"
-password_reset_message = ["要更改您的用戶名、電子郵件或密碼，請", "聯絡我們。"]
+seen = ["上次在線:", " 前"]
+reveal_info = "顯示賬號資料"
+account_info_heading = "賬號資料"
+email = "電子郵箱:"
+delete_account = "刪除賬號"
+password_reset_message = ["要更改您的用戶名、電子郵件或密碼，請", "聯系我們。"]
 
 [create-account]
-title = "註冊"
-username = "帳戶:"
-email = "電子郵件:"
+title = "注冊"
+username = "賬號:"
+email = "電子郵箱:"
 password = "密碼:"
-create_button = "註冊"
+create_button = "注冊"
 agreement = ["我同意", "服務條款", "。"]
 
 [create-account.javascript]
-js-username_specs = "用戶名必須至少包含 3 個字元，並且只能包含字母 A-Z 和數字 0-9"
+js-username_specs = "用戶名必須至少包含 3 個字符，並且隻能包含字母 A-Z 和數字 0-9"
 js-username_tooshort = "用戶名必須多於三個字母"
-js-username_wrongenc = "用戶名只能包含字母 A-Z 和數字 0-9。"
-js-email_invalid = "這不是一個有效的電子郵件"
-js-email_inuse = "這個電子郵件已經被使用了"
+js-username_wrongenc = "用戶名隻能包含字母 A-Z 和數字 0-9。"
+js-email_invalid = "這不是一個有效的郵箱"
+js-email_inuse = "這個電子郵箱已經被用了"
 js-pwd_incorrect_format = "密碼格式不正確"
-js-pwd_too_short = "密碼必須多於六個字元"
-js-pwd_too_long = "密碼禁止多於七十二個字元"
+js-pwd_too_short = "密碼必須多於六個字母"
+js-pwd_too_long = "密碼禁止多於七十二個字母"
 js-pwd_not_pwd = "密碼禁止是'password'"
 
 [play]
 title = "無限棋 - 對局"  # The tab title
-loading = "載入中"
+loading = "加載中"
 error = "錯誤"
 
 [play.main-menu]
@@ -123,7 +123,7 @@ credits = "鳴謝"
 play = "開始"
 guide = "指南"
 editor = "棋盤編輯器"
-loading = "載入中"
+loading = "加載中"
 error = "錯誤"
 
 [play.guide]
@@ -131,17 +131,491 @@ title = "指南"
 rules = "規則"
 rules_paragraphs = [
 "無限國際象棋的規則與經典國際象棋幾乎相同，唯一的區別是棋盤在所有方向上都是無限的！以下是您需要注意的更改和說明：",
-"滑動移動的棋子，如車、主教和皇后，每回合移動的距離沒有限制！只要路徑暢通無阻，您可以移動數百萬格！",
-["在“經典”預設變體中，白兵在第8排晉升，黑兵在第1排晉升。在這張圖片中，細黑線表示這一點，它們很微弱，看看您是否能找到它們！兵只需要到達相對的線即可晉升，", "不需要", "越過它。"],
-"棋盤格子不再用字母和數字（例如a1）表示，而是用x和y座標對來定義。a1格子變成了(1,1)，h8格子變成了(8,8)。在桌面設備上，滑鼠懸停的座標會顯示在螢幕頂部。",
-"其他規則與經典國際象棋相同，例如將軍、逼和、三次重複、50步規則、王車易位、“吃過路兵”等！"
+"滑動移動的棋子，如車、主教和皇后，每回合移動的距離沒有限制！隻要路徑暢通無阻，您可以移動數百萬格！",
+["在“經典”默認變體中，白兵在第8排晉升，黑兵在第1排晉升。在這張圖片中，細黑線表示這一點，它們很微弱，看看您是否能找到它們！兵隻需要到達相對的線即可晉升，", "不需要", "越過它。"],
+"棋盤方格不再用字母和數字（例如a1）表示，而是用x和y坐標對來定義。a1方格變成了(1,1)，h8方格變成了(8,8)。在桌面設備上，鼠標懸停的坐標會顯示在屏幕頂部。",
+"其他規則與經典國際象棋相同，例如將軍、逼和、三次重復、50步規則、王車易位、“吃過路兵”等！"
 ]
 careful_heading = "小心!"
 careful_paragraphs = [
-"無限棋盤的開放性意味著很容易利用叉子、釘子和斜線攻擊。您的後方通常非常脆弱。小心這樣的戰術！在保護國王和車的同時，尋找大範圍威脅敵方棋子的機會！",
+"無限棋盤的開放性意味著很容易利用叉子、釘子和斜線攻擊。您的后方通常非常脆弱。小心這樣的戰術！在保護國王和車的過程中要有創造力！開局策略與經典國際象棋非常不同。",
+"為了增強您的后方，已經創建了許多其他變體。"
 ]
-open_heading = "不要害怕“開放”"
-open_paragraphs = [
-"雖然棋盤是無限的，但遊戲通常與經典國際象棋一樣迅速結束！大多數策略仍然是基於您熟悉的棋子和它們的能力，但在大多數變體中，這些棋子的移動範圍更廣。",
+controls_heading = "控制"
+controls_paragraph = "點擊並拖動棋盤來移動。滾動鼠標滾輪進行縮放。點擊任何棋子，包括對手的棋子，在任何時候查看它們的合法移動！其他控制如下："
+keybinds = [
+" 來移動棋盤。",
+["空格鍵", " 和 ", "Shift鍵", " 來縮放。"],
+["Esc鍵", " 來暫停游戲。"],
+["Tab鍵", " 切換屏幕邊緣的箭頭指示器，用於指向屏幕外的棋子。默認情況下，此模式設置為“防御”，顯示從當前位置可以移動到您所在位置的棋子的箭頭。但按", "Tab鍵", "可以將此模式切換為“全部”或“關閉”。“全部”模式顯示所有在那些直線和斜線上的棋子，無論它們是否可以直線或斜線移動。此設置也可以在暫停菜單中切換。點擊這些箭頭會將您傳送到它們指向的棋子位置。"],
+" 在本地游戲中切換“編輯模式”。這允許您將任何棋子移動到棋盤上的其他位置！非常適合分析。"
+]
+controls_paragraph2 = "這些是您需要了解的主要控制。但如果您需要，這裡還有一些額外的操作！"
+keybinds_extra = [
+" 將重置棋子的渲染。如果它們變得不可見，這將非常有用。如果您移動極遠的距離（例如1e21），可能會發生此錯誤。",
+" 將切換導航和游戲信息欄的渲染，這對錄制很有用。歡迎在游戲中進行流媒體或制作視頻！",
+" 將切換FPS計數器。這顯示游戲每秒更新的次數，而不總是顯示渲染的幀數，因為游戲在沒有可見變化時跳過渲染以節省計算資源。",
+" 將切換圖標渲染。這些是在您足夠遠地縮小時棋子的可點擊縮略圖。在導入超過50,000個棋子的游戲中，這將自動關閉，因為它是性能瓶頸，但您可以使用 ",
+[" （反引號，或與 ", "相同的鍵）將切換調試模式。"],
+]
+fairy_heading = "仙子棋子"
+fairy_paragraph = "您已經掌握了玩默認“經典”變體所需的知識。仙子棋子不用於常規國際象棋，但被整合到其他變體中！如果您發現自己在某個變體中遇到了一些以前沒見過的棋子，讓我們在這裡學習它們的工作原理！"
+editing_heading = "棋盤編輯"
+editing_paragraphs = [
+["目前有一個外部 ", "棋盤編輯器", "，可在公共Google表單上使用！它包含使用說明。此工具需要一些基本的Google表單知識。設置后，您將能夠通過選項菜單中的“粘貼游戲”按鈕創建和導入自定義棋局位置！"],
+"要與朋友玩自定義棋局，請讓他們加入私人邀請，然后在開始游戲之前，雙方都粘貼游戲代碼！",
+"游戲內棋盤編輯器仍在計劃中。",
+]
+back = "返回"
+
+[play.guide.pieces]
+chancellor = {name="大臣", description="像車和騎士的組合一樣移動。"}
+archbishop = {name="主教騎士", description="像主教和騎士的組合一樣移動。"}
+amazon = {name="女皇", description="像皇后和騎士的組合一樣移動。這是游戲中最強大的棋子！"}
+guard = {name="護衛", description="像國王一樣移動，但不易受將軍或將死。"}
+hawk = {name="鷹", description="在任何方向上跳躍2或3格。"}
+centaur = {name="人馬", description="像騎士和護衛的組合一樣移動。"}
+knightrider = {name="騎士騎士", description="像騎士一樣在一個方向上無限跳躍，直到被阻擋。"}
+obstacle = {name="障礙物", description="一個中立棋子（不由任何玩家控制），阻擋移動，但可以被捕獲。"}
+void = {name="虛空", description="一個中立棋子（不由任何玩家控制），表示棋盤的缺失。棋子不能穿過或移動到它上面。"}
+
+
+[play.play-menu]
+title = "玩 - 網上"
+colors = "顏色"
+online = "網上"
+local = "本地"
+computer = "計算機"
+variant = "變體"
+Classical = "經典"
+Classical_Plus = "經典+"
+CoaIP = "無限棋盤上的國際象棋"
+Pawndard = "兵棋"
+Knighted_Chess = "騎士國際象棋"
+Knightline = "騎士線"
+Core = "核心"
+Standarch = "標准弧"
+Pawn_Horde = "兵群"
+Space_Classic = "太空經典"
+Space = "太空"
+Obstocean = "障礙海洋"
+Abundance = "豐饒"
+Amazon_Chandelier = "亞馬遜吊燈"
+Containment = "遏制"
+Classical_Limit_7 = "經典 - 限制 7"
+CoaIP_Limit_7 = "無限棋盤 - 限制 7"
+Chess = "國際象棋"
+Classical_KOTH = "實驗: 經典 - 王者爭奪"
+CoaIP_KOTH = "實驗: 無限棋盤 - 王者爭奪"
+Omega = "展示: 歐米伽"
+Omega_Squared = "展示: 歐米伽²"
+Omega_Cubed = "展示: 歐米伽³"
+Omega_Fourth = "展示: 歐米伽⁴"
+no_clock = "沒有表"
+clock = "表"
+minutes = "分鐘"
+seconds = "秒"
+infinite_time = "無限時間"
+color = "顏色"
+piece_colors = ["隨機", "白", "黑"]
+private = "未發布"
+no = "不"
+yes = "是"
+rated = "評級"
+casual = "休閑"
+join_games = "加入現有 - 活躍游戲:"
+private_invite = "私人邀請:"
+your_invite = "您的邀請碼:"
+create_invite = "創建邀請"
+join = "加入"
+copy = "復制"
+back = "返回"
+code = "邀請碼"
+
+[play.footer]
+white_to_move = "白方走起"
+player_white = "白方"
+player_black = "黑方"
+
+[play.pause]
+title = "暫停"
+resume = "繼續"
+arrows = "箭頭: 防御"
+perspective = "視角: 關閉"
+copy = "復制棋局"
+paste = "粘貼棋局"
+offer_draw = "提和"
+main_menu = "主頁"
+
+[play.drawoffer] # The draw offer UI that appears on the bottom bar
+question = "接受和棋提議"
+
+[play.javascript]
+guest_indicator = "(游客)"
+you_indicator = "(您)"
+white_to_move = "白方走棋"
+black_to_move = "黑方走棋"
+your_move = "輪到您走棋"
+their_move = "輪到他走棋"
+lost_network = "網絡丟失。"
+failed_to_load = "一個或多個資源加載失敗。請刷新頁面。"
+planned_feature = "此功能已計劃！"
+main_menu = "主頁"
+resign_game = "認輸"
+abort_game = "放棄游戲"
+offer_draw = "提和" # Offer draw button text in the pause menu
+accept_draw = "接受和棋" # Offer draw button text in the pause menu
+arrows_off = "箭頭: 關閉"
+arrows_defense = "箭頭: 防御"
+arrows_all = "箭頭: 全部"
+toggled = "切換"
+menu_online = "玩 - 網上"
+menu_local = "玩 - 本地"
+invite_error_digits = "邀請碼需要5位數字。"
+invite_copied = "邀請碼已復制到剪貼板。"
+move_counter = "步數:"
+constructing_mesh = "構建網格"
+rotating_mesh = "旋轉網格"
+lost_connection = "連接丟失。"
+please_wait = "請稍等，正在執行此任務。"
+webgl_unsupported = "您的瀏覽器不支持WebGL。此游戲需要WebGL才能運行。請更新您的瀏覽器。"
+bigints_unsupported = "BigInts 不受支持。請升級您的瀏覽器。\nBigInts 用於使棋盤無限。"
+shaders_failed = "無法初始化著色器程序："
+failed_compiling_shaders = "編譯著色器時發生錯誤："
+
+[play.javascript.copypaste]
+copied_game = "游戲已復制到剪貼板！"
+cannot_paste_in_public = "不能在公共比賽中粘貼游戲！"
+cannot_paste_after_moves = "移動后不能粘貼游戲！"
+clipboard_denied = "剪貼板權限被拒絕。這可能是您的瀏覽器問題。"
+clipboard_invalid = "剪貼板內容不符合有效的ICN格式。"
+game_needs_to_specify = "游戲需要指定 'Variant' 元數據或 'startingPosition' 屬性。"
+invalid_wincon_white = "白方有無效的勝利條件"
+invalid_wincon_black = "黑方有無效的勝利條件"
+pasting_game = "正在粘貼游戲..."
+pasting_in_private = "在私人比賽中粘貼游戲會導致不同步，如果對手沒有做同樣的操作！"
+piece_count = "棋子數量"
+exceeded = "超過了"
+changed_wincon = "將將死勝利條件更改為royalcapture，並關閉了圖標渲染。按 'P' 重新啟用（不推薦）。"
+loaded_from_clipboard = "從剪貼板加載了游戲！"
+loaded = "游戲已加載！"
+slidelimit_not_number = "slideLimit 游戲規則必須是數字。收到"
+
+[play.javascript.rendering]
+on = "開啟"
+off = "關閉"
+icon_rendering_off = "圖標渲染已關閉。"
+icon_rendering_on = "圖標渲染已開啟。"
+toggled_debug = "調試模式已切換："
+toggled_edit = "編輯模式已切換："
+perspective = "視角"
+perspective_mode_on_desktop = "桌面版支持視角模式！"
+movement_tutorial = "WASD 移動。空格 & Shift 縮放。"
+regenerated_pieces = "重新生成了棋子。"
+
+[play.javascript.invites]
+move_mouse = "移動鼠標以重新連接。"
+unknown_action_received_1 = "未知操作"
+unknown_action_received_2 = "從邀請訂閱中接收到的服務器消息！"
+cannot_cancel = "無法取消未定義 ID 的邀請。"
+you_indicator = "(你)"
+you_are_white = "你是白方"
+you_are_black = "你是黑方"
+random = "隨機"
+accept = "接受"
+cancel = "取消"
+create_invite = "創建邀請函"
+cancel_invite = "取消邀請函"
+start_game = "開始"
+join_existing_active_games = "加入現有 - 活躍游戲："
+
+[play.javascript.onlinegame]
+afk_warning = "你是AFK."
+opponent_afk = "對手是AFK."
+opponent_disconnected = "對手斷開連接了"
+opponent_lost_connection = "對手斷開連接了"
+auto_resigning_in = "將很快自動認輸"
+auto_aborting_in = "將很快自動中止"
+not_logged_in = "您未登錄。請登錄以重新連接到此游戲。"
+game_no_longer_exists = "游戲不再存在。"
+another_window_connected = "另一個窗口已連接。"
+server_restarting = "服務器即將重新啟動..."
+server_restarting_in = "服務器即將重新啟動"
+minute = "分鐘"
+minutes = "分鐘"
+
+[play.javascript.websocket]
+no_connection = "沒有連接"
+reconnected = "重新連接了"
+unable_to_identify_ip = "無法識別IP地址"
+online_play_disabled = "在線游戲已禁用。不支持Cookie。請嘗試其他瀏覽器。"
+too_many_requests = "請求次數過多，請稍后再試。"
+message_too_big = "消息太大。"
+too_many_sockets = "套接字太多。"
+origin_error = "來源錯誤。"
+connection_closed = "連接意外關閉。服務器消息。"
+please_report_bug = "這不應該發生，請報告此錯誤！"
+
+[play.javascript.termination] # What caused the termination of the game, in spoken language
+checkmate = "將死"
+stalemate = "僵局"
+repetition = "三次重復"
+moverule = [, "-回合規則"]  # The game inserts a number inbetween these two strings
+insuffmat = "棋子不足"
+royalcapture = "王被吃"
+allroyalscaptured = "所有王被吃"
+allpiecescaptured = "所有棋子被吃"
+threecheck = "三次將軍"
+koth = "山丘之王"
+resignation = "認輸"
+agreement = "同意" 
+time = "超時"
+aborted = "已中止"  # Game was cancelled (no elo exchanged)
+disconnect = "棄賽"  # A player left
+
+[play.javascript.results]
+you_checkmate = "你贏了，將死！"
+you_time = "你超時贏了！"
+you_resignation = "你贏了，對手認輸！"
+you_disconnect = "你贏了，對手棄權！"
+you_royalcapture = "你贏了，皇族棋子被捕！"
+you_allroyalscaptured = "你贏了，所有皇族棋子被捕！"
+you_allpiecescaptured = "你贏了，全軍覆沒！"
+you_threecheck = "你贏了，三步將軍！"
+you_koth = "你贏了，山頂王！"
+you_generic = "你贏了！"
+draw_stalemate = "和棋，僵局！"
+draw_repetition = "和棋，局面重復！"
+draw_moverule = ["和棋，", "步規則！"]
+draw_insuffmat = "和棋，因棋子不足！"
+draw_agreement = "協議和棋"
+draw_generic = "和棋!"
+aborted = "游戲中止"
+opponent_checkmate = "你輸了，將死！"
+opponent_time = "你超時輸了！"
+opponent_resignation = "你輸了，對手認輸！"
+opponent_disconnect = "你輸了，對手棄權！"
+opponent_royalcapture = "你輸了，皇族棋子被捕！"
+opponent_allroyalscaptured = "你輸了，所有皇族棋子被捕！"
+opponent_allpiecescaptured = "你輸了，全軍覆沒！"
+opponent_threecheck = "你輸了，被三步將軍！"
+opponent_koth = "你輸了山頂王！"
+opponent_generic = "你輸了!"
+white_checkmate = "白方將死獲勝!"
+black_checkmate = "黑方將死獲勝!"
+bug_checkmate = "這是一個錯誤，請報告。游戲以將死結束。"
+white_time = "白方超時勝"
+black_time = "黑方超時勝!"
+bug_time = "這是一個錯誤，請報告！游戲因超時結束。"
+white_royalcapture = "白方通過捕獲皇族棋子獲勝！"
+black_royalcapture = "黑方通過捕獲皇族棋子獲勝！"
+bug_royalcapture = "這是一個錯誤，請報告！游戲因皇族棋子被捕獲而結束。"
+white_allroyalscaptured = "白方通過吃掉所有皇族棋子獲勝！"
+black_allroyalscaptured = "黑方通過吃掉所有皇族棋子獲勝！"
+bug_allroyalscaptured = "這是一個錯誤，請報告！游戲因所有皇族棋子被捕獲而結束。"
+white_allpiecescaptured = "白方通過吃掉所有棋子獲勝！"
+black_allpiecescaptured = "黑方通過吃掉所有棋子獲勝！"
+bug_allpiecescaptured = "這是一個錯誤，請報告！游戲因所有棋子被捕獲而結束。"
+white_threecheck = "白方通過三步將軍獲勝！"
+black_threecheck = "黑方通過三步將軍獲勝！"
+bug_threecheck = "這是一個錯誤，請報告！游戲被三步將軍結束。"
+white_koth = "白方通過山頂之王獲勝！"
+black_koth = "黑方通過山頂之王獲勝！"
+bug_koth = "這是一個錯誤，請報告！游戲被山頂之王結束。"
+bug_generic = "這是一個錯誤，請報告！"
+
+[terms]
+title = "服務條款"
+warning = ["此文件不具有法律約束力。我們隻對英文版本的文件負責。本翻譯僅供一般參考。您可以在此處訪問官方英文版本", "這裡", "。"]
+consent = "使用本網站即表示您同意遵守以下條款。如果您不同意，您必須立即停止使用本網站。"
+guardian_consent = "如果您未滿18歲，您必須獲得父母或法定監護人的同意，才能使用本網站並創建賬戶。"
+parents_header = "父母"
+parents_paragraphs = [
+"本網站有一個算法，用於禁止用戶將其名字設置為常見的臟話。目前，網站上用戶之間沒有交流方式。",
+"目前，會員無法設置自己的個人資料圖片。我們計劃在未來允許此功能，屆時我們將盡最大努力防止不適當的個人資料圖片。",
+]
+fair_play_header = "公平游戲"
+fair_play_paragraph1 = ["您不能創建超過一個賬戶。如果您希望更改與賬戶關聯的電子郵件地址，請", "聯系我們。"]
+fair_play_paragraph2 = "為了讓游戲保持有趣和公平，您不得："
+fair_play_rules = [
+"以任何方式修改或操縱代碼，包括但不限於：使用控制台命令、本地覆蓋、自定義腳本、修改HTTP請求等。這樣做可能是為了故意破壞游戲，或給自己帶來優勢。",
+"在評級游戲中，接受他人或程序的幫助/建議，以決定應該下什麼棋。（創建引擎是可以的，並且是鼓勵的，但您必須將其使用限制在非評級游戲中。）",
+"通過故意輸棋以提升對手的Elo積分，或接受對手故意輸棋以提升自己的Elo積分。這會濫用系統，導致根據您的技能水平產生不准確的評級。"
+]
+cleanliness_header = "清潔"
+cleanliness_rules = [
+"在網站上使用的所有語言中，您必須保持文明，不得使用粗俗語言或臟話。您不得欺凌、騷擾或威脅他人，或從事任何非法行為。您不得向其他用戶或論壇發送垃圾信息。",
+"您不得上傳不適當、暗示性或血腥的圖像作為您的個人資料圖片。這樣做可能會導致您被禁止或終止賬戶。"
+]
+privacy_header = "隱私"
+privacy_rules = [
+"目前，我們收集的唯一個人信息是電子郵件。這是為了驗証用戶的賬戶，並提供在他們請求密碼重置時証明身份的手段。我們不會發送任何促銷電子郵件或優惠。我們不會與任何人共享用戶的電子郵件地址。",
+"InfiniteChess.org可能會收集您在網站上使用的數據，包括您的IP地址。這是為了幫助防止來自機器人的攻擊和其他不受歡迎的實體，並保持數據庫中的准確統計信息。這不是您的家庭地址。",
+"您在本網站上玩的所有游戲都會成為公共信息。如果您希望保持匿名，請不要與朋友或家人分享您的用戶名。如果這是您的願望，您有責任確保沒有人發現您的用戶名與您的真實身份相關聯。",
+"您的賬戶在線狀態以及您上次在網站上活躍的近似時間也是公共信息。",
+["盡管InfiniteChess.org將盡力在其能力范圍內保護每個人的賬戶和個人信息，但在發生黑客攻擊或數據泄露時，您不得向我們提出指控。如果發生數據泄露，用戶將在", "新聞", "頁面上收到通知。"],
+"網站上沒有可購買的內容。我們不收集其他個人信息。",
+"要從我們的服務器中刪除您的私人信息，您可以通過個人資料頁面刪除您的賬戶。唯一與您的用戶名有關且我們不會刪除的內容是您的游戲歷史記錄，因為所有游戲都是公開信息。",
+]
+cookie_header = "Cookie政策"
+cookie_paragraphs = [
+"本網站使用Cookie，Cookie是存儲在您瀏覽器中的小型文本文件，在連接時發送到服務器。使用這些Cookie的目的是：驗証您的登錄會話，驗証您的瀏覽器屬於它所稱的棋局，並存儲用戶的游戲偏好，以便他們在重新訪問網站時可以保留其偏好。該網站不使用第三方Cookie，Cookie不會與外部方共享。",
+"Cookie是本網站和游戲正常運行所必需的。如果您不希望網站存儲Cookie，您必須停止使用本網站。您可以進入瀏覽器偏好設置刪除現有的Cookie。繼續使用本網站即表示您同意使用Cookie。"
+]
+conclusion_header = "結論"
+conclusion_paragraphs = [
+"任何違反這些條款的行為可能導致您被禁止或終止賬戶。InfiniteChess.org希望能夠為每個人提供玩樂的機會！但是，我們保留隨時禁止或終止任何用戶賬戶的權利，原因無需披露。您不得向我們提出指控。",
+["這些服務條款可能隨時修改。您有責任確保您保持最新！當這些服務條款更新時，該信息將發布在", "新聞", "頁面上。如果在服務條款更新時，您不同意新條款，您必須立即停止使用網站。您可以從您的個人資料頁面刪除賬戶。如果您刪除賬戶，所有您的私人信息和賬戶數據將被刪除，除了與您的用戶名相關的游戲歷史記錄，因為這是公開信息。"],
+["此網站是開源的。隻要您遵循許可條款中規定的條件，您可以復制或分發本網站上的任何內容！", "許可條款", "。如果此鏈接失效，您有責任找到條款。"],
+"我們不能保証網站將100%時間運行。我們也不能保証數據永遠不會被損壞。",
+"您不得在網站上從事任何非法活動。",
+["如果您對這些條款有任何疑問，或對網站有任何其他問題，請", "通過電子郵件聯系我們！"]
+]
+update = "(最后更新日期：2024年7月13日。添加了警告，所有玩過的游戲可能成為公共信息，包括您賬戶上次活躍的大致時間。此外，這些條款可能會隨時更新，您有責任確保您保持更新。)"
+thanks = "謝謝！"
+
+
+[login]
+title = "登錄"
+username = "用戶名:"
+password = "密碼:"
+forgot_password = ["忘記了? ", "給我們發郵件."]
+login_button = "登錄"
+
+[error-pages] # Messages shown on some error pages explaining what went wrong
+400_message = "收到無效參數。"
+409_message = ["可能存在沖突的用戶名或電子郵件。請", "重新加載", "頁面"]
+500_message = "這不應該發生。需要進行一些調試！"
+
+########### NEWS ###########
+
+[news]
+title = "新聞"
+more_dev_logs = ["更多開發者日志在我們的", "Discord", "和在", "chess.com的論壇！"]
+
+[news.sept11-2024]
+date = "2024年9月11日:"
+paragraph1 = [
+    "首屆無限棋錦標賽現已開放報名！！！比賽將採用經典變體，時間控制為10分鐘加6秒（此功能將很快添加）。獲勝者將在 ",
+    "社區Discord", # The website inserts a hyperlink over this text
+    " 上獲得特殊標識和/或角色！"
+],
+paragraph2 = [
+    "這是 ",
+    "報名表格", # The website inserts a hyperlink over this text
+    "！報名截止日期是 ",
+    "2024年9月27日（星期五）！", # The website bolds this text
+    " 完整規則請查看 ",
+    "這裡", # The website inserts a hyperlink over this text
+    "。有關錦標賽的最新動態，請加入 ",
+    "Discord", # The website inserts a hyperlink over this text
+    "！"
+]
+paragraph3 = "更新 v.1.4.1 已發布！"
+list = [
+    "已添加和棋提議功能！在暫停菜單中找到提議和棋按鈕！",
+    "已添加以下語言支持：中文、波蘭語、葡萄牙語！",
+    "修復了一個錯誤：重復點擊創建邀請按鈕時會收到如您已擁有邀請或無法接受自己的邀請等消息。"
 ]
 
+
+[news.aug1-2024] # Update 1.4
+date = "2024年8月1日:"
+text_top = "更新 1.4 發布了！自從我們開源以來，添加了許多協作功能！"
+update_list = [
+"新增了騎士騎行者，它們像騎士一樣無限跳躍，直到被障礙物阻擋！'騎士國際象棋' 變體已經升級，將騎士替換為騎士騎行者！",
+"隨時點擊自己或對手的棋子以查看其可能的移動！",
+"隨時右鍵點擊以取消選擇當前選中的棋子。",
+"將鼠標懸停在屏幕邊緣的箭頭指示器上，現在會顯示指示的棋子的合法移動！",
+"如果棋盤上沒有足夠的棋子來強制將死，游戲現在會自動判定平局。",
+"網站已經翻譯成法語！您可以通過訪問任何頁面的頁腳來更改語言。",
+"改善了網站的加載時間。",
+"新的網站圖標，Ω！它會自動匹配您首選的淺色或深色設備主題。",
+"游戲代碼或 ICN 的元數據已重新格式化，更加符合 PGN 標准。",
+"用戶現在可以在個人資料頁面刪除他們的帳戶，無需通過電子郵件聯系我們。"
+]
+
+[news.july22-2024]
+date = "2024年7月22日"
+account_warning = "如果您尚未驗証您的賬戶，請在您的個人資料頁面上進行驗証！所有未驗証的賬戶將很快被刪除！"
+
+[news.july13-2024]
+date = "2024年7月13日"
+tos_update = [, "服務條款", "已更新。變更內容：您在網站上玩的所有游戲都可能成為公共信息，包括您的帳戶上次活躍的大概時間。條款可能會隨時更新，確保您了解最新條款是您的責任。"] # The game inserts a hyperlink inside the 2nd quotes here.
+game_history_warning = "您的游戲歷史可能在未來可在您的個人資料中查看。"
+
+[news.july9-2024]
+date = "2024年7月9日"
+text = ["無限棋現在開源！查看並貢獻項目，請訪問 ", "GitHub！"]
+
+[news.may27-2024]
+date = "2024年5月27日"
+text = "1.3.2更新今天發布！新增了我在最新視頻中展示的 Omega^3 和 Omega^4 的展示變體。此外，將軍算法現在兼容每邊多個國王。"
+
+[news.may24-2024]
+date = "2024年5月24日"
+text = "1.3更新今天發布！這包括指南、懸停導航按鈕時的彈出式工具提示以及標題頁上的 Discord 和游戲信用鏈接！"
+
+[news.may14-2024]
+date = "2024年5月14日"
+text_top = "1.3更新今天發布！這包括很多的改進："
+update_list = [
+"切換到 WebSocket，減少對手移動時的延遲。",
+"切換標簽不再斷開連接。",
+"當您或其他人創建邀請或下棋時，發出聲音提示。",
+"加了50步規則",
+"現在在時鐘剩余10秒時播放鼓式倒計時效果。",
+"如果您的對手AFK（並發出聲音警告），將開始自動認輸計時器。"
+]
+text_box = ["還有更多！那些都在我們的", "Discord！"]
+
+[news.jan29-2024]
+date = "2024年1月29日"
+text = "僅以案由一個新視頻"
+
+[server.javascript]
+ws-invalid_username = "用戶名無效"
+ws-incorrect_password = "密碼部隊"
+ws-username_and_password_required = "需要用戶名和密碼"
+ws-username_and_password_string = "用戶名和密碼必須是字符串"
+ws-login_failure_retry_in = "登錄失敗"
+ws-seconds = "妙" # unit of time
+ws-second = "妙" # unit of time
+ws-username_length = "用戶名必須多於3個字母和少於20字母"
+ws-username_letters = "用戶名隻能包含字母 A-Z 和數字 0-9。"
+ws-username_taken = "那個用戶名已經被用了。"
+ws-username_bad_word = "該用戶名包含不允許的詞語。"
+ws-email_too_long = "您的電子有限太長。"
+ws-email_invalid = "這個郵箱無效。"
+ws-email_in_use = "這個郵箱已經被用了。"
+ws-you_are_banned = "您被封禁了"
+ws-password_length = "密碼必須多於6個字母，並且少於72個字母。"
+ws-password_format = "密碼格式不正確"
+ws-password_password = "密碼禁止是password"
+ws-refresh_token_not_found_logged_out = "沒有成員擁有該刷新令牌 (已經等處)"
+ws-refresh_token_not_found = "沒有成員擁有該刷新令牌"
+ws-refresh_token_expired = "未找到刷新令牌（會話過期）"
+ws-refresh_token_invalid = "刷新令牌過期或被篡改"
+ws-member_not_found = "賬戶未找到"
+ws-forbidden_wrong_account = "禁止。這不是您的賬戶。"
+ws-deleting_account_not_found = "刪除帳戶失敗。找不到帳戶。"
+ws-server_error = "抱歉，發生伺服器錯誤！請返回。"
+ws-unable_to_identify_client_ip = "無法識別客戶端 IP 地址"
+ws-you_are_banned_by_server = "您被禁用了"
+ws-too_many_requests_to_server = "請求過多。請稍後再試。"
+ws-bad_request = "400"
+ws-not_found = "404"
+ws-forbidden = "403"
+ws-unauthorized_patron_page = "未經授權。此頁面僅限會員訪問。"
+ws-username_reserved = "用戶名已被保留"
+ws-already_in_game = "已在游戲中"
+ws-server_restarting = "服務器正在重啟"
+ws-minutes = "分鐘"
+ws-server_under_maintenance = "服務器正在維護中。請稍后再試！"  # Can be changed at will to change the display message.
+ws-minute = "分鐘"
+ws-no_abort_game_over = "游戲結束無法中止"
+ws-no_abort_after_moves = "無法在棋步后中止"
+ws-game_aborted_cheating = "因作弊游戲中止"
+ws-cannot_resign_finished_game = "無法放棄已完成的游戲"
+ws-invalid_code = "無效代碼"
+ws-game_aborted = "游戲中止"
