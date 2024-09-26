@@ -8,9 +8,8 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import gameutility from './gameutility.js';
-import math1 from '../math1.js';
-import movesscript1 from '../movesscript1.js';
 import { setGameConclusion } from './gamemanager.js';
+import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 
 /**
  * Type Definitions
@@ -32,7 +31,7 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
     if (!game) return console.error("Unable to find game after a hack report.");
 
     const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-    const opponentColor = math1.getOppositeColor(ourColor);
+    const opponentColor = colorutil.getOppositeColor(ourColor);
 
     if (game.publicity === 'private') {
         const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
@@ -42,7 +41,7 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
     }
 
     const perpetratingMoveIndex = game.moves.length - 1;
-    const colorThatPlayedPerpetratingMove = movesscript1.getColorThatPlayedMoveIndex(game, perpetratingMoveIndex);
+    const colorThatPlayedPerpetratingMove = gameutility.getColorThatPlayedMoveIndex(game, perpetratingMoveIndex);
     if (colorThatPlayedPerpetratingMove === ourColor) {
         const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
         logEvents(errString, 'hackLog.txt', { print: true });

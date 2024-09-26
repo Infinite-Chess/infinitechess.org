@@ -1,7 +1,7 @@
 name = "Français" # Name of language
 direction = "ltr"
 version = "12"
-maintainer = "Life Enjoyer"
+maintainer = "Life Enjoyer,cycy98"
 
 [header]
 home = "Accueil"
@@ -54,10 +54,10 @@ variants_credits = [
 "Coaip (Chess on an Infinite Plane) crée par Vickalan.",
 "Pawn Horde crée par Inaccessible Cardinal.",
 "Abundance crée par Clicktuck Suskriberz.",
-"Pawndard par SexyLexi.",
-"Classical+ par SexyLexi.",
-"Knightline par Inaccessible Cardinal.",
-"Knighted Chess par cycy98.",
+"Pawndard crée par SexyLexi.",
+"Classical+ crée par SexyLexi.",
+"Knightline crée par Inaccessible Cardinal.",
+"Knighted Chess crée par cycy98.",
 "crée par Cory Evans and Joel Hamkins.",
 "crée par Andreas Tsevas.",
 "crée par Cory Evans and Joel Hamkins.",

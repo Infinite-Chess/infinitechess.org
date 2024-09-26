@@ -93,6 +93,46 @@ function Game() {
     this.black = undefined;
     /** The moves list of the game. Each move is a string that looks like `8,1>16,1`. @type {string[]} */
     this.moves = undefined;
+    /** The gamerules of the variant. */
+    this.gameRules = {
+        /** An object containing lists of what win conditions each color can win by. This is REQUIRED. */
+        winConditions: {
+            /** A list of win conditions white can win by. REQUIRED. @type {string[]} */
+            white: undefined,
+            /** A list of win conditions black can win by. REQUIRED. @type {string[]} */
+            black: undefined,
+        },
+        /** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. */
+        turnOrder: undefined,
+
+        // Gamerules that also have dedicated slots in ICN notation...
+        
+        /**
+         * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
+         * If one side can't promote, their rank is `null`.
+         * If neither side can promote, this should be left as undefined.
+         * @type {number[]}
+         */
+        promotionRanks: undefined,
+        /**
+         * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
+         * If one color can't promote, their list should be left undefined.
+         * If no color can promote, this should be left undefined.
+         */
+        promotionsAllowed: {
+            /** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
+            white: undefined,
+            /** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
+            black: undefined,
+        },
+        /** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. */
+        moveRule: undefined,
+    
+        // Gamerules that DON'T have a dedicated slot in ICN notation...
+    
+        /** The maximum number of steps any sliding piece can take. */
+        slideLimit: undefined,
+    };
     /** The turn order of the game. `["white", "black"]` @type {string[]} */
     this.turnOrder = undefined;
     /** Whos turn it is currently. */

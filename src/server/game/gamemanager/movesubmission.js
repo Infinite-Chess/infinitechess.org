@@ -10,12 +10,12 @@ import { logEvents } from '../../middleware/logEvents.js';
 // Custom imports
 import gameutility from './gameutility.js';
 import wsutility from '../wsutility.js';
-import math1 from '../math1.js';
-import wincondition1 from '../wincondition1.js';
 
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
+import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import winconutil from '../../../client/scripts/game/misc/winconutil.js';
 
 /**
  * Type Definitions
@@ -47,7 +47,7 @@ function submitMove(ws, game, messageContents) {
 
     // Their subscription info should tell us what game they're in, including the color they are.
     const color = ws.metadata.subscriptions.game.color;
-    const opponentColor = math1.getOppositeColor(color);
+    const opponentColor = colorutil.getOppositeColor(color);
 
     // If the game is already over, don't accept it.
     // Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
@@ -131,11 +131,11 @@ function doesGameConclusionCheckOut(game, gameConclusion, color) {
     if (typeof gameConclusion !== 'string') return false;
 
     // If conclusion is "aborted", victor will not be specified.
-    const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(gameConclusion);
-    if (!wincondition1.isGameConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
+    const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+    if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
     // Game conclusion is decisive...
     // We can't submit a move where our opponent wins
-    const oppositeColor = math1.getOppositeColor(color);
+    const oppositeColor = colorutil.getOppositeColor(color);
     return victor !== oppositeColor;
 }
 

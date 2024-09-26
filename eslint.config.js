@@ -2,21 +2,6 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 
-/*
- * I haven't been able to get this to work. It would automatically insert
- * global variables in our browser environment according to all our game scripts,
- * eliminating the need for us to enter them manually every new script.
- * 
- * But, it's as if eslint just turns completely off if we use this.
- */
-// import { getAllGameScripts } from "./build.mjs";
-// const allGameScripts = await getAllGameScripts();
-// // Convert the array of script names into an object with "readonly" for each
-// const gameScriptsGlobals = allGameScripts.reduce((acc, script) => {
-//   acc[script] = "readonly";
-//   return acc;
-// }, {});
-
 export default [
   pluginJs.configs.recommended,
   {
@@ -47,6 +32,8 @@ export default [
       "max-depth": ["warn", 4], // Maximum number of nested blocks allowed.
       "eqeqeq": ["error", "always"], // Disallows "!=" and "==" to remove type coercion bugs. Use "!==" and "===" instead.
       'dot-notation': 'error', // Forces dot notation `.` instead of bracket notation `[""]` wherever possible
+      'no-empty': 'off',  // Disable the no-empty rule so blocks aren't entirely red just as we create them
+      'no-prototype-builtins': 'off', // Allows Object.hasOwnProperty() to be used
       // "no-multi-spaces": "error", // Disallows multiple spaces that isn't indentation.
       // "max-lines": ["warn", 500] // Can choose to enable to place a cap on how big files can be, in lines.
       // "complexity": ["warn", { "max": 10 }] // Can choose to enable to cap the complexity, or number of independant paths, which can lead to methods.
@@ -56,84 +43,11 @@ export default [
       globals: {
         ...globals.node, // Defines "require" and "exports"
         ...globals.browser, // Defines all browser environment variables for the game code
-        // ...globals.commonjs, // Not needed because "sourceType" is defined above
         // Game code scripts are considered public variables
-        memberHeader: "readonly",
+        // MOST OF THE GAME SCRIPTS are ESM scripts, importing their own definitions, so we don't need to list them below.
         translations: "readonly", // Injected into the html through ejs
+        memberHeader: "readonly",
         htmlscript: "readonly",
-        gl: "readonly",
-        mat4: "readonly",
-        // DOES NOT WORK right now. We have to input them manually
-        // ...gameScriptsGlobals,
-        backcompatible: "readonly",
-        checkdetection: "readonly",
-        checkmate: "readonly",
-        copypastegame: "readonly",
-        formatconverter: "readonly",
-        game: "readonly",
-        gamefile: "readonly",
-        gamefileutility: "readonly",
-        insufficientmaterial: "readonly",
-        legalmoves: "readonly",
-        movepiece: "readonly",
-        movesets: "readonly",
-        movesscript: "readonly",
-        organizedlines: "readonly",
-        selection: "readonly",
-        specialdetect: "readonly",
-        specialmove: "readonly",
-        specialundo: "readonly",
-        variant: "readonly",
-        variantomega: "readonly",
-        wincondition: "readonly",
-        gui: "readonly",
-        guigameinfo: "readonly",
-        guiguide: "readonly",
-        guiloading: "readonly",
-        guinavigation: "readonly",
-        guipause: "readonly",
-        guiplay: "readonly",
-        guipromotion: "readonly",
-        guititle: "readonly",
-        guidrawoffer: "readonly",
-        stats: "readonly",
-        statustext: "readonly",
-        style: "readonly",
-        browsersupport: "readonly",
-        clock: "readonly",
-        invites: "readonly",
-        loadbalancer: "readonly",
-        localstorage: "readonly",
-        math: "readonly",
-        onlinegame: "readonly",
-        sound: "readonly",
-        animation: "readonly",
-        area: "readonly",
-        arrows: "readonly",
-        board: "readonly",
-        bufferdata: "readonly",
-        buffermodel: "readonly",
-        camera: "readonly",
-        checkhighlight: "readonly",
-        coin: "readonly",
-        highlightline: "readonly",
-        highlights: "readonly",
-        miniimage: "readonly",
-        movement: "readonly",
-        options: "readonly",
-        perspective: "readonly",
-        pieces: "readonly",
-        piecesmodel: "readonly",
-        promotionlines: "readonly",
-        shaders: "readonly",
-        texture: "readonly",
-        transition: "readonly",
-        voids: "readonly",
-        webgl: "readonly",
-        input: "readonly",
-        main: "readonly",
-        websocket: "readonly",
-        drawoffers: "readonly",
       }
     }
   }

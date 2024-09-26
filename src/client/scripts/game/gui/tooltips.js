@@ -1,11 +1,14 @@
 
+// Import Start
+import input from "../input.js";
+// Import End
+
 /**
  * This script creates event listeners for managing the current classes
  * of all elements with a tooltip available.
  * If you hover for a tooltip, following tooltips pop up instantly,
  * until you go a little but without viewing another tooltip.
  */
-
 (function() {
 
     const tooltipClasses = ['tooltip-dl', 'tooltip-d', 'tooltip-dr'];
@@ -161,3 +164,7 @@
         });
     });
 })();
+
+// The ONLY reason we export is so that tooltips can be tied into the dependancy tree of our game,
+// otherwise esbuild won't include it.
+export default null;

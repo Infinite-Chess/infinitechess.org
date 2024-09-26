@@ -1,0 +1,592 @@
+name = "Português" # Nome do idioma
+direction = "ltr" # Change to "rtl" for right to left languages
+version = "14"
+maintainer = "The_Skeleton"
+
+[header]
+home = "Início"
+play = "Jogar"
+news = "Notícias"
+login = "Entrar"
+createaccount = "Criar conta"
+
+[footer]
+contact = "Contato"
+terms_of_service = "Termos de serviço"
+source_code = "Código-fonte"
+language = "Idioma"
+
+[header.javascript]
+js-profile = "Perfil"
+js-logout = "Sair"
+js-login = "Entrar"
+js-createaccount = "Criar Conta"
+
+[member.javascript]
+js-confirm_delete = "Tem certeza de que deseja excluir sua conta? Isso NÃO PODE ser desfeito! Clique em OK para digitar sua senha."
+js-enter_password = "Digite sua senha para excluir PERMANENTEMENTE sua conta:"
+
+[index]
+title = "Infinite Chess | Início - O Site Oficial" # The tab title
+secondary_title = "O site oficial para jogar ao vivo!"
+what_is_it_title = "O que é?"
+what_is_it_pargaraphs = [
+"Infinite Chess é uma variante do xadrez em que não há bordas, muito maior do que o seu familiar tabuleiro 8x8. A dama, as torres e os bispos <em>não têm limites</em> de quão longe podem se mover por turno. Escolha qualquer número natural até o infinito!",
+"Sem limite de quão longe você pode se mover, existem posições possíveis onde o número do relógio do xeque-mate, ou xeque-mate em <em>branco</em>, é representado pelo primeiro ordinal infinito, <strong>ômega ω</strong >. Na verdade, pesquisas descobriram que <strong>qualquer</strong> ordinal contável é alcançável para o relógio do xeque-mate!",
+"Como você pode imaginar, existem infinitas possibilidades de posições iniciais, muitas das quais você pode jogar competitivamente! Seu objetivo final ainda é o xeque-mate, o que requer novas táticas, visto que não há paredes contra as quais possa prender o rei inimigo. Os jogos tipicamente não duram muito mais do que os jogos normais de xadrez. Peões ainda promovem nas fileiras 1 & 8!",
+]
+how_to_title = "Como eu posso jogar?"
+how_to_paragraph = ["A versão atual é a 1.4 na página ","Jogar","!"]
+about_title = "Sobre o Projeto"
+about_paragraphs = [
+"Eu sou Naviary. Desde que descobri o Infinite Chess (o conceito existia muito antes deste site), fiquei muito intrigado com ele e suas possibilidades! Até pouco tempo atrás, jogar era bastante difícil, exigindo que os membros do chess.com criassem imagens do tabuleiro atual e as enviassem de um lado para o outro a cada jogada realizada. Devido a isso, poucas pessoas conhecem ou conseguiram jogar.",
+["Meu objetivo é criar uma maneira de tornar esse jogo fácil de jogar para todos e desenvolver uma comunidade em torno dele. Gastei inúmeras horas do meu tempo livre neste site, mantendo e desenvolvendo o jogo. Tenho muitas outras ideias que me manterão ocupado por algum tempo. Embora eu queira manter o jogo gratuito, a vida tem suas exigências. Para me ajudar financeiramente, considere a possibilidade de se juntar ao meu", "Patreon"]
+]
+patreon_title = "Apoiadores do Patreon"
+
+[credits]
+title = "Créditos"
+copyright = "Tudo o que estiver no site que não estiver listado abaixo é copyright de www.InfiniteChess.org"
+variants_heading = "Variantes"
+variants_credits = [
+"Core projetado por Andreas Tsevas.",
+"Space projetado por Andreas Tsevas.",
+"Space Classic projetado por Andreas Tsevas.",
+"Coaip (Chess on an Infinite Plane) projetado por Vickalan.",
+"Pawn Horde projetado por Inaccessible Cardinal.",
+"Abundance projetado por Clicktuck Suskriberz.",
+"Pawndard por SexyLexi.",
+"Classical+ por SexyLexi.",
+"Knightline por Inaccessible Cardinal.",
+"Knighted Chess por cycy98.",
+"projetado por Cory Evans e Joel Hamkins.",
+"projetado por Andreas Tsevas.",
+"projetado por Cory Evans e Joel Hamkins.",
+"projetado por Cory Evans, Joel Hamkins, e Norman Lewis Perlmutter.",
+]
+textures_heading = "Texturas"
+textures_licensed_under = "texturas licenciadas sob a licença"
+textures_credits = [
+"Gold coin por Quolte.",
+]
+sounds_heading = "Sons"
+sounds_credits = [
+["Alguns sons são fornecidos pelo", "sob a"],
+"Outros sons criados por Naviary.",
+]
+code_heading = "Código"
+code_credits = [
+"por Brandon Jones e Colin MacKenzie IV.",
+"por Andreas Tsevas e Naviary.",
+]
+
+[member]
+title = "Membro" # The tab name
+verify_message = "Verifique seu e-mail para confirmar sua conta."
+resend_message = ["Não recebeu um? Verifique sua pasta de spam. Também, ", "enviar novamente.", " Se você ainda não consegue encontrar, ", "me mande uma mensagem."]
+verify_confirm = "Obrigado! Sua conta foi verificada"
+rating = "Rating Elo:"
+joined = "Ingressou:"
+seen = ["Visto:", " desde de"]
+reveal_info = "Mostre informações da conta"
+account_info_heading = "Informações da conta"
+email = "Email:"
+delete_account = "Deletar conta"
+password_reset_message = ["Para mudar seu nome de usuário, email or senha, ", "Contate-nos."]
+
+[create-account]
+title = "Criar conta"
+username = "Nome de usuário:"
+email = "Email:"
+password = "Senha:"
+create_button = "Criar conta"
+agreement = ["Eu concordo com os ", "Termos de Serviço", "."]  # a entrada do meio é um hiperlink, as outras não são
+
+[create-account.javascript]
+js-username_specs = "O nome de usuário deve ter pelo menos 3 caracteres e conter apenas letras de A-Z e números de 0-9"
+js-username_tooshort = "O nome de usuário deve ter pelo menos 3 caracteres"
+js-username_wrongenc = "O nome de usuário deve conter apenas letras de A-Z e números de 0-9"
+js-email_invalid = "Este não é um email válido"
+js-email_inuse = "Este email já está em uso"
+js-pwd_incorrect_format = "A senha está em um formato incorreto"
+js-pwd_too_short = "A senha deve ter mais de 6 caracteres"
+js-pwd_too_long = "A senha não pode ter mais de 72 caracteres"
+js-pwd_not_pwd = "A senha não deve ser 'password'"
+
+[play]
+title = "Infinite Chess - Jogar" # The tab title
+loading = "CARREGANDO"
+error = "ERRO"
+
+[play.main-menu]
+credits = "Créditos"
+play = "Jogar"
+guide = "Guia"
+editor = "Editor de tabuleiro"
+
+[play.guide]
+title = "Guia"
+rules = "Regras"
+rules_paragraphs = [
+"As regras do Infinite Chess são quase idênticas às do xadrez clássico, exceto pelo fato de o tabuleiro ser infinito em todas as direções! Essas são as únicas observações e alterações das quais você precisa estar ciente:",
+"As peças com movimentos deslizantes, como as torres, os bispos e a dama, não têm limite para a distância que podem percorrer em um turno! Desde que o caminho delas esteja desobstruído, você pode mover milhões!",
+["Na variante padrão \"Classical\", os peões brancos são promovidos na posição 8 e os peões pretos na posição 1. Nesta imagem, isso é indicado pelas linhas pretas finas. Elas são fracas, veja se você consegue identificá-las! Os peões só precisam alcançar a linha oposta para serem promovidos, ", "não", " cruzá-la."],
+"A notação dos quadrados não é mais descrita pela letra da coluna e pelo número da fileira (ou seja, a1); em vez disso, cada quadrado é definido por um par de coordenadas x e y. O quadrado a1 se tornou (1,1) e o quadrado h8 se tornou (8,8). Em dispositivos desktop, a coordenada sobre a qual o mouse está posicionado é exibida na parte superior da tela.",
+"Todas as outras regras são as mesmas do xadrez clássico, como xeque-mate, afogamento, empate por tripla repetição, regra dos 50 lances, roque, en passant, etc.!"
+]
+careful_heading = "Cuidado!"
+careful_paragraphs = [
+"A abertura do tabuleiro infinito significa que é muito fácil explorar garfos, cravadas e espetos. Sua retaguarda geralmente fica muito vulnerável. Cuidado com táticas como essa! Seja criativo ao criar proteção para seu rei e torres! A estratégia da abertura é muito diferente do xadrez clássico.",
+"Muitas outras variantes foram criadas com o objetivo de fortalecer suas costas."
+]
+controls_heading = "Controles"
+controls_paragraph = "Muitos controles são intuitivos, como clicar e arrastar o tabuleiro para se movimentar e rolar para aumentar e diminuir o zoom, mas vamos dar uma olhada nos outros controles que estão à sua disposição!"
+keybinds = [
+" para se movimentar.",
+["Space", " e ", "Shift", " para aumentar e diminuir o zoom"],
+["Escape", " para pausar o jogo."],
+["Tab", " alterna o modo de funcionamento da seta nas bordas da tela que apontam para peças fora da tela. Por padrão, esse modo é definido como \"Defesa\", que mostra uma seta para peças que podem se mover para o seu local a partir de onde estão. Mas ", "tab", " pode mudar para o modo \"Todas\" ou \"Off\", sendo que o modo \"Todas\" revela todas as peças nessas ortogonais e diagonais, quer elas possam se mover ortogonalmente ou diagonalmente. Essa configuração também pode ser alternada no menu de pausa."],
+" ativará \"Modo Editor\" em jogos locais. Isso permite que você mova qualquer peça para qualquer outro lugar do tabuleiro! Muito útil para análise."
+]
+controls_paragraph2 = "Esses são os principais controles que você precisa conhecer. Mas aqui estão alguns extras, caso você venha a precisar deles!"
+keybinds_extra = [
+" redefinirá a renderização das peças. Isso é útil se elas ficarem invisíveis. Essa falha pode ocorrer se você se mover a distâncias extremas (como 1e21).",
+" alternará a renderização das barras de navegação e de informações do jogo, o que pode ser útil para a gravação. Transmitir e fazer vídeos sobre o jogo é bem-vindo!",
+" alternará seu medidor de FPS. Isso exibe o número de vezes que o jogo está sendo atualizado por segundo, nem sempre o número de quadros renderizados, pois o jogo pula a renderização quando nada visível foi alterado, para economizar computação.",
+" alternará a renderização de ícones. Essas são os mini-avatares clicáveis das peças quando você reduz o zoom o suficiente. Em jogos importados com mais de 50.000 peças, isso é desativado automaticamente, pois é um fator de redução de desempenho, mas pode ser ativado novamente com ",
+[" (backtick ou a mesma tecla que ", ") alternará para modo Debug."],
+]
+fairy_heading = "Peças Fadas"
+fairy_paragraph = "Você já sabe o que precisa saber para jogar a variante padrão \"Clássica\". As Peças das Fadas não são usadas no xadrez convencional, mas são incorporadas em outras variantes! Se você se encontrar em uma variante com algumas peças que nunca viu antes, vamos aprender como elas funcionam aqui!"
+editing_heading = "Editando o Tabuleiro"
+editing_paragraphs = [
+["Há um ", "editor de tabuleiro", " externo atualmente disponível em uma planilha pública do Google! Ela inclui instruções sobre como usá-la. Isso requer algum conhecimento básico do Google Sheets. Após a configuração, você poderá criar e importar posições personalizadas para o jogo por meio do botão \"Colar jogo\" no menu de opções!"],
+"Para jogar uma posição personalizada com um amigo, peça a ele que participe de um convite privado e, em seguida, vocês dois colarão o código do jogo antes de começar a jogar!",
+"Um editor de tabuleiro dentro do jogo ainda está planejado.",
+]
+back = "Voltar"
+
+[play.guide.pieces]
+chancellor = {name="Chanceler ", description="Move-se como uma torre e um cavalo combinados."}
+archbishop = {name="Arcebispo", description="Move-se como um bispo e um cavalo combinados."}
+amazon = {name="Amazonas", description="Move-se como uma rainha e um cavalo combinados. Essa é a peça mais forte do jogo!"}
+guard = {name="Guarda", description="Move-se como um rei, exceto que não é suscetível a xeque ou xeque-mate."}
+hawk = {name="Falcão", description="Salta exatamente 2 ou 3 quadrados em qualquer direção."}
+centaur = {name="Centauro", description="Move-se como um cavalo e um guarda combinados."}
+knightrider = {name="Knightrider", description="Pula como um cavalo em uma direção infinitamente, até ser obstruído."}
+obstacle = {name="Obstáculo", description="Uma peça neutra (não controlado por nenhum dos jogadores) que bloqueia o movimento, mas pode ser capturado."}
+void = {name="Vazio", description="Uma peça neutra (não controlada por nenhum dos jogadores) que representa a ausência do tabuleiro. As peças não podem se mover através dele ou sobre ele."}
+
+
+[play.play-menu]
+title = "Jogar - Online"
+colors = "Cores"
+online = "Online"
+local = "Local"
+computer = "Computador"
+variant = "Variante"
+Classical = "Classical"
+Classical_Plus = "Classical+"
+CoaIP = "Chess on an Infinite Plane"
+Pawndard = "Pawndard"
+Knighted_Chess = "Knighted Chess"
+Knightline = "Knightline"
+Core = "Core"
+Standarch = "Standarch"
+Pawn_Horde = "Pawn Horde"
+Space_Classic = "Space Classic"
+Space = "Space"
+Obstocean = "Obstocean"
+Abundance = "Abundance"
+Amazon_Chandelier = "Amazon Chandelier"
+Containment = "Containment"
+Classical_Limit_7 = "Classical - Limit 7"
+CoaIP_Limit_7 = "Coaip - Limit 7"
+Chess = "Chess"
+Classical_KOTH = "Experimental: Classical - KOTH"
+CoaIP_KOTH = "Experimental: Coaip - KOTH"
+Omega = "Showcase: Omega"
+Omega_Squared = "Showcase: Omega^2"
+Omega_Cubed = "Showcase: Omega^3"
+Omega_Fourth = "Showcase: Omega^4"
+no_clock = "Sem relógio"
+clock = "Relógio"
+minutes = "m"
+seconds = "s"
+infinite_time = "Tempo Infinito"
+color = "Cor"
+piece_colors = ["Aleatória", "Brancas", "Pretas"]
+private = "Privado"
+no = "Não"
+yes = "Sim"
+rated = "Com rating"
+unrated = "Sem rating"
+join_games = "Participe dos jogos existentes - Jogos Ativos:"
+private_invite = "Convite Privado:"
+your_invite = "Seu código de convite:"
+create_invite = "Criar convite"
+join = "Entrar"
+copy = "Copiar"
+back = "Voltar"
+code = "Código"
+
+[play.footer]
+white_to_move = "Brancas jogam"
+player_white = "Jogador de Brancas"
+player_black = "Jogador de Pretas"
+
+[play.pause]
+title = "Pausado"
+resume = "Fechar"
+arrows = "Setas: Defesa"
+perspective = "Perspectiva: Off"
+copy = "Copiar Jogo"
+paste = "Colar Jogo"
+offer_draw = "Oferecer Empate"
+main_menu = "Menu Principal"
+
+[play.drawoffer] # The draw offer UI that appears on the bottom bar
+question = "Aceitar oferta de empate?"
+
+[play.javascript] # Not text that's included in the html, but text that scripts use!
+guest_indicator = "(Convidado)"
+you_indicator = "(Você)"
+white_to_move = "Brancas jogam"
+black_to_move = "Pretas jogam"
+your_move = "Seu lance"
+their_move = "Lance dele(a)"
+lost_network = "Perca de conexão"
+failed_to_load = "Houve falha no carregamento de um ou mais recursos. Por favor, atualize."
+planned_feature = "Esse recurso está planejado!"
+main_menu = "Menu Principal"
+resign_game = "Desistir"
+abort_game = "Abortar Partida"
+offer_draw = "Oferecer Empate" # Offer draw button text in the pause menu
+accept_draw = "Aceitar Empate" # Offer draw button text in the pause menu
+arrows_off = "Setas: Off"
+arrows_defense = "Setas: Defesa"
+arrows_all = "Setas: Todas"
+toggled = "Alternado"
+menu_online = "Jogar - Online"
+menu_local = "Jogar - Local"
+invite_error_digits = "Código de convite precisa ter 5 digitos."
+invite_copied = "Código de convite copiado para a área de transferência."
+move_counter = "Lance:"
+constructing_mesh = "Constructing mesh"
+rotating_mesh = "Rotating mesh"
+lost_connection = "Perca de conexão."
+please_wait = "Aguarde um momento para executar essa tarefa."
+webgl_unsupported = "Seu navegador não é compatível com WebGL. Este jogo requer isso para funcionar. Atualize seu navegador."
+bigints_unsupported = "Não há suporte para BigInts. Atualize seu navegador.\nBigInts são necessários para tornar o tabuleiro infinito."
+shaders_failed = "Não foi possível inicializar o programa de shaders:"
+failed_compiling_shaders = "Ocorreu um erro na compilação dos shaders:"
+
+[play.javascript.copypaste]
+copied_game = "Jogo copiado para a área de transferência!"
+cannot_paste_in_public = "Não é possível colar o jogo em uma partida pública!"
+cannot_paste_after_moves = "Não é possível colar o jogo depois que os movimentos são feitos!"
+clipboard_denied = "Permissão negada para a área de transferência. Pode ser seu navegador."
+clipboard_invalid = "A área de transferência não está em uma notação ICN válida."
+game_needs_to_specify = "O jogo precisa especificar os metadados 'Variant' ou a propriedade 'startingPosition'."
+invalid_wincon_white = "As brancas têm uma condição de vitória inválida"
+invalid_wincon_black = "As pretas têm uma condição de vitória inválida"
+pasting_game = "Colando jogo..."
+pasting_in_private = "Colar um jogo em uma partida privada causará uma dessincronização se o seu oponente não fizer o mesmo!"
+piece_count = "Contagem de peças"
+exceeded = "excedido"
+changed_wincon = "Alterado as condições de vitória do xeque-mate para royalcapture e desativado a renderização de ícones. Pressione 'P' para reativar (não recomendado)."
+loaded_from_clipboard = "Jogo carregado da área de transferência!"
+loaded = "Jogo carregado!"
+slidelimit_not_number = "slideLimit gamerule deve ser um número. Recebido"
+
+[play.javascript.rendering]
+on = "On"
+off = "Off"
+icon_rendering_off = "Renderização de ícones desativada."
+icon_rendering_on = "Renderização de ícones ativada."
+toggled_debug = "Alterado para modo Debug:"
+toggled_edit = "Alterado para modo Editor:"
+perspective = "Perspectiva"
+perspective_mode_on_desktop = "O modo de perspectiva está disponível no desktop!"
+movement_tutorial = "WASD para mover. Espaço e shift para dar zoom."
+regenerated_pieces = "Peças regeneradas."
+
+[play.javascript.invites]
+move_mouse = "Mova o mouse para reconectar."
+unknown_action_received_1 = "Ação desconhecida"
+unknown_action_received_2 = "recebido do servidor na assinatura de convites!"
+cannot_cancel = "Não é possível cancelar um convite de ID indefinido."
+you_indicator = "(Você)"
+you_are_white = "Você: Brancas"
+you_are_black = "Você: Pretas"
+random = "Aleatório"
+accept = "Aceitar"
+cancel = "Cancelar"
+create_invite = "Criar convite"
+cancel_invite = "Cancelar convite"
+start_game = "Iniciar jogo"
+join_existing_active_games = "Participe de jogos existentes - Jogos Ativos:"
+
+[play.javascript.onlinegame]
+afk_warning = "Você está ausente."
+opponent_afk = "Seu oponente está ausente."
+opponent_disconnected = "O oponente desconectou."
+opponent_lost_connection = "O oponenteu perdeu conexão."
+auto_resigning_in = "Desistindo automaticamente em"
+auto_aborting_in = "Abortando automaticamente em"
+not_logged_in = "Você não está conectado. Faça login para se reconectar a este jogo."
+game_no_longer_exists = "Jogo não existe mais."
+another_window_connected = "Outra janela foi conectada."
+server_restarting = "Servidor reiniciando em breve..."
+server_restarting_in = "Servidor reiniciando em"
+minute = "minuto"
+minutes = "minutos"
+
+[play.javascript.websocket]
+no_connection = "Sem conexão."
+reconnected = "Reconectou."
+unable_to_identify_ip = "Não é possível identificar o IP."
+online_play_disabled = "Jogo on-line desativado. Cookies não suportados. Tente um navegador diferente."
+too_many_requests = "Muitas solicitações. Tente novamente em breve."
+message_too_big = "Mensagem grande demais."
+too_many_sockets = "Muitos sockets"
+origin_error = "Erro de Origem."
+connection_closed = "Conexão fechada inesperadamente. Mensagem do servidor:"
+please_report_bug = "Isso nunca deveria acontecer. Relate esse bug!"
+
+[play.javascript.termination] # O que causou o fim do jogo, é falado na lingua
+checkmate = "Xeque-mate"
+stalemate = "Afogamento"
+repetition = "Tripla repetição"
+moverule = "-Regra do"  # O jogo insere um número na frente dessa frase
+insuffmat = "Material insuficiente"
+royalcapture = "Captura da realeza"
+allroyalscaptured = "Todas peças da realeza capturadas"
+allpiecescaptured = "Todas peças capturadas"
+threecheck = "Three-check"
+koth = "King of the hill"
+resignation = "Desistência"
+agreement = "Acordo" 
+time = "Tempo esgotado"
+aborted = "Cancelada" # Partida foi cancelada (Sem troca de elo)
+disconnect = "Abandonado" # Algum jogador saiu
+
+[play.javascript.results]
+you_checkmate = "Você venceu por Xeque-mate!"
+you_time = "Você venceu por tempo!"
+you_resignation = "Você venceu por desistência!"
+you_disconnect = "Você venceu por desconexão!"
+you_royalcapture = "Você venceu por captura da realeza!"
+you_allroyalscaptured = "Você venceu por capturar todas as peças da realeza!"
+you_allpiecescaptured = "Você venceu por capturar todas as peças!"
+you_threecheck = "Você venceu por 3-xeques!"
+you_koth = "Você venceu Rei da Colina!"
+you_generic = "Você venceu!"
+draw_stalemate = "Empate por afogamento!"
+draw_repetition = "Empate por repetição!"
+draw_moverule = ["Empate pela regra dos ", "-move-rule!"]
+draw_insuffmat = "Empate por material insuficiente!"
+draw_agreement = "Empate por acordo!"
+draw_generic = "Empate!"
+aborted = "Partida cancelada."
+opponent_checkmate = "Você perdeu por Xeque-mate!"
+opponent_time = "Você venceu por tempo!"
+opponen_resignation = "Você perdeu por desistência!"
+opponent_disconnect = "Você perdeu por desconexão!"
+opponent_royalcapture = "Você perdeu por captura da realeza!"
+opponent_allroyalscaptured = "Você perdeu por pendurar todas as peças da realeza!"
+opponent_allpiecescaptured = "Você perdeu por pendurar todas as peças!"
+opponent_threecheck = "Você perdeu por 3-xeques!"
+opponent_koth = "Você perdeu por Rei da Colina!"
+opponent_generic = "Você perdeu!"
+white_checkmate = "Brancas vencem por xeque-mate!"
+black_checkmate = "Pretas vencem por xeque-mate!"
+bug_checkmate = "Isso é um bug, por favor, informe. Jogo encerrado por xeque-mate."
+white_time = "Brancas vencem por tempo!"
+black_time = "Pretas vencem por tempo!"
+bug_time = "Isso é um bug, por favor, informe. Jogo encerrado por tempo esgotado."
+white_royalcapture = "Brancas vencem por captura da realeza!"
+black_royalcapture = "Pretas vencem por captura da realeza!"
+bug_royalcapture = "Isso é um bug, por favor, informe. Jogo encerrado por captura da realeza"
+white_allroyalscaptured = "Brancas vencem por capturar todas as peças da realeza!"
+black_allroyalscaptured = "Pretas vencem por capturar todas as peças da realeza!"
+bug_allroyalscaptured = "Isso é um bug, por favor, informe. Jogo encerrado por captura de todas as peças da realeza"
+white_allpiecescaptured = "Brancas vencem por capturar todas as peças!"
+black_allpiecescaptured = "Pretas vencem por capturar todas as peças!"
+bug_allpiecescaptured = "Isso é um bug, por favor, informe. Jogo encerrado por captura de todas as peças"
+white_threecheck = "Brancas vencem por 3-xeques!"
+black_threecheck = "Pretas Vencem por 3-xeques!"
+bug_threecheck = "Isso é um bug, por favor, informe. Jogo encerrado por 3-xeques."
+white_koth = "Brancas ganham por Rei da Colina!"
+black_koth = "Pretas ganham por Rei da Colina!"
+bug_koth = "Isso é um bug, por favor, informe. Jogo encerrado por Rei da Colina."
+bug_generic = "Isso é um bug, por favor, informe!"
+
+[terms] # Traduções estão desativadas por enquanto, a única lingua permitida é en-US
+title = "Termos de Serviço"
+warning = ["ESTE DOCUMENTO NÃO É JURIDICAMENTE VINCULATIVO. Somos responsáveis apenas pela versão em inglês deste documento. Esta tradução é fornecida apenas para fins informativos gerais. Você pode acessar a versão oficial em inglês ", "aqui", "."]]
+consent = "Ao usar este site, você concorda em cumprir os seguintes termos. Se não concordar, você deve parar imediatamente de usar o site."
+guardian_consent = "Se você for menor de 18 anos, deverá receber o consentimento de um dos pais ou responsável legal para usar este site e criar uma conta."
+parents_header = "Pais"
+parents_paragraphs = [
+"Há um algoritmo em vigor para proibir que os usuários definam seus nomes com palavrões comuns. No momento, não há nenhum método de comunicação entre os membros do site.",
+"Atualmente, os membros não podem definir sua própria foto de perfil. Há um plano para permitir esse recurso. Nesse momento, faremos o possível para evitar fotos de perfil inadequadas",
+]
+fair_play_header = "Jogo limpo"
+fair_play_paragraph1 = ["Não é possível criar mais de uma conta. Se quiser alterar o endereço de e-mail associado à sua conta, ", "entre em contato conosco."].
+fair_play_paragraph2 = "Para manter o jogo divertido e justo para todos, você NÃO deve:"
+fair_play_rules = [
+"Modificar ou manipular o código de qualquer forma, incluindo, mas não se limitando a: Usar comandos de console, substituições locais, scripts personalizados, modificar solicitações http, etc. Isso pode ser feito para interromper intencionalmente o jogo ou para lhe dar uma vantagem.",
+"Em jogos classificados, receba ajuda/aconselhamento de outra pessoa ou programa sobre o que você deve jogar. (Criar um mecanismo é aceitável e incentivado, mas você deve limitar seu uso a jogos sem classificação)",
+"Trocar pontos de elo com outras pessoas, perdendo propositalmente com a intenção de aumentar o elo de seu oponente ou recebendo pontos de elo de um oponente que pretende perder para aumentar sua própria classificação. Isso abusa do sistema e cria classificações imprecisas de acordo com seu nível de habilidade."
+]
+cleanliness_header = "Cavalheirismo"
+cleanliness_rules = [
+"Em toda a sua linguagem no site, você deve permanecer limpo, sem vulgaridade ou xingamentos. Você não pode intimidar, assediar ou ameaçar ninguém, nem fazer nada que seja ilegal. Não é permitido enviar spam a outros usuários ou fóruns.",
+"Você não pode carregar imagens em seu perfil que sejam inadequadas, sugestivas ou sangrentas. Fazer isso pode resultar em banimento ou encerramento de sua conta."
+]
+privacy_header = "Privacidade"
+privacy_rules = [
+"Atualmente, as únicas informações pessoais que coletamos são o e-mail. A intenção é verificar as contas dos usuários e fornecer um meio de provar quem eles são quando solicitam uma redefinição de senha. Não enviamos nenhum e-mail promocional ou ofertas. Não compartilhamos o endereço de e-mail de nenhum usuário com ninguém.",
+"InfiniteChess.org pode coletar dados sobre seu uso no site, incluindo seu endereço IP. O objetivo é ajudar a prevenir ataques de bots e outras entidades indesejadas e manter estatísticas precisas no banco de dados. Este NÃO é o seu endereço residencial.",
+"Todos os jogos que você joga neste site se tornam informações públicas. Se desejar permanecer anônimo, não compartilhe seu nome de usuário com amigos ou familiares. Se esse for o seu desejo, é sua responsabilidade garantir que ninguém descubra que seu nome de usuário está associado à sua identidade humana.",
+"O status on-line de sua conta e a última vez que esteve ativo no site também são informações públicas.",
+["Embora o InfiniteChess.org se esforce para manter a conta e as informações pessoais de todos seguras da melhor forma possível, no caso de uma invasão ou vazamento de dados, você não pode nos acusar. Se ocorrer um vazamento de dados, os usuários serão notificados na página ", "Notícias", "."],
+"Não há conteúdo disponível no site para compra. Nenhuma outra informação pessoal é coletada.",
+"Para que suas informações privadas sejam excluídas de nossos servidores, você pode excluir sua conta por meio da página de perfil. A única coisa vinculada ao seu nome de usuário que NÃO será excluída é o seu histórico de jogos, pois todos os jogos são informações públicas.",
+]
+cookie_header = "Políticas de Cookies"
+cookie_paragraphs = [
+"Este site usa cookies, que são pequenos arquivos de texto armazenados em seu navegador e enviados ao servidor quando são feitas conexões. A finalidade desses cookies é: Validar sua sessão de login, validar que seu navegador pertence ao jogo de xadrez em que diz estar e armazenar as preferências de jogo do usuário para que ele possa manter suas preferências quando visitar o site novamente. O site não usa cookies de terceiros e os cookies não são compartilhados com terceiros.",
+"Os cookies são necessários para que este site e o jogo funcionem corretamente. Se não quiser que o site armazene cookies, você deverá parar de usar o site. Você pode navegar até as preferências do seu navegador para excluir os cookies existentes. Ao continuar a usar este site, você estará consentindo com o uso de cookies."
+]
+conclusion_header = "Conclusão"
+conclusion_paragraphs = [
+"Qualquer violação desses termos poderá resultar em banimento ou encerramento de sua conta. O InfiniteChess.org quer dar a todos a oportunidade de jogar e se divertir! No entanto, reservamo-nos o direito de, a qualquer momento, banir ou encerrar as contas de qualquer usuário, por motivos que não precisam ser divulgados. Não podem ser feitas acusações contra nós.",
+["Estes termos de serviço podem ser modificados a qualquer momento. É SUA responsabilidade garantir que você esteja atualizado sobre as últimas alterações! Quando estes termos de serviço receberem uma atualização, essa informação será publicada na página", "Notícias", ". Se, no momento da atualização dos termos de serviço, você não concordar com os novos termos, deverá interromper imediatamente o uso do site. Você pode excluir sua conta na sua página de perfil. Se você excluir sua conta, todas as suas informações privadas e dados da conta serão excluídos, EXCETO que não excluiremos o histórico de jogos associado ao seu nome de usuário, que é uma informação pública."],
+["Este site é de código aberto. Você pode copiar ou distribuir qualquer conteúdo deste site, desde que siga as condições descritas em", "os termos da licença", "! Se esse link estiver quebrado, é sua responsabilidade encontrar os meios."],
+"Não podemos garantir que o site estará funcionando 100% do tempo. Também não podemos garantir que os dados nunca serão corrompidos.",
+"Você não pode realizar nenhuma atividade ilegal no site.",
+["Se tiver alguma dúvida sobre esses termos ou qualquer outra questão sobre o site,", "envie-nos um e-mail!"]
+]
+update = "(Última atualização: 7/13/24. Adicionado o aviso de que todos os jogos jogados podem se tornar informações públicas, incluindo o último tempo aproximado em que sua conta esteve ativa. Além disso, esses termos podem ser atualizados a qualquer momento, e é de sua responsabilidade manter-se atualizado)."
+thanks = "Muito obrigado!"
+
+[login]
+title = "Entrar"
+username = "Nome de usuário:"
+password = "Senha:"
+forgot_password = ["Esqueceu a senha? ", "Envie um e-mail."]
+login_button = "Entrar"
+
+[error-pages] # Mensagens de erro mostradas em algumas páginas, explicando o que houve de errado
+400_message = "Parâmetros inválidos foram recebidos."
+409_message = ["Pode ter havido um conflito de nome de usuário ou e-mail. Por favor ", "recarregue", ", ta página."]
+500_message = "Isso não deveria acontecer. Há algum debug a ser feito!"
+
+########### NOTÍCIAS ###########
+
+[news]
+title = "Notícias"
+more_dev_logs = ["Mais registros de desenvolvimento são postados no ", "discord oficial", ", e nos ", "fóruns do chess.com!"]
+
+[news.aug1-2024] # Update 1.4
+date = "Agosto 1, 2024:"
+text_top = "A atualização 1.4 foi lançada! Foram adicionados muitos recursos de colaboração desde que abrimos o código-fonte!"
+update_list = [
+"Knightriders foram adicionados, que saltam infinitamente como um cavalo até serem obstruídos! A variante 'Knighted Chess' foi atualizada para substituir os cavalos por knightriders!",
+"Clique em suas peças ou nas do adversário a qualquer momento para ver os movimentos possíveis!",
+"Clique com o botão direito do mouse a qualquer momento para desmarcar a peça selecionada.",
+"Passar o mouse sobre os indicadores de seta na borda da tela agora renderiza os movimentos legais da peça que elas estão apontando!",
+"O jogo agora declara automaticamente um empate se não houver material suficiente no tabuleiro para forçar o xeque-mate.",
+"Traduzimos o site para o Francês! Você pode alterar o idioma acessando o rodapé de qualquer página.",
+"Melhoria no tempo de carregamento do site.",
+"Novo ícone do site, Ω! Ele corresponde automaticamente ao tema de seu dispositivo claro ou escuro preferido.",
+"Os metadados do código do jogo, ou do ICN, foram reformatados para se aproximarem mais das normas do PGN.",
+"Os usuários agora podem excluir suas contas na página de perfil, se assim desejarem, sem precisar nos enviar um e-mail."
+]
+
+[news.july22-2024]
+date = "Julho 22, 2024:"
+account_warning = "Se você ainda não verificou sua conta, faça isso em sua página de perfil! Todas as contas não verificadas serão excluídas em breve!"
+
+[news.july13-2024]
+date = "Julho 13, 2024:"
+tos_update = ["O ", "Termos de Serviço", " foram atualizados. Alterações feitas: Todos os jogos que você joga no site podem se tornar informações públicas, inclusive o horário aproximado em que sua conta esteve ativa pela última vez. Os termos podem ser atualizados a qualquer momento, e é sua responsabilidade certificar-se de que está em dia com eles."]
+game_history_warning = "Seu histórico de jogos poderá ficar disponível em seu perfil em um momento futuro."
+
+[news.july9-2024]
+date = "Julho 9, 2024:"
+text = ["O Infinite Chess agora é de código aberto! Veja e contribua com o projeto ", "no GitHub!"]
+
+[news.may27-2024]
+date = "Maio 27, 2024:"
+text = "1.3.2: Adicionadas variantes de mostruário para Ômega^3 e Ômega^4 que foram mostradas no meu último vídeo. Além disso, o algoritmo de xeque-mate agora é compatível com vários reis para cada lado."
+
+[news.may24-2024]
+date = "Maio 24, 2024:"
+text = "Atualização 1.3.1 lançada! Ela inclui o guia, dicas de ferramentas pop-up ao passar o mouse sobre os botões de navegação e links para o discord e os créditos do jogo na página de título!"
+
+[news.may14-2024]
+date = "Maio 14, 2024:"
+text_top = "A atualização 1.3 foi lançada hoje! Ela inclui MUITAS novas melhorias na velocidade e na experiência do usuário. Apenas algumas delas são:"
+update_list = [
+"A transição para websockets, diminuindo o atraso quando seu oponente se move.",
+"Você não é mais desconectado ao alternar entre guias.",
+"Avisos sonoros quando você ou outra pessoa cria um convite ou faz um lance.",
+"Adicionado a regra dos 50 Lances.",
+"Um efeito sonoro de bateria agora é reproduzido quando há 10 segundos restantes no relógio.",
+"Um cronômetro de desistência automática começará se seu oponente ficar ausente (com um aviso sonoro)."
+]
+text_box = ["E muitos outros! Para ver a lista completa, confira ", "o discord!"]
+
+[news.jan29-2024]
+date = "Janeiro 29, 2024:"
+text = "Novo vídeo lançado hoje!"
+
+[server.javascript]
+ws-invalid_username = "Nome de Usuário é inválido"
+ws-incorrect_password = "Senha está incorreta"
+ws-username_and_password_required = "Nome de usuário e senha são necessários."
+ws-username_and_password_string = "Nome de usuário e senha devem ser uma string."
+ws-login_failure_retry_in = "Falha no login, tente novamente em"
+ws-seconds = "segundos" # unidade de tempo
+ws-second = "segundo" # unidade de tempo
+ws-username_length = "Nome de usuário deve ter de 3 a 20 caracteres"
+ws-username_letters = "Nome de usuário deve conter apenas letras de A-Z e números de 0-9"
+ws-username_taken = "Esse nome de usuário já foi escolhido"
+ws-username_bad_word = "Esse nome de usuário contém uma palavra que não é permitida"
+ws-username_reserved = "Esse nome de usuário já está reservado"
+ws-email_too_long = "Seu e-mail é muito loooooooongo."
+ws-email_invalid = "Este não é um e-mail válido"
+ws-email_in_use = "Este e-mail já está em uso"
+ws-you_are_banned = "Você foi banido."
+ws-password_length = "A senha deve ter entre 6-72 caracteres"
+ws-password_format = "A senha está em um formato incorreto"
+ws-password_password = "A senha não deve ser 'password'"
+ws-refresh_token_not_found_logged_out = "Nenhum membro tem esse token de atualização (já desconectado)"
+ws-refresh_token_not_found = "Nenhum membro tem esse token de atualização"
+ws-refresh_token_expired = "Nenhum token de atualização encontrado (sessão expirada)"
+ws-refresh_token_invalid = "Token de atualização expirado ou adulterado"
+ws-member_not_found = "Membro não encontrado"
+ws-forbidden_wrong_account = "Proibido. Esta não é sua conta."
+ws-deleting_account_not_found = "Falha ao excluir a conta. Conta não encontrada."
+ws-server_error = "Desculpe, houve um erro no servidor! Por favor, volte."
+ws-unable_to_identify_client_ip = "Não é possível identificar o endereço IP do cliente"
+ws-you_are_banned_by_server = "Você foi banido"
+ws-too_many_requests_to_server = "Muitas solicitações. Tente novamente em breve."
+ws-bad_request = "Solitação ruim"
+ws-not_found = "404 Não Encontrado"
+ws-forbidden = "Proibido."
+ws-unauthorized_patron_page = "Não autorizado. Esta página é exclusiva para patronos."
+ws-already_in_game = "Você já está em um jogo."
+ws-server_restarting = "O servidor está reiniciando em" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
+ws-server_under_maintenance = "O servidor está em manutenção. Verifique novamente em breve" # Can be changed at will to change the display message.
+ws-minutes = "minutos" # unidade de tempo
+ws-minute = "minuto" # unidade de tempo
+ws-no_abort_game_over = "Não é possível cancelar o jogo, pois ele já terminou."
+ws-no_abort_after_moves = "Não é possível cancelar o jogo, pois duas jogadas foram realizadas.."
+ws-game_aborted_cheating = "Jogo cancelado por provável trapaça."
+ws-cannot_resign_finished_game = "Não é possível abandonar o jogo, pois ele já terminou."
+ws-invalid_code = "Código Inválido" # O código do convite não corresponde a nenhum convite existente
+ws-game_aborted = "Jogo Cancelado" # O convite foi cancelado enquanto você clicava nele

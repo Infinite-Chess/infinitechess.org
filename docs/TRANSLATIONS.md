@@ -30,7 +30,7 @@ key2 = "value2"
 ```
 
 > [!IMPORTANT]
-> **You should only change values and comments. Please, leave everything else unmodified when translating!**.
+> **You should only change values. Please, leave everything else, including comments, unmodified when translating!**.
 
 ## Translation process ##
 

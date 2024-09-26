@@ -1,5 +1,9 @@
 
-/*
+'use strict';
+
+/* global main sound */
+
+/**
  * The server injects this script directly into the html document
  * before serving that.
  * This is so we can execute code that needs to be executed preferrably
@@ -8,11 +12,9 @@
  * 
  * This is also what calls our main() function when the page fully loads.
  */
-
-'use strict';
-
+// eslint-disable-next-line no-unused-vars
 const htmlscript = (function() {
-    
+
     // Listen for the first user gesture...
 
     // *true* if the user has started interacting with the page,
@@ -111,7 +113,8 @@ const htmlscript = (function() {
 
     // Removes the onerror event listener from the "this" object.
     function removeOnerror() {
-        this.onerror = null;
+        this.removeAttribute('onerror');
+        this.removeAttribute('onload');
     }
 
     // Add event listeners for when connection is dropped when loading
@@ -135,7 +138,7 @@ const htmlscript = (function() {
         lostNetwork = false;
         if (loadingErrorOcurred) window.location.reload(); // Refresh the page
     }
-
+    
     // When the document is loaded, start the game!
 
     window.addEventListener('load', function() {
@@ -147,7 +150,7 @@ const htmlscript = (function() {
     return Object.freeze({
         callback_LoadingError,
         removeOnerror,
-        hasUserGesturedAtleastOnce
+        hasUserGesturedAtleastOnce,
     });
 
 })();

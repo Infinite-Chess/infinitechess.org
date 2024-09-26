@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { cpSync } from "node:fs";
+import { cpSync } from 'node:fs';
 import path from "path";
 
 import { fileURLToPath } from 'node:url';

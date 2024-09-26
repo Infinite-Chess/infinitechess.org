@@ -1,4 +1,8 @@
 {
+  "15": {
+    "note": "Added news.sept9-2024, line 493",
+    "changes": []
+  },
   "14": {
     "note": "Added translations for the tab titles. Added [play] and play.title on lines 116 & 117. Changed play.main-menu.loading to play.loading, and changed play.main-menu.error to play.error",
     "changes": [

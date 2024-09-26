@@ -4,8 +4,8 @@ import { rateLimitWebSocket } from './middleware/rateLimit.js';
 import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from './middleware/logEvents.js';
 import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
 
-import math1 from './game/math1.js';
-const { genUniqueID, generateNumbID } = math1;
+import uuid from '../client/scripts/game/misc/uuid.js';
+const { genUniqueID, generateNumbID } = uuid;
 import wsutility from './game/wsutility.js';
 import { handleGameRoute } from './game/gamemanager/gamerouter.js';
 import { handleInviteRoute } from './game/invitesmanager/invitesrouter.js';
@@ -593,34 +593,28 @@ function wasSocketClosureNotByTheirChoice(code, reason) {
 }
 
 
-const wsserver = (function() {
+function start(httpsServer) {
+    WebSocketServer = new Server({ server: httpsServer }); // Create a WebSocket server instance
+    // WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
+    WebSocketServer.on('connection', (ws, req) => {
+        executeSafely(onConnectionRequest, 'Error caught within websocket on-connection request:', ws, req);
+    }); // Event handler for new WebSocket connections
+}
 
-    function start(httpsServer) {
-        WebSocketServer = new Server({ server: httpsServer }); // Create a WebSocket server instance
-        // WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
-        WebSocketServer.on('connection', (ws, req) => {
-            executeSafely(onConnectionRequest, 'Error caught within websocket on-connection request:', ws, req);
-        }); // Event handler for new WebSocket connections
-    }
-
-    /**
-     * Closes all sockets a given member has open.
-     * @param {string} member - The member's username, in lowercase.
-     * @param {number} closureCode - The code of the socket closure, sent to the client.
-     * @param {string} closureReason - The closure reason, sent to the client.
-     */
-    function closeAllSocketsOfMember(member, closureCode, closureReason) {
-        connectedMembers[member]?.slice().forEach(socketID => { // slice() makes a copy of it
-            const ws = websocketConnections[socketID];
-            closeWebSocketConnection(ws, closureCode, closureReason);
-        });
-    }
-
-    return Object.freeze({
-        start,
-        closeAllSocketsOfMember
+/**
+ * Closes all sockets a given member has open.
+ * @param {string} member - The member's username, in lowercase.
+ * @param {number} closureCode - The code of the socket closure, sent to the client.
+ * @param {string} closureReason - The closure reason, sent to the client.
+ */
+function closeAllSocketsOfMember(member, closureCode, closureReason) {
+    connectedMembers[member]?.slice().forEach(socketID => { // slice() makes a copy of it
+        const ws = websocketConnections[socketID];
+        closeWebSocketConnection(ws, closureCode, closureReason);
     });
+}
 
-})();
-
-export default wsserver;
+export default {
+    start,
+    closeAllSocketsOfMember
+};
