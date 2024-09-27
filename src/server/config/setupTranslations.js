@@ -238,9 +238,10 @@ function loadTranslationsFolder(folder) {
 									const parsedHTML = marked.parse((fs.existsSync(fullPath) ? 
 										fs.readFileSync(fullPath) : 
 										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
-									return "<div class='news-post'>"+"<span class='news-post-date'>"+format(parseISO(filePath.replace('.md','')),'MMMM d, yyyy:',{timeZone:'UTC', locale: localeMap[languageCode]})+"</span>"+"<div class='news-post-markdown'>"+parsedHTML+"</div>"+"</div>";
+									return "<div class='news-post'>"+"<span class='news-post-date'>"+format(parseISO(filePath.replace('.md','')),'PPP:',{timeZone:'UTC', locale: localeMap[languageCode]})+"</span>"+"<div class='news-post-markdown'>"+parsedHTML+"</div>"+"</div>";
 								}).join('\n<hr>\n')
             };
+						console.log(resources[languageCode].default);
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
 
