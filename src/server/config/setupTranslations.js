@@ -8,6 +8,22 @@ import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
+import enUS from 'date-fns/locale/en-US/index.js';
+import frFR from 'date-fns/locale/fr/index.js';
+import ptBR from 'date-fns/locale/pt-BR/index.js';
+import zhTW from 'date-fns/locale/zh-TW/index.js';
+import zhCN from 'date-fns/locale/zh-CN/index.js';
+import pl from 'date-fns/locale/pl/index.js';
+
+const localeMap = {
+  'en-US': enUS,
+  'fr-FR': frFR,
+  'pt-BR': ptBR,
+  'zh-TW': zhTW,
+  'zh-CN': zhCN,
+  'pl-PL': pl
+};
+
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -222,7 +238,7 @@ function loadTranslationsFolder(folder) {
 									const parsedHTML = marked.parse((fs.existsSync(fullPath) ? 
 										fs.readFileSync(fullPath) : 
 										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
-									return "<div class='news-post'>"+"<span class='news-post-date'>"+format(parseISO(filePath.replace('.md','')),'MMMM d, yyyy:',{timeZone:'UTC'})+"</span>"+"<div class='news-post-markdown'>"+parsedHTML+"</div>"+"</div>";
+									return "<div class='news-post'>"+"<span class='news-post-date'>"+format(parseISO(filePath.replace('.md','')),'MMMM d, yyyy:',{timeZone:'UTC', locale: localeMap[languageCode]})+"</span>"+"<div class='news-post-markdown'>"+parsedHTML+"</div>"+"</div>";
 								}).join('\n<hr>\n')
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
