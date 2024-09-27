@@ -7,6 +7,7 @@ import middleware from "i18next-http-middleware";
 import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 import { marked } from 'marked';
+import { format, parseISO } from 'date-fns';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -221,7 +222,7 @@ function loadTranslationsFolder(folder) {
 									console.log(marked.parse((fs.existsSync(fullPath) ? 
 										fs.readFileSync(fullPath) : 
 										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString().replaceAll('\n\n', '\n\n\\\n')));
-									return marked.parse((fs.existsSync(fullPath) ? 
+									return marked.parse('### '+format(parseISO(filePath.replace('.md','')),'MMMM d, yyyy:',{timeZone:'UTC'})+'\n'+(fs.existsSync(fullPath) ? 
 										fs.readFileSync(fullPath) : 
 										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString());
 								}).join('\n<hr>\n')
