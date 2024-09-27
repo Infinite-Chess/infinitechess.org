@@ -155,3 +155,8 @@ a {
         margin-bottom: 50px;
     }
 }
+
+/* Don't hide borders on hr tags */
+hr {
+    border: 1px solid grey;
+}
