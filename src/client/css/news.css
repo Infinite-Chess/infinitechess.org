@@ -159,4 +159,5 @@ a {
 /* Don't hide borders on hr tags */
 hr {
     border: 1px solid grey;
+		margin: 1em 0;
 }
