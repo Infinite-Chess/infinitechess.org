@@ -219,9 +219,6 @@ function loadTranslationsFolder(folder) {
                 ),
 								news: newsFiles.map(filePath => {
 									const fullPath = path.join(folder, 'news', languageCode, filePath);
-									console.log(marked.parse((fs.existsSync(fullPath) ? 
-										fs.readFileSync(fullPath) : 
-										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString().replaceAll('\n\n', '\n\n\\\n')));
 									return marked.parse('### '+format(parseISO(filePath.replace('.md','')),'MMMM d, yyyy:',{timeZone:'UTC'})+'\n'+(fs.existsSync(fullPath) ? 
 										fs.readFileSync(fullPath) : 
 										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString());
