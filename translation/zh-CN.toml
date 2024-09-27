@@ -179,7 +179,6 @@ knightrider = {name="骑士骑士", description="像骑士一样在一个方向�
 obstacle = {name="障碍物", description="一个中立棋子（不由任何玩家控制），阻挡移动，但可以被捕获。"}
 void = {name="虚空", description="一个中立棋子（不由任何玩家控制），表示棋盘的缺失。棋子不能穿过或移动到它上面。"}
 
-
 [play.play-menu]
 title = "玩 - 网上"
 colors = "颜色"

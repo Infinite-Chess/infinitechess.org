@@ -123,8 +123,6 @@ credits = "鳴謝"
 play = "開始"
 guide = "指南"
 editor = "棋盤編輯器"
-loading = "加載中"
-error = "錯誤"
 
 [play.guide]
 title = "指南"
@@ -178,7 +176,6 @@ centaur = {name="人馬", description="像騎士和護衛的組合一樣移動�
 knightrider = {name="騎士騎士", description="像騎士一樣在一個方向上無限跳躍，直到被阻擋。"}
 obstacle = {name="障礙物", description="一個中立棋子（不由任何玩家控制），阻擋移動，但可以被捕獲。"}
 void = {name="虛空", description="一個中立棋子（不由任何玩家控制），表示棋盤的缺失。棋子不能穿過或移動到它上面。"}
-
 
 [play.play-menu]
 title = "玩 - 網上"
@@ -474,7 +471,6 @@ conclusion_paragraphs = [
 update = "(最后更新日期：2024年7月13日。添加了警告，所有玩過的游戲可能成為公共信息，包括您賬戶上次活躍的大致時間。此外，這些條款可能會隨時更新，您有責任確保您保持更新。)"
 thanks = "謝謝！"
 
-
 [login]
 title = "登錄"
 username = "用戶名:"
@@ -517,7 +513,6 @@ list = [
     "已添加以下語言支持：中文、波蘭語、葡萄牙語！",
     "修復了一個錯誤：重復點擊創建邀請按鈕時會收到如您已擁有邀請或無法接受自己的邀請等消息。"
 ]
-
 
 [news.aug1-2024] # Update 1.4
 date = "2024年8月1日:"
