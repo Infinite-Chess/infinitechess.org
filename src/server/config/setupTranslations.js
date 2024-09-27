@@ -241,7 +241,6 @@ function loadTranslationsFolder(folder) {
 									return "<div class='news-post'>"+"<span class='news-post-date'>"+format(parseISO(filePath.replace('.md','')),'PPP:',{timeZone:'UTC', locale: localeMap[languageCode]})+"</span>"+"<div class='news-post-markdown'>"+parsedHTML+"</div>"+"</div>";
 								}).join('\n<hr>\n')
             };
-						console.log(resources[languageCode].default);
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
 
