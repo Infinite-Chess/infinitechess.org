@@ -177,7 +177,6 @@ knightrider = {name="Knightrider", description="Pula como um cavalo em uma dire�
 obstacle = {name="Obstáculo", description="Uma peça neutra (não controlado por nenhum dos jogadores) que bloqueia o movimento, mas pode ser capturado."}
 void = {name="Vazio", description="Uma peça neutra (não controlada por nenhum dos jogadores) que representa a ausência do tabuleiro. As peças não podem se mover através dele ou sobre ele."}
 
-
 [play.play-menu]
 title = "Jogar - Online"
 colors = "Cores"

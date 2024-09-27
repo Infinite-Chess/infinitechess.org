@@ -177,7 +177,6 @@ knightrider = {name="Jeździec", description="Skacze jak skoczek nieskończenie 
 obstacle = {name="Blokada", description="Neutralna figura (niekantrolowana przez żadnego z graczy), która blokuje ruch, lecz może być zbita."}
 void = {name="Pustka", description="Neutralna figura (niekantrolowana przez żadnego z graczy), która reprezentuje \"dziurę\" w planszy. Figury nie mogą na niej stawać, ani się przez nią poruszać."}
 
-
 [play.play-menu]
 title = "Graj - Online"
 colors = "Kolor"
