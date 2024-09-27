@@ -123,8 +123,6 @@ credits = "鸣谢"
 play = "开始"
 guide = "指南"
 editor = "棋盘编辑器"
-loading = "加载中"
-error = "错误"
 
 [play.guide]
 title = "指南"
