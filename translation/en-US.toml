@@ -177,7 +177,6 @@ knightrider = {name="Knightrider", description="Hops like a knight infinitely in
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
-
 [play.play-menu]
 title = "Play - Online"
 colors = "Colors"

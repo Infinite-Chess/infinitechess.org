@@ -172,7 +172,6 @@ knightrider = {name="Le Cavalier Sauteur", description="Saute comme un cavalier 
 obstacle = {name="Obstacle", description="Une pièce neutre (controlées par aucun des joueurs) qui bloque les mouvements mais peut être capturée."}
 void = {name="Vide", description="Une pièce neutre (controlées par aucun des joueurs) qui représente l'absence d'une case sur le plateau. Les pièces ne peuvent se déplacer ni au dessus ni à travers du vide."}
 
-
 [play.play-menu]
 title = "Jouer - En Ligne"
 colors = "Couleurs"
