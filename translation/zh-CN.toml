@@ -1,4 +1,4 @@
-name = "中文" # Name of language
+name = "简体中文" # Simplified Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "15"
 maintainer = "Heinrich Xiao"
@@ -123,8 +123,6 @@ credits = "鸣谢"
 play = "开始"
 guide = "指南"
 editor = "棋盘编辑器"
-loading = "加载中"
-error = "错误"
 
 [play.guide]
 title = "指南"
@@ -178,7 +176,6 @@ centaur = {name="人马", description="像骑士和护卫的组合一样移动�
 knightrider = {name="骑士骑士", description="像骑士一样在一个方向上无限跳跃，直到被阻挡。"}
 obstacle = {name="障碍物", description="一个中立棋子（不由任何玩家控制），阻挡移动，但可以被捕获。"}
 void = {name="虚空", description="一个中立棋子（不由任何玩家控制），表示棋盘的缺失。棋子不能穿过或移动到它上面。"}
-
 
 [play.play-menu]
 title = "玩 - 网上"
