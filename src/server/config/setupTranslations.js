@@ -223,8 +223,8 @@ function loadTranslationsFolder(folder) {
 										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString().replaceAll('\n\n', '\n\n\\\n')));
 									return marked.parse((fs.existsSync(fullPath) ? 
 										fs.readFileSync(fullPath) : 
-										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString().replaceAll(/(\r?\n){2}/g, '\n\n\u200B\n'));
-								}).join('\n<br><br><br>\n')
+										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString());
+								}).join('\n<hr>\n')
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
