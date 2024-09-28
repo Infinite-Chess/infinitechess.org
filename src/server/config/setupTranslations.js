@@ -243,7 +243,10 @@ function loadTranslationsFolder(folder) {
 										locale: localeMap[languageCode] 
 									});
 
-									return "<div class='news-post'><span class='news-post-date'>"+date+"</span><div class='news-post-markdown'>"+parsedHTML+"</div></div>";
+									return `<div class='news-post'>
+										<span class='news-post-date'>${date}</span>
+										<div class='news-post-markdown'>${parsedHTML}</div>
+									</div>`;
 								}).join('\n<hr>\n')
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
