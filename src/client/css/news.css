@@ -162,15 +162,15 @@ hr {
 }
 
 .news-post {
-	display: flex;
-	flex-direction: column;
-	width: 100%;
-	height: 100%;
-	margin: 1em 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    margin: 1em 0;
 }
 
 .news-post-date {
-	font-size: 1.2em;
-	font-weight: 700;
+    font-size: 1.2em;
+    font-weight: 700;
 }
 
