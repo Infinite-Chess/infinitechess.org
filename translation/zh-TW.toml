@@ -1,6 +1,6 @@
 name = "繁體中文" # Traditional Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "15"
+version = "16"
 maintainer = "Heinrich Xiao"
 
 [header]
@@ -482,91 +482,6 @@ login_button = "登錄"
 400_message = "收到無效參數。"
 409_message = ["可能存在沖突的用戶名或電子郵件。請", "重新加載", "頁面"]
 500_message = "這不應該發生。需要進行一些調試！"
-
-########### NEWS ###########
-
-[news]
-title = "新聞"
-more_dev_logs = ["更多開發者日志在我們的", "Discord", "和在", "chess.com的論壇！"]
-
-[news.sept11-2024]
-date = "2024年9月11日:"
-paragraph1 = [
-    "首屆無限棋錦標賽現已開放報名！！！比賽將採用經典變體，時間控制為10分鐘加6秒（此功能將很快添加）。獲勝者將在 ",
-    "社區Discord", # The website inserts a hyperlink over this text
-    " 上獲得特殊標識和/或角色！"
-],
-paragraph2 = [
-    "這是 ",
-    "報名表格", # The website inserts a hyperlink over this text
-    "！報名截止日期是 ",
-    "2024年9月27日（星期五）！", # The website bolds this text
-    " 完整規則請查看 ",
-    "這裡", # The website inserts a hyperlink over this text
-    "。有關錦標賽的最新動態，請加入 ",
-    "Discord", # The website inserts a hyperlink over this text
-    "！"
-]
-paragraph3 = "更新 v.1.4.1 已發布！"
-list = [
-    "已添加和棋提議功能！在暫停菜單中找到提議和棋按鈕！",
-    "已添加以下語言支持：中文、波蘭語、葡萄牙語！",
-    "修復了一個錯誤：重復點擊創建邀請按鈕時會收到如您已擁有邀請或無法接受自己的邀請等消息。"
-]
-
-[news.aug1-2024] # Update 1.4
-date = "2024年8月1日:"
-text_top = "更新 1.4 發布了！自從我們開源以來，添加了許多協作功能！"
-update_list = [
-"新增了騎士騎行者，它們像騎士一樣無限跳躍，直到被障礙物阻擋！'騎士國際象棋' 變體已經升級，將騎士替換為騎士騎行者！",
-"隨時點擊自己或對手的棋子以查看其可能的移動！",
-"隨時右鍵點擊以取消選擇當前選中的棋子。",
-"將鼠標懸停在屏幕邊緣的箭頭指示器上，現在會顯示指示的棋子的合法移動！",
-"如果棋盤上沒有足夠的棋子來強制將死，游戲現在會自動判定平局。",
-"網站已經翻譯成法語！您可以通過訪問任何頁面的頁腳來更改語言。",
-"改善了網站的加載時間。",
-"新的網站圖標，Ω！它會自動匹配您首選的淺色或深色設備主題。",
-"游戲代碼或 ICN 的元數據已重新格式化，更加符合 PGN 標准。",
-"用戶現在可以在個人資料頁面刪除他們的帳戶，無需通過電子郵件聯系我們。"
-]
-
-[news.july22-2024]
-date = "2024年7月22日"
-account_warning = "如果您尚未驗証您的賬戶，請在您的個人資料頁面上進行驗証！所有未驗証的賬戶將很快被刪除！"
-
-[news.july13-2024]
-date = "2024年7月13日"
-tos_update = ["", "服務條款", "已更新。變更內容：您在網站上玩的所有游戲都可能成為公共信息，包括您的帳戶上次活躍的大概時間。條款可能會隨時更新，確保您了解最新條款是您的責任。"] # The game inserts a hyperlink inside the 2nd quotes here.
-game_history_warning = "您的游戲歷史可能在未來可在您的個人資料中查看。"
-
-[news.july9-2024]
-date = "2024年7月9日"
-text = ["無限棋現在開源！查看並貢獻項目，請訪問 ", "GitHub！"]
-
-[news.may27-2024]
-date = "2024年5月27日"
-text = "1.3.2更新今天發布！新增了我在最新視頻中展示的 Omega^3 和 Omega^4 的展示變體。此外，將軍算法現在兼容每邊多個國王。"
-
-[news.may24-2024]
-date = "2024年5月24日"
-text = "1.3更新今天發布！這包括指南、懸停導航按鈕時的彈出式工具提示以及標題頁上的 Discord 和游戲信用鏈接！"
-
-[news.may14-2024]
-date = "2024年5月14日"
-text_top = "1.3更新今天發布！這包括很多的改進："
-update_list = [
-"切換到 WebSocket，減少對手移動時的延遲。",
-"切換標簽不再斷開連接。",
-"當您或其他人創建邀請或下棋時，發出聲音提示。",
-"加了50步規則",
-"現在在時鐘剩余10秒時播放鼓式倒計時效果。",
-"如果您的對手AFK（並發出聲音警告），將開始自動認輸計時器。"
-]
-text_box = ["還有更多！那些都在我們的", "Discord！"]
-
-[news.jan29-2024]
-date = "2024年1月29日"
-text = "僅以案由一個新視頻"
 
 [server.javascript]
 ws-invalid_username = "用戶名無效"
