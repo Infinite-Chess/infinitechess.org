@@ -8,7 +8,7 @@ import docutil from "./misc/docutil.js";
  * 
  * THIS SHOULD ALWAYS MATCH src/server/config/config.GAME_VERSION
  */
-const GAME_VERSION = "1.4.1"; // The current version of the game
+const GAME_VERSION = "1.4.2"; // The current version of the game
 
 /** Video mode disables the rendering of some items, making making recordings more immersive. */
 const VIDEO_MODE = false;
