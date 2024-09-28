@@ -483,6 +483,10 @@ login_button = "登錄"
 409_message = ["可能存在沖突的用戶名或電子郵件。請", "重新加載", "頁面"]
 500_message = "這不應該發生。需要進行一些調試！"
 
+[news]
+title = "新闻"
+more_dev_logs = ["更多开发者日志在我们的", "Discord", "和在", "chess.com的论坛！"]
+
 [server.javascript]
 ws-invalid_username = "用戶名無效"
 ws-incorrect_password = "密碼部隊"
