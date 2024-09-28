@@ -1,4 +1,8 @@
 {
+  "16": {
+    "note": "Remove all news posts",
+    "changes": ["news"]
+  },
   "15": {
     "note": "Added news.sept9-2024, line 493",
     "changes": []
