@@ -1,6 +1,6 @@
 {
   "16": {
-    "note": "Remove all news posts",
+    "note": "Remove all news posts except title and more_dev_logs",
     "changes": ["news"]
   },
   "15": {

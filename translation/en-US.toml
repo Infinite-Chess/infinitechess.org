@@ -483,6 +483,10 @@ login_button = "Log In"
 409_message = ["There may have been a clashing username or email. Please ", "reload", ", the page."]
 500_message = "This isn't supposed to happen. There is some debugging to be done!"
 
+[news]
+title = "News" # The tab name
+more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+
 [server.javascript]
 ws-invalid_username = "Username is invalid"
 ws-incorrect_password = "Password is incorrect"
