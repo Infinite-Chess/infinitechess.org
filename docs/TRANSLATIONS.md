@@ -56,11 +56,11 @@ In case you are updating an existing language and you aren't sure what has chang
 
 In addition to the TOML translation files, you may also need to translate news articles located in the `translation/news/` directory. Here are the steps to translate news articles:
 
-1. **Copy the existing news file**: Find the English version of the news article (e.g., `2024-09-11.md`) and create a copy of it. Rename the file to reflect the target language code (e.g., for a new language, simply use a relevant name without specifying the extension).
+1. **Copy the existing news file**: Find the English version of the news article (e.g., `2024-09-11.md`) and create a copy of it. Put the copy in the appropriate locate directory.
 
-2. **Translate the content**: Open the copied file and translate the content while keeping the markdown structure intact. Make sure not to alter any metadata or formatting that is essential for the markdown file.
+2. **Translate the content**: Open the copied file and translate the content while keeping the markdown structure intact.
 
-3. **Preserve links and formatting**: Similar to the TOML files, ensure that any HTML tags or markdown elements (like links, images, etc.) are left unchanged. You should only modify the text content.
+3. **Preserve links and formatting**: Similar to the TOML files, ensure that any HTML tags or markdown elements (like links, Youtube iFrames, etc.) are left unchanged. You should only modify the text content.
 
 4. **Commit your changes**: Once your translation is complete, commit the changes as you would with TOML files.
 
