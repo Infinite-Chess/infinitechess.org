@@ -52,8 +52,6 @@ In case you are updating an existing language and you aren't sure what has chang
 > ```
 > In this example you should only change the words *Hello World*.
 
-When you are finished, you should open a pull request as described in [SETUP.md](./SETUP.md).
-
 ### Translating News Articles ###
 
 In addition to the TOML translation files, you may also need to translate news articles located in the `translations/news/` directory. Here are the steps to translate news articles:
