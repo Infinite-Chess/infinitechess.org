@@ -215,11 +215,11 @@ function loadTranslationsFolder(folder) {
         fs.readFileSync(path.join(folder, "changes.json")).toString(),
     );
     const supportedLanguages = [];
-		const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).sort((a, b) => {
-			const dateA = new Date(a.replace('.md', ''));
-			const dateB = new Date(b.replace('.md', ''));
-			return dateB - dateA;
-		});
+    const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).sort((a, b) => {
+      const dateA = new Date(a.replace('.md', ''));
+      const dateB = new Date(b.replace('.md', ''));
+      return dateB - dateA;
+    });
     files
         .filter(function y(x) {
             return x.endsWith(".toml");
@@ -233,21 +233,21 @@ function loadTranslationsFolder(folder) {
                         changelog,
                     ),
                 ),
-								news: newsFiles.map(filePath => {
-									const fullPath = path.join(folder, 'news', languageCode, filePath);
-									const parsedHTML = marked.parse((fs.existsSync(fullPath) ? 
-										fs.readFileSync(fullPath) : 
-										fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
-									const date = format(parseISO(filePath.replace('.md','')), 'PPP:', { 
-										timeZone: 'UTC', 
-										locale: localeMap[languageCode] 
-									});
+                news: newsFiles.map(filePath => {
+                    const fullPath = path.join(folder, 'news', languageCode, filePath);
+                    const parsedHTML = marked.parse((fs.existsSync(fullPath) ? 
+                    fs.readFileSync(fullPath) : 
+                    fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
+                    const date = format(parseISO(filePath.replace('.md','')), 'PPP:', { 
+                        timeZone: 'UTC', 
+                        locale: localeMap[languageCode] 
+                    });
 
-									return `<div class='news-post'>
-										<span class='news-post-date'>${date}</span>
-										<div class='news-post-markdown'>${parsedHTML}</div>
-									</div>`;
-								}).join('\n<hr>\n')
+                    return `<div class='news-post'>
+                        <span class='news-post-date'>${date}</span>
+                        <div class='news-post-markdown'>${parsedHTML}</div>
+                    </div>`;
+                }).join('\n<hr>\n')
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
         });
@@ -305,7 +305,7 @@ function translateStaticTemplates(translations) {
                         },
                         languages: languages_list,
                         language: language,
-												newsHTML: translations[language].news,
+                        newsHTML: translations[language].news,
                         viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
                     },
                 ),
