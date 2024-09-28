@@ -34,6 +34,16 @@ const pieceDictionary = {
     "voidsN": "vo"
 };
 
+const neutrals = [
+    "vo", "ob"
+];
+
+const pieces_NoNeutral = [
+    'k', 'gi', 'ca', 'ze', 'nr', 'am', 'q', 'rq', 'ha', 'ch', 'ce', 'n', 'gu', 'r', 'b', 'p'
+];
+
+const colors = ['w_', 'b_'];
+
 const metadata_key_ordering = [
     "Event",
     "Site",
@@ -66,6 +76,51 @@ function LongToShort_Piece(longpiece) {
 function ShortToLong_Piece(shortpiece) {
     if (!invertedpieceDictionary[shortpiece]) throw new Error("Unknown piece abbreviation detected: " + shortpiece);
     return invertedpieceDictionary[shortpiece];
+}
+
+/**
+ * 
+ * @param {string} shortpiece 
+ */
+function ShortToNum_Piece(shortpiece) {
+    let [type, color] = shortpiece.split('_');
+    if (type in neutrals) {
+        return neutrals.indexOf(type);
+    }
+
+    if (!color) {
+        color = '';
+    }
+
+    const wbsprite = type[0] === type[0].toUpperCase() ? 'w' : 'b';
+    type = type.toLowerCase();
+    
+    color = `${wbsprite}_${color}`;
+    if (!(color in colors)) throw new Error("Unknown color abbreviation detected: " + color);
+    if (!(type in pieces_NoNeutral)) throw new Error("Unkown type abbreviation detected: " + type);
+
+    return (colors.indexOf(color) - 1) * pieces_NoNeutral.length + pieces_NoNeutral.indexOf(type) + neutrals.length;
+}
+
+/**
+ * 
+ * @param {Number} number 
+ */
+function NumToShortPiece(num) {
+    if (num < neutrals.length) {
+        return neutrals[num];
+    }
+    num -= neutrals.length;
+    const [s, ext] = colors[num / pieces_NoNeutral.length].split('_');
+    let p = pieces_NoNeutral[num % pieces_NoNeutral.length];
+    if (s === 'w') {
+        p = p.toUpperCase();
+    }
+    if (!ext) {
+        return p;
+    } else {
+        return `${p}_${ext}`;
+    }
 }
 
 /**

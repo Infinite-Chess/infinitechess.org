@@ -14,9 +14,9 @@ const validColorExtensions_NoNeutral = ['W','B'];
 const colorExtensionOfNeutrals = 'N';
 
 /** All colors that are compatible with the game. */
-const validColors = [...validColors_NoNeutral, colorOfNeutrals];
+const validColors = [colorOfNeutrals, ...validColors_NoNeutral];
 /** All color-extensions that are compatible with the game. */
-const validColorExtensions = [...validColorExtensions_NoNeutral, colorExtensionOfNeutrals];
+const validColorExtensions = [colorExtensionOfNeutrals, ...validColorExtensions_NoNeutral];
 
 /**
  * Checks if a given color is a valid color.
@@ -111,6 +111,15 @@ function trimColorExtensionFromType(type) {
     return type.slice(0, -1); // Returns a new string that starts from the first character (index 0) and excludes the last character (because of -1).
 }
 
+/**
+ * 
+ * @param {string} type
+ * @returns {Number} 
+ */
+function getColorIndex(type) {
+    return validColorExtensions.indexOf(getColorExtensionFromType(type));
+}
+
 export default {
     validColors,
     validColorExtensions,
@@ -128,4 +137,5 @@ export default {
     getColorExtensionFromType,
     getColorExtensionFromColor,
     trimColorExtensionFromType,
+    getColorIndex,
 };

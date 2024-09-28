@@ -16,7 +16,7 @@ import colorutil from "./colorutil.js";
  */
 const types = ['kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'knights', 'guards', 'rooks', 'bishops', 'pawns'];
 /** All neutral types the game is compatible with. */
-const neutralTypes = ['obstacles', 'voids'];
+const neutralTypes = ['voids', 'obstacles'];
 
 /** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
 const jumpingRoyals = ['kings', 'royalCentaurs'];
@@ -35,6 +35,35 @@ colorutil.validColors_NoNeutral.forEach((color, index) => {
     colorsTypes[color] = types.map(type => type + colorExtension);
 });
 colorsTypes.neutral = neutralTypes.map(type => type + colorutil.colorExtensionOfNeutrals);
+
+/**
+ * 
+ * @param {string} type
+ * @returns {Number}
+ */
+function getNumFromType(type) {
+    const c = colorutil.getColorIndex(type);
+    type = colorutil.trimColorExtensionFromType(type);
+    if (c === 0) {
+        return neutralTypes.indexOf(type);
+    }
+    return (c - 1) * types.length + types.indexOf() + neutralTypes.length;
+}
+
+/**
+ * 
+ * @param {Number} num 
+ * @returns {String}
+ */
+function getTypeFromNum(num) {
+    if (num < neutralTypes.length) {
+        return neutralTypes[num] + colorutil.colorExtensionOfNeutrals;
+    }
+    num -= neutralTypes.length;
+    const ptype = types[num % colorutil.validColors_NoNeutral.length];
+    const pcolor = colorutil.validColorExtensions_NoNeutral[num / colorutil.validColorExtensions_NoNeutral.length];
+    return ptype + pcolor;
+}
 
 /**
  * Iterates through every single piece TYPE in the game state, and performs specified function on the type.
