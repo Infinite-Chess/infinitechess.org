@@ -484,8 +484,8 @@ login_button = "登錄"
 500_message = "這不應該發生。需要進行一些調試！"
 
 [news]
-title = "新闻"
-more_dev_logs = ["更多开发者日志在我们的", "Discord", "和在", "chess.com的论坛！"]
+title = "新聞"
+more_dev_logs = ["更多開發者日志在我們的", "Discord", "和在", "chess.com的論壇！"]
 
 [server.javascript]
 ws-invalid_username = "用戶名無效"
