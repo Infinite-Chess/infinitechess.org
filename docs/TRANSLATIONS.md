@@ -54,7 +54,7 @@ In case you are updating an existing language and you aren't sure what has chang
 
 ### Translating News Articles ###
 
-In addition to the TOML translation files, you may also need to translate news articles located in the `translations/news/` directory. Here are the steps to translate news articles:
+In addition to the TOML translation files, you may also need to translate news articles located in the `translation/news/` directory. Here are the steps to translate news articles:
 
 1. **Copy the existing news file**: Find the English version of the news article (e.g., `2024-09-11.md`) and create a copy of it. Rename the file to reflect the target language code (e.g., for a new language, simply use a relevant name without specifying the extension).
 
