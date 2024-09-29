@@ -46,11 +46,16 @@ function getLongformatInNewNotation(longformat) {
         converted.startingPosition = longformat.startingPosition;
         converted.specialRights = formatconverter.generateSpecialRights(longformat.startingPosition, pawnDoublePush, castleWith);
     }
+    let turnOrder = ['white','black'];
     if (longformat.moves?.length > 0) {
         // If it's a black-moves-first game, then the `turn` property of the results will be set to black.
         const results = {};
         const moveslong = movesscript.convertMovesTo1DFormat(longformat.moves, results); // Long format still, needs to be compressed
-        const turnOrderArray = results.turn === 'black' ? ['b','w'] : ['w','b'];
+        let turnOrderArray = ['w','b'];
+        if (results.turn === 'black') {
+            turnOrderArray = ['b','w'];
+            turnOrder = ['black','white'];
+        }
         const options = {
             turnOrderArray,
             fullmove: converted.fullMove,
@@ -82,6 +87,7 @@ function getLongformatInNewNotation(longformat) {
         //     }
         // }
         const newGameRules = {};
+        newGameRules.turnOrder = turnOrder;
         if (longformat.gameRules.slideLimit && longformat.gameRules.slideLimit !== "Infinity") newGameRules.slideLimit = longformat.gameRules.slideLimit;
         if (longformat.gameRules.winConditions) {
             const newWinConditions = { white: [], black: [] };
