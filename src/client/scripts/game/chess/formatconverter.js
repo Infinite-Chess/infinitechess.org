@@ -39,7 +39,7 @@ const neutrals = [
 ];
 
 const pieces_NoNeutral = [
-    'k', 'gi', 'ca', 'ze', 'nr', 'am', 'q', 'rq', 'ha', 'ch', 'ce', 'n', 'gu', 'r', 'b', 'p'
+    'k', 'gi', 'ca', 'ze', 'nr', 'am', 'q', 'rq', 'ha', 'ch', 'ar', 'ce', 'rc', 'n', 'gu', 'r', 'b', 'p'
 ];
 
 const colors = ['w_', 'b_'];
@@ -96,10 +96,15 @@ function ShortToNum_Piece(shortpiece) {
     type = type.toLowerCase();
     
     color = `${wbsprite}_${color}`;
-    if (!(color in colors)) throw new Error("Unknown color abbreviation detected: " + color);
-    if (!(type in pieces_NoNeutral)) throw new Error("Unkown type abbreviation detected: " + type);
-
-    return (colors.indexOf(color) - 1) * pieces_NoNeutral.length + pieces_NoNeutral.indexOf(type) + neutrals.length;
+    if (!colors.includes(color)) throw new Error("Unknown color abbreviation detected: " + color);
+    if (!pieces_NoNeutral.includes(type)) throw new Error("Unkown type abbreviation detected: " + type);
+    
+    type = (colors.indexOf(color) + 1) * pieces_NoNeutral.length + pieces_NoNeutral.indexOf(type) + neutrals.length;
+    
+    if (type < pieces_NoNeutral.length + neutrals.length) throw new Error("Raw type leak");
+    if (type === undefined) throw new Error("Type became undefined, how???????");
+    
+    return type;
 }
 
 /**
@@ -111,7 +116,9 @@ function NumToShortPiece(num) {
         return neutrals[num];
     }
     num -= neutrals.length;
-    const [s, ext] = colors[num / pieces_NoNeutral.length].split('_');
+    if (num < pieces_NoNeutral.length) throw new Error("Raw type leak");
+
+    const [s, ext] = colors[(num / pieces_NoNeutral.length) - 1].split('_');
     let p = pieces_NoNeutral[num % pieces_NoNeutral.length];
     if (s === 'w') {
         p = p.toUpperCase();
@@ -307,7 +314,7 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
         } else { // compact_moves > 0
             shortmoves += (i === 0 ? "" : "|");
         }
-        shortmoves += (longmove.type && (compact_moves == 0 || compact_moves == 1) ? LongToShort_Piece(longmove.type) : "");
+        shortmoves += (longmove.type && (compact_moves == 0 || compact_moves == 1) ? NumToShortPiece(longmove.type) : "");
         shortmoves += longmove.startCoords.toString();
         shortmoves += (compact_moves == 0 ? " " : "");
         shortmoves += (longmove.captured && (compact_moves == 0 || compact_moves == 1) ? "x" : ">");
@@ -316,7 +323,7 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
         shortmoves += (compact_moves == 0 ? " " : "");
         if (longmove.promotion) {
             shortmoves += (compact_moves == 0 || compact_moves == 1 ? "=" : "");
-            shortmoves += LongToShort_Piece(longmove.promotion);
+            shortmoves += NumToShortPiece(longmove.promotion);
         }
         if (longmove.mate && (compact_moves == 0 || compact_moves == 1)) {
             shortmoves += "#";
@@ -451,7 +458,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
                         } else {
                             longformat.gameRules.promotionsAllowed[color] = [];
                             for (const promotionpiece of string[i][1].split(",")) {
-                                longformat.gameRules.promotionsAllowed[color].push(ShortToLong_Piece(promotionpiece).slice(0,-1));
+                                longformat.gameRules.promotionsAllowed[color].push(ShortToNum_Piece(promotionpiece).slice(0,-1));
                             }
                         }
                     } else {
@@ -786,7 +793,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
  * @returns {string} Output string in compact ICN notation
  */
 function LongToShort_CompactMove(longmove) {
-    const promotedPiece = (longmove.promotion ? LongToShort_Piece(longmove.promotion) : "");
+    const promotedPiece = (longmove.promotion ? NumToShortPiece(longmove.promotion) : "");
     return `${longmove.startCoords.toString()}>${longmove.endCoords.toString()}${promotedPiece}`;
 }
 
@@ -809,7 +816,7 @@ function ShortToLong_CompactMove(shortmove) {
         if (!isFinite(coords[1])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
     });
     // ShortToLong_Piece() will already throw an error if the piece abbreviation is invalid.
-    const promotedPiece = (/[a-zA-Z]+/.test(shortmove) ? ShortToLong_Piece(shortmove.match(/[a-zA-Z]+/)) : "");
+    const promotedPiece = (/[a-zA-Z]+/.test(shortmove) ? ShortToNum_Piece(shortmove.match(/[a-zA-Z]+/)) : "");
     const longmove = { compact: shortmove };
     longmove.startCoords = coords[0];
     longmove.endCoords = coords[1];
@@ -830,9 +837,9 @@ function LongToShort_Position(position, specialRights = {}) {
     if (!position) return shortposition; // undefined position --> no string
     for (const coordinate in position) {
         if (specialRights[coordinate]) {
-            shortposition += `${LongToShort_Piece(position[coordinate])}${coordinate}+|`;
+            shortposition += `${NumToShortPiece(position[coordinate])}${coordinate}+|`;
         } else {
-            shortposition += `${LongToShort_Piece(position[coordinate])}${coordinate}|`;
+            shortposition += `${NumToShortPiece(position[coordinate])}${coordinate}|`;
         }
     }
 
@@ -949,21 +956,21 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
         if (end_index != -1) {
             if (shortposition[index + end_index] == "+") {
                 const coordString = shortposition.slice(index + piecelength, index + end_index);
-                startingPosition[coordString] = ShortToLong_Piece(shortpiece);
+                startingPosition[coordString] = ShortToNum_Piece(shortpiece);
                 specialRights[coordString] = true;
                 index += end_index + 2;
             } else {
-                startingPosition[shortposition.slice(index + piecelength, index + end_index)] = ShortToLong_Piece(shortpiece);
+                startingPosition[shortposition.slice(index + piecelength, index + end_index)] = ShortToNum_Piece(shortpiece);
                 index += end_index + 1;
             }
         } else {
-            if (shortposition.slice(-1) == "+") {
+            if (shortposition.slice(-1) === "+") {
                 const coordString = shortposition.slice(index + piecelength, -1);
-                startingPosition[coordString] = ShortToLong_Piece(shortpiece);
+                startingPosition[coordString] = ShortToNum_Piece(shortpiece);
                 specialRights[coordString] = true;
                 index = MAX_INDEX;
             } else {
-                startingPosition[shortposition.slice(index + piecelength)] = ShortToLong_Piece(shortpiece);
+                startingPosition[shortposition.slice(index + piecelength)] = ShortToNum_Piece(shortpiece);
                 index = MAX_INDEX;
             }
         }

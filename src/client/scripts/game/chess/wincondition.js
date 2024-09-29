@@ -6,7 +6,6 @@ import gamefileutility from './gamefileutility.js';
 import checkmate from './checkmate.js';
 import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
-import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 // Import End
 
@@ -93,7 +92,7 @@ function detectKoth(gamefile) {
     // Was the last move a king move?
     const lastMove = movesscript.getLastMove(gamefile.moves);
     if (!lastMove) return false;
-    if (!lastMove.type.startsWith('kings')) return false;
+    if (!typeutil.isRawType(lastMove.type, 'kings')) return false;
 
     let kingInCenter = false;
     for (let i = 0; i < kothCenterSquares.length; i++) {
@@ -101,7 +100,7 @@ function detectKoth(gamefile) {
 
         const typeAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisCenterSquare);
         if (!typeAtSquare) continue;
-        if (typeAtSquare.startsWith('kings')) {
+        if (typeutil.isRawType(typeAtSquare, 'kings')) {
             kingInCenter = true;
             break;
         }
@@ -133,7 +132,7 @@ function wasLastMoveARoyalCapture(gamefile) {
 
     if (!lastMove.captured) return false; // Last move not a capture
 
-    const trimmedTypeCaptured = colorutil.trimColorExtensionFromType(lastMove.captured);
+    const trimmedTypeCaptured = typeutil.trimColorExtensionFromType(lastMove.captured);
 
     // Does the piece type captured equal any royal piece?
     return typeutil.royals.includes(trimmedTypeCaptured);

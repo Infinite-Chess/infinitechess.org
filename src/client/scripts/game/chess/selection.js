@@ -21,6 +21,7 @@ import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 import colorutil from '../misc/colorutil.js';
 import coordutil from '../misc/coordutil.js';
+import typeutil from '../misc/typeutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
 // Import End
@@ -150,8 +151,8 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
     tag: if (pieceClickedType) {
 
         // Did we click a friendly piece?
-        // const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected.type)
-        // const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
+        // const selectedPieceColor = typeutil.getPieceColorFromType(pieceSelected.type)
+        // const clickedPieceColor = typeutil.getPieceColorFromType(pieceClickedType);
         // if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
 
         // If it clicked iteself, deselect.
@@ -178,7 +179,7 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
 
     // Check if the move is a pawn promotion
     if (specialdetect.isPawnPromotion(gamefile, pieceSelected.type, coordsClicked)) {
-        const color = colorutil.getPieceColorFromType(pieceSelected.type);
+        const color = typeutil.getPieceColorFromType(pieceSelected.type);
         guipromotion.open(color);
         pawnIsPromoting = coordsClicked;
         return;
@@ -211,7 +212,7 @@ function handleSelectingPiece(pieceClickedType) {
 
     // if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
     if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
-    const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
+    const clickedPieceColor = typeutil.getPieceColorFromType(pieceClickedType);
     if (!options.getEM() && clickedPieceColor === colorutil.colorOfNeutrals) return; // Don't select neutrals, unless we're in edit mode
     if (pieceClickedType === 'voidsN') return; // NEVER select voids, EVEN in edit mode.
 
@@ -233,7 +234,7 @@ function selectPiece(type, index, coords) {
     // Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
     legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected);
 
-    const pieceColor = colorutil.getPieceColorFromType(pieceSelected.type);
+    const pieceColor = typeutil.getPieceColorFromType(pieceSelected.type);
     isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
     /* Local Game */ : pieceColor !== game.getGamefile().whosTurn;
     isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
@@ -318,10 +319,10 @@ function updateHoverSquareLegal() {
 
     const gamefile = game.getGamefile();
     const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
-    const hoverSquareIsSameColor = typeAtHoverCoords && colorutil.getPieceColorFromType(pieceSelected.type) === colorutil.getPieceColorFromType(typeAtHoverCoords);
+    const hoverSquareIsSameColor = typeAtHoverCoords && typeutil.getPieceColorFromType(pieceSelected.type) === typeutil.getPieceColorFromType(typeAtHoverCoords);
     const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
     // The next boolean ensures that only pieces of the same color as the current player's turn can have a ghost piece:
-    const selectionColorAgreesWithMoveTurn = colorutil.getPieceColorFromType(pieceSelected.type) === gamefile.whosTurn;
+    const selectionColorAgreesWithMoveTurn = typeutil.getPieceColorFromType(pieceSelected.type) === gamefile.whosTurn;
     // This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
     hoverSquareLegal = (selectionColorAgreesWithMoveTurn && !isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor);
 }

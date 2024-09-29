@@ -31,7 +31,7 @@ const pointsPerSquare_Wireframe = 12; // Compared to  piecesmodel.pointsPerSquar
 
 function regenModel(gamefile) {
     /** A list of coordinates of all voids in the gamefile */
-    const voidList = game.getGamefile().ourPieces.voidsN;
+    const voidList = game.getGamefile().ourPieces[0];
 
     // Simplify the mesh by combining adjacent voids into larger rectangles!
     const simplifiedMesh = simplifyMesh(voidList);

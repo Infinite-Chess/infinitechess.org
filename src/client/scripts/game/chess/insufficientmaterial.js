@@ -5,6 +5,7 @@ import movesscript from './movesscript.js';
 import colorutil from '../misc/colorutil.js';
 import coordutil from '../misc/coordutil.js';
 import gamerules from '../variants/gamerules.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 /** 
@@ -169,7 +170,7 @@ function detectInsufficientMaterial(gamefile) {
     for (const key in gamefile.piecesOrganizedByKey) {
         const piece = gamefile.piecesOrganizedByKey[key];
         if (piece === "obstaclesN") continue;
-        else if (colorutil.trimColorExtensionFromType(piece) === "bishops") {
+        else if (typeutil.isRawType(piece,'bishops')) {
             const parity = sum_tuple_coords(coordutil.getCoordsFromKey(key)) % 2;
             const color = colorutil.getColorExtensionFromType(piece);
             if (color === "W") bishopsW_count[parity] += 1;

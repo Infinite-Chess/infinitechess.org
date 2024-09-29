@@ -7,6 +7,7 @@ import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import math from '../misc/math.js';
 import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 // Import End
@@ -40,7 +41,7 @@ function detectCheck(gamefile, color, attackers) {
     // Input validation
     if (!gamefile) throw new Error("Cannot detect check of an undefined game!");
     if (color !== 'white' && color !== 'black') throw new Error(`Cannot detect check of the team of color ${color}!`);
-    if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
+    if (attackers !== null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
 
     // Coordinates of ALL royals of this color!
     const royalCoords = gamefileutility.getRoyalCoords(gamefile, color); // [ coords1, coords2 ]
@@ -98,10 +99,10 @@ function doesVicinityAttackSquare(gamefile, coords, color, attackers) {
         const typeOnSquare = gamefile.piecesOrganizedByKey[key2];
         if (!typeOnSquare) continue; // Nothing there to capture us
         // Is it the same color?
-        const typeOnSquareColor = colorutil.getPieceColorFromType(typeOnSquare);
+        const typeOnSquareColor = typeutil.getPieceColorFromType(typeOnSquare);
         if (color === typeOnSquareColor) continue; // A friendly can't capture us
 
-        const typeOnSquareConcat = colorutil.trimColorExtensionFromType(typeOnSquare);
+        const typeOnSquareConcat = typeutil.trimColorExtensionFromType(typeOnSquare);
 
         // Is that a match with any piece type on this vicinity square?
         if (thisVicinity.includes(typeOnSquareConcat)) { // This square can be captured
@@ -123,10 +124,10 @@ function doesPawnAttackSquare(gamefile, coords, color, attackers) {
         const pieceOnSquare = gamefile.piecesOrganizedByKey[key];
         if (!pieceOnSquare) continue;
 
-        const pieceIsFriendly = color === colorutil.getPieceColorFromType(pieceOnSquare);
+        const pieceIsFriendly = color === typeutil.getPieceColorFromType(pieceOnSquare);
         if (pieceIsFriendly) continue; // Can't capture us
 
-        const pieceIsPawn = pieceOnSquare.startsWith('pawns');
+        const pieceIsPawn = typeutil.isRawType(pieceOnSquare, 'pawns');
         if (pieceIsPawn) {
             if (attackers) appendAttackerToList(attackers, { coords: thisSquare, slidingCheck: false });
             return true; // A pawn can capture on this square. There'll never be more than 1 short-range checks.
@@ -179,7 +180,7 @@ function doesLineAttackSquare(gamefile, line, direction, coords, color, attacker
     // Iterate through every piece on the line, and test if they can attack our square
     for (const thisPiece of line) { // { coords, type }
 
-        const thisPieceColor = colorutil.getPieceColorFromType(thisPiece.type);
+        const thisPieceColor = typeutil.getPieceColorFromType(thisPiece.type);
         if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
         if (thisPieceColor === colorutil.colorOfNeutrals) continue; // Neutrals can't move, that means they can't make captures, right?
 

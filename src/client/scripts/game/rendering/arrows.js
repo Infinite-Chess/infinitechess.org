@@ -436,7 +436,7 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
     // Calculate the mesh...
 
     const data = [];
-    const pieceColor = colorutil.getPieceColorFromType(type);
+    const pieceColor = typeutil.getPieceColorFromType(type);
     const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
     const isOpponentPiece = pieceColor === opponentColor;
     const isOurTurn = gamefile.whosTurn === pieceColor;

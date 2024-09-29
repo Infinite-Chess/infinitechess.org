@@ -7,6 +7,13 @@
  * ZERO dependancies
  */
 
+const types = ['kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'knights', 'guards', 'rooks', 'bishops', 'pawns'];
+/** All neutral types the game is compatible with. */
+const neutralTypes = ['voids', 'obstacles'];
+const alltypes = [...neutralTypes, ...types];
+
+function blankset() {return {};}
+
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
  * 
@@ -18,11 +25,11 @@
 function getPieceMovesets(slideLimit = Infinity) {
     if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
 
-    return {
+    const movesets = {
+        voids: blankset,
+        obstacles: blankset,
         // Finitely moving
-        pawns: function() {
-            return { individual: [] };
-        },
+        pawns: blankset,
         knights: function() {
             return {
                 individual: [
@@ -196,6 +203,8 @@ function getPieceMovesets(slideLimit = Infinity) {
             };
         },
     };
+    
+    return alltypes.map(type => movesets[type]);
 }
 
 export default {

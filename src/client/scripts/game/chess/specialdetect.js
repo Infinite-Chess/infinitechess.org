@@ -4,6 +4,7 @@ import gamefileutility from './gamefileutility.js';
 import organizedlines from './organizedlines.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import gamerules from '../variants/gamerules.js';
@@ -86,8 +87,8 @@ function kings(gamefile, coords, color, individualMoves) {
     const rightCoord = [right, y];
     const leftPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, leftCoord);
     const rightPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, rightCoord);
-    const leftColor = leftPieceType ? colorutil.getPieceColorFromType(leftPieceType) : undefined;
-    const rightColor = rightPieceType ? colorutil.getPieceColorFromType(rightPieceType) : undefined;
+    const leftColor = leftPieceType ? typeutil.getPieceColorFromType(leftPieceType) : undefined;
+    const rightColor = rightPieceType ? typeutil.getPieceColorFromType(rightPieceType) : undefined;
 
     if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns')) leftLegal = false;
     if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns')) rightLegal = false;
@@ -171,7 +172,7 @@ function pawns(gamefile, coords, color, individualMoves) {
         if (!pieceAtCoords) continue; // No piece, skip
 
         // There is a piece. Make sure it's a different color
-        const colorOfPiece = colorutil.getPieceColorFromType(pieceAtCoords);
+        const colorOfPiece = typeutil.getPieceColorFromType(pieceAtCoords);
         if (color === colorOfPiece) continue; // Same color, don't add the capture
 
         // Make sure it isn't a void
@@ -225,7 +226,7 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
     // cannot capture nothing en passant
     if (!capturedPieceType) return;
     // cannot capture own piece en passant
-    if (color === colorutil.getPieceColorFromType(capturedPieceType)) return;
+    if (color === typeutil.getPieceColorFromType(capturedPieceType)) return;
 
     // It is capturable en passant!
 
@@ -258,10 +259,10 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
  * @returns {boolean}
  */
 function isPawnPromotion(gamefile, type, coordsClicked) {
-    if (!type.startsWith('pawns')) return false;
+    if (!typeutil.isRawType(type, 'pawns')) return false;
     if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
-    const color = colorutil.getPieceColorFromType(type);
+    const color = typeutil.getPieceColorFromType(type);
     const promotionRank = color === 'white' ? gamefile.gameRules.promotionRanks[0]
         : color === 'black' ? gamefile.gameRules.promotionRanks[1]
             : undefined; // Can neutral pawns promote???

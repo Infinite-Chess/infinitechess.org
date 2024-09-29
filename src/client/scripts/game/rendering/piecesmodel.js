@@ -114,7 +114,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
         const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(pieceType, rotation);
 
         if (colorArgs) {
-            const pieceColor = colorutil.getPieceColorFromType(pieceType);
+            const pieceColor = typeutil.getPieceColorFromType(pieceType);
             const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
             // var's are FUNCTION-scoped!
             /* eslint-disable no-var */
@@ -332,7 +332,7 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
     let data;
     if (gamefile.mesh.usingColoredTextures) {
         const colorArgs = options.getPieceRegenColorArgs();
-        const pieceColor = colorutil.getPieceColorFromType(type);
+        const pieceColor = typeutil.getPieceColorFromType(type);
         const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
         const [r,g,b,a] = colorArray;
 

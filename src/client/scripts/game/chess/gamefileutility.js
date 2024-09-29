@@ -77,7 +77,7 @@ function forEachPieceInPiecesByType(callback, typeList, ignoreVoids, gamefile) {
     for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
 
         const thisNeutralType = typeutil.colorsTypes.neutral[i];
-        if (ignoreVoids && thisNeutralType.startsWith('voids')) continue;
+        if (ignoreVoids && thisNeutralType === 0) continue;
 
         const theseNeutralPieces = typeList[thisNeutralType];
 
@@ -110,7 +110,7 @@ function forEachPieceInKeysState(callback, state, { ignoreNeutrals, ignoreVoids 
     } else if (ignoreVoids) {
         for (const key in state) {
             const thisPieceType = state[key];
-            if (thisPieceType.startsWith('voids')) continue;
+            if (thisPieceType === 0) continue;
             // First it inserts the type of piece into the callback, then coords of piece 
             callback(thisPieceType, coordutil.getCoordsFromKey(key)); 
         }
@@ -270,28 +270,19 @@ function setTerminationMetadata(gamefile) {
 function getJumpingRoyalCoords(gamefile, color) {
     const state = gamefile.ourPieces;
     const jumpingRoyals = typeutil.jumpingRoyals;
-
+    const colorOffset = typeutil.getColorExtensionFromColor(color);
     const royalCoordsList = []; // A running list of all the jumping royals of this color
 
-    if (color === 'white') {
-        for (let i = 0; i < jumpingRoyals.length; i++) {
-            const thisRoyalType = jumpingRoyals[i] + 'W';
-            if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
-            state[thisRoyalType].forEach(coords => { // [x,y]
-                if (!coords) return;
-                royalCoordsList.push(coords);
-            });
-        }
-    } else if (color === 'black') {
-        for (let i = 0; i < jumpingRoyals.length; i++) {
-            const thisRoyalType = jumpingRoyals[i] + 'B';
-            if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
-            state[thisRoyalType].forEach(coords => { // [x,y]
-                if (!coords) return;
-                royalCoordsList.push(coords);
-            });
-        }
-    } else console.error(`Cannot get jumping royal coords from a side with color ${color}!`);
+    if (!colorutil.validColors_NoNeutral.includes(color)) return console.error(`Cannot fetch jumping royal coords when color is undefined!`);;
+
+    for (let i = 0; i < jumpingRoyals.length; i++) {
+        const thisRoyalType = jumpingRoyals[i] + colorOffset;
+        if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
+        state[thisRoyalType].forEach(coords => { // [x,y]
+            if (!coords) return;
+            royalCoordsList.push(coords);
+        });
+    }
 
     return royalCoordsList;
 }
@@ -418,7 +409,7 @@ function calcPieceIndexInAllPieces(gamefile, piece) {
     function iterate(listType) {
         if (foundPiece) return;
 
-        if (listType.startsWith('voids')) return; // SKIP Voids!
+        if (listType === 0) return; // SKIP Voids!
 
         const list = gamefile.ourPieces[listType];
 
@@ -444,7 +435,7 @@ function calcPieceIndexInAllPieces(gamefile, piece) {
  */
 function getRoyalCoords(gamefile, color) {
     const royals = typeutil.royals; // ['kings', ...]
-    const WorB = colorutil.getColorExtensionFromColor(color);
+    const WorB = typeutil.getColorExtensionFromColor(color);
 
     const piecesByType = gamefile.ourPieces;
     const royalCoords = [];
@@ -476,9 +467,9 @@ function getRoyalCountOfColor(piecesByKey, color) {
     let royalCount = 0;
     for (const key in piecesByKey) {
         const type = piecesByKey[key];
-        const thisColor = colorutil.getPieceColorFromType(type);
+        const thisColor = typeutil.getPieceColorFromType(type);
         if (!thisColor.endsWith(WorB)) return; // Different color
-        const strippedType = colorutil.trimColorExtensionFromType(type);
+        const strippedType = typeutil.trimColorExtensionFromType(type);
         if (!royals.includes(strippedType)) continue; // Not royalty
         royalCount++;
     }

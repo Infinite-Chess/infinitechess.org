@@ -246,7 +246,7 @@ function getColorOfType(type) {
     const colorArgs = getPieceRegenColorArgs(); // { white, black, neutral }
     if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
 
-    const pieceColor = colorutil.getPieceColorFromType(type); // white/black/neutral
+    const pieceColor = typeutil.getPieceColorFromType(type); // white/black/neutral
     const color = colorArgs[pieceColor]; // [r,g,b,a]
 
     return {

@@ -9,14 +9,15 @@
 /** All colors that are compatible with the game, EXCLUDING 'neutral'. */
 const validColors_NoNeutral = ['white','black'];
 const colorOfNeutrals = 'neutral';
+const colorOfRaw = 'raw';
 /** All color-extensions that are compatible with the game, EXCLUDING neutrals. */
 const validColorExtensions_NoNeutral = ['W','B'];
 const colorExtensionOfNeutrals = 'N';
-
+const colorExtensionOfRaw = '!'
 /** All colors that are compatible with the game. */
-const validColors = [colorOfNeutrals, ...validColors_NoNeutral];
+const validColors = [colorOfNeutrals, colorOfRaw, ...validColors_NoNeutral];
 /** All color-extensions that are compatible with the game. */
-const validColorExtensions = [colorExtensionOfNeutrals, ...validColorExtensions_NoNeutral];
+const validColorExtensions = [colorExtensionOfNeutrals, colorExtensionOfRaw, ...validColorExtensions_NoNeutral];
 
 /**
  * Checks if a given color is a valid color.

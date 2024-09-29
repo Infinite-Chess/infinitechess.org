@@ -17,24 +17,30 @@ import colorutil from "./colorutil.js";
 const types = ['kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'knights', 'guards', 'rooks', 'bishops', 'pawns'];
 /** All neutral types the game is compatible with. */
 const neutralTypes = ['voids', 'obstacles'];
-
+const alltypes = [...neutralTypes, ...types];
 /** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
-const jumpingRoyals = ['kings', 'royalCentaurs'];
+let jumpingRoyals = ['kings', 'royalCentaurs'];
 /** A list of the royals that are NOT compatible with checkmate, but must use royalcapture. */
 const slidingRoyals = ['royalQueens'];
 /** A list of the royal pieces, without the color appended. */
-const royals = [...jumpingRoyals, ...slidingRoyals];
+let royals = [...jumpingRoyals, ...slidingRoyals];
+const intTypes = {};
+alltypes.forEach((type, index) => intTypes[type] = index);
 
+royals = royals.map(type => intTypes[type]);
+jumpingRoyals = jumpingRoyals.map(type => intTypes[type]);
 /**
  * An object containing each color in the game, and all piece types associated with that color:
  * `{ white: ['kingsW', 'queensW'...], black: ['kingsB', 'queensB'...], neutral: ['obstaclesN','voidsN'] }`
  */
 const colorsTypes = {};
 colorutil.validColors_NoNeutral.forEach((color, index) => {
-    const colorExtension = colorutil.validColorExtensions_NoNeutral[index];
-    colorsTypes[color] = types.map(type => type + colorExtension);
+    const colorExtension = (index + 1) * types.length;
+    colorsTypes[color] = [...types.keys()].map(type => type + colorExtension + neutralTypes.length);
 });
-colorsTypes.neutral = neutralTypes.map(type => type + colorutil.colorExtensionOfNeutrals);
+colorsTypes.neutral = [...neutralTypes.keys()];
+
+console.log(alltypes.length);
 
 /**
  * 
@@ -43,11 +49,45 @@ colorsTypes.neutral = neutralTypes.map(type => type + colorutil.colorExtensionOf
  */
 function getNumFromType(type) {
     const c = colorutil.getColorIndex(type);
-    type = colorutil.trimColorExtensionFromType(type);
+    type = typeutil.trimColorExtensionFromType(type);
     if (c === 0) {
         return neutralTypes.indexOf(type);
     }
     return (c - 1) * types.length + types.indexOf() + neutralTypes.length;
+}
+
+/**
+ * 
+ * @param {Number} type
+ * @returns {Number}
+ */
+function trimColorExtensionFromType(type) {
+    if (type < neutralTypes.length) {
+        return type;
+    }
+    type -= neutralTypes.length;
+    type %= types.length;
+    type += neutralTypes.length;
+    if (type < 0) throw new Error("type is less than 0");
+    return type;
+}
+
+function getColorExtensionFromColor(color) {
+    const ext = colorutil.validColors.indexOf(color);
+    if (ext <= 1) return 0;
+    return (ext - 1) * types.length;
+}
+
+function getPieceColorFromType(type) {
+    if (type < neutralTypes.length) {
+        return colorutil.validColors[0];
+    }
+    type -= neutralTypes.length;
+    return colorutil.validColors[~~(type / types.length) + 1];
+}
+
+function isRawType(type, rawName) {
+    return trimColorExtensionFromType(type) === intTypes[rawName];
 }
 
 /**
@@ -60,8 +100,8 @@ function getTypeFromNum(num) {
         return neutralTypes[num] + colorutil.colorExtensionOfNeutrals;
     }
     num -= neutralTypes.length;
-    const ptype = types[num % colorutil.validColors_NoNeutral.length];
-    const pcolor = colorutil.validColorExtensions_NoNeutral[num / colorutil.validColorExtensions_NoNeutral.length];
+    const ptype = types[num % types.length];
+    const pcolor = colorutil.validColorExtensions_NoNeutral[~~(num / types.length) - 1];
     return ptype + pcolor;
 }
 
@@ -77,7 +117,7 @@ function forEachPieceType(callback, { ignoreNeutrals, ignoreVoids } = {}) { // C
     Object.keys(colorsTypes).reverse().forEach(color => {
         if (ignoreNeutrals && color === colorutil.colorOfNeutrals) return; // Skip 'neutral' if ignoreNeutrals is true
         colorsTypes[color].forEach(type => {
-            if (ignoreVoids && type.startsWith('voids')) return; // Skip voids if ignoreVoids is true
+            if (ignoreVoids && type === 0) return; // Skip voids if ignoreVoids is true
             callback(type);
         });
     });
@@ -95,7 +135,7 @@ async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignore
     for (const color of Object.keys(colorsTypes).reverse()) {
         if (ignoreNeutrals && color === colorutil.colorOfNeutrals) continue; // Skip 'neutral' if ignoreNeutrals is true
         for (const type of colorsTypes[color]) {
-            if (ignoreVoids && type.startsWith('voids')) continue; // Skip voids if ignoreVoids is true
+            if (ignoreVoids && type === 0) continue; // Skip voids if ignoreVoids is true
             await callback(type);
         }
     }
@@ -113,8 +153,14 @@ function forEachPieceTypeOfColor(color, callback) {
 export default {
     colorsTypes,
     royals,
+    intTypes,
     jumpingRoyals,
     forEachPieceType,
     forEachPieceType_Async,
     forEachPieceTypeOfColor,
+    trimColorExtensionFromType,
+    getColorExtensionFromColor,
+    getPieceColorFromType,
+    getTypeFromNum,
+    isRawType,
 };

@@ -6,7 +6,7 @@ import formatconverter from './formatconverter.js';
 import specialdetect from './specialdetect.js';
 import specialmove from './specialmove.js';
 import movesets from './movesets.js';
-import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 import coordutil from '../misc/coordutil.js';
 import variant from '../variants/variant.js';
 // Import End
@@ -58,9 +58,15 @@ function initExistingTypes(gamefile) {
     // Promotion types already have teams stripped
     const rawtypes = new Set(promotiontypes);
     for (const tpiece of teamtypes) {
-        rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
+        if (typeutil.getPieceColorFromType(tpiece) === "raw") throw new Error(`Piece ${tpiece} is raw`);
+        rawtypes.add(typeutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
     }
 
+    for (const type of rawtypes) {
+        if (type < 0) throw new Error('Type is negative. Possibly due to type list desync');
+        if (type === undefined) throw new Error("Type is undefined, how???????");
+    }
+    console.log(rawtypes);
     gamefile.startSnapshot.existingTypes = rawtypes;
 }
 

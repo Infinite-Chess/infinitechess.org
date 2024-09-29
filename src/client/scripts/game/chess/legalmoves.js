@@ -6,7 +6,6 @@ import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import math from '../misc/math.js';
 import checkdetection from './checkdetection.js';
-import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
@@ -66,7 +65,7 @@ function genVicinity(gamefile) {
             // Make sure the key's already initialized
             if (!vicinity[key]) vicinity[key] = [];
 
-            const pieceTypeConcat = colorutil.trimColorExtensionFromType(thisPieceType); // Remove the 'W'/'B' from end of type
+            const pieceTypeConcat = typeutil.trimColorExtensionFromType(thisPieceType); // Remove the 'W'/'B' from end of type
 
             // Make sure the key contains the piece type that can capture from that distance
             if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat);
@@ -82,7 +81,7 @@ function genVicinity(gamefile) {
  * @returns {Object} A moveset object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
  */
 function getPieceMoveset(gamefile, pieceType) {
-    pieceType = colorutil.trimColorExtensionFromType(pieceType); // Remove the 'W'/'B' from end of type
+    pieceType = typeutil.trimColorExtensionFromType(pieceType); // Remove the 'W'/'B' from end of type
     const movesetFunc = gamefile.pieceMovesets[pieceType];
     if (!movesetFunc) return {}; // Piece doesn't have a specified moveset (could be neutral). Return empty.
     return movesetFunc(); // Calling these parameters as a function returns their moveset.
@@ -99,8 +98,8 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
     if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
     const coords = piece.coords;
     const type = piece.type;
-    const trimmedType = colorutil.trimColorExtensionFromType(type);
-    const color = colorutil.getPieceColorFromType(type); // Color of piece calculating legal moves of
+    const trimmedType = typeutil.trimColorExtensionFromType(type);
+    const color = typeutil.getPieceColorFromType(type); // Color of piece calculating legal moves of
 
     // if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
 
@@ -167,7 +166,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
         if (!pieceAtSquare) continue; // Next move if there is no square here
 
         // Do the colors match?
-        const pieceAtSquareColor = colorutil.getPieceColorFromType(pieceAtSquare);
+        const pieceAtSquareColor = typeutil.getPieceColorFromType(pieceAtSquare);
 
         // If they match colors, move is illegal because we cannot capture friendly pieces. Remove the move.
         // ALSO remove if it's a void!
@@ -201,7 +200,7 @@ function slide_CalcLegalLimit(line, direction, slideMoveset, coords, color) {
         // What are the coords of this piece?
         const thisPiece = line[i]; // { type, coords }
         const thisPieceSteps = Math.floor((thisPiece.coords[axis] - coords[axis]) / direction[axis]);
-        const thisPieceColor = colorutil.getPieceColorFromType(thisPiece.type);
+        const thisPieceColor = typeutil.getPieceColorFromType(thisPiece.type);
         const isFriendlyPiece = color === thisPieceColor;
         const isVoid = thisPiece.type === 'voidsN';
         // Is the piece to the left of us or right of us?
@@ -297,7 +296,7 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
     }
 
     // Make sure it's the same color as your opponent.
-    const colorOfPieceMoved = colorutil.getPieceColorFromType(piecemoved.type);
+    const colorOfPieceMoved = typeutil.getPieceColorFromType(piecemoved.type);
     if (colorOfPieceMoved !== gamefile.whosTurn) {
         console.log(`Opponent's move is illegal because you can't move a non-friendly piece. Move: ${JSON.stringify(moveCopy)}`);
         return rewindGameAndReturnReason("Can't move a non-friendly piece.");
@@ -305,16 +304,16 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 
     // If there is a promotion, make sure that's legal
     if (moveCopy.promotion) {
-        if (!piecemoved.type.startsWith('pawns')) {
+        if (!typeutil.isRawType(piecemoved.type, 'pawns')) {
             console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveCopy)}`);
             return rewindGameAndReturnReason("Can't promote a non-pawn.");
         }
-        const colorPromotedTo = colorutil.getPieceColorFromType(moveCopy.promotion);
+        const colorPromotedTo = typeutil.getPieceColorFromType(moveCopy.promotion);
         if (gamefile.whosTurn !== colorPromotedTo) {
             console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveCopy)}`);
             return rewindGameAndReturnReason("Can't promote to opposite color.");
         }
-        const strippedPromotion = colorutil.trimColorExtensionFromType(moveCopy.promotion);
+        const strippedPromotion = typeutil.trimColorExtensionFromType(moveCopy.promotion);
         if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(strippedPromotion)) {
             console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveCopy)}`);
             return rewindGameAndReturnReason('Specified promotion is illegal.');
@@ -338,7 +337,7 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
     // Only do so if the win condition is decisive (exclude win conditions declared by the server,
     // such as time, aborted, resignation, disconnect)
     if (claimedGameConclusion === false || winconutil.isGameConclusionDecisive(claimedGameConclusion)) {
-        const color = colorutil.getPieceColorFromType(piecemoved.type);
+        const color = typeutil.getPieceColorFromType(piecemoved.type);
         const infoAboutSimulatedMove = movepiece.simulateMove(gamefile, moveCopy, color, { doGameOverChecks: true }); // { isCheck, gameConclusion }
         if (infoAboutSimulatedMove.gameConclusion !== claimedGameConclusion) {
             console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${infoAboutSimulatedMove.gameConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`);
@@ -397,7 +396,8 @@ function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, c
  */
 function hasAtleast1Move(moves) { // { individual, horizontal, vertical, ... }
     
-    if (moves.individual.length > 0) return true;
+    if (moves.individual && moves.individual.length > 0) return true;
+
     for (const line in moves.sliding)
         if (doesSlideHaveWidth(moves.sliding[line])) return true;
 

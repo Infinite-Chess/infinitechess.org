@@ -207,11 +207,11 @@ function addMoreUndefineds(gamefile, { regenModel = true, log = false } = {}) {
 function isTypeATypeWereAppendingUndefineds(gamefile, type) {
     if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
-    const color = colorutil.getPieceColorFromType(type);
+    const color = typeutil.getPieceColorFromType(type);
 
     if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
     
-    const trimmedType = colorutil.trimColorExtensionFromType(type);
+    const trimmedType = typeutil.trimColorExtensionFromType(type);
     return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
 }
 

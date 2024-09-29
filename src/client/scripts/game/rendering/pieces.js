@@ -11,6 +11,7 @@ import texture from './texture.js';
 import onlinegame from '../misc/onlinegame.js';
 import options from './options.js';
 import buffermodel from './buffermodel.js';
+import typeutil from '../misc/typeutil.js';
 // Import End
 
 "use strict";
@@ -168,6 +169,10 @@ function getSpritesheetDataPieceWidth() {
 }
 
 function getSpritesheetDataTexLocation(type) {
+    if (typeof type === 'number') {
+        type = typeutil.getTypeFromNum(type);
+        
+    }
     return spritesheetData[type];
 }
 

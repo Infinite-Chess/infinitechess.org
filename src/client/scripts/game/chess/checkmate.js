@@ -196,7 +196,7 @@ function detectRepetitionDraw(gamefile) {
         const thisMove = moveList[index];
 
         // If the move was a pawn push or capture, no further equal positions, terminate the loop.
-        if (thisMove.captured || thisMove.type.startsWith('pawns')) break;
+        if (thisMove.captured || typeutil.isRawType(thisMove.type,'pawns') ) break;
 
         // If this move was undo'd, there would be a DEFICIT on its endCoords
         const endCoords = thisMove.endCoords;

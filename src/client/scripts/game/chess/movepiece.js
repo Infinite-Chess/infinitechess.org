@@ -14,6 +14,7 @@ import movesscript from './movesscript.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
@@ -59,7 +60,7 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
     const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
     if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
     move.type = piece.type;
-    const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
+    const trimmedType = typeutil.trimColorExtensionFromType(move.type); // "queens"
     
     storeRewindInfoOnMove(gamefile, move, piece.index, { simulated }); // Keep track if important stuff to remember, for rewinding the game if we undo moves
 
@@ -259,7 +260,7 @@ function incrementMoveRule(gamefile, typeMoved, wasACapture) {
     if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
     
     // Reset if it was a capture or pawn movement
-    if (wasACapture || typeMoved.startsWith('pawns')) gamefile.moveRuleState = 0;
+    if (wasACapture || typeutil.isRawType(typeMoved, 'pawns')) gamefile.moveRuleState = 0;
     else gamefile.moveRuleState++;
 }
 
@@ -436,7 +437,7 @@ function rewindGameToIndex(gamefile, moveIndex, { removeMove = true, updateData 
 function rewindMove(gamefile, { updateData = true, removeMove = true, animate = true } = {}) {
 
     const move = movesscript.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
-    const trimmedType = colorutil.trimColorExtensionFromType(move.type);
+    const trimmedType = typeutil.trimColorExtensionFromType(move.type);
 
     let isSpecialMove = false;
     if (gamefile.specialUndos[trimmedType]) isSpecialMove = gamefile.specialUndos[trimmedType](gamefile, move, { updateData, animate });
