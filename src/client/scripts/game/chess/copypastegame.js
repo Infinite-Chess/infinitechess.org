@@ -162,7 +162,7 @@ function verifyLongformat(longformat) {
     if (!longformat.gameRules.winConditions) throw new Error("Pasted game doesn't specify winConditions! This is an error of the format converter, it should always return default win conditions if it's not specified in the pasted ICN.");
     if (!verifyWinConditions(longformat.gameRules.winConditions)) return false;
     if (longformat.gameRules.promotionRanks && !longformat.gameRules.promotionsAllowed) throw new Error("Pasted game specifies promotion lines, but no promotions allowed! This is an error of the format converter, it should always return default promotions if it's not specified in the pasted ICN.");
-    if (!longformat.gameRules.turnOrder) throw new Error("Pasted game doesn't specify turn order! This is an error of the format converter, it should always return default turn order if it's not specified in the pasted ICN.");
+    if (!longformat.gameRules.turnOrder) throw new Error("Pasted game doesn't specify turn order! This is either an error of the format converter (it should always return default turn order if it's not specified in the pasted ICN), or the old gamefile converter to the new format.");
 
     return true;
 }
