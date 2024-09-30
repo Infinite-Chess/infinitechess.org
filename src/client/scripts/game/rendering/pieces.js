@@ -13,6 +13,11 @@ import options from './options.js';
 import buffermodel from './buffermodel.js';
 // Import End
 
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ */
+
 "use strict";
 
 /**
@@ -38,14 +43,19 @@ function renderPiecesInGame(gamefile) {
 	miniimage.render();
 }
 
+/**
+ * 
+ * @param {gamefile} gamefile 
+ * @returns 
+ */
 function renderPieces(gamefile) {
 	if (gamefile.mesh == null) return;
 	if (gamefile.mesh.model == null) return;
 	if (movement.isScaleLess1Pixel_Virtual() && !miniimage.isDisabled()) return;
 
-	// Do we need to regen the pieces model? Are we out of bounds of our regenRange?
+	// Do we need to regen the pieces model? Are we out of bounds of our REGEN_RANGE?
 	if (!movement.isScaleLess1Pixel_Virtual()
-        && board.isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset, piecesmodel.regenRange)) piecesmodel.shiftPiecesModel(gamefile);
+        && board.isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset, piecesmodel.REGEN_RANGE)) piecesmodel.shiftPiecesModel(gamefile);
 
 	const boardPos = movement.getBoardPos();
 	const position = [ // Translate

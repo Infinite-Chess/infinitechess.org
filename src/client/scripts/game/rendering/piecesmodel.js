@@ -44,7 +44,7 @@ const POINTS_PER_SQUARE = 6; // Number of vertices used to render a square (2 tr
  * 10,000 was arbitrarily chose because once you reach uniform translations much bigger
  * than that, the rendering of the pieces start to get gittery.
  */
-const regenRange = 10_000;
+const REGEN_RANGE = 10_000;
 
 
 /**
@@ -67,7 +67,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	// Whenever you move 10,000 tiles away, the piece rendering starts to get gittery, SO regen the model with an offset! No more gittering!
 	// Do we need an offset? Calculate the nearest 10,000
 
-	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), regenRange);
+	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
 
 	// How many indeces will we need?
 	const coinCount = coin.getCoinCount();
@@ -413,12 +413,12 @@ function printbufferdataOnIndex(gamefile, index) {
 	}
 }
 
-// Shifts every piece in the model to the nearest regenRange. 
+// Shifts every piece in the model to the nearest REGEN_RANGE. 
 
 /**
  * Shifts the data linearly within the gamefile's mesh so that it's closer to the
  * origin, requiring less severe uniform translations upon rendering.
- * The amount it is shifted depends on the nearest `regenRange`.
+ * The amount it is shifted depends on the nearest `REGEN_RANGE`.
  * ~50% faster than using `regenPiecesModel()` to regenerate the entire mesh.
  * @param {gamefile} gamefile - The gamefile
  */
@@ -428,7 +428,7 @@ function shiftPiecesModel(gamefile) {
 
 	// console.log('Begin shifting model..')
 
-	const newOffset = math.roundPointToNearestGridpoint(movement.getBoardPos(), regenRange);
+	const newOffset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
 
 	const diffXOffset = gamefile.mesh.offset[0] - newOffset[0];
 	const diffYOffset = gamefile.mesh.offset[1] - newOffset[1];
@@ -483,7 +483,7 @@ function shiftPiecesModel(gamefile) {
  * @param {boolean} [ignoreGenerating] Optional. If true, the function will run regardless if the mesh is currently being calculated. This is useful to prevent running the function twice at the same time. Default: *false*
  */
 async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
-	if (gamefile.mesh.model == null) return;
+	if (gamefile.mesh.model === undefined) return;
 	if (gamefile.mesh.isGenerating && !ignoreGenerating) return;
 	gamefile.mesh.locked++;
 	gamefile.mesh.isGenerating++;
@@ -709,6 +709,7 @@ function eraseRotatedModel(gamefile) {
 
 export default {
 	POINTS_PER_SQUARE,
+	REGEN_RANGE,
 	regenModel,
 	movebufferdata,
 	deletebufferdata,
