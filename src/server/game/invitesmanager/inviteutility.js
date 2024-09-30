@@ -31,7 +31,7 @@ import jsutil from '../../../client/scripts/game/misc/jsutil.js';
  * @returns {boolean}
  */
 function isInvitePrivate(invite) {
-    return invite.publicity === 'private';
+	return invite.publicity === 'private';
 }
 
 /**
@@ -40,7 +40,7 @@ function isInvitePrivate(invite) {
  * @returns {boolean}
  */
 function isInvitePublic(invite) {
-    return invite.publicity === 'public';
+	return invite.publicity === 'public';
 }
 
 /**
@@ -50,8 +50,8 @@ function isInvitePublic(invite) {
  * @returns {Invite}
  */
 function makeInviteSafe(invite) {
-    delete invite.owner;
-    return invite;
+	delete invite.owner;
+	return invite;
 }
 
 /**
@@ -61,8 +61,8 @@ function makeInviteSafe(invite) {
  * @returns {Invite}
  */
 function safelyCopyInvite(invite) {
-    const inviteDeepCopy = jsutil.deepCopyObject(invite);
-    return makeInviteSafe(inviteDeepCopy);
+	const inviteDeepCopy = jsutil.deepCopyObject(invite);
+	return makeInviteSafe(inviteDeepCopy);
 }
 
 /**
@@ -72,16 +72,16 @@ function safelyCopyInvite(invite) {
  * @returns {boolean}
  */
 function isInviteOurs(ws, invite) {
-    return ws.metadata.user && ws.metadata.user === invite.owner.member
+	return ws.metadata.user && ws.metadata.user === invite.owner.member
         || ws.metadata['browser-id'] && ws.metadata['browser-id'] === invite.owner.browser;
 }
 
 //-------------------------------------------------------------------------------------------
 
 export {
-    isInvitePrivate,
-    isInvitePublic,
-    makeInviteSafe,
-    safelyCopyInvite,
-    isInviteOurs,
+	isInvitePrivate,
+	isInvitePublic,
+	makeInviteSafe,
+	safelyCopyInvite,
+	isInviteOurs,
 };

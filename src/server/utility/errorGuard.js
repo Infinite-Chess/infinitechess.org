@@ -15,14 +15,14 @@ import { logEvents } from '../middleware/logEvents.js';
  * @returns {boolean} true if the callback executed without error.
  */
 function executeSafely(callback, errorMessage, ...args) {
-    try {
-        callback(...args);
-    } catch (e) {
-        const errText = `${errorMessage}\n${e.stack}`;
-        logEvents(errText, 'errLog.txt', { print: true });
-        return false; // Yes error
-    }
-    return true; // No error
+	try {
+		callback(...args);
+	} catch (e) {
+		const errText = `${errorMessage}\n${e.stack}`;
+		logEvents(errText, 'errLog.txt', { print: true });
+		return false; // Yes error
+	}
+	return true; // No error
 }
 
 /**
@@ -35,17 +35,17 @@ function executeSafely(callback, errorMessage, ...args) {
  * @returns {Promise<boolean>} true if the callback executed without error.
  */
 async function executeSafely_async(callback, errorMessage, ...args) {
-    try {
-        await callback(...args);
-    } catch (e) {
-        const errText = `${errorMessage}\n${e.stack}`;
-        await logEvents(errText, 'errLog.txt', { print: true });
-        return false; // Yes error
-    }
-    return true; // No error
+	try {
+		await callback(...args);
+	} catch (e) {
+		const errText = `${errorMessage}\n${e.stack}`;
+		await logEvents(errText, 'errLog.txt', { print: true });
+		return false; // Yes error
+	}
+	return true; // No error
 }
 
 export {
-    executeSafely,
-    executeSafely_async
+	executeSafely,
+	executeSafely_async
 };

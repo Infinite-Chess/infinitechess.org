@@ -37,74 +37,74 @@ let visibilityWeight = 0;
  * @param {number} [durationSecs] The duration to show the move number. Default: 2.5
  */
 function showMoves(durationSecs = 2.5) {
-    if (config.VIDEO_MODE) return;
+	if (config.VIDEO_MODE) return;
 
-    visibilityWeight++;
+	visibilityWeight++;
 
-    setTextContentOfMoves();
-    setTimeout(hideMoves, durationSecs * 1000);
+	setTextContentOfMoves();
+	setTimeout(hideMoves, durationSecs * 1000);
 
-    if (visibilityWeight === 1) style.revealElement(elementStatusMoves);
+	if (visibilityWeight === 1) style.revealElement(elementStatusMoves);
 }
 
 function hideMoves() {
-    visibilityWeight--;
-    if (visibilityWeight === 0) style.hideElement(elementStatusMoves);
+	visibilityWeight--;
+	if (visibilityWeight === 0) style.hideElement(elementStatusMoves);
 }
 
 function setTextContentOfMoves( ) {
 
-    const currentPly = game.getGamefile().moveIndex + 1;
-    const totalPlyCount = movesscript.getPlyCount(game.getGamefile().moves);
+	const currentPly = game.getGamefile().moveIndex + 1;
+	const totalPlyCount = movesscript.getPlyCount(game.getGamefile().moves);
 
-    elementStatusMoves.textContent = `${translations.move_counter} ${currentPly}/${totalPlyCount}`;
+	elementStatusMoves.textContent = `${translations.move_counter} ${currentPly}/${totalPlyCount}`;
 }
 
 function updateStatsCSS() {
-    element_Statuses.style = `top: ${camera.getPIXEL_HEIGHT_OF_TOP_NAV()}px`;
+	element_Statuses.style = `top: ${camera.getPIXEL_HEIGHT_OF_TOP_NAV()}px`;
 }
 
 function showPiecesMesh() {
-    if (config.VIDEO_MODE) return;
-    style.revealElement(elementStatusPiecesMesh);
+	if (config.VIDEO_MODE) return;
+	style.revealElement(elementStatusPiecesMesh);
 }
 
 function updatePiecesMesh(percent) {
-    const percentString = math.decimalToPercent(percent);
-    elementStatusPiecesMesh.textContent = `${translations.constructing_mesh} ${percentString}`;
+	const percentString = math.decimalToPercent(percent);
+	elementStatusPiecesMesh.textContent = `${translations.constructing_mesh} ${percentString}`;
 }
 
 function hidePiecesMesh() {
-    style.hideElement(elementStatusPiecesMesh);
+	style.hideElement(elementStatusPiecesMesh);
 }
 
 function showFPS() {
-    if (config.VIDEO_MODE) return;
-    style.revealElement(elementStatusFPS);
+	if (config.VIDEO_MODE) return;
+	style.revealElement(elementStatusFPS);
 }
 
 function hideFPS() {
-    style.hideElement(elementStatusFPS);
+	style.hideElement(elementStatusFPS);
 }
 
 function updateFPS(fps) {
-    if (!options.isFPSOn()) return;
-    const truncated = fps | 0; // Bitwise operation that quickly rounds towards zero
-    elementStatusFPS.textContent = `FPS: ${truncated}`;
+	if (!options.isFPSOn()) return;
+	const truncated = fps | 0; // Bitwise operation that quickly rounds towards zero
+	elementStatusFPS.textContent = `FPS: ${truncated}`;
 }
 
 function showRotateMesh() {
-    if (config.VIDEO_MODE) return;
-    style.revealElement(elementStatusRotateMesh);
+	if (config.VIDEO_MODE) return;
+	style.revealElement(elementStatusRotateMesh);
 }
 
 function updateRotateMesh(percent) {
-    const percentString = math.decimalToPercent(percent);
-    elementStatusRotateMesh.textContent = `${translations.rotating_mesh} ${percentString}`;
+	const percentString = math.decimalToPercent(percent);
+	elementStatusRotateMesh.textContent = `${translations.rotating_mesh} ${percentString}`;
 }
 
 function hideRotateMesh() {
-    style.hideElement(elementStatusRotateMesh);
+	style.hideElement(elementStatusRotateMesh);
 }
 
 // NO LONGER USED. These were for the aynchronious checkmate algorithm.
@@ -119,15 +119,15 @@ function hideRotateMesh() {
 // },
 
 export default {
-    showMoves,
-    updateStatsCSS,
-    showPiecesMesh,
-    updatePiecesMesh,
-    hidePiecesMesh,
-    showFPS,
-    hideFPS,
-    updateFPS,
-    showRotateMesh,
-    updateRotateMesh,
-    hideRotateMesh,
+	showMoves,
+	updateStatsCSS,
+	showPiecesMesh,
+	updatePiecesMesh,
+	hidePiecesMesh,
+	showFPS,
+	hideFPS,
+	updateFPS,
+	showRotateMesh,
+	updateRotateMesh,
+	hideRotateMesh,
 };

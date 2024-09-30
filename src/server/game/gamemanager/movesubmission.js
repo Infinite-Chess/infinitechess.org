@@ -33,66 +33,66 @@ import winconutil from '../../../client/scripts/game/misc/winconutil.js';
  * @param {Object} messageContents - An object containing the properties `move`, `moveNumber`, and `gameConclusion`.
  */
 function submitMove(ws, game, messageContents) {
-    // They can't submit a move if they aren't subscribed to a game
-    if (!ws.metadata.subscriptions.game) {
-        console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.");
-        ws.metadata.sendmessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.");
-        return;
-    }
+	// They can't submit a move if they aren't subscribed to a game
+	if (!ws.metadata.subscriptions.game) {
+		console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.");
+		ws.metadata.sendmessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.");
+		return;
+	}
 
-    if (!game) {
-        console.error(`Cannot submit move when player does not belong in a game! Game of id "${ws.metadata.subscriptions.game.id}" is deleted!`);
-        return ws.metadata.sendmessage(ws, "general", "printerror", "Server error. Cannot submit move. This game does not exist.");
-    }
+	if (!game) {
+		console.error(`Cannot submit move when player does not belong in a game! Game of id "${ws.metadata.subscriptions.game.id}" is deleted!`);
+		return ws.metadata.sendmessage(ws, "general", "printerror", "Server error. Cannot submit move. This game does not exist.");
+	}
 
-    // Their subscription info should tell us what game they're in, including the color they are.
-    const color = ws.metadata.subscriptions.game.color;
-    const opponentColor = colorutil.getOppositeColor(color);
+	// Their subscription info should tell us what game they're in, including the color they are.
+	const color = ws.metadata.subscriptions.game.color;
+	const opponentColor = colorutil.getOppositeColor(color);
 
-    // If the game is already over, don't accept it.
-    // Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
-    // The ACTUAL game conclusion SHOULD already be on the way to them so....
-    if (gameutility.isGameOver(game)) return; 
+	// If the game is already over, don't accept it.
+	// Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
+	// The ACTUAL game conclusion SHOULD already be on the way to them so....
+	if (gameutility.isGameOver(game)) return; 
 
-    // Make sure the move number matches up. If not, they're out of sync, resync them!
-    const expectedMoveNumber = game.moves.length + 1;
-    if (messageContents.moveNumber !== expectedMoveNumber) {
-        const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
-        logEvents(errString, 'hackLog.txt', { print: true });
-        return resyncToGame(ws, game);
-    }
+	// Make sure the move number matches up. If not, they're out of sync, resync them!
+	const expectedMoveNumber = game.moves.length + 1;
+	if (messageContents.moveNumber !== expectedMoveNumber) {
+		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		logEvents(errString, 'hackLog.txt', { print: true });
+		return resyncToGame(ws, game);
+	}
 
-    // Make sure it's their turn
-    if (game.whosTurn !== color) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot submit a move when it's not your turn.");
+	// Make sure it's their turn
+	if (game.whosTurn !== color) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot submit a move when it's not your turn.");
 
-    // Legality checks...
-    if (!doesMoveCheckOut(messageContents.move)) {
-        const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
-        console.error(errString);
-        logEvents(errString, 'hackLog.txt');
-        return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid move format.");
-    }
-    if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
-        const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
-        console.error(errString);
-        logEvents(errString, 'hackLog.txt');
-        return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid game conclusion.");
-    }
+	// Legality checks...
+	if (!doesMoveCheckOut(messageContents.move)) {
+		const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		console.error(errString);
+		logEvents(errString, 'hackLog.txt');
+		return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid move format.");
+	}
+	if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
+		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		console.error(errString);
+		logEvents(errString, 'hackLog.txt');
+		return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid game conclusion.");
+	}
     
-    game.moves.push(messageContents.move); // Add the move to the list!
-    pushGameClock(game); // Flip whos turn and adjust the game properties
-    setGameConclusion(game, messageContents.gameConclusion);
+	game.moves.push(messageContents.move); // Add the move to the list!
+	pushGameClock(game); // Flip whos turn and adjust the game properties
+	setGameConclusion(game, messageContents.gameConclusion);
 
-    // console.log(`Accepted a move! Their websocket message data:`)
-    // console.log(messageContents)
-    // console.log("New move list:")
-    // console.log(game.moves);
+	// console.log(`Accepted a move! Their websocket message data:`)
+	// console.log(messageContents)
+	// console.log("New move list:")
+	// console.log(game.moves);
 
-    declineDraw(ws, game); // Auto-decline any open draw offer on move submissions
+	declineDraw(ws, game); // Auto-decline any open draw offer on move submissions
 
-    if (gameutility.isGameOver(game)) gameutility.sendGameUpdateToColor(game, color);
-    else gameutility.sendUpdatedClockToColor(game, color);
-    gameutility.sendMoveToColor(game, opponentColor); // Send their move to their opponent.
+	if (gameutility.isGameOver(game)) gameutility.sendGameUpdateToColor(game, color);
+	else gameutility.sendUpdatedClockToColor(game, color);
+	gameutility.sendMoveToColor(game, opponentColor); // Send their move to their opponent.
 }
 
 
@@ -102,19 +102,19 @@ function submitMove(ws, game, messageContents) {
  * @returns {boolean} *true* If the move is correctly formatted.
  */
 function doesMoveCheckOut(move) {
-    if (typeof move !== 'string') return false;
-    // Is the move in the correct format? "x,y>x,y=N"
-    const coordinates = move.split('>');
-    if (coordinates.length !== 2) return false;
-    const startCoordComponents = coordinates[0].split(',');
-    const endCoordComponents = coordinates[1].split(',');
-    if (startCoordComponents.length !== 2) return false;
-    if (endCoordComponents.length < 2) return false;
-    if (isNaN(parseInt(startCoordComponents[0]))) return false;
-    if (isNaN(parseInt(startCoordComponents[1]))) return false;
-    if (isNaN(parseInt(endCoordComponents[0]))) return false;
-    // Right now, don't test the 2nd component of the endCoord, because we haven't split it off the promotion piece.
-    return true;
+	if (typeof move !== 'string') return false;
+	// Is the move in the correct format? "x,y>x,y=N"
+	const coordinates = move.split('>');
+	if (coordinates.length !== 2) return false;
+	const startCoordComponents = coordinates[0].split(',');
+	const endCoordComponents = coordinates[1].split(',');
+	if (startCoordComponents.length !== 2) return false;
+	if (endCoordComponents.length < 2) return false;
+	if (isNaN(parseInt(startCoordComponents[0]))) return false;
+	if (isNaN(parseInt(startCoordComponents[1]))) return false;
+	if (isNaN(parseInt(endCoordComponents[0]))) return false;
+	// Right now, don't test the 2nd component of the endCoord, because we haven't split it off the promotion piece.
+	return true;
 }
 
 /**
@@ -127,19 +127,19 @@ function doesMoveCheckOut(move) {
  * @returns {boolean} *true* if their claimed conclusion seems reasonable.
  */
 function doesGameConclusionCheckOut(game, gameConclusion, color) {
-    if (gameConclusion === false) return true;
-    if (typeof gameConclusion !== 'string') return false;
+	if (gameConclusion === false) return true;
+	if (typeof gameConclusion !== 'string') return false;
 
-    // If conclusion is "aborted", victor will not be specified.
-    const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
-    if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
-    // Game conclusion is decisive...
-    // We can't submit a move where our opponent wins
-    const oppositeColor = colorutil.getOppositeColor(color);
-    return victor !== oppositeColor;
+	// If conclusion is "aborted", victor will not be specified.
+	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+	if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
+	// Game conclusion is decisive...
+	// We can't submit a move where our opponent wins
+	const oppositeColor = colorutil.getOppositeColor(color);
+	return victor !== oppositeColor;
 }
 
 
 export {
-    submitMove
+	submitMove
 };

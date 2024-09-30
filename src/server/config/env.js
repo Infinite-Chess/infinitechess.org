@@ -8,11 +8,11 @@ const envPath = '.env';
  * Ensures the .env file exists, creating it with default values if it doesn't.
  */
 function ensureEnvFile() {
-    if (fs.existsSync(envPath)) return; // Already exists
+	if (fs.existsSync(envPath)) return; // Already exists
 
-    const ACCESS_TOKEN_SECRET = generateSecret(32); // 32 bytes = 64 characters in hex
-    const REFRESH_TOKEN_SECRET = generateSecret(32);
-    const content = `
+	const ACCESS_TOKEN_SECRET = generateSecret(32); // 32 bytes = 64 characters in hex
+	const REFRESH_TOKEN_SECRET = generateSecret(32);
+	const content = `
 ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
 REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
 CERT_PATH=
@@ -23,12 +23,12 @@ HTTPSPORT=443
 HTTPPORT_LOCAL=3000
 HTTPSPORT_LOCAL=3443
     `;
-    fs.writeFileSync(envPath, content.trim());
-    console.log('Generated .env file');
+	fs.writeFileSync(envPath, content.trim());
+	console.log('Generated .env file');
 
-    // Load the .env file contents into process.env
-    // This needs to be as early as possible
-    dotenv.config(); 
+	// Load the .env file contents into process.env
+	// This needs to be as early as possible
+	dotenv.config(); 
 }
 
 /**
@@ -37,7 +37,7 @@ HTTPSPORT_LOCAL=3443
  * @returns {string} - The generated random string
  */
 function generateSecret(length) {
-    return crypto.randomBytes(length).toString('hex');
+	return crypto.randomBytes(length).toString('hex');
 }
 
 

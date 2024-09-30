@@ -67,151 +67,151 @@ let forceCalc = false;
 
 // Millis since the start of the program
 function getRunTime() {
-    return runTime;
+	return runTime;
 }
 
 function getDeltaTime() {
-    return deltaTime;
+	return deltaTime;
 }
 
 function getTimeUntilAFK() {
-    return config.DEV_BUILD ? timeUntilAFK.dev : timeUntilAFK.normal;
+	return config.DEV_BUILD ? timeUntilAFK.dev : timeUntilAFK.normal;
 }
 
 function gisAFK() {
-    return isAFK;
+	return isAFK;
 }
 
 function gisHibernating() {
-    return isHibernating;
+	return isHibernating;
 }
 
 function isPageHidden() {
-    return !windowIsVisible;
+	return !windowIsVisible;
 }
 
 function update(runtime) { // milliseconds
-    updateDeltaTime(runtime);
+	updateDeltaTime(runtime);
 
-    frames.push(runTime);
-    trimFrames();
+	frames.push(runTime);
+	trimFrames();
 
-    updateFPS();
+	updateFPS();
 
-    updateMonitorRefreshRate();
+	updateMonitorRefreshRate();
 
-    updateAFK();
+	updateAFK();
 }
 
 function updateDeltaTime(runtime) {
-    runTime = runtime;
-    deltaTime = (runTime - lastFrameTime) / 1000;
-    lastFrameTime = runTime;
+	runTime = runtime;
+	deltaTime = (runTime - lastFrameTime) / 1000;
+	lastFrameTime = runTime;
 }
 
 // Deletes frame timestamps from out list over 1 second ago
 function trimFrames() {
-    // What time was it 1 second ago
-    const splitPoint = runTime - fpsWindow;
+	// What time was it 1 second ago
+	const splitPoint = runTime - fpsWindow;
 
-    // Use binary search to find the split point.
-    const indexToSplit = jsutil.binarySearch_findValue(frames, splitPoint);
+	// Use binary search to find the split point.
+	const indexToSplit = jsutil.binarySearch_findValue(frames, splitPoint);
 
-    // This will not delete a timestamp if it falls exactly on the split point.
-    frames.splice(0, indexToSplit);
+	// This will not delete a timestamp if it falls exactly on the split point.
+	frames.splice(0, indexToSplit);
 }
 
 function updateFPS() {
-    fps = frames.length * 1000 / fpsWindow;
-    stats.updateFPS(fps);
+	fps = frames.length * 1000 / fpsWindow;
+	stats.updateFPS(fps);
 }
 
 // Our highest-ever fps will be the monitor's refresh rate!
 function updateMonitorRefreshRate() {
-    if (fps <= monitorRefreshRate) return;
+	if (fps <= monitorRefreshRate) return;
 
-    monitorRefreshRate = fps;
-    recalcIdealTimePerFrame();
+	monitorRefreshRate = fps;
+	recalcIdealTimePerFrame();
 }
 
 function recalcIdealTimePerFrame() {
-    idealTimePerFrame = 1000 / monitorRefreshRate;
+	idealTimePerFrame = 1000 / monitorRefreshRate;
 }
 
 function getLongTaskTime() {
-    return timeForLongTasks;
+	return timeForLongTasks;
 }
 
 // Calculates the amount of time this frame took to render.
 function timeAnimationFrame() {
-    // How much time did this frame take?
-    lastAnimationLength = performance.now() - runTime; // Update before calling updateTimeForLongTasks()
+	// How much time did this frame take?
+	lastAnimationLength = performance.now() - runTime; // Update before calling updateTimeForLongTasks()
 
-    updateTimeForLongTasks(); // Call after updating lastAnimationLength
+	updateTimeForLongTasks(); // Call after updating lastAnimationLength
 }
 
 function updateTimeForLongTasks() {
 
-    // How much time should we dedicate to long tasks?
+	// How much time should we dedicate to long tasks?
 
-    // What I WANT to do, is try to obtain 60fps (or our refresh rate),
-    // but make sure we're atleast spending as much time on long tasks as we are rendering!
+	// What I WANT to do, is try to obtain 60fps (or our refresh rate),
+	// but make sure we're atleast spending as much time on long tasks as we are rendering!
 
-    // How much time do we have left this frame after rendering until the next animation frame?
-    timeForLongTasks = idealTimePerFrame - lastAnimationLength - damping;
+	// How much time do we have left this frame after rendering until the next animation frame?
+	timeForLongTasks = idealTimePerFrame - lastAnimationLength - damping;
 
-    // Atleast spend as much time on long tasks as rendering
-    const minTime = lastAnimationLength * minLongTaskRatio;
-    timeForLongTasks = Math.max(timeForLongTasks, minTime);
-    timeForLongTasks = Math.min(timeForLongTasks, idealTimePerFrame); // The time should never exceed a threshold
+	// Atleast spend as much time on long tasks as rendering
+	const minTime = lastAnimationLength * minLongTaskRatio;
+	timeForLongTasks = Math.max(timeForLongTasks, minTime);
+	timeForLongTasks = Math.min(timeForLongTasks, idealTimePerFrame); // The time should never exceed a threshold
 
-    // console.log(`This frame took ${lastAnimationLength} ms`)
-    // console.log(`Reserving ${timeForLongTasks} ms for long tasks!`)
+	// console.log(`This frame took ${lastAnimationLength} ms`)
+	// console.log(`Reserving ${timeForLongTasks} ms for long tasks!`)
 }
 
 function updateAFK() {
-    if (activityThisFrame()) onReturnFromAFK();
+	if (activityThisFrame()) onReturnFromAFK();
 }
 
 // Returns true if there's been an user input this frame
 function activityThisFrame() {
-    return input.atleast1InputThisFrame();
+	return input.atleast1InputThisFrame();
 }
 
 function onReturnFromAFK() {
-    isAFK = false;
-    isHibernating = false;
-    restartAFKTimer();
-    restartHibernateTimer();
+	isAFK = false;
+	isHibernating = false;
+	restartAFKTimer();
+	restartHibernateTimer();
 
-    // Make sure we're subbed to invites list if we're on the play page!
-    invites.subscribeToInvites();
+	// Make sure we're subbed to invites list if we're on the play page!
+	invites.subscribeToInvites();
 }
 
 function restartAFKTimer() {
-    clearTimeout(AFKTimeoutID);
-    AFKTimeoutID = setTimeout(onAFK, getTimeUntilAFK());
+	clearTimeout(AFKTimeoutID);
+	AFKTimeoutID = setTimeout(onAFK, getTimeUntilAFK());
 }
 
 function restartHibernateTimer() {
-    clearTimeout(hibernateTimeoutID);
-    hibernateTimeoutID = setTimeout(onHibernate, timeUntilHibernation);
+	clearTimeout(hibernateTimeoutID);
+	hibernateTimeoutID = setTimeout(onHibernate, timeUntilHibernation);
 }
 
 function onAFK() {
-    isAFK = true;
-    AFKTimeoutID = undefined;
-    //console.log("Set AFK to true!")
+	isAFK = true;
+	AFKTimeoutID = undefined;
+	//console.log("Set AFK to true!")
 }
 
 function onHibernate() {
-    if (invites.doWeHave()) return restartHibernateTimer(); // Don't hibernate if we have an open invite AND the page is visible!
-    isHibernating = true;
-    hibernateTimeoutID = undefined;
-    //console.log("Set hibernating to true!")
+	if (invites.doWeHave()) return restartHibernateTimer(); // Don't hibernate if we have an open invite AND the page is visible!
+	isHibernating = true;
+	hibernateTimeoutID = undefined;
+	//console.log("Set hibernating to true!")
 
-    // Unsub from invites list
-    websocket.unsubFromInvites();
+	// Unsub from invites list
+	websocket.unsubFromInvites();
 }
 
 
@@ -219,10 +219,10 @@ function onHibernate() {
 // EVEN though the game is still visible on screen, it just means it lost focus!
 
 window.addEventListener('focus', () => {
-    windowInFocus = true;
+	windowInFocus = true;
 });
 window.addEventListener('blur', function() {
-    windowInFocus = false;
+	windowInFocus = false;
 });
 
 // This fires the next most commonly, whenever
@@ -231,57 +231,57 @@ window.addEventListener('blur', function() {
 // Use this listener as a giveaway that we have disconnected!
 
 document.addEventListener("visibilitychange", function() {
-    if (document.hidden) {
-        windowIsVisible = false;
+	if (document.hidden) {
+		windowIsVisible = false;
 
-        // Unsub from invites list if we don't have an invite!
-        // invitesweb.unsubIfWeNotHave();
+		// Unsub from invites list if we don't have an invite!
+		// invitesweb.unsubIfWeNotHave();
 
-        // Set a timer to delete our invite after not returning to the page!
-        // THIS ALSO UNSUBS US
-        // timeToDeleteInviteTimeoutID = setTimeout(websocket.unsubFromInvites, timeToDeleteInviteAfterPageHiddenMillis)
-        // This ONLY cancels our invite if we have one
-        timeToDeleteInviteTimeoutID = setTimeout(invites.cancel, timeToDeleteInviteAfterPageHiddenMillis);
+		// Set a timer to delete our invite after not returning to the page!
+		// THIS ALSO UNSUBS US
+		// timeToDeleteInviteTimeoutID = setTimeout(websocket.unsubFromInvites, timeToDeleteInviteAfterPageHiddenMillis)
+		// This ONLY cancels our invite if we have one
+		timeToDeleteInviteTimeoutID = setTimeout(invites.cancel, timeToDeleteInviteAfterPageHiddenMillis);
 
-    } else {
-        windowIsVisible = true;
+	} else {
+		windowIsVisible = true;
 
-        // Resub to invites list if we are on the play page and aren't already!
-        // invitesweb.subscribeToInvites();
+		// Resub to invites list if we are on the play page and aren't already!
+		// invitesweb.subscribeToInvites();
 
-        // Cancel the timer to delete our invite after not returning to the page
-        cancelTimerToDeleteInviteAfterLeavingPage();
+		// Cancel the timer to delete our invite after not returning to the page
+		cancelTimerToDeleteInviteAfterLeavingPage();
 
-        onlinegame.cancelMoveSound();
-    }
+		onlinegame.cancelMoveSound();
+	}
 });
 
 // Cancel the timer to delete our invite after not returning to the page
 function cancelTimerToDeleteInviteAfterLeavingPage() {
-    clearTimeout(timeToDeleteInviteTimeoutID);
-    timeToDeleteInviteTimeoutID = undefined;
+	clearTimeout(timeToDeleteInviteTimeoutID);
+	timeToDeleteInviteTimeoutID = undefined;
 }
 
 function getForceCalc() {
-    return forceCalc;
+	return forceCalc;
 }
 
 function setForceCalc(value) {
-    forceCalc = value;
+	forceCalc = value;
 }
 
 export default {
-    getRunTime,
-    getDeltaTime,
-    update,
-    getLongTaskTime,
-    timeAnimationFrame,
-    refreshPeriod,
-    refreshPeriodAFK,
-    stayConnectedPeriod,
-    gisAFK,
-    gisHibernating,
-    isPageHidden,
-    getForceCalc,
-    setForceCalc,
+	getRunTime,
+	getDeltaTime,
+	update,
+	getLongTaskTime,
+	timeAnimationFrame,
+	refreshPeriod,
+	refreshPeriodAFK,
+	stayConnectedPeriod,
+	gisAFK,
+	gisHibernating,
+	isPageHidden,
+	getForceCalc,
+	setForceCalc,
 };
