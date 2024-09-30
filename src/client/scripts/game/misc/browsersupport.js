@@ -6,18 +6,18 @@
  */
 
 function checkBrowserSupport() {
-    // Enable after infinite move distance
-    // checkIfBigIntSupported()
+	// Enable after infinite move distance
+	// checkIfBigIntSupported()
 }
 
 function checkIfBigIntSupported() {
-    try {
-        BigInt(123); // Try to initialize a BigInt
-    } catch (e) {
-        console.error('BigInts are not supported.');
-        alert(translations.bigints_unsupported);
-        throw new Error('Browser not supported.');
-    }
+	try {
+		BigInt(123); // Try to initialize a BigInt
+	} catch (e) {
+		console.error('BigInts are not supported.');
+		alert(translations.bigints_unsupported);
+		throw new Error('Browser not supported.');
+	}
 }
 
 // Only supported by 93.65% of all users
@@ -32,5 +32,5 @@ function checkIfBigIntSupported() {
 // }
 
 export default {
-    checkBrowserSupport
+	checkBrowserSupport
 };

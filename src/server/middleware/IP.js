@@ -14,11 +14,11 @@
  * @returns {string|undefined} The IP address of the request, or `undefined` if not present.
  */
 function getClientIP(req) {
-    //const clientIP = req.ip; // This DOES work... but it still often changes.
-    const clientIP = req.headers['x-forwarded-for'] || req.ip; // "x-forwarded-for" is Cloudflare's forwarded ip.
+	//const clientIP = req.ip; // This DOES work... but it still often changes.
+	const clientIP = req.headers['x-forwarded-for'] || req.ip; // "x-forwarded-for" is Cloudflare's forwarded ip.
 
-    if (typeof clientIP !== 'string') return undefined;
-    return clientIP;
+	if (typeof clientIP !== 'string') return undefined;
+	return clientIP;
 }
 
 /**
@@ -29,21 +29,21 @@ function getClientIP(req) {
  * @returns {string|undefined} The IP address of the websocket connection, or `undefined` if not present.
  */
 function getClientIP_Websocket(req, ws) {
-    if (ws.metadata.IP) return ws.metadata.IP; // Return their socket's ip if we have already read it!
+	if (ws.metadata.IP) return ws.metadata.IP; // Return their socket's ip if we have already read it!
 
-    //const clientIP = req.ip; // Undefined
-    //const clientIP = ws._socket.remoteAddress; // Changes every request
-    const clientIP = req.headers['x-forwarded-for'] || ws._socket.remoteAddress; // "x-forwarded-for" is Cloudflare's forwarded ip.
+	//const clientIP = req.ip; // Undefined
+	//const clientIP = ws._socket.remoteAddress; // Changes every request
+	const clientIP = req.headers['x-forwarded-for'] || ws._socket.remoteAddress; // "x-forwarded-for" is Cloudflare's forwarded ip.
 
-    if (typeof clientIP !== 'string') return undefined;
+	if (typeof clientIP !== 'string') return undefined;
 
-    ws.metadata.IP = clientIP; // Set their ip so we don't have to keep finding it with future socket messaes
-    return clientIP;
+	ws.metadata.IP = clientIP; // Set their ip so we don't have to keep finding it with future socket messaes
+	return clientIP;
 }
 
 
 
 export {
-    getClientIP,
-    getClientIP_Websocket
+	getClientIP,
+	getClientIP_Websocket
 };

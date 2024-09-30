@@ -24,43 +24,43 @@ const element_overlay = document.getElementById('overlay');
 element_overlay.addEventListener('click', callback_CancelPromotionIfUIOpen);
 
 function callback_CancelPromotionIfUIOpen() {
-    if (!guipromotion.isUIOpen()) return;
-    selection.unselectPiece();
-    frametracker.onVisualChange();
+	if (!guipromotion.isUIOpen()) return;
+	selection.unselectPiece();
+	frametracker.onVisualChange();
 }
 
 // Functions
 
 function getScreen() {
-    return screen;
+	return screen;
 }
 
 function setScreen(value) {
-    screen = value;
+	screen = value;
 }
 
 // Fades-in the overlay element over 1 second
 function fadeInOverlay1s() {
-    style.fadeIn1s(element_overlay);
+	style.fadeIn1s(element_overlay);
 }
 
 function callback_featurePlanned() {
-    statustext.showStatus(translations.planned_feature);
+	statustext.showStatus(translations.planned_feature);
 }
 
 function makeOverlayUnselectable() {
-    element_overlay.classList.add('unselectable');
+	element_overlay.classList.add('unselectable');
 }
 
 function makeOverlaySelectable() {
-    element_overlay.classList.remove('unselectable');
+	element_overlay.classList.remove('unselectable');
 }
 
 export default {
-    fadeInOverlay1s,
-    getScreen,
-    setScreen,
-    callback_featurePlanned,
-    makeOverlayUnselectable,
-    makeOverlaySelectable
+	fadeInOverlay1s,
+	getScreen,
+	setScreen,
+	callback_featurePlanned,
+	makeOverlayUnselectable,
+	makeOverlaySelectable
 };

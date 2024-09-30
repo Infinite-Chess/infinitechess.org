@@ -13,7 +13,7 @@ import path from 'path';
  * @returns {Buffer|null} The file contents, or null if the file does not exist.
  */
 function readFileIfExists(filePath) {
-    return fs.existsSync(filePath) ? fs.readFileSync(filePath) : null;
+	return fs.existsSync(filePath) ? fs.readFileSync(filePath) : null;
 }
 
 /**
@@ -21,9 +21,9 @@ function readFileIfExists(filePath) {
  * @param {string} dirPath - The path to the directory.
  */
 function ensureDirectoryExists(dirPath) {
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-    }
+	if (!fs.existsSync(dirPath)) {
+		fs.mkdirSync(dirPath, { recursive: true });
+	}
 }
 
 /**
@@ -32,16 +32,16 @@ function ensureDirectoryExists(dirPath) {
  * @param {string|Buffer} content - The content to write to the file.
  */
 function writeFile_ensureDirectory(filePath, content) {
-    // Ensure the directory exists
-    const dirPath = path.dirname(filePath);
-    ensureDirectoryExists(dirPath);
+	// Ensure the directory exists
+	const dirPath = path.dirname(filePath);
+	ensureDirectoryExists(dirPath);
 
-    // Write the file
-    fs.writeFileSync(filePath, content);
+	// Write the file
+	fs.writeFileSync(filePath, content);
 }
 
 export {
-    readFileIfExists,
-    ensureDirectoryExists,
-    writeFile_ensureDirectory
+	readFileIfExists,
+	ensureDirectoryExists,
+	writeFile_ensureDirectory
 };

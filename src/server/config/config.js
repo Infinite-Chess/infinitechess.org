@@ -47,12 +47,12 @@ const allowedOrigins = [ // Allowed sites
 ];
 
 export {
-    DEV_BUILD,
-    BUNDLE_FILES,
-    ARE_RATE_LIMITING,
-    simulatedWebsocketLatencyMillis,
-    HOST_NAME,
-    GAME_VERSION,
-    useOriginWhitelist,
-    allowedOrigins
+	DEV_BUILD,
+	BUNDLE_FILES,
+	ARE_RATE_LIMITING,
+	simulatedWebsocketLatencyMillis,
+	HOST_NAME,
+	GAME_VERSION,
+	useOriginWhitelist,
+	allowedOrigins
 };

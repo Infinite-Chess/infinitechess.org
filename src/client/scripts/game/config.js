@@ -21,7 +21,7 @@ const VIDEO_MODE = false;
 const DEV_BUILD = docutil.isLocalEnvironment();
 
 export default {
-    GAME_VERSION,
-    VIDEO_MODE,
-    DEV_BUILD
+	GAME_VERSION,
+	VIDEO_MODE,
+	DEV_BUILD
 };

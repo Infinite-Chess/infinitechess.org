@@ -16,10 +16,10 @@ function isClockValueValid(clock) { return validClockValues.includes(clock); }
  * @returns {Object} An object with 2 properties: `minutes`, `increment`, or `null` if the clock is infinite.
  */
 function getMinutesAndIncrementFromClock(clock) {
-    if (isClockValueInfinite(clock)) return null;
-    const [ seconds, increment ] = clock.split('+').map(part => +part); // Convert them into a number
-    const minutes = seconds / 60;
-    return { minutes, increment };
+	if (isClockValueInfinite(clock)) return null;
+	const [ seconds, increment ] = clock.split('+').map(part => +part); // Convert them into a number
+	const minutes = seconds / 60;
+	return { minutes, increment };
 }
 
 /**
@@ -30,7 +30,7 @@ function getMinutesAndIncrementFromClock(clock) {
 function isClockValueInfinite(clock) { return clock === '-'; }
 
 export default {
-    isClockValueValid,
-    getMinutesAndIncrementFromClock,
-    isClockValueInfinite,
+	isClockValueValid,
+	getMinutesAndIncrementFromClock,
+	isClockValueInfinite,
 };
