@@ -27,7 +27,7 @@ const color = [0, 0, 0, 1];
 const color_wireframe = [1, 0, 1, 1];
 
 const stride = 6; // Using color shader. Stride per VERTEX (2 vertex, 4 color)
-const pointsPerSquare_Wireframe = 12; // Compared to  piecesmodel.pointsPerSquare  which is 6 when rendering triangles
+const POINTS_PER_SQUARE_WIREFRAME = 12; // Compared to  piecesmodel.POINTS_PER_SQUARE  which is 6 when rendering triangles
 
 function regenModel(gamefile) {
 	/** A list of coordinates of all voids in the gamefile */
@@ -45,7 +45,7 @@ function regenModel(gamefile) {
 	// console.log(`Void rectangle count: ${rectangleCount}`)
     
 	const inDevMode = options.isDebugModeOn();
-	const thisPointsPerSquare = !inDevMode ? piecesmodel.pointsPerSquare : pointsPerSquare_Wireframe;
+	const thisPointsPerSquare = !inDevMode ? piecesmodel.POINTS_PER_SQUARE : POINTS_PER_SQUARE_WIREFRAME;
 	const indicesPerPiece = stride * thisPointsPerSquare; // 6 * (6 or 12) depending on wireframe
 	const totalElements = rectangleCount * indicesPerPiece;
 
@@ -293,10 +293,13 @@ function simplifyMesh(voidList) { // array of coordinates
 	return rectangles;
 }
 
-
-// Called from pieces.renderPiecesInGame()
+/**
+ * Called from pieces.renderPiecesInGame()
+ * @param {gamefile} gamefile 
+ * @returns 
+ */
 function render(gamefile) {
-	if (gamefile.voidMesh.model == null) return;
+	if (gamefile.voidMesh.model === undefined) return;
 
 	const boardPos = movement.getBoardPos();
 	const position = [ // Translate

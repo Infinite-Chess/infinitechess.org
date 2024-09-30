@@ -37,7 +37,7 @@ import thread from '../misc/thread.js';
 
 const strideWithTexture = 4; // Using texture shader. Stride per VERTEX
 const strideWithColoredTexture = 8;
-const pointsPerSquare = 6; // Number of vertices used to render a square (2 triangles)
+const POINTS_PER_SQUARE = 6; // Number of vertices used to render a square (2 triangles)
 
 /**
  * The interval at which to modify the mesh's linear offset once you travel this distance.
@@ -73,7 +73,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	const coinCount = coin.getCoinCount();
 	const totalPieceCount = gamefileutility.getPieceCount(game.getGamefile().ourPieces) + coinCount;
 	const thisStride = colorArgs ? strideWithColoredTexture : strideWithTexture; // 4 or 8
-	const indicesPerPiece = thisStride * pointsPerSquare; // 4|8 * 6
+	const indicesPerPiece = thisStride * POINTS_PER_SQUARE; // 4|8 * 6
 	const totalElements = totalPieceCount * indicesPerPiece;
 
 	const usingColoredTextures = colorArgs != null;
@@ -227,7 +227,7 @@ function movebufferdata(gamefile, piece, newCoords) {
     
 	const index = getPieceIndexInData(gamefile, piece);
 
-	const stridePerPiece = gamefile.mesh.stride * pointsPerSquare;
+	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 
 	const i = index * stridePerPiece;
 
@@ -280,7 +280,7 @@ function deletebufferdata(gamefile, piece) {
 	if (!gamefile.mesh.data32) throw new Error("Should not be deleting piece data when data32 is not defined!");
 	const index = getPieceIndexInData(gamefile, piece);
 
-	const stridePerPiece = gamefile.mesh.stride * pointsPerSquare;
+	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece; // Start index of deleted piece
 
 	for (let a = 0; a < stridePerPiece; a++) {
@@ -320,7 +320,7 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
     
 	const index = getPieceIndexInData(gamefile, undefinedPiece);
 
-	const stridePerPiece = gamefile.mesh.stride * pointsPerSquare;
+	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece;
 
 	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
@@ -404,7 +404,7 @@ function printbufferdataOnCoords(gamefile, coords) {
  * @param {number[]} coords - The coordiantes of the piece
  */
 function printbufferdataOnIndex(gamefile, index) {
-	const stridePerPiece = gamefile.mesh.stride * pointsPerSquare;
+	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece;
 
 	for (let a = 0; a < stridePerPiece; a++) {
@@ -501,7 +501,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 	gamefile.mesh.rotatedData32 = new Float32Array(gamefile.mesh.data32.length); // Empty it for re-initialization
 
 	const stride = gamefile.mesh.stride; // 4 / 8
-	const indicesPerPiece = stride * pointsPerSquare; // 4|8 * 6
+	const indicesPerPiece = stride * POINTS_PER_SQUARE; // 4|8 * 6
     
 	const coinCount = coin.getCoinCount();
 	const totalPieceCount = (gamefileutility.getPieceCount(game.getGamefile().ourPieces) + coinCount) * 2; // * 2 for the data32 and data64 arrays
@@ -708,6 +708,7 @@ function eraseRotatedModel(gamefile) {
 }
 
 export default {
+	POINTS_PER_SQUARE,
 	regenModel,
 	movebufferdata,
 	deletebufferdata,
