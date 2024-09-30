@@ -16,12 +16,12 @@ import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
 const localeMap = {
-  'en-US': enUS,
-  'fr-FR': frFR,
-  'pt-BR': ptBR,
-  'zh-TW': zhTW,
-  'zh-CN': zhCN,
-  'pl-PL': pl
+    'en-US': enUS,
+    'fr-FR': frFR,
+    'pt-BR': ptBR,
+    'zh-TW': zhTW,
+    'zh-CN': zhCN,
+    'pl-PL': pl
 };
 
 
@@ -216,9 +216,9 @@ function loadTranslationsFolder(folder) {
     );
     const supportedLanguages = [];
     const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).sort((a, b) => {
-      const dateA = new Date(a.replace('.md', ''));
-      const dateB = new Date(b.replace('.md', ''));
-      return dateB - dateA;
+        const dateA = new Date(a.replace('.md', ''));
+        const dateB = new Date(b.replace('.md', ''));
+        return dateB - dateA;
     });
     files
         .filter(function y(x) {
