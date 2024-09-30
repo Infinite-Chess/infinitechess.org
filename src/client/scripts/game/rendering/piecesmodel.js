@@ -46,6 +46,8 @@ const POINTS_PER_SQUARE = 6; // Number of vertices used to render a square (2 tr
  */
 const REGEN_RANGE = 10_000;
 
+const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrillion
+
 
 /**
  * Generates the model that contains every single piece on the board, *including* coins, but *excluding* voids.
@@ -432,6 +434,13 @@ function shiftPiecesModel(gamefile) {
 
 	const diffXOffset = gamefile.mesh.offset[0] - newOffset[0];
 	const diffYOffset = gamefile.mesh.offset[1] - newOffset[1];
+
+	const chebyshevDistance = math.chebyshevDistance(gamefile.mesh.offset, newOffset);
+	if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
+		console.log(`REGENERATING the model instead of shifting. It was translated by ${chebyshevDistance} tiles!`);
+		regenModel(gamefile, options.getPieceRegenColorArgs());
+		return;
+	}
 
 	gamefile.mesh.offset = newOffset;
 
