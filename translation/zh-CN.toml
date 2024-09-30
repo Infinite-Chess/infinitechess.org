@@ -484,6 +484,12 @@ login_button = "登录"
 409_message = ["可能存在冲突的用户名或电子邮件。请", "重新加载", "页面"]
 500_message = "这不应该发生。需要进行一些调试！"
 
+########### NEWS ###########
+
+[news]
+title = "新闻"
+more_dev_logs = ["更多开发者日志在我们的", "Discord", "和在", "chess.com的论坛！"]
+
 [server.javascript]
 ws-invalid_username = "用户名无效"
 ws-incorrect_password = "密码部队"
