@@ -16,17 +16,17 @@ import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect
  * @param {Game | undefined} game - The game they are in, if they are in one.
  */
 function onJoinGame(ws, game) {
-    if (!game) return; // They don't belong in a game
+	if (!game) return; // They don't belong in a game
 
-    const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-    gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
+	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
 
-    // Cancel the timer that auto loses them by AFK, IF IT is their turn!
-    if (game.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game, { alertOpponent: true });
-    cancelDisconnectTimer(game, colorPlayingAs);
+	// Cancel the timer that auto loses them by AFK, IF IT is their turn!
+	if (game.whosTurn === colorPlayingAs) cancelAutoAFKResignTimer(game, { alertOpponent: true });
+	cancelDisconnectTimer(game, colorPlayingAs);
 }
 
 
 export {
-    onJoinGame
+	onJoinGame
 };

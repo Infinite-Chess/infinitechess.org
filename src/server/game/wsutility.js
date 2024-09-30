@@ -19,9 +19,9 @@ function printSocket(ws) { console.log(stringifySocketMetadata(ws)); }
  * @returns {string} The stringified simplified websocket metadata.
  */
 function stringifySocketMetadata(ws) {
-    // Removes the recursion from the metadata, making it safe to stringify.
-    const simplifiedMetadata = getSimplifiedMetadata(ws);
-    return ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
+	// Removes the recursion from the metadata, making it safe to stringify.
+	const simplifiedMetadata = getSimplifiedMetadata(ws);
+	return ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
 }
 
 /**
@@ -34,19 +34,19 @@ function stringifySocketMetadata(ws) {
  * @returns {Object} A new object containing simplified metadata.
  */
 function getSimplifiedMetadata(ws) {
-    if (!ws) return console.error("Cannot get simplified metadata of an undefined websocket!");
+	if (!ws) return console.error("Cannot get simplified metadata of an undefined websocket!");
 
-    const metadata = ws.metadata;
-    if (!metadata) return console.error("We should not be simplifying a websockets metadata when it is undefined!");
-    const metadataCopy = {};
-    if (metadata.user) metadataCopy.user = metadata.user;
-    if (metadata.role) metadataCopy.role = metadata.role;
-    if (metadata['browser-id']) metadataCopy['browser-id'] = metadata['browser-id'];
-    metadataCopy.id = metadata.id;
-    if (metadata.IP) metadataCopy.IP = metadata.IP;
-    //if (metadata.id) metadataCopy.id = metadata.id;
-    if (metadata.subscriptions) metadataCopy.subscriptions = metadata.subscriptions;
-    return metadataCopy;
+	const metadata = ws.metadata;
+	if (!metadata) return console.error("We should not be simplifying a websockets metadata when it is undefined!");
+	const metadataCopy = {};
+	if (metadata.user) metadataCopy.user = metadata.user;
+	if (metadata.role) metadataCopy.role = metadata.role;
+	if (metadata['browser-id']) metadataCopy['browser-id'] = metadata['browser-id'];
+	metadataCopy.id = metadata.id;
+	if (metadata.IP) metadataCopy.IP = metadata.IP;
+	//if (metadata.id) metadataCopy.id = metadata.id;
+	if (metadata.subscriptions) metadataCopy.subscriptions = metadata.subscriptions;
+	return metadataCopy;
 }
 
 /**
@@ -55,9 +55,9 @@ function getSimplifiedMetadata(ws) {
  * @returns {Object} An object that contains either the `member` or `browser` property.
  */
 function getOwnerFromSocket(ws) {
-    if (ws.metadata.user) return { member: ws.metadata.user };
-    else if (ws.metadata['browser-id']) return { browser: ws.metadata['browser-id']};
-    else return console.error(`Cannot get owner info from socket in gamesweb.js when socket doesn't contain authentication! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (ws.metadata.user) return { member: ws.metadata.user };
+	else if (ws.metadata['browser-id']) return { browser: ws.metadata['browser-id']};
+	else return console.error(`Cannot get owner info from socket in gamesweb.js when socket doesn't contain authentication! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
 }
 
 /**
@@ -69,15 +69,15 @@ function getOwnerFromSocket(ws) {
  * @param {number} [options.number] - A number to include with special messages if applicable, typically representing a duration in minutes.
  */
 function sendNotify(ws, translationCode, { replyto, number } = {}) {
-    const i18next = ws.metadata.i18next;
-    let text = getTranslation(translationCode, i18next);
-    // Special case: number of minutes to be displayed upon server restart
-    if (translationCode === "server.javascript.ws-server_restarting" && number !== undefined) {
-        const minutes = Number(number); // Cast to number in case it's a string
-        const minutes_plurality = minutes === 1 ? getTranslation("server.javascript.ws-minute", i18next) : getTranslation("server.javascript.ws-minutes", i18next);
-        text += ` ${minutes} ${minutes_plurality}.`;
-    }
-    ws.metadata.sendmessage(ws, "general", "notify", text, replyto);
+	const i18next = ws.metadata.i18next;
+	let text = getTranslation(translationCode, i18next);
+	// Special case: number of minutes to be displayed upon server restart
+	if (translationCode === "server.javascript.ws-server_restarting" && number !== undefined) {
+		const minutes = Number(number); // Cast to number in case it's a string
+		const minutes_plurality = minutes === 1 ? getTranslation("server.javascript.ws-minute", i18next) : getTranslation("server.javascript.ws-minutes", i18next);
+		text += ` ${minutes} ${minutes_plurality}.`;
+	}
+	ws.metadata.sendmessage(ws, "general", "notify", text, replyto);
 }
 
 /**
@@ -86,13 +86,13 @@ function sendNotify(ws, translationCode, { replyto, number } = {}) {
  * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
  */
 function sendNotifyError(ws, translationCode) {
-    ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.i18next));
+	ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.i18next));
 }
 
 export default {
-    printSocket,
-    stringifySocketMetadata,
-    getOwnerFromSocket,
-    sendNotify,
-    sendNotifyError
+	printSocket,
+	stringifySocketMetadata,
+	getOwnerFromSocket,
+	sendNotify,
+	sendNotifyError
 };

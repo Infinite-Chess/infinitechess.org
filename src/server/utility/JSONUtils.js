@@ -6,17 +6,17 @@
  * @returns {string} - The JSON stringified input or the original string if input was a string. Or, if an error ocurred, 'Error: Input could not be JSON stringified'.
  */
 function ensureJSONString(input, errorMessage) {
-    if (typeof input === 'string') return input;
-    try {
-        return JSON.stringify(input);
-    } catch (error) {
-        // Handle cases where input cannot be stringified
-        if (errorMessage) { // Print the error...
-            const errText = `${errorMessage}\n${error.stack}`;
-            console.log(errText);
-        }
-        return 'Error: Input could not be JSON stringified';
-    }
+	if (typeof input === 'string') return input;
+	try {
+		return JSON.stringify(input);
+	} catch (error) {
+		// Handle cases where input cannot be stringified
+		if (errorMessage) { // Print the error...
+			const errText = `${errorMessage}\n${error.stack}`;
+			console.log(errText);
+		}
+		return 'Error: Input could not be JSON stringified';
+	}
 }
 
 export { ensureJSONString };

@@ -41,12 +41,12 @@ let isAcceptingDraw = false;
  * @returns {boolean}
  */
 function isOfferingDrawLegal() {
-    const gamefile = game.getGamefile();
-    if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
-    if (!movesscript.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
-    if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
-    if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
-    return true; // Is legal to EXTEND
+	const gamefile = game.getGamefile();
+	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
+	if (!movesscript.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
+	if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
+	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
+	return true; // Is legal to EXTEND
 }
 
 /**
@@ -55,12 +55,12 @@ function isOfferingDrawLegal() {
  * @returns {boolean}
  */
 function isTooSoonToOfferDraw() {
-    const gamefile = game.getGamefile();
-    if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
+	const gamefile = game.getGamefile();
+	if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
 
-    const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
-    if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
-    return false;
+	const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
+	if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
+	return false;
 }
 
 /**
@@ -71,10 +71,10 @@ function areWeAcceptingDraw() { return isAcceptingDraw; }
 
 /** Is called when we receive a draw offer from our opponent */
 function onOpponentExtendedOffer() {
-    isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
-    guidrawoffer.open();
-    sound.playSound_base(); //playSound_drawOffer()
-    guipause.updateDrawOfferButton();
+	isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
+	guidrawoffer.open();
+	sound.playSound_base(); //playSound_drawOffer()
+	guipause.updateDrawOfferButton();
 }
 
 /**
@@ -82,11 +82,11 @@ function onOpponentExtendedOffer() {
  * All legality checks have already passed!
  */
 function extendOffer() {
-    websocket.sendmessage('game', 'offerdraw');
-    const gamefile = game.getGamefile();
-    plyOfLastOfferedDraw = gamefile.moves.length;
-    statustext.showStatus(`Waiting for opponent to accept...`);
-    guipause.updateDrawOfferButton();
+	websocket.sendmessage('game', 'offerdraw');
+	const gamefile = game.getGamefile();
+	plyOfLastOfferedDraw = gamefile.moves.length;
+	statustext.showStatus(`Waiting for opponent to accept...`);
+	guipause.updateDrawOfferButton();
 }
 
 /**
@@ -94,10 +94,10 @@ function extendOffer() {
  * the draw offer UI on the bottom navigation bar.
  */
 function callback_AcceptDraw() {
-    isAcceptingDraw = false;
-    websocket.sendmessage('game', 'acceptdraw');
-    guidrawoffer.close();
-    guipause.updateDrawOfferButton();
+	isAcceptingDraw = false;
+	websocket.sendmessage('game', 'acceptdraw');
+	guidrawoffer.close();
+	guipause.updateDrawOfferButton();
 }
 
 /**
@@ -110,14 +110,14 @@ function callback_AcceptDraw() {
 * We'll want to set this to false if we call this after making a move, because the server auto-declines it.
 */
 function callback_declineDraw({ informServer = true } = {}) {
-    if (!isAcceptingDraw) return; // No open draw offer from our opponent
+	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 
-    if (informServer) {
-        websocket.sendmessage('game', 'declinedraw');
-        statustext.showStatus(`Draw declined`);
-    }
-    guidrawoffer.close();
-    isAcceptingDraw = false;
+	if (informServer) {
+		websocket.sendmessage('game', 'declinedraw');
+		statustext.showStatus(`Draw declined`);
+	}
+	guidrawoffer.close();
+	isAcceptingDraw = false;
 }
 
 /**
@@ -128,10 +128,10 @@ function callback_declineDraw({ informServer = true } = {}) {
  * and `lastOfferPly` is the last move ply WE EXTENDED an offer, if we have, otherwise undefined.
  */
 function set(drawOffer) {
-    plyOfLastOfferedDraw = drawOffer.lastOfferPly;
-    if (!drawOffer.unconfirmed) return; // No open draw offer
-    // Open draw offer!!
-    onOpponentExtendedOffer();
+	plyOfLastOfferedDraw = drawOffer.lastOfferPly;
+	if (!drawOffer.unconfirmed) return; // No open draw offer
+	// Open draw offer!!
+	onOpponentExtendedOffer();
 }
 
 /**
@@ -139,19 +139,19 @@ function set(drawOffer) {
  * offer and resets all draw for values for future games.
  */
 function reset() {
-    plyOfLastOfferedDraw = undefined;
-    isAcceptingDraw = false;
-    guidrawoffer.close();
-    guipause.updateDrawOfferButton();
+	plyOfLastOfferedDraw = undefined;
+	isAcceptingDraw = false;
+	guidrawoffer.close();
+	guipause.updateDrawOfferButton();
 }
 
 export default {
-    isOfferingDrawLegal,
-    areWeAcceptingDraw,
-    callback_AcceptDraw,
-    callback_declineDraw,
-    onOpponentExtendedOffer,
-    extendOffer,
-    set,
-    reset,
+	isOfferingDrawLegal,
+	areWeAcceptingDraw,
+	callback_AcceptDraw,
+	callback_declineDraw,
+	onOpponentExtendedOffer,
+	extendOffer,
+	set,
+	reset,
 };

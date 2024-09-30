@@ -56,40 +56,40 @@ import frametracker from '../rendering/frametracker.js';
  * - `simulated`: Whether you plan on undo'ing this move. If true, the `rewindInfo` property will be added to the `move` for easy restoring of the gamefile's properties when undo'ing the move.
  */
 function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushClock = true, doGameOverChecks = true, concludeGameIfOver = true, animate = true, updateData = true, updateProperties = true, simulated = false } = {}) {                
-    const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
-    if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
-    move.type = piece.type;
-    const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
+	const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
+	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
+	move.type = piece.type;
+	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
     
-    storeRewindInfoOnMove(gamefile, move, piece.index, { simulated }); // Keep track if important stuff to remember, for rewinding the game if we undo moves
+	storeRewindInfoOnMove(gamefile, move, piece.index, { simulated }); // Keep track if important stuff to remember, for rewinding the game if we undo moves
 
-    // Do this before making the move, so that if its a pawn double push, enpassant can be reinstated and not deleted.
-    if (recordMove || updateProperties) deleteEnpassantAndSpecialRightsProperties(gamefile, move.startCoords, move.endCoords);
+	// Do this before making the move, so that if its a pawn double push, enpassant can be reinstated and not deleted.
+	if (recordMove || updateProperties) deleteEnpassantAndSpecialRightsProperties(gamefile, move.startCoords, move.endCoords);
     
-    let specialMoveMade;
-    if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
-    if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
-    const wasACapture = move.captured != null;
+	let specialMoveMade;
+	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
+	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
+	const wasACapture = move.captured != null;
 
-    gamefile.moveIndex++;
-    if (recordMove) gamefile.moves.push(move);
-    // The "check" property will be added inside updateInCheck()...
-    // The "mate" property will be added inside our game conclusion checks...
+	gamefile.moveIndex++;
+	if (recordMove) gamefile.moves.push(move);
+	// The "check" property will be added inside updateInCheck()...
+	// The "mate" property will be added inside our game conclusion checks...
 
-    if (updateProperties) incrementMoveRule(gamefile, piece.type, wasACapture);
+	if (updateProperties) incrementMoveRule(gamefile, piece.type, wasACapture);
 
-    if (flipTurn) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
+	if (flipTurn) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
 
-    // ALWAYS DO THIS NOW, no matter what. 
-    updateInCheck(gamefile, recordMove);
-    if (doGameOverChecks) gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated });
+	// ALWAYS DO THIS NOW, no matter what. 
+	updateInCheck(gamefile, recordMove);
+	if (doGameOverChecks) gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver, simulated });
 
-    if (updateData) {
-        guinavigation.update_MoveButtons();
-        frametracker.onVisualChange();
-    }
+	if (updateData) {
+		guinavigation.update_MoveButtons();
+		frametracker.onVisualChange();
+	}
 
-    if (!simulated) arrows.clearListOfHoveredPieces();
+	if (!simulated) arrows.clearListOfHoveredPieces();
 }
 
 /**
@@ -101,24 +101,24 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
  * - `simulated`: Whether you plan on undo'ing this move. If *true*, then `capturedIndex` and `pawnIndex` will also be remembered, so the mesh doesn't get screwed up when rewinding. Default: *false*
  */
 function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false } = {}) {
-    const rewindInfoAlreadyPresent = move.rewindInfo != null;
-    const rewindInfo = move.rewindInfo || {};
+	const rewindInfoAlreadyPresent = move.rewindInfo != null;
+	const rewindInfo = move.rewindInfo || {};
 
-    if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
-    if (!rewindInfoAlreadyPresent) {
-        rewindInfo.inCheck = jsutil.deepCopyObject(gamefile.inCheck);
-        rewindInfo.gameConclusion = gamefile.gameConclusion;
-        if (gamefile.attackers) rewindInfo.attackers = jsutil.deepCopyObject(gamefile.attackers);
-        if (gamefile.enpassant) rewindInfo.enpassant = gamefile.enpassant;
-        if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
-        if (gamefile.checksGiven) rewindInfo.checksGiven = gamefile.checksGiven;
-        let key = coordutil.getKeyFromCoords(move.startCoords);
-        if (gamefile.specialRights[key]) rewindInfo.specialRightStart = true;
-        key = coordutil.getKeyFromCoords(move.endCoords);
-        if (gamefile.specialRights[key]) rewindInfo.specialRightEnd = true;
-    }
+	if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
+	if (!rewindInfoAlreadyPresent) {
+		rewindInfo.inCheck = jsutil.deepCopyObject(gamefile.inCheck);
+		rewindInfo.gameConclusion = gamefile.gameConclusion;
+		if (gamefile.attackers) rewindInfo.attackers = jsutil.deepCopyObject(gamefile.attackers);
+		if (gamefile.enpassant) rewindInfo.enpassant = gamefile.enpassant;
+		if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
+		if (gamefile.checksGiven) rewindInfo.checksGiven = gamefile.checksGiven;
+		let key = coordutil.getKeyFromCoords(move.startCoords);
+		if (gamefile.specialRights[key]) rewindInfo.specialRightStart = true;
+		key = coordutil.getKeyFromCoords(move.endCoords);
+		if (gamefile.specialRights[key]) rewindInfo.specialRightEnd = true;
+	}
 
-    move.rewindInfo = rewindInfo;
+	move.rewindInfo = rewindInfo;
 }
 
 /**
@@ -129,11 +129,11 @@ function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false }
  * @param {number[]} endCoords - The destination of the piece moving
  */
 function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoords) {
-    delete gamefile.enpassant;
-    let key = coordutil.getKeyFromCoords(startCoords);
-    delete gamefile.specialRights[key]; // We also delete its special move right for ANY piece moved
-    key = coordutil.getKeyFromCoords(endCoords);
-    delete gamefile.specialRights[key]; // We also delete the captured pieces specialRights for ANY move.
+	delete gamefile.enpassant;
+	let key = coordutil.getKeyFromCoords(startCoords);
+	delete gamefile.specialRights[key]; // We also delete its special move right for ANY piece moved
+	key = coordutil.getKeyFromCoords(endCoords);
+	delete gamefile.specialRights[key]; // We also delete the captured pieces specialRights for ANY move.
 }
 
 // RETURNS index of captured piece! Required for undo'ing moves.
@@ -150,15 +150,15 @@ function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoo
  * - `simulated`: Whether you plan on undo'ing this move. If true, the index of the captured piece within the gamefile's piece list will be stored in the `rewindInfo` property of the move for easy undo'ing without screwing up the mesh.
  */
 function movePiece_NoSpecial(gamefile, piece, move, { updateData = true, animate = true, simulated = false } = {}) { // piece: { coords, type, index }
-    const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
-    if (capturedPiece) move.captured = capturedPiece.type;
-    if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
+	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
+	if (capturedPiece) move.captured = capturedPiece.type;
+	if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
 
-    if (capturedPiece) deletePiece(gamefile, capturedPiece, { updateData });
+	if (capturedPiece) deletePiece(gamefile, capturedPiece, { updateData });
 
-    movePiece(gamefile, piece, move.endCoords, { updateData });
+	movePiece(gamefile, piece, move.endCoords, { updateData });
 
-    if (animate) animation.animatePiece(piece.type, move.startCoords, move.endCoords, capturedPiece);
+	if (animate) animation.animatePiece(piece.type, move.startCoords, move.endCoords, capturedPiece);
 }
 
 /**
@@ -170,17 +170,17 @@ function movePiece_NoSpecial(gamefile, piece, move, { updateData = true, animate
  * @param {Object} options - An object that may contain the property `updateData`, that when true will update the piece in the mesh.
  */
 function movePiece(gamefile, piece, endCoords, { updateData = true } = {}) {
-    // Move the piece, change the coordinates
-    gamefile.ourPieces[piece.type][piece.index] = endCoords;
+	// Move the piece, change the coordinates
+	gamefile.ourPieces[piece.type][piece.index] = endCoords;
 
-    // Remove selected piece from all the organized piece lists (piecesOrganizedByKey, etc.)
-    organizedlines.removeOrganizedPiece(gamefile, piece.coords);
+	// Remove selected piece from all the organized piece lists (piecesOrganizedByKey, etc.)
+	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
 
-    // Add the piece to organized lists with new destination
-    organizedlines.organizePiece(piece.type, endCoords, gamefile);
+	// Add the piece to organized lists with new destination
+	organizedlines.organizePiece(piece.type, endCoords, gamefile);
 
-    // Edit its data within the mesh of the pieces!
-    if (updateData) piecesmodel.movebufferdata(gamefile, piece, endCoords);
+	// Edit its data within the mesh of the pieces!
+	if (updateData) piecesmodel.movebufferdata(gamefile, piece, endCoords);
 }
 
 /**
@@ -194,38 +194,38 @@ function movePiece(gamefile, piece, endCoords, { updateData = true } = {}) {
  */
 function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = {}) { // desiredIndex optional
 
-    const list = gamefile.ourPieces[type];
+	const list = gamefile.ourPieces[type];
 
-    // If no index specified, make the default the first undefined in the list!
-    if (desiredIndex == null) desiredIndex = list.undefineds[0];
+	// If no index specified, make the default the first undefined in the list!
+	if (desiredIndex == null) desiredIndex = list.undefineds[0];
 
-    // If there are no undefined placeholders left, updateData better be false, because we are going to append on the end!
-    if (desiredIndex == null && updateData) throw new Error("Cannot add a piece and update the data when there are no undefined placeholders remaining!");
+	// If there are no undefined placeholders left, updateData better be false, because we are going to append on the end!
+	if (desiredIndex == null && updateData) throw new Error("Cannot add a piece and update the data when there are no undefined placeholders remaining!");
 
-    if (desiredIndex == null) list.push(coords);
-    else { // desiredIndex specified
+	if (desiredIndex == null) list.push(coords);
+	else { // desiredIndex specified
 
-        const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, coords) != null;
-        if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
+		const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, coords) != null;
+		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
 
-        // Remove the undefined from the undefineds list
-        const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
-        if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
+		// Remove the undefined from the undefineds list
+		const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
+		if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
 
-        list[desiredIndex] = coords;
-    }
+		list[desiredIndex] = coords;
+	}
 
-    organizedlines.organizePiece(type, coords, gamefile);
+	organizedlines.organizePiece(type, coords, gamefile);
 
-    if (!updateData) return;
+	if (!updateData) return;
 
-    // Edit its data within the pieces buffer!
-    const undefinedPiece = { type, index: desiredIndex };
-    piecesmodel.overwritebufferdata(gamefile, undefinedPiece, coords, type);
+	// Edit its data within the pieces buffer!
+	const undefinedPiece = { type, index: desiredIndex };
+	piecesmodel.overwritebufferdata(gamefile, undefinedPiece, coords, type);
 
-    // Do we need to add more undefineds?
-    // Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
-    if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
+	// Do we need to add more undefineds?
+	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
+	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
 }
 
 /**
@@ -239,14 +239,14 @@ function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = 
  */
 function deletePiece(gamefile, piece, { updateData = true } = {}) { // piece: { type, index }
 
-    const list = gamefile.ourPieces[piece.type];
-    gamefileutility.deleteIndexFromPieceList(list, piece.index);
+	const list = gamefile.ourPieces[piece.type];
+	gamefileutility.deleteIndexFromPieceList(list, piece.index);
 
-    // Remove captured piece from organized piece lists
-    organizedlines.removeOrganizedPiece(gamefile, piece.coords);
+	// Remove captured piece from organized piece lists
+	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
 
-    // Delete its data within the pieces buffer! Overwrite with 0's
-    if (updateData) piecesmodel.deletebufferdata(gamefile, piece);
+	// Delete its data within the pieces buffer! Overwrite with 0's
+	if (updateData) piecesmodel.deletebufferdata(gamefile, piece);
 }
 
 /**
@@ -256,11 +256,11 @@ function deletePiece(gamefile, piece, { updateData = true } = {}) { // piece: { 
  * @param {boolean} wasACapture Whether the move made a capture
  */
 function incrementMoveRule(gamefile, typeMoved, wasACapture) {
-    if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
+	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
     
-    // Reset if it was a capture or pawn movement
-    if (wasACapture || typeMoved.startsWith('pawns')) gamefile.moveRuleState = 0;
-    else gamefile.moveRuleState++;
+	// Reset if it was a capture or pawn movement
+	if (wasACapture || typeMoved.startsWith('pawns')) gamefile.moveRuleState = 0;
+	else gamefile.moveRuleState++;
 }
 
 /**
@@ -272,9 +272,9 @@ function incrementMoveRule(gamefile, typeMoved, wasACapture) {
  * - `doGameOverChecks`: Whether game-over checks such as checkmate, or other win conditions, are performed for this move.
  */
 function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
-    gamefile.whosTurn = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
-    if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
-    if (pushClock) clock.push();
+	gamefile.whosTurn = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
+	if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
+	if (pushClock) clock.push();
 }
 
 /**
@@ -286,16 +286,16 @@ function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = 
     */
 function updateInCheck(gamefile, flagMoveAsCheck = true) {
 
-    let attackers = undefined;
-    // Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
-    const whosTurnItWasAtMoveIndex = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
-    const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
-    if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
+	let attackers = undefined;
+	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
+	const whosTurnItWasAtMoveIndex = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
+	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
+	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 
-    gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
-    gamefile.attackers = attackers || []; // Erase the checking pieces calculated from previous turn and pass in new ones!
+	gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
+	gamefile.attackers = attackers || []; // Erase the checking pieces calculated from previous turn and pass in new ones!
 
-    if (gamefile.inCheck && flagMoveAsCheck) movesscript.flagLastMoveAsCheck(gamefile);
+	if (gamefile.inCheck && flagMoveAsCheck) movesscript.flagLastMoveAsCheck(gamefile);
 }
 
 /**
@@ -310,26 +310,26 @@ function updateInCheck(gamefile, flagMoveAsCheck = true) {
  * @param {string[]} moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
 function makeAllMovesInGame(gamefile, moves) {
-    if (gamefile.moveIndex !== -1) throw new Error("Cannot make all moves in game when we're not at the beginning.");
+	if (gamefile.moveIndex !== -1) throw new Error("Cannot make all moves in game when we're not at the beginning.");
         
-    for (let i = 0; i < moves.length; i++) {
+	for (let i = 0; i < moves.length; i++) {
 
-        const shortmove = moves[i];
-        const move = calculateMoveFromShortmove(gamefile, shortmove);
-        // The makeMove() method auto-reconstructs the `captured` property.
+		const shortmove = moves[i];
+		const move = calculateMoveFromShortmove(gamefile, shortmove);
+		// The makeMove() method auto-reconstructs the `captured` property.
 
-        if (!move) throw new Error(`Cannot make all moves in game! There was a move in an invalid format: ${shortmove}. Index: ${i}`);
+		if (!move) throw new Error(`Cannot make all moves in game! There was a move in an invalid format: ${shortmove}. Index: ${i}`);
 
-        // Make the move in the game!
+		// Make the move in the game!
 
-        const isLastMove = i === moves.length - 1;
-        const animate = isLastMove;
-        makeMove(gamefile, move, { pushClock: false, updateData: false, concludeGameIfOver: false, doGameOverChecks: false, animate });
-    }
+		const isLastMove = i === moves.length - 1;
+		const animate = isLastMove;
+		makeMove(gamefile, move, { pushClock: false, updateData: false, concludeGameIfOver: false, doGameOverChecks: false, animate });
+	}
 
-    if (moves.length === 0) updateInCheck(gamefile, false);
-    // Perform game over checks.
-    gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver: false });
+	if (moves.length === 0) updateInCheck(gamefile, false);
+	// Perform game over checks.
+	gamefileutility.updateGameConclusion(gamefile, { concludeGameIfOver: false });
 }
 
 /**
@@ -344,37 +344,37 @@ function makeAllMovesInGame(gamefile, moves) {
  * @returns {Move | undefined} The move object, or undefined if there was an error.
  */
 function calculateMoveFromShortmove(gamefile, shortmove) {
-    if (!movesscript.areWeViewingLatestMove(gamefile)) return console.error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
+	if (!movesscript.areWeViewingLatestMove(gamefile)) return console.error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
 
-    // Reconstruct the startCoords, endCoords, and promotion properties of the longmove
+	// Reconstruct the startCoords, endCoords, and promotion properties of the longmove
 
-    /** @type {Move} */
-    let move;
-    try {
-        move = formatconverter.ShortToLong_CompactMove(shortmove); // { startCoords, endCoords, promotion }
-    } catch (error) {
-        console.error(error);
-        console.error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);
-        return;
-    }
+	/** @type {Move} */
+	let move;
+	try {
+		move = formatconverter.ShortToLong_CompactMove(shortmove); // { startCoords, endCoords, promotion }
+	} catch (error) {
+		console.error(error);
+		console.error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);
+		return;
+	}
 
-    // Reconstruct the enpassant and castle properties by calculating what legal
-    // special moves this piece can make, comparing them to the move's endCoords,
-    // and if there's a match, pass on the special move flag.
+	// Reconstruct the enpassant and castle properties by calculating what legal
+	// special moves this piece can make, comparing them to the move's endCoords,
+	// and if there's a match, pass on the special move flag.
 
-    const selectedPiece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
-    if (!selectedPiece) return move; // Return without any special move properties, this will automatically be an illegal move.
+	const selectedPiece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
+	if (!selectedPiece) return move; // Return without any special move properties, this will automatically be an illegal move.
     
-    const legalSpecialMoves = legalmoves.calculate(gamefile, selectedPiece, { onlyCalcSpecials: true }).individual;
-    for (let i = 0; i < legalSpecialMoves.length; i++) {
-        const thisCoord = legalSpecialMoves[i];
-        if (!coordutil.areCoordsEqual(thisCoord, move.endCoords)) continue;
-        // Matched coordinates! Transfer any special move tags
-        specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, move);
-        break;
-    }
+	const legalSpecialMoves = legalmoves.calculate(gamefile, selectedPiece, { onlyCalcSpecials: true }).individual;
+	for (let i = 0; i < legalSpecialMoves.length; i++) {
+		const thisCoord = legalSpecialMoves[i];
+		if (!coordutil.areCoordsEqual(thisCoord, move.endCoords)) continue;
+		// Matched coordinates! Transfer any special move tags
+		specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, move);
+		break;
+	}
 
-    return move;
+	return move;
 }
 
 /**
@@ -390,21 +390,21 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 
 function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, updateData = true, updateProperties = true, simulated = false } = {}) {
 
-    while (true) { // For as long as we have moves to forward...
-        const nextIndex = gamefile.moveIndex + 1;
-        if (movesscript.isIndexOutOfRange(gamefile.moves, nextIndex)) break;
+	while (true) { // For as long as we have moves to forward...
+		const nextIndex = gamefile.moveIndex + 1;
+		if (movesscript.isIndexOutOfRange(gamefile.moves, nextIndex)) break;
 
-        const nextMove = movesscript.getMoveFromIndex(gamefile.moves, nextIndex);
+		const nextMove = movesscript.getMoveFromIndex(gamefile.moves, nextIndex);
 
-        const isLastMove = movesscript.isIndexTheLastMove(gamefile.moves, nextIndex);
-        const animate = animateLastMove && isLastMove;
-        makeMove(gamefile, nextMove, { recordMove: false, pushClock: false, doGameOverChecks: false, flipTurn, animate, updateData, updateProperties, simulated });
-    }
+		const isLastMove = movesscript.isIndexTheLastMove(gamefile.moves, nextIndex);
+		const animate = animateLastMove && isLastMove;
+		makeMove(gamefile, nextMove, { recordMove: false, pushClock: false, doGameOverChecks: false, flipTurn, animate, updateData, updateProperties, simulated });
+	}
 
-    if (!simulated) guigameinfo.updateWhosTurn(gamefile);
+	if (!simulated) guigameinfo.updateWhosTurn(gamefile);
 
-    // If updateData is true, lock the rewind/forward buttons for a brief moment.
-    if (updateData) guinavigation.lockRewind();
+	// If updateData is true, lock the rewind/forward buttons for a brief moment.
+	if (updateData) guinavigation.lockRewind();
 }
 
 /**
@@ -416,11 +416,11 @@ function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, upd
  * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
  */
 function rewindGameToIndex(gamefile, moveIndex, { removeMove = true, updateData = true } = {}) {
-    if (removeMove && !movesscript.areWeViewingLatestMove(gamefile)) return console.error("Cannot rewind game to index while deleting moves unless we start at the most recent move. forwardToFront() first.");
-    if (gamefile.moveIndex < moveIndex) return console.error("Cannot rewind game to index when we need to forward instead.");
-    while (gamefile.moveIndex > moveIndex) rewindMove(gamefile, { animate: false, updateData, removeMove });
-    guigameinfo.updateWhosTurn(gamefile);
-    frametracker.onVisualChange();
+	if (removeMove && !movesscript.areWeViewingLatestMove(gamefile)) return console.error("Cannot rewind game to index while deleting moves unless we start at the most recent move. forwardToFront() first.");
+	if (gamefile.moveIndex < moveIndex) return console.error("Cannot rewind game to index when we need to forward instead.");
+	while (gamefile.moveIndex > moveIndex) rewindMove(gamefile, { animate: false, updateData, removeMove });
+	guigameinfo.updateWhosTurn(gamefile);
+	frametracker.onVisualChange();
 }
 
 /**
@@ -435,49 +435,49 @@ function rewindGameToIndex(gamefile, moveIndex, { removeMove = true, updateData 
  */
 function rewindMove(gamefile, { updateData = true, removeMove = true, animate = true } = {}) {
 
-    const move = movesscript.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
-    const trimmedType = colorutil.trimColorExtensionFromType(move.type);
+	const move = movesscript.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
+	const trimmedType = colorutil.trimColorExtensionFromType(move.type);
 
-    let isSpecialMove = false;
-    if (gamefile.specialUndos[trimmedType]) isSpecialMove = gamefile.specialUndos[trimmedType](gamefile, move, { updateData, animate });
-    if (!isSpecialMove) rewindMove_NoSpecial(gamefile, move, { updateData, animate });
+	let isSpecialMove = false;
+	if (gamefile.specialUndos[trimmedType]) isSpecialMove = gamefile.specialUndos[trimmedType](gamefile, move, { updateData, animate });
+	if (!isSpecialMove) rewindMove_NoSpecial(gamefile, move, { updateData, animate });
 
-    // inCheck and attackers are always restored, no matter if we're deleting the move or not.
-    gamefile.inCheck = move.rewindInfo.inCheck;
-    if (move.rewindInfo.attackers) gamefile.attackers = move.rewindInfo.attackers;
-    if (removeMove) { // Restore original values
-        gamefile.enpassant = move.rewindInfo.enpassant;
-        gamefile.moveRuleState = move.rewindInfo.moveRuleState;
-        gamefile.checksGiven = move.rewindInfo.checksGiven;
-        if (move.rewindInfo.specialRightStart) { // Restore their special right
-            const key = coordutil.getKeyFromCoords(move.startCoords);
-            gamefile.specialRights[key] = true;
-        }
-        if (move.rewindInfo.specialRightEnd) { // Restore their special right
-            const key = coordutil.getKeyFromCoords(move.endCoords);
-            gamefile.specialRights[key] = true;
-        }
-        gamefile.gameConclusion = move.rewindInfo.gameConclusion; // Simulated moves may or may not have performed game over checks.
-    }
-    // The capturedIndex and pawnIndex are only used for undo'ing
-    // simulated moves, so that we don't screw up the mesh
-    delete move.rewindInfo.capturedIndex;
-    delete move.rewindInfo.pawnIndex;
+	// inCheck and attackers are always restored, no matter if we're deleting the move or not.
+	gamefile.inCheck = move.rewindInfo.inCheck;
+	if (move.rewindInfo.attackers) gamefile.attackers = move.rewindInfo.attackers;
+	if (removeMove) { // Restore original values
+		gamefile.enpassant = move.rewindInfo.enpassant;
+		gamefile.moveRuleState = move.rewindInfo.moveRuleState;
+		gamefile.checksGiven = move.rewindInfo.checksGiven;
+		if (move.rewindInfo.specialRightStart) { // Restore their special right
+			const key = coordutil.getKeyFromCoords(move.startCoords);
+			gamefile.specialRights[key] = true;
+		}
+		if (move.rewindInfo.specialRightEnd) { // Restore their special right
+			const key = coordutil.getKeyFromCoords(move.endCoords);
+			gamefile.specialRights[key] = true;
+		}
+		gamefile.gameConclusion = move.rewindInfo.gameConclusion; // Simulated moves may or may not have performed game over checks.
+	}
+	// The capturedIndex and pawnIndex are only used for undo'ing
+	// simulated moves, so that we don't screw up the mesh
+	delete move.rewindInfo.capturedIndex;
+	delete move.rewindInfo.pawnIndex;
 
-    // Finally, delete the move off the top of our moves [] array list
-    if (removeMove) movesscript.deleteLastMove(gamefile.moves);
-    gamefile.moveIndex--;
+	// Finally, delete the move off the top of our moves [] array list
+	if (removeMove) movesscript.deleteLastMove(gamefile.moves);
+	gamefile.moveIndex--;
 
-    if (removeMove) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false });
+	if (removeMove) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false });
 
-    // if (animate) updateInCheck(gamefile, false)
-    // No longer needed, as rewinding the move restores the inCheck property.
-    // updateInCheck(gamefile, false)
+	// if (animate) updateInCheck(gamefile, false)
+	// No longer needed, as rewinding the move restores the inCheck property.
+	// updateInCheck(gamefile, false)
 
-    if (updateData) {
-        guinavigation.update_MoveButtons();
-        frametracker.onVisualChange();
-    }
+	if (updateData) {
+		guinavigation.update_MoveButtons();
+		frametracker.onVisualChange();
+	}
 }
 
 /**
@@ -490,15 +490,15 @@ function rewindMove(gamefile, { updateData = true, removeMove = true, animate = 
  * - `animate`: Whether to animate this move.
  */
 function rewindMove_NoSpecial(gamefile, move, { updateData = true, animate = true } = {}) {
-    const movedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords); // Returns { type, index, coords }
-    movePiece(gamefile, movedPiece, move.startCoords, { updateData }); // Changes the pieces coords and data in the organized lists without making any captures.
+	const movedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords); // Returns { type, index, coords }
+	movePiece(gamefile, movedPiece, move.startCoords, { updateData }); // Changes the pieces coords and data in the organized lists without making any captures.
 
-    if (move.captured) { // Replace the piece captured
-        const type = move.captured;
-        addPiece(gamefile, type, move.endCoords, move.rewindInfo.capturedIndex, { updateData });
-    }
+	if (move.captured) { // Replace the piece captured
+		const type = move.captured;
+		addPiece(gamefile, type, move.endCoords, move.rewindInfo.capturedIndex, { updateData });
+	}
 
-    if (animate) animation.animatePiece(move.type, move.endCoords, move.startCoords);
+	if (animate) animation.animatePiece(move.type, move.endCoords, move.startCoords);
 }
 
 /**
@@ -514,22 +514,22 @@ function rewindMove_NoSpecial(gamefile, move, { updateData = true, animate = tru
  * - `gameConclusion`: The resulting `gameConclusion` after the move, if `doGameOverChecks` was specified as *true*.
  */
 function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = false } = {}) {
-    // Moves the piece without unselecting it or regenerating the pieces model.
-    makeMove(gamefile, move, { pushClock: false, animate: false, updateData: false, simulated: true, doGameOverChecks, updateProperties: doGameOverChecks });
+	// Moves the piece without unselecting it or regenerating the pieces model.
+	makeMove(gamefile, move, { pushClock: false, animate: false, updateData: false, simulated: true, doGameOverChecks, updateProperties: doGameOverChecks });
     
-    // What info can we pull from the game after simulating this move?
-    const info = {
-        isCheck: doGameOverChecks ? gamefile.inCheck : checkdetection.detectCheck(gamefile, colorToTestInCheck, []),
-        gameConclusion: doGameOverChecks ? gamefile.gameConclusion : undefined
-    };
+	// What info can we pull from the game after simulating this move?
+	const info = {
+		isCheck: doGameOverChecks ? gamefile.inCheck : checkdetection.detectCheck(gamefile, colorToTestInCheck, []),
+		gameConclusion: doGameOverChecks ? gamefile.gameConclusion : undefined
+	};
 
-    // Undo the move, REWIND.
-    // We don't have to worry about the index changing, it is the same.
-    // BUT THE CAPTURED PIECE MUST be inserted in the exact location!
-    // Only remove the move
-    rewindMove(gamefile, { updateData: false, animate: false });
+	// Undo the move, REWIND.
+	// We don't have to worry about the index changing, it is the same.
+	// BUT THE CAPTURED PIECE MUST be inserted in the exact location!
+	// Only remove the move
+	rewindMove(gamefile, { updateData: false, animate: false });
 
-    return info; // Info from simulating the move: { isCheck, gameConclusion }
+	return info; // Info from simulating the move: { isCheck, gameConclusion }
 }
 
 /**
@@ -541,15 +541,15 @@ function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = f
 function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]]; }
 
 export default {
-    makeMove,
-    movePiece,
-    addPiece,
-    deletePiece,
-    makeAllMovesInGame,
-    calculateMoveFromShortmove,
-    forwardToFront,
-    rewindGameToIndex,
-    rewindMove,
-    simulateMove,
-    stripSpecialMoveTagsFromCoords
+	makeMove,
+	movePiece,
+	addPiece,
+	deletePiece,
+	makeAllMovesInGame,
+	calculateMoveFromShortmove,
+	forwardToFront,
+	rewindGameToIndex,
+	rewindMove,
+	simulateMove,
+	stripSpecialMoveTagsFromCoords
 };

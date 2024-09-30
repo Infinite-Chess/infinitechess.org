@@ -17,17 +17,17 @@ let navigationStyle;
 // Add and remove classes
 
 function addClass(element, className) {
-    element.classList.add(className);
+	element.classList.add(className);
 }
 
 function removeClass(element, className) {
-    element.classList.remove(className);
+	element.classList.remove(className);
 }
 
 // Removes the class, THEN adds it back! This starts over animations
 function reinstateClass(element, className) {
-    removeClass(element, className);
-    addClass(element, className);
+	removeClass(element, className);
+	addClass(element, className);
 }
 
 // Hide and show elements...
@@ -37,7 +37,7 @@ function reinstateClass(element, className) {
  * @param {HTMLElement} element - The document element
  */
 function hideElement(element) {
-    addClass(element, "hidden");
+	addClass(element, "hidden");
 }
 
 /**
@@ -45,57 +45,57 @@ function hideElement(element) {
  * @param {HTMLElement} element - The document element
  */
 function revealElement(element) {
-    removeClass(element, "hidden");
+	removeClass(element, "hidden");
 }
 
 // Animate elements
 
 // Fades in the element over the span of 1 second
 function fadeIn1s(element) {
-    revealElement(element); // Make sure the element no longer has the 'display: none' property.
-    reinstateClass(element, 'fade-in-2_3s'); // This class contain the fade-in animation that begins immediately upon receiving this property
+	revealElement(element); // Make sure the element no longer has the 'display: none' property.
+	reinstateClass(element, 'fade-in-2_3s'); // This class contain the fade-in animation that begins immediately upon receiving this property
 
-    if (!element.fadeIn1sLayers) element.fadeIn1sLayers = 1;
-    else element.fadeIn1sLayers++;
+	if (!element.fadeIn1sLayers) element.fadeIn1sLayers = 1;
+	else element.fadeIn1sLayers++;
 
-    setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
-        element.fadeIn1sLayers--;
-        if (element.fadeIn1sLayers > 0) return; // The fade-in-1s animation was RENEWED
-        delete element.fadeIn1sLayers;
-        removeClass(element, 'fade-in-2_3s');
-    }, 1000);
+	setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
+		element.fadeIn1sLayers--;
+		if (element.fadeIn1sLayers > 0) return; // The fade-in-1s animation was RENEWED
+		delete element.fadeIn1sLayers;
+		removeClass(element, 'fade-in-2_3s');
+	}, 1000);
 }
 
 // Fades out the element over the span of 1 second
 function fadeOut1s(element) {
-    revealElement(element);
-    reinstateClass(element,'fade-out-2_3s'); // This class contain the fade-out animation that begins immediately upon receiving this property.
+	revealElement(element);
+	reinstateClass(element,'fade-out-2_3s'); // This class contain the fade-out animation that begins immediately upon receiving this property.
     
-    if (!element.fadeOut1sLayers) element.fadeOut1sLayers = 1;
-    else element.fadeOut1sLayers++;
+	if (!element.fadeOut1sLayers) element.fadeOut1sLayers = 1;
+	else element.fadeOut1sLayers++;
 
-    setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
-        element.fadeOut1sLayers--;
-        if (element.fadeOut1sLayers > 0) return; // The fade-in-1s animation was RENEWED
-        delete element.fadeOut1sLayers;
-        removeClass(element, 'fade-out-2_3s');
-        hideElement(element);
-    }, 1000);
+	setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
+		element.fadeOut1sLayers--;
+		if (element.fadeOut1sLayers > 0) return; // The fade-in-1s animation was RENEWED
+		delete element.fadeOut1sLayers;
+		removeClass(element, 'fade-out-2_3s');
+		hideElement(element);
+	}, 1000);
 }
 
 // Other operations
 
 function setNavStyle(cssStyle) {
-    navigationStyle = cssStyle;
-    onStyleChange();
+	navigationStyle = cssStyle;
+	onStyleChange();
 }
 
 function onStyleChange() {
-    updateJavascriptStyling();
+	updateJavascriptStyling();
 }
 
 function updateJavascriptStyling() {
-    element_style.innerHTML = navigationStyle; // Other styles can be appended here later
+	element_style.innerHTML = navigationStyle; // Other styles can be appended here later
 }
 
 /**
@@ -104,25 +104,25 @@ function updateJavascriptStyling() {
  * @returns {string[]} An array of text contents of the child elements.
  */
 function getChildrenTextContents(parentElement) {
-    // Get all child elements
-    const children = parentElement.children;
+	// Get all child elements
+	const children = parentElement.children;
     
-    // Create an array to hold the text contents
-    const textContents = [];
+	// Create an array to hold the text contents
+	const textContents = [];
 
-    // Loop through the child elements and extract their text content
-    for (let i = 0; i < children.length; i++) {
-        textContents.push(children[i].textContent);
-    }
+	// Loop through the child elements and extract their text content
+	for (let i = 0; i < children.length; i++) {
+		textContents.push(children[i].textContent);
+	}
 
-    return textContents;
+	return textContents;
 }
 
 export default {
-    hideElement,
-    revealElement,
-    setNavStyle,
-    fadeIn1s,
-    fadeOut1s,
-    getChildrenTextContents
+	hideElement,
+	revealElement,
+	setNavStyle,
+	fadeIn1s,
+	fadeOut1s,
+	getChildrenTextContents
 };

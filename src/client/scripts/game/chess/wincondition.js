@@ -34,7 +34,7 @@ const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
  * @returns {string | false} The conclusion string, if the game is over. For example, "white checkmate", or "draw stalemate". If the game isn't over, this returns *false*.
  */
 function getGameConclusion(gamefile) {
-    return detectAllpiecescaptured(gamefile)
+	return detectAllpiecescaptured(gamefile)
         || detectRoyalCapture(gamefile)
         || detectAllroyalscaptured(gamefile)
         || detectKoth(gamefile)
@@ -46,73 +46,73 @@ function getGameConclusion(gamefile) {
 }
 
 function detectRoyalCapture(gamefile) {
-    if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule
 
-    // Was the last move capturing a royal piece?
-    if (wasLastMoveARoyalCapture(gamefile)) {
-        const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
-        return `${colorThatWon} royalcapture`;
-    }
+	// Was the last move capturing a royal piece?
+	if (wasLastMoveARoyalCapture(gamefile)) {
+		const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+		return `${colorThatWon} royalcapture`;
+	}
 
-    return false;
+	return false;
 }
 
 function detectAllroyalscaptured(gamefile) {
-    if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'allroyalscaptured')) return false; // Not using this gamerule
-    if (!wasLastMoveARoyalCapture(gamefile)) return false; // Last move wasn't a royal capture.
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'allroyalscaptured')) return false; // Not using this gamerule
+	if (!wasLastMoveARoyalCapture(gamefile)) return false; // Last move wasn't a royal capture.
 
-    // Are there any royal pieces remaining?
-    // Remember that whosTurn has already been flipped since the last move.
-    const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, typeutil.royals, gamefile.whosTurn);
+	// Are there any royal pieces remaining?
+	// Remember that whosTurn has already been flipped since the last move.
+	const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, typeutil.royals, gamefile.whosTurn);
 
-    if (royalCount === 0) {
-        const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
-        return `${colorThatWon} allroyalscaptured`;
-    }
+	if (royalCount === 0) {
+		const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+		return `${colorThatWon} allroyalscaptured`;
+	}
 
-    return false;
+	return false;
 }
 
 function detectAllpiecescaptured(gamefile) {
-    if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'allpiecescaptured')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'allpiecescaptured')) return false; // Not using this gamerule
 
-    // If the player who's turn it is now has zero pieces left, win!
-    const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn);
+	// If the player who's turn it is now has zero pieces left, win!
+	const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn);
 
-    if (count === 0) {
-        const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
-        return `${colorThatWon} allpiecescaptured`;
-    }
+	if (count === 0) {
+		const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+		return `${colorThatWon} allpiecescaptured`;
+	}
 
-    return false;
+	return false;
 }
 
 function detectKoth(gamefile) {
-    if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'koth')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'koth')) return false; // Not using this gamerule
 
-    // Was the last move a king move?
-    const lastMove = movesscript.getLastMove(gamefile.moves);
-    if (!lastMove) return false;
-    if (!lastMove.type.startsWith('kings')) return false;
+	// Was the last move a king move?
+	const lastMove = movesscript.getLastMove(gamefile.moves);
+	if (!lastMove) return false;
+	if (!lastMove.type.startsWith('kings')) return false;
 
-    let kingInCenter = false;
-    for (let i = 0; i < kothCenterSquares.length; i++) {
-        const thisCenterSquare = kothCenterSquares[i];
+	let kingInCenter = false;
+	for (let i = 0; i < kothCenterSquares.length; i++) {
+		const thisCenterSquare = kothCenterSquares[i];
 
-        const typeAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisCenterSquare);
-        if (!typeAtSquare) continue;
-        if (typeAtSquare.startsWith('kings')) {
-            kingInCenter = true;
-            break;
-        }
-    }
+		const typeAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisCenterSquare);
+		if (!typeAtSquare) continue;
+		if (typeAtSquare.startsWith('kings')) {
+			kingInCenter = true;
+			break;
+		}
+	}
 
-    if (kingInCenter) {
-        const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
-        return `${colorThatWon} koth`;
-    }
+	if (kingInCenter) {
+		const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+		return `${colorThatWon} koth`;
+	}
 
-    return false;
+	return false;
 }
 
 /**
@@ -121,22 +121,22 @@ function detectKoth(gamefile) {
  * @returns {string | false} 'draw moverule', if the game is over by the move-rule, otherwise *false*.
  */
 function detectMoveRule(gamefile) {
-    if (!gamefile.gameRules.moveRule) return false; // No move-rule being used
-    if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return 'draw moverule';
-    return false;
+	if (!gamefile.gameRules.moveRule) return false; // No move-rule being used
+	if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return 'draw moverule';
+	return false;
 }
 
 // Returns true if the very last move captured a royal piece.
 function wasLastMoveARoyalCapture(gamefile) {
-    const lastMove = movesscript.getLastMove(gamefile.moves);
-    if (!lastMove) return false;
+	const lastMove = movesscript.getLastMove(gamefile.moves);
+	if (!lastMove) return false;
 
-    if (!lastMove.captured) return false; // Last move not a capture
+	if (!lastMove.captured) return false; // Last move not a capture
 
-    const trimmedTypeCaptured = colorutil.trimColorExtensionFromType(lastMove.captured);
+	const trimmedTypeCaptured = colorutil.trimColorExtensionFromType(lastMove.captured);
 
-    // Does the piece type captured equal any royal piece?
-    return typeutil.royals.includes(trimmedTypeCaptured);
+	// Does the piece type captured equal any royal piece?
+	return typeutil.royals.includes(trimmedTypeCaptured);
 }
 
 /**
@@ -150,11 +150,11 @@ function wasLastMoveARoyalCapture(gamefile) {
  * @returns {boolean} true if the gamefile is checkmate compatible
  */
 function isCheckmateCompatibleWithGame(gamefile) {
-    if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
-    if (organizedlines.areColinearSlidesPresentInGame(gamefile)) return false; // Logic surrounding making opening discovered attacks illegal is a nightmare.
-    if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
-    if (movesscript.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
-    return true; // Checkmate compatible!
+	if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
+	if (organizedlines.areColinearSlidesPresentInGame(gamefile)) return false; // Logic surrounding making opening discovered attacks illegal is a nightmare.
+	if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
+	if (movesscript.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
+	return true; // Checkmate compatible!
 }
 
 /**
@@ -163,15 +163,15 @@ function isCheckmateCompatibleWithGame(gamefile) {
  * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
  */
 function getTerminationInEnglish(gameRules, condition) {
-    if (condition === 'moverule') { // One exception
-        const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
-        return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
-    }
-    return translations.termination[condition];
+	if (condition === 'moverule') { // One exception
+		const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
+		return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
+	}
+	return translations.termination[condition];
 }
 
 export default {
-    getGameConclusion,
-    isCheckmateCompatibleWithGame,
-    getTerminationInEnglish,
+	getGameConclusion,
+	isCheckmateCompatibleWithGame,
+	getTerminationInEnglish,
 };

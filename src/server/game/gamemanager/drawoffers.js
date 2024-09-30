@@ -32,7 +32,7 @@ const movesBetweenDrawOffers = 2;
  * @returns {boolean}
  */
 function isDrawOfferOpen(game) {
-    return game.drawOffers.state !== undefined;
+	return game.drawOffers.state !== undefined;
 }
 
 /**
@@ -42,7 +42,7 @@ function isDrawOfferOpen(game) {
  * @returns {boolean}
  */
 function doesColorHaveExtendedDrawOffer(game, color) {
-    return game.drawOffers.state === color;
+	return game.drawOffers.state === color;
 }
 
 /**
@@ -53,12 +53,12 @@ function doesColorHaveExtendedDrawOffer(game, color) {
  * @returns {boolean}
  */
 function hasColorOfferedDrawTooFast(game, color) {
-    const lastPlyDrawOffered = game.drawOffers.lastOfferPly[color]; // number | undefined
-    if (lastPlyDrawOffered !== undefined) { // They have made atleast 1 offer this game
-        const movesSinceLastOffer = game.moves.length - lastPlyDrawOffered;
-        if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
-    }
-    return false;
+	const lastPlyDrawOffered = game.drawOffers.lastOfferPly[color]; // number | undefined
+	if (lastPlyDrawOffered !== undefined) { // They have made atleast 1 offer this game
+		const movesSinceLastOffer = game.moves.length - lastPlyDrawOffered;
+		if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
+	}
+	return false;
 }
 
 /**
@@ -68,9 +68,9 @@ function hasColorOfferedDrawTooFast(game, color) {
  * @param {string} color - The color of the player extending the offer
  */
 function openDrawOffer(game, color) {
-    if (isDrawOfferOpen(game)) return logEvents("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt", { print: true });
-    game.drawOffers.lastOfferPly[color] = game.moves.length;
-    game.drawOffers.state = color;
+	if (isDrawOfferOpen(game)) return logEvents("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt", { print: true });
+	game.drawOffers.lastOfferPly[color] = game.moves.length;
+	game.drawOffers.state = color;
 }
 
 /**
@@ -79,7 +79,7 @@ function openDrawOffer(game, color) {
  * @param {Game} game
  */
 function closeDrawOffer(game) {
-    game.drawOffers.state = undefined;
+	game.drawOffers.state = undefined;
 }
 
 /**
@@ -90,17 +90,17 @@ function closeDrawOffer(game) {
  * @returns {number | undefined}
  */
 function getLastDrawOfferPlyOfColor(game, color) {
-    return game.drawOffers.lastOfferPly[color];
+	return game.drawOffers.lastOfferPly[color];
 }
 
 //--------------------------------------------------------------------------------------------------------
 
 export {
-    movesBetweenDrawOffers,
-    isDrawOfferOpen,
-    doesColorHaveExtendedDrawOffer,
-    hasColorOfferedDrawTooFast,
-    openDrawOffer,
-    closeDrawOffer,
-    getLastDrawOfferPlyOfColor,
+	movesBetweenDrawOffers,
+	isDrawOfferOpen,
+	doesColorHaveExtendedDrawOffer,
+	hasColorOfferedDrawTooFast,
+	openDrawOffer,
+	closeDrawOffer,
+	getLastDrawOfferPlyOfColor,
 };

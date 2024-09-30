@@ -68,38 +68,38 @@ function setClearColor(newClearColor) { clearColor = newClearColor; }
  * Initiate the WebGL context. This is our web-based render engine.
  */
 function init() {
-    if (useWebGL2) {
-        // Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-        gl = camera.canvas.getContext('webgl2', { alpha: false });
-        if (!gl) console.log("Browser doesn't support WebGL-2, falling back to WebGL-1.");
-    }
-    if (!gl) { // Init WebGL-1
-        gl = camera.canvas.getContext('webgl', { alpha: false });
-    }
-    if (!gl) { // Init WebGL experimental
-        console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.");
-        gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
-    }
-    if (!gl) { // Experimental also failed to init
-        alert(translations.webgl_unsupported);
-        throw new Error("WebGL not supported.");
-    }
+	if (useWebGL2) {
+		// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
+		gl = camera.canvas.getContext('webgl2', { alpha: false });
+		if (!gl) console.log("Browser doesn't support WebGL-2, falling back to WebGL-1.");
+	}
+	if (!gl) { // Init WebGL-1
+		gl = camera.canvas.getContext('webgl', { alpha: false });
+	}
+	if (!gl) { // Init WebGL experimental
+		console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.");
+		gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
+	}
+	if (!gl) { // Experimental also failed to init
+		alert(translations.webgl_unsupported);
+		throw new Error("WebGL not supported.");
+	}
 
-    gl.clearDepth(1.0); // Set the clear depth value
-    clearScreen();
+	gl.clearDepth(1.0); // Set the clear depth value
+	clearScreen();
 
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl[defaultDepthFuncParam]);
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl[defaultDepthFuncParam]);
 
-    gl.enable(gl.BLEND);
-    toggleNormalBlending();
+	gl.enable(gl.BLEND);
+	toggleNormalBlending();
 
-    if (culling) {
-        gl.enable(gl.CULL_FACE);
-        const dir = frontFaceVerticesAreClockwise ? gl.CW : gl.CCW;
-        gl.frontFace(dir); // Specifies what faces are considered front, depending on their vertices direction.
-        gl.cullFace(gl.BACK); // Skip rendering back faces. Alertnatively we could skip rendering FRONT faces.
-    }
+	if (culling) {
+		gl.enable(gl.CULL_FACE);
+		const dir = frontFaceVerticesAreClockwise ? gl.CW : gl.CCW;
+		gl.frontFace(dir); // Specifies what faces are considered front, depending on their vertices direction.
+		gl.cullFace(gl.BACK); // Skip rendering back faces. Alertnatively we could skip rendering FRONT faces.
+	}
 }
 
 /**
@@ -107,8 +107,8 @@ function init() {
  * Needs to be called every frame.
  */
 function clearScreen() {
-    gl.clearColor(...clearColor, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.clearColor(...clearColor, 1.0);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }
 
 /**
@@ -133,10 +133,10 @@ function toggleInverseBlending() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.GL_ZE
  * @param {...*} args - Arguments to pass to the function.
  */
 function executeWithDepthFunc_ALWAYS(func, ...args) {
-    // This prevents tearing when rendering in the same z-level and in perspective.
-    gl.depthFunc(gl.ALWAYS); // Temporary toggle the depth function to ALWAYS.
-    func(...args);
-    gl.depthFunc(gl[defaultDepthFuncParam]); // Return to the original blending.
+	// This prevents tearing when rendering in the same z-level and in perspective.
+	gl.depthFunc(gl.ALWAYS); // Temporary toggle the depth function to ALWAYS.
+	func(...args);
+	gl.depthFunc(gl[defaultDepthFuncParam]); // Return to the original blending.
 }
 
 /**
@@ -148,9 +148,9 @@ function executeWithDepthFunc_ALWAYS(func, ...args) {
  * @param {Function} func 
  */
 function executeWithInverseBlending(func) {
-    toggleInverseBlending();
-    func();
-    toggleNormalBlending();
+	toggleInverseBlending();
+	func();
+	toggleNormalBlending();
 }
 
 /**
@@ -159,7 +159,7 @@ function executeWithInverseBlending(func) {
  * @param {WebGLRenderingContext} gl - The WebGL context.
  */
 function queryWebGLContextInfo() {
-    const params = [
+	const params = [
         { name: 'MAX_TEXTURE_SIZE', desc: 'Maximum texture size', guaranteed: 64 },
         { name: 'MAX_CUBE_MAP_TEXTURE_SIZE', desc: 'Maximum cube map texture size', guaranteed: 16 },
         { name: 'MAX_RENDERBUFFER_SIZE', desc: 'Maximum renderbuffer size', guaranteed: 1 },
@@ -182,20 +182,20 @@ function queryWebGLContextInfo() {
         { name: 'MAX_SAMPLES', desc: 'Maximum samples', guaranteed: 4 },
     ];
 
-    console.log('WebGL Context Information:');
-    params.forEach(param => {
-        const value = gl.getParameter(gl[param.name]);
-        console.log(`${param.desc}:`, value, `(Guaranteed: ${param.guaranteed})`);
-    });
+	console.log('WebGL Context Information:');
+	params.forEach(param => {
+		const value = gl.getParameter(gl[param.name]);
+		console.log(`${param.desc}:`, value, `(Guaranteed: ${param.guaranteed})`);
+	});
 }
 
 export default {
-    init,
-    clearScreen,
-    executeWithDepthFunc_ALWAYS,
-    executeWithInverseBlending,
-    setClearColor,
-    queryWebGLContextInfo
+	init,
+	clearScreen,
+	executeWithDepthFunc_ALWAYS,
+	executeWithInverseBlending,
+	setClearColor,
+	queryWebGLContextInfo
 };
 
 export { gl };

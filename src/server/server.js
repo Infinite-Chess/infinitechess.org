@@ -44,13 +44,13 @@ let cleanupDone = false;
 process.on('SIGUSR2', async() => { await handleCleanup('SIGUSR2'); }); // A file was saved (nodemon auto restarts)
 process.on('SIGINT', async() => { await handleCleanup('SIGINT'); }); // Ctrl>C was pressed (force terminates nodemon)
 async function handleCleanup(signal) {
-    if (cleanupDone) return; // Sometimes this is called twice
-    cleanupDone = true;
-    console.log(`\nReceived ${signal}. Cleaning up...`);
+	if (cleanupDone) return; // Sometimes this is called twice
+	cleanupDone = true;
+	console.log(`\nReceived ${signal}. Cleaning up...`);
 
-    await saveMembersIfChangesMade();
-    await saveRolesIfChangesMade();
-    await logAllGames();
+	await saveMembersIfChangesMade();
+	await saveRolesIfChangesMade();
+	await logAllGames();
 
-    process.exit(0);
+	process.exit(0);
 }

@@ -12,7 +12,7 @@
  * @returns {boolean} - Returns true if both coordinates are integers, otherwise false.
  */
 function areCoordsIntegers(coords) {
-    return Number.isInteger(coords[0]) && Number.isInteger(coords[1]);
+	return Number.isInteger(coords[0]) && Number.isInteger(coords[1]);
 }
 
 /**
@@ -21,7 +21,7 @@ function areCoordsIntegers(coords) {
  * @returns {string} The key
  */
 function getKeyFromCoords(coords) {
-    return `${coords[0]},${coords[1]}`;
+	return `${coords[0]},${coords[1]}`;
 }
 
 /**
@@ -30,7 +30,7 @@ function getKeyFromCoords(coords) {
  * @return {number[]} The coordinates of the piece, [x,y]
  */
 function getCoordsFromKey(key) {
-    return key.split(',').map(Number);
+	return key.split(',').map(Number);
 }
 
 /**
@@ -40,18 +40,18 @@ function getCoordsFromKey(key) {
  * @returns {boolean} Whether the coordinates are equal
  */
 function areCoordsEqual(coord1, coord2) {
-    if (!coord1 || !coord2) return false; // One undefined, can't be equal
-    return coord1[0] === coord2[0] && coord1[1] === coord2[1];
+	if (!coord1 || !coord2) return false; // One undefined, can't be equal
+	return coord1[0] === coord2[0] && coord1[1] === coord2[1];
 }
 
 function areCoordsEqual_noValidate(coord1, coord2) {
-    return coord1[0] === coord2[0] && coord1[1] === coord2[1];
+	return coord1[0] === coord2[0] && coord1[1] === coord2[1];
 }
 
 export default {
-    areCoordsIntegers,
-    getKeyFromCoords,
-    getCoordsFromKey,
-    areCoordsEqual,
-    areCoordsEqual_noValidate,
+	areCoordsIntegers,
+	getKeyFromCoords,
+	getCoordsFromKey,
+	areCoordsEqual,
+	areCoordsEqual_noValidate,
 };

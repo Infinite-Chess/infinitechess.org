@@ -10,10 +10,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const membersFilePath = path.resolve('database/members.json');
 (function ensureMembersFileExists() {
-    if (fs.existsSync(membersFilePath)) return; // Already exists
-    const content = JSON.stringify({});
-    writeFile_ensureDirectory(membersFilePath, content);
-    console.log("Generated members file");
+	if (fs.existsSync(membersFilePath)) return; // Already exists
+	const content = JSON.stringify({});
+	writeFile_ensureDirectory(membersFilePath, content);
+	console.log("Generated members file");
 })();
 
 const members = await readFile('database/members.json', 'Unable to read members.json on startup.');
@@ -30,14 +30,14 @@ const members = await readFile('database/members.json', 'Unable to read members.
  * list to invalidate it.
  */
 const refreshTokenHash = (function constructRefreshTokenList() {
-    const newRefreshTokenList = {};
-    for (const key in members) {
-        const member = members[key];
-        for (let i = 0; i < member.refreshTokens.length; i++) {
-            newRefreshTokenList[member.refreshTokens[i]] = key;
-        }
-    }
-    return newRefreshTokenList;
+	const newRefreshTokenList = {};
+	for (const key in members) {
+		const member = members[key];
+		for (let i = 0; i < member.refreshTokens.length; i++) {
+			newRefreshTokenList[member.refreshTokens[i]] = key;
+		}
+	}
+	return newRefreshTokenList;
 })();
 
 /** The maximum number of login sessions a user can have at once. */
@@ -46,11 +46,11 @@ const sessionsCap = 3;
 
 /** A hash table with each email in use for the key, and *true* for the value. */
 const emailHash = (function constructEmailHash() {
-    const newEmailList = {};
-    for (const key in members) {
-        newEmailList[members[key].email] = true;
-    }
-    return newEmailList;
+	const newEmailList = {};
+	for (const key in members) {
+		newEmailList[members[key].email] = true;
+	}
+	return newEmailList;
 })();
 
 
@@ -69,7 +69,7 @@ const intervalToSaveMembersMillis = 30000; // 30 seconds
  * @returns {boolean} true if the member exists
  */
 const doesMemberExist = (username) => {
-    return members[username] != null;
+	return members[username] != null;
 };
 
 /**
@@ -79,7 +79,7 @@ const doesMemberExist = (username) => {
  * @returns {string|undefined} Their case-sensitive username, if they exist, otherwise undefined.
  */
 const getUsernameCaseSensitive = (username) => {
-    return members[username]?.username;
+	return members[username]?.username;
 };
 
 /**
@@ -87,7 +87,7 @@ const getUsernameCaseSensitive = (username) => {
  * @returns {string[]} - An array of all usernames, in lowercase.
  */
 function getAllUsernames() {
-    return Object.keys(members);
+	return Object.keys(members);
 }
 
 /**
@@ -96,11 +96,11 @@ function getAllUsernames() {
  * @returns {string|undefined} Their hashed password, if they exist, otherwise undefined.
  */
 function getHashedPassword(username) {
-    return members[username]?.password;
+	return members[username]?.password;
 }
 
 const getEmail = (memberKey) => {
-    return members[memberKey]?.email;
+	return members[memberKey]?.email;
 };
 
 /**
@@ -109,20 +109,20 @@ const getEmail = (memberKey) => {
  * @returns {boolean} true if the email is not in use
  */
 const isEmailAvailable = function(email) {
-    if (emailHash[email]) return false;
-    return true;
+	if (emailHash[email]) return false;
+	return true;
 };
 
 function getJoinDate(username) {
-    return new Date(members[username]?.joined);
+	return new Date(members[username]?.joined);
 }
 
 function getLastSeen(username) {
-    return new Date(members[username]?.seen);
+	return new Date(members[username]?.seen);
 }
 
 function getElo(username) {
-    return members[username]?.elo;
+	return members[username]?.elo;
 }
 
 /**
@@ -131,7 +131,7 @@ function getElo(username) {
  * @returns {Object} Their member data, deep copied.
  */
 function getMemberData(username) {
-    return structuredClone(members[username]);
+	return structuredClone(members[username]);
 }
 
 /**
@@ -141,7 +141,7 @@ function getMemberData(username) {
  * @returns {string|undefined} - The member's username that owns that refreshToken, or undefined if it's invalid.
  */
 const findMemberFromRefreshToken = (refreshToken) => {
-    return refreshTokenHash[refreshToken];
+	return refreshTokenHash[refreshToken];
 };
 
 /**
@@ -153,19 +153,19 @@ const findMemberFromRefreshToken = (refreshToken) => {
  * @returns {boolean} true if the creation was a success (if false, it means they already exist).
  */
 function addMember(username, newMember) {
-    if (doesMemberExist(username)) {
-        const errString = `Error creating new member. ${getUsernameCaseSensitive(username)} already exists!`;
-        logEvents(errString, 'errLog.txt', { print: true });
-        return false;
-    }
+	if (doesMemberExist(username)) {
+		const errString = `Error creating new member. ${getUsernameCaseSensitive(username)} already exists!`;
+		logEvents(errString, 'errLog.txt', { print: true });
+		return false;
+	}
 
-    // Add the member
-    members[username] = newMember;
-    // Update email hash!
-    emailHash[newMember.email] = true;
+	// Add the member
+	members[username] = newMember;
+	// Update email hash!
+	emailHash[newMember.email] = true;
 
-    membersHasBeenEdited = true; // Flag it to be saved
-    return true; // Success
+	membersHasBeenEdited = true; // Flag it to be saved
+	return true; // Success
 }
 
 /**
@@ -175,20 +175,20 @@ function addMember(username, newMember) {
  * @returns {boolean} true if the deletion was a success.
  */
 function removeMember(username) {
-    // Just in case
-    if (!doesMemberExist(username)) {
-        const errString = `Error deleting member. ${username} does not exist!`;
-        logEvents(errString, 'errLog.txt', {print: true});
-        return false;
-    }
+	// Just in case
+	if (!doesMemberExist(username)) {
+		const errString = `Error deleting member. ${username} does not exist!`;
+		logEvents(errString, 'errLog.txt', {print: true});
+		return false;
+	}
 
-    // (Roles are removed from within removeAccountController)
-    deleteEmailFromHash(getEmail(username)); // Allows them to recreate an account with the same email
-    deleteAllRefreshTokensOfMemberFromHash(username); // Invalidates all their refresh tokens
+	// (Roles are removed from within removeAccountController)
+	deleteEmailFromHash(getEmail(username)); // Allows them to recreate an account with the same email
+	deleteAllRefreshTokensOfMemberFromHash(username); // Invalidates all their refresh tokens
 
-    delete members[username]; // Delete them
-    membersHasBeenEdited = true; // Flag it to be saved
-    return true; // Success
+	delete members[username]; // Delete them
+	membersHasBeenEdited = true; // Flag it to be saved
+	return true; // Success
 }
 
 /**
@@ -197,7 +197,7 @@ function removeMember(username) {
  * @param {string} email - The email to delete
  */
 function deleteEmailFromHash(email) {
-    delete emailHash[email];
+	delete emailHash[email];
 }
 
 /**
@@ -207,14 +207,14 @@ function deleteEmailFromHash(email) {
  * @returns {boolean} true if the member was found, and successfully incremented their login count.
  */
 function incrementLoginCount(username) {
-    if (!doesMemberExist(username)) {
-        const errText = `Could not increment login count of non-existent member "${username}"!`;
-        logEvents(errText, 'errLog.txt', { print: true });
-        return false;
-    }
-    members[username].logins++;
-    membersHasBeenEdited = true; // Flag it to be saved
-    return true; // Success
+	if (!doesMemberExist(username)) {
+		const errText = `Could not increment login count of non-existent member "${username}"!`;
+		logEvents(errText, 'errLog.txt', { print: true });
+		return false;
+	}
+	members[username].logins++;
+	membersHasBeenEdited = true; // Flag it to be saved
+	return true; // Success
 }
 
 /**
@@ -224,14 +224,14 @@ function incrementLoginCount(username) {
  * @returns {boolean} true if the member was found, and successfully updated their last-seen property.
  */
 function updateLastSeen(username) {
-    if (!doesMemberExist(username)) {
-        const errText = `Could not update last-seen date of non-existent member "${username}"!`;
-        logEvents(errText, 'errLog.txt', { print: true });
-        return false;
-    }
-    members[username].seen = new Date();
-    membersHasBeenEdited = true; // Flag it to be saved
-    return true; // Success
+	if (!doesMemberExist(username)) {
+		const errText = `Could not update last-seen date of non-existent member "${username}"!`;
+		logEvents(errText, 'errLog.txt', { print: true });
+		return false;
+	}
+	members[username].seen = new Date();
+	membersHasBeenEdited = true; // Flag it to be saved
+	return true; // Success
 }
 
 /**
@@ -243,24 +243,24 @@ function updateLastSeen(username) {
  * @returns {boolean} true if it was a success (if false, it means the member doesn't exist).
  */
 function addRefreshToken(username, refreshToken) {
-    if (!doesMemberExist(username)) {
-        const errText = `Cannot add the refresh token to the hash for a non-existent member "${username}"!`;
-        logEvents(errText, "errLog.txt", { print: true });
-        return false;
-    }
-    // Update the hash
-    refreshTokenHash[refreshToken] = username;
-    // Update the member data
-    const refreshTokens = members[username].refreshTokens;
-    refreshTokens.push(refreshToken);
-    while (refreshTokens.length > sessionsCap) {
-        const deletedToken = refreshTokens.shift();
-        // Invalidate it from the hash
-        delete refreshTokenHash[deletedToken];
-    }
+	if (!doesMemberExist(username)) {
+		const errText = `Cannot add the refresh token to the hash for a non-existent member "${username}"!`;
+		logEvents(errText, "errLog.txt", { print: true });
+		return false;
+	}
+	// Update the hash
+	refreshTokenHash[refreshToken] = username;
+	// Update the member data
+	const refreshTokens = members[username].refreshTokens;
+	refreshTokens.push(refreshToken);
+	while (refreshTokens.length > sessionsCap) {
+		const deletedToken = refreshTokens.shift();
+		// Invalidate it from the hash
+		delete refreshTokenHash[deletedToken];
+	}
 
-    membersHasBeenEdited = true; // Flag it to be saved
-    return true; // Success
+	membersHasBeenEdited = true; // Flag it to be saved
+	return true; // Success
 }
 
 /**
@@ -272,20 +272,20 @@ function addRefreshToken(username, refreshToken) {
  * @returns {boolean} true if it was a success (if false, it means the member doesn't exist).
  */
 const deleteRefreshToken = async(username, token) => {
-    if (!doesMemberExist(username)) {
-        const errText = `Cannot delete the refresh token from non-existent member "${username}"!`;
-        logEvents(errText, "errLog.txt", { print: true });
-        return false;
-    }
-    // Delete from the hash
-    delete refreshTokenHash[token];
-    // Delete from the member data
-    const thisMember = members[username];
-    const index = thisMember.refreshTokens.indexOf(token);
-    thisMember.refreshTokens.splice(index, 1);
+	if (!doesMemberExist(username)) {
+		const errText = `Cannot delete the refresh token from non-existent member "${username}"!`;
+		logEvents(errText, "errLog.txt", { print: true });
+		return false;
+	}
+	// Delete from the hash
+	delete refreshTokenHash[token];
+	// Delete from the member data
+	const thisMember = members[username];
+	const index = thisMember.refreshTokens.indexOf(token);
+	thisMember.refreshTokens.splice(index, 1);
 
-    membersHasBeenEdited = true; // Flag it to be saved
-    return true; // Success
+	membersHasBeenEdited = true; // Flag it to be saved
+	return true; // Success
 };
 
 /**
@@ -296,18 +296,18 @@ const deleteRefreshToken = async(username, token) => {
  * @returns {boolean} true if it was successful
  */
 function deleteAllRefreshTokensOfMemberFromHash(username) {
-    if (!doesMemberExist(username)) {
-        const errText = `Cannot delete all the refresh tokens from non-existent member "${username}"!`;
-        logEvents(errText, "errLog.txt", { print: true });
-        return false;
-    }
+	if (!doesMemberExist(username)) {
+		const errText = `Cannot delete all the refresh tokens from non-existent member "${username}"!`;
+		logEvents(errText, "errLog.txt", { print: true });
+		return false;
+	}
 
-    for (const token of members[username].refreshTokens) {
-        // Delete from the hash
-        delete refreshTokenHash[token];
-    }
+	for (const token of members[username].refreshTokens) {
+		// Delete from the hash
+		delete refreshTokenHash[token];
+	}
 
-    return true; // Success
+	return true; // Success
 }
 
 /**
@@ -316,14 +316,14 @@ function deleteAllRefreshTokensOfMemberFromHash(username) {
  * @returns {boolean|0} - The verified property, if it exists, otherwise 0 (already verified, or member doesn't exist).
  */
 const getVerified = (username) => {
-    if (!doesMemberExist(username)) {
-        const errText = `Cannot get the verified property of non-existent member "${username}"!`;
-        logEvents(errText, "errLog.txt", { print: true });
-        return 0;
-    }
-    const verified = members[username].verified;
-    if (verified) return verified[0];
-    return 0;
+	if (!doesMemberExist(username)) {
+		const errText = `Cannot get the verified property of non-existent member "${username}"!`;
+		logEvents(errText, "errLog.txt", { print: true });
+		return 0;
+	}
+	const verified = members[username].verified;
+	if (verified) return verified[0];
+	return 0;
 };
 
 /**
@@ -334,12 +334,12 @@ const getVerified = (username) => {
  * @returns {boolean} true if the provided verification ID matches their data.
  */
 const doesVerificationIDMatch = (username, verificationID) => {
-    if (!doesMemberExist(username)) {
-        const errText = `Cannot verify verification ID of non-existent member "${username}"!`;
-        logEvents(errText, "errLog.txt", { print: true });
-        return false;
-    }
-    return members[username].verified[1] === verificationID;
+	if (!doesMemberExist(username)) {
+		const errText = `Cannot verify verification ID of non-existent member "${username}"!`;
+		logEvents(errText, "errLog.txt", { print: true });
+		return false;
+	}
+	return members[username].verified[1] === verificationID;
 };
 
 /**
@@ -349,20 +349,20 @@ const doesVerificationIDMatch = (username, verificationID) => {
  * @returns {boolean} true if it was a success
  */
 const setVerified = (username, value) => {
-    if (!doesMemberExist(username)) {
-        const errText = `Cannot set verification property of non-existent member "${username}"!`;
-        logEvents(errText, "errLog.txt", { print: true });
-        return false;
-    }
-    if (value !== true && value !== 0) {
-        const errText = `Cannot set member ${getUsernameCaseSensitive(username)}'s verified parameter to any value besides true or 0! Received value: ${value}`;
-        logEvents(errText, "errLog.txt", { print: true });
-        return false;
-    }
-    members[username].verified[0] = value;
-    if (value === 0) delete members[username].verified; // Already verified (and they have seen that fact)
-    membersHasBeenEdited = true; // Flag it to be saved
-    return true; // Success
+	if (!doesMemberExist(username)) {
+		const errText = `Cannot set verification property of non-existent member "${username}"!`;
+		logEvents(errText, "errLog.txt", { print: true });
+		return false;
+	}
+	if (value !== true && value !== 0) {
+		const errText = `Cannot set member ${getUsernameCaseSensitive(username)}'s verified parameter to any value besides true or 0! Received value: ${value}`;
+		logEvents(errText, "errLog.txt", { print: true });
+		return false;
+	}
+	members[username].verified[0] = value;
+	if (value === 0) delete members[username].verified; // Already verified (and they have seen that fact)
+	membersHasBeenEdited = true; // Flag it to be saved
+	return true; // Success
 };
 
 /**
@@ -372,53 +372,53 @@ const setVerified = (username, value) => {
  * @returns {Object|undefined} An object containing their `username`, `email`, and `verified` properties, deep copied, or undefined if the member doesn't exist.
  */
 function getInfo(username) {
-    if (!doesMemberExist(username)) return;
-    return {
-        username: members[username].username,
-        email: members[username].email,
-        verified: structuredClone(members[username].verified)
-    };
+	if (!doesMemberExist(username)) return;
+	return {
+		username: members[username].username,
+		email: members[username].email,
+		verified: structuredClone(members[username].verified)
+	};
 }
 
 async function save() {
-    console.log("Saving members file..");
-    return await writeFile(
-        path.join(__dirname, '..', '..', '..', 'database', 'members.json'),
-        members,
-        "Failed to lock/write members.json after periodically saving! Members should still be accurate in RAM, but not database."
-    );
+	console.log("Saving members file..");
+	return await writeFile(
+		path.join(__dirname, '..', '..', '..', 'database', 'members.json'),
+		members,
+		"Failed to lock/write members.json after periodically saving! Members should still be accurate in RAM, but not database."
+	);
 }
 
 setInterval(saveMembersIfChangesMade, intervalToSaveMembersMillis);
 
 async function saveMembersIfChangesMade() {
-    if (!membersHasBeenEdited) return; // No change made, don't save the file!
-    if (await save()) membersHasBeenEdited = false;
+	if (!membersHasBeenEdited) return; // No change made, don't save the file!
+	if (await save()) membersHasBeenEdited = false;
 }
 
 
 
 export {
-    doesMemberExist,
-    getUsernameCaseSensitive,
-    getAllUsernames,
-    getHashedPassword,
-    getMemberData,
-    findMemberFromRefreshToken,
-    getVerified,
-    doesVerificationIDMatch,
-    addMember,
-    addRefreshToken,
-    deleteRefreshToken,
-    setVerified,
-    getInfo,
-    getEmail,
-    incrementLoginCount,
-    updateLastSeen,
-    saveMembersIfChangesMade,
-    getJoinDate,
-    getLastSeen,
-    getElo,
-    removeMember,
-    isEmailAvailable
+	doesMemberExist,
+	getUsernameCaseSensitive,
+	getAllUsernames,
+	getHashedPassword,
+	getMemberData,
+	findMemberFromRefreshToken,
+	getVerified,
+	doesVerificationIDMatch,
+	addMember,
+	addRefreshToken,
+	deleteRefreshToken,
+	setVerified,
+	getInfo,
+	getEmail,
+	incrementLoginCount,
+	updateLastSeen,
+	saveMembersIfChangesMade,
+	getJoinDate,
+	getLastSeen,
+	getElo,
+	removeMember,
+	isEmailAvailable
 };

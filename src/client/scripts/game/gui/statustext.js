@@ -20,8 +20,8 @@ let layers = 0;
  * @param {number} durationMultiplier - Optional. Multiplies the default duration. Default: 1.
  */
 function showStatus(text, isError, durationMultiplier = 1) {
-    const duration = (stapleLength + text.length * length) * durationMultiplier;
-    showStatusForDuration(text, duration, isError);
+	const duration = (stapleLength + text.length * length) * durationMultiplier;
+	showStatusForDuration(text, duration, isError);
 }
 
 /**
@@ -31,62 +31,62 @@ function showStatus(text, isError, durationMultiplier = 1) {
  * @param {boolean} [isError] Optional. Whether the backdrop should be red for an error
  */
 function showStatusForDuration(text, durationMillis, isError) {
-    if (text == null) return console.error("Cannot show status of undefined text!!");
+	if (text == null) return console.error("Cannot show status of undefined text!!");
     
-    layers++;
+	layers++;
     
-    fadeAfter(durationMillis);
+	fadeAfter(durationMillis);
 
-    statusText.textContent = text;
-    statusText.classList.remove('fade-out-1s');
-    statusMessage.classList.remove('hidden');
+	statusText.textContent = text;
+	statusText.classList.remove('fade-out-1s');
+	statusMessage.classList.remove('hidden');
 
-    if (!isError) {
-        statusText.classList.remove('error');
-        statusText.classList.add('ok');
-    } else {
-        statusText.classList.remove('ok');
-        statusText.classList.add('error');
-        console.error(text);
-    }
+	if (!isError) {
+		statusText.classList.remove('error');
+		statusText.classList.add('ok');
+	} else {
+		statusText.classList.remove('ok');
+		statusText.classList.add('error');
+		console.error(text);
+	}
 }
 
 function fadeAfter(ms) {
-    setTimeout(function() {
-        if (layers === 1) {
-            statusText.classList.add('fade-out-1s');
-            hideAfter(fadeTimer);
-        } else layers--; // This layer has been overwritten!
-    }, ms);
+	setTimeout(function() {
+		if (layers === 1) {
+			statusText.classList.add('fade-out-1s');
+			hideAfter(fadeTimer);
+		} else layers--; // This layer has been overwritten!
+	}, ms);
 }
 
 function hideAfter(ms) {
-    setTimeout(function() {
-        layers--;
-        if (layers > 0) return; // Only one left, hide!
-        statusMessage.classList.add('hidden');
-        statusText.classList.remove('fade-out-1s');
-    }, ms);
+	setTimeout(function() {
+		layers--;
+		if (layers > 0) return; // Only one left, hide!
+		statusMessage.classList.add('hidden');
+		statusText.classList.remove('fade-out-1s');
+	}, ms);
 }
 
 function lostConnection() {
-    showStatus(translations.lost_connection);
+	showStatus(translations.lost_connection);
 }
 
 /** Shows a status message stating to please wait to perform this task. */
 function pleaseWaitForTask() {
-    showStatus(translations.please_wait, false, 0.5);
+	showStatus(translations.please_wait, false, 0.5);
 }
 
 // Dev purposes
 function getLayerCount() {
-    return layers;
+	return layers;
 }
 
 export default {
-    showStatus,
-    lostConnection,
-    pleaseWaitForTask,
-    getLayerCount,
-    showStatusForDuration
+	showStatus,
+	lostConnection,
+	pleaseWaitForTask,
+	getLayerCount,
+	showStatusForDuration
 };

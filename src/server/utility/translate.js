@@ -24,14 +24,14 @@ function setSupportedLanguages(list) { supportedLanguages = list; }
  * @returns {string} The language to be used.
  */
 function getLanguageToServe(req) {
-    let language = req.query.lng || req.cookies.i18next || req.i18n.resolvedLanguage;
-    if (!supportedLanguages.includes(language)) { // Query param language not supported
-        language = req.cookies.i18next;
-    }
-    if (!supportedLanguages.includes(language)) { // Cookie language not supported
-        language = req.i18n.resolvedLanguage;
-    }
-    return language;
+	let language = req.query.lng || req.cookies.i18next || req.i18n.resolvedLanguage;
+	if (!supportedLanguages.includes(language)) { // Query param language not supported
+		language = req.cookies.i18next;
+	}
+	if (!supportedLanguages.includes(language)) { // Cookie language not supported
+		language = req.i18n.resolvedLanguage;
+	}
+	return language;
 }
 
 /**
@@ -44,8 +44,8 @@ function getLanguageToServe(req) {
  * @returns {string} The translated string.
  */
 function getTranslation(key, language = defaultLanguage, options = {}) {
-    options.lng = language;
-    return i18next.t(key, options);
+	options.lng = language;
+	return i18next.t(key, options);
 }
 
 /**
@@ -58,13 +58,13 @@ function getTranslation(key, language = defaultLanguage, options = {}) {
  * @returns {string} The translated string.
  */
 function getTranslationForReq(key, req, options = {}) {
-    return getTranslation(key, req.cookies?.i18next, options);
+	return getTranslation(key, req.cookies?.i18next, options);
 }
 
 export {
-    setSupportedLanguages,
-    getLanguageToServe,
-    getDefaultLanguage,
-    getTranslation,
-    getTranslationForReq,
+	setSupportedLanguages,
+	getLanguageToServe,
+	getDefaultLanguage,
+	getTranslation,
+	getTranslationForReq,
 };

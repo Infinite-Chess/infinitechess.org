@@ -28,35 +28,35 @@ let drawOfferUICramped = false;
 
 /** Reveals the draw offer UI on the bottom navigation bar */
 function open() {
-    style.revealElement(element_draw_offer_ui);
-    style.hideElement(element_whosturn);
-    initDrawOfferListeners();
-    // Do the names and clocks need to be hidden to make room for the draw offer UI?
-    updateVisibilityOfNamesAndClocksWithDrawOffer();
+	style.revealElement(element_draw_offer_ui);
+	style.hideElement(element_whosturn);
+	initDrawOfferListeners();
+	// Do the names and clocks need to be hidden to make room for the draw offer UI?
+	updateVisibilityOfNamesAndClocksWithDrawOffer();
 }
 
 /** Hides the draw offer UI on the bottom navigation bar */
 function close() {
-    style.hideElement(element_draw_offer_ui);
-    style.revealElement(element_whosturn);
-    closeDrawOfferListeners();
+	style.hideElement(element_draw_offer_ui);
+	style.revealElement(element_whosturn);
+	closeDrawOfferListeners();
 
-    if (!drawOfferUICramped) return;
-    // We had hid the names and clocks to make room for the UI, reveal them here!
-    // console.log("revealing");
-    guigameinfo.revealPlayerNames();
-    clock.showClocks();
-    drawOfferUICramped = false; // Reset for next draw offer UI opening
+	if (!drawOfferUICramped) return;
+	// We had hid the names and clocks to make room for the UI, reveal them here!
+	// console.log("revealing");
+	guigameinfo.revealPlayerNames();
+	clock.showClocks();
+	drawOfferUICramped = false; // Reset for next draw offer UI opening
 }
 
 function initDrawOfferListeners() {
-    element_acceptDraw.addEventListener('click', drawoffers.callback_AcceptDraw);
-    element_declineDraw.addEventListener('click', drawoffers.callback_declineDraw);
+	element_acceptDraw.addEventListener('click', drawoffers.callback_AcceptDraw);
+	element_declineDraw.addEventListener('click', drawoffers.callback_declineDraw);
 }
 
 function closeDrawOfferListeners() {
-    element_acceptDraw.removeEventListener('click', drawoffers.callback_AcceptDraw);
-    element_declineDraw.removeEventListener('click', drawoffers.callback_declineDraw);
+	element_acceptDraw.removeEventListener('click', drawoffers.callback_AcceptDraw);
+	element_declineDraw.removeEventListener('click', drawoffers.callback_declineDraw);
 }
 
 /**
@@ -65,21 +65,21 @@ function closeDrawOfferListeners() {
  * This is called when the UI is opened, AND on screen resize event!
  */
 function updateVisibilityOfNamesAndClocksWithDrawOffer() {
-    if (!drawoffers.areWeAcceptingDraw()) return; // No open draw offer
+	if (!drawoffers.areWeAcceptingDraw()) return; // No open draw offer
     
-    if (isDrawOfferUICramped()) { // Hide the player names and clocks
-        if (drawOfferUICramped) return; // Already hidden
-        // console.log("hiding");
-        drawOfferUICramped = true;
-        guigameinfo.hidePlayerNames();
-        clock.hideClocks();
-    } else { // We have space now, reveal them!
-        if (!drawOfferUICramped) return; // Already revealed
-        // console.log("revealing");
-        drawOfferUICramped = false;
-        guigameinfo.revealPlayerNames();
-        clock.showClocks();
-    }
+	if (isDrawOfferUICramped()) { // Hide the player names and clocks
+		if (drawOfferUICramped) return; // Already hidden
+		// console.log("hiding");
+		drawOfferUICramped = true;
+		guigameinfo.hidePlayerNames();
+		clock.hideClocks();
+	} else { // We have space now, reveal them!
+		if (!drawOfferUICramped) return; // Already revealed
+		// console.log("revealing");
+		drawOfferUICramped = false;
+		guigameinfo.revealPlayerNames();
+		clock.showClocks();
+	}
 }
 
 /**
@@ -88,13 +88,13 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
  * @returns {boolean}
  */
 function isDrawOfferUICramped() {
-    if (clock.isGameUntimed()) return false; // Clocks not visible, we definitely have room
-    if (window.innerWidth > 560) return false; // Screen is wide, we have room
-    return true; // Cramped
+	if (clock.isGameUntimed()) return false; // Clocks not visible, we definitely have room
+	if (window.innerWidth > 560) return false; // Screen is wide, we have room
+	return true; // Cramped
 }
 
 export default {
-    open,
-    close,
-    updateVisibilityOfNamesAndClocksWithDrawOffer,
+	open,
+	close,
+	updateVisibilityOfNamesAndClocksWithDrawOffer,
 };

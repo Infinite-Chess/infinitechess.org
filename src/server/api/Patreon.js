@@ -31,15 +31,15 @@ function refreshPatreonPatronList() {
  * @returns {string[]}
  */
 function getPatreonPatrons() {
-    // Replace their true usernames with replacements
-    const patronsWithReplacedNames = patrons.map((patron) => {
-        return replacementNames[patron] || patron;
-    });
+	// Replace their true usernames with replacements
+	const patronsWithReplacedNames = patrons.map((patron) => {
+		return replacementNames[patron] || patron;
+	});
 
-    return patronsWithReplacedNames;
+	return patronsWithReplacedNames;
 }
 
 
 export {
-    getPatreonPatrons
+	getPatreonPatrons
 };

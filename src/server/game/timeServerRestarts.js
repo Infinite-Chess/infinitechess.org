@@ -33,22 +33,22 @@ function cancelServerRestart() { serverRestartingAt = false; }
  * @returns {number | undefined} Minutes until restart, rounded up, or undefined if we're not restarting.
  */
 function getMinutesUntilServerRestart() {
-    if (!serverRestartingAt) return; // Not restarting
+	if (!serverRestartingAt) return; // Not restarting
 
-    const now = Date.now(); // Current time in milliseconds
-    const millisLeft = serverRestartingAt - now;
+	const now = Date.now(); // Current time in milliseconds
+	const millisLeft = serverRestartingAt - now;
 
-    const minutesLeft = millisLeft / (1000 * 60);
-    const ceiled = Math.ceil(minutesLeft);
-    const returnThis = ceiled > 0 ? ceiled : 0;
+	const minutesLeft = millisLeft / (1000 * 60);
+	const ceiled = Math.ceil(minutesLeft);
+	const returnThis = ceiled > 0 ? ceiled : 0;
 
-    return returnThis; // Convert to minutes
+	return returnThis; // Convert to minutes
 }
 
 
 export {
-    getTimeServerRestarting,
-    setTimeServerRestarting,
-    cancelServerRestart,
-    getMinutesUntilServerRestart
+	getTimeServerRestarting,
+	setTimeServerRestarting,
+	cancelServerRestart,
+	getMinutesUntilServerRestart
 };
