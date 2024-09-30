@@ -135,7 +135,7 @@ function update() {
 
 function updateAFK() {
 	if (!input.atleast1InputThisFrame() || game.getGamefile().gameConclusion) return;
-
+	// Has been mouse movement, restart the afk auto-resign timer.
 	if (afk.timeWeLoseFromAFK) tellServerWeBackFromAFK();
 	rescheduleAlertServerWeAFK();
 }
@@ -143,7 +143,7 @@ function updateAFK() {
 function rescheduleAlertServerWeAFK() {
 	clearTimeout(afk.timeoutID);
 	const gamefile = game.getGamefile();
-	if (!isItOurTurn() || gamefileutility.isGameOver(gamefile) || isPrivate && clock.isGameUntimed()) return;
+	if (!isItOurTurn() || gamefileutility.isGameOver(gamefile) || isPrivate && clock.isGameUntimed() || !clock.isGameUntimed() && movesscript.isGameResignable(gamefile)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
 	const timeUntilAFKSecs = !movesscript.isGameResignable(game.getGamefile()) ? afk.timeUntilAFKSecs_Abortable
         : clock.isGameUntimed() ? afk.timeUntilAFKSecs_Untimed

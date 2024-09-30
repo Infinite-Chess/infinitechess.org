@@ -44,6 +44,8 @@ function onAFK(ws, game) {
 
 	// Verify it's their turn (can't lose by afk if not)
 	if (game.whosTurn !== color) return console.error("Client submitted they are afk when it's not their turn. Ignoring.");
+
+	if (!game.untimed && gameutility.isGameResignable(game)) return console.error("Client submitted they are afk in a timed, resignable game. There is no afk auto-resign timers in timed games anymore.");
     
 	if (gameutility.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!");
 
@@ -74,6 +76,8 @@ function onAFK_Return(ws, game) {
 
 	// Verify it's their turn (can't lose by afk if not)
 	if (game.whosTurn !== color) return console.error("Client submitted they are back from being afk when it's not their turn. Ignoring.");
+
+	if (!game.untimed && gameutility.isGameResignable(game)) return console.error("Client submitted they are back from being afk in a timed, resignable game. There is no afk auto-resign timers in timed games anymore.");
 
 	cancelAutoAFKResignTimer(game, { alertOpponent: true });
 }
