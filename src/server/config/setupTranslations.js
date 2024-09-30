@@ -16,12 +16,12 @@ import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
 const localeMap = {
-  'en-US': enUS,
-  'fr-FR': frFR,
-  'pt-BR': ptBR,
-  'zh-TW': zhTW,
-  'zh-CN': zhCN,
-  'pl-PL': pl
+    'en-US': enUS,
+    'fr-FR': frFR,
+    'pt-BR': ptBR,
+    'zh-TW': zhTW,
+    'zh-CN': zhCN,
+    'pl-PL': pl
 };
 
 
