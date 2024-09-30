@@ -15,6 +15,12 @@ import zhTW from 'date-fns/locale/zh-TW/index.js';
 import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
+/**
+ * This dictionary tells use what code the date-fns package uses
+ * to provide language-correct dates.
+ * 
+ * Update when we support a new language.
+ */
 const localeMap = {
     'en-US': enUS,
     'fr-FR': frFR,
@@ -219,7 +225,7 @@ function loadTranslationsFolder(folder) {
         const dateA = new Date(a.replace('.md', ''));
         const dateB = new Date(b.replace('.md', ''));
         return dateB - dateA;
-    });
+    }); // ['2024-09-11.md', '2024-08-01.md'...]
     files
         .filter(function y(x) {
             return x.endsWith(".toml");
@@ -235,18 +241,18 @@ function loadTranslationsFolder(folder) {
                 ),
                 news: newsFiles.map(filePath => {
                     const fullPath = path.join(folder, 'news', languageCode, filePath);
-                    const parsedHTML = marked.parse((fs.existsSync(fullPath) ? 
-                    fs.readFileSync(fullPath) : 
-                    fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
-                    const date = format(parseISO(filePath.replace('.md','')), 'PPP:', { 
-                        timeZone: 'UTC', 
+                    const parsedHTML = marked.parse((fs.existsSync(fullPath)
+                        ? fs.readFileSync(fullPath)
+                        : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
+                    const date = format(parseISO(filePath.replace('.md','')), 'PP', { // Change the number of P's to change how the date is phrased
+                        timeZone: 'UTC-6', 
                         locale: localeMap[languageCode] 
                     });
 
                     return `<div class='news-post'>
-                        <span class='news-post-date'>${date}</span>
-                        <div class='news-post-markdown'>${parsedHTML}</div>
-                    </div>`;
+                                <span class='news-post-date'>${date}</span>
+                                <div class='news-post-markdown'>${parsedHTML}</div>
+                            </div>`;
                 }).join('\n<hr>\n')
             };
             supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
