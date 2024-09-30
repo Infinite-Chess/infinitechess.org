@@ -493,26 +493,26 @@ more_dev_logs = ["更多开发者日志在我们的", "Discord", "和在", "ches
 [news.sept11-2024]
 date = "2024年9月11日:"
 paragraph1 = [
-    "首届无限棋锦标赛现已开放报名！！！比赛将采用经典变体，时间控制为10分钟加6秒（此功能将很快添加）。获胜者将在 ",
-    "社区Discord", # The website inserts a hyperlink over this text
-    " 上获得特殊标识和/或角色！"
+	"首届无限棋锦标赛现已开放报名！！！比赛将采用经典变体，时间控制为10分钟加6秒（此功能将很快添加）。获胜者将在 ",
+	"社区Discord", # The website inserts a hyperlink over this text
+	" 上获得特殊标识和/或角色！"
 ],
 paragraph2 = [
-    "这是 ",
-    "报名表格", # The website inserts a hyperlink over this text
-    "！报名截止日期是 ",
-    "2024年9月27日（星期五）！", # The website bolds this text
-    " 完整规则请查看 ",
-    "这里", # The website inserts a hyperlink over this text
-    "。有关锦标赛的最新动态，请加入 ",
-    "Discord", # The website inserts a hyperlink over this text
-    "！"
+	"这是 ",
+	"报名表格", # The website inserts a hyperlink over this text
+	"！报名截止日期是 ",
+	"2024年9月27日（星期五）！", # The website bolds this text
+	" 完整规则请查看 ",
+	"这里", # The website inserts a hyperlink over this text
+	"。有关锦标赛的最新动态，请加入 ",
+	"Discord", # The website inserts a hyperlink over this text
+	"！"
 ]
 paragraph3 = "更新 v.1.4.1 已发布！"
 list = [
-    "已添加和棋提议功能！在暂停菜单中找到提议和棋按钮！",
-    "已添加以下语言支持：中文、波兰语、葡萄牙语！",
-    "修复了一个错误：重复点击创建邀请按钮时会收到如您已拥有邀请或无法接受自己的邀请等消息。"
+	"已添加和棋提议功能！在暂停菜单中找到提议和棋按钮！",
+	"已添加以下语言支持：中文、波兰语、葡萄牙语！",
+	"修复了一个错误：重复点击创建邀请按钮时会收到如您已拥有邀请或无法接受自己的邀请等消息。"
 ]
 
 
