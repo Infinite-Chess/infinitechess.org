@@ -1,6 +1,10 @@
 {
+  "16": {
+    "note": "Deleted all news posts. The only keys you keep in the `news` section is `title` and `more_dev_logs`! Please verify your language's news posts have been translated correctly within translation/news!",
+    "changes": []
+  },
   "15": {
-    "note": "Added news.sept9-2024, line 493",
+    "note": "Added news.sept9-2024, line 493. ALL NEWS POSTS DELETED IN FUTURE CHANGE.",
     "changes": []
   },
   "14": {

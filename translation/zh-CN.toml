@@ -1,6 +1,6 @@
 name = "简体中文" # Simplified Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "15"
+version = "16"
 maintainer = "Heinrich Xiao"
 
 [header]
@@ -489,86 +489,6 @@ login_button = "登录"
 [news]
 title = "新闻"
 more_dev_logs = ["更多开发者日志在我们的", "Discord", "和在", "chess.com的论坛！"]
-
-[news.sept11-2024]
-date = "2024年9月11日:"
-paragraph1 = [
-    "首届无限棋锦标赛现已开放报名！！！比赛将采用经典变体，时间控制为10分钟加6秒（此功能将很快添加）。获胜者将在 ",
-    "社区Discord", # The website inserts a hyperlink over this text
-    " 上获得特殊标识和/或角色！"
-],
-paragraph2 = [
-    "这是 ",
-    "报名表格", # The website inserts a hyperlink over this text
-    "！报名截止日期是 ",
-    "2024年9月27日（星期五）！", # The website bolds this text
-    " 完整规则请查看 ",
-    "这里", # The website inserts a hyperlink over this text
-    "。有关锦标赛的最新动态，请加入 ",
-    "Discord", # The website inserts a hyperlink over this text
-    "！"
-]
-paragraph3 = "更新 v.1.4.1 已发布！"
-list = [
-    "已添加和棋提议功能！在暂停菜单中找到提议和棋按钮！",
-    "已添加以下语言支持：中文、波兰语、葡萄牙语！",
-    "修复了一个错误：重复点击创建邀请按钮时会收到如您已拥有邀请或无法接受自己的邀请等消息。"
-]
-
-
-[news.aug1-2024] # Update 1.4
-date = "2024年8月1日:"
-text_top = "更新 1.4 发布了！自从我们开源以来，添加了许多协作功能！"
-update_list = [
-"新增了骑士骑行者，它们像骑士一样无限跳跃，直到被障碍物阻挡！'骑士国际象棋' 变体已经升级，将骑士替换为骑士骑行者！",
-"随时点击自己或对手的棋子以查看其可能的移动！",
-"随时右键点击以取消选择当前选中的棋子。",
-"将鼠标悬停在屏幕边缘的箭头指示器上，现在会显示指示的棋子的合法移动！",
-"如果棋盘上没有足够的棋子来强制将死，游戏现在会自动判定平局。",
-"网站已经翻译成法语！您可以通过访问任何页面的页脚来更改语言。",
-"改善了网站的加载时间。",
-"新的网站图标，Ω！它会自动匹配您首选的浅色或深色设备主题。",
-"游戏代码或 ICN 的元数据已重新格式化，更加符合 PGN 标准。",
-"用户现在可以在个人资料页面删除他们的帐户，无需通过电子邮件联系我们。"
-]
-
-[news.july22-2024]
-date = "2024年7月22日"
-account_warning = "如果您尚未验证您的账户，请在您的个人资料页面上进行验证！所有未验证的账户将很快被删除！"
-
-[news.july13-2024]
-date = "2024年7月13日"
-tos_update = ["", "服务条款", "已更新。变更内容：您在网站上玩的所有游戏都可能成为公共信息，包括您的帐户上次活跃的大概时间。条款可能会随时更新，确保您了解最新条款是您的责任。"] # The game inserts a hyperlink inside the 2nd quotes here.
-game_history_warning = "您的游戏历史可能在未来可在您的个人资料中查看。"
-
-[news.july9-2024]
-date = "2024年7月9日"
-text = ["无限棋现在开源！查看并贡献项目，请访问 ", "GitHub！"]
-
-[news.may27-2024]
-date = "2024年5月27日"
-text = "1.3.2更新今天发布！新增了我在最新视频中展示的 Omega^3 和 Omega^4 的展示变体。此外，将军算法现在兼容每边多个国王。"
-
-[news.may24-2024]
-date = "2024年5月24日"
-text = "1.3更新今天发布！这包括指南、悬停导航按钮时的弹出式工具提示以及标题页上的 Discord 和游戏信用链接！"
-
-[news.may14-2024]
-date = "2024年5月14日"
-text_top = "1.3更新今天发布！这包括很多的改进："
-update_list = [
-"切换到 WebSocket，减少对手移动时的延迟。",
-"切换标签不再断开连接。",
-"当您或其他人创建邀请或下棋时，发出声音提示。",
-"加了50步规则",
-"现在在时钟剩余10秒时播放鼓式倒计时效果。",
-"如果您的对手AFK（并发出声音警告），将开始自动认输计时器。"
-]
-text_box = ["还有更多！那些都在我们的", "Discord！"]
-
-[news.jan29-2024]
-date = "2024年1月29日"
-text = "仅以案由一个新视频"
 
 [server.javascript]
 ws-invalid_username = "用户名无效"
