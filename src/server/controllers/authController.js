@@ -6,7 +6,7 @@
  */
 
 
-        /*&@@@@@@@@@@@@@@@@&#/         
+/*&@@@@@@@@@@@@@@@@&#/         
       #&#/#@@@@@/&@%@@(@%&@@@*%@/      
      @@%((*@&@&@@&,/*%@@#&@@@/#%@(     
     @@&#((/@&&@@@@@%@@@&%@&@((#%%@(    
@@ -74,29 +74,29 @@ const timeToDeleteBrowserAgentAfterNoAttemptsMillis = 1000 * 60 * 5; // 5 minute
  * @param {Object} res - The response object
  */
 async function handleLogin(req, res) {
-    if (!(await testPasswordForRequest(req, res))) return; // Incorrect password, it will have already sent a response.
-    // Correct password...
+	if (!(await testPasswordForRequest(req, res))) return; // Incorrect password, it will have already sent a response.
+	// Correct password...
 
-    const username = req.body.username; // We already know this property is present on the request
-    const usernameLowercase = username.toLowerCase();
-    const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
+	const username = req.body.username; // We already know this property is present on the request
+	const usernameLowercase = username.toLowerCase();
+	const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
 
-    // The payload can be an object with their username and their roles.
-    const payload = { "username": usernameLowercase };
-    const { accessToken, refreshToken } = signTokens(payload);
+	// The payload can be an object with their username and their roles.
+	const payload = { "username": usernameLowercase };
+	const { accessToken, refreshToken } = signTokens(payload);
     
-    // Save the refresh token with current user so later when they log out we can invalidate it.
-    addRefreshToken(usernameLowercase, refreshToken);
+	// Save the refresh token with current user so later when they log out we can invalidate it.
+	addRefreshToken(usernameLowercase, refreshToken);
     
-    createRefreshTokenCookie(res, refreshToken);
+	createRefreshTokenCookie(res, refreshToken);
     
-    // Update our member's statistics in their data file!
-    updateMembersInfo(usernameLowercase);
+	// Update our member's statistics in their data file!
+	updateMembersInfo(usernameLowercase);
     
-    // Finally, send the access token! On front-end, don't store it anywhere except memory.
-    res.json({ accessToken });
+	// Finally, send the access token! On front-end, don't store it anywhere except memory.
+	res.json({ accessToken });
 
-    logEvents(`Logged in member ${usernameCaseSensitive}`, "loginAttempts.txt", { print: true });
+	logEvents(`Logged in member ${usernameCaseSensitive}`, "loginAttempts.txt", { print: true });
 }
 
 /**
@@ -111,37 +111,37 @@ async function handleLogin(req, res) {
  * @returns {boolean} true if the password was correct
  */
 async function testPasswordForRequest(req, res) {
-    if (!verifyBodyHasLoginFormData(req, res)) return false; // If false, it will have already sent a response.
+	if (!verifyBodyHasLoginFormData(req, res)) return false; // If false, it will have already sent a response.
     
-    // eslint-disable-next-line prefer-const
-    let { username, password } = req.body;
-    if (!username) username = req.params.member;
-    const usernameLowercase = username.toLowerCase();
-    const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
-    const hashedPassword = getHashedPassword(usernameLowercase);
+	// eslint-disable-next-line prefer-const
+	let { username, password } = req.body;
+	if (!username) username = req.params.member;
+	const usernameLowercase = username.toLowerCase();
+	const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
+	const hashedPassword = getHashedPassword(usernameLowercase);
 
-    if (!usernameCaseSensitive || !hashedPassword) {
-        res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-invalid_username", req)}); // Unauthorized, username not found
-        return false;
-    }
+	if (!usernameCaseSensitive || !hashedPassword) {
+		res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-invalid_username", req)}); // Unauthorized, username not found
+		return false;
+	}
     
-    const browserAgent = getBrowserAgent(req, usernameLowercase);
-    if (!rateLimitLogin(req, res, browserAgent)) {
-        return false; // They are being rate limited from enterring incorrectly too many times
-    }
+	const browserAgent = getBrowserAgent(req, usernameLowercase);
+	if (!rateLimitLogin(req, res, browserAgent)) {
+		return false; // They are being rate limited from enterring incorrectly too many times
+	}
 
-    // Test the password
-    const match = await bcrypt.compare(password, hashedPassword);
-    if (!match) {
-        logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
-        res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-incorrect_password", req )}); // Unauthorized, password not found
-        onIncorrectPassword(browserAgent, usernameCaseSensitive);
-        return false;
-    }
+	// Test the password
+	const match = await bcrypt.compare(password, hashedPassword);
+	if (!match) {
+		logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
+		res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-incorrect_password", req )}); // Unauthorized, password not found
+		onIncorrectPassword(browserAgent, usernameCaseSensitive);
+		return false;
+	}
 
-    onCorrectPassword(browserAgent);
+	onCorrectPassword(browserAgent);
 
-    return true;
+	return true;
 }
 
 /**
@@ -152,27 +152,27 @@ async function testPasswordForRequest(req, res) {
  * @returns {boolean} true if the body is valid
  */
 function verifyBodyHasLoginFormData(req, res) {
-    if (!req.body) { // Missing body
-        console.log(`User sent a bad login request missing the body!`);
-        res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
-        return false;
-    }
+	if (!req.body) { // Missing body
+		console.log(`User sent a bad login request missing the body!`);
+		res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
+		return false;
+	}
 
-    const { username, password } = req.body;
+	const { username, password } = req.body;
     
-    if (!username || !password) {
-        console.log(`User ${username} sent a bad login request missing either username or password!`);
-        res.status(400).json({ 'message': getTranslationForReq('server.javascript.ws-username_and_password_required', req) }); // 400 Bad request
-        return false;
-    }
+	if (!username || !password) {
+		console.log(`User ${username} sent a bad login request missing either username or password!`);
+		res.status(400).json({ 'message': getTranslationForReq('server.javascript.ws-username_and_password_required', req) }); // 400 Bad request
+		return false;
+	}
 
-    if (typeof username !== "string" || typeof password !== "string") {
-        console.log(`User ${username} sent a bad login request with either username or password not a string!`);
-        res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_and_password_string", req) }); // 400 Bad request
-        return false;
-    }
+	if (typeof username !== "string" || typeof password !== "string") {
+		console.log(`User ${username} sent a bad login request with either username or password not a string!`);
+		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_and_password_string", req) }); // 400 Bad request
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
 /**
@@ -186,18 +186,18 @@ function verifyBodyHasLoginFormData(req, res) {
  * @returns {Object} - An object containing the properties `accessToken` and `refreshToken`.
  */
 function signTokens(payload) {
-    const accessToken = jwt.sign(
-        payload, // Username is the payload, should NOT be password
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: accessTokenExpirySecs } // Good for as long as u stay on 1 page (stored in memory of script)
-    );
-    const refreshToken = jwt.sign(
-        payload, // Payload can contain roles
-        process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: refreshTokenExpirySecs }
-    );
+	const accessToken = jwt.sign(
+		payload, // Username is the payload, should NOT be password
+		process.env.ACCESS_TOKEN_SECRET,
+		{ expiresIn: accessTokenExpirySecs } // Good for as long as u stay on 1 page (stored in memory of script)
+	);
+	const refreshToken = jwt.sign(
+		payload, // Payload can contain roles
+		process.env.REFRESH_TOKEN_SECRET,
+		{ expiresIn: refreshTokenExpirySecs }
+	);
 
-    return { accessToken, refreshToken };
+	return { accessToken, refreshToken };
 }
 
 /**
@@ -206,8 +206,8 @@ function signTokens(payload) {
  * @param {string} refreshToken - The refresh token to be stored in the cookie.
  */
 function createRefreshTokenCookie(res, refreshToken) {
-    // Cross-site usage requires we set sameSite to none! Also requires secure (https) true
-    res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: refreshTokenExpiryMillis });
+	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true
+	res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: refreshTokenExpiryMillis });
 }
 
 /**
@@ -215,8 +215,8 @@ function createRefreshTokenCookie(res, refreshToken) {
  * @param {string} usernameLowercase - Their username, in lowercase
  */
 function updateMembersInfo(usernameLowercase) {
-    incrementLoginCount(usernameLowercase);
-    updateLastSeen(usernameLowercase);
+	incrementLoginCount(usernameLowercase);
+	updateLastSeen(usernameLowercase);
 }
 
 // Rate limiting stuff...
@@ -226,43 +226,43 @@ function updateMembersInfo(usernameLowercase) {
  * @returns {boolean} true if the attempt is allowed
  */
 function rateLimitLogin(req, res, browserAgent) {
-    const now = new Date();
-    loginAttemptData[browserAgent] = loginAttemptData[browserAgent] || {
-        attempts: 0,
-        cooldownTimeSecs: 0,
-        lastAttemptTime: now
-    };
+	const now = new Date();
+	loginAttemptData[browserAgent] = loginAttemptData[browserAgent] || {
+		attempts: 0,
+		cooldownTimeSecs: 0,
+		lastAttemptTime: now
+	};
     
-    const timeSinceLastAttemptsSecs = (now - loginAttemptData[browserAgent].lastAttemptTime) / 1000;
+	const timeSinceLastAttemptsSecs = (now - loginAttemptData[browserAgent].lastAttemptTime) / 1000;
 
-    if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) {
-        incrementBrowserAgentLoginAttemptCounter(browserAgent, now);
-        return true; // Attempt allowed
-    }
+	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) {
+		incrementBrowserAgentLoginAttemptCounter(browserAgent, now);
+		return true; // Attempt allowed
+	}
 
-    // Too many attempts!
+	// Too many attempts!
 
-    if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) { // Still on cooldown
+	if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) { // Still on cooldown
 
-        let translation = getTranslationForReq('server.javascript.ws-login_failure_retry_in', req);
-        const login_cooldown = Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs);
-        const seconds_plurality = login_cooldown === 1 ? getTranslationForReq("server.javascript.ws-second", req) : getTranslationForReq("server.javascript.ws-seconds", req);
-        translation += ` ${login_cooldown} ${seconds_plurality}.`;
+		let translation = getTranslationForReq('server.javascript.ws-login_failure_retry_in', req);
+		const login_cooldown = Math.floor(loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs);
+		const seconds_plurality = login_cooldown === 1 ? getTranslationForReq("server.javascript.ws-second", req) : getTranslationForReq("server.javascript.ws-seconds", req);
+		translation += ` ${login_cooldown} ${seconds_plurality}.`;
 
-        res.status(401).json({ 'message': translation }); // "Failed to log in, try again in 3 seconds.""
+		res.status(401).json({ 'message': translation }); // "Failed to log in, try again in 3 seconds.""
         
-        // Reset the timer to auto-delete them from the login attempt data
-        // if they haven't tried in a while.
-        // This is so it doesn't get cluttered over time
-        // as more and more people try to login and fail.
-        resetTimerToDeleteBrowserAgent(browserAgent);
-        return false; // Attempt not allowed
-    }
+		// Reset the timer to auto-delete them from the login attempt data
+		// if they haven't tried in a while.
+		// This is so it doesn't get cluttered over time
+		// as more and more people try to login and fail.
+		resetTimerToDeleteBrowserAgent(browserAgent);
+		return false; // Attempt not allowed
+	}
 
-    // No longer on cooldown
-    resetBrowserAgentLoginAttemptCounter(browserAgent);
-    incrementBrowserAgentLoginAttemptCounter(browserAgent, now);
-    return true; // Attempt allowed
+	// No longer on cooldown
+	resetBrowserAgentLoginAttemptCounter(browserAgent);
+	incrementBrowserAgentLoginAttemptCounter(browserAgent, now);
+	return true; // Attempt allowed
 }
 
 /**
@@ -272,8 +272,8 @@ function rateLimitLogin(req, res, browserAgent) {
  * @returns {string} - The browser agent string, `${usernameLowercase}${clientIP}`
  */
 function getBrowserAgent(req, usernameLowercase) {
-    const clientIP = getClientIP(req);
-    return `${usernameLowercase}${clientIP}`;
+	const clientIP = getClientIP(req);
+	return `${usernameLowercase}${clientIP}`;
 }
 
 /**
@@ -282,13 +282,13 @@ function getBrowserAgent(req, usernameLowercase) {
  * @param {Date} now - The current date and time.
  */
 function incrementBrowserAgentLoginAttemptCounter(browserAgent, now) {
-    loginAttemptData[browserAgent].attempts += 1;
-    loginAttemptData[browserAgent].lastAttemptTime = now;
-    // Reset the timer to auto-delete them from the login attempt data
-    // if they haven't tried in a while.
-    // This is so it doesn't get cluttered over time
-    // as more and more people try to login and fail.
-    resetTimerToDeleteBrowserAgent(browserAgent);
+	loginAttemptData[browserAgent].attempts += 1;
+	loginAttemptData[browserAgent].lastAttemptTime = now;
+	// Reset the timer to auto-delete them from the login attempt data
+	// if they haven't tried in a while.
+	// This is so it doesn't get cluttered over time
+	// as more and more people try to login and fail.
+	resetTimerToDeleteBrowserAgent(browserAgent);
 }
 
 /**
@@ -296,7 +296,7 @@ function incrementBrowserAgentLoginAttemptCounter(browserAgent, now) {
  * @param {string} browserAgent - The browser agent string.
  */
 function resetBrowserAgentLoginAttemptCounter(browserAgent) {
-    loginAttemptData[browserAgent].attempts = 0;
+	loginAttemptData[browserAgent].attempts = 0;
 }
 
 /**
@@ -304,8 +304,8 @@ function resetBrowserAgentLoginAttemptCounter(browserAgent) {
  * @param {string} browserAgent - The browser agent string.
  */
 function resetTimerToDeleteBrowserAgent(browserAgent) {
-    cancelTimerToDeleteBrowserAgent(browserAgent);
-    startTimerToDeleteBrowserAgent(browserAgent);
+	cancelTimerToDeleteBrowserAgent(browserAgent);
+	startTimerToDeleteBrowserAgent(browserAgent);
 }
 
 /**
@@ -313,8 +313,8 @@ function resetTimerToDeleteBrowserAgent(browserAgent) {
  * @param {string} browserAgent - The browser agent string.
  */
 function cancelTimerToDeleteBrowserAgent(browserAgent) {
-    clearTimeout(loginAttemptData[browserAgent]?.deleteTimeoutID);
-    delete loginAttemptData[browserAgent]?.deleteTimeoutID;
+	clearTimeout(loginAttemptData[browserAgent]?.deleteTimeoutID);
+	delete loginAttemptData[browserAgent]?.deleteTimeoutID;
 }
 
 /**
@@ -323,10 +323,10 @@ function cancelTimerToDeleteBrowserAgent(browserAgent) {
  * @param {string} browserAgent - The browser agent string.
  */
 function startTimerToDeleteBrowserAgent(browserAgent) {
-    loginAttemptData[browserAgent].deleteTimeoutID = setTimeout(() => {
-        delete loginAttemptData[browserAgent];
-        console.log(`Allowing browser agent "${browserAgent}" to login without cooldown again!`);
-    }, timeToDeleteBrowserAgentAfterNoAttemptsMillis);
+	loginAttemptData[browserAgent].deleteTimeoutID = setTimeout(() => {
+		delete loginAttemptData[browserAgent];
+		console.log(`Allowing browser agent "${browserAgent}" to login without cooldown again!`);
+	}, timeToDeleteBrowserAgentAfterNoAttemptsMillis);
 }
 
 /**
@@ -336,10 +336,10 @@ function startTimerToDeleteBrowserAgent(browserAgent) {
  * @param {string} usernameCaseSensitive - The case-sensitive username.
  */
 function onIncorrectPassword(browserAgent, usernameCaseSensitive) {
-    if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
-    // Lock them!
-    loginAttemptData[browserAgent].cooldownTimeSecs += loginCooldownIncrementorSecs;
-    logEvents(`${usernameCaseSensitive} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt", { print: true });
+	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
+	// Lock them!
+	loginAttemptData[browserAgent].cooldownTimeSecs += loginCooldownIncrementorSecs;
+	logEvents(`${usernameCaseSensitive} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt", { print: true });
 }
 
 /**
@@ -348,12 +348,12 @@ function onIncorrectPassword(browserAgent, usernameCaseSensitive) {
  * @param {string} browserAgent - The browser agent string.
  */
 function onCorrectPassword(browserAgent) {
-    cancelTimerToDeleteBrowserAgent(browserAgent);
-    // Delete now
-    delete loginAttemptData[browserAgent];
+	cancelTimerToDeleteBrowserAgent(browserAgent);
+	// Delete now
+	delete loginAttemptData[browserAgent];
 }
 
 export {
-    handleLogin,
-    testPasswordForRequest
+	handleLogin,
+	testPasswordForRequest
 };

@@ -10,16 +10,16 @@
  * @returns {boolean} *true* if the page is running locally, *false* otherwise.
  */
 function isLocalEnvironment() {
-    const hostname = window.location.hostname;
+	const hostname = window.location.hostname;
     
-    // Check for common localhost hostnames and local IP ranges
-    return (
-        hostname === 'localhost' || // Localhost
+	// Check for common localhost hostnames and local IP ranges
+	return (
+		hostname === 'localhost' || // Localhost
         hostname === '127.0.0.1' || // Loopback IP address
         hostname.startsWith('192.168.') || // Private IPv4 address space
         hostname.startsWith('10.') || // Private IPv4 address space
         hostname.startsWith('172.') && parseInt(hostname.split('.')[1], 10) >= 16 && parseInt(hostname.split('.')[1], 10) <= 31 // Private IPv4 address space
-    );
+	);
 }
 
 /**
@@ -27,9 +27,9 @@ function isLocalEnvironment() {
  * @param {string} text - The text to copy
  */
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text)
-        .then(() => { console.log('Copied to clipboard'); })
-        .catch((error) => { console.error('Failed to copy to clipboard', error); });
+	navigator.clipboard.writeText(text)
+		.then(() => { console.log('Copied to clipboard'); })
+		.catch((error) => { console.error('Failed to copy to clipboard', error); });
 }
 
 /**
@@ -37,9 +37,9 @@ function copyToClipboard(text) {
  * @returns {boolean}
  */
 function isMouseSupported() {
-    // "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
-    // See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
-    return window.matchMedia("(pointer: fine)").matches;
+	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
+	// See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
+	return window.matchMedia("(pointer: fine)").matches;
 }
 
 /**
@@ -47,12 +47,12 @@ function isMouseSupported() {
  * @returns {boolean}
  */
 function isTouchSupported() {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
+	return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
 }
 
 export default {
-    isLocalEnvironment,
-    copyToClipboard,
-    isMouseSupported,
-    isTouchSupported,
+	isLocalEnvironment,
+	copyToClipboard,
+	isMouseSupported,
+	isTouchSupported,
 };

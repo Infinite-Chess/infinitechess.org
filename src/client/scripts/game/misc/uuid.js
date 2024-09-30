@@ -11,13 +11,13 @@
  * @returns {string} The ID
  */
 function generateID(length) {
-    let result = '';
-    const characters = '0123456789abcdefghijklmnopqrstuvwxyz';
-    const charactersLength = characters.length;
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.random() * charactersLength); // Coerc to an int
-    }
-    return result;
+	let result = '';
+	const characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+	const charactersLength = characters.length;
+	for (let i = 0; i < length; i++) {
+		result += characters.charAt(Math.random() * charactersLength); // Coerc to an int
+	}
+	return result;
 }
 
 /**
@@ -28,11 +28,11 @@ function generateID(length) {
  * @returns {string} The ID
  */
 function genUniqueID(length, object) { // object contains the key value list where the keys are the ids we want to not have duplicates of.
-    let id;
-    do {
-        id = generateID(length);
-    } while (object[id] !== undefined);
-    return id;
+	let id;
+	do {
+		id = generateID(length);
+	} while (object[id] !== undefined);
+	return id;
 }
 
 /**
@@ -41,13 +41,13 @@ function genUniqueID(length, object) { // object contains the key value list whe
  * @returns {number} The ID
  */
 function generateNumbID(length) {
-    const zeroOne = Math.random();
-    const multiplier = 10 ** length;
-    return Math.floor(zeroOne * multiplier);
+	const zeroOne = Math.random();
+	const multiplier = 10 ** length;
+	return Math.floor(zeroOne * multiplier);
 }
 
 export default {
-    generateID,
-    genUniqueID,
-    generateNumbID,
+	generateID,
+	genUniqueID,
+	generateNumbID,
 };

@@ -26,49 +26,49 @@ import frametracker from '../rendering/frametracker.js';
 
 /** The `Move` custom type. This should not be called, it is for JSDoc dropdown info. */
 function Move() {
-    console.error('This Move constructor should NEVER be called! It is purely for useful JSDoc dropdown info when working with the `Move` type.');
+	console.error('This Move constructor should NEVER be called! It is purely for useful JSDoc dropdown info when working with the `Move` type.');
 
-    /** The type of piece moved (e.g. `queensW`). */
-    this.type = undefined;
-    /** The start coordinates of the piece: `[x,y]` */
-    this.startCoords = undefined;
-    /** The end coordinates of the piece: `[x,y]`  */
-    this.endCoords = undefined;
-    /** The type of piece captured (e.g. `knightsB`), if one was made. @type {string} */
-    this.captured = undefined;
-    /** Whether the move delivered check. */
-    this.check = undefined;
-    /** Whether the move delivered mate (or the killing move). */
-    this.mate = undefined;
-    /** Contains information for undoing simulated moves.
+	/** The type of piece moved (e.g. `queensW`). */
+	this.type = undefined;
+	/** The start coordinates of the piece: `[x,y]` */
+	this.startCoords = undefined;
+	/** The end coordinates of the piece: `[x,y]`  */
+	this.endCoords = undefined;
+	/** The type of piece captured (e.g. `knightsB`), if one was made. @type {string} */
+	this.captured = undefined;
+	/** Whether the move delivered check. */
+	this.check = undefined;
+	/** Whether the move delivered mate (or the killing move). */
+	this.mate = undefined;
+	/** Contains information for undoing simulated moves.
      * Several of these properties are impossible to recalculate without
      * looking at previous moves, or replaying the whole game. */
-    this.rewindInfo = {
-        /** The index of the captured piece within the gamefile's piece list.
+	this.rewindInfo = {
+		/** The index of the captured piece within the gamefile's piece list.
          * Required to not screw up the mesh when simulating. */
-        capturedIndex: undefined,
-        /** The index of the promoted pawn within the gamefile's piece list.
+		capturedIndex: undefined,
+		/** The index of the promoted pawn within the gamefile's piece list.
          * Required to not screw up the mesh when simulating. */
-        pawnIndex: undefined,
-        /** Whether the moved piece had its special right before moving. */
-        specialRightStart: undefined,
-        /** Whether the piece on the destination had its special rights before being captured. */
-        specialRightEnd: undefined,
-        /** The gamefile's `enpassant` property before this move was made. */
-        enpassant: undefined,
-        /** The gamefile's `moveRuleState` property before this move was made. */
-        moveRuleState: undefined,
-        /** The gamefile's `checksGiven` property before this move was made. */
-        checksGiven: undefined,
-        /** The gamefile's `inCheck` property before this move was made. */
-        inCheck: undefined,
-        /** The gamefile's `attackers` property before this move was made. */
-        attackers: undefined,
-        /** The gamefile's `gameConclusion` property before this move was made. */
-        gameConclusion: undefined,
-    };
-    /** The move in most compact notation: `8,7>8,8Q` */
-    this.compact = undefined;
+		pawnIndex: undefined,
+		/** Whether the moved piece had its special right before moving. */
+		specialRightStart: undefined,
+		/** Whether the piece on the destination had its special rights before being captured. */
+		specialRightEnd: undefined,
+		/** The gamefile's `enpassant` property before this move was made. */
+		enpassant: undefined,
+		/** The gamefile's `moveRuleState` property before this move was made. */
+		moveRuleState: undefined,
+		/** The gamefile's `checksGiven` property before this move was made. */
+		checksGiven: undefined,
+		/** The gamefile's `inCheck` property before this move was made. */
+		inCheck: undefined,
+		/** The gamefile's `attackers` property before this move was made. */
+		attackers: undefined,
+		/** The gamefile's `gameConclusion` property before this move was made. */
+		gameConclusion: undefined,
+	};
+	/** The move in most compact notation: `8,7>8,8Q` */
+	this.compact = undefined;
 }
 
 /**
@@ -78,54 +78,54 @@ function Move() {
 
 /** Tests if the arrow keys have been pressed, signaling to rewind/forward the game. */
 function update() {
-    testIfRewindMove();
-    testIfForwardMove();
+	testIfRewindMove();
+	testIfForwardMove();
 }
 
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
 function testIfRewindMove() {
-    if (!input.isKeyDown('arrowleft')) return;
-    if (guinavigation.isRewindButtonLocked()) return;
-    rewindMove();
+	if (!input.isKeyDown('arrowleft')) return;
+	if (guinavigation.isRewindButtonLocked()) return;
+	rewindMove();
 }
 
 /** Tests if the right arrow key has been pressed, signaling to forward the game. */
 function testIfForwardMove() {
-    if (!input.isKeyDown('arrowright')) return;
-    forwardMove();
+	if (!input.isKeyDown('arrowright')) return;
+	forwardMove();
 }
 
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function rewindMove() {
-    if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
-    if (!isDecrementingLegal(game.getGamefile())) return stats.showMoves();
+	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
+	if (!isDecrementingLegal(game.getGamefile())) return stats.showMoves();
 
-    frametracker.onVisualChange();
+	frametracker.onVisualChange();
 
-    movepiece.rewindMove(game.getGamefile(), { removeMove: false });
+	movepiece.rewindMove(game.getGamefile(), { removeMove: false });
     
-    selection.unselectPiece();
+	selection.unselectPiece();
 
-    guinavigation.update_MoveButtons();
+	guinavigation.update_MoveButtons();
 
-    stats.showMoves();
+	stats.showMoves();
 }
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
-    if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
-    if (!isIncrementingLegal(game.getGamefile())) return stats.showMoves();
+	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
+	if (!isIncrementingLegal(game.getGamefile())) return stats.showMoves();
 
-    const move = getMoveOneForward();
+	const move = getMoveOneForward();
 
-    // Only leave animate and updateData as true
-    movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false });
+	// Only leave animate and updateData as true
+	movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false });
 
-    // transition.teleportToLastMove()
+	// transition.teleportToLastMove()
 
-    guinavigation.update_MoveButtons();
+	guinavigation.update_MoveButtons();
 
-    stats.showMoves();
+	stats.showMoves();
 }
 
 /**
@@ -134,9 +134,9 @@ function forwardMove() {
  * @returns {Move | undefined} The move
  */
 function getMoveOneForward() {
-    const moveIndex = game.getGamefile().moveIndex;
-    const incrementedIndex = moveIndex + 1;
-    return getMoveFromIndex(game.getGamefile().moves, incrementedIndex);
+	const moveIndex = game.getGamefile().moveIndex;
+	const incrementedIndex = moveIndex + 1;
+	return getMoveFromIndex(game.getGamefile().moves, incrementedIndex);
 }
 
 /**
@@ -145,10 +145,10 @@ function getMoveOneForward() {
  * @returns {boolean}
  */
 function isIncrementingLegal(gamefile) {
-    if (gamefile == null) throw new Error("Cannot ask if incrementing moves is legal when there's no gamefile.");
+	if (gamefile == null) throw new Error("Cannot ask if incrementing moves is legal when there's no gamefile.");
 
-    const incrementedIndex = gamefile.moveIndex + 1;
-    return !isIndexOutOfRange(gamefile.moves, incrementedIndex);
+	const incrementedIndex = gamefile.moveIndex + 1;
+	return !isIndexOutOfRange(gamefile.moves, incrementedIndex);
 }
 
 /**
@@ -157,10 +157,10 @@ function isIncrementingLegal(gamefile) {
  * @returns {boolean}
  */
 function isDecrementingLegal(gamefile) {
-    if (gamefile == null) throw new Error("Cannot ask if decrementing moves is legal when there's no gamefile.");
+	if (gamefile == null) throw new Error("Cannot ask if decrementing moves is legal when there's no gamefile.");
 
-    const decrementedIndex = gamefile.moveIndex - 1;
-    return !isIndexOutOfRange(gamefile.moves, decrementedIndex);
+	const decrementedIndex = gamefile.moveIndex - 1;
+	return !isIndexOutOfRange(gamefile.moves, decrementedIndex);
 }
 
 /**
@@ -177,9 +177,9 @@ function isIndexOutOfRange(moves, index) { return index < -1 || index >= moves.l
  * @returns {Move | undefined} The last move, undefined if there isn't one.
  */
 function getLastMove(moves) {
-    const finalIndex = moves.length - 1;
-    if (finalIndex < 0) return;
-    return moves[finalIndex];
+	const finalIndex = moves.length - 1;
+	if (finalIndex < 0) return;
+	return moves[finalIndex];
 }
 
 // 
@@ -190,9 +190,9 @@ function getLastMove(moves) {
  * @returns {Move} The move
  */
 function getCurrentMove(gamefile) {
-    const index = gamefile.moveIndex;
-    if (index < 0) return;
-    return gamefile.moves[index];
+	const index = gamefile.moveIndex;
+	if (index < 0) return;
+	return gamefile.moves[index];
 }
 
 /**
@@ -202,8 +202,8 @@ function getCurrentMove(gamefile) {
  * @returns {Move} The move at the specified index
  */
 function getMoveFromIndex(moves, index) { // [index1, plyIndex]
-    if (isIndexOutOfRange(moves, index)) return console.error("Cannot get next move when index overflow");
-    return moves[index];
+	if (isIndexOutOfRange(moves, index)) return console.error("Cannot get next move when index overflow");
+	return moves[index];
 }
 
 /**
@@ -212,8 +212,8 @@ function getMoveFromIndex(moves, index) { // [index1, plyIndex]
  * @returns {boolean} *true* if the provided gamefile is viewing the final move
  */
 function areWeViewingLatestMove(gamefile) {
-    const moveIndex = gamefile.moveIndex;
-    return isIndexTheLastMove(gamefile.moves, moveIndex);
+	const moveIndex = gamefile.moveIndex;
+	return isIndexTheLastMove(gamefile.moves, moveIndex);
 }
 
 /**
@@ -223,8 +223,8 @@ function areWeViewingLatestMove(gamefile) {
  * @returns {boolean} *true* if the provided index is that index of the last move in the list
  */
 function isIndexTheLastMove(moves, index) {
-    const finalIndex = moves.length - 1;
-    return index === finalIndex;
+	const finalIndex = moves.length - 1;
+	return index === finalIndex;
 }
 
 /**
@@ -234,7 +234,7 @@ function isIndexTheLastMove(moves, index) {
  * @returns {string} Whos turn it is, 'white' or 'black'
  */
 function getWhosTurnAtFront(gamefile) {
-    return getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
+	return getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
 }
 
 /**
@@ -252,10 +252,10 @@ function getPlyCount(moves) { return moves.length; }
  * @returns {boolean} *true* if the piece has moved
  */
 function hasPieceMoved(gamefile, coords) {
-    for (const thisMove of gamefile.moves) {
-        if (coordutil.areCoordsEqual(thisMove.endCoords, coords)) return true;
-    }
-    return false;
+	for (const thisMove of gamefile.moves) {
+		if (coordutil.areCoordsEqual(thisMove.endCoords, coords)) return true;
+	}
+	return false;
 }
 
 /**
@@ -263,8 +263,8 @@ function hasPieceMoved(gamefile, coords) {
  * @param {Move[]} moves - The moves list
  */
 function deleteLastMove(moves) {
-    if (moves.length === 0) return console.error("Cannot delete last move when there are none");
-    moves.pop();
+	if (moves.length === 0) return console.error("Cannot delete last move when there are none");
+	moves.pop();
 }
 
 /**
@@ -273,8 +273,8 @@ function deleteLastMove(moves) {
  * @returns {boolean} *true* if the moves are in the old 2D format, false if in new 1D format.
  */
 function areMovesIn2DFormat(longmoves) {
-    if (longmoves.length === 0) return false; // Empty, assume they are in the new 1D format
-    return Array.isArray(longmoves[0]);
+	if (longmoves.length === 0) return false; // Empty, assume they are in the new 1D format
+	return Array.isArray(longmoves[0]);
 }
 
 /**
@@ -286,17 +286,17 @@ function areMovesIn2DFormat(longmoves) {
  * @returns {Move[]} Moves converted to the new 1D array format
  */
 function convertMovesTo1DFormat(moves, results) {
-    results.turn = 'white';
-    const moves1D = [];
-    for (let a = 0; a < moves.length; a++) {
-        const thisPair = moves[a];
-        for (let b = 0; b < thisPair.length; b++) {
-            const thisMove = thisPair[b];
-            if (thisMove === null) results.turn = 'black';
-            else moves1D.push(thisMove);
-        }
-    }
-    return moves1D;
+	results.turn = 'white';
+	const moves1D = [];
+	for (let a = 0; a < moves.length; a++) {
+		const thisPair = moves[a];
+		for (let b = 0; b < thisPair.length; b++) {
+			const thisMove = thisPair[b];
+			if (thisMove === null) results.turn = 'black';
+			else moves1D.push(thisMove);
+		}
+	}
+	return moves1D;
 }
 
 /**
@@ -304,9 +304,9 @@ function convertMovesTo1DFormat(moves, results) {
  * @param {gamefile} gamefile - The gamefile
  */
 function flagLastMoveAsCheck(gamefile) {
-    if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.");
-    const lastMove = getLastMove(gamefile.moves);
-    lastMove.check = true;
+	if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.");
+	const lastMove = getLastMove(gamefile.moves);
+	lastMove.check = true;
 }
 
 /**
@@ -314,9 +314,9 @@ function flagLastMoveAsCheck(gamefile) {
  * @param {gamefile} gamefile - The gamefile
  */
 function flagLastMoveAsMate(gamefile) {
-    if (gamefile.moves.length === 0) return; // No moves, can't flag last move as mate (this can happen when pasting a game that's over)
-    const lastMove = getLastMove(gamefile.moves);
-    lastMove.mate = true;
+	if (gamefile.moves.length === 0) return; // No moves, can't flag last move as mate (this can happen when pasting a game that's over)
+	const lastMove = getLastMove(gamefile.moves);
+	lastMove.mate = true;
 }
 
 /**
@@ -335,10 +335,10 @@ function isGameResignable(gamefile) { return gamefile.moves.length > 1; }
  * @returns {string} - The color that playd the moveIndex
  */
 function getColorThatPlayedMoveIndex(gamefile, i) {
-    if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
-    const turnOrder = gamefile.gameRules.turnOrder;
-    const loopIndex = i % turnOrder.length;
-    return turnOrder[loopIndex];
+	if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
+	const turnOrder = gamefile.gameRules.turnOrder;
+	const loopIndex = i % turnOrder.length;
+	return turnOrder[loopIndex];
 }
 
 /**
@@ -348,7 +348,7 @@ function getColorThatPlayedMoveIndex(gamefile, i) {
  * @returns {string} 'white' / 'black'
  */
 function getWhosTurnAtMoveIndex(gamefile, moveIndex) {
-    return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
+	return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
 }
 
 /**
@@ -357,42 +357,42 @@ function getWhosTurnAtMoveIndex(gamefile, moveIndex) {
  * @returns {boolean}
  */
 function doesAnyPlayerGet2TurnsInARow(gamefile) {
-    // If one player ever gets 2 turns in a row, then that also allows the capture of the king.
-    const turnOrder = gamefile.gameRules.turnOrder;
-    for (let i = 0; i < turnOrder.length; i++) {
-        const thisColor = turnOrder[i];
-        const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.
-        const nextColor = turnOrder[nextColorIndex];
-        if (thisColor === nextColor) return true;
-    }
-    return false;
+	// If one player ever gets 2 turns in a row, then that also allows the capture of the king.
+	const turnOrder = gamefile.gameRules.turnOrder;
+	for (let i = 0; i < turnOrder.length; i++) {
+		const thisColor = turnOrder[i];
+		const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.
+		const nextColor = turnOrder[nextColorIndex];
+		if (thisColor === nextColor) return true;
+	}
+	return false;
 }
 
 //Type export DO NOT USE
 export { Move };
 
 export default {
-    update,
-    rewindMove,
-    forwardMove,
-    isIncrementingLegal,
-    isDecrementingLegal,
-    isIndexOutOfRange,
-    getLastMove,
-    getCurrentMove,
-    getMoveFromIndex,
-    areWeViewingLatestMove,
-    isIndexTheLastMove,
-    getWhosTurnAtFront,
-    getPlyCount,
-    hasPieceMoved,
-    deleteLastMove,
-    flagLastMoveAsCheck,
-    flagLastMoveAsMate,
-    areMovesIn2DFormat,
-    convertMovesTo1DFormat,
-    isGameResignable,
-    getColorThatPlayedMoveIndex,
-    getWhosTurnAtMoveIndex,
-    doesAnyPlayerGet2TurnsInARow,
+	update,
+	rewindMove,
+	forwardMove,
+	isIncrementingLegal,
+	isDecrementingLegal,
+	isIndexOutOfRange,
+	getLastMove,
+	getCurrentMove,
+	getMoveFromIndex,
+	areWeViewingLatestMove,
+	isIndexTheLastMove,
+	getWhosTurnAtFront,
+	getPlyCount,
+	hasPieceMoved,
+	deleteLastMove,
+	flagLastMoveAsCheck,
+	flagLastMoveAsMate,
+	areMovesIn2DFormat,
+	convertMovesTo1DFormat,
+	isGameResignable,
+	getColorThatPlayedMoveIndex,
+	getWhosTurnAtMoveIndex,
+	doesAnyPlayerGet2TurnsInARow,
 };

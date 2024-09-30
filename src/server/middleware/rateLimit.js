@@ -77,32 +77,32 @@ const connectionsLargeMessageCountsFor = 34;
  * @param {Function} next - The function to call, when finished, to continue the middleware waterfall.
  */
 function rateLimit(req, res, next) {
-    if (!ARE_RATE_LIMITING) return next(); // Not rate limiting
+	if (!ARE_RATE_LIMITING) return next(); // Not rate limiting
     
-    countRecentRequests();
+	countRecentRequests();
     
-    const clientIP = getClientIP(req);
-    if (!clientIP) {
-        console.log('Unable to identify client IP address');
-        return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
-    }
+	const clientIP = getClientIP(req);
+	if (!clientIP) {
+		console.log('Unable to identify client IP address');
+		return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
+	}
 
-    if (isIPBanned(clientIP)) {
-        const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
-        logEvents(logThis, 'bannedIPLog.txt', { print: true });
-        return res.status(403).json({ message: getTranslationForReq("server.javascript.ws-you_are_banned_by_server", req) });
-    }
+	if (isIPBanned(clientIP)) {
+		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+		logEvents(logThis, 'bannedIPLog.txt', { print: true });
+		return res.status(403).json({ message: getTranslationForReq("server.javascript.ws-you_are_banned_by_server", req) });
+	}
 
-    if (rateLimitHash[clientIP] > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
-        console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
-        return res.status(429).json({ message: getTranslationForReq("server.javascript.ws-too_many_requests_to_server", req) });
-    }
+	if (rateLimitHash[clientIP] > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
+		console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
+		return res.status(429).json({ message: getTranslationForReq("server.javascript.ws-too_many_requests_to_server", req) });
+	}
 
-    // Increment their recent connection count,
-    // and set a timer to decrement their recent connection count after 1 min
-    incrementClientConnectionCount(clientIP);
+	// Increment their recent connection count,
+	// and set a timer to decrement their recent connection count after 1 min
+	incrementClientConnectionCount(clientIP);
 
-    next(); // Continue the middleware waterfall
+	next(); // Continue the middleware waterfall
 }
 
 // Returns true if the connection is allowed. False if too many.
@@ -116,34 +116,34 @@ function rateLimit(req, res, next) {
  */
 function rateLimitWebSocket(req, ws) {
 
-    countRecentRequests();
+	countRecentRequests();
 
-    const clientIP = getClientIP_Websocket(req, ws);
-    if (!clientIP) {
-        console.log('Unable to identify client IP address from web socket connection');
-        ws.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
-        return false;
-    }
+	const clientIP = getClientIP_Websocket(req, ws);
+	if (!clientIP) {
+		console.log('Unable to identify client IP address from web socket connection');
+		ws.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
+		return false;
+	}
 
-    if (rateLimitHash[clientIP] > maxRequestsPerMinute) {
-        console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
-        ws.close(1009, 'Too Many Requests. Try again soon.');
-        return false;
-    }
+	if (rateLimitHash[clientIP] > maxRequestsPerMinute) {
+		console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
+		ws.close(1009, 'Too Many Requests. Try again soon.');
+		return false;
+	}
 
-    // Test if the message is too big here. People could DDOS this way
-    // THIS MAY NOT WORK if the bytes get read before we reach this part of the code, it could still DDOS us before we reject them.
-    // Then again.. Unless their initial http websocket upgrade request contains a massive amount of bytes, this will immediately reject them anyway!
-    const messageSize = ws._socket.bytesRead;
-    if (messageSize > maxWebsocketMessageSizeBytes) {
-        ws.close(1009, 'Message Too Big');
-        incrementClientConnectionCount(clientIP, connectionsLargeMessageCountsFor);
-        return false;
-    }
+	// Test if the message is too big here. People could DDOS this way
+	// THIS MAY NOT WORK if the bytes get read before we reach this part of the code, it could still DDOS us before we reject them.
+	// Then again.. Unless their initial http websocket upgrade request contains a massive amount of bytes, this will immediately reject them anyway!
+	const messageSize = ws._socket.bytesRead;
+	if (messageSize > maxWebsocketMessageSizeBytes) {
+		ws.close(1009, 'Message Too Big');
+		incrementClientConnectionCount(clientIP, connectionsLargeMessageCountsFor);
+		return false;
+	}
 
-    incrementClientConnectionCount(clientIP);
+	incrementClientConnectionCount(clientIP);
 
-    return true; // Connection allowed!
+	return true; // Connection allowed!
 }
 
 /**
@@ -154,10 +154,10 @@ function rateLimitWebSocket(req, ws) {
  * @param {number|undefined} [amount=1] The weight of this request. Default: 1. Higher => rate limit sooner.
  */
 function incrementClientConnectionCount(clientIP, amount = 1) {
-    if (rateLimitHash[clientIP] === undefined) rateLimitHash[clientIP] = amount;
-    else rateLimitHash[clientIP] += amount; // Will only increment if we haven't already rejected them for too many requests.
+	if (rateLimitHash[clientIP] === undefined) rateLimitHash[clientIP] = amount;
+	else rateLimitHash[clientIP] += amount; // Will only increment if we haven't already rejected them for too many requests.
 
-    setTimeout(() => { rateLimitHash[clientIP] -= amount; }, minuteInMillis);
+	setTimeout(() => { rateLimitHash[clientIP] -= amount; }, minuteInMillis);
 }
 
 /**
@@ -166,11 +166,11 @@ function incrementClientConnectionCount(clientIP, amount = 1) {
  * with 0 recent connections.
  */
 setInterval(() => {
-    const hashKeys = Object.keys(rateLimitHash);
-    for (const ip of hashKeys) {
-        if (rateLimitHash[ip] !== 0) continue;
-        delete rateLimitHash[ip];
-    }
+	const hashKeys = Object.keys(rateLimitHash);
+	for (const ip of hashKeys) {
+		if (rateLimitHash[ip] !== 0) continue;
+		delete rateLimitHash[ip];
+	}
 }, rateToClearDeadConnectionsMillis);
 
 /**
@@ -179,8 +179,8 @@ setInterval(() => {
  * EVEN if they are rate limited.
  */
 function countRecentRequests() {
-    const currentTimeMillis = Date.now();
-    recentRequests.push(currentTimeMillis);
+	const currentTimeMillis = Date.now();
+	recentRequests.push(currentTimeMillis);
 }
 
 /**
@@ -193,21 +193,21 @@ function countRecentRequests() {
  * many recent connections that it must be a DDOS attack.
  */
 setInterval(() => {
-    // Delete recent requests longer than 2 seconds ago
-    const twoSecondsAgo = Date.now() - requestWindowToToggleAttackModeMillis;
-    const indexToSplitAt = binarySearch_findValue(recentRequests, twoSecondsAgo);
-    recentRequests.splice(0, indexToSplitAt + 1);
+	// Delete recent requests longer than 2 seconds ago
+	const twoSecondsAgo = Date.now() - requestWindowToToggleAttackModeMillis;
+	const indexToSplitAt = binarySearch_findValue(recentRequests, twoSecondsAgo);
+	recentRequests.splice(0, indexToSplitAt + 1);
 
-    if (recentRequests.length > requestCapToToggleAttackMode) {
-        //console.log(`Probable DDOS attack happening now. The past ${requestWindowToToggleAttackModeMillis} milliseconds contained ${recentRequests.length} reqests!`)
-        if (!underAttackMode) { // Toggle on
-            underAttackMode = true;
-            logAttackBegin();
-        }
-    } else if (underAttackMode) {
-        underAttackMode = false;
-        logAttackEnd();
-    }
+	if (recentRequests.length > requestCapToToggleAttackMode) {
+		//console.log(`Probable DDOS attack happening now. The past ${requestWindowToToggleAttackModeMillis} milliseconds contained ${recentRequests.length} reqests!`)
+		if (!underAttackMode) { // Toggle on
+			underAttackMode = true;
+			logAttackBegin();
+		}
+	} else if (underAttackMode) {
+		underAttackMode = false;
+		logAttackEnd();
+	}
 }, requestWindowToToggleAttackModeMillis);
 
 /**
@@ -218,33 +218,33 @@ setInterval(() => {
  * @returns {number} The index
  */
 function binarySearch_findValue(sortedArray, value) {
-    let left = 0;
-    let right = sortedArray.length - 1;
+	let left = 0;
+	let right = sortedArray.length - 1;
 
-    while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        const midValue = sortedArray[mid];
+	while (left <= right) {
+		const mid = Math.floor((left + right) / 2);
+		const midValue = sortedArray[mid];
 
-        if (value < midValue) right = mid - 1;
-        else if (value > midValue) left = mid + 1;
-        else if (midValue === value) return mid;
-    }
+		if (value < midValue) right = mid - 1;
+		else if (value > midValue) left = mid + 1;
+		else if (midValue === value) return mid;
+	}
 
-    // The left is the index at which you could insert the new value at the correct location!
-    return left;
+	// The left is the index at which you could insert the new value at the correct location!
+	return left;
 }
 
 function logAttackBegin() {
-    const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
-    logEvents(logText, 'hackLog.txt', { print: true });
+	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
+	logEvents(logText, 'hackLog.txt', { print: true });
 }
 
 function logAttackEnd() {
-    const logText = `DDOS attack has ended.`;
-    logEvents(logText, 'hackLog.txt', { print: true });
+	const logText = `DDOS attack has ended.`;
+	logEvents(logText, 'hackLog.txt', { print: true });
 }
 
 export {
-    rateLimit,
-    rateLimitWebSocket
+	rateLimit,
+	rateLimitWebSocket
 };

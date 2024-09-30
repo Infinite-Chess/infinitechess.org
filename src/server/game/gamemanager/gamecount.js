@@ -17,20 +17,20 @@ let activeGameCount = 0;
 
 /** Call when a game is created. */
 function incrementActiveGameCount() {
-    activeGameCount++;
-    // Game count increment is already broadcasted automatically
-    // in the invitesmanager when an invite is accepted.
+	activeGameCount++;
+	// Game count increment is already broadcasted automatically
+	// in the invitesmanager when an invite is accepted.
 }
 
 /** Call when a game ENDS (not necessarily deleted). */
 function decrementActiveGameCount() {
-    activeGameCount--;
-    broadcastGameCountToInviteSubs();
+	activeGameCount--;
+	broadcastGameCountToInviteSubs();
 }
 
 /** Broadcasts the current game count to all sockets subscribed to the invites list. */
 function broadcastGameCountToInviteSubs() {
-    broadcastToAllInviteSubs("gamecount", activeGameCount);
+	broadcastToAllInviteSubs("gamecount", activeGameCount);
 }
 
 /**
@@ -40,20 +40,20 @@ function broadcastGameCountToInviteSubs() {
  * @returns {number} The active game count
  */
 function getActiveGameCount() {
-    return activeGameCount;
+	return activeGameCount;
 }
 
 /** Prints the active game count to the console. */
 function printActiveGameCount() {
-    const activeGameCount = getActiveGameCount();
-    console.log(`Active games: ${activeGameCount} ===========================================`);
+	const activeGameCount = getActiveGameCount();
+	console.log(`Active games: ${activeGameCount} ===========================================`);
 }
 
 
 export {
-    incrementActiveGameCount,
-    decrementActiveGameCount,
-    getActiveGameCount,
-    printActiveGameCount,
-    broadcastGameCountToInviteSubs,
+	incrementActiveGameCount,
+	decrementActiveGameCount,
+	getActiveGameCount,
+	printActiveGameCount,
+	broadcastGameCountToInviteSubs,
 };

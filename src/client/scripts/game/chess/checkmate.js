@@ -26,36 +26,36 @@ import typeutil from '../misc/typeutil.js';
  */
 function detectCheckmateOrDraw(gamefile) {
 
-    // Is there a draw by repetition?
-    if (detectRepetitionDraw(gamefile)) return 'draw repetition';
+	// Is there a draw by repetition?
+	if (detectRepetitionDraw(gamefile)) return 'draw repetition';
 
-    // The game also will be over when the player has zero legal moves remaining, lose or draw.
-    // Iterate through every piece, calculating its legal moves. The first legal move we find, we
-    // know the game is not over yet...
+	// The game also will be over when the player has zero legal moves remaining, lose or draw.
+	// Iterate through every piece, calculating its legal moves. The first legal move we find, we
+	// know the game is not over yet...
 
-    const whosTurn = gamefile.whosTurn;
-    const teamTypes = typeutil.colorsTypes[whosTurn];
-    for (const thisType of teamTypes) {
-        const thesePieces = gamefile.ourPieces[thisType];
-        for (let a = 0; a < thesePieces.length; a++) {
-            const coords = thesePieces[a];
-            if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-            const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords);
-            const thisPiece = { type: thisType, coords, index }; // { index, coords }
-            const moves = legalmoves.calculate(gamefile, thisPiece);
-            if (!legalmoves.hasAtleast1Move(moves)) continue;
-            return false;
-        }
-    }
+	const whosTurn = gamefile.whosTurn;
+	const teamTypes = typeutil.colorsTypes[whosTurn];
+	for (const thisType of teamTypes) {
+		const thesePieces = gamefile.ourPieces[thisType];
+		for (let a = 0; a < thesePieces.length; a++) {
+			const coords = thesePieces[a];
+			if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
+			const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords);
+			const thisPiece = { type: thisType, coords, index }; // { index, coords }
+			const moves = legalmoves.calculate(gamefile, thisPiece);
+			if (!legalmoves.hasAtleast1Move(moves)) continue;
+			return false;
+		}
+	}
 
-    // We made it through every single piece without finding a single move.
-    // So is this draw or checkmate? Depends on whether the current state is check!
-    // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
-    const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate');
-    if (gamefile.inCheck && usingCheckmate) {
-        const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
-        return `${colorThatWon} checkmate`;
-    } else return 'draw stalemate';
+	// We made it through every single piece without finding a single move.
+	// So is this draw or checkmate? Depends on whether the current state is check!
+	// Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
+	const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate');
+	if (gamefile.inCheck && usingCheckmate) {
+		const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+		return `${colorThatWon} checkmate`;
+	} else return 'draw stalemate';
 }
 
 // /** THE OLD CHECKMATE ALGORITHM, THAT IS ASYNCHRONIOUS. NO LONGER USED. ASYNC STUFF IS TOO MUCH OF A KNIGHTMARE.
@@ -177,67 +177,67 @@ function detectCheckmateOrDraw(gamefile) {
  * @returns {boolean} *true* if there has been a repetition draw
  */
 function detectRepetitionDraw(gamefile) {
-    const moveList = gamefile.moves;
+	const moveList = gamefile.moves;
 
-    const deficit = { }; // `x,y,type`
-    const surplus = { }; // `x,y,type`
+	const deficit = { }; // `x,y,type`
+	const surplus = { }; // `x,y,type`
 
-    // TODO: Make sure that all special rights, and gamefile's en passant values,
-    // match, in order for positions to be counted as equal!!!!!
+	// TODO: Make sure that all special rights, and gamefile's en passant values,
+	// match, in order for positions to be counted as equal!!!!!
 
-    let equalPositionsFound = 0;
+	let equalPositionsFound = 0;
 
-    let index = moveList.length - 1;
-    let indexOfLastEqualPositionFound = index + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
-    while (index >= 0) {
+	let index = moveList.length - 1;
+	let indexOfLastEqualPositionFound = index + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
+	while (index >= 0) {
 
-        // Moves are in the format: { type, startCoords, endCoords, captured: 'type'}
-        /** @type {Move} */
-        const thisMove = moveList[index];
+		// Moves are in the format: { type, startCoords, endCoords, captured: 'type'}
+		/** @type {Move} */
+		const thisMove = moveList[index];
 
-        // If the move was a pawn push or capture, no further equal positions, terminate the loop.
-        if (thisMove.captured || thisMove.type.startsWith('pawns')) break;
+		// If the move was a pawn push or capture, no further equal positions, terminate the loop.
+		if (thisMove.captured || thisMove.type.startsWith('pawns')) break;
 
-        // If this move was undo'd, there would be a DEFICIT on its endCoords
-        const endCoords = thisMove.endCoords;
-        let key = `${endCoords[0]},${endCoords[1]},${thisMove.type}`;
-        // If there is a SURPLUS with this exact same key, delete that instead! It's been canceled-out.
-        if (surplus[key]) delete surplus[key];
-        else deficit[key] = true;
+		// If this move was undo'd, there would be a DEFICIT on its endCoords
+		const endCoords = thisMove.endCoords;
+		let key = `${endCoords[0]},${endCoords[1]},${thisMove.type}`;
+		// If there is a SURPLUS with this exact same key, delete that instead! It's been canceled-out.
+		if (surplus[key]) delete surplus[key];
+		else deficit[key] = true;
 
-        // There would also be a SURPLUS on its startCoords
-        const startCoords = thisMove.startCoords;
-        key = `${startCoords[0]},${startCoords[1]},${thisMove.type}`;
-        // If there is a DEFICIT with this exact same key, delete that instead! It's been canceled-out.
-        if (deficit[key]) delete deficit[key];
-        else surplus[key] = true;
+		// There would also be a SURPLUS on its startCoords
+		const startCoords = thisMove.startCoords;
+		key = `${startCoords[0]},${startCoords[1]},${thisMove.type}`;
+		// If there is a DEFICIT with this exact same key, delete that instead! It's been canceled-out.
+		if (deficit[key]) delete deficit[key];
+		else surplus[key] = true;
 
-        checkEqualPosition: {
-            // Has a full turn cycle ocurred since the last increment of equalPositionsFound?
-            // If so, we can't count this as an equal position, because it will break it in multiplayer games,
-            // or if we have multiple turns in a row.
-            const indexDiff = indexOfLastEqualPositionFound - index;
-            if (indexDiff < gamefile.gameRules.turnOrder.length) break checkEqualPosition; // Hasn't been a full turn cycle yet, don't increment the counter
+		checkEqualPosition: {
+			// Has a full turn cycle ocurred since the last increment of equalPositionsFound?
+			// If so, we can't count this as an equal position, because it will break it in multiplayer games,
+			// or if we have multiple turns in a row.
+			const indexDiff = indexOfLastEqualPositionFound - index;
+			if (indexDiff < gamefile.gameRules.turnOrder.length) break checkEqualPosition; // Hasn't been a full turn cycle yet, don't increment the counter
 
-            // If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
-            const deficitKeys = Object.keys(deficit);
-            const surplusKeys = Object.keys(surplus);
-            if (deficitKeys.length === 0 && surplusKeys.length === 0) {
-                equalPositionsFound++;
-                indexOfLastEqualPositionFound = index;
-                if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
-            }
-        }
+			// If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
+			const deficitKeys = Object.keys(deficit);
+			const surplusKeys = Object.keys(surplus);
+			if (deficitKeys.length === 0 && surplusKeys.length === 0) {
+				equalPositionsFound++;
+				indexOfLastEqualPositionFound = index;
+				if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
+			}
+		}
 
-        // Prep for next iteration, decrement index.
-        // WILL BE -1 if we've reached the beginning of the game!
-        index--;
-    }
+		// Prep for next iteration, decrement index.
+		// WILL BE -1 if we've reached the beginning of the game!
+		index--;
+	}
 
-    // Loop is finished. How many equal positions did we find?
-    return equalPositionsFound === 2; // TRUE if there's a repetition draw!
+	// Loop is finished. How many equal positions did we find?
+	return equalPositionsFound === 2; // TRUE if there's a repetition draw!
 }
 
 export default {
-    detectCheckmateOrDraw,
+	detectCheckmateOrDraw,
 };

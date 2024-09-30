@@ -1,6 +1,6 @@
 {
-  "name": "Infinite Chess Server",
-  "version": "1.0.0",
+  "name": "infinite-chess-server",
+  "version": "1.4.3",
   "description": "infinitechess.org server",
   "author": "Naviary",
   "license": "AGPL",

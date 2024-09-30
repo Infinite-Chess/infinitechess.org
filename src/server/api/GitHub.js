@@ -32,5 +32,5 @@ function getContributors() { return contributors; }
 
 
 export {
-    getContributors
+	getContributors
 };

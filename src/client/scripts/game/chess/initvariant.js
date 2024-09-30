@@ -34,14 +34,14 @@ import variant from '../variants/variant.js';
  * @param {Object} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
  */
 function setupVariant(gamefile, metadata, options) {
-    if (options) initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options); // Ignores the "Variant" metadata, and just uses the specified startingPosition
-    else initStartSnapshotAndGamerules(gamefile, metadata); // Default (built-in variant, not pasted)
+	if (options) initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options); // Ignores the "Variant" metadata, and just uses the specified startingPosition
+	else initStartSnapshotAndGamerules(gamefile, metadata); // Default (built-in variant, not pasted)
 
-    gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
+	gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
 
-    initExistingTypes(gamefile);
-    initPieceMovesets(gamefile);
-    initSlidingMoves(gamefile);
+	initExistingTypes(gamefile);
+	initPieceMovesets(gamefile);
+	initSlidingMoves(gamefile);
 }
 
 /**
@@ -50,18 +50,18 @@ function setupVariant(gamefile, metadata, options) {
  * @param {gamefile} gamefile 
  */
 function initExistingTypes(gamefile) {
-    const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
+	const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
     
-    // Makes sure all possible pieces are accounted for. even when they dont start with them
-    const promotiontypes = gamefile.gameRules.promotionsAllowed ? [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black] : [];
+	// Makes sure all possible pieces are accounted for. even when they dont start with them
+	const promotiontypes = gamefile.gameRules.promotionsAllowed ? [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black] : [];
     
-    // Promotion types already have teams stripped
-    const rawtypes = new Set(promotiontypes);
-    for (const tpiece of teamtypes) {
-        rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
-    }
+	// Promotion types already have teams stripped
+	const rawtypes = new Set(promotiontypes);
+	for (const tpiece of teamtypes) {
+		rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
+	}
 
-    gamefile.startSnapshot.existingTypes = rawtypes;
+	gamefile.startSnapshot.existingTypes = rawtypes;
 }
 
 /**
@@ -71,7 +71,7 @@ function initExistingTypes(gamefile) {
  * @param {gamefile} gamefile 
  */
 function initSlidingMoves(gamefile) {
-    gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
+	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
 }
 
 /**
@@ -80,19 +80,19 @@ function initSlidingMoves(gamefile) {
  * @param {gamefile} gamefile
  */
 function getPossibleSlides(gamefile) {
-    const rawtypes = gamefile.startSnapshot.existingTypes;
-    const movesets = gamefile.pieceMovesets;
-    const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
-    for (const type of rawtypes) {
-        let moveset = movesets[type];
-        if (!moveset) continue;
-        moveset = moveset();
-        if (!moveset.sliding) continue;
-        Object.keys(moveset.sliding).forEach( slide => { slides.add(slide); });
-    }
-    const temp = [];
-    slides.forEach(slideline => { temp.push(coordutil.getCoordsFromKey(slideline)); });
-    return temp;
+	const rawtypes = gamefile.startSnapshot.existingTypes;
+	const movesets = gamefile.pieceMovesets;
+	const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
+	for (const type of rawtypes) {
+		let moveset = movesets[type];
+		if (!moveset) continue;
+		moveset = moveset();
+		if (!moveset.sliding) continue;
+		Object.keys(moveset.sliding).forEach( slide => { slides.add(slide); });
+	}
+	const temp = [];
+	slides.forEach(slideline => { temp.push(coordutil.getCoordsFromKey(slideline)); });
+	return temp;
 }
 
 /**
@@ -100,14 +100,14 @@ function getPossibleSlides(gamefile) {
  * @param {gamefile} gamefile - The gamefile
  */
 function initPieceMovesets(gamefile) {
-    // The movesets and methods for detecting and executing special moves
-    // are attached to the gamefile. This is because different variants
-    // can have different movesets for each piece. For example, the slideLimit gamerule.
-    gamefile.pieceMovesets = movesets.getPieceMovesets(gamefile.gameRules.slideLimit);
-    gamefile.specialDetects = specialdetect.getSpecialMoves();
-    gamefile.specialMoves = specialmove.getFunctions();
-    gamefile.specialUndos = specialundo.getFunctions();
-    gamefile.vicinity = legalmoves.genVicinity(gamefile);
+	// The movesets and methods for detecting and executing special moves
+	// are attached to the gamefile. This is because different variants
+	// can have different movesets for each piece. For example, the slideLimit gamerule.
+	gamefile.pieceMovesets = movesets.getPieceMovesets(gamefile.gameRules.slideLimit);
+	gamefile.specialDetects = specialdetect.getSpecialMoves();
+	gamefile.specialMoves = specialmove.getFunctions();
+	gamefile.specialUndos = specialundo.getFunctions();
+	gamefile.vicinity = legalmoves.genVicinity(gamefile);
 }
 
 /**
@@ -123,30 +123,30 @@ function initPieceMovesets(gamefile) {
  */
 function initStartSnapshotAndGamerulesFromOptions(gamefile, { Variant, UTCDate, UTCTime }, options) {
 
-    let positionString = options.positionString;
-    let position = options.startingPosition;
-    let specialRights = options.specialRights;
-    if (!options.startingPosition) {
-        const result = variant.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime });
-        positionString = result.positionString;
-        position = result.position;
-        specialRights = result.specialRights;
-    } else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
+	let positionString = options.positionString;
+	let position = options.startingPosition;
+	let specialRights = options.specialRights;
+	if (!options.startingPosition) {
+		const result = variant.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime });
+		positionString = result.positionString;
+		position = result.position;
+		specialRights = result.specialRights;
+	} else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
 
-    gamefile.startSnapshot = {
-        position,
-        positionString,
-        specialRights,
-        fullMove: options.fullMove || 1
-    };
-    if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
-    if (options.moveRule) {
-        const [state, max] = options.moveRule.split('/');
-        gamefile.startSnapshot.moveRuleState = Number(state);
-        options.gameRules.moveRule = Number(max);
-    }
+	gamefile.startSnapshot = {
+		position,
+		positionString,
+		specialRights,
+		fullMove: options.fullMove || 1
+	};
+	if (options.enpassant) gamefile.startSnapshot.enpassant = options.enpassant;
+	if (options.moveRule) {
+		const [state, max] = options.moveRule.split('/');
+		gamefile.startSnapshot.moveRuleState = Number(state);
+		options.gameRules.moveRule = Number(max);
+	}
     
-    gamefile.gameRules = options.gameRules;
+	gamefile.gameRules = options.gameRules;
 }
 
 /**
@@ -158,22 +158,22 @@ function initStartSnapshotAndGamerulesFromOptions(gamefile, { Variant, UTCDate, 
  */
 function initStartSnapshotAndGamerules(gamefile, { Variant, UTCDate, UTCTime }) {
 
-    const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }); 
-    gamefile.startSnapshot = {
-        position,
-        positionString,
-        specialRights
-    };
-    gamefile.gameRules = variant.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
+	const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }); 
+	gamefile.startSnapshot = {
+		position,
+		positionString,
+		specialRights
+	};
+	gamefile.gameRules = variant.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
 
-    // console.log(jsutil.deepCopyObject(position));
-    // console.log(jsutil.deepCopyObject(positionString));
-    // console.log(jsutil.deepCopyObject(specialRights));
-    // console.log(jsutil.deepCopyObject(gamefile.gameRules));
+	// console.log(jsutil.deepCopyObject(position));
+	// console.log(jsutil.deepCopyObject(positionString));
+	// console.log(jsutil.deepCopyObject(specialRights));
+	// console.log(jsutil.deepCopyObject(gamefile.gameRules));
 
-    // Every variant has the exact same initial moveRuleState value.
-    if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0;
-    gamefile.startSnapshot.fullMove = 1; // Every variant has the exact same fullMove value.
+	// Every variant has the exact same initial moveRuleState value.
+	if (gamefile.gameRules.moveRule) gamefile.startSnapshot.moveRuleState = 0;
+	gamefile.startSnapshot.fullMove = 1; // Every variant has the exact same fullMove value.
 }
 
 
@@ -227,5 +227,5 @@ function initStartSnapshotAndGamerules(gamefile, { Variant, UTCDate, UTCTime }) 
 // }
 
 export default {
-    setupVariant
+	setupVariant
 };
