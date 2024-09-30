@@ -62,7 +62,7 @@ function getGamefile() {
 }
 
 function areInGame() {
-	return gamefile != null;
+	return gamefile !== undefined;
 }
 
 // Initiates textures, buffer models for rendering, and the title screen.

@@ -10,6 +10,7 @@ import guipromotion from '../gui/guipromotion.js';
 import guititle from '../gui/guititle.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
+import game from '../chess/game.js';
 // Import End
 
 "use strict";
@@ -138,7 +139,7 @@ function recalcPosition() {
 
 // Updates board position dependant on panVel
 function panBoard() {
-	if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
+	if (loadbalancer.gisAFK() && !game.areInGame()) return; // Exit if we're AFK. Save our CPU!
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
     
 	frametracker.onVisualChange(); // Visual change, render the screen this frame.
