@@ -159,34 +159,93 @@ function executeWithInverseBlending(func) {
  * @param {WebGLRenderingContext} gl - The WebGL context.
  */
 function queryWebGLContextInfo() {
-	const params = [
-        { name: 'MAX_TEXTURE_SIZE', desc: 'Maximum texture size', guaranteed: 64 },
-        { name: 'MAX_CUBE_MAP_TEXTURE_SIZE', desc: 'Maximum cube map texture size', guaranteed: 16 },
-        { name: 'MAX_RENDERBUFFER_SIZE', desc: 'Maximum renderbuffer size', guaranteed: 1 },
-        { name: 'MAX_TEXTURE_IMAGE_UNITS', desc: 'Maximum texture units for fragment shader', guaranteed: 8 },
-        { name: 'MAX_VERTEX_TEXTURE_IMAGE_UNITS', desc: 'Maximum texture units for vertex shader', guaranteed: 0 },
-        { name: 'MAX_COMBINED_TEXTURE_IMAGE_UNITS', desc: 'Maximum combined texture units', guaranteed: 8 },
-        { name: 'MAX_VERTEX_ATTRIBS', desc: 'Maximum vertex attributes', guaranteed: 8 },
-        { name: 'MAX_VERTEX_UNIFORM_VECTORS', desc: 'Maximum vertex uniform vectors', guaranteed: 128 },
-        { name: 'MAX_FRAGMENT_UNIFORM_VECTORS', desc: 'Maximum fragment uniform vectors', guaranteed: 16 },
-        { name: 'MAX_VARYING_VECTORS', desc: 'Maximum varying vectors', guaranteed: 8 },
-        { name: 'MAX_VIEWPORT_DIMS', desc: 'Maximum viewport dimensions', guaranteed: [0, 0] },
-        { name: 'ALIASED_POINT_SIZE_RANGE', desc: 'Aliased point size range', guaranteed: [1, 1] },
-        { name: 'ALIASED_LINE_WIDTH_RANGE', desc: 'Aliased line width range', guaranteed: [1, 1] },
-        { name: 'MAX_VERTEX_UNIFORM_COMPONENTS', desc: 'Maximum vertex uniform components', guaranteed: 1024 },
-        { name: 'MAX_FRAGMENT_UNIFORM_COMPONENTS', desc: 'Maximum fragment uniform components', guaranteed: 1024 },
-        { name: 'MAX_VERTEX_OUTPUT_COMPONENTS', desc: 'Maximum vertex output components', guaranteed: 64 },
-        { name: 'MAX_FRAGMENT_INPUT_COMPONENTS', desc: 'Maximum fragment input components', guaranteed: 60 },
-        { name: 'MAX_DRAW_BUFFERS', desc: 'Maximum draw buffers', guaranteed: 4 },
-        { name: 'MAX_COLOR_ATTACHMENTS', desc: 'Maximum color attachments', guaranteed: 4 },
-        { name: 'MAX_SAMPLES', desc: 'Maximum samples', guaranteed: 4 },
-    ];
+	// Create a canvas and attempt to get WebGL 2 context, fallback to WebGL 1 if unavailable
+	const canvas = document.createElement('canvas');
+	const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');  // WebGL 2 if available, otherwise WebGL 1
 
-	console.log('WebGL Context Information:');
-	params.forEach(param => {
-		const value = gl.getParameter(gl[param.name]);
-		console.log(`${param.desc}:`, value, `(Guaranteed: ${param.guaranteed})`);
-	});
+	if (!gl) {
+		console.error('WebGL is not supported in this browser.');
+	} else {
+		console.log(gl instanceof WebGL2RenderingContext ? 'WebGL 2 is supported' : 'WebGL 1 is supported');
+
+		const params = [
+			{ name: 'MAX_TEXTURE_SIZE', desc: 'Maximum texture size', guaranteed: 64 },
+			{ name: 'MAX_CUBE_MAP_TEXTURE_SIZE', desc: 'Maximum cube map texture size', guaranteed: 16 },
+			{ name: 'MAX_RENDERBUFFER_SIZE', desc: 'Maximum renderbuffer size', guaranteed: 1 },
+			{ name: 'MAX_TEXTURE_IMAGE_UNITS', desc: 'Maximum texture units for fragment shader', guaranteed: 8 },
+			{ name: 'MAX_VERTEX_TEXTURE_IMAGE_UNITS', desc: 'Maximum texture units for vertex shader', guaranteed: 0 },
+			{ name: 'MAX_COMBINED_TEXTURE_IMAGE_UNITS', desc: 'Maximum combined texture units', guaranteed: 8 },
+			{ name: 'MAX_VERTEX_ATTRIBS', desc: 'Maximum vertex attributes', guaranteed: 8 },
+			{ name: 'MAX_VERTEX_UNIFORM_VECTORS', desc: 'Maximum vertex uniform vectors', guaranteed: 128 },
+			{ name: 'MAX_FRAGMENT_UNIFORM_VECTORS', desc: 'Maximum fragment uniform vectors', guaranteed: 16 },
+			{ name: 'MAX_VARYING_VECTORS', desc: 'Maximum varying vectors', guaranteed: 8 },
+			{ name: 'MAX_VIEWPORT_DIMS', desc: 'Maximum viewport dimensions', guaranteed: [0, 0] },
+			{ name: 'ALIASED_POINT_SIZE_RANGE', desc: 'Aliased point size range', guaranteed: [1, 1] },
+			{ name: 'ALIASED_LINE_WIDTH_RANGE', desc: 'Aliased line width range', guaranteed: [1, 1] },
+			{ name: 'MAX_VERTEX_UNIFORM_COMPONENTS', desc: 'Maximum vertex uniform components', guaranteed: 1024 },
+			{ name: 'MAX_FRAGMENT_UNIFORM_COMPONENTS', desc: 'Maximum fragment uniform components', guaranteed: 1024 },
+			{ name: 'MAX_VERTEX_OUTPUT_COMPONENTS', desc: 'Maximum vertex output components', guaranteed: 64 },
+			{ name: 'MAX_FRAGMENT_INPUT_COMPONENTS', desc: 'Maximum fragment input components', guaranteed: 60 },
+			{ name: 'MAX_DRAW_BUFFERS', desc: 'Maximum draw buffers', guaranteed: 4 },
+			{ name: 'MAX_COLOR_ATTACHMENTS', desc: 'Maximum color attachments', guaranteed: 4 },
+			{ name: 'MAX_SAMPLES', desc: 'Maximum samples', guaranteed: 4 }
+		];
+
+		// Output WebGL Context Information
+		console.log('WebGL Context Information:');
+		params.forEach(param => {
+			try {
+				const value = gl.getParameter(gl[param.name]);
+				console.log(`${param.desc}:`, value, `(Guaranteed: ${param.guaranteed})`);
+			} catch (e) {
+				console.warn(`Error fetching ${param.name}:`, e.message);
+			}
+		});
+	}
+
+	// Shortened version:
+
+	// Create a canvas and attempt to get WebGL 2 context, fallback to WebGL 1 if unavailable
+	// const canvas = document.createElement('canvas');
+	// const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');  // WebGL 2 if available, otherwise WebGL 1
+
+	// if (!gl) {
+	// 	console.error('WebGL not supported.');
+	// } else {
+	// 	console.log(gl instanceof WebGL2RenderingContext ? 'WebGL 2' : 'WebGL 1');
+
+	// 	const params = [
+	// 		{ name: 'MAX_TEXTURE_SIZE', guaranteed: 64 },
+	// 		{ name: 'MAX_CUBE_MAP_TEXTURE_SIZE', guaranteed: 16 },
+	// 		{ name: 'MAX_RENDERBUFFER_SIZE', guaranteed: 1 },
+	// 		{ name: 'MAX_TEXTURE_IMAGE_UNITS', guaranteed: 8 },
+	// 		{ name: 'MAX_VERTEX_TEXTURE_IMAGE_UNITS', guaranteed: 0 },
+	// 		{ name: 'MAX_COMBINED_TEXTURE_IMAGE_UNITS', guaranteed: 8 },
+	// 		{ name: 'MAX_VERTEX_ATTRIBS', guaranteed: 8 },
+	// 		{ name: 'MAX_VERTEX_UNIFORM_VECTORS', guaranteed: 128 },
+	// 		{ name: 'MAX_FRAGMENT_UNIFORM_VECTORS', guaranteed: 16 },
+	// 		{ name: 'MAX_VARYING_VECTORS', guaranteed: 8 },
+	// 		{ name: 'MAX_VIEWPORT_DIMS', guaranteed: [0, 0] },
+	// 		{ name: 'ALIASED_POINT_SIZE_RANGE', guaranteed: [1, 1] },
+	// 		{ name: 'ALIASED_LINE_WIDTH_RANGE', guaranteed: [1, 1] },
+	// 		{ name: 'MAX_VERTEX_UNIFORM_COMPONENTS', guaranteed: 1024 },
+	// 		{ name: 'MAX_FRAGMENT_UNIFORM_COMPONENTS', guaranteed: 1024 },
+	// 		{ name: 'MAX_VERTEX_OUTPUT_COMPONENTS', guaranteed: 64 },
+	// 		{ name: 'MAX_FRAGMENT_INPUT_COMPONENTS', guaranteed: 60 },
+	// 		{ name: 'MAX_DRAW_BUFFERS', guaranteed: 4 },
+	// 		{ name: 'MAX_COLOR_ATTACHMENTS', guaranteed: 4 },
+	// 		{ name: 'MAX_SAMPLES', guaranteed: 4 }
+	// 	];
+
+	// 	params.forEach(param => {
+	// 		try {
+	// 			const value = gl.getParameter(gl[param.name]);
+	// 			console.log(`${param.name}: ${value}, G: ${param.guaranteed}`);
+	// 		} catch (e) {
+	// 			console.warn(`Error on ${param.name}`);
+	// 		}
+	// 	});
+	// }
 }
 
 export default {
