@@ -24,11 +24,67 @@ let jumpingRoyals = ['kings', 'royalCentaurs'];
 const slidingRoyals = ['royalQueens'];
 /** A list of the royal pieces, without the color appended. */
 let royals = [...jumpingRoyals, ...slidingRoyals];
-const intTypes = {};
-alltypes.forEach((type, index) => intTypes[type] = index);
+const intTypes = {
+    voidsN: 0,
+    obstaclesN: 1,
+    'kings-': 2,
+    'giraffes-': 3,
+    'camels-': 4,
+    'zebras-': 5,
+    'knightriders-': 6,
+    'amazons-': 7,
+    'queens-': 8,
+    'royalQueens-': 9,
+    'hawks-': 10,
+    'chancellors-': 11,
+    'archbishops-': 12,
+    'centaurs-': 13,
+    'royalCentaurs-': 14,
+    'knights-': 15,
+    'guards-': 16,
+    'rooks-': 17,
+    'bishops-': 18,
+    'pawns-': 19,
+    kingsW: 20,
+    giraffesW: 21,
+    camelsW: 22,
+    zebrasW: 23,
+    knightridersW: 24,
+    amazonsW: 25,
+    queensW: 26,
+    royalQueensW: 27,
+    hawksW: 28,
+    chancellorsW: 29,
+    archbishopsW: 30,
+    centaursW: 31,
+    royalCentaursW: 32,
+    knightsW: 33,
+    guardsW: 34,
+    rooksW: 35,
+    bishopsW: 36,
+    pawnsW: 37,
+    kingsB: 38,
+    giraffesB: 39,
+    camelsB: 40,
+    zebrasB: 41,
+    knightridersB: 42,
+    amazonsB: 43,
+    queensB: 44,
+    royalQueensB: 45,
+    hawksB: 46,
+    chancellorsB: 47,
+    archbishopsB: 48,
+    centaursB: 49,
+    royalCentaursB: 50,
+    knightsB: 51,
+    guardsB: 52,
+    rooksB: 53,
+    bishopsB: 54,
+    pawnsB: 55,
+};
 
-royals = royals.map(type => intTypes[type]);
-jumpingRoyals = jumpingRoyals.map(type => intTypes[type]);
+royals = royals.map(type => intTypes[`${type}-`]);
+jumpingRoyals = jumpingRoyals.map(type => intTypes[`${type}-`]);
 /**
  * An object containing each color in the game, and all piece types associated with that color:
  * `{ white: ['kingsW', 'queensW'...], black: ['kingsB', 'queensB'...], neutral: ['obstaclesN','voidsN'] }`
@@ -42,19 +98,19 @@ colorsTypes.neutral = [...neutralTypes.keys()];
 
 console.log(alltypes.length);
 
-/**
- * 
- * @param {string} type
- * @returns {Number}
- */
-function getNumFromType(type) {
-    const c = colorutil.getColorIndex(type);
-    type = typeutil.trimColorExtensionFromType(type);
-    if (c === 0) {
-        return neutralTypes.indexOf(type);
-    }
-    return (c - 1) * types.length + types.indexOf() + neutralTypes.length;
-}
+// /**
+//  * 
+//  * @param {string} type
+//  * @returns {Number}
+//  */
+// function getNumFromType(type) {
+//     const c = colorutil.getColorIndex(type);
+//     type = typeutil.trimColorExtensionFromType(type);
+//     if (c === 0) {
+//         return neutralTypes.indexOf(type);
+//     }
+//     return (c - 1) * types.length + types.indexOf() + neutralTypes.length;
+// }
 
 /**
  * 
@@ -87,7 +143,7 @@ function getPieceColorFromType(type) {
 }
 
 function isRawType(type, rawName) {
-    return trimColorExtensionFromType(type) === intTypes[rawName];
+    return trimColorExtensionFromType(type) === intTypes[`${rawName}-`];
 }
 
 /**

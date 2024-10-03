@@ -54,7 +54,7 @@ function initExistingTypes(gamefile) {
     
     // Makes sure all possible pieces are accounted for. even when they dont start with them
     const promotiontypes = gamefile.gameRules.promotionsAllowed ? [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black] : [];
-    
+
     // Promotion types already have teams stripped
     const rawtypes = new Set(promotiontypes);
     for (const tpiece of teamtypes) {

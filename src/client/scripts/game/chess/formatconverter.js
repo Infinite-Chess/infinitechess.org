@@ -116,9 +116,12 @@ function NumToShortPiece(num) {
         return neutrals[num];
     }
     num -= neutrals.length;
+    if (isNaN(num)) throw new Error("Type is NaN");
     if (num < pieces_NoNeutral.length) throw new Error("Raw type leak");
+    const col = colors[~~(num / pieces_NoNeutral.length) - 1];
 
-    const [s, ext] = colors[(num / pieces_NoNeutral.length) - 1].split('_');
+    const [s, ext] = col.split('_');
+    
     let p = pieces_NoNeutral[num % pieces_NoNeutral.length];
     if (s === 'w') {
         p = p.toUpperCase();

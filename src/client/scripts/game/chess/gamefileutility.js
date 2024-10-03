@@ -436,7 +436,7 @@ function calcPieceIndexInAllPieces(gamefile, piece) {
 function getRoyalCoords(gamefile, color) {
     const royals = typeutil.royals; // ['kings', ...]
     const WorB = typeutil.getColorExtensionFromColor(color);
-
+    console.log(WorB, royals);
     const piecesByType = gamefile.ourPieces;
     const royalCoords = [];
 

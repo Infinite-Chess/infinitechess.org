@@ -1,5 +1,6 @@
 
 import coordutil from '../misc/coordutil.js';
+import typeutil from '../misc/typeutil.js';
 
 /** 
  * Type Definitions 
@@ -17,102 +18,102 @@ function genPositionOfOmegaFourth() {
 
     // King chamber
     const startingPos = {
-        '-14,17':'pawnsW',
-        '-14,18':'pawnsB',
-        '-13,14':'pawnsW',
-        '-13,15':'pawnsB',
-        '-13,16':'pawnsW',
-        '-13,17':'pawnsB',
-        '-13,20':'pawnsW',
-        '-13,21':'pawnsB',
-        '-13,22':'pawnsW',
-        '-13,23':'pawnsB',
-        '-13,24':'pawnsW',
-        '-13,25':'pawnsB',
-        '-13,26':'pawnsW',
-        '-13,27':'pawnsB',
-        '-12,16':'bishopsB',
-        '-12,25':'bishopsW',
-        '-11,14':'pawnsW',
-        '-11,15':'pawnsB',
-        '-11,16':'kingsB',
-        '-11,17':'pawnsB',
-        '-11,24':'pawnsW',
-        '-11,25':'kingsW',
-        '-11,26':'pawnsW',
-        '-11,27':'pawnsB',
-        '-10,16':'bishopsB',
-        '-10,25':'bishopsW',
-        '-9,14':'pawnsW',
-        '-9,15':'pawnsB',
-        '-9,16':'pawnsW',
-        '-9,17':'pawnsB',
-        '-9,18':'pawnsW',
-        '-9,19':'pawnsB',
-        '-9,20':'pawnsW',
-        '-9,21':'pawnsB',
-        '-9,22':'pawnsW',
-        '-9,23':'pawnsB',
-        '-9,24':'pawnsW',
-        '-9,25':'pawnsB',
-        '-9,26':'pawnsW',
-        '-9,27':'pawnsB',
+        '-14,17':typeutil.intTypes.pawnsW,
+        '-14,18':typeutil.intTypes.pawnsB,
+        '-13,14':typeutil.intTypes.pawnsW,
+        '-13,15':typeutil.intTypes.pawnsB,
+        '-13,16':typeutil.intTypes.pawnsW,
+        '-13,17':typeutil.intTypes.pawnsB,
+        '-13,20':typeutil.intTypes.pawnsW,
+        '-13,21':typeutil.intTypes.pawnsB,
+        '-13,22':typeutil.intTypes.pawnsW,
+        '-13,23':typeutil.intTypes.pawnsB,
+        '-13,24':typeutil.intTypes.pawnsW,
+        '-13,25':typeutil.intTypes.pawnsB,
+        '-13,26':typeutil.intTypes.pawnsW,
+        '-13,27':typeutil.intTypes.pawnsB,
+        '-12,16':typeutil.intTypes.bishopsB,
+        '-12,25':typeutil.intTypes.bishopsW,
+        '-11,14':typeutil.intTypes.pawnsW,
+        '-11,15':typeutil.intTypes.pawnsB,
+        '-11,16':typeutil.intTypes.kingsB,
+        '-11,17':typeutil.intTypes.pawnsB,
+        '-11,24':typeutil.intTypes.pawnsW,
+        '-11,25':typeutil.intTypes.kingsW,
+        '-11,26':typeutil.intTypes.pawnsW,
+        '-11,27':typeutil.intTypes.pawnsB,
+        '-10,16':typeutil.intTypes.bishopsB,
+        '-10,25':typeutil.intTypes.bishopsW,
+        '-9,14':typeutil.intTypes.pawnsW,
+        '-9,15':typeutil.intTypes.pawnsB,
+        '-9,16':typeutil.intTypes.pawnsW,
+        '-9,17':typeutil.intTypes.pawnsB,
+        '-9,18':typeutil.intTypes.pawnsW,
+        '-9,19':typeutil.intTypes.pawnsB,
+        '-9,20':typeutil.intTypes.pawnsW,
+        '-9,21':typeutil.intTypes.pawnsB,
+        '-9,22':typeutil.intTypes.pawnsW,
+        '-9,23':typeutil.intTypes.pawnsB,
+        '-9,24':typeutil.intTypes.pawnsW,
+        '-9,25':typeutil.intTypes.pawnsB,
+        '-9,26':typeutil.intTypes.pawnsW,
+        '-9,27':typeutil.intTypes.pawnsB,
     };
 
     // Rook towers
 
     const startOfRookTowers = {
-        '0,3': 'pawnsW',
-        '0,4': 'pawnsB',
-        '0,5': 'pawnsW',
-        '0,6': 'pawnsB',
-        '0,11': 'pawnsW',
-        '0,12': 'pawnsB',
-        '1,4': 'bishopsW',
-        '1,12': 'bishopsW',
-        '1,13': 'rooksB',
-        '2,1': 'pawnsW',
-        '2,2': 'pawnsB',
-        '2,3': 'pawnsW',
-        '2,4': 'pawnsB',
-        '2,5': 'pawnsW',
-        '2,6': 'pawnsB',
-        '2,7': 'pawnsW',
-        '2,8': 'pawnsW',
-        '2,9': 'pawnsW',
-        '2,10': 'pawnsW',
-        '2,11': 'pawnsW',
-        '2,12': 'pawnsB',
-        '3,2': 'bishopsW',
-        '3,4': 'bishopsB',
-        '3,6': 'pawnsW',
-        '3,7': 'pawnsB',
-        '3,8': 'bishopsW',
-        '3,9': 'pawnsW',
-        '3,10': 'bishopsW',
-        '3,12': 'bishopsW',
-        '3,14': 'bishopsW',
-        '4,1': 'pawnsW',
-        '4,2': 'pawnsB',
-        '4,3': 'pawnsW',
-        '4,4': 'pawnsB',
-        '4,7': 'pawnsW',
-        '4,8': 'pawnsB',
-        '4,9': 'bishopsW',
-        '4,11': 'bishopsW',
-        '4,13': 'bishopsW',
-        '4,15': 'bishopsW',
-        '4,16': 'rooksB',
-        '5,4': 'pawnsW',
-        '5,5': 'pawnsB',
-        '5,8': 'pawnsW',
-        '5,9': 'pawnsB',
-        '5,10': 'pawnsW',
-        '5,11': 'pawnsW',
-        '5,12': 'pawnsW',
-        '5,13': 'pawnsW',
-        '5,14': 'pawnsW',
-        '5,15': 'pawnsB',
+        '0,3': typeutil.intTypes.pawnsW,
+        '0,4': typeutil.intTypes.pawnsB,
+        '0,5': typeutil.intTypes.pawnsW,
+        '0,6': typeutil.intTypes.pawnsB,
+        '0,11': typeutil.intTypes.pawnsW,
+        '0,12': typeutil.intTypes.pawnsB,
+        '1,4': typeutil.intTypes.bishopsW,
+        '1,12': typeutil.intTypes.bishopsW,
+        '1,13': typeutil.intTypes.rooksB,
+        '2,1': typeutil.intTypes.pawnsW,
+        '2,2': typeutil.intTypes.pawnsB,
+        '2,3': typeutil.intTypes.pawnsW,
+        '2,4': typeutil.intTypes.pawnsB,
+        '2,5': typeutil.intTypes.pawnsW,
+        '2,6': typeutil.intTypes.pawnsB,
+        '2,7': typeutil.intTypes.pawnsW,
+        '2,8': typeutil.intTypes.pawnsW,
+        '2,9': typeutil.intTypes.pawnsW,
+        '2,10': typeutil.intTypes.pawnsW,
+        '2,11': typeutil.intTypes.pawnsW,
+        '2,12': typeutil.intTypes.pawnsB,
+        '3,2': typeutil.intTypes.bishopsW,
+        '3,4': typeutil.intTypes.bishopsB,
+        '3,6': typeutil.intTypes.pawnsW,
+        '3,7': typeutil.intTypes.pawnsB,
+        '3,8': typeutil.intTypes.bishopsW,
+        '3,9': typeutil.intTypes.pawnsW,
+        '3,10': typeutil.intTypes.bishopsW,
+        '3,12': typeutil.intTypes.bishopsW,
+        '3,14': typeutil.intTypes.bishopsW,
+        '4,1': typeutil.intTypes.pawnsW,
+        '4,2': typeutil.intTypes.pawnsB,
+        '4,3': typeutil.intTypes.pawnsW,
+        '4,4': typeutil.intTypes.pawnsB,
+        '4,7': typeutil.intTypes.pawnsW,
+        '4,8': typeutil.intTypes.pawnsB,
+        '4,9': typeutil.intTypes.bishopsW,
+        '4,11': typeutil.intTypes.bishopsW,
+        '4,13': typeutil.intTypes.bishopsW,
+        '4,15': typeutil.intTypes.bishopsW,
+        '4,16': typeutil.intTypes.rooksB,
+        '5,4': typeutil.intTypes.pawnsW,
+        '5,5': typeutil.intTypes.pawnsB,
+        '5,8': typeutil.intTypes.pawnsW,
+        '5,9': typeutil.intTypes.pawnsB,
+        '5,10': typeutil.intTypes.pawnsW,
+        '5,11': typeutil.intTypes.pawnsW,
+        '5,12': typeutil.intTypes.pawnsW,
+        '5,13': typeutil.intTypes.pawnsW,
+        '5,14': typeutil.intTypes.pawnsW,
+        '5,15': typeutil.intTypes.pawnsB,
     };
 
     const keys = Object.keys(startOfRookTowers);
@@ -129,8 +130,8 @@ function genPositionOfOmegaFourth() {
 
     // Bishop Cannon Battery
 
-    startingPos[coordutil.getKeyFromCoords([0,-6])] = 'pawnsB';
-    startingPos[coordutil.getKeyFromCoords([0,-7])] = 'pawnsW';
+    startingPos[coordutil.getKeyFromCoords([0,-6])] = typeutil.intTypes.pawnsB;
+    startingPos[coordutil.getKeyFromCoords([0,-7])] = typeutil.intTypes.pawnsW;
 
     spawnAllBishopCannons(startingPos, 1, -7, dist, -dist);
 
@@ -146,7 +147,7 @@ function genPositionOfOmegaFourth() {
         for (let y = startY; y <= endY; y++) {
             const thisCoords = [x,y];
             const key = coordutil.getKeyFromCoords(thisCoords);
-            startingPos[key] = "pawnsW";
+            startingPos[key] = typeutil.intTypes.pawnsW;
         }
     }
         
@@ -158,45 +159,45 @@ function genPositionOfOmegaFourth() {
     function spawnRookTower(startingPos, xStart, yStart, dist) {
         
         // First wall with 4 bishops
-        startingPos[coordutil.getKeyFromCoords([xStart,yStart])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([xStart,yStart + 1])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([xStart,yStart + 2])] = 'pawnsW';
-        if (yStart + 3 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 3])] = 'pawnsB';
-        if (yStart + 6 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 6])] = 'pawnsW';
-        if (yStart + 7 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 7])] = 'pawnsB';
-        if (yStart + 8 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 8])] = 'bishopsW';
-        if (yStart + 9 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 9])] = 'pawnsW';
-        if (yStart + 10 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 10])] = 'bishopsW';
-        if (yStart + 12 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 12])] = 'bishopsW';
-        if (yStart + 14 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 14])] = 'bishopsW';
+        startingPos[coordutil.getKeyFromCoords([xStart,yStart])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([xStart,yStart + 1])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([xStart,yStart + 2])] = typeutil.intTypes.pawnsW;
+        if (yStart + 3 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 3])] = typeutil.intTypes.pawnsB;
+        if (yStart + 6 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 6])] = typeutil.intTypes.pawnsW;
+        if (yStart + 7 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 7])] = typeutil.intTypes.pawnsB;
+        if (yStart + 8 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 8])] = typeutil.intTypes.bishopsW;
+        if (yStart + 9 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 9])] = typeutil.intTypes.pawnsW;
+        if (yStart + 10 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 10])] = typeutil.intTypes.bishopsW;
+        if (yStart + 12 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 12])] = typeutil.intTypes.bishopsW;
+        if (yStart + 14 <= dist) startingPos[coordutil.getKeyFromCoords([xStart,yStart + 14])] = typeutil.intTypes.bishopsW;
         appendPawnTower(startingPos, xStart, yStart + 16, dist);
         
         // Second wall with rook
-        startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 1])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 2])] = 'pawnsB';
-        if (yStart + 3 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 3])] = 'pawnsW';
-        if (yStart + 4 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 4])] = 'pawnsB';
-        if (yStart + 7 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 7])] = 'pawnsW';
-        if (yStart + 8 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 8])] = 'pawnsB';
-        if (yStart + 9 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 9])] = 'bishopsW';
-        if (yStart + 11 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 11])] = 'bishopsW';
-        if (yStart + 13 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 13])] = 'bishopsW';
-        if (yStart + 15 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 15])] = 'bishopsW';
-        if (yStart + 16 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 16])] = 'rooksB';
+        startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 1])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 2])] = typeutil.intTypes.pawnsB;
+        if (yStart + 3 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 3])] = typeutil.intTypes.pawnsW;
+        if (yStart + 4 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 4])] = typeutil.intTypes.pawnsB;
+        if (yStart + 7 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 7])] = typeutil.intTypes.pawnsW;
+        if (yStart + 8 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 8])] = typeutil.intTypes.pawnsB;
+        if (yStart + 9 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 9])] = typeutil.intTypes.bishopsW;
+        if (yStart + 11 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 11])] = typeutil.intTypes.bishopsW;
+        if (yStart + 13 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 13])] = typeutil.intTypes.bishopsW;
+        if (yStart + 15 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 15])] = typeutil.intTypes.bishopsW;
+        if (yStart + 16 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 1,yStart + 16])] = typeutil.intTypes.rooksB;
         
         // Third pawn wall
-        startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 2])] = 'pawnsW';
-        if (yStart + 3 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 3])] = 'pawnsB';
-        if (yStart + 4 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 4])] = 'pawnsW';
-        if (yStart + 5 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 5])] = 'pawnsB';
-        if (yStart + 8 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 8])] = 'pawnsW';
-        if (yStart + 9 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 9])] = 'pawnsB';
-        if (yStart + 10 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 10])] = 'pawnsW';
-        if (yStart + 11 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 11])] = 'pawnsW';
-        if (yStart + 12 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 12])] = 'pawnsW';
-        if (yStart + 13 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 13])] = 'pawnsW';
-        if (yStart + 14 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 14])] = 'pawnsW';
-        if (yStart + 15 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 15])] = 'pawnsB';
+        startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 2])] = typeutil.intTypes.pawnsW;
+        if (yStart + 3 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 3])] = typeutil.intTypes.pawnsB;
+        if (yStart + 4 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 4])] = typeutil.intTypes.pawnsW;
+        if (yStart + 5 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 5])] = typeutil.intTypes.pawnsB;
+        if (yStart + 8 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 8])] = typeutil.intTypes.pawnsW;
+        if (yStart + 9 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 9])] = typeutil.intTypes.pawnsB;
+        if (yStart + 10 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 10])] = typeutil.intTypes.pawnsW;
+        if (yStart + 11 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 11])] = typeutil.intTypes.pawnsW;
+        if (yStart + 12 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 12])] = typeutil.intTypes.pawnsW;
+        if (yStart + 13 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 13])] = typeutil.intTypes.pawnsW;
+        if (yStart + 14 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 14])] = typeutil.intTypes.pawnsW;
+        if (yStart + 15 <= dist) startingPos[coordutil.getKeyFromCoords([xStart + 2,yStart + 15])] = typeutil.intTypes.pawnsB;
         appendPawnTower(startingPos, xStart + 2, yStart + 16, dist);
     }
     
@@ -226,34 +227,34 @@ function genPositionOfOmegaFourth() {
     function genBishopCannon(startingPos, x, y, i) {
 
         // Pawn staples that never change
-        startingPos[coordutil.getKeyFromCoords([x,y])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x,y - 1])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x + 1,y - 1])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x + 1,y - 2])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x + 2,y - 2])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x + 2,y - 3])] = 'pawnsW';
-        if (y - 3 - x + 3 > -980) startingPos[coordutil.getKeyFromCoords([x + 3,y - 3])] = 'pawnsB';
-        if (y - 4 - x + 3 > -980) startingPos[coordutil.getKeyFromCoords([x + 3,y - 4])] = 'pawnsW';
-        if (y - 5 - x + 4 > -980) startingPos[coordutil.getKeyFromCoords([x + 4,y - 4])] = 'pawnsB';
-        if (y - 3 - x + 4 > -980) startingPos[coordutil.getKeyFromCoords([x + 4,y - 5])] = 'pawnsW';
-        if (y - 4 - x + 5 > -980) startingPos[coordutil.getKeyFromCoords([x + 5,y - 3])] = 'pawnsB';
-        if (y - 4 - x + 5 > -980) startingPos[coordutil.getKeyFromCoords([x + 5,y - 4])] = 'pawnsW';
-        if (y - 2 - x + 6 > -980) startingPos[coordutil.getKeyFromCoords([x + 6,y - 2])] = 'pawnsB';
-        if (y - 3 - x + 6 > -980) startingPos[coordutil.getKeyFromCoords([x + 6,y - 3])] = 'pawnsW';
-        if (y - 1 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y - 1])] = 'pawnsB';
-        if (y - 2 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y - 2])] = 'pawnsW';
-        if (y + 1 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y + 1])] = 'pawnsB';
-        if (y + 0 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y + 0])] = 'pawnsW';
-        if (y - 2 - x + 8 > -980) startingPos[coordutil.getKeyFromCoords([x + 8,y - 2])] = 'bishopsB';
+        startingPos[coordutil.getKeyFromCoords([x,y])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x,y - 1])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x + 1,y - 1])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x + 1,y - 2])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x + 2,y - 2])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x + 2,y - 3])] = typeutil.intTypes.pawnsW;
+        if (y - 3 - x + 3 > -980) startingPos[coordutil.getKeyFromCoords([x + 3,y - 3])] = typeutil.intTypes.pawnsB;
+        if (y - 4 - x + 3 > -980) startingPos[coordutil.getKeyFromCoords([x + 3,y - 4])] = typeutil.intTypes.pawnsW;
+        if (y - 5 - x + 4 > -980) startingPos[coordutil.getKeyFromCoords([x + 4,y - 4])] = typeutil.intTypes.pawnsB;
+        if (y - 3 - x + 4 > -980) startingPos[coordutil.getKeyFromCoords([x + 4,y - 5])] = typeutil.intTypes.pawnsW;
+        if (y - 4 - x + 5 > -980) startingPos[coordutil.getKeyFromCoords([x + 5,y - 3])] = typeutil.intTypes.pawnsB;
+        if (y - 4 - x + 5 > -980) startingPos[coordutil.getKeyFromCoords([x + 5,y - 4])] = typeutil.intTypes.pawnsW;
+        if (y - 2 - x + 6 > -980) startingPos[coordutil.getKeyFromCoords([x + 6,y - 2])] = typeutil.intTypes.pawnsB;
+        if (y - 3 - x + 6 > -980) startingPos[coordutil.getKeyFromCoords([x + 6,y - 3])] = typeutil.intTypes.pawnsW;
+        if (y - 1 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y - 1])] = typeutil.intTypes.pawnsB;
+        if (y - 2 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y - 2])] = typeutil.intTypes.pawnsW;
+        if (y + 1 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y + 1])] = typeutil.intTypes.pawnsB;
+        if (y + 0 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y + 0])] = typeutil.intTypes.pawnsW;
+        if (y - 2 - x + 8 > -980) startingPos[coordutil.getKeyFromCoords([x + 8,y - 2])] = typeutil.intTypes.bishopsB;
         
-        if (y - 6 - x + 6 > -980) startingPos[coordutil.getKeyFromCoords([x + 6,y - 6])] = 'pawnsB';
-        if (y - 7 - x + 6 > -980) startingPos[coordutil.getKeyFromCoords([x + 6,y - 7])] = 'pawnsW';
-        if (y - 5 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y - 5])] = 'pawnsB';
-        if (y - 6 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y - 6])] = 'pawnsW';
-        if (y - 4 - x + 8 > -980) startingPos[coordutil.getKeyFromCoords([x + 8,y - 4])] = 'pawnsB';
-        if (y - 5 - x + 8 > -980) startingPos[coordutil.getKeyFromCoords([x + 8,y - 5])] = 'pawnsW';
-        if (y - 3 - x + 9 > -980) startingPos[coordutil.getKeyFromCoords([x + 9,y - 3])] = 'pawnsB';
-        if (y - 4 - x + 9 > -980) startingPos[coordutil.getKeyFromCoords([x + 9,y - 4])] = 'pawnsW';
+        if (y - 6 - x + 6 > -980) startingPos[coordutil.getKeyFromCoords([x + 6,y - 6])] = typeutil.intTypes.pawnsB;
+        if (y - 7 - x + 6 > -980) startingPos[coordutil.getKeyFromCoords([x + 6,y - 7])] = typeutil.intTypes.pawnsW;
+        if (y - 5 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y - 5])] = typeutil.intTypes.pawnsB;
+        if (y - 6 - x + 7 > -980) startingPos[coordutil.getKeyFromCoords([x + 7,y - 6])] = typeutil.intTypes.pawnsW;
+        if (y - 4 - x + 8 > -980) startingPos[coordutil.getKeyFromCoords([x + 8,y - 4])] = typeutil.intTypes.pawnsB;
+        if (y - 5 - x + 8 > -980) startingPos[coordutil.getKeyFromCoords([x + 8,y - 5])] = typeutil.intTypes.pawnsW;
+        if (y - 3 - x + 9 > -980) startingPos[coordutil.getKeyFromCoords([x + 9,y - 3])] = typeutil.intTypes.pawnsB;
+        if (y - 4 - x + 9 > -980) startingPos[coordutil.getKeyFromCoords([x + 9,y - 4])] = typeutil.intTypes.pawnsW;
 
         // Generate bishop puzzle pieces.
         // it tells us how many to iteratively gen!
@@ -276,7 +277,7 @@ function genPositionOfOmegaFourth() {
         let pawnX = x + 4;
         let pawnY = y;
         for (let a = 0; a < i; a++) {
-            startingPos[coordutil.getKeyFromCoords([pawnX,pawnY])] = 'pawnsW';
+            startingPos[coordutil.getKeyFromCoords([pawnX,pawnY])] = typeutil.intTypes.pawnsW;
 
             pawnX++;
             pawnY++;
@@ -284,21 +285,21 @@ function genPositionOfOmegaFourth() {
     }
 
     function genBishopPuzzlePiece(startingPos, x, y, isLastIndex) {
-        startingPos[coordutil.getKeyFromCoords([x,y])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x,y - 1])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x,y - 2])] = 'bishopsB';
-        startingPos[coordutil.getKeyFromCoords([x + 1,y - 2])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x + 1,y - 3])] = 'bishopsB';
-        startingPos[coordutil.getKeyFromCoords([x + 2,y - 4])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x + 2,y - 5])] = 'pawnsW';
+        startingPos[coordutil.getKeyFromCoords([x,y])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x,y - 1])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x,y - 2])] = typeutil.intTypes.bishopsB;
+        startingPos[coordutil.getKeyFromCoords([x + 1,y - 2])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x + 1,y - 3])] = typeutil.intTypes.bishopsB;
+        startingPos[coordutil.getKeyFromCoords([x + 2,y - 4])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x + 2,y - 5])] = typeutil.intTypes.pawnsW;
 
         if (!isLastIndex) return;
 
         // Is last index
-        startingPos[coordutil.getKeyFromCoords([x + 1,y - 2])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x + 1,y - 1])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x + 2,y - 3])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x + 2,y - 2])] = 'pawnsB';
+        startingPos[coordutil.getKeyFromCoords([x + 1,y - 2])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x + 1,y - 1])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x + 2,y - 3])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x + 2,y - 2])] = typeutil.intTypes.pawnsB;
     }
 
     function spawnAllWings(startingPos, startX, startY, endX, endY) {
@@ -317,16 +318,16 @@ function genPositionOfOmegaFourth() {
     }
 
     function spawnWing(startingPos, x, y, i) {
-        startingPos[coordutil.getKeyFromCoords([x,y])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x,y - 1])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 1,y - 1])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 1,y - 2])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y - 2])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y - 3])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 3,y - 3])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 3,y - 4])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y - 4])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y - 5])] = 'pawnsW';
+        startingPos[coordutil.getKeyFromCoords([x,y])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x,y - 1])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 1,y - 1])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 1,y - 2])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y - 2])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y - 3])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 3,y - 3])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 3,y - 4])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y - 4])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y - 5])] = typeutil.intTypes.pawnsW;
         
         // Generate segments
         // it tells us how many to iteratively gen!
@@ -350,50 +351,50 @@ function genPositionOfOmegaFourth() {
     }
 
     function genWingSegment(startingPos, x, y, isLastIndex) {
-        startingPos[coordutil.getKeyFromCoords([x,y - 2])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x,y - 1])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 1,y - 1])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 1,y + 0])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 0])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 1])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 3,y + 1])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 3,y + 2])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y + 2])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y + 3])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 3])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 4])] = 'pawnsB';
+        startingPos[coordutil.getKeyFromCoords([x,y - 2])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x,y - 1])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 1,y - 1])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 1,y + 0])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 0])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 1])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 3,y + 1])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 3,y + 2])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y + 2])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y + 3])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 3])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 4])] = typeutil.intTypes.pawnsB;
 
-        startingPos[coordutil.getKeyFromCoords([x,y + 2])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x,y + 3])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 1,y + 3])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 1,y + 4])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 4])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 5])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 6])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 7])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 8])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 9])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 10])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 2,y + 11])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 3,y + 11])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 3,y + 12])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y + 12])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y + 13])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 11])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 12])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 10])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 9])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 8])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 7])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y + 7])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y + 6])] = 'pawnsW';
-        startingPos[coordutil.getKeyFromCoords([x - 4,y + 10])] = 'bishopsW';
+        startingPos[coordutil.getKeyFromCoords([x,y + 2])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x,y + 3])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 1,y + 3])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 1,y + 4])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 4])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 5])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 6])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 7])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 8])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 9])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 10])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 2,y + 11])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 3,y + 11])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 3,y + 12])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y + 12])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y + 13])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 11])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 12])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 10])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 9])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 8])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 7])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y + 7])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y + 6])] = typeutil.intTypes.pawnsW;
+        startingPos[coordutil.getKeyFromCoords([x - 4,y + 10])] = typeutil.intTypes.bishopsW;
 
         if (!isLastIndex) return;
 
         // Is last wing segment!
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 6])] = 'pawnsB';
-        startingPos[coordutil.getKeyFromCoords([x - 5,y + 5])] = 'pawnsW';
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 6])] = typeutil.intTypes.pawnsB;
+        startingPos[coordutil.getKeyFromCoords([x - 5,y + 5])] = typeutil.intTypes.pawnsW;
     }
 }
 
@@ -401,36 +402,36 @@ function addVoidSquaresToOmegaFourth(startingPos, left, top, right, bottomright,
 
     for (let x = left; x <= right; x++) {
         const key = coordutil.getKeyFromCoords([x,top]);
-        startingPos[key] = 'voidsN';
+        startingPos[key] = typeutil.intTypes.voidsN;
     }
     for (let y = top; y >= bottomright; y--) {
         const key = coordutil.getKeyFromCoords([right,y]);
-        startingPos[key] = 'voidsN';
+        startingPos[key] = typeutil.intTypes.voidsN;
     }
 
     let y = bottomright;
     for (let x = right; x >= -3; x--) {
         let key = coordutil.getKeyFromCoords([x,y]);
-        startingPos[key] = 'voidsN';
+        startingPos[key] = typeutil.intTypes.voidsN;
         key = coordutil.getKeyFromCoords([x,y - 1]);
-        startingPos[key] = 'voidsN';
+        startingPos[key] = typeutil.intTypes.voidsN;
         y--;
     }
 
     for (let y = top; y >= bottomleft; y--) {
         const key = coordutil.getKeyFromCoords([left,y]);
-        startingPos[key] = 'voidsN';
+        startingPos[key] = typeutil.intTypes.voidsN;
     }
     y = bottomleft;
     for (let x = left; x <= -4; x++) {
         let key = coordutil.getKeyFromCoords([x,y]);
-        startingPos[key] = 'voidsN';
+        startingPos[key] = typeutil.intTypes.voidsN;
         key = coordutil.getKeyFromCoords([x,y - 1]);
-        startingPos[key] = 'voidsN';
+        startingPos[key] = typeutil.intTypes.voidsN;
         y--;
     }
 
-    startingPos[`492,493`] = 'voidsN';
+    startingPos[`492,493`] = typeutil.intTypes.voidsN;
 }
 
 export default {
