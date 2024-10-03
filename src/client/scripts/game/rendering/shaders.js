@@ -2,6 +2,7 @@
 // Import Start
 import { gl } from './webgl.js';
 import camera from './camera.js';
+import webgl from './webgl.js';
 // Import End
 
 "use strict";
@@ -127,14 +128,30 @@ function createColorProgram() {
 }
 
 /**
- * Creates and return a shader program that is
- * capable of rendering meshes with a bound texture.
+ * Creates and returns a shader program that is capable of rendering meshes with a bound texture.
+ * If WebGL 2 is supported, this shader will apply a bias to the LOD (mipmap level) to sharpen the textures.
  * @returns {ShaderProgram}
-*/
+ */
 function createTextureProgram() {
-	// Vertex shader. For every vertex, applies matrix multiplication to find it's position on the canvas.
-	// Attributes receive data from buffer. Uniforms are like global variables, they stay the same.
-	const vsSource = `
+	// Check if WebGL 2 is supported
+	const isWebGL2 = webgl.areWeUsingWebGL2();
+
+	// GLSL version 300 for WebGL 2, otherwise WebGL 1 shader code
+	const vsSource = isWebGL2 ? `#version 300 es
+        in vec4 aVertexPosition;
+        in vec2 aTextureCoord;
+
+        uniform mat4 uWorldMatrix;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjMatrix;
+
+        out vec2 vTextureCoord;
+
+        void main(void) {
+            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
+            vTextureCoord = aTextureCoord;
+        }
+    ` : `
         attribute vec4 aVertexPosition;
         attribute vec2 aTextureCoord;
 
@@ -145,52 +162,30 @@ function createTextureProgram() {
         varying lowp vec2 vTextureCoord;
 
         void main(void) {
-            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition; // Original, no z-translating
+            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
             vTextureCoord = aTextureCoord;
         }
     `;
-	// Fragment shader. Called for every pixel on each shape to be drawn. Color.
-	const fsSource = `
-        varying lowp vec2 vTextureCoord;
 
+	const fsSource = isWebGL2 ? `#version 300 es
+        precision lowp float;
+
+        in vec2 vTextureCoord;
+        uniform sampler2D uSampler;
+
+        out vec4 fragColor;
+
+        void main(void) {
+            fragColor = texture(uSampler, vTextureCoord, -0.5); // Apply a mipmap level bias so as to make the textures sharper. (For devices only compatible with WebGL1, their textures will be a little more blurred)
+        }
+    ` : `
+        varying lowp vec2 vTextureCoord;
         uniform sampler2D uSampler;
 
         void main(void) {
             gl_FragColor = texture2D(uSampler, vTextureCoord);
         }
     `;
-
-	// ALTERNATIVE shader code that uses version 3! ONLY compatible with WebGL-2, which safari doesn't support!
-	// const vsSource = `#version 300 es
-
-	//     in vec4 aVertexPosition;
-	//     in vec2 aTextureCoord;
-        
-	//     uniform mat4 uWorldMatrix;
-	//     uniform mat4 uViewMatrix;
-	//     uniform mat4 uProjMatrix;
-        
-	//     out lowp vec2 vTextureCoord;
-        
-	//     void main(void) {
-	//         gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
-	//         vTextureCoord = aTextureCoord;
-	//     }
-	// `;
-	// const fsSource = `#version 300 es
-
-	//     precision mediump float;
-
-	//     in lowp vec2 vTextureCoord;
-
-	//     uniform sampler2D uSampler;
-
-	//     out vec4 fragColor;
-
-	//     void main(void) {
-	//         fragColor = texture(uSampler, vTextureCoord);
-	//     }
-	// `;
 
 	const program = createShaderProgram(vsSource, fsSource);
 

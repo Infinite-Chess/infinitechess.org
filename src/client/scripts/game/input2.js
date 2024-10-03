@@ -1,4 +1,12 @@
 
+/**
+ * Future new input script that can listen for inputs on specific elements,
+ * not only on the document.
+ *
+ * Also, we will need built-in double-click and triple-click detection
+ * for mapping tools to, such as ray/arrow drawing.
+ */
+
 import docutil from "./misc/docutil.js";
 
 

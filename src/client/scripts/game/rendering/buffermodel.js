@@ -208,6 +208,7 @@ function sendCustomUniformToGPU(program, name, value) {
 		const transpose = false;
 		return gl[method](program.uniformLocations[name], transpose, value);
 	}
+	// If the value is a number, WE DO NOT ACCOUNT FOR whether it's supposed to be a float or an integer! Right now we just pretend it's an int.
 	gl[method](program.uniformLocations[name], value);
 }
 
