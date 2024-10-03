@@ -1,4 +1,8 @@
 {
+  "17": {
+    "note": "Added credits.language_heading and credits.language_credits, line 82",
+    "changes": []
+  },
   "16": {
     "note": "Deleted all news posts. The only keys you keep in the `news` section is `title` and `more_dev_logs`! Please verify your language's news posts have been translated correctly within translation/news!",
     "changes": []
