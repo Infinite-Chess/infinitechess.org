@@ -76,7 +76,7 @@ function areWeUsingWebGL2() {
  */
 function init() {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-	gl = camera.canvas.getContext('webgl2', { alpha: false, antialias: true });
+	gl = camera.canvas.getContext('webgl2', { alpha: false });
 	if (!gl) { // Init WebGL-1
 		console.log("Browser doesn't support WebGL-2, falling back to WebGL-1.");
 		WebGL2IsSupported = false;
