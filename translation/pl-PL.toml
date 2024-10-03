@@ -1,6 +1,6 @@
 name = "Polski" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "16"
+version = "17"
 maintainer = "Apsurt"
 
 [header]
@@ -78,6 +78,14 @@ code_heading = "Kod"
 code_credits = [
 "- Brandon Jones i Colin MacKenzie IV.",
 "- Andreas Tsevas i Naviary.",
+]
+language_heading = "Tłumaczenia"
+language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
+	"Francuski - Life Enjoyer and cycy98.",
+	"Chiński uproszczony - ", "Heinrich Xiao", ".",
+	"Chiński tradycyjny - ", "Heinrich Xiao", ".",
+	"Polski - Tymon Becella.",
+	"Portugalski - ", "The_Skeleton", "."
 ]
 
 [member]
