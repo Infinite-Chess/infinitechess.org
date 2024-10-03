@@ -392,7 +392,7 @@ function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, c
 
 	const axis = direction[0] === 0 ? 1 : 0;
 	const coordMag = coords[axis];
-	const relCoords = coordMag - pieceCoords[axis];
+	const relCoords = (coordMag - pieceCoords[axis]) / Math.abs(direction[axis]);
 	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
 	const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
 	return coordMag >= min && coordMag <= max && !ignoreFunction(relCoords, direction);
