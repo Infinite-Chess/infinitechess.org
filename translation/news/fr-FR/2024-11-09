@@ -10,4 +10,4 @@ La mise à jour 1.4.1 a été déployée !
 
 - Dans le menu pause, on peut déclarer partie nulle
 - Trois ont été rajoutées: Le chinois, le polonais, et le portugais!
-- Correction de bug où cliquer plusieurs fois le bouton "Créer une invitaion" affiche le message qui dit que vous en avez déjà créé, ou que vous pouvez accepter votre propre invitation.
+- Correction de bug où cliquer plusieurs fois le bouton "Créer une invitaion" affiche le message qui dit que vous en avez déjà créé, ou que vous ne pouvez pas accepter votre propre invitation.
