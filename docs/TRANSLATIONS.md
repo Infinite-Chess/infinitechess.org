@@ -52,6 +52,16 @@ In case you are updating an existing language and you aren't sure what has chang
 > ```
 > In this example you should only change the words *Hello World*.
 
+### Translating News Articles ###
+
+In addition to the TOML translation files, you also should translate news articles located in the `translation/news/` directory. Here are the steps to translate those:
+
+1. **Make a copy of the [translation/news/en-US](../translation/news/en-US/) folder**: Rename it to your language's BCP 47 tag.
+
+2. **Translate the content**: For each `.md` file within (e.g. `2024-09-11.md`), translate it from english into your language. Each news article supports [markdown](https://www.markdownguide.org/basic-syntax/), please don't modify hyperlinks, bullet points, headers indicated by `#`, or html tags (e.g. `<iframe>...</iframe>`).
+
+4. **Commit your changes**: Once the translations are complete, commit the changes as you would with TOML files.
+
 When you are finished, you should open a pull request as described in [SETUP.md](./SETUP.md).
 
 ## Conclusion ##

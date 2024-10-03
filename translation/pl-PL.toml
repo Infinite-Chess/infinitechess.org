@@ -1,6 +1,6 @@
 name = "Polski" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "14"
+version = "16"
 maintainer = "Apsurt"
 
 [header]
@@ -483,65 +483,9 @@ login_button = "Zaloguj"
 409_message = ["Możliwy błąd dotyczący nazwy użytkownika lub e-mail. ", "Przeładuj", ", stronę."]
 500_message = "Nie powinno się to zdarzyć!"
 
-########### NEWS ###########
-
 [news]
 title = "Aktualności"
 more_dev_logs = ["Więcej wpisów deweloperskich na ", "oficjalnym serwerze discord", ", oraz na ", "forach chess.com!"]
-
-[news.aug1-2024] # Update 1.4
-date = "1 sierpnia 2024:"
-text_top = "Wyszła aktualizacja 1.4 została! Pojawiło się wiele nowych funkcji od kiedy projekt jest open source!"
-update_list = [
-"Jeździec został dodany, może on skakać w nieskończoność dopóki nic nie stanie mu na drodze! Wariant 'Knighted Chess' został ulepszony, skoczki zostały zastąpione jeźdzcami!",
-"Kliknij figurę twojego przeciwnika by zobaczyć jej potencjalne ruchy!",
-"Kliknij prawym przyciskiem myszy w dowolnym momencie by odznaczyć figurę.",
-"Przytrzymaj kursor nad strzałką na krańcu ekranu, by zobaczyć wszystike możliwe ruchy figury, na którą ona wskazuje!",
-"Od teraz gra automatycznie ogłasza remis gdy na planszy nie ma wystarczająco materiału by dać mata.",
-"Przetłumaczono stronę na język francuski! Możesz zmienić język na dole strony.",
-"Przyśpieszono ładowanie strony.",
-"Nowe logo, Ω! Automatycznie dopasowuje się do trybu jasnego i ciemnego twojego urządzenia.",
-"Kod gry, notacja ICN's, metadata zostały przeformatowane by bardziej przypominać notację PGN.",
-"Od teraz użytkownicy mogą usunąć sowje konto za pomocą przycisku na swoim profilu. Nie musisz już pisać e-maila do nas"
-]
-
-[news.july22-2024]
-date = "22 lipca 2024:"
-account_warning = "Jeśli twoje konto nie jest zweryfikowane, zrób to na swoim profilu! Niedługo wszystkie niezweryfikowane konta zostaną usunięte!!"
-
-[news.july13-2024]
-date = "13 lipca 2024:"
-tos_update = ["", "Warunki korzystania z usługi", " zostały zaktualizowane. Zmiany: Wszystkie gry, które zagrasz na stronie, a także twój ostatni czas logowania, zostanie informacją publiczną. Warunki mogą zostać zaktualizowane w dowolnym momencie, i że twoją odpowiedzialnością jest zapoznać się ze zmianami."] # The game inserts a hyperlink inside the 2nd quotes here.
-game_history_warning = "W przyszłości twoja historia gier będzie widoczna na twoim profilu."
-
-[news.july9-2024]
-date = "9 lipce 2024:"
-text = ["Infinite Chess jest teraz Open Source! Zobacz i buduj projekt z nami na ", "GitHubie!"]
-
-[news.may27-2024]
-date = "27 maja 2024:"
-text = "1.3.2: Dodano wariant showcase Omega^3 oraz showcase Omega^4, które zostały zaprezentowane w moim ostatnim filmie. Algorytm matowania działa teraz przy grach z więcej niż jednym królem po każdej ze stron."
-
-[news.may24-2024]
-date = "24 maja 2024:"
-text = "Aktualizacja 1.3.1! Dodano poradnik, popowiedzi po najechaniu na przyciski nawigacji, oraz linki do discorda i podziękowań na stronie tytułowej!"
-
-[news.may14-2024]
-date = "14 maja 2024:"
-text_top = "Aktualizacja 1.3! Zawiera DUŻO usprawnień w użytkowaniu. Między innymi:"
-update_list = [
-"Zmiana architektury sieciowej na websockets, zmniejszająca opóźnienie ruchu przeciwnika.",
-"Nie będziesz już rozłączany gdzy zmienisz kartę w przeglądarce.",
-"Dodano powiadomienie dzwiękowe gdy ty lobu ktoś inny stworzy zaproszenie albo wykona ruch.",
-"Dodano zasade 50 ruchów.",
-"Od teraz, gdy na zegarze zostanie mniej niż 10 sekund, będzie grał efekt dzwiękowy.",
-"Licznik automatycznego poddania się zacznie odliczać gdy twój przeciwnik będzie AFK (z dzwiękowym ostrzeżeniem)."
-]
-text_box = ["I wiele więcej! By zobaczyć pełną listę sprawdź ", "discorda!"]
-
-[news.jan29-2024]
-date = "29 stycznie 2024:"
-text = "Wyszedł nowy film!"
 
 [server.javascript]
 ws-invalid_username = "Nieprawidłowa nazwa użytkownika"

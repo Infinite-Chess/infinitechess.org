@@ -6,6 +6,30 @@ import ejs from "ejs";
 import middleware from "i18next-http-middleware";
 import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
+import { marked } from 'marked';
+import { format, parseISO } from 'date-fns';
+import enUS from 'date-fns/locale/en-US/index.js';
+import frFR from 'date-fns/locale/fr/index.js';
+import ptBR from 'date-fns/locale/pt-BR/index.js';
+import zhTW from 'date-fns/locale/zh-TW/index.js';
+import zhCN from 'date-fns/locale/zh-CN/index.js';
+import pl from 'date-fns/locale/pl/index.js';
+
+/**
+ * This dictionary tells use what code the date-fns package uses
+ * to provide language-correct dates.
+ * 
+ * Update when we support a new language.
+ */
+const localeMap = {
+	'en-US': enUS,
+	'fr-FR': frFR,
+	'pt-BR': ptBR,
+	'zh-TW': zhTW,
+	'zh-CN': zhCN,
+	'pl-PL': pl
+};
+
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -17,19 +41,19 @@ const translationsFolder = "./translation";
  * Don't insert names with file extensions.
  */
 const staticTranslatedTemplates = [
-    "createaccount",
-    "credits",
-    "index",
-    "login",
-    "member",
-    "news",
-    "play",
-    "termsofservice",
-    "errors/400",
-    "errors/401",
-    "errors/404",
-    "errors/409",
-    "errors/500",
+	"createaccount",
+	"credits",
+	"index",
+	"login",
+	"member",
+	"news",
+	"play",
+	"termsofservice",
+	"errors/400",
+	"errors/401",
+	"errors/404",
+	"errors/409",
+	"errors/500",
 ];
 
 // Removed because <a> tags are no longer in whitelist
@@ -81,23 +105,23 @@ const xss_options = {
 	},
 	onTagAttr: function(tag, name, value, isWhiteAttr) {
 		/*if (!isWhiteAttr && !(value === 'href' && name === 'a')) {
-      console.warn(
-        `Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
-      );
-    }*/
+	  console.warn(
+		`Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
+	  );
+	}*/
 	},
 	safeAttrValue: function(tag, name, value) {
 		/*if (
-      tag === "a" &&
-        name === "href" &&
-        link_white_list.includes(value.trim())
-    ) {
-      return value;
-    } else if (name === "href") {
-      console.warn(
-        `Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
-      );
-    }*/
+	  tag === "a" &&
+		name === "href" &&
+		link_white_list.includes(value.trim())
+	) {
+	  return value;
+	} else if (name === "href") {
+	  console.warn(
+		`Atribute "${name}" of "${tag}" tag with value "${value.trim()}" failed to pass XSS filter. `,
+	  );
+	}*/
 	},
 };
 const custom_xss = new FilterXSS(xss_options);
@@ -197,6 +221,11 @@ function loadTranslationsFolder(folder) {
 		fs.readFileSync(path.join(folder, "changes.json")).toString(),
 	);
 	const supportedLanguages = [];
+	const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).sort((a, b) => {
+		const dateA = new Date(a.replace('.md', ''));
+		const dateB = new Date(b.replace('.md', ''));
+		return dateB - dateA;
+	}); // ['2024-09-11.md', '2024-08-01.md'...]
 	files
 		.filter(function y(x) {
 			return x.endsWith(".toml");
@@ -210,6 +239,21 @@ function loadTranslationsFolder(folder) {
 						changelog,
 					),
 				),
+				news: newsFiles.map(filePath => {
+					const fullPath = path.join(folder, 'news', languageCode, filePath);
+					const parsedHTML = marked.parse((fs.existsSync(fullPath)
+                        ? fs.readFileSync(fullPath)
+                        : fs.readFileSync(path.join(folder, 'news', getDefaultLanguage(), filePath))).toString()); // parsedHTML should be safe to be rendered
+					const date = format(parseISO(filePath.replace('.md','')), 'PP', { // Change the number of P's to change how the date is phrased
+						timeZone: 'UTC-6', 
+						locale: localeMap[languageCode] 
+					});
+
+					return `<div class='news-post'>
+                                <span class='news-post-date'>${date}</span>
+                                <div class='news-post-markdown'>${parsedHTML}</div>
+                            </div>`;
+				}).join('\n<hr>\n')
 			};
 			supportedLanguages.push(languageCode); // Add language to list of supportedLanguages
 		});
@@ -267,6 +311,7 @@ function translateStaticTemplates(translations) {
 						},
 						languages: languages_list,
 						language: language,
+						newsHTML: translations[language].news,
 						viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
 					},
 				),
