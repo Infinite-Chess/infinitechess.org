@@ -35,11 +35,9 @@ let clearColor = [0.5, 0.5, 0.5]; // Grey
 const defaultDepthFuncParam = 'LEQUAL';
 
 /**
- * Whether to use WebGL2 if it's compatible. It is backwards compatible.
- * 
- * WebGL2 is not supported on Safari. Let's just use WebGL1 to avoid incompatibility with browsers.
+ * True if our device supports WebGL 2. If not, they'll use 1
  */
-const useWebGL2 = false;
+let WebGL2IsSupported = true;
 
 /**
  * Whether to cull (skip) rendering back faces.
@@ -65,15 +63,23 @@ const frontFaceVerticesAreClockwise = true;
 function setClearColor(newClearColor) { clearColor = newClearColor; }
 
 /**
+ * True if our device supports WebGL 2. If not, we'll avoid using features that require v2.0
+ * @returns {boolean}
+ */
+function areWeUsingWebGL2() {
+	// return gl instanceof WebGL2RenderingContext;
+	return WebGL2IsSupported;
+}
+
+/**
  * Initiate the WebGL context. This is our web-based render engine.
  */
 function init() {
-	if (useWebGL2) {
-		// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-		gl = camera.canvas.getContext('webgl2', { alpha: false });
-		if (!gl) console.log("Browser doesn't support WebGL-2, falling back to WebGL-1.");
-	}
+	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
+	gl = camera.canvas.getContext('webgl2', { alpha: false, antialias: true });
 	if (!gl) { // Init WebGL-1
+		console.log("Browser doesn't support WebGL-2, falling back to WebGL-1.");
+		WebGL2IsSupported = false;
 		gl = camera.canvas.getContext('webgl', { alpha: false });
 	}
 	if (!gl) { // Init WebGL experimental
@@ -251,6 +257,7 @@ function queryWebGLContextInfo() {
 export default {
 	init,
 	clearScreen,
+	areWeUsingWebGL2,
 	executeWithDepthFunc_ALWAYS,
 	executeWithInverseBlending,
 	setClearColor,
