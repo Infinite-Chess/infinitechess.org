@@ -30,6 +30,7 @@ const pieceDictionary = {
 	"royalQueensW": "RQ", "royalQueensB": "rq",
 	"royalCentaursW": "RC", "royalCentaursB": "rc",
 	"knightridersW": "NR", "knightridersB": "nr",
+	"huygensW": "HU", "huygensB": "hu",
 	"obstaclesN": "ob",
 	"voidsN": "vo"
 };

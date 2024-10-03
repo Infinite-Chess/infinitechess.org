@@ -123,7 +123,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 				const line = lines[i];
 				if (!thisPieceMoveset.sliding[line]) continue;
 				const key = organizedlines.getKeyFromLine(line,coords);
-				legalSliding[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key],line, thisPieceMoveset.sliding[line], coords, color);
+				legalSliding[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key], line, thisPieceMoveset.sliding[line], coords, color, getIgnoreFunction(thisPieceMoveset));
 			};
 		};
 
@@ -133,6 +133,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves);
 
 	const moves = {
+		ignore: getIgnoreFunction(thisPieceMoveset),
 		individual: legalIndividualMoves,
 		sliding: legalSliding
 	};
@@ -187,7 +188,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
  * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
  * @param {string} color - The color of friendlies
  */
-function slide_CalcLegalLimit(line, direction, slideMoveset, coords, color) {
+function slide_CalcLegalLimit(line, direction, slideMoveset, coords, color, ignoreFunction) {
 
 	if (!slideMoveset) return; // Return undefined if there is no slide moveset
 
@@ -210,14 +211,14 @@ function slide_CalcLegalLimit(line, direction, slideMoveset, coords, color) {
 			// What would our new left slide limit be? If it's an opponent, it's legal to capture it.
 			const newLeftSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps + 1 : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
-			if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
+			if (newLeftSlideLimit > limit[0] && !ignoreFunction(thisPieceSteps, direction)) limit[0] = newLeftSlideLimit;
 
 		} else if (thisPieceSteps > 0) { // To our right
 
 			// What would our new right slide limit be? If it's an opponent, it's legal to capture it.
 			const newRightSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps - 1 : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
-			if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
+			if (newRightSlideLimit < limit[1] && !ignoreFunction(thisPieceSteps, direction)) limit[1] = newRightSlideLimit;
 
 		} // else this is us, don't do anything.
 	}
@@ -261,10 +262,17 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
 		const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
 		if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
-		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords)) continue;
+		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignore)) continue;
 		return true;
 	}
 	return false;
+}
+
+/**
+ * TODO
+ */
+function getIgnoreFunction(moves) {
+	return moves.ignore ? moves.ignore : () => false;
 }
 
 /**
@@ -377,17 +385,17 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
  * @param {number[]} coords - The coordinates we want to know if they can reach.
  * @returns {boolean} true if the piece is able to slide to the coordinates
  */
-function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords) {
+function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords, ignoreFunction) {
 	// const step = math.getLineSteps(direction, pieceCoords, coords)
 	// return step >= slideMoveset[0] && step <= slideMoveset[1];
 
 
 	const axis = direction[0] === 0 ? 1 : 0;
 	const coordMag = coords[axis];
+	const relCoords = coordMag - pieceCoords[axis];
 	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
 	const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
-
-	return coordMag >= min && coordMag <= max;
+	return coordMag >= min && coordMag <= max && !ignoreFunction(relCoords, direction);
 }
 
 /**
@@ -417,5 +425,6 @@ export default {
 	doesSlidingMovesetContainSquare,
 	hasAtleast1Move,
 	slide_CalcLegalLimit,
-	isOpponentsMoveLegal
+	isOpponentsMoveLegal,
+	getIgnoreFunction
 };

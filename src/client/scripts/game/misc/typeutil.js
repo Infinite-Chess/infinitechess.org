@@ -14,7 +14,7 @@ import colorutil from "./colorutil.js";
  * They are arranged in this order for faster checkmate/draw detection,
  * as we should check if the kings have a legal move first.
  */
-const types = ['kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'knights', 'guards', 'rooks', 'bishops', 'pawns'];
+const types = ['kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'knights', 'guards', 'huygens', 'rooks', 'bishops', 'pawns'];
 /** All neutral types the game is compatible with. */
 const neutralTypes = ['obstacles', 'voids'];
 

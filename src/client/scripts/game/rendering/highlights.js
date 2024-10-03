@@ -280,7 +280,7 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) { console.error(`Line only has one intersect with square.`); continue; }
         
-		concatData_HighlightedMoves_Diagonal(data, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[line], vertexData);
+		concatData_HighlightedMoves_Diagonal(data, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[line], vertexData, legalMoves.ignore);
 	}
 }
 
@@ -294,14 +294,14 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
  * @param {number[]} limits - Slide limit: [-7,Infinity]
  * @param {number[]} vertexData - The vertex data of a single legal move highlight (square or dot).
  */
-function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, vertexData) {
+function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, vertexData, ignoreFunction) {
     
 	// Right moveset
-	concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], jsutil.deepCopyObject(vertexData));
+	concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], jsutil.deepCopyObject(vertexData), ignoreFunction);
     
 	// Left moveset
 	const negStep = [step[0] * -1, step[1] * -1];
-	concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), jsutil.deepCopyObject(vertexData));
+	concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), jsutil.deepCopyObject(vertexData), ignoreFunction);
 }
 
 /**
@@ -314,7 +314,7 @@ function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, 
  * @param {number} limit - Needs to be POSITIVE.
  * @param {number[]} vertexData - The vertex data of a single legal move highlight (square or dot).
  */
-function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limit, vertexData) {
+function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limit, vertexData, ignoreFunction) {
 	if (limit === 0) return; // Quick exit
 
 	const lineIsVertical = step[0] === 0;
@@ -356,8 +356,9 @@ function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1
 	const xyDist = stepIsPositive ? endCoords[index] - startCoords[index] : startCoords[index] - endCoords[index];
 	if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
 	const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
-
-	addDataDiagonalVariant(data, vertexData, step, iterationCount);
+	const distanceAlongLine = (startCoords[index] - coords[index]) / Math.abs(step[index]);
+	
+	addDataDiagonalVariant(data, vertexData, step, iterationCount, distanceAlongLine, stepIsPositive, ignoreFunction);
 }
 
 /**
@@ -367,11 +368,19 @@ function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1
  * @param {number[]} vertexData - The vertex data of the legal move highlight (square/dot). Stride 7 (3 vertex values, 4 color).
  * @param {number[]} step - [dx,dy]
  * @param {number} iterateCount 
+ * TODO
  */
-function addDataDiagonalVariant(data, vertexData, step, iterateCount) {
+function addDataDiagonalVariant(data, vertexData, step, iterateCount, distanceAlongLine, stepIsPositive, ignoreFunction) {
 	for (let i = 0; i < iterateCount; i++) { 
-		data.push(...vertexData);
+		if (!ignoreFunction(distanceAlongLine, step)) {
+			data.push(...vertexData);
+		}
 		shiftVertexData(vertexData, step[0], step[1]);
+		if (stepIsPositive) {
+			distanceAlongLine++;
+		} else {
+			distanceAlongLine--;
+		}
 	}
 }
 

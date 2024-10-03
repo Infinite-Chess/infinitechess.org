@@ -156,6 +156,9 @@ function initSpritesheetData() {
 		// 2nd dragon texture, also used in 5D chess.
 		drakonsW: getSpriteCoords(pieceWidth, 1,7),
 		drakonsB: getSpriteCoords(pieceWidth, 2,7),
+		// TODO: Change to an actual huygens
+		huygensW: getSpriteCoords(pieceWidth, 7,1),
+		huygensB: getSpriteCoords(pieceWidth, 8,1),
 
 		// Neutral pieces
 		air: getSpriteCoords(pieceWidth, 3,7),
