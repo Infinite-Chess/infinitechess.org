@@ -1,6 +1,6 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "14"
+version = "16"
 maintainer = "Life Enjoyer,cycy98,Heinrich Xiao"
 
 [header]
