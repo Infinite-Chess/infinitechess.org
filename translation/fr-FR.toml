@@ -1,7 +1,7 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "13"
-maintainer = "Life Enjoyer,cycy98"
+version = "14"
+maintainer = "Life Enjoyer,cycy98,Heinrich Xiao"
 
 [header]
 home = "Accueil"
@@ -27,6 +27,7 @@ js-confirm_delete = "Êtes vous sûr de vouloir supprimer votre compte ? Cette a
 js-enter_password = "Entrez votre mot de passe pour supprimer votre compte DÉFINITIVEMENT:"
 
 [index]
+title = "Infinite Chess | Accueil - Le Site Officiel" # The tab title
 secondary_title = "Le site officiel pour jouer en direct !"
 what_is_it_title = "Qu'est ce que c'est ?"
 what_is_it_pargaraphs = [
@@ -80,6 +81,7 @@ code_credits = [
 ]
 
 [member]
+title = "Membre" # The tab name
 verify_message = "Validez l'email pour vérifier votre compte."
 resend_message = ["Vous n'avez pas reçu d'email ? Vérifiez vos spams. Aussi, ", "renvoyer.", " Si vous ne recevez toujours rien,", "envoyez moi un message."]
 verify_confirm = "Merci ! Votre compte est désormais vérifié."
@@ -111,12 +113,16 @@ js-pwd_too_short = "Le mot de passe doit contenir au moins 6 caractères"
 js-pwd_too_long = "Le mot de passe doit contenir moins de 72 caractères"
 js-pwd_not_pwd = "Le mot de passe ne doit pas être 'password'"
 
+[play]
+title = "Infinite Chess - Jouer"
+loading = "CHARGEMENT"
+error = "ERREUR"
+
 [play.main-menu]
 credits = "Credits"
 play = "Jouer"
 guide = "Guide"
 editor = "Editeur de plateau"
-loading = "CHARGEMENT"
 error = "ERREUR"
 
 [play.guide]
