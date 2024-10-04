@@ -18,7 +18,7 @@ This is the best method I've found, to retain high quality, yet remain highly co
 
 8. Click "Generate Optimized Image". Download optimized image.
 
-9. Open your SVG's code, find all `fill` attributes. Change the ones super close to white to `#ffffff`, and the ones super close to black to `#000000`.
+9. Open your SVG's code, find all `fill` attributes. Change the ones super close to white to `#ffffff`, and the ones super close to black to `#000000`. Remove unneeded external links.
 
 10. See if it can further be compressed by running it through [SVG Minify](https://www.svgminify.com/).
 
