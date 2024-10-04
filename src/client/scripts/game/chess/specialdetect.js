@@ -230,10 +230,6 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
  * @param {array[]} individualMoves - The legal individual moves calculated so far
  */
 function roses(gamefile, coords, color, individualMoves) {
-	if (!individualMoves) {
-		console.error("not present");
-		console.error(coords);
-	}
 	const movements = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1]; // Counter-clockwise and clockwise directions
 
