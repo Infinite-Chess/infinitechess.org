@@ -195,6 +195,9 @@ function getPieceMovesets(slideLimit = Infinity) {
                 ]
 			};
 		},
+		roses: function() {
+			return { individual: [] };
+		},
 	};
 }
 
