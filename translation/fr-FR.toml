@@ -79,6 +79,14 @@ code_credits = [
 "par Brandon Jones et Colin MacKenzie IV.",
 "par Andreas Tsevas et Naviary.",
 ]
+language_heading = "Traductions de langue"
+language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
+	"Français par ", "Life Enjoyer", " et ", "cycy98", ".",
+	"Chinois simplifié par ", "Heinrich Xiao", ".",
+	"Chinois traditionnel par ", "Heinrich Xiao", ".",
+	"Polonais par ", "Tymon Becella", ".", # Apsurt
+	"Portugais par ", "The_Skeleton", "."
+]
 
 [member]
 title = "Membre" # The tab name
