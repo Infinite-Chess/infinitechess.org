@@ -79,6 +79,14 @@ code_credits = [
 "由Brandon Jones 和 Colin MacKenzie IV 编写。",
 "由Andreas"
 ]
+language_heading = "语言翻译"
+language_credits = [
+    "法语由 ", "Life Enjoyer", " 和 ", "cycy98", " 贡献。",
+    "简体中文由 ", "Heinrich Xiao", " 贡献。",
+    "繁体中文由 ", "Heinrich Xiao", " 贡献。",
+    "波兰语由 ", "Tymon Becella", " 贡献。",
+    "葡萄牙语由 ", "The_Skeleton", " 贡献。"
+]
 
 [member]
 title = "会员" # The tab name
