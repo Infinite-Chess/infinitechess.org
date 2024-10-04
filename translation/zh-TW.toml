@@ -1,6 +1,6 @@
 name = "繁體中文" # Traditional Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "16"
+version = "17"
 maintainer = "Heinrich Xiao"
 
 [header]
