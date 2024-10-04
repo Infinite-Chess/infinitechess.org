@@ -81,10 +81,10 @@ code_credits = [
 ]
 language_heading = "Language Translations"
 language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
-	"French by Life Enjoyer and cycy98.",
+	"French by ", "Life Enjoyer", " and ", "cycy98", ".",
 	"Simplified Chinese by ", "Heinrich Xiao", ".",
 	"Traditional Chinese by ", "Heinrich Xiao", ".",
-	"Polish by Apsurt.",
+	"Polish by ", "Tymon Becella", ".", # Apsurt
 	"Português by ", "The_Skeleton", "."
 ]
 

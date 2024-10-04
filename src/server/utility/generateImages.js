@@ -1,3 +1,16 @@
+
+/**
+ * This script compresses all our images.
+ * 
+ * Steps:
+ * 
+ * 1. Make sure the images you want compressed are located in dev-utils/image-sources/
+ * They will be compressed to the same directory within src/client/img/
+
+ * 2. Run the command:
+ * node src/server/utility/generateImages.js
+ */
+
 import sharp from "sharp";
 import { cpSync } from 'node:fs';
 import path from "path";

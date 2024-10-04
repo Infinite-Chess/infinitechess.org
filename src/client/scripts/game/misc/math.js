@@ -390,15 +390,6 @@ function toRadians(angleDegrees) {
 	return angleDegrees * (Math.PI / 180);
 }
 
-/**
- * Makes a deep copy of the provided coordinates
- * @param {number[]} coords - [x,y]
- * @returns Copied coords
- */
-function copyCoords(coords) {
-	return [coords[0], coords[1]];
-}
-
 function roundAwayFromZero(value) {
 	return value > 0 ? Math.ceil(value) : Math.floor(value);
 }
@@ -493,7 +484,6 @@ export default {
 	manhattanDistance,
 	chebyshevDistance,
 	toRadians,
-	copyCoords,
 	roundAwayFromZero,
 	PseudoRandomGenerator,
 	decimalToPercent,

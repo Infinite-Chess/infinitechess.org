@@ -1,7 +1,7 @@
 name = "Français" # Name of language
 direction = "ltr"
-version = "12"
-maintainer = "Life Enjoyer,cycy98"
+version = "17"
+maintainer = "Life Enjoyer,cycy98,Heinrich Xiao"
 
 [header]
 home = "Accueil"
@@ -27,6 +27,7 @@ js-confirm_delete = "Êtes vous sûr de vouloir supprimer votre compte ? Cette a
 js-enter_password = "Entrez votre mot de passe pour supprimer votre compte DÉFINITIVEMENT:"
 
 [index]
+title = "Infinite Chess | Accueil - Le Site Officiel" # The tab title
 secondary_title = "Le site officiel pour jouer en direct !"
 what_is_it_title = "Qu'est ce que c'est ?"
 what_is_it_pargaraphs = [
@@ -78,8 +79,17 @@ code_credits = [
 "par Brandon Jones et Colin MacKenzie IV.",
 "par Andreas Tsevas et Naviary.",
 ]
+language_heading = "Traductions de langue"
+language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
+	"Français par ", "Life Enjoyer", " et ", "cycy98", ".",
+	"Chinois simplifié par ", "Heinrich Xiao", ".",
+	"Chinois traditionnel par ", "Heinrich Xiao", ".",
+	"Polonais par ", "Tymon Becella", ".", # Apsurt
+	"Portugais par ", "The_Skeleton", "."
+]
 
 [member]
+title = "Membre" # The tab name
 verify_message = "Validez l'email pour vérifier votre compte."
 resend_message = ["Vous n'avez pas reçu d'email ? Vérifiez vos spams. Aussi, ", "renvoyer.", " Si vous ne recevez toujours rien,", "envoyez moi un message."]
 verify_confirm = "Merci ! Votre compte est désormais vérifié."
@@ -111,12 +121,16 @@ js-pwd_too_short = "Le mot de passe doit contenir au moins 6 caractères"
 js-pwd_too_long = "Le mot de passe doit contenir moins de 72 caractères"
 js-pwd_not_pwd = "Le mot de passe ne doit pas être 'password'"
 
+[play]
+title = "Infinite Chess - Jouer"
+loading = "CHARGEMENT"
+error = "ERREUR"
+
 [play.main-menu]
 credits = "Credits"
 play = "Jouer"
 guide = "Guide"
 editor = "Editeur de plateau"
-loading = "CHARGEMENT"
 error = "ERREUR"
 
 [play.guide]
@@ -236,7 +250,11 @@ arrows = "Flèches: Defense"
 perspective = "Perspective: Off"
 copy = "Copier la position"
 paste = "Coller une position"
+offer_draw = "Proposer une nulle"
 main_menu = "Menu Principal"
+
+[play.drawoffer] # The draw offer UI that appears on the bottom bar
+question = "Accepter la nulle ?"
 
 [play.javascript]
 guest_indicator = "(Guest)"
@@ -268,6 +286,8 @@ webgl_unsupported = "Votre navigateur ne supporte pas WebGL. Ce jeu ne peut pas 
 bigints_unsupported = "Votre navigateur ne supporte pas les BigInts. Mettez à jour votre navigateur.\nLes BigInts sont nécessaire pour rendre le plateau infini."
 shaders_failed = "Les shaders n'ont pas pu être initialisés:"
 failed_compiling_shaders = "Une erreur s'est produite lors de la compilation des shaders:"
+offer_draw = "Proposer une nulle"
+accept_draw = "Accepter la nulle"
 
 [play.javascript.copypaste]
 copied_game = "La position a été copiée dans le presse-papier !"
@@ -354,6 +374,7 @@ allpiecescaptured = "Toutes les pièces ont été capturées"
 threecheck = "Triple échec"
 koth = "KOTH"
 resignation = "Abandon"
+agreement = "Accord"
 time = "Défaite au temps"
 aborted = "Annulation" # Game was cancelled (no elo exchanged)
 disconnect = "Déconnexion" # A player left
@@ -373,6 +394,7 @@ draw_stalemate = "Pat !"
 draw_repetition = "Égalité par répétition !"
 draw_moverule = ["Égalité par la règle des ", " coups"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Égalité par manque de matériel !"
+draw_agreement = "Égalité par accord !"
 draw_generic = "Égalité!"
 aborted = "Partie annulée."
 opponent_checkmate = "Défaite par échec-et-mat !"
@@ -512,9 +534,6 @@ ws-not_found = "404 Introuvable"
 ws-forbidden = "Interdit."
 ws-unauthorized_patron_page = "Non autorisé. Cette page est réservé aux patreons."
 ws-already_in_game = "Vous êtes déjà dans une partie."
-ws-player_already_has_invite = "Ce joueur a déjà reçu une invitation."
-ws-invite_cancelled = "Cette invitation a déjà été annulée."
-ws-accept_own_invite = "Tu ne peux pas accepter ta propre invitation gros bêta"
 ws-server_restarting = "Ce serveur redémarre dans"
 ws-server_under_maintenance = "Le serveur redémarre bientôt." # Can be changed at will to change the display message.
 ws-minutes = "minutes" # unit of time

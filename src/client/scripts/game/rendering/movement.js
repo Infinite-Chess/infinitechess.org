@@ -11,6 +11,7 @@ import guititle from '../gui/guititle.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
 import game from '../chess/game.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 "use strict";
@@ -49,7 +50,7 @@ let scaleIsLess1Pixel_Virtual = false; // Set to true when we're so zoomed out, 
 // Returns a copy of the boardPos in memory, otherwise the memory location
 // could be used to modify the original.
 function getBoardPos() {
-	return math.copyCoords(boardPos);
+	return coordutil.copyCoords(boardPos);
 }
 
 // Password for modifying is stored in "passwordForSetting", or is "pidough"
@@ -472,7 +473,7 @@ function eraseMomentum() {
 function setPositionToArea(area, password) {
 	if (!area) console.error("Cannot set position to an undefined area.");
 
-	const copiedCoords = math.copyCoords(area.coords);
+	const copiedCoords = coordutil.copyCoords(area.coords);
 	setBoardPos(copiedCoords, password);
 	setBoardScale(area.scale, password);
 }

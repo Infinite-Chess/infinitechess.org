@@ -1,6 +1,6 @@
 name = "繁體中文" # Traditional Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "16"
+version = "17"
 maintainer = "Heinrich Xiao"
 
 [header]
@@ -78,6 +78,14 @@ code_heading = "程序"
 code_credits = [
 "由Brandon Jones 和 Colin MacKenzie IV 編寫。",
 "由Andreas"
+]
+language_heading = "語言翻譯"
+language_credits = [
+    "法語由 ", "Life Enjoyer", " 和 ", "cycy98", " 貢獻。",
+    "繁體中文由 ", "Heinrich Xiao", " 貢獻。",
+    "簡體中文由 ", "Heinrich Xiao", " 貢獻。",
+    "波蘭語由 ", "Tymon Becella", " 貢獻。",
+    "葡萄牙語由 ", "The_Skeleton", " 貢獻。"
 ]
 
 [member]
