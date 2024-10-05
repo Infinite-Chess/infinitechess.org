@@ -1,145 +1,146 @@
 {
-  "17": {
-    "note": "Added credits.language_heading and credits.language_credits, line 82",
-    "changes": []
-  },
-  "16": {
-    "note": "Deleted all news posts. The only keys you keep in the `news` section is `title` and `more_dev_logs`! Please verify your language's news posts have been translated correctly within translation/news!",
-    "changes": []
-  },
-  "15": {
-    "note": "Added news.sept11-2024, line 493. ALL NEWS POSTS DELETED IN FUTURE CHANGE.",
-    "changes": []
-  },
-  "14": {
-    "note": "Added translations for the tab titles. Added [play] and play.title on lines 116 & 117. Changed play.main-menu.loading to play.loading, and changed play.main-menu.error to play.error",
-    "changes": [
-      "index.title",
-      "member.title",
-      "play.title",
-      "play.main-menu.loading",
-      "play.main-menu.error",
-      "play.loading",
-      "play.error"
-    ]
-  },
-  "13": {
-    "note": "Added draw offers. Deleted ws-player_already_has_invite, ws-accept_own_invite, and ws-invite_cancelled",
-    "changes": [
-      "play.pause.offer_draw",
-      "play.drawoffer.question",
-      "play.javascript.offer_draw",
-      "play.javascript.accept_draw",
-      "play.javascript.termination.agreement",
-      "play.javascript.results.draw_agreement",
-      "server.javascript.ws-player_already_has_invite",
-      "server.javascript.ws-accept_own_invite",
-      "server.javascript.ws-invite_cancelled"
-    ]
-  },
-  "12": {
-    "note": "Corrected opponen_resignation to opponent_resignation",
-    "changes": [
-        "play.javascript.results.opponen_resignation"
-    ]
-  },
-  "11": {
-    "note": "Changed the structure of play.javascript.termination.moverule",
-    "changes": [
-        "play.javascript.termination.moverule"
-      ]
-  },
-  "10": {
-    "note": "Added news post Aug 1, 2024. Deleted news post Aug 26, 2023.",
-    "changes": [
-        "news.aug1-2024.date",
-        "news.aug1-2024.text_top",
-        "news.aug1-2024.update_list",
-        "news.aug26-2023.date",
-        "news.aug26-2023.text_top",
-        "news.aug26-2023.text_box"
-      ]
-  },
-  "9": {
-    "note": "In the guide, under controls, where it describes what the Tab key does, added sentence 'Clicking these arrows will teleport you to the piece they're pointing to.' line 142. Also changed controls_paragraph, line 137.",
-    "changes": [
-      "play.guide.controls_paragraph",
-      "play.guide.keybinds"
-    ]
-  },
-  "8": {
-    "note": "Added a knightrider description for the guide, on line 170.",
-    "changes": ["play.guide.pieces.knightrider"]
-  },
-  "7": {
-    "note": "Added ws-server_under_maintenance on line 561.",
-    "changes": ["server.javascript.ws-server_under_maintenance"]
-  },
-  "6": {
-    "note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
-    "changes": []
-  },
-  "5": {
-    "note": "Deleted create-account.argreement on line 100, and replaced it with create-account.agreement which is different. Deleted play.play-menu.variants. Added several entries to play.play-menu. Added several entries to server.javascript.",
-    "changes": ["create-account.argreement",
-                "create-account.agreement",
-                "play.play-menu.variants",
-                "play.play-menu.Classical",
-                "play.play-menu.Classical_Plus",
-                "play.play-menu.CoaIP",
-                "play.play-menu.Pawndard",
-                "play.play-menu.Knighted_Chess",
-                "play.play-menu.Knightline",
-                "play.play-menu.Core",
-                "play.play-menu.Standarch",
-                "play.play-menu.Pawn_Horde",
-                "play.play-menu.Space_Classic",
-                "play.play-menu.Space",
-                "play.play-menu.Obstocean",
-                "play.play-menu.Abundance",
-                "play.play-menu.Amazon_Chandelier",
-                "play.play-menu.Containment",
-                "play.play-menu.Classical_Limit_7",
-                "play.play-menu.CoaIP_Limit_7",
-                "play.play-menu.Chess",
-                "play.play-menu.Classical_KOTH",
-                "play.play-menu.CoaIP_KOTH",
-                "play.play-menu.Omega",
-                "play.play-menu.Omega_Squared",
-                "play.play-menu.Omega_Cubed",
-                "play.play-menu.Omega_Fourth",
-                "play.play-menu.no_clock",
-                "play.play-menu.casual",
-                "server.javascript.ws-username_reserved",
-                "server.javascript.ws-already_in_game",
-                "server.javascript.ws-player_already_has_invite",
-                "server.javascript.ws-invite_cancelled",
-                "server.javascript.ws-accept_own_invite",
-                "server.javascript.ws-server_restarting",
-                "server.javascript.ws-minutes",
-                "server.javascript.ws-minute",
-                "server.javascript.ws-no_abort_game_over",
-                "server.javascript.ws-no_abort_after_moves",
-                "server.javascript.ws-game_aborted_cheating",
-                "server.javascript.ws-cannot_resign_finished_game",
-                "server.javascript.ws-invalid_code",
-                "server.javascript.ws-game_aborted"
-              ]
-  },
-  "4": {
-    "note": "Added news.july22-2024 on line 462",
-    "changes": ["news.july22-2024"]
-  },
-  "3": {
-    "note": "added play.javascript.invites.start_game on line 314",
-    "changes": ["play.javascript.invites.start_game"]
-  },
-  "2": {
-    "note": "added login.login_button on line 448",
-    "changes": ["login.login_button"]
-  },
-  "1": {
-    "note": "inital commit of en-US-toml",
-    "changes": []
-  }
+	"17": {
+		"note": "Added credits.language_heading and credits.language_credits, line 82",
+		"changes": []
+	},
+	"16": {
+		"note": "Deleted all news posts. The only keys you keep in the `news` section is `title` and `more_dev_logs`! Please verify your language's news posts have been translated correctly within translation/news!",
+		"changes": []
+	},
+	"15": {
+		"note": "Added news.sept11-2024, line 493. ALL NEWS POSTS DELETED IN FUTURE CHANGE.",
+		"changes": []
+	},
+	"14": {
+		"note": "Added translations for the tab titles. Added [play] and play.title on lines 116 & 117. Changed play.main-menu.loading to play.loading, and changed play.main-menu.error to play.error",
+		"changes": [
+			"index.title",
+			"member.title",
+			"play.title",
+			"play.main-menu.loading",
+			"play.main-menu.error",
+			"play.loading",
+			"play.error"
+		]
+	},
+	"13": {
+		"note": "Added draw offers. Deleted ws-player_already_has_invite, ws-accept_own_invite, and ws-invite_cancelled",
+		"changes": [
+			"play.pause.offer_draw",
+			"play.drawoffer.question",
+			"play.javascript.offer_draw",
+			"play.javascript.accept_draw",
+			"play.javascript.termination.agreement",
+			"play.javascript.results.draw_agreement",
+			"server.javascript.ws-player_already_has_invite",
+			"server.javascript.ws-accept_own_invite",
+			"server.javascript.ws-invite_cancelled"
+		]
+	},
+	"12": {
+		"note": "Corrected opponen_resignation to opponent_resignation",
+		"changes": [
+			"play.javascript.results.opponen_resignation"
+		]
+	},
+	"11": {
+		"note": "Changed the structure of play.javascript.termination.moverule",
+		"changes": [
+			"play.javascript.termination.moverule"
+		]
+	},
+	"10": {
+		"note": "Added news post Aug 1, 2024. Deleted news post Aug 26, 2023.",
+		"changes": [
+			"news.aug1-2024.date",
+			"news.aug1-2024.text_top",
+			"news.aug1-2024.update_list",
+			"news.aug26-2023.date",
+			"news.aug26-2023.text_top",
+			"news.aug26-2023.text_box"
+		]
+	},
+	"9": {
+		"note": "In the guide, under controls, where it describes what the Tab key does, added sentence 'Clicking these arrows will teleport you to the piece they're pointing to.' line 142. Also changed controls_paragraph, line 137.",
+		"changes": [
+			"play.guide.controls_paragraph",
+			"play.guide.keybinds"
+		]
+	},
+	"8": {
+		"note": "Added a knightrider description for the guide, on line 170.",
+		"changes": ["play.guide.pieces.knightrider"]
+	},
+	"7": {
+		"note": "Added ws-server_under_maintenance on line 561.",
+		"changes": ["server.javascript.ws-server_under_maintenance"]
+	},
+	"6": {
+		"note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
+		"changes": []
+	},
+	"5": {
+		"note": "Deleted create-account.argreement on line 100, and replaced it with create-account.agreement which is different. Deleted play.play-menu.variants. Added several entries to play.play-menu. Added several entries to server.javascript.",
+		"changes": [
+			"create-account.argreement",
+			"create-account.agreement",
+			"play.play-menu.variants",
+			"play.play-menu.Classical",
+			"play.play-menu.Classical_Plus",
+			"play.play-menu.CoaIP",
+			"play.play-menu.Pawndard",
+			"play.play-menu.Knighted_Chess",
+			"play.play-menu.Knightline",
+			"play.play-menu.Core",
+			"play.play-menu.Standarch",
+			"play.play-menu.Pawn_Horde",
+			"play.play-menu.Space_Classic",
+			"play.play-menu.Space",
+			"play.play-menu.Obstocean",
+			"play.play-menu.Abundance",
+			"play.play-menu.Amazon_Chandelier",
+			"play.play-menu.Containment",
+			"play.play-menu.Classical_Limit_7",
+			"play.play-menu.CoaIP_Limit_7",
+			"play.play-menu.Chess",
+			"play.play-menu.Classical_KOTH",
+			"play.play-menu.CoaIP_KOTH",
+			"play.play-menu.Omega",
+			"play.play-menu.Omega_Squared",
+			"play.play-menu.Omega_Cubed",
+			"play.play-menu.Omega_Fourth",
+			"play.play-menu.no_clock",
+			"play.play-menu.casual",
+			"server.javascript.ws-username_reserved",
+			"server.javascript.ws-already_in_game",
+			"server.javascript.ws-player_already_has_invite",
+			"server.javascript.ws-invite_cancelled",
+			"server.javascript.ws-accept_own_invite",
+			"server.javascript.ws-server_restarting",
+			"server.javascript.ws-minutes",
+			"server.javascript.ws-minute",
+			"server.javascript.ws-no_abort_game_over",
+			"server.javascript.ws-no_abort_after_moves",
+			"server.javascript.ws-game_aborted_cheating",
+			"server.javascript.ws-cannot_resign_finished_game",
+			"server.javascript.ws-invalid_code",
+			"server.javascript.ws-game_aborted"
+		]
+	},
+	"4": {
+		"note": "Added news.july22-2024 on line 462",
+		"changes": ["news.july22-2024"]
+	},
+	"3": {
+		"note": "added play.javascript.invites.start_game on line 314",
+		"changes": ["play.javascript.invites.start_game"]
+	},
+	"2": {
+		"note": "added login.login_button on line 448",
+		"changes": ["login.login_button"]
+	},
+	"1": {
+		"note": "inital commit of en-US-toml",
+		"changes": []
+	}
 }
