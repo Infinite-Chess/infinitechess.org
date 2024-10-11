@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "14"
+version = "15"
 maintainer = "xa31"
 
 [header]
