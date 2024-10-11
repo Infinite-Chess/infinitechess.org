@@ -33,9 +33,9 @@ function getInviteSubscribers() { return subscribedClients; }
  * @param {*} message - The message contents
  */
 function broadcastToAllInviteSubs(action, message) {
-    for (const ws of Object.values(subscribedClients)) {
-        ws.metadata.sendmessage(ws, "invites", action, message); // In order: socket, sub, action, value
-    }
+	for (const ws of Object.values(subscribedClients)) {
+		ws.metadata.sendmessage(ws, "invites", action, message); // In order: socket, sub, action, value
+	}
 }
 
 /**
@@ -43,13 +43,13 @@ function broadcastToAllInviteSubs(action, message) {
  * @param {Socket} ws 
  */
 function addSocketToInvitesSubs(ws) {
-    const socketID = ws.metadata.id;
-    if (subscribedClients[socketID]) return console.error("Cannot sub socket to invites list because they already are!");
+	const socketID = ws.metadata.id;
+	if (subscribedClients[socketID]) return console.error("Cannot sub socket to invites list because they already are!");
 
-    subscribedClients[socketID] = ws;
-    ws.metadata.subscriptions.invites = true;
-    if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
-    if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
+	subscribedClients[socketID] = ws;
+	ws.metadata.subscriptions.invites = true;
+	if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
 
 /**
@@ -58,15 +58,15 @@ function addSocketToInvitesSubs(ws) {
  * @param {Socket} ws 
  */
 function removeSocketFromInvitesSubs(ws) {
-    if (!ws) return console.error("Can't remove socket from invites subs list because it's undefined!");
+	if (!ws) return console.error("Can't remove socket from invites subs list because it's undefined!");
 
-    const socketID = ws.metadata.id;
-    if (!subscribedClients[socketID]) return console.error("Cannot unsub socket from invites list because they aren't subbed!");
+	const socketID = ws.metadata.id;
+	if (!subscribedClients[socketID]) return console.error("Cannot unsub socket from invites list because they aren't subbed!");
 
-    delete subscribedClients[socketID];
-    delete ws.metadata.subscriptions.invites;
-    if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
-    if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
+	delete subscribedClients[socketID];
+	delete ws.metadata.subscriptions.invites;
+	if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
 
 
@@ -74,8 +74,8 @@ function removeSocketFromInvitesSubs(ws) {
 
 
 export {
-    getInviteSubscribers,
-    broadcastToAllInviteSubs,
-    addSocketToInvitesSubs,
-    removeSocketFromInvitesSubs,
+	getInviteSubscribers,
+	broadcastToAllInviteSubs,
+	addSocketToInvitesSubs,
+	removeSocketFromInvitesSubs,
 };

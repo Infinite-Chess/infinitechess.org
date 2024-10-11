@@ -27,14 +27,14 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
  * initial startup, if it isn't alread
  */
 (function ensureAllowInvitesFileExists() {
-    if (fs.existsSync(allowinvitesPath)) return; // Already exists
+	if (fs.existsSync(allowinvitesPath)) return; // Already exists
 
-    const content = JSON.stringify({
-        allowinvites: true,
-        restartIn: false
-    }, null, 2);
-    writeFile_ensureDirectory(allowinvitesPath, content);
-    console.log("Generated allowinvites file");
+	const content = JSON.stringify({
+		allowinvites: true,
+		restartIn: false
+	}, null, 2);
+	writeFile_ensureDirectory(allowinvitesPath, content);
+	console.log("Generated allowinvites file");
 })();
 
 /**
@@ -61,46 +61,46 @@ const intervalToReadAllowinviteMillis = 5000; // 5 seconds
  * @returns {Promise<boolean>} true if invite creation is allowed
  */
 async function isServerRestarting() {
-    await updateAllowInvites();
-    return !allowinvites.allowinvites;
+	await updateAllowInvites();
+	return !allowinvites.allowinvites;
 }
 
 /** Makes sure {@link allowinvites} is up-to-date with any changes the computer user has made. */
 const updateAllowInvites = (function() {
 
-    /**
+	/**
      * The time, in millis since the Unix Epoch, we last read allowinvites.json to see if
      * we've modified it to disallow new invite creation or init a server restart.
      * 
      * Typically this file is re-read every time someone generates an invite, but we
      * will not read it again if it has been read in the last {@link intervalToReadAllowinviteMillis}
      */
-    let timeLastReadAllowInvites = Date.now();
+	let timeLastReadAllowInvites = Date.now();
 
-    return async() => {
-        // How long has it been since the last read?
-        const timePassedMillis = Date.now() - timeLastReadAllowInvites;
-        const isTimeToReadAgain = timePassedMillis >= intervalToReadAllowinviteMillis;
-        if (!isTimeToReadAgain) return; // Hasn't been over 5 seconds since last read
+	return async() => {
+		// How long has it been since the last read?
+		const timePassedMillis = Date.now() - timeLastReadAllowInvites;
+		const isTimeToReadAgain = timePassedMillis >= intervalToReadAllowinviteMillis;
+		if (!isTimeToReadAgain) return; // Hasn't been over 5 seconds since last read
 
-        // console.log("Reading allowinvites.json!")
+		// console.log("Reading allowinvites.json!")
     
-        // If this is not called with 'await', it returns a promise.
-        const newAllowInvitesValue = await readFile(allowinvitesPath, `Error locking & reading allowinvites.json after receiving a created invite!`);
+		// If this is not called with 'await', it returns a promise.
+		const newAllowInvitesValue = await readFile(allowinvitesPath, `Error locking & reading allowinvites.json after receiving a created invite!`);
 
-        timeLastReadAllowInvites = Date.now();
+		timeLastReadAllowInvites = Date.now();
     
-        if (newAllowInvitesValue === undefined) { // Not defined, error in reading. Probably file is locked
-            console.error(`There was an error reading allowinvites.json. Not updating it in memory.`);
-            return;
-        }
+		if (newAllowInvitesValue === undefined) { // Not defined, error in reading. Probably file is locked
+			console.error(`There was an error reading allowinvites.json. Not updating it in memory.`);
+			return;
+		}
 
-        allowinvites = newAllowInvitesValue;
+		allowinvites = newAllowInvitesValue;
 
-        // Stop server restarting if we're allowing invites again!
-        if (allowinvites.allowinvites) cancelServerRestart();
-        else initServerRestart(allowinvites);
-    };
+		// Stop server restarting if we're allowing invites again!
+		if (allowinvites.allowinvites) cancelServerRestart();
+		else initServerRestart(allowinvites);
+	};
 })();
 
 /**
@@ -113,35 +113,35 @@ const updateAllowInvites = (function() {
  * @param {Object} newAllowInvitesValue - The newly read allowinvites.json file.
  */
 async function initServerRestart(newAllowInvitesValue) { // { allowInvites, restartIn: minutes }
-    if (!newAllowInvitesValue.restartIn) return; // We have not changed the value to indicate we're restarting. Return.
+	if (!newAllowInvitesValue.restartIn) return; // We have not changed the value to indicate we're restarting. Return.
 
-    const now = Date.now(); // Current time in milliseconds
-    // restartIn is in minutes, convert to milliseconds!
-    const millisecondsUntilRestart = newAllowInvitesValue.restartIn * 60 * 1000;
+	const now = Date.now(); // Current time in milliseconds
+	// restartIn is in minutes, convert to milliseconds!
+	const millisecondsUntilRestart = newAllowInvitesValue.restartIn * 60 * 1000;
 
-    const value = now + millisecondsUntilRestart;
-    setTimeServerRestarting(value);
+	const value = now + millisecondsUntilRestart;
+	setTimeServerRestarting(value);
 
-    console.log(`Will be restarting the server in ${newAllowInvitesValue.restartIn} minutes!`);
+	console.log(`Will be restarting the server in ${newAllowInvitesValue.restartIn} minutes!`);
 
-    // Set our restartIn variable to undefined, so we don't repeat this next time we load the file!
-    newAllowInvitesValue.restartIn = false;
+	// Set our restartIn variable to undefined, so we don't repeat this next time we load the file!
+	newAllowInvitesValue.restartIn = false;
 
-    // Save the file
-    await writeFile(
-        allowinvitesPath,
-        newAllowInvitesValue,
-        `Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created.`
-    );
+	// Save the file
+	await writeFile(
+		allowinvitesPath,
+		newAllowInvitesValue,
+		`Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created.`
+	);
 
-    // Alert all people on the invite screen that we will be restarting soon
-    // ...
+	// Alert all people on the invite screen that we will be restarting soon
+	// ...
 
-    // Alert all people in a game that we will be restarting soon
-    broadCastGameRestarting();
+	// Alert all people in a game that we will be restarting soon
+	broadCastGameRestarting();
 }
 
 
 export {
-    isServerRestarting
+	isServerRestarting
 };

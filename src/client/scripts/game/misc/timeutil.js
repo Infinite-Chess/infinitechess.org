@@ -24,12 +24,12 @@ function secondsToMillis(seconds) { return seconds * 1000; }
  * @returns {string} The current UTC date.
  */
 function getCurrentUTCDate() {
-    const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(now.getUTCDate()).padStart(2, '0');
+	const now = new Date();
+	const year = now.getUTCFullYear();
+	const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+	const day = String(now.getUTCDate()).padStart(2, '0');
     
-    return `${year}.${month}.${day}`;
+	return `${year}.${month}.${day}`;
 }
 
 /**
@@ -37,12 +37,12 @@ function getCurrentUTCDate() {
  * @returns {string} The current UTC time.
  */
 function getCurrentUTCTime() {
-    const now = new Date();
-    const hours = String(now.getUTCHours()).padStart(2, '0');
-    const minutes = String(now.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+	const now = new Date();
+	const hours = String(now.getUTCHours()).padStart(2, '0');
+	const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+	const seconds = String(now.getUTCSeconds()).padStart(2, '0');
     
-    return `${hours}:${minutes}:${seconds}`;
+	return `${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -51,20 +51,20 @@ function getCurrentUTCTime() {
  * @returns {Object} An object with the properties { UTCDate: "YYYY.MM.DD", UTCTime: "HH:MM:SS" }.
  */
 function convertTimestampToUTCDateUTCTime(timestamp) {
-    const date = new Date(timestamp);
+	const date = new Date(timestamp);
     
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
+	const year = date.getUTCFullYear();
+	const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+	const day = String(date.getUTCDate()).padStart(2, '0');
     
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+	const hours = String(date.getUTCHours()).padStart(2, '0');
+	const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+	const seconds = String(date.getUTCSeconds()).padStart(2, '0');
     
-    const UTCDate = `${year}.${month}.${day}`;
-    const UTCTime = `${hours}:${minutes}:${seconds}`;
+	const UTCDate = `${year}.${month}.${day}`;
+	const UTCTime = `${hours}:${minutes}:${seconds}`;
     
-    return { UTCDate, UTCTime };
+	return { UTCDate, UTCTime };
 }
 
 /**
@@ -74,11 +74,11 @@ function convertTimestampToUTCDateUTCTime(timestamp) {
  * @returns {number} The UTC timestamp in milliseconds since the Unix Epoch.
  */
 function convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime = "00:00:00") {
-    const [year, month, day] = UTCDate.split('.').map(Number);
-    const [hours, minutes, seconds] = UTCTime.split(':').map(Number);
+	const [year, month, day] = UTCDate.split('.').map(Number);
+	const [hours, minutes, seconds] = UTCTime.split(':').map(Number);
 
-    const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
-    return date.getTime();
+	const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
+	return date.getTime();
 }
 
 /**
@@ -95,24 +95,24 @@ function convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime = "00:00:00") {
  * @returns {number} The total milliseconds calculated from the provided options.
  */
 function getTotalMilliseconds(options) {
-    const millisecondsIn = {
-        milliseconds: 1,
-        seconds: 1000,
-        minutes: 1000 * 60,
-        hours: 1000 * 60 * 60,
-        days: 1000 * 60 * 60 * 24,
-        weeks: 1000 * 60 * 60 * 24 * 7,
-        months: 1000 * 60 * 60 * 24 * 30, // Approximation, not precise
-        years: 1000 * 60 * 60 * 24 * 365, // Approximation, not precise
-    };
+	const millisecondsIn = {
+		milliseconds: 1,
+		seconds: 1000,
+		minutes: 1000 * 60,
+		hours: 1000 * 60 * 60,
+		days: 1000 * 60 * 60 * 24,
+		weeks: 1000 * 60 * 60 * 24 * 7,
+		months: 1000 * 60 * 60 * 24 * 30, // Approximation, not precise
+		years: 1000 * 60 * 60 * 24 * 365, // Approximation, not precise
+	};
 
-    let totalMilliseconds = 0;
+	let totalMilliseconds = 0;
 
-    for (const option in options) {
-        if (millisecondsIn[option]) totalMilliseconds += options[option] * millisecondsIn[option];
-    }
+	for (const option in options) {
+		if (millisecondsIn[option]) totalMilliseconds += options[option] * millisecondsIn[option];
+	}
 
-    return totalMilliseconds;
+	return totalMilliseconds;
 }
 
 /**
@@ -120,10 +120,10 @@ function getTotalMilliseconds(options) {
  * @returns {string} The current month in 'yyyy-mm' format.
  */
 function getCurrentMonth() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Add 1 because getMonth() returns 0-11
-    return `${year}-${month}`;
+	const date = new Date();
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Add 1 because getMonth() returns 0-11
+	return `${year}-${month}`;
 }
 
 /**
@@ -131,21 +131,21 @@ function getCurrentMonth() {
  * @returns {string} The current day in 'yyyy-mm-dd' format.
  */
 function getCurrentDay() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+	const date = new Date();
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, '0');
+	const day = date.getDate().toString().padStart(2, '0');
+	return `${year}-${month}-${day}`;
 }
 
 export default {
-    minutesToMillis,
-    secondsToMillis,
-    getCurrentUTCDate,
-    getCurrentUTCTime,
-    convertTimestampToUTCDateUTCTime,
-    convertUTCDateUTCTimeToTimeStamp,
-    getTotalMilliseconds,
-    getCurrentMonth,
-    getCurrentDay,
+	minutesToMillis,
+	secondsToMillis,
+	getCurrentUTCDate,
+	getCurrentUTCTime,
+	convertTimestampToUTCDateUTCTime,
+	convertUTCDateUTCTimeToTimeStamp,
+	getTotalMilliseconds,
+	getCurrentMonth,
+	getCurrentDay,
 };

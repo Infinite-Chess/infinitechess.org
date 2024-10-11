@@ -5,28 +5,28 @@ import { deleteAllInvitesOfMember } from '../game/invitesmanager/invitesmanager.
 import { getTranslationForReq } from '../utility/translate.js';
 
 const handleLogout = async(req, res) => {
-    // On client, also delete the accessToken
+	// On client, also delete the accessToken
 
-    const cookies = req.cookies;
-    // We need to delete refresh token cookie, but is it already?
-    if (!cookies?.jwt) return res.redirect('/'); // Success, already logged out
-    const refreshToken = cookies.jwt;
+	const cookies = req.cookies;
+	// We need to delete refresh token cookie, but is it already?
+	if (!cookies?.jwt) return res.redirect('/'); // Success, already logged out
+	const refreshToken = cookies.jwt;
 
-    // Is refreshToken in db?
-    const foundMemberKey = findMemberFromRefreshToken(refreshToken);
-    if (!foundMemberKey) return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) }); // Forbidden
+	// Is refreshToken in db?
+	const foundMemberKey = findMemberFromRefreshToken(refreshToken);
+	if (!foundMemberKey) return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) }); // Forbidden
 
-    // Delete refreshToken in db.
-    // This also saves the members file.
-    deleteRefreshToken(foundMemberKey, refreshToken);
+	// Delete refreshToken in db.
+	// This also saves the members file.
+	deleteRefreshToken(foundMemberKey, refreshToken);
 
-    websocketserver.closeAllSocketsOfMember(foundMemberKey, 1008, "Logged out");
-    deleteAllInvitesOfMember(foundMemberKey);
+	websocketserver.closeAllSocketsOfMember(foundMemberKey, 1008, "Logged out");
+	deleteAllInvitesOfMember(foundMemberKey);
 
-    console.log(`Logged out member ${getUsernameCaseSensitive(foundMemberKey)}`);
-    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+	console.log(`Logged out member ${getUsernameCaseSensitive(foundMemberKey)}`);
+	res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
 
-    res.redirect('/');
+	res.redirect('/');
 };
 
 export { handleLogout };

@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "15"
+version = "17"
 maintainer = "Naviary"
 
 [header]
@@ -78,6 +78,14 @@ code_heading = "Code"
 code_credits = [
 "by Brandon Jones and Colin MacKenzie IV.",
 "by Andreas Tsevas and Naviary.",
+]
+language_heading = "Language Translations"
+language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
+	"French by ", "Life Enjoyer", " and ", "cycy98", ".",
+	"Simplified Chinese by ", "Heinrich Xiao", ".",
+	"Traditional Chinese by ", "Heinrich Xiao", ".",
+	"Polish by ", "Tymon Becella", ".", # Apsurt
+	"Português by ", "The_Skeleton", "."
 ]
 
 [member]
@@ -176,7 +184,6 @@ centaur = {name="Centaur", description="Moves like a knight and a guard combined
 knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
-
 
 [play.play-menu]
 title = "Play - Online"
@@ -484,90 +491,9 @@ login_button = "Log In"
 409_message = ["There may have been a clashing username or email. Please ", "reload", ", the page."]
 500_message = "This isn't supposed to happen. There is some debugging to be done!"
 
-########### NEWS ###########
-
 [news]
 title = "News" # The tab name
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
-
-[news.sept11-2024]
-date = "Sept 11, 2024:"
-paragraph1 = [
-    "The first-ever Infinite Chess tournament is now open for sign-ups!!! It will be played on the Classical variant, and the time control will be 10m+6s (this will be added soon). The winner will be given a special flare and/or role on the ",
-    "community discord", # The website inserts a hyperlink over this text
-    "!"
-],
-paragraph2 = [
-    "Here's the ",
-    "sign-up form", # The website inserts a hyperlink over this text
-    "! The deadline to sign up is ",
-    "Friday, Sept 27th!", # The website bolds this text
-    " The full rules are located ",
-    "here", # The website inserts a hyperlink over this text
-    ". For future updates about the tournament, join the ",
-    "discord", # The website inserts a hyperlink over this text
-    "!"
-]
-paragraph3 = "Update v.1.4.1 has been released!"
-list = [
-    "Draw offers have been added! Find the offer draw button in the pause menu!",
-    "Added languages for the following: Chinese, Polish, Portuguese!",
-    "Fixed bug where spamming the Create Invite button gave you messages such as you already have an invite, or you can't accept your own invite."
-]
-
-[news.aug1-2024] # Update 1.4
-date = "August 1, 2024:"
-text_top = "Update 1.4 is released! There have been many collaborative features added since we open sourced!"
-update_list = [
-"Knightriders have been added, which hop infinitely like a knight until they're obstructed! The 'Knighted Chess' variant has been upgraded to replace the knights with knightriders!",
-"Click your or your opponent's pieces at any time to view their possible moves!",
-"Right-click at any time to deselect the currently selected piece.",
-"Hovering over arrow indicators on the edge of the screen now renders the legal moves of the piece they are pointing to!",
-"The game now automatically declares a draw if there's insufficient material on the board to force checkmate.",
-"Translated the website into French! You can change the language by visiting the footer on any page.",
-"Improved the loading time of the website.",
-"New website icon, Ω! This automatically matches your preferred light or dark device theme.",
-"The game code's, or the ICN's, metadata has been reformatted to more closely match PGN norms.",
-"Users can now delete their account on their profile page, if they so choose, without having to email us."
-]
-
-[news.july22-2024]
-date = "July 22, 2024:"
-account_warning = "If you have not verified your account, please do so on your profile page! All unverified accounts will soon be deleted!!"
-
-[news.july13-2024]
-date = "July 13, 2024:"
-tos_update = ["The ", "Terms of Service", " have been updated. Changes made: All games you play on the website may become public information, including the approximate time your account was last active. The terms may be updated at any time, and it is your responsibility to make sure you're up-to-date on them."] # The game inserts a hyperlink inside the 2nd quotes here.
-game_history_warning = "Your game history may become available on your profile at a future time."
-
-[news.july9-2024]
-date = "July 9, 2024:"
-text = ["Infinite Chess is Now Open Source! See, and contribute, to the project ", "on GitHub!"]
-
-[news.may27-2024]
-date = "May 27, 2024:"
-text = "1.3.2: Added showcase variants for Omega^3 and Omega^4 that were shown in my latest video. Also, the checkmate algorithm is now compatible with multiple kings per side."
-
-[news.may24-2024]
-date = "May 24, 2024:"
-text = "Update 1.3.1 released! This includes the guide, pop-up tooltips when hovering over the navigation buttons, and links to the discord and game credits on the title page!"
-
-[news.may14-2024]
-date = "May 14, 2024:"
-text_top = "Update 1.3 released today! This includes MANY new speed and user experience improvements. Just a few are:"
-update_list = [
-"The transition to websockets, decreasing the delay when your opponent moves.",
-"No longer getting disconnected when you switch tabs.",
-"Audible cues when you or someone else creates an invite, or makes a move.",
-"Added the 50-move rule.",
-"A drum countdown effect is now played at 10 seconds left on the clock.",
-"An auto-resignation timer will start if you're opponent goes AFK (with an audible warning)."
-]
-text_box = ["And many others! For the full list, check out ", "the discord!"]
-
-[news.jan29-2024]
-date = "Jan 29, 2024:"
-text = "New video released today!"
 
 [server.javascript]
 ws-invalid_username = "Username is invalid"

@@ -50,24 +50,24 @@ const timeBeforeGameDeletionMillis = 1000 * 15; // 15 seconds
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
 function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1 is the invite owner.
-    const gameID = uuid.genUniqueID(5, activeGames);
-    const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
-    if (!player1Socket) {
-        // Player 1 (invite owner)'s socket closed before their invite was deleted.
-        // Immediately start the auto-resign by disconnection timer
-        const player2Color = gameutility.doesSocketBelongToGame_ReturnColor(game, player2Socket);
-        const player1Color = colorutil.getOppositeColor(player2Color);
-        startDisconnectTimer(game, player1Color, false, onPlayerLostByDisconnect);
-    }
+	const gameID = uuid.genUniqueID(5, activeGames);
+	const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
+	if (!player1Socket) {
+		// Player 1 (invite owner)'s socket closed before their invite was deleted.
+		// Immediately start the auto-resign by disconnection timer
+		const player2Color = gameutility.doesSocketBelongToGame_ReturnColor(game, player2Socket);
+		const player1Color = colorutil.getOppositeColor(player2Color);
+		startDisconnectTimer(game, player1Color, false, onPlayerLostByDisconnect);
+	}
 
-    addUserToActiveGames(game.white, game.id);
-    addUserToActiveGames(game.black, game.id);
+	addUserToActiveGames(game.white, game.id);
+	addUserToActiveGames(game.black, game.id);
 
-    addGameToActiveGames(game);
+	addGameToActiveGames(game);
 
-    console.log("Starting new game:");
-    gameutility.printGame(game);
-    printActiveGameCount();
+	console.log("Starting new game:");
+	gameutility.printGame(game);
+	printActiveGameCount();
 }
 
 /**
@@ -75,9 +75,9 @@ function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1
  * @param {Game} game - The game
  */
 function addGameToActiveGames(game) {
-    if (!game) return console.error("Can't add an undefined game to the active games list.");
-    activeGames[game.id] = game;
-    incrementActiveGameCount();
+	if (!game) return console.error("Can't add an undefined game to the active games list.");
+	activeGames[game.id] = game;
+	incrementActiveGameCount();
 }
 
 /**
@@ -88,26 +88,26 @@ function addGameToActiveGames(game) {
  * @param {boolean} [unsubNotByChoice] When true, we will give them a 5-second cushion to re-sub before we start an auto-resignation timer. Set to false if we call this due to them closing the tab.
  */
 function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
-    const gameID = ws.metadata.subscriptions.game?.id;
-    if (gameID == null) return console.error("Cannot unsub client from game when it's not subscribed to one.");
+	const gameID = ws.metadata.subscriptions.game?.id;
+	if (gameID == null) return console.error("Cannot unsub client from game when it's not subscribed to one.");
 
-    const game = getGameByID(gameID);
-    if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	const game = getGameByID(gameID);
+	if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
 
-    gameutility.unsubClientFromGame(game, ws, { sendMessage: false }); // Don't tell the client to unsub because their socket is CLOSING
+	gameutility.unsubClientFromGame(game, ws, { sendMessage: false }); // Don't tell the client to unsub because their socket is CLOSING
 
-    // Let their OPPONENT know they've disconnected though...
+	// Let their OPPONENT know they've disconnected though...
 
-    if (gameutility.isGameOver(game)) return; // It's fine if players unsub/disconnect after the game has ended.
+	if (gameutility.isGameOver(game)) return; // It's fine if players unsub/disconnect after the game has ended.
 
-    const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-    if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
-        console.log("Waiting 5 seconds before starting disconnection timer.");
-        const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
-        game.disconnect.startTimer[color] = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect);
-    } else { // Closed tab manually. Immediately start auto-resign timer.
-        startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect);
-    }
+	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
+		console.log("Waiting 5 seconds before starting disconnection timer.");
+		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
+		game.disconnect.startTimer[color] = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect);
+	} else { // Closed tab manually. Immediately start auto-resign timer.
+		startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect);
+	}
 }
 
 /**
@@ -123,9 +123,9 @@ function getGameByID(id) { return activeGames[id]; }
  * @returns {Game | undefined} - The game they are in, if they belong in one, otherwise undefined..
  */
 function getGameByPlayer(player) {
-    const gameID = getIDOfGamePlayerIsIn(player);
-    if (!gameID) return; // Not in a game;
-    return getGameByID(gameID);
+	const gameID = getIDOfGamePlayerIsIn(player);
+	if (!gameID) return; // Not in a game;
+	return getGameByID(gameID);
 }
 
 /**
@@ -135,16 +135,16 @@ function getGameByPlayer(player) {
  * @returns {Game | undefined} - The game they are in, if they belong in one, otherwise undefined.
  */
 function getGameBySocket(ws) {
-    const gameID = ws.metadata.subscriptions.game?.id;
-    if (gameID) return getGameByID(gameID); 
+	const gameID = ws.metadata.subscriptions.game?.id;
+	if (gameID) return getGameByID(gameID); 
     
-    // The socket is not subscribed to any game. Perhaps this is a resync/refresh?
+	// The socket is not subscribed to any game. Perhaps this is a resync/refresh?
 
-    // Is the client in a game? What's their username/browser-id?
-    const player = wsutility.getOwnerFromSocket(ws);
-    if (player.member == null && player.browser == null) return console.error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${wsutility.stringifySocketMetadata(ws)}`);
+	// Is the client in a game? What's their username/browser-id?
+	const player = wsutility.getOwnerFromSocket(ws);
+	if (player.member == null && player.browser == null) return console.error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${wsutility.stringifySocketMetadata(ws)}`);
 
-    return getGameByPlayer(player);
+	return getGameByPlayer(player);
 }
 
 /**
@@ -158,25 +158,25 @@ function getGameBySocket(ws) {
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws, game) {
-    const user = wsutility.getOwnerFromSocket(ws); // { member/browser }
-    if (!game) return console.error("Can't remove player from players in active games list when they don't belong in a game");
-    removeUserFromActiveGame(user, game.id);
+	const user = wsutility.getOwnerFromSocket(ws); // { member/browser }
+	if (!game) return console.error("Can't remove player from players in active games list when they don't belong in a game");
+	removeUserFromActiveGame(user, game.id);
     
-    // If both players have requested this (i.e. have seen the game conclusion),
-    // and the game is scheduled to be deleted, just delete it now!
+	// If both players have requested this (i.e. have seen the game conclusion),
+	// and the game is scheduled to be deleted, just delete it now!
     
-    if (game.deleteTimeoutID === undefined) return; // Not scheduled to be deleted
-    // Is the opponent still in the players in active games list? (has not seen the game results)
-    const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-    const opponentColor = colorutil.getOppositeColor(color);
-    if (!hasColorInGameSeenConclusion(game, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
+	if (game.deleteTimeoutID === undefined) return; // Not scheduled to be deleted
+	// Is the opponent still in the players in active games list? (has not seen the game results)
+	const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	const opponentColor = colorutil.getOppositeColor(color);
+	if (!hasColorInGameSeenConclusion(game, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
 
-    // console.log("Deleting game immediately, instead of waiting 15 seconds, because both players have seen the game conclusion and requested to be removed from the players in active games list.")
+	// console.log("Deleting game immediately, instead of waiting 15 seconds, because both players have seen the game conclusion and requested to be removed from the players in active games list.")
 
-    // Both players have seen the game conclusion and requested to be removed
-    // from the players in active games list, just delete the game now!
-    gameutility.cancelDeleteGameTimer(game);
-    deleteGame(game);
+	// Both players have seen the game conclusion and requested to be removed
+	// from the players in active games list, just delete the game now!
+	gameutility.cancelDeleteGameTimer(game);
+	deleteGame(game);
 }
 
 /**
@@ -185,30 +185,30 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
  * @param {Game} game - The game
  */
 function pushGameClock(game) {
-    // if (!game.whosTurn) return; // Game is over
-    const colorWhoJustMoved = game.whosTurn; // white/black
-    game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
-    if (game.untimed) return; // Don't adjust the times if the game isn't timed.
+	// if (!game.whosTurn) return; // Game is over
+	const colorWhoJustMoved = game.whosTurn; // white/black
+	game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
+	if (game.untimed) return; // Don't adjust the times if the game isn't timed.
 
-    if (!gameutility.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
+	if (!gameutility.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
 
-    const now = Date.now();
-    const timeSpent = now - game.timeAtTurnStart;
-    let newTime = game.timeRemainAtTurnStart - timeSpent;
-    game.timeAtTurnStart = now;
+	const now = Date.now();
+	const timeSpent = now - game.timeAtTurnStart;
+	let newTime = game.timeRemainAtTurnStart - timeSpent;
+	game.timeAtTurnStart = now;
 
-    if (colorWhoJustMoved === 'white') game.timeRemainAtTurnStart = game.timerBlack;
-    else                               game.timeRemainAtTurnStart = game.timerWhite;
-    game.timeNextPlayerLosesAt = game.timeAtTurnStart + game.timeRemainAtTurnStart;
+	if (colorWhoJustMoved === 'white') game.timeRemainAtTurnStart = game.timerBlack;
+	else                               game.timeRemainAtTurnStart = game.timerWhite;
+	game.timeNextPlayerLosesAt = game.timeAtTurnStart + game.timeRemainAtTurnStart;
 
-    // Start the timer that will auto-terminate the player when they lose on time
-    setAutoTimeLossTimer(game);
+	// Start the timer that will auto-terminate the player when they lose on time
+	setAutoTimeLossTimer(game);
 
-    if (game.moves.length < 3) return; //////////////////////////////////////// Atleast 3 moves played
+	if (game.moves.length < 3) return; //////////////////////////////////////// Atleast 3 moves played
 
-    newTime += game.incrementMillis; // Increment
-    if (colorWhoJustMoved === 'white') game.timerWhite = newTime;
-    else                               game.timerBlack = newTime;
+	newTime += game.incrementMillis; // Increment
+	if (colorWhoJustMoved === 'white') game.timerWhite = newTime;
+	else                               game.timerBlack = newTime;
 }
 
 /**
@@ -217,25 +217,25 @@ function pushGameClock(game) {
  * @param {Game} game - The game
  */
 function stopGameClock(game) {
-    if (game.untimed) return;
+	if (game.untimed) return;
 
-    if (!gameutility.isGameResignable(game)) {
-        game.whosTurn = undefined;
-        return; 
-    }
+	if (!gameutility.isGameResignable(game)) {
+		game.whosTurn = undefined;
+		return; 
+	}
 
-    const timeSpent = Date.now() - game.timeAtTurnStart;
-    let newTime = game.timeRemainAtTurnStart - timeSpent;
-    if (newTime < 0) newTime = 0;
+	const timeSpent = Date.now() - game.timeAtTurnStart;
+	let newTime = game.timeRemainAtTurnStart - timeSpent;
+	if (newTime < 0) newTime = 0;
 
-    if (game.whosTurn === 'white') game.timerWhite = newTime;
-    else                           game.timerBlack = newTime;
+	if (game.whosTurn === 'white') game.timerWhite = newTime;
+	else                           game.timerBlack = newTime;
 
-    game.whosTurn = undefined;
+	game.whosTurn = undefined;
 
-    game.timeAtTurnStart = undefined;
-    game.timeNextPlayerLosesAt = undefined;
-    game.timeRemainAtTurnStart = undefined;
+	game.timeAtTurnStart = undefined;
+	game.timeNextPlayerLosesAt = undefined;
+	game.timeRemainAtTurnStart = undefined;
 }
 
 /**
@@ -245,9 +245,9 @@ function stopGameClock(game) {
  * @param {string} conclusion - The new game conclusion
  */
 function setGameConclusion(game, conclusion) {
-    const dontDecrementActiveGames = game.gameConclusion !== false; // Game already over, active game count already decremented.
-    game.gameConclusion = conclusion;
-    if (conclusion) onGameConclusion(game, { dontDecrementActiveGames });
+	const dontDecrementActiveGames = game.gameConclusion !== false; // Game already over, active game count already decremented.
+	game.gameConclusion = conclusion;
+	if (conclusion) onGameConclusion(game, { dontDecrementActiveGames });
 }
 
 /**
@@ -259,24 +259,24 @@ function setGameConclusion(game, conclusion) {
  * @param {boolean} [options.dontDecrementActiveGames=false] - If true, prevents decrementing the active game count.
  */
 function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
-    if (!dontDecrementActiveGames) decrementActiveGameCount();
+	if (!dontDecrementActiveGames) decrementActiveGameCount();
 
-    console.log(`Game ${game.id} over. White: ${JSON.stringify(game.white)}. Black: ${JSON.stringify(game.black)}. Conclusion: ${game.gameConclusion}`);
-    printActiveGameCount();
+	console.log(`Game ${game.id} over. White: ${JSON.stringify(game.white)}. Black: ${JSON.stringify(game.black)}. Conclusion: ${game.gameConclusion}`);
+	printActiveGameCount();
 
-    stopGameClock(game);
-    // Cancel the timer that will auto terminate
-    // the game when the next player runs out of time
-    clearTimeout(game.autoTimeLossTimeoutID);
-    // Also cancel the one that auto loses by AFK
-    cancelAutoAFKResignTimer(game);
-    cancelDisconnectTimers(game);
-    closeDrawOffer(game);
+	stopGameClock(game);
+	// Cancel the timer that will auto terminate
+	// the game when the next player runs out of time
+	clearTimeout(game.autoTimeLossTimeoutID);
+	// Also cancel the one that auto loses by AFK
+	cancelAutoAFKResignTimer(game);
+	cancelDisconnectTimers(game);
+	closeDrawOffer(game);
 
-    // Set a 5-second timer to delete it and change elos,
-    // to give the other client time to oppose the conclusion if they want.
-    gameutility.cancelDeleteGameTimer(game); // Cancel first, in case a hacking report just ocurred.
-    game.deleteTimeoutID = setTimeout(deleteGame, timeBeforeGameDeletionMillis, game);
+	// Set a 5-second timer to delete it and change elos,
+	// to give the other client time to oppose the conclusion if they want.
+	gameutility.cancelDeleteGameTimer(game); // Cancel first, in case a hacking report just ocurred.
+	game.deleteTimeoutID = setTimeout(deleteGame, timeBeforeGameDeletionMillis, game);
 }
 
 /**
@@ -284,12 +284,12 @@ function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
  * @param {Game} game - The game
  */
 function setAutoTimeLossTimer(game) {
-    if (gameutility.isGameOver(game)) return; // Don't set the timer if the game is over
-    // Cancel previous auto loss timer if it exists
-    clearTimeout(game.autoTimeLossTimeoutID);
-    // Set the next one
-    const timeUntilLoseOnTime = game.timeRemainAtTurnStart;
-    game.autoTimeLossTimeoutID = setTimeout(onPlayerLostOnTime, timeUntilLoseOnTime, game);
+	if (gameutility.isGameOver(game)) return; // Don't set the timer if the game is over
+	// Cancel previous auto loss timer if it exists
+	clearTimeout(game.autoTimeLossTimeoutID);
+	// Set the next one
+	const timeUntilLoseOnTime = game.timeRemainAtTurnStart;
+	game.autoTimeLossTimeoutID = setTimeout(onPlayerLostOnTime, timeUntilLoseOnTime, game);
 }
 
 /**
@@ -300,21 +300,21 @@ function setAutoTimeLossTimer(game) {
  * @param {Game} game - The game
  */
 function onPlayerLostOnTime(game) {
-    console.log("Someone has lost on time!");
+	console.log("Someone has lost on time!");
 
-    // Who lost on time?
-    const loser = game.whosTurn;
-    const winner = colorutil.getOppositeColor(loser);
+	// Who lost on time?
+	const loser = game.whosTurn;
+	const winner = colorutil.getOppositeColor(loser);
 
-    setGameConclusion(game, `${winner} time`);
+	setGameConclusion(game, `${winner} time`);
 
-    // Sometimes they're clock can have 1ms left. Just make that zero.
-    // This needs to be done AFTER setting game conclusion, because that
-    // stops the clocks and changes their values.
-    if (loser === 'white') game.timerWhite = 0;
-    else                   game.timerBlack = 0;
+	// Sometimes they're clock can have 1ms left. Just make that zero.
+	// This needs to be done AFTER setting game conclusion, because that
+	// stops the clocks and changes their values.
+	if (loser === 'white') game.timerWhite = 0;
+	else                   game.timerBlack = 0;
 
-    gameutility.sendGameUpdateToBothPlayers(game);
+	gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 /**
@@ -324,19 +324,19 @@ function onPlayerLostOnTime(game) {
  * @param {string} colorWon - The color that won by opponent disconnection
  */
 function onPlayerLostByDisconnect(game, colorWon) {
-    if (!colorWon) return console.log("Cannot lose player by disconnection when colorWon is undefined");
+	if (!colorWon) return console.log("Cannot lose player by disconnection when colorWon is undefined");
 
-    if (gameutility.isGameOver(game)) return console.error("We should have cancelled the auto-loss-by-disconnection timer when the game ended!");
+	if (gameutility.isGameOver(game)) return console.error("We should have cancelled the auto-loss-by-disconnection timer when the game ended!");
 
-    if (gameutility.isGameResignable(game)) {
-        console.log("Someone has lost by disconnection!");
-        setGameConclusion(game, `${colorWon} disconnect`);
-    } else {
-        console.log("Game aborted from disconnection.");
-        setGameConclusion(game, 'aborted');
-    }
+	if (gameutility.isGameResignable(game)) {
+		console.log("Someone has lost by disconnection!");
+		setGameConclusion(game, `${colorWon} disconnect`);
+	} else {
+		console.log("Game aborted from disconnection.");
+		setGameConclusion(game, 'aborted');
+	}
 
-    gameutility.sendGameUpdateToBothPlayers(game);
+	gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 /**
@@ -348,17 +348,17 @@ function onPlayerLostByDisconnect(game, colorWon) {
  * @param {string} colorWon - The color that won by opponent abandonment (AFK)
  */
 function onPlayerLostByAbandonment(game, colorWon) {
-    if (!colorWon) return console.log("Cannot lose player by abandonment when colorWon is undefined");
+	if (!colorWon) return console.log("Cannot lose player by abandonment when colorWon is undefined");
 
-    if (gameutility.isGameResignable(game)) {
-        console.log("Someone has lost by abandonment!");
-        setGameConclusion(game, `${colorWon} disconnect`);
-    } else {
-        console.log("Game aborted from abandonment.");
-        setGameConclusion(game, 'aborted');
-    }
+	if (gameutility.isGameResignable(game)) {
+		console.log("Someone has lost by abandonment!");
+		setGameConclusion(game, `${colorWon} disconnect`);
+	} else {
+		console.log("Game aborted from abandonment.");
+		setGameConclusion(game, 'aborted');
+	}
 
-    gameutility.sendGameUpdateToBothPlayers(game);
+	gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 /**
@@ -369,28 +369,28 @@ function onPlayerLostByAbandonment(game, colorWon) {
  * @param {Game} game
  */
 async function deleteGame(game) {
-    if (!game) return console.error(`Unable to delete an undefined game!`);
+	if (!game) return console.error(`Unable to delete an undefined game!`);
 
-    const gameConclusion = game.gameConclusion;
+	const gameConclusion = game.gameConclusion;
 
-    // THIS IS WHERE WE MODIFY ELO based on who won!!!
-    // ...
+	// THIS IS WHERE WE MODIFY ELO based on who won!!!
+	// ...
 
-    // Unsubscribe both players' sockets from the game if they still are connected.
-    // If the socket is undefined, they will have already been auto-unsubscribed.
-    gameutility.unsubClientFromGame(game, game.whiteSocket);
-    gameutility.unsubClientFromGame(game, game.blackSocket);
+	// Unsubscribe both players' sockets from the game if they still are connected.
+	// If the socket is undefined, they will have already been auto-unsubscribed.
+	gameutility.unsubClientFromGame(game, game.whiteSocket);
+	gameutility.unsubClientFromGame(game, game.blackSocket);
 
-    // Remove them from the list of users in active games to allow them to join a new game.
-    removeUserFromActiveGame(game.white, game.id);
-    removeUserFromActiveGame(game.black, game.id);
+	// Remove them from the list of users in active games to allow them to join a new game.
+	removeUserFromActiveGame(game.white, game.id);
+	removeUserFromActiveGame(game.black, game.id);
 
-    delete activeGames[game.id]; // Delete the game
+	delete activeGames[game.id]; // Delete the game
 
-    console.log(`Deleted game ${game.id}.`);
+	console.log(`Deleted game ${game.id}.`);
 
-    await executeSafely_async(gameutility.logGame, `Unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game); // The game log will only log games with at least 1 move played
-    await statlogger.logGame(game); // The statlogger will only log games with atleast 2 moves played (resignable)
+	await executeSafely_async(gameutility.logGame, `Unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game); // The game log will only log games with at least 1 move played
+	await statlogger.logGame(game); // The statlogger will only log games with atleast 2 moves played (resignable)
 }
 
 /**
@@ -399,19 +399,19 @@ async function deleteGame(game) {
  * Immediately logs all games and updates statistics.
  */
 async function logAllGames() {
-    for (const gameID in activeGames) {
-        /** @type {Game} */
-        const game = activeGames[gameID];
-        if (!gameutility.isGameOver(game)) {
-            // Abort the game
-            setGameConclusion(game, 'aborted');
-            // Report conclusion to players
-            gameutility.sendGameUpdateToBothPlayers(game);
-        }
-        // Immediately log the game and update statistics.
-        clearTimeout(game.deleteTimeoutID); // Cancel first, in case it's already scheduled to be deleted.
-        await deleteGame(game);
-    }
+	for (const gameID in activeGames) {
+		/** @type {Game} */
+		const game = activeGames[gameID];
+		if (!gameutility.isGameOver(game)) {
+			// Abort the game
+			setGameConclusion(game, 'aborted');
+			// Report conclusion to players
+			gameutility.sendGameUpdateToBothPlayers(game);
+		}
+		// Immediately log the game and update statistics.
+		clearTimeout(game.deleteTimeoutID); // Cancel first, in case it's already scheduled to be deleted.
+		await deleteGame(game);
+	}
 }
 
 /**
@@ -419,27 +419,27 @@ async function logAllGames() {
  * Every reconnection from now on should re-send the time the server will restart.
  */
 function broadCastGameRestarting() {
-    const timeToRestart = getTimeServerRestarting();
-    for (const gameID in activeGames) {
-        const game = activeGames[gameID];
-        gameutility.sendMessageToSocketOfColor(game, 'white', 'game', 'serverrestart', timeToRestart);
-        gameutility.sendMessageToSocketOfColor(game, 'black', 'game', 'serverrestart', timeToRestart);
-    }
-    const minutesTillRestart = Math.ceil((timeToRestart - Date.now()) / (1000 * 60));
-    console.log(`Alerted all clients in a game that the server is restarting in ${minutesTillRestart} minutes!`);
+	const timeToRestart = getTimeServerRestarting();
+	for (const gameID in activeGames) {
+		const game = activeGames[gameID];
+		gameutility.sendMessageToSocketOfColor(game, 'white', 'game', 'serverrestart', timeToRestart);
+		gameutility.sendMessageToSocketOfColor(game, 'black', 'game', 'serverrestart', timeToRestart);
+	}
+	const minutesTillRestart = Math.ceil((timeToRestart - Date.now()) / (1000 * 60));
+	console.log(`Alerted all clients in a game that the server is restarting in ${minutesTillRestart} minutes!`);
 }
 
 //--------------------------------------------------------------------------------------------------------
 
 export {
-    createGame,
-    unsubClientFromGameBySocket,
-    onPlayerLostByAbandonment,
-    broadCastGameRestarting,
-    logAllGames,
-    getGameBySocket,
-    onRequestRemovalFromPlayersInActiveGames,
-    setGameConclusion,
-    pushGameClock,
-    getGameByID,
+	createGame,
+	unsubClientFromGameBySocket,
+	onPlayerLostByAbandonment,
+	broadCastGameRestarting,
+	logAllGames,
+	getGameBySocket,
+	onRequestRemovalFromPlayersInActiveGames,
+	setGameConclusion,
+	pushGameClock,
+	getGameByID,
 };

@@ -41,29 +41,29 @@ const element_perspective = document.getElementById('toggleperspective');
 function areWePaused() { return isPaused; }
 
 function getelement_perspective() {
-    return element_perspective;
+	return element_perspective;
 }
 
 function open() {
-    isPaused = true;
-    updateTextOfMainMenuButton();
-    updatePasteButtonTransparency();
-    updateDrawOfferButton();
-    style.revealElement(element_pauseUI);
-    initListeners();
+	isPaused = true;
+	updateTextOfMainMenuButton();
+	updatePasteButtonTransparency();
+	updateDrawOfferButton();
+	style.revealElement(element_pauseUI);
+	initListeners();
 }
 
 function toggle() {
-    if (!isPaused) open();
-    else callback_Resume();
+	if (!isPaused) open();
+	else callback_Resume();
 }
 
 function updatePasteButtonTransparency() {
-    const moves = game.getGamefile().moves;
-    const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
+	const moves = game.getGamefile().moves;
+	const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
 
-    if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
-    else                                                      element_pastegame.classList.remove('opacity-0_5');
+	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
+	else                                                      element_pastegame.classList.remove('opacity-0_5');
 }
 
 /**
@@ -71,22 +71,22 @@ function updatePasteButtonTransparency() {
  * or "Accept Draw", and update its transparency depending on whether it's legal.
  */
 function updateDrawOfferButton() {
-    if (!isPaused) return; // Not paused, no point in updating button, because it's updated as soon as we pause the game
-    // Should it say "offer draw" or "accept draw"?
-    if (drawoffers.areWeAcceptingDraw()) {
-        element_offerDraw.innerText = translations.accept_draw; // "Accept Draw"
-        element_offerDraw.classList.remove('opacity-0_5');
-        return;
-    } else element_offerDraw.innerText = translations.offer_draw; // "Offer Draw"
+	if (!isPaused) return; // Not paused, no point in updating button, because it's updated as soon as we pause the game
+	// Should it say "offer draw" or "accept draw"?
+	if (drawoffers.areWeAcceptingDraw()) {
+		element_offerDraw.innerText = translations.accept_draw; // "Accept Draw"
+		element_offerDraw.classList.remove('opacity-0_5');
+		return;
+	} else element_offerDraw.innerText = translations.offer_draw; // "Offer Draw"
 
-    // Update transparency
-    if (drawoffers.isOfferingDrawLegal()) element_offerDraw.classList.remove('opacity-0_5');
-    else element_offerDraw.classList.add('opacity-0_5');
+	// Update transparency
+	if (drawoffers.isOfferingDrawLegal()) element_offerDraw.classList.remove('opacity-0_5');
+	else element_offerDraw.classList.add('opacity-0_5');
 }
 
 function onReceiveOpponentsMove() {
-    updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable: true });
-    updateDrawOfferButton();
+	updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable: true });
+	updateDrawOfferButton();
 }
 
 /**
@@ -99,109 +99,109 @@ function onReceiveOpponentsMove() {
  * This should only be true when called from onReceiveOpponentsMove(), not on open()
  */
 function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
-    if (!isPaused) return;
+	if (!isPaused) return;
 
-    if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
+	if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
 
-    if (movesscript.isGameResignable(game.getGamefile())) {
-        // If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
-        if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations.abort_game) {
-            element_mainmenu.disabled = true;
-            element_mainmenu.classList.add('opacity-0_5');
-            setTimeout(() => {
-                element_mainmenu.disabled = false;
-                element_mainmenu.classList.remove('opacity-0_5');
-            }, 1000);
-        }
-        element_mainmenu.textContent = translations.resign_game;
-        return;
-    }
+	if (movesscript.isGameResignable(game.getGamefile())) {
+		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
+		if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations.abort_game) {
+			element_mainmenu.disabled = true;
+			element_mainmenu.classList.add('opacity-0_5');
+			setTimeout(() => {
+				element_mainmenu.disabled = false;
+				element_mainmenu.classList.remove('opacity-0_5');
+			}, 1000);
+		}
+		element_mainmenu.textContent = translations.resign_game;
+		return;
+	}
 
-    element_mainmenu.textContent = translations.abort_game;
+	element_mainmenu.textContent = translations.abort_game;
 }
 
 function initListeners() {
-    element_resume.addEventListener('click', callback_Resume);
-    element_pointers.addEventListener('click', callback_TogglePointers);
-    element_copygame.addEventListener('click', copypastegame.callbackCopy);
-    element_pastegame.addEventListener('click', copypastegame.callbackPaste);
-    element_mainmenu.addEventListener('click', callback_MainMenu);
-    element_offerDraw.addEventListener('click', callback_OfferDraw);
-    element_perspective.addEventListener('click', callback_Perspective);
+	element_resume.addEventListener('click', callback_Resume);
+	element_pointers.addEventListener('click', callback_TogglePointers);
+	element_copygame.addEventListener('click', copypastegame.callbackCopy);
+	element_pastegame.addEventListener('click', copypastegame.callbackPaste);
+	element_mainmenu.addEventListener('click', callback_MainMenu);
+	element_offerDraw.addEventListener('click', callback_OfferDraw);
+	element_perspective.addEventListener('click', callback_Perspective);
 }
 
 function closeListeners() {
-    element_resume.removeEventListener('click', callback_Resume);
-    element_pointers.removeEventListener('click', callback_TogglePointers);
-    element_copygame.removeEventListener('click', copypastegame.callbackCopy);
-    element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
-    element_mainmenu.removeEventListener('click', callback_MainMenu);
-    element_offerDraw.removeEventListener('click', callback_OfferDraw);
-    element_perspective.removeEventListener('click', callback_Perspective);
+	element_resume.removeEventListener('click', callback_Resume);
+	element_pointers.removeEventListener('click', callback_TogglePointers);
+	element_copygame.removeEventListener('click', copypastegame.callbackCopy);
+	element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
+	element_mainmenu.removeEventListener('click', callback_MainMenu);
+	element_offerDraw.removeEventListener('click', callback_OfferDraw);
+	element_perspective.removeEventListener('click', callback_Perspective);
 }
 
 function callback_Resume() {
-    if (!isPaused) return;
-    isPaused = false;
-    style.hideElement(element_pauseUI);
-    closeListeners();
-    frametracker.onVisualChange();
+	if (!isPaused) return;
+	isPaused = false;
+	style.hideElement(element_pauseUI);
+	closeListeners();
+	frametracker.onVisualChange();
 }
 
 function callback_MainMenu() {
-    onlinegame.onMainMenuPress();
-    onlinegame.closeOnlineGame();
-    callback_Resume();
-    game.unloadGame();
-    clock.reset();
-    guinavigation.close();
-    guititle.open();
+	onlinegame.onMainMenuPress();
+	onlinegame.closeOnlineGame();
+	callback_Resume();
+	game.unloadGame();
+	clock.reset();
+	guinavigation.close();
+	guititle.open();
 }
 
 /** Called when the Offer Draw button is clicked in the pause menu */
 function callback_OfferDraw() {
-    // Are we accepting a draw?
-    if (drawoffers.areWeAcceptingDraw()) {
-        drawoffers.callback_AcceptDraw();
-        callback_Resume();
-        return;
-    }
+	// Are we accepting a draw?
+	if (drawoffers.areWeAcceptingDraw()) {
+		drawoffers.callback_AcceptDraw();
+		callback_Resume();
+		return;
+	}
 
-    // Not accepting. Is it legal to extend, then?
-    if (drawoffers.isOfferingDrawLegal()) {
-        drawoffers.extendOffer();
-        callback_Resume();
-        return;
-    }
+	// Not accepting. Is it legal to extend, then?
+	if (drawoffers.isOfferingDrawLegal()) {
+		drawoffers.extendOffer();
+		callback_Resume();
+		return;
+	}
 
-    statustext.showStatus("Can't offer draw.");
+	statustext.showStatus("Can't offer draw.");
 }
 
 function callback_TogglePointers() {
-    frametracker.onVisualChange();
-    let mode = arrows.getMode();
-    mode++;
-    if (mode > 2) mode = 0;
-    arrows.setMode(mode);
-    const text = mode === 0 ? translations.arrows_off
+	frametracker.onVisualChange();
+	let mode = arrows.getMode();
+	mode++;
+	if (mode > 2) mode = 0;
+	arrows.setMode(mode);
+	const text = mode === 0 ? translations.arrows_off
                 : mode === 1 ? translations.arrows_defense
                             : translations.arrows_all;
-    element_pointers.textContent = text;
-    if (!isPaused) statustext.showStatus(translations.toggled + " " + text);
+	element_pointers.textContent = text;
+	if (!isPaused) statustext.showStatus(translations.toggled + " " + text);
 }
 
 function callback_Perspective() {
-    perspective.toggle();
+	perspective.toggle();
 }
 
 export default {
-    areWePaused,
-    getelement_perspective,
-    open,
-    toggle,
-    updateDrawOfferButton,
-    onReceiveOpponentsMove,
-    updateTextOfMainMenuButton,
-    callback_Resume,
-    callback_TogglePointers,
+	areWePaused,
+	getelement_perspective,
+	open,
+	toggle,
+	updateDrawOfferButton,
+	onReceiveOpponentsMove,
+	updateTextOfMainMenuButton,
+	callback_Resume,
+	callback_TogglePointers,
 };
