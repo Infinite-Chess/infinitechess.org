@@ -24,7 +24,7 @@ const validColorExtensions = [...validColorExtensions_NoNeutral, colorExtensionO
  * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
  */
 function isValidColor(color) {
-    return validColors.includes(color);
+	return validColors.includes(color);
 }
 
 /**
@@ -33,7 +33,7 @@ function isValidColor(color) {
  * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
  */
 function isValidColor_NoNeutral(color) {
-    return validColors_NoNeutral.includes(color);
+	return validColors_NoNeutral.includes(color);
 }
 
 /**
@@ -42,7 +42,7 @@ function isValidColor_NoNeutral(color) {
  * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
  */
 function isValidColorExtension(colorExtension) {
-    return validColorExtensions.includes(colorExtension);
+	return validColorExtensions.includes(colorExtension);
 }
 
 /**
@@ -51,7 +51,7 @@ function isValidColorExtension(colorExtension) {
  * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
  */
 function isValidColorExtension_NoNeutral(colorExtension) {
-    return validColorExtensions_NoNeutral.includes(colorExtension);
+	return validColorExtensions_NoNeutral.includes(colorExtension);
 }
 
 /**
@@ -60,8 +60,8 @@ function isValidColorExtension_NoNeutral(colorExtension) {
  * @returns {string | undefined} The color of the piece, "white", "black", or "neutral", or undefined if not valid
  */
 function getPieceColorFromType(type) {
-    const colorExtension = getColorExtensionFromType(type);
-    return getColorFromExtension(colorExtension);
+	const colorExtension = getColorExtensionFromType(type);
+	return getColorFromExtension(colorExtension);
 }
 
 /**
@@ -70,9 +70,9 @@ function getPieceColorFromType(type) {
  * @returns {string} - The color (e.g. "white"/"black"/"neutral")
  */
 function getColorFromExtension(colorExtention) {
-    const index = validColorExtensions.indexOf(colorExtention);
-    if (index === -1) throw new Error(`Cannot get the color of invalid color extension "${colorExtention}"!`);
-    return validColors[index];
+	const index = validColorExtensions.indexOf(colorExtention);
+	if (index === -1) throw new Error(`Cannot get the color of invalid color extension "${colorExtention}"!`);
+	return validColors[index];
 }
 
 /**
@@ -81,9 +81,9 @@ function getColorFromExtension(colorExtention) {
  * @returns {string} The opposite color, "White" / "Black"
  */
 function getOppositeColor(color) {
-    if (color === 'white') return 'black';
-    else if (color === 'black') return 'white';
-    else throw new Error(`Cannot return the opposite color of color ${color}!`);
+	if (color === 'white') return 'black';
+	else if (color === 'black') return 'white';
+	else throw new Error(`Cannot return the opposite color of color ${color}!`);
 }
 
 /**
@@ -93,13 +93,13 @@ function getOppositeColor(color) {
  * @returns {string} The color extension: "W"
  */
 function getColorExtensionFromType(type) {
-    return type.charAt(type.length - 1);
+	return type.charAt(type.length - 1);
 }
 
 function getColorExtensionFromColor(color) {
-    const index = validColors.indexOf(color);
-    if (index === -1) throw new Error(`Cannot get the extension of invalid color "${color}"!`);
-    return validColorExtensions[index];
+	const index = validColors.indexOf(color);
+	if (index === -1) throw new Error(`Cannot get the extension of invalid color "${color}"!`);
+	return validColorExtensions[index];
 }
 
 /**
@@ -108,24 +108,24 @@ function getColorExtensionFromColor(color) {
  * @returns {string} The trimmed type.
  */
 function trimColorExtensionFromType(type) {
-    return type.slice(0, -1); // Returns a new string that starts from the first character (index 0) and excludes the last character (because of -1).
+	return type.slice(0, -1); // Returns a new string that starts from the first character (index 0) and excludes the last character (because of -1).
 }
 
 export default {
-    validColors,
-    validColorExtensions,
-    validColors_NoNeutral,
-    colorOfNeutrals,
-    validColorExtensions_NoNeutral,
-    colorExtensionOfNeutrals,
-    isValidColor,
-    isValidColor_NoNeutral,
-    isValidColorExtension,
-    isValidColorExtension_NoNeutral,
-    getPieceColorFromType,
-    getColorFromExtension,
-    getOppositeColor,
-    getColorExtensionFromType,
-    getColorExtensionFromColor,
-    trimColorExtensionFromType,
+	validColors,
+	validColorExtensions,
+	validColors_NoNeutral,
+	colorOfNeutrals,
+	validColorExtensions_NoNeutral,
+	colorExtensionOfNeutrals,
+	isValidColor,
+	isValidColor_NoNeutral,
+	isValidColorExtension,
+	isValidColorExtension_NoNeutral,
+	getPieceColorFromType,
+	getColorFromExtension,
+	getOppositeColor,
+	getColorExtensionFromType,
+	getColorExtensionFromColor,
+	trimColorExtensionFromType,
 };

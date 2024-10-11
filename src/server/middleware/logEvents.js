@@ -25,20 +25,20 @@ const giveLoggedItemsUUID = false;
  * @returns {Promise<void>} - A promise that resolves when the log operation is complete.
  */
 const logEvents = async(message, logName, { print } = {}) => {
-    if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.");
+	if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.");
 
-    if (print) console.error(message);
-    const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
-    const logItem = giveLoggedItemsUUID ? `${dateTime}   ${uuid()}   ${message}\n` // With unique UUID
+	if (print) console.error(message);
+	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
+	const logItem = giveLoggedItemsUUID ? `${dateTime}   ${uuid()}   ${message}\n` // With unique UUID
                                         : `${dateTime}   ${message}\n`;
     
-    try {
-        const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
-        ensureDirectoryExists(logsPath);
-        await fsPromises.appendFile(path.join(logsPath, logName), logItem);
-    } catch (err) {
-        console.log(err);
-    }
+	try {
+		const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
+		ensureDirectoryExists(logsPath);
+		await fsPromises.appendFile(path.join(logsPath, logName), logItem);
+	} catch (err) {
+		console.log(err);
+	}
 };
 
 /**
@@ -48,20 +48,20 @@ const logEvents = async(message, logName, { print } = {}) => {
  * @param {Function} next - The function to call, once finished, to continue down the middleware waterfall.
  */
 const logger = (req, res, next) => {
-    const clientIP = getClientIP(req);
+	const clientIP = getClientIP(req);
 
-    let logThis = `${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
-    // Delete passwords from incoming form data
-    let sensoredBody;
-    if (JSON.stringify(req.body) !== '{}') { // Not an empty object
-        sensoredBody = Object.assign({}, req.body);
-        delete sensoredBody.password;
-        logThis += `\n${JSON.stringify(sensoredBody)}`;
-    }
+	let logThis = `${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+	// Delete passwords from incoming form data
+	let sensoredBody;
+	if (JSON.stringify(req.body) !== '{}') { // Not an empty object
+		sensoredBody = Object.assign({}, req.body);
+		delete sensoredBody.password;
+		logThis += `\n${JSON.stringify(sensoredBody)}`;
+	}
 
-    logEvents(logThis, 'reqLog.txt');
+	logEvents(logThis, 'reqLog.txt');
     
-    next(); // Continue to next middleware
+	next(); // Continue to next middleware
 };
 
 /**
@@ -70,11 +70,11 @@ const logger = (req, res, next) => {
  * @param {Socket} ws - The websocket object
  */
 function logWebsocketStart(req, ws) {
-    const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-    const userAgent = req.headers['user-agent'];
-    // const userAgent = ws.metadata.userAgent;
-    const logThis = `Socket: ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
-    logEvents(logThis, 'wsInLog.txt');
+	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
+	const userAgent = req.headers['user-agent'];
+	// const userAgent = ws.metadata.userAgent;
+	const logThis = `Socket: ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
+	logEvents(logThis, 'wsInLog.txt');
 }
 
 /**
@@ -83,10 +83,10 @@ function logWebsocketStart(req, ws) {
  * @param {string} messageData - The raw data of the incoming message, as a string
  */
 function logReqWebsocketIn(ws, messageData) {
-    const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-    let logThis = `Socket: ${stringifiedSocketMetadata}`;
-    if (messageData) logThis += `\n${messageData}`;
-    logEvents(logThis, 'wsInLog.txt');
+	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
+	let logThis = `Socket: ${stringifiedSocketMetadata}`;
+	if (messageData) logThis += `\n${messageData}`;
+	logEvents(logThis, 'wsInLog.txt');
 }
 
 /**
@@ -95,15 +95,15 @@ function logReqWebsocketIn(ws, messageData) {
  * @param {string} messageData - The raw data of the outgoing message, as a string
  */
 function logReqWebsocketOut(ws, messageData) {
-    const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-    const logThis = `To socket: ${stringifiedSocketMetadata}\n${messageData}`;
-    logEvents(logThis, 'wsOutLog.txt');
+	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
+	const logThis = `To socket: ${stringifiedSocketMetadata}\n${messageData}`;
+	logEvents(logThis, 'wsOutLog.txt');
 }
 
 export {
-    logEvents,
-    logger,
-    logWebsocketStart,
-    logReqWebsocketIn,
-    logReqWebsocketOut
+	logEvents,
+	logger,
+	logWebsocketStart,
+	logReqWebsocketIn,
+	logReqWebsocketOut
 };

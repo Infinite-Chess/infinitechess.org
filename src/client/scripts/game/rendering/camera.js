@@ -83,11 +83,11 @@ let viewMatrix;
 
 // Returns devMode-sensitive camera position.
 function getPosition(ignoreDevmode) {
-    return jsutil.deepCopyObject(!ignoreDevmode && options.isDebugModeOn() ? position_devMode : position);
+	return jsutil.deepCopyObject(!ignoreDevmode && options.isDebugModeOn() ? position_devMode : position);
 }
 
 function getZFar() {
-    return zFar;
+	return zFar;
 }
 
 /**
@@ -96,27 +96,27 @@ function getZFar() {
  * @returns {number} The pixel density
  */
 function getPixelDensity() {
-    return pixelDensity;
+	return pixelDensity;
 }
 
 function getPIXEL_HEIGHT_OF_TOP_NAV() {
-    return PIXEL_HEIGHT_OF_TOP_NAV;
+	return PIXEL_HEIGHT_OF_TOP_NAV;
 }
 
 function getPIXEL_HEIGHT_OF_BOTTOM_NAV() {
-    return PIXEL_HEIGHT_OF_BOTTOM_NAV;
+	return PIXEL_HEIGHT_OF_BOTTOM_NAV;
 }
 
 function getCanvasWidthVirtualPixels() {
-    return canvasWidthVirtualPixels;
+	return canvasWidthVirtualPixels;
 }
 
 function getCanvasHeightVirtualPixels() {
-    return canvasHeightVirtualPixels;
+	return canvasHeightVirtualPixels;
 }
 
 function getCanvasRect() {
-    return jsutil.deepCopyObject(canvasRect);
+	return jsutil.deepCopyObject(canvasRect);
 }
 
 // Returns the bounding box of the screen in world-space, NOT tile/board space.
@@ -128,7 +128,7 @@ function getCanvasRect() {
  * @returns {BoundingBox} The bounding box of the screen
  */
 function getScreenBoundingBox(devMode) {
-    return jsutil.deepCopyObject(devMode ? screenBoundingBox_devMode : screenBoundingBox);
+	return jsutil.deepCopyObject(devMode ? screenBoundingBox_devMode : screenBoundingBox);
 }
 
 /**
@@ -136,188 +136,188 @@ function getScreenBoundingBox(devMode) {
  * @returns {Float32Array} The view matrix
  */
 function getViewMatrix() {
-    return jsutil.copyFloat32Array(viewMatrix);
+	return jsutil.copyFloat32Array(viewMatrix);
 }
 
 // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
 function init() {
-    initMatrixes();
-    canvasRect = canvas.getBoundingClientRect();
+	initMatrixes();
+	canvasRect = canvas.getBoundingClientRect();
 }
 
 // Inits the matrix uniforms: viewMatrix (camera) & projMatrix
 function initMatrixes() {
     
-    projectionMatrix = mat4.create(); // Same for every shader program
+	projectionMatrix = mat4.create(); // Same for every shader program
 
-    initPerspective(); // Initiates perspective, including the projection matrix
+	initPerspective(); // Initiates perspective, including the projection matrix
 
-    initViewMatrix(); // Camera
+	initViewMatrix(); // Camera
 
-    // World matrix only needs to be initiated when rendering objects
+	// World matrix only needs to be initiated when rendering objects
 }
 
 // Call this when window resized. Also updates the projection matrix.
 function initPerspective() {
 
-    updateCanvasDimensions(); // Also updates viewport
+	updateCanvasDimensions(); // Also updates viewport
 
-    initProjMatrix();
+	initProjMatrix();
 }
 
 // Also updates viewport, and updates canvas-dependant variables
 function updateCanvasDimensions() {
 
-    canvasWidthVirtualPixels = window.innerWidth;
-    canvasHeightVirtualPixels = (window.innerHeight - MARGIN_OF_HEADER_AND_FOOTER);
+	canvasWidthVirtualPixels = window.innerWidth;
+	canvasHeightVirtualPixels = (window.innerHeight - MARGIN_OF_HEADER_AND_FOOTER);
 
-    // Size of entire window in physical pixels, not virtual. Retina displays have a greater width.
-    canvas.width = canvasWidthVirtualPixels * pixelDensity; 
-    canvas.height = canvasHeightVirtualPixels * pixelDensity;
+	// Size of entire window in physical pixels, not virtual. Retina displays have a greater width.
+	canvas.width = canvasWidthVirtualPixels * pixelDensity; 
+	canvas.height = canvasHeightVirtualPixels * pixelDensity;
 
-    gl.viewport(0, 0, canvas.width, canvas.height);
+	gl.viewport(0, 0, canvas.width, canvas.height);
 
-    updatePIXEL_HEIGHT_OF_NAVS();
+	updatePIXEL_HEIGHT_OF_NAVS();
 
-    recalcCanvasVariables(); // Recalculate canvas-dependant variables
+	recalcCanvasVariables(); // Recalculate canvas-dependant variables
 }
 
 function updatePIXEL_HEIGHT_OF_NAVS() {
-    PIXEL_HEIGHT_OF_TOP_NAV = !options.gnavigationVisible() ? 0
+	PIXEL_HEIGHT_OF_TOP_NAV = !options.gnavigationVisible() ? 0
                                     : window.innerWidth > 700 ? 84  // Update with the css stylesheet!
                                     : window.innerWidth > 550 ? window.innerWidth * 0.12
                                     : window.innerWidth > 368 ? 66
                                                                 : window.innerWidth * 0.179;
-    PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.gnavigationVisible() ? 0 : 84;
-    frametracker.onVisualChange();
+	PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.gnavigationVisible() ? 0 : 84;
+	frametracker.onVisualChange();
 
-    stats.updateStatsCSS();
+	stats.updateStatsCSS();
 }
 
 function recalcCanvasVariables() {
     
-    aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    initScreenBoundingBox();
+	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+	initScreenBoundingBox();
 
-    game.updateVariablesAfterScreenResize();
-    miniimage.recalcWidthWorld();
+	game.updateVariablesAfterScreenResize();
+	miniimage.recalcWidthWorld();
 }
 
 // Set view matrix
 function setViewMatrix(newMatrix) {
-    viewMatrix = newMatrix;
-    sendViewMatrixToGPU();
+	viewMatrix = newMatrix;
+	sendViewMatrixToGPU();
 }
 
 // Initiates the camera matrix. View matrix.
 function initViewMatrix(ignoreRotations) {
-    const newViewMatrix = mat4.create();
+	const newViewMatrix = mat4.create();
 
-    const cameraPos = getPosition(); // devMode-sensitive
+	const cameraPos = getPosition(); // devMode-sensitive
 
-    // Translates the view (camera) matrix to be looking at point..
-    //             Camera,     Position, Looking-at, Up-direction
-    mat4.lookAt(newViewMatrix, cameraPos, [0, 0, 0], [0, 1, 0]);
+	// Translates the view (camera) matrix to be looking at point..
+	//             Camera,     Position, Looking-at, Up-direction
+	mat4.lookAt(newViewMatrix, cameraPos, [0, 0, 0], [0, 1, 0]);
 
-    if (!ignoreRotations) perspective.applyRotations(newViewMatrix);
+	if (!ignoreRotations) perspective.applyRotations(newViewMatrix);
 
-    viewMatrix = newViewMatrix;
+	viewMatrix = newViewMatrix;
 
-    sendViewMatrixToGPU();
+	sendViewMatrixToGPU();
 }
 
 /** Updates the view matrix uniform on the gpu for each of our shader programs. */
 function sendViewMatrixToGPU() {
-    for (const programName in shaders.programs) { // Iterate over an object's properties
-        /** @type {ShaderProgram} */
-        const program = shaders.programs[programName];
-        const viewMatrixLocation = program.uniformLocations.viewMatrix;
-        if (viewMatrixLocation == null) continue; // This shader program doesn't have the viewMatrix uniform, skip.
-        gl.useProgram(program.program);
-        gl.uniformMatrix4fv(viewMatrixLocation, false, viewMatrix);
-    }
+	for (const programName in shaders.programs) { // Iterate over an object's properties
+		/** @type {ShaderProgram} */
+		const program = shaders.programs[programName];
+		const viewMatrixLocation = program.uniformLocations.viewMatrix;
+		if (viewMatrixLocation == null) continue; // This shader program doesn't have the viewMatrix uniform, skip.
+		gl.useProgram(program.program);
+		gl.uniformMatrix4fv(viewMatrixLocation, false, viewMatrix);
+	}
 }
 
 /** Inits the projection matrix uniform and sends that over to the gpu for each of our shader programs. */
 function initProjMatrix() {
-    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
-    // Send the projectionMatrix to the gpu
-    for (const programName in shaders.programs) { // Iterate over an object's properties
-        /** @type {ShaderProgram} */
-        const program = shaders.programs[programName];
-        const projMatrixLocation = program.uniformLocations.projectionMatrix;
-        if (projMatrixLocation == null) continue; // This shader program doesn't have the projectionMatrix uniform, skip.
-        gl.useProgram(program.program);
-        gl.uniformMatrix4fv(projMatrixLocation, gl.FALSE, projectionMatrix);
-    }
+	mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+	// Send the projectionMatrix to the gpu
+	for (const programName in shaders.programs) { // Iterate over an object's properties
+		/** @type {ShaderProgram} */
+		const program = shaders.programs[programName];
+		const projMatrixLocation = program.uniformLocations.projectionMatrix;
+		if (projMatrixLocation == null) continue; // This shader program doesn't have the projectionMatrix uniform, skip.
+		gl.useProgram(program.program);
+		gl.uniformMatrix4fv(projMatrixLocation, gl.FALSE, projectionMatrix);
+	}
 }
 
 // Return the world-space x & y positions of the screen edges. Not affected by scale or board position.
 function initScreenBoundingBox() {
 
-    // Camera dist
-    let dist = position[2];
-    // const dist = 7;
-    const thetaY = fieldOfView / 2; // Radians
+	// Camera dist
+	let dist = position[2];
+	// const dist = 7;
+	const thetaY = fieldOfView / 2; // Radians
 
-    // Length of missing side:
-    // tan(theta) = x / dist
-    // x = tan(theta) * dist
-    let distToVertEdge = Math.tan(thetaY) * dist;
-    let distToHorzEdge = distToVertEdge * aspect;
+	// Length of missing side:
+	// tan(theta) = x / dist
+	// x = tan(theta) * dist
+	let distToVertEdge = Math.tan(thetaY) * dist;
+	let distToHorzEdge = distToVertEdge * aspect;
 
-    screenBoundingBox = {
-        left: -distToHorzEdge,
-        right: distToHorzEdge,
-        bottom: -distToVertEdge,
-        top: distToVertEdge
-    };
+	screenBoundingBox = {
+		left: -distToHorzEdge,
+		right: distToHorzEdge,
+		bottom: -distToVertEdge,
+		top: distToVertEdge
+	};
 
-    // Now init the developer-mode screen bounding box
+	// Now init the developer-mode screen bounding box
 
-    dist = position_devMode[2];
+	dist = position_devMode[2];
 
-    distToVertEdge = Math.tan(thetaY) * dist;
-    distToHorzEdge = distToVertEdge * aspect;
+	distToVertEdge = Math.tan(thetaY) * dist;
+	distToHorzEdge = distToVertEdge * aspect;
 
-    screenBoundingBox_devMode = {
-        left: -distToHorzEdge,
-        right: distToHorzEdge,
-        bottom: -distToVertEdge,
-        top: distToVertEdge
-    };
+	screenBoundingBox_devMode = {
+		left: -distToHorzEdge,
+		right: distToHorzEdge,
+		bottom: -distToVertEdge,
+		top: distToVertEdge
+	};
 }
 
 function onScreenResize() {
-    initPerspective(); // The projection matrix needs to be recalculated every screen resize
-    perspective.initCrosshairModel();
-    frametracker.onVisualChange(); // Visual change. Render the screen this frame.
-    guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
-    // console.log('Resized window.')
+	initPerspective(); // The projection matrix needs to be recalculated every screen resize
+	perspective.initCrosshairModel();
+	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
+	guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
+	// console.log('Resized window.')
 }
 
 // Call both when camera moves or rotates
 function onPositionChange() {
-    initViewMatrix();
+	initViewMatrix();
 }
 
 
 export default {
-    getPosition,
-    getPixelDensity,
-    getPIXEL_HEIGHT_OF_TOP_NAV,
-    getPIXEL_HEIGHT_OF_BOTTOM_NAV,
-    canvas,
-    getCanvasWidthVirtualPixels,
-    getCanvasHeightVirtualPixels,
-    getCanvasRect,
-    getScreenBoundingBox,
-    getViewMatrix,
-    init,
-    updatePIXEL_HEIGHT_OF_NAVS,
-    setViewMatrix,
-    onScreenResize,
-    onPositionChange,
-    initViewMatrix,
-    getZFar,
+	getPosition,
+	getPixelDensity,
+	getPIXEL_HEIGHT_OF_TOP_NAV,
+	getPIXEL_HEIGHT_OF_BOTTOM_NAV,
+	canvas,
+	getCanvasWidthVirtualPixels,
+	getCanvasHeightVirtualPixels,
+	getCanvasRect,
+	getScreenBoundingBox,
+	getViewMatrix,
+	init,
+	updatePIXEL_HEIGHT_OF_NAVS,
+	setViewMatrix,
+	onScreenResize,
+	onPositionChange,
+	initViewMatrix,
+	getZFar,
 };

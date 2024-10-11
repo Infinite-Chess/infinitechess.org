@@ -15,11 +15,11 @@ import coordutil from '../misc/coordutil.js';
 // In the future, parameters can be added if variants have
 // different special moves for pieces.
 function getFunctions() {
-    return {
-        "kings": kings,
-        "royalCentaurs": kings,
-        "pawns": pawns
-    };
+	return {
+		"kings": kings,
+		"royalCentaurs": kings,
+		"pawns": pawns
+	};
 }
 
 // A custom special move needs to be able to:
@@ -39,68 +39,68 @@ function getFunctions() {
 // RETURNS FALSE if special move was not executed!
 function kings(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
 
-    const specialTag = move.castle; // { dir: -1/1, coord }
-    if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
+	const specialTag = move.castle; // { dir: -1/1, coord }
+	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
-    // Move the king to new square
+	// Move the king to new square
 
-    movepiece.movePiece(gamefile, piece, move.endCoords, { updateData }); // Make normal move
+	movepiece.movePiece(gamefile, piece, move.endCoords, { updateData }); // Make normal move
 
-    // Move the rook to new square
+	// Move the rook to new square
 
-    const pieceToCastleWith = gamefileutility.getPieceAtCoords(gamefile, specialTag.coord);
-    const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
-    // Delete the rook's special move rights
-    const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
-    delete gamefile.specialRights[key];
-    movepiece.movePiece(gamefile, pieceToCastleWith, landSquare, { updateData }); // Make normal move
+	const pieceToCastleWith = gamefileutility.getPieceAtCoords(gamefile, specialTag.coord);
+	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
+	// Delete the rook's special move rights
+	const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
+	delete gamefile.specialRights[key];
+	movepiece.movePiece(gamefile, pieceToCastleWith, landSquare, { updateData }); // Make normal move
 
-    if (animate) {
-        animation.animatePiece(piece.type, piece.coords, move.endCoords); // King
-        const resetAnimations = false;
-        animation.animatePiece(pieceToCastleWith.type, pieceToCastleWith.coords, landSquare, undefined, resetAnimations); // Castled piece
-    }
+	if (animate) {
+		animation.animatePiece(piece.type, piece.coords, move.endCoords); // King
+		const resetAnimations = false;
+		animation.animatePiece(pieceToCastleWith.type, pieceToCastleWith.coords, landSquare, undefined, resetAnimations); // Castled piece
+	}
 
-    // Special move was executed!
-    // There is no captured piece with castling
-    return true;
+	// Special move was executed!
+	// There is no captured piece with castling
+	return true;
 }
 
 function pawns(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
 
-    // If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
-    if (updateProperties && isPawnMoveADoublePush(piece.coords, move.endCoords)) {
-        gamefile.enpassant = getEnPassantSquare(piece.coords, move.endCoords);
-    }
+	// If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
+	if (updateProperties && isPawnMoveADoublePush(piece.coords, move.endCoords)) {
+		gamefile.enpassant = getEnPassantSquare(piece.coords, move.endCoords);
+	}
 
-    const enpassantTag = move.enpassant; // -1/1
-    const promotionTag = move.promotion; // promote type
-    if (!enpassantTag && !promotionTag) return false; ; // No special move to execute, return false to signify we didn't move the piece.
+	const enpassantTag = move.enpassant; // -1/1
+	const promotionTag = move.promotion; // promote type
+	if (!enpassantTag && !promotionTag) return false; ; // No special move to execute, return false to signify we didn't move the piece.
 
-    const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
-    const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+	const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
+	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
 
-    if (capturedPiece) move.captured = capturedPiece.type;
-    if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
+	if (capturedPiece) move.captured = capturedPiece.type;
+	if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
 
-    // Delete the piece captured
-    if (capturedPiece) movepiece.deletePiece(gamefile, capturedPiece, { updateData });
+	// Delete the piece captured
+	if (capturedPiece) movepiece.deletePiece(gamefile, capturedPiece, { updateData });
 
-    if (promotionTag) {
-        // Delete original pawn
-        movepiece.deletePiece(gamefile, piece, { updateData });
+	if (promotionTag) {
+		// Delete original pawn
+		movepiece.deletePiece(gamefile, piece, { updateData });
 
-        movepiece.addPiece(gamefile, promotionTag, move.endCoords, null, { updateData });
+		movepiece.addPiece(gamefile, promotionTag, move.endCoords, null, { updateData });
 
-    } else /* enpassantTag */ {
-        // Move the pawn
-        movepiece.movePiece(gamefile, piece, move.endCoords, { updateData });
-    }
+	} else /* enpassantTag */ {
+		// Move the pawn
+		movepiece.movePiece(gamefile, piece, move.endCoords, { updateData });
+	}
 
-    if (animate) animation.animatePiece(piece.type, piece.coords, move.endCoords, capturedPiece);
+	if (animate) animation.animatePiece(piece.type, piece.coords, move.endCoords, capturedPiece);
 
-    // Special move was executed!
-    return true;
+	// Special move was executed!
+	return true;
 }
 
 function isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2; }
@@ -112,13 +112,13 @@ function isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoor
  * @returns {number[]} The coordinates en passant is allowed
  */
 function getEnPassantSquare(moveStartCoords, moveEndCoords) {
-    const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
-    return [moveStartCoords[0], y];
+	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
+	return [moveStartCoords[0], y];
 }
 
 // MUST require there be an enpassant tag!
 function getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag]; }
 
 export default {
-    getFunctions
+	getFunctions
 };

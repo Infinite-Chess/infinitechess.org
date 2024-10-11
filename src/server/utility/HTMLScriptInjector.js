@@ -12,7 +12,7 @@
  * @returns {string} The injected string. If no match was found, the string will have not changed.
  */
 function injectStringIntoStringAfter(src, after, inject) {
-    return src.replace(after, `${after}${inject}`);
+	return src.replace(after, `${after}${inject}`);
 }
 
 /**
@@ -25,18 +25,18 @@ function injectStringIntoStringAfter(src, after, inject) {
  * @returns {string} - The modified HTML string with the inserted script tag.
  */
 function insertScriptLinkIntoHTML(HTML, src, defer, attributes = {}) {
-    let scriptTag = `<script`; // Start of the tag
-    if (defer) scriptTag += ' defer'; // Add the defer attribute first if required
-    scriptTag += ` src="${src}"`; // Then add the src attribute
-    for (const [key, value] of Object.entries(attributes)) scriptTag += ` ${key}="${value}"`; // Add any additional attributes
-    scriptTag += '></script>'; // Close the script tag
+	let scriptTag = `<script`; // Start of the tag
+	if (defer) scriptTag += ' defer'; // Add the defer attribute first if required
+	scriptTag += ` src="${src}"`; // Then add the src attribute
+	for (const [key, value] of Object.entries(attributes)) scriptTag += ` ${key}="${value}"`; // Add any additional attributes
+	scriptTag += '></script>'; // Close the script tag
 
-    // Find the position to insert the script tag
-    const headEndIndex = HTML.indexOf('</head>');
-    if (headEndIndex === -1) throw new Error(`Cannot insert script of src '${src}' into HTML when it doesn't contain a head!`);
+	// Find the position to insert the script tag
+	const headEndIndex = HTML.indexOf('</head>');
+	if (headEndIndex === -1) throw new Error(`Cannot insert script of src '${src}' into HTML when it doesn't contain a head!`);
     
-    // Insert the script tag at the determined position and return the modified HTML
-    return HTML.slice(0, headEndIndex) + scriptTag + HTML.slice(headEndIndex);
+	// Insert the script tag at the determined position and return the modified HTML
+	return HTML.slice(0, headEndIndex) + scriptTag + HTML.slice(headEndIndex);
 }
 
 /**
@@ -49,26 +49,26 @@ function insertScriptLinkIntoHTML(HTML, src, defer, attributes = {}) {
  * @returns {string} - The modified HTML string with the inserted script tag containing the JavaScript code.
  */
 function insertScriptIntoHTML(HTML, JS, attributes = {}, after) {
-    let scriptTag = `<script`; // Start of the script tag
-    for (const [key, value] of Object.entries(attributes)) scriptTag += ` ${key}="${value}"`; // Add any additional attributes
-    scriptTag += `>${JS}</script>`; // Add the JavaScript code and close the script tag
+	let scriptTag = `<script`; // Start of the script tag
+	for (const [key, value] of Object.entries(attributes)) scriptTag += ` ${key}="${value}"`; // Add any additional attributes
+	scriptTag += `>${JS}</script>`; // Add the JavaScript code and close the script tag
 
-    // Determine the insertion point
-    let insertionIndex = after ? HTML.indexOf(after) + after.length // If 'after' is provided and exists in the HTML, insert after the first occurrence of 'after'
+	// Determine the insertion point
+	let insertionIndex = after ? HTML.indexOf(after) + after.length // If 'after' is provided and exists in the HTML, insert after the first occurrence of 'after'
                                : insertionIndex = HTML.indexOf('</head>'); // Otherwise, insert before the closing </head> tag
 
-    if (insertionIndex === -1) { // Throw an error if we don't know where to insert
-        if (after) throw new Error(`Cannot inject script into HTML when it doesn't contain the string '${after}'!`);
-        else throw new Error(`Cannot inject script into HTML when it doesn't contain a head,!`);
-    }
+	if (insertionIndex === -1) { // Throw an error if we don't know where to insert
+		if (after) throw new Error(`Cannot inject script into HTML when it doesn't contain the string '${after}'!`);
+		else throw new Error(`Cannot inject script into HTML when it doesn't contain a head,!`);
+	}
 
-    // Insert the script tag at the determined position and return the modified HTML
-    return HTML.slice(0, insertionIndex) + scriptTag + HTML.slice(insertionIndex);
+	// Insert the script tag at the determined position and return the modified HTML
+	return HTML.slice(0, insertionIndex) + scriptTag + HTML.slice(insertionIndex);
 }
 
 
 
 export {
-    insertScriptLinkIntoHTML,
-    insertScriptIntoHTML,
+	insertScriptLinkIntoHTML,
+	insertScriptIntoHTML,
 };

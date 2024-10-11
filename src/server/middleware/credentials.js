@@ -7,13 +7,13 @@
 import { allowedOrigins } from '../config/config.js';
 
 const credentials = (req, res, next) => {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-        // Allows credentials (cookies, HTTP authentication...) from
-        // origins on the whitelist.
-        res.header('Access-Control-Allow-Credentials', true);
-    }
-    next();
+	const origin = req.headers.origin;
+	if (allowedOrigins.includes(origin)) {
+		// Allows credentials (cookies, HTTP authentication...) from
+		// origins on the whitelist.
+		res.header('Access-Control-Allow-Credentials', true);
+	}
+	next();
 };
 
 export default credentials;

@@ -11,8 +11,8 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 router.get('/', (req, res) => {
-    const language = getLanguageToServe(req);
-    res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'createaccount.html'));
+	const language = getLanguageToServe(req);
+	res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'createaccount.html'));
 });
 
 router.post('/', createNewMember);

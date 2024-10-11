@@ -37,99 +37,99 @@ import coordutil from '../misc/coordutil.js';
  * @param {Object} [options] - An object that may contain the `appendUndefineds` option. If false, no undefined *null* placeholder pieces will be left for the mesh generation. Defaults to *true*. Set to false if you're planning on regenerating manually.
  */
 function initOrganizedPieceLists(gamefile, { appendUndefineds = true} = {}) {
-    if (!gamefile.ourPieces) return console.error("Cannot init the organized lines before ourPieces is defined.");
+	if (!gamefile.ourPieces) return console.error("Cannot init the organized lines before ourPieces is defined.");
     
-    // console.log("Begin organizing lists...")
+	// console.log("Begin organizing lists...")
 
-    resetOrganizedLists(gamefile);
-    // Organize each piece with a callback function.
-    // We need .bind(this) to specify our parent object for the callback!
-    // Otherwise it would not be able to access our gamefile's properties such as the organized lists to push to.
-    gamefileutility.forEachPieceInGame(gamefile, organizePiece);
+	resetOrganizedLists(gamefile);
+	// Organize each piece with a callback function.
+	// We need .bind(this) to specify our parent object for the callback!
+	// Otherwise it would not be able to access our gamefile's properties such as the organized lists to push to.
+	gamefileutility.forEachPieceInGame(gamefile, organizePiece);
     
-    // console.log("Finished organizing lists!")
+	// console.log("Finished organizing lists!")
 
-    // Add extra undefined pieces into each type array!
-    initUndefineds(gamefile);
+	// Add extra undefined pieces into each type array!
+	initUndefineds(gamefile);
 
-    if (appendUndefineds) appendUndefineds(gamefile);
+	if (appendUndefineds) appendUndefineds(gamefile);
 }
 
 function resetOrganizedLists(gamefile) {
-    gamefile.piecesOrganizedByKey = {};
-    gamefile.piecesOrganizedByLines = {};
+	gamefile.piecesOrganizedByKey = {};
+	gamefile.piecesOrganizedByLines = {};
 
-    const lines = gamefile.startSnapshot.slidingPossible;
-    for (let i = 0; i < lines.length; i++) {
-        gamefile.piecesOrganizedByLines[coordutil.getKeyFromCoords(lines[i])] = {};
-    }
+	const lines = gamefile.startSnapshot.slidingPossible;
+	for (let i = 0; i < lines.length; i++) {
+		gamefile.piecesOrganizedByLines[coordutil.getKeyFromCoords(lines[i])] = {};
+	}
 }
 
 // Inserts given piece into all the organized piece lists (key, row, column...)
 function organizePiece(type, coords, gamefile) {
-    if (!coords) return; // Piece is undefined, skip this one!
+	if (!coords) return; // Piece is undefined, skip this one!
 
-    const piece = { type, coords };
+	const piece = { type, coords };
 
-    // Organize by key
-    // First, turn the coords into a key in the format 'x,y'
-    let key = coordutil.getKeyFromCoords(coords);
-    // Is there already a piece there? (Desync)
-    if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`);
-    gamefile.piecesOrganizedByKey[key] = type;
+	// Organize by key
+	// First, turn the coords into a key in the format 'x,y'
+	let key = coordutil.getKeyFromCoords(coords);
+	// Is there already a piece there? (Desync)
+	if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`);
+	gamefile.piecesOrganizedByKey[key] = type;
     
-    // Organize by line
-    const lines = gamefile.startSnapshot.slidingPossible;
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        key = getKeyFromLine(line,coords);
-        const strline = coordutil.getKeyFromCoords(line);
-        // Is line initialized
-        if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = [];
-        gamefile.piecesOrganizedByLines[strline][key].push(piece);
-    }
+	// Organize by line
+	const lines = gamefile.startSnapshot.slidingPossible;
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		key = getKeyFromLine(line,coords);
+		const strline = coordutil.getKeyFromCoords(line);
+		// Is line initialized
+		if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = [];
+		gamefile.piecesOrganizedByLines[strline][key].push(piece);
+	}
     
 }
 
 // Remove specified piece from all the organized piece lists (piecesOrganizedByKey, etc.)
 function removeOrganizedPiece(gamefile, coords) {
 
-    // Make the piece key undefined in piecesOrganizedByKey object  
-    let key = coordutil.getKeyFromCoords(coords);
-    if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`);
-    // Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
-    delete gamefile.piecesOrganizedByKey[key]; 
+	// Make the piece key undefined in piecesOrganizedByKey object  
+	let key = coordutil.getKeyFromCoords(coords);
+	if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`);
+	// Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
+	delete gamefile.piecesOrganizedByKey[key]; 
 
-    const lines = gamefile.startSnapshot.slidingPossible;
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        key = getKeyFromLine(line,coords);
-        removePieceFromLine(gamefile.piecesOrganizedByLines[line],key);
-    }
+	const lines = gamefile.startSnapshot.slidingPossible;
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		key = getKeyFromLine(line,coords);
+		removePieceFromLine(gamefile.piecesOrganizedByLines[line],key);
+	}
 
-    // Takes a line from a property of an organized piece list, deletes the piece at specified coords
-    function removePieceFromLine(organizedPieces, lineKey) {
-        const line = organizedPieces[lineKey];
+	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
+	function removePieceFromLine(organizedPieces, lineKey) {
+		const line = organizedPieces[lineKey];
 
-        for (let i = 0; i < line.length; i++) {
-            const thisPieceCoords = line[i].coords;
-            if (thisPieceCoords[0] === coords[0] && thisPieceCoords[1] === coords[1]) {
-                line.splice(i, 1); // Delete
-                // If the line length is now 0, remove itself from the organizedPieces
-                if (line.length === 0) delete organizedPieces[lineKey];
-                break;
-            }
-        }
-    }
+		for (let i = 0; i < line.length; i++) {
+			const thisPieceCoords = line[i].coords;
+			if (thisPieceCoords[0] === coords[0] && thisPieceCoords[1] === coords[1]) {
+				line.splice(i, 1); // Delete
+				// If the line length is now 0, remove itself from the organizedPieces
+				if (line.length === 0) delete organizedPieces[lineKey];
+				break;
+			}
+		}
+	}
 }
 
 function initUndefineds(gamefile) {
-    // Add extra undefined pieces into each type array!
-    typeutil.forEachPieceType(init);
-    function init(listType) {
-        const list = gamefile.ourPieces[listType];
-        list.undefineds = [];
-    }
+	// Add extra undefined pieces into each type array!
+	typeutil.forEachPieceType(init);
+	function init(listType) {
+		const list = gamefile.ourPieces[listType];
+		list.undefineds = [];
+	}
 }
 
 
@@ -142,30 +142,30 @@ function initUndefineds(gamefile) {
  * @param {gamefile} gamefile - The gamefile
  */
 function appendUndefineds(gamefile) {
-    typeutil.forEachPieceType(append);
+	typeutil.forEachPieceType(append);
 
-    function append(listType) {
-        if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
+	function append(listType) {
+		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
 
-        const list = gamefile.ourPieces[listType];
-        for (let i = 0; i < pieces.extraUndefineds; i++) insertUndefinedIntoList(list);
-    }
+		const list = gamefile.ourPieces[listType];
+		for (let i = 0; i < pieces.extraUndefineds; i++) insertUndefinedIntoList(list);
+	}
 }
 
 function areWeShortOnUndefineds(gamefile) {
 
-    let weShort = false;
-    typeutil.forEachPieceType(areWeShort);
+	let weShort = false;
+	typeutil.forEachPieceType(areWeShort);
 
-    function areWeShort(listType) {
-        if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
+	function areWeShort(listType) {
+		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
 
-        const list = gamefile.ourPieces[listType];
-        const undefinedCount = list.undefineds.length;
-        if (undefinedCount === 0) weShort = true;
-    }
+		const list = gamefile.ourPieces[listType];
+		const undefinedCount = list.undefineds.length;
+		if (undefinedCount === 0) weShort = true;
+	}
 
-    return weShort;
+	return weShort;
 }
 
 /**
@@ -180,19 +180,19 @@ function areWeShortOnUndefineds(gamefile) {
  * - `log`: Whether to log to the console that we're adding more undefineds. Default: *false*
  */
 function addMoreUndefineds(gamefile, { regenModel = true, log = false } = {}) {
-    if (log) console.log('Adding more placeholder undefined pieces.');
+	if (log) console.log('Adding more placeholder undefined pieces.');
     
-    typeutil.forEachPieceType(add);
+	typeutil.forEachPieceType(add);
 
-    function add(listType) {
-        if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
+	function add(listType) {
+		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
 
-        const list = gamefile.ourPieces[listType];
-        const undefinedCount = list.undefineds.length;
-        for (let i = undefinedCount; i < pieces.extraUndefineds; i++) insertUndefinedIntoList(list);
-    }
+		const list = gamefile.ourPieces[listType];
+		const undefinedCount = list.undefineds.length;
+		for (let i = undefinedCount; i < pieces.extraUndefineds; i++) insertUndefinedIntoList(list);
+	}
 
-    if (regenModel) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+	if (regenModel) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
 }
 
 /**
@@ -205,33 +205,33 @@ function addMoreUndefineds(gamefile, { regenModel = true, log = false } = {}) {
  * @returns {boolean} *true* if we need to append placeholders for this type.
  */
 function isTypeATypeWereAppendingUndefineds(gamefile, type) {
-    if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
+	if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
-    const color = colorutil.getPieceColorFromType(type);
+	const color = colorutil.getPieceColorFromType(type);
 
-    if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
+	if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
     
-    const trimmedType = colorutil.trimColorExtensionFromType(type);
-    return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
+	const trimmedType = colorutil.trimColorExtensionFromType(type);
+	return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
 }
 
 function insertUndefinedIntoList(list) {
-    const insertedIndex = list.push(undefined) - 1; // insertedIndex = New length - 1
-    list.undefineds.push(insertedIndex);
+	const insertedIndex = list.push(undefined) - 1; // insertedIndex = New length - 1
+	list.undefineds.push(insertedIndex);
 }
 
 function buildKeyListFromState(state) { // state is default piece list organized by type
 
-    const keyList = { };
+	const keyList = { };
 
-    gamefileutility.forEachPieceInPiecesByType(callback, state);
+	gamefileutility.forEachPieceInPiecesByType(callback, state);
 
-    function callback(type, coords) {
-        const key = coordutil.getKeyFromCoords(coords);
-        keyList[key] = type;
-    }
+	function callback(type, coords) {
+		const key = coordutil.getKeyFromCoords(coords);
+		keyList[key] = type;
+	}
 
-    return keyList;
+	return keyList;
 }
 
 /**
@@ -240,37 +240,37 @@ function buildKeyListFromState(state) { // state is default piece list organized
  * @returns {Object} Pieces organized by type: `{ pawnsW: [ [1,2], [2,2], ...]}`
  */
 function buildStateFromKeyList(keyList) {
-    const state = getEmptyTypeState();
+	const state = getEmptyTypeState();
 
-    // For some reason, does not iterate through inherited properties?
-    for (const key in keyList) {
-        const type = keyList[key];
-        const coords = coordutil.getCoordsFromKey(key);
-        // Does the type parameter exist?
-        // if (!state[type]) state[type] = []
-        if (!state[type]) return console.error(`Error when building state from key list. Type ${type} is undefined!`);
-        // Push the coords
-        state[type].push(coords);
-    }
+	// For some reason, does not iterate through inherited properties?
+	for (const key in keyList) {
+		const type = keyList[key];
+		const coords = coordutil.getCoordsFromKey(key);
+		// Does the type parameter exist?
+		// if (!state[type]) state[type] = []
+		if (!state[type]) return console.error(`Error when building state from key list. Type ${type} is undefined!`);
+		// Push the coords
+		state[type].push(coords);
+	}
 
-    return state;
+	return state;
 }
 
 function getEmptyTypeState() {
 
-    const state = {};
+	const state = {};
 
-    // White and Black
-    for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
-        state[typeutil.colorsTypes.white[i]] = [];
-        state[typeutil.colorsTypes.black[i]] = [];
-    }
-    // Neutral
-    for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
-        state[typeutil.colorsTypes.neutral[i]] = [];
-    }
+	// White and Black
+	for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
+		state[typeutil.colorsTypes.white[i]] = [];
+		state[typeutil.colorsTypes.black[i]] = [];
+	}
+	// Neutral
+	for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
+		state[typeutil.colorsTypes.neutral[i]] = [];
+	}
 
-    return state;
+	return state;
 }
 
 /**
@@ -288,9 +288,9 @@ function getEmptyTypeState() {
  * @returns {String} the key `C|X`
  */
 function getKeyFromLine(step, coords) {
-    const C = getCFromLine(step, coords);
-    const X = getXFromLine(step, coords);
-    return `${C}|${X}`;
+	const C = getCFromLine(step, coords);
+	const X = getXFromLine(step, coords);
+	return `${C}|${X}`;
 }
 
 /**
@@ -302,7 +302,7 @@ function getKeyFromLine(step, coords) {
  * @returns {number} The C in the line's key: `C|X`
  */
 function getCFromLine(step, coords) {
-    return step[0] * coords[1] - step[1] * coords[0];
+	return step[0] * coords[1] - step[1] * coords[0];
 }
 
 /**
@@ -319,14 +319,14 @@ function getCFromLine(step, coords) {
  * @returns {number} The X in the line's key: `C|X`
  */
 function getXFromLine(step, coords) {
-    // See these desmos graphs for inspiration for finding what line the coords are on:
-    // https://www.desmos.com/calculator/d0uf1sqipn
-    // https://www.desmos.com/calculator/t9wkt3kbfo
+	// See these desmos graphs for inspiration for finding what line the coords are on:
+	// https://www.desmos.com/calculator/d0uf1sqipn
+	// https://www.desmos.com/calculator/t9wkt3kbfo
 
-    const lineIsVertical = step[0] === 0;
-    const deltaAxis = lineIsVertical ? step[1] : step[0];
-    const coordAxis = lineIsVertical ? coords[1] : coords[0];
-    return math.posMod(coordAxis, deltaAxis);
+	const lineIsVertical = step[0] === 0;
+	const deltaAxis = lineIsVertical ? step[1] : step[0];
+	const coordAxis = lineIsVertical ? coords[1] : coords[0];
+	return math.posMod(coordAxis, deltaAxis);
 }
 
 /**
@@ -338,37 +338,37 @@ function getXFromLine(step, coords) {
  * @param {gamefile} gamefile 
  */
 function areColinearSlidesPresentInGame(gamefile) {
-    const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
+	const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
 
-    // How to know if 2 lines are colinear?
-    // They will have the exact same slope!
+	// How to know if 2 lines are colinear?
+	// They will have the exact same slope!
 
-    // Iterate through each line, comparing its slope with every other line
-    for (let a = 0; a < slidingPossible.length - 1; a++) {
-        const line1 = slidingPossible[a]; // [dx,dy]
-        const slope1 = line1[1] / line1[0]; // Rise/Run
-        const line1IsVertical = isNaN(slope1);
+	// Iterate through each line, comparing its slope with every other line
+	for (let a = 0; a < slidingPossible.length - 1; a++) {
+		const line1 = slidingPossible[a]; // [dx,dy]
+		const slope1 = line1[1] / line1[0]; // Rise/Run
+		const line1IsVertical = isNaN(slope1);
         
-        for (let b = a + 1; b < slidingPossible.length; b++) {
-            const line2 = slidingPossible[b]; // [dx,dy]
-            const slope2 = line2[1] / line2[0]; // Rise/Run
-            const line2IsVertical = isNaN(slope2);
+		for (let b = a + 1; b < slidingPossible.length; b++) {
+			const line2 = slidingPossible[b]; // [dx,dy]
+			const slope2 = line2[1] / line2[0]; // Rise/Run
+			const line2IsVertical = isNaN(slope2);
 
-            if (line1IsVertical && line2IsVertical) return true; // Colinear!
-            if (slope1 === slope2) return true; // Colinear!
-        }
-    }
-    return false;
+			if (line1IsVertical && line2IsVertical) return true; // Colinear!
+			if (slope1 === slope2) return true; // Colinear!
+		}
+	}
+	return false;
 }
 
 export default {
-    initOrganizedPieceLists,
-    organizePiece,
-    removeOrganizedPiece,
-    areWeShortOnUndefineds,
-    addMoreUndefineds,
-    buildStateFromKeyList,
-    getKeyFromLine,
-    getCFromLine,
-    areColinearSlidesPresentInGame,
+	initOrganizedPieceLists,
+	organizePiece,
+	removeOrganizedPiece,
+	areWeShortOnUndefineds,
+	addMoreUndefineds,
+	buildStateFromKeyList,
+	getKeyFromLine,
+	getCFromLine,
+	areColinearSlidesPresentInGame,
 };

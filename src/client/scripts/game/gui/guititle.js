@@ -29,48 +29,48 @@ const element_menuExternalLinks = document.getElementById('menu-external-links')
 
 // Call when title screen is loaded
 function open() {
-    perspective.disable();
-    if (!gui.getScreen()?.includes('title')) movement.randomizePanVelDir(); // Randomize pan velocity direction
-    gui.setScreen('title');
-    movement.setBoardScale(1.8, 'pidough'); // 1.8
-    style.revealElement(titleElement);
-    style.revealElement(element_menuExternalLinks);
-    initListeners(); // These need to be canceled when leaving screen
+	perspective.disable();
+	if (!gui.getScreen()?.includes('title')) movement.randomizePanVelDir(); // Randomize pan velocity direction
+	gui.setScreen('title');
+	movement.setBoardScale(1.8, 'pidough'); // 1.8
+	style.revealElement(titleElement);
+	style.revealElement(element_menuExternalLinks);
+	initListeners(); // These need to be canceled when leaving screen
 }
 
 function close() {
-    // Cancel all title screen button event listeners to save cpu...
-    closeListeners();
-    style.hideElement(titleElement);
-    style.hideElement(element_menuExternalLinks);
+	// Cancel all title screen button event listeners to save cpu...
+	closeListeners();
+	style.hideElement(titleElement);
+	style.hideElement(element_menuExternalLinks);
 }
 
 function initListeners() {
-    element_play.addEventListener('click', callback_Play);
-    element_guide.addEventListener('click', callback_Guide);
-    element_boardEditor.addEventListener('click', gui.callback_featurePlanned);
+	element_play.addEventListener('click', callback_Play);
+	element_guide.addEventListener('click', callback_Guide);
+	element_boardEditor.addEventListener('click', gui.callback_featurePlanned);
 }
 
 function closeListeners() {
-    element_play.removeEventListener('click', callback_Play);
-    element_guide.removeEventListener('click', callback_Guide);
-    element_boardEditor.removeEventListener('click', gui.callback_featurePlanned);
+	element_play.removeEventListener('click', callback_Play);
+	element_guide.removeEventListener('click', callback_Guide);
+	element_boardEditor.removeEventListener('click', gui.callback_featurePlanned);
 }
 
 function callback_Play(event) {
-    event = event || window.event;
-    close();
-    guiplay.open();
+	event = event || window.event;
+	close();
+	guiplay.open();
 }
 
 function callback_Guide(event) {
-    event = event || window.event;
-    close();
-    guiguide.open();
+	event = event || window.event;
+	close();
+	guiguide.open();
 }
 
 export default {
-    boardVel,
-    open,
-    close
+	boardVel,
+	open,
+	close
 };
