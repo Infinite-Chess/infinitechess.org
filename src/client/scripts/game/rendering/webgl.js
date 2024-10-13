@@ -265,6 +265,7 @@ function enableDepthTest() {
 /**
  * Disables depth testing in WebGL.
  * This will ensure that all objects are drawn regardless of their distance from the camera.
+ * More efficient that setting the depth test condition to gl.ALWAYS
  */
 function disableDepthTest() {
 	gl.disable(gl.DEPTH_TEST);
