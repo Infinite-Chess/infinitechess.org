@@ -111,255 +111,255 @@ create_button = "Crear Cuenta"
 agreement = ["Acepto los ", "Términos de Servicio", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
-js-username_specs = "Username must be atleast 3 characters long, and only contain letters A-Z and numbers 0-9"
-js-username_tooshort = "Username must be at least 3 characters long"
-js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
-js-email_invalid = "This is not a valid email"
-js-email_inuse = "This email is already in use"
-js-pwd_incorrect_format = "Password is in an incorrect format"
-js-pwd_too_short = "Password must be 6+ characters long"
-js-pwd_too_long = "Password can't be over 72 characters long"
-js-pwd_not_pwd = "Password must not be 'password'"
+js-username_specs = "El nombre de usuario debe tener como mínimo 3 caracteres, y solo puede contener las letras A-Z y los numeros 0-9"
+js-username_tooshort = "El nombre de usuario debe tener 3 caracteres como mínimo"
+js-username_wrongenc = "El nombre de usuario debe contener solo los caracteres A-Z y 0-9"
+js-email_invalid = "No es un e-mail válido"
+js-email_inuse = "Este e-mail ya esta registrado con otra cuenta"
+js-pwd_incorrect_format = "La contraseña está en un formato incorrecto"
+js-pwd_too_short = "La contraseña debe tener 6 o más caracteres"
+js-pwd_too_long = "La contraseña no puede tener mas de 72 caracteres"
+js-pwd_not_pwd = "La contraseña no debe ser 'password'"
 
 [play]
-title = "Infinite Chess - Play" # The tab title
-loading = "LOADING"
+title = "Infinite Chess - Jugar" # The tab title
+loading = "CARGANDO"
 error = "ERROR"
 
 [play.main-menu]
-credits = "Credits"
-play = "Play"
-guide = "Guide"
-editor = "Board Editor"
+credits = "Créditos"
+play = "Jugar"
+guide = "Guia"
+editor = "Editor de tablero"
 
 [play.guide]
-title = "Guide"
-rules = "Rules"
+title = "Guia"
+rules = "Reglas"
 rules_paragraphs = [
-"The rules to Infinite Chess are almost identical to classical chess, except the board is infinite in all directions! These are the only notes and changes you need to be aware of:",
-"Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions!",
-["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines, they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
-"Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
-"All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
+"Las reglas del ajedrez infinito son casi idénticas a las del ajedrez clasico, ¡Excepto que el tablero es infinito en todas las direcciones! Estas son las unicas notas y cambios que necesitas saber:",
+"Las piezas que tienen movimientos deslizantes, como las torres, alfiles y damas, ¡No tienen ningún límite a como de lejos se pueden mover en un turno! Mientras su camino no esté obstruido, ¡Pueden moverse millones de casillas!",
+["En variante por defecto \"Clásica\", los peones blancos coronan en la fila 8, y los negras en la fila 1. En esta imagen, esto se indica con las finas lineas negras, son difíciles de ver, ¡Fíjate a ver si puedes encontralas! Los Peones solo necesitan llegar a la línea opuesta para coronar", "no", " cruzarla."],
+"La notación de las casillas ya no se describe por la letra y numero de fila, (i.e., a1), en cambio, cada casilla se identifica por una pareja de coordenadas x e y. La casilla a1 se convierte en (1,1), y la casila h8 en (8,8). En dispositivos de escitorio, la coordenada que el puntero de tu ratón esté encima se muestra en la parte superior de la pantalla",
+"¡Todas las demás reglas son iguales que en el ajedrez clasico, como el jaque mate, tablas, triple repetición, la regla de los 50 movimientos, enroque, en passant, etc.!"
 ]
-careful_heading = "Be Careful!"
+careful_heading = "¡Ten cuidado!"
 careful_paragraphs = [
-"The openness of the infinite board means it is very easy to exploit forks, pins, and skewers. Your backside is often very vulnerable. Watch out for tactics like this! Be creative about forming protection for your king and rooks! Opening strategy is very different from classical chess.",
-"Many other variants have been created with the aim of strengthening your backside."
+"La libertad del tablero infinito significa que es muy fácil explotar ataques dobles y clavadas. Tu lado trasero es a menudo una parte muy vulnerable. ¡Ten cuidado con tácticas como esta! ¡Sé creativo al formar protección para tu rey y tus torres! La estrategia de apertura es muy distinta a la del ajedrez clasico.",
+"Muchas otras variantes han sido creadas con el objetivo de fortalecer tu defensa trasera."
 ]
-controls_heading = "Controls"
-controls_paragraph = "Click and drag the board to move around. Scroll to zoom in and out. Click any piece, including your opponent's pieces, to view their legal moves at any point! Additional controls are:"
+controls_heading = "Controles"
+controls_paragraph = "Haz click y arrastra para mover la cámara. Mueve la rueda del ratón para hacer zoom. Haz click en cualquiera pieza, incluidas las de tus oponentes, ¡Para ver sus movimientos legales en qualquier momento! Otros controles son:"
 keybinds = [
-" to move around.",
-["Space", " and ", "Shift", " to zoom in and out."],
-["Escape", " to pause the game."],
-["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu. Clicking these arrows will teleport you to the piece they're pointing to."],
-" will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
+" para mover la cámara.",
+["Espacio", " y ", "Mayus Izq.", " para hacer zoom."],
+["Esc", " para pausar el juego."],
+["Tab", " activa o desactiva las flechas indicadiras en los bordes de la pantalla que apuntan a las piezas que estan fuera de plano. Por defecto, están en modo \"Defensa\", que muestra una flecha para las piezas que pueden moverse a tu localización desde donde están. Pero ", "tab", " puede cambiar al modo \"Todos\", o \"Ninguno\", de los cuales \"Todos\" revela todas las piezas en estas ortogonales y diagonales, sin importar que puedan moverse de esa manera. Esta opción tambien puede cambiarse en el menú de pausa. Hacer click en las flechas te lleva a la pieza que están apuntando."],
+" activa o desactiva \"Modo Edición\" en partidas locales. ¡Esto te permite mover cualquier pieza a cualquier lugar del tablero! Muy útil para analizar posiciones."
 ]
-controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
+controls_paragraph2 = "Esos son los principales controles que necesitas saber."
 keybinds_extra = [
-" will reset the rendering of the pieces. This is useful if they turn invisible. This glitch can happen if you move extreme distances (like 1e21).",
-" will toggle the rendering of the navigation and game info bars, which can be useful for recording. Streaming and making videos on the game is welcome!",
-" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed, to save compute.",
-" will toggle icon-rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throddler, but they can be toggled back on with ",
-[" (backtick, or the same key as ", ") will toggle Debug mode."],
+" reinicia el renderizado de las piezas. Esto es útil si la pieza se vuelve invisible. Este error puede ocurrir si mueves las piezas a distancias extremas (como 1e12).",
+" activa o desactiva el renderizado de las barras de navegación e información, que puede ser útil para grabar ¡Hacer streaming y vídeos en el juego es bienvenido!",
+" activa o desactiva el medidor de FPS. Esto muestra el número de veces que se actualiza el juego por segundo, no siempre el numero de FPS, ya que el juego salta el renderizado cuando nada visible haya cambiado, para ahorrar tiempo de computación.",
+" activa o desactiva el renderizado por iconos. Los iconos son unas mini-imágenes clickables de las piezas cuando haces el suficiente zoom hacia fuera. En partidas importadas con más de 50.000 piezas esto se desactiva automaticamente, al ser costoso computacionalmente, pero puede volverse a activar con ",
+[" (tílde invertida, la misma tecla que ", ") activará o desactivará el modo Debug"],
 ]
-fairy_heading = "Fairy Pieces"
-fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!"
-editing_heading = "Board Editing"
+fairy_heading = "Piezas Fairy"
+fairy_paragraph = "Ya sabes todo lo que necesitas saber para jugar a la variante por defecto \"Clásica\". Las piezas de ajedrez Fairy no se usan en ajedrez convencional, ¡Pero están incorporadas en otras variantes! Si te necuentras en una variante con algunas piezas que no has visto antes, ¡Vámos a aprender como funcionan aquí!"
+editing_heading = "Edición de tablero"
 editing_paragraphs = [
-["There is an external ", "board editor", " currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
-"To play a custom position with a friend, have them join a private invite, then both of you paste the game code before you start playing!",
-"An in-game board editor is still planned.",
+["Hay un ", "editor de tablero externo", " ¡Disponible ahora mismo en una hoja de Google sheets pública! Incluye instrucciones sobre como usarla. Requiere unos conocimientos basicos sobre Google Sheets. Despues de la preparación, ¡Podrás crear y importar posiciones personalizadas en el juego a través de el botón \"Pegar Juego\" en el menu opciones!"],
+"Para jugar una posición personalizada con un amigo, mándale una invitación privada, después los dos pegais el codigo de juego ¡Antes de empezar a jugar!",
+"Un editor de tablero integrado está planeado.",
 ]
-back = "Back"
+back = "Atrás"
 
 [play.guide.pieces]
-chancellor = {name="Chancellor", description="Moves like a rook and a knight combined."}
-archbishop = {name="Archbishop", description="Moves like a bishop and a knight combined."}
-amazon = {name="Amazon", description="Moves like a queen and a knight combined. This is the strongest piece in the game!"}
-guard = {name="Guard", description="Moves like a king, except it is not susceptible to check or checkmate."}
-hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."}
-centaur = {name="Centaur", description="Moves like a knight and a guard combined."}
-knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
-obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
-void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
+chancellor = {name="Canciller", description="Se mueve como una torre y un caballo combinados."}
+archbishop = {name="Arzobispo", description="Se mueve como un alfíl y un caballo combinados."}
+amazon = {name="Amazona", description="Se mueve como una dama y un caballo combinados. ¡Esta es la pieza más potente del juego!"}
+guard = {name="Guardia", description="Se mueve como un rey, pero no es susceptible al jaque o el jaque mate."}
+hawk = {name="Halcón", description="Salta exactamente 2 o 3 casillas en qualquier dirección."}
+centaur = {name="Centauro", description="Se mueve como un caballo y un guardia combinados."}
+knightrider = {name="Jinete", description="Se mueve como un caballo infinitamente en una dirección, hasta que esté bloqueado."}
+obstacle = {name="Obstáculo", description="Una pieza neutral (Que no es controlada por ningún jugador) que bloquea el movimiento, pero puede ser capturada."}
+void = {name="Vacío", description="Una pieza neutral (Que no es controlada por ningún jugador) que representa la ausencia de tablero. Las demás piezan no pueden moverse a través o encima de él."}
 
 [play.play-menu]
-title = "Play - Online"
-colors = "Colors"
+title = "Jugar - Online"
+colors = "Colores"
 online = "Online"
 local = "Local"
-computer = "Computer"
-variant = "Variant"
-Classical = "Classical"
-Classical_Plus = "Classical+"
-CoaIP = "Chess on an Infinite Plane"
+computer = "Ordenador"
+variant = "Variante"
+Classical = "Clasica"
+Classical_Plus = "Classica+"
+CoaIP = "Ajedrez en un plano infinito"
 Pawndard = "Pawndard"
 Knighted_Chess = "Knighted Chess"
 Knightline = "Knightline"
 Core = "Core"
 Standarch = "Standarch"
-Pawn_Horde = "Pawn Horde"
-Space_Classic = "Space Classic"
-Space = "Space"
+Pawn_Horde = "Horda de peones"
+Space_Classic = "Classica Espacio"
+Space = "Espacio"
 Obstocean = "Obstocean"
-Abundance = "Abundance"
-Amazon_Chandelier = "Amazon Chandelier"
-Containment = "Containment"
-Classical_Limit_7 = "Classical - Limit 7"
-CoaIP_Limit_7 = "Coaip - Limit 7"
-Chess = "Chess"
-Classical_KOTH = "Experimental: Classical - KOTH"
-CoaIP_KOTH = "Experimental: Coaip - KOTH"
-Omega = "Showcase: Omega"
-Omega_Squared = "Showcase: Omega^2"
-Omega_Cubed = "Showcase: Omega^3"
-Omega_Fourth = "Showcase: Omega^4"
-no_clock = "No Clock"
-clock = "Clock"
+Abundance = "Abundancia"
+Amazon_Chandelier = "Amazona Canciller"
+Containment = "Contención"
+Classical_Limit_7 = "Classica - Límite 7"
+CoaIP_Limit_7 = "Aeupi - Límite 7"
+Chess = "Ajedrez"
+Classical_KOTH = "Experimental: Classica - KOTH"
+CoaIP_KOTH = "Experimental: Aeupi - KOTH"
+Omega = "Demostración: Omega"
+Omega_Squared = "Demostración: Omega^2"
+Omega_Cubed = "Demostración: Omega^3"
+Omega_Fourth = "Demostración: Omega^4"
+no_clock = "Sin Reloj"
+clock = "Reloj"
 minutes = "m"
 seconds = "s"
-infinite_time = "Infinite Time"
+infinite_time = "Tiempo Infinito"
 color = "Color"
-piece_colors = ["Random", "White", "Black"]
-private = "Private"
+piece_colors = ["Aleatorio", "Blancas", "Negras"]
+private = "Privado"
 no = "No"
-yes = "Yes"
-rated = "Rated"
+yes = "Sí"
+rated = "Por puntos"
 casual = "Casual"
-join_games = "Join Existing - Active Games:"
-private_invite = "Private Invite:"
-your_invite = "Your Invite Code:"
-create_invite = "Create Invite"
-join = "Join"
-copy = "Copy"
-back = "Back"
-code = "Code"
+join_games = "Unirse a una partida existente - Partidas Activas:"
+private_invite = "Invitación privada:"
+your_invite = "Tu código de invitación:"
+create_invite = "Crear invitación"
+join = "Unirse"
+copy = "Copiar"
+back = "Atrás"
+code = "Codigo"
 
 [play.footer]
-white_to_move = "White to move"
-player_white = "Player white"
-player_black = "Player black"
+white_to_move = "Juegan blancas"
+player_white = "Jugador de blancas"
+player_black = "Jugador de negras"
 
 [play.pause]
-title = "Paused"
-resume = "Resume"
-arrows = "Arrows: Defense"
-perspective = "Perspective: Off"
-copy = "Copy Game"
-paste = "Paste Game"
-offer_draw = "Offer Draw"
-main_menu = "Main Menu"
+title = "Pausa"
+resume = "Resumir"
+arrows = "Flechas: Defensa"
+perspective = "Perspectiva: Apagada"
+copy = "Copiar Partida"
+paste = "Pegar Partida"
+offer_draw = "Ofrecer Tablas"
+main_menu = "Menú principal"
 
 [play.drawoffer] # The draw offer UI that appears on the bottom bar
-question = "Accept draw offer?"
+question = "Aceptar tablas?"
 
 [play.javascript] # Not text that's included in the html, but text that scripts use!
-guest_indicator = "(Guest)"
-you_indicator = "(You)"
-white_to_move = "White to move"
-black_to_move = "Black to move"
-your_move = "Your move"
-their_move = "Their move"
-lost_network = "Lost network."
-failed_to_load = "One or more resources failed to load. Please refresh."
-planned_feature = "This feature is planned!"
-main_menu = "Main Menu"
-resign_game = "Resign Game"
-abort_game = "Abort Game"
-offer_draw = "Offer Draw" # Offer draw button text in the pause menu
-accept_draw = "Accept Draw" # Offer draw button text in the pause menu
-arrows_off = "Arrows: Off"
-arrows_defense = "Arrows: Defense"
-arrows_all = "Arrows: All"
-toggled = "Toggled"
-menu_online = "Play - Online"
-menu_local = "Play - Local"
-invite_error_digits = "Invite code needs to be 5 digits."
-invite_copied = "Copied invite code to clipboard."
-move_counter = "Move:"
-constructing_mesh = "Constructing mesh"
-rotating_mesh = "Rotating mesh"
-lost_connection = "Lost connection."
-please_wait = "Please wait a moment to perform this task."
-webgl_unsupported = "Your browser does not support WebGL. This game requires that to function. Please update your browser."
-bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
-shaders_failed = "Unable to initialize the shader program:"
-failed_compiling_shaders = "An error occurred compiling the shaders:"
+guest_indicator = "(Invitado)"
+you_indicator = "(Tú)"
+white_to_move = "Juegan blancas"
+black_to_move = "Juegan negras"
+your_move = "Tu turno"
+their_move = "Su turno"
+lost_network = "Conexión perdida"
+failed_to_load = "Uno o más recursos fallaron al cargar. Por favor refresca la página."
+planned_feature = "¡Esta función esta planeada!"
+main_menu = "Menú pricipal"
+resign_game = "Rendirse"
+abort_game = "Abortar partída"
+offer_draw = "Ofrecer tablas" # Offer draw button text in the pause menu
+accept_draw = "Aceptar tablas" # Offer draw button text in the pause menu
+arrows_off = "Flechas: Apagadas"
+arrows_defense = "Flechas: Defensa"
+arrows_all = "Flechas: Todas"
+toggled = "Activado / Desactivado"
+menu_online = "Jugar - Online"
+menu_local = "Jugar -Local"
+invite_error_digits = "El código de invitación tiene que tener 5 dígitos."
+invite_copied = "Código de invitación copiado al portapapeles."
+move_counter = "Jugada:"
+constructing_mesh = "Construyendo malla"
+rotating_mesh = "Rotando malla"
+lost_connection = "Conexión perdida."
+please_wait = "Por favor espera un momento para realizar esta acción."
+webgl_unsupported = "Tu navegador no tiene soporte para WebGL. Este juego lo requiere para funcionar. Por favor actualiza tu navegador."
+bigints_unsupported = "Las BigInts no tienen soporte. Por favor actualiza tu navegador.\nLas BigInts son necesarias para hacer que el tablero sea infinito."
+shaders_failed = "No ha sido posible inicializar el programa de sombreado"
+failed_compiling_shaders = "Ha ocurrido un error compilando los shaders:"
 
 [play.javascript.copypaste]
-copied_game = "Copied game to clipboard!"
-cannot_paste_in_public = "Cannot paste game in a public match!"
-cannot_paste_after_moves = "Cannot paste game after moves are made!"
-clipboard_denied = "Clipboard permission denied. This might be your browser."
-clipboard_invalid = "Clipboard is not in valid ICN notation."
-game_needs_to_specify = "Game needs to specify either the 'Variant' metadata, or 'startingPosition' property."
-invalid_wincon_white = "White has an invalid win condition"
-invalid_wincon_black = "Black has an invalid win condition"
-pasting_game = "Pasting game..."
-pasting_in_private = "Pasting a game in a private match will cause a desync if your opponent doesn't do the same!"
-piece_count = "Piece count"
-exceeded = "exceeded"
-changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
-loaded_from_clipboard = "Loaded game from clipboard!"
-loaded = "Loaded game!"
-slidelimit_not_number = "slideLimit gamerule must be a number. Received"
+copied_game = "¡Posición copiada en el portapapeles!"
+cannot_paste_in_public = "¡No se pueden pegar posiciones en una partida pública"
+cannot_paste_after_moves = "¡No se pueden pegar posiciones si ya se han hecho movimientos!"
+clipboard_denied = "Permiso de portapapeles denegado. Esto puede ser tu navegador."
+clipboard_invalid = "El portapapeles no está en notación ICN valida."
+game_needs_to_specify = "LA posición debe especificar el metadato 'Varinte', o la propiedad 'startingPosition'."
+invalid_wincon_white = "Las blancas tienen una posición de victoria inválida"
+invalid_wincon_black = "Las negras tienen una posición de victoria inválida "
+pasting_game = "Pegando posición..."
+pasting_in_private = "Pegar una posición en una partida privada ¡Causará una desicronización si tu oponente no hace lo mismo!"
+piece_count = "Numero de piezas"
+exceeded = "excedido"
+changed_wincon = "Cambiada la condición de victoria por jaque mate a captura real, y desactivado el renderizado de iconos. Pulsa 'P' para re-activarlo (no recomendado)."
+loaded_from_clipboard = "Partida cargada desde el portapapeles"
+loaded = "¡Partida cargada!"
+slidelimit_not_number = "La gamerule slideLimit debe ser un número."
 
 [play.javascript.rendering]
-on = "On"
-off = "Off"
-icon_rendering_off = "Toggled off icon rendering."
-icon_rendering_on = "Toggled on icon rendering."
-toggled_debug = "Toggled Debug Mode:"
-toggled_edit = "Toggled Edit Mode:"
-perspective = "Perspective"
-perspective_mode_on_desktop = "Perspective mode is available on desktop!"
-movement_tutorial = "WASD to move. Space & shift to zoom."
-regenerated_pieces = "Regenerated pieces."
+on = "Activado"
+off = "Desactivado"
+icon_rendering_off = "Desactivado el renderizado de iconos."
+icon_rendering_on = "Activado el renderizado de iconos."
+toggled_debug = "Modo Debug activado / desactivado:"
+toggled_edit = "Modo edición activado / desactivado:"
+perspective = "Perspectiva"
+perspective_mode_on_desktop = "¡El modo perspectiva está disponible en dispositivos de escritorio!"
+movement_tutorial = "WASD para moverse. Espacio y Mayus Izq. para hacer zoom."
+regenerated_pieces = "Piezas regeneradas."
 
 [play.javascript.invites]
-move_mouse = "Move the mouse to reconnect."
-unknown_action_received_1 = "Unknown action"
-unknown_action_received_2 = "received from the server in the invites subscription!"
-cannot_cancel = "Cannot cancel invite of undefined ID."
-you_indicator = "(You)"
-you_are_white = "You're: White"
-you_are_black = "You're: Black"
-random = "Random"
-accept = "Accept"
-cancel = "Cancel"
-create_invite = "Create Invite"
-cancel_invite = "Cancel Invite"
-start_game = "Start Game"
-join_existing_active_games = "Join Existing - Active Games:"
+move_mouse = "Mueve el ratón para reconectarte"
+unknown_action_received_1 = "!Acción desconocida"
+unknown_action_received_2 = "recibida desde el servidor en la subscripción de invitaciones!"
+cannot_cancel = "No se puede cancelar una invitación de ID indefinido."
+you_indicator = "(Tú)"
+you_are_white = "Eres: Blancas"
+you_are_black = "Eres: Negras"
+random = "Aleatorio"
+accept = "Aceptar"
+cancel = "Cancelar"
+create_invite = "Crear Invitación"
+cancel_invite = "Cancelar Invitación"
+start_game = "Empezar partida"
+join_existing_active_games = "Unirse a una partida existente - Partidas Activas:"
 
 [play.javascript.onlinegame]
-afk_warning = "You are AFK."
-opponent_afk = "Opponent is AFK."
-opponent_disconnected = "Opponent has disconnected."
-opponent_lost_connection = "Opponent has lost connection."
-auto_resigning_in = "Auto-resigning in"
-auto_aborting_in = "Auto-aborting in"
-not_logged_in = "You are not logged in. Please login to reconnect to this game."
-game_no_longer_exists = "Game no longer exists."
-another_window_connected = "Another window has connected."
-server_restarting = "Server restarting shortly..."
-server_restarting_in = "Server restarting in"
-minute = "minute"
-minutes = "minutes"
+afk_warning = "Estás AFK."
+opponent_afk = "Tu oponente está AFK."
+opponent_disconnected = "Tu oponente se ha desconectado."
+opponent_lost_connection = "Tu oponente ha perdido conexión."
+auto_resigning_in = "Auto-rindiendose en"
+auto_aborting_in = "Auto-abortando en"
+not_logged_in = "No has iniciado sesión. Por favór inicia sesión para reconectarse a esta partida."
+game_no_longer_exists = "Esta partida ya no existe"
+another_window_connected = "Otra ventana se ha conectado."
+server_restarting = "Servidor reiniciandose inminentemente..."
+server_restarting_in = "Servidor reiniciandose en"
+minute = "minuto"
+minutes = "minutos"
 
 [play.javascript.websocket]
-no_connection = "No connection."
-reconnected = "Reconnected."
-unable_to_identify_ip = "Unable to identify IP."
-online_play_disabled = "Online play disabled. Cookies not supported. Try a different browser."
-too_many_requests = "Too many requests. Try again soon."
-message_too_big = "Message too big."
-too_many_sockets = "Too many sockets"
-origin_error = "Origin error."
-connection_closed = "Connection closed unexpectedly. Server message:"
-please_report_bug = "This should never happen, please report this bug!"
+no_connection = "Sin conexión."
+reconnected = "Reconectado."
+unable_to_identify_ip = "Incapáz de identificar IP."
+online_play_disabled = "Juego Online desactivado. Las Cookies no están soportadas. Prueba con otro buscador."
+too_many_requests = "Demasiadas conexiones. Intentalo otra vez dentro de un rato."
+message_too_big = "Mensaje demasiado grande."
+too_many_sockets = "Demasiados sockets"
+origin_error = "Error de origen."
+connection_closed = "La conexión ha sido cerrada inesperadamente. Mensaje del servidor:"
+please_report_bug = "Esto no debería pasar, ¡Por favor reporta este bug!"
 
 [play.javascript.termination] # What caused the termination of the game, in spoken language
 checkmate = "Checkmate"
