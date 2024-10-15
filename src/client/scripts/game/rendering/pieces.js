@@ -127,8 +127,8 @@ function initSpritesheetData() {
 		// Commoner texture for the guard
 		// guardsW: getSpriteCoords(5,3),
 		// guardsB: getSpriteCoords(6,3),
-		hawksW: getSpriteCoords(7,3),
-		hawksB: getSpriteCoords(8,3),
+		hawksW: getSpriteCoords(8,3),
+		hawksB: getSpriteCoords(7,3),
 		camelsW: getSpriteCoords(1,4),
 		camelsB: getSpriteCoords(2,4),
 		giraffesW: getSpriteCoords(3,4),
