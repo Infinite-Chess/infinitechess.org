@@ -408,38 +408,38 @@ opponent_koth = "¡Pierdes por king of the hill!"
 opponent_generic = "¡Pierdes!"
 white_checkmate = "¡Las blancas ganan por jaque mate!"
 black_checkmate = "¡Las negras ganan por jaque mate!"
-bug_checkmate = "Esto es un bug, por favor reportalo. EL juego acaba en jaque mate."
+bug_checkmate = "Esto es un bug, por favor reportalo. El juego acaba en jaque mate."
 white_time = "¡Las blancas ganan por tiempo!"
 black_time = "¡Las negras ganan por tiempo!"
 bug_time = "Esto es un bug, por favor reportalo. El juego acaba por tiempo."
 white_royalcapture = "¡Las blancas ganan por captura real!"
 black_royalcapture = "¡Las negras ganan por captura real!"
-bug_royalcapture = "This is a bug, please report. Game ended by royal capture."
-white_allroyalscaptured = "White wins by all royals captured!"
-black_allroyalscaptured = "Black wins by all royals captured!"
-bug_allroyalscaptured = "This is a bug, please report. Game ended by all royals captured."
-white_allpiecescaptured = "White wins by all pieces captured!"
-black_allpiecescaptured = "Black wins by all pieces captured!"
-bug_allpiecescaptured = "This is a bug, please report. Game ended by all pieces captured."
-white_threecheck = "White wins by three-check!"
-black_threecheck = "Black wins by three-check!"
-bug_threecheck = "This is a bug, please report. Game ended by three-check."
-white_koth = "White wins by king of the hill!"
-black_koth = "Black wins by king of the hill!"
-bug_koth = "This is a bug, please report. Game ended by king of the hill."
-bug_generic = "This is a bug, please report!"
+bug_royalcapture = "Esto es un bug, por favor reportalo. El juego acaba por captura real."
+white_allroyalscaptured = "¡Las blancas ganan por captura real total!"
+black_allroyalscaptured = "¡Las negras ganan por captura real total!"
+bug_allroyalscaptured = "Esto es un bug, por favor reportalo. El juego acaba por captura real total."
+white_allpiecescaptured = "¡Las blancas ganan por captura de todas las piezas!"
+black_allpiecescaptured = "¡Las negras ganan por captura de todas las piezas!"
+bug_allpiecescaptured = "Esto es un bug, por favor reportalo. El juego acaba por captura de todas las piezas."
+white_threecheck = "¡Las blancas ganan por jaque triple!"
+black_threecheck = "¡Las negras gananpor jaque triple!"
+bug_threecheck = "Esto es un bug, por favor reportalo. El juego acaba por jaque triple."
+white_koth = "¡Las blancas ganan por king of the hill!"
+black_koth = "¡Las negras ganan por king of the hill!"
+bug_koth = "Esto es un bug, por favor reportalo. El juego acaba por king of the hill."
+bug_generic = "¡Esto es un bug, por favor reportalo!"
 
 [terms]
-title = "Terms of Service"
-warning = ["THIS DOCUMENT IS NOT LEGALLY BINDING. We are only accountable for the English version of this document. This translation is provided solely for general informational purposes. You can access the official English version ", "here", "."]
-consent = "By using this site, you agree to abide by the following terms. If you do not agree, you must immediately stop using the site."
-guardian_consent = "If you are under 18, you must receive consent from a parent or legal guardian to use this site and to create an account."
-parents_header = "Parents"
+title = "Terminos del Servicio"
+warning = ["ESTE DOCUMENTO NO ES VINCULANTE JURIDICAMENTE. Solo somos reponsables de la versión en inglés de este documento. Esta traducción se proporciona solo con un propósito informativo. Puedes acceder a la versíon inglesa oficial ", "aquí", "."]
+consent = "Al usar esta página web, aceptas los siguientes términos. Si no acceptas, debes dejar de usar la página inmediatamente"
+guardian_consent = "Si eres menor de 18, debes recibir consentimiento de un pariente o tutor legal para usar esta página web y para crear una cuenta."
+parents_header = "Padres"
 parents_paragraphs = [
-"There is an algorithm in place for prohibiting users setting their name to common cuss words. At this time there is no method of communication between members on the site.",
-"Currently, members cannot set their own profile picture. There is a plan to allow this feature. At that time we will do our best to prevent innapropriate profile pictures.",
+"Hay un algoritmo funcionando para evitar que los usuarios establezcan su nombre de usuario a palabras malsonantes comunes. Por el momento no hay ningún metodo de comunicación entre usuarios.",
+"Por el momento, los miembros no pueden establecer su imagen de perfíl. Hay planes para permitir esta función. En ese momento ahremos lo posible para prevenir imágenes inapropiadas.",
 ]
-fair_play_header = "Fair Play"
+fair_play_header = "Juego limpio"
 fair_play_paragraph1 = ["You cannot create more than 1 account. If you would like to change the email address associated with your account, ", "contact us."]
 fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
 fair_play_rules = [
