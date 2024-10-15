@@ -254,6 +254,24 @@ function queryWebGLContextInfo() {
 	// }
 }
 
+/**
+ * Enables depth testing in WebGL.
+ * This will ensure that objects closer to the camera are drawn in front of objects farther away.
+ */
+function enableDepthTest() {
+	gl.enable(gl.DEPTH_TEST);
+}
+
+/**
+ * Disables depth testing in WebGL.
+ * This will ensure that all objects are drawn regardless of their distance from the camera.
+ * More efficient that setting the depth test condition to gl.ALWAYS
+ */
+function disableDepthTest() {
+	gl.disable(gl.DEPTH_TEST);
+}
+
+
 export default {
 	init,
 	clearScreen,
@@ -261,7 +279,9 @@ export default {
 	executeWithDepthFunc_ALWAYS,
 	executeWithInverseBlending,
 	setClearColor,
-	queryWebGLContextInfo
+	queryWebGLContextInfo,
+	enableDepthTest,
+	disableDepthTest,
 };
 
 export { gl };

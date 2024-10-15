@@ -368,7 +368,7 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 	return false;
 }
 
-//Type export DO NOT USE
+// Type export DO NOT USE
 export { Move };
 
 export default {
