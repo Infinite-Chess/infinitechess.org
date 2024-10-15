@@ -440,25 +440,25 @@ parents_paragraphs = [
 "Por el momento, los miembros no pueden establecer su imagen de perfíl. Hay planes para permitir esta función. En ese momento ahremos lo posible para prevenir imágenes inapropiadas.",
 ]
 fair_play_header = "Juego limpio"
-fair_play_paragraph1 = ["You cannot create more than 1 account. If you would like to change the email address associated with your account, ", "contact us."]
-fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
+fair_play_paragraph1 = ["No puedes crear mas de una cuenta. Si te gustaría cambiar la dirección de email asociada con tu cuenta, ", "contacta con nosotros."]
+fair_play_paragraph2 = "Para mantener el juego limpio y justo para todos, NO debes:"
 fair_play_rules = [
-"Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, etc. This can be done to intentionally break the game, or to give you an advantage.",
-"In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated, casual, games)",
-"Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
+"Modificar o manipular el código de cualquier manera, incluyendo, pero no solo: Utilizar comandos de consola, controles locales, scripts personales, modificar peticiones http, etc. Esto puede hacerse intencionalmente para romper el juego, o para darte una ventaja.",
+"En partidas por puntos, recivir ayuda/consejos de otra persona o programa sobre lo que deberías hacer. (Crear un bot está bien y te animamos a hacerlo, pero debes limitar su uso a partidas amistosas, sin puntos)",
+"intercambiar puntos elo con otras personas al perder de manera intencionada para subir su nivel, o recibiendo puntos elo de un oponente que quiere perder para subir tu nivel. Esto abusa el sistema y crea niveles de puntuación poco precisos que no representan tu nivel de habilidad."
 ]
-cleanliness_header = "Cleanliness"
+cleanliness_header = "Lenguaje y imágenes"
 cleanliness_rules = [
-"In all your language on the site, you must remain clean, no vulgarity or cursing. You cannot bully, harass, or threaten anyone, or do anything that is illegal. You cannot spam other users or forums.",
-"You cannot not upload imagery to your profile that is innapropriate, suggestive, or gory. Doing so may result in a ban or termination of your account."
+"En todo el lenguaje que uses en esta página, debes permanecer limpio y educado, sin vulgaridades o palabras malsonantes. No puedes molestar, insultar o amenazar a nadie, o hacer nada ilegal. No puedes hacer spam a otros usuarios o foros.",
+"No puedes subir imágenes a tu perfíl que sean inapropiadas, sugestivas o gore. Hacerlo resultará en un ban o terminación de tu cuenta."
 ]
-privacy_header = "Privacy"
+privacy_header = "Privacidad"
 privacy_rules = [
-"Currently, the only personal information we collect is email. This is with intent to verify users' accounts, and provide a means of proving who they are when they request a password reset. We do not send any promotional emails or offers. We do not share any user's email address with anyone else.",
-"InfiniteChess.org may collect data about your usage on the site, including your ip address. This is intended to help prevent attacks from bots and other unwanted entities, and to keep accurate statistics in the database. This is NOT your home address.",
-"All games you play on this website become public information. If you wish to remain anonymous, do not share your username with friends or family. If this is your desire, it is your responsibility to make sure no one finds out your username is associated with your human identity.",
-"Your account online status, and the approximate last time you were active on the website, is also public information.",
-["While InfiniteChess.org will strive to keep everyone's account and personal information safe to the best of our ability, in the event of a hack or data leak, you may not press charges on us. If a data leak ever happens, users will be notified on the ", "News", "page."],
+"Actualmente, la única información personal que guardamos es tu dirección de email. Esto tiene el proposito de verificar las cuentas de usuario, y proporcionar una manera de demostrar quiénes son cuando pidan un reinicio de contraseña. No mandamos nigún email promocional o ofertas. No compartimos las direcciones de correo de los usuarios con nadie",
+"InfiniteChess.org puede guardar datos sobre tu uso del sitio, incluyendo tu dirección ip. Esto tiene la intención de prevenir ataques de bots y otras entidades no deseadas, y para mantener estadísticas precisas en la base de datos. Esto NO es tu dirección real.",
+"Todas las partidas que juegues en esta web se convierten en información pública. Si deseas mantener tu anonimidad, no compartas tu nombre de usuario con amigos o familia. Si ese es tu deseo, es tu responsabilidad asegurarte de que nadie descubre que tu nombre de usuario esta asociado con tu identidad humana.",
+"El estado de actividad de tu cuenta, y el tiempo aproximado desde la última vez que estuviste activo en la web, también en información pública.",
+["Aún que InfiniteChess.org siempre intentará mantener la información personal y de la cuenta segura de todo el mundo el máximo posible, en el evento de un hackeo o filtración de datos, no podrás presentar cargos. Si alguna vez ocurriese una filtración, los usuarios serán notificados en la página ", "Noticias", "."],
 "There is no content available on the site for purchase. Any other personal information is not collected.",
 "To have your private information deleted from our servers, you may delete your account through your profile page. The only thing with ties to your username that we will NOT delete, is your game history, because all games are public information.",
 ]
@@ -540,4 +540,4 @@ ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played."
 ws-game_aborted_cheating = "Game aborted for probable cheating."
 ws-cannot_resign_finished_game = "Can't resign game, it's already over."
 ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
-ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
+ws-game_aborted = "Partida abortada." # Invite was cancelled as you clicked on it
