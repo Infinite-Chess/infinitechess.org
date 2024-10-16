@@ -35,6 +35,9 @@ import gamerules from '../variants/gamerules.js';
 import jsutil from '../misc/jsutil.js';
 // Import End
 
+// TEMP FOR TESTING
+import atomic from '../modifiers/atomic.js';
+
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
@@ -183,6 +186,9 @@ function loadGamefile(newGamefile) {
 
 	gamefile = newGamefile;
 
+	// FIXME: TEMP PLEASE CHANGE
+	atomic.init();
+
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
 		miniimage.disable();
@@ -212,6 +218,9 @@ function unloadGame() {
 	// Terminate the mesh algorithm.
 	gamefile.mesh.terminateIfGenerating();
 	gamefile = undefined;
+
+	// FIXME: TEMP PLEASE CHANGE
+	atomic.reset();
 
 	selection.unselectPiece();
 	transition.eraseTelHist();
