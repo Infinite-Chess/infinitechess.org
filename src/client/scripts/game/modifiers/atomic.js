@@ -11,29 +11,66 @@
 
 const atomic = (function() {
     function initListeners() {
-        addEventListener('move', (e) => onMove(e.detail.gamefile,e.detail.move));
-        addEventListener('rewindMove', (e) => onRewind(e.detail.gamefile, e.detail.move))
+        addEventListener('move', onMove);
+        addEventListener('rewindMove', onRewind);
+        addEventListener('checkConclusion', checkConclusion);
     }
 
     /**
      * 
-     * @param {gamefile} gamefile 
-     * @param {atomicMove} move 
+     * @param {CustomEvent} event
      */
-    function onRewind(gamefile, move) {
+    function checkConclusion(event) {
+        // TBH JUST USE ALL ROYALS CAP
+        // NO MESSAGE SUPPORTED YET
+        /** @type {gamefile} */
+        const gamefile = event.detail.gamefile
+
+        if (!wincondition.isOpponentUsingWinCondition(gamefile, 'atomicroyalcapture')) return;
+
+        if (event.defaultPrevented) return;
+
+        /** @type {atomicMove} */
+        const lastMove = movesscript.getLastMove(gamefile.moves)
+
+        if (!lastMove.nukedPieces) return;
+
+        let royalNuke = false;
+
+        for (const piece of lastMove.nukedPieces) {
+            const type = math.trimWorBFromType(piece.type)
+            if (pieces.royals.includes(type)) {
+                royalNuke = true
+                break
+            }
+        }
+        if (!royalNuke) return
+        event.preventDefault()
+        event.detail.conclusion.push(`${math.getOppositeColor(gamefile.whosTurn)} atomicroyalcapture`)
+        return
+    }
+
+    /**
+     * 
+     * @param {CustomEvent} event
+     */
+    function onRewind(event) {
+        const gamefile = event.detail.gamefile
+        const move = event.detail.move
         if (!move.nukedPieces) return;
 
         for (const piece of move.nukedPieces) {
-            movepiece.addPiece(gamefile, piece.type, piece.coords, piece.index)
+            movepiece.addPiece(gamefile, piece.type, piece.coords, piece.index, { updateData:event.detail.options.updateData })
         }
     }
 
     /**
      * 
-     * @param {gamefile} gamefile 
-     * @param {atomicMove} move 
+     * @param {CustomEvent} event
      */
-    function onMove(gamefile, move) {
+    function onMove(event) {
+        const gamefile = event.detail.gamefile
+        const move = event.detail.move
         if (move.captured==null) return;
 
         const width = 1
@@ -46,8 +83,7 @@ const atomic = (function() {
             const nukePiece = gamefileutility.getPieceAtCoords(gamefile, ecoord)
 
             if (!nukePiece) continue;
-
-            movepiece.deletePiece(gamefile, nukePiece);
+            movepiece.deletePiece(gamefile, nukePiece, { updateData:event.detail.options.updateData });
             move.nukedPieces.push(nukePiece);
         }};
     }
