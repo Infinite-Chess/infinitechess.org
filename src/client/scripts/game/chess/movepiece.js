@@ -70,6 +70,8 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
 	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
 	const wasACapture = move.captured != null;
+    
+    dispatchEvent(new CustomEvent("move", {detail:{move: move, gamefile: gamefile}}))
 
 	gamefile.moveIndex++;
 	if (recordMove) gamefile.moves.push(move);
@@ -437,6 +439,8 @@ function rewindMove(gamefile, { updateData = true, removeMove = true, animate = 
 
 	const move = movesscript.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
 	const trimmedType = colorutil.trimColorExtensionFromType(move.type);
+
+    dispatchEvent(new CustomEvent("rewindMove", {detail: {gamefile: gamefile, move: move}}))
 
 	let isSpecialMove = false;
 	if (gamefile.specialUndos[trimmedType]) isSpecialMove = gamefile.specialUndos[trimmedType](gamefile, move, { updateData, animate });
