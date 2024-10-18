@@ -469,75 +469,75 @@ cookie_paragraphs = [
 ]
 conclusion_header = "Conclusión"
 conclusion_paragraphs = [
-"Cualquier ciolación de estos términos puedz resultar en un ban o terminación de tu cuenta. ¡InfiniteChess.org quiere ser capaz de dar a todo el mundo la oportunidad de jugar y divertirse! Pero reservamos el derecho a, en cualquier momento, banear o terminar las cuentas de cualquier usuario, por razones que no necesitan ser hechas públicas. No podrás presentar cargos.",
+"Cualquier violación de estos términos puedz resultar en un ban o terminación de tu cuenta. ¡InfiniteChess.org quiere ser capaz de dar a todo el mundo la oportunidad de jugar y divertirse! Pero reservamos el derecho a, en cualquier momento, banear o terminar las cuentas de cualquier usuario, por razones que no necesitan ser hechas públicas. No podrás presentar cargos.",
 ["Estos términos de servicio pueden ser modificados en cualquier momento. ¡Es TU responsabilidad asegurarte de que te mantienes actualizado con los últimos cambios! Cuándo estos términos del servicio reciban una actualización, esa información sera publicada en la página ", "Noticias", ". Si en el momento de una actualización de los términos de servicio, no estás de acuerdo con los nuevos términos, debes dejar de usar la web inmediatamente. Puedes eliminar tu cuenta en la página de perfíl. Si eliminas tu cuenta, toda tu información privada y datos de la cuenta serán eliminados, EXCEPTO el regístro de partidas jugadas con tu cuenta, que es información pública."],
-["Esta web es de código abierto. Puedes copiar o distribuir cualquier cosa en esta web siempre y cuando sigas las condiciones especificadas en","los términos de la licencia",],
-"We cannot guarantee the site will be running 100% of the time. We also cannot guarantee that data will never be corrupted.",
-"You may not perform any illegal activity on the site.",
-["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
+["Esta web es de código abierto. Puedes copiar o distribuir cualquier cosa en esta web, ¡Siempre y cuando sigas las condiciones especificadas en","los términos de la licencia","! Si este link no funciona, es tu reponsabilidad encontrar lso términos."],
+"No podemos garantizar que la página vaya a estar funcionando el 100% del tiempo. Tampoco podemos garntizar que los datos nunca estarán corruptos.",
+"No puedes realizar ninguna actividad ilegal en esta página web.",
+["Si tienes alguna pregunta sobre estos términos, o cualquier otra pregunta sobre la página,", "¡Mándanos un correo!"]
 ]
-update = "(Last updated: 7/13/24. Added warning that all games played may become public information, including your account's approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
-thanks = "Thank you!"
+update = "(Ultima actualización: 13/7/24. Añadida una advertencia de que todas las partidas jugadas se convierten en información pública, incluyendo el tiempo aproximado desde la última vez que estuviste activo en la web, y es tu responsabilidad asegurarte de que te mantienes actualizado.)"
+thanks = "¡Gracias!"
 
 [login]
-title = "Log In" # The tab name
-username = "Username:"
-password = "Password:"
-forgot_password = ["Forgot? ", "Email us."]
-login_button = "Log In"
+title = "Inicio de Sesión" # The tab name
+username = "Nombre de usuario:"
+password = "Contraseña:"
+forgot_password = ["Olvidaste tu contraseña? ", "Mandanos un correo."]
+login_button = "Iniciar Sesión"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
-400_message = "Invalid parameters were received."
-409_message = ["There may have been a clashing username or email. Please ", "reload", ", the page."]
-500_message = "This isn't supposed to happen. There is some debugging to be done!"
+400_message = "Parametros inválidos recibidos"
+409_message = ["Puede que haya un nombre de usuario o correo conflictivo. Por favor ", "recarga", " la página."]
+500_message = "Esto no debería pasar ¡Hay algo de debugging por hacer!"
 
 [news]
-title = "News" # The tab name
-more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
+title = "Noticias" # The tab name
+more_dev_logs = ["¡Mas devlogs se publican en ", "el discord oficial", " y en los ", "foros de chess.com!"]
 
 [server.javascript]
-ws-invalid_username = "Username is invalid"
-ws-incorrect_password = "Password is incorrect"
-ws-username_and_password_required = "Username and password are required."
-ws-username_and_password_string = "Username and password must be a string."
-ws-login_failure_retry_in = "Failed to login, try again in"
-ws-seconds = "seconds" # unit of time
-ws-second = "second" # unit of time
-ws-username_length = "Username must be between 3-20 characters"
-ws-username_letters = "Username must only contain letters A-Z and numbers 0-9"
-ws-username_taken = "That username is taken"
-ws-username_bad_word = "That username contains a word that is not allowed"
-ws-username_reserved = "That username is reserved"
-ws-email_too_long = "Your email is too looooooong."
-ws-email_invalid = "This is not a valid email"
-ws-email_in_use = "This email is already in use"
-ws-you_are_banned = "You are banned."
-ws-password_length = "Password must be 6-72 characters long"
-ws-password_format = "Password is in an incorrect format"
-ws-password_password = "Password must not be 'password'"
-ws-refresh_token_not_found_logged_out = "No member has that refresh token (already logged out)"
-ws-refresh_token_not_found = "No member has that refresh token"
-ws-refresh_token_expired = "No refresh token found (expired session)"
-ws-refresh_token_invalid = "Refresh token expired or tampered"
-ws-member_not_found = "Member not found"
-ws-forbidden_wrong_account = "Forbidden. This is not your account."
-ws-deleting_account_not_found = "Failed to delete account. Account not found."
-ws-server_error = "Sorry, there was a server error! Please go back."
-ws-unable_to_identify_client_ip = "Unable to identify client IP address"
-ws-you_are_banned_by_server = "You are banned"
-ws-too_many_requests_to_server = "Too Many Requests. Try again soon."
-ws-bad_request = "Bad Request"
-ws-not_found = "404 Not Found"
-ws-forbidden = "Forbidden."
-ws-unauthorized_patron_page = "Unauthorized. This page is patron-exclusive."
-ws-already_in_game = "You are already in a game."
-ws-server_restarting = "The server is restarting in" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
-ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
-ws-minutes = "minutes" # unit of time
-ws-minute = "minute" # unit of time
-ws-no_abort_game_over = "Can't abort game, it's already over."
-ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played."
-ws-game_aborted_cheating = "Game aborted for probable cheating."
-ws-cannot_resign_finished_game = "Can't resign game, it's already over."
-ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
+ws-invalid_username = "El nombre de usuario no es válido"
+ws-incorrect_password = "La contraseña es incorrecta"
+ws-username_and_password_required = "Se necesita un usuario y contraseña."
+ws-username_and_password_string = "El usuario y la contraseña deben ser texto."
+ws-login_failure_retry_in = "Inicio de sesión fallido, intentalo de nuevo en"
+ws-seconds = "segundos" # unit of time
+ws-second = "segundo" # unit of time
+ws-username_length = "El nombre de usuario debe tener entre 3 y 20 caracteres"
+ws-username_letters = "El nombre de usuario debe contener solo las letras A-Z y los números 0-9"
+ws-username_taken = "Ese nombre de usuario ya existe"
+ws-username_bad_word = "Ese nombre de usuario contiene una palabra que no etá permitida"
+ws-username_reserved = "Ese nombre de usuario está resevado"
+ws-email_too_long = "Tu email es muuuuuuuuuuuuy largo"
+ws-email_invalid = "Eso no es un email válido"
+ws-email_in_use = "Ese email ya ha sido registrado"
+ws-you_are_banned = "Estás baneado."
+ws-password_length = "La contraseña debe tener entre 6 y 72 caracteres"
+ws-password_format = "La contraseña está en un formato incorrecto"
+ws-password_password = "La contraseña no debe ser 'password'"
+ws-refresh_token_not_found_logged_out = "Ningún miembro tiene ese token de refresco (Ya has cerrado la sesión)"
+ws-refresh_token_not_found = "Ningún miembro tiene ese token de refresco"
+ws-refresh_token_expired = "No se ha encontrado ningún token de refresco (Tu sesión ha expirado)"
+ws-refresh_token_invalid = "Token de refrescom expirado o manipulado"
+ws-member_not_found = "No se ha encontrado ese miembro"
+ws-forbidden_wrong_account = "Prohibido. Esta no es tu cuenta"
+ws-deleting_account_not_found = "Error al eliminar la cuenta. No se ha encontrado la cuenta."
+ws-server_error = "Lo sentimos, ¡Ha habido un error de servidores! Por favor vuelve atrás."
+ws-unable_to_identify_client_ip = "No ha sido posible identificar la IP dle cliente"
+ws-you_are_banned_by_server = "Estás baneado"
+ws-too_many_requests_to_server = "Demasiadas peticiones. Intentalo otra vez luego."
+ws-bad_request = "Petición erronea."
+ws-not_found = "404 Página no encontrada"
+ws-forbidden = "Prohibido."
+ws-unauthorized_patron_page = "Desautorizado. Esta página es exclusiva para Patreons."
+ws-already_in_game = "Ya estas en una partida."
+ws-server_restarting = "El servidor se reiniciará en" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
+ws-server_under_maintenance = "El servidor esta bajo mantenimiento. ¡Vuelve en un rato!" # Can be changed at will to change the display message.
+ws-minutes = "minutos" # unit of time
+ws-minute = "minuto" # unit of time
+ws-no_abort_game_over = "No se puede abortar la partida, ya ha acabado."
+ws-no_abort_after_moves = "No se puede abortar la partida, se tienen que jugar al menos 2 movimientos."
+ws-game_aborted_cheating = "Partida abortada por trampas probables.."
+ws-cannot_resign_finished_game = "No se puede conceder la partida, ya ha acabado."
+ws-invalid_code = "¡Código invalido!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Partida abortada." # Invite was cancelled as you clicked on it
