@@ -40,6 +40,16 @@ function Move() {
 	this.check = undefined;
 	/** Whether the move delivered mate (or the killing move). */
 	this.mate = undefined;
+	/** Present if the move was special-move enpassant capture. This will be
+	 * 1 for the captured piece is 1 square above, or -1 for 1 square below. */
+	this.enpassant = undefined;
+	/** Present if the move was a special-move promotion. This will be
+	 * a string of the type of piece being promoted to: "queensW" */
+	this.promotion = undefined;
+	/** Present if the move was a special-move casle. This may look like an
+	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
+	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
+	this.castle = undefined;
 	/** Contains information for undoing simulated moves.
      * Several of these properties are impossible to recalculate without
      * looking at previous moves, or replaying the whole game. */
