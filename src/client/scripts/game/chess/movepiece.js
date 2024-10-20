@@ -17,6 +17,7 @@ import colorutil from '../misc/colorutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
+import stats from '../gui/stats.js';
 // Import End
 
 /** 
@@ -86,6 +87,7 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
 
 	if (updateData) {
 		guinavigation.update_MoveButtons();
+		stats.setTextContentOfMoves(); // Making a move should change the move number in the stats
 		frametracker.onVisualChange();
 	}
 
