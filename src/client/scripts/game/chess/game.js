@@ -13,6 +13,7 @@ import guipause from '../gui/guipause.js';
 import input from '../input.js';
 import miniimage from '../rendering/miniimage.js';
 import clock from '../misc/clock.js';
+import guiclock from '../gui/guiclock.js';
 import piecesmodel from '../rendering/piecesmodel.js';
 import movement from '../rendering/movement.js';
 import selection from './selection.js';
