@@ -15,6 +15,7 @@ import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../misc/colorutil.js';
 import frametracker from './frametracker.js';
+import timeutil from '../misc/timeutil.js';
 // Import End
 
 "use strict";
@@ -32,6 +33,7 @@ let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
 
 let navigationVisible = true;
 
+// let theme = getHollidayTheme(); // default/halloween/christmas
 let theme = 'default'; // default/halloween/christmas
 const validThemes = ['default', 'halloween', 'thanksgiving', 'christmas'];
 
@@ -211,16 +213,39 @@ function getDefaultCheckHighlightColor() {
 
 function setTheme(newTheme) { // default/halloween
 	if (!validateTheme(theme)) console.error(`Cannot change theme to invalid theme ${theme}!`);
+	if (theme === newTheme) return; // Same theme
 
 	theme = newTheme;
 	board.updateTheme();
 	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
 	highlights.regenModel();
+
+	if (isHollidayTheme(newTheme)) statustext.showStatus("To disable holliday theme, hit Enter.");
 }
 
-function toggleChristmasTheme() {
-	if (theme === 'christmas') setTheme('default');
-	else if (theme === 'default') setTheme('christmas');
+/**
+ * Toggles the theme between 'default' and the auto-selected theme.
+ * If the current theme is not 'default', it sets it to 'default'.
+ * If the current theme is 'default', it sets it to the value returned by getHollidayTheme().
+ */
+function toggleHollidayTheme() {
+	if (isHollidayTheme(theme)) setTheme('default');
+	else setTheme(getHollidayTheme());
+}
+
+function isHollidayTheme(theme) {
+	return theme !== 'default';
+}
+
+/**
+ * Determines the theme based on the current date.
+ * @returns {string} The theme for the current date ('halloween', 'christmas', or 'default').
+ */
+function getHollidayTheme() {
+	if (timeutil.isCurrentDateWithinRange(10, 25, 10, 31)) return 'halloween'; // Halloween week (October 25 to 31)
+	if (timeutil.isCurrentDateWithinRange(11, 23, 11, 29)) return 'thanksgiving'; // Thanksgiving week (November 23 to 29)
+	if (timeutil.isCurrentDateWithinRange(12, 19, 12, 25)) return 'christmas'; // Christmas week (December 19 to 25)
+	return 'default'; // Default theme if not in a holiday week
 }
 
 function validateTheme(theme) {
@@ -288,7 +313,7 @@ export default {
 	getDefaultLastMoveHighlightColor,
 	getDefaultCheckHighlightColor,
 	setTheme,
-	toggleChristmasTheme,
+	toggleHollidayTheme,
 	getPieceRegenColorArgs,
 	getColorOfType,
 	areUsingColoredPieces,

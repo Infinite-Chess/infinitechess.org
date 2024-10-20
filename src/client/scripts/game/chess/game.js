@@ -96,7 +96,7 @@ function updateVariablesAfterScreenResize() {
 function update() {
 	if (input.isKeyDown('`')) options.toggleDeveloperMode();
 	if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
-	// if (input.isKeyDown('enter')) options.toggleChristmasTheme()
+	if (input.isKeyDown('enter')) options.toggleHollidayTheme();
 	if (input.isKeyDown('m')) options.toggleFPS();
 	if (getGamefile()?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 
