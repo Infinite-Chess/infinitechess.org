@@ -73,6 +73,15 @@ function stop() {
 	clearTimeout(countdown.drum.timeoutID);
 	countdown.ticking.sound?.fadeOut(countdown.ticking.fadeOutDuration);
 	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
+	lowtimeNotif.whiteNotified = false;
+	lowtimeNotif.blackNotified = false;
+	countdown.drum.timeoutID = undefined;
+	countdown.tick.sound = undefined;
+	countdown.ticking.sound = undefined;
+	countdown.tick.timeoutID = undefined;
+	countdown.ticking.timeoutID = undefined;
+	removeBorder(element_timerWhite);
+	removeBorder(element_timerBlack);
 }
 
 /**
@@ -85,19 +94,6 @@ function update(gamefile) {
 	else updateBorderColor(gamefile, element_timerBlack, gamefile.currentTime.black);
 
 	updateTextContent(gamefile);
-}
-
-function reset() {
-	stop();
-	lowtimeNotif.whiteNotified = false;
-	lowtimeNotif.blackNotified = false;
-	countdown.drum.timeoutID = undefined;
-	countdown.tick.sound = undefined;
-	countdown.ticking.sound = undefined;
-	countdown.tick.timeoutID = undefined;
-	countdown.ticking.timeoutID = undefined;
-	removeBorder(element_timerWhite);
-	removeBorder(element_timerBlack);
 }
 
 function edit(gamefile) {
@@ -277,5 +273,4 @@ export default {
 	edit,
 	push,
 	update,
-	reset,
 };

@@ -267,7 +267,7 @@ function onmessage(data) { // { sub, action, value, id }
 			closeOnlineGame();
 			game.unloadGame();
 			// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
-			guiclock.reset();
+			guiclock.stop();
 			guinavigation.close();
 			guititle.open();
 			break;
