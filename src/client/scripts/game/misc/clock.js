@@ -78,11 +78,11 @@ function push(gamefile) {
 	if (!movesscript.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 
 	// Add increment
-	currentTime[gamefile.colorTicking] += timeutil.secondsToMillis(gamefile.startTime.increment);
+	gamefile.currentTime[gamefile.colorTicking] += timeutil.secondsToMillis(gamefile.startTime.increment);
 	// Flip colorTicking
 	gamefile.colorTicking = gamefile.whosTurn;
 
-	gamefile.timeRemainAtTurnStart = currentTime[gamefile.colorTicking];
+	gamefile.timeRemainAtTurnStart = gamefile.currentTime[gamefile.colorTicking];
 	gamefile.timeAtTurnStart = Date.now();
 	gamefile.timeNextPlayerLosesAt = gamefile.timeAtTurnStart + gamefile.timeRemainAtTurnStart;
 }
@@ -108,10 +108,10 @@ function update(gamefile) {
 
 	// Has either clock run out of time?
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
-	if (currentTime.white <= 0) {
+	if (gamefile.currentTime.white <= 0) {
 		gamefile.gameConclusion = 'black time';
 		gamefileutility.concludeGame(game.getGamefile());
-	} else if (currentTime.black <= 0) {
+	} else if (gamefile.currentTime.black <= 0) {
 		gamefile.gameConclusion = 'white time';
 		gamefileutility.concludeGame(game.getGamefile());
 	}
