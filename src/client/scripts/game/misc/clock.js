@@ -36,7 +36,7 @@ function set(gamefile, clock, currentTimes) {
 	}
 
 	// Edit the closk if we're re-loading an online game
-	if (currentTimes) edit(currentTimes.timerWhite, currentTimes.timerBlack, currentTimes.timeNextPlayerLosesAt);
+	if (currentTimes) edit(gamefile, currentTimes.timerWhite, currentTimes.timerBlack, currentTimes.timeNextPlayerLosesAt);
 	else { // No current time specified, start both players with the default.
 		gamefile.currentTime.white = gamefile.startTime.millis;
 		gamefile.currentTime.black = gamefile.startTime.millis;
@@ -103,8 +103,8 @@ function update(gamefile) {
 
 	// Update current values
 	const timePassedSinceTurnStart = Date.now() - gamefile.timeAtTurnStart;
-	if (gamefile.colorTicking === 'white') currentTime.white = Math.ceil(gamefile.timeRemainAtTurnStart - timePassedSinceTurnStart);
-	else currentTime.black = Math.ceil(gamefile.timeRemainAtTurnStart - timePassedSinceTurnStart);
+	if (gamefile.colorTicking === 'white') gamefile.currentTime.white = Math.ceil(gamefile.timeRemainAtTurnStart - timePassedSinceTurnStart);
+	else gamefile.currentTime.black = Math.ceil(gamefile.timeRemainAtTurnStart - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.

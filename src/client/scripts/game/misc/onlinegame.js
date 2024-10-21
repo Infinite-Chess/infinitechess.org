@@ -510,7 +510,7 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhi
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// When the game has ended by time/disconnect/resignation/aborted
-	clock.edit(messageContents.timerWhite, messageContents.timerBlack, messageContents.timeNextPlayerLosesAt);
+	clock.edit(gamefile, messageContents.timerWhite, messageContents.timerBlack, messageContents.timeNextPlayerLosesAt);
 
 	if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile);
 }

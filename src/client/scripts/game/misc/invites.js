@@ -3,7 +3,7 @@
 import websocket from '../websocket.js';
 import localstorage from './localstorage.js';
 import sound from './sound.js';
-import clock from './clock.js';
+import timeutil from './timeutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
 import style from '../gui/style.js';
@@ -174,7 +174,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
 		newInvite.appendChild(variant);
 
-		const time = clock.getClockFromKey(invite.clock);
+		const time = timeutil.getClockFromKey(invite.clock);
 		const cloc = createDiv(['invite-child'], time);
 		newInvite.appendChild(cloc);
 

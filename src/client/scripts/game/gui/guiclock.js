@@ -81,10 +81,10 @@ function stop() {
  */
 function update(gamefile) {
 	// Update border color
-	if (gamefile.colorTicking === 'white') updateBorderColor(gamefile, element_timerWhite, currentTime.white);
-	else updateBorderColor(element_timerBlack, currentTime.black);
+	if (gamefile.colorTicking === 'white') updateBorderColor(gamefile, element_timerWhite, gamefile.currentTime.white);
+	else updateBorderColor(gamefile, element_timerBlack, gamefile.currentTime.black);
 
-	updateTextContent();
+	updateTextContent(gamefile);
 }
 
 function reset() {
@@ -102,19 +102,19 @@ function reset() {
 
 function edit(gamefile) {
 
-	updateTextContent();
+	updateTextContent(gamefile);
 
 	// Remove colored border
 	if (gamefile.colorTicking === 'white') removeBorder(element_timerBlack);
 	else removeBorder(element_timerWhite);
 
 	if (!movesscript.isGameResignable(gamefile) || gamefile.gameConclusion) return;
-	rescheduleMinuteTick(); // Lowtime notif at 1 minute left
-	rescheduleCountdown(); // Schedule 10s drum countdown
+	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
+	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
 }
 
 // TODO: clock gui
-function removeBorder(gamefile, element) {
+function removeBorder(element) {
 	element.style.outline = '';
 }
 
@@ -183,7 +183,7 @@ function set(gamefile) {
 	if (gamefile.untimed) return hideClocks();
 	else showClocks();
 
-	updateTextContent();
+	updateTextContent(gamefile);
 }
 
 // The 10s drum countdown...
