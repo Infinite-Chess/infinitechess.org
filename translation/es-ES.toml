@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "17"
+version = "20"
 maintainer = "xa31"
 
 [header]
@@ -237,6 +237,14 @@ join = "Unirse"
 copy = "Copiar"
 back = "Atrás"
 code = "Codigo"
+
+[play.gamebuttontooltips]
+undo_transition = "Deshacer transición"
+expand_fit_all = "Expandir para ver todo"
+recenter = "Recentrar"
+rewind_move = "Deshacer movimiento"
+forward_move = "Rehacer movimiento"
+pause = "Pausar"
 
 [play.footer]
 white_to_move = "Juegan blancas"

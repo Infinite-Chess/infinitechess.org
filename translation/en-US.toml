@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "17"
+version = "20"
 maintainer = "Naviary"
 
 [header]
@@ -237,6 +237,14 @@ join = "Join"
 copy = "Copy"
 back = "Back"
 code = "Code"
+
+[play.gamebuttontooltips]
+undo_transition = "Undo transition"
+expand_fit_all = "Expand to fit all"
+recenter = "Recenter"
+rewind_move = "Rewind move"
+forward_move = "Forward move"
+pause = "Pause"
 
 [play.footer]
 white_to_move = "White to move"
