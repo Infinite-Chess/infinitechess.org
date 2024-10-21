@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "17"
+version = "20"
 maintainer = "xa31"
 
 [header]
@@ -85,13 +85,14 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Chino simplificado por ", "Heinrich Xiao", ".",
 	"Chino tradicional por ", "Heinrich Xiao", ".",
 	"Polaco por ", "Tymon Becella", ".", # Apsurt
-	"Português por ", "The_Skeleton", "."
+	"Portugués por ", "The_Skeleton", ".",
+	"Español por ", "xa31er", "."
 ]
 
 [member]
 title = "Miembro" # The tab name
-verify_message = "Por favor comprueba tu e-mail para verificar tu cuenta"
-resend_message = ["¿El e-mail no ha llegado? Comprueba la carpeta de spam. También puedes, ", "mandarlo otra vez.", "Si no puedes encontrarlo, ", "mandame un mensaje."]
+verify_message = "Por favor comprueba tu e-mail para verificar tu cuenta. Las cuentas sin verificar se eliminan tras 3 días."
+resend_message = ["¿El e-mail no ha llegado? Comprueba la carpeta de spam. También puedes, ", "mandarlo otra vez.", "Si no puedes encontrarlo, ", "mandanos un mensaje."]
 verify_confirm = "¡Gracias! Tu cuenta ha sido verificada."
 rating = "Rating Elo:"
 joined = "Se unió:"
@@ -236,6 +237,14 @@ join = "Unirse"
 copy = "Copiar"
 back = "Atrás"
 code = "Codigo"
+
+[play.gamebuttontooltips]
+undo_transition = "Deshacer transición"
+expand_fit_all = "Expandir para ver todo"
+recenter = "Recentrar"
+rewind_move = "Deshacer movimiento"
+forward_move = "Rehacer movimiento"
+pause = "Pausar"
 
 [play.footer]
 white_to_move = "Juegan blancas"
