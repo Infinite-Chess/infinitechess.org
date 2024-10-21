@@ -85,13 +85,14 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Chino simplificado por ", "Heinrich Xiao", ".",
 	"Chino tradicional por ", "Heinrich Xiao", ".",
 	"Polaco por ", "Tymon Becella", ".", # Apsurt
-	"Português por ", "The_Skeleton", "."
+	"Portugués por ", "The_Skeleton", ".",
+	"Español por ", "xa31er", "."
 ]
 
 [member]
 title = "Miembro" # The tab name
-verify_message = "Por favor comprueba tu e-mail para verificar tu cuenta"
-resend_message = ["¿El e-mail no ha llegado? Comprueba la carpeta de spam. También puedes, ", "mandarlo otra vez.", "Si no puedes encontrarlo, ", "mandame un mensaje."]
+verify_message = "Por favor comprueba tu e-mail para verificar tu cuenta. Las cuentas sin verificar se eliminan tras 3 días."
+resend_message = ["¿El e-mail no ha llegado? Comprueba la carpeta de spam. También puedes, ", "mandarlo otra vez.", "Si no puedes encontrarlo, ", "mandanos un mensaje."]
 verify_confirm = "¡Gracias! Tu cuenta ha sido verificada."
 rating = "Rating Elo:"
 joined = "Se unió:"
