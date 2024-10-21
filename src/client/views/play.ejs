@@ -10,20 +10,20 @@
         </script>
         <!-- Do not modify the next line under any circumstances!! It is used by build.js as a reference point of where to inject js -->
         <!-- htmlscript inject here -->
-        <!-- Javascript will add future styles in here -->
-        <style id="style"></style>
 
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
         <title><%=t('play.title')%></title>
-        <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="htmlscript.removeOnerror.call(this);">
+        <link rel='stylesheet' href='/css/play.css' onerror="htmlscript.callback_LoadingError(event)" onload="htmlscript.removeOnerror.call(this);"> <!-- NEEDS TO BE ABOVE JAVASCRIPT-INJECTED STYLINGS SO THAT TAKES PRECEDENCE -->
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
         <!-- Custom fonts: Merriweather, Open Sans -->
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
         
         <script defer src="/scripts/memberHeader.js"></script>
+        <!-- Javascript will add future styles in here. NEEDS TO BE BELOW OTHER STYLESHEET SO THIS TAKES PRECEDENCE -->
+        <style id="style"></style>
     </head>
     <body>
         <header>

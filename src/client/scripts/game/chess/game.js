@@ -33,6 +33,8 @@ import guigameinfo from '../gui/guigameinfo.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import gamerules from '../variants/gamerules.js';
 import jsutil from '../misc/jsutil.js';
+import statustext from '../gui/statustext.js';
+import docutil from '../misc/docutil.js';
 // Import End
 
 /** 
@@ -73,6 +75,15 @@ function init() {
 	guititle.open();
 
 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
+
+	// Change the theme to match the current holliday
+	options.toggleHollidayTheme();
+
+	// If a holliday theme is active, tell the user how to disable it.
+	if (options.isHollidayTheme()) {
+		if (docutil.isMouseSupported()) statustext.showStatus("To disable holliday theme, press Enter.");
+		else statustext.showStatus("To disable holliday theme, three-finger-tap the screen.");
+	}
 }
 
 // Initiates our textures, and our spritesheet data (where each piece's texture is located)

@@ -381,7 +381,6 @@ function updateTheme() {
 
 // Updates sky color based on current board color
 function updateSkyColor() {
-
 	const avgR = (whiteTiles[0] + darkTiles[0]) / 2;
 	const avgG = (whiteTiles[1] + darkTiles[1]) / 2;
 	const avgB = (whiteTiles[2] + darkTiles[2]) / 2;
@@ -401,17 +400,13 @@ function updateNavColor() {
 	const avgG = (whiteTiles[1] + darkTiles[1]) / 2;
 	const avgB = (whiteTiles[2] + darkTiles[2]) / 2;
 
-	// const brightAmount = 0.3; // 0.11 for default white & grey   0.3 default
-	// const navR = (avgR + brightAmount) * 255;
-	// const navG = (avgG + brightAmount) * 255;
-	// const navB = (avgB + brightAmount) * 255;
 
 	// With the default theme, these should be max
 	let navR = 255;
 	let navG = 255;
 	let navB = 255;
 
-	if (!options.isThemeDefault()) {
+	if (options.isHollidayTheme()) {
 		const brightAmount = 0.6; // 50% closer to white
 		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
 		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;
