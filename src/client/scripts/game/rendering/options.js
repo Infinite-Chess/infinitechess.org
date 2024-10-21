@@ -52,7 +52,7 @@ const themes = {
 		// legalMovesHighlightColor_Friendly: [1, 0.4, 0,  0.35], // Orange (for sandstone theme)
 		// legalMovesHighlightColor_Friendly: [1, 0.2, 0,  0.4], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
 		legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
-		legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
+		legalMovesHighlightColor_Premove: [0.3, 0, 1, 0.3],
 		lastMoveHighlightColor: [0, 1, 0, 0.25], // 0.17
 		// lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
 		checkHighlightColor: [1, 0, 0, 0.7],
