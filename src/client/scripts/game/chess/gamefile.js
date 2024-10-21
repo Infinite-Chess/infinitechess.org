@@ -172,7 +172,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
 	/** Contains the methods for undo'ing special moves for this game. */
 	this.specialUndos = undefined;
 
-	/** The time each player has remaining, in milliseconds. */
+	/** The time each player has remaining, in milliseconds, at the time of the last move played. */
 	this.currentTime = {
 		white: undefined,
 		black: undefined,
