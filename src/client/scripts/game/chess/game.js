@@ -124,7 +124,9 @@ function updateBoard() {
 	if (input.isKeyDown('r')) piecesmodel.regenModel(getGamefile(), options.getPieceRegenColorArgs(), true);
 	if (input.isKeyDown('n')) options.toggleNavigationBar();
 
-	clock.update();
+	const gamefile = getGamefile();
+	clock.update(gamefile);
+	guiclock.update(gamefile);
 	miniimage.testIfToggled();
 	animation.update();
 	if (guipause.areWePaused() && !onlinegame.areInOnlineGame()) return;

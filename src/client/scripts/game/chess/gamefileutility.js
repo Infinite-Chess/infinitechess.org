@@ -6,6 +6,7 @@ import onlinegame from '../misc/onlinegame.js';
 import sound from '../misc/sound.js';
 import wincondition from './wincondition.js';
 import clock from '../misc/clock.js';
+import guiclock from '../gui/guiclock.js';
 import selection from './selection.js';
 import board from '../rendering/board.js';
 import movesscript from './movesscript.js';
@@ -218,7 +219,8 @@ function concludeGame(gamefile, conclusion = gamefile.gameConclusion, { requestR
 	gamefile.gameConclusion = conclusion;
 	if (requestRemovalFromActiveGames) onlinegame.requestRemovalFromPlayersInActiveGames();
 	if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
-	clock.stop();
+	clock.endGame(gamefile);
+	guiclock.stop(gamefile);
 	board.darkenColor();
 	guigameinfo.gameEnd(gamefile.gameConclusion);
 	onlinegame.onGameConclude();

@@ -4,7 +4,7 @@ import onlinegame from '../misc/onlinegame.js';
 import style from './style.js';
 import game from '../chess/game.js';
 import arrows from '../rendering/arrows.js';
-import clock from '../misc/clock.js';
+import guiclock from '../misc/clock.js';
 import guinavigation from './guinavigation.js';
 import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
@@ -153,7 +153,10 @@ function callback_MainMenu() {
 	onlinegame.closeOnlineGame();
 	callback_Resume();
 	game.unloadGame();
-	clock.reset();
+
+	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
+	guiclock.reset();
+
 	guinavigation.close();
 	guititle.open();
 }

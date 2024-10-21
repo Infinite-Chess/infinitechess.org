@@ -172,6 +172,32 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
 	/** Contains the methods for undo'ing special moves for this game. */
 	this.specialUndos = undefined;
 
+	/** The time each player has remaining, in milliseconds. */
+	this.currentTime = {
+		white: undefined,
+		black: undefined,
+	};
+
+	/** Contains information about the start time of the game. */
+	this.startTime = {
+		/** The number of minutes both sides started with. */
+		minutes: undefined,
+		/** The number of miliseconds both sides started with. */
+		millis: undefined,
+		/** The increment used, in milliseconds. */
+		increment: undefined,
+	};
+
+	/** Which color's clock is currently running. This is usually the same as the gamefile's whosTurn property. */
+	this.colorTicking = undefined;
+	/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds. */
+	this.timeRemainAtTurnStart = undefined;
+	/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. */
+	this.timeAtTurnStart = undefined;
+	this.timeNextPlayerLosesAt = undefined;
+	/** True if the game is not timed. @type {Boolean}*/
+	this.untimed = undefined;
+
 	// JSDoc stuff over...
 
 	// this.metadata = metadata; // Breaks the above JSDoc
