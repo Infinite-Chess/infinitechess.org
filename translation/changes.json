@@ -1,4 +1,8 @@
 {
+	"19": {
+		"note": "Updated wording of verify_message and resend_message, lines 94-95",
+		"changes": []
+	},
 	"18": {
 		"note": "Added Spanish translation credit, line 89",
 		"changes": []
