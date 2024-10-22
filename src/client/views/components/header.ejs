@@ -1,0 +1,31 @@
+<header>
+    <nav>
+        <a href="/">
+            <p><%=t('header.home')%></p>
+        </a>
+        <a href="/play">
+            <p><%=t('header.play')%></p>
+        </a>
+        <a href="/news">
+            <p><%=t('header.news')%></p>
+        </a>
+        <a href="/login" id="loginlink">
+            <p id="logintext"><%=t('header.login')%></p>
+        </a>
+        <a href="/createaccount" id="createaccountlink">
+            <p id="createaccounttext" class="<%t%> "><%=t('header.createaccount')%></p>
+        </a>
+        <label for="language-picker"><%=t('footer.language')%>:
+            <select id="language-picker">
+                <% for(let i=0; i<languages.length; i++) {%>
+                    <% if (languages[i].code === language) { %>
+                        <option value="<%= languages[i].code %>" selected><%= languages[i].name %></option>
+                    <% } else { %>
+                        <option value="<%= languages[i].code %>"><%= languages[i].name %></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </label>
+    </nav>
+</header>
+<script src="/scripts/languagepicker.js"></script>
