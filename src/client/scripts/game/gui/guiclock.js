@@ -99,7 +99,7 @@ function stop() {
  */
 function update(gamefile) {
 	const clocks = gamefile.clocks;
-	if (clocks.untimed || clocks.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
+	if (clocks.untimed || gamefile.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
 	const whosTurn = gamefile.whosTurn;
 	// Update border color

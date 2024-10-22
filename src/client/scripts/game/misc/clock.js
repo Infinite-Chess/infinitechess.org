@@ -96,7 +96,6 @@ function endGame(gamefile) {
 	clocks.timeRemainAtTurnStart = undefined;
 	clocks.timeAtTurnStart = undefined;
 	clocks.timeNextPlayerLosesAt = undefined;
-	gamefile.whosTurn = undefined;
 }
 
 /**
@@ -105,7 +104,7 @@ function endGame(gamefile) {
 */
 function update(gamefile) {
 	const clocks = gamefile.clocks;
-	if (clocks.untimed || clocks.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
+	if (clocks.untimed || gamefile.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
 	// Update current values
 	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
