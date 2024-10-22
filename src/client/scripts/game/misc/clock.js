@@ -24,25 +24,27 @@ import timeutil from './timeutil.js';
  * @param {Object} [currentTimes] - An object containing the properties `timerWhite`, and `timerBlack` for the current time of the players. Often used if we re-joining an online game.
  */
 function set(gamefile, clock, currentTimes) {
-	gamefile.startTime.minutes = null;
-	gamefile.startTime.millis = null;
-	gamefile.startTime.increment = null;
+	const clocks = gamefile.clocks;
+
+	clocks.startTime.minutes = null;
+	clocks.startTime.millis = null;
+	clocks.startTime.increment = null;
 
 	const clockPartsSplit = timeutil.getMinutesAndIncrementFromClock(clock); // { minutes, increment }
 	if (clockPartsSplit !== null) {
-		gamefile.startTime.minutes = clockPartsSplit.minutes;
-		gamefile.startTime.millis = timeutil.minutesToMillis(gamefile.startTime.minutes);
-		gamefile.startTime.increment = clockPartsSplit.increment;
+		clocks.startTime.minutes = clockPartsSplit.minutes;
+		clocks.startTime.millis = timeutil.minutesToMillis(clocks.startTime.minutes);
+		clocks.startTime.increment = clockPartsSplit.increment;
 	}
 
 	// Edit the closk if we're re-loading an online game
 	if (currentTimes) edit(gamefile, currentTimes.timerWhite, currentTimes.timerBlack, currentTimes.timeNextPlayerLosesAt);
 	else { // No current time specified, start both players with the default.
-		gamefile.currentTime.white = gamefile.startTime.millis;
-		gamefile.currentTime.black = gamefile.startTime.millis;
+		clocks.currentTime.white = clocks.startTime.millis;
+		clocks.currentTime.black = clocks.startTime.millis;
 	}
 
-	gamefile.untimed = timeutil.isClockValueInfinite(clock);
+	clocks.untimed = timeutil.isClockValueInfinite(clock);
 }
 
 /**
@@ -52,20 +54,20 @@ function set(gamefile, clock, currentTimes) {
  * @param {number} newTimeBlack - Black's current time, in milliseconds.
  * @param {number} timeNextPlayerLoses - The time at which the current player will lose on time if they don't move in time.
  */
-function edit(gamefile, newTimeWhite, newTimeBlack, timeNextPlayerLoses) {   
-	gamefile.colorTicking = gamefile.whosTurn; // Update colorTicking because we don't call push() with this.
+function edit(gamefile, newTimeWhite, newTimeBlack, timeNextPlayerLoses) {
+	const clocks = gamefile.clocks;
 
-	gamefile.currentTime.white = newTimeWhite;
-	gamefile.currentTime.black = newTimeBlack;
-	gamefile.timeNextPlayerLosesAt = timeNextPlayerLoses;
+	clocks.currentTime.white = newTimeWhite;
+	clocks.currentTime.black = newTimeBlack;
+	clocks.timeNextPlayerLosesAt = timeNextPlayerLoses;
 	const now = Date.now();
-	gamefile.timeAtTurnStart = now;
+	clocks.timeAtTurnStart = now;
 
 	if (timeNextPlayerLoses) {
 		const nextPlayerTrueTime = timeNextPlayerLoses - now;
-		gamefile.currentTime[gamefile.colorTicking] = nextPlayerTrueTime;
+		clocks.currentTime[gamefile.whosTurn] = nextPlayerTrueTime;
 	}
-	gamefile.timeRemainAtTurnStart = gamefile.colorTicking === 'white' ? gamefile.currentTime.white : gamefile.currentTime.black;
+	clocks.timeRemainAtTurnStart = gamefile.whosTurn === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
 }
 
 /**
@@ -73,25 +75,28 @@ function edit(gamefile, newTimeWhite, newTimeBlack, timeNextPlayerLoses) {
  * @param {gamefile} gamefile 
  */
 function push(gamefile) {
+	const clocks = gamefile.clocks;
+
 	if (onlinegame.areInOnlineGame()) return; // Only the server can push clocks
-	if (gamefile.untimed) return;
+	if (clocks.untimed) return;
 	if (!movesscript.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
-
+	
 	// Add increment
-	gamefile.currentTime[gamefile.colorTicking] += timeutil.secondsToMillis(gamefile.startTime.increment);
+	clocks.currentTime[gamefile.whosTurn] += timeutil.secondsToMillis(clocks.startTime.increment);
 	// Flip colorTicking
-	gamefile.colorTicking = gamefile.whosTurn;
+	gamefile.whosTurn = clocks.whosTurn;
 
-	gamefile.timeRemainAtTurnStart = gamefile.currentTime[gamefile.colorTicking];
-	gamefile.timeAtTurnStart = Date.now();
-	gamefile.timeNextPlayerLosesAt = gamefile.timeAtTurnStart + gamefile.timeRemainAtTurnStart;
+	clocks.timeRemainAtTurnStart = clocks.currentTime[gamefile.whosTurn];
+	clocks.timeAtTurnStart = Date.now();
+	clocks.timeNextPlayerLosesAt = clocks.timeAtTurnStart + clocks.timeRemainAtTurnStart;
 }
 
 function endGame(gamefile) {
-	gamefile.timeRemainAtTurnStart = undefined;
-	gamefile.timeAtTurnStart = undefined;
-	gamefile.timeNextPlayerLosesAt = undefined;
-	gamefile.colorTicking = undefined;
+	const clocks = gamefile.clocks;
+	clocks.timeRemainAtTurnStart = undefined;
+	clocks.timeAtTurnStart = undefined;
+	clocks.timeNextPlayerLosesAt = undefined;
+	gamefile.whosTurn = undefined;
 }
 
 /**
@@ -99,20 +104,21 @@ function endGame(gamefile) {
  * @param {gamefile} gamefile
 */
 function update(gamefile) {
-	if (gamefile.untimed || gamefile.gameConclusion || !movesscript.isGameResignable(gamefile) || gamefile.timeAtTurnStart === undefined) return;
+	const clocks = gamefile.clocks;
+	if (clocks.untimed || clocks.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
 	// Update current values
-	const timePassedSinceTurnStart = Date.now() - gamefile.timeAtTurnStart;
-	if (gamefile.colorTicking === 'white') gamefile.currentTime.white = Math.ceil(gamefile.timeRemainAtTurnStart - timePassedSinceTurnStart);
-	else gamefile.currentTime.black = Math.ceil(gamefile.timeRemainAtTurnStart - timePassedSinceTurnStart);
+	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
+	if (gamefile.whosTurn === 'white') clocks.currentTime.white = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
+	else clocks.currentTime.black = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
-	if (gamefile.currentTime.white <= 0) {
-		gamefile.gameConclusion = 'black time';
+	if (clocks.currentTime.white <= 0) {
+		clocks.gameConclusion = 'black time';
 		gamefileutility.concludeGame(game.getGamefile());
-	} else if (gamefile.currentTime.black <= 0) {
-		gamefile.gameConclusion = 'white time';
+	} else if (clocks.currentTime.black <= 0) {
+		clocks.gameConclusion = 'white time';
 		gamefileutility.concludeGame(game.getGamefile());
 	}
 }
@@ -122,10 +128,12 @@ function update(gamefile) {
  * @param {gamefile} gamefile 
  */
 function printClocks(gamefile) {
-	console.log(`White time: ${gamefile.currentTime.white}`);
-	console.log(`Black time: ${gamefile.currentTime.black}`);
-	console.log(`timeRemainAtTurnStart: ${gamefile.timeRemainAtTurnStart}`);
-	console.log(`timeAtTurnStart: ${gamefile.timeAtTurnStart}`);
+	const clocks = gamefile.clocks;
+	for (const color in clocks.currentTime) {
+		console.log(`${color} time: ${clocks.currentTime[color]}`);
+	}
+	console.log(`timeRemainAtTurnStart: ${clocks.timeRemainAtTurnStart}`);
+	console.log(`timeAtTurnStart: ${clocks.timeAtTurnStart}`);
 }
 
 /**
@@ -133,7 +141,7 @@ function printClocks(gamefile) {
  * @param {gamefile} gamefile 
  */
 function isGameUntimed(gamefile) {
-	return gamefile.untimed;
+	return gamefile.clocks.untimed;
 }
 
 export default {
