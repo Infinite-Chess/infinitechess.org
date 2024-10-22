@@ -98,10 +98,13 @@ function stop() {
  * @param {gamefile} gamefile 
  */
 function update(gamefile) {
+	const clocks = gamefile.clocks;
+	if (clocks.untimed || clocks.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
+
 	const whosTurn = gamefile.whosTurn;
 	// Update border color
 	if (whosTurn !== undefined) {
-		updateBorderColor(gamefile, element_timers[whosTurn].timer, gamefile.clocks.currentTime[whosTurn]);
+		updateBorderColor(gamefile, element_timers[whosTurn].timer, clocks.currentTime[whosTurn]);
 	}
 	updateTextContent(gamefile);
 }
