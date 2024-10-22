@@ -13,7 +13,7 @@ header {
     z-index: 1;
 }
 
-header a {
+.topnavitem {
     display: inline-block;
     text-decoration: none;
     line-height: 40px;
@@ -23,10 +23,10 @@ header a {
     color: black;
 }
 
-header a:hover {
+.topnavitem :hover {
     background-color: rgb(211, 235, 255);
 }
 
-header p {
-    padding: 0 10px;
+.topnavtext {
+    padding: 5px;
 }

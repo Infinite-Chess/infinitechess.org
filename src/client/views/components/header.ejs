@@ -1,22 +1,22 @@
 <header>
     <nav>
-        <a href="/">
-            <p><%=t('header.home')%></p>
+        <a class="topnavitem" href="/">
+            <p class="topnavtext"><%=t('header.home')%></p>
         </a>
-        <a href="/play">
-            <p><%=t('header.play')%></p>
+        <a class="topnavitem" href="/play">
+            <p class="topnavtext"><%=t('header.play')%></p>
         </a>
-        <a href="/news">
-            <p><%=t('header.news')%></p>
+        <a class="topnavitem" href="/news">
+            <p class="topnavtext"><%=t('header.news')%></p>
         </a>
-        <a href="/login" id="loginlink">
-            <p id="logintext"><%=t('header.login')%></p>
+        <a class="topnavitem" href="/login" id="loginlink">
+            <p class="topnavtext" id="logintext"><%=t('header.login')%></p>
         </a>
-        <a href="/createaccount" id="createaccountlink">
-            <p id="createaccounttext" class="<%t%> "><%=t('header.createaccount')%></p>
+        <a class="topnavitem" href="/createaccount" id="createaccountlink">
+            <p class="topnavtext" id="createaccounttext"><%=t('header.createaccount')%></p>
         </a>
-        <label for="language-picker"><%=t('footer.language')%>:
-            <select id="language-picker">
+        <label class="topnavitem" for="language-picker"><%=t('footer.language')%>:
+            <select class="topnavtext" id="language-picker">
                 <% for(let i=0; i<languages.length; i++) {%>
                     <% if (languages[i].code === language) { %>
                         <option value="<%= languages[i].code %>" selected><%= languages[i].name %></option>
