@@ -13,6 +13,17 @@ header {
     z-index: 1;
 }
 
+/* Start increasing header links width */
+@media only screen and (min-width: 450px) {
+    header {
+        overflow: unset;
+    }
+
+    header a {
+        min-width: calc(70px + (100vw - 450px) * 0.15);
+    }
+}
+
 .topnavitem {
     display: inline-block;
     text-decoration: none;
@@ -28,5 +39,5 @@ header {
 }
 
 .topnavtext {
-    padding: 5px;
+    padding: 0 10px;
 }

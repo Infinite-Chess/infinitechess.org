@@ -134,17 +134,6 @@ a {
 
 
 
-/* Start increasing header links width */
-@media only screen and (min-width: 450px) {
-    header {
-        overflow: unset;
-    }
-
-    header a {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
-}
-
 /* Reveal pictures in logo */
 @media only screen and (min-width: 480px) {
     .logo img {
