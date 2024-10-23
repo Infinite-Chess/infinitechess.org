@@ -8,7 +8,7 @@ This guide walks you through the initial setup phase of the infinitechess.org se
 
 ## Step 1: Download VSCode ##
 
-This guide will use VSCode, but you may use another code editor if you wish, if it is compatible with Node, npm, and has source control features.
+This guide will use VSCode, which is **highly** recommended, but you may use another code editor if you wish, as long as it is compatible with Node, npm, and has source control features. This guide will walk you through the process using VSCode.
 
 [Go here](https://code.visualstudio.com/) to download and install VSCode. Be sure you have Visual Studio **Code**, and not Visual Studio (they are different).
 
