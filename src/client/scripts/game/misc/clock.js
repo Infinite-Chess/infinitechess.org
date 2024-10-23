@@ -84,8 +84,6 @@ function push(gamefile) {
 	
 	// Add increment
 	clocks.currentTime[gamefile.whosTurn] += timeutil.secondsToMillis(clocks.startTime.increment);
-	// Flip colorTicking
-	gamefile.whosTurn = clocks.whosTurn;
 
 	clocks.timeRemainAtTurnStart = clocks.currentTime[gamefile.whosTurn];
 	clocks.timeAtTurnStart = Date.now();
@@ -109,16 +107,17 @@ function update(gamefile) {
 
 	// Update current values
 	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
-	if (gamefile.whosTurn === 'white') clocks.currentTime.white = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
-	else clocks.currentTime.black = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
+
+	clocks.currentTime[gamefile.whosTurn] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
+	// TODO: update when lose conditions are added
 	if (clocks.currentTime.white <= 0) {
-		clocks.gameConclusion = 'black time';
+		gamefile.gameConclusion = 'black time';
 		gamefileutility.concludeGame(game.getGamefile());
 	} else if (clocks.currentTime.black <= 0) {
-		clocks.gameConclusion = 'white time';
+		gamefile.gameConclusion = 'white time';
 		gamefileutility.concludeGame(game.getGamefile());
 	}
 }
