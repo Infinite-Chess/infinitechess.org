@@ -4,6 +4,7 @@ import onlinegame from './onlinegame.js';
 import game from '../chess/game.js';
 import movesscript from '../chess/movesscript.js';
 import gamefileutility from '../chess/gamefileutility.js';
+import clockutil from './clockutil.js';
 import timeutil from './timeutil.js';
 // Import End
 
@@ -30,7 +31,7 @@ function set(gamefile, clock, currentTimes) {
 	clocks.startTime.millis = null;
 	clocks.startTime.increment = null;
 
-	const clockPartsSplit = timeutil.getMinutesAndIncrementFromClock(clock); // { minutes, increment }
+	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock); // { minutes, increment }
 	if (clockPartsSplit !== null) {
 		clocks.startTime.minutes = clockPartsSplit.minutes;
 		clocks.startTime.millis = timeutil.minutesToMillis(clocks.startTime.minutes);
@@ -44,7 +45,7 @@ function set(gamefile, clock, currentTimes) {
 		clocks.currentTime.black = clocks.startTime.millis;
 	}
 
-	clocks.untimed = timeutil.isClockValueInfinite(clock);
+	clocks.untimed = clockutil.isClockValueInfinite(clock);
 }
 
 /**

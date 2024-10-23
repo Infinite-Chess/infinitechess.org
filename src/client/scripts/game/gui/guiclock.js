@@ -2,7 +2,7 @@ import style from "./style.js";
 import movesscript from "../chess/movesscript.js";
 import onlinegame from "../misc/onlinegame.js";
 import sound from "../misc/sound.js";
-import timeutil from "../misc/timeutil.js";
+import clockutil from "../misc/clockutil.js";
 
 /**
  * @typedef {import('../chess/gamefile').gamefile} gamefile
@@ -164,7 +164,7 @@ function updateBorderColor(gamefile, element, currentTimeRemain) {
 /** Updates the clocks' text content in the document. */
 function updateTextContent(gamefile) {
 	for (const color in element_timers) {
-		const text = timeutil.getTextContentFromTimeRemain(gamefile.clocks.currentTime[color]);
+		const text = clockutil.getTextContentFromTimeRemain(gamefile.clocks.currentTime[color]);
 		element_timers[color].timer.textContent = text;
 	}
 }
