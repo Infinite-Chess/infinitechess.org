@@ -24,3 +24,8 @@ footer select {
     margin: 10px 10px 10px 0px;
     cursor: pointer;
 }
+
+/* This ONLY changes the color of the text in the language-selection dropdown list so that the contrast is easier to read on Windows */
+footer .language-option {
+    color: rgb(33, 33, 33);
+}
