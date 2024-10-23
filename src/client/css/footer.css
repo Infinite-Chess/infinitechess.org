@@ -24,3 +24,7 @@ footer select {
     margin: 10px 10px 10px 0px;
     cursor: pointer;
 }
+
+footer .language-option {
+    color: rgb(33, 33, 33)
+}
