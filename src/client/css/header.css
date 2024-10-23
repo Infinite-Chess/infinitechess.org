@@ -1,0 +1,50 @@
+header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    box-shadow: 0px 1px 5px rgb(107, 107, 107);
+    height: 40px;
+    font-size: 0;
+    overflow: scroll;
+    white-space: nowrap;
+    text-align: center;
+    background-color: white;
+    z-index: 1;
+}
+
+.topnavitem {
+    display: inline-block;
+    text-decoration: none;
+    line-height: 40px;
+    margin-left: 4px;
+    min-width: 70px;
+    font-size: 16px;
+    color: black;
+}
+
+.topnavitem :hover {
+    background-color: rgb(211, 235, 255);
+}
+
+.topnavtext {
+    padding: 0 10px;
+}
+
+/* Start increasing header links width when screen is 450px+ */
+@media only screen and (min-width: 450px) {
+    header {
+        overflow: unset;
+    }
+
+    .topnavitem {
+        min-width: calc(70px + (100vw - 450px) * 0.15);
+    }
+}
+
+/* Stop increasing header links width once screen reaches 715px+ */
+@media only screen and (min-width: 715px) {
+    .topnavitem {
+        min-width: 110px;
+    }
+}

@@ -6,25 +6,25 @@ This guide walks you through the initial setup phase of the infinitechess.org se
 
 **Summary of the setup process below for experienced users:** Install VSCode and Node.js. Fork the repository and install the project dependencies via `npm install`. Now you can run `npx nodemon` to launch a live infinite chess server at `https://localhost:3443`. Optionally, you can also set up an email serivce now. You are now ready to test changes and contribute to the main project after reading the [Navigation Guide](./NAVIGATING.md)! **All these steps are explained in great detail below:**
 
-## Step 1: Download VSCode ##
 
-This guide will use VSCode, but you may use another code editor if you wish, if it is compatible with Node, npm, and has source control features.
+
+## Step 1: Install Git ##
+
+[Here's a guide](https://github.com/git-guides/install-git) for how to check if you have Git installed already, and if not, how to install it.
+
+## Step 2: Download VSCode ##
+
+This guide will use VSCode, which is **highly** recommended, but you may use another code editor if you wish, as long as it is compatible with Node, npm, and has source control features. This guide will walk you through the process using VSCode.
 
 [Go here](https://code.visualstudio.com/) to download and install VSCode. Be sure you have Visual Studio **Code**, and not Visual Studio (they are different).
 
 
 
-## Step 2: Install Node.js ##
+## Step 3: Install Node.js ##
 
 [Go here](https://nodejs.org/en/download/package-manager) to download and install Node. The easiest method is to click the "Prebuilt Installer" tab, download that, and run the installer.
 
 <img width="916" alt="22 copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/9f0b5cab-f372-45f6-b648-cefef99e68a0">
-
-
-
-## Step 3: Install Git ##
-
-[Here's a guide](https://github.com/git-guides/install-git) for how to check if you have Git installed already, and if not, how to install it.
 
 
 
@@ -109,6 +109,10 @@ Installing the ESLint VSCode extension will help your pull requests be approved 
 Go to the extensions tab, search for "eslint", click the one by "Microsoft", then Click "Install"!
 
 <img width="1081" alt="Screen Shot 2024-08-16 at 10 26 33 PM copy" src="https://github.com/user-attachments/assets/7df938ff-da69-4675-934f-4a61e93e69c1">
+
+
+
+Another highly recommended extension to install is "GitHub Pull Requests", which allows you to test-run other people's code suggestions on the repository, but it is not required.
 
 
 
