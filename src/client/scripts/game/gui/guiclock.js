@@ -21,11 +21,8 @@ const element_timers = {
 
 /** All variables related to the lowtime tick notification at 1 minute remaining. */
 const lowtimeNotif = {
-	/** True if white's clock has reached 1 minute or less and the ticking sound effect has been played. */
-	colorNotified: {
-		black: false,
-		white: false,
-	},
+	/** Contains the colors that have had the ticking sound play */
+	colorsNotified: new Set(),
 	/** The timer that, when ends, will play the lowtime ticking audio cue. */
 	timeoutID: undefined,
 	/** The amount of milliseconds before losing on time at which the lowtime tick notification will be played. */
@@ -85,9 +82,7 @@ function stop() {
 	for (const color in element_timers) {
 		removeBorder(element_timers[color].timer);
 	}
-	for (const color in lowtimeNotif.colorNotified) {
-		lowtimeNotif.colorNotified[color] = false;
-	}
+	lowtimeNotif.colorsNotified = new Set();
 	countdown.drum.timeoutID = undefined;
 	countdown.tick.sound = undefined;
 	countdown.ticking.sound = undefined;
@@ -177,14 +172,14 @@ function rescheduleMinuteTick(gamefile) {
 	if (gamefile.clocks.startTime.minutes < lowtimeNotif.clockMinsRequiredToUse) return; // 1 minute lowtime notif is not used in bullet games.
 	clearTimeout(lowtimeNotif.timeoutID);
 	if (onlinegame.areInOnlineGame() && gamefile.whosTurn !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
-	if (lowtimeNotif.colorNotified[gamefile.whosTurn]) return;
+	if (lowtimeNotif.colorsNotified.has(gamefile.whosTurn)) return;
 	const timeRemain = gamefile.clocks.timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd;
-	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile);
+	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile.whosTurn);
 }
 
-function playMinuteTick(gamefile) {
+function playMinuteTick(color) {
 	sound.playSound_tick({ volume: 0.07 });
-	lowtimeNotif.colorNotified[gamefile.whosTurn] = true;
+	lowtimeNotif.colorsNotified.add(color);
 }
 
 function set(gamefile) {
