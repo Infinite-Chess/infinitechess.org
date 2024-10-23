@@ -193,13 +193,6 @@ a {
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
-    header {
-        overflow: unset;
-    }
-
-    header a {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
 
     #content h1 {
         font-size: calc(40px + 0.027 * (100vw - 450px));
@@ -216,10 +209,6 @@ a {
 
 /* Stop increasing header links width */
 @media only screen and (min-width: 715px) {
-    header a {
-        min-width: 110px;
-    }
-
     input {
         width: 260px; /* Must also change div.error width! */
     }

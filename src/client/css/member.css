@@ -230,14 +230,6 @@ a {
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
-    header {
-        overflow: unset;
-    }
-
-    header a {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
-
     .member {
         padding: calc(12px + (100vw - 450px) * 0.05);
     }
@@ -254,10 +246,6 @@ a {
 
 /* Stop increasing header links width */
 @media only screen and (min-width: 715px) {
-    header a {
-        min-width: 110px;
-    }
-
     #verifyerror h2, #verifyconfirm {
         font-size: 20px;
     }

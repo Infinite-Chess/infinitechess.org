@@ -59,26 +59,6 @@ header p {
     padding: 0 10px;
 }
 
-/* Start increasing header links width */
-@media only screen and (min-width: 450px) {
-
-    header {
-        overflow: unset;
-    }
-
-    header a {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
-}
-
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-
-    header a {
-        min-width: 110px;
-    }
-}
-
 
 
 /* Everything besides the top navigation bar */
@@ -1031,7 +1011,6 @@ button.join-button, button.copy-button {
 }
 
 @media only screen and (max-width: 502px) {
-
     .playerwhite, .playerblack {
         display: none;
     }

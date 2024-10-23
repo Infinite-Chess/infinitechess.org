@@ -146,13 +146,6 @@ a {
     }
 }
 
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-    header a {
-        min-width: 110px;
-    }
-}
-
 /* Cap content width size */
 @media only screen and (min-width: 810px) {
     #content {
