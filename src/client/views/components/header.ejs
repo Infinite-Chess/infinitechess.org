@@ -17,3 +17,9 @@
         </a>
     </nav>
 </header>
+
+<script>
+    document.querySelectorAll('.topnavitem').forEach(link => {
+        if (link.getAttribute('href') === window.location.pathname) link.classList.add('currPage');
+    });
+</script>
