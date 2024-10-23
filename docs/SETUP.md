@@ -112,6 +112,10 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 
 
 
+Another highly recommended extension to install is "GitHub Pull Requests", which allows you to test-run other people's code suggestions on the repository, but it is not required.
+
+
+
 ## Step 7 (optional): Setting up the email service ##
 
 While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails (planned) until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
