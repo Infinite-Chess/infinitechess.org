@@ -31,7 +31,7 @@ header {
     padding: 0 10px;
 }
 
-/* Start increasing header links width. NEEDS TO BE BELOW EVERYTHING ELSE so that is overwrites. */
+/* Start increasing header links width when screen is 450px+ */
 @media only screen and (min-width: 450px) {
     header {
         overflow: unset;
@@ -42,7 +42,7 @@ header {
     }
 }
 
-/* Stop increasing header links width */
+/* Stop increasing header links width once screen reaches 715px+ */
 @media only screen and (min-width: 715px) {
     .topnavitem {
         min-width: 110px;
