@@ -22,7 +22,13 @@ This guide will use VSCode, but you may use another code editor if you wish, if 
 
 
 
-## Step 3: Forking the repository ##
+## Step 3: Install Git ##
+
+[Here's a guide](https://github.com/git-guides/install-git) for how to check if you have Git installed already, and if not, how to install it.
+
+
+
+## Step 4: Forking the repository ##
 
 Go to the [repository's home page](https://github.com/Infinite-Chess/infinitechess.org), then click "Fork"! You will need a github account.
 
@@ -48,7 +54,7 @@ Choose a location on your machine to store the repository. Then when prompted wh
 
 
 
-## Step 4: Install project dependencies ##
+## Step 5: Install project dependencies ##
 
 Inside the opened VSCode project, open a terminal window within it by going to Terminal > New Terminal.
 
@@ -96,7 +102,7 @@ If done correctly, you should be met with the following. This means the server h
 
 
 
-## Step 5: Install ESLint ##
+## Step 6: Install ESLint ##
 
 Installing the ESLint VSCode extension will help your pull requests be approved quicker, by holding your code semantics to the standards of the project! ESLint will give you errors when you have undefined variables, missing semicolons, and other items, making it easier to catch bugs before runtime!
 
@@ -106,7 +112,7 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 
 
 
-## Step 6 (optional): Setting up the email service ##
+## Step 7 (optional): Setting up the email service ##
 
 While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails (planned) until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
 
