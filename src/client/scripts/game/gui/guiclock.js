@@ -72,22 +72,26 @@ function showClocks() {
 	}
 }
 
-function stop() {
+function stopClocks() {
 	clearTimeout(lowtimeNotif.timeoutID);
 	clearTimeout(countdown.ticking.timeoutID);
 	clearTimeout(countdown.tick.timeoutID);
 	clearTimeout(countdown.drum.timeoutID);
 	countdown.ticking.sound?.fadeOut(countdown.ticking.fadeOutDuration);
 	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
-	for (const color in element_timers) {
-		removeBorder(element_timers[color].timer);
-	}
-	lowtimeNotif.colorsNotified = new Set();
 	countdown.drum.timeoutID = undefined;
 	countdown.tick.sound = undefined;
 	countdown.ticking.sound = undefined;
 	countdown.tick.timeoutID = undefined;
 	countdown.ticking.timeoutID = undefined;
+
+	for (const color in element_timers) {
+		removeBorder(element_timers[color].timer);
+	}
+}
+function endGame() {
+	stopClocks();
+	lowtimeNotif.colorsNotified = new Set();
 }
 
 /**
@@ -125,7 +129,12 @@ function removeBorder(element) {
 	element.style.outline = '';
 }
 
-/** Changes the border color gradually */
+/**
+ * Changes the border color gradually
+ * @param {gamefile} gamefile 
+ * @param {Element} element 
+ * @param {Number} currentTimeRemain 
+ */
 function updateBorderColor(gamefile, element, currentTimeRemain) {
 	const percRemain = currentTimeRemain / (gamefile.clocks.startTime.minutes * 60 * 1000);
 
@@ -156,7 +165,10 @@ function updateBorderColor(gamefile, element, currentTimeRemain) {
 	element.style.outline = `3px solid rgb(${r * 255},${g * 255},${b * 255})`;
 }
 
-/** Updates the clocks' text content in the document. */
+/** 
+ * Updates the clocks' text content in the document.
+ * @param {gamefile} gamefile 
+ */
 function updateTextContent(gamefile) {
 	for (const color in element_timers) {
 		const text = clockutil.getTextContentFromTimeRemain(gamefile.clocks.currentTime[color]);
@@ -165,13 +177,18 @@ function updateTextContent(gamefile) {
 }
 
 // The lowtime notification...
-/** Reschedules the timer to play the ticking sound effect at 1 minute remaining. */
+/** 
+ * Reschedules the timer to play the ticking sound effect at 1 minute remaining.
+ * @param {gamefile} gamefile 
+ */
 function rescheduleMinuteTick(gamefile) {
 	if (gamefile.clocks.startTime.minutes < lowtimeNotif.clockMinsRequiredToUse) return; // 1 minute lowtime notif is not used in bullet games.
 	clearTimeout(lowtimeNotif.timeoutID);
 	if (onlinegame.areInOnlineGame() && gamefile.whosTurn !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
 	if (lowtimeNotif.colorsNotified.has(gamefile.whosTurn)) return;
 	const timeRemain = gamefile.clocks.timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd;
+	console.log(gamefile);
+	console.log(timeRemain, gamefile.clocks.timeRemainAtTurnStart, lowtimeNotif.timeToStartFromEnd);
 	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile.whosTurn);
 }
 
@@ -196,7 +213,17 @@ function rescheduleCountdown(gamefile) {
 	rescheduleTick(gamefile, now);
 }
 
+/**
+ * 
+ * @param {gamefile} gamefile 
+ */
 function push(gamefile) {
+	/**
+	 * Dont update if no clocks are ticking
+	 * If you wan to stop clocks temporarly run {@link stopClocks} to update gui
+	 */
+	if (!gamefile.clocks.timeNextPlayerLosesAt) return;
+
 	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
 	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
 
@@ -275,7 +302,8 @@ export default {
 	hideClocks,
 	showClocks,
 	set,
-	stop,
+	endGame,
+	stopClocks,
 	edit,
 	push,
 	update,
