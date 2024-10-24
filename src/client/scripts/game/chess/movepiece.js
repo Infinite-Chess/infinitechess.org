@@ -5,6 +5,7 @@ import gamefileutility from './gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import arrows from '../rendering/arrows.js';
 import clock from '../misc/clock.js';
+import guiclock from '../gui/guiclock.js';
 import organizedlines from './organizedlines.js';
 import animation from '../rendering/animation.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -276,7 +277,10 @@ function incrementMoveRule(gamefile, typeMoved, wasACapture) {
 function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
 	gamefile.whosTurn = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
-	if (pushClock) clock.push();
+	if (pushClock) {
+		clock.push(gamefile);
+		guiclock.push(gamefile);
+	};
 }
 
 /**

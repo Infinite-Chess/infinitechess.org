@@ -9,6 +9,7 @@ import style from './style.js';
 import game from '../chess/game.js';
 import sound from '../misc/sound.js';
 import clock from '../misc/clock.js';
+import guiclock from './guiclock.js';
 import movement from '../rendering/movement.js';
 import options from '../rendering/options.js';
 import statustext from './statustext.js';
@@ -323,7 +324,9 @@ function startLocalGame(inviteOptions) {
 		}
 	};
 	loadGame(gameOptions);
-	clock.set(inviteOptions.clock);
+	const gamefile = game.getGamefile();
+	clock.set(gamefile, inviteOptions.clock);
+	guiclock.set(gamefile);
 	guigameinfo.hidePlayerNames();
 }
 
@@ -342,8 +345,10 @@ function startOnlineGame(gameOptions) {
 	onlinegame.setColorAndGameID(gameOptions);
 	gameOptions.variantOptions = generateVariantOptionsIfReloadingPrivateCustomGame();
 	loadGame(gameOptions);
+	const gamefile = game.getGamefile();
 	onlinegame.initOnlineGame(gameOptions);
-	clock.set(gameOptions.clock, { timerWhite: gameOptions.timerWhite, timerBlack: gameOptions.timerBlack, timeNextPlayerLosesAt: gameOptions.timeNextPlayerLosesAt });
+	clock.set(gamefile, gameOptions.clock, { timerWhite: gameOptions.timerWhite, timerBlack: gameOptions.timerBlack, timeNextPlayerLosesAt: gameOptions.timeNextPlayerLosesAt });
+	guiclock.set(gamefile);
 	guigameinfo.revealPlayerNames(gameOptions);
 	drawoffers.set(gameOptions.drawOffer);
 }
