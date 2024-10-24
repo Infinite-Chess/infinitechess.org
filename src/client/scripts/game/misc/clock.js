@@ -83,7 +83,7 @@ function push(gamefile) {
 	if (!movesscript.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 	
 	// Add increment if the last move has a clock ticking
-	if (clocks.timeNextPlayerLosesAt) {
+	if (clocks.timeAtTurnStart !== undefined) {
 		const prevcolor = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 		clocks.currentTime[prevcolor] += timeutil.secondsToMillis(clocks.startTime.increment);
 	}

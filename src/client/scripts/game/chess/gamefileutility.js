@@ -220,7 +220,7 @@ function concludeGame(gamefile, conclusion = gamefile.gameConclusion, { requestR
 	if (requestRemovalFromActiveGames) onlinegame.requestRemovalFromPlayersInActiveGames();
 	if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
 	clock.endGame(gamefile);
-	guiclock.stop(gamefile);
+	guiclock.stopClocks(gamefile);
 	board.darkenColor();
 	guigameinfo.gameEnd(gamefile.gameConclusion);
 	onlinegame.onGameConclude();

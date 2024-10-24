@@ -249,7 +249,7 @@ function onmessage(data) { // { sub, action, value, id }
 			websocket.getSubs().game = false;
 			inSync = false;
 			clock.endGame(game.getGamefile());
-			guiclock.stop();
+			guiclock.stopClocks();
 			game.getGamefile().gameConclusion = 'limbo';
 			selection.unselectPiece();
 			board.darkenColor();
@@ -267,7 +267,7 @@ function onmessage(data) { // { sub, action, value, id }
 			closeOnlineGame();
 			game.unloadGame();
 			// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
-			guiclock.stop();
+			guiclock.resetClocks();
 			guinavigation.close();
 			guititle.open();
 			break;

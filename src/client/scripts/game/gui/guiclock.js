@@ -72,6 +72,9 @@ function showClocks() {
 	}
 }
 
+/**
+ * Stops clock sounds and removes all borders
+ */
 function stopClocks() {
 	clearTimeout(lowtimeNotif.timeoutID);
 	clearTimeout(countdown.ticking.timeoutID);
@@ -89,7 +92,11 @@ function stopClocks() {
 		removeBorder(element_timers[color].timer);
 	}
 }
-function endGame() {
+
+/**
+ * Resets all data so a new game can be loaded
+ */
+function resetClocks() {
 	stopClocks();
 	lowtimeNotif.colorsNotified = new Set();
 }
@@ -218,11 +225,8 @@ function rescheduleCountdown(gamefile) {
  * @param {gamefile} gamefile 
  */
 function push(gamefile) {
-	/**
-	 * Dont update if no clocks are ticking
-	 * If you wan to stop clocks temporarly run {@link stopClocks} to update gui
-	 */
-	if (!gamefile.clocks.timeNextPlayerLosesAt) return;
+	// Dont update if no clocks are ticking
+	if (gamefile.clocks.timeAtTurnStart === undefined) return;
 
 	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
 	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
@@ -302,7 +306,7 @@ export default {
 	hideClocks,
 	showClocks,
 	set,
-	endGame,
+	resetClocks,
 	stopClocks,
 	edit,
 	push,
