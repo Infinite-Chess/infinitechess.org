@@ -1,25 +1,154 @@
 <header>
+    <a class="home" href="/">
+        <!-- svg of big omega -->
+        <img src="img/logo/light-theme.png" class="headerlogo" alt="Omega one, the logo of Infinite Chess."/>
+        <p><%=t('header.home')%></p>
+    </a>
     <nav>
-        <a class="topnavitem" href="/">
-            <p class="topnavtext"><%=t('header.home')%></p>
+        <a href="/play">
+            <span><%=t('header.play')%></span>
+            <svg class="svg-play" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 45 45"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#666" fill-opacity="1" fill-rule="nonzero" stroke="#666" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/></svg>
         </a>
-        <a class="topnavitem" href="/play">
-            <p class="topnavtext"><%=t('header.play')%></p>
+        <a href="/news">
+            <span><%=t('header.news')%></span>
+            <svg class="svg-news" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 5.00006C10.4477 5.00006 10 5.44777 10 6.00006C10 6.55234 10.4477 7.00006 11 7.00006H18C18.5523 7.00006 19 6.55234 19 6.00006C19 5.44777 18.5523 5.00006 18 5.00006H11Z" fill="#555"></path> <path d="M10 10.0001C10 9.44777 10.4477 9.00006 11 9.00006H13C13.5523 9.00006 14 9.44777 14 10.0001C14 10.5523 13.5523 11.0001 13 11.0001H11C10.4477 11.0001 10 10.5523 10 10.0001Z" fill="#555"></path> <path d="M11 13.0001C10.4477 13.0001 10 13.4478 10 14.0001C10 14.5523 10.4477 15.0001 11 15.0001H13C13.5523 15.0001 14 14.5523 14 14.0001C14 13.4478 13.5523 13.0001 13 13.0001H11Z" fill="#555"></path> <path d="M10 18.0001C10 17.4478 10.4477 17.0001 11 17.0001H13C13.5523 17.0001 14 17.4478 14 18.0001C14 18.5523 13.5523 19.0001 13 19.0001H11C10.4477 19.0001 10 18.5523 10 18.0001Z" fill="#555"></path> <path d="M16 9.00006C15.4477 9.00006 15 9.44777 15 10.0001C15 10.5523 15.4477 11.0001 16 11.0001H18C18.5523 11.0001 19 10.5523 19 10.0001C19 9.44777 18.5523 9.00006 18 9.00006H16Z" fill="#555"></path> <path d="M15 14.0001C15 13.4478 15.4477 13.0001 16 13.0001H18C18.5523 13.0001 19 13.4478 19 14.0001C19 14.5523 18.5523 15.0001 18 15.0001H16C15.4477 15.0001 15 14.5523 15 14.0001Z" fill="#555"></path> <path d="M16 17.0001C15.4477 17.0001 15 17.4478 15 18.0001C15 18.5523 15.4477 19.0001 16 19.0001H18C18.5523 19.0001 19 18.5523 19 18.0001C19 17.4478 18.5523 17.0001 18 17.0001H16Z" fill="#555"></path> <path fill-rule="evenodd" clip-rule="evenodd" d="M4.50013 23.0001H19C19.925 23.0001 20.6852 22.7659 21.2891 22.3634C21.8867 21.965 22.2726 21.4409 22.5194 20.9473C22.7643 20.4576 22.8817 19.9799 22.9395 19.6332C22.9743 19.4247 22.9995 19.2118 23 19.0001V4.00012C23 2.34327 21.6569 1.00012 20 1.00012H9C7.34315 1.00012 6 2.34327 6 4.00012L6 13.0001H4C2.34381 13.0001 1 14.3415 1 15.999V19.0001C1 20.8388 1.79875 21.9205 2.7355 22.4826C3.17156 22.7442 3.59956 22.871 3.91326 22.9338C4.1055 22.9722 4.30358 23.0001 4.50013 23.0001ZM21 4.00012C21 3.44784 20.5523 3.00012 20 3.00012H9C8.44771 3.00012 8 3.44784 8 4.00012V19.0001C8 19.8053 7.84683 20.4653 7.59599 21.0001H19C19.575 21.0001 19.9398 20.8592 20.1797 20.6993C20.4258 20.5352 20.6024 20.3092 20.7306 20.0528C20.8917 19.7306 20.9901 19.3559 21 18.9939V4.00012ZM4 15.0001H6L6 19.0001C6 20.1613 5.54875 20.5796 5.2355 20.7676C4.76451 21.0502 4.23209 21.0481 3.7645 20.7676C3.45125 20.5796 3 20.1613 3 19.0001V15.999C3 15.4474 3.44705 15.0001 4 15.0001Z" fill="#555"></path> </g></svg>
         </a>
-        <a class="topnavitem" href="/news">
-            <p class="topnavtext"><%=t('header.news')%></p>
+        <a href="/login">
+            <span><%=t('header.login')%></span>
+            <svg class="svg-login" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M15 16.5V19C15 20.1046 14.1046 21 13 21H6C4.89543 21 4 20.1046 4 19V5C4 3.89543 4.89543 3 6 3H13C14.1046 3 15 3.89543 15 5V8.0625M20 12L9 12M9 12L11.5 14.5M9 12L11.5 9.5" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
         </a>
-        <a class="topnavitem" href="/login" id="loginlink">
-            <p class="topnavtext" id="logintext"><%=t('header.login')%></p>
-        </a>
-        <a class="topnavitem" href="/createaccount" id="createaccountlink">
-            <p class="topnavtext" id="createaccounttext"><%=t('header.createaccount')%></p>
+        <a href="/createaccount">
+            <span><%=t('header.createaccount')%></span>
+            <svg class="svg-createaccount" fill="#555" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 310 310" xml:space="preserve" stroke="#555"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M300.606,159.727l-45.333-45.333c-5.857-5.858-15.355-5.858-21.213,0L225,123.454V15c0-8.284-6.716-15-15-15H20 C11.716,0,5,6.716,5,15v240.002c0,8.284,6.716,15,15,15h85V295c0,8.284,6.716,15,15,15h45.333c3.979,0,7.794-1.581,10.607-4.394 l124.667-124.667C306.465,175.081,306.465,165.585,300.606,159.727z M35,30h160v123.454l-85.606,85.605 c-0.302,0.301-0.581,0.619-0.854,0.942H35V30z M159.12,280H135v-24.121l109.667-109.666l24.12,24.12L159.12,280z"></path> </g></svg>
         </a>
     </nav>
+    <!-- gear svg for settings -->
+     <div class="gear-container">
+        <svg class="gear" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M12.7848 0.449982C13.8239 0.449982 14.7167 1.16546 14.9122 2.15495L14.9991 2.59495C15.3408 4.32442 17.1859 5.35722 18.9016 4.7794L19.3383 4.63233C20.3199 4.30175 21.4054 4.69358 21.9249 5.56605L22.7097 6.88386C23.2293 7.75636 23.0365 8.86366 22.2504 9.52253L21.9008 9.81555C20.5267 10.9672 20.5267 13.0328 21.9008 14.1844L22.2504 14.4774C23.0365 15.1363 23.2293 16.2436 22.7097 17.1161L21.925 18.4339C21.4054 19.3064 20.3199 19.6982 19.3382 19.3676L18.9017 19.2205C17.1859 18.6426 15.3408 19.6754 14.9991 21.405L14.9122 21.845C14.7167 22.8345 13.8239 23.55 12.7848 23.55H11.2152C10.1761 23.55 9.28331 22.8345 9.08781 21.8451L9.00082 21.4048C8.65909 19.6754 6.81395 18.6426 5.09822 19.2205L4.66179 19.3675C3.68016 19.6982 2.59465 19.3063 2.07505 18.4338L1.2903 17.1161C0.770719 16.2436 0.963446 15.1363 1.74956 14.4774L2.09922 14.1844C3.47324 13.0327 3.47324 10.9672 2.09922 9.8156L1.74956 9.52254C0.963446 8.86366 0.77072 7.75638 1.2903 6.8839L2.07508 5.56608C2.59466 4.69359 3.68014 4.30176 4.66176 4.63236L5.09831 4.77939C6.81401 5.35722 8.65909 4.32449 9.00082 2.59506L9.0878 2.15487C9.28331 1.16542 10.176 0.449982 11.2152 0.449982H12.7848ZM12 15.3C13.8225 15.3 15.3 13.8225 15.3 12C15.3 10.1774 13.8225 8.69998 12 8.69998C10.1774 8.69998 8.69997 10.1774 8.69997 12C8.69997 13.8225 10.1774 15.3 12 15.3Z" fill="#555"></path> </g></svg>
+     </div>
 </header>
 
 <script>
-    document.querySelectorAll('.topnavitem').forEach(link => {
+    // Greys the navigation link of the page we are currently on
+    document.querySelectorAll('nav a').forEach(link => {
         if (link.getAttribute('href') === window.location.pathname) link.classList.add('currPage');
     });
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const header = document.querySelector('header');
+        const home = document.querySelector('.home');
+        const nav = document.querySelector('nav');
+        const links = document.querySelectorAll('nav a');
+        const navSVGs = document.querySelectorAll('nav svg');
+        const maxPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-max-padding'));
+        const minPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-min-padding'));
+        const gear = document.querySelector('.gear-container');
+
+        // These things are hidden in our stylesheet off the bat to give our javascript
+        // here time to calculate the spacing of everything
+        home.style.visibility = 'visible';
+        nav.style.visibility = 'visible';
+        gear.style.visibility = 'visible';
+
+        let mode = 0;
+
+        function updateSpacing() {
+            resetMode();
+            updatePadding();
+
+
+            let homeRight = home.getBoundingClientRect().right;
+            let navLeft = nav.getBoundingClientRect().left;
+            let spaceBetween = navLeft - homeRight;
+
+            console.log(spaceBetween, mode)
+
+            while (spaceBetween === 0 && mode < 4) {
+                increaseCompactness();
+                updatePadding();
+                homeRight = home.getBoundingClientRect().right;
+                navLeft = nav.getBoundingClientRect().left;
+                spaceBetween = navLeft - homeRight;
+            }
+        }
+
+        // Function to update padding based on space between .home and nav
+        function updatePadding() {
+
+            const homeRight = home.getBoundingClientRect().right;
+            const navLeft = nav.getBoundingClientRect().left;
+            const spaceBetween = navLeft - homeRight;
+
+            // If the space is less than 100px, reduce padding gradually
+            if (spaceBetween >= 100) {
+                // Reset to max padding when space is larger than 100px
+                links.forEach(link => {
+                    link.style.paddingLeft = `${maxPadding}px`;
+                    link.style.paddingRight = `${maxPadding}px`;
+                });
+            } else {
+                const newPadding = Math.max(minPadding, maxPadding * (spaceBetween / 100));
+                links.forEach(link => {
+                    link.style.paddingLeft = `${newPadding}px`;
+                    link.style.paddingRight = `${newPadding}px`;
+                });
+            }
+        }
+
+        function resetMode() {
+            mode = 0;
+            updateMode();
+        }
+
+        function increaseCompactness() {
+            mode++;
+            updateMode();
+        }
+
+        function decreaseCompactness() {
+            if (mode === 0) return;
+            mode--;
+            updateMode(); 
+        }
+
+        function updateMode() {
+            if (mode === 0) {
+                home.classList.remove('compact-1');
+                // Unhide the navigation SVGs
+                nav.classList.remove('compact-2');
+                // Show the navigation TEXT
+                nav.classList.remove('compact-3');
+            } else if (mode === 1) {
+                // Hide "Infinite Chess" text
+                home.classList.add('compact-1');
+                // Unhide the navigation SVGs
+                nav.classList.remove('compact-2');
+                // Show the navigation TEXT
+                nav.classList.remove('compact-3');
+            } else if (mode === 2) {
+                // Hide the navigation SVGs
+                nav.classList.add('compact-2');
+                // Show the navigation TEXT
+                nav.classList.remove('compact-3');
+            } else if (mode === 3) {
+                // Unhide the navigation SVGs
+                nav.classList.remove('compact-2');
+                // Hide the navigation TEXT
+                nav.classList.add('compact-3');
+            }
+        }
+
+        // Function to iteratively call updatePadding 15 times
+        function iterativeUpdatePadding() {
+            for (let i = 0; i < 15; i++) updatePadding();
+        }
+
+        // Check on load and window resize
+        updateSpacing();
+        // window.addEventListener('resize', iterativeUpdatePadding);
+        window.addEventListener('resize', updateSpacing);
+    })
+
 </script>
+
