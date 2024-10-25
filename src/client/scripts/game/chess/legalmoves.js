@@ -364,9 +364,6 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	}
 }
 
-// TODO: moveset changes
-// This requires coords be on the same line as the sliding moveset.
-
 /**
  * Tests if the piece's precalculated slideMoveset is able to reach the provided coords.
  * ASSUMES the coords are on the direction of travel!!!
