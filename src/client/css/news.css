@@ -80,6 +80,10 @@ a {
     color: red;
 }
 
+.visibility-hidden {
+    visibility: hidden;
+}
+
 
 
 /* Don't hide borders on hr tags */
