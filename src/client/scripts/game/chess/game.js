@@ -82,8 +82,8 @@ function init() {
 
 	// If a holliday theme is active, tell the user how to disable it.
 	if (options.isHollidayTheme()) {
-		if (docutil.isMouseSupported()) statustext.showStatus("To disable holladay theme, press Enter.");
-		else statustext.showStatus("To disable holladay theme, three-finger-tap the screen.");
+		if (docutil.isMouseSupported()) statustext.showStatus(translations.disable_holladay_theme_desktop);
+		else statustext.showStatus(translations.disable_holladay_theme_mobile);
 	}
 }
 
