@@ -168,6 +168,14 @@ main {
     display: none;
 }
 
+.visibility-hidden {
+    visibility: hidden;
+}
+
+.currPage {
+    background-color: rgb(236, 236, 236);
+}
+
 .center {
     text-align: center;
 }

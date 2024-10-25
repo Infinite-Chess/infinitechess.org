@@ -140,6 +140,10 @@ a {
     color: black;
 }
 
+.visibility-hidden {
+    visibility: hidden;
+}
+
 
 
 /* Start increasing header links width */

@@ -1402,6 +1402,10 @@ a {
     display: none;
 }
 
+.visibility-hidden {
+    visibility: hidden;
+}
+
 .opacity-0_5 {
     opacity: 0.5;
 }
