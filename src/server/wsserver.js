@@ -147,7 +147,8 @@ function onConnectionRequest(ws, req) {
 	if (cookies['browser-id']) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
 
 	if (!ws.metadata.user && !ws.metadata['browser-id']) { // Terminate web socket connection request, they NEED authentication!
-		console.log("Authentication needed for WebSocket connection request!!");
+		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
+		wsutility.printSocket(ws);
 		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
 	}
 

@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "17"
+version = "20"
 maintainer = "Naviary"
 
 [header]
@@ -91,8 +91,8 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 
 [member]
 title = "Member" # The tab name
-verify_message = "Please check your email to verify your account."
-resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message me."]
+verify_message = "Please check your email to verify your account. Unverified accounts are deleted after 3 days."
+resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message us."]
 verify_confirm = "Thank you! Your account has been verified."
 rating = "Elo rating:"
 joined = "Joined:"
@@ -237,6 +237,14 @@ join = "Join"
 copy = "Copy"
 back = "Back"
 code = "Code"
+
+[play.gamebuttontooltips]
+undo_transition = "Undo transition"
+expand_fit_all = "Expand to fit all"
+recenter = "Recenter"
+rewind_move = "Rewind move"
+forward_move = "Forward move"
+pause = "Pause"
 
 [play.footer]
 white_to_move = "White to move"

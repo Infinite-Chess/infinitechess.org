@@ -33,8 +33,7 @@ let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
 
 let navigationVisible = true;
 
-// let theme = getHollidayTheme(); // default/halloween/christmas
-let theme = 'default'; // default/halloween/christmas
+let theme = 'default';
 const validThemes = ['default', 'halloween', 'thanksgiving', 'christmas'];
 
 const themes = {
@@ -53,7 +52,7 @@ const themes = {
 		// legalMovesHighlightColor_Friendly: [1, 0.4, 0,  0.35], // Orange (for sandstone theme)
 		// legalMovesHighlightColor_Friendly: [1, 0.2, 0,  0.4], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
 		legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
-		legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
+		legalMovesHighlightColor_Premove: [0.3, 0, 1, 0.3],
 		lastMoveHighlightColor: [0, 1, 0, 0.25], // 0.17
 		// lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
 		checkHighlightColor: [1, 0, 0, 0.7],
@@ -69,8 +68,8 @@ const themes = {
 		darkTiles:  [1, 0.4, 0, 1],
 		selectedPieceHighlightColor: [0, 0, 0, 0.5],
 		legalMovesHighlightColor_Friendly: [0.6, 0, 1, 0.55],
-		legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
-		legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
+		legalMovesHighlightColor_Opponent: [0, 0.5, 0, 0.35],
+		legalMovesHighlightColor_Premove: [1, 0.15, 0, 0.65],
 		lastMoveHighlightColor: [0.5, 0.2, 0, 0.75],
 		checkHighlightColor: [1, 0, 0.5, 0.76],
 		useColoredPieces: true,
@@ -219,8 +218,6 @@ function setTheme(newTheme) { // default/halloween
 	board.updateTheme();
 	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
 	highlights.regenModel();
-
-	if (isHollidayTheme(newTheme)) statustext.showStatus("To disable holliday theme, hit Enter.");
 }
 
 /**
@@ -233,8 +230,8 @@ function toggleHollidayTheme() {
 	else setTheme(getHollidayTheme());
 }
 
-function isHollidayTheme(theme) {
-	return theme !== 'default';
+function isHollidayTheme(themeARG = theme) {
+	return themeARG !== 'default';
 }
 
 /**
@@ -321,5 +318,6 @@ export default {
 	toggleFPS,
 	isThemeDefault,
 	disableEM,
-	isFPSOn
+	isFPSOn,
+	isHollidayTheme,
 };

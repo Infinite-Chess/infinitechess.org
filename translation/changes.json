@@ -1,4 +1,14 @@
 {
+	"20": {
+		"note": "Added fields for game button tooltips, lines 241-247",
+		"changes": [
+			"play.gamebuttontooltips"
+		]
+	},	
+	"19": {
+		"note": "Updated wording of verify_message and resend_message, lines 94-95",
+		"changes": []
+	},
 	"18": {
 		"note": "Added Spanish translation credit, line 89",
 		"changes": []

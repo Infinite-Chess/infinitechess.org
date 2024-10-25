@@ -98,7 +98,7 @@ function configureMiddleware(app) {
 	app.use(protectedStatic);
 
 	// Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
-	app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, 'cert/.well-known/acme-challenge')));
+	app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')));
 
 	// Provide a route
 	app.use('/', rootRouter);

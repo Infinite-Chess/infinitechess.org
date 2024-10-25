@@ -6,15 +6,21 @@ This guide walks you through the initial setup phase of the infinitechess.org se
 
 **Summary of the setup process below for experienced users:** Install VSCode and Node.js. Fork the repository and install the project dependencies via `npm install`. Now you can run `npx nodemon` to launch a live infinite chess server at `https://localhost:3443`. Optionally, you can also set up an email serivce now. You are now ready to test changes and contribute to the main project after reading the [Navigation Guide](./NAVIGATING.md)! **All these steps are explained in great detail below:**
 
-## Step 1: Download VSCode ##
 
-This guide will use VSCode, but you may use another code editor if you wish, if it is compatible with Node, npm, and has source control features.
+
+## Step 1: Install Git ##
+
+[Here's a guide](https://github.com/git-guides/install-git) for how to check if you have Git installed already, and if not, how to install it.
+
+## Step 2: Download VSCode ##
+
+This guide will use VSCode, which is **highly** recommended, but you may use another code editor if you wish, as long as it is compatible with Node, npm, and has source control features. This guide will walk you through the process using VSCode.
 
 [Go here](https://code.visualstudio.com/) to download and install VSCode. Be sure you have Visual Studio **Code**, and not Visual Studio (they are different).
 
 
 
-## Step 2: Install Node.js ##
+## Step 3: Install Node.js ##
 
 [Go here](https://nodejs.org/en/download/package-manager) to download and install Node. The easiest method is to click the "Prebuilt Installer" tab, download that, and run the installer.
 
@@ -22,7 +28,7 @@ This guide will use VSCode, but you may use another code editor if you wish, if 
 
 
 
-## Step 3: Forking the repository ##
+## Step 4: Forking the repository ##
 
 Go to the [repository's home page](https://github.com/Infinite-Chess/infinitechess.org), then click "Fork"! You will need a github account.
 
@@ -48,7 +54,7 @@ Choose a location on your machine to store the repository. Then when prompted wh
 
 
 
-## Step 4: Install project dependencies ##
+## Step 5: Install project dependencies ##
 
 Inside the opened VSCode project, open a terminal window within it by going to Terminal > New Terminal.
 
@@ -96,7 +102,7 @@ If done correctly, you should be met with the following. This means the server h
 
 
 
-## Step 5: Install ESLint ##
+## Step 6: Install ESLint ##
 
 Installing the ESLint VSCode extension will help your pull requests be approved quicker, by holding your code semantics to the standards of the project! ESLint will give you errors when you have undefined variables, missing semicolons, and other items, making it easier to catch bugs before runtime!
 
@@ -106,7 +112,11 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 
 
 
-## Step 6 (optional): Setting up the email service ##
+Another highly recommended extension to install is "GitHub Pull Requests", which allows you to test-run other people's code suggestions on the repository, but it is not required.
+
+
+
+## Step 7 (optional): Setting up the email service ##
 
 While at this stage, you **do** have enough setup to be able to create new accounts while dev testing, you will not be able to receive account verification emails or password reset emails (planned) until we setup an email service. This step can optionally be skipped. If not setup, manual verification links are printed to the console when you create an account.
 
