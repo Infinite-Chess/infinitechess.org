@@ -1382,10 +1382,6 @@ button.join-button, button.copy-button {
 
 /* General classes with basic properties */
 
-.currPage {
-    background-color: rgb(236, 236, 236);
-}
-
 .center {
     text-align: center;
 }
