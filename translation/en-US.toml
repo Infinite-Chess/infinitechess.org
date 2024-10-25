@@ -4,7 +4,7 @@ version = "20"
 maintainer = "Naviary"
 
 [header]
-home = "Home"
+home = "Infinite Chess"
 play = "Play"
 news = "News"
 login = "Log In"
