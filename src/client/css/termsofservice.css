@@ -14,39 +14,6 @@ html {
 
 
 
-header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
-    box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    height: 40px;
-    font-size: 0;
-    overflow: scroll;
-    white-space: nowrap;
-    text-align: center;
-    background-color: white;
-    z-index: 1;
-}
-
-header a {
-    display: inline-block;
-    text-decoration: none;
-    line-height: 40px;
-    margin-left: 4px;
-    min-width: 70px;
-    font-size: 16px;
-    color: black;
-}
-
-header a:hover {
-    background-color: rgb(211, 235, 255);
-}
-
-header p {
-    padding: 0 10px;
-}
-
 main {
     background-color: #fff;
     /* Using PNG because it was the smallest after compression */
@@ -107,10 +74,6 @@ a {
 
 .center {
     text-align: center;
-}
-
-.visibility-hidden {
-    visibility: hidden;
 }
 
 

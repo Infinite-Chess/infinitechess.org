@@ -50,7 +50,7 @@
 
         // These things are hidden in our stylesheet off the bat to give our javascript
         // here time to calculate the spacing of everything before rendering
-        header.children.forEach(child => { child.classList.remove('visibility-hidden') })
+        for (const child of header.children) child.classList.remove('visibility-hidden');
 
         let compactnessLevel = 0;
 
