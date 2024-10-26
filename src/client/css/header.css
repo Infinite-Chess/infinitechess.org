@@ -44,8 +44,6 @@ header a {
     padding: 0 10px;
 	white-space: nowrap; /* Prevent text from wrapping */
 	overflow: hidden; /* Hide overflow if needed */
-    /* Initially hide so that the javascript has time to calculate the spacing of everything */
-    visibility: hidden; 
 }
 
 .home .headerlogo {
@@ -75,8 +73,6 @@ header a {
 nav {
     display: flex;
     height: 100%;
-    /* Initially hide so that the javascript has time to calculate the spacing of everything */
-    visibility: hidden; 
 }
 
 nav a {
@@ -141,8 +137,6 @@ header .gear-container {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    /* Initially hide so that the javascript has time to calculate the spacing of everything */
-    visibility: hidden;
 }
 
 header .gear-container:hover {
@@ -161,6 +155,17 @@ header .gear {
 .currPage {
     background-color: grey;
 }
+
+.hidden {
+    display: none;
+}
+
+.visibility-hidden {
+    visibility: hidden;
+}
+
+
+
 
 /* Start compressing navigation links when screen is below 1080px */
 /* @media only screen and (max-width: 1080px) {
