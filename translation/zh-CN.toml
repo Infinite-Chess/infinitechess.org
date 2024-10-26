@@ -1,6 +1,6 @@
 name = "简体中文" # Simplified Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "18"
+version = "19"
 maintainer = "Heinrich Xiao"
 
 [header]
@@ -91,8 +91,8 @@ language_credits = [
 
 [member]
 title = "会员" # The tab name
-verify_message = "请检查您的电子邮箱以验证您的账户。"
-resend_message = ["没有收到邮件？请检查您的垃圾邮件文件夹。另外，", "再次发送。", " 如果仍然找不到，请", "联系我。"]
+verify_message = "请检查您的电子邮件以验证您的账户。未验证的账户将在 3 天后删除。"
+resend_message = ["没有收到？请检查您的垃圾邮件文件夹。另外，", "重新发送邮件。", "如果仍找不到，请", "联系我们。"]
 verify_confirm = "感谢您！您的账户已验证。"
 rating = "Elo 评级:"
 joined = "加入时间:"

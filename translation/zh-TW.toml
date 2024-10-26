@@ -91,8 +91,8 @@ language_credits = [
 
 [member]
 title = "會員" # The tab name
-verify_message = "請檢查您的電子郵箱以驗証您的賬戶。"
-resend_message = ["沒有收到郵件？請檢查您的垃圾郵件文件夾。另外，", "再次發送。", " 如果仍然找不到，請", "聯系我。"]
+verify_message = "請檢查您的電子郵件以驗證您的賬戶。未驗證的賬戶將在 3 天後刪除。"
+resend_message = ["沒有收到？請檢查您的垃圾郵件文件夾。另外，", "重新發送郵件。", "如果仍找不到，請", "聯繫我們。"]
 verify_confirm = "感謝您！您的賬戶已驗証。"
 rating = "Elo 評級:"
 joined = "加入時間:"
