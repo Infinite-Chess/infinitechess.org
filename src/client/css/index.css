@@ -112,10 +112,6 @@ iframe {
     text-shadow: -2px 0px 0.6em rgba(0, 38, 255, 0.2);
 }
 
-.currPage {
-    background-color: rgb(236, 236, 236);
-}
-
 .grey {
     color:rgba(0, 0, 0, 0.345)
 }

@@ -1,4 +1,8 @@
 {
+	"21": {
+		"note": "Added notices for how to disable the holiday theme, lines 299-300",
+		"changes": []
+	},	
 	"20": {
 		"note": "Added fields for game button tooltips, lines 241-247",
 		"changes": [

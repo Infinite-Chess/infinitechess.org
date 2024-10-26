@@ -13,6 +13,7 @@ import guipause from '../gui/guipause.js';
 import input from '../input.js';
 import miniimage from '../rendering/miniimage.js';
 import clock from '../misc/clock.js';
+import guiclock from '../gui/guiclock.js';
 import piecesmodel from '../rendering/piecesmodel.js';
 import movement from '../rendering/movement.js';
 import selection from './selection.js';
@@ -81,8 +82,8 @@ function init() {
 
 	// If a holliday theme is active, tell the user how to disable it.
 	if (options.isHollidayTheme()) {
-		if (docutil.isMouseSupported()) statustext.showStatus("To disable holladay theme, press Enter.");
-		else statustext.showStatus("To disable holladay theme, three-finger-tap the screen.");
+		if (docutil.isMouseSupported()) statustext.showStatus(translations.disable_holiday_theme_desktop);
+		else statustext.showStatus(translations.disable_holiday_theme_mobile);
 	}
 }
 
@@ -109,7 +110,7 @@ function update() {
 	if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
 	if (input.isKeyDown('enter')) options.toggleHollidayTheme();
 	if (input.isKeyDown('m')) options.toggleFPS();
-	if (getGamefile()?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+	if (gamefile?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 
 	if (gui.getScreen().includes('title')) updateTitleScreen();
 	else updateBoard(); // Other screen, board is visible, update everything board related
@@ -131,10 +132,11 @@ function updateBoard() {
 	if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
 	if (input.isKeyDown('escape')) guipause.toggle();
 	if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
-	if (input.isKeyDown('r')) piecesmodel.regenModel(getGamefile(), options.getPieceRegenColorArgs(), true);
+	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
 	if (input.isKeyDown('n')) options.toggleNavigationBar();
 
-	clock.update();
+	clock.update(gamefile);
+	guiclock.update(gamefile);
 	miniimage.testIfToggled();
 	animation.update();
 	if (guipause.areWePaused() && !onlinegame.areInOnlineGame()) return;
@@ -207,7 +209,7 @@ function loadGamefile(newGamefile) {
 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
 	// Regenerate the mesh of all the pieces.
-	piecesmodel.regenModel(getGamefile(), options.getPieceRegenColorArgs());
+	piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
 
 	guinavigation.update_MoveButtons();
 
