@@ -1,58 +1,188 @@
+:root {
+    --header-height: 50px;
+    --header-link-hover-color: rgb(230, 230, 230);
+    --header-link-max-padding: 20px;
+    --header-link-min-padding: 8px;
+}
+
 header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
+    /* 
     box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    height: 40px;
-    font-size: 0;
     overflow: scroll;
     white-space: nowrap;
     text-align: center;
     background-color: white;
-    z-index: 1;
+    z-index: 1; */
+
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    height: var(--header-height);
+    background-color: white;
+    border-bottom: 1px solid black;
+    font-size: 18px;
+    align-items: center;
 }
 
-.topnavitem {
-    display: inline-block;
+header a {
     text-decoration: none;
-    line-height: 40px;
-    margin-left: 4px;
-    min-width: 70px;
-    font-size: 16px;
     color: black;
+    display: flex;
+    align-items: center;
 }
 
-.topnavitem :hover {
-    background-color: rgb(211, 235, 255);
-}
 
-.topnavtext {
+
+.home {
+    display: flex;
+	gap: 5px;
+    height: 100%;
+    align-items: center;
     padding: 0 10px;
+	white-space: nowrap; /* Prevent text from wrapping */
+	overflow: hidden; /* Hide overflow if needed */
 }
+
+.home .headerlogo {
+	height: 85%;
+}
+
+.home p {
+    font-family: georgia;
+    font-size: 30px;
+}
+
+.home:hover p {
+    text-decoration: underline;
+}
+
+.home.compact-1:hover {
+    background-color: var(--header-link-hover-color);
+}
+
+/* Hide the "Infinite Chess" text when we are at compactness level 1 */
+.home.compact-1 p {
+    display: none;
+}
+
+
+
+nav {
+    display: flex;
+    height: 100%;
+}
+
+nav a {
+    padding: 0 calc(var(--header-link-max-padding)) 0;
+	white-space: nowrap; /* Prevent text from wrapping */
+	overflow: hidden; /* Hide overflow if needed */
+}
+
+nav span {
+    padding-left: 5px;
+}
+
+/* Hide the navigation SVGs when we are at compactness level 2 */
+nav.compact-2 svg {
+    display: none;
+}
+nav.compact-2 span {
+    padding: 0;
+}
+
+/* Navigation SVGs are visible again, but not the text */
+nav.compact-3 span {
+    display: none;
+}
+nav.compact-3 .svg-createaccount {
+    padding-left: 5px;
+}
+
+nav .svg-play {
+    height: 65%;
+    position: relative;
+    bottom: 1px;
+}
+
+nav .svg-news {
+    height: 55%;
+    padding: 0 6px;
+}
+
+nav .svg-login {
+    height: 60%;
+    padding-left: 5px;
+}
+
+nav .svg-createaccount {
+    height: 50%;
+    padding-left: 9px;
+    position: relative;
+    top: 1px;
+}
+
+nav a:hover, .gear-container:hover {
+    background-color: var(--header-link-hover-color);
+}
+
+
+
+header .gear-container {
+    height: 100%;
+    width: var(--header-height);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+header .gear-container:hover {
+    background-color: var(--header-link-hover-color);
+}
+
+header .gear {
+    width: 45%;
+    height: 45%;
+}
+
+
 
 
 
 .currPage {
-    background-color: rgb(236, 236, 236);
+    background-color: grey;
+}
+
+.hidden {
+    display: none;
+}
+
+.visibility-hidden {
+    visibility: hidden;
 }
 
 
 
-/* Start increasing header links width when screen is 450px+ */
-@media only screen and (min-width: 450px) {
-    header {
-        overflow: unset;
-    }
 
-    .topnavitem {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
+/* Start compressing navigation links when screen is below 1080px */
+/* @media only screen and (max-width: 1080px) {
+    nav a {
+        padding: 0 calc(var(--header-link-max-padding) - (1080px - 100vw) / 20);
     }
-}
+} */
 
-/* Stop increasing header links width once screen reaches 715px+ */
-@media only screen and (min-width: 715px) {
-    .topnavitem {
-        min-width: 110px;
+/* Start compressing navigation links when screen is below 809px */
+/* @media only screen and (max-width: 809px) {
+    nav a {
+        padding: 0 calc(var(--header-link-max-padding) - (661px - 100vw) / 15);
     }
-}
+    .home:hover {
+        background-color: var(--header-link-hover-color);
+    }
+    .home p {
+        display: none;
+    }
+} */
