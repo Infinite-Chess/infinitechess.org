@@ -156,6 +156,17 @@ header .gear {
     background-color: grey;
 }
 
+.hidden {
+    display: none;
+}
+
+.visibility-hidden {
+    visibility: hidden;
+}
+
+
+
+
 /* Start compressing navigation links when screen is below 1080px */
 /* @media only screen and (max-width: 1080px) {
     nav a {
