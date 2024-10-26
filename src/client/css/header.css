@@ -31,6 +31,14 @@ header {
     padding: 0 10px;
 }
 
+
+
+.currPage {
+    background-color: rgb(236, 236, 236);
+}
+
+
+
 /* Start increasing header links width when screen is 450px+ */
 @media only screen and (min-width: 450px) {
     header {
