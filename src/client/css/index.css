@@ -14,41 +14,6 @@ html {
 
 
 
-header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
-    box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    height: 40px;
-    font-size: 0;
-    overflow: scroll;
-    white-space: nowrap;
-    text-align: center;
-    background-color: white;
-    z-index: 1;
-}
-
-header a {
-    display: inline-block;
-    text-decoration: none;
-    line-height: 40px;
-    margin-left: 4px;
-    min-width: 70px;
-    font-size: 16px;
-    color: black;
-}
-
-header a:hover {
-    background-color: rgb(211, 235, 255);
-}
-
-header p {
-    padding: 0 10px;
-}
-
-
-
 main {
     background-color: #fff;
     /* Using PNG because it was the smallest after compression */
@@ -147,10 +112,6 @@ iframe {
     text-shadow: -2px 0px 0.6em rgba(0, 38, 255, 0.2);
 }
 
-.currPage {
-    background-color: rgb(236, 236, 236);
-}
-
 .grey {
     color:rgba(0, 0, 0, 0.345)
 }
@@ -169,17 +130,6 @@ a {
 
 
 
-/* Start increasing header links width */
-@media only screen and (min-width: 450px) {
-    header {
-        overflow: unset;
-    }
-
-    header a {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
-}
-
 /* Reveal pictures in logo */
 @media only screen and (min-width: 480px) {
     .logo img {
@@ -189,13 +139,6 @@ a {
 
     .logo h1 {
         font-size: calc(40px + 0.059 * (100vw - 475px));
-    }
-}
-
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-    header a {
-        min-width: 110px;
     }
 }
 

@@ -52,7 +52,7 @@ function hideMoves() {
 	if (visibilityWeight === 0) style.hideElement(elementStatusMoves);
 }
 
-function setTextContentOfMoves( ) {
+function setTextContentOfMoves() {
 
 	const currentPly = game.getGamefile().moveIndex + 1;
 	const totalPlyCount = movesscript.getPlyCount(game.getGamefile().moves);
@@ -130,4 +130,5 @@ export default {
 	showRotateMesh,
 	updateRotateMesh,
 	hideRotateMesh,
+	setTextContentOfMoves,
 };

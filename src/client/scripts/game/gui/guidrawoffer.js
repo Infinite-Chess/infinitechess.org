@@ -3,7 +3,9 @@
 import style from './style.js';
 import guigameinfo from './guigameinfo.js';
 import drawoffers from '../misc/drawoffers.js';
+import guiclock from './guiclock.js';
 import clock from '../misc/clock.js';
+import game from '../chess/game.js';
 // Import End
 
 "use strict";
@@ -45,7 +47,7 @@ function close() {
 	// We had hid the names and clocks to make room for the UI, reveal them here!
 	// console.log("revealing");
 	guigameinfo.revealPlayerNames();
-	clock.showClocks();
+	guiclock.showClocks();
 	drawOfferUICramped = false; // Reset for next draw offer UI opening
 }
 
@@ -72,13 +74,13 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
 		// console.log("hiding");
 		drawOfferUICramped = true;
 		guigameinfo.hidePlayerNames();
-		clock.hideClocks();
+		guiclock.hideClocks();
 	} else { // We have space now, reveal them!
 		if (!drawOfferUICramped) return; // Already revealed
 		// console.log("revealing");
 		drawOfferUICramped = false;
 		guigameinfo.revealPlayerNames();
-		clock.showClocks();
+		guiclock.showClocks();
 	}
 }
 
@@ -88,7 +90,7 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
  * @returns {boolean}
  */
 function isDrawOfferUICramped() {
-	if (clock.isGameUntimed()) return false; // Clocks not visible, we definitely have room
+	if (clock.isGameUntimed(game.getGamefile())) return false; // Clocks not visible, we definitely have room
 	if (window.innerWidth > 560) return false; // Screen is wide, we have room
 	return true; // Cramped
 }

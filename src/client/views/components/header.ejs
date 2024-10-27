@@ -1,0 +1,25 @@
+<header>
+    <nav>
+        <a class="topnavitem" href="/">
+            <p class="topnavtext"><%=t('header.home')%></p>
+        </a>
+        <a class="topnavitem" href="/play">
+            <p class="topnavtext"><%=t('header.play')%></p>
+        </a>
+        <a class="topnavitem" href="/news">
+            <p class="topnavtext"><%=t('header.news')%></p>
+        </a>
+        <a class="topnavitem" href="/login" id="loginlink">
+            <p class="topnavtext" id="logintext"><%=t('header.login')%></p>
+        </a>
+        <a class="topnavitem" href="/createaccount" id="createaccountlink">
+            <p class="topnavtext" id="createaccounttext"><%=t('header.createaccount')%></p>
+        </a>
+    </nav>
+</header>
+
+<script>
+    document.querySelectorAll('.topnavitem').forEach(link => {
+        if (link.getAttribute('href') === window.location.pathname) link.classList.add('currPage');
+    });
+</script>

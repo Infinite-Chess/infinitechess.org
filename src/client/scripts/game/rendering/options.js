@@ -15,6 +15,7 @@ import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../misc/colorutil.js';
 import frametracker from './frametracker.js';
+import timeutil from '../misc/timeutil.js';
 // Import End
 
 "use strict";
@@ -32,7 +33,7 @@ let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
 
 let navigationVisible = true;
 
-let theme = 'default'; // default/halloween/christmas
+let theme = 'default';
 const validThemes = ['default', 'halloween', 'thanksgiving', 'christmas'];
 
 const themes = {
@@ -51,7 +52,7 @@ const themes = {
 		// legalMovesHighlightColor_Friendly: [1, 0.4, 0,  0.35], // Orange (for sandstone theme)
 		// legalMovesHighlightColor_Friendly: [1, 0.2, 0,  0.4], // Red-orange (for wood theme)   0.5 for BIG positions   0.35 for SMALL
 		legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
-		legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
+		legalMovesHighlightColor_Premove: [0.3, 0, 1, 0.3],
 		lastMoveHighlightColor: [0, 1, 0, 0.25], // 0.17
 		// lastMoveHighlightColor: [0.3, 1, 0,  0.35], // For sandstone theme   0.3 for small, 0.35 for BIG positions
 		checkHighlightColor: [1, 0, 0, 0.7],
@@ -67,8 +68,8 @@ const themes = {
 		darkTiles:  [1, 0.4, 0, 1],
 		selectedPieceHighlightColor: [0, 0, 0, 0.5],
 		legalMovesHighlightColor_Friendly: [0.6, 0, 1, 0.55],
-		legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
-		legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],
+		legalMovesHighlightColor_Opponent: [0, 0.5, 0, 0.35],
+		legalMovesHighlightColor_Premove: [1, 0.15, 0, 0.65],
 		lastMoveHighlightColor: [0.5, 0.2, 0, 0.75],
 		checkHighlightColor: [1, 0, 0.5, 0.76],
 		useColoredPieces: true,
@@ -211,6 +212,7 @@ function getDefaultCheckHighlightColor() {
 
 function setTheme(newTheme) { // default/halloween
 	if (!validateTheme(theme)) console.error(`Cannot change theme to invalid theme ${theme}!`);
+	if (theme === newTheme) return; // Same theme
 
 	theme = newTheme;
 	board.updateTheme();
@@ -218,9 +220,29 @@ function setTheme(newTheme) { // default/halloween
 	highlights.regenModel();
 }
 
-function toggleChristmasTheme() {
-	if (theme === 'christmas') setTheme('default');
-	else if (theme === 'default') setTheme('christmas');
+/**
+ * Toggles the theme between 'default' and the auto-selected theme.
+ * If the current theme is not 'default', it sets it to 'default'.
+ * If the current theme is 'default', it sets it to the value returned by getHollidayTheme().
+ */
+function toggleHollidayTheme() {
+	if (isHollidayTheme(theme)) setTheme('default');
+	else setTheme(getHollidayTheme());
+}
+
+function isHollidayTheme(themeARG = theme) {
+	return themeARG !== 'default';
+}
+
+/**
+ * Determines the theme based on the current date.
+ * @returns {string} The theme for the current date ('halloween', 'christmas', or 'default').
+ */
+function getHollidayTheme() {
+	if (timeutil.isCurrentDateWithinRange(10, 25, 10, 31)) return 'halloween'; // Halloween week (October 25 to 31)
+	if (timeutil.isCurrentDateWithinRange(11, 23, 11, 29)) return 'thanksgiving'; // Thanksgiving week (November 23 to 29)
+	if (timeutil.isCurrentDateWithinRange(12, 19, 12, 25)) return 'christmas'; // Christmas week (December 19 to 25)
+	return 'default'; // Default theme if not in a holiday week
 }
 
 function validateTheme(theme) {
@@ -288,7 +310,7 @@ export default {
 	getDefaultLastMoveHighlightColor,
 	getDefaultCheckHighlightColor,
 	setTheme,
-	toggleChristmasTheme,
+	toggleHollidayTheme,
 	getPieceRegenColorArgs,
 	getColorOfType,
 	areUsingColoredPieces,
@@ -296,5 +318,6 @@ export default {
 	toggleFPS,
 	isThemeDefault,
 	disableEM,
-	isFPSOn
+	isFPSOn,
+	isHollidayTheme,
 };

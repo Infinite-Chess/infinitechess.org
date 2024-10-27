@@ -64,7 +64,7 @@ function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
  * @param {Function} onAutoResignFunc - The function to call when the player should be auto resigned from disconnection. This should have 2 arguments: The game, and the color that won.
  */
 function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc) {
-	// console.log(`Starting disconnect timer to auto resign player ${color}.`)
+	console.log(`Starting disconnect timer to auto resign player ${color}.`);
 
 	const now = Date.now();
 	const resignable = gameutility.isGameResignable(game);
