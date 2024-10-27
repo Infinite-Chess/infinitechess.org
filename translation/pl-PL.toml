@@ -1,6 +1,6 @@
 name = "Polski" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "17"
+version = "21"
 maintainer = "Apsurt"
 
 [header]
@@ -85,13 +85,14 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Chiński uproszczony - ", "Heinrich Xiao", ".",
 	"Chiński tradycyjny - ", "Heinrich Xiao", ".",
 	"Polski - ", "Tymon Becella", ".", # Apsurt
-	"Portugalski - ", "The_Skeleton", "."
+	"Portugalski - ", "The_Skeleton", ".",
+	"Hiszpański - ", "xa31er", "."
 ]
 
 [member]
 title = "Twój Profil"
-verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację."
-resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu lub ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do nas."]
+verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację. Konto, które nie zostanie zwerifikowane w ciągu 3 dni, zostanie usunięte."
+resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu. Możesz również ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do nas."]
 verify_confirm = "Dziękujemy! Twoje konto zostało zarejestrowane pomyślnie."
 rating = "Ranking ELO:"
 joined = "Dołączył:"
@@ -237,6 +238,14 @@ copy = "Skopiuj"
 back = "Powrót"
 code = "Kod"
 
+[play.gamebuttontooltips]
+undo_transition = "Cofnij"
+expand_fit_all = "Oddal by zobaczyć wszystko"
+recenter = "Wyśrodkuj"
+rewind_move = "Cofnij"
+forward_move = "Następny"
+pause = "Pauza"
+
 [play.footer]
 white_to_move = "Ruch białego"
 player_white = "Gracz Biały"
@@ -287,6 +296,8 @@ webgl_unsupported = "Twoja przeglądarka nie wspiera WebGL. Ta gra potrzebuje te
 bigints_unsupported = "BigInts nie są wspierane. Zaktualizuj swoją przeglądarkę.\nBigInts are needed to make the board infinite."
 shaders_failed = "Nie udało się uruchomić shadera:"
 failed_compiling_shaders = "Wystąpił błąd przy kompilowaniu shadera:"
+disable_holiday_theme_desktop = "By wyłączyć motyw świąteczny, wciśnij Enter."
+disable_holiday_theme_mobile = "By wyłączyć motyw świąteczny, wciśnij ekran trzema palcami."
 
 [play.javascript.copypaste]
 copied_game = "Skopiowano grę do schowka!"
