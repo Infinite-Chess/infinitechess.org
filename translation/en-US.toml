@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "21"
+version = "22"
 maintainer = "Naviary"
 
 [header]
@@ -86,7 +86,8 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Traditional Chinese by ", "Heinrich Xiao", ".",
 	"Polish by ", "Tymon Becella", ".", # Apsurt
 	"Português by ", "The_Skeleton", ".",
-	"Spanish by ", "xa31er", "."
+	"Spanish by ", "xa31er", ".",
+	"Finnish by ", "ThisIsNotAvailable", "."
 ]
 
 [member]

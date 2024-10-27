@@ -1,6 +1,6 @@
 name = "Finnish" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "17"
+version = "22"
 maintainer = "ThisIsNotAvailable"
 
 [header]
@@ -35,11 +35,11 @@ what_is_it_pargaraphs = [
 "Ilman rajoituksia sille, kuinka pitkälle voit liikkua, on olemassa asetelmia, joissa tuomiopäivän kello, tai shakkimatti-<em>jossain</em>-siirrossa, numero on edustettuna ensimmäisellä äärettömällä järjestysluvulla, <strong>omegalla ω</strong>. Tutkijat ovat todistaneet, että <strong>mikä tahansa</strong> laskettava järjestysluku on saavutettavissa shakkimatti kellossa!",
 "Kuten voit kuvitella, on olemassa loputtomasti mahdollisuuksia aloituskokoonpanoille, joista monta voi pelata kilpailullisesti! Pyrit edelleen shakkimattiin, joka tarvitsee uusia taktiikoita, koska ei ole olemassa seiniä, joihin vastustajan kuninkaan voisi lukita. Pelit eivät yleensä kestä paljon pidempään kuin tavalliset shakki pelit. Sotilaat edelleen ylentyvät riveillä 1 ja 8!",
 ]
-how_to_title = "Miten voiv pelata?"
+how_to_title = "Miten voin pelata?"
 how_to_paragraph = ["Tämän hetkinen versio on 1.4 ","Pelaa"," sivulla!"]
 about_title = "Tietoa Projektista"
 about_paragraphs = [
-"Minä olen Naviary. Siitä lähtien, kun löysin loputtoman shakin (konsepti oli olemassa kauan ennen tätä nettisivua), minua on kiehtonut sen mahdollisuudet! Viime aikoihin asti pelaaminen on ollut aika vaikeaa, vaatien chess.com jäsenten luomaan kuvia sen hetkisestä shakkilaudasta ja lähettämään ne toiselle pelaajalle jokaisella siirrolla. Tämän takia harva tietää tai on pelannut tätä.",
+"Minä olen Naviary. Siitä lähtien, kun löysin loputtoman shakin (konsepti oli olemassa kauan ennen tätä nettisivua), minua on kiehtonut sen mahdollisuudet! Viime aikoihin asti pelaaminen on ollut aika vaikeaa, vaatien chess.com jäsenien luomaan kuvia sen hetkisestä shakkilaudasta ja lähettämään ne toiselle pelaajalle jokaisella siirrolla. Sen takia harva tietää tai on pelannut tätä.",
 ["Minun tavoitteeni on luoda tapa, joka tekee tästä helposti saavutettavan kaikille, ja kasvattaa yleisöä sen ympärille. Olen käyttänyt lukemattomia tunteja omasta ajastani tämän nettisivun ylläpitämiseen, ja sen kehittämiseen. Minulla on monen monta ideaa, jotka ovat pitäneet minut kiireellisinä. Vaikka haluankin pitää tämän ilmaisena, elämällä on vaatimuksensa, tukeaksesi minuta taloudellisesti harkitse liityväsi minun", "Patreoniin"]
 ]
 patreon_title = "Patreon Tukijat"
@@ -64,35 +64,36 @@ variants_credits = [
 "suunnitteli Cory Evans ja Joel Hamkins.",
 "suunnitteli Cory Evans, Joel Hamkins, ja Norman Lewis Perlmutter.",
 ]
-textures_heading = "Textures"
-textures_licensed_under = "textures licensed under the"
+textures_heading = "Tekstuurit"
+textures_licensed_under = "tekstuurit on lisentoitu"
 textures_credits = [
-"Gold coin by Quolte.",
+"Kultakolikko Quoltelta.",
 ]
-sounds_heading = "Sounds"
+sounds_heading = "Äänet"
 sounds_credits = [
-["Some sounds are provided by the", "project under the"],
-"Other sounds created by Naviary.",
+["Jotkin äänet tarjotaa ", "projekti lisenssillä"],
+"Muut äänet on luonut Naviary.",
 ]
-code_heading = "Code"
+code_heading = "Koodi"
 code_credits = [
-"by Brandon Jones and Colin MacKenzie IV.",
-"by Andreas Tsevas and Naviary.",
+"koodasi Brandon Jones ja Colin MacKenzie IV.",
+"koodasi Andreas Tsevas ja Naviary.",
 ]
-language_heading = "Language Translations"
+language_heading = "Kääntäjät"
 language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
-	"French by ", "Life Enjoyer", " and ", "cycy98", ".",
-	"Simplified Chinese by ", "Heinrich Xiao", ".",
-	"Traditional Chinese by ", "Heinrich Xiao", ".",
-	"Polish by ", "Tymon Becella", ".", # Apsurt
-	"Português by ", "The_Skeleton", ".",
-	"Finnish by ", "ThisIsNotAvailable", "."
+	"Ranskan käänsi ", "Life Enjoyer", " ja ", "cycy98", ".",
+	"Helpoitetun kiinan käänsi ", "Heinrich Xiao", ".",
+	"Perinteisen kiinan käänsi ", "Heinrich Xiao", ".",
+	"Puolan käänsi ", "Tymon Becella", ".", # Apsurt
+	"Portugalin käänsi ", "The_Skeleton", ".",
+	"Espanja käänsi ", "xa31er", ".",
+	"Suomen käänsi ", "ThisIsNotAvailable", "."
 ]
 
 [member]
 title = "Jäsen" # The tab name
-verify_message = "Tarkista sähköpostisi todentaaksesi tilisi."
-resend_message = ["Etkä saanut postia? Tarkista roskapostisi. Jos et löydä sitä sieltä, ", "lähetä se uudelleen.", " Jos et vieläkään löydä sitä, ", "lähetä minulle viesti."]
+verify_message = "Tarkista sähköpostisi todentaaksesi tilisi. Vahvistamattomat tilit poistetaan 3 päivän jälkeen."
+resend_message = ["Etkö saanut postia? Tarkista roskapostisi. Jos et löydä sitä sieltä, ", "lähetä se uudelleen.", " Jos et vieläkään löydä sitä, ", "ota meihin yhteyttä."]
 verify_confirm = "Kiitos! Tilisi on todennettu."
 rating = "Elo luokitus:"
 joined = "Liityi:"
@@ -101,7 +102,7 @@ reveal_info = "Näytä Tilitiedot"
 account_info_heading = "Tilitiedot"
 email = "Sähköpostiosoite:"
 delete_account = "Poista tili"
-password_reset_message = ["To change your username, email or password, ", "contact us."]
+password_reset_message = ["Vaihtaaksesi nimesi, sähköpostisi tai salasanasi, ", "ota meihin yhteyttä."]
 
 [create-account]
 title = "Luo Tili" # The tab name
@@ -138,18 +139,18 @@ title = "Opas"
 rules = "Säännöt"
 rules_paragraphs = [
 "Loputtoman Shakin säännöt ovat melkein identtiset tavallisen shakin kanssa, paitsi että shakkilauta on loputon kaikissa suunnissa! Nämä ovat ainoat huomiot ja muutokset, joista sinun pitää tietää:",
-"Nappulat, jotka liikkuvat suorassa linjassa, kuten tornit, lähetit, ja kuningatar, näkevät niiden tavalliset rajoitukset etäisyyteen poistettuna! As long as their path is unobstructed, you can move millions!",
-["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines, they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
+"Nappulat, jotka liikkuvat suorassa linjassa, kuten tornit, lähetit, ja kuningatar, näkevät niiden tavalliset rajoitukset etäisyyteen poistettuna! Niin kauan, jun niiden reitty on esteetön, sinä voit liikkua miljoonia ruutuja!",
+["\"Klassisessa\" variantissa, valkoiset sotilaat ylentyvät rivillä 8, ja mustat sotilaat rivillä 1. Tässä kuvassa, tämä hainnollistetaan ohuilla mustilla viivoilla. Ne ovat todella ohuesti piirretty, näetkö ne? Sotilaiden täytyy päästä vastakkaiselle viivalle ylentyäkseen, ", "ei", " sen yli."],
 "Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
-"All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
+"Kaikki muut säännöt ovat samat kuin tavallisessa shakissa, kuten shakkimatti, umpikuja,  kolminkertainen toisto, 50-siirron sääntö, linnoittuminen, en passant, jne.!"
 ]
 careful_heading = "Ole Varovainen!"
 careful_paragraphs = [
-"Loputtoman laudan avoinneisuus tarkoitta sitä, että on todella helppoa hyväksikäytää haarukoita ja vartaita. Sinun takapuolesi on usein todella haavoittuvainen. Yritä huomata tälläiset taktiikat! Ole luova suojelun luomisessa sinun kuninkaalle ja torneille! Avausstrategia on todella erilainen kuin tavallisessa shakissa.",
-"Monet muut variantit ovar luotu sinun takapuolen vahvistamiseen."
+"Loputtoman laudan avoinneisuus tarkoitta sitä, että on todella helppoa hyväksikäytää haarukoita ja vartaita. Sinun taaimmainen puoli on usein todella haavoittuvainen. Yritä huomata tälläiset taktiikat! Ole luova suojelun luomisessa sinun kuninkaalle ja torneille! Avausstrategia on todella erilainen kuin tavallisessa shakissa.",
+"Monet muut variantit on luotu sinun taaimmaisen puolen vahvistamiseen."
 ]
 controls_heading = "Ohjaimet"
-controls_paragraph = "Click and drag the board to move around. Scroll to zoom in and out. Click any piece, including your opponent's pieces, to view their legal moves at any point! Additional controls are:"
+controls_paragraph = "Paina ja siirrä pelilautaa liikkuaksesi ympäriinsä. Scrollaa zoomataksesi sisään ja ulos. Paina mitä tahansa nappulaa, mukaan lukien vastustajan nappulat, nähdäksesi kaikki niiden mahdolliset siirrot! Ylimääräiset ohjaimet ovat:"
 keybinds = [
 " liikkuaksesi ympäriinsä.",
 ["Välilyönti", " ja ", "Vaihto", " zoomataksesi sisään ja ulos."],
@@ -238,13 +239,21 @@ copy = "Kopioi"
 back = "Takaisin"
 code = "Koodi"
 
+[play.gamebuttontooltips]
+undo_transition = "Kumoa siirtymä"
+expand_fit_all = "Laajenna nähdäksesi kaiken"
+recenter = "Keskitä"
+rewind_move = "Kelaa taaksepäin siirto"
+forward_move = "Eteenpäin siirto"
+pause = "Pysäytä"
+
 [play.footer]
 white_to_move = "Valkoisen vuoro"
 player_white = "Valkoisen pelaaja"
 player_black = "Mustan pelaaja"
 
 [play.pause]
-title = "Keskeytetty"
+title = "Pysäytetty"
 resume = "Palaa"
 arrows = "Nuolet: Puolustus"
 perspective = "Perspektiivi: Pois"
@@ -257,18 +266,18 @@ main_menu = "Päävalikkoon"
 question = "Hyväksystö tasapelin?"
 
 [play.javascript] # Not text that's included in the html, but text that scripts use!
-guest_indicator = "(Guest)"
+guest_indicator = "(Vieras)"
 you_indicator = "(Sinä)"
 white_to_move = "Valkoisen vuoro"
 black_to_move = "Mustan vuoro"
 your_move = "Sinun siirto"
 their_move = "Hänen siirto"
 lost_network = "Yhteys menetetty."
-failed_to_load = "Yksi tai enemmän resurssia ei latautunut. Uudelleen lataa sivu."
+failed_to_load = "Yksi tai enemmän resurssia ei latautunut. Lataa sivu uudelleen."
 planned_feature = "Tämä on tulossa!"
 main_menu = "Päävalikko"
-resign_game = "Resign Game"
-abort_game = "Abort Game"
+resign_game = "Luovuta"
+abort_game = "Keskeytä Peli"
 offer_draw = "Ehdota Tasapeliä" # Offer draw button text in the pause menu
 accept_draw = "Hyväksy Tasapeli" # Offer draw button text in the pause menu
 arrows_off = "Nuolet: Pois"
@@ -280,14 +289,16 @@ menu_local = "Play - Paikallinen"
 invite_error_digits = "Kutsukoodi täytyy olla 5 pitkä."
 invite_copied = "Kutsukoodi kopioitui."
 move_counter = "Siirto:"
-constructing_mesh = "Constructing mesh"
-rotating_mesh = "Rotating mesh"
+constructing_mesh = "Rakennetaan meshiä"
+rotating_mesh = "Käännetään meshiä"
 lost_connection = "Yhteys menetetty."
 please_wait = "Odoto hetki suorittaaksesi tämän."
 webgl_unsupported = "Sinun nettiselain ei tue WebGLää. Tämä peli tarvitsee sitä toimiakseeen. Päivitä nettiselaimesi."
 bigints_unsupported = "BigInts ei ole tuettu. Päivitä nettiselaimesi.\nBigIntsiä tarvitaan, jotta lauta olisi loputon."
 shaders_failed = "Varjostin ohjelmaa ei pystytty alustamaan:"
 failed_compiling_shaders = "Virhe tapahtui varjostimien kokoamisessa:"
+disable_holiday_theme_desktop = "Poistaaksesi loma teeman, paina Enteriä."
+disable_holiday_theme_mobile = "Poistaaksesi loma teeman, näpäytä näyttöä kolmella sormella."
 
 [play.javascript.copypaste]
 copied_game = "Peli kopioitu leikepöydälle!"
@@ -494,7 +505,7 @@ login_button = "Kirjaudu Sisään"
 
 [news]
 title = "Uutiset" # The tab name
-more_dev_logs = ["Enemmän kehittäjälogeja on ", "discord-kanavalla", ", ja ", "chess.com forumeilla!"]
+more_dev_logs = ["Enemmän kehittäjälogeja on ", "discord-kanavalla", ", ja ", "chess.com foorumeilla!"]
 
 [server.javascript]
 ws-invalid_username = "Käyttäjänimi on väärä"
@@ -537,7 +548,7 @@ ws-server_under_maintenance = "Palvelin on huollossa. Tule pian takaisin!" # Can
 ws-minutes = "minuuttia" # unit of time
 ws-minute = "minuutti" # unit of time
 ws-no_abort_game_over = "Peliä ei voi keskeyttää, se on jo ohi."
-ws-no_abort_after_moves = "Peliä ei voi keskeyttää, vähintään 2 siirtoa on tehty jo."
+ws-no_abort_after_moves = "Peliä ei voi keskeyttää, vähintään 2 siirtoa on jo tehty."
 ws-game_aborted_cheating = "Peli keskeytettiin todennäköisestä huijaamisesta."
 ws-cannot_resign_finished_game = "Peliä ei voi erota, se on jo ohi."
 ws-invalid_code = "Vääränlainen koodi!" # Invite code doesn't match any existing invites
