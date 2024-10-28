@@ -266,10 +266,6 @@ function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
 	console.log(`Game ${game.id} over. White: ${JSON.stringify(game.white)}. Black: ${JSON.stringify(game.black)}. Conclusion: ${game.gameConclusion}`);
 	printActiveGameCount();
 
-	if (game.rated && game.white.member && game.black.member) {
-		updateRatings(game);
-	}
-
 	stopGameClock(game);
 	// Cancel the timer that will auto terminate
 	// the game when the next player runs out of time
@@ -377,10 +373,10 @@ function onPlayerLostByAbandonment(game, colorWon) {
 async function deleteGame(game) {
 	if (!game) return console.error(`Unable to delete an undefined game!`);
 
-	const gameConclusion = game.gameConclusion;
-
-	// THIS IS WHERE WE MODIFY ELO based on who won!!!
-	// ...
+	// Modify Elos if it's a rated game	
+	if (game.rated && game.white.member && game.black.member) {
+		updateRatings(game);
+	}
 
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.
