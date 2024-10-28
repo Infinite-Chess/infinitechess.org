@@ -140,7 +140,7 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 	if (!clockweb.isClockValueValid(invite.clock)) return true;
 
 	if (invite.color !== "White" && invite.color !== "Black" && invite.color !== "Random") return true;
-	if (invite.rated !== 'casual') return true;
+	if (invite.rated !== 'casual' && invite.rated !== 'rated') return true;
 	if (invite.publicity !== 'public' && invite.publicity !== 'private') return true;
 	if (invite.tag.length !== 8) return true; // Invite tags must be 8 characters long.
 

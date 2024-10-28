@@ -235,6 +235,25 @@ function updateLastSeen(username) {
 }
 
 /**
+ * Updates the elo property of the user, if found,
+ * then flags the members file to be saved.
+ * @param {string} username - Their username, in lowercase.
+ * @param {number} amount - The amount to change the elo by. 
+ * @returns {boolean} true if the member was found, and successfully updated their elo property.
+ */
+function changeElo(username, amount) {
+	if (!doesMemberExist(username)) {
+		const errText = `Could not update elo of non-existent member "${username}"!`;
+		logEvents(errText, 'errLog.txt', { print: true });
+		return false;
+	}
+	members[username].elo += amount;
+	membersHasBeenEdited = true; // Flag it to be saved
+	return true; // Success
+}
+
+
+/**
  * Adds the provided refreshToken to the {@link refreshTokenHash},
  * and to the member's data, then flags the members file to be saved.
  * Call after generating a new refresh token for a user after logging in.
@@ -419,6 +438,7 @@ export {
 	getJoinDate,
 	getLastSeen,
 	getElo,
+	changeElo,
 	removeMember,
 	isEmailAvailable
 };

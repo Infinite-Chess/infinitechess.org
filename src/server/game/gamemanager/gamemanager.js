@@ -18,6 +18,8 @@ import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, 
 import uuid from '../../../client/scripts/game/misc/uuid.js';
 import colorutil from '../../../client/scripts/game/misc/colorutil.js';
 
+import updateRatings from './ratingmanager.js';
+
 /**
  * Type Definitions
  * @typedef {import('../TypeDefinitions.js').Socket} Socket
@@ -263,6 +265,10 @@ function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
 
 	console.log(`Game ${game.id} over. White: ${JSON.stringify(game.white)}. Black: ${JSON.stringify(game.black)}. Conclusion: ${game.gameConclusion}`);
 	printActiveGameCount();
+
+	if (game.rated && game.white.member && game.black.member) {
+		updateRatings(game);
+	}
 
 	stopGameClock(game);
 	// Cancel the timer that will auto terminate
