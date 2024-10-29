@@ -1,7 +1,7 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "17"
-maintainer = "The_Skeleton"
+version = "21"
+maintainer = "Emerson P. Machado"
 
 [header]
 home = "Início"
@@ -85,13 +85,14 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Chinês Simplificado por ", "Heinrich Xiao", ".",
 	"Chinês Tradicional por ", "Heinrich Xiao", ".",
 	"Polonês por ", "Tymon Becella", ".", # Apsurt
-	"Português por ", "The_Skeleton", "."
+	"Português por ", "Emerson P. Machado", "."
+	"Espanhol por ", "xa31er", "."
 ]
 
 [member]
 title = "Membro" # The tab name
-verify_message = "Verifique seu e-mail para confirmar sua conta."
-resend_message = ["Não recebeu um? Verifique sua pasta de spam. Também, ", "enviar novamente.", " Se você ainda não consegue encontrar, ", "me mande uma mensagem."]
+verify_message = "Por favor verifique seu e-mail para confirmar sua conta. Contas não confirmadas serão deletadas após 3 dias."
+resend_message = ["Não recebeu um? Verifique sua pasta de spam. Também, ", "enviar novamente.", " Se você ainda não consegue encontrar, ", "mande uma mensagem."]
 verify_confirm = "Obrigado! Sua conta foi verificada"
 rating = "Rating Elo:"
 joined = "Ingressou:"
@@ -237,6 +238,14 @@ copy = "Copiar"
 back = "Voltar"
 code = "Código"
 
+[play.gamebuttontooltips]
+undo_transition = "Voltar transição"
+expand_fit_all = "Expandir para caber tudo"
+recenter = "Recentralizar"
+rewind_move = "Lance anterior"
+forward_move = "Próximo lance"
+pause = "Pausar"
+
 [play.footer]
 white_to_move = "Brancas jogam"
 player_white = "Jogador de Brancas"
@@ -287,6 +296,8 @@ webgl_unsupported = "Seu navegador não é compatível com WebGL. Este jogo requ
 bigints_unsupported = "Não há suporte para BigInts. Atualize seu navegador.\nBigInts são necessários para tornar o tabuleiro infinito."
 shaders_failed = "Não foi possível inicializar o programa de shaders:"
 failed_compiling_shaders = "Ocorreu um erro na compilação dos shaders:"
+disable_holiday_theme_desktop = "Para desativar o tema de férias, pressione Enter."
+disable_holiday_theme_mobile = "Para desativar o tema de férias, toque com três dedos na tela."
 
 [play.javascript.copypaste]
 copied_game = "Jogo copiado para a área de transferência!"
