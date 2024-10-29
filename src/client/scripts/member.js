@@ -112,7 +112,7 @@ function loadMemberData(loggedInAs) {
 			// Change on-screen data of the member
 			element_memberName.textContent = result.username;
 			const eloElement = document.getElementById('elo');
-			eloElement.textContent = result.elo;
+			eloElement.textContent = Math.round(result.elo);
 			const joinedElement = document.getElementById('joined');
 			joinedElement.textContent = result.joined;
 			const seenElement = document.getElementById('seen');

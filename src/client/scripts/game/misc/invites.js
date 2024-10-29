@@ -169,7 +169,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		// <div class="invite-child accept">Accept</div>
 
 		const n = ours ? translations.invites.you_indicator : invite.name;
-		const name = createDiv(['invite-child'], n + " (" + invite.elo + ")");
+		const name = createDiv(['invite-child'], n + " (" + Math.round(invite.elo) + ")");
 		newInvite.appendChild(name);
 
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
