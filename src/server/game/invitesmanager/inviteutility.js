@@ -14,6 +14,7 @@ import jsutil from '../../../client/scripts/game/misc/jsutil.js';
  * @typedef {Object} Invite - The invite object.
  * @property {string} id - A unique identifier, containing lowercase letters a-z and numbers 0-9.
  * @property {Object} name - The display name of the owner, "(Guest)" if not logged in.
+ * @property {number} elo - The owner's elo
  * @property {Object} owner - An object with either the `member` or `browser` property, which tells us who owns it.
  * @property {string} tag - Used to verify if an invite is your own.
  * @property {string} variant - The name of the variant this invite is for

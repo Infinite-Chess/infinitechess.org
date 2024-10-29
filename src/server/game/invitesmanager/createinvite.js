@@ -12,6 +12,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import wsutility from '../wsutility.js';
+import { getElo } from '../../controllers/members.js'
 const { sendNotify, sendNotifyError } = wsutility;
 import clockweb from '../clockweb.js';
 import gameutility from '../gamemanager/gameutility.js';
@@ -97,6 +98,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
      * We further need to manually add the properties:
      * id
      * owner
+	 * elo
      * name
      */
 
@@ -109,6 +111,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 	const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] };
 	invite.owner = owner;
 	invite.name = getDisplayNameOfPlayer(owner);
+	invite.elo = ws.metadata.user ? getElo(getDisplayNameOfPlayer(owner)) : 1200;
 
 	invite.variant = messageContents.variant;
 	invite.clock = messageContents.clock;

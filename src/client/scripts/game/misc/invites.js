@@ -17,6 +17,7 @@ import uuid from './uuid.js';
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
  * @property {string} name - Who owns the invite. If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
+ * @property {number} elo - The invite owner's elo
  * @property {string} id - A unique identifier
  * @property {string} tag - Used to verify if an invite is your own.
  * @property {string} variant - The name of the variant
@@ -168,7 +169,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		// <div class="invite-child accept">Accept</div>
 
 		const n = ours ? translations.invites.you_indicator : invite.name;
-		const name = createDiv(['invite-child'], n);
+		const name = createDiv(['invite-child'], n + " (" + invite.elo + ")");
 		newInvite.appendChild(name);
 
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
@@ -267,7 +268,8 @@ function clearIfOnPlayPage() {
  * @returns {boolean} true if it is our
  */
 function isInviteOurs(invite) {
-	if (memberHeader.getMember() === invite.name) return true;
+	const inviteName = memberHeader.getMember();
+	if (inviteName === invite.name) return true;
 
 	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 
