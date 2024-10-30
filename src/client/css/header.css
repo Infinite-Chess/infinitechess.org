@@ -1,8 +1,8 @@
 :root {
-    --header-height: 50px;
+    --header-height: 40px;
     --header-link-hover-color: rgb(230, 230, 230);
-    --header-link-max-padding: 20px;
-    --header-link-min-padding: 8px;
+    --header-link-max-padding: 16px;
+    --header-link-min-padding: 6.5px;
 }
 
 header {
@@ -23,7 +23,7 @@ header {
     height: var(--header-height);
     background-color: white;
     border-bottom: 1px solid black;
-    font-size: 18px;
+    font-size: 16px;
     align-items: center;
 }
 
@@ -52,7 +52,7 @@ header a {
 
 .home p {
     font-family: georgia;
-    font-size: 30px;
+    font-size: 24px;
 }
 
 .home:hover p {
@@ -82,7 +82,30 @@ nav a {
 }
 
 nav span {
-    padding-left: 5px;
+    padding-left: 4px;
+}
+
+nav .svg-play {
+    height: 65%;
+    position: relative;
+    bottom: 1px;
+}
+
+nav .svg-news {
+    height: 55%;
+    padding: 0 5px;
+}
+
+nav .svg-login {
+    height: 60%;
+    padding-left: 4px;
+}
+
+nav .svg-createaccount {
+    height: 50%;
+    padding-left: 7px;
+    position: relative;
+    top: 1px;
 }
 
 /* Hide the navigation SVGs when we are at compactness level 2 */
@@ -99,29 +122,6 @@ nav.compact-3 span {
 }
 nav.compact-3 .svg-createaccount {
     padding-left: 5px;
-}
-
-nav .svg-play {
-    height: 65%;
-    position: relative;
-    bottom: 1px;
-}
-
-nav .svg-news {
-    height: 55%;
-    padding: 0 6px;
-}
-
-nav .svg-login {
-    height: 60%;
-    padding-left: 5px;
-}
-
-nav .svg-createaccount {
-    height: 50%;
-    padding-left: 9px;
-    position: relative;
-    top: 1px;
 }
 
 nav a:hover, .gear-container:hover {
