@@ -135,7 +135,11 @@ function updateBoard() {
 	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
 	if (input.isKeyDown('n')) options.toggleNavigationBar();
 
-	clock.update(gamefile);
+	const timeWinner = clock.update(gamefile);
+	if (timeWinner) { // undefined if no clock has ran out
+		gamefile.gameConclusion = `${timeWinner} time`;
+		gamefileutility.concludeGame(gamefile);
+	}
 	guiclock.update(gamefile);
 	miniimage.testIfToggled();
 	animation.update();

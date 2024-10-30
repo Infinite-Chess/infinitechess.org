@@ -1,9 +1,7 @@
 
 // Import Start
 import onlinegame from './onlinegame.js';
-import game from '../chess/game.js';
 import movesscript from '../chess/movesscript.js';
-import gamefileutility from '../chess/gamefileutility.js';
 import clockutil from './clockutil.js';
 import timeutil from './timeutil.js';
 // Import End
@@ -103,6 +101,7 @@ function endGame(gamefile) {
 /**
  * Called every frame, updates values.
  * @param {gamefile} gamefile
+ * @returns {undefined | string} undefined if clocks still have time, otherwise it's the color who won.
 */
 function update(gamefile) {
 	const clocks = gamefile.clocks;
@@ -116,13 +115,8 @@ function update(gamefile) {
 	// Has either clock run out of time?
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
 	// TODO: update when lose conditions are added
-	if (clocks.currentTime.white <= 0) {
-		gamefile.gameConclusion = 'black time';
-		gamefileutility.concludeGame(game.getGamefile());
-	} else if (clocks.currentTime.black <= 0) {
-		gamefile.gameConclusion = 'white time';
-		gamefileutility.concludeGame(game.getGamefile());
-	}
+	if (clocks.currentTime.white <= 0) return 'black';
+	else if (clocks.currentTime.black <= 0) return 'white';
 }
 
 /**
