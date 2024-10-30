@@ -221,7 +221,10 @@ function loadGamefile(newGamefile) {
 
 	guigameinfo.updateWhosTurn(gamefile);
 	// Immediately conclude the game if we loaded a game that's over already
-	if (gamefileutility.isGameOver(gamefile)) concludeGame();
+	if (gamefileutility.isGameOver(gamefile)) {
+		concludeGame();
+		onlinegame.requestRemovalFromPlayersInActiveGames();
+	}
 
 	initListeners();
 }

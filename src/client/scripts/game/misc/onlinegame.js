@@ -432,7 +432,10 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, t
 	guiclock.edit(gamefile);
 
 	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
-	if (gamefileutility.isGameOver(gamefile)) game.concludeGame();
+	if (gamefileutility.isGameOver(gamefile)) {
+		game.concludeGame();
+		requestRemovalFromPlayersInActiveGames();
+	}
 
 	rescheduleAlertServerWeAFK();
 	stopOpponentAFKCountdown(); // The opponent is no longer AFK if they were
@@ -514,7 +517,10 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhi
 	// When the game has ended by time/disconnect/resignation/aborted
 	clock.edit(gamefile, messageContents.timerWhite, messageContents.timerBlack, messageContents.timeNextPlayerLosesAt);
 
-	if (gamefileutility.isGameOver(gamefile)) game.concludeGame();
+	if (gamefileutility.isGameOver(gamefile)) {
+		game.concludeGame();
+		requestRemovalFromPlayersInActiveGames();
+	}
 }
 
 /**
