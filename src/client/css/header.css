@@ -122,7 +122,7 @@ nav #svg-logout {
     padding-left: 5px;
 }
 
-nav a:hover, .gear-container:hover {
+nav a:hover, #settings:hover {
     background-color: var(--header-link-hover-color);
 }
 
@@ -153,7 +153,7 @@ nav.compact-3 #svg-logout {
 
 
 
-.gear-container {
+.settings {
     height: 100%;
     width: var(--header-height);
     display: flex;
@@ -165,6 +165,31 @@ nav.compact-3 #svg-logout {
 .gear {
     width: 45%;
     height: 45%;
+}
+
+.settings-dropdown {
+  position: absolute; /* Position relative to the nearest positioned ancestor */
+  top: 100%; /* Aligns the top of the dropdown content to the bottom of the button */
+  right: 0;
+  background-color: white;
+  min-width: 160px;
+  /* box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2); */
+  z-index: 1;
+  border-left: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+/* Dropdown items */
+.settings-dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  color: black;
+  text-align: left;
+  background-color: white;
+}
+
+.settings-dropdown-item:hover {
+  background-color: #f1f1f1;
 }
 
 
