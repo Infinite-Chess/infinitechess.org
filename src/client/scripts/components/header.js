@@ -98,6 +98,48 @@ document.querySelectorAll('nav a').forEach(link => {
 }
 
 
+
+favicon: { // This block auto detects device theme and adjusts the browser icon accordingly
+
+	const element_favicon = document.getElementById('favicon');
+
+	/**
+     * Switches the browser icon to match the given theme.
+     * @param {string} theme "dark"/"light"
+     */
+	function switchFavicon(theme) {
+		if (theme === 'dark') element_favicon.href = '/img/favicon-dark.png';
+		else element_favicon.href = '/img/favicon-light.png';
+	}
+    
+	if (!window.matchMedia) break favicon; // Don't create a theme-change event listener if matchMedia isn't supported.
+
+	// Initial theme detection
+	const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+	switchFavicon(prefersDarkScheme ? 'dark' : 'light');
+    
+	// Listen for theme changes
+	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+		const newTheme = event.matches ? 'dark' : 'light';
+		console.log(`Toggled ${newTheme} icon`);
+		switchFavicon(newTheme);
+	});
+}
+
+{ // This block auto-removes the "lng" query parameter from the url, visually, without refreshing
+	(function removeLngQueryParam() {
+		// Create a URL object from the current window location
+		const url = new URL(window.location);
+  
+		// Remove the "lng" query parameter
+		url.searchParams.delete('lng');
+  
+		// Update the browser's URL without refreshing the page
+		window.history.replaceState({}, '', url);
+	})();
+}
+
+
 /*
  * Refreshes our token if we are logged in and have a refresh token,
  * and if we are login logged in it, changes the login and
@@ -296,6 +338,13 @@ const header = (function() {
 		const segments = pathname.split('/');
 		return segments[segments.length - 1] || segments[segments.length - 2]; // Handle situation if trailing '/' is present
 	}
+
+	// function removeQueryParamsFromLink(link) {
+	// 	const url = new URL(link, window.location.origin);
+	// 	// Remove query parameters
+	// 	url.search = '';
+	// 	return url.toString();
+	// }
 
 	refreshToken();
 
