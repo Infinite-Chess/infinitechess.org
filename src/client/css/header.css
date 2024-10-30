@@ -131,12 +131,15 @@ nav.compact-2 svg {
     display: none;
 }
 nav.compact-2 span {
-    padding: 0;
+    padding: 0 4px;
 }
 
 /* Navigation SVGs are visible again, but not the text */
 nav.compact-3 span {
     display: none;
+}
+nav.compact-3 #svg-news {
+    padding: 0 4px;
 }
 nav.compact-3 #svg-profile {
     padding: 0 4px;
@@ -179,26 +182,3 @@ nav.compact-3 #svg-logout {
 .visibility-hidden {
     visibility: hidden;
 }
-
-
-
-
-/* Start compressing navigation links when screen is below 1080px */
-/* @media only screen and (max-width: 1080px) {
-    nav a {
-        padding: 0 calc(var(--header-link-max-padding) - (1080px - 100vw) / 20);
-    }
-} */
-
-/* Start compressing navigation links when screen is below 809px */
-/* @media only screen and (max-width: 809px) {
-    nav a {
-        padding: 0 calc(var(--header-link-max-padding) - (661px - 100vw) / 15);
-    }
-    .home:hover {
-        background-color: var(--header-link-hover-color);
-    }
-    .home p {
-        display: none;
-    }
-} */
