@@ -60,8 +60,6 @@ function initListeners() {
 		// This allows us to control the reason why the socket was closed.
 		// "1000 Closed by client" instead of "1001 Endpoint left"
 		websocket.closeSocket();
-
-		memberHeader.deleteToken();
         
 		invites.deleteInviteTagInLocalStorage();
 		localstorage.eraseExpiredItems();

@@ -89,27 +89,37 @@ nav span {
     padding-left: 4px;
 }
 
-nav .svg-play {
+nav #svg-play {
     height: 65%;
     position: relative;
     bottom: 1px;
 }
 
-nav .svg-news {
+nav #svg-news {
     height: 55%;
     padding: 0 5px;
 }
 
-nav .svg-login {
+nav #svg-login {
     height: 60%;
     padding-left: 4px;
 }
 
-nav .svg-createaccount {
+nav #svg-profile {
+    height: 47.5%;
+    padding: 0 4px 0 6px;
+}
+
+nav #svg-createaccount {
     height: 50%;
     padding-left: 7px;
     position: relative;
     top: 1px;
+}
+
+nav #svg-logout {
+    height: 63%;
+    padding-left: 5px;
 }
 
 nav a:hover, .gear-container:hover {
@@ -128,8 +138,14 @@ nav.compact-2 span {
 nav.compact-3 span {
     display: none;
 }
-nav.compact-3 .svg-createaccount {
+nav.compact-3 #svg-profile {
+    padding: 0 4px;
+}
+nav.compact-3 #svg-createaccount {
     padding-left: 5px;
+}
+nav.compact-3 #svg-logout {
+    padding-left: 4px;
 }
 
 

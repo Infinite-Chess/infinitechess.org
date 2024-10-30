@@ -45,7 +45,7 @@ export default [
 				// Game code scripts are considered public variables
 				// MOST OF THE GAME SCRIPTS are ESM scripts, importing their own definitions, so we don't need to list them below.
 				translations: "readonly", // Injected into the html through ejs
-				memberHeader: "readonly",
+				header: "readonly",
 				htmlscript: "readonly",
 			}
 		}
