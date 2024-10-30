@@ -5,7 +5,7 @@
 //                  but all game scripts in /src/client/scripts/game are concatenated into app.js.
 //                  Further, all scripts are minified with the use of terser.
 
-import { readdir, cp as copy, rm as remove, readFile, writeFile } from 'node:fs/promises';
+import { readdir, cp as copy, rm as remove, readFile, writeFile, mkdir } from 'node:fs/promises';
 import swc from "@swc/core";
 import browserslist from 'browserslist';
 import { transform, browserslistToTargets } from 'lightningcss';
@@ -13,6 +13,7 @@ import { insertScriptLinkIntoHTML, insertScriptIntoHTML } from './src/server/uti
 import { BUNDLE_FILES } from './src/server/config/config.js';
 import esbuild from 'esbuild';
 import path from "node:path";
+import { writeFile_ensureDirectory } from './src/server/utility/fileUtils.js';
 
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
@@ -105,7 +106,7 @@ if (!BUNDLE_FILES) {
 			compress: true, // Enable compression
 			sourceMap: false
 		});
-		await writeFile(`./dist/${file}`, minified.code, 'utf8');
+		writeFile_ensureDirectory(`./dist/${file}`, minified.code);
 	}
 
 	await compressGameScriptsIntoAppJS();
