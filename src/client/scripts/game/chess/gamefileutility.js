@@ -196,50 +196,11 @@ function getPieceAtCoords(gamefile, coords) {
 }
 
 /**
- * Tests if the game is over by the used win condition, and if so, ends it.
+ * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
  * @param {gamefile} gamefile - The gamefile
- * @param {Object} An object containing various properties:
- * - `concludeGameIfOver`: If true, we will not stop the clocks, darken the board, display who won, or play a sound effect. Default: *true*. `simulated` MUST ALSO BE FALSE.
- * - `simulated`: Whether you plan on undo'ing this move. We don't conclude the game. Default: *false*
  */
-function updateGameConclusion(gamefile, { concludeGameIfOver = true, simulated = false } = {}) {
+function doGameOverChecks(gamefile) {
 	gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
-	if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) concludeGame(gamefile);
-}
-
-/**
- * Ends the game. Call this when the game is over by the used win condition.
- * Stops the clocks, darkens the board, displays who won, plays a sound effect.
- * @param {gamefile} gamefile - The gamefile
- * @param {string} [conclusion] - Optional. The conclusion string. For example, "white checkmate".
- * @param {Object} options - An object that may contain the following properties (all are default TRUE):
- * - `requestRemovalFromActiveGames`: Whether to request the server to remove us from the player-in-active-games list, to allow us to join a new game.
- */
-function concludeGame(gamefile, conclusion = gamefile.gameConclusion, { requestRemovalFromActiveGames = true } = {}) {
-	gamefile.gameConclusion = conclusion;
-	if (requestRemovalFromActiveGames) onlinegame.requestRemovalFromPlayersInActiveGames();
-	if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
-	clock.endGame(gamefile);
-	guiclock.stopClocks(gamefile);
-	board.darkenColor();
-	guigameinfo.gameEnd(gamefile.gameConclusion);
-	onlinegame.onGameConclude();
-
-	const delayToPlayConcludeSoundSecs = 0.65;
-	if (!onlinegame.areInOnlineGame()) {
-		if (!gamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
-		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
-	} else { // In online game
-		if (gamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs);
-		else if (gamefile.gameConclusion.includes('draw') || gamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs);
-		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
-	}
-
-	// Set the Result and Condition metadata
-	setTerminationMetadata(gamefile);
-
-	selection.unselectPiece();
-	guipause.updateTextOfMainMenuButton();
 }
 
 /**
@@ -498,6 +459,15 @@ function isOpponentUsingWinCondition(gamefile, winCondition) {
 	return gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, winCondition);
 }
 
+/**
+ * 
+ * @param {gamefile} gamefile 
+ * @param {string} conclusion 
+ */
+function setGameConclusion(gamefile, conclusion) {
+	gamefile.gameConclusion = conclusion;
+}
+
 export default {
 	pieceCountToDisableCheckmate,
 	getPieceCountOfType,
@@ -509,8 +479,7 @@ export default {
 	getPieceTypeAtCoords,
 	getPieceAtCoords,
 	getPieceFromTypeAndCoords,
-	updateGameConclusion,
-	concludeGame,
+	doGameOverChecks,
 	getJumpingRoyalCoords,
 	getCountOfTypesFromPiecesByType,
 	getCoordsOfAllPieces,
@@ -523,4 +492,6 @@ export default {
 	getPieceCountOfGame,
 	isGameOver,
 	isOpponentUsingWinCondition,
+	setTerminationMetadata,
+	setGameConclusion,
 };

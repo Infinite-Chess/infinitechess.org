@@ -235,7 +235,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     
 	organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
 	// movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
-	// gamefileutility.updateGameConclusion(this, { concludeGameIfOver: false });
+	// gamefileutility.doGameOverChecks(this);
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
