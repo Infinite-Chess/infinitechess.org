@@ -4,7 +4,9 @@
 
 // Greys the navigation link of the page we are currently on
 document.querySelectorAll('nav a').forEach(link => {
-	if (link.getAttribute('href') === window.location.pathname) link.classList.add('currPage');
+	if (link.getAttribute('href') === window.location.pathname) { // e.g. "/news"
+		link.classList.add('currPage');
+	}
 });
 
 
@@ -164,6 +166,8 @@ const header = (function() {
 			// Optionally set areLoggedIn to false or perform other error handling logic here
 		} finally {
 			reqIsOut = false;
+			// Grey the background of the profile button if we are viewing our profile AND are logged in
+			if (window.location.pathname.startsWith("/member") && getLastSegmentOfURL() === username) loginLink.classList.add('currPage');
 		}
 	}
 
@@ -280,6 +284,17 @@ const header = (function() {
      */
 	function deleteCookie(cookieName) {
 		document.cookie = cookieName + '=; Max-Age=-99999999;';  
+	}
+	
+	/**
+	 * Gets the last segment of the current URL without query parameters.
+	 * @returns {string} - The last segment of the URL.
+	 */
+	function getLastSegmentOfURL() {
+		const url = new URL(window.location.href);
+		const pathname = url.pathname;
+		const segments = pathname.split('/');
+		return segments[segments.length - 1] || segments[segments.length - 2]; // Handle situation if trailing '/' is present
 	}
 
 	refreshToken();
