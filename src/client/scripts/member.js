@@ -45,6 +45,20 @@ function getLastSegmentOfURL() {
 	return segments[segments.length - 1] || segments[segments.length - 2]; // Handle situation if trailing '/' is present
 }
 
+/**
+ * Fetches data from a given endpoint after removing any query parameters from the URL.
+ * 
+ * @param {string} member - The member identifier to include in the URL.
+ * @param {Object} config - The configuration object for the fetch request.
+ * @returns {Promise<Response>} - The fetch response promise.
+ */
+function removeQueryParamsFromLink(link) {
+	const url = new URL(link, window.location.origin);
+	// Remove query parameters
+	url.search = '';
+	return url.toString();
+}
+
 (function loadMemberData() {
 	const config = {
 		method: 'GET',
