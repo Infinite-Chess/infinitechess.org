@@ -258,7 +258,7 @@ function onmessage(data) { // { sub, action, value, id }
 			statustext.showStatus(translations.onlinegame.game_no_longer_exists, false, 1.5);
 			websocket.getSubs().game = false;
 			inSync = false;
-			gamefileutility.setGameConclusion('aborted');
+			game.getGamefile().gameConclusion = 'aborted';
 			game.concludeGame();
 			requestRemovalFromPlayersInActiveGames();
 			break;

@@ -459,15 +459,6 @@ function isOpponentUsingWinCondition(gamefile, winCondition) {
 	return gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, winCondition);
 }
 
-/**
- * 
- * @param {gamefile} gamefile 
- * @param {string} conclusion 
- */
-function setGameConclusion(gamefile, conclusion) {
-	gamefile.gameConclusion = conclusion;
-}
-
 export default {
 	pieceCountToDisableCheckmate,
 	getPieceCountOfType,
@@ -493,5 +484,4 @@ export default {
 	isGameOver,
 	isOpponentUsingWinCondition,
 	setTerminationMetadata,
-	setGameConclusion,
 };
