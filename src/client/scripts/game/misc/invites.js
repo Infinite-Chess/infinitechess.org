@@ -267,7 +267,7 @@ function clearIfOnPlayPage() {
  * @returns {boolean} true if it is our
  */
 function isInviteOurs(invite) {
-	if (memberHeader.getMember() === invite.name) return true;
+	if (header.getOurUsername() === invite.name) return true;
 
 	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 

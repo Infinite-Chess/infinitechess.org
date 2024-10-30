@@ -753,7 +753,7 @@ async function askServerIfWeAreInGame() {
 	// because then we will atleast have a browser-id cookie
 	// when we try to create our websocket!
 	// The server only allows sockets if we are either logged in, or have a browser-id cookie.
-	await memberHeader.waitUntilInitialRequestBack();
+	await header.waitUntilInitialRequestBack();
 
 	const messageContents = undefined;
 	websocket.sendmessage('game', 'joingame', messageContents, true);
