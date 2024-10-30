@@ -1,4 +1,10 @@
 {
+	"100": {
+		"note": "Deleted all of header.javascript. Added header.profile & header.logout.",
+		"changes": []
+	},
+
+
 	"21": {
 		"note": "Added notices for how to disable the holiday theme, lines 299-300",
 		"changes": []
