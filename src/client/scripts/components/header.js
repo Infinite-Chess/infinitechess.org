@@ -209,7 +209,7 @@ const header = (function() {
 		} finally {
 			reqIsOut = false;
 			// Grey the background of the profile button if we are viewing our profile AND are logged in
-			if (window.location.pathname.startsWith("/member") && getLastSegmentOfURL() === username) loginLink.classList.add('currPage');
+			if (window.location.pathname.startsWith("/member") && getLastSegmentOfURL() === username.toLowerCase()) loginLink.classList.add('currPage');
 		}
 	}
 
