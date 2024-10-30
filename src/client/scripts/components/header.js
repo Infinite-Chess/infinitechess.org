@@ -19,7 +19,7 @@ document.querySelectorAll('nav a').forEach(link => {
 	// Paddings allowed between each of our header links (right of logo & left of gear)
 	const maxPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-max-padding'));
 	const minPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-min-padding'));
-	const gear = document.querySelector('.gear-container');
+	const gear = document.querySelector('.settings');
     
 	// These things are hidden in our stylesheet off the bat to give our javascript
 	// here time to calculate the spacing of everything before rendering
@@ -96,6 +96,16 @@ document.querySelectorAll('nav a').forEach(link => {
 		return navLeft - homeRight;
 	}
 }
+
+
+{ // This block opens and closes our settings drop-down menu when it is clicked.
+	const gearContainer = document.getElementById('settings');
+	const settingsDropdown = document.getElementById('settings-dropdown');
+	gearContainer.addEventListener('click', function() {
+		settingsDropdown.classList.toggle('hidden');
+	});
+}
+
 
 
 
