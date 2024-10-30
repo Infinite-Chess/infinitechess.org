@@ -425,7 +425,7 @@ function onclose(event) {
 			onAuthenticationNeeded();
 			break; // Don't resub
 		case "Logged out":
-			memberHeader.onLogOut(); // Updates the header bar navigation links
+			header.onLogOut(); // Updates the header bar navigation links
 			resubAll(); // Instantly reconnects.
 			break;
 		case "Too Many Requests. Try again soon.":
@@ -686,8 +686,7 @@ async function onAuthenticationNeeded() {
 	// we just have to request a new browser-id cookie before we
 	// reopen our socket.
 
-	memberHeader.refreshToken();
-	await memberHeader.waitUntilInitialRequestBack();
+	await header.refreshToken();
 	resubAll();
 }
 

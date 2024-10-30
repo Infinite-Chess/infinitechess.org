@@ -8,19 +8,15 @@ home = "Infinite Chess"
 play = "Play"
 news = "News"
 login = "Log In"
+profile = "Profile"
 createaccount = "Create Account"
+logout = "Log Out"
 
 [footer]
 contact = "Contact us"
 terms_of_service = "Terms of Service"
 source_code = "Source Code"
 language = "Language"
-
-[header.javascript]
-js-profile = "Profile"
-js-logout = "Log Out"
-js-login = "Log In"
-js-createaccount = "Create Account"
 
 [member.javascript]
 js-confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
