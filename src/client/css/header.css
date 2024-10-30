@@ -25,6 +25,7 @@ header {
     border-bottom: 1px solid black;
     font-size: 16px;
     align-items: center;
+    user-select: none; /* Prevent text selection */
 }
 
 header a {
@@ -172,7 +173,7 @@ nav.compact-3 #svg-logout {
   top: 100%; /* Aligns the top of the dropdown content to the bottom of the button */
   right: 0;
   background-color: white;
-  min-width: 160px;
+  /* min-width: 160px; */
   /* box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2); */
   z-index: 1;
   border-left: 1px solid black;
@@ -181,15 +182,33 @@ nav.compact-3 #svg-logout {
 
 /* Dropdown items */
 .settings-dropdown-item {
-  padding: 12px 16px;
-  cursor: pointer;
-  color: black;
-  text-align: left;
-  background-color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 15px 0 8px;
+    cursor: pointer;
+    color: black;
+    text-align: left;
+    background-color: white;
 }
 
 .settings-dropdown-item:hover {
   background-color: #f1f1f1;
+}
+
+.settings-dropdown-item svg {
+    height: 25px;
+}
+
+.settings-dropdown-item span.text {
+    padding: 12px 15px 12px 8px;
+}
+
+.settings-dropdown-item span.arrow-head {
+    width: 9px;
+    height: 9px;
+    border-right: 3px solid #555;
+    border-top: 3px solid #555;
+    transform: rotate(45deg) /* skew(10deg, 10deg); */;
 }
 
 
