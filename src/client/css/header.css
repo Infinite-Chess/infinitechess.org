@@ -2,7 +2,7 @@
     --header-height: 40px;
     --header-link-hover-color: rgb(230, 230, 230);
     --header-link-max-padding: 16px;
-    --header-link-min-padding: 6.5px;
+    --header-link-min-padding: 8px;
 }
 
 header {
@@ -41,13 +41,17 @@ header a {
 	gap: 5px;
     height: 100%;
     align-items: center;
-    padding: 0 10px;
+    padding: 0 8px;
 	white-space: nowrap; /* Prevent text from wrapping */
 	overflow: hidden; /* Hide overflow if needed */
 }
 
-.home .headerlogo {
-	height: 85%;
+.home picture {
+	height: 90%;
+}
+
+.home picture img {
+    height: 100%;
 }
 
 .home p {
@@ -59,13 +63,13 @@ header a {
     text-decoration: underline;
 }
 
-.home.compact-1:hover {
-    background-color: var(--header-link-hover-color);
-}
-
 /* Hide the "Infinite Chess" text when we are at compactness level 1 */
 .home.compact-1 p {
     display: none;
+}
+
+.home.compact-1:hover {
+    background-color: var(--header-link-hover-color);
 }
 
 
@@ -108,6 +112,10 @@ nav .svg-createaccount {
     top: 1px;
 }
 
+nav a:hover, .gear-container:hover {
+    background-color: var(--header-link-hover-color);
+}
+
 /* Hide the navigation SVGs when we are at compactness level 2 */
 nav.compact-2 svg {
     display: none;
@@ -124,13 +132,9 @@ nav.compact-3 .svg-createaccount {
     padding-left: 5px;
 }
 
-nav a:hover, .gear-container:hover {
-    background-color: var(--header-link-hover-color);
-}
 
 
-
-header .gear-container {
+.gear-container {
     height: 100%;
     width: var(--header-height);
     display: flex;
@@ -139,11 +143,7 @@ header .gear-container {
     cursor: pointer;
 }
 
-header .gear-container:hover {
-    background-color: var(--header-link-hover-color);
-}
-
-header .gear {
+.gear {
     width: 45%;
     height: 45%;
 }
