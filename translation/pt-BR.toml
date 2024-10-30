@@ -1,7 +1,7 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "21"
-maintainer = "Emerson P. Machado"
+maintainer = "Emerson P. Machado" # The_Skeleton on discord
 
 [header]
 home = "Início"
@@ -85,7 +85,7 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Chinês Simplificado por ", "Heinrich Xiao", ".",
 	"Chinês Tradicional por ", "Heinrich Xiao", ".",
 	"Polonês por ", "Tymon Becella", ".", # Apsurt
-	"Português por ", "Emerson P. Machado", "."
+	"Português por ", "Emerson P. Machado", ".", # The_Skeleton on discord
 	"Espanhol por ", "xa31er", "."
 ]
 
