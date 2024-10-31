@@ -45,7 +45,7 @@ const zFar = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  perspective.
     
 // Header = 40
 // Footer = 59.5
-const MARGIN_OF_HEADER_AND_FOOTER = 40; // UPDATE with the html document  ---  !!! This is the sum of the heights of the page's navigation bar and footer.
+const MARGIN_OF_HEADER_AND_FOOTER = 41; // UPDATE with the html document  ---  !!! This is the sum of the heights of the page's navigation bar and footer. 40 + 1 for border
 // How many physical pixels per virtual pixel on the device screen? For retina displays this is usually 2 or 3.
 const pixelDensity = window.devicePixelRatio;
 let PIXEL_HEIGHT_OF_TOP_NAV = undefined; // In virtual pixels
