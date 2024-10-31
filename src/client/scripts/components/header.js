@@ -19,7 +19,7 @@ document.querySelectorAll('nav a').forEach(link => {
 	// Paddings allowed between each of our header links (right of logo & left of gear)
 	const maxPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-max-padding'));
 	const minPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-min-padding'));
-	const gear = document.querySelector('.settings');
+	// const gear = document.querySelector('.settings');
     
 	// These things are hidden in our stylesheet off the bat to give our javascript
 	// here time to calculate the spacing of everything before rendering
@@ -101,25 +101,55 @@ document.querySelectorAll('nav a').forEach(link => {
 { // This block opens and closes our settings drop-down menu when it is clicked.
 	const settings = document.getElementById('settings');
 	const settingsDropdown = document.getElementById('settings-dropdown');
-	settings.addEventListener('click', () => {
-		if (settingsDropdown.contains(event.target)) return; // We clicked the drop-down itself don't toggle it off
+	const languageDropdownSelection = document.getElementById('language-settings-dropdown-item');
+	const languageDropdown = document.querySelector('.language-dropdown');
+
+	const allSettingsDropdowns = [settingsDropdown, languageDropdown];
+	let settingsIsOpen = settings.classList.contains('open');
+
+	settings.addEventListener('click', event => {
+		if (didEventClickAnyDropdown(event)) return; // We clicked any dropdown, don't toggle it off
 		toggleSettingsDropdown();
 	});
 
 	// Close the dropdown if clicking outside of it
 	document.addEventListener('click', (event) => {
-		// Check if the click was outside the dropdown
-		if (!settings.contains(event.target)) closeSettingsDropdown();
+		if (!settings.contains(event.target) && !didEventClickAnyDropdown(event)) closeSettingsDropdowns();
 	});
 
-	function toggleSettingsDropdown() {
-		settingsDropdown.classList.toggle('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
-		settings.classList.toggle('open');
+	function didEventClickAnyDropdown(event) {
+		// Check if the click was outside the dropdown
+		let clickedDropdown = false;
+		allSettingsDropdowns.forEach(dropdown => {
+			if (dropdown.contains(event.target)) clickedDropdown = true;
+		});
+		return clickedDropdown;
 	}
 
-	function closeSettingsDropdown() {
-		settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	function toggleSettingsDropdown() {
+		if (settingsIsOpen) closeSettingsDropdowns();
+		else openSettingsDropdown();
+	}
+	function openSettingsDropdown() { // Opens the initial settings dropdown
+		settings.classList.add('open');
+		settingsDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+		settingsIsOpen = true;
+	}
+	function closeSettingsDropdowns() { // Closes all dropdowns that may be open
 		settings.classList.remove('open');
+		settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+		languageDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+		settingsIsOpen = false;
+	}
+	
+	languageDropdownSelection.addEventListener('click', () => {
+		// if (settingsDropdown.contains(event.target)) return; // We clicked the drop-down itself don't toggle it off
+		toggleLanguageDropdown();
+	});
+
+	function toggleLanguageDropdown() {
+		languageDropdown.classList.toggle('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+		// settings.classList.toggle('open');
 	}
 }
 
