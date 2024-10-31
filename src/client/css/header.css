@@ -206,7 +206,7 @@ nav.compact-3 #svg-logout {
   z-index: 1;
   border-left: 1px solid black;
   border-bottom: 1px solid black;
-  transition: transform 0.2s cubic-bezier(.54,0,1,.97), visibility 0s 1s;
+  transition: transform 0.2s cubic-bezier(.54,0,1,.97), visibility 0s 0.2s;
   cursor: auto;
   border-radius: 0 0 0 5px;
   overflow: hidden; /* Prevent children from rendering outside the border */
@@ -227,7 +227,7 @@ nav.compact-3 #svg-logout {
 }
 
 .settings-dropdown-item:hover {
-  background-color: var(--header-link-hover-color)
+  background-color: var(--header-link-hover-color);
 }
 
 .settings-dropdown-item span.text {
@@ -251,6 +251,45 @@ nav.compact-3 #svg-logout {
     width: 19px;
     padding: 0 2px;
 }
+
+
+
+/* Language nested dropdown */
+
+.language-dropdown.visibility-hidden {
+    transform: translateX(100%); /* Just off screen to the right, to start out, until it's animated in. */
+    transition: transform 0.2s cubic-bezier(.54,0,1,.97), visibility 0s 0.2s;
+}
+
+.language-dropdown {
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
+    right: 0; 
+    width: 187px;
+    background-color: white;
+    box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    border-left: 1px solid black;
+    border-bottom: 1px solid black;
+    cursor: auto;
+    border-radius: 0 0 0 5px;
+    overflow: hidden; /* Prevent children from rendering outside the border */
+	transform: translateX(0); /* Slide into view */
+    transition: transform 0.3s cubic-bezier(0,1.05,.47,1), visibility 0s;
+}
+
+.language-dropdown-item {
+    display:flex;
+    align-items: center;
+    height: 60px;
+    padding: 0 15px;
+    cursor: pointer;
+}
+
+.language-dropdown-item:hover {
+  background-color: var(--header-link-hover-color)
+}
+
 
 
 
