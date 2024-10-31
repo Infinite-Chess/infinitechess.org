@@ -16,6 +16,21 @@ import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
 /**
+ * This dictionary tells use what code the date-fns package uses
+ * to provide language-correct dates.
+ * 
+ * Update when we support a new language.
+ */
+const localeMap = {
+	'en-US': enUS,
+	'fr-FR': frFR,
+	'pt-BR': ptBR,
+	'zh-TW': zhTW,
+	'zh-CN': zhCN,
+	'pl-PL': pl
+};
+
+/**
  * A dictionary containing the English names of many language codes.
  * ADD TO THIS when we add a new language that's not listed below!
  */
@@ -36,22 +51,6 @@ const languageNames = {
 	'ko-KR': 'Korean',
 	'tr-TR': 'Turkish',
 };
-
-/**
- * This dictionary tells use what code the date-fns package uses
- * to provide language-correct dates.
- * 
- * Update when we support a new language.
- */
-const localeMap = {
-	'en-US': enUS,
-	'fr-FR': frFR,
-	'pt-BR': ptBR,
-	'zh-TW': zhTW,
-	'zh-CN': zhCN,
-	'pl-PL': pl
-};
-
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
