@@ -33,29 +33,34 @@
     <!-- gear svg for settings -->
     <div id="settings" class="settings visibility-hidden open">
         <svg class="gear" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="M128 4c10 0 20 8 21 18v4a30 30 0 00 40 22l4-2c10-3 21 0 26 10l8 13c5 9 3 20-4 26l-4 3a28 28 0 00 0 44l4 3c7 6 10 17 4 26l-8 13c-5 10-16 13-26 10l-4-2a30 30 0 00-40 22v4c-2 10-10 18-21 18h-16c-10 0-20-8-21-18v-4a30 30 0 00-40-22l-4 2c-10 3-21 0-26-10l-8-13a20 20 0 01 4-26l4-3a28 28 0 00 0-44l-4-3A20 20 0 01 13 70L20 56c5-10 16-13 26-10l4 2a30 30 0 00 40-22v-4c2-10 10-18 21-18h16ZM120 153a33 33 0 10 0-66 33 33 0 00 0 66Z" fill="#555" fill-rule="evenodd" clip-rule="evenodd"/></svg>
-        <div id="settings-dropdown" class="settings-dropdown">
+        <div class="settings-dropdown dropdown">
             <div id="language-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-language" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="m30 75 44 30 4 3h3l4-4 9-12V90h2s0 0 0 0l40-18 3-2v0l1-4 3-42m-8 112 26 11 6 3v4l-2 5-13 18c0 2 0 2-2 3h0l-3 1h-24l-2-2-2-3-7-22v-7l6-10c0-3 2-4 2-5h8l8 3ZM220 120a100 100 0 11-200 0 100 100 0 01 200 0Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/></svg>
                 <span class="text">Language</span>
-                <span class="arrow-head"></span>
+                <span class="arrow-head-right"></span>
             </div>
             <div class="settings-dropdown-item">
                 <svg class="svg-board" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 479 479"><path d="M0 240v239h480V0H0v240m0 0v240l1-120V120L0 1v239m60-90v90h180v180h180V240H240V60H60v90" fill="#777" fill-rule="evenodd"/></svg>
                 <span class="text">Board</span>
-                <span class="arrow-head"></span>
+                <span class="arrow-head-right"></span>
             </div>
         </div>
-        <div class="language-dropdown visibility-hidden">
+        <div class="language-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-language" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="m30 75 44 30 4 3h3l4-4 9-12V90h2s0 0 0 0l40-18 3-2v0l1-4 3-42m-8 112 26 11 6 3v4l-2 5-13 18c0 2 0 2-2 3h0l-3 1h-24l-2-2-2-3-7-22v-7l6-10c0-3 2-4 2-5h8l8 3ZM220 120a100 100 0 11-200 0 100 100 0 01 200 0Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/></svg>
+                <span class="text">Language</span>
+            </div>
             <% for(let i = 0; i < languages.length; i++) { %>
-                <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>">
+                <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>" value="<%= languages[i].code %>">
                     <div class="language-names">
                         <p class="name"><%= languages[i].name %></p>
                         <p class="englishName"><%= languages[i].englishName %></p>
                     </div>
+                    <%- languages[i].code === language ? '<svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320"><path d="m290 85-21-21a10 10 0 00-15 0L126 192l-60-61A10 10 0 00 50 130l-20 20a10 10 0 00 0 15l88 90c4 4 10 4 15 0L290 100c4-4 4-10 0-15"/></svg>' : '' %>
                 </div>
             <% } %>
         </div>
-        
     </div>
 </header>
 
