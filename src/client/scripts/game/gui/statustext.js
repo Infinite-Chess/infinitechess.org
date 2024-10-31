@@ -20,6 +20,7 @@ let layers = 0;
  * @param {number} durationMultiplier - Optional. Multiplies the default duration. Default: 1.
  */
 function showStatus(text, isError, durationMultiplier = 1) {
+	if (!text) return; // Not defined (can happen if translation unavailable)
 	const duration = (stapleLength + text.length * length) * durationMultiplier;
 	showStatusForDuration(text, duration, isError);
 }
@@ -31,6 +32,7 @@ function showStatus(text, isError, durationMultiplier = 1) {
  * @param {boolean} [isError] Optional. Whether the backdrop should be red for an error
  */
 function showStatusForDuration(text, durationMillis, isError) {
+	if (!text) return; // Not defined (can happen if translation unavailable)
 	if (text == null) return console.error("Cannot show status of undefined text!!");
     
 	layers++;
