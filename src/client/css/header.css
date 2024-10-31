@@ -281,13 +281,22 @@ nav.compact-3 #svg-logout {
 .language-dropdown-item {
     display:flex;
     align-items: center;
-    height: 60px;
+    height: 48px;
     padding: 0 15px;
     cursor: pointer;
 }
 
 .language-dropdown-item:hover {
   background-color: var(--header-link-hover-color)
+}
+
+.language-dropdown-item p.name {
+
+}
+
+.language-dropdown-item p.englishName {
+    color: grey;
+    font-size: 0.7em;
 }
 
 
