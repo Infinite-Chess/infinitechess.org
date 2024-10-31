@@ -1,6 +1,7 @@
 :root {
     --header-height: 40px;
     --header-link-hover-color: rgb(230, 230, 230);
+    --currPage-background-color: rgb(237, 237, 237);
     --header-link-max-padding: 16px;
     --header-link-min-padding: 8px;
 }
@@ -18,11 +19,13 @@ header {
     left: 0;
     top: 0;
     right: 0;
+    z-index: 1;
     display: flex;
     justify-content: space-between;
     height: var(--header-height);
     background-color: white;
     border-bottom: 1px solid black;
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.08);
     font-size: 16px;
     align-items: center;
     user-select: none; /* Prevent text selection */
@@ -36,6 +39,8 @@ header a {
 }
 
 
+
+/* The Infinite Chess text and logo, left side of header */
 
 .home {
     display: flex;
@@ -74,6 +79,8 @@ header a {
 }
 
 
+
+/* The navigation hyperlinks, middle of header. Play, News, Login, Create Account */
 
 nav {
     display: flex;
@@ -154,6 +161,8 @@ nav.compact-3 #svg-logout {
 
 
 
+/* The gear and settings dropdown menu, right side of header. */
+
 .settings {
     height: 100%;
     width: var(--header-height);
@@ -163,60 +172,76 @@ nav.compact-3 #svg-logout {
     cursor: pointer;
 }
 
+.settings.open {
+    background-color: var(--currPage-background-color);
+}
+
 .gear {
     width: 45%;
-    height: 45%;
 }
 
 .settings-dropdown {
   position: absolute; /* Position relative to the nearest positioned ancestor */
-  top: 100%; /* Aligns the top of the dropdown content to the bottom of the button */
-  right: 0;
+  top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
+  right: 0; 
+  transform: translateX(100%); /* Just off screen to the right, to start out, until it's animated in. */
+  width: 187px;
   background-color: white;
-  /* min-width: 160px; */
-  /* box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2); */
+  box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
   z-index: 1;
   border-left: 1px solid black;
   border-bottom: 1px solid black;
+  transition: transform 0.2s cubic-bezier(.54,0,1,.97), visibility 0s 1s;
+  cursor: auto;
+}
+
+.settings.open .settings-dropdown {
+	transform: translateX(0); /* Slide into view */
+    transition: transform 0.3s cubic-bezier(0,1.05,.47,1), visibility 0s;
 }
 
 /* Dropdown items */
 .settings-dropdown-item {
     display: flex;
     align-items: center;
+    height: 43px;
     padding: 0 15px 0 8px;
     cursor: pointer;
-    color: black;
-    text-align: left;
-    background-color: white;
 }
 
 .settings-dropdown-item:hover {
-  background-color: #f1f1f1;
-}
-
-.settings-dropdown-item svg {
-    height: 25px;
+  background-color: var(--header-link-hover-color)
 }
 
 .settings-dropdown-item span.text {
-    padding: 12px 15px 12px 8px;
+    padding: 0 6px;
 }
 
 .settings-dropdown-item span.arrow-head {
-    width: 9px;
-    height: 9px;
-    border-right: 3px solid #555;
-    border-top: 3px solid #555;
+    width: 8px;
+    height: 8px;
+    border-right: 3px solid #666;
+    border-top: 3px solid #666;
     transform: rotate(45deg) /* skew(10deg, 10deg); */;
+    margin-left: auto;
+}
+
+.settings-dropdown-item .svg-language {
+    height: 23px;
+}
+
+.settings-dropdown-item .svg-board {
+    width: 19px;
+    padding: 0 2px;
 }
 
 
 
+/* Miscellaneous (some of these can probably be put in a universal stylesheet for all pages, not just the header stylesheet) */
 
-
+/* Greys the background of the navigation hyperlink we are currently in */
 .currPage {
-    background-color: rgb(237, 237, 237);
+    background-color: var(--currPage-background-color);
 }
 
 .hidden {
