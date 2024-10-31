@@ -46,14 +46,16 @@
             </div>
         </div>
         <div class="language-dropdown visibility-hidden">
-            <% for(let i=0; i<languages.length; i++) {%>
-                <% if (languages[i].code === language) { %>
-                    <div class="language-dropdown-item" value="<%= languages[i].code %>" selected><%= languages[i].name %></div>
-                <% } else { %>
-                    <div class="language-dropdown-item" value="<%= languages[i].code %>"><%= languages[i].name %></div>
-                <% } %>
+            <% for(let i = 0; i < languages.length; i++) { %>
+                <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>">
+                    <div class="language-names">
+                        <p class="name"><%= languages[i].name %></p>
+                        <p class="englishName"><%= languages[i].englishName %></p>
+                    </div>
+                </div>
             <% } %>
         </div>
+        
     </div>
 </header>
 
