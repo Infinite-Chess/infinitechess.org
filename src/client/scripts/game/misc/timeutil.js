@@ -147,9 +147,11 @@ function getCurrentDay() {
  * @returns {boolean} True if the current date is within the specified range; otherwise, false.
  */
 function isCurrentDateWithinRange(startMonth, startDay, endMonth, endDay) {
-	const checkDate = new Date(); // Current date
-	return checkDate >= new Date(checkDate.getFullYear(), startMonth - 1, startDay)
-		&& checkDate <= new Date(checkDate.getFullYear(), endMonth - 1, endDay);
+	const currentDate = new Date();
+	const today = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()); // Normalized current date
+	const startDate = new Date(currentDate.getFullYear(), startMonth - 1, startDay);
+	const endDate = new Date(currentDate.getFullYear(), endMonth - 1, endDay);
+	return today >= startDate && today <= endDate;
 }
 
 export default {

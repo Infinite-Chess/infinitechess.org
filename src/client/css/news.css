@@ -82,27 +82,6 @@ a {
 
 
 
-/* Start increasing header links width */
-@media only screen and (min-width: 450px) {
-    #content h1 {
-        font-size: calc(40px + 0.028 * (100vw - 450px));
-    }
-}
-
-/* Cap content width size, revealing image on the sides */
-@media only screen and (min-width: 810px) {
-    #content {
-        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
-        padding: 40px 30px;
-        min-height: 800px;
-    }
-
-    #content h1 {
-        font-size: 50px;
-        margin-bottom: 50px;
-    }
-}
-
 /* Don't hide borders on hr tags */
 hr {
     border: 1px solid #00000057;
@@ -124,5 +103,35 @@ hr {
 
 .news-post-markdown {
     margin: 1em 0;
+}
+
+iframe {
+	width: 350px;  /* Makes the iframe take the full width of the parent */
+    max-width: 100%;
+    aspect-ratio: 16 / 9; /* Set your desired aspect ratio (16:9 in this case) */
+    height: auto; /* Automatically adjust the height based on the aspect ratio */
+}
+
+
+
+/* Start increasing header links width */
+@media only screen and (min-width: 450px) {
+    #content h1 {
+        font-size: calc(40px + 0.028 * (100vw - 450px));
+    }
+}
+
+/* Cap content width size, revealing image on the sides */
+@media only screen and (min-width: 810px) {
+    #content {
+        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+        padding: 40px 30px;
+        min-height: 800px;
+    }
+
+    #content h1 {
+        font-size: 50px;
+        margin-bottom: 50px;
+    }
 }
 

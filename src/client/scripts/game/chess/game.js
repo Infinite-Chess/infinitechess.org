@@ -36,6 +36,8 @@ import gamerules from '../variants/gamerules.js';
 import jsutil from '../misc/jsutil.js';
 import statustext from '../gui/statustext.js';
 import docutil from '../misc/docutil.js';
+import winconutil from '../misc/winconutil.js';
+import sound from '../misc/sound.js';
 // Import End
 
 /** 
@@ -135,7 +137,11 @@ function updateBoard() {
 	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
 	if (input.isKeyDown('n')) options.toggleNavigationBar();
 
-	clock.update(gamefile);
+	const timeWinner = clock.update(gamefile);
+	if (timeWinner) { // undefined if no clock has ran out
+		gamefile.gameConclusion = `${timeWinner} time`;
+		concludeGame();
+	}
 	guiclock.update(gamefile);
 	miniimage.testIfToggled();
 	animation.update();
@@ -215,7 +221,10 @@ function loadGamefile(newGamefile) {
 
 	guigameinfo.updateWhosTurn(gamefile);
 	// Immediately conclude the game if we loaded a game that's over already
-	if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile, gamefile.gameConclusion);
+	if (gamefileutility.isGameOver(gamefile)) {
+		concludeGame();
+		onlinegame.requestRemovalFromPlayersInActiveGames();
+	}
 
 	initListeners();
 }
@@ -244,6 +253,35 @@ function closeListeners() {
 	document.removeEventListener('paste', copypastegame.callbackPaste);
 }
 
+/**
+ * Ends the game. Call this when the game is over by the used win condition.
+ * Stops the clocks, darkens the board, displays who won, plays a sound effect.
+ */
+function concludeGame() {
+	if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
+	clock.endGame(gamefile);
+	guiclock.stopClocks(gamefile);
+	board.darkenColor();
+	guigameinfo.gameEnd(gamefile.gameConclusion);
+	onlinegame.onGameConclude();
+
+	const delayToPlayConcludeSoundSecs = 0.65;
+	if (!onlinegame.areInOnlineGame()) {
+		if (!gamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
+	} else { // In online game
+		if (gamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		else if (gamefile.gameConclusion.includes('draw') || gamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs);
+		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
+	}
+	
+	// Set the Result and Condition metadata
+	gamefileutility.setTerminationMetadata(gamefile);
+
+	selection.unselectPiece();
+	guipause.updateTextOfMainMenuButton();
+}
+
 
 export default {
 	getGamefile,
@@ -253,5 +291,6 @@ export default {
 	update,
 	render,
 	loadGamefile,
-	unloadGame
+	unloadGame,
+	concludeGame,
 };

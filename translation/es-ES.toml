@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "20"
+version = "21"
 maintainer = "xa31"
 
 [header]
@@ -85,7 +85,7 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Chino simplificado por ", "Heinrich Xiao", ".",
 	"Chino tradicional por ", "Heinrich Xiao", ".",
 	"Polaco por ", "Tymon Becella", ".", # Apsurt
-	"Portugués por ", "The_Skeleton", ".",
+	"Portugués por ", "Emerson P. Machado", ".", # The_Skeleton on discord
 	"Español por ", "xa31er", "."
 ]
 
@@ -296,6 +296,8 @@ webgl_unsupported = "Tu navegador no tiene soporte para WebGL. Este juego lo req
 bigints_unsupported = "Las BigInts no tienen soporte. Por favor actualiza tu navegador.\nLas BigInts son necesarias para hacer que el tablero sea infinito."
 shaders_failed = "No ha sido posible inicializar el programa de sombreado"
 failed_compiling_shaders = "Ha ocurrido un error compilando los shaders:"
+disable_holiday_theme_desktop = "Para desactivar el tema de celebración, pulsa Enter."
+disable_holiday_theme_mobile = "Para desactivar el tema de celebración, pulsa con tres dedos a la vez."
 
 [play.javascript.copypaste]
 copied_game = "¡Posición copiada en el portapapeles!"
