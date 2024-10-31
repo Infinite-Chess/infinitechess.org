@@ -4,6 +4,8 @@
     --currPage-background-color: rgb(237, 237, 237);
     --header-link-max-padding: 16px;
     --header-link-min-padding: 8px;
+    --CBC-in: cubic-bezier(0,1.05,.47,1); /* Settings dropdown IN curve */
+    --CBC-out: cubic-bezier(.54,0,1,.97); /* Settings dropdown OUT curve */
 }
 
 header {
@@ -180,41 +182,54 @@ nav.compact-3 #svg-logout {
     background-color: var(--header-link-hover-color);
 }
 
-.settings:active {
-    background-color: var(--header-link-hover-color); /* Prevents blue highlight when holding finger over the gear button */
-    -webkit-tap-highlight-color: transparent; /* Prevents blue highlight */
+.settings:active { /* Prevents blue highlight when holding finger over the gear button */
+    background-color: var(--header-link-hover-color); 
+    -webkit-tap-highlight-color: transparent;
 }
 
 .gear {
     width: 45%;
-    transition: transform 0.2s cubic-bezier(.54,0,1,.97);
+    transition: transform 0.2s var(--CBC-out);
 }
 
 .settings.open .gear {
-    transition: transform 0.3s cubic-bezier(0,1.05,.47,1);
+    transition: transform 0.3s var(--CBC-in);
     transform: rotate(60deg);
 }
 
-.settings-dropdown {
-  position: absolute; /* Position relative to the nearest positioned ancestor */
-  top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
-  right: 0; 
-  transform: translateX(100%); /* Just off screen to the right, to start out, until it's animated in. */
-  width: 187px;
-  background-color: white;
-  box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1;
-  border-left: 1px solid black;
-  border-bottom: 1px solid black;
-  transition: transform 0.2s cubic-bezier(.54,0,1,.97), visibility 0s 0.2s;
-  cursor: auto;
-  border-radius: 0 0 0 5px;
-  overflow: hidden; /* Prevent children from rendering outside the border */
+.dropdown {
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
+    right: 0; 
+    width: 187px;
+    background-color: white;
+    box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    border: 1px solid black;
+    border-right: unset;
+    cursor: auto;
+    border-radius: 0 0 0 5px;
+    overflow: hidden; /* Prevent children from rendering outside the border */
+    transform: translateX(0); /* Slide into view */
+    transition: transform 0.3s var(--CBC-in), visibility 0s;
 }
 
-.settings.open .settings-dropdown {
-	transform: translateX(0); /* Slide into view */
-    transition: transform 0.3s cubic-bezier(0,1.05,.47,1), visibility 0s;
+.dropdown.visibility-hidden {
+    transform: translateX(100%); /* Just off screen to the right, to start out, until it's animated in. */
+    transition: transform 0.2s var(--CBC-out), visibility 0s 0.2s;
+}
+
+.dropdown-title { /* The back button at the top of 2+ deep dropdown */
+    display: flex;
+    align-items: center;
+    height: 43px;
+    padding: 0 15px;
+    cursor: pointer;
+    border-bottom: 1px solid grey;
+}
+
+.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover {
+    background-color: var(--header-link-hover-color);
 }
 
 /* Dropdown items */
@@ -226,28 +241,31 @@ nav.compact-3 #svg-logout {
     cursor: pointer;
 }
 
-.settings-dropdown-item:hover {
-  background-color: var(--header-link-hover-color);
-}
-
-.settings-dropdown-item span.text {
+span.text {
     padding: 0 6px;
+    margin-right: auto;
 }
 
-.settings-dropdown-item span.arrow-head {
+span.arrow-head-right, span.arrow-head-left {
     width: 8px;
     height: 8px;
     border-right: 3px solid #666;
     border-top: 3px solid #666;
-    transform: rotate(45deg) /* skew(10deg, 10deg); */;
+}
+span.arrow-head-right {
     margin-left: auto;
+    transform: rotate(45deg) /* skew(10deg, 10deg); */;
+}
+span.arrow-head-left {
+    margin-right: auto;
+    transform: rotate(225deg) /* skew(10deg, 10deg); */;
 }
 
-.settings-dropdown-item .svg-language {
-    height: 23px;
+.svg-language {
+    width: 23px;
 }
 
-.settings-dropdown-item .svg-board {
+.svg-board {
     width: 19px;
     padding: 0 2px;
 }
@@ -255,28 +273,6 @@ nav.compact-3 #svg-logout {
 
 
 /* Language nested dropdown */
-
-.language-dropdown.visibility-hidden {
-    transform: translateX(100%); /* Just off screen to the right, to start out, until it's animated in. */
-    transition: transform 0.2s cubic-bezier(.54,0,1,.97), visibility 0s 0.2s;
-}
-
-.language-dropdown {
-    position: absolute; /* Position relative to the nearest positioned ancestor */
-    top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
-    right: 0; 
-    width: 187px;
-    background-color: white;
-    box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
-    z-index: 1;
-    border-left: 1px solid black;
-    border-bottom: 1px solid black;
-    cursor: auto;
-    border-radius: 0 0 0 5px;
-    overflow: hidden; /* Prevent children from rendering outside the border */
-	transform: translateX(0); /* Slide into view */
-    transition: transform 0.3s cubic-bezier(0,1.05,.47,1), visibility 0s;
-}
 
 .language-dropdown-item {
     display:flex;
@@ -286,17 +282,19 @@ nav.compact-3 #svg-logout {
     cursor: pointer;
 }
 
-.language-dropdown-item:hover {
-  background-color: var(--header-link-hover-color)
-}
+/* .language-dropdown-item p.name {
 
-.language-dropdown-item p.name {
-
-}
+} */
 
 .language-dropdown-item p.englishName {
     color: grey;
     font-size: 0.7em;
+}
+
+svg.checkmark {
+    width: 30px;
+    margin-left: auto;
+    fill: #444;
 }
 
 
