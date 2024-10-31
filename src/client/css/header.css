@@ -208,6 +208,8 @@ nav.compact-3 #svg-logout {
   border-bottom: 1px solid black;
   transition: transform 0.2s cubic-bezier(.54,0,1,.97), visibility 0s 1s;
   cursor: auto;
+  border-radius: 0 0 0 5px;
+  overflow: hidden; /* Prevent children from rendering outside the border */
 }
 
 .settings.open .settings-dropdown {
