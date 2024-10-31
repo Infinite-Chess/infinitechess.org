@@ -99,11 +99,28 @@ document.querySelectorAll('nav a').forEach(link => {
 
 
 { // This block opens and closes our settings drop-down menu when it is clicked.
-	const gearContainer = document.getElementById('settings');
+	const settings = document.getElementById('settings');
 	const settingsDropdown = document.getElementById('settings-dropdown');
-	gearContainer.addEventListener('click', function() {
-		settingsDropdown.classList.toggle('hidden');
+	settings.addEventListener('click', () => {
+		if (settingsDropdown.contains(event.target)) return; // We clicked the drop-down itself don't toggle it off
+		toggleSettingsDropdown();
 	});
+
+	// Close the dropdown if clicking outside of it
+	document.addEventListener('click', (event) => {
+		// Check if the click was outside the dropdown
+		if (!settings.contains(event.target)) closeSettingsDropdown();
+	});
+
+	function toggleSettingsDropdown() {
+		settingsDropdown.classList.toggle('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+		settings.classList.toggle('open');
+	}
+
+	function closeSettingsDropdown() {
+		settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+		settings.classList.remove('open');
+	}
 }
 
 
@@ -264,6 +281,11 @@ const header = (function() {
 			loginLink.href = addLngQueryParamToLink('/login');
 			createaccountLink.href = addLngQueryParamToLink('/createaccount');
 		}
+
+		// Manually dispatch a window resize event so that our javascript knows to
+		// recalc the spacing/compactness of the header, as the items have changed their content.
+		const resizeEvent = new Event('resize');
+		window.dispatchEvent(resizeEvent);
 	}
 
 	/**

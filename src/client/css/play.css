@@ -15,7 +15,7 @@ html {
 :root {
     /* 100vw, but with a maximum, so some UIs don't get too big. */
     --vw-capped: clamp(0px, 100vw, 1086px);
-    --nav-bar-height: 40px;
+    --nav-bar-height: 41px; /* 40 + 1 for border */
     /* The viewport height, subtract the navigation bar height. */
     --vh-sub-nav: calc(100vh - var(--nav-bar-height));
     /* The minimum between the viewport width and height */
