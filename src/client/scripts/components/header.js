@@ -11,7 +11,6 @@ document.querySelectorAll('nav a').forEach(link => {
 
 
 { // Spacing: This block handles the spacing of our header elements at various screen widths
-    
 	const header = document.querySelector('header');
 	const home = document.querySelector('.home');
 	const nav = document.querySelector('nav');
@@ -100,9 +99,11 @@ document.querySelectorAll('nav a').forEach(link => {
 
 { // This block opens and closes our settings drop-down menu when it is clicked.
 	const settings = document.getElementById('settings');
-	const settingsDropdown = document.getElementById('settings-dropdown');
+	const settingsDropdown = document.querySelector('.settings-dropdown');
 	const languageDropdownSelection = document.getElementById('language-settings-dropdown-item');
 	const languageDropdown = document.querySelector('.language-dropdown');
+
+	const languageDropdownTitle = document.querySelector('.language-dropdown .dropdown-title');
 
 	const allSettingsDropdowns = [settingsDropdown, languageDropdown];
 	let settingsIsOpen = settings.classList.contains('open');
@@ -142,17 +143,55 @@ document.querySelectorAll('nav a').forEach(link => {
 		settingsIsOpen = false;
 	}
 	
-	languageDropdownSelection.addEventListener('click', () => {
-		// if (settingsDropdown.contains(event.target)) return; // We clicked the drop-down itself don't toggle it off
-		toggleLanguageDropdown();
-	});
+	languageDropdownSelection.addEventListener('click', toggleLanguageDropdown);
 
 	function toggleLanguageDropdown() {
 		languageDropdown.classList.toggle('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
-		// settings.classList.toggle('open');
 	}
+
+	languageDropdownTitle.addEventListener('click', toggleLanguageDropdown);
 }
 
+
+
+{ // This block selects new languages when we click a language in the language dropdown
+	// Request cookie if it doesn't exist
+	if (getCookieValue("i18next") === undefined) {
+		fetch("/setlanguage", {
+			method: "POST",
+			credentials: "same-origin",
+		});
+	}
+
+	// Attach click event listener to language dropdown items
+	const dropdownItems = document.querySelectorAll(".language-dropdown-item");
+	dropdownItems.forEach(item => {
+		item.addEventListener("click", () => {
+			const selectedLanguage = item.getAttribute("value"); // Get the selected language code
+			updateCookie("i18next", selectedLanguage, 365);
+
+			// Modify the URL to include the "lng" query parameter
+			const url = new URL(window.location);
+			url.searchParams.set("lng", selectedLanguage);
+
+			// Update the browser's URL without reloading the page
+			window.history.replaceState({}, '', url);
+
+			// Reload the page
+			location.reload();
+		});
+	});
+
+	function updateCookie(cookieName, value, days) {
+		let expires = "";
+		if (days) {
+			const date = new Date();
+			date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+			expires = "; expires=" + date.toUTCString();
+		}
+		document.cookie = cookieName + "=" + (value || "") + expires + "; path=/";
+	}
+}
 
 
 
@@ -183,6 +222,8 @@ favicon: { // This block auto detects device theme and adjusts the browser icon 
 	});
 }
 
+
+
 { // This block auto-removes the "lng" query parameter from the url, visually, without refreshing
 	(function removeLngQueryParam() {
 		// Create a URL object from the current window location
@@ -204,6 +245,8 @@ favicon: { // This block auto detects device theme and adjusts the browser icon 
  * 
  * If we are not logged in the server will give us a browser-id
  * cookie to validate our identity in future requests.
+ * 
+ * It appends our lng query param to all the navigation links.
  */
 // eslint-disable-next-line no-unused-vars
 const header = (function() {
@@ -369,20 +412,6 @@ const header = (function() {
 	}
 
 	/**
-     * Searches the document for the specified cookie, and returns it if found.
-     * @param {string} cookieName The name of the cookie you would like to retrieve.
-     * @returns {string | undefined} The cookie, if it exists, otherwise, undefined.
-     */
-	function getCookieValue(cookieName) {
-		const cookieArray = document.cookie.split("; ");
-        
-		for (let i = 0; i < cookieArray.length; i++) {
-			const cookiePair = cookieArray[i].split("=");
-			if (cookiePair[0] === cookieName) return cookiePair[1];
-		}
-	}
-
-	/**
      * Deletes a document cookie.
      * @param {string} cookieName - The name of the cookie you would like to delete.
      */
@@ -418,3 +447,19 @@ const header = (function() {
 		onLogOut,
 	});
 })();
+
+
+
+/**
+ * Searches the document for the specified cookie, and returns it if found.
+ * @param {string} cookieName The name of the cookie you would like to retrieve.
+ * @returns {string | undefined} The cookie, if it exists, otherwise, undefined.
+ */
+function getCookieValue(cookieName) {
+	const cookieArray = document.cookie.split("; ");
+	
+	for (let i = 0; i < cookieArray.length; i++) {
+		const cookiePair = cookieArray[i].split("=");
+		if (cookiePair[0] === cookieName) return cookiePair[1];
+	}
+}
