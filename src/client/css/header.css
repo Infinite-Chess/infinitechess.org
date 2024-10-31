@@ -187,6 +187,12 @@ nav.compact-3 #svg-logout {
 
 .gear {
     width: 45%;
+    transition: transform 0.2s cubic-bezier(.54,0,1,.97);
+}
+
+.settings.open .gear {
+    transition: transform 0.3s cubic-bezier(0,1.05,.47,1);
+    transform: rotate(60deg);
 }
 
 .settings-dropdown {
