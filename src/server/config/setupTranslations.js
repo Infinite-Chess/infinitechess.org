@@ -16,6 +16,28 @@ import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
 /**
+ * A dictionary containing the English names of many language codes.
+ * ADD TO THIS when we add a new language that's not listed below!
+ */
+const languageNames = {
+	'en-US': 'English',
+	'es-ES': 'Spanish',
+	'fr-FR': 'French',
+	'pl-PL': 'Polish',
+	'pt-BR': 'Portuguese',
+	'zh-CN': 'Simplified Chinese',
+	'zh-TW': 'Traditional Chinese',
+	'de-DE': 'German',
+	'ja-JP': 'Japanese',
+	'ru-RU': 'Russian',
+	'it-IT': 'Italian',
+	'ar-SA': 'Arabic',
+	'hi-IN': 'Hindi',
+	'ko-KR': 'Korean',
+	'tr-TR': 'Turkish',
+};
+
+/**
  * This dictionary tells use what code the date-fns package uses
  * to provide language-correct dates.
  * 
@@ -287,10 +309,12 @@ function createFileOrDir(filePath) {
 function translateStaticTemplates(translations) {
 	const languages = Object.keys(translations);
   
-	const languages_list = [];
-	for (const language of languages) {
-		languages_list.push({ code: language, name: translations[language].default.name });
-	}
+	const languages_list = languages.map(language => {
+		const name = translations[language].default.name;
+		const englishName = languageNames[language];
+		if (!englishName) throw new Error(`English name not found for language code: ${language} Name: ${translations[language].default.name}`);
+		return { code: language, name, englishName };
+	});
   
 	const templatesPath = path.join(__dirname, "..", "..", "..", "dist", "views");
 	for (const language of languages) {
