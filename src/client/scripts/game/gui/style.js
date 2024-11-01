@@ -118,11 +118,34 @@ function getChildrenTextContents(parentElement) {
 	return textContents;
 }
 
+/**
+ * Converts an array of [r, g, b, a], range 0-1, into a valid CSS rgba color string.
+ * @param {number[]} colorArray - An array containing [r, g, b, a] values, where r, g, b are in the range [0, 1].
+ * @returns {string} A CSS rgba color string.
+ */
+function arrayToCssColor(colorArray) {
+	if (colorArray.length !== 4) throw new Error('Array must have exactly 4 elements: [r, g, b, a].');
+
+	const [r, g, b, a] = colorArray.map((value, index) => {
+		if (index < 3) {
+			if (value < 0 || value > 1) throw new Error('RGB values must be between 0 and 1.');
+			return Math.round(value * 255);
+		} else {
+			if (value < 0 || value > 1) throw new Error('Alpha value must be between 0 and 1.');
+			return value;
+		}
+	});
+
+	return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+
 export default {
 	hideElement,
 	revealElement,
 	setNavStyle,
 	fadeIn1s,
 	fadeOut1s,
-	getChildrenTextContents
+	getChildrenTextContents,
+	arrayToCssColor,
 };

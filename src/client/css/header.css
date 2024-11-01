@@ -201,7 +201,7 @@ nav.compact-3 #svg-logout {
     position: absolute; /* Position relative to the nearest positioned ancestor */
     top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
     right: 0; 
-    width: 187px;
+    width: 195px;
     background-color: white;
     box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
     z-index: 1;
