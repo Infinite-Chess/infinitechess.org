@@ -91,15 +91,12 @@ function init() {
 
 // Initiates our textures, and our spritesheet data (where each piece's texture is located)
 function initTextures() {
-	board.initTextures();
+	board.initBoard();
 	pieces.initSpritesheet();
 	pieces.initSpritesheetData();
 }
 
 function updateVariablesAfterScreenResize() {
-
-	board.initDarkTilesModel();
-
 	// Recalculate scale at which 1 tile = 1 pixel       world-space                physical pixels
 	movement.setScale_When1TileIs1Pixel_Physical((camera.getScreenBoundingBox(false).right * 2) / camera.canvas.width);
 	movement.setScale_When1TileIs1Pixel_Virtual(movement.getScale_When1TileIs1Pixel_Physical() * camera.getPixelDensity());

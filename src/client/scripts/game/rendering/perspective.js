@@ -76,7 +76,6 @@ function enable() {
 
 	lockMouse();
 
-	board.initDarkTilesModel(); // Expanded model
 	initCrosshairModel();
 	piecesmodel.initRotatedPiecesModel(game.getGamefile()); // Async
 
@@ -94,8 +93,6 @@ function disable() {
 	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.off}`;
     
 	resetRotations();
-    
-	board.initDarkTilesModel(); // Shrunk model
 
 	piecesmodel.eraseRotatedModel(game.getGamefile());
 }
@@ -252,7 +249,6 @@ function initCrosshairModel() {
 function renderCrosshair() {
 	if (!enabled) return;
 	if (config.VIDEO_MODE) return; // Don't render while recording
-	if (crosshairModel == null) return console.error("Crosshair model is null but it should have been defined when toggling on perspective!");
 
 	const perspectiveViewMatrixCopy = camera.getViewMatrix();
 	camera.initViewMatrix(true); // Init view while ignoring perspective rotations
