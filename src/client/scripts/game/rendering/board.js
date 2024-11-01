@@ -32,17 +32,12 @@ import frametracker from './frametracker.js';
  * We also keep track of what tile the mouse is currently hovering over.
  */
 
-let tiles_texture; // 2x2 transparent
-let tiles256_texture; // 256x256 transparent. Any color, but greater mouire effect
-let tilesGrey78_texture; // tilesGrey78, only white & grey tiles
+/** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
+let tilesTexture_2; // Opaque, no mipmaps
+/** 256x256 Opaque, yes mipmaps. Used in 2D mode. Zero moire, yes antialiasing. */
+let tilesTexture_256mips;
 
 const squareCenter = 0.5; // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
-
-/** The buffer model of the dark squares. This is just one
- * large square covering the whole screen, rendered underneath
- * the white tiles, because the texture is transparent.
- * @type {BufferModel} */
-let darkTilesModel; // The dark tile color is rendered on the screen underneath the white tiles (transparent image)
 
 let tileWidth_Pixels; // Width of tiles in physical, not virtual screen pixels (greater for retina displays). Dependent on board scale.
 
@@ -70,15 +65,31 @@ const perspectiveMode_z = -0.01;
 const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesn't break
 //const limitToDampScale = 0.15; // FOR RECORDING. This slows down very fast.
 
-let whiteTiles; // [r,g,b,a]
+let lightTiles; // [r,g,b,a]
 let darkTiles;
 
-function initTextures() {
-	tiles_texture = texture.loadTexture('tiles', { useMipmaps: false });
-	// This transparent tiles texture gives us freedom of color, but the artifacts are a little heavier
-	tiles256_texture = texture.loadTexture('tiles256', { useMipmaps: false });
-	tilesGrey78_texture = texture.loadTexture('tilesGrey78', { useMipmaps: false });
+function initBoard() {
+	initColor();
+	initTextures();
 }
+
+/** Initiates the color of the board tiles, according to our current theme. */
+function initColor() {
+	lightTiles = options.getDefaultTiles(true);
+	darkTiles = options.getDefaultTiles(false);
+}
+
+async function initTextures() {
+	const lightTilesCssColor = style.arrayToCssColor(lightTiles);
+	const darkTilesCssColor = style.arrayToCssColor(darkTiles);
+
+	const element_tilesTexture2 = await header.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 2);
+	tilesTexture_2 = texture.loadTexture(element_tilesTexture2, { useMipmaps: false });
+
+	const element_tilesTexture256mips = await header.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256);
+	tilesTexture_256mips = texture.loadTexture(element_tilesTexture256mips, { useMipmaps: true });
+}
+
 
 function gsquareCenter() {
 	return squareCenter;
@@ -234,8 +245,8 @@ function roundAwayBoundingBox(src) {
  * @returns {BufferModel} The buffer model
  */
 function regenBoardModel() {
-
-	// New method of rendering board!
+	const boardTexture = perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
+	if (!boardTexture) return; // Can't create buffer model if texture not loaded.
 
 	const boardScale = movement.getBoardScale();
 	const TwoTimesScale = 2 * boardScale;
@@ -250,13 +261,12 @@ function regenBoardModel() {
 
 	const boardPos = movement.getBoardPos();
 	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
-	// Without "- 1/1000", my computer's texture rendering is slightly off
-	const texCoordStartX = (((boardPos[0] + squareCenter) + startX / boardScale) % 2) / 2 - 1 / 1000;
-	const texCoordStartY = (((boardPos[1] + squareCenter) + startY / boardScale) % 2) / 2 - 1 / 1000;
+	const texCoordStartX = (((boardPos[0] + squareCenter) + startX / boardScale) % 2) / 2;
+	const texCoordStartY = (((boardPos[1] + squareCenter) + startY / boardScale) % 2) / 2;
 	const texCoordEndX = texCoordStartX + (endX - startX) / TwoTimesScale;
 	const texCoordEndY = texCoordStartY + (endY - startY) / TwoTimesScale;
 
-	const [wr,wg,wb,wa] = whiteTiles;
+	const [wr,wg,wb,wa] = lightTiles;
 	// const [dr,dg,db,da] = darkTiles;
 
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
@@ -269,51 +279,16 @@ function regenBoardModel() {
 	// const darkTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, dr, dg, db, da)
 	// data.push(...darkTilesData);
 
-	// return buffermodel.createModel_ColorTexture3D(new Float32Array(data))
-	const texture = perspective.getEnabled() ? tiles256_texture : tiles_texture;
-	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", texture);
-}
-
-// The dark tiles model is a rectangle filling the whole screen, rendered underneath the white tile texture which is transparent.
-function initDarkTilesModel() {
-	if (!darkTiles) resetColor();
-
-	const inPerspective = perspective.getEnabled();
-	const dist = perspective.distToRenderBoard;
-	const screenBoundingBox = camera.getScreenBoundingBox(false);
-
-	const startX = inPerspective ? -dist : screenBoundingBox.left;
-	const endX =   inPerspective ?  dist : screenBoundingBox.right;
-	const startY = inPerspective ? -dist : screenBoundingBox.bottom;
-	const endY =   inPerspective ?  dist : screenBoundingBox.top;
-	// const z = perspective.getEnabled() ? perspectiveMode_z : 0;
-	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
-
-	const [r,g,b,a] = darkTiles;
-
-	const data = bufferdata.getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a);
-	const dataFloat32 = new Float32Array(data);
-
-	// darkTilesModel = buffermodel.createModel_Color3D(dataFloat32) // { prepDraw, vertexCount, program }
-	darkTilesModel = buffermodel.createModel_Colored(dataFloat32, 3, "TRIANGLES");
+	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
 }
 
 function renderMainBoard() {
-
 	if (movement.isScaleLess1Pixel_Physical()) return;
 
 	// We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
 	// The other option is to regenerate it as much as highlighted squares, with the bounding box.
 	const model = regenBoardModel();
-
-	// OLD
-	// const texture = perspective.getEnabled() ? tilesGrey78_texture : tiles_texture
-	// NEW
-	// const texture = perspective.getEnabled() ? tiles256_texture : tiles_texture
-	// render.renderModel(darkTilesModel, undefined, undefined, "TRIANGLES") // Dark Tiles, underneath white tiles covering whole screen.
-	darkTilesModel.render();
-    
-	// render.renderModel(model, undefined, undefined, "TRIANGLES", texture) // White Tiles
+	if (!model) return; // Model not defined because the texture was not fully loaded yet
 	model.render();
 }
 
@@ -381,9 +356,9 @@ function updateTheme() {
 
 // Updates sky color based on current board color
 function updateSkyColor() {
-	const avgR = (whiteTiles[0] + darkTiles[0]) / 2;
-	const avgG = (whiteTiles[1] + darkTiles[1]) / 2;
-	const avgB = (whiteTiles[2] + darkTiles[2]) / 2;
+	const avgR = (lightTiles[0] + darkTiles[0]) / 2;
+	const avgG = (lightTiles[1] + darkTiles[1]) / 2;
+	const avgB = (lightTiles[2] + darkTiles[2]) / 2;
 
 	const dimAmount = 0.27; // Default: 0.27
 	const skyR = avgR - dimAmount;
@@ -396,9 +371,9 @@ function updateSkyColor() {
 function updateNavColor() {
 	// Determine the new "white" color
 
-	const avgR = (whiteTiles[0] + darkTiles[0]) / 2;
-	const avgG = (whiteTiles[1] + darkTiles[1]) / 2;
-	const avgB = (whiteTiles[2] + darkTiles[2]) / 2;
+	const avgR = (lightTiles[0] + darkTiles[0]) / 2;
+	const avgG = (lightTiles[1] + darkTiles[1]) / 2;
+	const avgB = (lightTiles[2] + darkTiles[2]) / 2;
 
 
 	// With the default theme, these should be max
@@ -428,16 +403,14 @@ function updateNavColor() {
 // TEMPORARILY changes the board tiles color! Resets upon leaving game.
 // Used to darken board
 function changeColor(newWhiteTiles, newDarkTiles) {
-	frametracker.onVisualChange();
-	whiteTiles = newWhiteTiles;
+	lightTiles = newWhiteTiles;
 	darkTiles = newDarkTiles;
-	initDarkTilesModel();
+	frametracker.onVisualChange();
 }
 
 function resetColor() {
-	whiteTiles = options.getDefaultTiles(true); // true for white
+	lightTiles = options.getDefaultTiles(true); // true for white
 	darkTiles = options.getDefaultTiles(false); // false for dark
-	initDarkTilesModel();
 	frametracker.onVisualChange();
 }
 
@@ -505,20 +478,10 @@ function renderSolidCover() {
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
 	const cameraZ = camera.getPosition(true)[2];
 
-	const r = (whiteTiles[0] + darkTiles[0]) / 2;
-	const g = (whiteTiles[1] + darkTiles[1]) / 2;
-	const b = (whiteTiles[2] + darkTiles[2]) / 2;
-	const a = (whiteTiles[3] + darkTiles[3]) / 2;
-
-	// const data = new Float32Array([
-	//     //     Vertex                                      Color
-	//     0,     0,   -perspective.distToRenderBoard,     r, g, b, a,
-	//     0,     dist, cameraZ,                           r, g, b, a,
-	//     dist,  0,    cameraZ,                           r, g, b, a,
-	//     0,    -dist, cameraZ,                           r, g, b, a,
-	//    -dist,  0,    cameraZ,                           r, g, b, a,
-	//     0,     dist, cameraZ,                           r, g, b, a,
-	// ])
+	const r = (lightTiles[0] + darkTiles[0]) / 2;
+	const g = (lightTiles[1] + darkTiles[1]) / 2;
+	const b = (lightTiles[2] + darkTiles[2]) / 2;
+	const a = (lightTiles[3] + darkTiles[3]) / 2;
 
 	const data = bufferdata.getDataBoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
 	data.push(...bufferdata.getDataQuad_Color3D(-dist, -dist, dist, dist, z, r, g, b, a)); // Floor of the box
@@ -529,6 +492,8 @@ function renderSolidCover() {
 }
 
 function renderZoomedBoard(zoom, opacity) {
+	const boardTexture = tilesTexture_2; 
+	if (!boardTexture) return; // Can't create buffer model if texture not defined.
 
 	const zoomTimesScale = zoom * movement.getBoardScale();
 	const zoomTimesScaleTwo = zoomTimesScale * 2;
@@ -554,27 +519,16 @@ function renderZoomedBoard(zoom, opacity) {
 	const texEndX = texStartX + texCoordDiffX;
 	const texEndY = texStartY + texCoordDiffY;
 
-	const texStartXB = texStartX + 0.5;
-	const texEndXB = texEndX + 0.5;
-
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
 
 	// eslint-disable-next-line prefer-const
-	let [wr,wg,wb,wa] = whiteTiles; wa *= opacity;
-	// eslint-disable-next-line prefer-const
-	let [dr,dg,db,da] = darkTiles; da *= opacity;
+	let [wr,wg,wb,wa] = lightTiles; wa *= opacity;
     
 	const data = [];
 
 	const dataWhiteTiles = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, wr, wg, wb, wa);
 	data.push(...dataWhiteTiles);
-
-	const dataDarkTiles = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartXB, texStartY, texEndXB, texEndY, dr, dg, db, da);
-	data.push(...dataDarkTiles);
-
-	// const model = buffermodel.createModel_ColorTexture3D(new Float32Array(data));
-	const texture = perspective.getEnabled() ? tiles256_texture : tiles_texture;
-	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", texture);
+	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
 
 	model.render();
 }
@@ -625,13 +579,12 @@ function generatePerspectiveBoundingBox(rangeOfView) { // ~18
 
 export default {
 	gsquareCenter,
-	initTextures,
+	initBoard,
 	gtileWidth_Pixels,
 	recalcVariables,
 	gtile_MouseOver_Float,
 	isOffsetOutOfRangeOfRegenRange,
 	gpositionFingerOver,
-	initDarkTilesModel,
 	gtile_MouseOver_Int,
 	recalcTileWidth_Pixels,
 	gtileCoordsOver,
