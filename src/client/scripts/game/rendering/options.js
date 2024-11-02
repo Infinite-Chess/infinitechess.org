@@ -33,7 +33,7 @@ let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
 
 let navigationVisible = true;
 
-let theme = 'default';
+let theme;
 const validThemes = ['default', 'halloween', 'thanksgiving', 'christmas'];
 
 const themes = {
@@ -114,7 +114,15 @@ let em = false; // editMode, allows moving pieces anywhere else on the board!
 let fps = false;
 
 
-// Function
+function initThemeChangeListener() {
+	window.addEventListener('theme-change', function(event) { // detail: { theme, properties, IMG }
+		const selectedTheme = event.detail.theme;
+		console.log(`Theme change event triggered: ${selectedTheme}`);
+		event.detail.properties.name = selectedTheme;
+		event.detail.properties.IMG = event.detail.IMG;
+		setTheme(event.detail.properties);
+	});
+}
 
 function isDebugModeOn() {
 	return debugMode;
@@ -188,31 +196,37 @@ function onToggleNavigationBar() {
 }
 
 function getDefaultTiles(isWhite) {
-	if (isWhite) return themes[theme].whiteTiles;
-	else return themes[theme].darkTiles;
+	if (isWhite) return theme.whiteTiles;
+	else return theme.darkTiles;
 }
 
 function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
-	if (isOpponentPiece) return themes[theme].legalMovesHighlightColor_Opponent;
-	else if (isPremove) return themes[theme].legalMovesHighlightColor_Premove;
-	else return themes[theme].legalMovesHighlightColor_Friendly;
+	if (isOpponentPiece) return theme.legalMovesHighlightColor_Opponent;
+	else if (isPremove) return theme.legalMovesHighlightColor_Premove;
+	else return theme.legalMovesHighlightColor_Friendly;
 }
 
 function getDefaultSelectedPieceHighlight() {
-	return themes[theme].selectedPieceHighlightColor;
+	return theme.selectedPieceHighlightColor;
 }
 
 function getDefaultLastMoveHighlightColor() {
-	return themes[theme].lastMoveHighlightColor;
+	return theme.lastMoveHighlightColor;
 }
 
 function getDefaultCheckHighlightColor() {
-	return themes[theme].checkHighlightColor;
+	return theme.checkHighlightColor;
 }
 
-function setTheme(newTheme) { // default/halloween
-	if (!validateTheme(theme)) console.error(`Cannot change theme to invalid theme ${theme}!`);
-	if (theme === newTheme) return; // Same theme
+function setTheme(newTheme) { // default/halloween   
+	// if (!validateTheme(theme)) console.error(`Cannot change theme to invalid theme ${theme}!`);
+	// if (theme === newTheme) return; // Same theme
+
+	// theme = newTheme;
+	// board.updateTheme();
+	// piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
+	// highlights.regenModel();
+
 
 	theme = newTheme;
 	board.updateTheme();
@@ -225,7 +239,7 @@ function setTheme(newTheme) { // default/halloween
  * If the current theme is not 'default', it sets it to 'default'.
  * If the current theme is 'default', it sets it to the value returned by getHollidayTheme().
  */
-function toggleHollidayTheme() {
+function toggleHolidayTheme() {
 	if (isHollidayTheme(theme)) setTheme('default');
 	else setTheme(getHollidayTheme());
 }
@@ -254,12 +268,12 @@ function validateTheme(theme) {
  * @returns {Object} An object containing the properties "white", "black", and "neutral".
  */
 function getPieceRegenColorArgs() {
-	if (!themes[theme].useColoredPieces) return; // Not using colored pieces
+	if (!theme.useColoredPieces) return; // Not using colored pieces
     
 	return {
-		white: themes[theme].whitePiecesColor, // [r,g,b,a]
-		black: themes[theme].blackPiecesColor,
-		neutral: themes[theme].neutralPiecesColor
+		white: theme.whitePiecesColor, // [r,g,b,a]
+		black: theme.blackPiecesColor,
+		neutral: theme.neutralPiecesColor
 	};
 }
 
@@ -281,7 +295,7 @@ function getColorOfType(type) {
 
 // Returns true if our current theme is using custom-colored pieces.
 function areUsingColoredPieces() {
-	return themes[theme].useColoredPieces;
+	return theme.useColoredPieces;
 }
 
 function toggleFPS() {
@@ -300,7 +314,6 @@ export default {
 	gnavigationVisible,
 	setNavigationBar,
 	gtheme,
-	themes,
 	toggleDeveloperMode,
 	toggleEM,
 	toggleNavigationBar,
@@ -310,7 +323,7 @@ export default {
 	getDefaultLastMoveHighlightColor,
 	getDefaultCheckHighlightColor,
 	setTheme,
-	toggleHollidayTheme,
+	toggleHolidayTheme,
 	getPieceRegenColorArgs,
 	getColorOfType,
 	areUsingColoredPieces,
@@ -320,4 +333,5 @@ export default {
 	disableEM,
 	isFPSOn,
 	isHollidayTheme,
+	initThemeChangeListener,
 };
