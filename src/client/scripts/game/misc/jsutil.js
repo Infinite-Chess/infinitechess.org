@@ -47,7 +47,13 @@ function copyFloat32Array(src) {
 	return copy;
 }
 
-// Assumes the sortedArray DOES NOT contain the value!
+/**
+ * Performs a binary search on a sorted array to find the index where a given value could be inserted,
+ * maintaining the array's sorted order. MUST NOT ALREADY CONTAIN THE VALUE!!
+ * @param {number[]} sortedArray - The array to search, which must be sorted in ascending order.
+ * @param {number} value - The value to search for.
+ * @returns {number} The index where the value can be inserted, maintaining order.
+ */
 function binarySearch_findSplitPoint(sortedArray, value) {
 	if (value === undefined) throw new Error('Cannot binary search when value is undefined!');
 
@@ -69,11 +75,14 @@ function binarySearch_findSplitPoint(sortedArray, value) {
 	return left;
 }
 
-// Returns the index at which you could insert the value and keep it organized,
-// OR returns the index of the value!
+/**
+ * Calculates the index at which you could insert the given value
+ * and keep the array organized, OR returns the index of the given value.
+ * @param {number[]} sortedArray - An Array of NUMBERS. If not all numbers, this will crash.
+ * @param {number} value - The number to find the split point of, or exact index position of.
+ * @returns {number} The index
+ */
 function binarySearch_findValue(sortedArray, value) {
-	if (value === undefined) return console.error('Cannot binary search when value is undefined!');
-
 	let left = 0;
 	let right = sortedArray.length - 1;
 
