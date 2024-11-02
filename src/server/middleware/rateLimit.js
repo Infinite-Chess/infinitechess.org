@@ -17,15 +17,22 @@ const minuteInMillis = 60000;
 /**
  * Interval to clear out an agent's list of recent connection timestamps if they
  * are longer ago than {@link minuteInMillis}
+ * Interval to clear out an agent's list of recent connection timestamps if they
+ * are longer ago than {@link minuteInMillis}
  */
+const rateToUpdateRecentConnections = 1000; // 1 Second
 const rateToUpdateRecentConnections = 1000; // 1 Second
 
 /**
  * The object containing a combination of IP addresses and user agents for the key,
  * and for the value - an array of timestamps of their recent connections.
  * The key format will be `{ "192.538.1.1|User-Agent-String": [timestamp1, timestamp2, ...] }`
+ * The object containing a combination of IP addresses and user agents for the key,
+ * and for the value - an array of timestamps of their recent connections.
+ * The key format will be `{ "192.538.1.1|User-Agent-String": [timestamp1, timestamp2, ...] }`
  */
 const rateLimitHash = {};
+
 
 
 // For detecting if we're under a DDOS attack...
@@ -134,7 +141,7 @@ function rateLimitWebSocket(req, ws) {
 
 	const clientIP = getClientIP_Websocket(req, ws);
 	if (!clientIP) {
-		logEvents('Unable to identify client IP address from web socket connection when rate limiting!', 'hackLog.txt');
+		console.log('Unable to identify client IP address from web socket connection');
 		ws.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
 		return false;
 	}
