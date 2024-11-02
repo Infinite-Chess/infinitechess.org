@@ -2,241 +2,6 @@
 // header that runs on every single page
 
 
-// Greys the navigation link of the page we are currently on
-document.querySelectorAll('nav a').forEach(link => {
-	if (link.getAttribute('href') === window.location.pathname) { // e.g. "/news"
-		link.classList.add('currPage');
-	}
-});
-
-
-{ // Spacing: This block handles the spacing of our header elements at various screen widths
-	const header = document.querySelector('header');
-	const home = document.querySelector('.home');
-	const nav = document.querySelector('nav');
-	const links = document.querySelectorAll('nav a');
-	// Paddings allowed between each of our header links (right of logo & left of gear)
-	const maxPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-max-padding'));
-	const minPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-min-padding'));
-	// const gear = document.querySelector('.settings');
-    
-	// These things are hidden in our stylesheet off the bat to give our javascript
-	// here time to calculate the spacing of everything before rendering
-	for (const child of header.children) child.classList.remove('visibility-hidden');
-    
-	let compactnessLevel = 0;
-    
-	updateSpacing(); // Initial spacing on page load
-	window.addEventListener('resize', updateSpacing); // Continuous spacing on page-resizing
-    
-	function updateSpacing() {
-		// Reset to least compact, so that we can measure if each stage fits.
-		// If it doesn't, we go down to the next compact stage
-		compactnessLevel = 0;
-		updateMode();
-		updatePadding();
-    
-		let spaceBetween = getSpaceBetweenHeaderFlexElements();
-    
-		while (spaceBetween === 0 && compactnessLevel < 4) {
-			compactnessLevel++;
-			updateMode();
-			updatePadding();
-			spaceBetween = getSpaceBetweenHeaderFlexElements(); // Recalculate space after adjusting compactness and padding
-		}
-	}
-    
-	/**
-     * Updates the left-right padding of the navigation links (right of logo and left of gear)
-     * according to how much space is available.
-     */
-	function updatePadding() {
-		const spaceBetween = getSpaceBetweenHeaderFlexElements();
-    
-		// If the space is less than 100px, reduce padding gradually
-		if (spaceBetween >= 100) {
-			// Reset to max padding when space is larger than 100px
-			links.forEach(link => {
-				link.style.paddingLeft = `${maxPadding}px`;
-				link.style.paddingRight = `${maxPadding}px`;
-			});
-		} else {
-			const newPadding = Math.max(minPadding, maxPadding * (spaceBetween / 100));
-			links.forEach(link => {
-				link.style.paddingLeft = `${newPadding}px`;
-				link.style.paddingRight = `${newPadding}px`;
-			});
-		}
-	}
-    
-	function updateMode() {
-		if (compactnessLevel === 0) {
-			home.classList.remove('compact-1'); // Show the "Infinite Chess" text
-			nav.classList.remove('compact-2'); // Show the navigation SVGs
-			nav.classList.remove('compact-3'); // Show the navigation TEXT
-		} else if (compactnessLevel === 1) {
-			home.classList.add('compact-1'); // Hide the "Infinite Chess" text
-			nav.classList.remove('compact-2'); // Show the navigation SVGs
-			nav.classList.remove('compact-3'); // Show the navigation TEXT
-		} else if (compactnessLevel === 2) {
-			home.classList.add('compact-1'); // Hide the "Infinite Chess" text
-			nav.classList.add('compact-2'); // Hide the navigation SVGs
-			nav.classList.remove('compact-3'); // Show the navigation TEXT
-		} else if (compactnessLevel === 3) {
-			home.classList.add('compact-1'); // Hide the "Infinite Chess" text
-			nav.classList.remove('compact-2'); // Show the navigation SVGs
-			nav.classList.add('compact-3'); // Hide the navigation TEXT
-		}
-	}
-    
-	function getSpaceBetweenHeaderFlexElements() {
-		const homeRight = home.getBoundingClientRect().right;
-		const navLeft = nav.getBoundingClientRect().left;
-		return navLeft - homeRight;
-	}
-}
-
-
-{ // This block opens and closes our settings drop-down menu when it is clicked.
-	const settings = document.getElementById('settings');
-	const settingsDropdown = document.querySelector('.settings-dropdown');
-	const languageDropdownSelection = document.getElementById('language-settings-dropdown-item');
-	const languageDropdown = document.querySelector('.language-dropdown');
-
-	const languageDropdownTitle = document.querySelector('.language-dropdown .dropdown-title');
-
-	const allSettingsDropdowns = [settingsDropdown, languageDropdown];
-	let settingsIsOpen = settings.classList.contains('open');
-
-	settings.addEventListener('click', event => {
-		if (didEventClickAnyDropdown(event)) return; // We clicked any dropdown, don't toggle it off
-		toggleSettingsDropdown();
-	});
-
-	// Close the dropdown if clicking outside of it
-	document.addEventListener('click', (event) => {
-		if (!settings.contains(event.target) && !didEventClickAnyDropdown(event)) closeSettingsDropdowns();
-	});
-
-	function didEventClickAnyDropdown(event) {
-		// Check if the click was outside the dropdown
-		let clickedDropdown = false;
-		allSettingsDropdowns.forEach(dropdown => {
-			if (dropdown.contains(event.target)) clickedDropdown = true;
-		});
-		return clickedDropdown;
-	}
-
-	function toggleSettingsDropdown() {
-		if (settingsIsOpen) closeSettingsDropdowns();
-		else openSettingsDropdown();
-	}
-	function openSettingsDropdown() { // Opens the initial settings dropdown
-		settings.classList.add('open');
-		settingsDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
-		settingsIsOpen = true;
-	}
-	function closeSettingsDropdowns() { // Closes all dropdowns that may be open
-		settings.classList.remove('open');
-		settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
-		languageDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
-		settingsIsOpen = false;
-	}
-	
-	languageDropdownSelection.addEventListener('click', toggleLanguageDropdown);
-
-	function toggleLanguageDropdown() {
-		languageDropdown.classList.toggle('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
-	}
-
-	languageDropdownTitle.addEventListener('click', toggleLanguageDropdown);
-}
-
-
-
-{ // This block selects new languages when we click a language in the language dropdown
-	// Request cookie if it doesn't exist
-	if (getCookieValue("i18next") === undefined) {
-		fetch("/setlanguage", {
-			method: "POST",
-			credentials: "same-origin",
-		});
-	}
-
-	// Attach click event listener to language dropdown items
-	const dropdownItems = document.querySelectorAll(".language-dropdown-item");
-	dropdownItems.forEach(item => {
-		item.addEventListener("click", () => {
-			const selectedLanguage = item.getAttribute("value"); // Get the selected language code
-			updateCookie("i18next", selectedLanguage, 365);
-
-			// Modify the URL to include the "lng" query parameter
-			const url = new URL(window.location);
-			url.searchParams.set("lng", selectedLanguage);
-
-			// Update the browser's URL without reloading the page
-			window.history.replaceState({}, '', url);
-
-			// Reload the page
-			location.reload();
-		});
-	});
-
-	function updateCookie(cookieName, value, days) {
-		let expires = "";
-		if (days) {
-			const date = new Date();
-			date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-			expires = "; expires=" + date.toUTCString();
-		}
-		document.cookie = cookieName + "=" + (value || "") + expires + "; path=/";
-	}
-}
-
-
-
-favicon: { // This block auto detects device theme and adjusts the browser icon accordingly
-
-	const element_favicon = document.getElementById('favicon');
-
-	/**
-     * Switches the browser icon to match the given theme.
-     * @param {string} theme "dark"/"light"
-     */
-	function switchFavicon(theme) {
-		if (theme === 'dark') element_favicon.href = '/img/favicon-dark.png';
-		else element_favicon.href = '/img/favicon-light.png';
-	}
-    
-	if (!window.matchMedia) break favicon; // Don't create a theme-change event listener if matchMedia isn't supported.
-
-	// Initial theme detection
-	const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-	switchFavicon(prefersDarkScheme ? 'dark' : 'light');
-    
-	// Listen for theme changes
-	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-		const newTheme = event.matches ? 'dark' : 'light';
-		console.log(`Toggled ${newTheme} icon`);
-		switchFavicon(newTheme);
-	});
-}
-
-
-
-{ // This block auto-removes the "lng" query parameter from the url, visually, without refreshing
-	(function removeLngQueryParam() {
-		// Create a URL object from the current window location
-		const url = new URL(window.location);
-  
-		// Remove the "lng" query parameter
-		url.searchParams.delete('lng');
-  
-		// Update the browser's URL without refreshing the page
-		window.history.replaceState({}, '', url);
-	})();
-}
-
 
 /*
  * Refreshes our token if we are logged in and have a refresh token,
@@ -494,6 +259,401 @@ const header = (function() {
 		createCheckerboardIMG,
 	});
 })();
+
+
+
+// Greys the navigation link of the page we are currently on
+document.querySelectorAll('nav a').forEach(link => {
+	if (link.getAttribute('href') === window.location.pathname) { // e.g. "/news"
+		link.classList.add('currPage');
+	}
+});
+
+
+
+{ // Spacing: This block handles the spacing of our header elements at various screen widths
+	const header = document.querySelector('header');
+	const home = document.querySelector('.home');
+	const nav = document.querySelector('nav');
+	const links = document.querySelectorAll('nav a');
+	// Paddings allowed between each of our header links (right of logo & left of gear)
+	const maxPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-max-padding'));
+	const minPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-link-min-padding'));
+	// const gear = document.querySelector('.settings');
+    
+	// These things are hidden in our stylesheet off the bat to give our javascript
+	// here time to calculate the spacing of everything before rendering
+	for (const child of header.children) child.classList.remove('visibility-hidden');
+    
+	let compactnessLevel = 0;
+    
+	updateSpacing(); // Initial spacing on page load
+	window.addEventListener('resize', updateSpacing); // Continuous spacing on page-resizing
+    
+	function updateSpacing() {
+		// Reset to least compact, so that we can measure if each stage fits.
+		// If it doesn't, we go down to the next compact stage
+		compactnessLevel = 0;
+		updateMode();
+		updatePadding();
+    
+		let spaceBetween = getSpaceBetweenHeaderFlexElements();
+    
+		while (spaceBetween === 0 && compactnessLevel < 4) {
+			compactnessLevel++;
+			updateMode();
+			updatePadding();
+			spaceBetween = getSpaceBetweenHeaderFlexElements(); // Recalculate space after adjusting compactness and padding
+		}
+	}
+    
+	/**
+     * Updates the left-right padding of the navigation links (right of logo and left of gear)
+     * according to how much space is available.
+     */
+	function updatePadding() {
+		const spaceBetween = getSpaceBetweenHeaderFlexElements();
+    
+		// If the space is less than 100px, reduce padding gradually
+		if (spaceBetween >= 100) {
+			// Reset to max padding when space is larger than 100px
+			links.forEach(link => {
+				link.style.paddingLeft = `${maxPadding}px`;
+				link.style.paddingRight = `${maxPadding}px`;
+			});
+		} else {
+			const newPadding = Math.max(minPadding, maxPadding * (spaceBetween / 100));
+			links.forEach(link => {
+				link.style.paddingLeft = `${newPadding}px`;
+				link.style.paddingRight = `${newPadding}px`;
+			});
+		}
+	}
+    
+	function updateMode() {
+		if (compactnessLevel === 0) {
+			home.classList.remove('compact-1'); // Show the "Infinite Chess" text
+			nav.classList.remove('compact-2'); // Show the navigation SVGs
+			nav.classList.remove('compact-3'); // Show the navigation TEXT
+		} else if (compactnessLevel === 1) {
+			home.classList.add('compact-1'); // Hide the "Infinite Chess" text
+			nav.classList.remove('compact-2'); // Show the navigation SVGs
+			nav.classList.remove('compact-3'); // Show the navigation TEXT
+		} else if (compactnessLevel === 2) {
+			home.classList.add('compact-1'); // Hide the "Infinite Chess" text
+			nav.classList.add('compact-2'); // Hide the navigation SVGs
+			nav.classList.remove('compact-3'); // Show the navigation TEXT
+		} else if (compactnessLevel === 3) {
+			home.classList.add('compact-1'); // Hide the "Infinite Chess" text
+			nav.classList.remove('compact-2'); // Show the navigation SVGs
+			nav.classList.add('compact-3'); // Hide the navigation TEXT
+		}
+	}
+    
+	function getSpaceBetweenHeaderFlexElements() {
+		const homeRight = home.getBoundingClientRect().right;
+		const navLeft = nav.getBoundingClientRect().left;
+		return navLeft - homeRight;
+	}
+}
+
+
+
+{ // This block opens and closes our settings drop-down menu when it is clicked.
+	const settings = document.getElementById('settings');
+	const settingsDropdown = document.querySelector('.settings-dropdown');
+	const languageDropdownSelection = document.getElementById('language-settings-dropdown-item');
+	const boardDropdownSelection = document.getElementById('board-settings-dropdown-item');
+	const languageDropdown = document.querySelector('.language-dropdown');
+	const boardDropdown = document.querySelector('.board-dropdown');
+
+	const languageDropdownTitle = document.querySelector('.language-dropdown .dropdown-title');
+	const boardDropdownTitle = document.querySelector('.board-dropdown .dropdown-title');
+	const themeList = document.querySelector('.theme-list'); // Get the theme list div
+
+	const allSettingsDropdownsExceptMainOne = [languageDropdown, boardDropdown];
+	const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
+	let settingsIsOpen = settings.classList.contains('open');
+
+	settings.addEventListener('click', event => {
+		if (didEventClickAnyDropdown(event)) return; // We clicked any dropdown, don't toggle it off
+		toggleSettingsDropdown();
+	});
+
+	// Close the dropdown if clicking outside of it
+	document.addEventListener('click', (event) => {
+		if (!settings.contains(event.target) && !didEventClickAnyDropdown(event)) closeSettingsDropdowns();
+	});
+
+	function didEventClickAnyDropdown(event) {
+		// Check if the click was outside the dropdown
+		let clickedDropdown = false;
+		allSettingsDropdowns.forEach(dropdown => {
+			if (dropdown.contains(event.target)) clickedDropdown = true;
+		});
+		return clickedDropdown;
+	}
+
+	function toggleSettingsDropdown() {
+		if (settingsIsOpen) closeSettingsDropdowns();
+		else openSettingsDropdown();
+	}
+	function openSettingsDropdown() { // Opens the initial settings dropdown
+		settings.classList.add('open');
+		settingsDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+		settingsIsOpen = true;
+	}
+	function closeSettingsDropdowns() { // Closes all dropdowns that may be open
+		settings.classList.remove('open');
+		settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+		closeAllSettingsDropdownsExceptMainOne();
+		settingsIsOpen = false;
+	}
+	function closeAllSettingsDropdownsExceptMainOne() {
+		allSettingsDropdownsExceptMainOne.forEach(dropdown => { dropdown.classList.add('visibility-hidden'); });
+	}
+
+
+	
+	languageDropdownSelection.addEventListener('click', toggleLanguageDropdown);
+
+	function toggleLanguageDropdown() {
+		if (languageDropdown.classList.contains('visibility-hidden')) closeAllSettingsDropdownsExceptMainOne();
+		languageDropdown.classList.toggle('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	}
+
+	languageDropdownTitle.addEventListener('click', toggleLanguageDropdown);
+
+
+	
+	boardDropdownSelection.addEventListener('click', toggleBoardDropdown);
+
+	function toggleBoardDropdown() {
+		if (boardDropdown.classList.contains('visibility-hidden')) closeAllSettingsDropdownsExceptMainOne();
+		boardDropdown.classList.toggle('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	}
+
+	boardDropdownTitle.addEventListener('click', toggleBoardDropdown);
+
+
+	(async function addThemesToThemesDropdown() {
+
+		const themeDictionary = {
+			white: { // White/Grey
+				whiteTiles: [1, 1, 1, 1], // RGBA
+				darkTiles:  [0.78, 0.78, 0.78, 1],
+				selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
+				legalMovesHighlightColor_Friendly: [0, 0, 1, 0.3],
+				legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
+				legalMovesHighlightColor_Premove: [0.3, 0, 1, 0.3],
+				lastMoveHighlightColor: [0, 1, 0, 0.25], // 0.17
+				checkHighlightColor: [1, 0, 0, 0.7],
+				useColoredPieces: false,
+				whitePiecesColor: [1, 1, 1, 1],
+				blackPiecesColor: [1, 1, 1, 1],
+				neutralPiecesColor: [1, 1, 1, 1]
+			},
+			blue: {
+				whiteTiles: [0.5, 0.5, 1, 1],
+				darkTiles: [0, 0, 1, 1],
+			},
+			wood: {
+				whiteTiles: [246 / 255, 207 / 255, 167 / 255, 1],
+				darkTiles: [197 / 255, 141 / 255, 88 / 255, 1],
+			},
+			redWood: {
+				whiteTiles: [245 / 255, 210 / 255, 178 / 255, 1],
+				darkTiles: [193 / 255, 90 / 255, 60 / 255, 1],
+			},
+			sandstone: {
+				whiteTiles: [239 / 255, 225 / 255, 199 / 255, 1],
+				darkTiles: [188 / 255, 160 / 255, 136 / 255, 1],
+			},
+			darkSandstone: {
+				whiteTiles: [220 / 255, 193 / 255, 127 / 255, 1],
+				darkTiles: [176 / 255, 140 / 255, 88 / 255, 1],
+			},
+			beehive: {
+				whiteTiles: [255 / 255, 219 / 255, 90 / 255, 1],
+				darkTiles: [225 / 255, 132 / 255, 13 / 255, 1],
+			},
+			blue2: {
+				whiteTiles: [213 / 255, 231 / 255, 240 / 255, 1],
+				darkTiles: [66 / 255, 140 / 255, 198 / 255, 1],
+			},
+			ocean: {
+				whiteTiles: [106 / 255, 190 / 255, 246 / 255, 1],
+				darkTiles: [63 / 255, 118 / 255, 186 / 255, 1],
+			},
+			cyanOcean: {
+				whiteTiles: [50 / 255, 205 / 255, 211 / 255, 1],
+				darkTiles: [15 / 255, 255 / 255, 255 / 255, 1],
+			},
+			green: {
+				whiteTiles: [238 / 255, 238 / 255, 216 / 255, 1],
+				darkTiles: [130 / 255, 146 / 255, 101 / 255, 1],
+			},
+			avocado: {
+				whiteTiles: [213 / 255, 250 / 255, 127 / 255, 1],
+				darkTiles: [159 / 255, 196 / 255, 89 / 255, 1],
+			},
+			lime: {
+				whiteTiles: [204 / 255, 240 / 255, 100 / 255, 1],
+				darkTiles: [124 / 255, 212 / 255, 21 / 255, 1],
+			},
+			pink: {
+				whiteTiles: [250 / 255, 237 / 255, 236 / 255, 1],
+				darkTiles: [243 / 255, 195 / 255, 194 / 255, 1],
+			},
+			lichess: {
+				whiteTiles: [238 / 255, 216 / 255, 185 / 255, 1],
+				darkTiles: [178 / 255, 136 / 255, 104 / 255, 1],
+			}
+		};
+
+		// Loop through each theme in the dictionary
+		for (const themeName in themeDictionary) {
+			const theme = themeDictionary[themeName];
+			const whiteTiles = theme.whiteTiles;
+			const darkTiles = theme.darkTiles;
+
+			// Create the checkerboard image for the theme
+			const checkerboardImage = await header.createCheckerboardIMG(
+				arrayToCssColor(whiteTiles), // Convert to CSS color format
+				arrayToCssColor(darkTiles),  // Convert to CSS color format
+				2 // Width
+			);
+			checkerboardImage.setAttribute('theme', themeName);
+			checkerboardImage.setAttribute('draggable', 'false');
+
+			// Append the image to the theme list div
+			themeList.appendChild(checkerboardImage);
+		}
+
+		(function initThemeChangeListeners() {
+			// Iterate through each child in the themeList using a for loop
+			for (let i = 0; i < themeList.children.length; i++) {
+				const theme = themeList.children[i];
+				theme.addEventListener('click', selectTheme);
+			}
+		})();
+
+		function selectTheme(event) {
+			const selectedTheme = event.target.getAttribute('theme');
+			// console.log('Selected theme:', selectedTheme);
+			
+			// Dispatch a custom event for theme change so that any game code present can pick it up.
+			const themeChangeEvent = new CustomEvent('theme-change', { detail: { theme: selectedTheme, properties: themeDictionary[selectedTheme], IMG: event.target } });
+			dispatchEvent(themeChangeEvent);
+		}
+	})();
+
+	/**
+	 * Converts an array of [r, g, b, a], range 0-1, into a valid CSS rgba color string.
+	 * @param {number[]} colorArray - An array containing [r, g, b, a] values, where r, g, b are in the range [0, 1].
+	 * @returns {string} A CSS rgba color string.
+	 */
+	function arrayToCssColor(colorArray) {
+		if (colorArray.length !== 4) throw new Error('Array must have exactly 4 elements: [r, g, b, a].');
+
+		const [r, g, b, a] = colorArray.map((value, index) => {
+			if (index < 3) {
+				if (value < 0 || value > 1) throw new Error('RGB values must be between 0 and 1.');
+				return Math.round(value * 255);
+			} else {
+				if (value < 0 || value > 1) throw new Error('Alpha value must be between 0 and 1.');
+				return value;
+			}
+		});
+
+		return `rgba(${r}, ${g}, ${b}, ${a})`;
+	}
+}
+
+
+
+{ // This block selects new languages when we click a language in the language dropdown
+	// Request cookie if it doesn't exist
+	if (getCookieValue("i18next") === undefined) {
+		fetch("/setlanguage", {
+			method: "POST",
+			credentials: "same-origin",
+		});
+	}
+
+	// Attach click event listener to language dropdown items
+	const dropdownItems = document.querySelectorAll(".language-dropdown-item");
+	dropdownItems.forEach(item => {
+		item.addEventListener("click", () => {
+			const selectedLanguage = item.getAttribute("value"); // Get the selected language code
+			updateCookie("i18next", selectedLanguage, 365);
+
+			// Modify the URL to include the "lng" query parameter
+			const url = new URL(window.location);
+			url.searchParams.set("lng", selectedLanguage);
+
+			// Update the browser's URL without reloading the page
+			window.history.replaceState({}, '', url);
+
+			// Reload the page
+			location.reload();
+		});
+	});
+
+	function updateCookie(cookieName, value, days) {
+		let expires = "";
+		if (days) {
+			const date = new Date();
+			date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+			expires = "; expires=" + date.toUTCString();
+		}
+		document.cookie = cookieName + "=" + (value || "") + expires + "; path=/";
+	}
+}
+
+
+
+favicon: { // This block auto detects device theme and adjusts the browser icon accordingly
+
+	const element_favicon = document.getElementById('favicon');
+
+	/**
+     * Switches the browser icon to match the given theme.
+     * @param {string} theme "dark"/"light"
+     */
+	function switchFavicon(theme) {
+		if (theme === 'dark') element_favicon.href = '/img/favicon-dark.png';
+		else element_favicon.href = '/img/favicon-light.png';
+	}
+    
+	if (!window.matchMedia) break favicon; // Don't create a theme-change event listener if matchMedia isn't supported.
+
+	// Initial theme detection
+	const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+	switchFavicon(prefersDarkScheme ? 'dark' : 'light');
+    
+	// Listen for theme changes
+	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+		const newTheme = event.matches ? 'dark' : 'light';
+		console.log(`Toggled ${newTheme} icon`);
+		switchFavicon(newTheme);
+	});
+}
+
+
+
+{ // This block auto-removes the "lng" query parameter from the url, visually, without refreshing
+	(function removeLngQueryParam() {
+		// Create a URL object from the current window location
+		const url = new URL(window.location);
+  
+		// Remove the "lng" query parameter
+		url.searchParams.delete('lng');
+  
+		// Update the browser's URL without refreshing the page
+		window.history.replaceState({}, '', url);
+	})();
+}
 
 
 
