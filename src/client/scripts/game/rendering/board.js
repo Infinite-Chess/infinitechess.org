@@ -245,19 +245,23 @@ function roundAwayBoundingBox(src) {
  * @returns {BufferModel} The buffer model
  */
 function regenBoardModel() {
-	const boardTexture = perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
+	// const boardTexture = perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
+	const theme = options.gtheme();
+	const IMG = theme.IMG;
+	const boardTexture = texture.loadTexture(IMG, { useMipmaps: false });
+
 	if (!boardTexture) return; // Can't create buffer model if texture not loaded.
 
 	const boardScale = movement.getBoardScale();
 	const TwoTimesScale = 2 * boardScale;
 
 	const inPerspective = perspective.getEnabled();
-	const a = perspective.distToRenderBoard;
+	const distToRenderBoard = perspective.distToRenderBoard;
 
-	const startX = inPerspective ? -a : camera.getScreenBoundingBox(false).left;
-	const endX = inPerspective ? a : camera.getScreenBoundingBox(false).right;
-	const startY = inPerspective ? -a : camera.getScreenBoundingBox(false).bottom;
-	const endY = inPerspective ? a : camera.getScreenBoundingBox(false).top;
+	const startX = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).left;
+	const endX = inPerspective ? distToRenderBoard : camera.getScreenBoundingBox(false).right;
+	const startY = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
+	const endY = inPerspective ? distToRenderBoard : camera.getScreenBoundingBox(false).top;
 
 	const boardPos = movement.getBoardPos();
 	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
@@ -266,17 +270,16 @@ function regenBoardModel() {
 	const texCoordEndX = texCoordStartX + (endX - startX) / TwoTimesScale;
 	const texCoordEndY = texCoordStartY + (endY - startY) / TwoTimesScale;
 
-	const [wr,wg,wb,wa] = lightTiles;
-	// const [dr,dg,db,da] = darkTiles;
+	const [r,g,b,a] = [1,1,1,1];
 
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
     
 	const data = [];
 
-	const whiteTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, wr, wg, wb, wa);
+	const whiteTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, r, g, b, a);
 	data.push(...whiteTilesData);
 
-	// const darkTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, dr, dg, db, da)
+	// const darkTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, dr, dg, db, da);
 	// data.push(...darkTilesData);
 
 	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
@@ -317,8 +320,8 @@ function changeTheme(args) {
 
 	// If any of these are not defined, we do not set them!
 
-	if (args.whiteTiles) options.themes[options.gtheme()].whiteTiles = args.whiteTiles;
-	if (args.darkTiles) options.themes[options.gtheme()].darkTiles = args.darkTiles;
+	if (args.whiteTiles) options.gtheme().whiteTiles = args.whiteTiles;
+	if (args.darkTiles) options.gtheme().darkTiles = args.darkTiles;
 
 	ifThemeArgumentDefined_Set(args, 'whiteTiles');
 	ifThemeArgumentDefined_Set(args, 'darkTiles');
@@ -337,13 +340,13 @@ function changeTheme(args) {
 }
 
 function ifThemeArgumentDefined_Set(args, argumentName) { // whiteTiles/selectedPieceHighlightColor...
-	if (args[argumentName] != null) options.themes[options.gtheme()][argumentName] = args[argumentName];
+	if (args[argumentName] != null) options.gtheme()[argumentName] = args[argumentName];
 }
 
 function ifThemeArgumentDefined_Set_AndEnableColor(args, argumentName) { // whiteTiles/selectedPieceHighlightColor...
 	if (args[argumentName] != null) {
-		options.themes[options.gtheme()][argumentName] = args[argumentName];
-		options.themes[options.gtheme()].useColoredPieces = true;
+		options.gtheme()[argumentName] = args[argumentName];
+		options.gtheme().useColoredPieces = true;
 	}
 }
 

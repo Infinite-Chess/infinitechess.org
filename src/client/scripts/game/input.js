@@ -202,7 +202,7 @@ function pushTouches(touches) {
 	}
 
 	// If it's a three-finger tap, toggle the holliday theme.
-	if (touchHelds.length >= 3) options.toggleHollidayTheme();
+	if (touchHelds.length >= 3) options.toggleHolidayTheme();
 }
 
 function initTouchSimulatedClick() {

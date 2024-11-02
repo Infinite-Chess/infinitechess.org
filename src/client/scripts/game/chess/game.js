@@ -80,7 +80,8 @@ function init() {
 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
 
 	// Change the theme to match the current holliday
-	options.toggleHollidayTheme();
+	// options.toggleHolidayTheme();
+	options.initThemeChangeListener();
 
 	// If a holliday theme is active, tell the user how to disable it.
 	if (options.isHollidayTheme()) {
@@ -107,7 +108,7 @@ function updateVariablesAfterScreenResize() {
 function update() {
 	if (input.isKeyDown('`')) options.toggleDeveloperMode();
 	if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
-	if (input.isKeyDown('enter')) options.toggleHollidayTheme();
+	if (input.isKeyDown('enter')) options.toggleHolidayTheme();
 	if (input.isKeyDown('m')) options.toggleFPS();
 	if (gamefile?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 
