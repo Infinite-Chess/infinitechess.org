@@ -81,7 +81,6 @@ function init() {
 
 	// Change the theme to match the current holliday
 	// options.toggleHolidayTheme();
-	options.initThemeChangeListener();
 
 	// If a holliday theme is active, tell the user how to disable it.
 	if (options.isHollidayTheme()) {
