@@ -1,6 +1,8 @@
 
 // This module stores our themes. Straight forward :P
 
+const defaultTheme = 'sandstone';
+
 const themeDictionary = {
 	white: { // White/Grey
 		whiteTiles: [1, 1, 1, 1], // RGBA
@@ -232,5 +234,6 @@ const themeDictionary = {
 };
 
 export default {
+	defaultTheme,
 	themes: themeDictionary,
 };
