@@ -18,6 +18,7 @@ import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import checkerboardgenerator from './checkerboardgenerator.js';
+import gamefileutility from '../chess/gamefileutility.js';
 // Import End
 
 /** 
@@ -340,7 +341,9 @@ function ifThemeArgumentDefined_Set_AndEnableColor(args, argumentName) { // whit
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme() {
-	resetColor();
+	const gamefile = game.getGamefile();
+	if (gamefile && gamefileutility.isGameOver(gamefile)) darkenColor(); // Reset to slightly darkened board
+	else resetColor(); // Reset to defaults
 	updateSkyColor();
 	updateNavColor();
 }
@@ -391,34 +394,26 @@ function updateNavColor() {
     `);
 }
 
-// TEMPORARILY changes the board tiles color! Resets upon leaving game.
-// Used to darken board
-function changeColor(newWhiteTiles, newDarkTiles) {
-	lightTiles = newWhiteTiles;
-	darkTiles = newDarkTiles;
-	frametracker.onVisualChange();
-}
-
-function resetColor() {
-	lightTiles = options.getDefaultTiles(true); // true for white
-	darkTiles = options.getDefaultTiles(false); // false for dark
+function resetColor(newLightTiles = options.getDefaultTiles(true), newDarkTiles = options.getDefaultTiles(false)) {
+	lightTiles = newLightTiles; // true for white
+	darkTiles = newDarkTiles; // false for dark
 	initTextures();
 	frametracker.onVisualChange();
 }
 
 function darkenColor() {
-	const whiteTiles = options.getDefaultTiles(true); ;
-	const darkTiles = options.getDefaultTiles(false);
+	const defaultLightTiles = options.getDefaultTiles(true);
+	const defaultDarkTiles = options.getDefaultTiles(false);
 
 	const darkenBy = 0.09;
-	const darkWR = whiteTiles[0] - darkenBy;
-	const darkWG = whiteTiles[1] - darkenBy;
-	const darkWB = whiteTiles[2] - darkenBy;
-	const darkDR = darkTiles[0] - darkenBy;
-	const darkDG = darkTiles[1] - darkenBy;
-	const darkDB = darkTiles[2] - darkenBy;
+	const darkWR = defaultLightTiles[0] - darkenBy;
+	const darkWG = defaultLightTiles[1] - darkenBy;
+	const darkWB = defaultLightTiles[2] - darkenBy;
+	const darkDR = defaultDarkTiles[0] - darkenBy;
+	const darkDG = defaultDarkTiles[1] - darkenBy;
+	const darkDB = defaultDarkTiles[2] - darkenBy;
 
-	changeColor([darkWR, darkWG, darkWB, 1], [darkDR, darkDG, darkDB, 1]);
+	resetColor([darkWR, darkWG, darkWB, 1], [darkDR, darkDG, darkDB, 1]);
 }
 
 // Renders board tiles
