@@ -90,7 +90,7 @@ boardDropdownTitle.addEventListener('click', toggleBoardDropdown);
 
 (async function addThemesToThemesDropdown() {
 
-	const themeDictionary = themes.getThemes();
+	const themeDictionary = themes.themes;
 
 	// Loop through each theme in the dictionary
 	for (const themeName in themeDictionary) {
