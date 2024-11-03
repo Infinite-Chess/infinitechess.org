@@ -63,6 +63,17 @@ function getLastSegmentOfURL() {
 }
 
 /**
+ * Extracts the pathname from a given href.
+ * (e.g. "https://www.infinitechess.org/news?lng=en-US" ==> "/news")
+ * @param {string} href - The href to extract the pathname from. Can be a relative or absolute URL.
+ * @returns {string} The pathname of the href (e.g., '/news').
+ */
+function getPathnameFromHref(href) {
+	const url = new URL(href, window.location.origin);
+	return url.pathname;
+}
+
+/**
  * Fetches data from a given endpoint after removing any query parameters from the URL.
  * 
  * @param {string} member - The member identifier to include in the URL.
@@ -114,6 +125,7 @@ export default {
 	isMouseSupported,
 	isTouchSupported,
 	getLastSegmentOfURL,
+	getPathnameFromHref,
 	removeQueryParamsFromLink,
 	getCookieValue,
 	updateCookie,

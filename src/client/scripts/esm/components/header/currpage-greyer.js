@@ -4,13 +4,13 @@
 import docutil from "../../util/docutil.js";
 import validatorama from "../../util/validatorama.js";
 
-
 const loginLink = document.getElementById('login-link');
 
 
 // Greys the background color of the header navigation link of the page we are currently on
 document.querySelectorAll('nav a').forEach(link => {
-	if (link.getAttribute('href') === window.location.pathname) { // e.g. "/news"
+	const hrefPathname = docutil.getPathnameFromHref(link.getAttribute('href'));
+	if (hrefPathname === window.location.pathname) { // e.g. "/news"
 		link.classList.add('currPage');
 	}
 });
