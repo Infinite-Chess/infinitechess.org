@@ -1,4 +1,7 @@
 
+// I called it validatorama because "validator" was already something
+// in the Node environment or somewhere and so jsdoc wasn't auto suggesting the right one
+
 /*
  * Fetches an access token and our usernameif we are logged in.
 

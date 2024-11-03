@@ -5,6 +5,7 @@ import localstorage from "../../util/localstorage.js";
 import checkerboardgenerator from "../../game/rendering/checkerboardgenerator.js";
 import languageselector from "./languageselector.js";
 import themes from "./themes.js";
+import timeutil from "../../game/misc/timeutil.js";
 
 const settings = document.getElementById('settings');
 const settingsDropdown = document.querySelector('.settings-dropdown');
@@ -123,10 +124,11 @@ boardDropdownTitle.addEventListener('click', toggleBoardDropdown);
 		const selectedTheme = event.target.getAttribute('theme');
 		// console.log('Selected theme:', selectedTheme);
 
-		const detail = { theme: selectedTheme, properties: themeDictionary[selectedTheme] };
+		const detail = selectedTheme;
 
 		// Save it to browser storage
-		localstorage.saveItem('theme', detail);
+		const oneYearInMillis = timeutil.getTotalMilliseconds({ years: 1});
+		localstorage.saveItem('theme', selectedTheme, oneYearInMillis);
 		
 		// Dispatch a custom event for theme change so that any game code present can pick it up.
 		const themeChangeEvent = new CustomEvent('theme-change', { detail });
