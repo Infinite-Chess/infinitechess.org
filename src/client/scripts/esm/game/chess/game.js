@@ -73,25 +73,16 @@ function areInGame() {
 // Initiates textures, buffer models for rendering, and the title screen.
 function init() {
 
+	options.initTheme();
 	initTextures(); // Load game textures
 
 	guititle.open();
 
 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
-
-	// Change the theme to match the current holliday
-	// options.toggleHolidayTheme();
-
-	// If a holliday theme is active, tell the user how to disable it.
-	if (options.isHollidayTheme()) {
-		if (docutil.isMouseSupported()) statustext.showStatus(translations.disable_holiday_theme_desktop);
-		else statustext.showStatus(translations.disable_holiday_theme_mobile);
-	}
 }
 
 // Initiates our textures, and our spritesheet data (where each piece's texture is located)
 function initTextures() {
-	board.initBoard();
 	pieces.initSpritesheet();
 	pieces.initSpritesheetData();
 }
@@ -107,7 +98,6 @@ function updateVariablesAfterScreenResize() {
 function update() {
 	if (input.isKeyDown('`')) options.toggleDeveloperMode();
 	if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
-	if (input.isKeyDown('enter')) options.toggleHolidayTheme();
 	if (input.isKeyDown('m')) options.toggleFPS();
 	if (gamefile?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 
