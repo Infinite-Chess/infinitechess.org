@@ -129,13 +129,15 @@ let fps = false;
 
 
 function initThemeChangeListener() {
-	window.addEventListener('theme-change', function(event) { // detail: { theme, properties, IMG }
+	document.addEventListener('theme-change', function(event) { // detail: { theme, properties, IMG }
 		const selectedTheme = event.detail.theme;
 		console.log(`Theme change event detected: ${selectedTheme}`);
 		event.detail.properties.name = selectedTheme;
 		setTheme(event.detail.properties);
 	});
 }
+
+initThemeChangeListener();
 
 function isDebugModeOn() {
 	return debugMode;
