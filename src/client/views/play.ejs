@@ -4,8 +4,7 @@
         <script>
             const translations = <%-JSON.stringify({
                 ...t('play.javascript', {returnObjects: true}),
-                ...t('play.play-menu', {returnObjects: true}),
-                ...t('header.javascript', {returnObjects: true})
+                ...t('play.play-menu', {returnObjects: true})
             })%>;
         </script>
         <!-- Do not modify the next line under any circumstances!! It is used by build.js as a reference point of where to inject js -->
@@ -21,7 +20,7 @@
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
         <!-- Custom fonts: Merriweather, Open Sans -->
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-        
+        <script defer src="/scripts/esm/game/main.js" type="module" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <!-- Javascript will add future styles in here. NEEDS TO BE BELOW OTHER STYLESHEET SO THIS TAKES PRECEDENCE -->
         <style id="style"></style>
     </head>
