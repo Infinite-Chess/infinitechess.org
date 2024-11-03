@@ -3,7 +3,6 @@
     <head>
         <script>
             const translations = <%-JSON.stringify({
-                ...t('header.javascript', {returnObjects: true}),
                 ...t('create-account.javascript', {returnObjects: true})
             })%>;
         </script>
@@ -16,7 +15,7 @@
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
-        <script defer src="/scripts/createaccount.js"></script>
+        <script defer src="/scripts/cjs/views/createaccount.js"></script>
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>

@@ -7,7 +7,7 @@
 import gameutility from './gameutility.js';
 import { onPlayerLostByAbandonment } from './gamemanager.js';
 import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/game/misc/colorutil.js';
 
 /**
  * Type Definitions

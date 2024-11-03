@@ -4,7 +4,7 @@
  * with single invites, not multiple
  */
 
-import jsutil from '../../../client/scripts/game/misc/jsutil.js';
+import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
 /** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 

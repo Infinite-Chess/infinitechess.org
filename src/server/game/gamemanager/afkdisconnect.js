@@ -8,7 +8,7 @@
 // Custom imports
 
 import gameutility from './gameutility.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/game/misc/colorutil.js';
 
 // Type imports
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
