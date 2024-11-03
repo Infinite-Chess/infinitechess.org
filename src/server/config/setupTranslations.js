@@ -15,6 +15,8 @@ import zhTW from 'date-fns/locale/zh-TW/index.js';
 import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
+import { BUNDLE_FILES } from "./config.js";
+
 /**
  * A dictionary containing the English names of many language codes.
  * ADD TO THIS when we add a new language that's not listed below!
@@ -337,6 +339,7 @@ function translateStaticTemplates(translations) {
 						language: language,
 						newsHTML: translations[language].news,
 						viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
+						// BUNDLE_FILES, // EJS can read this to insert different attributes to elements if desired.
 					},
 				),
 			);

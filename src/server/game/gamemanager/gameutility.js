@@ -19,15 +19,15 @@ import { ensureJSONString } from '../../utility/JSONUtils.js';
 import clockweb from '../clockweb.js';
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
-import formatconverter from '../../../client/scripts/game/chess/formatconverter.js';
+import formatconverter from '../../../client/scripts/esm/game/chess/formatconverter.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-import timeutil from '../../../client/scripts/game/misc/timeutil.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
-import variant from '../../../client/scripts/game/variants/variant.js';
-import jsutil from '../../../client/scripts/game/misc/jsutil.js';
-import winconutil from '../../../client/scripts/game/misc/winconutil.js';
+import timeutil from '../../../client/scripts/esm/game/misc/timeutil.js';
+import colorutil from '../../../client/scripts/esm/game/misc/colorutil.js';
+import variant from '../../../client/scripts/esm/game/variants/variant.js';
+import jsutil from '../../../client/scripts/esm/util/jsutil.js';
+import winconutil from '../../../client/scripts/esm/game/misc/winconutil.js';
 
 // Type Definitions...
 
@@ -36,7 +36,7 @@ import winconutil from '../../../client/scripts/game/misc/winconutil.js';
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
 /* eslint-disable no-unused-vars */
-import { GameRules } from '../../../client/scripts/game/variants/gamerules.js';
+import { GameRules } from '../../../client/scripts/esm/game/variants/gamerules.js';
 /* eslint-enable no-unused-vars */
 
 /**

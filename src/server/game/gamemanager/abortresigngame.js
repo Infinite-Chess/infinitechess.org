@@ -7,7 +7,7 @@ import gameutility from './gameutility.js';
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
 import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/game/misc/colorutil.js';
 
 /**
  * Type Definitions
