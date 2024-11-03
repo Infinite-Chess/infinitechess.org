@@ -112,6 +112,8 @@ boardDropdownTitle.addEventListener('click', toggleBoardDropdown);
 		themeList.appendChild(checkerboardImage);
 	}
 
+	updateThemeSelectedStyling();
+
 	(function initThemeChangeListeners() {
 		// Iterate through each child in the themeList using a for loop
 		for (let i = 0; i < themeList.children.length; i++) {
@@ -124,15 +126,27 @@ boardDropdownTitle.addEventListener('click', toggleBoardDropdown);
 		const selectedTheme = event.target.getAttribute('theme');
 		// console.log('Selected theme:', selectedTheme);
 
-		const detail = selectedTheme;
-
 		// Save it to browser storage
 		const oneYearInMillis = timeutil.getTotalMilliseconds({ years: 1});
 		localstorage.saveItem('theme', selectedTheme, oneYearInMillis);
+
+		updateThemeSelectedStyling();
 		
 		// Dispatch a custom event for theme change so that any game code present can pick it up.
+		const detail = selectedTheme;
 		const themeChangeEvent = new CustomEvent('theme-change', { detail });
 		document.dispatchEvent(themeChangeEvent);
+	}
+
+	/** Outlines in black the current theme selection */
+	function updateThemeSelectedStyling() {
+		const selectedTheme = localstorage.loadItem('theme') || themes.defaultTheme;
+		if (!selectTheme) return;
+		for (let i = 0; i < themeList.children.length; i++) {
+			const theme = themeList.children[i];
+			if (selectTheme && theme.getAttribute('theme') === selectedTheme) theme.classList.add('selected');
+			else theme.classList.remove('selected');
+		}
 	}
 })();
 

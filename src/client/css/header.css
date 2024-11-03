@@ -321,10 +321,9 @@ svg.checkmark {
     cursor: pointer;
 }
 
-.theme-list img:hover {
+.theme-list img:hover, .theme-list img.selected {
     outline: 5px solid black;
 }
-
 
 
 

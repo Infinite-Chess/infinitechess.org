@@ -164,7 +164,7 @@ function getHollidayTheme() {
 	if (timeutil.isCurrentDateWithinRange(10, 25, 10, 31)) return 'halloween'; // Halloween week (October 25 to 31)
 	// if (timeutil.isCurrentDateWithinRange(11, 23, 11, 29)) return 'thanksgiving'; // Thanksgiving week (November 23 to 29)
 	if (timeutil.isCurrentDateWithinRange(12, 19, 12, 25)) return 'christmas'; // Christmas week (December 19 to 25)
-	return 'sandstone'; // Default theme if not in a holiday week
+	return themes.defaultTheme; // Default theme if not in a holiday week
 }
 
 /**
