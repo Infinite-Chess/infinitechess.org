@@ -7,7 +7,7 @@
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
 import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/game/misc/colorutil.js';
 
 /**
  * Type Definitions
