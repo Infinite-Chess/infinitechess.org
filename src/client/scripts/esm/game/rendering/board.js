@@ -69,17 +69,6 @@ const limitToDampScale = 0.000_01; // We need to soft limit the scale so the gam
 let lightTiles; // [r,g,b,a]
 let darkTiles;
 
-function initBoard() {
-	initColor();
-	initTextures();
-}
-
-/** Initiates the color of the board tiles, according to our current theme. */
-function initColor() {
-	lightTiles = options.getDefaultTiles(true);
-	darkTiles = options.getDefaultTiles(false);
-}
-
 async function initTextures() {
 	const lightTilesCssColor = style.arrayToCssColor(lightTiles);
 	const darkTilesCssColor = style.arrayToCssColor(darkTiles);
@@ -383,7 +372,7 @@ function updateNavColor() {
 	let navG = 255;
 	let navB = 255;
 
-	if (options.isHollidayTheme()) {
+	if (options.gtheme() !== 'white') {
 		const brightAmount = 0.6; // 50% closer to white
 		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
 		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;
@@ -582,7 +571,6 @@ function generatePerspectiveBoundingBox(rangeOfView) { // ~18
 
 export default {
 	gsquareCenter,
-	initBoard,
 	gtileWidth_Pixels,
 	recalcVariables,
 	gtile_MouseOver_Float,

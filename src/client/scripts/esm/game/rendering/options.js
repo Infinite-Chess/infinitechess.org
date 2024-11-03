@@ -16,6 +16,8 @@ import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../misc/colorutil.js';
 import frametracker from './frametracker.js';
 import timeutil from '../misc/timeutil.js';
+import localstorage from '../../util/localstorage.js';
+import themes from '../../components/header/themes.js';
 // Import End
 
 "use strict";
@@ -33,37 +35,22 @@ let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
 
 let navigationVisible = true;
 
-let theme = {
-	name: 'default',
-	whiteTiles: [1, 1, 1, 1],
-	darkTiles:  [0.78, 0.78, 0.78, 1],
-	selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
-	legalMovesHighlightColor_Friendly: [0, 0, 1, 0.3],
-	legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
-	legalMovesHighlightColor_Premove: [0.3, 0, 1, 0.3],
-	lastMoveHighlightColor: [0, 1, 0, 0.25],
-	checkHighlightColor: [1, 0, 0, 0.7],
-	useColoredPieces: false,
-	whitePiecesColor: [1, 1, 1, 1],
-	blackPiecesColor: [1, 1, 1, 1],
-	neutralPiecesColor: [1, 1, 1, 1]
-};
+let theme;
 
 let em = false; // editMode, allows moving pieces anywhere else on the board!
 
 let fps = false;
 
+function initTheme() {
+	const selectedTheme = localstorage.loadItem('theme') || getHollidayTheme();
+	setTheme(selectedTheme);
 
-function initThemeChangeListener() {
-	document.addEventListener('theme-change', function(event) { // detail: { theme, properties, IMG }
-		const selectedTheme = event.detail.theme;
+	document.addEventListener('theme-change', function(event) { // detail: themeName
+		const selectedTheme = event.detail;
 		console.log(`Theme change event detected: ${selectedTheme}`);
-		event.detail.properties.name = selectedTheme;
-		setTheme(event.detail.properties);
+		setTheme(selectedTheme);
 	});
 }
-
-initThemeChangeListener();
 
 function isDebugModeOn() {
 	return debugMode;
@@ -159,34 +146,14 @@ function getDefaultCheckHighlightColor() {
 	return theme.checkHighlightColor;
 }
 
-function setTheme(newTheme) { // default/halloween   
-	// if (!validateTheme(theme)) console.error(`Cannot change theme to invalid theme ${theme}!`);
-	// if (theme === newTheme) return; // Same theme
-
-	// theme = newTheme;
-	// board.updateTheme();
-	// piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
-	// highlights.regenModel();
-
-
+function setTheme(themeName) {
+	const newTheme = themes.themes[themeName];
+	if (!newTheme) throw new Error(`Invalid theme "${themeName}"!`);
 	theme = newTheme;
+
 	board.updateTheme();
 	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
 	highlights.regenModel();
-}
-
-/**
- * Toggles the theme between 'default' and the auto-selected theme.
- * If the current theme is not 'default', it sets it to 'default'.
- * If the current theme is 'default', it sets it to the value returned by getHollidayTheme().
- */
-function toggleHolidayTheme() {
-	if (isHollidayTheme(theme)) setTheme('default');
-	else setTheme(getHollidayTheme());
-}
-
-function isHollidayTheme(themeARG = theme) {
-	return themeARG !== 'default';
 }
 
 /**
@@ -195,13 +162,9 @@ function isHollidayTheme(themeARG = theme) {
  */
 function getHollidayTheme() {
 	if (timeutil.isCurrentDateWithinRange(10, 25, 10, 31)) return 'halloween'; // Halloween week (October 25 to 31)
-	if (timeutil.isCurrentDateWithinRange(11, 23, 11, 29)) return 'thanksgiving'; // Thanksgiving week (November 23 to 29)
+	// if (timeutil.isCurrentDateWithinRange(11, 23, 11, 29)) return 'thanksgiving'; // Thanksgiving week (November 23 to 29)
 	if (timeutil.isCurrentDateWithinRange(12, 19, 12, 25)) return 'christmas'; // Christmas week (December 19 to 25)
-	return 'default'; // Default theme if not in a holiday week
-}
-
-function validateTheme(theme) {
-	return validThemes.includes(theme);
+	return 'sandstone'; // Default theme if not in a holiday week
 }
 
 /**
@@ -263,8 +226,6 @@ export default {
 	getDefaultSelectedPieceHighlight,
 	getDefaultLastMoveHighlightColor,
 	getDefaultCheckHighlightColor,
-	setTheme,
-	toggleHolidayTheme,
 	getPieceRegenColorArgs,
 	getColorOfType,
 	areUsingColoredPieces,
@@ -273,6 +234,5 @@ export default {
 	isThemeDefault,
 	disableEM,
 	isFPSOn,
-	isHollidayTheme,
-	initThemeChangeListener,
+	initTheme,
 };
