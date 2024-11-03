@@ -292,8 +292,6 @@ webgl_unsupported = "Your browser does not support WebGL. This game requires tha
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
-disable_holiday_theme_desktop = "To disable holiday theme, press Enter."
-disable_holiday_theme_mobile = "To disable holiday theme, three-finger-tap the screen."
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
