@@ -106,6 +106,8 @@ function genModel() {
 
 	// Ghost image...
 
+	if (perspective.getEnabled() && !perspective.isMouseLocked()) return;
+
 	modelGhost = undefined;
 
 	// In the future we'll still need to pass this point if we've got
