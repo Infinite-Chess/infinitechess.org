@@ -28,9 +28,12 @@ settings.addEventListener('click', event => {
 });
 
 // Close the dropdown if clicking outside of it
-document.addEventListener('click', (event) => {
+document.addEventListener('click', closeSettingsDropdownIfConditionsMet);
+document.addEventListener('touchstart', closeSettingsDropdownIfConditionsMet);
+
+function closeSettingsDropdownIfConditionsMet(event) {
 	if (!settings.contains(event.target) && !didEventClickAnyDropdown(event)) closeSettingsDropdowns();
-});
+}
 
 function didEventClickAnyDropdown(event) {
 	// Check if the click was outside the dropdown
