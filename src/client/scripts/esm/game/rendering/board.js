@@ -286,7 +286,7 @@ function isOffsetOutOfRangeOfRegenRange(offset, regenRange) { // offset: [x,y]
 
 // Overwrites the current theme's settings with the provided args!
 function changeTheme(args) {
-	// whiteTiles
+	// lightTiles
 	// darkTiles
 	// selectedPieceHighlightColor
 	// legalMovesHighlightColor_Friendly
@@ -300,10 +300,10 @@ function changeTheme(args) {
 
 	// If any of these are not defined, we do not set them!
 
-	if (args.whiteTiles) options.gtheme().whiteTiles = args.whiteTiles;
+	if (args.lightTiles) options.gtheme().lightTiles = args.lightTiles;
 	if (args.darkTiles) options.gtheme().darkTiles = args.darkTiles;
 
-	ifThemeArgumentDefined_Set(args, 'whiteTiles');
+	ifThemeArgumentDefined_Set(args, 'lightTiles');
 	ifThemeArgumentDefined_Set(args, 'darkTiles');
 	ifThemeArgumentDefined_Set(args, 'selectedPieceHighlightColor');
 	ifThemeArgumentDefined_Set(args, 'legalMovesHighlightColor_Friendly');
@@ -319,11 +319,11 @@ function changeTheme(args) {
 	highlights.regenModel();
 }
 
-function ifThemeArgumentDefined_Set(args, argumentName) { // whiteTiles/selectedPieceHighlightColor...
+function ifThemeArgumentDefined_Set(args, argumentName) { // lightTiles/selectedPieceHighlightColor...
 	if (args[argumentName] != null) options.gtheme()[argumentName] = args[argumentName];
 }
 
-function ifThemeArgumentDefined_Set_AndEnableColor(args, argumentName) { // whiteTiles/selectedPieceHighlightColor...
+function ifThemeArgumentDefined_Set_AndEnableColor(args, argumentName) { // lightTiles/selectedPieceHighlightColor...
 	if (args[argumentName] != null) {
 		options.gtheme()[argumentName] = args[argumentName];
 		options.gtheme().useColoredPieces = true;
@@ -366,7 +366,7 @@ function updateNavColor() {
 	let navG = 255;
 	let navB = 255;
 
-	if (options.gtheme() !== 'white') {
+	if (options.gtheme().name !== 'white') {
 		const brightAmount = 0.6; // 50% closer to white
 		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
 		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;

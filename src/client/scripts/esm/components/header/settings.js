@@ -6,6 +6,7 @@ import checkerboardgenerator from "../../game/rendering/checkerboardgenerator.js
 import languageselector from "./languageselector.js";
 import themes from "./themes.js";
 import timeutil from "../../game/misc/timeutil.js";
+import style from "../../game/gui/style.js";
 
 const settings = document.getElementById('settings');
 const settingsDropdown = document.querySelector('.settings-dropdown');
@@ -99,13 +100,14 @@ boardDropdownTitle.addEventListener('click', toggleBoardDropdown);
 	// Loop through each theme in the dictionary
 	for (const themeName in themeDictionary) {
 		const theme = themeDictionary[themeName];
-		const whiteTiles = theme.whiteTiles;
+		const lightTiles = theme.lightTiles;
 		const darkTiles = theme.darkTiles;
 
 		// Create the checkerboard image for the theme
+		console.log(lightTiles, darkTiles);
 		const checkerboardImage = await checkerboardgenerator.createCheckerboardIMG(
-			arrayToCssColor(whiteTiles), // Convert to CSS color format
-			arrayToCssColor(darkTiles),  // Convert to CSS color format
+			style.arrayToCssColor(lightTiles), // Convert to CSS color format
+			style.arrayToCssColor(darkTiles),  // Convert to CSS color format
 			2 // Width
 		);
 		checkerboardImage.setAttribute('theme', themeName);
@@ -152,26 +154,5 @@ boardDropdownTitle.addEventListener('click', toggleBoardDropdown);
 		}
 	}
 })();
-
-/**
- * Converts an array of [r, g, b, a], range 0-1, into a valid CSS rgba color string.
- * @param {number[]} colorArray - An array containing [r, g, b, a] values, where r, g, b are in the range [0, 1].
- * @returns {string} A CSS rgba color string.
- */
-function arrayToCssColor(colorArray) {
-	if (colorArray.length !== 4) throw new Error('Array must have exactly 4 elements: [r, g, b, a].');
-
-	const [r, g, b, a] = colorArray.map((value, index) => {
-		if (index < 3) {
-			if (value < 0 || value > 1) throw new Error('RGB values must be between 0 and 1.');
-			return Math.round(value * 255);
-		} else {
-			if (value < 0 || value > 1) throw new Error('Alpha value must be between 0 and 1.');
-			return value;
-		}
-	});
-
-	return `rgba(${r}, ${g}, ${b}, ${a})`;
-}
 
 export default {};
