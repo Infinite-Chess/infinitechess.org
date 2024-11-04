@@ -64,13 +64,6 @@ function getTheme() {
 	return theme;
 }
 
-function getThemeInfo() {
-	return {
-		name: theme,
-		properties: themes.themes[theme],
-	};
-}
-
 function toggleDeveloperMode() {
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	debugMode = !debugMode;
@@ -136,35 +129,30 @@ function onToggleNavigationBar() {
  * @returns 
  */
 function getDefaultTiles(isWhite) {
-	const themeProperties = themes.themes[theme];
-	if (isWhite) return themeProperties.lightTiles;
-	else return themeProperties.darkTiles;
+	if (isWhite) return themes.getPropertyOfTheme(theme, 'lightTiles');
+	else return themes.getPropertyOfTheme(theme, 'darkTiles');
 }
 
 function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
-	const themeProperties = themes.themes[theme];
-	if (isOpponentPiece) return themeProperties.legalMovesHighlightColor_Opponent;
-	else if (isPremove) return themeProperties.legalMovesHighlightColor_Premove;
-	else return themeProperties.legalMovesHighlightColor_Friendly;
+	if (isOpponentPiece) return themes.getPropertyOfTheme(theme, 'legalMovesHighlightColor_Opponent');
+	else if (isPremove) return themes.getPropertyOfTheme(theme, 'legalMovesHighlightColor_Premove');
+	else return themes.getPropertyOfTheme(theme, 'legalMovesHighlightColor_Friendly');
 }
 
 function getDefaultSelectedPieceHighlight() {
-	const themeProperties = themes.themes[theme];
-	return themeProperties.selectedPieceHighlightColor;
+	return themes.getPropertyOfTheme(theme, 'selectedPieceHighlightColor');
 }
 
 function getDefaultLastMoveHighlightColor() {
-	const themeProperties = themes.themes[theme];
-	return themeProperties.lastMoveHighlightColor;
+	return themes.getPropertyOfTheme(theme, 'lastMoveHighlightColor');
 }
 
 function getDefaultCheckHighlightColor() {
-	const themeProperties = themes.themes[theme];
-	return themeProperties.checkHighlightColor;
+	return themes.getPropertyOfTheme(theme, 'checkHighlightColor'); 
 }
 
 function setTheme(newTheme) {
-	if (!themes.themes[newTheme]) {
+	if (!themes.isThemeValid(newTheme)) {
 		console.error(`Invalid theme "${newTheme}"! Setting to default..`);
 		newTheme = themes.defaultTheme;
 	}
@@ -195,9 +183,9 @@ function getPieceRegenColorArgs() {
 	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
 
 	return {
-		white: themeProperties.whitePiecesColor, // [r,g,b,a]
-		black: themeProperties.blackPiecesColor,
-		neutral: themeProperties.neutralPiecesColor
+		white: themes.getPropertyOfTheme(theme, 'whitePiecesColor'), // [r,g,b,a]
+		black: themes.getPropertyOfTheme(theme, 'blackPiecesColor'),
+		neutral: themes.getPropertyOfTheme(theme, 'neutralPiecesColor'),
 	};
 }
 
@@ -321,7 +309,6 @@ export default {
 	getNavigationVisible,
 	setNavigationBar,
 	getTheme,
-	getThemeInfo,
 	toggleDeveloperMode,
 	toggleEM,
 	toggleNavigationBar,

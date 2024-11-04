@@ -284,56 +284,6 @@ function isOffsetOutOfRangeOfRegenRange(offset, regenRange) { // offset: [x,y]
 	return false;
 }
 
-// Overwrites the current theme's settings with the provided args!
-function changeTheme(args) {
-	// lightTiles
-	// darkTiles
-	// selectedPieceHighlightColor
-	// legalMovesHighlightColor_Friendly
-	// legalMovesHighlightColor_Opponent
-	// lastMoveHighlightColor
-	// checkHighlightColor
-	// useColoredPieces
-	// whitePiecesColor
-	// blackPiecesColor
-	// neutralPiecesColor
-
-	// If any of these are not defined, we do not set them!
-
-	const themeProperties = options.getThemeInfo().properties;
-
-	if (args.lightTiles) themeProperties.lightTiles = args.lightTiles;
-	if (args.darkTiles) themeProperties.darkTiles = args.darkTiles;
-
-	ifThemeArgumentDefined_Set(args, 'lightTiles');
-	ifThemeArgumentDefined_Set(args, 'darkTiles');
-	ifThemeArgumentDefined_Set(args, 'selectedPieceHighlightColor');
-	ifThemeArgumentDefined_Set(args, 'legalMovesHighlightColor_Friendly');
-	ifThemeArgumentDefined_Set(args, 'lastMoveHighlightColor');
-	ifThemeArgumentDefined_Set(args, 'checkHighlightColor');
-	ifThemeArgumentDefined_Set(args, 'useColoredPieces');
-	ifThemeArgumentDefined_Set_AndEnableColor(args, 'whitePiecesColor');
-	ifThemeArgumentDefined_Set_AndEnableColor(args, 'blackPiecesColor');
-	ifThemeArgumentDefined_Set_AndEnableColor(args, 'neutralPiecesColor');
-
-	updateTheme();
-	piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
-	highlights.regenModel();
-}
-
-function ifThemeArgumentDefined_Set(args, argumentName) { // lightTiles/selectedPieceHighlightColor...
-	if (args[argumentName] === undefined) return;
-	const themeProperties = options.getThemeInfo().properties;
-	themeProperties[argumentName] = args[argumentName];
-}
-
-function ifThemeArgumentDefined_Set_AndEnableColor(args, argumentName) { // lightTiles/selectedPieceHighlightColor...
-	if (args[argumentName] === undefined) return;
-	const themeProperties = options.getThemeInfo().properties;
-	themeProperties[argumentName] = args[argumentName];
-	themeProperties.useColoredPieces = true;
-}
-
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme() {
 	const gamefile = game.getGamefile();
@@ -564,7 +514,6 @@ export default {
 	gtileCoordsOver,
 	roundAwayBoundingBox,
 	gboundingBox,
-	changeTheme,
 	gboundingBoxFloat,
 	updateTheme,
 	resetColor,
