@@ -206,20 +206,20 @@ const themeDictionary = {
 		blackPiecesColor: [1, 1, 1, 1],
 		neutralPiecesColor: [1, 1, 1, 1],
 	},
-	purplechesscom: { 
-		lightTiles: [0.95, 0.95, 0.95, 1],
-		darkTiles: [0.49, 0.42, 0.68, 1],
-		selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
-		legalMovesHighlightColor_Friendly: [0, 0, 1, 0.3],
-		legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
-		legalMovesHighlightColor_Premove: [0.3, 0, 1, 0.3],
-		lastMoveHighlightColor: [0, 1, 0, 0.25],
-		checkHighlightColor: [1, 0, 0, 0.7],
-		useColoredPieces: false,
-		whitePiecesColor: [1, 1, 1, 1],
-		blackPiecesColor: [1, 1, 1, 1],
-		neutralPiecesColor: [1, 1, 1, 1],
-	},
+	// purplechesscom: { 
+	// 	lightTiles: [0.95, 0.95, 0.95, 1],
+	// 	darkTiles: [0.49, 0.42, 0.68, 1],
+	// 	selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
+	// 	legalMovesHighlightColor_Friendly: [0, 0, 1, 0.3],
+	// 	legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
+	// 	legalMovesHighlightColor_Premove: [0.3, 0, 1, 0.3],
+	// 	lastMoveHighlightColor: [0, 1, 0, 0.25],
+	// 	checkHighlightColor: [1, 0, 0, 0.7],
+	// 	useColoredPieces: false,
+	// 	whitePiecesColor: [1, 1, 1, 1],
+	// 	blackPiecesColor: [1, 1, 1, 1],
+	// 	neutralPiecesColor: [1, 1, 1, 1],
+	// },
 
 	// Mine
 
@@ -351,7 +351,23 @@ const themeDictionary = {
 		blackPiecesColor: [1, 1, 1, 1],
 		neutralPiecesColor: [1, 1, 1, 1],
 	},
+	grey_dark: {
+		lightTiles: [0.45, 0.45, 0.45, 1],
+		darkTiles: [0.3, 0.3, 0.3, 1], // tad darker than lichess
+		selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
+		legalMovesHighlightColor_Friendly: [0, 0, 1, 0.3],
+		legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
+		legalMovesHighlightColor_Premove: [0.3, 0, 1, 0.3],
+		lastMoveHighlightColor: [0, 1, 0, 0.25],
+		checkHighlightColor: [1, 0, 0, 0.7],
+		useColoredPieces: false,
+		whitePiecesColor: [1, 1, 1, 1],
+		blackPiecesColor: [1, 1, 1, 1],
+		neutralPiecesColor: [1, 1, 1, 1],
+	},
+
 	// Holiday themes
+
 	// halloween: {
 	// 	lightTiles: [1, 0.65, 0.4, 1],
 	// 	darkTiles:  [1, 0.4, 0, 1],

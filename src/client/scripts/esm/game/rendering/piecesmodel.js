@@ -78,7 +78,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	const indicesPerPiece = thisStride * POINTS_PER_SQUARE; // 4|8 * 6
 	const totalElements = totalPieceCount * indicesPerPiece;
 
-	const usingColoredTextures = colorArgs != null;
+	const usingColoredTextures = colorArgs !== undefined;
 	const mesh = {
 		data64: new Float64Array(totalElements), // Inits all 0's to begin..
 		data32: new Float32Array(totalElements), // Inits all 0's to begin..

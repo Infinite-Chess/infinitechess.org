@@ -104,7 +104,6 @@ boardDropdownTitle.addEventListener('click', toggleBoardDropdown);
 		const darkTiles = theme.darkTiles;
 
 		// Create the checkerboard image for the theme
-		console.log(lightTiles, darkTiles);
 		const checkerboardImage = await checkerboardgenerator.createCheckerboardIMG(
 			style.arrayToCssColor(lightTiles), // Convert to CSS color format
 			style.arrayToCssColor(darkTiles),  // Convert to CSS color format
