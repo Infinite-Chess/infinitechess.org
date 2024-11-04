@@ -300,8 +300,10 @@ function changeTheme(args) {
 
 	// If any of these are not defined, we do not set them!
 
-	if (args.lightTiles) options.gtheme().lightTiles = args.lightTiles;
-	if (args.darkTiles) options.gtheme().darkTiles = args.darkTiles;
+	const themeProperties = options.getThemeInfo().properties;
+
+	if (args.lightTiles) themeProperties.lightTiles = args.lightTiles;
+	if (args.darkTiles) themeProperties.darkTiles = args.darkTiles;
 
 	ifThemeArgumentDefined_Set(args, 'lightTiles');
 	ifThemeArgumentDefined_Set(args, 'darkTiles');
@@ -320,14 +322,16 @@ function changeTheme(args) {
 }
 
 function ifThemeArgumentDefined_Set(args, argumentName) { // lightTiles/selectedPieceHighlightColor...
-	if (args[argumentName] != null) options.gtheme()[argumentName] = args[argumentName];
+	if (args[argumentName] === undefined) return;
+	const themeProperties = options.getThemeInfo().properties;
+	themeProperties[argumentName] = args[argumentName];
 }
 
 function ifThemeArgumentDefined_Set_AndEnableColor(args, argumentName) { // lightTiles/selectedPieceHighlightColor...
-	if (args[argumentName] != null) {
-		options.gtheme()[argumentName] = args[argumentName];
-		options.gtheme().useColoredPieces = true;
-	}
+	if (args[argumentName] === undefined) return;
+	const themeProperties = options.getThemeInfo().properties;
+	themeProperties[argumentName] = args[argumentName];
+	themeProperties.useColoredPieces = true;
 }
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
@@ -366,7 +370,7 @@ function updateNavColor() {
 	let navG = 255;
 	let navB = 255;
 
-	if (options.gtheme().name !== 'white') {
+	if (options.getTheme() !== 'white') {
 		const brightAmount = 0.6; // 50% closer to white
 		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
 		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;
