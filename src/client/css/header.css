@@ -305,19 +305,21 @@ svg.checkmark {
 }
 
 .theme-list {
-    display: flex;
-    justify-content: left;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 45.5px);
+    justify-content: center;
+    gap: 14px; /* Combined margin from both axes (7px) */
     padding: 16px;
 }
 
 .theme-list img {
     width: 45.5px;
-    margin: 7px;
-	image-rendering: pixelated;
+    image-rendering: pixelated;
     border-radius: 2px;
     outline: 3px solid rgb(97, 97, 97);
     cursor: pointer;
+    justify-self: center;
+    align-self: center;
 }
 
 .theme-list img:hover, .theme-list img.selected {
