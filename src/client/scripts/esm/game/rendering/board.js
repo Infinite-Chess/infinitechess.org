@@ -259,18 +259,9 @@ function regenBoardModel() {
 	const texCoordEndX = texCoordStartX + (endX - startX) / TwoTimesScale;
 	const texCoordEndY = texCoordStartY + (endY - startY) / TwoTimesScale;
 
-	const [r,g,b,a] = [1,1,1,1];
-
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
     
-	const data = [];
-
-	const whiteTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, r, g, b, a);
-	data.push(...whiteTilesData);
-
-	// const darkTilesData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, dr, dg, db, da);
-	// data.push(...darkTilesData);
-
+	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, 1, 1, 1, 1);
 	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
 }
 
@@ -486,18 +477,17 @@ function renderZoomedBoard(zoom, opacity) {
 	const zoomTimesScaleTwo = zoomTimesScale * 2;
 
 	const inPerspective = perspective.getEnabled();
-	const c = perspective.distToRenderBoard;
+	const distToRenderBoard = perspective.distToRenderBoard;
 
-	const startX = inPerspective ? -c : camera.getScreenBoundingBox(false).left;
-	const endX =   inPerspective ?  c : camera.getScreenBoundingBox(false).right;
-	const startY = inPerspective ? -c : camera.getScreenBoundingBox(false).bottom;
-	const endY =   inPerspective ?  c : camera.getScreenBoundingBox(false).top;
+	const startX = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).left;
+	const endX =   inPerspective ?  distToRenderBoard : camera.getScreenBoundingBox(false).right;
+	const startY = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
+	const endY =   inPerspective ?  distToRenderBoard : camera.getScreenBoundingBox(false).top;
 
 	const boardPos = movement.getBoardPos();
 	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
-	// Without "- 1/1000", my mac's texture rendering is slightly off
-	const texStartX = (((boardPos[0] + squareCenter) / zoom + (startX / zoomTimesScale)) % 2) / 2 - 1 / 1000;
-	const texStartY = (((boardPos[1] + squareCenter) / zoom + (startY / zoomTimesScale)) % 2) / 2 - 1 / 1000;
+	const texStartX = (((boardPos[0] + squareCenter) / zoom + (startX / zoomTimesScale)) % 2) / 2;
+	const texStartY = (((boardPos[1] + squareCenter) / zoom + (startY / zoomTimesScale)) % 2) / 2;
 	const texCoordDiffX = (endX - startX) / zoomTimesScaleTwo;
 	const screenTexCoordDiffX = (camera.getScreenBoundingBox(false).right - camera.getScreenBoundingBox(false).left) / zoomTimesScaleTwo;
 	const diffWhen1TileIs1Pixel = camera.canvas.width / 2;
@@ -507,14 +497,8 @@ function renderZoomedBoard(zoom, opacity) {
 	const texEndY = texStartY + texCoordDiffY;
 
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
-
-	// eslint-disable-next-line prefer-const
-	let [wr,wg,wb,wa] = lightTiles; wa *= opacity;
     
-	const data = [];
-
-	const dataWhiteTiles = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, wr, wg, wb, wa);
-	data.push(...dataWhiteTiles);
+	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, 1, 1, 1, opacity);
 	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
 
 	model.render();
