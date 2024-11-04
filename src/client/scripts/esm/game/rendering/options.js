@@ -42,8 +42,8 @@ let em = false; // editMode, allows moving pieces anywhere else on the board!
 let fps = false;
 
 function initTheme() {
-	const selectedTheme = localstorage.loadItem('theme') || getHollidayTheme();
-	setTheme(selectedTheme);
+	const selectedThemeName = localstorage.loadItem('theme') || getHollidayTheme();
+	setTheme(selectedThemeName);
 
 	document.addEventListener('theme-change', function(event) { // detail: themeName
 		const selectedTheme = event.detail;
@@ -124,7 +124,7 @@ function onToggleNavigationBar() {
 }
 
 function getDefaultTiles(isWhite) {
-	if (isWhite) return theme.whiteTiles;
+	if (isWhite) return theme.lightTiles;
 	else return theme.darkTiles;
 }
 
@@ -150,6 +150,7 @@ function setTheme(themeName) {
 	const newTheme = themes.themes[themeName];
 	if (!newTheme) throw new Error(`Invalid theme "${themeName}"!`);
 	theme = newTheme;
+	theme.name = themeName;
 
 	board.updateTheme();
 	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
@@ -210,7 +211,7 @@ function toggleFPS() {
 }
 
 function isThemeDefault() {
-	return theme === "default";
+	return theme.name === themes.defaultTheme;
 }
 
 export default {
