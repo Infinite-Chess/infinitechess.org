@@ -111,8 +111,9 @@ function genModel() {
 	// While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
 	// We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
 
+	const areWatchingMousePosition = !perspective.getEnabled() || perspective.isMouseLocked();
 	typeutil.forEachPieceType(concatBufferData, { ignoreVoids: true });
-    
+
 	// Adds pieces of that type's buffer to the overall data
 	function concatBufferData(pieceType) {
 		const thesePieces = game.getGamefile().ourPieces[pieceType];
@@ -138,20 +139,21 @@ function genModel() {
 			let thisOpacity = opacity;
 
 			// Are we hovering over? If so, opacity needs to be 100%
-			// input.getTouchHelds()[0]?.
-			const touchClicked = input.getTouchClicked();
-			const mouseWorldLocation = touchClicked ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
-			const mouseWorldX = mouseWorldLocation[0];
-			const mouseWorldY = mouseWorldLocation[1];
-
-			if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
-				thisOpacity = 1;
-				hovering = true;
-				// If we also clicked, then teleport!
-				if (input.isMouseDown_Left() || input.getTouchClicked()) {
-					// Add them to a list of pieces we're hovering over.
-					// If we click, we teleport to a location containing them all.
-					piecesClicked.push(thisPiece);
+			if (areWatchingMousePosition) {
+				const touchClicked = input.getTouchClicked();
+				const mouseWorldLocation = touchClicked ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
+				const mouseWorldX = mouseWorldLocation[0];
+				const mouseWorldY = mouseWorldLocation[1];
+	
+				if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
+					thisOpacity = 1;
+					hovering = true;
+					// If we also clicked, then teleport!
+					if (input.isMouseDown_Left() || input.getTouchClicked()) {
+						// Add them to a list of pieces we're hovering over.
+						// If we click, we teleport to a location containing them all.
+						piecesClicked.push(thisPiece);
+					}
 				}
 			}
 
