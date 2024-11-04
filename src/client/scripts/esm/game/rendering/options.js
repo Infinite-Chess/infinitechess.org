@@ -224,6 +224,98 @@ function toggleFPS() {
 	else stats.hideFPS();
 }
 
+
+/*
+ * The commented stuff below was ONLY used for fast
+ * modifying of theme colors using the keyboard keys!!!
+ */
+
+// const allProperties = Object.keys(themes.themes[themes.defaultTheme]);
+// let currPropertyIndex = 0;
+// let currProperty = allProperties[currPropertyIndex];
+// function update() {
+
+// 	const themeProperties = themes.themes[theme];
+	
+// 	if (input.isKeyDown('u')) {
+// 		currPropertyIndex--;
+// 		if (currPropertyIndex < 0) currPropertyIndex = allProperties.length - 1;
+// 		currProperty = allProperties[currPropertyIndex];
+// 		console.log(`Selected property: ${currProperty}`);
+// 	}
+// 	if (input.isKeyDown('i')) {
+// 		currPropertyIndex++;
+// 		if (currPropertyIndex > allProperties.length - 1) currPropertyIndex = 0;
+// 		currProperty = allProperties[currPropertyIndex];
+// 		console.log(`Selected property: ${currProperty}`);
+// 	}
+
+// 	const amount = 0.02;
+
+// 	if (input.isKeyDown('j')) {
+// 		const dig = 0;
+// 		themeProperties[currProperty][dig] += amount;
+// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+// 	if (input.isKeyDown('m')) {
+// 		const dig = 0;
+// 		themeProperties[currProperty][dig] -= amount;
+// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+
+// 	if (input.isKeyDown('k')) {
+// 		const dig = 1;
+// 		themeProperties[currProperty][dig] += amount;
+// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+// 	if (input.isKeyDown(',')) {
+// 		const dig = 1;
+// 		themeProperties[currProperty][dig] -= amount;
+// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+
+// 	if (input.isKeyDown('l')) {
+// 		const dig = 2;
+// 		themeProperties[currProperty][dig] += amount;
+// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+// 	if (input.isKeyDown('.')) {
+// 		const dig = 2;
+// 		themeProperties[currProperty][dig] -= amount;
+// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+
+// 	if (input.isKeyDown(';')) {
+// 		const dig = 3;
+// 		themeProperties[currProperty][dig] += amount;
+// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+// 	if (input.isKeyDown('/')) {
+// 		const dig = 3;
+// 		themeProperties[currProperty][dig] -= amount;
+// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+
+
+// 	if (input.isKeyDown('\\')) {
+// 		console.log(JSON.stringify(themes.themes[theme]));
+// 	}
+
+// 	board.updateTheme();
+// 	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
+// 	highlights.regenModel();
+// }
+
+
+
 export default {
 	isDebugModeOn,
 	getNavigationVisible,
