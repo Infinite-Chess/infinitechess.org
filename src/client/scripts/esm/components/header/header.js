@@ -1,7 +1,7 @@
 // This script contains the code related to the
 // header that runs on every single page
 
-import languageselector from "./languageselector.js";
+import languagedropdown from "./dropdowns/languagedropdown.js";
 import validatorama from "../../util/validatorama.js";
 // Only imported so their code will run!
 import faviconselector from './faviconselector.js';
@@ -57,8 +57,8 @@ const header = (function() {
 			logoutText.classList.remove('hidden');
 			logoutSVG.classList.remove('hidden');
 
-			loginLink.href = languageselector.addLngQueryParamToLink(`/member/${username.toLowerCase()}`);
-			createaccountLink.href = languageselector.addLngQueryParamToLink('/logout');
+			loginLink.href = languagedropdown.addLngQueryParamToLink(`/member/${username.toLowerCase()}`);
+			createaccountLink.href = languagedropdown.addLngQueryParamToLink('/logout');
 		} else { // Not logged in
 			profileText.classList.add('hidden');
 			profileSVG.classList.add('hidden');
@@ -69,8 +69,8 @@ const header = (function() {
 			createaccountText.classList.remove('hidden');
 			createaccountSVG.classList.remove('hidden');
 
-			loginLink.href = languageselector.addLngQueryParamToLink('/login');
-			createaccountLink.href = languageselector.addLngQueryParamToLink('/createaccount');
+			loginLink.href = languagedropdown.addLngQueryParamToLink('/login');
+			createaccountLink.href = languagedropdown.addLngQueryParamToLink('/createaccount');
 		}
 
 		// Manually dispatch a window resize event so that our javascript knows to
