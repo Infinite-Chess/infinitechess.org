@@ -45,7 +45,7 @@ function initTheme() {
 	const selectedThemeName = localstorage.loadItem('theme') || getHollidayTheme();
 	setTheme(selectedThemeName);
 
-	document.addEventListener('theme-change', function(event) { // detail: themeName
+	document.addEventListener('theme-change', function(event) { // Custom Event listener.   detail: themeName
 		const selectedTheme = event.detail;
 		console.log(`Theme change event detected: ${selectedTheme}`);
 		setTheme(selectedTheme);
@@ -56,12 +56,19 @@ function isDebugModeOn() {
 	return debugMode;
 }
 
-function gnavigationVisible() {
+function getNavigationVisible() {
 	return navigationVisible;
 }
 
-function gtheme() {
+function getTheme() {
 	return theme;
+}
+
+function getThemeInfo() {
+	return {
+		name: theme,
+		properties: themes.themes[theme],
+	};
 }
 
 function toggleDeveloperMode() {
@@ -123,34 +130,45 @@ function onToggleNavigationBar() {
 	camera.updatePIXEL_HEIGHT_OF_NAVS();
 }
 
+/**
+ * Return the color of the specified light or dark tile of our current theme.
+ * @param {boolean} isWhite - True if we're wanting the light square color, otherwise dark square
+ * @returns 
+ */
 function getDefaultTiles(isWhite) {
-	if (isWhite) return theme.lightTiles;
-	else return theme.darkTiles;
+	const themeProperties = themes.themes[theme];
+	if (isWhite) return themeProperties.lightTiles;
+	else return themeProperties.darkTiles;
 }
 
 function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
-	if (isOpponentPiece) return theme.legalMovesHighlightColor_Opponent;
-	else if (isPremove) return theme.legalMovesHighlightColor_Premove;
-	else return theme.legalMovesHighlightColor_Friendly;
+	const themeProperties = themes.themes[theme];
+	if (isOpponentPiece) return themeProperties.legalMovesHighlightColor_Opponent;
+	else if (isPremove) return themeProperties.legalMovesHighlightColor_Premove;
+	else return themeProperties.legalMovesHighlightColor_Friendly;
 }
 
 function getDefaultSelectedPieceHighlight() {
-	return theme.selectedPieceHighlightColor;
+	const themeProperties = themes.themes[theme];
+	return themeProperties.selectedPieceHighlightColor;
 }
 
 function getDefaultLastMoveHighlightColor() {
-	return theme.lastMoveHighlightColor;
+	const themeProperties = themes.themes[theme];
+	return themeProperties.lastMoveHighlightColor;
 }
 
 function getDefaultCheckHighlightColor() {
-	return theme.checkHighlightColor;
+	const themeProperties = themes.themes[theme];
+	return themeProperties.checkHighlightColor;
 }
 
-function setTheme(themeName) {
-	const newTheme = themes.themes[themeName];
-	if (!newTheme) throw new Error(`Invalid theme "${themeName}"!`);
+function setTheme(newTheme) {
+	if (!themes.themes[newTheme]) {
+		console.error(`Invalid theme "${newTheme}"! Setting to default..`);
+		newTheme = themes.defaultTheme;
+	}
 	theme = newTheme;
-	theme.name = themeName;
 
 	board.updateTheme();
 	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
@@ -173,12 +191,13 @@ function getHollidayTheme() {
  * @returns {Object} An object containing the properties "white", "black", and "neutral".
  */
 function getPieceRegenColorArgs() {
-	if (!theme.useColoredPieces) return; // Not using colored pieces
-    
+	const themeProperties = themes.themes[theme];
+	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
+
 	return {
-		white: theme.whitePiecesColor, // [r,g,b,a]
-		black: theme.blackPiecesColor,
-		neutral: theme.neutralPiecesColor
+		white: themeProperties.whitePiecesColor, // [r,g,b,a]
+		black: themeProperties.blackPiecesColor,
+		neutral: themeProperties.neutralPiecesColor
 	};
 }
 
@@ -198,11 +217,6 @@ function getColorOfType(type) {
 	};
 }
 
-// Returns true if our current theme is using custom-colored pieces.
-function areUsingColoredPieces() {
-	return theme.useColoredPieces;
-}
-
 function toggleFPS() {
 	fps = !fps;
 
@@ -210,15 +224,12 @@ function toggleFPS() {
 	else stats.hideFPS();
 }
 
-function isThemeDefault() {
-	return theme.name === themes.defaultTheme;
-}
-
 export default {
 	isDebugModeOn,
-	gnavigationVisible,
+	getNavigationVisible,
 	setNavigationBar,
-	gtheme,
+	getTheme,
+	getThemeInfo,
 	toggleDeveloperMode,
 	toggleEM,
 	toggleNavigationBar,
@@ -229,10 +240,8 @@ export default {
 	getDefaultCheckHighlightColor,
 	getPieceRegenColorArgs,
 	getColorOfType,
-	areUsingColoredPieces,
 	getEM,
 	toggleFPS,
-	isThemeDefault,
 	disableEM,
 	isFPSOn,
 	initTheme,

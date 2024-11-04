@@ -183,12 +183,12 @@ function updateCanvasDimensions() {
 }
 
 function updatePIXEL_HEIGHT_OF_NAVS() {
-	PIXEL_HEIGHT_OF_TOP_NAV = !options.gnavigationVisible() ? 0
+	PIXEL_HEIGHT_OF_TOP_NAV = !options.getNavigationVisible() ? 0
                                     : window.innerWidth > 700 ? 84  // Update with the css stylesheet!
                                     : window.innerWidth > 550 ? window.innerWidth * 0.12
                                     : window.innerWidth > 368 ? 66
                                                                 : window.innerWidth * 0.179;
-	PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.gnavigationVisible() ? 0 : 84;
+	PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.getNavigationVisible() ? 0 : 84;
 	frametracker.onVisualChange();
 
 	stats.updateStatsCSS();
