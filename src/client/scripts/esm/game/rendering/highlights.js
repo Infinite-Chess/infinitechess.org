@@ -60,6 +60,16 @@ let model_Offset = [0,0]; // [x,y]
 const z = -0.01;
 
 
+
+(function init() {
+	initLegalMoveShapeChangeEventListener();
+})();
+
+function initLegalMoveShapeChangeEventListener() {
+	document.addEventListener('legalmove-shape-change', regenModel); // Custom Event listener when the setting is changed
+}
+
+
 function getOffset() {
 	return model_Offset;
 }
@@ -172,7 +182,7 @@ function concatData_HighlightedMoves_Individual(data, legalMoves, color) {
 
 function getDataOfHighlightShapeDependingOnIfPieceOnSquare(coord, color) {
 
-	const usingDots = preferences.getLegalMovesShape() === 'dot';
+	const usingDots = preferences.getLegalMovesShape() === 'dots';
 	const gamefile = game.getGamefile();
 
 	const thisHighlightVertexData = usingDots ? (() => {
@@ -289,7 +299,7 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
 
 	const lineSet = new Set(Object.keys(legalMoves.sliding));
 
-	const usingDots = preferences.getLegalMovesShape() === 'dot';
+	const usingDots = preferences.getLegalMovesShape() === 'dots';
 	const gamefile = game.getGamefile();
 
 	const vertexDataMove = usingDots ? shapes2.getDataLegalMoveDot_WithOffset(model_Offset, coords, z, color)
