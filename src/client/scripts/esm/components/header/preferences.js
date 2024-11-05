@@ -6,9 +6,9 @@ import timeutil from "../../game/misc/timeutil.js";
 let preferences; // { theme, legal_moves }
 
 // The legal moves shape preference
-const default_legal_moves = 'dot';
-// const default_legal_moves = 'square';
-const legal_move_shapes = ['square','dot'];
+const default_legal_moves = 'dots';
+// const default_legal_moves = 'squares';
+const legal_move_shapes = ['squares','dots'];
 
 
 (function init() {
