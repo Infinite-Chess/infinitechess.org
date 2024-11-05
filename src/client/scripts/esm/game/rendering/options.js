@@ -16,8 +16,8 @@ import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../misc/colorutil.js';
 import frametracker from './frametracker.js';
 import timeutil from '../misc/timeutil.js';
-import localstorage from '../../util/localstorage.js';
 import themes from '../../components/header/themes.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 "use strict";
@@ -42,7 +42,7 @@ let em = false; // editMode, allows moving pieces anywhere else on the board!
 let fps = false;
 
 function initTheme() {
-	const selectedThemeName = localstorage.loadItem('theme') || getHollidayTheme();
+	const selectedThemeName = preferences.getTheme();
 	setTheme(selectedThemeName);
 
 	document.addEventListener('theme-change', function(event) { // Custom Event listener.   detail: themeName
@@ -324,4 +324,5 @@ export default {
 	disableEM,
 	isFPSOn,
 	initTheme,
+	// update,
 };

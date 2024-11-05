@@ -60,6 +60,17 @@ function addCoordinates(coord1, coord2) {
 }
 
 /**
+ * Adds two coordinate pairs together component-wise.
+ *
+ * @param {number[]} minuendCoord - The first coordinate pair [x1, y1] to start with.
+ * @param {number[]} subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
+ * @returns {number[]} The resulting coordinate pair after subtracting [x1 - x2, y1 - y2].
+ */
+function subtractCoordinates(minuendCoord, subtrahendCoord) {
+	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];
+}
+
+/**
  * Makes a deep copy of the provided coordinates
  * @param {number[]} coords - [x,y]
  * @returns Copied coords
@@ -76,5 +87,6 @@ export default {
 	areCoordsEqual,
 	areCoordsEqual_noValidate,
 	addCoordinates,
+	subtractCoordinates,
 	copyCoords
 };
