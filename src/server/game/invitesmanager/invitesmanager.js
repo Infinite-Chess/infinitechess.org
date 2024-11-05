@@ -10,7 +10,7 @@ import wsutility from '../wsutility.js';
 import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
-import jsutil from '../../../client/scripts/game/misc/jsutil.js';
+import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
 /**
  * Type Definitions

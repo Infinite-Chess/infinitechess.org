@@ -227,7 +227,7 @@ nav.compact-3 #svg-logout {
     border-bottom: 1px solid grey;
 }
 
-.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover {
+.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover {
     background-color: var(--header-link-hover-color);
 }
 
@@ -264,7 +264,7 @@ span.arrow-head-left {
     width: 23px;
 }
 
-.svg-board {
+.svg-board, .svg-legalmove {
     width: 19px;
     padding: 0 2px;
 }
@@ -294,6 +294,66 @@ svg.checkmark {
     width: 30px;
     margin-left: auto;
     fill: #444;
+}
+
+
+/* Board theme nested dropdown */
+
+.board-dropdown {
+    width: 211px;
+}
+
+.theme-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 45.5px);
+    justify-content: center;
+    gap: 14px; /* Combined margin from both axes (7px) */
+    padding: 16px;
+}
+
+.theme-list img {
+    width: 45.5px;
+    image-rendering: pixelated;
+    border-radius: 2px;
+    outline: 3px solid rgb(97, 97, 97);
+    cursor: pointer;
+    justify-self: center;
+    align-self: center;
+}
+
+.theme-list img:hover, .theme-list img.selected {
+    outline: 5px solid black;
+}
+
+
+
+/* Legalmove nested dropdown */
+
+/* .legalmove-dropdown {
+    
+} */
+
+.legalmove-option {
+    display:flex;
+    align-items: center;
+    height: 43px;
+    padding: 0 15px 0 8px;
+    cursor: pointer;
+}
+
+.svg-squares {
+    width: 19px;
+    padding: 0 2px;
+}
+
+.legalmove-option .checkmark {
+    transition: transform 0.5s cubic-bezier(.09,1.61,.36,1);
+    transform: scale(1);
+}
+
+.legalmove-option .checkmark.visibility-hidden {
+    transition: transform 0.2s cubic-bezier(0,1.1,1,1), visibility 0s 0.5s;
+    transform: scale(0);
 }
 
 

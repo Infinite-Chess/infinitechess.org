@@ -1,6 +1,6 @@
 {
 	"100": {
-		"note": "Deleted all of header.javascript. Added header.profile & header.logout.",
+		"note": "Deleted all of header.javascript. Added header.profile & header.logout. Deleted disable_holiday_theme_desktop and disable_holiday_theme_mobile.",
 		"changes": []
 	},
 
