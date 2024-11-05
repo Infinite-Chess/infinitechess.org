@@ -17,6 +17,9 @@ import buffermodel from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import frametracker from './frametracker.js';
+import preferences from '../../components/header/preferences.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import shapes2 from './shapes2.js';
 // Import End
 
 /**
@@ -29,8 +32,8 @@ import frametracker from './frametracker.js';
 "use strict";
 
 /**
- * This script handles the rendering of legal jumping (no sliding) moves,
- * and also hilights the last move played.
+ * This script handles the rendering of legal moves,
+ * and also highlights the last move played.
  */
 
 const highlightedMovesRegenRange = 10_000; // Not every highlighted move can be calculated every frame because it's infinite. So we render them out to a specified distance. This is NOT that specified distance. This is the distance to at which to call the function to recalculate the model of the highlighted moves (the out-of-bounds)
@@ -141,7 +144,13 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 
 function calcHighlightData_SelectedPiece() {
 	const color = options.getDefaultSelectedPieceHighlight();
-	return bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, selection.getPieceSelected().coords, z, color);
+	const pieceCoords = selection.getPieceSelected().coords;
+	const renderCoords = subtractHighlightsOffsetFromCoord(pieceCoords);
+	return bufferdata.getDataQuad_Color3D_UsingUniform(renderCoords, z, color);
+}
+
+function subtractHighlightsOffsetFromCoord(coords) {
+	return coordutil.subtractCoordinates(coords, model_Offset);
 }
 
 /**
@@ -157,8 +166,22 @@ function concatData_HighlightedMoves_Individual(data, legalMoves, color) {
 	// For each of these squares, calculate it's buffer data
 	const length = !theseLegalMoves ? 0 : theseLegalMoves.length;
 	for (let i = 0; i < length; i++) {
-		data.push(...bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, theseLegalMoves[i], z, color));
+		data.push(...getDataOfHighlightShapeDependingOnIfPieceOnSquare(theseLegalMoves[i], color));
 	}
+}
+
+function getDataOfHighlightShapeDependingOnIfPieceOnSquare(coord, color) {
+
+	const usingDots = preferences.getLegalMovesShape() === 'dot';
+	const gamefile = game.getGamefile();
+
+	const thisHighlightVertexData = usingDots ? (() => {
+		const isPieceOnSquare = gamefileutility.getPieceAtCoords(gamefile, coord) !== undefined;
+		if (isPieceOnSquare) return shapes2.getDataLegalMoveCornerTris_WithOffset(model_Offset, coord, z, color);
+		else return shapes2.getDataLegalMoveDot_WithOffset(model_Offset, coord, z, color);
+	})() : bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coord, z, color)
+;
+	return thisHighlightVertexData;
 }
 
 // Processes current offset and render range to return the bounding box of the area we will be rendering highlights.
@@ -266,7 +289,12 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
 
 	const lineSet = new Set(Object.keys(legalMoves.sliding));
 
-	const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coords, z, color); // Square / dot highlighting 1 legal move
+	const usingDots = preferences.getLegalMovesShape() === 'dot';
+	const gamefile = game.getGamefile();
+
+	const vertexDataMove = usingDots ? shapes2.getDataLegalMoveDot_WithOffset(model_Offset, coords, z, color)
+									 : bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coords, z, color);
+	const vertexDataCapture = usingDots ? shapes2.getDataLegalMoveCornerTris_WithOffset(model_Offset, coords, z, color) : undefined;
 
 	for (const strline of lineSet) {
 		const line = coordutil.getCoordsFromKey(strline); // [dx,dy]
@@ -280,7 +308,7 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) { console.error(`Line only has one intersect with square.`); continue; }
         
-		concatData_HighlightedMoves_Diagonal(data, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[line], vertexData);
+		concatData_HighlightedMoves_Diagonal(data, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[line], vertexDataMove, vertexDataCapture, usingDots, gamefile);
 	}
 }
 
@@ -294,14 +322,13 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
  * @param {number[]} limits - Slide limit: [-7,Infinity]
  * @param {number[]} vertexData - The vertex data of a single legal move highlight (square or dot).
  */
-function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, vertexData) {
-    
+function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, vertexDataMove, vertexDataCapture, usingDots, gamefile) {
 	// Right moveset
-	concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], jsutil.deepCopyObject(vertexData));
+	concatData_HighlightedMoves_Diagonal_Split(data, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		   jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), usingDots, gamefile);
     
 	// Left moveset
 	const negStep = [step[0] * -1, step[1] * -1];
-	concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), jsutil.deepCopyObject(vertexData));
+	concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), usingDots, gamefile);
 }
 
 /**
@@ -314,7 +341,7 @@ function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, 
  * @param {number} limit - Needs to be POSITIVE.
  * @param {number[]} vertexData - The vertex data of a single legal move highlight (square or dot).
  */
-function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limit, vertexData) {
+function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limit, vertexDataMove, vertexDataCapture, usingDots, gamefile) {
 	if (limit === 0) return; // Quick exit
 
 	const lineIsVertical = step[0] === 0;
@@ -350,14 +377,14 @@ function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1
 	// Shift the vertex data of our first step to the right place
 	const vertexDataXDiff = startCoords[0] - coords[0];
 	const vertexDataYDiff = startCoords[1] - coords[1];
-	shiftVertexData(vertexData, vertexDataXDiff, vertexDataYDiff); // The vertex data of the 1st step!
+	shiftVertexData(vertexDataMove, vertexDataCapture, vertexDataXDiff, vertexDataYDiff); // The vertex data of the 1st step!
 
 	// Calculate how many times we need to iteratively shift this vertex data and append it to our vertex data array
 	const xyDist = stepIsPositive ? endCoords[index] - startCoords[index] : startCoords[index] - endCoords[index];
 	if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
 	const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
 
-	addDataDiagonalVariant(data, vertexData, step, iterationCount);
+	addDataDiagonalVariant(data, vertexDataMove, vertexDataCapture, usingDots, step, iterationCount, startCoords, gamefile);
 }
 
 /**
@@ -368,34 +395,45 @@ function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1
  * @param {number[]} step - [dx,dy]
  * @param {number} iterateCount 
  */
-function addDataDiagonalVariant(data, vertexData, step, iterateCount) {
-	for (let i = 0; i < iterateCount; i++) { 
-		data.push(...vertexData);
-		shiftVertexData(vertexData, step[0], step[1]);
+function addDataDiagonalVariant(data, vertexDataMove, vertexDataCapture, usingDots, step, iterateCount, startCoords, gamefile) {
+	if (usingDots) {
+		for (let i = 0; i < iterateCount; i++) { 
+			const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i];
+			const isPieceOnSquare = gamefileutility.getPieceAtCoords(gamefile, thisCoord) !== undefined;
+			if (isPieceOnSquare) data.push(...vertexDataCapture);
+			else data.push(...vertexDataMove);
+			
+			shiftVertexData(vertexDataMove, vertexDataCapture, step[0], step[1]);
+		}
+	} else {
+		for (let i = 0; i < iterateCount; i++) {
+			data.push(...vertexDataMove);
+			shiftVertexData(vertexDataMove, vertexDataCapture, step[0], step[1]);
+		}
 	}
 }
 
 /**
- * Shifts the provided vertex data. Stride 7 (three vertex values, 4 color).
- * Use this when copying and shifting the data of legal move highlights (square/dots).
- * @param {number[]} data 
- * @param {number} x 
- * @param {number} y 
+ * Shifts the provided vertex data for each vertex by the given X and Y offsets.
+ * Stride 7 (three vertex values, 4 color).
+ * Shifts only the first (X) and second (Y) values in each stride.
+ * 
+ * @param {number[]} data - The vertex data array.
+ * @param {number} x - The X offset to shift.
+ * @param {number} y - The Y offset to shift.
  */
-function shiftVertexData(data, x, y) {
-	// Skip the z and the color indices
-	data[0] += x;
-	data[1] += y;
-	data[7] += x;
-	data[8] += y;
-	data[14] += x;
-	data[15] += y;
-	data[21] += x;
-	data[22] += y;
-	data[28] += x;
-	data[29] += y;
-	data[35] += x;
-	data[36] += y;
+function shiftVertexData(dataMove, dataCapture, x, y) {
+	const stride = 7; // 3 position values + 4 color values
+	for (let i = 0; i < dataMove.length; i += stride) {
+		dataMove[i] += x;     // Shift X value (first in the stride)
+		dataMove[i + 1] += y; // Shift Y value (second in the stride)
+	}
+	if (dataCapture !== undefined) {
+		for (let i = 0; i < dataCapture.length; i += stride) {
+			dataCapture[i] += x;     // Shift X value (first in the stride)
+			dataCapture[i + 1] += y; // Shift Y value (second in the stride)
+		}
+	}
 }
 
 // Generates buffer model and renders the outline of the render range of our highlights, useful in developer mode.
