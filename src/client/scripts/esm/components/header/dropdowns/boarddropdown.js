@@ -1,7 +1,6 @@
 import style from "../../../game/gui/style.js";
-import timeutil from "../../../game/misc/timeutil.js";
+import preferences from "../preferences.js";
 import checkerboardgenerator from "../../../game/rendering/checkerboardgenerator.js";
-import localstorage from "../../../util/localstorage.js";
 import themes from "../themes.js";
 
 
@@ -83,11 +82,9 @@ function closeThemeChangeListeners() {
 
 function selectTheme(event) {
 	const selectedTheme = event.target.getAttribute('theme');
-	// console.log('Selected theme:', selectedTheme);
 
-	// Save it to browser storage
-	const oneYearInMillis = timeutil.getTotalMilliseconds({ years: 1});
-	localstorage.saveItem('theme', selectedTheme, oneYearInMillis);
+	// Saves it to browser storage
+	preferences.setTheme(selectedTheme);
 
 	updateThemeSelectedStyling();
 	
@@ -98,8 +95,7 @@ function selectTheme(event) {
 }
 /** Outlines in black the current theme selection */
 function updateThemeSelectedStyling() {
-	const selectedTheme = localstorage.loadItem('theme') || themes.defaultTheme;
-	if (!selectTheme) return;
+	const selectedTheme = preferences.getTheme();
 	for (let i = 0; i < themeList.children.length; i++) {
 		const theme = themeList.children[i];
 		if (selectTheme && theme.getAttribute('theme') === selectedTheme) theme.classList.add('selected');

@@ -211,8 +211,6 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 
 	gamefile.mesh.locked--;
 	gamefile.mesh.isGenerating--;
-
-	console.log("Done!");
 }
 
 /**

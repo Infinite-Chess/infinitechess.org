@@ -10,6 +10,7 @@ import buffermodel from './buffermodel.js';
 /**
  * Type Definitions
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('./highlights.js').BoundingBox} BoundingBox
  */
 
 "use strict";
@@ -25,20 +26,45 @@ import buffermodel from './buffermodel.js';
 
 // Returns coord data of piece WITHOUT the offset of the pieces model,
 // and without needing uniform translations before rendering.
-function getCoordDataOfTile(coords) {
+
+
+/**
+ * Returns a bounding box of the coordinates at which
+ * you can EXACTLY render a highlight on the provided coords.
+ * 
+ * Does not require uniform translations before rendering.
+ * @param {number[]} coords 
+ * @returns {BoundingBox}
+ */
+function getCoordBoundingBoxOfSquare(coords) {
 	const boardPos = movement.getBoardPos();
 	const boardScale = movement.getBoardScale();
-	const startX = (coords[0] - board.gsquareCenter() - boardPos[0]) * boardScale;
-	const startY = (coords[1] - board.gsquareCenter() - boardPos[1]) * boardScale;
-	const endX = startX + /* 1 * */ boardScale;
-	const endY = startY + /* 1 * */ boardScale;
+	const left = (coords[0] - board.gsquareCenter() - boardPos[0]) * boardScale;
+	const bottom = (coords[1] - board.gsquareCenter() - boardPos[1]) * boardScale;
+	const right = left + boardScale;
+	const top = bottom + boardScale;
+	return { left, right, bottom, top };
+}
 
-	return {
-		startX,
-		startY,
-		endX,
-		endY
-	};
+/**
+ * Returns a bounding box of the coordinates.
+ * @param {number[]} coords 
+ * @returns {BoundingBox}
+ */
+function getBoundingBoxOfCoord_UsingUniform(coords) {
+	const squareCenter = board.gsquareCenter();
+	const left = coords[0] - squareCenter;
+	const bottom = coords[1] - squareCenter;
+	const right = left + 1;
+	const top = bottom + 1;
+	return { left, right, bottom, top };
+}
+
+function getTrueCoordofTileWithOffset(coords, offset) {
+	return [
+		coords[0] - offset[0],
+		coords[1] - offset[1],
+	];
 }
 
 /**
@@ -48,8 +74,9 @@ function getCoordDataOfTile(coords) {
  * @returns {Object} The coordinate data: `{ startX, startY, endX, endY }`
  */
 function getCoordDataOfTile_WithOffset(offset, coords) {
-	const startX = coords[0] - board.gsquareCenter() - offset[0];
-	const startY = coords[1] - board.gsquareCenter() - offset[1];
+	const trueCoords = getTrueCoordofTileWithOffset(coords, offset);
+	const startX = trueCoords[0] - board.gsquareCenter();
+	const startY = trueCoords[1] - board.gsquareCenter();
 	const endX = startX + 1;
 	const endY = startY + 1;
 
@@ -284,6 +311,7 @@ function getDataCircle3D(x, y, z, radius, resolution, r, g, b, a) {
 	return data;
 }
 
+
 /**
  * Returns the buffer model of a solid-color circle at the provided coordinates,
  * lying flat in xy space, with the provided dimensions, resolution, and color.
@@ -449,23 +477,30 @@ function getModelRing3D(x, y, z, inRad, outRad, resolution, r1, g1, b1, a1, r2, 
 
 // Universal...
 
-function getDataQuad_Color_FromCoord(coords, color) {
-	const { startX, startY, endX, endY } = getCoordDataOfTile(coords);
+// function getDataQuad_Color_FromCoord(coords, color) {
+// 	const { startX, startY, endX, endY } = getCoordBoundingBoxOfSquare(coords);
+// 	const [ r, g, b, a ] = color;
+// 	return getDataQuad_Color(startX, startY, endX, endY, r, g, b, a);
+// }
+
+// Needs to be translated by the pieces mesh offset before rendering.
+// function getDataQuad_Color_FromCoord_WithOffset(offset, coords, color) {
+// 	const { startX, startY, endX, endY } = getCoordDataOfTile_WithOffset(offset, coords);
+// 	const [ r, g, b, a ] = color;
+// 	return getDataQuad_Color(startX, startY, endX, endY, r, g, b, a);
+// }
+
+function getDataQuad_Color3D_FromCoord(coords, z, color) {
+	const { left, right, bottom, top } = getCoordBoundingBoxOfSquare(coords);
 	const [ r, g, b, a ] = color;
-	return getDataQuad_Color(startX, startY, endX, endY, r, g, b, a);
+	return getDataQuad_Color3D(left, bottom, right, top, z, r, g, b, a);
 }
 
 // Needs to be translated by the pieces mesh offset before rendering.
-function getDataQuad_Color_FromCoord_WithOffset(offset, coords, color) {
-	const { startX, startY, endX, endY } = getCoordDataOfTile_WithOffset(offset, coords);
+function getDataQuad_Color3D_UsingUniform(coords, z, color) {
+	const { left, right, bottom, top } = getBoundingBoxOfCoord_UsingUniform(coords);
 	const [ r, g, b, a ] = color;
-	return getDataQuad_Color(startX, startY, endX, endY, r, g, b, a);
-}
-
-function getDataQuad_Color3D_FromCoord(coords, z, color) {
-	const { startX, startY, endX, endY } = getCoordDataOfTile(coords);
-	const [ r, g, b, a ] = color;
-	return getDataQuad_Color3D(startX, startY, endX, endY, z, r, g, b, a);
+	return getDataQuad_Color3D(left, bottom, right, top, z, r, g, b, a);
 }
 
 // Needs to be translated by the pieces mesh offset before rendering.
@@ -478,19 +513,19 @@ function getDataQuad_Color3D_FromCoord_WithOffset(offset, coords, z, color) {
 function getDataQuad_ColorTexture_FromCoordAndType(coords, type, color) {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texStartX, texStartY, texEndX, texEndY } = getTexDataOfType(type, rotation);
-	const { startX, startY, endX, endY } = getCoordDataOfTile(coords);
+	const { left, right, bottom, top } = getCoordBoundingBoxOfSquare(coords);
 	const { r, g, b, a } = color;
 
-	return getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a);
+	return getDataQuad_ColorTexture(left, bottom, right, top, texStartX, texStartY, texEndX, texEndY, r, g, b, a);
 }
 
 function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texStartX, texStartY, texEndX, texEndY } = getTexDataOfType(type, rotation);
-	const { startX, startY, endX, endY } = getCoordDataOfTile(coords);
+	const { left, right, bottom, top } = getCoordBoundingBoxOfSquare(coords);
 	const { r, g, b, a } = color;
 
-	return getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, r, g, b, a);
+	return getDataQuad_ColorTexture3D(left, bottom, right, top, z, texStartX, texStartY, texEndX, texEndY, r, g, b, a);
 }
 
 function getDataQuad_ColorTexture_FromPositionWidthType(x, y, width, type, color) { // Position in world-space
@@ -511,6 +546,7 @@ function getDataRect_FromTileBoundingBox(boundingBox, color) { // { left, right,
 	const [ r, g, b, a ] = color;
 	return getDataRect(startX, startY, endX, endY, r, g, b, a);
 }
+
 
 // Modifying data...
 
@@ -579,7 +615,6 @@ function rotateDataColorTexture(data, rotation = 1) {
 }
 
 export default {
-	getCoordDataOfTile,
 	getCoordDataOfTile_WithOffset,
 	getCoordDataOfTileBoundingBox,
 	getTexDataOfType,
@@ -598,8 +633,6 @@ export default {
 	getDataRingSolid,
 	getDataRing3D,
 	getModelRing3D,
-	getDataQuad_Color_FromCoord,
-	getDataQuad_Color_FromCoord_WithOffset,
 	getDataQuad_Color3D_FromCoord,
 	getDataQuad_Color3D_FromCoord_WithOffset,
 	getDataQuad_ColorTexture_FromCoordAndType,
@@ -607,5 +640,8 @@ export default {
 	getDataQuad_ColorTexture_FromPositionWidthType,
 	getDataRect_FromTileBoundingBox,
 	rotateDataTexture,
-	rotateDataColorTexture
+	rotateDataColorTexture,
+
+	getDataQuad_Color3D_UsingUniform,
+	getTrueCoordofTileWithOffset,
 };
