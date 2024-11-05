@@ -6,6 +6,8 @@
     --header-link-min-padding: 8px;
     --CBC-in: cubic-bezier(0,1.05,.47,1); /* Settings dropdown IN curve */
     --CBC-out: cubic-bezier(.54,0,1,.97); /* Settings dropdown OUT curve */
+    --CBC-CM-in: cubic-bezier(.09,1.61,.36,1); /* Checkmark IN curve */
+    --CBC-CM-out: cubic-bezier(0,1.1,1,1); /* Checkmark OUT curve */
 }
 
 header {
@@ -269,16 +271,29 @@ span.arrow-head-left {
     padding: 0 2px;
 }
 
+.checkmark {
+    transition: transform 0.5s var(--CBC-CM-in);
+    transform: scale(1);
+}
+
+.checkmark.visibility-hidden {
+    transition: transform 0.2s var(--CBC-CM-out), visibility 0s 0.5s;
+    transform: scale(0);
+}
+
 
 
 /* Language nested dropdown */
 
-.language-dropdown-item {
+.language-dropdown-item, .legalmove-option {
     display:flex;
     align-items: center;
+    cursor: pointer;
+}
+
+.language-dropdown-item {
     height: 48px;
     padding: 0 15px;
-    cursor: pointer;
 }
 
 /* .language-dropdown-item p.name {
@@ -327,33 +342,20 @@ svg.checkmark {
 
 
 
-/* Legalmove nested dropdown */
+/* Legalmove shape nested dropdown */
 
 /* .legalmove-dropdown {
     
 } */
 
 .legalmove-option {
-    display:flex;
-    align-items: center;
     height: 43px;
     padding: 0 15px 0 8px;
-    cursor: pointer;
 }
 
-.svg-squares {
+.svg-squares { /* Square legal move shape option */
     width: 19px;
     padding: 0 2px;
-}
-
-.legalmove-option .checkmark {
-    transition: transform 0.5s cubic-bezier(.09,1.61,.36,1);
-    transform: scale(1);
-}
-
-.legalmove-option .checkmark.visibility-hidden {
-    transition: transform 0.2s cubic-bezier(0,1.1,1,1), visibility 0s 0.5s;
-    transform: scale(0);
 }
 
 
