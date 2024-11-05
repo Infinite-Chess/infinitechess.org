@@ -100,7 +100,7 @@ function getDataCornerTriangles(centerX, centerY, z, triSize, color) {
  */
 function getDataLegalMoveCornerTris_WithOffset(offset, coords, z, color) {
 	const trueCoords = bufferdata.getTrueCoordofTileWithOffset(coords, offset);
-	const triSize = 0.50;     // Default: 0.45     Adjust this for triangle size in each corner
+	const triSize = 0.50;     // Default: 0.50     Adjust this for triangle size in each corner
 	const opacityOffset = 0.2; // Increase opacity for better visibility
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color; a += opacityOffset;

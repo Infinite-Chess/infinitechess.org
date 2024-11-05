@@ -136,7 +136,7 @@ const themeDictionary = {
 	white: {
 		lightTiles: [1, 1, 1, 1],
 		darkTiles:  [0.78, 0.78, 0.78, 1],
-		legalMovesHighlightColor_Friendly: [0, 0.38, 0, 0.32], // [0, 0.48, 0.1, 0.32]
+		legalMovesHighlightColor_Friendly: [0, 0, 0, 1], // [0, 0.48, 0.1, 0.32]
 		legalMovesHighlightColor_Opponent: [1, 0.18, 0, 0.29],
 		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.28],
 	},
