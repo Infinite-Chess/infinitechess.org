@@ -16,13 +16,13 @@ import selection from '../chess/selection.js';
 import camera from './camera.js';
 import board from './board.js';
 import math from '../misc/math.js';
-import pieces from './pieces.js';
 import movesscript from '../chess/movesscript.js';
 import buffermodel from './buffermodel.js';
 import colorutil from '../misc/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import space from '../misc/space.js';
+import spritesheet from './spritesheet.js';
 // Import End
 
 /**
@@ -263,7 +263,7 @@ function update() {
 		onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
 	}
     
-	model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", pieces.getSpritesheet());
+	model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", spritesheet.getSpritesheet());
 	modelArrows = buffermodel.createModel_Colored(new Float32Array(dataArrows), 2, "TRIANGLES");
 }
 
@@ -410,7 +410,7 @@ function renderThem() {
 	if (mode === 0) return;
 	if (model == null) return;
 
-	// render.renderModel(model, undefined, undefined, "TRIANGLES", pieces.getSpritesheet())
+	// render.renderModel(model, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet())
 	model.render();
 	// render.renderModel(modelArrows, undefined, undefined, "TRIANGLES")
 	modelArrows.render();
