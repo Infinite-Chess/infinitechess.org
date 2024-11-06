@@ -11,6 +11,7 @@ import texture from './texture.js';
 import onlinegame from '../misc/onlinegame.js';
 import options from './options.js';
 import buffermodel from './buffermodel.js';
+import shapes from './shapes.js';
 // Import End
 
 /** 
@@ -79,7 +80,7 @@ function renderPieces(gamefile) {
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type, coords) {
 	const color = options.getColorOfType(type); color.a *= ghostOpacity;
-	const data = bufferdata.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
+	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
 	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", getSpritesheet());
 	model.render();
 }

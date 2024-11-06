@@ -196,6 +196,16 @@ function getPieceAtCoords(gamefile, coords) {
 }
 
 /**
+ * Whether a piece is on the provided coords
+ * @param {gamefile} gamefile - The gamefile
+ * @param {number[]} coords - The coordinates
+ * @returns {boolean}
+ */
+function isPieceOnCoords(gamefile, coords) {
+	return getPieceTypeAtCoords(gamefile, coords) !== undefined;
+}
+
+/**
  * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
  * @param {gamefile} gamefile - The gamefile
  */
@@ -469,6 +479,7 @@ export default {
 	getPieceIndexByTypeAndCoords,
 	getPieceTypeAtCoords,
 	getPieceAtCoords,
+	isPieceOnCoords,
 	getPieceFromTypeAndCoords,
 	doGameOverChecks,
 	getJumpingRoyalCoords,

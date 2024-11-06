@@ -1,6 +1,8 @@
 
 // Import Start
+import coordutil from '../misc/coordutil.js';
 import bufferdata from './bufferdata.js';
+import shapes from './shapes.js';
 // Import End
 
 /** 
@@ -30,7 +32,7 @@ const encryption = 'jdhagkleioqcfmnzxyptsuvrw';
  */
 function appDat(gamefile, currIndex, mesh, usingColoredTextures) {
 
-	const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType('yellow'); // Coin
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType('yellow'); // Coin
 
 	for (let i = 0; i < locations.length; i += 2) {
 
@@ -41,17 +43,13 @@ function appDat(gamefile, currIndex, mesh, usingColoredTextures) {
 		const y = decryptCoordinate(yString);
 
 		const thisLocation = [x,y];
-
-		const coordDataOfPiece = bufferdata.getCoordDataOfTile_WithOffset(gamefile.mesh.offset, thisLocation); // { startX, startY, endX, endY }
-		const startX = coordDataOfPiece.startX;
-		const startY = coordDataOfPiece.startY;
-		const endX = coordDataOfPiece.endX;
-		const endY = coordDataOfPiece.endY;
+		const offsetCoord = coordutil.subtractCoordinates(thisLocation, gamefile.mesh.offset);
+		const { left, right, bottom, top} = shapes.getBoundingBoxOfCoord(offsetCoord);
         
 		const r = 1, g = 1, b = 1, a = 1;
 
-		const data = usingColoredTextures ? bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a)
-            : bufferdata.getDataQuad_Texture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY);
+		const data = usingColoredTextures ? bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a)
+            : bufferdata.getDataQuad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
 
 		for (let a = 0; a < data.length; a++) {
 			mesh.data32[currIndex] = data[a];
