@@ -1,4 +1,100 @@
 
+import board from "./board.js";
+import bufferdata from "./bufferdata.js";
+
+
+/**
+ * Returns a bounding box of a coordinate.
+ * REQUIRES uniform transformations before rendering.
+ * @param {number[]} coords 
+ * @returns {BoundingBox}
+ */
+function getBoundingBoxOfCoord(coords) {
+	const squareCenter = board.gsquareCenter();
+	const left = coords[0] - squareCenter;
+	const bottom = coords[1] - squareCenter;
+	const right = left + 1;
+	const top = bottom + 1;
+	return { left, right, bottom, top };
+}
+
+/**
+ * Returns a bounding box of the coordinates at which
+ * you can EXACTLY render a highlight on the provided coords.
+ * 
+ * Does not require uniform translations before rendering.
+ * @param {number[]} coords 
+ * @returns {BoundingBox}
+ */
+function getTransformedBoundingBoxOfSquare(coords) {
+	const coordsBoundingBox = getBoundingBoxOfCoord(coords);
+	return applyWorldTransformationsToSquareBoundingBox(coordsBoundingBox);
+}
+
+/**
+ * Applies our board position and scale transformations to a SQUARE's bounding box
+ * so it can be rendered exactly where it is without requiring uniform translations.
+ * 
+ * ONLY WORKS WITH transforming square bounding box data!! To make it work with
+ * any size bounding box, we have to apply the exact transformation to each point!
+ * Use {@link applyWorldTransformationsToSquareBoundingBox} instead.
+ * This one is slightly faster than that for single squares.
+ * @param {BoundingBox} boundingBox 
+ */
+function applyWorldTransformationsToSquareBoundingBox(boundingBox) {
+	const boardPos = movement.getBoardPos();
+	const boardScale = movement.getBoardScale();
+	const left = (boundingBox.left - boardPos[0]) * boardScale;
+	const bottom = (boundingBox.bottom - boardPos[1]) * boardScale;
+	const right = left + boardScale;
+	const top = bottom + boardScale;
+	return { left, right, bottom, top };
+}
+
+/**
+ * GENERIC. Applies our board position and scale transformations to a bounding box
+ * so it can be rendered exactly where it is without requiring uniform translations.
+ * 
+ * If the bounding box is of a single square, using {@link applyWorldTransformationsToSquareBoundingBox}
+ * is slightly faster.
+ * @param {BoundingBox} boundingBox 
+ */
+function applyWorldTransformationsToBoundingBox(boundingBox) {
+	const boardPos = movement.getBoardPos();
+	const boardScale = movement.getBoardScale();
+	const left = (boundingBox.left - boardPos[0]) * boardScale;
+	const right = (boundingBox.right - boardPos[0]) * boardScale;
+	const bottom = (boundingBox.bottom - boardPos[1]) * boardScale;
+	const top = (boundingBox.top - boardPos[1]) * boardScale;
+	return { left, bottom, right, top };
+}
+
+function expandTileBoundingBoxToEncompassWholeSquare(boundingBox) {
+	const squareCenter = board.gsquareCenter();
+	const left = boundingBox.left - squareCenter;
+	const right = boundingBox.right - squareCenter + 1;
+	const bottom = boundingBox.bottom - squareCenter;
+	const top = boundingBox.top - squareCenter + 1;
+	return { left, bottom, right, top };
+}
+
+
+
+
+// Needs to be translated by the pieces mesh offset before rendering.
+function getDataQuad_Color3D_FromCoord(coords, z, color) {
+	const boundingBox = getBoundingBoxOfCoord(coords);
+	return bufferdata.getDataQuad_Color3D(boundingBox, z, color);
+}
+
+function getTransformedDataQuad_Color3D_FromCoord(coords, z, color) {
+	const boundingBox = getTransformedBoundingBoxOfSquare(coords);
+	return bufferdata.getDataQuad_Color3D(boundingBox, z, color);
+}
+
+
+
+
 /**
  * Generates the vertex data for a circle in 3D space with color attributes.
  * @param {number} centerX - The X coordinate of the circle's center.
@@ -42,6 +138,112 @@ function getDataCircle_3D(x, y, z, radius, resolution, r, g, b, a) {
 	return vertices;
 }
 
+/**
+ * Returns the buffer model of a solid-color circle at the provided coordinates,
+ * lying flat in xy space, with the provided dimensions, resolution, and color.
+ * Renders with TRIANGLE_FAN, as it's less vertex data.
+ * @param {number} x 
+ * @param {number} y 
+ * @param {number} z
+ * @param {number} radius 
+ * @param {number} resolution - How many points will be rendered on the circle's edge. 3+
+ * @param {number} r - Red
+ * @param {number} g - Green
+ * @param {number} b - Blue
+ * @param {number} a - Alpha
+ * @returns {BufferModel} The buffer model
+ */
+function getModelCircle3D(x, y, z, radius, resolution, r, g, b, a) {
+	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a fuzz ball.");
+
+	const data = [x, y, z, r, g, b, a]; // Mid point
+
+	for (let i = 0; i <= resolution; i++) { // Add all outer points
+		const theta = (i / resolution) * 2 * Math.PI;
+		const thisX = x + radius * Math.cos(theta);
+		const thisY = y + radius * Math.sin(theta);
+		data.push(thisX, thisY, z, r, g, b, a);
+	}
+
+	// return buffermodel.createModel_Color3D(new Float32Array(data))
+	return buffermodel.createModel_Colored(new Float32Array(data), 3, 'TRIANGLE_FAN');
+}
+
+/**
+ * Returns the buffer model of a gradient-colored ring at the provided coordinates,
+ * lying flat in xy space, with the specified dimensions, resolution, and color gradient.
+ * @param {number} x - The x-coordinate of the ring's center.
+ * @param {number} y - The y-coordinate of the ring's center.
+ * @param {number} z - The z-coordinate for the ring's plane.
+ * @param {number} inRad - The radius of the inner edge of the ring.
+ * @param {number} outRad - The radius of the outer edge of the ring.
+ * @param {number} resolution - The number of points rendered along the ring's edge; must be 3 or greater.
+ * @param {number[]} innerColor - RGBA color array for the inner edge [r1, g1, b1, a1].
+ * @param {number[]} outerColor - RGBA color array for the outer edge [r2, g2, b2, a2].
+ * @returns {BufferModel} The buffer model representing the gradient-colored ring.
+ */
+function getModelRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
+	if (resolution < 3) return console.error("Resolution must be 3+ to get model of a ring.");
+
+	const data = [];
+
+	for (let i = 0; i <= resolution; i++) {
+		const theta = (i / resolution) * 2 * Math.PI;
+		const innerX = x + inRad * Math.cos(theta);
+		const innerY = y + inRad * Math.sin(theta);
+		const outerX = x + outRad * Math.cos(theta);
+		const outerY = y + outRad * Math.sin(theta);
+
+		// Inner point
+		data.push(innerX, innerY, z, r1, g1, b1, a1);
+
+		// Outer point
+		data.push(outerX, outerY, z, r2, g2, b2, a2);
+	}
+
+	// return buffermodel.createModel_Color3D(new Float32Array(data))
+	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLE_STRIP");
+}
+
+function getDataRect_FromTileBoundingBox(boundingBox, color) {
+	boundingBox = shapes.expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
+	boundingBox = shapes.applyWorldTransformationsToBoundingBox(boundingBox);
+	return getDataRect(boundingBox, color);
+}
+
+
+
+function getDataQuad_ColorTexture_FromCoordAndType(coords, type, color) {
+	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
+	const { texleft, texbottom, texright, textop } = getTexDataOfType(type, rotation);
+	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(coords);
+	const { r, g, b, a } = color;
+
+	return getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
+}
+
+function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
+	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
+	const { texleft, texbottom, texright, textop } = getTexDataOfType(type, rotation);
+	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(coords);
+	const { r, g, b, a } = color;
+
+	return getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a);
+}
+
+
+
 export default {
+	getBoundingBoxOfCoord,
+	getTransformedBoundingBoxOfSquare,
 	getDataCircle_3D,
+	getDataQuad_Color3D_FromCoord,
+	getTransformedDataQuad_Color3D_FromCoord,
+	expandTileBoundingBoxToEncompassWholeSquare,
+	applyWorldTransformationsToBoundingBox,
+	getModelCircle3D,
+	getModelRing3D,
+	getDataRect_FromTileBoundingBox,
+	getDataQuad_ColorTexture_FromCoordAndType,
+	getDataQuad_ColorTexture3D_FromCoordAndType,
 };

@@ -122,7 +122,7 @@ function genModel() {
 	const type = selection.getPieceSelected().type;
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
 	const halfWidth = miniimage.gwidthWorld() / 2;
 
@@ -133,7 +133,7 @@ function genModel() {
 
 	const { r, g, b } = options.getColorOfType(type);
 
-	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, opacityOfGhostImage);
+	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, opacityOfGhostImage);
 
 	dataGhost.push(...data);
     

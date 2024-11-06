@@ -249,7 +249,7 @@ function genPieceModel() {
 function appendDataOfPiece3D(data, type, coords) {
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
 	const boardPos = movement.getBoardPos();
 	const boardScale = movement.getBoardScale();
@@ -260,7 +260,7 @@ function appendDataOfPiece3D(data, type, coords) {
 
 	const { r, g, b, a } = options.getColorOfType(type);
 
-	const bufferData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, r, g, b, a);
+	const bufferData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texleft, texbottom, texright, textop, r, g, b, a);
 
 	data.push(...bufferData);
 }

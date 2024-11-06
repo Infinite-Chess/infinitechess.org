@@ -50,8 +50,8 @@ function genCheckHighlightModel(royalsInCheck) {
 		const inRad = 0.3 * movement.getBoardScale();
 		const resolution = 20;
 
-		const dataCircle = bufferdata.getDataCircle3D(x, y, z, inRad, resolution, ...color);
-		const dataRing = bufferdata.getDataRing3D(x, y, z, inRad, outRad, resolution, ...color, color[0], color[1], color[2], 0);
+		const dataCircle = bufferdata.getDataCircle3D(x, y, z, inRad, resolution, color);
+		const dataRing = bufferdata.getDataRing3D(x, y, z, inRad, outRad, resolution, color, [color[0],color[1],color[2],0]);
 		data.push(...dataCircle);
 		data.push(...dataRing);
 	}
