@@ -24,10 +24,10 @@ const themeDictionary = {
 	wood_light: { // 5D Chess
 		lightTiles: [1, 0.85, 0.66, 1],
 		darkTiles: [0.87, 0.68, 0.46, 1],
-		legalMovesHighlightColor_Friendly: [0, 0.48, 0.14, 0.38],
+		legalMovesHighlightColor_Friendly: [0, 0.5, 0.14, 0.38],
 		legalMovesHighlightColor_Opponent: [1, 0.18, 0, 0.37],
 		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.32],
-		selectedPieceHighlightColor: [0, 0.48, 0.14, 0.38],
+		selectedPieceHighlightColor: [0, 0.5, 0.14, 0.38],
 		lastMoveHighlightColor: [0.90, 1, 0, 0.30],
 	},
 	sandstone: { // Sometimes thanksgiving uses this
