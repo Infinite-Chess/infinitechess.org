@@ -27,7 +27,7 @@ function loadTexture(gl, textureElementOrID, { useMipmaps = false } = {}) {
 
 	// Ensure the element is an HTMLImageElement
 	if (!(textureElement instanceof HTMLImageElement)) {
-		throw new Error(`The provided texture element is not a valid HTMLImageElement!`);
+		throw new Error(`The provided texture element is not a valid HTMLImageElement: ${JSON.stringify(textureElement)}`);
 	}
 
 	// Flip image pixels into the bottom-to-top order that WebGL expects.

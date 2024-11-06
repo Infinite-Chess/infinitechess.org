@@ -1,6 +1,9 @@
 
 import board from "./board.js";
 import bufferdata from "./bufferdata.js";
+import buffermodel from "./buffermodel.js";
+import movement from "./movement.js";
+import perspective from "./perspective.js";
 
 
 
@@ -212,29 +215,29 @@ function getModelRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g
 }
 
 function getDataRect_FromTileBoundingBox(boundingBox, color) {
-	boundingBox = shapes.expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
-	boundingBox = shapes.applyWorldTransformationsToBoundingBox(boundingBox);
-	return getDataRect(boundingBox, color);
+	boundingBox = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
+	boundingBox = applyWorldTransformationsToBoundingBox(boundingBox);
+	return bufferdata.getDataRect(boundingBox, color);
 }
 
 
 
 function getDataQuad_ColorTexture_FromCoordAndType(coords, type, color) {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = getTexDataOfType(type, rotation);
-	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(coords);
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
 	const { r, g, b, a } = color;
 
-	return getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
+	return bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
 }
 
 function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = getTexDataOfType(type, rotation);
-	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(coords);
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
 	const { r, g, b, a } = color;
 
-	return getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a);
+	return bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a);
 }
 
 
