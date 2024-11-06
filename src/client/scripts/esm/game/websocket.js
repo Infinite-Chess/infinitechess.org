@@ -10,6 +10,7 @@ import uuid from './misc/uuid.js';
 import config from './config.js';
 import thread from './misc/thread.js';
 import validatorama from '../util/validatorama.js';
+import wsutil from '../util/wsutil.js';
 // Import End
 
 "use strict";
@@ -59,7 +60,7 @@ const timeToResubAfterMessageTooBigMillis = timeToResubAfterNetworkLossMillis;
 
 const timeToWaitForHTTPMillis = 5000; // Milliseconds to assume http isn't connecting
 const timeToWaitForEchoMillis = 5000; // 3 seconds until we assume we've disconnected!
-let echoTimers = {}; // messageID: timeoutID   A list of setTimeout id's that are currently out.
+let echoTimers = {}; // messageID: { timeSent, timeoutID }   A list of setTimeout id's that are currently out.
 
 // List of functions to execute when we get specified reply back
 let onreplyFuncs = {}; // { messageID: onreplyFunc }
@@ -182,7 +183,14 @@ function httpLostConnection() {
  */
 function cancelTimerOfMessageID(message) { // { sub, action, value, id }
 	const echoMessageID = message.value; // If the action is an "echo", the message ID their echo'ing is stored in "value"!
-	const timeoutID = echoTimers[echoMessageID];
+
+	// How long did it take the message to return round trip?
+	// Let's update the Ping meter
+	const timeTaken = Date.now() - echoTimers[echoMessageID].timeSent;
+	const detail = timeTaken;
+	document.dispatchEvent(new CustomEvent('ping', { detail }));
+
+	const timeoutID = echoTimers[echoMessageID].timeoutID;
 
 	clearTimeout(timeoutID);
 	delete echoTimers[echoMessageID];
@@ -363,37 +371,21 @@ function onclose(event) {
 	onlinegame.setInSyncFalse();
 	guiplay.onSocketClose();
 
-	// All closure codes:
 
-	// 1000: Normal closure.
-	// 1001: Endpoint going away.
-	// 1002: Protocol error.
-	// 1003: Unsupported data.
-	// 1005: No status code received (reserved).
-	// 1006: Abnormal closure, no further detail available (reserved). This is usually a network interruption, OR the server is down.
-	// 1007: Invalid data received.
-	// 1008: Policy violation.
-	// 1009: Message too big.
-	// 1010: Missing extension.
-	// 1011: Internal server error.
-	// 1012: Service restart.
-	// 1013: Try again later.
-	// 1014: Bad gateway.
-	// 1015: TLS handshake failure (reserved).
+	const trimmedReason = event.reason.trim();
+	const notByChoice = wsutil.wasSocketClosureNotByTheirChoice(event.code, trimmedReason);
+	// Dispatch an event to let other code know that that a websocket closed
+	/**
+	 * True if we want to show the loading animation.
+	 * 
+	 * If it was closed, not by our choice, but we have nothing
+	 * to be subscribed to, just close the ping meter anyway.
+	 */
+	const detail = notByChoice && !zeroSubs();
+	document.dispatchEvent(new CustomEvent('socket-closed', { detail }));
+	console.log('here', detail, notByChoice, !zeroSubs());
 
-	// Possible closure reasons (pairings of code and reason):
-    
-	// 1000 "Connection expired"  (This can say this even if in dev tools we disable our network)
-	// 1000 "Connection closed by client"
-	// 1000 "Connection closed by client. Renew."
-	// 1008 "Unable to identify client IP address"
-	// 1008 "Authentication needed"
-	// 1008 "Logged out" (Happens when we click log out button)
-	// 1009 "Too Many Requests. Try again soon."
-	// 1009 "Message Too Big"
-	// 1009 "Too Many Sockets"
-	// 1009 "Origin Error"
-	// 1014 "No echo heard"  (Client took too long to respond)
+	// See wsutil.js for all possible closure reasons!
 
 	// Connection closed unexpectedly (network interrupted), OR the server is down.
 	// We did nothing wrong on our part, it's okay to instantly try to reconnect!
@@ -404,7 +396,6 @@ function onclose(event) {
 		return;
 	}
 
-	const trimmedReason = event.reason.trim();
 	switch (trimmedReason) {
 		case "Connection expired":
 			// Reopen connection and resubscribe
@@ -510,7 +501,10 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 
 	// Set a timer. At the end, just assume we've disconnected and start again.
 	// This will be canceled if we here the echo in time.
-	if (!isEcho) echoTimers[payload.id] = setTimeout(renewConnection, timeToWaitForEchoMillis, payload.id);
+	if (!isEcho) echoTimers[payload.id] = {
+		timeSent: Date.now(),
+		timeoutID: setTimeout(renewConnection, timeToWaitForEchoMillis, payload.id)
+	};
 	//console.log(`Set timer of message id "${payload.id}"`)
 
 	if (!isEcho) scheduleOnreplyFunc(payload.id, onreplyFunc);
@@ -527,7 +521,7 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 function cancelAllEchoTimers() {
 	const echoTimersKeys = Object.keys(echoTimers); // []
 	for (const timeoutIDKey of echoTimersKeys) {
-		const timeoutIDValue = echoTimers[timeoutIDKey];
+		const timeoutIDValue = echoTimers[timeoutIDKey].timeoutID;
 		clearTimeout(timeoutIDValue);
 	}
 	echoTimers = {};
