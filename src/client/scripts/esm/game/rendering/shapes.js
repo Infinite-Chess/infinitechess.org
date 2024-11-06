@@ -3,6 +3,7 @@ import board from "./board.js";
 import bufferdata from "./bufferdata.js";
 
 
+
 /**
  * Returns a bounding box of a coordinate.
  * REQUIRES uniform transformations before rendering.
@@ -69,6 +70,12 @@ function applyWorldTransformationsToBoundingBox(boundingBox) {
 	return { left, bottom, right, top };
 }
 
+/**
+ * If you have say a bounding box from coordinate [1,1] to [9,9],
+ * this will round that outwards from [0.5,0.5] to [9.5,9.5]
+ * @param {BoundingBox} boundingBox 
+ * @returns {BoundingBox}
+ */
 function expandTileBoundingBoxToEncompassWholeSquare(boundingBox) {
 	const squareCenter = board.gsquareCenter();
 	const left = boundingBox.left - squareCenter;
@@ -81,7 +88,6 @@ function expandTileBoundingBoxToEncompassWholeSquare(boundingBox) {
 
 
 
-// Needs to be translated by the pieces mesh offset before rendering.
 function getDataQuad_Color3D_FromCoord(coords, z, color) {
 	const boundingBox = getBoundingBoxOfCoord(coords);
 	return bufferdata.getDataQuad_Color3D(boundingBox, z, color);
