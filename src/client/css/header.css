@@ -213,12 +213,12 @@ nav.compact-3 #svg-logout {
     border-radius: 0 0 0 5px;
     overflow: hidden; /* Prevent children from rendering outside the border */
     transform: translateX(0); /* Slide into view */
-    transition: transform 0.3s var(--CBC-in), visibility 0s;
+    transition: transform 0.3s var(--CBC-in), visibility 0s, opacity 0.25s ease-in-out;
 }
 
 .dropdown.visibility-hidden {
     transform: translateX(100%); /* Just off screen to the right, to start out, until it's animated in. */
-    transition: transform 0.2s var(--CBC-out), visibility 0s 0.2s;
+    transition: transform 0.2s var(--CBC-out), visibility 0s 0.2s, opacity 0.25s ease-in-out;
 }
 
 .dropdown-title { /* The back button at the top of 2+ deep dropdown */
@@ -429,4 +429,8 @@ svg.checkmark {
 
 .visibility-hidden {
     visibility: hidden;
+}
+
+.transparent {
+    opacity: 30%;
 }
