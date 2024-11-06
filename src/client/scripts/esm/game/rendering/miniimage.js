@@ -121,7 +121,7 @@ function genModel() {
 		if (!thesePieces) return; // Don't concat data if there are no pieces of this type
 
 		const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-		const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(pieceType, rotation);
+		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
 
 		const { r, g, b } = options.getColorOfType(pieceType);
 
@@ -157,7 +157,7 @@ function genModel() {
 				}
 			}
 
-			const newData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, thisOpacity);
+			const newData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, thisOpacity);
 
 			data.push(...newData);
 		}

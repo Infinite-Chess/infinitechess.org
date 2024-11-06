@@ -318,7 +318,7 @@ function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCo
 	const worldCoords = space.convertCoordToWorldSpace(renderCoords);
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
 	const xPad = paddingDir.includes('right') ? -padding
                 : paddingDir.includes('left')  ?  padding
@@ -364,7 +364,7 @@ function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCo
 		}
 	}
 
-	const thisData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, thisOpacity);
+	const thisData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, thisOpacity);
 
 	data.push(...thisData);
 
