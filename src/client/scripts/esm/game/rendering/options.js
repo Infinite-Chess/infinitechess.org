@@ -139,10 +139,6 @@ function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPiec
 	else return themes.getPropertyOfTheme(theme, 'legalMovesHighlightColor_Friendly');
 }
 
-function getDefaultSelectedPieceHighlight() {
-	return themes.getPropertyOfTheme(theme, 'selectedPieceHighlightColor');
-}
-
 function getDefaultLastMoveHighlightColor() {
 	return themes.getPropertyOfTheme(theme, 'lastMoveHighlightColor');
 }
@@ -314,7 +310,6 @@ export default {
 	toggleNavigationBar,
 	getDefaultTiles,
 	getLegalMoveHighlightColor,
-	getDefaultSelectedPieceHighlight,
 	getDefaultLastMoveHighlightColor,
 	getDefaultCheckHighlightColor,
 	getPieceRegenColorArgs,

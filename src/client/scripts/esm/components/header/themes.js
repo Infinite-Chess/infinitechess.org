@@ -6,7 +6,6 @@
  * to use if it doesn't have them present
  */
 const defaults = {
-	selectedPieceHighlightColor: [0, 0.48, 0.1, 0.32],
 	lastMoveHighlightColor: [0.72, 1, 0, 0.28],
 	checkHighlightColor: [1, 0, 0, 0.7],
 	// If this is false, we will render them white,
@@ -27,13 +26,11 @@ const themeDictionary = {
 		legalMovesHighlightColor_Friendly: [0, 0.5, 0.14, 0.38],
 		legalMovesHighlightColor_Opponent: [1, 0.18, 0, 0.37],
 		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.32],
-		selectedPieceHighlightColor: [0, 0.5, 0.14, 0.38],
 		lastMoveHighlightColor: [0.90, 1, 0, 0.30],
 	},
 	sandstone: { // Sometimes thanksgiving uses this
 		lightTiles: [0.94, 0.88, 0.78, 1],
 		darkTiles: [0.74, 0.63, 0.53, 1],
-		selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
 		legalMovesHighlightColor_Friendly: [1, 0.2, 0, 0.35], // 0.5 for BIG positions   0.35 for SMALL
 		legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
 		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.28],
@@ -112,7 +109,6 @@ const themeDictionary = {
 	green: { 
 		lightTiles: [0.92, 0.93, 0.82, 1],
 		darkTiles: [0.45, 0.58, 0.32, 1],
-		selectedPieceHighlightColor: [1, 1, 0, 0.48],
 		legalMovesHighlightColor_Friendly: [1, 1, 0, 0.48],
 		legalMovesHighlightColor_Opponent: [0.28, 0, 1, 0.31],
 		legalMovesHighlightColor_Premove: [1, 0.12, 0.12, 0.38],
@@ -178,7 +174,6 @@ const themeDictionary = {
 	marble: { 
 		lightTiles: [0.78, 0.78, 0.7, 1],
 		darkTiles: [0.44, 0.42, 0.4, 1],
-		selectedPieceHighlightColor: [0, 0.48, 0.1, 0.44],
 		legalMovesHighlightColor_Friendly: [0, 0.48, 0.1, 0.44],
 		legalMovesHighlightColor_Opponent: [1, 0.18, 0, 0.37],
 		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.34],
@@ -216,7 +211,6 @@ const themeDictionary = {
 	// halloween: {
 	// 	lightTiles: [1, 0.65, 0.4, 1],
 	// 	darkTiles:  [1, 0.4, 0, 1],
-	// 	selectedPieceHighlightColor: [0, 0, 0, 0.5],
 	// 	legalMovesHighlightColor_Friendly: [0.6, 0, 1, 0.55],
 	// 	legalMovesHighlightColor_Opponent: [0, 0.5, 0, 0.35],
 	// 	legalMovesHighlightColor_Premove: [1, 0.15, 0, 0.65],
@@ -230,7 +224,6 @@ const themeDictionary = {
 	// christmas: {
 	// 	lightTiles: [0.60, 0.93, 1, 1],
 	// 	darkTiles: [0 / 255, 199 / 255, 238 / 255, 1],
-	// 	selectedPieceHighlightColor: [0, 0.5, 0.5, 0.3],
 	// 	legalMovesHighlightColor_Friendly: [0, 0, 1, 0.35],
 	// 	legalMovesHighlightColor_Opponent: [1, 0.7, 0, 0.35],
 	// 	legalMovesHighlightColor_Premove: [0.25, 0, 0.7, 0.3],

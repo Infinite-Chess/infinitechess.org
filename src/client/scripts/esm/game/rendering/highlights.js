@@ -154,7 +154,7 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 }
 
 function calcHighlightData_SelectedPiece() {
-	const color = options.getDefaultSelectedPieceHighlight();
+	const color = options.getLegalMoveHighlightColor();
 	const pieceCoords = selection.getPieceSelected().coords;
 	const renderCoords = subtractHighlightsOffsetFromCoord(pieceCoords);
 	return shapes.getDataQuad_Color3D_FromCoord(renderCoords, z, color);
