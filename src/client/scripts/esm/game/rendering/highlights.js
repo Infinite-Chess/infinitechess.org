@@ -19,7 +19,8 @@ import coordutil from '../misc/coordutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import gamefileutility from '../chess/gamefileutility.js';
-import shapes2 from './shapes2.js';
+import legalmoveshapes from './legalmoveshapes.js';
+import shapes from './shapes.js';
 // Import End
 
 /**
@@ -156,7 +157,7 @@ function calcHighlightData_SelectedPiece() {
 	const color = options.getDefaultSelectedPieceHighlight();
 	const pieceCoords = selection.getPieceSelected().coords;
 	const renderCoords = subtractHighlightsOffsetFromCoord(pieceCoords);
-	return bufferdata.getDataQuad_Color3D_UsingUniform(renderCoords, z, color);
+	return shapes.getDataQuad_Color3D_FromCoord(renderCoords, z, color);
 }
 
 function subtractHighlightsOffsetFromCoord(coords) {
@@ -172,26 +173,23 @@ function subtractHighlightsOffsetFromCoord(coords) {
 function concatData_HighlightedMoves_Individual(data, legalMoves, color) {
 	// Get an array of the list of individual legal squares the current selected piece can move to
 	const theseLegalMoves = legalMoves.individual;
+	
+	const usingDots = preferences.getLegalMovesShape() === 'dots';
+	const gamefile = game.getGamefile();
 
 	// For each of these squares, calculate it's buffer data
 	const length = !theseLegalMoves ? 0 : theseLegalMoves.length;
 	for (let i = 0; i < length; i++) {
-		data.push(...getDataOfHighlightShapeDependingOnIfPieceOnSquare(theseLegalMoves[i], color));
+		data.push(...getDataOfHighlightShapeDependingOnIfPieceOnSquare(theseLegalMoves[i], color, usingDots, gamefile));
 	}
 }
 
-function getDataOfHighlightShapeDependingOnIfPieceOnSquare(coord, color) {
-
-	const usingDots = preferences.getLegalMovesShape() === 'dots';
-	const gamefile = game.getGamefile();
-
-	const thisHighlightVertexData = usingDots ? (() => {
-		const isPieceOnSquare = gamefileutility.getPieceAtCoords(gamefile, coord) !== undefined;
-		if (isPieceOnSquare) return shapes2.getDataLegalMoveCornerTris_WithOffset(model_Offset, coord, z, color);
-		else return shapes2.getDataLegalMoveDot_WithOffset(model_Offset, coord, z, color);
-	})() : bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coord, z, color)
-;
-	return thisHighlightVertexData;
+function getDataOfHighlightShapeDependingOnIfPieceOnSquare(coord, color, usingDots, gamefile) {
+	const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset)
+	return usingDots ? (() => {
+		if (gamefileutility.isPieceOnCoords(gamefile, coord)) return legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, z, color);
+		else return legalmoveshapes.getDataLegalMoveDot(offsetCoord, z, color);
+	})() : shapes.getDataQuad_Color3D_FromCoord(offsetCoord, z, color);
 }
 
 // Processes current offset and render range to return the bounding box of the area we will be rendering highlights.
@@ -253,7 +251,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 	const boundingBoxOfView = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
         : board.gboundingBox();
 
-	// If our screen bounding box is less than 3x smaller than our render range bounding box,
+	// If our screen bounding box is less than 4x smaller than our render range bounding box,
 	// we're wasting cpu, let's regenerate it.
 	const width = boundingBoxOfView.right - boundingBoxOfView.left + 1;
 
@@ -302,9 +300,10 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 	const gamefile = game.getGamefile();
 
-	const vertexDataMove = usingDots ? shapes2.getDataLegalMoveDot_WithOffset(model_Offset, coords, z, color)
-									 : bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coords, z, color);
-	const vertexDataCapture = usingDots ? shapes2.getDataLegalMoveCornerTris_WithOffset(model_Offset, coords, z, color) : undefined;
+	const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset)
+	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, z, color)
+									 : shapes.getDataQuad_Color3D_FromCoord(offsetCoord, z, color);
+	const vertexDataCapture = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, z, color) : undefined;
 
 	for (const strline of lineSet) {
 		const line = coordutil.getCoordsFromKey(strline); // [dx,dy]
@@ -409,8 +408,7 @@ function addDataDiagonalVariant(data, vertexDataMove, vertexDataCapture, usingDo
 	if (usingDots) {
 		for (let i = 0; i < iterateCount; i++) { 
 			const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i];
-			const isPieceOnSquare = gamefileutility.getPieceAtCoords(gamefile, thisCoord) !== undefined;
-			if (isPieceOnSquare) data.push(...vertexDataCapture);
+			if (gamefileutility.isPieceOnCoords(gamefile, thisCoord)) data.push(...vertexDataCapture);
 			else data.push(...vertexDataMove);
 			
 			shiftVertexData(vertexDataMove, vertexDataCapture, step[0], step[1]);
@@ -451,7 +449,7 @@ function renderBoundingBoxOfRenderRange() {
 	if (!options.isDebugModeOn()) return; // Skip if debug mode off
 
 	const color = [1,0,1, 1];
-	const data = bufferdata.getDataRect_FromTileBoundingBox(boundingBoxOfRenderRange, color);
+	const data = shapes.getDataRect_FromTileBoundingBox(boundingBoxOfRenderRange, color);
 
 	// const model = buffermodel.createModel_Color(new Float32Array(data));
 	const model = buffermodel.createModel_Colored(new Float32Array(data), 2, "LINE_LOOP");
@@ -467,8 +465,8 @@ function highlightLastMove() {
 
 	const data = [];
 
-	data.push(...bufferdata.getDataQuad_Color3D_FromCoord(lastMove.startCoords, z, color));
-	data.push(...bufferdata.getDataQuad_Color3D_FromCoord(lastMove.endCoords, z, color));
+	data.push(...shapes.getTransformedDataQuad_Color3D_FromCoord(lastMove.startCoords, z, color));
+	data.push(...shapes.getTransformedDataQuad_Color3D_FromCoord(lastMove.endCoords, z, color));
 
 	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 

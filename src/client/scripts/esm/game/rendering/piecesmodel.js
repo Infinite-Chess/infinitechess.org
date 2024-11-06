@@ -20,6 +20,7 @@ import typeutil from '../misc/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import thread from '../misc/thread.js';
+import coordutil from '../misc/coordutil.js';
 // Import End
 
 /** 
@@ -113,7 +114,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 		if (gamefile.mesh.terminate) return;
 		const thesePieces = game.getGamefile().ourPieces[pieceType];
 
-		const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(pieceType, rotation);
+		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
 
 		if (colorArgs) {
 			const pieceColor = colorutil.getPieceColorFromType(pieceType);
@@ -136,10 +137,11 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 				continue;
 			}
 
-			const { startX, startY, endX, endY } = bufferdata.getCoordDataOfTile_WithOffset(gamefile.mesh.offset, thisPiece);
+			const offsetCoord = coordutil.subtractCoordinates(thisPiece, gamefile.mesh.offset);
+			const { left, right, bottom, top } = shapes.getBoundingBoxOfCoord(offsetCoord);
 
-			const data = colorArgs ? bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a)
-                : bufferdata.getDataQuad_Texture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY);
+			const data = colorArgs ? bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a)
+                : bufferdata.getDataQuad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
 
 			for (let a = 0; a < data.length; a++) {
 				mesh.data64[currIndex] = data[a];
@@ -231,7 +233,8 @@ function movebufferdata(gamefile, piece, newCoords) {
 
 	const i = index * stridePerPiece;
 
-	const { startX, startY, endX, endY } = bufferdata.getCoordDataOfTile_WithOffset(gamefile.mesh.offset, newCoords);
+	const offsetCoord = coordutil.subtractCoordinates(newCoords, gamefile.mesh.offset);
+	const { left, right, bottom, top } = shapes.getBoundingBoxOfCoord(offsetCoord);
 
 	const stride = gamefile.mesh.stride;
 
@@ -244,18 +247,18 @@ function movebufferdata(gamefile, piece, newCoords) {
 	}
 
 	function moveData(array) {
-		array[i] = startX;
-		array[i + 1] = startY;
-		array[i + stride * 1] = startX;
-		array[i + stride * 1 + 1] = endY;
-		array[i + stride * 2] = endX;
-		array[i + stride * 2 + 1] = startY;
-		array[i + stride * 3] = endX;
-		array[i + stride * 3 + 1] = startY;
-		array[i + stride * 4] = startX;
-		array[i + stride * 4 + 1] = endY;
-		array[i + stride * 5] = endX;
-		array[i + stride * 5 + 1] = endY;
+		array[i] = left;
+		array[i + 1] = bottom;
+		array[i + stride * 1] = left;
+		array[i + stride * 1 + 1] = top;
+		array[i + stride * 2] = right;
+		array[i + stride * 2 + 1] = bottom;
+		array[i + stride * 3] = right;
+		array[i + stride * 3 + 1] = bottom;
+		array[i + stride * 4] = left;
+		array[i + stride * 4 + 1] = top;
+		array[i + stride * 5] = right;
+		array[i + stride * 5 + 1] = top;
 	}
 
 	// Update the buffer on the gpu!
@@ -326,8 +329,9 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
 	const rotation = weAreBlack ? -1 : 1;
 
-	const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);
-	const { startX, startY, endX, endY } = bufferdata.getCoordDataOfTile_WithOffset(gamefile.mesh.offset, coords);
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+	const offsetCoord = coordutil.subtractCoordinates(coords, gamefile.mesh.offset);
+	const { left, right, bottom, top } = shapes.getBoundingBoxOfCoord(offsetCoord);
 
 	let data;
 	if (gamefile.mesh.usingColoredTextures) {
@@ -336,9 +340,9 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 		const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
 		const [r,g,b,a] = colorArray;
 
-		data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY, r, g, b, a); 
+		data = bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a); 
 
-	} else data = bufferdata.getDataQuad_Texture(startX, startY, endX, endY, texStartX, texStartY, texEndX, texEndY);
+	} else data = bufferdata.getDataQuad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
 
 	for (let a = 0; a < data.length; a++) {
 		const thisIndex = i + a;

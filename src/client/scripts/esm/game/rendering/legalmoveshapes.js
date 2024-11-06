@@ -4,14 +4,12 @@ import shapes from "./shapes.js";
 
 /**
  * Generates the vertex data for a "legal move dot" (a circle) on the board.
- * @param {Array<number>} offset - The mesh offset in [offsetX, offsetY] format.
  * @param {Array<number>} coords - The tile coordinates in [coordX, coordY] format.
  * @param {number} z - The Z coordinate (depth) for the circle.
  * @param {Array<number>} color - The color as an array [r, g, b, a].
  * @returns {Array<number>} The vertex data for the "legal move dot" (circle).
  */
-function getDataLegalMoveDot_WithOffset(offset, coords, z, color) {
-	const trueCoords = bufferdata.getTrueCoordofTileWithOffset(coords, offset);
+function getDataLegalMoveDot(coords, z, color) {
 	const radius = 0.16;
 	const resolution = 32;  // Adjust resolution as needed for circle smoothness
 	const opacityOffset = 0.2; // Increase the opacity of dots because they are harder and smaller to see than squares
@@ -19,8 +17,8 @@ function getDataLegalMoveDot_WithOffset(offset, coords, z, color) {
 	let [r, g, b, a] = color; a += opacityOffset;
 
 	// Get the tile's center point with the mesh offset applied
-	const x = trueCoords[0] + (1 - board.gsquareCenter()) - 0.5;
-	const y = trueCoords[1] + (1 - board.gsquareCenter()) - 0.5;
+	const x = coords[0] + (1 - board.gsquareCenter()) - 0.5;
+	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
 
 	// Generate and return the vertex data for the legal move dot (circle)
 	return shapes.getDataCircle_3D(x, y, z, radius, resolution, r, g, b, a);
@@ -92,28 +90,26 @@ function getDataCornerTriangles(centerX, centerY, z, triSize, color) {
 
 /**
  * Generates the vertex data for four small triangles in the corners of a tile.
- * @param {Array<number>} offset - The mesh offset in [offsetX, offsetY] format.
  * @param {Array<number>} coords - The tile coordinates in [coordX, coordY] format.
  * @param {number} z - The Z coordinate (depth) for the triangles.
  * @param {Array<number>} color - The color as an array [r, g, b, a].
  * @returns {Array<number>} The vertex data for the four corner triangles.
  */
-function getDataLegalMoveCornerTris_WithOffset(offset, coords, z, color) {
-	const trueCoords = bufferdata.getTrueCoordofTileWithOffset(coords, offset);
+function getDataLegalMoveCornerTris(coords, z, color) {
 	const triSize = 0.50;     // Default: 0.50     Adjust this for triangle size in each corner
 	const opacityOffset = 0.2; // Increase opacity for better visibility
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color; a += opacityOffset;
 
 	// Get the tile's center point with the mesh offset applied
-	const x = trueCoords[0] + (1 - board.gsquareCenter()) - 0.5;
-	const y = trueCoords[1] + (1 - board.gsquareCenter()) - 0.5;
+	const x = coords[0] + (1 - board.gsquareCenter()) - 0.5;
+	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
 
 	// Generate and return the vertex data for the four corner triangles
 	return getDataCornerTriangles(x, y, z, triSize, [r, g, b, a]);
 }
 
 export default {
-	getDataLegalMoveDot_WithOffset,
-	getDataLegalMoveCornerTris_WithOffset,
+	getDataLegalMoveDot,
+	getDataLegalMoveCornerTris,
 };

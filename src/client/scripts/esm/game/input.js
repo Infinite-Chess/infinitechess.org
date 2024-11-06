@@ -610,7 +610,7 @@ function renderMouse() {
 	const mouseInnerWidthWorld = space.convertPixelsToWorldSpace_Virtual(mouseInnerWidth);
 	const mouseOuterWidthWorld = space.convertPixelsToWorldSpace_Virtual(mouseOuterWidth);
 
-	const mouseData = bufferdata.getDataRingSolid(x, y, mouseInnerWidthWorld, mouseOuterWidthWorld, 32, 0, 0, 0, mouseOpacity);
+	const mouseData = bufferdata.getDataRingSolid(x, y, mouseInnerWidthWorld, mouseOuterWidthWorld, 32, [0,0,0,mouseOpacity]);
 	const data32 = new Float32Array(mouseData);
 
 	const model = buffermodel.createModel_Colored(data32, 2, "TRIANGLES");

@@ -416,7 +416,8 @@ function renderSolidCover() {
 	const a = (lightTiles[3] + darkTiles[3]) / 2;
 
 	const data = bufferdata.getDataBoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
-	data.push(...bufferdata.getDataQuad_Color3D(-dist, -dist, dist, dist, z, r, g, b, a)); // Floor of the box
+	const boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
+	data.push(...bufferdata.getDataQuad_Color3D(boundingBox, z, [r, g, b, a])); // Floor of the box
 
 	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 
@@ -440,19 +441,19 @@ function renderZoomedBoard(zoom, opacity) {
 
 	const boardPos = movement.getBoardPos();
 	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
-	const texStartX = (((boardPos[0] + squareCenter) / zoom + (startX / zoomTimesScale)) % 2) / 2;
-	const texStartY = (((boardPos[1] + squareCenter) / zoom + (startY / zoomTimesScale)) % 2) / 2;
+	const texleft = (((boardPos[0] + squareCenter) / zoom + (startX / zoomTimesScale)) % 2) / 2;
+	const texbottom = (((boardPos[1] + squareCenter) / zoom + (startY / zoomTimesScale)) % 2) / 2;
 	const texCoordDiffX = (endX - startX) / zoomTimesScaleTwo;
 	const screenTexCoordDiffX = (camera.getScreenBoundingBox(false).right - camera.getScreenBoundingBox(false).left) / zoomTimesScaleTwo;
 	const diffWhen1TileIs1Pixel = camera.canvas.width / 2;
 	if (screenTexCoordDiffX > diffWhen1TileIs1Pixel) return; // STOP rendering to avoid glitches! Too small
 	const texCoordDiffY = (endY - startY) / zoomTimesScaleTwo;
-	const texEndX = texStartX + texCoordDiffX;
-	const texEndY = texStartY + texCoordDiffY;
+	const texright = texleft + texCoordDiffX;
+	const textop = texbottom + texCoordDiffY;
 
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
     
-	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texStartX, texStartY, texEndX, texEndY, 1, 1, 1, opacity);
+	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texleft, texbottom, texright, textop, 1, 1, 1, opacity);
 	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
 
 	model.render();
