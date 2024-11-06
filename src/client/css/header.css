@@ -42,6 +42,15 @@ header a {
     align-items: center;
 }
 
+/* The pawn svg and loading animation that we use in several spots */
+.svg-play {
+    position: relative;
+    bottom: 3px;
+    height: 65%;
+    aspect-ratio: 1;
+    transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
+}
+
 
 
 /* The Infinite Chess text and logo, left side of header */
@@ -101,9 +110,7 @@ nav span {
     padding-left: 4px;
 }
 
-nav #svg-play {
-    height: 65%;
-    position: relative;
+nav .svg-play {
     bottom: 1px;
 }
 
@@ -414,11 +421,7 @@ svg.checkmark {
 }
 
 .ping-meter .svg-play {
-    transform-origin: 50% 60%; /* Rotate around the top-left corner */
     animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
-    height: 65%;
-    position: relative;
-    bottom: 3px;
 }
 
 
