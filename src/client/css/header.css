@@ -413,6 +413,14 @@ svg.checkmark {
     /* transform: scaleY(0.7); */
 }
 
+.ping-meter .svg-play {
+    transform-origin: 50% 60%; /* Rotate around the top-left corner */
+    animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
+    height: 65%;
+    position: relative;
+    bottom: 3px;
+}
+
 
 
 
@@ -433,4 +441,15 @@ svg.checkmark {
 
 .transparent {
     opacity: 30%;
+}
+
+/* Animations */
+
+@keyframes spin {
+    0% {
+      transform: rotate(0deg); /* Start at 0 degrees */
+    }
+    100% {
+      transform: rotate(360deg); /* Complete a full 360 degree rotation */
+    }
 }
