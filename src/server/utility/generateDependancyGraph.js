@@ -9,7 +9,7 @@
 import madge from 'madge';
 
 // const pathOfFileToGenerateDependancyGraphFor = 'src/server/server.js'; // Enable for the server-side code
-const pathOfFileToGenerateDependancyGraphFor = 'src/client/scripts/game/main.js'; // Enable for the client-side code
+const pathOfFileToGenerateDependancyGraphFor = 'src/client/scripts/esm/game/main.js'; // Enable for the client-side code
 const nameToGiveDependancyGraph = 'dependancyGraph.svg';
 
 madge(pathOfFileToGenerateDependancyGraphFor)
