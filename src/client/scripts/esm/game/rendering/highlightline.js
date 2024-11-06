@@ -10,13 +10,13 @@ import organizedlines from '../chess/organizedlines.js';
 import options from './options.js';
 import selection from '../chess/selection.js';
 import camera from './camera.js';
-import pieces from './pieces.js';
 import math from '../misc/math.js';
 import movement from './movement.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import space from '../misc/space.js';
+import spritesheet from './spritesheet.js';
 // Import End
 
 /**
@@ -137,7 +137,7 @@ function genModel() {
 
 	dataGhost.push(...data);
     
-	modelGhost = buffermodel.createModel_ColorTextured(new Float32Array(dataGhost), 2, "TRIANGLES", pieces.getSpritesheet());
+	modelGhost = buffermodel.createModel_ColorTextured(new Float32Array(dataGhost), 2, "TRIANGLES", spritesheet.getSpritesheet());
     
 	// If we clicked, teleport to the point on the line closest to the click location.
 	// BUT we have to recalculate it in coords format instead of world-space
@@ -216,7 +216,7 @@ function render() {
 	// render.renderModel(modelLines, undefined, undefined, "LINES")
 	modelLines.render();
 
-	// if (modelGhost) render.renderModel(modelGhost, undefined, undefined, "TRIANGLES", pieces.getSpritesheet())
+	// if (modelGhost) render.renderModel(modelGhost, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet())
 	if (modelGhost) modelGhost.render();
 }
 

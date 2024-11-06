@@ -1,6 +1,5 @@
 
 // Import Start
-import { gl } from './webgl.js';
 import math from '../misc/math.js';
 // Import End
 
@@ -10,11 +9,12 @@ import math from '../misc/math.js';
 
 /**
  * Creates a texture object from either an HTML `<img>` element or the ID of such an element, which can be bound before rendering.
+ * @param {WebGL2RenderingContext} gl - The webgl context being used
  * @param {HTMLImageElement|string} textureElementOrID - Either the HTML `<img>` element itself or the ID of the `<img>` element.
  * @param {Object} options - An object that may contain the `useMipmaps` property, which is *false* by default.
  * @returns {WebGLTexture} The texture object.
  */
-function loadTexture(textureElementOrID, { useMipmaps = false } = {}) {
+function loadTexture(gl, textureElementOrID, { useMipmaps = false } = {}) {
 
 	// If a string is passed, assume it's an ID and get the element
 	let textureElement = textureElementOrID;
