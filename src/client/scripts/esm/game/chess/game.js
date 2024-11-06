@@ -34,10 +34,9 @@ import guigameinfo from '../gui/guigameinfo.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import gamerules from '../variants/gamerules.js';
 import jsutil from '../../util/jsutil.js';
-import statustext from '../gui/statustext.js';
-import docutil from '../../util/docutil.js';
 import winconutil from '../misc/winconutil.js';
 import sound from '../misc/sound.js';
+import spritesheet from '../rendering/spritesheet.js';
 // Import End
 
 /** 
@@ -83,7 +82,7 @@ function init() {
 
 // Initiates our textures, and our spritesheet data (where each piece's texture is located)
 function initTextures() {
-	pieces.initSpritesheet();
+	spritesheet.initSpritesheet();
 	pieces.initSpritesheetData();
 }
 
