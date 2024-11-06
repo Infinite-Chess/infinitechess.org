@@ -300,7 +300,7 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 	const gamefile = game.getGamefile();
 
-	const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset)
+	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, z, color)
 									 : shapes.getDataQuad_Color3D_FromCoord(offsetCoord, z, color);
 	const vertexDataCapture = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, z, color) : undefined;

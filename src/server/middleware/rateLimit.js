@@ -17,16 +17,10 @@ const minuteInMillis = 60000;
 /**
  * Interval to clear out an agent's list of recent connection timestamps if they
  * are longer ago than {@link minuteInMillis}
- * Interval to clear out an agent's list of recent connection timestamps if they
- * are longer ago than {@link minuteInMillis}
  */
-const rateToUpdateRecentConnections = 1000; // 1 Second
 const rateToUpdateRecentConnections = 1000; // 1 Second
 
 /**
- * The object containing a combination of IP addresses and user agents for the key,
- * and for the value - an array of timestamps of their recent connections.
- * The key format will be `{ "192.538.1.1|User-Agent-String": [timestamp1, timestamp2, ...] }`
  * The object containing a combination of IP addresses and user agents for the key,
  * and for the value - an array of timestamps of their recent connections.
  * The key format will be `{ "192.538.1.1|User-Agent-String": [timestamp1, timestamp2, ...] }`
@@ -100,28 +94,27 @@ function rateLimit(req, res, next) {
 	if (!ARE_RATE_LIMITING) return next(); // Not rate limiting
     
 	countRecentRequests();
-
+    
 	const clientIP = getClientIP(req);
 	if (!clientIP) {
-		logEvents('Unable to identify client IP address when rate limiting!', 'hackLog.txt');
+		console.log('Unable to identify client IP address');
 		return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
 	}
 
 	if (isIPBanned(clientIP)) {
 		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
-		logEvents(logThis, 'bannedIPLog.txt');
+		logEvents(logThis, 'bannedIPLog.txt', { print: true });
 		return res.status(403).json({ message: getTranslationForReq("server.javascript.ws-you_are_banned_by_server", req) });
 	}
 
-	const userKey = getIpBrowserAgentKey(req); // By this point their IP is defined so this will be defined.
-
-	// Add the current timestamp to their list of recent connection timestamps.
-	incrementClientConnectionCount(userKey);
-
-	if (rateLimitHash[userKey].length > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
-		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'hackLog.txt');
+	if (rateLimitHash[clientIP] > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
+		console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
 		return res.status(429).json({ message: getTranslationForReq("server.javascript.ws-too_many_requests_to_server", req) });
 	}
+
+	// Increment their recent connection count,
+	// and set a timer to decrement their recent connection count after 1 min
+	incrementClientConnectionCount(clientIP);
 
 	next(); // Continue the middleware waterfall
 }
@@ -162,8 +155,8 @@ function rateLimitWebSocket(req, ws) {
 	// Then again.. Unless their initial http websocket upgrade request contains a massive amount of bytes, this will immediately reject them anyway!
 	const messageSize = ws._socket.bytesRead;
 	if (messageSize > maxWebsocketMessageSizeBytes) {
-		logEvents(`Agent ${userKey} sent too big a websocket message.`, 'hackLog.txt');
 		ws.close(1009, 'Message Too Big');
+		incrementClientConnectionCount(clientIP, connectionsLargeMessageCountsFor);
 		return false;
 	}
 
@@ -171,10 +164,11 @@ function rateLimitWebSocket(req, ws) {
 }
 
 /**
- * Increment the provided user key's recent connection count by adding the current timestamp
- * to their list of recent connection timestamps.
+ * Increment the provided IP address's recent connection count,
+ * and set a timer to decrement their recent connection count after 1 min.
  * Only call if we haven't already rejected them for too many requests.
- * @param {string} userKey - The unique key combining IP address and user agent.
+ * @param {string} clientIP - The client's IP address
+ * @param {number|undefined} [amount=1] The weight of this request. Default: 1. Higher => rate limit sooner.
  */
 function incrementClientConnectionCount(userKey) {
 	// Initialize the array if it doesn't exist
@@ -184,8 +178,9 @@ function incrementClientConnectionCount(userKey) {
 }
 
 /**
- * Set an interval to periodically clear {@link rateLimitHash}
- * of IP addresses with no recent connections or outdated timestamps.
+ * Set an interval to every so often,
+ * clear {@link rateLimitHash} of IP addresses
+ * with no recent connections or outdated timestamps.
  */
 setInterval(() => {
 	const hashKeys = Object.keys(rateLimitHash);

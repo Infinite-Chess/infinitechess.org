@@ -1,5 +1,4 @@
 import board from "./board.js";
-import bufferdata from "./bufferdata.js";
 import shapes from "./shapes.js";
 
 /**

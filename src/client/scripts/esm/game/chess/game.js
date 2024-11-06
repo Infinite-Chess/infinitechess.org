@@ -22,7 +22,7 @@ import board from '../rendering/board.js';
 import movesscript from './movesscript.js';
 import animation from '../rendering/animation.js';
 import webgl from '../rendering/webgl.js';
-import { gl } from './webgl.js';
+import { gl } from '../rendering/webgl.js';
 import perspective from '../rendering/perspective.js';
 import highlightline from '../rendering/highlightline.js';
 import transition from '../rendering/transition.js';
@@ -74,17 +74,11 @@ function areInGame() {
 function init() {
 
 	options.initTheme();
-	initTextures(); // Load game textures
+	spritesheet.initSpritesheet(gl);
 
 	guititle.open();
 
 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
-}
-
-// Initiates our textures, and our spritesheet data (where each piece's texture is located)
-function initTextures() {
-	spritesheet.initSpritesheet(gl);
-	pieces.initSpritesheetData();
 }
 
 function updateVariablesAfterScreenResize() {
