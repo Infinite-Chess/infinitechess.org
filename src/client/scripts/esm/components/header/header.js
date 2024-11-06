@@ -80,12 +80,3 @@ const header = (function() {
 
 	updateNavigationLinks(); // If we don't do this once initially, our validate Arama method might receive our token back before the event listener is set here
 })();
-
-
-
-
-
-
-
-
-

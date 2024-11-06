@@ -361,6 +361,60 @@ svg.checkmark {
 
 
 
+/* Ping Meter */
+
+.ping-meter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50px;
+    padding: 0 15px;
+    border-top: 1px solid grey;
+    overflow: hidden; /* Don't let the connection bars glow effect leak above */
+    font-size: 0px; /* Prevents a small amount of margin between each element */
+}
+
+.ping-meter .ping {
+    font-size: 15px;
+}
+
+.ping-meter .ping-value {
+    font-size: 15px;
+    padding: 0 3px 0 6px;
+}
+
+.ping-meter .ms {
+    font-size: 13px;
+}
+
+/* .ping-bars {
+    
+} */
+
+.ping-bar {
+    outline: 1px solid #0000008c;
+    display: inline-block;
+    width: 9px;
+    /* box-shadow: 0px 0px 5px 0px #0000007a; */
+    background-color: rgb(210, 210, 210);
+}
+
+.ping-bar.green {
+    background-color: #78ff78;
+}
+
+.ping-glow { /* Relatively positioned 0-space element that only glows */
+    box-shadow: 0px 0px 80px 30px #000000c4;
+    position: relative;
+    bottom: 7px;
+    z-index: -1; /* Places glow behind all bars */
+    left: 10px;
+    overflow: hidden;
+    /* transform: scaleY(0.7); */
+}
+
+
+
 
 /* Miscellaneous (some of these can probably be put in a universal stylesheet for all pages, not just the header stylesheet) */
 
