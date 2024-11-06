@@ -4,6 +4,8 @@
 import languagedropdown from "./dropdowns/languagedropdown.js";
 import boarddropdown from "./dropdowns/boarddropdown.js";
 import legalmovedropdown from "./dropdowns/legalmovedropdown.js";
+// Only imported so its code runs
+import pingmeter from "./pingmeter.js";
 
 
 // Document Elements -------------------------------------------------------------------------
