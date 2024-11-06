@@ -99,8 +99,6 @@ function genModel() {
 	data = [];
 	piecesClicked = [];
 
-	if (widthWorld == null) console.error('widthWorld is not defined yet');
-
 	// Iterate through all pieces
 	// ...
 
