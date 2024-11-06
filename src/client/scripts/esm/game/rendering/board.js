@@ -2,14 +2,12 @@
 // Import Start
 import webgl from './webgl.js';
 import texture from './texture.js';
-import highlights from './highlights.js';
 import style from '../gui/style.js';
 import bufferdata from './bufferdata.js';
 import input from '../input.js';
 import perspective from './perspective.js';
 import movement from './movement.js';
 import options from './options.js';
-import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import math from '../misc/math.js';
 import buffermodel from './buffermodel.js';
@@ -19,6 +17,7 @@ import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import checkerboardgenerator from './checkerboardgenerator.js';
 import gamefileutility from '../chess/gamefileutility.js';
+import { gl } from './webgl.js';
 // Import End
 
 /** 
@@ -75,10 +74,10 @@ async function initTextures() {
 	const darkTilesCssColor = style.arrayToCssColor(darkTiles);
 
 	const element_tilesTexture2 = await checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 2);
-	tilesTexture_2 = texture.loadTexture(element_tilesTexture2, { useMipmaps: false });
+	tilesTexture_2 = texture.loadTexture(gl, element_tilesTexture2, { useMipmaps: false });
 
 	const element_tilesTexture256mips = await checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256);
-	tilesTexture_256mips = texture.loadTexture(element_tilesTexture256mips, { useMipmaps: true });
+	tilesTexture_256mips = texture.loadTexture(gl, element_tilesTexture256mips, { useMipmaps: true });
 
 	frametracker.onVisualChange();
 }

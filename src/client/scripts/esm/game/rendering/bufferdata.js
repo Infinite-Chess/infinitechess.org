@@ -1,6 +1,6 @@
 
 // Import Start
-import pieces from './pieces.js';
+import spritesheet from './spritesheet.js';
 // Import End
 
 /**
@@ -23,8 +23,8 @@ import pieces from './pieces.js';
 // Texture data...
 
 function getTexDataOfType(type, rotation = 1) {
-	const texLocation = pieces.getSpritesheetDataTexLocation(type);
-	const texWidth = pieces.getSpritesheetDataPieceWidth();
+	const texLocation = spritesheet.getSpritesheetDataTexLocation(type);
+	const texWidth = spritesheet.getSpritesheetDataPieceWidth();
 
 	const texleft = texLocation[0];
 	const texbottom = texLocation[1];
@@ -144,7 +144,6 @@ function getDataRect({left,right,bottom,top}, [r,g,b,a]) {
 
 // Hollow circle
 function getDataCircle(x, y, radius, r, g, b, a, resolution) { // res is resolution
-	if (resolution == null) return console.error("Cannot get data of circle with no specified resolution!");
 	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a circle.");
 
 	const data = [];
@@ -330,7 +329,7 @@ function getDataRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2
 // Rotates the piece 180 of a stride-4 model utilizing the texture shader.
 function rotateDataTexture(data, rotation = 1) {
 	const copiedData = data.slice(); // Creates shallow copy (data array must not contain objects)
-	const texWidth = pieces.getSpritesheetDataPieceWidth() * rotation;
+	const texWidth = spritesheet.getSpritesheetDataPieceWidth() * rotation;
 
 	// Point 1
 	copiedData[2] += texWidth;
@@ -362,7 +361,7 @@ function rotateDataTexture(data, rotation = 1) {
 // Rotates the piece 180 of a stride-8 model utilizing the colored-texture shader.
 function rotateDataColorTexture(data, rotation = 1) {
 	const copiedData = data.slice(); // Creates shallow copy (data array must not contain objects)
-	const texWidth = pieces.getSpritesheetDataPieceWidth() * rotation;
+	const texWidth = spritesheet.getSpritesheetDataPieceWidth() * rotation;
 
 	// Point 1
 	copiedData[2] += texWidth;
@@ -408,7 +407,6 @@ export default {
 	getDataFuzzBall3D,
 	getDataRingSolid,
 	getDataRing3D,
-	getDataQuad_ColorTexture_FromPositionWidthType,
 	rotateDataTexture,
 	rotateDataColorTexture,
 };
