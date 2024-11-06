@@ -10,13 +10,16 @@ import texture from './texture.js';
  */
 
 
-let spritesheet // Texture. 8x8 containing every texture of every piece, black and white.
-/** Contains where each piece is located in the spritesheet (texture coord) */
+let spritesheet; // Texture. 8x8 containing every texture of every piece, black and white.
+/**
+ * Contains where each piece is located in the spritesheet (texture coord).
+ * Texture coords of a piece range from 0-1
+ */
 const spritesheetData = (() => {
 
 	const pieceWidth = 1 / 8; // In texture coords. Our spritesheet is 8x8
 
-	spritesheetData = {
+	return {
 		pieceWidth,
         
 		// One-sided pieces
@@ -93,13 +96,14 @@ const spritesheetData = (() => {
 })(); 
 
 
-
-function initSpritesheet() {
+/**
+ * Loads the spritesheet texture
+ * @param {WebGL2RenderingContext} gl - The webgl context being used} gl 
+ */
+function initSpritesheet(gl) {
 	spritesheet = texture.loadTexture('spritesheet', { useMipmaps: true });
 }
 
-// Returns the spritesheet texture object!
-// I need a getter for this because it's not immediately initialized.
 function getSpritesheet() {
 	return spritesheet;
 }
@@ -113,8 +117,8 @@ function getSpritesheetDataTexLocation(type) {
 }
 
 export default {
-    initSpritesheet,
-    getSpritesheet,
+	initSpritesheet,
+	getSpritesheet,
 	getSpritesheetDataPieceWidth,
 	getSpritesheetDataTexLocation,
-}
+};

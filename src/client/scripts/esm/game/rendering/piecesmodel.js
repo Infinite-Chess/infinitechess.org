@@ -9,7 +9,6 @@ import game from '../chess/game.js';
 import stats from '../gui/stats.js';
 import coin from './coin.js';
 import voids from './voids.js';
-import pieces from './pieces.js';
 import statustext from '../gui/statustext.js';
 import movement from './movement.js';
 import perspective from './perspective.js';
@@ -21,6 +20,8 @@ import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import thread from '../misc/thread.js';
 import coordutil from '../misc/coordutil.js';
+import spritesheet from './spritesheet.js';
+import shapes from './shapes.js';
 // Import End
 
 /** 
@@ -189,9 +190,9 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 		return;
 	}
 
-	mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
-                            : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
-	//                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
+	mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
+                            : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+	//                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
 
 	jsutil.copyPropertiesToObject(mesh, gamefile.mesh);
     
@@ -459,8 +460,8 @@ function shiftPiecesModel(gamefile) {
 		}
 
 		// gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.data32)
-		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
+		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
+            : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
 	}
 
 	function shiftBothModels() {            
@@ -476,11 +477,11 @@ function shiftPiecesModel(gamefile) {
 		}
 
 		// gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.data32)
-		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", pieces.getSpritesheet());
+		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
+            : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
 		// gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
-		gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet());
+		gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet())
+            : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet());
 	}
 
 	voids.shiftModel(gamefile, diffXOffset, diffYOffset);
@@ -506,7 +507,8 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 
 	// Amount to transition the points
 	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
-	const texWidth = weAreBlack ? -pieces.getSpritesheetDataPieceWidth() : pieces.getSpritesheetDataPieceWidth();
+	const spritesheetPieceWidth = spritesheet.getSpritesheetDataPieceWidth();
+	const texWidth = weAreBlack ? -spritesheetPieceWidth : spritesheetPieceWidth;
 
 	gamefile.mesh.rotatedData64 = new Float64Array(gamefile.mesh.data32.length); // Empty it for re-initialization
 	gamefile.mesh.rotatedData32 = new Float32Array(gamefile.mesh.data32.length); // Empty it for re-initialization
@@ -699,8 +701,8 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 	stats.hideRotateMesh();
 
 	// gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
-	gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet())
-        : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", pieces.getSpritesheet());
+	gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet())
+        : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet());
 
 	gamefile.mesh.locked--;
 	gamefile.mesh.isGenerating--;
@@ -712,7 +714,6 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
  * @param {gamefile} gamefile - The gamefile
  */
 function eraseRotatedModel(gamefile) {
-	if (gamefile?.mesh == null) return;
 	delete gamefile.mesh.rotatedData64;
 	delete gamefile.mesh.rotatedData32;
 	delete gamefile.mesh.rotatedModel;

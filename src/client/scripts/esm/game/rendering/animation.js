@@ -5,11 +5,11 @@ import sound from '../misc/sound.js';
 import movement from './movement.js';
 import options from './options.js';
 import board from './board.js';
-import pieces from './pieces.js';
 import math from '../misc/math.js';
 import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 import frametracker from './frametracker.js';
+import spritesheet from './spritesheet.js';
 // Import End
 
 /**
@@ -138,7 +138,7 @@ function renderPieces() {
 	if (animations.length === 0) return;
 
 	const pieceModel = genPieceModel();
-	// render.renderModel(pieceModel, undefined, undefined, "TRIANGLES", pieces.getSpritesheet());
+	// render.renderModel(pieceModel, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet());
 	pieceModel.render();
 }
 
@@ -243,7 +243,7 @@ function genPieceModel() {
 	}
 
 	// return buffermodel.createModel_ColorTexture3D(new Float32Array(data))
-	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", pieces.getSpritesheet());
+	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
 }
 
 function appendDataOfPiece3D(data, type, coords) {

@@ -7,7 +7,6 @@ import bufferdata from './bufferdata.js';
 import transition from './transition.js';
 import movement from './movement.js';
 import options from './options.js';
-import pieces from './pieces.js';
 import statustext from '../gui/statustext.js';
 import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
@@ -15,6 +14,7 @@ import area from './area.js';
 import typeutil from '../misc/typeutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
+import spritesheet from './spritesheet.js';
 // Import End
 
 /**
@@ -165,7 +165,7 @@ function genModel() {
 
 	const floatData = new Float32Array(data);
 	// model = buffermodel.createModel_ColorTexture(data)
-	model = buffermodel.createModel_ColorTextured(floatData, 2, "TRIANGLES", pieces.getSpritesheet());
+	model = buffermodel.createModel_ColorTextured(floatData, 2, "TRIANGLES", spritesheet.getSpritesheet());
 
 	// Teleport to clicked pieces
 	if (piecesClicked.length > 0) {
@@ -188,7 +188,7 @@ function render() {
 	if (!model) genModel(); // LEAVE THIS HERE or mobile will crash when zooming out
 
 	webgl.executeWithDepthFunc_ALWAYS(() => {
-		// render.renderModel(model, undefined, undefined, "TRIANGLES", pieces.getSpritesheet())
+		// render.renderModel(model, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet())
 		model.render();
 	});
 }

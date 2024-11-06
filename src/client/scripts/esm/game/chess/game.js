@@ -22,6 +22,7 @@ import board from '../rendering/board.js';
 import movesscript from './movesscript.js';
 import animation from '../rendering/animation.js';
 import webgl from '../rendering/webgl.js';
+import { gl } from './webgl.js';
 import perspective from '../rendering/perspective.js';
 import highlightline from '../rendering/highlightline.js';
 import transition from '../rendering/transition.js';
@@ -82,7 +83,7 @@ function init() {
 
 // Initiates our textures, and our spritesheet data (where each piece's texture is located)
 function initTextures() {
-	spritesheet.initSpritesheet();
+	spritesheet.initSpritesheet(gl);
 	pieces.initSpritesheetData();
 }
 
