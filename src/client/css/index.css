@@ -4,7 +4,7 @@
     font-family: Verdana;
     border: 0;
     /* Enable temporarily during dev to see the borders of all elements */
-    outline: 1px solid rgba(0, 0, 0, 0.102);
+    /* outline: 1px solid rgba(0, 0, 0, 0.102); */
 }
 
 html {
