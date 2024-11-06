@@ -101,7 +101,7 @@ const spritesheetData = (() => {
  * @param {WebGL2RenderingContext} gl - The webgl context being used} gl 
  */
 function initSpritesheet(gl) {
-	spritesheet = texture.loadTexture('spritesheet', { useMipmaps: true });
+	spritesheet = texture.loadTexture(gl, 'spritesheet', { useMipmaps: true });
 }
 
 function getSpritesheet() {
