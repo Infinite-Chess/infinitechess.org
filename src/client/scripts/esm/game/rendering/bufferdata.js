@@ -1,11 +1,6 @@
 
 // Import Start
-import board from './board.js';
 import pieces from './pieces.js';
-import movement from './movement.js';
-import perspective from './perspective.js';
-import buffermodel from './buffermodel.js';
-import shapes from './shapes.js';
 // Import End
 
 /**
@@ -17,16 +12,11 @@ import shapes from './shapes.js';
 "use strict";
 
 /**
- * This script contains methods for obtaining the vertex data
- * of many common shapes.
- * This vertex data can then be used in the construction
- * of a buffer model for rendering.
+ * This script contains methods for obtaining the vertex array data
+ * of many common shapes, when their dimensions and position are known.
+ * 
+ * This vertex data can then be used to pass into a buffer model for rendering.
  */
-
-// Coordinate data...
-
-// Returns coord data of piece WITHOUT the offset of the pieces model,
-// and without needing uniform translations before rendering.
 
 
 
@@ -171,6 +161,8 @@ function getDataCircle(x, y, radius, r, g, b, a, resolution) { // res is resolut
 
 	return data;
 }
+
+
 
 // Other odd shapes...
 
@@ -333,9 +325,6 @@ function getDataRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2
 }
 
 
-// Universal...
-
-
 // Modifying data...
 
 // Rotates the piece 180 of a stride-4 model utilizing the texture shader.
@@ -401,6 +390,8 @@ function rotateDataColorTexture(data, rotation = 1) {
 
 	return copiedData;
 }
+
+
 
 export default {
 	getTexDataOfType,
