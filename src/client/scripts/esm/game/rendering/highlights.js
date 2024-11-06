@@ -185,7 +185,7 @@ function concatData_HighlightedMoves_Individual(data, legalMoves, color) {
 }
 
 function getDataOfHighlightShapeDependingOnIfPieceOnSquare(coord, color, usingDots, gamefile) {
-	const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset)
+	const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
 	return usingDots ? (() => {
 		if (gamefileutility.isPieceOnCoords(gamefile, coord)) return legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, z, color);
 		else return legalmoveshapes.getDataLegalMoveDot(offsetCoord, z, color);

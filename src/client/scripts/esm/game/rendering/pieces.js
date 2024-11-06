@@ -10,6 +10,7 @@ import onlinegame from '../misc/onlinegame.js';
 import options from './options.js';
 import buffermodel from './buffermodel.js';
 import shapes from './shapes.js';
+import spritesheet from './spritesheet.js';
 // Import End
 
 /** 
@@ -45,8 +46,7 @@ function renderPiecesInGame(gamefile) {
  * @returns 
  */
 function renderPieces(gamefile) {
-	if (gamefile.mesh == null) return;
-	if (gamefile.mesh.model == null) return;
+	if (gamefile.mesh.model === undefined) return;
 	if (movement.isScaleLess1Pixel_Virtual() && !miniimage.isDisabled()) return;
 
 	// Do we need to regen the pieces model? Are we out of bounds of our REGEN_RANGE?
@@ -64,8 +64,8 @@ function renderPieces(gamefile) {
 	const scale = [boardScale, boardScale, 1];
 
 	let modelToUse;
-	if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
-	else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel != null ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
+	if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel === undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
+	else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel === undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
 
 	modelToUse.render(position, scale);
 	// Use this line when rendering with the tinted texture shader program.
@@ -76,7 +76,7 @@ function renderPieces(gamefile) {
 function renderGhostPiece(type, coords) {
 	const color = options.getColorOfType(type); color.a *= ghostOpacity;
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
-	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", getSpritesheet());
+	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", spritesheet.getSpritesheet());
 	model.render();
 }
 
