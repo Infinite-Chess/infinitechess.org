@@ -7,8 +7,8 @@ let preferences; // { theme, legal_moves }
 
 // The legal moves shape preference
 const default_legal_moves = 'dots';
-// const default_legal_moves = 'squares';
 const legal_move_shapes = ['squares','dots'];
+const default_perspective_sensitivity = 100;
 
 
 (function init() {
@@ -19,6 +19,7 @@ function loadPreferences() {
 	preferences = localstorage.loadItem('preferences') || {
 		theme: themes.defaultTheme,
 		legal_moves: default_legal_moves,
+		perspective_sensitivity: default_perspective_sensitivity,
 	};
 
 	// Here send a request to the server for our preferences,
@@ -50,10 +51,20 @@ function setLegalMovesShape(legal_moves) {
 	savePreferences();
 }
 
+function getPerspectiveSensitivity() {
+	return preferences.perspective_sensitivity || default_perspective_sensitivity;
+}
+function setPerspectiveSensitivity(perspective_sensitivity) {
+	preferences.perspective_sensitivity = perspective_sensitivity;
+	savePreferences();
+}
+
 
 export default {
 	getTheme,
 	setTheme,
 	getLegalMovesShape,
 	setLegalMovesShape,
+	getPerspectiveSensitivity,
+	setPerspectiveSensitivity,
 };
