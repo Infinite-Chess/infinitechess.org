@@ -5,6 +5,13 @@
             <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#666" fill-opacity="1" fill-rule="nonzero" stroke="#666" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/>
         </symbol>
     </svg>
+    <!-- Checkmark svg commonly found in the settings dropdowns -->
+    <svg class="hidden">
+        <symbol id="checkmark" viewBox="0 0 320 320">
+            <path d="m290 85-21-21a10 10 0 00-15 0L126 192l-60-61A10 10 0 00 50 130l-20 20a10 10 0 00 0 15l88 90c4 4 10 4 15 0L290 100c4-4 4-10 0-15"/>
+        </symbol>
+    </svg>
+    <!-- END OF reused SVGs -->
     <a class="home compact-1" href="/">
         <!-- <img class="headerlogo" src="img/logo/light-theme.png"/> -->
         <picture class="headerlogo" >
@@ -83,7 +90,7 @@
                         <p class="name"><%= languages[i].name %></p>
                         <p class="englishName"><%= languages[i].englishName %></p>
                     </div>
-                    <%- languages[i].code === language ? '<svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320"><path d="m290 85-21-21a10 10 0 00-15 0L126 192l-60-61A10 10 0 00 50 130l-20 20a10 10 0 00 0 15l88 90c4 4 10 4 15 0L290 100c4-4 4-10 0-15"/></svg>' : '' %>
+                    <%- languages[i].code === language ? '<svg class="checkmark"><use href="#checkmark"></use></svg>' : '' %>
                 </div>
             <% } %>
         </div>
@@ -110,12 +117,12 @@
                 <div class="legalmove-option squares">
                     <svg class="svg-squares" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3780 3780"><path d="M1890 950v940H0v1890h1890V1890h1890v940a34850 34850 0 00 10-950L3780 0H1890v950M0 2840" fill="#777" fill-rule="evenodd"/></svg>
                     <span class="text">Squares</span>
-                    <svg class="checkmark visibility-hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320"><path d="m290 85-21-21a10 10 0 00-15 0L126 192l-60-61A10 10 0 00 50 130l-20 20a10 10 0 00 0 15l88 90c4 4 10 4 15 0L290 100c4-4 4-10 0-15"/></svg>
+                    <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
                 </div>
                 <div class="legalmove-option dots">
                     <svg class="svg-legalmove" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3710 3700"><path d="M0 740v730l740-730 730-740H0v740m2980-10 730 730V0H2250l730 730m-1260 360h-40l-30 10-10 10h-30l-20 10-20 10h-10l-90 50-20 10-50 30-30 20a840 840 0 00-200 230v10l-10 20-30 50-10 30-40 120a1420 1420 0 00 10 340l20 60v20l10 20 20 50 30 50 10 10 60 90a740 740 0 00 340 250l140 40a1500 1500 0 00 330-20l30-10h20l20-10 10-10c10 10 150-60 200-110 90-80 200-210 190-230l10-10a430 430 0 00 70-160l10-80 10-40a670 670 0 00 0-230l-10-40-10-10a540 540 0 00-90-220c0-30-110-150-190-210l-100-70-40-20c-40-20-120-50-130-40l-10-10c-20-20-310-30-320-10M0 2970v730h1480l-730-730-740-740-10 740m2980 0-730 730h1460V2240l-730 730" fill="#666" fill-rule="evenodd"/></svg>
                     <span class="text">Dots</span>
-                    <svg class="checkmark visibility-hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320"><path d="m290 85-21-21a10 10 0 00-15 0L126 192l-60-61A10 10 0 00 50 130l-20 20a10 10 0 00 0 15l88 90c4 4 10 4 15 0L290 100c4-4 4-10 0-15"/></svg>
+                    <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
                 </div>
             </div>
         </div>
