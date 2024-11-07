@@ -36,18 +36,21 @@ function updatePing(event) {
 }
 
 function updateBarCount(ping) {
-	removeAllGreen();
+	removeAllColor();
 	const newBarCount = getBarCount(ping);
+	const color = newBarCount >= 3 ? 'green' : newBarCount === 2 ? 'yellow' : 'red';
 	for (let i = 1; i <= newBarCount; i++) {
 		const thisPingBar = pingBars.children[i - 1];
-		thisPingBar.classList.add('green');
+		thisPingBar.classList.add(color);
 	}
 }
 
-function removeAllGreen() {
+function removeAllColor() {
 	for (let i = 1; i <= pingBars.children.length; i++) {
 		const thisPingBar = pingBars.children[i - 1];
 		thisPingBar.classList.remove('green');
+		thisPingBar.classList.remove('yellow');
+		thisPingBar.classList.remove('red');
 	}
 }
 

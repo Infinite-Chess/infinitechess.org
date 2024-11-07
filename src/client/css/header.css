@@ -410,6 +410,14 @@ svg.checkmark {
     background-color: #78ff78;
 }
 
+.ping-bar.yellow {
+    background-color: #f8f878;
+}
+
+.ping-bar.red {
+    background-color: #ff8b8b;
+}
+
 .ping-glow { /* Relatively positioned 0-space element that only glows */
     box-shadow: 0px 0px 80px 30px #000000c4;
     position: relative;
