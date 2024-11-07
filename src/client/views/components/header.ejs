@@ -11,6 +11,12 @@
             <path d="m290 85-21-21a10 10 0 00-15 0L126 192l-60-61A10 10 0 00 50 130l-20 20a10 10 0 00 0 15l88 90c4 4 10 4 15 0L290 100c4-4 4-10 0-15"/>
         </symbol>
     </svg>
+    <!-- Mouse svg -->
+    <svg class="hidden">
+        <symbol id="svg-mouse" viewBox="0 0 240 240" fill="none">
+            <path d="M120 70v20m53.3 70 4.8-71.9.1-2a50 50 0 00-19.1-41.5l-1.7-1.2a60 60 0 00-72.2-2l-2.6 2-1.7 1.3a50 50 0 00-19 43.8l4.8 72a53.4 53.4 0 00 106.6 0Z" stroke="#555" stroke-linecap="round" stroke-width="20"/></svg>
+        </symbol>
+    </svg>
     <!-- END OF reused SVGs -->
     <a class="home compact-1" href="/">
         <!-- <img class="headerlogo" src="img/logo/light-theme.png"/> -->
@@ -62,6 +68,11 @@
                 <span class="text">Legal Moves</span>
                 <span class="arrow-head-right"></span>
             </div>
+            <div id="mouse-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
+                <span class="text">Mouse</span>
+                <span class="arrow-head-right"></span>
+            </div>
             <div class="ping-meter hidden">
                 <div>
                     <span class="ping">Ping</span>
@@ -109,11 +120,6 @@
                 <span class="text">Legal Moves</span>
             </div>
             <div class="legalmove-options">
-                <!-- <div id="board-settings-dropdown-item" class="settings-dropdown-item">
-                    <svg class="svg-board" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 479 479"><path d="M0 240v239h480V0H0v240m0 0v240l1-120V120L0 1v239m60-90v90h180v180h180V240H240V60H60v90" fill="#777" fill-rule="evenodd"/></svg>
-                    <span class="text">Board</span>
-                    <span class="arrow-head-right"></span>
-                </div> -->
                 <div class="legalmove-option squares">
                     <svg class="svg-squares" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3780 3780"><path d="M1890 950v940H0v1890h1890V1890h1890v940a34850 34850 0 00 10-950L3780 0H1890v950M0 2840" fill="#777" fill-rule="evenodd"/></svg>
                     <span class="text">Squares</span>
@@ -123,6 +129,22 @@
                     <svg class="svg-legalmove" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3710 3700"><path d="M0 740v730l740-730 730-740H0v740m2980-10 730 730V0H2250l730 730m-1260 360h-40l-30 10-10 10h-30l-20 10-20 10h-10l-90 50-20 10-50 30-30 20a840 840 0 00-200 230v10l-10 20-30 50-10 30-40 120a1420 1420 0 00 10 340l20 60v20l10 20 20 50 30 50 10 10 60 90a740 740 0 00 340 250l140 40a1500 1500 0 00 330-20l30-10h20l20-10 10-10c10 10 150-60 200-110 90-80 200-210 190-230l10-10a430 430 0 00 70-160l10-80 10-40a670 670 0 00 0-230l-10-40-10-10a540 540 0 00-90-220c0-30-110-150-190-210l-100-70-40-20c-40-20-120-50-130-40l-10-10c-20-20-310-30-320-10M0 2970v730h1480l-730-730-740-740-10 740m2980 0-730 730h1460V2240l-730 730" fill="#666" fill-rule="evenodd"/></svg>
                     <span class="text">Dots</span>
                     <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
+                </div>
+            </div>
+        </div>
+        <div class="mouse-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
+                <span class="text">Mouse</span>
+            </div>
+            <div class="mouse-options">
+                <div class="mouse-option perspective-sensitivity">                    
+                    <p>Perspective Sensitivity</p>
+                    <div class="slider-container">
+                        <input class="slider" type="range" min="25" max="200" value="100">
+                        <span class="value">100%</span>
+                    </div>
                 </div>
             </div>
         </div>
