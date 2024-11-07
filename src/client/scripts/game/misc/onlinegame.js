@@ -249,7 +249,7 @@ function onmessage(data) { // { sub, action, value, id }
 			websocket.getSubs().game = false;
 			inSync = false;
 			clock.endGame(game.getGamefile());
-			guiclock.stopClocks();
+			guiclock.stopClocks(game.getGamefile());
 			game.getGamefile().gameConclusion = 'limbo';
 			selection.unselectPiece();
 			board.darkenColor();

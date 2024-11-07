@@ -76,7 +76,7 @@ function showClocks() {
 /**
  * Stops clock sounds and removes all borders
  */
-function stopClocks() {
+function stopClocks(gamefile) {
 	clearTimeout(lowtimeNotif.timeoutID);
 	clearTimeout(countdown.ticking.timeoutID);
 	clearTimeout(countdown.tick.timeoutID);
@@ -89,6 +89,7 @@ function stopClocks() {
 	countdown.tick.timeoutID = undefined;
 	countdown.ticking.timeoutID = undefined;
 
+	updateTextContent(gamefile); // Do this one last time so that when we lose on time, the clock doesn't freeze at one second remaining.
 	for (const color in element_timers) {
 		removeBorder(element_timers[color].timer);
 	}
