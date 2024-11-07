@@ -56,6 +56,10 @@ header a {
     transform: scale(1.21);
 }
 
+.svg-perspective {
+    transform: scale(1.1);
+}
+
 .svg-mouse {
     transform: scale(1.47);
 }
@@ -282,8 +286,8 @@ span.arrow-head-left {
     transform: rotate(225deg) /* skew(10deg, 10deg); */;
 }
 
-.svg-language, .svg-board, .svg-legalmove, .svg-mouse,
-.svg-squares,
+.svg-language, .svg-board, .svg-legalmove, .svg-perspective,
+.svg-squares, .svg-mouse,
 .checkmark {
     width: 19px;
     aspect-ratio: 1;
@@ -374,28 +378,35 @@ span.arrow-head-left {
 
 /* Mouse dropdown */
 
-.mouse-options {
+.perspective-options {
     text-align: center;
 }
 
-.mouse-option.perspective-sensitivity {
+.perspective-option.mouse-sensitivity {
     font-size: 14px;
 }
 
-.mouse-option.perspective-sensitivity p { /* "Perspective Sensitivity" */
-    margin: 13px 10px;
-}
-
-.mouse-option.perspective-sensitivity .slider-container {
+.perspective-option .mouse-sensitivity-title {
     display: flex;
-    margin: 0 0 15px 10px;
+    justify-content: center;
+    align-items: center;
+    height: 45px;
 }
 
-.mouse-option.perspective-sensitivity .slider {
+.perspective-option.mouse-sensitivity p { /* "Perspective Sensitivity" */
+    padding-left: 4px;
+}
+
+.perspective-option.mouse-sensitivity .slider-container {
+    display: flex;
+    margin: 0 0 15px 7px;
+}
+
+.perspective-option.mouse-sensitivity .slider {
     width: 100%;
 }
 
-.mouse-option.perspective-sensitivity .value {
+.perspective-option.mouse-sensitivity .value {
     padding-left: 5px;
 	width: 50px; /* Fixed width to prevent layout shifting */
 	text-align: left; /* Optional: Align the text */

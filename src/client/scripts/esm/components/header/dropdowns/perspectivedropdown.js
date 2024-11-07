@@ -7,11 +7,11 @@ import preferences from "../preferences.js";
 
 const settingsDropdown = document.querySelector('.settings-dropdown');
 
-const mouseDropdown = document.querySelector('.mouse-dropdown');
-const mouseDropdownTitle = document.querySelector('.mouse-dropdown .dropdown-title');
+const mouseDropdown = document.querySelector('.perspective-dropdown');
+const mouseDropdownTitle = document.querySelector('.perspective-dropdown .dropdown-title');
 
-const slider = document.querySelector('.mouse-dropdown .slider');
-const output = document.querySelector('.mouse-dropdown .value');
+const slider = document.querySelector('.perspective-dropdown .slider');
+const output = document.querySelector('.perspective-dropdown .value');
 
 // Update the slider value on page load
 output.textContent = slider.value + '%';

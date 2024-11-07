@@ -31,6 +31,12 @@
                 <path d="M0 740v730l740-730 730-740H0v740m2980-10 730 730V0H2250l730 730m-1260 360h-40l-30 10-10 10h-30l-20 10-20 10h-10l-90 50-20 10-50 30-30 20a840 840 0 00-200 230v10l-10 20-30 50-10 30-40 120a1420 1420 0 00 10 340l20 60v20l10 20 20 50 30 50 10 10 60 90a740 740 0 00 340 250l140 40a1500 1500 0 00 330-20l30-10h20l20-10 10-10c10 10 150-60 200-110 90-80 200-210 190-230l10-10a430 430 0 00 70-160l10-80 10-40a670 670 0 00 0-230l-10-40-10-10a540 540 0 00-90-220c0-30-110-150-190-210l-100-70-40-20c-40-20-120-50-130-40l-10-10c-20-20-310-30-320-10M0 2970v730h1480l-730-730-740-740-10 740m2980 0-730 730h1460V2240l-730 730" fill="#666" fill-rule="evenodd"/>
             </symbol>
         </svg>
+        <!-- Perspective mode svg -->
+        <svg>
+            <symbol id="svg-perspective" fill="none" viewBox="0 0 480 480">
+                <path d="M0 0h480v480H0" fill="none"/><path d="M440 280v80l-130 26M440 280 40 320m400-40v-80M40 320v120l130-26M40 320V160m400 40v-80L310 94M440 200 40 160m0 0V40l130 26m140 28v292m0-292L170 66m140 320-140 28m0-348v348" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="40"/>
+            </symbol>
+        </svg>
         <!-- Mouse svg -->
         <svg>
             <symbol id="svg-mouse" viewBox="0 0 240 240" fill="none">
@@ -88,9 +94,9 @@
                 <span class="text">Legal Moves</span>
                 <span class="arrow-head-right"></span>
             </div>
-            <div id="mouse-settings-dropdown-item" class="settings-dropdown-item">
-                <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
-                <span class="text">Mouse</span>
+            <div id="perspective-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
+                <span class="text">Perspective</span>
                 <span class="arrow-head-right"></span>
             </div>
             <div class="ping-meter hidden">
@@ -152,15 +158,19 @@
                 </div>
             </div>
         </div>
-        <div class="mouse-dropdown dropdown visibility-hidden">
+        <div class="perspective-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
-                <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
-                <span class="text">Mouse</span>
+                <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
+                <span class="text">Perspective</span>
             </div>
-            <div class="mouse-options">
-                <div class="mouse-option perspective-sensitivity">                    
-                    <p>Perspective Sensitivity</p>
+            <div class="perspective-options">
+                <div class="perspective-option mouse-sensitivity">   
+                    <div class="mouse-sensitivity-title">
+                        <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
+                        <p>Mouse Sensitivity</p>
+                    </div>          
+                    
                     <div class="slider-container">
                         <input class="slider" type="range" min="25" max="200" value="100">
                         <span class="value">100%</span>
