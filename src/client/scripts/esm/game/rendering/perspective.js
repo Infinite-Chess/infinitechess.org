@@ -14,6 +14,7 @@ import input from '../input.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 /**
@@ -36,7 +37,7 @@ let rotZ = 0; // Positive z looks right
 
 let isViewingBlackPerspective = false;
 
-const mouseSensitivity = 0.13; // 0.13 Default
+const mouseSensitivityMultiplier = 0.13; // 0.13 Default   This is Multiplied by our perspective_sensitivity in the preferences.
 
 // How far to render the board into the distance
 const distToRenderBoard = 1500; // Default 1500. When changing this, also change  camera.getZFar()
@@ -129,9 +130,11 @@ function update(mouseChangeInX, mouseChangeInY) {
 	// If the mouse is unlocked, don't rotate view.
 	if (!isMouseLocked()) return;
 
+	const thisSensitivity = mouseSensitivityMultiplier * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
+
 	// Change rotations based on mouse motion
-	rotX += mouseChangeInY * mouseSensitivity;
-	rotZ += mouseChangeInX * mouseSensitivity;
+	rotX += mouseChangeInY * thisSensitivity;
+	rotZ += mouseChangeInX * thisSensitivity;
 	capRotations();
 	updateIsViewingBlackPerspective();
 

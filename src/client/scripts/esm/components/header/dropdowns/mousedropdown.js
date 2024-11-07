@@ -1,6 +1,8 @@
 
 // This script allows us to adjust the mouse sensitivity in perspective mode
 
+import preferences from "../preferences.js";
+
 // Document Elements -------------------------------------------------------------------------
 
 const settingsDropdown = document.querySelector('.settings-dropdown');
@@ -21,10 +23,13 @@ output.textContent = slider.value + '%';
 
 (function init() {
 
-	// Update the value dynamically as the slider is moved
-	slider.oninput = function() {
-		output.textContent = this.value + '%';
-	};
+	// Update the value dynamically as the slider is moved. Called continuously.
+	slider.addEventListener('input', event => {
+		output.textContent = event.currentTarget.value + '%';
+	});
+
+	// Detect when the slider value changes. Called when the slider's released.
+	slider.addEventListener('change', onSensitivityChanged);
 
 })();
 
@@ -47,6 +52,13 @@ function initListeners() {
 }
 function closeListeners() {
 	mouseDropdownTitle.removeEventListener('click', close);
+}
+
+
+function onSensitivityChanged(event) {
+	const value = event.currentTarget.value;
+	console.log(`Slider changed: ${value}`);
+	preferences.setPerspectiveSensitivity(value);
 }
 
 
