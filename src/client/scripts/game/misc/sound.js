@@ -75,7 +75,7 @@ function playSound(soundName, { volume = 1, delay = 0, offset = 0, fadeInDuratio
 	// A reverb volume of 3.5 and a duration of 1.5 seconds most-closely matches my audio file!
 	if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound 
     
-	if (!audioContext) throw new Error(`Can't play sound ${soundName} when audioContext isn't initialized yet! (Still loading)`);
+	if (!audioContext) return console.error(`Can't play sound ${soundName} when audioContext isn't initialized yet. (Still loading)`);
 
 	const soundStamp = getSoundStamp(soundName); // [ timeStart, timeEnd ] Start and end time stamps in the sprite
 	const offsetSecs = offset / 1000;

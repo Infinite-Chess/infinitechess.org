@@ -227,6 +227,8 @@ function loadGamefile(newGamefile) {
 	}
 
 	initListeners();
+
+	guiclock.set(newGamefile);
 }
 
 /** The canvas will no longer render the current game */
@@ -239,6 +241,9 @@ function unloadGame() {
 	transition.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
 	closeListeners();
+
+	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
+	guiclock.resetClocks();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */

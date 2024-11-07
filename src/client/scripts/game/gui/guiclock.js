@@ -194,8 +194,6 @@ function rescheduleMinuteTick(gamefile) {
 	if (onlinegame.areInOnlineGame() && gamefile.whosTurn !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
 	if (lowtimeNotif.colorsNotified.has(gamefile.whosTurn)) return;
 	const timeRemain = gamefile.clocks.timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd;
-	console.log(gamefile);
-	console.log(timeRemain, gamefile.clocks.timeRemainAtTurnStart, lowtimeNotif.timeToStartFromEnd);
 	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile.whosTurn);
 }
 

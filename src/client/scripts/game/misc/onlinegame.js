@@ -232,9 +232,9 @@ function onmessage(data) { // { sub, action, value, id }
 			break;
 		case "clock": { // Contain this case in a block so that it's variables are not hoisted 
 			if (!inOnlineGame) return;
-			const message = data.value; // { timerWhite, timerBlack, timeNextPlayerLosesAtAt }
+			const message = data.value; // { clockValues: { timerWhite, timerBlack, timeNextPlayerLosesAtAt } }
 			const gamefile = game.getGamefile();
-			clock.edit(gamefile, message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt); // Edit the clocks
+			clock.edit(gamefile, message.clockValues); // Edit the clocks
 			guiclock.edit(gamefile);
 			break;
 		} case "gameupdate": // When the game has ended by time/disconnect/resignation/aborted, OR we are resyncing to the game.
@@ -268,8 +268,6 @@ function onmessage(data) { // { sub, action, value, id }
 			inSync = false;
 			closeOnlineGame();
 			game.unloadGame();
-			// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
-			guiclock.resetClocks();
 			guinavigation.close();
 			guititle.open();
 			break;
@@ -362,8 +360,8 @@ function handleJoinGame(message) {
 	// The server's message looks like:
 	// {
 	//     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
-	//     id, clock, publicity, youAreColor, timerWhite,
-	//     timerBlack, moves, autoAFKResignTime, disconnect, gameConclusion, drawOffer
+	//	   clockValues: { timerWhite, timerBlack, timeNextPlayerLosesAt }
+	//     id, clock, publicity, youAreColor, , moves, autoAFKResignTime, disconnect, gameConclusion, drawOffer,
 	// }
 
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
@@ -428,7 +426,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, t
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
-	clock.edit(gamefile, message.timerWhite, message.timerBlack, message.timeNextPlayerLosesAt);
+	clock.edit(gamefile, message.clockValues);
 	guiclock.edit(gamefile);
 
 	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
@@ -481,7 +479,7 @@ function resyncToGame() {
  * @param {Object} messageContents - The contents of the server message, with the properties:
  * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`, `offerDraw`
  */
-function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhite, timerBlack, timeNextPlayerLosesAt, moves, autoAFKResignTime, offerDraw }
+function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack, timeNextPlayerLosesAt }, moves, autoAFKResignTime, offerDraw }
 	if (!inOnlineGame) return;
 	const gamefile = game.getGamefile();
 	const claimedGameConclusion = messageContents.gameConclusion;
@@ -515,7 +513,7 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, timerWhi
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// When the game has ended by time/disconnect/resignation/aborted
-	clock.edit(gamefile, messageContents.timerWhite, messageContents.timerBlack, messageContents.timeNextPlayerLosesAt);
+	clock.edit(gamefile, messageContents.clockValues);
 
 	if (gamefileutility.isGameOver(gamefile)) {
 		game.concludeGame();

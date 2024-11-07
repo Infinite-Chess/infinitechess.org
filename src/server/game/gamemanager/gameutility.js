@@ -266,11 +266,7 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 		}
 	};
 	// Include additional stuff if relevant
-	if (!game.untimed) {
-		gameOptions.timerWhite = game.timerWhite;
-		gameOptions.timerBlack = game.timerBlack;
-		gameOptions.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt;
-	}
+	if (!game.untimed) gameOptions.clockValues = getGameClockValues(game);
 
 	// If true, we know it's their opponent that's afk, because this client
 	// just refreshed the page and would have cancelled the timer if they were the ones afk.
@@ -340,11 +336,7 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 		}
 	};
 	// Include timer info if it's timed
-	if (!game.untimed) {
-		messageContents.timerWhite = game.timerWhite;
-		messageContents.timerBlack = game.timerBlack;
-		messageContents.timeNextPlayerLosesAt = game.timeNextPlayerLosesAt;
-	}
+	if (!game.untimed) messageContents.clockValues = getGameClockValues(game);
 	// Include other relevant stuff if defined
 	if (isAFKTimerActive(game)) messageContents.autoAFKResignTime = game.autoAFKResignTime;
 
@@ -598,13 +590,23 @@ function sendUpdatedClockToColor(game, color) {
 	if (game.untimed) return; // Don't send clock values in an untimed game
 
 	const message = {
-		timerWhite: game.timerWhite,
-		timerBlack: game.timerBlack,
-		timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
+		clockValues: getGameClockValues(game),
 	};
 	const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
 	if (!playerSocket) return; // They are not connected, can't send message
 	playerSocket.metadata.sendmessage(playerSocket, "game", "clock", message);
+}
+
+/**
+ * Return the clock values of the game that can be sent to a client
+ * @param {Game} game - The game
+ */
+function getGameClockValues(game) {
+	return {
+		timerWhite: game.timerWhite,
+		timerBlack: game.timerBlack,
+		timeNextPlayerLosesAt: game.timeNextPlayerLosesAt,
+	};
 }
 
 /**
@@ -619,9 +621,7 @@ function sendMoveToColor(game, color) {
 		move: getLastMove(game),
 		gameConclusion: game.gameConclusion,
 		moveNumber: game.moves.length,
-		timerWhite: game.timerWhite,
-		timerBlack: game.timerBlack,
-		timeNextPlayerLosesAt: game.timeNextPlayerLosesAt
+		clockValues: getGameClockValues(game),
 	};
 	const sendToSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
 	if (!sendToSocket) return; // They are not connected, can't send message

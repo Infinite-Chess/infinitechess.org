@@ -324,20 +324,17 @@ function startLocalGame(inviteOptions) {
 		}
 	};
 	loadGame(gameOptions);
-	const gamefile = game.getGamefile();
-	clock.set(gamefile, inviteOptions.clock);
-	guiclock.set(gamefile);
 	guigameinfo.hidePlayerNames();
 }
 
 /**
  * Starts an online game according to the options provided by the server.
  * @param {Object} gameOptions - An object that contains the properties
- * `metadata`, `id`, `publicity`, `youAreColor`, `moves`, `timerWhite`,
- * `timerBlack`, `timeNextPlayerLosesAt`, `autoAFKResignTime`,
+ * `metadata`, `clockValues`, `id`, `publicity`, `youAreColor`, `moves`, `autoAFKResignTime`,
  * `disconnect`, `gameConclusion`, `serverRestartingAt`, `drawOffer`
  * 
  * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.
+ * The `clockValues` property contains the properties `timerWhite`, `timerBlack`, `timeNextPlayerLosesAt`.
  */
 function startOnlineGame(gameOptions) {
 	gui.setScreen('game online'); // Change screen location
@@ -345,10 +342,7 @@ function startOnlineGame(gameOptions) {
 	onlinegame.setColorAndGameID(gameOptions);
 	gameOptions.variantOptions = generateVariantOptionsIfReloadingPrivateCustomGame();
 	loadGame(gameOptions);
-	const gamefile = game.getGamefile();
 	onlinegame.initOnlineGame(gameOptions);
-	clock.set(gamefile, gameOptions.clock, { timerWhite: gameOptions.timerWhite, timerBlack: gameOptions.timerBlack, timeNextPlayerLosesAt: gameOptions.timeNextPlayerLosesAt });
-	guiclock.set(gamefile);
 	guigameinfo.revealPlayerNames(gameOptions);
 	drawoffers.set(gameOptions.drawOffer);
 }
@@ -390,7 +384,8 @@ function loadGame(gameOptions) {
 	const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
 		moves: gameOptions.moves,
 		variantOptions: gameOptions.variantOptions,
-		gameConclusion: gameOptions.gameConclusion
+		gameConclusion: gameOptions.gameConclusion,
+		clockValues: gameOptions.clockValues
 	});
 	game.loadGamefile(newGamefile);
 
