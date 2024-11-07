@@ -4,6 +4,7 @@
 import languagedropdown from "./dropdowns/languagedropdown.js";
 import boarddropdown from "./dropdowns/boarddropdown.js";
 import legalmovedropdown from "./dropdowns/legalmovedropdown.js";
+import mousedropdown from "./dropdowns/mousedropdown.js";
 // Only imported so its code runs
 import pingmeter from "./pingmeter.js";
 
@@ -19,12 +20,14 @@ const settingsDropdown = document.querySelector('.settings-dropdown');
 const languageDropdownSelection = document.getElementById('language-settings-dropdown-item');
 const boardDropdownSelection = document.getElementById('board-settings-dropdown-item');
 const legalmoveDropdownSelection = document.getElementById('legalmove-settings-dropdown-item');
+const mouseDropdownSelection = document.getElementById('mouse-settings-dropdown-item');
 
 // All nested dropdowns
 const languageDropdown = document.querySelector('.language-dropdown');
 const boardDropdown = document.querySelector('.board-dropdown');
 const legalmoveDropdown = document.querySelector('.legalmove-dropdown');
-const allSettingsDropdownsExceptMainOne = [languageDropdown, boardDropdown, legalmoveDropdown];
+const mouseDropdown = document.querySelector('.mouse-dropdown');
+const allSettingsDropdownsExceptMainOne = [languageDropdown, boardDropdown, legalmoveDropdown, mouseDropdown];
 
 
 // Variables ---------------------------------------------------------------------------------
@@ -75,6 +78,7 @@ function closeAllSettingsDropdownsExceptMainOne() {
 	languagedropdown.close();
 	boarddropdown.close();
 	legalmovedropdown.close();
+	mousedropdown.close();
 }
 
 
@@ -85,6 +89,8 @@ function initSettingsListeners() {
 	boardDropdownSelection.addEventListener('click', boarddropdown.open);
 	legalmoveDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	legalmoveDropdownSelection.addEventListener('click', legalmovedropdown.open);
+	mouseDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	mouseDropdownSelection.addEventListener('click', mousedropdown.open);
 }
 function closeSettingsListeners() {
 	languageDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
@@ -93,6 +99,8 @@ function closeSettingsListeners() {
 	boardDropdownSelection.removeEventListener('click', boarddropdown.open);
 	legalmoveDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	legalmoveDropdownSelection.removeEventListener('click', legalmovedropdown.open);
+	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	mouseDropdownSelection.removeEventListener('click', mousedropdown.open);
 }
 
 

@@ -51,6 +51,11 @@ header a {
     transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
 }
 
+.svg-mouse {
+    width: 28px;
+    aspect-ratio: 1;
+}
+
 
 
 /* The Infinite Chess text and logo, left side of header */
@@ -249,6 +254,10 @@ nav.compact-3 #svg-logout {
     padding: 0 15px 0 8px;
     cursor: pointer;
 }
+/* Dropdown items */
+#mouse-settings-dropdown-item {
+    padding: 0 15px 0 5.5px;
+}
 
 span.text {
     padding: 0 6px;
@@ -363,6 +372,40 @@ span.arrow-head-left {
     width: 19px;
     padding: 0 2px;
 }
+
+
+
+/* Mouse dropdown */
+
+.mouse-options {
+    text-align: center;
+}
+
+.mouse-option.perspective-sensitivity {
+    font-size: 14px;
+}
+
+.mouse-option.perspective-sensitivity p { /* "Perspective Sensitivity" */
+    margin: 13px 10px;
+}
+
+.mouse-option.perspective-sensitivity .slider-container {
+    display: flex;
+    margin: 0 0 15px 10px;
+}
+
+.mouse-option.perspective-sensitivity .slider {
+    width: 100%;
+}
+
+.mouse-option.perspective-sensitivity .value {
+    padding-left: 5px;
+	width: 50px; /* Fixed width to prevent layout shifting */
+	text-align: left; /* Optional: Align the text */
+    flex-shrink: 0;
+}
+
+
 
 
 
