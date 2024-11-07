@@ -383,7 +383,6 @@ function onclose(event) {
 	 */
 	const detail = notByChoice && !zeroSubs();
 	document.dispatchEvent(new CustomEvent('socket-closed', { detail }));
-	console.log('here', detail, notByChoice, !zeroSubs());
 
 	// See wsutil.js for all possible closure reasons!
 
