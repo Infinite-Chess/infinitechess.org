@@ -5,7 +5,6 @@ import movesscript from '../chess/movesscript.js';
 import clockutil from './clockutil.js';
 import timeutil from './timeutil.js';
 import gamefileutility from '../chess/gamefileutility.js';
-import jsutil from '../misc/jsutil.js';
 // Import End
 
 /**
