@@ -89,7 +89,7 @@ function stopClocks(gamefile) {
 	countdown.tick.timeoutID = undefined;
 	countdown.ticking.timeoutID = undefined;
 
-	updateTextContent(gamefile); // Do this one last time so that when we lose on time, the clock doesn't freeze at one second remaining.
+	if (gamefile) updateTextContent(gamefile); // Do this one last time so that when we lose on time, the clock doesn't freeze at one second remaining.
 	for (const color in element_timers) {
 		removeBorder(element_timers[color].timer);
 	}
