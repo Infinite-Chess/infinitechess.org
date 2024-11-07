@@ -42,8 +42,9 @@ header a {
     align-items: center;
 }
 
-/* The pawn svg and loading animation that we use in several spots */
-.svg-play {
+/* All SVG settings. (Most settings dropdown SVGs are the same width in the document, we just scale them here to make them all VISUALLY the same size */
+
+.svg-play { /* The pawn svg and loading animation that we use in several spots */
     position: relative;
     bottom: 3px;
     height: 65%;
@@ -51,9 +52,12 @@ header a {
     transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
 }
 
+.svg-language {
+    transform: scale(1.21);
+}
+
 .svg-mouse {
-    width: 28px;
-    aspect-ratio: 1;
+    transform: scale(1.47);
 }
 
 
@@ -216,6 +220,9 @@ nav.compact-3 #svg-logout {
     top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
     right: 0; 
     width: 195px;
+    /* Can't enable these because words "Perspective Sensitivity" won't wrap but instead increase the length of the whole dropdown. */
+    /* min-width: 195px;
+    width: fit-content; */
     background-color: white;
     box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
     z-index: 1;
@@ -254,10 +261,6 @@ nav.compact-3 #svg-logout {
     padding: 0 15px 0 8px;
     cursor: pointer;
 }
-/* Dropdown items */
-#mouse-settings-dropdown-item {
-    padding: 0 15px 0 5.5px;
-}
 
 span.text {
     padding: 0 6px;
@@ -279,12 +282,11 @@ span.arrow-head-left {
     transform: rotate(225deg) /* skew(10deg, 10deg); */;
 }
 
-.svg-language {
-    width: 23px;
-}
-
-.svg-board, .svg-legalmove {
+.svg-language, .svg-board, .svg-legalmove, .svg-mouse,
+.svg-squares,
+.checkmark {
     width: 19px;
+    aspect-ratio: 1;
     padding: 0 2px;
 }
 
@@ -366,11 +368,6 @@ span.arrow-head-left {
 .legalmove-option {
     height: 43px;
     padding: 0 15px 0 8px;
-}
-
-.svg-squares { /* Square legal move shape option */
-    width: 19px;
-    padding: 0 2px;
 }
 
 
@@ -492,7 +489,8 @@ span.arrow-head-left {
 }
 
 .transparent {
-    opacity: 30%;
+    opacity: 0%;
+    pointer-events: none;
 }
 
 /* Animations */
