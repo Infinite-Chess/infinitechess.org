@@ -190,9 +190,12 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 			/** The increment used, in milliseconds. */
 			increment: undefined,
 		},
+		/** We need this separate from gamefile's "whosTurn", because when we are
+		 * in an online game and we make a move, we want our Clock to continue
+		 * ticking until we receive the Clock information back from the server! */
+		colorTicking: undefined,
 		/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
-		 * When set to undefined no clocks are ticking
-		*/
+		 * When set to undefined no clocks are ticking */
 		timeRemainAtTurnStart: undefined,
 		/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. */
 		timeAtTurnStart: undefined,

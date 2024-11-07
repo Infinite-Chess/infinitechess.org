@@ -39,6 +39,8 @@ function set(gamefile, currentTimes) {
 		clocks.startTime.increment = clockPartsSplit.increment;
 	}
 
+	clocks.colorTicking = gamefile.whosTurn;
+
 	// Edit the closk if we're re-loading an online game
 	if (currentTimes) edit(gamefile, currentTimes);
 	else { // No current time specified, start both players with the default.
@@ -62,6 +64,7 @@ function edit(gamefile, clockValues) {
 	const { timerWhite, timerBlack, timeNextPlayerLosesAt } = clockValues;
 	const clocks = gamefile.clocks;
 
+	clocks.colorTicking = gamefile.whosTurn;
 	clocks.currentTime.white = timerWhite;
 	clocks.currentTime.black = timerBlack;
 	clocks.timeNextPlayerLosesAt = timeNextPlayerLosesAt;
@@ -70,9 +73,9 @@ function edit(gamefile, clockValues) {
 
 	if (timeNextPlayerLosesAt) {
 		const nextPlayerTrueTime = timeNextPlayerLosesAt - now;
-		clocks.currentTime[gamefile.whosTurn] = nextPlayerTrueTime;
+		clocks.currentTime[clocks.colorTicking] = nextPlayerTrueTime;
 	}
-	clocks.timeRemainAtTurnStart = gamefile.whosTurn === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
+	clocks.timeRemainAtTurnStart = clocks.colorTicking === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
 }
 
 /**
@@ -81,18 +84,19 @@ function edit(gamefile, clockValues) {
  */
 function push(gamefile) {
 	const clocks = gamefile.clocks;
-
 	if (onlinegame.areInOnlineGame()) return; // Only the server can push clocks
 	if (clocks.untimed) return;
 	if (!movesscript.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
-	
+
+	clocks.colorTicking = gamefile.whosTurn;
+
 	// Add increment if the last move has a clock ticking
 	if (clocks.timeAtTurnStart !== undefined) {
 		const prevcolor = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 		clocks.currentTime[prevcolor] += timeutil.secondsToMillis(clocks.startTime.increment);
 	}
 
-	clocks.timeRemainAtTurnStart = clocks.currentTime[gamefile.whosTurn];
+	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking];
 	clocks.timeAtTurnStart = Date.now();
 	clocks.timeNextPlayerLosesAt = clocks.timeAtTurnStart + clocks.timeRemainAtTurnStart;
 }
@@ -116,7 +120,7 @@ function update(gamefile) {
 	// Update current values
 	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
 
-	clocks.currentTime[gamefile.whosTurn] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
+	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
