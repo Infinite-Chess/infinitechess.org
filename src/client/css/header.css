@@ -280,6 +280,10 @@ span.arrow-head-left {
 }
 
 .checkmark {
+    width: 30px;
+    aspect-ratio: 1;
+    margin-left: auto;
+    fill: #444;
     transition: transform 0.5s var(--CBC-CM-in);
     transform: scale(1);
 }
@@ -311,12 +315,6 @@ span.arrow-head-left {
 .language-dropdown-item p.englishName {
     color: grey;
     font-size: 0.7em;
-}
-
-svg.checkmark {
-    width: 30px;
-    margin-left: auto;
-    fill: #444;
 }
 
 
