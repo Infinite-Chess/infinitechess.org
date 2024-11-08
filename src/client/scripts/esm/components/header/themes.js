@@ -91,6 +91,7 @@ const themeDictionary = {
 		legalMovesHighlightColor_Friendly: [0, 0.60, 0.1, 0.34],
 		legalMovesHighlightColor_Opponent: [1, 0.46, 0, 0.35],
 		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.34],
+		lastMoveHighlightColor: [0, 1, 1, 0.3],
 	},
 	blue_soft: {
 		lightTiles: [0.59, 0.70, 0.78, 1],
@@ -132,9 +133,10 @@ const themeDictionary = {
 	white: {
 		lightTiles: [1, 1, 1, 1],
 		darkTiles:  [0.78, 0.78, 0.78, 1],
-		legalMovesHighlightColor_Friendly: [0, 0.38, 0, 0.32], // [0, 0.48, 0.1, 0.32]
-		legalMovesHighlightColor_Opponent: [1, 0.18, 0, 0.29],
-		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.28],
+		legalMovesHighlightColor_Friendly: [0, 0, 1, 0.28],
+		legalMovesHighlightColor_Opponent: [1, 0.72, 0, 0.37],
+		legalMovesHighlightColor_Premove: [0, 0, 0.26, 0.36],
+		lastMoveHighlightColor: [0.28, 1, 0, 0.28],
 	},
 	poison: {
 		lightTiles: [0.93, 0.93, 0.93, 1],

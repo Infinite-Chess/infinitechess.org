@@ -101,6 +101,7 @@ function update() {
 	onlinegame.update();
 
 	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
+	// options.update();
 }
 
 // Called within update() when on title screen
