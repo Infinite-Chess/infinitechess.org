@@ -11,6 +11,7 @@ import shaders from './shaders.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 /**
@@ -37,7 +38,8 @@ import frametracker from './frametracker.js';
 const position = [0, 0, 12]; // [x, y, z]
 const position_devMode = [0, 0, 18];
 
-const fieldOfView = 90 * Math.PI / 180; // Converted to radians
+/** Field of view, in radians */
+let fieldOfView;
 // The closer near & far limits are in terms of orders of magnitude, the more accurate
 // and less often things appear out of order. Should be within 5-6 magnitude orders.
 const zNear = 1;
@@ -124,11 +126,22 @@ function getCanvasRect() {
 /**
  * Returns a copy of the current screen bounding box,
  * or the world-space coordinates of the edges of the canvas.
- * @param {boolean} devMode - Whether developer mode is enabled.
+ * @param {boolean} [debugMode] Whether developer mode is enabled.
  * @returns {BoundingBox} The bounding box of the screen
  */
-function getScreenBoundingBox(devMode) {
-	return jsutil.deepCopyObject(devMode ? screenBoundingBox_devMode : screenBoundingBox);
+function getScreenBoundingBox(debugMode = options.isDebugModeOn()) {
+	return jsutil.deepCopyObject(debugMode ? screenBoundingBox_devMode : screenBoundingBox);
+}
+
+/**
+ * Returns the length from the bottom of the screen to the top, in tiles when at a zoom of 1.
+ * This is the same as the height of {@link getScreenBoundingBox}.
+ * @param {boolean} [debugMode] Whether developer mode is enabled.
+ * @returns {number} The height of the screen in squares
+ */
+function getScreenHeightWorld(debugMode = options.isDebugModeOn()) {
+	const boundingBox = getScreenBoundingBox(debugMode);
+	return boundingBox.top - boundingBox.bottom;
 }
 
 /**
@@ -141,8 +154,11 @@ function getViewMatrix() {
 
 // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
 function init() {
+	initFOV();
 	initMatrixes();
 	canvasRect = canvas.getBoundingClientRect();
+	window.addEventListener("resize", onScreenResize);
+	document.addEventListener("fov-change", onFOVChange); // Custom Event
 }
 
 // Inits the matrix uniforms: viewMatrix (camera) & projMatrix
@@ -195,7 +211,6 @@ function updatePIXEL_HEIGHT_OF_NAVS() {
 }
 
 function recalcCanvasVariables() {
-    
 	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	initScreenBoundingBox();
 
@@ -250,6 +265,8 @@ function initProjMatrix() {
 		gl.useProgram(program.program);
 		gl.uniformMatrix4fv(projMatrixLocation, gl.FALSE, projectionMatrix);
 	}
+
+	frametracker.onVisualChange();
 }
 
 // Return the world-space x & y positions of the screen edges. Not affected by scale or board position.
@@ -296,6 +313,19 @@ function onScreenResize() {
 	// console.log('Resized window.')
 }
 
+// Converts to radians
+function initFOV() {
+	fieldOfView = preferences.getPerspectiveFOV() * Math.PI / 180;
+}
+
+function onFOVChange() {
+	// console.log("Detected field of view change custom event!");
+	initFOV();
+	initProjMatrix();
+	recalcCanvasVariables(); // The only thing inside here we don't actually need to change is the aspect variable, but it doesn't matter.
+	perspective.initCrosshairModel();
+}
+
 // Call both when camera moves or rotates
 function onPositionChange() {
 	initViewMatrix();
@@ -312,11 +342,11 @@ export default {
 	getCanvasHeightVirtualPixels,
 	getCanvasRect,
 	getScreenBoundingBox,
+	getScreenHeightWorld,
 	getViewMatrix,
 	init,
 	updatePIXEL_HEIGHT_OF_NAVS,
 	setViewMatrix,
-	onScreenResize,
 	onPositionChange,
 	initViewMatrix,
 	getZFar,

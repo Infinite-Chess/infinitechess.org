@@ -52,6 +52,14 @@ header a {
     transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
 }
 
+.svg-language, .svg-board, .svg-legalmove, .svg-perspective,
+.svg-squares, .svg-mouse, .svg-camera,
+.checkmark {
+    width: 19px;
+    aspect-ratio: 1;
+    padding: 0 2px;
+}
+
 .svg-language {
     transform: scale(1.21);
 }
@@ -62,6 +70,10 @@ header a {
 
 .svg-mouse {
     transform: scale(1.47);
+}
+
+.svg-camera {
+    transform: scale(1.3);
 }
 
 
@@ -286,14 +298,6 @@ span.arrow-head-left {
     transform: rotate(225deg) /* skew(10deg, 10deg); */;
 }
 
-.svg-language, .svg-board, .svg-legalmove, .svg-perspective,
-.svg-squares, .svg-mouse,
-.checkmark {
-    width: 19px;
-    aspect-ratio: 1;
-    padding: 0 2px;
-}
-
 .checkmark {
     width: 30px;
     aspect-ratio: 1;
@@ -376,41 +380,93 @@ span.arrow-head-left {
 
 
 
-/* Mouse dropdown */
+/* Perspective dropdown */
 
 .perspective-options {
     text-align: center;
 }
 
-.perspective-option.mouse-sensitivity {
+.perspective-option {
     font-size: 14px;
+    padding: 5px 0 10px;
 }
 
-.perspective-option .mouse-sensitivity-title {
+.perspective-option .perspective-option-title {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 45px;
+    height: 35px;
 }
 
-.perspective-option.mouse-sensitivity p { /* "Perspective Sensitivity" */
-    padding-left: 4px;
+.perspective-option .perspective-option-title p { /* "Mouse Sensitivity", "Field of View" */
+    padding-left: 6px;
 }
 
-.perspective-option.mouse-sensitivity .slider-container {
+.perspective-option .slider-container {
     display: flex;
-    margin: 0 0 15px 7px;
+    margin-left: 8px;
 }
 
-.perspective-option.mouse-sensitivity .slider {
+.perspective-option .slider {
     width: 100%;
 }
 
-.perspective-option.mouse-sensitivity .value {
+.perspective-option .slider:hover {
+    cursor: pointer;
+}
+
+.perspective-option .value {
     padding-left: 5px;
-	width: 50px; /* Fixed width to prevent layout shifting */
-	text-align: left; /* Optional: Align the text */
+	text-align: left;
     flex-shrink: 0;
+}
+
+.perspective-option.mouse-sensitivity .value {
+	width: 50px;
+}
+
+.perspective-option.fov .value {
+    width: 35px;
+}
+
+
+
+/* Reset default buttons */
+
+.reset-default-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 5px;
+}
+
+.reset-default {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    height: fit-content;
+    border-radius: 15px;
+    padding: 3px 8px;
+}
+
+.reset-default:hover {
+    background-color: rgb(233, 233, 233);
+    cursor: pointer;
+}
+
+.reset-default:active {
+    transform: scale(0.95);
+}
+
+.reset-default span {
+    padding-left: 2px;
+}
+
+.reset-default-container .svg-undo {
+    width: 19px;
+    aspect-ratio: 1;
+    transform-origin: 70% 55%; /* Rotate around the center of mass (slightly downward) */
+    transform: scale(1.8);
 }
 
 
