@@ -454,10 +454,6 @@ span.arrow-head-left {
     cursor: pointer;
 }
 
-.reset-default:active {
-    transform: scale(0.95);
-}
-
 .reset-default span {
     padding-left: 2px;
 }
