@@ -64,8 +64,8 @@ function renderPieces(gamefile) {
 	const scale = [boardScale, boardScale, 1];
 
 	let modelToUse;
-	if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel === undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
-	else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel === undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
+	if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel !== undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
+	else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel !== undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
 
 	modelToUse.render(position, scale);
 	// Use this line when rendering with the tinted texture shader program.
