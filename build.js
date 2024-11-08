@@ -154,7 +154,7 @@ if (!BUNDLE_FILES) {
 	await minifyCSSFiles();
 }
 
-// Overwrite play.ejs, inserting the link for htmlscript.js into it
+// Overwrite play.ejs, directly inserting htmlscript.js into it.
 /** The relative path to play.ejs */
 const playEJSPath = './dist/views/play.ejs';
 const playEJS = await readFile(playEJSPath, 'utf8');
