@@ -13,56 +13,8 @@ const __dirname = path.dirname(__filename);
 
 // Create or connect to the SQLite database file
 const dbPath = path.join(__dirname, '../../../database.db');
-// const db = new Database(dbPath);
-const db = new Database(dbPath, { verbose: console.log }); // Outputs all queries to the console
-
-
-
-
-function initTables() {
-	// SQL to create the members table
-	const createTableSQL = `
-	  CREATE TABLE IF NOT EXISTS members (
-		user_id INTEGER PRIMARY KEY,               
-		username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
-		email TEXT UNIQUE NOT NULL,                
-		hashed_password TEXT NOT NULL,             
-		roles TEXT,                       
-		joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		refresh_tokens TEXT,                       
-		preferences TEXT,                          
-		verification TEXT,                         
-		login_count INTEGER DEFAULT 1,             
-		last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	  );
-	`;
-	
-	// Run the SQL command
-	db.prepare(createTableSQL).run();
-	console.log('Members table created or already exists.');
-}
-// initTables();
-
-/**
- * Deletes a table from the database by its name.
- * @param {string} tableName - The name of the table to delete.
- */
-function deleteTable(tableName) {
-	try {
-	  // Prepare the SQL query to drop the table
-	  const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;
-	  
-	  // Run the query
-	  db.prepare(deleteTableSQL).run();
-	  console.log(`Table ${tableName} deleted successfully.`);
-	} catch (error) {
-	  console.error(`Error deleting table ${tableName}:`, error);
-	}
-}
-// deleteTable('members');
-  
-
-
+const db = new Database(dbPath);
+// const db = new Database(dbPath, { verbose: console.log }); // Outputs all queries to the console
 
 
 
@@ -105,8 +57,8 @@ function all(query, params = []) {
 
 /** Closes the database connection. */
 function close() {
-	console.log('Closing database.');
 	db.close();
+	console.log('Closed database.');
 }
 
 

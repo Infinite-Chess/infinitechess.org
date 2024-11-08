@@ -2,6 +2,8 @@
 // Ensure our workspace is ready for the dev environment
 import { initDevEnvironment } from './config/setupDev.js';
 initDevEnvironment();
+import { initTables } from './database/initDatabase.js';
+initTables();
 
 // Dependancy/built-in imports
 import express from 'express';
@@ -18,9 +20,6 @@ import { saveMembersIfChangesMade } from './controllers/members.js';
 import { saveRolesIfChangesMade } from './controllers/roles.js';
 import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
-
-// ONLY IMPORTED SO ITS CODE IS RUN RIGHT NOW
-import memberController from './database/controllers/memberController.js';
 
 // Initiate translations
 initTranslations();
