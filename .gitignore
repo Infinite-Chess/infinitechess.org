@@ -2,7 +2,9 @@ node_modules
 .env
 .vscode
 cert
-database
+# Old json data storage "database"
+/database
+# New database using SQLite
 database.db
 logs
 dist

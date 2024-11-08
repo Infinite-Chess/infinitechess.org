@@ -19,6 +19,9 @@ import { saveRolesIfChangesMade } from './controllers/roles.js';
 import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
 
+// ONLY IMPORTED SO ITS CODE IS RUN RIGHT NOW
+import memberController from './database/controllers/memberController.js';
+
 // Initiate translations
 initTranslations();
 
