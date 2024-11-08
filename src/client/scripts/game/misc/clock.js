@@ -1,11 +1,11 @@
 
 // Import Start
 import onlinegame from './onlinegame.js';
-import game from '../chess/game.js';
 import movesscript from '../chess/movesscript.js';
-import gamefileutility from '../chess/gamefileutility.js';
 import clockutil from './clockutil.js';
 import timeutil from './timeutil.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import jsutil from '../misc/jsutil.js';
 // Import End
 
 /**
@@ -21,10 +21,11 @@ import timeutil from './timeutil.js';
 /**
  * Sets the clocks.
  * @param {gamefile} gamefile 
- * @param {string} clock - The clock value (e.g. "10+5").
- * @param {Object} [currentTimes] - An object containing the properties `timerWhite`, and `timerBlack` for the current time of the players. Often used if we re-joining an online game.
+ * @param {string} clock - The clock value (e.g. "600+5" => 10m+5s).
+ * @param {Object} [currentTimes] - Optional. An object containing the properties `timerWhite`, `timerBlack`, and `timeNextPlayerLosesAt` (if an online game) for the current time of the players. Often used if we re-joining an online game.
  */
-function set(gamefile, clock, currentTimes) {
+function set(gamefile, currentTimes) {
+	const clock = gamefile.metadata.TimeControl; // "600+5"
 	const clocks = gamefile.clocks;
 
 	clocks.startTime.minutes = null;
@@ -38,8 +39,10 @@ function set(gamefile, clock, currentTimes) {
 		clocks.startTime.increment = clockPartsSplit.increment;
 	}
 
+	clocks.colorTicking = gamefile.whosTurn;
+
 	// Edit the closk if we're re-loading an online game
-	if (currentTimes) edit(gamefile, currentTimes.timerWhite, currentTimes.timerBlack, currentTimes.timeNextPlayerLosesAt);
+	if (currentTimes) edit(gamefile, currentTimes);
 	else { // No current time specified, start both players with the default.
 		clocks.currentTime.white = clocks.startTime.millis;
 		clocks.currentTime.black = clocks.startTime.millis;
@@ -49,26 +52,30 @@ function set(gamefile, clock, currentTimes) {
 }
 
 /**
- * Called when receive updated clock info from the server.
- * @param {gamefile} gamefile
- * @param {number} newTimeWhite - White's current time, in milliseconds.
- * @param {number} newTimeBlack - Black's current time, in milliseconds.
- * @param {number} timeNextPlayerLoses - The time at which the current player will lose on time if they don't move in time.
+ * Updates the gamefile with new clock information received from the server.
+ * @param {object} gamefile - The current game state object containing clock information.
+ * @param {object} clockValues - An object containing the updated clock values.
+ * @param {number} clockValues.timerWhite - White's current time, in milliseconds.
+ * @param {number} clockValues.timerBlack - Black's current time, in milliseconds.
+ * @param {number} clockValues.timeNextPlayerLosesAt - The time (in epoch milliseconds) when the current player will lose on time if they don't make a move.
  */
-function edit(gamefile, newTimeWhite, newTimeBlack, timeNextPlayerLoses) {
+function edit(gamefile, clockValues) {
+	if (!clockValues) return; // Likely a no-timed game
+	const { timerWhite, timerBlack, timeNextPlayerLosesAt } = clockValues;
 	const clocks = gamefile.clocks;
 
-	clocks.currentTime.white = newTimeWhite;
-	clocks.currentTime.black = newTimeBlack;
-	clocks.timeNextPlayerLosesAt = timeNextPlayerLoses;
+	clocks.colorTicking = gamefile.whosTurn;
+	clocks.currentTime.white = timerWhite;
+	clocks.currentTime.black = timerBlack;
+	clocks.timeNextPlayerLosesAt = timeNextPlayerLosesAt;
 	const now = Date.now();
 	clocks.timeAtTurnStart = now;
 
-	if (timeNextPlayerLoses) {
-		const nextPlayerTrueTime = timeNextPlayerLoses - now;
-		clocks.currentTime[gamefile.whosTurn] = nextPlayerTrueTime;
+	if (timeNextPlayerLosesAt) {
+		const nextPlayerTrueTime = timeNextPlayerLosesAt - now;
+		clocks.currentTime[clocks.colorTicking] = nextPlayerTrueTime;
 	}
-	clocks.timeRemainAtTurnStart = gamefile.whosTurn === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
+	clocks.timeRemainAtTurnStart = clocks.colorTicking === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
 }
 
 /**
@@ -77,18 +84,19 @@ function edit(gamefile, newTimeWhite, newTimeBlack, timeNextPlayerLoses) {
  */
 function push(gamefile) {
 	const clocks = gamefile.clocks;
-
 	if (onlinegame.areInOnlineGame()) return; // Only the server can push clocks
 	if (clocks.untimed) return;
 	if (!movesscript.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
-	
+
+	clocks.colorTicking = gamefile.whosTurn;
+
 	// Add increment if the last move has a clock ticking
 	if (clocks.timeAtTurnStart !== undefined) {
 		const prevcolor = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 		clocks.currentTime[prevcolor] += timeutil.secondsToMillis(clocks.startTime.increment);
 	}
 
-	clocks.timeRemainAtTurnStart = clocks.currentTime[gamefile.whosTurn];
+	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking];
 	clocks.timeAtTurnStart = Date.now();
 	clocks.timeNextPlayerLosesAt = clocks.timeAtTurnStart + clocks.timeRemainAtTurnStart;
 }
@@ -103,25 +111,27 @@ function endGame(gamefile) {
 /**
  * Called every frame, updates values.
  * @param {gamefile} gamefile
+ * @returns {undefined | string} undefined if clocks still have time, otherwise it's the color who won.
 */
 function update(gamefile) {
 	const clocks = gamefile.clocks;
-	if (clocks.untimed || gamefile.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
+	if (clocks.untimed || gamefileutility.isGameOver(gamefile) || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
 	// Update current values
 	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
 
-	clocks.currentTime[gamefile.whosTurn] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
+	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
 	// TODO: update when lose conditions are added
 	if (clocks.currentTime.white <= 0) {
-		gamefile.gameConclusion = 'black time';
-		gamefileutility.concludeGame(game.getGamefile());
-	} else if (clocks.currentTime.black <= 0) {
-		gamefile.gameConclusion = 'white time';
-		gamefileutility.concludeGame(game.getGamefile());
+		clocks.currentTime.white = 0;
+		return 'black';
+	}
+	else if (clocks.currentTime.black <= 0) {
+		clocks.currentTime.black = 0;
+		return 'white';
 	}
 }
 

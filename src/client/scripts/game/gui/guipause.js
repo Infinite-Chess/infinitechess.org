@@ -154,9 +154,6 @@ function callback_MainMenu() {
 	callback_Resume();
 	game.unloadGame();
 
-	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
-	guiclock.resetClocks();
-
 	guinavigation.close();
 	guititle.open();
 }

@@ -3,6 +3,7 @@ import movesscript from "../chess/movesscript.js";
 import onlinegame from "../misc/onlinegame.js";
 import sound from "../misc/sound.js";
 import clockutil from "../misc/clockutil.js";
+import gamefileutility from "../chess/gamefileutility.js";
 
 /**
  * @typedef {import('../chess/gamefile').gamefile} gamefile
@@ -75,7 +76,7 @@ function showClocks() {
 /**
  * Stops clock sounds and removes all borders
  */
-function stopClocks() {
+function stopClocks(gamefile) {
 	clearTimeout(lowtimeNotif.timeoutID);
 	clearTimeout(countdown.ticking.timeoutID);
 	clearTimeout(countdown.tick.timeoutID);
@@ -88,6 +89,7 @@ function stopClocks() {
 	countdown.tick.timeoutID = undefined;
 	countdown.ticking.timeoutID = undefined;
 
+	if (gamefile) updateTextContent(gamefile); // Do this one last time so that when we lose on time, the clock doesn't freeze at one second remaining.
 	for (const color in element_timers) {
 		removeBorder(element_timers[color].timer);
 	}
@@ -109,10 +111,9 @@ function update(gamefile) {
 	const clocks = gamefile.clocks;
 	if (clocks.untimed || gamefile.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
-	const whosTurn = gamefile.whosTurn;
 	// Update border color
-	if (whosTurn !== undefined) {
-		updateBorderColor(gamefile, element_timers[whosTurn].timer, clocks.currentTime[whosTurn]);
+	if (clocks.colorTicking !== undefined) {
+		updateBorderColor(gamefile, element_timers[clocks.colorTicking].timer, clocks.currentTime[clocks.colorTicking]);
 	}
 	updateTextContent(gamefile);
 }
@@ -123,11 +124,15 @@ function edit(gamefile) {
 
 	// Remove colored border
 	for (const color in element_timers) {
-		if (color === gamefile.whosTurn) continue;
+		if (color === gamefile.clocks.colorTicking) continue;
 		removeBorder(element_timers[color].timer);
 	}
 
 	if (!movesscript.isGameResignable(gamefile) || gamefile.gameConclusion) return;
+	rescheduleSoundEffects(gamefile);
+}
+
+function rescheduleSoundEffects(gamefile) {
 	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
 	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
 }
@@ -191,12 +196,10 @@ function updateTextContent(gamefile) {
 function rescheduleMinuteTick(gamefile) {
 	if (gamefile.clocks.startTime.minutes < lowtimeNotif.clockMinsRequiredToUse) return; // 1 minute lowtime notif is not used in bullet games.
 	clearTimeout(lowtimeNotif.timeoutID);
-	if (onlinegame.areInOnlineGame() && gamefile.whosTurn !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
-	if (lowtimeNotif.colorsNotified.has(gamefile.whosTurn)) return;
+	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
+	if (lowtimeNotif.colorsNotified.has(gamefile.clocks.colorTicking)) return;
 	const timeRemain = gamefile.clocks.timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd;
-	console.log(gamefile);
-	console.log(timeRemain, gamefile.clocks.timeRemainAtTurnStart, lowtimeNotif.timeToStartFromEnd);
-	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile.whosTurn);
+	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile.clocks.colorTicking);
 }
 
 function playMinuteTick(color) {
@@ -207,8 +210,9 @@ function playMinuteTick(color) {
 function set(gamefile) {
 	if (gamefile.clocks.untimed) return hideClocks();
 	else showClocks();
-
 	updateTextContent(gamefile);
+	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play
+	rescheduleSoundEffects(gamefile);
 }
 
 // The 10s drum countdown...
@@ -225,22 +229,22 @@ function rescheduleCountdown(gamefile) {
  * @param {gamefile} gamefile 
  */
 function push(gamefile) {
+	const clocks = gamefile.clocks;
 	// Dont update if no clocks are ticking
-	if (gamefile.clocks.timeAtTurnStart === undefined) return;
+	if (clocks.untimed || gamefileutility.isGameOver(gamefile) || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
-	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
-	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
+	rescheduleSoundEffects(gamefile);
 
 	// Remove colored border
 	for (const color in element_timers) {
-		if (color === gamefile.whosTurn) continue;
+		if (color === gamefile.clocks.colorTicking) continue;
 		removeBorder(element_timers[color].timer);
 	}
 }
 
 function rescheduleDrum(gamefile, now) {
 	clearTimeout(countdown.drum.timeoutID);
-	if (onlinegame.areInOnlineGame() && gamefile.whosTurn !== onlinegame.getOurColor() || !gamefile.clocks.timeNextPlayerLosesAt) return; // Don't play the sound effect for our opponent.
+	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor() || !gamefile.clocks.timeNextPlayerLosesAt) return; // Don't play the sound effect for our opponent.
 	const timeUntil10SecsRemain = gamefile.clocks.timeNextPlayerLosesAt - now - 10000;
 	let timeNextDrum = timeUntil10SecsRemain;
 	let secsRemaining = 10;
@@ -255,7 +259,7 @@ function rescheduleDrum(gamefile, now) {
 function rescheduleTicking(gamefile, now) {
 	clearTimeout(countdown.ticking.timeoutID);
 	countdown.ticking.sound?.fadeOut(countdown.ticking.fadeOutDuration);
-	if (onlinegame.areInOnlineGame() && gamefile.whosTurn !== onlinegame.getOurColor() || !gamefile.clocks.timeNextPlayerLosesAt) return; // Don't play the sound effect for our opponent.
+	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor() || !gamefile.clocks.timeNextPlayerLosesAt) return; // Don't play the sound effect for our opponent.
 	if (gamefile.clocks.timeAtTurnStart < 10000) return;
 	const timeToStartTicking = gamefile.clocks.timeNextPlayerLosesAt - countdown.ticking.timeToStartFromEnd;
 	const timeRemain = timeToStartTicking - now;
@@ -270,7 +274,7 @@ function rescheduleTicking(gamefile, now) {
 function rescheduleTick(gamefile, now) {
 	clearTimeout(countdown.tick.timeoutID);
 	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
-	if (onlinegame.areInOnlineGame() && gamefile.whosTurn !== onlinegame.getOurColor() || !gamefile.clocks.timeNextPlayerLosesAt) return; // Don't play the sound effect for our opponent.
+	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor() || !gamefile.clocks.timeNextPlayerLosesAt) return; // Don't play the sound effect for our opponent.
 	const timeToStartTick = gamefile.clocks.timeNextPlayerLosesAt - countdown.tick.timeToStartFromEnd;
 	const timeRemain = timeToStartTick - now;
 	if (timeRemain > 0) countdown.tick.timeoutID = setTimeout(playTickEffect, timeRemain);
@@ -281,7 +285,7 @@ function rescheduleTick(gamefile, now) {
 }
 
 function playDrumAndQueueNext(gamefile, secsRemaining) {
-	if (!secsRemaining) return console.error("Cannot play drum without secsRemaining");
+	if (secsRemaining === undefined) return console.error("Cannot play drum without secsRemaining");
 	sound.playSound_drum();
 
 	const timeRemain = gamefile.clocks.timeNextPlayerLosesAt - Date.now();

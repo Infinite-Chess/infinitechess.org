@@ -10,7 +10,11 @@ This guide walks you through the initial setup phase of the infinitechess.org se
 
 ## Step 1: Install Git ##
 
-[Here's a guide](https://github.com/git-guides/install-git) for how to check if you have Git installed already, and if not, how to install it.
+Let's check to make sure you have Git already installed. Open a command prompt (windows) or terminal (mac), and enter the following:
+```
+git version
+```
+If this outputs a version number, you have it installed, proceed to the next step! If it outputted unknown command, [follow this guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to install it!
 
 ## Step 2: Download VSCode ##
 

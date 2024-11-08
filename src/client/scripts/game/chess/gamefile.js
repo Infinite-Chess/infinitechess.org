@@ -7,6 +7,7 @@ import gamefileutility from './gamefileutility.js';
 import area from '../rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../misc/jsutil.js';
+import clock from '../misc/clock.js';
 
 // Type Definitions...
 
@@ -24,9 +25,10 @@ import jsutil from '../misc/jsutil.js';
  * @param {string[]} [options.moves=[]] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
+ * @param {Object} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, timeNextPlayerLosesAt }`
  * @returns {Object} The gamefile
  */
-function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {}) {
+function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues } = {}) {
 
 	// Everything for JSDoc stuff...
 
@@ -173,7 +175,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
 	this.specialUndos = undefined;
 
 	this.clocks = {
-		/** The time each player has remaining, in milliseconds, at the time of the last move played. */
+		/** The time each player has remaining, in milliseconds. */
 		currentTime: {
 			white: undefined,
 			black: undefined,
@@ -188,9 +190,12 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
 			/** The increment used, in milliseconds. */
 			increment: undefined,
 		},
+		/** We need this separate from gamefile's "whosTurn", because when we are
+		 * in an online game and we make a move, we want our Clock to continue
+		 * ticking until we receive the Clock information back from the server! */
+		colorTicking: undefined,
 		/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
-		 * When set to undefined no clocks are ticking
-		*/
+		 * When set to undefined no clocks are ticking */
 		timeRemainAtTurnStart: undefined,
 		/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. */
 		timeAtTurnStart: undefined,
@@ -235,13 +240,15 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion } = {})
     
 	organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
 	// movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
-	// gamefileutility.updateGameConclusion(this, { concludeGameIfOver: false });
+	// gamefileutility.doGameOverChecks(this);
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	this.gameConclusion = gameConclusion || this.gameConclusion;
 
 	organizedlines.addMoreUndefineds(this, { regenModel: false });
+
+	clock.set(this, clockValues);
 };
 
 // Typedef export DO NOT USE
