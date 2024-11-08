@@ -43,6 +43,18 @@
                 <path d="M120 70v20m53.3 70 4.8-71.9.1-2a50 50 0 00-19.1-41.5l-1.7-1.2a60 60 0 00-72.2-2l-2.6 2-1.7 1.3a50 50 0 00-19 43.8l4.8 72a53.4 53.4 0 00 106.6 0Z" stroke="#555" stroke-linecap="round" stroke-width="20"/></svg>
             </symbol>
         </svg>
+        <!-- Camera perspective fov svg -->
+        <svg>
+            <symbol id="svg-camera" fill="none" viewBox="0 0 240 240">
+                <path d="M120 160a30 30 0 10 0-60 30 30 0 00 0 60Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/><path d="M30 168V92c0-11.2 0-16.8 2.2-21a20 20 0 01 8.7-8.8C45.2 60 50.9 60 62 60h13a10 10 0 00 7.2-4.5l1.1-2.2 2.3-4.2a20 20 0 01 14.5-9h39.8a20 20 0 01 14.5 9l2.3 4.2 1.1 2.2a10 10 0 00 7.2 4.4h13c11.2 0 16.8 0 21 2.3 3.8 2 7 5 8.8 8.7 2.2 4.3 2.2 10 2.2 21v76.1c0 11.2 0 16.8-2.2 21a20 20 0 01-8.7 8.8c-4.3 2.2-9.9 2.2-21 2.2H62c-11.2 0-16.8 0-21-2.2a20 20 0 01-8.8-8.7C30 184.8 30 179.2 30 168.1Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/>
+            </symbol>
+        </svg>
+        <!-- Undo arrow for resetting to default -->
+        <svg>
+            <symbol id="svg-undo" fill="none" viewBox="-200 0 1900 1900">
+                <path d="M910 1473c147-169 90-414-136-388 9 56 18 110 20 130 9 47-30 54-30 54l-438-310 423-378s43 0 35 64l-16 128C1142 724 1372 1230 940 1490l-30-17Z" fill="#555" fill-rule="evenodd" clip-rule="evenodd"/>
+            </symbol>
+        </svg>
     </div>
     <a class="home compact-1" href="/">
         <!-- <img class="headerlogo" src="img/logo/light-theme.png"/> -->
@@ -166,14 +178,29 @@
             </div>
             <div class="perspective-options">
                 <div class="perspective-option mouse-sensitivity">   
-                    <div class="mouse-sensitivity-title">
+                    <div class="perspective-option-title">
                         <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
                         <p>Mouse Sensitivity</p>
                     </div>          
-                    
                     <div class="slider-container">
                         <input class="slider" type="range" min="25" max="200" value="100">
                         <span class="value">100%</span>
+                    </div>
+                </div>
+                <div class="perspective-option fov">   
+                    <div class="perspective-option-title">
+                        <svg class="svg-camera"><use href="#svg-camera"></use></svg>
+                        <p>Field of View</p>
+                    </div> 
+                    <div class="slider-container">
+                        <input class="slider" type="range" min="60" max="150" value="90">
+                        <span class="value">90</span>
+                    </div>
+                    <div class="reset-default-container hidden">
+                        <div class="reset-default">
+                            <svg class="svg-undo"><use href="#svg-undo"></use></svg>
+                            <span>Reset to default</span>
+                        </div>
                     </div>
                 </div>
             </div>

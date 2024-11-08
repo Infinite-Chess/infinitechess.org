@@ -193,10 +193,10 @@ function isMouseLocked() {
 function initCrosshairModel() {
 	if (!enabled) return;
 
-	const cameraZ = camera.getPosition()[2]; // dev-mode sensitive
+	const screenHeight = camera.getScreenHeightWorld();
 
-	const innerSide = crosshairThickness * cameraZ / camera.getCanvasHeightVirtualPixels();
-	const outerSide = crosshairWidth * cameraZ / camera.getCanvasHeightVirtualPixels();
+	const innerSide = (crosshairThickness / 2) * screenHeight  / camera.getCanvasHeightVirtualPixels();
+	const outerSide = (crosshairWidth / 2) * screenHeight / camera.getCanvasHeightVirtualPixels();
 
 	const [r,g,b,a] = crosshairColor;
 

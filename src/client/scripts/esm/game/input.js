@@ -116,9 +116,6 @@ function getMouseWorldLocation() {
 
 // Called within the main() function
 function initListeners() {
-
-	window.addEventListener("resize", camera.onScreenResize );
-
 	initListeners_Touch();
 	initListeners_Mouse();
 	initListeners_Keyboard();
