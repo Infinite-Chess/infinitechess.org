@@ -36,7 +36,7 @@ const targets = browserslistToTargets(browserslist('defaults'));
 
 
 /**
- * ESBuild Text each entry point and all of their dependencies and merges them bundling them into one file.
+ * ESBuild takes each entry point and all of their dependencies and merges them bundling them into one file.
  * If multiple entry points share dependencies, then those dependencies will be split into separate modules,
  * which means they aren't duplicated, and there's only one instance of it per page.
  * This also means more requests to the server, but not many.
