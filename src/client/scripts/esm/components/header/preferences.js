@@ -9,6 +9,7 @@ let preferences; // { theme, legal_moves }
 const default_legal_moves = 'dots';
 const legal_move_shapes = ['squares','dots'];
 const default_perspective_sensitivity = 100;
+const default_perspective_fov = 90;
 
 
 (function init() {
@@ -47,6 +48,7 @@ function getLegalMovesShape() {
 	return preferences.legal_moves || default_legal_moves;
 }
 function setLegalMovesShape(legal_moves) {
+	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
 	savePreferences();
 }
@@ -55,8 +57,22 @@ function getPerspectiveSensitivity() {
 	return preferences.perspective_sensitivity || default_perspective_sensitivity;
 }
 function setPerspectiveSensitivity(perspective_sensitivity) {
+	if (typeof perspective_sensitivity !== 'number') throw new Error('Cannot set preference perspective_sensitivity when it is not a number.');
 	preferences.perspective_sensitivity = perspective_sensitivity;
 	savePreferences();
+}
+
+function getPerspectiveFOV() {
+	return preferences.perspective_fov || default_perspective_fov;
+}
+function getDefaultPerspectiveFOV() {
+	return default_perspective_fov;
+}
+function setPerspectiveFOV(perspective_fov) {
+	if (typeof perspective_fov !== 'number') throw new Error('Cannot set preference perspective_fov when it is not a number.');
+	preferences.perspective_fov = perspective_fov;
+	savePreferences();
+	document.dispatchEvent(new CustomEvent('fov-change'));
 }
 
 
@@ -67,4 +83,7 @@ export default {
 	setLegalMovesShape,
 	getPerspectiveSensitivity,
 	setPerspectiveSensitivity,
+	getPerspectiveFOV,
+	getDefaultPerspectiveFOV,
+	setPerspectiveFOV,
 };

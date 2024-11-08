@@ -43,11 +43,13 @@ function convertCoordToWorldSpace(coords, position = movement.getBoardPos(), sca
 }
 
 function convertPixelsToWorldSpace_Virtual(value) {
-	return (value / camera.getCanvasHeightVirtualPixels()) * (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom);
+	const screenHeight = camera.getScreenHeightWorld(false);
+	return (value / camera.getCanvasHeightVirtualPixels()) * screenHeight;
 }
 
 function convertWorldSpaceToPixels_Virtual(value) {
-	return (value / (camera.getScreenBoundingBox(false).top - camera.getScreenBoundingBox(false).bottom)) * camera.getCanvasHeightVirtualPixels();
+	const screenHeight = camera.getScreenHeightWorld(false);
+	return (value / screenHeight) * camera.getCanvasHeightVirtualPixels();
 }
 
 function convertWorldSpaceToGrid(value) {

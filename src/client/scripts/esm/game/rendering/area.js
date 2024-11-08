@@ -36,7 +36,11 @@ import space from '../misc/space.js';
 
 const padding = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
 const paddingMiniimage = 0.2; // The padding to use when miniimages are visible (zoomed out far)
-const capScale = 1.4; // Divided by screen width
+/**
+ * The minimum number of squares that should be visible when transitioning somewhere. 
+ * This is so that it doesn't zoom too close-up on a single piece or small group.
+ * */
+const areaMinHeightSquares = 17; // Divided by screen width
 
 // Just the action of adding padding, changes the required scale to have that amount of padding,
 // so we need to iterate it a few times for more accuracy.
@@ -168,6 +172,9 @@ function calcScaleToMatchSides(boundingBox) {
 	// What is the scale required to match the sides?
 	const xScale = camera.getScreenBoundingBox(false).right / xHalfLength;
 	const yScale = camera.getScreenBoundingBox(false).top / yHalfLength;
+
+	const screenHeight = camera.getScreenHeightWorld(false);
+	const capScale = screenHeight / areaMinHeightSquares;
 
 	let newScale = xScale < yScale ? xScale : yScale;
 	if (newScale > capScale) newScale = capScale;
