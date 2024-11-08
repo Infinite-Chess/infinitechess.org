@@ -714,6 +714,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
  * @param {gamefile} gamefile - The gamefile
  */
 function eraseRotatedModel(gamefile) {
+	if (!gamefile) return; // Gamefile was unloaded before turning off perspective mode
 	delete gamefile.mesh.rotatedData64;
 	delete gamefile.mesh.rotatedData32;
 	delete gamefile.mesh.rotatedModel;
