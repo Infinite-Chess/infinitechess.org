@@ -1,11 +1,15 @@
 
 // This script allows us to adjust the mouse sensitivity in perspective mode
 
+import docutil from "../../../util/docutil.js";
 import preferences from "../preferences.js";
 
 // Document Elements -------------------------------------------------------------------------
 
 const settingsDropdown = document.querySelector('.settings-dropdown');
+
+// The option in the main settings menu
+const perspectiveSettingsDropdownItem = document.getElementById('perspective-settings-dropdown-item');
 
 const perspectiveDropdown = document.querySelector('.perspective-dropdown');
 const perspectiveDropdownTitle = document.querySelector('.perspective-dropdown .dropdown-title');
@@ -27,6 +31,9 @@ const fovResetDefault = document.querySelector('.perspective-dropdown .fov .rese
 
 
 (function init() {
+
+	if (docutil.isMouseSupported()) perspectiveSettingsDropdownItem.classList.remove('hidden'); // Enable (perspective mode can't be used on mobile)
+	else return;
 
 	setInitialValues();
 
