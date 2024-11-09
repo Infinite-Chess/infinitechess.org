@@ -1,6 +1,5 @@
 
 // Import Start
-import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
 import checkhighlight from './checkhighlight.js';
 import arrows from './arrows.js';
@@ -41,7 +40,9 @@ const highlightedMovesRegenRange = 10_000; // Not every highlighted move can be 
 
 /**
  * The board bounding box in which to render the legal move fields.
- * This dynamically grows and shrinks as you move around while a piece is selected.
+ * This dynamically grows and shrinks as you move around.
+ * ALL legal move highlights, yours, your opponents,
+ * even the ones when hovering over arrows, appear in here!
  * @type {BoundingBox}
  */
 let boundingBoxOfRenderRange;
@@ -51,10 +52,9 @@ let boundingBoxOfRenderRange;
 const multiplier = 4;
 const multiplier_perspective = 2;
 
-/** The vertex data of our blue legal move fields. */
+/** The vertex data of our legal move fields. */
 let data;
-/** The buffer model of the blue legal move fields.
- * @type {BufferModel} */
+/** The buffer model of the legal move fields. @type {BufferModel} */
 let model;
 let model_Offset = [0,0]; // [x,y]
 
@@ -93,7 +93,7 @@ function renderLegalMoves() {
 	const position = [
         -boardPos[0] + model_Offset[0], // Add the model's offset
         -boardPos[1] + model_Offset[1],
-        0
+        z
     ];
 	const boardScale = movement.getBoardScale();
 	const scale = [boardScale, boardScale, 1];
@@ -125,7 +125,7 @@ function regenModel() {
 	// Potentially infinite data on sliding moves...
 	concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color);
 
-	model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 }
 
 /**
@@ -157,7 +157,7 @@ function calcHighlightData_SelectedPiece() {
 	const color = options.getLegalMoveHighlightColor();
 	const pieceCoords = selection.getPieceSelected().coords;
 	const renderCoords = subtractHighlightsOffsetFromCoord(pieceCoords);
-	return shapes.getDataQuad_Color3D_FromCoord(renderCoords, z, color);
+	return shapes.getDataQuad_Color_FromCoord(renderCoords, color);
 }
 
 function subtractHighlightsOffsetFromCoord(coords) {
@@ -187,9 +187,9 @@ function concatData_HighlightedMoves_Individual(data, legalMoves, color) {
 function getDataOfHighlightShapeDependingOnIfPieceOnSquare(coord, color, usingDots, gamefile) {
 	const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
 	return usingDots ? (() => {
-		if (gamefileutility.isPieceOnCoords(gamefile, coord)) return legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, z, color);
-		else return legalmoveshapes.getDataLegalMoveDot(offsetCoord, z, color);
-	})() : shapes.getDataQuad_Color3D_FromCoord(offsetCoord, z, color);
+		if (gamefileutility.isPieceOnCoords(gamefile, coord)) return legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, color);
+		else return legalmoveshapes.getDataLegalMoveDot(offsetCoord, color);
+	})() : shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
 }
 
 // Processes current offset and render range to return the bounding box of the area we will be rendering highlights.
@@ -301,9 +301,9 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
 	const gamefile = game.getGamefile();
 
 	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
-	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, z, color)
-									 : shapes.getDataQuad_Color3D_FromCoord(offsetCoord, z, color);
-	const vertexDataCapture = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, z, color) : undefined;
+	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, color)
+									: shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
+	const vertexDataCapture = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, color) : undefined;
 
 	for (const strline of lineSet) {
 		const line = coordutil.getCoordsFromKey(strline); // [dx,dy]
@@ -465,8 +465,8 @@ function highlightLastMove() {
 
 	const data = [];
 
-	data.push(...shapes.getTransformedDataQuad_Color3D_FromCoord(lastMove.startCoords, z, color));
-	data.push(...shapes.getTransformedDataQuad_Color3D_FromCoord(lastMove.endCoords, z, color));
+	data.push(...shapes.getTransformedDataQuad_Color_FromCoord(lastMove.startCoords, color));
+	data.push(...shapes.getTransformedDataQuad_Color_FromCoord(lastMove.endCoords, color));
 
 	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 
