@@ -55,8 +55,8 @@ const pixelDistToCancelClick = 10; // Default: 12   If the mouse moves more than
 let mousePos = [0,0]; // Current mouse position in pixels relative to the center of the screen.
 let mouseMoved = true; // Did the mouse move this frame? Helps us detect if the user is afk. (If they are we can save computation)
 let mousePosLF = []; // Mouse position last few frames. Required for mouse velocity calculation.
-let mouseVel = [0,0]; // The amount of pixels the mouse moved relative to the last few frames.
-const frameCount = 25; // The amount of frames to look back into for mouse velocity calculation.
+let mouseVel = [0,0]; // The amount of tiles the mouse moved relative to the last few frames.
+const frameCount = 5; // The amount of frames to look back into for mouse velocity calculation.
 
 let mouseWorldLocation = [0,0]; // Current mouse position in world-space
 
@@ -504,7 +504,7 @@ function resetKeyEvents() {
 // Calculates the mouse velocity, called before resetKeyEvents in game loop.
 function calcMouseVel() {
 	// Store the current mouse position
-	mousePosLF.push([...mousePos]);
+	mousePosLF.push([...board.getTileMouseOver().tile_Float]);
 
 	// Ensure the array only holds the specified number of frames
 	if (mousePosLF.length > frameCount) {
@@ -522,7 +522,7 @@ function calcMouseVel() {
         	totalY += mousePosLF[i][1] - mousePosLF[i - 1][1];
     	}
 
-    	mouseVel = [totalX / frameCount, totalY / frameCount];
+    	mouseVel = [totalX, totalY];
 	}
 
 }
