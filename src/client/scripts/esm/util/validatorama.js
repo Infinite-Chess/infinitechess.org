@@ -23,6 +23,10 @@ document.addEventListener('logout', event => { // Custom-event listener. Often f
 // If we're logged in, the log in button will change to their profile,
 // and create account will change to log out...
 
+function areWeLoggedIn() {
+	return username !== undefined;
+}
+
 function getOurUsername() {
 	return username;
 }
@@ -82,5 +86,6 @@ refreshToken();
 export default {
 	refreshToken,
 	waitUntilInitialRequestBack,
+	areWeLoggedIn,
 	getOurUsername,
 };

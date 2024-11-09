@@ -7,6 +7,7 @@ import legalmovedropdown from "./dropdowns/legalmovedropdown.js";
 import perspectivedropdown from "./dropdowns/perspectivedropdown.js";
 // Only imported so its code runs
 import pingmeter from "./pingmeter.js";
+import preferences from "./preferences.js";
 
 
 // Document Elements -------------------------------------------------------------------------
@@ -73,6 +74,7 @@ function closeAllSettingsDropdowns() { // Closes all dropdowns that may be open
 function closeMainSettingsDropdown() {
 	settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeSettingsListeners();
+	preferences.sendPrefsToServer();
 }
 function closeAllSettingsDropdownsExceptMainOne() {
 	languagedropdown.close();
