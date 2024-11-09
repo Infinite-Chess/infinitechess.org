@@ -1,6 +1,8 @@
 import themes from "./themes.js";
 import localstorage from "../../util/localstorage.js";
 import timeutil from "../../game/misc/timeutil.js";
+import validatorama from "../../util/validatorama.js";
+import jsutil from "../../util/jsutil.js";
 
 
 let preferences; // { theme, legal_moves }
@@ -12,7 +14,13 @@ const default_perspective_sensitivity = 100;
 const default_perspective_fov = 90;
 
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs = ['default_perspective_sensitivity', 'default_perspective_fov']
+const clientSidePrefs = ['perspective_sensitivity', 'perspective_fov'];
+
+/**
+ * Whether a change was made to the preferences since the last time we sent them over to the server.
+ * We only change this to true if we change a preference that isn't only client side.
+ */
+let changeWasMade = false;
 
 
 (function init() {
@@ -40,18 +48,21 @@ function savePreferences() {
 
 function sendPrefsToServer() {
 	if (!validatorama.areWeLoggedIn()) return;
-	console.log('Sending preferences to the server!')
+	if (!changeWasMade) return;
+	changeWasMade = false;
+
+	console.log('Sending preferences to the server!');
 	const preparedPrefs = preparePrefs();
 	// POST request...
 }
 
 function preparePrefs() {
-	const prefsCopy = jsutil.deepCopyObject(preferences)
+	const prefsCopy = jsutil.deepCopyObject(preferences);
 	Object.keys(prefsCopy).forEach(prefName => {
-		if (clientSidePrefs.includes(prefName)) prefsCopy.delete(prefName)
+		if (clientSidePrefs.includes(prefName)) delete prefsCopy[prefName];
 	});
-	console.log(`Original preferences: ${JSON.stringify(preferences)}`)
-	console.log(`Prepared preferences: ${JSON.stringify(prefsCopy)}`)
+	console.log(`Original preferences: ${JSON.stringify(preferences)}`);
+	console.log(`Prepared preferences: ${JSON.stringify(prefsCopy)}`);
 	return prefsCopy;
 }
 
@@ -61,6 +72,7 @@ function getTheme() {
 }
 function setTheme(theme) {
 	preferences.theme = theme;
+	changeWasMade = true;
 	savePreferences();
 }
 
@@ -70,6 +82,7 @@ function getLegalMovesShape() {
 function setLegalMovesShape(legal_moves) {
 	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
+	changeWasMade = true;
 	savePreferences();
 }
 
