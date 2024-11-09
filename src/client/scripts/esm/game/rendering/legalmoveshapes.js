@@ -4,11 +4,10 @@ import shapes from "./shapes.js";
 /**
  * Generates the vertex data for a "legal move dot" (a circle) on the board.
  * @param {Array<number>} coords - The tile coordinates in [coordX, coordY] format.
- * @param {number} z - The Z coordinate (depth) for the circle.
  * @param {Array<number>} color - The color as an array [r, g, b, a].
  * @returns {Array<number>} The vertex data for the "legal move dot" (circle).
  */
-function getDataLegalMoveDot(coords, z, color) {
+function getDataLegalMoveDot(coords, color) {
 	const radius = 0.16;
 	const resolution = 32;  // Adjust resolution as needed for circle smoothness
 	const opacityOffset = 0.2; // Increase the opacity of dots because they are harder and smaller to see than squares
@@ -20,20 +19,19 @@ function getDataLegalMoveDot(coords, z, color) {
 	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
 
 	// Generate and return the vertex data for the legal move dot (circle)
-	return shapes.getDataCircle_3D(x, y, z, radius, resolution, r, g, b, a);
+	return shapes.getDataCircle(x, y, radius, resolution, r, g, b, a);
 }
 
 /**
  * Generates vertex data for four small triangles, each located in a corner of a square.
  * @param {number} centerX - The X coordinate of the square's center.
  * @param {number} centerY - The Y coordinate of the square's center.
- * @param {number} z - The Z coordinate (depth) for the triangles.
  * @param {number} size - The size of the square (full side length).
  * @param {number} triSize - The size of the small triangles (side length).
  * @param {Array<number>} color - The color as an array [r, g, b, a].
  * @returns {Array<number>} The vertex data for the four triangles.
  */
-function getDataCornerTriangles(centerX, centerY, z, triSize, color) {
+function getDataCornerTriangles(centerX, centerY, triSize, color) {
 	const vertices = [];
 	const halfSize = 1 / 2;
 	const [r, g, b, a] = color;
@@ -41,9 +39,9 @@ function getDataCornerTriangles(centerX, centerY, z, triSize, color) {
 	// Helper function to add a triangle's vertex data
 	function addTriangle(x1, y1, x2, y2, x3, y3) {
 		vertices.push(
-			x1, y1, z, r, g, b, a, // Vertex 1
-			x2, y2, z, r, g, b, a, // Vertex 2
-			x3, y3, z, r, g, b, a  // Vertex 3
+			x1, y1, r, g, b, a, // Vertex 1
+			x2, y2, r, g, b, a, // Vertex 2
+			x3, y3, r, g, b, a  // Vertex 3
 		);
 	}
 
@@ -90,11 +88,10 @@ function getDataCornerTriangles(centerX, centerY, z, triSize, color) {
 /**
  * Generates the vertex data for four small triangles in the corners of a tile.
  * @param {Array<number>} coords - The tile coordinates in [coordX, coordY] format.
- * @param {number} z - The Z coordinate (depth) for the triangles.
  * @param {Array<number>} color - The color as an array [r, g, b, a].
  * @returns {Array<number>} The vertex data for the four corner triangles.
  */
-function getDataLegalMoveCornerTris(coords, z, color) {
+function getDataLegalMoveCornerTris(coords, color) {
 	const triSize = 0.50;     // Default: 0.50     Adjust this for triangle size in each corner
 	const opacityOffset = 0.2; // Increase opacity for better visibility
 	// eslint-disable-next-line prefer-const
@@ -105,7 +102,7 @@ function getDataLegalMoveCornerTris(coords, z, color) {
 	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
 
 	// Generate and return the vertex data for the four corner triangles
-	return getDataCornerTriangles(x, y, z, triSize, [r, g, b, a]);
+	return getDataCornerTriangles(x, y, triSize, [r, g, b, a]);
 }
 
 export default {
