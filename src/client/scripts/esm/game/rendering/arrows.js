@@ -23,6 +23,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import space from '../misc/space.js';
 import spritesheet from './spritesheet.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 /**
@@ -441,8 +442,9 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
-	highlights.concatData_HighlightedMoves_Individual(data, thisPieceLegalMoves, color);
-	highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisPieceLegalMoves, color);
+	const usingDots = preferences.getLegalMovesShape() === 'dots';
+	highlights.concatData_HighlightedMoves_Individual(data, thisPieceLegalMoves, color, usingDots, gamefile);
+	highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisPieceLegalMoves, color, usingDots, gamefile);
 	const model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 
 	// Store both these objects inside piecesHoveredOver
@@ -511,12 +513,14 @@ function regenModelsOfHoveredPieces() {
 	if (!Object.keys(piecesHoveredOver).length) return;
 
 	console.log('Updating models of hovered piece\'s legal moves..');
+	const usingDots = preferences.getLegalMovesShape() === 'dots';
+	const gamefile = game.getGamefile();
 
 	for (const [key, value] of Object.entries(piecesHoveredOver)) { // { legalMoves, model, color }
 		const coords = coordutil.getCoordsFromKey(key);
 		// Calculate the mesh...
 		const data = [];
-		highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color);
+		highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color, usingDots, gamefile);
 		// Overwrite the model inside piecesHoveredOver
 		value.model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 	}
