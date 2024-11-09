@@ -27,6 +27,7 @@ import shapes from './shapes.js';
  * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
  */
 
 "use strict";
@@ -52,8 +53,6 @@ let boundingBoxOfRenderRange;
 const multiplier = 4;
 const multiplier_perspective = 2;
 
-/** The vertex data of our legal move fields. */
-let data;
 /** The buffer model of the legal move fields. @type {BufferModel} */
 let model;
 let model_Offset = [0,0]; // [x,y]
@@ -106,24 +105,25 @@ function regenModel() {
 	frametracker.onVisualChange();
 	// console.log("Regenerating legal moves model..");
 
-	updateOffsetAndBoundingBoxOfRenderRange();
+	/** The vertex data of our legal move fields. */
+	const data = [];
 
-	// Initate the variable that will store our vertex data
-	data = [];
-
-	// 1 square data of our single selected piece
-	const selectedPieceHighlightData = calcHighlightData_SelectedPiece();
-	data.push(...selectedPieceHighlightData);
-
+	const gamefile = game.getGamefile();
 	const coords = selection.getPieceSelected().coords;
 	const legalMoves = selection.getLegalMovesOfSelectedPiece();
 	const color = options.getLegalMoveHighlightColor(); // [r,g,b,a]
-
-	// Data of short range moves within 3 tiles
-	concatData_HighlightedMoves_Individual(data, legalMoves, color);
+	let usingDots = preferences.getLegalMovesShape() === 'dots';
 
 	// Potentially infinite data on sliding moves...
-	concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color);
+	// NEEDS TO BE FIRST BECAUSE IT CALLS updateOffsetAndBoundingBoxOfRenderRange() !!!!!
+	concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color, usingDots, gamefile);
+
+	// Data of short range moves within 3 tiles
+	concatData_HighlightedMoves_Individual(data, legalMoves, color, usingDots, gamefile);
+
+	// 1 square data of our single selected piece
+	usingDots = false;
+	data.push(...getDataOfHighlightShapeDependingOnIfPieceOnSquare(coords, color, usingDots, gamefile));
 
 	model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 }
@@ -153,29 +153,17 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 	}
 }
 
-function calcHighlightData_SelectedPiece() {
-	const color = options.getLegalMoveHighlightColor();
-	const pieceCoords = selection.getPieceSelected().coords;
-	const renderCoords = subtractHighlightsOffsetFromCoord(pieceCoords);
-	return shapes.getDataQuad_Color_FromCoord(renderCoords, color);
-}
-
-function subtractHighlightsOffsetFromCoord(coords) {
-	return coordutil.subtractCoordinates(coords, model_Offset);
-}
-
 /**
  * Calculates buffer data of legal individual moves and appends it to the provided vertex data array.
  * @param {number[]} data - The vertex data array to apphend the new vertex data to
  * @param {LegalMoves} legalMoves 
  * @param {number[]} color 
+ * @param {boolean} usingDots - Whether legal move are being rendered as dots and corner tri's. 
+ * @param {gamefile} gamefile 
  */
-function concatData_HighlightedMoves_Individual(data, legalMoves, color) {
+function concatData_HighlightedMoves_Individual(data, legalMoves, color, usingDots, gamefile) {
 	// Get an array of the list of individual legal squares the current selected piece can move to
 	const theseLegalMoves = legalMoves.individual;
-	
-	const usingDots = preferences.getLegalMovesShape() === 'dots';
-	const gamefile = game.getGamefile();
 
 	// For each of these squares, calculate it's buffer data
 	const length = !theseLegalMoves ? 0 : theseLegalMoves.length;
@@ -289,16 +277,15 @@ function getBoundingBoxOfPerspectiveView() {
  * @param {number[]} coords - The coordinates of the piece with the provided legal moves
  * @param {LegalMoves} legalMoves 
  * @param {number[]} color 
+ * @param {boolean} usingDots - Whether legal move are being rendered as dots and corner tri's.
+ * @param {gamefile} gamefile 
  */
-function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { // { left, right, bottom, top} The size of the box we should render within
+function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color, usingDots, gamefile) { // { left, right, bottom, top} The size of the box we should render within
 	if (!legalMoves.sliding) return; // No sliding moves
 
 	updateOffsetAndBoundingBoxOfRenderRange();
 
 	const lineSet = new Set(Object.keys(legalMoves.sliding));
-
-	const usingDots = preferences.getLegalMovesShape() === 'dots';
-	const gamefile = game.getGamefile();
 
 	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, color)
@@ -317,7 +304,7 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) { console.error(`Line only has one intersect with square.`); continue; }
         
-		concatData_HighlightedMoves_Diagonal(data, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[line], vertexDataMove, vertexDataCapture, usingDots, gamefile);
+		concatData_HighlightedMoves_Diagonal(data, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[line], usingDots, vertexDataMove, vertexDataCapture, gamefile);
 	}
 }
 
@@ -329,15 +316,18 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color) { 
  * @param {number[]} intsect1Tile - What point this line intersect the left side of the screen box.
  * @param {number[]} intsect2Tile - What point this line intersect the right side of the screen box.
  * @param {number[]} limits - Slide limit: [-7,Infinity]
- * @param {number[]} vertexData - The vertex data of a single legal move highlight (square or dot).
+ * @param {boolean} usingDots - Whether legal move are being rendered as dots and corner tri's.
+ * @param {number[]} vertexDataMove - The vertex data of a single legal move highlight (square or dot).
+ * @param {number[]|undefined} [vertexDataCapture] The vertex data of a single legal move corner tri's (if usingDots).
+ * @param {gamefile} gamefile 
  */
-function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, vertexDataMove, vertexDataCapture, usingDots, gamefile) {
+function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, usingDots, vertexDataMove, vertexDataCapture, gamefile) {
 	// Right moveset
-	concatData_HighlightedMoves_Diagonal_Split(data, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		   jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), usingDots, gamefile);
+	concatData_HighlightedMoves_Diagonal_Split(data, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		   usingDots,  jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), gamefile);
     
 	// Left moveset
 	const negStep = [step[0] * -1, step[1] * -1];
-	concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), usingDots, gamefile);
+	concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), usingDots, jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), gamefile);
 }
 
 /**
@@ -348,9 +338,12 @@ function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, 
  * @param {number[]} intsect1Tile - What point this line intersect the left side of the screen box.
  * @param {number[]} intsect2Tile - What point this line intersect the right side of the screen box.
  * @param {number} limit - Needs to be POSITIVE.
- * @param {number[]} vertexData - The vertex data of a single legal move highlight (square or dot).
+ * @param {boolean} usingDots - Whether legal move are being rendered as dots and corner tri's.
+ * @param {number[]} vertexDataMove - The vertex data of a single legal move highlight (square or dot).
+ * @param {number[]|undefined} [vertexDataCapture] The vertex data of a single legal move corner tri's (if usingDots).
+ * @param {gamefile} gamefile 
  */
-function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limit, vertexDataMove, vertexDataCapture, usingDots, gamefile) {
+function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limit, usingDots, vertexDataMove, vertexDataCapture, gamefile) {
 	if (limit === 0) return; // Quick exit
 
 	const lineIsVertical = step[0] === 0;
@@ -393,18 +386,20 @@ function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1
 	if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
 	const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
 
-	addDataDiagonalVariant(data, vertexDataMove, vertexDataCapture, usingDots, step, iterationCount, startCoords, gamefile);
+	addDataDiagonalVariant(data, usingDots, vertexDataMove, vertexDataCapture, step, iterationCount, startCoords, gamefile);
 }
 
 /**
  * Accepts the vertex data of a legal move highlight (square/dot), and recursively
  * adds it to the vertex data list, shifting by the step size.
  * @param {number[]} data - The currently running vertex data array to apphend the new vertex data to
- * @param {number[]} vertexData - The vertex data of the legal move highlight (square/dot). Stride 7 (3 vertex values, 4 color).
+ * @param {boolean} usingDots - Whether legal move are being rendered as dots and corner tri's.
+ * @param {number[]} vertexDataMove - The vertex data of a single legal move highlight (square or dot).
+ * @param {number[]|undefined} [vertexDataCapture] The vertex data of a single legal move corner tri's (if usingDots).
  * @param {number[]} step - [dx,dy]
  * @param {number} iterateCount 
  */
-function addDataDiagonalVariant(data, vertexDataMove, vertexDataCapture, usingDots, step, iterateCount, startCoords, gamefile) {
+function addDataDiagonalVariant(data, usingDots, vertexDataMove, vertexDataCapture, step, iterateCount, startCoords, gamefile) {
 	if (usingDots) {
 		for (let i = 0; i < iterateCount; i++) { 
 			const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i];
@@ -423,24 +418,23 @@ function addDataDiagonalVariant(data, vertexDataMove, vertexDataCapture, usingDo
 
 /**
  * Shifts the provided vertex data for each vertex by the given X and Y offsets.
- * Stride 7 (three vertex values, 4 color).
+ * Stride 6 (2 vertex values, 4 color).
  * Shifts only the first (X) and second (Y) values in each stride.
- * 
- * @param {number[]} data - The vertex data array.
+ * @param {number[]} vertexDataMove - The vertex data of a single legal move highlight (square or dot).
+ * @param {number[]|undefined} [vertexDataCapture] The vertex data of a single legal move corner tri's (if usingDots).
  * @param {number} x - The X offset to shift.
  * @param {number} y - The Y offset to shift.
  */
 function shiftVertexData(dataMove, dataCapture, x, y) {
-	const stride = 7; // 3 position values + 4 color values
+	const stride = 6; // 2 position values + 4 color values
 	for (let i = 0; i < dataMove.length; i += stride) {
 		dataMove[i] += x;     // Shift X value (first in the stride)
 		dataMove[i + 1] += y; // Shift Y value (second in the stride)
 	}
-	if (dataCapture !== undefined) {
-		for (let i = 0; i < dataCapture.length; i += stride) {
-			dataCapture[i] += x;     // Shift X value (first in the stride)
-			dataCapture[i + 1] += y; // Shift Y value (second in the stride)
-		}
+	if (dataCapture === undefined) return; // No capture data to shift
+	for (let i = 0; i < dataCapture.length; i += stride) {
+		dataCapture[i] += x;     // Shift X value (first in the stride)
+		dataCapture[i + 1] += y; // Shift Y value (second in the stride)
 	}
 }
 
@@ -465,8 +459,8 @@ function highlightLastMove() {
 
 	const data = [];
 
-	data.push(...shapes.getTransformedDataQuad_Color_FromCoord(lastMove.startCoords, color));
-	data.push(...shapes.getTransformedDataQuad_Color_FromCoord(lastMove.endCoords, color));
+	data.push(...shapes.getTransformedDataQuad_Color3D_FromCoord(lastMove.startCoords, z, color));
+	data.push(...shapes.getTransformedDataQuad_Color3D_FromCoord(lastMove.endCoords, z, color));
 
 	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 
@@ -475,6 +469,7 @@ function highlightLastMove() {
 
 export default {
 	getOffset,
+	z,
 	render,
 	regenModel,
 	concatData_HighlightedMoves_Individual,
