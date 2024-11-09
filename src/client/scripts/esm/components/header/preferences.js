@@ -11,6 +11,9 @@ const legal_move_shapes = ['squares','dots'];
 const default_perspective_sensitivity = 100;
 const default_perspective_fov = 90;
 
+/** Prefs that do NOT get saved on the server side */
+const clientSidePrefs = ['default_perspective_sensitivity', 'default_perspective_fov']
+
 
 (function init() {
 	loadPreferences();
@@ -33,6 +36,23 @@ function savePreferences() {
 
 	// After a delay, also send a post request to the server to update our preferences.
 	// Auto send it if the window is closing
+}
+
+function sendPrefsToServer() {
+	if (!validatorama.areWeLoggedIn()) return;
+	console.log('Sending preferences to the server!')
+	const preparedPrefs = preparePrefs();
+	// POST request...
+}
+
+function preparePrefs() {
+	const prefsCopy = jsutil.deepCopyObject(preferences)
+	Object.keys(prefsCopy).forEach(prefName => {
+		if (clientSidePrefs.includes(prefName)) prefsCopy.delete(prefName)
+	});
+	console.log(`Original preferences: ${JSON.stringify(preferences)}`)
+	console.log(`Prepared preferences: ${JSON.stringify(prefsCopy)}`)
+	return prefsCopy;
 }
 
 
@@ -86,4 +106,5 @@ export default {
 	getPerspectiveFOV,
 	getDefaultPerspectiveFOV,
 	setPerspectiveFOV,
+	sendPrefsToServer,
 };
