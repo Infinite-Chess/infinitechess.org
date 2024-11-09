@@ -37,7 +37,7 @@ let boardPos = [0,0]; // Coordinates
 let panVel = [0,0]; // Current panning velocity
 let boardScale = 1; // Current scale. Starts at 1.5 to be higher on the title screen.
 let scaleVel = 0; // Current scale velocity
-const mouseDragMulti = 6; // Value to multiply mouse velocity by during panVel calculation.
+const mouseDragMulti = 0.5; // Value to multiply mouse velocity by during panVel calculation.
 
 let boardIsGrabbed = 0; // Are we currently dragging the board?  0 = false   1 = mouse variant   2 = touch variant
 let boardPosMouseGrabbed; // What coordinates the mouse has grabbed the board.
@@ -224,12 +224,12 @@ function grabBoard_WithMouse() {
 	boardIsGrabbed = 1;
 	const tile_MouseOver_Float = board.gtile_MouseOver_Float();
 	boardPosMouseGrabbed = [tile_MouseOver_Float[0], tile_MouseOver_Float[1]];
-	if (selection.getPieceSelected() === undefined) {
+	if (selection.isAPieceSelected()) {
+		erasePanVelocity();
+	} else {
 		const panXV = input.getMouseVel()[0] * mouseDragMulti;
 		const panYV = input.getMouseVel()[1] * mouseDragMulti;
 		panVel = [panXV, panYV];
-	} else {
-		erasePanVelocity();
 	}
 }
 
