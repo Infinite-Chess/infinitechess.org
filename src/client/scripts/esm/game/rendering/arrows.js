@@ -348,7 +348,7 @@ function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCo
 	const mouseWorldLocation = input.getMouseWorldLocation(); // [x,y]
 	const mouseWorldX = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[0] : mouseWorldLocation[0];
 	const mouseWorldY = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1];
-	if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
+	if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) { // Mouse is hovering over
 		piecesHoveringOverThisFrame.push({ type, coords: pieceCoords, dir: direction });
 		thisOpacity = 1;
 		hovering = true;
@@ -443,7 +443,7 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 	highlights.concatData_HighlightedMoves_Individual(data, thisPieceLegalMoves, color);
 	highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisPieceLegalMoves, color);
-	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	const model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 
 	// Store both these objects inside piecesHoveredOver
 
@@ -486,7 +486,7 @@ function renderEachHoveredPiece() {
 	const position = [
         -boardPos[0] + model_Offset[0], // Add the highlights offset
         -boardPos[1] + model_Offset[1],
-        0
+        highlights.z
     ];
 	const boardScale = movement.getBoardScale();
 	const scale = [boardScale, boardScale, 1];
@@ -518,7 +518,7 @@ function regenModelsOfHoveredPieces() {
 		const data = [];
 		highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color);
 		// Overwrite the model inside piecesHoveredOver
-		value.model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+		value.model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 	}
 }
 
