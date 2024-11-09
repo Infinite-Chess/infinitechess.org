@@ -23,6 +23,8 @@ const panAccel = 50; // Acceleration of board panning   Default: 50
 let panVelCap = 11.0; // Hyptenuse cap of x & y speeds   Default: 11
 const panMomentumKept = 0.5; // Amount of momentum to keep after board is let go	Default: 0.8
 const momentumMin = 0.1; // Amount of momentum required before it snaps to 0	Default: 0.1
+const mouseDragMulti = 0.34; // Value to multiply mouse velocity by during panVel calculation.	Default: 0.2
+// Also, mouseDragMulti should be kept at a low level to avoid glitches. High values will result in eradic behavior.
 
 const scaleAccel = 6.0; // Acceleration of board scaling   Default: 6
 const scaleVelCap = 1.0; // Default: 1.0
@@ -37,7 +39,6 @@ let boardPos = [0,0]; // Coordinates
 let panVel = [0,0]; // Current panning velocity
 let boardScale = 1; // Current scale. Starts at 1.5 to be higher on the title screen.
 let scaleVel = 0; // Current scale velocity
-const mouseDragMulti = 0.5; // Value to multiply mouse velocity by during panVel calculation.
 
 let boardIsGrabbed = 0; // Are we currently dragging the board?  0 = false   1 = mouse variant   2 = touch variant
 let boardPosMouseGrabbed; // What coordinates the mouse has grabbed the board.
@@ -224,13 +225,9 @@ function grabBoard_WithMouse() {
 	boardIsGrabbed = 1;
 	const tile_MouseOver_Float = board.gtile_MouseOver_Float();
 	boardPosMouseGrabbed = [tile_MouseOver_Float[0], tile_MouseOver_Float[1]];
-	if (selection.isAPieceSelected()) {
-		erasePanVelocity();
-	} else {
-		const panXV = input.getMouseVel()[0] * mouseDragMulti;
-		const panYV = input.getMouseVel()[1] * mouseDragMulti;
-		panVel = [panXV, panYV];
-	}
+	const panXV = input.getMouseVel()[0] * mouseDragMulti;
+	const panYV = input.getMouseVel()[1] * mouseDragMulti;
+	panVel = [panXV, panYV];
 }
 
 function erasePanVelocity() { panVel = [0,0]; } // Erase all panning velocity
@@ -349,7 +346,10 @@ function panAccel_Perspective(angle) {
 // Deccelerates the board's momentum
 function decceleratePanVel() {
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Already stopped
-
+	if (selection.isAPieceSelected()) {
+		panVel = [0, 0];
+		return; // Stop momentum if we've selected a piece
+	}
 	if (perspective.getEnabled()) {
 		const hyp = Math.hypot(...panVel);
 		const ratio = (hyp - loadbalancer.getDeltaTime() * panAccel) / hyp;
@@ -522,9 +522,6 @@ function setPositionToArea(area, password) {
 }
 
 
-globalThis.movement = {
-	setBoardPos
-};
 
 export default {
 	getScale_When1TileIs1Pixel_Physical,
