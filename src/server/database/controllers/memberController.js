@@ -4,7 +4,6 @@
  * It does not verify their information.
  */
 
-import uuid from '../../../client/scripts/game/misc/uuid.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import db from '../database.js';
 
@@ -29,11 +28,7 @@ const user_id_upper_cap = 14_776_336; // Limit of unique user id with 4-digit ba
  * @param {string} [options.roles] - The user's roles (e.g., 'owner', 'admin').
  * @param {string} [options.verification] - The verification string (optional).
  * @param {string} [options.preferences] - The user's preferences (optional).
- * @returns {object} - The result of the database operation or an error message. 
- * The result contains:
- *   - {boolean} success - Whether the operation was successful.
- *   - {string} message - A message describing the outcome.
- *   - {object} result - The result of the database operation if successful.
+ * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), result }
  */
 function addUser(username, email, hashed_password, { roles, verification, preferences } = {}) {
 	// The table looks like:
