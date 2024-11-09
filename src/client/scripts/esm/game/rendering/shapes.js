@@ -91,9 +91,19 @@ function expandTileBoundingBoxToEncompassWholeSquare(boundingBox) {
 
 
 
+function getDataQuad_Color_FromCoord(coords, color) {
+	const boundingBox = getBoundingBoxOfCoord(coords);
+	return bufferdata.getDataQuad_Color(boundingBox, color);
+}
+
 function getDataQuad_Color3D_FromCoord(coords, z, color) {
 	const boundingBox = getBoundingBoxOfCoord(coords);
 	return bufferdata.getDataQuad_Color3D(boundingBox, z, color);
+}
+
+function getTransformedDataQuad_Color_FromCoord(coords, color) {
+	const boundingBox = getTransformedBoundingBoxOfSquare(coords);
+	return bufferdata.getDataQuad_Color(boundingBox, color);
 }
 
 function getTransformedDataQuad_Color3D_FromCoord(coords, z, color) {
@@ -106,9 +116,51 @@ function getTransformedDataQuad_Color3D_FromCoord(coords, z, color) {
 
 /**
  * Generates the vertex data for a circle in 3D space with color attributes.
- * @param {number} centerX - The X coordinate of the circle's center.
- * @param {number} centerY - The Y coordinate of the circle's center.
- * @param {number} centerZ - The Z coordinate of the circle's center.
+ * @param {number} x - The X coordinate of the circle's center.
+ * @param {number} y - The Y coordinate of the circle's center.
+ * @param {number} radius - The radius of the circle.
+ * @param {number} resolution - The number of triangles (segments) used to approximate the circle.
+ * @param {number} r - Red color component (0-1).
+ * @param {number} g - Green color component (0-1).
+ * @param {number} b - Blue color component (0-1).
+ * @param {number} a - Alpha (transparency) component (0-1).
+ * @returns {number[]} The vertex data for the circle, including position and color for each vertex.
+ */
+function getDataCircle(x, y, radius, resolution, r, g, b, a) {
+	const vertices = [];
+	const angleStep = (2 * Math.PI) / resolution;
+
+	// Center point of the circle
+	for (let i = 0; i < resolution; i++) {
+		// Current and next angle positions
+		const currentAngle = i * angleStep;
+		const nextAngle = (i + 1) * angleStep;
+
+		// Position of current and next points on the circumference
+		const x1 = x + radius * Math.cos(currentAngle);
+		const y1 = y + radius * Math.sin(currentAngle);
+		const x2 = x + radius * Math.cos(nextAngle);
+		const y2 = y + radius * Math.sin(nextAngle);
+
+		// Triangle fan: center point, current point, and next point
+		vertices.push(
+			// Center vertex
+			x, y, 		r, g, b, a,
+			// Current circumference vertex
+			x1, y1, 	r, g, b, a,
+			// Next circumference vertex
+			x2, y2, 	r, g, b, a
+		);
+	}
+
+	return vertices;
+}
+
+/**
+ * Generates the vertex data for a circle in 3D space with color attributes.
+ * @param {number} x - The X coordinate of the circle's center.
+ * @param {number} y - The Y coordinate of the circle's center.
+ * @param {number} z - The Z coordinate of the circle's center.
  * @param {number} radius - The radius of the circle.
  * @param {number} resolution - The number of triangles (segments) used to approximate the circle.
  * @param {number} r - Red color component (0-1).
@@ -245,8 +297,11 @@ function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 export default {
 	getBoundingBoxOfCoord,
 	getTransformedBoundingBoxOfSquare,
+	getDataCircle,
 	getDataCircle_3D,
+	getDataQuad_Color_FromCoord,
 	getDataQuad_Color3D_FromCoord,
+	getTransformedDataQuad_Color_FromCoord,
 	getTransformedDataQuad_Color3D_FromCoord,
 	expandTileBoundingBoxToEncompassWholeSquare,
 	applyWorldTransformationsToBoundingBox,
