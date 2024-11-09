@@ -9,29 +9,6 @@
  */
 
 
-		/*&@@@@@@@@@@@@@@@@&#/         
-      #&#/#@@@@@/&@%@@(@%&@@@*%@/      
-     @@%((*@&@&@@&,/*%@@#&@@@/#%@(     
-    @@&#((/@&&@@@@@%@@@&%@&@((#%%@(    
-   &@&##(((#&&&&%,* @,%#&&@(((##%&@/   
-  &@&&#((((##(@&&&&&&&&&&%#(((##%%@@   
-  @&@%##########&%%##%((########%#&&@  
- (@&&#######%###&&&&&&%%%#######%%%&@, 
- @&@%##%#%#%%%##@&&%&&%%%%######%%%&@/ 
- @&%%##########%&&&&&&%%%###(###%%%&&& 
-.@&%#(/((####%%%&&&&&&###(///*-/(#%&@@ 
-,%%#(/((((((((((#####%(((((/////(((##& 
-.&%(./@&%#(/** ##*,,,,.*#(.-/(*#%&&.%@ 
-.&%(.@&&%%%%%%&&@@#/((&@@&%%%%%* (&*%@ 
-.&%#/ #&&@@&&@%#@&@%@@@ . &%&@,..#.%%@ 
-.&%#( @ ..... @%@#, ,@@   &% ... @,%%@ 
-.&%%#/* . @.. &.. @ . @.. @ ..@..&*(%& 
-.&%%#(, .... #@*../.. @ . @ ..@..%/(%& 
-.&%%#(/.. @ ..*..#@...@ . &. .. .%(#%& 
-.&%%##(.. @ ..*..,... @   @%%%(*%/##%& 
-,&%%###.,(%@@&&%@@#... @&&%%&#@,((##*/
-
-
 import bcrypt from 'bcrypt';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { addUser, isUsernameTaken, isEmailTaken } from './memberController.js';
@@ -167,7 +144,7 @@ async function generateAccount({ username, email, password, autoVerify }) {
 // Returns whether the email parameter is associated with an account.
 // True = open. false = in-use
 function checkEmailAssociated(req, res) {
-	const lowercaseEmail = req.params.email.toLowerCase()
+	const lowercaseEmail = req.params.email.toLowerCase();
 	if (isEmailTaken(lowercaseEmail)) res.json([false]);
 	else res.json([true]);
 };

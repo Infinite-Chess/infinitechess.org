@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 import db from '../database.js';
 import { DEV_BUILD, HOST_NAME } from '../../config/config.js';
 import { logEvents } from '../../middleware/logEvents.js';
+import { getUserUsernameEmailAndVerification } from './members.js';
 
 /**
  * Sends an account verification email to the specified member
@@ -79,17 +80,6 @@ const sendEmailConfirmation = function(user_id) {
 
 
 
-/**
- * Fetches specific columns (e.g., username and email) of a user based on their user ID.
- * @param {number} userId - The user ID of the user to retrieve.
- * @returns {object|undefined} - An object with the selected columns or undefined if not found.
- */
-function getUserUsernameEmailAndVerification(userId) {
-	// SQL query to select only the username and email columns for a specific user
-	const query = 'SELECT username, email, verification FROM members WHERE user_id = ?';
-	// Execute the query and return the result
-	return db.get(query, [userId]);
-}
 
 
 
