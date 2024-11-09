@@ -59,7 +59,7 @@ function submitMove(ws, game, messageContents) {
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 		logEvents(errString, 'hackLog.txt', { print: true });
-		return resyncToGame(ws, game);
+		return resyncToGame(ws, game, game.id);
 	}
 
 	// Make sure it's their turn
