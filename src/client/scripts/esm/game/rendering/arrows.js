@@ -23,6 +23,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import space from '../misc/space.js';
 import spritesheet from './spritesheet.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 /**
@@ -348,7 +349,7 @@ function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCo
 	const mouseWorldLocation = input.getMouseWorldLocation(); // [x,y]
 	const mouseWorldX = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[0] : mouseWorldLocation[0];
 	const mouseWorldY = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1];
-	if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
+	if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) { // Mouse is hovering over
 		piecesHoveringOverThisFrame.push({ type, coords: pieceCoords, dir: direction });
 		thisOpacity = 1;
 		hovering = true;
@@ -441,9 +442,10 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
-	highlights.concatData_HighlightedMoves_Individual(data, thisPieceLegalMoves, color);
-	highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisPieceLegalMoves, color);
-	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	const usingDots = preferences.getLegalMovesShape() === 'dots';
+	highlights.concatData_HighlightedMoves_Individual(data, thisPieceLegalMoves, color, usingDots, gamefile);
+	highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisPieceLegalMoves, color, usingDots, gamefile);
+	const model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 
 	// Store both these objects inside piecesHoveredOver
 
@@ -486,7 +488,7 @@ function renderEachHoveredPiece() {
 	const position = [
         -boardPos[0] + model_Offset[0], // Add the highlights offset
         -boardPos[1] + model_Offset[1],
-        0
+        highlights.z
     ];
 	const boardScale = movement.getBoardScale();
 	const scale = [boardScale, boardScale, 1];
@@ -511,14 +513,16 @@ function regenModelsOfHoveredPieces() {
 	if (!Object.keys(piecesHoveredOver).length) return;
 
 	console.log('Updating models of hovered piece\'s legal moves..');
+	const usingDots = preferences.getLegalMovesShape() === 'dots';
+	const gamefile = game.getGamefile();
 
 	for (const [key, value] of Object.entries(piecesHoveredOver)) { // { legalMoves, model, color }
 		const coords = coordutil.getCoordsFromKey(key);
 		// Calculate the mesh...
 		const data = [];
-		highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color);
+		highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color, usingDots, gamefile);
 		// Overwrite the model inside piecesHoveredOver
-		value.model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+		value.model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 	}
 }
 

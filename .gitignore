@@ -14,3 +14,4 @@ pnpm-lock.yaml
 
 # Hidden mac file storing attributes of the directory
 .DS_Store 
+database.db
