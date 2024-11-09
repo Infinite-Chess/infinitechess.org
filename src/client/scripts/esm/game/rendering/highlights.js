@@ -237,7 +237,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 	if (!boundingBoxOfRenderRange) return true; // It isn't even initiated yet 
 
 	const boundingBoxOfView = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
-        : board.gboundingBox();
+        : board.gboundingBox(false);
 
 	// If our screen bounding box is less than 4x smaller than our render range bounding box,
 	// we're wasting cpu, let's regenerate it.
