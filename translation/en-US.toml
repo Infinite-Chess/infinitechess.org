@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "100"
+version = "22"
 maintainer = "Naviary"
 
 [header]
@@ -11,6 +11,18 @@ login = "Log In"
 profile = "Profile"
 createaccount = "Create Account"
 logout = "Log Out"
+
+[header.settings]
+language = "Language"
+board = "Board" # Board color/theme
+legalmoves = "Legal Moves" # Legal moves shape
+legalmoves-squares = "Squares"
+legalmoves-dots = "Dots" # Dots and 4 corner triangles
+perspective = "Perspective" # Perspective-mode
+perspective-mouse-sensitivity = "Mouse Sensitivity"
+perspective-fov = "Field of View"
+ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
+reset-to-default = "Reset to default"
 
 [footer]
 contact = "Contact us"
