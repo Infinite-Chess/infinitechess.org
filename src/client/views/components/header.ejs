@@ -93,29 +93,29 @@
         <div class="settings-dropdown dropdown visibility-hidden">
             <div id="language-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-language"><use href="#svg-language"></use></svg>
-                <span class="text">Language</span>
+                <span class="text"><%=t('header.settings.language')%></span>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="board-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
-                <span class="text">Board</span>
+                <span class="text"><%=t('header.settings.board')%></span>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="legalmove-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                <span class="text">Legal Moves</span>
+                <span class="text"><%=t('header.settings.legalmoves')%></span>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden"> <!-- Hidden Initially until we test if mouse (& perspective mode) is supported -->
                 <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
-                <span class="text">Perspective</span>
+                <span class="text"><%=t('header.settings.perspective')%></span>
                 <span class="arrow-head-right"></span>
             </div>
             <div class="ping-meter hidden">
                 <div>
-                    <span class="ping">Ping</span>
+                    <span class="ping"><%=t('header.settings.ping.0')%></span>
                     <strong class="ping-value">-</strong>
-                    <span class="ms">ms</span>
+                    <span class="ms"><%=t('header.settings.ping.1')%></span>
                 </div>
                 <div class="ping-bars">
                     <div class="ping-bar" style="height: 6px;"></div>
@@ -131,7 +131,7 @@
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-language"><use href="#svg-language"></use></svg>
-                <span class="text">Language</span>
+                <span class="text"><%=t('header.settings.language')%></span>
             </div>
             <% for(let i = 0; i < languages.length; i++) { %>
                 <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>" value="<%= languages[i].code %>">
@@ -147,7 +147,7 @@
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
-                <span class="text">Board</span>
+                <span class="text"><%=t('header.settings.board')%></span>
             </div>
             <div class="theme-list"></div>
         </div>
@@ -155,17 +155,17 @@
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                <span class="text">Legal Moves</span>
+                <span class="text"><%=t('header.settings.legalmoves')%></span>
             </div>
             <div class="legalmove-options">
                 <div class="legalmove-option squares">
                     <svg class="svg-squares" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3780 3780"><path d="M1890 950v940H0v1890h1890V1890h1890v940a34850 34850 0 00 10-950L3780 0H1890v950M0 2840" fill="#777" fill-rule="evenodd"/></svg>
-                    <span class="text">Squares</span>
+                    <span class="text"><%=t('header.settings.legalmoves-squares')%></span>
                     <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
                 </div>
                 <div class="legalmove-option dots">
                     <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                    <span class="text">Dots</span>
+                    <span class="text"><%=t('header.settings.legalmoves-dots')%></span>
                     <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
                 </div>
             </div>
@@ -174,32 +174,32 @@
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
-                <span class="text">Perspective</span>
+                <span class="text"><%=t('header.settings.perspective')%></span>
             </div>
             <div class="perspective-options">
                 <div class="perspective-option mouse-sensitivity">   
                     <div class="perspective-option-title">
                         <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
-                        <p>Mouse Sensitivity</p>
+                        <p><%=t('header.settings.perspective-mouse-sensitivity')%></p>
                     </div>          
                     <div class="slider-container">
                         <input class="slider" type="range" min="25" max="200" value="100">
-                        <span class="value">100%</span>
+                        <span class="value"></span>
                     </div>
                 </div>
                 <div class="perspective-option fov">   
                     <div class="perspective-option-title">
                         <svg class="svg-camera"><use href="#svg-camera"></use></svg>
-                        <p>Field of View</p>
+                        <p><%=t('header.settings.perspective-fov')%></p>
                     </div> 
                     <div class="slider-container">
                         <input class="slider" type="range" min="60" max="150" value="90">
-                        <span class="value">90</span>
+                        <span class="value"></span>
                     </div>
                     <div class="reset-default-container hidden">
                         <div class="reset-default">
                             <svg class="svg-undo"><use href="#svg-undo"></use></svg>
-                            <span>Reset to default</span>
+                            <span><%=t('header.settings.reset-to-default')%></span>
                         </div>
                     </div>
                 </div>
