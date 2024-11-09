@@ -60,6 +60,13 @@ let boundingBoxFloat;
  * @type {BoundingBox}
  */
 let boundingBox;
+/**
+ * The bounding box of the board currently visible on the canvas IN DEBUG MODE,
+ * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
+ * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
+ * @type {BoundingBox}
+ */
+let boundingBox_debugMode;
 
 const perspectiveMode_z = -0.01;
 
@@ -112,8 +119,8 @@ function gboundingBoxFloat() {
  * of the canvas to encapsulate the whole of any partially visible squares.
  * @returns {BoundingBox} The board bounding box
  */
-function gboundingBox() {
-	return jsutil.deepCopyObject(boundingBox);
+function gboundingBox(debugMode = options.isDebugModeOn()) {
+	return debugMode ? jsutil.deepCopyObject(boundingBox_debugMode) : jsutil.deepCopyObject(boundingBox);
 }
 
 function glimitToDampScale() {
@@ -211,8 +218,11 @@ function gpositionFingerOver(touchID) {
 
 function recalcBoundingBox() {
 
-	boundingBoxFloat = getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), camera.getScreenBoundingBox());
+	boundingBoxFloat = getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), false);
 	boundingBox = roundAwayBoundingBox(boundingBoxFloat);
+
+	const boundingBoxFloat_debugMode = getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), true);
+	boundingBox_debugMode = roundAwayBoundingBox(boundingBoxFloat_debugMode);
 }
 
 /**
@@ -468,16 +478,17 @@ function renderZoomedBoard(zoom, opacity) {
  * the whole of all tiles atleast partially visible, further use {@link roundAwayBoundingBox}
  * @param {number[]} [position] - The position of the camera.
  * @param {number} [scale] - The scale (zoom) of the camera.
+ * @param {boolean} [debugMode] Whether developer mode is enabled.
  * @returns {BoundingBox} The bounding box
  */
-function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale()) {
+function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale(), debugMode) {
 
-	const distToHorzEdgeDivScale = camera.getScreenBoundingBox().right / scale;
+	const distToHorzEdgeDivScale = camera.getScreenBoundingBox(debugMode).right / scale;
 
 	const left = position[0] - distToHorzEdgeDivScale;
 	const right = position[0] + distToHorzEdgeDivScale;
 
-	const distToVertEdgeDivScale = camera.getScreenBoundingBox().top / scale;
+	const distToVertEdgeDivScale = camera.getScreenBoundingBox(debugMode).top / scale;
 
 	const bottom = position[1] - distToVertEdgeDivScale;
 	const top = position[1] + distToVertEdgeDivScale;
