@@ -20,6 +20,8 @@ import coordutil from '../misc/coordutil.js';
 
 const panAccel = 50; // Acceleration of board panning   Default: 50
 let panVelCap = 11.0; // Hyptenuse cap of x & y speeds   Default: 11
+const panMomentumKept = 0.5; // Amount of momentum to keep after board is let go	Default: 0.8
+const momentumMin = 0.1; // Amount of momentum required before it snaps to 0	Default: 0.1
 
 const scaleAccel = 6.0; // Acceleration of board scaling   Default: 6
 const scaleVelCap = 1.0; // Default: 1.0
@@ -46,6 +48,7 @@ let scale_When1TileIs1Pixel_Physical; // Scale limit where each tile takes up ex
 let scale_When1TileIs1Pixel_Virtual; // Scale limit where each tile takes up exactly 1 VIRTUAL pixel on screen
 let scaleIsLess1Pixel_Physical = false;
 let scaleIsLess1Pixel_Virtual = false; // Set to true when we're so zoomed out, 1 cell is smaller than 1 pixel!! Everything renders differently!
+
 
 // Returns a copy of the boardPos in memory, otherwise the memory location
 // could be used to modify the original.
@@ -164,7 +167,7 @@ function recalcScale() {
 function updateNavControls() {
 
 	checkIfBoardDropped(); // Needs to be before exiting from teleporting
-
+	
 	if (transition.areWeTeleporting()) return; // Exit if teleporting
 	if (guipromotion.isUIOpen()) { // User needs to select a promotion piece, dont update navigation
 		decceleratePanVel();
@@ -181,6 +184,8 @@ function updateNavControls() {
 }
 
 function checkIfBoardDropped() {
+
+
 	if (boardIsGrabbed === 0) return; // Not grabbed
 
 	if (boardIsGrabbed === 1) {
@@ -217,7 +222,7 @@ function grabBoard_WithMouse() {
 	boardIsGrabbed = 1;
 	const tile_MouseOver_Float = board.gtile_MouseOver_Float();
 	boardPosMouseGrabbed = [tile_MouseOver_Float[0], tile_MouseOver_Float[1]];
-	erasePanVelocity();
+	panVel = input.getMouseVel();
 }
 
 function erasePanVelocity() { panVel = [0,0]; } // Erase all panning velocity
@@ -333,15 +338,45 @@ function panAccel_Perspective(angle) {
 	panVel[1] += loadbalancer.getDeltaTime() * panAccel * XYComponents[1];
 }
 
+// Deccelerates the board's momentum
 function decceleratePanVel() {
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Already stopped
 
-	const hyp = Math.hypot(...panVel);
-	const ratio = (hyp - loadbalancer.getDeltaTime() * panAccel) / hyp;
-	if (ratio < 0) panVel = [0,0]; // Stop completely before we start going in the opposite direction
-	else {
-		panVel[0] *= ratio;
-		panVel[1] *= ratio;
+	if (perspective.getEnabled()) {
+		const hyp = Math.hypot(...panVel);
+		const ratio = (hyp - loadbalancer.getDeltaTime() * panAccel) / hyp;
+		if (ratio < 0) panVel = [0,0]; // Stop completely before we start going in the opposite direction
+		else {
+			panVel[0] *= ratio;
+			panVel[1] *= ratio;
+		}
+	} else {
+		const pMK = 1 - panMomentumKept * loadbalancer.getDeltaTime(); // panMomentKept scaled to deltaTime
+		let x = panVel[0] * pMK;
+		let y = panVel[1] * pMK;
+		
+		if (x < 0) {
+			if (x > -momentumMin) {
+				x = 0;
+			}
+		} else {
+			if (x < momentumMin) {
+				x = 0;
+			}
+		}
+		if (y < 0) {
+			if (y > -momentumMin) {
+				y = 0;
+			}
+		} else {
+			if (y < momentumMin) {
+				y = 0;
+			}
+		}
+
+		panVel = [x, y];
+		
+		
 	}
 }
 
@@ -478,6 +513,11 @@ function setPositionToArea(area, password) {
 	setBoardScale(area.scale, password);
 }
 
+
+globalThis.movement = {
+	setBoardPos
+};
+
 export default {
 	getScale_When1TileIs1Pixel_Physical,
 	setScale_When1TileIs1Pixel_Physical,
@@ -498,3 +538,4 @@ export default {
 	eraseMomentum,
 	setPositionToArea
 };
+

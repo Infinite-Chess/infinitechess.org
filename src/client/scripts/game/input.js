@@ -54,6 +54,9 @@ const pixelDistToCancelClick = 10; // Default: 12   If the mouse moves more than
 
 let mousePos = [0,0]; // Current mouse position in pixels relative to the center of the screen.
 let mouseMoved = true; // Did the mouse move this frame? Helps us detect if the user is afk. (If they are we can save computation)
+let mousePosLF = []; // Mouse position last few frames. Required for mouse velocity calculation.
+let mouseVel = [0,0]; // The amount of pixels the mouse moved relative to the last few frames.
+const frameCount = 25; // The amount of frames to look back into for mouse velocity calculation.
 
 let mouseWorldLocation = [0,0]; // Current mouse position in world-space
 
@@ -498,6 +501,36 @@ function resetKeyEvents() {
 	ignoreMouseDown = false;
 }
 
+// Calculates the mouse velocity, called before resetKeyEvents in game loop.
+function calcMouseVel() {
+	// Store the current mouse position
+	mousePosLF.push([...mousePos]);
+
+	// Ensure the array only holds the specified number of frames
+	if (mousePosLF.length > frameCount) {
+		mousePosLF.shift();
+	}
+
+	// Calculate average velocity if enough frames are stored
+	if (mousePosLF.length >= 2) {
+		let totalX = 0;
+    	let totalY = 0;
+
+    	// Sum the differences between consecutive frames
+    	for (let i = 1; i < mousePosLF.length; i++) {
+        	totalX += mousePosLF[i][0] - mousePosLF[i - 1][0];
+        	totalY += mousePosLF[i][1] - mousePosLF[i - 1][1];
+    	}
+
+    	mouseVel = [totalX / frameCount, totalY / frameCount];
+	}
+
+}
+
+function getMouseVel() {
+	return mouseVel;
+}
+
 // Returns true if the touch point with specified id exists
 function touchHeldsIncludesID(touchID) {
 	for (let i = 0; i < touchHelds.length; i++) {
@@ -659,6 +692,8 @@ export default {
 	isMouseSupported,
 	initListeners,
 	resetKeyEvents,
+	calcMouseVel,
+	getMouseVel,
 	touchHeldsIncludesID,
 	getTouchHeldByID,
 	getMouseWorldLocation,
