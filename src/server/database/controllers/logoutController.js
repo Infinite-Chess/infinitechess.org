@@ -16,8 +16,9 @@ const handleLogout = async(req, res) => {
 
 	const { user_id, username } = getUserIDAndUsernameFromRefreshToken(refreshToken);
 	if (user_id === undefined) {
-		logEvents(`Tampered refresh token did not decode to any user_id: "${refreshToken}"`, 'errLog.txt', { print: true })
-		return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) });
+		logEvents(`When logging out, tampered refresh token did not decode to any user_id: "${refreshToken}"`, 'errLog.txt', { print: true });
+		// return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) });
+		return res.redirect('/'); // Return this instead just in case there's a bug.
 	}
 
 	deleteRefreshToken(user_id, refreshToken);

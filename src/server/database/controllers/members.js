@@ -195,7 +195,7 @@ function saveRefreshTokens(userId, refreshTokens) {
  * Retrieves the user ID and username from a refresh token.
  * This does NOT test it we have manually invalidated it if they logged out early!!
  * @param {string} refreshToken - The refresh token to decode.
- * @returns {object} - An object: { user_id, username } if valid, or {} if the token is invalid.
+ * @returns {object} - An object: { user_id, username } if valid, or {} if the token is invalid, WAS invalidated, or expired.
  */
 function getUserIDAndUsernameFromRefreshToken(refreshToken) {
 	const payload = getRefreshTokenPayload(refreshToken);
