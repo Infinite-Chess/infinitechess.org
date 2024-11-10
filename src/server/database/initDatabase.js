@@ -13,27 +13,31 @@ import db from './database.js';
 function initTables() {
 	// Members table
 	let createTableSQLQuery = `
-	  CREATE TABLE IF NOT EXISTS members (
-		user_id INTEGER PRIMARY KEY,               
-		username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
-		email TEXT UNIQUE NOT NULL,                
-		hashed_password TEXT NOT NULL,             
-		roles TEXT,                       
-		joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		refresh_tokens TEXT,                        
-		preferences TEXT,                          
-		verification TEXT,                         
-		login_count INTEGER DEFAULT 0,             
-		last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	  );
+		CREATE TABLE IF NOT EXISTS members (
+			user_id INTEGER PRIMARY KEY,               
+			username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
+			email TEXT UNIQUE NOT NULL,                
+			hashed_password TEXT NOT NULL,             
+			roles TEXT,                       
+			joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			refresh_tokens TEXT,                        
+			preferences TEXT,                          
+			verification TEXT,                         
+			login_count INTEGER DEFAULT 0,             
+			last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
 	`;
 	db.run(createTableSQLQuery);
 
 	// Bans table
-
-
-	// Stats table
-
+	createTableSQLQuery = `
+		CREATE TABLE IF NOT EXISTS bans (
+			emails TEXT DEFAULT '[]',
+			ips TEXT DEFAULT '[]',
+			browser_ids TEXT DEFAULT '[]'
+		)
+	`;
+	db.run(createTableSQLQuery);
 
 	// Games table...
 }
