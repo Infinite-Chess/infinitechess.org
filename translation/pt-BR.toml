@@ -1,14 +1,28 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "21"
+version = "22"
 maintainer = "Emerson P. Machado" # The_Skeleton on discord
 
 [header]
-home = "Início"
+home = "Xadrez Infinito"
 play = "Jogar"
 news = "Notícias"
 login = "Entrar"
+profile = "Perfil"
 createaccount = "Criar conta"
+logout = "Sair"
+
+[header.settings]
+language = "Idioma"
+board = "Tabuleiro" # Cor/Tema do Tabuleiro
+legalmoves = "Lances Legais" # Legal moves shape
+legalmoves-squares = "Casas"
+legalmoves-dots = "Pontos" # Pontos e triângulos de 4 cantos
+perspective = "Perspectiva" # Modo da perspectiva
+perspective-mouse-sensitivity = "Sensibilidade do Mouse"
+perspective-fov = "Campo de Visão"
+ping = ["Ping", "ms"] # Um número é inserido dentro dessas 2 strings.
+reset-to-default = "Resetar para o Padrão"
 
 [footer]
 contact = "Contato"
@@ -16,22 +30,16 @@ terms_of_service = "Termos de serviço"
 source_code = "Código-fonte"
 language = "Idioma"
 
-[header.javascript]
-js-profile = "Perfil"
-js-logout = "Sair"
-js-login = "Entrar"
-js-createaccount = "Criar Conta"
-
 [member.javascript]
 js-confirm_delete = "Tem certeza de que deseja excluir sua conta? Isso NÃO PODE ser desfeito! Clique em OK para digitar sua senha."
 js-enter_password = "Digite sua senha para excluir PERMANENTEMENTE sua conta:"
 
 [index]
-title = "Infinite Chess | Início - O Site Oficial" # The tab title
+title = "Xadrez Infinito | Início - O Site Oficial" # The tab title
 secondary_title = "O site oficial para jogar ao vivo!"
 what_is_it_title = "O que é?"
 what_is_it_pargaraphs = [
-"Infinite Chess é uma variante do xadrez em que não há bordas, muito maior do que o seu familiar tabuleiro 8x8. A dama, as torres e os bispos <em>não têm limites</em> de quão longe podem se mover por turno. Escolha qualquer número natural até o infinito!",
+"Xadrez Infinito é uma variante do xadrez em que não há bordas, muito maior do que o seu familiar tabuleiro 8x8. A dama, as torres e os bispos <em>não têm limites</em> de quão longe podem se mover por turno. Escolha qualquer número natural até o infinito!",
 "Sem limite de quão longe você pode se mover, existem posições possíveis onde o número do relógio do xeque-mate, ou xeque-mate em <em>branco</em>, é representado pelo primeiro ordinal infinito, <strong>ômega ω</strong >. Na verdade, pesquisas descobriram que <strong>qualquer</strong> ordinal contável é alcançável para o relógio do xeque-mate!",
 "Como você pode imaginar, existem infinitas possibilidades de posições iniciais, muitas das quais você pode jogar competitivamente! Seu objetivo final ainda é o xeque-mate, o que requer novas táticas, visto que não há paredes contra as quais possa prender o rei inimigo. Os jogos tipicamente não duram muito mais do que os jogos normais de xadrez. Peões ainda promovem nas fileiras 1 & 8!",
 ]
@@ -39,7 +47,7 @@ how_to_title = "Como eu posso jogar?"
 how_to_paragraph = ["A versão atual é a 1.4 na página ","Jogar","!"]
 about_title = "Sobre o Projeto"
 about_paragraphs = [
-"Eu sou Naviary. Desde que descobri o Infinite Chess (o conceito existia muito antes deste site), fiquei muito intrigado com ele e suas possibilidades! Até pouco tempo atrás, jogar era bastante difícil, exigindo que os membros do chess.com criassem imagens do tabuleiro atual e as enviassem de um lado para o outro a cada jogada realizada. Devido a isso, poucas pessoas conhecem ou conseguiram jogar.",
+"Eu sou Naviary. Desde que descobri o Xadrez Infinito (o conceito existia muito antes deste site), fiquei muito intrigado com ele e suas possibilidades! Até pouco tempo atrás, jogar era bastante difícil, exigindo que os membros do chess.com criassem imagens do tabuleiro atual e as enviassem de um lado para o outro a cada jogada realizada. Devido a isso, poucas pessoas conhecem ou conseguiram jogar.",
 ["Meu objetivo é criar uma maneira de tornar esse jogo fácil de jogar para todos e desenvolver uma comunidade em torno dele. Gastei inúmeras horas do meu tempo livre neste site, mantendo e desenvolvendo o jogo. Tenho muitas outras ideias que me manterão ocupado por algum tempo. Embora eu queira manter o jogo gratuito, a vida tem suas exigências. Para me ajudar financeiramente, considere a possibilidade de se juntar ao meu", "Patreon"]
 ]
 patreon_title = "Apoiadores do Patreon"
@@ -123,7 +131,7 @@ js-pwd_too_long = "A senha não pode ter mais de 72 caracteres"
 js-pwd_not_pwd = "A senha não deve ser 'password'"
 
 [play]
-title = "Infinite Chess - Jogar" # The tab title
+title = "Xadrez Infinito - Jogar" # The tab title
 loading = "CARREGANDO"
 error = "ERRO"
 
@@ -137,7 +145,7 @@ editor = "Editor de tabuleiro"
 title = "Guia"
 rules = "Regras"
 rules_paragraphs = [
-"As regras do Infinite Chess são quase idênticas às do xadrez clássico, exceto pelo fato de o tabuleiro ser infinito em todas as direções! Essas são as únicas observações e alterações das quais você precisa estar ciente:",
+"As regras do Xadrez Infinito são quase idênticas às do xadrez clássico, exceto pelo fato de o tabuleiro ser infinito em todas as direções! Essas são as únicas observações e alterações das quais você precisa estar ciente:",
 "As peças com movimentos deslizantes, como as torres, os bispos e a dama, não têm limite para a distância que podem percorrer em um turno! Desde que o caminho delas esteja desobstruído, você pode mover milhões!",
 ["Na variante padrão \"Classical\", os peões brancos são promovidos na posição 8 e os peões pretos na posição 1. Nesta imagem, isso é indicado pelas linhas pretas finas. Elas são fracas, veja se você consegue identificá-las! Os peões só precisam alcançar a linha oposta para serem promovidos, ", "não", " cruzá-la."],
 "A notação dos quadrados não é mais descrita pela letra da coluna e pelo número da fileira (ou seja, a1); em vez disso, cada quadrado é definido por um par de coordenadas x e y. O quadrado a1 se tornou (1,1) e o quadrado h8 se tornou (8,8). Em dispositivos desktop, a coordenada sobre a qual o mouse está posicionado é exibida na parte superior da tela.",
@@ -210,7 +218,7 @@ Amazon_Chandelier = "Amazon Chandelier"
 Containment = "Containment"
 Classical_Limit_7 = "Classical - Limit 7"
 CoaIP_Limit_7 = "Coaip - Limit 7"
-Chess = "Chess"
+Chess = "Xadrez"
 Classical_KOTH = "Experimental: Classical - KOTH"
 CoaIP_KOTH = "Experimental: Coaip - KOTH"
 Omega = "Showcase: Omega"
@@ -296,8 +304,6 @@ webgl_unsupported = "Seu navegador não é compatível com WebGL. Este jogo requ
 bigints_unsupported = "Não há suporte para BigInts. Atualize seu navegador.\nBigInts são necessários para tornar o tabuleiro infinito."
 shaders_failed = "Não foi possível inicializar o programa de shaders:"
 failed_compiling_shaders = "Ocorreu um erro na compilação dos shaders:"
-disable_holiday_theme_desktop = "Para desativar o tema de férias, pressione Enter."
-disable_holiday_theme_mobile = "Para desativar o tema de férias, toque com três dedos na tela."
 
 [play.javascript.copypaste]
 copied_game = "Jogo copiado para a área de transferência!"
