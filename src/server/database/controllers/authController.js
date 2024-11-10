@@ -95,7 +95,7 @@ async function testPasswordForRequest(req, res) {
 	let { username: claimedUsername, password: claimedPassword } = req.body;
 	claimedUsername = claimedUsername || req.params.member;
 
-	const { user_id, username, hashed_password } = getUserIDUsernameAndPasswordByUsername(claimedUsername);
+	const { user_id, username, hashed_password } = getUserIDUsernameAndPasswordByUsername(claimedUsername, { noerror: true });
 	if (user_id === undefined) { // Username doesn't exist
 		res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-invalid_username", req)}); // Unauthorized, username not found
 		return false;
