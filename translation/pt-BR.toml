@@ -1,6 +1,6 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "21"
+version = "22"
 maintainer = "Emerson P. Machado" # The_Skeleton on discord
 
 [header]
@@ -8,19 +8,27 @@ home = "Início"
 play = "Jogar"
 news = "Notícias"
 login = "Entrar"
+profile = "Perfil"
 createaccount = "Criar conta"
+logout = "Sair"
+
+[header.settings]
+language = "Idioma"
+board = "Tabuleiro" # Cor/Tema do Tabuleiro
+legalmoves = "Lances Legais" # Legal moves shape
+legalmoves-squares = "Casas"
+legalmoves-dots = "Pontos" # Pontos e triângulos de 4 cantos
+perspective = "Perspectiva" # Modo da perspectiva
+perspective-mouse-sensitivity = "Sensibilidade do Mouse"
+perspective-fov = "Campo de Visão"
+ping = ["Ping", "ms"] # Um número é inserido dentro dessas 2 strings.
+reset-to-default = "Resetar para o Padrão"
 
 [footer]
 contact = "Contato"
 terms_of_service = "Termos de serviço"
 source_code = "Código-fonte"
 language = "Idioma"
-
-[header.javascript]
-js-profile = "Perfil"
-js-logout = "Sair"
-js-login = "Entrar"
-js-createaccount = "Criar Conta"
 
 [member.javascript]
 js-confirm_delete = "Tem certeza de que deseja excluir sua conta? Isso NÃO PODE ser desfeito! Clique em OK para digitar sua senha."
@@ -296,8 +304,6 @@ webgl_unsupported = "Seu navegador não é compatível com WebGL. Este jogo requ
 bigints_unsupported = "Não há suporte para BigInts. Atualize seu navegador.\nBigInts são necessários para tornar o tabuleiro infinito."
 shaders_failed = "Não foi possível inicializar o programa de shaders:"
 failed_compiling_shaders = "Ocorreu um erro na compilação dos shaders:"
-disable_holiday_theme_desktop = "Para desativar o tema de férias, pressione Enter."
-disable_holiday_theme_mobile = "Para desativar o tema de férias, toque com três dedos na tela."
 
 [play.javascript.copypaste]
 copied_game = "Jogo copiado para a área de transferência!"
