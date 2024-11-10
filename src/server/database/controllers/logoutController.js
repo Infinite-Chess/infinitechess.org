@@ -15,12 +15,12 @@ const handleLogout = async(req, res) => {
 	const refreshToken = cookies.jwt;
 
 	const { user_id, username } = getUserIDAndUsernameFromRefreshToken(refreshToken);
-	if (user_id === undefined) return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) }); // Tampered token, it didn't decode to anybody's username.
+	if (user_id === undefined) {
+		logEvents(`Tampered refresh token did not decode to any user_id: "${refreshToken}"`, 'errLog.txt', { print: true })
+		return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) });
+	}
 
-	const result = deleteRefreshToken(user_id, refreshToken); // { success (boolean), message (string), result }
-
-	// Was the refreshToken in db?
-	if (!result.success) return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) }); // Forbidden, already deleted
+	deleteRefreshToken(user_id, refreshToken);
 
 	websocketserver.closeAllSocketsOfMember(username.toLowerCase(), 1008, "Logged out");
 	deleteAllInvitesOfMember(username.toLowerCase());

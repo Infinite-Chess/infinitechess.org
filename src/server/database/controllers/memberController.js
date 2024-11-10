@@ -1,6 +1,6 @@
 
 /**
- * This script ads and deletes members from the members table.
+ * This script adds and deletes members from the members table.
  * It does not verify their information.
  */
 
@@ -28,7 +28,7 @@ const user_id_upper_cap = 14_776_336; // Limit of unique user id with 4-digit ba
  * @param {string} [options.roles] - The user's roles (e.g., 'owner', 'admin').
  * @param {string} [options.verification] - The verification string (optional).
  * @param {string} [options.preferences] - The user's preferences (optional).
- * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), result }
+ * @returns {object} - The result of the database operation or an error message: { success (boolean), result: { lastInsertRowid } }
  */
 function addUser(username, email, hashed_password, { roles, verification, preferences } = {}) {
 	// The table looks like:
@@ -71,14 +71,14 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 		const result = db.run(query, [user_id, username, email, hashed_password, roles, verification, preferences]); // { changes: 1, lastInsertRowid: 7656846 }
 		
 		// Return success result
-		return { success: true, message: `User "${username}" added successfully`, result };
+		return { success: true, result };
 
 	} catch (error) {
 		// Log the error for debugging purposes
 		logEvents(`Error adding user "${username}": ${error.message}`, 'errLog.txt', { print: true });
 		
 		// Return an error message
-		return { success: false, message: error.message };
+		return { success: false };
 	}
 }
 // console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password'));
@@ -93,22 +93,11 @@ function deleteUser(user_id) {
 	// SQL query to delete a user by their user_id
 	const query = 'DELETE FROM members WHERE user_id = ?';
 
-	try {
-		// Execute the delete query
-		const result = db.run(query, [user_id]); // { changes: 1 }
+	// Execute the delete query
+	const result = db.run(query, [user_id]); // { changes: 1 }
 
-		// Check if any rows were deleted
-		if (result.changes === 0) return { success: false, message: `User with ID ${user_id} not found.` };
-
-		// Return success result
-		return { success: true, message: `User with ID ${user_id} deleted successfully.`, result };
-	} catch (error) {
-		// Log the error for debugging purposes
-		logEvents(`Error deleting user with ID ${user_id}: ${error.message}`, 'errLog.txt', { print: true });
-
-		// Return an error message
-		return { success: false, message: error.message };
-	}
+	// Check if any rows were deleted
+	if (result.changes === 0) logEvents(`Cannot delete non-existent user of id "${user_id}"!`, 'errLog.txt', { print: true });
 }
 // console.log(deleteUser(3408674));
 
