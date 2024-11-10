@@ -222,7 +222,21 @@ function getUserUsernameEmailAndVerification(userId) {
 }
 
 /**
- * Fetches the case-sensitive username and hashed_password of a member based on their username.
+ * Fetches the user_id of a member based on their username.
+ * @param {string} username - The username of the member to retrieve, capitalization doesn't matter.
+ * @returns {object} - An object containing the user_id, username, and hashed_password, or {} if the user is not found.
+ */
+function getUserIDByUsername(username) {
+	// SQL query to select the username and hashed_password
+	const query = 'SELECT user_id FROM members WHERE username = ?';
+	// Execute the query and return the result, or an empty object if not found
+	const row = db.get(query, [username]);
+	if (row === undefined) logEvents(`Unable to get user_id of non-existent user "${username}"!`);
+	return row || {};
+}
+
+/**
+ * Fetches the user_id and case-sensitive username of a member based on their username.
  * @param {string} username - The username of the member to retrieve, capitalization doesn't matter.
  * @returns {object} - An object containing the user_id, username, and hashed_password, or {} if the user is not found.
  */
@@ -318,6 +332,7 @@ export {
 	updateLastSeen,
 	getUserIDAndUsernameFromRefreshToken,
 	getUserUsernameEmailAndVerification,
+	getUserIDByUsername,
 	getUserIDAndUsernameByUsername,
 	getUserIDUsernameAndPasswordByUsername,
 	getUserIdUsernameAndVerificationByUsername,
