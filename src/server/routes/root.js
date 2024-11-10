@@ -68,7 +68,7 @@ router.get("/termsofservice(.html)?", (req, res) => {
 	);
 });
 
-router.get("/verify/:member/:id", verifyAccount);
+router.get("/verify/:member/:code", verifyAccount);
 
 router.get("/400(.html)?", (req, res) => {
 	const language = getLanguageToServe(req);

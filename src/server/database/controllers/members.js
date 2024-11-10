@@ -212,7 +212,7 @@ function getUserIDAndUsernameFromRefreshToken(refreshToken) {
  * @param {number} userId - The user ID of the user to retrieve.
  * @returns {object|undefined} - An object with the selected columns or undefined if not found.
  */
-function getUserUsernameEmailAndVerification(c) {
+function getUserUsernameEmailAndVerification(userId) {
 	// SQL query to select only the username and email columns for a specific user
 	const query = 'SELECT username, email, verification FROM members WHERE user_id = ?';
 	// Execute the query and return the result
@@ -254,60 +254,43 @@ function getUserIDUsernameAndPasswordByUsername(username, { noerror } = {}) {
 	return row || {};
 }
 
-/**
- * Returns the `verified` property of the member.
- * @param {string} username - Their username, in lowercase
- * @returns {boolean|0} - The verified property, if it exists, otherwise 0 (already verified, or member doesn't exist).
- */
-const getVerified = (username) => {
-	if (!doesMemberExist(username)) {
-		const errText = `Cannot get the verified property of non-existent member "${username}"!`;
-		logEvents(errText, "errLog.txt", { print: true });
-		return 0;
-	}
-	const verified = members[username].verified;
-	if (verified) return verified[0];
-	return 0;
-};
 
 /**
- * Tests if the provided account verification ID matches their data.
- * Called when a new user clicks verify account in their verification email.
- * @param {string} username - Their username, in lowercase
- * @param {string} verificationID - The verification ID from their verification link.
- * @returns {boolean} true if the provided verification ID matches their data.
+ * Fetches the user ID, username, and verification status based on the username.
+ * @param {string} username - The username of the user to retrieve.
+ * @param {boolean} [noerror] If true, and we encounter an error that they don't exist, we will skip logging it to the error log.
+ * @returns {object|undefined} - An object with the user ID, username, and verification status, or undefined if not found.
  */
-const doesVerificationIDMatch = (username, verificationID) => {
-	if (!doesMemberExist(username)) {
-		const errText = `Cannot verify verification ID of non-existent member "${username}"!`;
-		logEvents(errText, "errLog.txt", { print: true });
-		return false;
-	}
-	return members[username].verified[1] === verificationID;
-};
+function getUserIdUsernameAndVerificationByUsername(username, { noerror } = {}) {
+    // SQL query to select the user_id, username, and verification columns for a specific user
+    const query = 'SELECT user_id, username, verification FROM members WHERE username = ?';
+    
+    // Execute the query and return the result
+    const row = db.get(query, [username]);
+    if (row === undefined && !noerror) logEvents(`Unable to find user with username "${username}"!`);
+
+    return row || {};
+}
 
 /**
- * Sets the `verified` property of the member data.
- * @param {string} username - Their username, in lowercase
- * @param {true|0} value - The new value of the `verified` property, either true or 0, 0 meaning they are verified and we have told them they are.
- * @returns {boolean} true if it was a success
+ * Updates the verification status for a given user.
+ * @param {number} userId - The user ID of the member.
+ * @param {object|null} verification - The new verification status as an object to be stringified and saved, or null if they are verified AND notified.
  */
-const setVerified = (username, value) => {
-	if (!doesMemberExist(username)) {
-		const errText = `Cannot set verification property of non-existent member "${username}"!`;
-		logEvents(errText, "errLog.txt", { print: true });
-		return false;
-	}
-	if (value !== true && value !== 0) {
-		const errText = `Cannot set member ${getUsernameCaseSensitive(username)}'s verified parameter to any value besides true or 0! Received value: ${value}`;
-		logEvents(errText, "errLog.txt", { print: true });
-		return false;
-	}
-	members[username].verified[0] = value;
-	if (value === 0) delete members[username].verified; // Already verified (and they have seen that fact)
-	membersHasBeenEdited = true; // Flag it to be saved
-	return true; // Success
-};
+function saveVerification(userId, verification) {
+    // If verification is null, pass null to the query; otherwise, stringify the object
+    const verificationToSave = (verification === null) ? null : JSON.stringify(verification);
+
+    // Update query to save the stringified or null verification status
+    const updateQuery = 'UPDATE members SET verification = ? WHERE user_id = ?';
+    
+    // Execute the query and update the verification status
+    const result = db.run(updateQuery, [verificationToSave, userId]);
+    
+    // Log an event if no changes were made
+    if (result.changes === 0) logEvents(`No changes made when saving verification for member with id "${userId}"! Value: "${verificationToSave}"`, 'errLog.txt', { print: true });
+}
+
 
 /**
  * Returns the member's username, email, and verified properties.
@@ -328,16 +311,15 @@ function getInfo(username) {
 
 export {
 	updateLoginCountAndLastSeen,
-	getVerified,
-	doesVerificationIDMatch,
 	removeExpiredTokens,
 	addRefreshToken,
 	deleteRefreshToken,
-	setVerified,
 	getInfo,
 	updateLastSeen,
 	getUserIDAndUsernameFromRefreshToken,
 	getUserUsernameEmailAndVerification,
 	getUserIDAndUsernameByUsername,
 	getUserIDUsernameAndPasswordByUsername,
+	getUserIdUsernameAndVerificationByUsername,
+	saveVerification,
 };
