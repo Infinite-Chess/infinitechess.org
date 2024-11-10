@@ -12,7 +12,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { getClientIP } from '../../middleware/IP.js';
 import db from '../database.js';
-import { addRefreshToken, updateLoginCountAndLastSeen } from './members.js';
+import { addRefreshToken, getUserIDAndUsernameByUsername, getUserIDUsernameAndPasswordByUsername, updateLoginCountAndLastSeen } from './members.js';
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
@@ -57,8 +57,7 @@ async function handleLogin(req, res) {
 	const usernameCaseInsensitive = req.body.username; // We already know this property is present on the request
 
 	const { user_id, username } = getUserIDAndUsernameByUsername(usernameCaseInsensitive);
-	const userFound = user_id !== undefined;
-	if (!userFound) logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
+	if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 
 	// The payload can be an object with their username and their roles.
 	const payload = { user_id, username };
@@ -97,9 +96,7 @@ async function testPasswordForRequest(req, res) {
 	claimedUsername = claimedUsername || req.params.member;
 
 	const { user_id, username, hashed_password } = getUserIDUsernameAndPasswordByUsername(claimedUsername);
-	const userFound = user_id !== undefined;
-
-	if (!userFound) { // Username doesn't exist
+	if (user_id === undefined) { // Username doesn't exist
 		res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-invalid_username", req)}); // Unauthorized, username not found
 		return false;
 	}
@@ -121,36 +118,6 @@ async function testPasswordForRequest(req, res) {
 	onCorrectPassword(browserAgent);
 
 	return true;
-}
-
-/**
- * Fetches the case-sensitive username and hashed_password of a member based on their username.
- * @param {string} username - The username of the member to retrieve, capitalization doesn't matter.
- * @returns {object} - An object containing the user_id, username, and hashed_password, or an empty object if the user is not found.
- */
-function getUserIDUsernameAndPasswordByUsername(username) {
-	console.log(`search by username2 "${username}"`);
-	// SQL query to select the username and hashed_password
-	const query = 'SELECT user_id, username, hashed_password FROM members WHERE username = ?';
-	// Execute the query and return the result, or an empty object if not found
-	const result = db.get(query, [username]);
-	console.log(`found "${JSON.stringify(result)}"`);
-	return result || {};
-}
-
-/**
- * Fetches the case-sensitive username and hashed_password of a member based on their username.
- * @param {string} username - The username of the member to retrieve, capitalization doesn't matter.
- * @returns {object} - An object containing the user_id, username, and hashed_password, or an empty object if the user is not found.
- */
-function getUserIDAndUsernameByUsername(username) {
-	console.log(`search by username2 "${username}"`);
-	// SQL query to select the username and hashed_password
-	const query = 'SELECT user_id, username FROM members WHERE username = ?';
-	// Execute the query and return the result, or an empty object if not found
-	const result = db.get(query, [username]);
-	console.log(`found "${JSON.stringify(result)}"`);
-	return result || {};
 }
 
 /**

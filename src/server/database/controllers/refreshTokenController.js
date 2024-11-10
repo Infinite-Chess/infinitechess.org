@@ -82,7 +82,7 @@ function getRefreshTokenPayload(refreshToken) {
 		// Decode the JWT and return the payload
 		return jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 	} catch (err) {
-		// Return null if verification fails (e.g., token is invalid or expired)
+		// Return undefined if verification fails (e.g., token is invalid or expired)
 		return undefined;
 	}
 };

@@ -24,18 +24,10 @@ function updateLoginCountAndLastSeen(userId) {
 		WHERE user_id = ?
 	`;
 
-	try {
-		// Execute the query with the provided userId
-		const result = db.run(query, [userId]);
-		
-		// Return success result
-		return { success: true, message: `Login count and last seen updated for user ID "${userId}"`, result };
+	// Execute the query with the provided userId
+	const result = db.run(query, [userId]);
 
-	} catch (error) {
-		// Log the error and return an error message
-		logEvents(`Error updating login count for user ID "${userId}": ${error.message}`, 'errLog.txt', { print: true });
-		return { success: false, message: error.message };
-	}
+	if (result.changes === 0) logEvents(`No changes made when updating login_count and last_seen for member of id "${userId}"!`, 'errLog.txt', { print: true })
 }
 
 
@@ -53,61 +45,16 @@ function updateLastSeen(userId) {
 		WHERE user_id = ?
 	`;
 
-	try {
-		// Execute the query with the provided userId
-		const result = db.run(query, [userId]);
-		
-		// Return success result
-		return { success: true, message: `Last seen updated for user ID "${userId}"`, result };
+	// Execute the query with the provided userId
+	const result = db.run(query, [userId]);
 
-	} catch (error) {
-		// Log the error and return an error message
-		logEvents(`Error updating last seen for user ID "${userId}": ${error.message}`, 'errLog.txt', { print: true });
-		return { success: false, message: error.message };
-	}
-}
-
-/**
- * Adds a new refresh token in the database to the refresh_tokens column for a member.
- * @param {number} userId - The user ID of the member.
- * @param {string} newToken - The new refresh token to add.
- * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), result }
- */
-function addRefreshToken(userId, newToken) {
-	// SQL query to update the refresh_tokens field
-	const updateQuery = `
-		UPDATE members
-		SET refresh_tokens = ?
-		WHERE user_id = ?
-	`;
-
-	try {
-		// Get the current refresh tokens
-		let refreshTokens = getRefreshTokensByUserID(userId);
-
-		// Remove any expired tokens. Do this whenever we read and write it.
-		refreshTokens = removeExpiredTokens(refreshTokens);
-
-		// Add the new token to the list
-		refreshTokens = addTokenToRefreshTokens(refreshTokens, newToken);
-
-		// Update the refresh_tokens field with the new stringified JSON
-		const result = db.run(updateQuery, [JSON.stringify(refreshTokens), userId]);
-
-		// Return success result
-		return { success: true, message: 'Refresh token added successfully', result };
-
-	} catch (error) {
-		// Log the error and return an error message
-		logEvents(`Error adding refresh token for user ID "${userId}": ${error.message}`, 'errLog.txt', { print: true });
-		return { success: false, message: error.message };
-	}
+	if (result.changes === 0) logEvents(`No changes made when updating last_seen for member of id "${userId}"!`, 'errLog.txt', { print: true })
 }
 
 /**
  * Fetches the refresh tokens for a given user ID.
  * @param {number} userId - The user ID of the member whose refresh tokens are to be fetched.
- * @returns {object[]} - An array of all their refresh tokens: [ { token, expires }, { token, expires }, ...]
+ * @returns {object[]|undefined} - An array of all their refresh tokens: [ { token, expires }, { token, expires }, ...], or undefined if the member doesn't exist
  */
 function getRefreshTokensByUserID(userId) {
 	// SQL query to fetch the refresh_tokens column
@@ -116,22 +63,28 @@ function getRefreshTokensByUserID(userId) {
 	// Retrieve the refresh tokens column for the user
 	const row = db.get(query, [userId]);
 
-	// If no refresh tokens are found, return an empty array
-	return row?.refresh_tokens ? JSON.parse(row.refresh_tokens) : []; // { { token, expires }, { token, expires }, ...}
+	// If the user exists but has null or no refresh tokens, return an empty array.
+	// If the user doesn't exist (row is undefined), return undefined.
+	const refresh_tokens = row ? JSON.parse(row.refresh_tokens || '[]') : undefined;
+	if (refresh_tokens === undefined) logEvents(`Cannot get refresh tokens of a non-existent member of id "${userId}"!`);
+
+	return refresh_tokens;
 }
+
 
 /**
  * Fetches the refresh tokens for a given user ID, removes any expired tokens,
  * updates the database with the new list of valid tokens, and returns the updated list.
  * @param {number} userId - The user ID of the member whose refresh tokens are to be fetched and updated.
- * @returns {object[]} - The updated array of valid refresh tokens: [ { token, expires }, { token, expires }, ... ]
+ * @returns {object[]|undefined} - The updated array of valid refresh tokens: [ { token, expires }, { token, expires }, ... ], or undefined if the member doesn't exist.
  */
 function getRefreshTokensByUserID_DeleteExpired(userId) {
 	// Step 1: Fetch the current refresh tokens for the user
 	let refreshTokens = getRefreshTokensByUserID(userId);
+	if (refreshTokens === undefined) return logEvents(`Cannot get refresh tokens (and delete expired) of a non-existent member of id "${userId}"!`);
 
 	// Step 2: Remove expired tokens
-	refreshTokens = removeExpiredTokens(refreshTokens);
+	const validRefreshTokens = removeExpiredTokens(refreshTokens);
 
 	// Step 3: If the list of valid tokens has changed, save the new list
 	if (refreshTokens.length !== validRefreshTokens.length) {
@@ -140,6 +93,32 @@ function getRefreshTokensByUserID_DeleteExpired(userId) {
 
 	// Step 4: Return the array of valid refresh tokens
 	return validRefreshTokens;
+}
+
+/**
+ * Adds a new refresh token in the database to the refresh_tokens column for a member.
+ * @param {number} userId - The user ID of the member.
+ * @param {string} newToken - The new refresh token to add.
+ */
+function addRefreshToken(userId, newToken) {
+	// Get the current refresh tokens
+	let refreshTokens = getRefreshTokensByUserID(userId);
+	if (refreshTokens === undefined) return logEvents(`Cannot add refresh token to non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
+
+	// Remove any expired tokens
+	refreshTokens = removeExpiredTokens(refreshTokens);
+
+	// Add the new token to the list
+	refreshTokens = addTokenToRefreshTokens(refreshTokens, newToken);
+
+	// SQL query to update the refresh_tokens field
+	const updateQuery = `
+		UPDATE members
+		SET refresh_tokens = ?
+		WHERE user_id = ?
+	`;
+	// Update the refresh_tokens field with the new stringified JSON
+	db.run(updateQuery, [JSON.stringify(refreshTokens), userId]);
 }
 
 
@@ -179,35 +158,22 @@ function removeExpiredTokens(refreshTokens) {
  * Deletes a specific refresh token in the database for a user based on their user_id.
  * @param {number} userId - The user ID of the member whose refresh token is to be deleted.
  * @param {string} refreshToken - The refresh token to be deleted from the user's refresh_tokens column.
- * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), result }
  */
 function deleteRefreshToken(userId, refreshToken) {
 	// Fetch the current refresh tokens for the user
 	let refreshTokens = getRefreshTokensByUserID(userId);
+	if (refreshTokens === undefined) return logEvents(`Cannot delete refresh token from non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
 
 	// Remove any expired tokens. Do this whenever we read and write it.
-	refreshTokens = removeExpiredTokens(refreshTokens);
+	let newRefreshTokens = removeExpiredTokens(refreshTokens);
 
 	// Remove the specified refresh token from the array
-	refreshTokens = refreshTokens.filter(token => token.token !== refreshToken);
+	newRefreshTokens = newRefreshTokens.filter(token => token.token !== refreshToken);
 
 	// Save the updated refresh tokens
-	const saveResult = saveRefreshTokens(userId, refreshTokens);
-
-	// Check if the update was successful
-
-	// Check if the save was successful, if not, log the failure
-	if (saveResult.success) {
-		if (saveResult.changes > 0) {
-			return { success: true, message: 'Refresh token deleted successfully.' };
-		} else {
-			logEvents(`Failed to delete the refresh token (not found) for member of id "${userId}"! This should never happen. Was it already deleted?`, 'errLog.txt', { print: true });
-			return { success: false, message: 'Failed to delete the refresh token, not found.' };
-		}
-	} else { // Failure probably due to member not found
-		logEvents(`Failed to delete the refresh token for member with id "${userId}", this should never happen: ${saveResult.message}.`, 'errLog.txt', { print: true });
-		return { success: false, message: saveResult.message };
-	}
+	if (newRefreshTokens.length !== refreshTokens.length) {
+		saveRefreshTokens(userId, refreshTokens);
+	} else logEvents(`Unable to find refresh token to delete of member with id "${userId}"!`);
 }
 
 
@@ -215,19 +181,12 @@ function deleteRefreshToken(userId, refreshToken) {
  * Updates the refresh tokens for a given user.
  * @param {number} userId - The user ID of the member.
  * @param {object[]} refreshTokens - The new array of refresh tokens to save.
- * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), changes (number) }
  */
 function saveRefreshTokens(userId, refreshTokens) {
-	try {
-		// Update query to save the refresh tokens
-		const updateQuery = 'UPDATE members SET refresh_tokens = ? WHERE user_id = ?';
-		const result = db.run(updateQuery, [JSON.stringify(refreshTokens), userId]);
-		// Return success
-		return { success: true, message: `Success updating refresh tokens for member with id "${userId}"!`, changes: result.changes };
-	} catch (error) {
-		logEvents(`Database error updating refresh tokens for user with ID "${userId}", do they not exist?: ${error.message}`, 'errLog.txt', { print: true });
-		return { success: false, message: `Error: ${error.message}` };
-	}
+	// Update query to save the refresh tokens
+	const updateQuery = 'UPDATE members SET refresh_tokens = ? WHERE user_id = ?';
+	const result = db.run(updateQuery, [JSON.stringify(refreshTokens), userId]);
+	if (result.changes === 0) logEvents(`No changes made when saving refresh_tokens of member with id "${userId}"!`);
 }
 
 
@@ -253,15 +212,47 @@ function getUserIDAndUsernameFromRefreshToken(refreshToken) {
  * @param {number} userId - The user ID of the user to retrieve.
  * @returns {object|undefined} - An object with the selected columns or undefined if not found.
  */
-function getUserUsernameEmailAndVerification(userId) {
+function getUserUsernameEmailAndVerification(c) {
 	// SQL query to select only the username and email columns for a specific user
 	const query = 'SELECT username, email, verification FROM members WHERE user_id = ?';
 	// Execute the query and return the result
-	return db.get(query, [userId]);
+	const row = db.get(query, [userId]);
+	if (row === undefined) logEvents(`Unable to get username, email, and verification of non-existant member of id "${userId}"!`);
+	return row || {};
 }
 
+/**
+ * Fetches the case-sensitive username and hashed_password of a member based on their username.
+ * @param {string} username - The username of the member to retrieve, capitalization doesn't matter.
+ * @returns {object} - An object containing the user_id, username, and hashed_password, or {} if the user is not found.
+ */
+function getUserIDAndUsernameByUsername(username) {
+	console.log(`search by username "${username}"`);
+	// SQL query to select the username and hashed_password
+	const query = 'SELECT user_id, username FROM members WHERE username = ?';
+	// Execute the query and return the result, or an empty object if not found
+	const row = db.get(query, [username]);
+	console.log(`found "${JSON.stringify(row)}"`);
+	if (row === undefined) logEvents(`Unable to get user_id and username of non-existent user "${username}"!`);
+	return row || {};
+}
 
-
+/**
+ * Fetches the case-sensitive username and hashed_password of a member based on their username.
+ * @param {string} username - The username of the member to retrieve, capitalization doesn't matter.
+ * @param {boolean} [noerror] If true, and we encounter an error that they don't exist, we will skip logging it to the error log.
+ * @returns {object} - An object containing the user_id, username, and hashed_password, or {} if the user is not found.
+ */
+function getUserIDUsernameAndPasswordByUsername(username, { noerror } = {}) {
+	console.log(`search by username2 "${username}"`);
+	// SQL query to select the username and hashed_password
+	const query = 'SELECT user_id, username, hashed_password FROM members WHERE username = ?';
+	// Execute the query and return the result, or an empty object if not found
+	const row = db.get(query, [username]);
+	console.log(`found "${JSON.stringify(row)}"`);
+	if (row === undefined && !noerror) logEvents(`Unable to get user_id, username, and hashed_password of non-existent user "${username}"!`);
+	return row || {};
+}
 
 /**
  * Returns the `verified` property of the member.
@@ -347,4 +338,6 @@ export {
 	updateLastSeen,
 	getUserIDAndUsernameFromRefreshToken,
 	getUserUsernameEmailAndVerification,
+	getUserIDAndUsernameByUsername,
+	getUserIDUsernameAndPasswordByUsername,
 };

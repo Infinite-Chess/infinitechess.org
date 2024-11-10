@@ -16,6 +16,7 @@ const sendEmailConfirmation = function(user_id) {
 
 	// eslint-disable-next-line prefer-const
 	let { username, email, verification } = getUserUsernameEmailAndVerification(user_id);
+	if (username === undefined) return logEvents(`Unable to send email confirmation of non-existent member of id "${user_id}"!`);
 	verification = JSON.parse(verification); // { verified, code }
 
 	const url_string = `https://${host}/verify/${username.toLowerCase()}/${verification.code}`;
