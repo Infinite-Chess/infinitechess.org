@@ -21,10 +21,11 @@ import selection from '../chess/selection.js';
 
 const panAccel = 50; // Acceleration of board panning   Default: 50
 let panVelCap = 11.0; // Hyptenuse cap of x & y speeds   Default: 11
-const panMomentumKept = 0.5; // Amount of momentum to keep after board is let go	Default: 0.8
-const momentumMin = 0.1; // Amount of momentum required before it snaps to 0	Default: 0.1
-const mouseDragMulti = 0.34; // Value to multiply mouse velocity by during panVel calculation.	Default: 0.2
-// Also, mouseDragMulti should be kept at a low level to avoid glitches. High values will result in eradic behavior.
+const panMomentumKept = 0.5; // Amount of momentum to keep after board is let go	Default: 0.5
+const momentumMin = 0.5; // Amount of momentum required before it snaps to 0	Default: 0.5
+const mouseVelocityRequirement = 3; // The speed the mouse must go at before the dragging can cause board velocity.
+const mouseDragMulti = 0.4; // Value to multiply mouse velocity by during panVel calculation.	Default: 0.4
+// Also, mouseDragMulti should be kept at a low level to avoid glitches. High values will result in eratic behavior.
 
 const scaleAccel = 6.0; // Acceleration of board scaling   Default: 6
 const scaleVelCap = 1.0; // Default: 1.0
@@ -225,9 +226,22 @@ function grabBoard_WithMouse() {
 	boardIsGrabbed = 1;
 	const tile_MouseOver_Float = board.gtile_MouseOver_Float();
 	boardPosMouseGrabbed = [tile_MouseOver_Float[0], tile_MouseOver_Float[1]];
-	const panXV = input.getMouseVel()[0] * mouseDragMulti;
-	const panYV = input.getMouseVel()[1] * mouseDragMulti;
-	panVel = [panXV, panYV];
+	let mouseXVel = input.getMouseVel()[0];
+	let mouseYVel = input.getMouseVel()[1];
+	if (mouseXVel < 0) {
+		mouseXVel *= -1;
+	}
+	if (mouseYVel < 0) {
+		mouseYVel *= -1;
+	}
+	const mouseOverallVelocity = Math.hypot(mouseXVel, mouseYVel);
+	if (mouseOverallVelocity > mouseVelocityRequirement) {
+		const panXV = input.getMouseVel()[0] * mouseDragMulti;
+		const panYV = input.getMouseVel()[1] * mouseDragMulti;
+		panVel = [panXV, panYV];
+	} else {
+		erasePanVelocity();
+	}
 }
 
 function erasePanVelocity() { panVel = [0,0]; } // Erase all panning velocity
