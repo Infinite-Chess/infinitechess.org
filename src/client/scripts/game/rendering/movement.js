@@ -20,12 +20,11 @@ import selection from '../chess/selection.js';
 /** This script stores our board position and scale and controls our panning and zooming. */
 
 const panAccel = 50; // Acceleration of board panning   Default: 50
+const deccelRate2D = 15; // Deccelleration rate of panning in 2D mode	Default: 15
+const boardDroppedSpeedMultiplier = 0.3; // Multiplier of mouse velocity before getting applied to
+// the board after the user finishes dragging	Default: 0.3
+const requiredVelocityToThrow = 3; // Mouse velocity required for the board to get thrown	Default: 4
 let panVelCap = 11.0; // Hyptenuse cap of x & y speeds   Default: 11
-const panMomentumKept = 0.5; // Amount of momentum to keep after board is let go	Default: 0.5
-const momentumMin = 0.5; // Amount of momentum required before it snaps to 0	Default: 0.5
-const mouseVelocityRequirement = 3.5; // The speed the mouse must go at before the dragging can cause board velocity.
-const mouseDragMulti = 0.4; // Value to multiply mouse velocity by during panVel calculation.	Default: 0.4
-// Also, mouseDragMulti should be kept at a low level to avoid glitches. High values will result in eratic behavior.
 
 const scaleAccel = 6.0; // Acceleration of board scaling   Default: 6
 const scaleVelCap = 1.0; // Default: 1.0
@@ -52,7 +51,6 @@ let scale_When1TileIs1Pixel_Physical; // Scale limit where each tile takes up ex
 let scale_When1TileIs1Pixel_Virtual; // Scale limit where each tile takes up exactly 1 VIRTUAL pixel on screen
 let scaleIsLess1Pixel_Physical = false;
 let scaleIsLess1Pixel_Virtual = false; // Set to true when we're so zoomed out, 1 cell is smaller than 1 pixel!! Everything renders differently!
-
 
 // Returns a copy of the boardPos in memory, otherwise the memory location
 // could be used to modify the original.
@@ -171,7 +169,7 @@ function recalcScale() {
 function updateNavControls() {
 
 	checkIfBoardDropped(); // Needs to be before exiting from teleporting
-	
+
 	if (transition.areWeTeleporting()) return; // Exit if teleporting
 	if (guipromotion.isUIOpen()) { // User needs to select a promotion piece, dont update navigation
 		decceleratePanVel();
@@ -187,14 +185,29 @@ function updateNavControls() {
 	detectZooming(); // Zoom/Scale (Space shift, mouse wheel)
 }
 
+// Checks if the conditions for momentum on letting go have been achieved
+function canThrowBoard() {
+
+	let x = input.getMouseVel()[0];
+	let y = input.getMouseVel()[1];
+	x = (x < 0) ? -x : x;
+	y = (y < 0) ? -y : y;
+	const momentum = Math.hypot(x, y);
+	if (momentum < requiredVelocityToThrow) return false;
+	if (selection.isAPieceSelected()) return false;
+	return true;
+
+}
+
 function checkIfBoardDropped() {
-
-
 	if (boardIsGrabbed === 0) return; // Not grabbed
 
 	if (boardIsGrabbed === 1) {
 
-		if (!input.isMouseHeld_Left()) boardIsGrabbed = 0; // Dropped board
+		if (!input.isMouseHeld_Left()) {
+			boardIsGrabbed = 0;
+			if (canThrowBoard()) panVel = [input.getMouseVel()[0] * -1 * boardDroppedSpeedMultiplier, input.getMouseVel()[1] * -1 * boardDroppedSpeedMultiplier];
+		}; // Dropped board
 		return;
 	}
     
@@ -226,22 +239,7 @@ function grabBoard_WithMouse() {
 	boardIsGrabbed = 1;
 	const tile_MouseOver_Float = board.gtile_MouseOver_Float();
 	boardPosMouseGrabbed = [tile_MouseOver_Float[0], tile_MouseOver_Float[1]];
-	let mouseXVel = input.getMouseVel()[0];
-	let mouseYVel = input.getMouseVel()[1];
-	if (mouseXVel < 0) {
-		mouseXVel *= -1;
-	}
-	if (mouseYVel < 0) {
-		mouseYVel *= -1;
-	}
-	const mouseOverallVelocity = Math.hypot(mouseXVel, mouseYVel);
-	if (mouseOverallVelocity > mouseVelocityRequirement) {
-		const panXV = input.getMouseVel()[0] * mouseDragMulti;
-		const panYV = input.getMouseVel()[1] * mouseDragMulti;
-		panVel = [panXV, panYV];
-	} else {
-		erasePanVelocity();
-	}
+	erasePanVelocity();
 }
 
 function erasePanVelocity() { panVel = [0,0]; } // Erase all panning velocity
@@ -357,48 +355,17 @@ function panAccel_Perspective(angle) {
 	panVel[1] += loadbalancer.getDeltaTime() * panAccel * XYComponents[1];
 }
 
-// Deccelerates the board's momentum
 function decceleratePanVel() {
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Already stopped
-	if (selection.isAPieceSelected()) {
-		panVel = [0, 0];
-		return; // Stop momentum if we've selected a piece
-	}
-	if (perspective.getEnabled()) {
-		const hyp = Math.hypot(...panVel);
-		const ratio = (hyp - loadbalancer.getDeltaTime() * panAccel) / hyp;
-		if (ratio < 0) panVel = [0,0]; // Stop completely before we start going in the opposite direction
-		else {
-			panVel[0] *= ratio;
-			panVel[1] *= ratio;
-		}
-	} else {
-		const pMK = 1 - panMomentumKept * loadbalancer.getDeltaTime(); // panMomentKept scaled to deltaTime
-		let x = panVel[0] * pMK;
-		let y = panVel[1] * pMK;
-		
-		if (x < 0) {
-			if (x > -momentumMin) {
-				x = 0;
-			}
-		} else {
-			if (x < momentumMin) {
-				x = 0;
-			}
-		}
-		if (y < 0) {
-			if (y > -momentumMin) {
-				y = 0;
-			}
-		} else {
-			if (y < momentumMin) {
-				y = 0;
-			}
-		}
 
-		panVel = [x, y];
-		
-		
+	const rateToUse = perspective.getEnabled() ? panAccel : deccelRate2D;
+
+	const hyp = Math.hypot(...panVel);
+	const ratio = (hyp - loadbalancer.getDeltaTime() * rateToUse) / hyp;
+	if (ratio < 0) panVel = [0,0]; // Stop completely before we start going in the opposite direction
+	else {
+		panVel[0] *= ratio;
+		panVel[1] *= ratio;
 	}
 }
 
@@ -535,8 +502,6 @@ function setPositionToArea(area, password) {
 	setBoardScale(area.scale, password);
 }
 
-
-
 export default {
 	getScale_When1TileIs1Pixel_Physical,
 	setScale_When1TileIs1Pixel_Physical,
@@ -557,4 +522,3 @@ export default {
 	eraseMomentum,
 	setPositionToArea
 };
-
