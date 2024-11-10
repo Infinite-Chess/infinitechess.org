@@ -23,7 +23,7 @@ const panAccel = 50; // Acceleration of board panning   Default: 50
 let panVelCap = 11.0; // Hyptenuse cap of x & y speeds   Default: 11
 const panMomentumKept = 0.5; // Amount of momentum to keep after board is let go	Default: 0.5
 const momentumMin = 0.5; // Amount of momentum required before it snaps to 0	Default: 0.5
-const mouseVelocityRequirement = 3; // The speed the mouse must go at before the dragging can cause board velocity.
+const mouseVelocityRequirement = 3.5; // The speed the mouse must go at before the dragging can cause board velocity.
 const mouseDragMulti = 0.4; // Value to multiply mouse velocity by during panVel calculation.	Default: 0.4
 // Also, mouseDragMulti should be kept at a low level to avoid glitches. High values will result in eratic behavior.
 
