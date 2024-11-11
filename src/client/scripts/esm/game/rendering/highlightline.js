@@ -10,11 +10,11 @@ import organizedlines from '../chess/organizedlines.js';
 import options from './options.js';
 import selection from '../chess/selection.js';
 import camera from './camera.js';
-import math from '../misc/math.js';
+import math from '../../util/math.js';
 import movement from './movement.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../../chess/util/coordutil.js';
 import space from '../misc/space.js';
 import spritesheet from './spritesheet.js';
 // Import End
@@ -22,7 +22,7 @@ import spritesheet from './spritesheet.js';
 /**
  * Type Definitions
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  */
 
 "use strict";

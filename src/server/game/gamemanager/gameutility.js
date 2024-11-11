@@ -23,11 +23,11 @@ import formatconverter from '../../../client/scripts/esm/game/chess/formatconver
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-import timeutil from '../../../client/scripts/esm/game/misc/timeutil.js';
-import colorutil from '../../../client/scripts/esm/game/misc/colorutil.js';
+import timeutil from '../../../client/scripts/esm/util/timeutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 import variant from '../../../client/scripts/esm/game/variants/variant.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
-import winconutil from '../../../client/scripts/esm/game/misc/winconutil.js';
+import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 
 // Type Definitions...
 

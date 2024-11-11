@@ -1,6 +1,6 @@
 
 // Import Start
-import thread from './thread.js';
+import thread from '../../util/thread.js';
 // Import End
 
 "use strict";

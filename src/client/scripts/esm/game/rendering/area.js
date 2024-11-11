@@ -5,7 +5,7 @@ import movement from './movement.js';
 import camera from './camera.js';
 import board from './board.js';
 import gamefileutility from '../chess/gamefileutility.js';
-import math from '../misc/math.js';
+import math from '../../util/math.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 // Import End
@@ -13,7 +13,7 @@ import space from '../misc/space.js';
 /** 
  * Type Definitions 
  * @typedef {import('../chess/gamefile.js').gamefile} gamefile
- * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
 */
 
 "use strict";

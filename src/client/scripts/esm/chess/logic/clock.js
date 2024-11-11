@@ -1,9 +1,9 @@
 
 // Import Start
-import onlinegame from './onlinegame.js';
+import onlinegame from '../../game/misc/onlinegame.js';
 import movesscript from '../chess/movesscript.js';
-import clockutil from './clockutil.js';
-import timeutil from './timeutil.js';
+import clockutil from '../util/clockutil.js';
+import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../chess/gamefileutility.js';
 // Import End
 

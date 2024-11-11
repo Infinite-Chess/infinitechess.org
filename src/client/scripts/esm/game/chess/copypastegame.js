@@ -15,7 +15,7 @@ import gamefileutility from './gamefileutility.js';
 import statustext from '../gui/statustext.js';
 import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
-import winconutil from '../misc/winconutil.js';
+import winconutil from '../../chess/util/winconutil.js';
 // Import End
 
 "use strict";

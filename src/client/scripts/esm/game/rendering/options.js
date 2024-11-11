@@ -10,12 +10,12 @@ import selection from '../chess/selection.js';
 import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import board from './board.js';
-import game from '../chess/game.js';
+import game from '../game.js';
 import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
-import colorutil from '../misc/colorutil.js';
+import colorutil from '../../chess/util/colorutil.js';
 import frametracker from './frametracker.js';
-import timeutil from '../misc/timeutil.js';
+import timeutil from '../../util/timeutil.js';
 import themes from '../../components/header/themes.js';
 import preferences from '../../components/header/preferences.js';
 // Import End

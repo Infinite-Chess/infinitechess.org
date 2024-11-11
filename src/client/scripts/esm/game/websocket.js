@@ -5,10 +5,10 @@ import invites from './misc/invites.js';
 import guiplay from './gui/guiplay.js';
 import onlinegame from './misc/onlinegame.js';
 import localstorage from '../util/localstorage.js';
-import timeutil from './misc/timeutil.js';
-import uuid from './misc/uuid.js';
+import timeutil from '../util/timeutil.js';
+import uuid from '../util/uuid.js';
 import config from './config.js';
-import thread from './misc/thread.js';
+import thread from '../util/thread.js';
 import validatorama from '../util/validatorama.js';
 import wsutil from '../util/wsutil.js';
 // Import End

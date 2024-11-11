@@ -9,7 +9,7 @@ import statustext from '../gui/statustext.js';
 import buffermodel from './buffermodel.js';
 import onlinegame from '../misc/onlinegame.js';
 import mat4 from './gl-matrix.js';
-import game from '../chess/game.js';
+import game from '../game.js';
 import input from '../input.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';

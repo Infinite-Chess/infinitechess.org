@@ -7,7 +7,7 @@ import guipause from '../gui/guipause.js';
 import sound from './sound.js';
 import movesscript from '../chess/movesscript.js';
 import onlinegame from './onlinegame.js';
-import game from '../chess/game.js';
+import game from '../game.js';
 // Import End
 
 'use strict';

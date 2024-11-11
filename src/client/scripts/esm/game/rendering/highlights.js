@@ -9,12 +9,12 @@ import options from './options.js';
 import selection from '../chess/selection.js';
 import camera from './camera.js';
 import board from './board.js';
-import math from '../misc/math.js';
+import math from '../../util/math.js';
 import movesscript from '../chess/movesscript.js';
-import game from '../chess/game.js';
+import game from '../game.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../../chess/util/coordutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import gamefileutility from '../chess/gamefileutility.js';
@@ -26,7 +26,7 @@ import shapes from './shapes.js';
  * Type Definitions
  * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  * @typedef {import('../chess/gamefile.js').gamefile} gamefile
  */
 

@@ -2,7 +2,7 @@
 // Import Start
 import perspective from './perspective.js';
 import miniimage from './miniimage.js';
-import game from '../chess/game.js';
+import game from '../game.js';
 import stats from '../gui/stats.js';
 import options from './options.js';
 import mat4 from './gl-matrix.js';
@@ -16,7 +16,7 @@ import preferences from '../../components/header/preferences.js';
 
 /**
  * Type Definitions
- * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
  */
 

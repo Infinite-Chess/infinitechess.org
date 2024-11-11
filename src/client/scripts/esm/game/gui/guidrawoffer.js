@@ -4,8 +4,8 @@ import style from './style.js';
 import guigameinfo from './guigameinfo.js';
 import drawoffers from '../misc/drawoffers.js';
 import guiclock from './guiclock.js';
-import clock from '../misc/clock.js';
-import game from '../chess/game.js';
+import clock from '../../chess/logic/clock.js';
+import game from '../game.js';
 // Import End
 
 "use strict";

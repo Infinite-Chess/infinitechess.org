@@ -21,7 +21,7 @@ import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { isServerRestarting } from '../updateServerRestart.js';
-import uuid from '../../../client/scripts/esm/game/misc/uuid.js';
+import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/game/variants/variant.js';
 
 /**

@@ -19,8 +19,8 @@ import movement from '../rendering/movement.js';
 import movesscript from './movesscript.js';
 import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
-import colorutil from '../misc/colorutil.js';
-import coordutil from '../misc/coordutil.js';
+import colorutil from '../../chess/util/colorutil.js';
+import coordutil from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
 // Import End
