@@ -56,7 +56,7 @@ let mousePos = [0,0]; // Current mouse position in pixels relative to the center
 let mouseMoved = true; // Did the mouse move this frame? Helps us detect if the user is afk. (If they are we can save computation)
 let mousePosLF = []; // Mouse position last few frames. Required for mouse velocity calculation.
 let mouseVel = [0,0]; // The amount of pixels the mouse moved relative to the last few frames.
-const frameDecaySeconds = 0.08; // The amount of seconds to look back into for mouse velocity calculation.
+const frameDecayMillis = 80; // The amount of seconds to look back into for mouse velocity calculation.
 
 let mouseWorldLocation = [0,0]; // Current mouse position in world-space
 
@@ -299,6 +299,7 @@ function initListeners_Mouse() {
 		const mouseCoords = convertCoords_CenterOrigin(event);
 		mousePos = mouseCoords;
 		mouseMoved = true;
+		recalcMouseVel(mousePos);
 
 		// Now calculate the mouse position in world-space, not just virtual pixels
 		calcMouseWorldLocation();
@@ -501,35 +502,30 @@ function resetKeyEvents() {
 	ignoreMouseDown = false;
 }
 
-// Calculates the mouse velocity, called before resetKeyEvents in game loop.
-function calcMouseVel() {
-	// Store the current mouse position
-	mousePosLF.push([mousePos, Date.now()]);
+/**
+ * Calculates the mouse velocity based on recent mouse positions.
+ * @param {number[]} mousePos - The current mouse position
+ */
+function recalcMouseVel(mousePos) {
+	const now = Date.now();
+	// Store the current mouse position with a timestamp
+	const currentMousePosEntry = [jsutil.deepCopyObject(mousePos), now]; // { mousePos, time }
+	mousePosLF.push(currentMousePosEntry); // Deep copy the mouse position to avoid modifying the original
 
-	// Ensure the array only holds the specified number of frames
- 	for (const mousePosE of mousePosLF) {
-		if (mousePosE[1] < Date.now() - frameDecaySeconds * 1000) {
-			mousePosLF.shift();
-		} else {
-			break; // We're done here, no need to continue.
-		}
-	}
+	// Remove old entries, stop once we encounter recent enough data
+	const timeToRemoveEntriesBefore = now - frameDecayMillis;
+	while (mousePosLF.length > 0 && mousePosLF[0][1] < timeToRemoveEntriesBefore) mousePosLF.shift();
 
-	// Calculate average velocity if enough frames are stored
+	// Calculate velocity if there are at least two positions
 	if (mousePosLF.length >= 2) {
-		// Calculate the average velocity between the first and last stored positions.
-		// console.log(mousePosLF.length - 1)
-		const firstStore = mousePosLF[0][0];
-		const mVX = mousePos[0] - firstStore[0];
-		const mVY = mousePos[1] - firstStore[1];
+		const firstMousePosEntry = mousePosLF[0]; // { mousePos, time }
+		const timeDiffBetwFirstAndLastEntryMillis = (currentMousePosEntry[1] - firstMousePosEntry[1]);
 
-    	mouseVel = [mVX / mousePosLF.length, mVY / mousePosLF.length];
+		const mVX = (currentMousePosEntry[0][0] - firstMousePosEntry[0][0]) / timeDiffBetwFirstAndLastEntryMillis;
+		const mVY = (currentMousePosEntry[0][1] - firstMousePosEntry[0][1]) / timeDiffBetwFirstAndLastEntryMillis;
 
-		
-	} else {
-		mouseVel = [0, 0];
-	}
-
+		mouseVel = [mVX, mVY];
+	} else mouseVel = [0, 0];
 }
 
 function getMouseVel() {
@@ -697,7 +693,6 @@ export default {
 	isMouseSupported,
 	initListeners,
 	resetKeyEvents,
-	calcMouseVel,
 	getMouseVel,
 	touchHeldsIncludesID,
 	getTouchHeldByID,

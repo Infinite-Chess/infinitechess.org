@@ -77,8 +77,6 @@ function gameLoop() {
 
 		render(); // Render everything
         
-		input.calcMouseVel(); // Calculates the mouse's velocity
-		
 		input.resetKeyEvents(); // Key events should be reset as soon as possible after updating, so we don't miss any. Then again, all events are fired at the end of the animation frame anyway.
 
 		loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
