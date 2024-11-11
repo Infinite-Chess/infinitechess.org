@@ -3,6 +3,7 @@ node_modules
 .vscode
 cert
 database
+database.db
 logs
 dist
 

@@ -12,7 +12,6 @@ import frametracker from './frametracker.js';
 import config from '../config.js';
 import game from '../chess/game.js';
 import coordutil from '../misc/coordutil.js';
-import selection from '../chess/selection.js';
 // Import End
 
 "use strict";
