@@ -6,17 +6,13 @@
  */
 
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 
 import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { getClientIP } from '../../middleware/IP.js';
-import { addRefreshToken, getMemberDataByCriteria, updateLoginCountAndLastSeen } from './members.js';
-
-const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
-const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
-const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
-const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
+import {  getMemberDataByCriteria, updateLoginCountAndLastSeen } from './members.js';
+import { addRefreshTokenToMemberData, createRefreshTokenCookie } from './refreshTokenController.js';
+import { signTokens } from './tokenController.js';
 
 // Rate limiting stuff...
 
@@ -63,7 +59,7 @@ async function handleLogin(req, res) {
 	const { accessToken, refreshToken } = signTokens(payload);
     
 	// Save the refresh token with current user so later when they log out we can invalidate it.
-	addRefreshToken(user_id, refreshToken);
+	addRefreshTokenToMemberData(user_id, refreshToken);
     
 	createRefreshTokenCookie(res, refreshToken);
     
@@ -146,41 +142,6 @@ function verifyBodyHasLoginFormData(req, res) {
 	}
 
 	return true;
-}
-
-/**
- * Signs and generates access and refresh tokens for the user.
- * These are forms of user identification issued after logging in.
- * 
- * ACCESS TOKEN: A browser should NOT store it in local storage or cookie, only memory. Expiry 5-15m.
- * 
- * REFRESH TOKEN: Issued in httpOnly cookie--not accesible wth JS. Expires in hours or days.
- * @param {Object} payload - The payload for the tokens, typically an object containing the username and roles.
- * @returns {Object} - An object containing the properties `accessToken` and `refreshToken`.
- */
-function signTokens(payload) {
-	const accessToken = jwt.sign(
-		payload, // Username is the payload, should NOT be password
-		process.env.ACCESS_TOKEN_SECRET,
-		{ expiresIn: accessTokenExpirySecs } // Good for as long as u stay on 1 page (stored in memory of script)
-	);
-	const refreshToken = jwt.sign(
-		payload, // Payload can contain roles
-		process.env.REFRESH_TOKEN_SECRET,
-		{ expiresIn: refreshTokenExpirySecs }
-	);
-
-	return { accessToken, refreshToken };
-}
-
-/**
- * Creates and sets an HTTP-only cookie containing the refresh token.
- * @param {Object} res - The response object.
- * @param {string} refreshToken - The refresh token to be stored in the cookie.
- */
-function createRefreshTokenCookie(res, refreshToken) {
-	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true
-	res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: refreshTokenExpiryMillis });
 }
 
 // Rate limiting stuff...
@@ -320,5 +281,4 @@ function onCorrectPassword(browserAgent) {
 export {
 	handleLogin,
 	testPasswordForRequest,
-	refreshTokenExpirySecs,
 };

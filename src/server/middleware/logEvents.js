@@ -25,6 +25,7 @@ const giveLoggedItemsUUID = false;
  */
 const logEvents = async(message, logName, { print } = {}) => {
 	if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.");
+	if (!logName) return console.trace("Log name MUST be provided when logging an event!");
 
 	if (print) console.error(message);
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');

@@ -17,6 +17,7 @@ import uuid from '../../../client/scripts/game/misc/uuid.js';
 import { isEmailBanned } from '../../middleware/banned.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { sendEmailConfirmation } from './sendMail.js';
+import { handleLogin } from './authController.js';
 
 
 /**
