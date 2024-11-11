@@ -18,10 +18,11 @@ import coordutil from '../misc/coordutil.js';
 
 /** This script stores our board position and scale and controls our panning and zooming. */
 
-const panAccel = 50; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 50
-const deccelRate2D = 100; // 2D mode: Deccelleration rate of panning.   Default: 15
+const panAccel_3D = 75; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 50
+const panAccel_2D = 100; // 2D mode: Deccelleration rate of panning.   Default: 15
 const droppedVelMultiplier = 4.5; // This times the mouse velocity is applied to the board after dropping it.   Default: 4.5
-let panVelCap = 11.0; // Hyptenuse cap of x & y speeds   Default: 11
+const panVelCap_2D = 22.0; // Hyptenuse cap of x & y speeds   Default: 11
+const panVelCap_3D = 16.0; // Hyptenuse cap of x & y speeds   Default: 11
 
 const scaleAccel = 6.0; // Acceleration of board scaling   Default: 6
 const scaleVelCap = 1.0; // Default: 1.0
@@ -97,11 +98,6 @@ function setBoardScale(newScale, password) {
 	// scaleIsLess1Pixel_Virtual = true;
     
 	frametracker.onVisualChange();
-}
-
-function setPanVelCap(newPanVelCap) {
-	if (!config.DEV_BUILD) return; // DO NOT set the panVelCap if not in dev mode!!
-	panVelCap = newPanVelCap;
 }
 
 function getScale_When1TileIs1Pixel_Physical() {
@@ -187,10 +183,10 @@ function checkIfBoardDropped() {
 
 	if (boardIsGrabbed === 1) {
 
-		if (!input.isMouseHeld_Left()) {
+		if (!input.isMouseHeld_Left()) { // Dropped board
 			boardIsGrabbed = 0;
 			throwBoard(); // Mouse throws the board
-		}; // Dropped board
+		}
 		return;
 	}
     
@@ -325,7 +321,8 @@ function detectPanning() {
 	if (panning) { // Make sure velocity hypotenuse hasn't gone over cap
 		// Calculate hypotenuse
 		const hyp = Math.hypot(...panVel);
-		const ratio = panVelCap / hyp;
+		const capToUse = perspective.getEnabled() ? panVelCap_3D : panVelCap_2D;
+		const ratio = capToUse / hyp;
 		if (ratio < 1) { // Too fast, multiply components by the ratio to cap our velocity
 			panVel[0] *= ratio;
 			panVel[1] *= ratio;
@@ -341,14 +338,15 @@ function panAccel_Perspective(angle) {
 
 	const XYComponents = math.getXYComponents_FromAngle(angleRad);
 
-	panVel[0] += loadbalancer.getDeltaTime() * panAccel * XYComponents[0];
-	panVel[1] += loadbalancer.getDeltaTime() * panAccel * XYComponents[1];
+	const accelToUse = perspective.getEnabled() ? panAccel_3D : panAccel_2D;
+	panVel[0] += loadbalancer.getDeltaTime() * accelToUse * XYComponents[0];
+	panVel[1] += loadbalancer.getDeltaTime() * accelToUse * XYComponents[1];
 }
 
 function decceleratePanVel() {
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Already stopped
 
-	const rateToUse = perspective.getEnabled() ? panAccel : deccelRate2D;
+	const rateToUse = perspective.getEnabled() ? panAccel_3D : panAccel_2D;
 
 	const hyp = Math.hypot(...panVel);
 	const ratio = (hyp - loadbalancer.getDeltaTime() * rateToUse) / hyp;
@@ -497,7 +495,6 @@ export default {
 	setScale_When1TileIs1Pixel_Physical,
 	getScale_When1TileIs1Pixel_Virtual,
 	setScale_When1TileIs1Pixel_Virtual,
-	setPanVelCap,
 	isScaleLess1Pixel_Physical,
 	isScaleLess1Pixel_Virtual,
 	getBoardPos,
