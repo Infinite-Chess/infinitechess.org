@@ -19,9 +19,9 @@ import selection from '../chess/selection.js';
 
 /** This script stores our board position and scale and controls our panning and zooming. */
 
-const panAccel = 50; // Acceleration of board panning   Default: 50
-const deccelRate2D = 15; // Deccelleration rate of panning in 2D mode	Default: 15
-const boardDroppedSpeedMultiplier = 0.3; // Multiplier of mouse velocity before getting applied to
+const panAccel = 50; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 50
+const deccelRate2D = 100; // 2D mode: Deccelleration rate of panning.   Default: 15
+const droppedVelMultiplier = 4.5; // This times the mouse velocity is applied to the board after dropping it
 // the board after the user finishes dragging	Default: 0.3
 const requiredVelocityToThrow = 3; // Mouse velocity required for the board to get thrown	Default: 4
 let panVelCap = 11.0; // Hyptenuse cap of x & y speeds   Default: 11
@@ -185,20 +185,6 @@ function updateNavControls() {
 	detectZooming(); // Zoom/Scale (Space shift, mouse wheel)
 }
 
-// Checks if the conditions for momentum on letting go have been achieved
-function canThrowBoard() {
-
-	let x = input.getMouseVel()[0];
-	let y = input.getMouseVel()[1];
-	x = (x < 0) ? -x : x;
-	y = (y < 0) ? -y : y;
-	const momentum = Math.hypot(x, y);
-	if (momentum < requiredVelocityToThrow) return false;
-	if (selection.isAPieceSelected()) return false;
-	return true;
-
-}
-
 function checkIfBoardDropped() {
 	if (boardIsGrabbed === 0) return; // Not grabbed
 
@@ -206,7 +192,7 @@ function checkIfBoardDropped() {
 
 		if (!input.isMouseHeld_Left()) {
 			boardIsGrabbed = 0;
-			if (canThrowBoard()) panVel = [input.getMouseVel()[0] * -1 * boardDroppedSpeedMultiplier, input.getMouseVel()[1] * -1 * boardDroppedSpeedMultiplier];
+			throwBoard(); // Mouse throws the board
 		}; // Dropped board
 		return;
 	}
@@ -220,6 +206,13 @@ function checkIfBoardDropped() {
 	boardIsGrabbed = 0;
 	boardPosFingerTwoGrabbed = undefined;
 	return;
+}
+
+/** Called after letting go of the board. Applies velocity to the board according to how fast the mouse was moving */
+function throwBoard() {
+	const xVel = input.getMouseVel()[0] * -1 * droppedVelMultiplier;
+	const yVel = input.getMouseVel()[1] * -1 * droppedVelMultiplier;
+	panVel = [xVel, yVel];
 }
 
 // Checks if the mouse or finger has started dragging the board. Keep in mind if the

@@ -56,7 +56,7 @@ let mousePos = [0,0]; // Current mouse position in pixels relative to the center
 let mouseMoved = true; // Did the mouse move this frame? Helps us detect if the user is afk. (If they are we can save computation)
 let mousePosLF = []; // Mouse position last few frames. Required for mouse velocity calculation.
 let mouseVel = [0,0]; // The amount of pixels the mouse moved relative to the last few frames.
-const frameDecaySeconds = 0.1; // The amount of seconds to look back into for mouse velocity calculation.
+const frameDecaySeconds = 0.08; // The amount of seconds to look back into for mouse velocity calculation.
 
 let mouseWorldLocation = [0,0]; // Current mouse position in world-space
 
@@ -518,6 +518,7 @@ function calcMouseVel() {
 	// Calculate average velocity if enough frames are stored
 	if (mousePosLF.length >= 2) {
 		// Calculate the average velocity between the first and last stored positions.
+		// console.log(mousePosLF.length - 1)
 		const firstStore = mousePosLF[0][0];
 		const mVX = mousePos[0] - firstStore[0];
 		const mVY = mousePos[1] - firstStore[1];
