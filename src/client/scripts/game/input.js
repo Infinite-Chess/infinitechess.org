@@ -53,8 +53,8 @@ let mouseClickedPixels; // [x,y] The screen coords where the simulated mouse cli
 const pixelDistToCancelClick = 10; // Default: 12   If the mouse moves more than this while down, don't simulate a click
 
 let mousePos = [0,0]; // Current mouse position in pixels relative to the center of the screen.
+const mousePosHistory = []; // Mouse position last few frames. Required for mouse velocity calculation.
 let mouseMoved = true; // Did the mouse move this frame? Helps us detect if the user is afk. (If they are we can save computation)
-let mousePosLF = []; // Mouse position last few frames. Required for mouse velocity calculation.
 let mouseVel = [0,0]; // The amount of pixels the mouse moved relative to the last few frames.
 const frameDecayMillis = 80; // The amount of seconds to look back into for mouse velocity calculation.
 
@@ -510,15 +510,15 @@ function recalcMouseVel(mousePos) {
 	const now = Date.now();
 	// Store the current mouse position with a timestamp
 	const currentMousePosEntry = [jsutil.deepCopyObject(mousePos), now]; // { mousePos, time }
-	mousePosLF.push(currentMousePosEntry); // Deep copy the mouse position to avoid modifying the original
+	mousePosHistory.push(currentMousePosEntry); // Deep copy the mouse position to avoid modifying the original
 
 	// Remove old entries, stop once we encounter recent enough data
 	const timeToRemoveEntriesBefore = now - frameDecayMillis;
-	while (mousePosLF.length > 0 && mousePosLF[0][1] < timeToRemoveEntriesBefore) mousePosLF.shift();
+	while (mousePosHistory.length > 0 && mousePosHistory[0][1] < timeToRemoveEntriesBefore) mousePosHistory.shift();
 
 	// Calculate velocity if there are at least two positions
-	if (mousePosLF.length >= 2) {
-		const firstMousePosEntry = mousePosLF[0]; // { mousePos, time }
+	if (mousePosHistory.length >= 2) {
+		const firstMousePosEntry = mousePosHistory[0]; // { mousePos, time }
 		const timeDiffBetwFirstAndLastEntryMillis = (currentMousePosEntry[1] - firstMousePosEntry[1]);
 
 		const mVX = (currentMousePosEntry[0][0] - firstMousePosEntry[0][0]) / timeDiffBetwFirstAndLastEntryMillis;
