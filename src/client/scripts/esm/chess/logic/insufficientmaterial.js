@@ -1,9 +1,9 @@
 
 // Import Start
-import gamefileutility from './gamefileutility.js';
+import gamefileutility from '../util/gamefileutility.js';
 import movesscript from './movesscript.js';
-import colorutil from '../misc/colorutil.js';
-import coordutil from '../misc/coordutil.js';
+import colorutil from '../util/colorutil.js';
+import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 // Import End
 

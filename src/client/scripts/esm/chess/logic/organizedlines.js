@@ -1,13 +1,13 @@
 
 // Import Start
-import gamefileutility from './gamefileutility.js';
-import pieces from '../rendering/pieces.js';
-import math from '../misc/math.js';
-import piecesmodel from '../rendering/piecesmodel.js';
-import options from '../rendering/options.js';
-import colorutil from '../misc/colorutil.js';
-import typeutil from '../misc/typeutil.js';
-import coordutil from '../misc/coordutil.js';
+import gamefileutility from '../util/gamefileutility.js';
+import pieces from '../../game/rendering/pieces.js';
+import math from '../../util/math.js';
+import piecesmodel from '../../game/rendering/piecesmodel.js';
+import options from '../../game/rendering/options.js';
+import colorutil from '../util/colorutil.js';
+import typeutil from '../util/typeutil.js';
+import coordutil from '../util/coordutil.js';
 // Import End
 
 /** 

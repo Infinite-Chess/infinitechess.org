@@ -1,7 +1,7 @@
 
 // Import Start
 import bufferdata from './bufferdata.js';
-import game from '../game.js';
+import game from '../chess/game.js';
 import movement from './movement.js';
 import options from './options.js';
 import buffermodel from './buffermodel.js';

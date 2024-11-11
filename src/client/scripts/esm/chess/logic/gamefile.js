@@ -3,11 +3,11 @@
 
 import organizedlines from './organizedlines.js';
 import movepiece from './movepiece.js';
-import gamefileutility from './gamefileutility.js';
-import area from '../rendering/area.js';
+import gamefileutility from '../util/gamefileutility.js';
+import area from '../../game/rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
-import clock from '../misc/clock.js';
+import clock from './clock.js';
 
 // Type Definitions...
 

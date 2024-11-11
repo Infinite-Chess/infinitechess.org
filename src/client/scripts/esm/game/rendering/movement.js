@@ -10,7 +10,7 @@ import guipromotion from '../gui/guipromotion.js';
 import guititle from '../gui/guititle.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
-import game from '../game.js';
+import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
 // Import End
 

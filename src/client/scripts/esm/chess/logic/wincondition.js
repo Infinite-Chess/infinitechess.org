@@ -2,12 +2,12 @@
 
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
-import gamefileutility from './gamefileutility.js';
+import gamefileutility from '../util/gamefileutility.js';
 import checkmate from './checkmate.js';
 import organizedlines from './organizedlines.js';
 import movesscript from './movesscript.js';
-import colorutil from '../misc/colorutil.js';
-import typeutil from '../misc/typeutil.js';
+import colorutil from '../util/colorutil.js';
+import typeutil from '../util/typeutil.js';
 // Import End
 
 // Type Definitions...

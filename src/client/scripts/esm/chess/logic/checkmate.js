@@ -1,9 +1,9 @@
 
 // Import Start
-import gamefileutility from './gamefileutility.js';
+import gamefileutility from '../util/gamefileutility.js';
 import movesscript from './movesscript.js';
 import legalmoves from './legalmoves.js';
-import typeutil from '../misc/typeutil.js';
+import typeutil from '../util/typeutil.js';
 // Import End
 
 /** 

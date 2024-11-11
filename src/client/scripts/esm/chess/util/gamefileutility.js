@@ -1,28 +1,18 @@
 
 // Import Start
-import guipause from '../gui/guipause.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import onlinegame from '../misc/onlinegame.js';
-import sound from '../misc/sound.js';
-import wincondition from './wincondition.js';
-import clock from '../misc/clock.js';
-import guiclock from '../gui/guiclock.js';
-import selection from './selection.js';
-import board from '../rendering/board.js';
-import movesscript from './movesscript.js';
-import game from './game.js';
-import colorutil from '../misc/colorutil.js';
-import typeutil from '../misc/typeutil.js';
+import wincondition from '../logic/wincondition.js';
+import colorutil from './colorutil.js';
+import typeutil from './typeutil.js';
 import jsutil from '../../util/jsutil.js';
-import coordutil from '../misc/coordutil.js';
-import winconutil from '../misc/winconutil.js';
+import coordutil from './coordutil.js';
+import winconutil from './winconutil.js';
 import gamerules from '../variants/gamerules.js';
 // Import End
 
 /** 
  * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('../logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../logic/movepiece.js').Piece} Piece
 */
 
 "use strict";
@@ -216,10 +206,10 @@ function doGameOverChecks(gamefile) {
 /**
  * Returns true if the game is over (gameConclusion is truthy).
  * If the game is over, it will be a string. If not, it will be false.
- * @param {gamefile} gamefile - The gamefile. If not specified, this is game.getGamefile()
+ * @param {gamefile} gamefile - The gamefile.
  * @returns {boolean} true if over
  */
-function isGameOver(gamefile = game.getGamefile()) {
+function isGameOver(gamefile) {
 	if (gamefile.gameConclusion) return true;
 	return false;
 }

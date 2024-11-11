@@ -9,7 +9,7 @@ import movement from './movement.js';
 import options from './options.js';
 import statustext from '../gui/statustext.js';
 import buffermodel from './buffermodel.js';
-import game from '../game.js';
+import game from '../chess/game.js';
 import area from './area.js';
 import typeutil from '../../chess/util/typeutil.js';
 import space from '../misc/space.js';

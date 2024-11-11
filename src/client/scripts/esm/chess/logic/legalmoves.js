@@ -1,15 +1,15 @@
 
 // Import Start
 import movepiece from './movepiece.js';
-import gamefileutility from './gamefileutility.js';
+import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import checkdetection from './checkdetection.js';
-import colorutil from '../misc/colorutil.js';
-import typeutil from '../misc/typeutil.js';
+import colorutil from '../util/colorutil.js';
+import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
-import coordutil from '../misc/coordutil.js';
-import winconutil from '../misc/winconutil.js';
+import coordutil from '../util/coordutil.js';
+import winconutil from '../util/winconutil.js';
 // Import End
 
 /** 

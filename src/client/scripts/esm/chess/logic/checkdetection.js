@@ -2,13 +2,13 @@
 // Import Start
 import legalmoves from './legalmoves.js';
 import movepiece from './movepiece.js';
-import gamefileutility from './gamefileutility.js';
+import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
-import math from '../misc/math.js';
-import colorutil from '../misc/colorutil.js';
+import math from '../../util/math.js';
+import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../util/coordutil.js';
 // Import End
 
 /** 

@@ -6,8 +6,8 @@ import formatconverter from './formatconverter.js';
 import specialdetect from './specialdetect.js';
 import specialmove from './specialmove.js';
 import movesets from './movesets.js';
-import colorutil from '../misc/colorutil.js';
-import coordutil from '../misc/coordutil.js';
+import colorutil from '../util/colorutil.js';
+import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
 // Import End
 

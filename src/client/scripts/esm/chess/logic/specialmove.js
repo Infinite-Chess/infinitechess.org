@@ -1,9 +1,9 @@
 
 // Import Start
-import gamefileutility from './gamefileutility.js';
-import animation from '../rendering/animation.js';
+import gamefileutility from '../util/gamefileutility.js';
+import animation from '../../game/rendering/animation.js';
 import movepiece from './movepiece.js';
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../util/coordutil.js';
 // Import End
 
 "use strict";

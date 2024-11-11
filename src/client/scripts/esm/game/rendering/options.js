@@ -10,7 +10,7 @@ import selection from '../chess/selection.js';
 import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import board from './board.js';
-import game from '../game.js';
+import game from '../chess/game.js';
 import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../../chess/util/colorutil.js';

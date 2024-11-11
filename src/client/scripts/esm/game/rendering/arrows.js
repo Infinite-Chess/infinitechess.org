@@ -1,22 +1,22 @@
 
 // Import Start
-import legalmoves from '../chess/legalmoves.js';
+import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
 import highlights from './highlights.js';
 import onlinegame from '../misc/onlinegame.js';
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
-import gamefileutility from '../chess/gamefileutility.js';
-import game from '../game.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import game from '../chess/game.js';
 import transition from './transition.js';
-import organizedlines from '../chess/organizedlines.js';
+import organizedlines from '../../chess/logic/organizedlines.js';
 import movement from './movement.js';
 import options from './options.js';
 import selection from '../chess/selection.js';
 import camera from './camera.js';
 import board from './board.js';
 import math from '../../util/math.js';
-import movesscript from '../chess/movesscript.js';
+import movesscript from '../../chess/logic/movesscript.js';
 import buffermodel from './buffermodel.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';

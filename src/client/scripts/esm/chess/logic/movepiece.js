@@ -1,26 +1,26 @@
 
 // Import Start
 import legalmoves from './legalmoves.js';
-import gamefileutility from './gamefileutility.js';
+import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
-import arrows from '../rendering/arrows.js';
-import clock from '../misc/clock.js';
-import guiclock from '../gui/guiclock.js';
+import arrows from '../../game/rendering/arrows.js';
+import clock from './clock.js';
+import guiclock from '../../game/gui/guiclock.js';
 import organizedlines from './organizedlines.js';
-import animation from '../rendering/animation.js';
-import guinavigation from '../gui/guinavigation.js';
-import piecesmodel from '../rendering/piecesmodel.js';
-import guigameinfo from '../gui/guigameinfo.js';
+import animation from '../../game/rendering/animation.js';
+import guinavigation from '../../game/gui/guinavigation.js';
+import piecesmodel from '../../game/rendering/piecesmodel.js';
+import guigameinfo from '../../game/gui/guigameinfo.js';
 import movesscript from './movesscript.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
-import colorutil from '../misc/colorutil.js';
+import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
-import coordutil from '../misc/coordutil.js';
-import frametracker from '../rendering/frametracker.js';
-import stats from '../gui/stats.js';
-import onlinegame from '../misc/onlinegame.js';
-import game from './game.js';
+import coordutil from '../util/coordutil.js';
+import frametracker from '../../game/rendering/frametracker.js';
+import stats from '../../game/gui/stats.js';
+import onlinegame from '../../game/misc/onlinegame.js';
+import game from '../../game/chess/game.js';
 // Import End
 
 /** 

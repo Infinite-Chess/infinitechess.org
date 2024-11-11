@@ -5,9 +5,9 @@ import statustext from '../gui/statustext.js';
 import websocket from '../websocket.js';
 import guipause from '../gui/guipause.js';
 import sound from './sound.js';
-import movesscript from '../chess/movesscript.js';
+import movesscript from '../../chess/logic/movesscript.js';
 import onlinegame from './onlinegame.js';
-import game from '../game.js';
+import game from '../chess/game.js';
 // Import End
 
 'use strict';

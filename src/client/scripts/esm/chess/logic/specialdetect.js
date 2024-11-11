@@ -1,13 +1,13 @@
 
 // Import Start
-import gamefileutility from './gamefileutility.js';
+import gamefileutility from '../util/gamefileutility.js';
 import organizedlines from './organizedlines.js';
 import checkdetection from './checkdetection.js';
-import colorutil from '../misc/colorutil.js';
+import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
-import math from '../misc/math.js';
+import math from '../../util/math.js';
 // Import End
 
 /** 

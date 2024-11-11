@@ -4,7 +4,7 @@ import transition from './transition.js';
 import movement from './movement.js';
 import camera from './camera.js';
 import board from './board.js';
-import gamefileutility from '../chess/gamefileutility.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 import math from '../../util/math.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';

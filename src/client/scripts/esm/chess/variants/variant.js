@@ -1,11 +1,11 @@
 
-import formatconverter from '../chess/formatconverter.js';
+import formatconverter from '../logic/formatconverter.js';
 import omega3generator from './omega3generator.js';
 import omega4generator from './omega4generator.js';
-import colorutil from '../misc/colorutil.js';
-import typeutil from '../misc/typeutil.js';
+import colorutil from '../util/colorutil.js';
+import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
-import timeutil from '../misc/timeutil.js';
+import timeutil from '../../util/timeutil.js';
 
 // Type Definitions...
 /** @typedef {import('./gamerules.js').GameRules} GameRules */

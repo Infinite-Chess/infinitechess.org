@@ -6,7 +6,7 @@ import perspective from './perspective.js';
 import miniimage from './miniimage.js';
 import board from './board.js';
 import transition from './transition.js';
-import organizedlines from '../chess/organizedlines.js';
+import organizedlines from '../../chess/logic/organizedlines.js';
 import options from './options.js';
 import selection from '../chess/selection.js';
 import camera from './camera.js';

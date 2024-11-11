@@ -1,10 +1,10 @@
 
 // Import Start
-import movesscript from '../chess/movesscript.js';
+import movesscript from '../../chess/logic/movesscript.js';
 import style from './style.js';
 import options from '../rendering/options.js';
 import camera from '../rendering/camera.js';
-import game from '../game.js';
+import game from '../chess/game.js';
 import math from '../../util/math.js';
 import config from '../config.js';
 // Import End

@@ -4,14 +4,14 @@
 
 // Import Start
 import movepiece from './movepiece.js';
-import stats from '../gui/stats.js';
-import guinavigation from '../gui/guinavigation.js';
-import selection from './selection.js';
-import input from '../input.js';
-import statustext from '../gui/statustext.js';
-import game from './game.js';
-import coordutil from '../misc/coordutil.js';
-import frametracker from '../rendering/frametracker.js';
+import stats from '../../game/gui/stats.js';
+import guinavigation from '../../game/gui/guinavigation.js';
+import selection from '../../game/chess/selection.js';
+import input from '../../game/input.js';
+import statustext from '../../game/gui/statustext.js';
+import game from '../../game/chess/game.js';
+import coordutil from '../util/coordutil.js';
+import frametracker from '../../game/rendering/frametracker.js';
 // Import End
 
 /** 

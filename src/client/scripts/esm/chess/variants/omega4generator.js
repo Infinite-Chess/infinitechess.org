@@ -1,5 +1,5 @@
 
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../util/coordutil.js';
 
 /** 
  * Type Definitions 

@@ -11,12 +11,12 @@ import options from './options.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
 import buffermodel from './buffermodel.js';
-import game from '../game.js';
+import game from '../chess/game.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import checkerboardgenerator from './checkerboardgenerator.js';
-import gamefileutility from '../chess/gamefileutility.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
 // Import End
 

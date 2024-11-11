@@ -12,7 +12,7 @@ import loadbalancer from './misc/loadbalancer.js';
 import input from './input.js';
 import onlinegame from './misc/onlinegame.js';
 import localstorage from '../util/localstorage.js';
-import game from './game.js';
+import game from './chess/game.js';
 import shaders from './rendering/shaders.js';
 import browsersupport from './misc/browsersupport.js';
 import camera from './rendering/camera.js';
