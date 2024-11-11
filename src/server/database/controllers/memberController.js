@@ -1,7 +1,8 @@
 
 /**
- * This script adds and deletes members from the members table.
- * It does not verify their information.
+ * This script contains all of the queries we used to interact with the members table!
+ * 
+ * Queries should NOT be made to the members table outside of this script!
  */
 
 import { logEvents } from '../../middleware/logEvents.js';
@@ -9,14 +10,25 @@ import db from '../database.js';
 
 
 
-// Variables -----------------------------------------------------------------------------------
+// Variables ----------------------------------------------------------------------------------------------------------
+
 
 
 const user_id_upper_cap = 14_776_336; // Limit of unique user id with 4-digit base-62 user ids!
 
+/** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
+const uniqueMemberKeys = ['user_id', 'username', 'email'];
+	
+/** All columns of the members table each of these would be valid to retrieve from any member. */
+const allMemberColumns = [
+	'user_id', 'username', 'email', 'hashed_password', 'roles', 
+	'joined', 'refresh_tokens', 'preferences', 'verification', 
+	'login_count', 'last_seen'
+];
 
-// Functions -----------------------------------------------------------------------------------
 
+
+// Create / Delete Member methods ---------------------------------------------------------------------------------------
 
 
 /**
@@ -83,7 +95,6 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 }
 // console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password'));
 
-
 /**
  * Deletes a user from the members table based on their user ID.
  * @param {number} user_id - The ID of the user to delete.
@@ -101,60 +112,170 @@ function deleteUser(user_id) {
 }
 // console.log(deleteUser(3408674));
 
+/**
+ * Generates a **UNIQUE** user_id. It queries if it is taken to do so.
+ * @returns {string} The ID
+ */
+function genUniqueUserID(length) { // object contains the key value list where the keys are the ids we want to not have duplicates of.
+	let id;
+	do {
+		id = generateRandomUserId(length);
+	} while (isUserIdTaken(id));
+	return id;
+}
+
+/**
+ * Generates a random user_id. DOES NOT test if it's taken already.
+ * @returns {number} A random user_id.
+ */
+function generateRandomUserId() {
+	// Generate a random number between 0 and user_id_upper_cap
+	return Math.floor(Math.random() * user_id_upper_cap);
+}
 
 
-// /**
-//  * Fetches all users from the members table.
-//  * @returns {Object[]} - An array of user objects. Each object represents a user 
-//  * and contains all columns from the 'members' table. If there are no users, it returns an empty array.
-//  */
-// function getAllUsers() {
-// 	return db.all('SELECT * FROM members');
-// }
+
+// General SELECT/UPDATE methods ---------------------------------------------------------------------------------------
+
+
+
+/**
+ * Fetches all users from the members table.
+ * @returns {Object[]} - An array of user objects. Each object represents a user 
+ * and contains all columns from the 'members' table. If there are no users, it returns an empty array.
+ */
+function getAllUsers() {
+	return db.all('SELECT * FROM members');
+}
 // console.log(getAllUsers());
 
+/**
+ * Fetches specified columns of a single member, from either their user_id, username, or email.
+ * @param {string[]} columns - The columns to retrieve (e.g., ['user_id', 'username', 'email']).
+ * @param {string} searchKey - The search key to use, must be either 'user_id', 'username', or 'email'.
+ * @param {string | number} searchValue - The value to search for, can be a user ID, username, or email.
+ * @param {boolean} [skipErrorLogging] If true, and we encounter an error that they don't exist, we will skip logging it to the error log.
+ * @returns {object} - An object with the requested columns, or an empty object if no match is found.
+ */
+function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLogging } = {}) {
 
-// /**
-//  * Fetches a user from the members table based on their username.
-//  * @param {string} username - The username of the user to retrieve.
-//  * @returns {object|undefined} - The user object if found, or undefined if not found.
-//  */
-// function getUserByUsername(username) {
-// 	// SQL query to select a user by their username
-// 	const query = 'SELECT * FROM members WHERE username = ?';
-// 	// Execute the query and return the user object or undefined
-// 	return db.get(query, [username]);
-// }
-// getUserByUsername('nav');
+	// Check if the searchKey is valid
+	if (!uniqueMemberKeys.includes(searchKey)) {
+		logEvents(`Invalid search key for mmembers table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt', { print: true });
+		return {};
+	}
+
+	// Validate columns
+	const invalidColumns = columns.filter(column => !allMemberColumns.includes(column));
+	if (invalidColumns.length > 0) {
+		logEvents(`Invalid columns requested from members table: ${invalidColumns.join(', ')}`, 'errLog.txt', { print: true });
+		return {};
+	}
+
+	// Construct SQL query
+	const query = `SELECT ${columns.join(', ')} FROM members WHERE ${searchKey} = ?`;
+
+	// Execute the query and fetch result
+	const row = db.get(query, [searchValue]);
+
+	// If no row is found, return an empty object
+	if (!row) {
+		if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = "${searchValue}"`, 'errLog.txt', { print: true });
+		return {};
+	}
+
+	// Return the fetched row (single object)
+	return row;
+}
+
+
+/**
+ * Updates multiple column values in the members table for a given user.
+ * @param {number} userId - The user ID of the member.
+ * @param {object} columnsAndValues - An object containing column-value pairs to update.
+ * @returns {boolean} - Returns true if the update was successful, false if no changes were made or validation failed.
+ */
+function updateMemberColumns(userId, columnsAndValues) {
+	// Ensure columnsAndValues is an object and not empty
+	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
+		logEvents(`Invalid or empty columns and values provided for user ID "${userId}" when updating member columns!`, 'errLog.txt', { print: true });
+		return false;
+	}
+
+	for (const column in columnsAndValues) {
+		// Validate all provided columns
+		if (!allMemberColumns.includes(column)) {
+			logEvents(`Invalid column "${column}" provided for user ID "${userId}" when updating member columns!`, 'errLog.txt', { print: true });
+			return false;
+		}
+		// Convert objects (e.g., JSON) to strings for storage
+		if (typeof columnsAndValues[column] === 'object' && columnsAndValues[column] !== null) {
+			columnsAndValues[column] = JSON.stringify(columnsAndValues[column]);
+		}
+	}
+
+	// Dynamically build the SET part of the query
+	const setStatements = Object.keys(columnsAndValues).map(column => `${column} = ?`).join(', ');
+	const values = Object.values(columnsAndValues);
+
+	// Add the userId as the last parameter for the WHERE clause
+	values.push(userId);
+
+	// Update query to modify multiple columns
+	const updateQuery = `UPDATE members SET ${setStatements} WHERE user_id = ?`;
+	const result = db.run(updateQuery, values);
+
+	// Check if the update was successful
+	if (result.changes > 0) return true;
+	else {
+		logEvents(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`, 'errLog.txt', { print: true });
+		return false;
+	}
+}
 
 
 
-// /**
-//  * Fetches a user from the members table based on their user ID.
-//  * @param {number} userId - The user ID of the user to retrieve.
-//  * @returns {object|undefined} - The user object if found, or undefined if not found.
-//  */
-// function getUserByUserId(userId) {
-// 	// SQL query to select a user by their user_id
-// 	const query = 'SELECT * FROM members WHERE user_id = ?';
-// 	// Execute the query and return the user object or undefined
-// 	return db.get(query, [userId]);
-// }
-// console.log(getUserByUserId(1103142));
+// Login Count & Last Seen ---------------------------------------------------------------------------------------
 
 
-// /**
-//  * Fetches a user from the members table based on their email.
-//  * @param {string} email - The email of the user to retrieve, case-sensitive.
-//  * @returns {object|undefined} - The user object if found, or undefined if not found.
-//  */
-// function getUserByEmail(email) {
-// 	// SQL query to select a user by their email
-// 	const query = 'SELECT * FROM members WHERE email = ?';
-// 	// Execute the query and return the user object or undefined
-// 	return db.get(query, [email]);
-// }
-// console.log(getUserByEmail('testemail2'));
+
+/**
+ * Increments the login count and updates the last_seen column for a member based on their user ID.
+ * @param {number} userId - The user ID of the member.
+ * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), result }
+ */
+function updateLoginCountAndLastSeen(userId) {
+	// SQL query to update the login_count and last_seen fields
+	const query = `
+		UPDATE members
+		SET login_count = login_count + 1, last_seen = CURRENT_TIMESTAMP
+		WHERE user_id = ?
+	`;
+
+	// Execute the query with the provided userId
+	const result = db.run(query, [userId]);
+
+	if (result.changes === 0) logEvents(`No changes made when updating login_count and last_seen for member of id "${userId}"!`, 'errLog.txt', { print: true });
+}
+
+/**
+ * Updates the last_seen column for a member based on their user ID.
+ * @param {number} userId - The user ID of the member.
+ * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), result }
+ */
+function updateLastSeen(userId) {
+	// SQL query to update the last_seen field
+	const query = `
+		UPDATE members
+		SET last_seen = CURRENT_TIMESTAMP
+		WHERE user_id = ?
+	`;
+
+	// Execute the query with the provided userId
+	const result = db.run(query, [userId]);
+
+	if (result.changes === 0) logEvents(`No changes made when updating last_seen for member of id "${userId}"!`, 'errLog.txt', { print: true });
+}
 
 
 
@@ -212,33 +333,14 @@ function isEmailTaken(email) {
 	return row !== undefined;
 }
 
-/**
- * Generates a **UNIQUE** user_id. It queries if it is taken to do so.
- * @returns {string} The ID
- */
-function genUniqueUserID(length) { // object contains the key value list where the keys are the ids we want to not have duplicates of.
-	let id;
-	do {
-		id = generateRandomUserId(length);
-	} while (isUserIdTaken(id));
-	return id;
-}
-
-/**
- * Generates a random user_id. DOES NOT test if it's taken already.
- * @returns {number} A random user_id.
- */
-function generateRandomUserId() {
-	// Generate a random number between 0 and user_id_upper_cap
-	return Math.floor(Math.random() * user_id_upper_cap);
-}
-
-
-
 
 export {
 	addUser,
 	deleteUser,
+	getMemberDataByCriteria,
+	updateMemberColumns,
+	updateLoginCountAndLastSeen,
+	updateLastSeen,
 	isUsernameTaken,
 	isEmailTaken,
 };

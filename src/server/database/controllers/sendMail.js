@@ -2,7 +2,7 @@
 import nodemailer from 'nodemailer';
 import { DEV_BUILD, HOST_NAME } from '../../config/config.js';
 import { logEvents } from '../../middleware/logEvents.js';
-import { getMemberDataByCriteria } from './members.js';
+import { getMemberDataByCriteria } from './memberController.js';
 
 /**
  * Sends an account verification email to the specified member

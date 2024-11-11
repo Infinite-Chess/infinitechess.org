@@ -1,7 +1,7 @@
 
 import jwt from 'jsonwebtoken';
 import { getTranslationForReq } from '../../utility/translate';
-import { getMemberDataByCriteria, updateLastSeen, updateMemberColumns } from './members';
+import { getMemberDataByCriteria, updateLastSeen, updateMemberColumns } from './memberController';
 import { logEvents } from '../../middleware/logEvents';
 import { refreshTokenExpiryMillis, signAccessToken } from './tokenController';
 import { createAccessTokenCookie } from './accessTokenController';

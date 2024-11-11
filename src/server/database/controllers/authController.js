@@ -1,6 +1,10 @@
 
 /**
  * This controller is used when a client submits login form data.
+ * 
+ * This rate limits a members login attempts,
+ * and when they successfully login:
+ * 
  * This generates an access token, and a refresh cookie for them,
  * and updates basic variables in their profile after logging in.
  */
@@ -10,7 +14,7 @@ import bcrypt from 'bcrypt';
 import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { getClientIP } from '../../middleware/IP.js';
-import {  getMemberDataByCriteria, updateLoginCountAndLastSeen } from './members.js';
+import {  getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController.js';
 import { addRefreshTokenToMemberData, createRefreshTokenCookie } from './refreshTokenController.js';
 import { signTokens } from './tokenController.js';
 

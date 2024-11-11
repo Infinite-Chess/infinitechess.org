@@ -1,7 +1,7 @@
 
 import websocketserver from '../../wsserver.js';
 import { getTranslationForReq } from "../../utility/translate.js";
-import { getUserIDAndUsernameFromRefreshToken } from "./members.js";
+import { getUserIDAndUsernameFromRefreshToken } from "./memberController.js";
 import { deleteAllInvitesOfMember } from '../../game/invitesmanager/invitesmanager';
 import { logEvents } from '../../middleware/logEvents.js';
 import { deleteRefreshToken } from './refreshTokenController.js';

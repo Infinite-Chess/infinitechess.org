@@ -7,15 +7,6 @@ import db from './database.js';
 
 
 
-/** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
-const uniqueMemberKeys = ['user_id', 'username', 'email'];
-	
-/** All columns of the members table each of these would be valid to retrieve from any member. */
-const allMemberColumns = [
-	'user_id', 'username', 'email', 'hashed_password', 'roles', 
-	'joined', 'refresh_tokens', 'preferences', 'verification', 
-	'login_count', 'last_seen'
-];
 
 
 
@@ -77,8 +68,6 @@ function deleteTable(tableName) {
 
 
 export {
-	uniqueMemberKeys,
-	allMemberColumns,
 	initTables,
 	deleteTable,
 };

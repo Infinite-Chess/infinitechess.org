@@ -5,8 +5,7 @@
 import { logEvents } from "../../middleware/logEvents";
 import { getTranslationForReq } from "../../utility/translate";
 import { testPasswordForRequest } from "./authController";
-import { deleteUser } from "./memberController";
-import { getMemberDataByCriteria } from "./members";
+import { deleteUser, getMemberDataByCriteria } from "./memberController";
 
 // Automatic deletion of accounts...
 
@@ -23,7 +22,7 @@ const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1;
  * @param {object} res - The response object.
  */
 async function removeAccount(req, res) {
-	const claimedUsername = req.params.member
+	const claimedUsername = req.params.member;
 
 	// Check to make sure they're logged in
 	if (req.user !== claimedUsername) {
@@ -40,7 +39,7 @@ async function removeAccount(req, res) {
 
 	// DELETE ACCOUNT..
 
-    console.error("Don't know how to delet all roles of mem yet");
+	console.error("Don't know how to delet all roles of mem yet");
 	// removeAllRoles(req.user); // Remove roles
 
 	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
@@ -49,7 +48,7 @@ async function removeAccount(req, res) {
 		// if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 	}
 
-	deleteUser()
+	deleteUser(user_id);
 
 	if (deleteUser(req.user)) {
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
