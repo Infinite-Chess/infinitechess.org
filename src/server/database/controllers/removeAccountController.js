@@ -2,15 +2,11 @@
  * This module handles account deletion.
  */
 
+import { logEvents } from "../../middleware/logEvents";
+import { getTranslationForReq } from "../../utility/translate";
 import { testPasswordForRequest } from "./authController";
 import { deleteUser } from "./memberController";
-import { getUserIDByUsername } from "./members";
-
-// import { removeMember, getAllUsernames, getVerified, getJoinDate, getUsernameCaseSensitive } from './members.js';
-// import { testPasswordForRequest } from './authController.js';
-// import { removeAllRoles } from './roles.js';
-// import { logEvents } from '../middleware/logEvents.js';
-// import { getTranslationForReq } from '../utility/translate.js';
+import { getMemberDataByCriteria } from "./members";
 
 // Automatic deletion of accounts...
 
@@ -47,7 +43,7 @@ async function removeAccount(req, res) {
     console.error("Don't know how to delet all roles of mem yet");
 	// removeAllRoles(req.user); // Remove roles
 
-	const { user_id } = getUserIDByUsername(claimedUsername);
+	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
 	if (user_id === undefined) {
 		logEvents(`Unable to find member of claimed username "${claimedUsername}" after a successful`)
 		// if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
@@ -55,7 +51,7 @@ async function removeAccount(req, res) {
 
 	deleteUser()
 
-	if (removeMember(req.user)) {
+	if (deleteUser(req.user)) {
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
 		return res.send('OK'); // 200 is default code
 	} else {

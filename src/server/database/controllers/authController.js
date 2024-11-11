@@ -11,8 +11,7 @@ import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { getClientIP } from '../../middleware/IP.js';
-import db from '../database.js';
-import { addRefreshToken, getUserIDAndUsernameByUsername, getUserIDUsernameAndPasswordByUsername, updateLoginCountAndLastSeen } from './members.js';
+import { addRefreshToken, getMemberDataByCriteria, updateLoginCountAndLastSeen } from './members.js';
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
@@ -56,7 +55,7 @@ async function handleLogin(req, res) {
 
 	const usernameCaseInsensitive = req.body.username; // We already know this property is present on the request
 
-	const { user_id, username } = getUserIDAndUsernameByUsername(usernameCaseInsensitive);
+	const { user_id, username } = getMemberDataByCriteria(['user_id', 'username'], 'username', usernameCaseInsensitive);
 	if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 
 	// The payload can be an object with their username and their roles.
@@ -95,16 +94,14 @@ async function testPasswordForRequest(req, res) {
 	let { username: claimedUsername, password: claimedPassword } = req.body;
 	claimedUsername = claimedUsername || req.params.member;
 
-	const { user_id, username, hashed_password } = getUserIDUsernameAndPasswordByUsername(claimedUsername, { noerror: true });
+	const { user_id, username, hashed_password } = getMemberDataByCriteria(['user_id', 'username', 'hashed_password'], 'username', claimedUsername, { skipErrorLogging: true });
 	if (user_id === undefined) { // Username doesn't exist
 		res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-invalid_username", req)}); // Unauthorized, username not found
 		return false;
 	}
     
 	const browserAgent = getBrowserAgent(req, username);
-	if (!rateLimitLogin(req, res, browserAgent)) {
-		return false; // They are being rate limited from enterring incorrectly too many times
-	}
+	if (!rateLimitLogin(req, res, browserAgent)) return false; // They are being rate limited from enterring incorrectly too many times
 
 	// Test the password
 	const match = await bcrypt.compare(claimedPassword, hashed_password);

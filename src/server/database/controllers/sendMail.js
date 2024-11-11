@@ -1,9 +1,8 @@
 
 import nodemailer from 'nodemailer';
-import db from '../database.js';
 import { DEV_BUILD, HOST_NAME } from '../../config/config.js';
 import { logEvents } from '../../middleware/logEvents.js';
-import { getUserUsernameEmailAndVerification } from './members.js';
+import { getMemberDataByCriteria } from './members.js';
 
 /**
  * Sends an account verification email to the specified member
@@ -15,7 +14,7 @@ const sendEmailConfirmation = function(user_id) {
 	const host = DEV_BUILD ? `localhost:${process.env.HTTPSPORT_LOCAL}` : HOST_NAME;
 
 	// eslint-disable-next-line prefer-const
-	let { username, email, verification } = getUserUsernameEmailAndVerification(user_id);
+	let { username, email, verification } = getMemberDataByCriteria(['username', 'email', 'verification'], 'user_id', user_id);
 	if (username === undefined) return logEvents(`Unable to send email confirmation of non-existent member of id "${user_id}"!`);
 	verification = JSON.parse(verification); // { verified, code }
 

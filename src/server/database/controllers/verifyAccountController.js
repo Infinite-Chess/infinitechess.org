@@ -1,7 +1,7 @@
 
 import { logEvents } from "../../middleware/logEvents";
 import { getTranslationForReq } from "../../utility/translate";
-import { getUserIdUsernameAndVerificationByUsername, saveVerification } from "./members";
+import { getMemberDataByCriteria, updateMemberColumns } from "./members";
 
 // Called when clicked on verification link in email.
 // CAN redirect!
@@ -10,7 +10,8 @@ const verifyAccount = async function(req, res) {
 	const claimedUsername = req.params.member;
 	const claimedCode = req.params.code;
 
-	const { user_id, username, verification } = getUserIdUsernameAndVerificationByUsername(claimedUsername, { noerror: true })
+	// eslint-disable-next-line prefer-const
+	let { user_id, username, verification } = getMemberDataByCriteria(['user_id', 'username', 'verification'], 'username', claimedUsername, { skipErrorLogging: true });
 	if (user_id === undefined) { // User not found
 		logEvents(`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST. Verification code "${claimedCode}"`, 'hackLog.txt', { print: true });
 		return res.status(400).redirect(`/400`); // Bad request
@@ -47,14 +48,15 @@ const verifyAccount = async function(req, res) {
 
 	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
 
-	saveVerification(user_id, verification);
+	const changesMade = updateMemberColumns(user_id, { verification });
+	if (!changesMade) return logEvents(`No changes made when saving verification for member with id "${user_id}"! Value: ${JSON.stringify(verification)}`, 'errLog.txt', { print: true });
 
 	logEvents(`Verified member ${username}'s account!`, 'loginAttempts.txt', { print: true });
 	res.redirect(`/member/${username.toLowercase()}`);
 };
 
 function onVerify(verification) { // { verified, notified, code }
-    verification.verified = true;
+	verification.verified = true;
 	verification.notified = false;
 	delete verification.code;
 }
