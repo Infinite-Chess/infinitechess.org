@@ -54,9 +54,9 @@ const pixelDistToCancelClick = 10; // Default: 12   If the mouse moves more than
 
 let mousePos = [0,0]; // Current mouse position in pixels relative to the center of the screen.
 const mousePosHistory = []; // Mouse position last few frames. Required for mouse velocity calculation.
+const mousePosHIstoryWindowMillis = 80; // The amount of seconds to look back into for mouse velocity calculation.
 let mouseMoved = true; // Did the mouse move this frame? Helps us detect if the user is afk. (If they are we can save computation)
 let mouseVel = [0,0]; // The amount of pixels the mouse moved relative to the last few frames.
-const frameDecayMillis = 80; // The amount of seconds to look back into for mouse velocity calculation.
 
 let mouseWorldLocation = [0,0]; // Current mouse position in world-space
 
@@ -513,7 +513,7 @@ function recalcMouseVel(mousePos) {
 	mousePosHistory.push(currentMousePosEntry); // Deep copy the mouse position to avoid modifying the original
 
 	// Remove old entries, stop once we encounter recent enough data
-	const timeToRemoveEntriesBefore = now - frameDecayMillis;
+	const timeToRemoveEntriesBefore = now - mousePosHIstoryWindowMillis;
 	while (mousePosHistory.length > 0 && mousePosHistory[0][1] < timeToRemoveEntriesBefore) mousePosHistory.shift();
 
 	// Calculate velocity if there are at least two positions
