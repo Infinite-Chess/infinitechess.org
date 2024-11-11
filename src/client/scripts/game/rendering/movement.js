@@ -21,9 +21,7 @@ import selection from '../chess/selection.js';
 
 const panAccel = 50; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 50
 const deccelRate2D = 100; // 2D mode: Deccelleration rate of panning.   Default: 15
-const droppedVelMultiplier = 4.5; // This times the mouse velocity is applied to the board after dropping it
-// the board after the user finishes dragging	Default: 0.3
-const requiredVelocityToThrow = 3; // Mouse velocity required for the board to get thrown	Default: 4
+const droppedVelMultiplier = 4.5; // This times the mouse velocity is applied to the board after dropping it.   Default: 4.5
 let panVelCap = 11.0; // Hyptenuse cap of x & y speeds   Default: 11
 
 const scaleAccel = 6.0; // Acceleration of board scaling   Default: 6
