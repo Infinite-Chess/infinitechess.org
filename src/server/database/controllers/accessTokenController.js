@@ -1,6 +1,4 @@
 
-import jwt from 'jsonwebtoken';
-import { logEvents } from '../../middleware/logEvents';
 
 /**
  * How long until the cookie containing their new access token

@@ -14,6 +14,8 @@ import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberCo
 import { logEvents } from '../../middleware/logEvents';
 import { signRefreshToken } from './tokenController';
 import { addRefreshTokenToMemberData, createMemberInfoCookie, createRefreshTokenCookie } from './refreshTokenController';
+import { getTranslationForReq } from '../../utility/translate';
+import { getClientIP } from '../../middleware/IP';
 
 
 // Rate limiting stuff...
