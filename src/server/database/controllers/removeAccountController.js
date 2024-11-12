@@ -38,17 +38,19 @@ async function removeAccount(req, res) {
 
 	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
 	if (user_id === undefined) {
-		logEvents(`Unable to find member of claimed username "${claimedUsername}" after a successful`)
+		logEvents(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt', { print: true });
 		// if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 	}
 
-	deleteUser(user_id);
-
 	if (deleteUser(claimedUsername)) {
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
+
+		// Add their user_id to the deleted user_id's  table
+		// ...
+
 		return res.send('OK'); // 200 is default code
 	} else {
-		logEvents(`Can't delete ${claimedUsername}'s account. They do not exist.`, 'hackLog.txt', { print: true });
+		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered, they do not exist.`, 'errLog.txt', { print: true });
 		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_not_found", req) });
 	}
 }
@@ -58,14 +60,14 @@ async function removeAccount(req, res) {
  * @param {string} usernameLowercase - The username of the account to remove, in lowercase.
  * @param {string} reason - The reason for account deletion.
  */
-function removeAccountByUsername(usernameLowercase, reason) {
-	removeAllRoles(usernameLowercase);
-	if (removeMember(usernameLowercase)) {
-		logEvents(`User ${usernameLowercase} was deleted for '${reason}'`, "deletedAccounts.txt", { print: true });
-	} else {
-		logEvents(`User ${usernameLowercase} was attempted to be removed for '${reason}' but failed`, 'hackLog.txt', { print: true });
-	}
-}
+// function removeAccountByUsername(usernameLowercase, reason) {
+// 	removeAllRoles(usernameLowercase);
+// 	if (removeMember(usernameLowercase)) {
+// 		logEvents(`User ${usernameLowercase} was deleted for '${reason}'`, "deletedAccounts.txt", { print: true });
+// 	} else {
+// 		logEvents(`User ${usernameLowercase} was attempted to be removed for '${reason}' but failed`, 'hackLog.txt', { print: true });
+// 	}
+// }
 
 // Automatic deletion of old, unverified accounts...
 
@@ -74,24 +76,25 @@ function removeAccountByUsername(usernameLowercase, reason) {
  * It checkes for old unverified account and removes them from the database
  */
 function removeOldUnverifiedMembers() {
-	const now = new Date();
-	const millisecondsInADay = 1000 * 60 * 60 * 24;
+	return console.error("Don't know how to delete old unverified accounts yet!")
+	// const now = new Date();
+	// const millisecondsInADay = 1000 * 60 * 60 * 24;
 
-	const allUserNames = getAllUsernames(); // An array of all usernames
+	// const allUserNames = getAllUsernames(); // An array of all usernames
 
-	for (const username of allUserNames) {
-		if (getVerified(username) !== false) continue; // Are verified, or they don't exist
-		// Are not verified...
+	// for (const username of allUserNames) {
+	// 	if (getVerified(username) !== false) continue; // Are verified, or they don't exist
+	// 	// Are not verified...
         
-		// Calculate the time since the user joined
-		const timeJoined = getJoinDate(username); // A date object
-		const timeSinceJoined = now - timeJoined; // Milliseconds (Date - Date = number)
+	// 	// Calculate the time since the user joined
+	// 	const timeJoined = getJoinDate(username); // A date object
+	// 	const timeSinceJoined = now - timeJoined; // Milliseconds (Date - Date = number)
 
-		if (timeSinceJoined < maxExistenceTimeForUnverifiedAccountMillis) continue; // Account isn't old enough.
+	// 	if (timeSinceJoined < maxExistenceTimeForUnverifiedAccountMillis) continue; // Account isn't old enough.
 
-		// Delete account...
-		removeAccountByUsername(username, `Unverified for more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days`);
-	}
+	// 	// Delete account...
+	// 	removeAccountByUsername(username, `Unverified for more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days`);
+	// }
 }
 
 removeOldUnverifiedMembers(); // Call once on startup.

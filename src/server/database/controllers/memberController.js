@@ -98,7 +98,7 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 /**
  * Deletes a user from the members table based on their user ID.
  * @param {number} user_id - The ID of the user to delete.
- * @returns {object} - The result of the database operation or an error message: `{ success, message, result }`
+ * @returns {boolean} true if there was a change made (deleted successfully)
  */
 function deleteUser(user_id) {
 	// SQL query to delete a user by their user_id
@@ -108,7 +108,11 @@ function deleteUser(user_id) {
 	const result = db.run(query, [user_id]); // { changes: 1 }
 
 	// Check if any rows were deleted
-	if (result.changes === 0) logEvents(`Cannot delete non-existent user of id "${user_id}"!`, 'errLog.txt', { print: true });
+	if (result.changes === 0) {
+		logEvents(`Cannot delete non-existent user of id "${user_id}"!`, 'errLog.txt', { print: true });
+		return false;
+	}
+	return true; // Change made
 }
 // console.log(deleteUser(3408674));
 
