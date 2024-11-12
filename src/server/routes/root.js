@@ -2,10 +2,10 @@ import express from "express";
 const router = express.Router();
 import path from "path";
 
-import { handleLogout } from '../controllers/logoutController.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import { fileURLToPath } from 'node:url';
 import { handleLogin } from "../database/controllers/authController.js";
+import { handleLogout } from "../database/controllers/logoutController.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

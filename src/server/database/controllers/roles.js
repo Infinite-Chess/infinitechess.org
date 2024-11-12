@@ -7,9 +7,8 @@
 
 import path from 'path';
 import fs from 'fs';
-import { readFile, writeFile } from '../utility/lockFile.js';
-
-import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
+import { readFile, writeFile } from '../../utility/lockFile.js';
+import { writeFile_ensureDirectory } from '../../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

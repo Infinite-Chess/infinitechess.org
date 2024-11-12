@@ -3,7 +3,6 @@ import express from 'express';
 const router = express.Router();
 import path from 'path';
 
-import { getMemberData,requestConfirmEmail } from '../controllers/memberController.js';
 import { getLanguageToServe } from '../utility/translate.js';
 
 import { fileURLToPath } from 'node:url';

@@ -15,7 +15,6 @@ import errorHandler from './errorHandler.js';
 import { logger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
-import { protectedStatic } from './protectedStatic.js';
 
 // External translation middleware
 import i18next from 'i18next';
