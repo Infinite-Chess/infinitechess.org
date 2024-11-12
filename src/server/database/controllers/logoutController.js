@@ -1,10 +1,9 @@
 
 import websocketserver from '../../wsserver.js';
-import { getTranslationForReq } from "../../utility/translate.js";
 import { getUserIDAndUsernameFromRefreshToken } from "./memberController.js";
 import { deleteAllInvitesOfMember } from '../../game/invitesmanager/invitesmanager';
 import { logEvents } from '../../middleware/logEvents.js';
-import { deleteToken } from './tokenController.js';
+import { deleteRefreshTokenFromMemberData } from './refreshTokenController.js';
 
 
 const handleLogout = async(req, res) => {
@@ -22,7 +21,7 @@ const handleLogout = async(req, res) => {
 		return res.redirect('/'); // Return this instead just in case there's a bug.
 	}
 
-	deleteToken(user_id, refreshToken, true); // true if isRefreshToken
+	deleteRefreshTokenFromMemberData(user_id, refreshToken); // true if isRefreshToken
 	// They didn't pass an access token in the request so don't delete that here.
 
 	websocketserver.closeAllSocketsOfMember(username.toLowerCase(), 1008, "Logged out");
