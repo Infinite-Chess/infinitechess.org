@@ -10,13 +10,11 @@
  */
 
 import bcrypt from 'bcrypt';
+import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController';
+import { logEvents } from '../../middleware/logEvents';
+import { signRefreshToken } from './tokenController';
+import { addRefreshTokenToMemberData, createMemberInfoCookie, createRefreshTokenCookie } from './refreshTokenController';
 
-import { logEvents } from '../../middleware/logEvents.js';
-import { getTranslationForReq } from '../../utility/translate.js';
-import { getClientIP } from '../../middleware/IP.js';
-import {  getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController.js';
-import { createRefreshTokenCookie } from './refreshTokenController.js';
-import { addTokenToMemberData, signTokens } from './tokenController.js';
 
 // Rate limiting stuff...
 
@@ -55,26 +53,23 @@ async function handleLogin(req, res) {
 
 	const usernameCaseInsensitive = req.body.username; // We already know this property is present on the request
 
-	const { user_id, username } = getMemberDataByCriteria(['user_id', 'username'], 'username', usernameCaseInsensitive);
+	const { user_id, username, roles } = getMemberDataByCriteria(['user_id', 'username', 'roles'], 'username', usernameCaseInsensitive);
 	if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 
 	// The payload can be an object with their username and their roles.
-	const payload = { user_id, username };
-	const { accessToken, refreshToken } = signTokens(payload);
+	const refreshToken = signRefreshToken(user_id, username, roles);
     
 	// Save the refresh token with current user so later when they log out we can invalidate it.
-	addTokenToMemberData(user_id, accessToken, false); // false for access token
-	addTokenToMemberData(user_id, refreshToken, false); // true for refresh token
+	addRefreshTokenToMemberData(user_id, refreshToken, ); // false for access token
     
 	createRefreshTokenCookie(res, refreshToken);
 	createMemberInfoCookie(res, user_id, username);
+
+	res.sendStatus(200); // Success!
     
 	// Update our member's statistics in their data file!
 	updateLoginCountAndLastSeen(user_id);
     
-	// Finally, send the access token! On front-end, don't store it anywhere except memory.
-	res.json({ accessToken });
-
 	logEvents(`Logged in member "${username}".`, "loginAttempts.txt", { print: true });
 }
 

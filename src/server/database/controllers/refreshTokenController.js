@@ -126,7 +126,7 @@ function addRefreshTokenToMemberData(userId, token) {
  * @param {number} userId - The user ID of the member whose refresh token is to be deleted.
  * @param {string} token - The refresh token to be deleted from the user's refresh_tokens column.
  */
-function deleteRefreshTokenFromMemberData(userId, token) {
+function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 	// Fetch the current refresh tokens for the user
 	const refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) return logEvents(`Cannot delete refresh token from non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
@@ -135,7 +135,7 @@ function deleteRefreshTokenFromMemberData(userId, token) {
 	let newRefreshTokens = removeExpiredTokens(refreshTokens);
 
 	// Remove the specified refresh token from the array
-	newRefreshTokens = newRefreshTokens.filter(token => token.token !== token);
+	newRefreshTokens = newRefreshTokens.filter(token => token.token !== deleteToken);
 
 	// Save the updated refresh tokens
 	if (newRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, refreshTokens);
@@ -196,4 +196,6 @@ export {
 	createRefreshTokenCookie,
 	createMemberInfoCookie,
 	doesMemberHaveRefreshToken,
+	addRefreshTokenToMemberData,
+	deleteRefreshTokenFromMemberData,
 };
