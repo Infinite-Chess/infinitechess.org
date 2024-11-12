@@ -15,8 +15,8 @@ import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { getClientIP } from '../../middleware/IP.js';
 import {  getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController.js';
-import { addRefreshTokenToMemberData, createRefreshTokenCookie } from './refreshTokenController.js';
-import { signTokens } from './tokenController.js';
+import { createRefreshTokenCookie } from './refreshTokenController.js';
+import { addTokenToMemberData, signTokens } from './tokenController.js';
 
 // Rate limiting stuff...
 
@@ -63,9 +63,11 @@ async function handleLogin(req, res) {
 	const { accessToken, refreshToken } = signTokens(payload);
     
 	// Save the refresh token with current user so later when they log out we can invalidate it.
-	addRefreshTokenToMemberData(user_id, refreshToken);
+	addTokenToMemberData(user_id, accessToken, false); // false for access token
+	addTokenToMemberData(user_id, refreshToken, false); // true for refresh token
     
 	createRefreshTokenCookie(res, refreshToken);
+	createMemberInfoCookie(res, user_id, username);
     
 	// Update our member's statistics in their data file!
 	updateLoginCountAndLastSeen(user_id);

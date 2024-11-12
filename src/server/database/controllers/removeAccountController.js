@@ -24,12 +24,6 @@ const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1;
 async function removeAccount(req, res) {
 	const claimedUsername = req.params.member;
 
-	// Check to make sure they're logged in
-	if (req.user !== claimedUsername) {
-		logEvents(`User "${req.user}" tried to delete account "${claimedUsername}"!!`, 'loginAttempts.txt', { print: true });
-		return res.status(403).json({'message' : getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req) });
-	}
-
 	// The delete account request doesn't come with the username
 	// already in the body, so we set that here.
 	req.body.username = claimedUsername;
@@ -39,8 +33,8 @@ async function removeAccount(req, res) {
 
 	// DELETE ACCOUNT..
 
-	console.error("Don't know how to delet all roles of mem yet");
-	// removeAllRoles(req.user); // Remove roles
+	console.error("Don't know how to delete all roles of mem yet");
+	// removeAllRoles(claimedUsername); // Remove roles
 
 	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
 	if (user_id === undefined) {
@@ -50,7 +44,7 @@ async function removeAccount(req, res) {
 
 	deleteUser(user_id);
 
-	if (deleteUser(req.user)) {
+	if (deleteUser(claimedUsername)) {
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
 		return res.send('OK'); // 200 is default code
 	} else {

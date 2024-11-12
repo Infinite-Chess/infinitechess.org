@@ -284,6 +284,15 @@ function updateLastSeen(userId) {
 
 
 /**
+ * Checks if a member of a given id exists in the members table.
+ * @param {number} userId - The user ID to check.
+ * @returns {boolean} - Returns true if the member exists, false otherwise.
+ */
+function doesMemberOfIDExist(userId) {
+	return isUserIdTaken(userId);
+}
+
+/**
  * Checks if a given user_id exists in the members table.
  * @param {number} userId - The user ID to check.
  * @returns {boolean} - Returns true if the user ID exists, false otherwise.

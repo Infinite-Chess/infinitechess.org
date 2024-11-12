@@ -87,7 +87,7 @@ const memberHeader = (function() {
 		lastRefreshTime = undefined; // Set as undefined, because waitUntilInitialRequestBack() relies on it being undefined
 		let OK = false;
 
-		fetch('/refresh')
+		fetch('/api/get-access-token')
 			.then(response => {
 				if (response.ok) {
 					OK = true;

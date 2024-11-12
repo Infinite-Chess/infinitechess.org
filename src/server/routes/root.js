@@ -2,13 +2,11 @@ import express from "express";
 const router = express.Router();
 import path from "path";
 
-import { handleLogin } from '../controllers/authController.js';
-import { handleRefreshToken } from '../controllers/refreshTokenController.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import { verifyAccount } from '../controllers/verifyAccountController.js';
-import { ensureOwner, ensurePatron } from '../middleware/verifyRoles.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import { fileURLToPath } from 'node:url';
+import { handleLogin } from "../database/controllers/authController.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -56,8 +54,6 @@ router.get("/login(.html)?", (req, res) => {
 });
 
 router.post("/auth", handleLogin);
-
-router.get("/refresh", handleRefreshToken);
 
 router.get("/logout", handleLogout);
 

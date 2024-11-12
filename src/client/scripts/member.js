@@ -47,7 +47,7 @@ refreshAndUpdateNav();
 function refreshAndUpdateNav() {
 	// Fetch an access token by refreshing
 	let OK = false;
-	fetch('/refresh')
+	fetch('/api/get-access-token')
 		.then((response) => {
 			if (response.ok) OK = true;
 			return response.json();

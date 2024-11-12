@@ -8,8 +8,9 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { findMemberFromRefreshToken, doesMemberExist } from '../controllers/members.js';
-import { setRole, setRoleWebSocket } from '../controllers/roles.js';
+import { setRole } from '../database/controllers/roles.js';
+import { doesMemberHaveToken, getUserIDAndUsernameFromToken, isTokenValid } from '../database/controllers/tokenController.js';
+import { doesMemberOfIDExist } from '../database/controllers/memberController.js';
 
 /** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
@@ -43,6 +44,7 @@ const verifyJWT = (req, res, next) => {
  * @returns {boolean} true if a valid token was found (logged in)
  */
 function verifyAccessToken(req) {
+	req.user = null;
 	const authHeader = req.headers.authorization || req.headers.Authorization;
 	if (!authHeader) return false;
 	if (!authHeader.startsWith('Bearer ')) return false;
@@ -50,13 +52,29 @@ function verifyAccessToken(req) {
 	const accessToken = authHeader.split(' ')[1];
 	if (!accessToken) return false; // Token empty
 
-	jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-		if (err) return console.log('Invalid access token (http)!'); // Forbidden, invalid token
-		if (!doesMemberExist(decoded.username)) return; // I have deleted their account, so their access token is no longer valid.
-		req.user = decoded.username; // Username was our payload when we generated the access token
-	});
+	const { user_id, username } = getUserIDAndUsernameFromToken(accessToken, false); // false for isRefreshToken => isAccessToken
+	if (user_id === undefined) {
+		console.log('Invalid access token (http)!'); // Forbidden, invalid token
+		return false;
+	}
 
-	return req.user != null; // true if they have a valid ACCESS token
+	console.log("A valid access token was used! :D");
+
+	if (!doesMemberOfIDExist(user_id)) return false; // They have deleted their account, so their access token is no longer valid.
+
+	// Token is valid and hasn't hit the 15m expiry, but have we manually invalidated it? (perhaps account deleted)
+	// If we have removed the refresh token from the members data in the database. That means it is invalid.
+	// ...
+	
+	if (!doesMemberHaveToken(user_id, accessToken, false)) { // false for access token
+		return false; // Their access token is no longer valid.
+	}
+
+	// Token is valid! Set their req.user property!
+
+	req.user = username; // Username was our payload when we generated the access token
+
+	return user_id !== undefined; // true if they have a valid ACCESS token
 }
 
 /**
@@ -73,16 +91,16 @@ function verifyRefreshToken(req) {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return false; // Not logged in, don't set their user property
 
-	// First make sure we haven't manually invalidated this refresh token if they've logged out.
-	const memberWithThisRefreshToken = findMemberFromRefreshToken(refreshToken);
-	if (!memberWithThisRefreshToken) return false; // They've logged out since.
+	// { isValid (boolean), user_id, username }
+	const results = isTokenValid(refreshToken, true); // true for isRefreshToken
+	if (!results.isValid) return false;
 
-	jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-		if (err || memberWithThisRefreshToken !== decoded.username) return console.log('Invalid refresh token! Expired or tampered. verifyJWT middleware.');
-		req.user = decoded.username;
-	});
+	// Valid! Set their req.user property!
 
-	return req.user != null; // true if they have a valid REFRESH token
+	const { user_id, username } = results;
+	req.user = username;
+
+	return true; // true if they have a valid REFRESH token
 };
 
 
