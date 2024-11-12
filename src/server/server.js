@@ -16,8 +16,6 @@ import wsserver from './wsserver.js';
 import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';
 import { DEV_BUILD } from './config/config.js';
-import { saveMembersIfChangesMade } from './controllers/members.js';
-import { saveRolesIfChangesMade } from './controllers/roles.js';
 import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
 
@@ -51,8 +49,6 @@ async function handleCleanup(signal) {
 	cleanupDone = true;
 	console.log(`\nReceived ${signal}. Cleaning up...`);
 
-	await saveMembersIfChangesMade();
-	await saveRolesIfChangesMade();
 	await logAllGames();
 
 	db.close();  // Close the database when the server is shutting down.

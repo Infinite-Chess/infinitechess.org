@@ -17,15 +17,15 @@ const verifyAccount = async function(req, res) {
 		return res.status(400).redirect(`/400`); // Bad request
 	}
 
-	if (!req.user) { // Not logged in
+	if (!req.memberInfo.signedIn) { // Not logged in
 		logEvents(`Forwarding user '${username}' to login before they can verify!`, 'loginAttempts.txt', { print: true });
 		// Redirect them to the login page, BUT add a query parameter with the original verification url they were visiting!
 		const redirectTo = encodeURIComponent(req.originalUrl);
 		return res.redirect(`/login?redirectTo=${redirectTo}`);
 	}
 
-	if (req.user !== username) { // Forbid them if they are logged in and NOT who they're wanting to verify!
-		logEvents(`User ${req.user} attempted to verify ${username}!`, 'loginAttempts.txt', { print: true });
+	if (req.memberInfo.username !== username) { // Forbid them if they are logged in and NOT who they're wanting to verify!
+		logEvents(`User ${req.memberInfo.username} attempted to verify ${username}!`, 'loginAttempts.txt', { print: true });
 		return res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req));
 	}
 

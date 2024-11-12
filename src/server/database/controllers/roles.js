@@ -70,10 +70,10 @@ const isPatron = function(member) {
  * Sets the `role` property of the request to the
  * member's role, if they have one.
  * @param {Object} req - The request object.
- * @param {string} req.user - Their username, in lowercase, if logged in.
  */
 function setRole(req) {
-	const user = req.user;
+	return console.log("do not know yet how to set the role of a request!");
+	const user = req.memberInfo.username;
 	if (!user) return; // Not logged in, no role
 
 	if (isOwner(user)) req.role = 'owner';
@@ -101,6 +101,7 @@ function setRoleWebSocket(ws) {
  * @param {string} description - A 1 or 2 word description
  */
 function giveRole_Owner(user, description) {
+	return console.error("Don't know how to give roll yet!");
 	removeAllRoles(user);
 	roles.owners[user] = description;
 	rolesHaveBeenEdited = true;
@@ -112,6 +113,7 @@ function giveRole_Owner(user, description) {
  * @param {string} description - A 1 or 2 word description
  */
 function giveRole_Patron(user, description) {
+	return console.error("Don't know how to give roll yet!");
 	removeAllRoles(user);
 	roles.patrons[user] = description;
 	rolesHaveBeenEdited = true;

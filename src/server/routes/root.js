@@ -3,7 +3,6 @@ const router = express.Router();
 import path from "path";
 
 import { handleLogout } from '../controllers/logoutController.js';
-import { verifyAccount } from '../controllers/verifyAccountController.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import { fileURLToPath } from 'node:url';
 import { handleLogin } from "../database/controllers/authController.js";
@@ -63,8 +62,6 @@ router.get("/termsofservice(.html)?", (req, res) => {
 		path.join(htmlDirectory, language, "termsofservice.html"),
 	);
 });
-
-router.get("/verify/:member/:code", verifyAccount);
 
 router.get("/400(.html)?", (req, res) => {
 	const language = getLanguageToServe(req);

@@ -31,6 +31,7 @@ import corsOptions from '../config/corsOptions.js';
 
 import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../database/controllers/accessTokenIssuer.js';
+import { verifyAccount } from '../database/controllers/verifyAccountController.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -83,6 +84,7 @@ function configureMiddleware(app) {
      */
 	app.use(express.urlencoded({ extended: false}));
 
+	// Sets the req.cookies property
 	app.use(cookieParser());
 
 	// Serve public assets. (e.g. css, scripts, images, audio)
@@ -97,7 +99,7 @@ function configureMiddleware(app) {
 	app.use('/member', memberRouter);
 
 	/**
-     * Sets the req.user and req.role properties if they have an authorization
+     * Sets the req.memberInfo properties if they have an authorization
      * header (contains access token) or refresh cookie (contains refresh token).
      * Don't send unauthorized people private stuff without the proper role.
 	 * 
@@ -107,6 +109,7 @@ function configureMiddleware(app) {
 	app.use(verifyJWT);
 
 	app.post("/api/get-access-token", accessTokenIssuer);
+	app.get("/verify/:member/:code", verifyAccount);
 
 	// If we've reached this point, send our 404 page.
 	app.all('*', send404);

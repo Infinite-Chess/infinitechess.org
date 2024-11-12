@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
 import { DEV_BUILD } from './config.js';
-import { generateAccount } from '../controllers/createaccountController.js';
-import { giveRole_Owner, giveRole_Patron } from '../controllers/roles.js';
 import { doesMemberExist } from '../controllers/members.js';
 import { ensureEnvFile } from './env.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
+import { generateAccount } from '../database/controllers/createaccountController.js';
+import { giveRole_Owner, giveRole_Patron } from '../database/controllers/roles.js';
 
 function initDevEnvironment() {
 	if (!DEV_BUILD) return callDotenvConfig(); // Production

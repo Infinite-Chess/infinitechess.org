@@ -34,7 +34,7 @@ function isTokenValid(token, isRefreshToken) {
 	const { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
 	if (user_id === undefined) return { isValid: false }; // Expired or tampered token
 
-	if (!isRefreshToken) return { isValid: true }; // Access tokens can't be manually invalidated in the database. They need to remain quick.
+	if (!isRefreshToken) return { isValid: true, user_id, username, roles, allowed_actions }; // Access tokens can't be manually invalidated in the database. They need to remain quick.
 
 	// Check if the token was manually invalidated (e.g., user logged out)
 	if (!doesMemberHaveRefreshToken(user_id, token, isRefreshToken)) return { isValid: false };
