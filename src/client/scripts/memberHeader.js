@@ -87,7 +87,7 @@ const memberHeader = (function() {
 		lastRefreshTime = undefined; // Set as undefined, because waitUntilInitialRequestBack() relies on it being undefined
 		let OK = false;
 
-		fetch('/api/get-access-token')
+		fetch('/api/get-access-token', { method: 'POST', credentials: 'include' })
 			.then(response => {
 				if (response.ok) {
 					OK = true;
@@ -96,6 +96,7 @@ const memberHeader = (function() {
 			})
 			.then(result => {
 				if (OK) { // Refresh token (from cookie) accepted!
+					// Get the access token from the cookie
 					token = getCookieValue('token');
 					if (!token) {
 						console.error("Response from the server did not include a token!");
@@ -103,11 +104,19 @@ const memberHeader = (function() {
 						console.log("Logged in");
 					}
 
-					member = result.member;
+					// Get member info from the memberInfo cookie
+					const memberInfo = getCookieValue('memberInfo');
+					if (memberInfo) {
+						const { user_id, username } = JSON.parse(memberInfo);
+						member = username; // Use the username for the member
+					} else {
+						console.error("Member info cookie not found!");
+					}
 				} else { // Unauthorized, don't change any navigation links. Should have given us a browser-id!
 					console.log(`Server: ${result.message}`);
 					areLoggedIn = false;
 				}
+
 				// Delete the token cookie after reading it, so it doesn't bleed
 				// into future page refreshes, even after we have logged out
 				deleteCookie('token');
@@ -118,7 +127,7 @@ const memberHeader = (function() {
 			.catch(error => {
 				// Handle the error
 				console.error('Error occurred during refreshing of token:', error);
-				// You can also set areLoggedIn to false or perform other error handling logic here
+				// Set areLoggedIn to false or perform other error handling logic here
 				requestOut = false;
 			});
 	}

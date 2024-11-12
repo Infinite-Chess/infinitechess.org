@@ -47,31 +47,41 @@ refreshAndUpdateNav();
 function refreshAndUpdateNav() {
 	// Fetch an access token by refreshing
 	let OK = false;
-	fetch('/api/get-access-token')
+	fetch('/api/get-access-token', { method: 'POST', credentials: 'include' }) // POST request now
 		.then((response) => {
 			if (response.ok) OK = true;
 			return response.json();
 		})
 		.then((result) => {
-			if (OK) { // Refresh token (from cookie) accepted! Receiving new access token + member name
+			if (OK) { // Refresh token (from cookie) accepted! Receiving new access token
 				console.log("Logged in");
+
 				// token = result.accessToken;
-				token = getCookieValue('token'); // Cookie expires in 60s
-            
-				loadMemberData(result.member.toLowerCase());
+				token = getCookieValue('token'); // Assuming you store access token in a separate cookie
 
-				// Change navigation links...
-				element_loginLink.setAttribute('href', `/member/${result.member.toLowerCase()}`);
-				// element_loginText.textContent = result.member;
-				element_loginText.textContent = translations["js-profile"];
+				// Read the member info cookie
+				const memberInfo = getCookieValue('memberInfo');
+				if (memberInfo) {
+					const { user_id, username } = JSON.parse(memberInfo); // Parse member info from the cookie
 
-				element_createaccountLink.setAttribute('href', '/logout');
-				element_createaccountText.textContent = translations["js-logout"];
+					// Use member info to update navigation links
+					const memberName = username.toLowerCase();
+					loadMemberData(memberName);
 
+					element_loginLink.setAttribute('href', `/member/${memberName}`);
+					element_loginText.textContent = translations["js-profile"];
+
+					element_createaccountLink.setAttribute('href', '/logout');
+					element_createaccountText.textContent = translations["js-logout"];
+				} console.error('no member info cookie found');
 			} else { // Unauthorized, don't change any navigation links
 				console.log(result.message);
-				loadMemberData();
+				loadMemberData(); // No member data, possibly show guest UI
 			}
+		})
+		.catch((err) => {
+			console.error('Error refreshing token:', err);
+			loadMemberData(); // In case of any error, treat as guest
 		});
 }
 

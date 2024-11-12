@@ -1,9 +1,6 @@
 
-import { getTranslationForReq } from '../../utility/translate';
-import { getMemberDataByCriteria, updateLastSeen, updateMemberColumns } from './memberController';
-import { isTokenValid, refreshTokenExpiryMillis, signAccessToken } from './tokenController';
-import { createAccessTokenCookie } from './accessTokenController';
-import { assignOrRenewBrowserID } from './browserIDController';
+import { getMemberDataByCriteria, updateMemberColumns } from './memberController';
+import { refreshTokenExpiryMillis } from './tokenController';
 import { logEvents } from '../../middleware/logEvents';
 
 
@@ -18,7 +15,26 @@ function createRefreshTokenCookie(res, refreshToken) {
 	res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: refreshTokenExpiryMillis });
 }
 
-createMemberInfoCookie(res, user_id, username);
+/**
+ * Creates and sets a cookie containing user info (user ID and username),
+ * accessible by JavaScript, with the same expiration as the refresh token.
+ * @param {Object} res - The response object.
+ * @param {string} userId - The ID of the user.
+ * @param {string} username - The username of the user.
+ */
+function createMemberInfoCookie(res, userId, username) {
+	// Create an object with member info
+	const memberInfo = JSON.stringify({ user_id: userId, username });
+
+	// Set the cookie (readable by JavaScript, not HTTP-only)
+	// Cross-site usage requires we set sameSite to 'None'! Also requires secure (https) true
+	res.cookie('memberInfo', memberInfo, {
+		httpOnly: false, // Accessible by JavaScript
+		sameSite: 'None', // Cross-site cookies
+		secure: true,     // Requires HTTPS
+		maxAge: refreshTokenExpiryMillis // Match the refresh token cookie expiration
+	});
+}
 
 
 
@@ -178,5 +194,6 @@ function removeExpiredTokens(tokens) {
 
 export {
 	createRefreshTokenCookie,
+	createMemberInfoCookie,
 	doesMemberHaveRefreshToken,
 };
