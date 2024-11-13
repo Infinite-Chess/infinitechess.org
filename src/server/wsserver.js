@@ -85,12 +85,11 @@ function onConnectionRequest(ws, req) {
 	}
 
 	// Parse cookies from the Upgrade http headers
-	const cookies = getCookiesFromWebsocket(req);
+	ws.cookies = getCookiesFromWebsocket(req);
 
 	ws.metadata = {
 		subscriptions: {}, // NEEDS TO BE INITIALIZED before we do anything it will crash because it's undefined!
 		userAgent: req.headers['user-agent'],
-		i18next: cookies.i18next, // Their preferred language, i.e. 'en-US'
 	};
 
 	// Rate Limit Here
@@ -108,17 +107,16 @@ function onConnectionRequest(ws, req) {
 		console.log(`Client IP ${ws.metadata.IP} has too many sockets! Not connecting this one.`);
 		return ws.close(1009, 'Too Many Sockets');
 	}
-	if (memberHasMaxSocketCount(ws.metadata.user)) {
-		console.log(`Member ${ws.metadata.user} has too many sockets! Not connecting this one.`);
+	
+	// Initialize who they are. Member? Browser ID?...
+	verifyJWTWebSocket(ws); // Auto sets ws.metadata.memberInfo properties!
+
+	if (memberHasMaxSocketCount(ws.metadata.memberInfo.username)) {
+		console.log(`Member ${ws.metadata.memberInfo.username} has too many sockets! Not connecting this one.`);
 		return ws.close(1009, 'Too Many Sockets');
 	}
 
-	// Initialize who they are. Member? Browser ID?...
-
-	verifyJWTWebSocket(ws, cookies); // Auto sets ws.metadata.memberInfo properties!
-	if (cookies['browser-id']) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
-
-	if (!ws.metadata.user && !ws.metadata['browser-id']) { // Terminate web socket connection request, they NEED authentication!
+	if (!ws.metadata.memberInfo.signedIn && ws.cookies['browser-id'] === undefined) { // Terminate web socket connection request, they NEED authentication!
 		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
 		wsutility.printSocket(ws);
 		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
@@ -128,7 +126,7 @@ function onConnectionRequest(ws, req) {
 
 	websocketConnections[id] = ws; // Add the connection to our list of all websocket connections
 	addConnectionToConnectedIPs(ws.metadata.IP, id); // Add the conenction to THIS IP's list of connections (so we can cap on a per-IP basis)
-	addConnectionToConnectedMembers(ws.metadata.user, id);
+	addConnectionToConnectedMembers(ws.metadata.memberInfo.username, id);
 
 	// Log the request
 	logWebsocketStart(req, ws);
@@ -247,7 +245,7 @@ function onclose(ws, code, reason) {
 	const id = ws.metadata.id;
 	delete websocketConnections[id];
 	removeConnectionFromConnectedIPs(ws.metadata.IP, id);
-	removeConnectionFromConnectedMembers(ws.metadata.user, id);
+	removeConnectionFromConnectedMembers(ws.metadata.memberInfo.username, id);
 
 	// What if the code is 1000, and reason is "Connection closed by client"?
 	// I then immediately want to delete their invite.
@@ -427,6 +425,7 @@ function clientHasMaxSocketCount(IP) {
  * @returns {boolean} *true* if they have too many sockets.
  */
 function memberHasMaxSocketCount(member) {
+	if (member === undefined) return false;
 	return connectedMembers[member]?.length >= maxSocketsAllowedPerMember;
 }
 
@@ -461,8 +460,11 @@ function closeWebSocketConnection(ws, code, message, messageID) {
 }
 
 function getCookiesFromWebsocket(req) { // req is the WEBSOCKET on-connection request!
-	//console.log(req.cookies) // UNDEFINED FOR WebSocket connections!!
-	const rawCookies = req.headers?.cookie; // In the format: "invite-tag=etg5b3bu; jwt=9732fIESLGIESLF"
+
+	// req.cookies is only defined from our cookie parser for REGULAR requests,
+	// NOT for websocket upgrade requests! We have to parse them manually!
+
+	const rawCookies = req.headers.cookie; // In the format: "invite-tag=etg5b3bu; jwt=9732fIESLGIESLF"
 	const cookies = {};
 	if (!rawCookies || typeof rawCookies !== 'string') return cookies;
 
@@ -475,7 +477,7 @@ function getCookiesFromWebsocket(req) { // req is the WEBSOCKET on-connection re
 		});
 	} catch (e) {
 		const errText = `Websocket connection request contained cookies in an invalid format!! Cookies: ${ensureJSONString(rawCookies)}\n${e.stack}`;
-		logEvents(errText, 'hackLog.txt', { print: true });
+		logEvents(errText, 'errLog.txt', { print: true });
 	}
 
 	return cookies;
