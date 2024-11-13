@@ -2,6 +2,7 @@
 import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents';
 import { doesMemberHaveRefreshToken } from './refreshTokenController';
+import { updateLastSeen } from './memberController';
 
 
 
@@ -32,14 +33,19 @@ const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 function isTokenValid(token, isRefreshToken) {
 	// Extract user ID and username from the token
 	const { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
-	if (user_id === undefined) return { isValid: false }; // Expired or tampered token
+	if (user_id === undefined || username === undefined || roles === undefined) return { isValid: false }; // Expired or tampered token
 
-	if (!isRefreshToken) return { isValid: true, user_id, username, roles, allowed_actions }; // Access tokens can't be manually invalidated in the database. They need to remain quick.
+	// If it's an access token, we already know it's valid.
+	if (!isRefreshToken) {
+		updateLastSeen(user_id);
+		return { isValid: true, user_id, username, roles, allowed_actions }; // Access tokens can't be manually invalidated in the database. They need to remain quick.
+	}
 
 	// Check if the token was manually invalidated (e.g., user logged out)
 	if (!doesMemberHaveRefreshToken(user_id, token, isRefreshToken)) return { isValid: false };
 
 	// If all checks pass, return a success response with the decoded payload information, such as their user_id and username
+	updateLastSeen(user_id);
 	return { isValid: true, user_id, username, roles, allowed_actions };
 }
 

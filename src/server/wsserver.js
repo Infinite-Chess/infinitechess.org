@@ -115,8 +115,7 @@ function onConnectionRequest(ws, req) {
 
 	// Initialize who they are. Member? Browser ID?...
 
-
-	verifyJWTWebSocket(ws, cookies); // Auto sets ws.metadata.user/role properties!
+	verifyJWTWebSocket(ws, cookies); // Auto sets ws.metadata.memberInfo properties!
 	if (cookies['browser-id']) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
 
 	if (!ws.metadata.user && !ws.metadata['browser-id']) { // Terminate web socket connection request, they NEED authentication!

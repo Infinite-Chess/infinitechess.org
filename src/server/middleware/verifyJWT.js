@@ -8,9 +8,7 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { setRole, setRoleWebSocket } from '../database/controllers/roles.js';
-import { doesMemberHaveToken, isTokenValid } from '../database/controllers/tokenController.js';
-import { doesMemberOfIDExist } from '../database/controllers/memberController.js';
+import { isTokenValid } from '../database/controllers/tokenController.js';
 import { logEvents } from './logEvents.js';
 
 /** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
@@ -32,11 +30,6 @@ const verifyJWT = (req, res, next) => {
 	const hasAccessToken = verifyAccessToken(req);
 	if (!hasAccessToken) verifyRefreshToken(req);
 
-	setRole(req);
-
-	// Here we can update their last-seen variable!
-	// ...
-
 	next(); // Continue down the middleware waterfall
 };
 
@@ -57,7 +50,7 @@ function verifyAccessToken(req) {
 	// { isValid (boolean), user_id, username, roles }
 	const result = isTokenValid(accessToken, false); // False for access token
 	if (!result.isValid) {
-		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true }); // Forbidden, invalid token
+		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered
 	}
 
@@ -88,7 +81,10 @@ function verifyRefreshToken(req) {
 
 	// { isValid (boolean), user_id, username }
 	const result = isTokenValid(refreshToken, true); // true for refresh token
-	if (!result.isValid) return false;
+	if (!result.isValid) {
+		logEvents(`Invalid refresh token, expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true });
+		return false; //Token was expired or tampered
+	}
 
 	// Valid! Set their req.memberInfo property!
 
@@ -100,8 +96,6 @@ function verifyRefreshToken(req) {
 
 
 
-// Checks bearer token, sets req.memberInfo to any matching user.
-
 /**
  * Reads the access token cookie OR the refresh cookie token,
  * sets the socket metadata's `user` and `role`
@@ -111,34 +105,37 @@ function verifyRefreshToken(req) {
  * @param {Socket} ws - The websocket object
  * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. These should be `token`, `jwt` (refresh token), and `browser-id`.
  */
-const verifyJWTWebSocket = (ws, cookies) => {
+function verifyJWTWebSocket(ws) {
+	const cookies = ws.cookies;
+	if (!cookies) return logEvents("Websocket needs to have the cookies prop before verifying JWT!", 'errLog.txt', { print: true })
+
+	ws.metadata.memberInfo = { signedIn: false };
+
 	const hasToken = verifyAccessTokenWebSocket(ws, cookies);
-	if (!hasToken) verifyRefreshTokenWebSocket(ws, cookies);
-
-	setRoleWebSocket(ws);
-
-	// Here I can update their last-seen variable!
-	// ...
+	// if (!hasToken) verifyRefreshTokenWebSocket(ws, cookies);
 };
 
 /**
- * If they have a valid access token cookie, set's the socket
- * metadata's `user` property, ands returns true.
+ * If they have a valid refresh token cookie (http-only), set's
+ * the socket metadata's `user` property, ands returns true.
  * @param {Socket} ws - The websocket object
- * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. This should contain the `token` cookie.
+ * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. This should contain the `jwt` (refresh token) cookie.
  * @returns {boolean} true if a valid token was found.
  */
 function verifyAccessTokenWebSocket(ws, cookies) {
-	const token = cookies.token;
-	if (!token) return false; // Token empty
+	// const refreshToken = cookies.jwt;
+	// if (!refreshToken) return false; // Not logged in, don't set their user property
 
-	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-		if (err) return console.log('Invalid access token (ws)!'); // Forbidden, invalid token
-		if (!doesMemberOfIDExist(decoded.user_id)) return; // I have deleted their account, so their access token is no longer valid.
-		ws.metadata.user = decoded.username; // Username was our payload when we generated the access token
-	});
+	// Read access token from header...
 
-	return ws.metadata.user != null; // true if they have a valid ACCESS token
+	const result = isTokenValid(token, false); // False for access token
+	if (!result.isValid) {
+		logEvents(`Invalid access token, expired or tampered! "${token}"`, 'errLog.txt', { print: true }); // Forbidden, invalid token
+		return false; //Token was expired or tampered
+	}
+
+	const { user_id, username, roles } = result;
+	ws.metadata.memberInfo = { signedIn: true, user_id, username, roles }; // Username was our payload when we generated the access token
 }
 
 /**
@@ -163,8 +160,6 @@ function verifyRefreshTokenWebSocket(ws, cookies) {
 
 	return ws.metadata.user != null; // true if they have a valid REFRESH token
 }
-
-
 
 export {
 	verifyJWT,
