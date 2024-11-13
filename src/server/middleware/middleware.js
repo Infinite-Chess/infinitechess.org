@@ -34,6 +34,7 @@ import { verifyAccount } from '../database/controllers/verifyAccountController.j
 import { getLanguageToServe } from '../utility/translate.js';
 import { removeAccount } from '../database/controllers/removeAccountController.js';
 import { requestConfirmEmail } from '../database/controllers/sendMail.js';
+import { getMemberData } from '../api/Member.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
