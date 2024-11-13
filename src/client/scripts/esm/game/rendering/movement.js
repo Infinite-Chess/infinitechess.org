@@ -20,7 +20,7 @@ import coordutil from '../../chess/util/coordutil.js';
 
 const panAccel_3D = 75; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 50
 const panAccel_2D = 100; // 2D mode: Deccelleration rate of panning.   Default: 15
-const droppedVelMultiplier = 12; // This times the mouse velocity is applied to the board after dropping it.   Default: 4.5
+const droppedVelMultiplier = 14; // This times the mouse velocity is applied to the board after dropping it.   Default: 12
 const panVelCap_2D = 22.0; // Hyptenuse cap of x & y speeds   Default: 11
 const panVelCap_3D = 16.0; // Hyptenuse cap of x & y speeds   Default: 11
 
