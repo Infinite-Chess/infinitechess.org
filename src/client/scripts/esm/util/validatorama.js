@@ -84,24 +84,15 @@ async function refreshToken() {
 			accessToken = docutil.getCookieValue('token'); // Read access token from cookie
 			if (!accessToken) console.error("Token not found in the cookie!");
 			lastRefreshTime = Date.now(); // Update the last refresh time
-
-			// Read the member info from the cookie
-			// Get the URL-encoded cookie value
-			// JSON objects can't be string into cookies because cookies can't hold special characters
-			const encodedMemberInfo = docutil.getCookieValue('memberInfo'); 
-			if (!encodedMemberInfo) console.error("Member info cookie not found!");
-			// Decode the URL-encoded string
-			const memberInfoStringified = decodeURIComponent(encodedMemberInfo);
-			const memberInfo = JSON.parse(memberInfoStringified); // { user_id, username }
-
-			username = memberInfo.username;
-
-		} else {
+		} else { // 403 of 500 error
 			console.log(`Server: ${result.message}`);
+			docutil.deleteCookie('memberInfo');
 		}
 
 		// Delete the token cookie after reading it
 		docutil.deleteCookie('token');
+		refreshOurUsername();
+
 	} catch (error) {
 		console.error('Error occurred during token refresh:', error);
 	} finally {
@@ -109,6 +100,27 @@ async function refreshToken() {
 		// Dispatch event to inform other parts of the app that validation is complete
 		document.dispatchEvent(new CustomEvent('validated'));
 	}
+}
+
+/**
+ * Read the memberInfo cookie, which will be present
+ * if we have a refreshed token cookie, to grab our
+ * username and user_id properties if we are signed in.
+ */
+function refreshOurUsername() {
+	// Read the member info from the cookie
+	// Get the URL-encoded cookie value
+	// JSON objects can't be string into cookies because cookies can't hold special characters
+	const encodedMemberInfo = docutil.getCookieValue('memberInfo'); 
+	if (!encodedMemberInfo) {
+		username = undefined;
+		return; // No cookie, not signed in.
+	}
+	// Decode the URL-encoded string
+	const memberInfoStringified = decodeURIComponent(encodedMemberInfo);
+	const memberInfo = JSON.parse(memberInfoStringified); // { user_id, username }
+
+	username = memberInfo.username;
 }
 
 /**
@@ -136,6 +148,7 @@ function getOurUsername() {
 	return username;
 }
 
+refreshOurUsername();
 refreshToken();
 
 // Export these methods to be used by other scripts

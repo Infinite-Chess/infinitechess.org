@@ -13,7 +13,7 @@ import bcrypt from 'bcrypt';
 import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { signRefreshToken } from './tokenController.js';
-import { addRefreshTokenToMemberData, createMemberInfoCookie, createRefreshTokenCookie } from './refreshTokenController.js';
+import { addRefreshTokenToMemberData, createLoginCookies } from './refreshTokenController.js';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { getClientIP } from '../../middleware/IP.js';
 
@@ -64,8 +64,7 @@ async function handleLogin(req, res) {
 	// Save the refresh token with current user so later when they log out we can invalidate it.
 	addRefreshTokenToMemberData(user_id, refreshToken, ); // false for access token
     
-	createRefreshTokenCookie(res, refreshToken);
-	createMemberInfoCookie(res, user_id, username);
+	createLoginCookies(res, user_id, username, refreshToken);
 
 	res.status(200).json({ message: "Logged in! Issued refresh token cookie and member info cookie." }); // Success!
     

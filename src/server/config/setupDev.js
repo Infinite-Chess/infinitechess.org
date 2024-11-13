@@ -27,12 +27,13 @@ function callDotenvConfig() {
 
 function createDevelopmentAccounts() {
 	if (!doesMemberOfUsernameExist("owner")) {
-		// generateAccount({ username: "Owner", email: "cardinknowles@gmail.com", password: "1", autoVerify: true });
-		generateAccount({ username: "Owner", email: "cardinknowles@gmail.com", password: "1" });
+		generateAccount({ username: "Owner", email: "cardinknowles@gmail.com", password: "1", autoVerify: true });
+		// generateAccount({ username: "Owner", email: "cardinknowles@gmail.com", password: "1" });
 		giveRole_Owner("owner", "developmental account");
 	}
 	if (!doesMemberOfUsernameExist("patron")) {
 		generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
+		// generateAccount({ username: "Patron", email: "email2", password: "1" });
 		giveRole_Patron("patron", "developmental account");
 	}
 	if (!doesMemberOfUsernameExist("member")) {

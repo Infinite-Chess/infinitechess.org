@@ -6,6 +6,34 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 
 /**
+ * Creates and sets the cookies:
+ * * memberInfo containing user info (user ID and username),
+ * * jwt containing our refresh token.
+ * @param {Object} res - The response object.
+ * @param {string} userId - The ID of the user.
+ * @param {string} username - The username of the user.
+ * @param {string} refreshToken - The refresh token to be stored in the cookie.
+ */
+function createLoginCookies(res, userId, username, refreshToken) {
+	createRefreshTokenCookie(res, refreshToken);
+	createMemberInfoCookie(res, userId, username);
+}
+
+/**
+ * Creates and sets the cookies:
+ * * memberInfo containing user info (user ID and username),
+ * * jwt containing our refresh token.
+ * @param {Object} res - The response object.
+ * @param {string} userId - The ID of the user.
+ * @param {string} username - The username of the user.
+ * @param {string} refreshToken - The refresh token to be stored in the cookie.
+ */
+function deleteLoginCookies(res) {
+	deleteRefreshTokenCookie(res);
+	deleteMemberInfoCookie(res);
+}
+
+/**
  * Creates and sets an HTTP-only cookie containing the refresh token.
  * @param {Object} res - The response object.
  * @param {string} refreshToken - The refresh token to be stored in the cookie.
@@ -43,6 +71,15 @@ function createMemberInfoCookie(res, userId, username) {
 		secure: true,     // Requires HTTPS
 		maxAge: refreshTokenExpiryMillis // Match the refresh token cookie expiration
 	});
+}
+
+/**
+ * Deletes the HTTP-only refresh token cookie.
+ * @param {Object} res - The response object.
+ */
+function deleteMemberInfoCookie(res) {
+	// Clear the 'jwt' cookie by setting the same options as when it was created
+	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'None', secure: true });
 }
 
 
@@ -202,9 +239,8 @@ function removeExpiredTokens(tokens) {
 
 
 export {
-	createRefreshTokenCookie,
-	deleteRefreshTokenCookie,
-	createMemberInfoCookie,
+	createLoginCookies,
+	deleteLoginCookies,
 	doesMemberHaveRefreshToken,
 	addRefreshTokenToMemberData,
 	deleteRefreshTokenFromMemberData,

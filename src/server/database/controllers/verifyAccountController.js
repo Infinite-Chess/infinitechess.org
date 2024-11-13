@@ -34,7 +34,7 @@ const verifyAccount = async function(req, res) {
 	// verification: { verified, notified, code }
 
 	// Ignore if already verified.
-	if (verification.verified === true) { // Bad request, member already verified
+	if (verification === null || verification.verified === true) { // Bad request, member already verified
 		logEvents(`Member "${username}" is already verified!`, 'loginAttempts.txt', { print: true });
 		return res.redirect(`/member/${claimedUsername}`);
 	}
@@ -46,7 +46,7 @@ const verifyAccount = async function(req, res) {
 	}
 
 	// VERIFY THEM..
-	verification = onVerify(verification);
+	onVerify(verification);
 
 	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
 

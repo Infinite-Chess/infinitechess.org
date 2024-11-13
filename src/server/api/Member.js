@@ -19,6 +19,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	// eslint-disable-next-line prefer-const
 	let { user_id, username, email, joined, verification, last_seen } = getMemberDataByCriteria(['user_id','username','email','joined','verification','last_seen'], 'username', claimedUsername, { skipErrorLogging: true });
 	if (user_id === undefined) return res.status(404).json({ message: getTranslationForReq("server.javascript.ws-member_not_found", req) }); // Member not found
+	verification = JSON.parse(verification);
 
 	// What data are we going to send?
 	// Case-sensitive username, elo rating, joined date, last seen...
@@ -41,17 +42,21 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 		logEvents("req.memberInfo must be defined when requesting member data from API!", 'errLog.txt', { print: true });
 		res.status(500).send('Internal Server Error');
 	}
-	if (req.memberInfo.signedIn && req.memberInfo.username.toLowerCase() === claimedUsername.toLowerCase()) {
+	if (req.memberInfo.signedIn && req.memberInfo.username.toLowerCase() === claimedUsername.toLowerCase()) { // Their page
 		
 		sendData.email = email; // This is their account, include their email with the response
 
-		// They have now seen the message that their account has been verified. Mark there verification notified as true.
-		if (verification !== null && verification.verified && !verification.notified) {
-			console.log(`Thanking member ${claimedUsername} for verifying their account!`);
-			// verification.notified = true;
-			verification = null; // Just delete the verification from their member information in the database, it's no longer needed.
-			updateMemberColumns(user_id, { verification });
-		} else if (verification !== null && !verification.verified) console.log(`Requesting member ${claimedUsername} to verify their account!`);
+		if (verification !== null) {
+			sendData.verified = verification.verified;
+
+			// They have now seen the message that their account has been verified. Mark there verification notified as true.
+			if (verification.verified && !verification.notified) {
+				console.log(`Thanking member ${claimedUsername} for verifying their account!`);
+				// verification.notified = true;
+				verification = null; // Just delete the verification from their member information in the database, it's no longer needed.
+				updateMemberColumns(user_id, { verification });
+			} else if (!verification.verified) console.log(`Requesting member ${claimedUsername} to verify their account!`);
+		}
 	}
 
 	// Return data

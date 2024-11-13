@@ -1,7 +1,7 @@
 
 import websocketserver from '../../wsserver.js';
 import { logEvents } from '../../middleware/logEvents.js';
-import { deleteRefreshTokenCookie, deleteRefreshTokenFromMemberData } from './refreshTokenController.js';
+import { deleteLoginCookies, deleteRefreshTokenFromMemberData } from './refreshTokenController.js';
 import { deleteAllInvitesOfMember } from '../../game/invitesmanager/invitesmanager.js';
 
 
@@ -28,7 +28,7 @@ const handleLogout = async(req, res) => {
 
 	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
 	res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
-	deleteRefreshTokenCookie(res);
+	deleteLoginCookies(res);
 
 	res.redirect('/');
 };

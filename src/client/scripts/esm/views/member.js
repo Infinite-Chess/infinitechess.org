@@ -77,7 +77,7 @@ const member = docutil.getLastSegmentOfURL();
 			const loggedInAs = validatorama.getOurUsername();
 
 			// Is it our own profile?
-			if (loggedInAs === result.username.toLowerCase()) {
+			if (loggedInAs === result.username) {
 				isOurProfile = true;
 
 				// If this account has not yet confirmed their email, make that error visible.
