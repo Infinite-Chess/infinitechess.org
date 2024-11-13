@@ -28,7 +28,7 @@ const CUSHION_MILLIS = 10_000;
 
 let reqIsOut = false;
 
-document.addEventListener('logout', event => {
+document.addEventListener('logout', event => { // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
 	username = undefined;
 	accessToken = undefined;
 	lastRefreshTime = undefined;
@@ -46,6 +46,7 @@ function getOurUsername() {
  * Checks if the access token is expired or near-expiring.
  * If expired, it calls `refreshToken()` to get a new one.
  * 
+ * If we're not signed in, the server will give/renew us a browser-id cookie for validating our identity.
  * @returns {Promise<string | undefined>} Resolves with the access token, or undefined if not logged in.
  */
 async function getAccessToken() {
