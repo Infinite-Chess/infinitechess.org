@@ -70,7 +70,12 @@ async function refreshToken() {
 	let OK = false;
 
 	try {
-		const response = await fetch('/api/get-access-token');
+		const response = await fetch('/api/get-access-token', {
+			method: 'POST', // Ensure it's a POST request
+			headers: {
+				'Content-Type': 'application/json', // Add the appropriate headers if needed
+			},
+		});
 		OK = response.ok;
 
 		const result = await response.json();
@@ -81,9 +86,15 @@ async function refreshToken() {
 			lastRefreshTime = Date.now(); // Update the last refresh time
 
 			// Read the member info from the cookie
-			const memberInfo = JSON.parse(docutil.getCookieValue('memberInfo')); // { user_id, username }
-			if (memberInfo) username = memberInfo.username;
-			else console.error("Member info cookie not found!");
+			// Get the URL-encoded cookie value
+			// JSON objects can't be string into cookies because cookies can't hold special characters
+			const encodedMemberInfo = docutil.getCookieValue('memberInfo'); 
+			if (!encodedMemberInfo) console.error("Member info cookie not found!");
+			// Decode the URL-encoded string
+			const memberInfoStringified = decodeURIComponent(encodedMemberInfo);
+			const memberInfo = JSON.parse(memberInfoStringified); // { user_id, username }
+
+			username = memberInfo.username;
 
 		} else {
 			console.log(`Server: ${result.message}`);

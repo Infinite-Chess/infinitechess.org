@@ -162,10 +162,14 @@ function getAllUsers() {
  * @returns {object} - An object with the requested columns, or an empty object if no match is found.
  */
 function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLogging } = {}) {
+	if (!Array.isArray(columns)) {
+		logEvents("When getting member data by criteria, columns must be an array of strings!", 'errLog.txt', { print: true });
+		return {};
+	}
 
 	// Check if the searchKey is valid
 	if (!uniqueMemberKeys.includes(searchKey)) {
-		logEvents(`Invalid search key for mmembers table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt', { print: true });
+		logEvents(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt', { print: true });
 		return {};
 	}
 

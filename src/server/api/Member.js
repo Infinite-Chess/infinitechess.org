@@ -8,7 +8,7 @@ import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/controllers/memberController.js";
 import { getTranslationForReq } from "../utility/translate.js";
-import { logEvents } from '../middleware/logEvents';
+import { logEvents } from '../middleware/logEvents.js';
 
 // SHOULD ONLY ever return a JSON.
 const getMemberData = async(req, res) => { // route: /member/:member/data

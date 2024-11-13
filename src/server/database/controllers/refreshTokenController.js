@@ -67,7 +67,7 @@ function doesMemberHaveRefreshToken(userId, token) {
  * @returns {object[]|undefined} - An array of all their refresh tokens: [ { token, expires }, { token, expires }, ...], or undefined if the member doesn't exist
  */
 function getRefreshTokensByUserID(userId) {
-	let { refresh_tokens } = getMemberDataByCriteria('refresh_tokens', 'user_id', userId);
+	let { refresh_tokens } = getMemberDataByCriteria(['refresh_tokens'], 'user_id', userId);
 
 	// If the user exists but has null or no refresh tokens, return an empty array.
 	if (refresh_tokens === null) refresh_tokens = '[]';
@@ -75,7 +75,7 @@ function getRefreshTokensByUserID(userId) {
 	// If the user doesn't exist (row is undefined), return undefined.
 	if (refresh_tokens === undefined) return logEvents(`Cannot get refresh tokens of a non-existent member of id "${userId}"!`, 'errLog.txt', { print: true });
 
-	return Object.parse(refresh_tokens);
+	return JSON.parse(refresh_tokens);
 }
 
 

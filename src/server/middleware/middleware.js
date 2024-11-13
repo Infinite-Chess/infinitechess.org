@@ -24,7 +24,6 @@ import middleware from 'i18next-http-middleware';
 import { useOriginWhitelist } from '../config/config.js';
 import { router as rootRouter } from '../routes/root.js';
 import { router as accountRouter } from '../routes/createaccount.js';
-import { router as memberRouter } from '../routes/member.js';
 import send404 from './send404.js';
 import corsOptions from '../config/corsOptions.js';
 
@@ -99,7 +98,6 @@ function configureMiddleware(app) {
 	// Provide a route
 	app.use('/', rootRouter);
 	app.use('/createaccount(.html)?', accountRouter);
-	app.use('/member', memberRouter);
 
 	// Member page routes that don't require authentication
 	app.get('/member/:member', (req, res) => {

@@ -99,13 +99,7 @@ async function createNewMember(req, res) {
 	if (doEmailFormatChecks(email, req, res) !== true) return;
 	if (doPasswordFormatChecks(password, req, res) !== true) return;
 
-	const result = await generateAccount({ username, email, password }); // { success, result: { lastInsertRowid } }
-	const user_id = result.result.lastInsertRowid;
-
-	if (!result.success) return; // Account generation failed because the account already exists. This can happen if they spam the button.
-
-	// SEND EMAIL CONFIRMATION
-	sendEmailConfirmation(user_id);
+	await generateAccount({ username, email, password }); // { success, result: { lastInsertRowid } }
 
 	// GENERATE ACCESS AND REFRESH TOKENS! They just created an account, so log them in!
 	// This will handle our response/redirect
@@ -120,11 +114,6 @@ async function createNewMember(req, res) {
  * @param {string} param0.email - The email for the new account.
  * @param {string} param0.password - The password for the new account.
  * @param {boolean} [param0.autoVerify] - Whether to auto-verify this account.
- * @returns {object} - The result of the database operation or an error message. 
- * The result contains:
- *   - {boolean} success - Whether the operation was successful.
- *   - {string} message - A message describing the outcome.
- *   - {object} result - The result of the database operation if successful.
  */
 async function generateAccount({ username, email, password, autoVerify }) {
 	// Use bcrypt to hash & salt password
@@ -137,7 +126,11 @@ async function generateAccount({ username, email, password, autoVerify }) {
 	const logTxt = `Created new member: ${username}`;
 	logEvents(logTxt, 'newMemberLog.txt', { print: true });
 
-	return result;
+	// SEND EMAIL CONFIRMATION
+	if (!autoVerify) {
+		const user_id = result.result.lastInsertRowid;
+		sendEmailConfirmation(user_id);
+	}
 }
 
 // Route

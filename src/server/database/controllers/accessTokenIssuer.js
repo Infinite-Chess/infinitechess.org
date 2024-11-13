@@ -41,8 +41,7 @@ function accessTokenIssuer(req, res) {
 
 	// SEND the token as a cookie!
 	createAccessTokenCookie(res, accessToken); // 10 second expiry time
-	// res.json({ user_id, member: username });
-	res.sendStatus(200); // Their member information is now stored in a cookie when the refreshed token cookie is generated
+	res.json({ message: 'Issued access token!' }); // Their member information is now stored in a cookie when the refreshed token cookie is generated
 	console.log(`Issued access token for member "${username}" --------`);
 
 	// Update their last-seen variable

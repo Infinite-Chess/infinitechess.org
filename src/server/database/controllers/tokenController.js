@@ -127,7 +127,7 @@ function signRefreshToken(userId, username, roles) {
  * @returns {object} - The payload object containing user information.
  */
 function generatePayload(userId, username, roles, allowedActions) {
-	if (!userId || !username || !roles) logEvents(`Both userId and username are required to generate the token payload!!!!!!!!!!!!!!!!`, 'errLog.txt', { print: true });
+	if (!userId || !username) logEvents(`Both userId and username are required to generate the token payload!!!!!!!!!!!!!!!!`, 'errLog.txt', { print: true });
 	return { user_id: userId, username, roles, allowed_actions: allowedActions };
 }
 

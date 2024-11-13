@@ -1,9 +1,9 @@
 
 // Ensure our workspace is ready for the dev environment
-import { initDevEnvironment } from './config/setupDev.js';
-initDevEnvironment();
 import { initTables } from './database/initDatabase.js';
 initTables();
+import { initDevEnvironment } from './config/setupDev.js';
+initDevEnvironment();
 
 // Dependancy/built-in imports
 import express from 'express';
