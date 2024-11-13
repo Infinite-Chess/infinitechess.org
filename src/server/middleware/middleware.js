@@ -31,6 +31,9 @@ import corsOptions from '../config/corsOptions.js';
 import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../database/controllers/accessTokenIssuer.js';
 import { verifyAccount } from '../database/controllers/verifyAccountController.js';
+import { getLanguageToServe } from '../utility/translate.js';
+import { removeAccount } from '../database/controllers/removeAccountController.js';
+import { requestConfirmEmail } from '../database/controllers/sendMail.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -97,6 +100,13 @@ function configureMiddleware(app) {
 	app.use('/createaccount(.html)?', accountRouter);
 	app.use('/member', memberRouter);
 
+	// Member page routes that don't require authentication
+	app.get('/member/:member', (req, res) => {
+		const language = getLanguageToServe(req);
+		res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'member.html'), {t: req.t});
+	});
+	app.delete('/member/:member/delete', removeAccount);
+
 	/**
      * Sets the req.memberInfo properties if they have an authorization
      * header (contains access token) or refresh cookie (contains refresh token).
@@ -108,6 +118,10 @@ function configureMiddleware(app) {
 	app.use(verifyJWT);
 
 	app.post("/api/get-access-token", accessTokenIssuer);
+
+	// Member routes that do require authentication
+	app.get('/member/:member/data', getMemberData);
+	app.get('/member/:member/send-email', requestConfirmEmail);
 	app.get("/verify/:member/:code", verifyAccount);
 
 	// If we've reached this point, send our 404 page.

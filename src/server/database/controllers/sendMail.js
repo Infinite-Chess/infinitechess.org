@@ -81,6 +81,45 @@ const sendEmailConfirmation = function(user_id) {
 
 
 
+// Resend confirmation email. Called by script in member page
+const requestConfirmEmail = (req, res) => {
+	if (req.memberInfo === undefined) {
+		logEvents("req.memberInfo needs to be defined before handling confirmation email request route!");
+		return res.status(500).json({ message: 'Internal Server Error' });
+	}
+
+	const usernameLowercase = req.params.member.toLowerCase();
+
+	// Check to make sure they're logged in, then resend the email!
+	if (req.memberInfo.username.toLowerCase() === usernameLowercase) {
+
+		const { user_id, verification } = getMemberDataByCriteria(['user_id', 'verification'], 'username', usernameLowercase);
+		if (user_id === undefined) {
+			logEvents(`Could not find member of username "${usernameLowercase}" when requesting confirmation email!`, 'errLog.txt', { print: true });
+			return res.status(400).json({ message: 'Bad Request. Username not found.' });
+		}
+
+		// ONLY send email if they haven't already verified!
+		if (verification !== null && verification.verified === true) {
+			const hackText = `User "${usernameLowercase}" tried requesting another verification email after they've already verified!`;
+			logEvents(hackText, 'hackLog.txt', { print: true });
+			return res.status(401).json({sent: false});
+		}
+
+		// SEND EMAIL CONFIRMATION
+		sendEmailConfirmation(user_id);
+
+		return res.json({sent: true});
+	} else {
+		const errText = `User ${req.memberInfo.username} attempted to send verification email for user ${usernameLowercase}!`;
+		logEvents(errText, 'hackLog.txt', { print: true });
+		return res.status(401).json({sent: false});
+	}
+};
 
 
-export { sendEmailConfirmation };
+
+export {
+	sendEmailConfirmation,
+	requestConfirmEmail,
+};
