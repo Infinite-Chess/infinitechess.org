@@ -114,6 +114,7 @@ async function createNewMember(req, res) {
  * @param {string} param0.email - The email for the new account.
  * @param {string} param0.password - The password for the new account.
  * @param {boolean} [param0.autoVerify] - Whether to auto-verify this account.
+ * @returns {number|undefined} The result of the database operation or an error message: { success (boolean), result: { lastInsertRowid } }
  */
 async function generateAccount({ username, email, password, autoVerify }) {
 	// Use bcrypt to hash & salt password
@@ -121,7 +122,7 @@ async function generateAccount({ username, email, password, autoVerify }) {
 	const verification = autoVerify ? undefined : JSON.stringify({ verified: false, code: uuid.generateID(24) });
 
 	const result = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
-	if (!result.success) return result; // Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
+	if (!result.success) return; // Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
     
 	const logTxt = `Created new member: ${username}`;
 	logEvents(logTxt, 'newMemberLog.txt', { print: true });
@@ -131,6 +132,8 @@ async function generateAccount({ username, email, password, autoVerify }) {
 		const user_id = result.result.lastInsertRowid;
 		sendEmailConfirmation(user_id);
 	}
+
+	return result.result.lastInsertRowid;
 }
 
 // Route

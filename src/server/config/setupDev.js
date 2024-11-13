@@ -4,7 +4,7 @@ import { ensureEnvFile } from './env.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
 import { doesMemberOfUsernameExist } from '../database/controllers/memberController.js';
 import { generateAccount } from '../database/controllers/createaccountController.js';
-import { giveRole_Owner, giveRole_Patron } from '../database/controllers/roles.js';
+import { giveRole } from '../database/controllers/roles.js';
 
 function initDevEnvironment() {
 	if (!DEV_BUILD) return callDotenvConfig(); // Production
@@ -25,19 +25,17 @@ function callDotenvConfig() {
 	dotenv.config(); 
 }
 
-function createDevelopmentAccounts() {
+async function createDevelopmentAccounts() {
 	if (!doesMemberOfUsernameExist("owner")) {
-		generateAccount({ username: "Owner", email: "cardinknowles@gmail.com", password: "1", autoVerify: true });
-		// generateAccount({ username: "Owner", email: "cardinknowles@gmail.com", password: "1" });
-		giveRole_Owner("owner", "developmental account");
+		const user_id = await generateAccount({ username: "Owner", email: "email1", password: "1", autoVerify: true });
+		giveRole(user_id, "owner");
 	}
 	if (!doesMemberOfUsernameExist("patron")) {
-		generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
-		// generateAccount({ username: "Patron", email: "email2", password: "1" });
-		giveRole_Patron("patron", "developmental account");
+		const user_id = await generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
+		giveRole(user_id, "patron");
 	}
 	if (!doesMemberOfUsernameExist("member")) {
-		generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
+		const user_id = await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
 }
 
