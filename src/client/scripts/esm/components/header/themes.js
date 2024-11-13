@@ -16,7 +16,7 @@ const defaults = {
 	neutralPiecesColor: [1, 1, 1, 1],
 };
 
-const defaultTheme = 'sandstone';
+const defaultTheme = 'wood_light';
 
 const themeDictionary = {
 
