@@ -17,8 +17,8 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	const claimedUsername = req.params.member;
 
 	// eslint-disable-next-line prefer-const
-	let { user_id, username, email, joined, verification, last_seen } = getMemberDataByCriteria(['user_id','username','email','joined','verification','last_seen'], 'username', claimedUsername);
-	if (user_id === undefined) return res.status(404).json({ message: getTranslationForReq("server.javascript.ws-member_not_found", req) }); // Remember not found
+	let { user_id, username, email, joined, verification, last_seen } = getMemberDataByCriteria(['user_id','username','email','joined','verification','last_seen'], 'username', claimedUsername, { skipErrorLogging: true });
+	if (user_id === undefined) return res.status(404).json({ message: getTranslationForReq("server.javascript.ws-member_not_found", req) }); // Member not found
 
 	// What data are we going to send?
 	// Case-sensitive username, elo rating, joined date, last seen...
@@ -42,6 +42,8 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 		res.status(500).send('Internal Server Error');
 	}
 	if (req.memberInfo.signedIn && req.memberInfo.username.toLowerCase() === claimedUsername.toLowerCase()) {
+		
+		sendData.email = email; // This is their account, include their email with the response
 
 		// They have now seen the message that their account has been verified. Mark there verification notified as true.
 		if (verification !== null && verification.verified && !verification.notified) {
@@ -50,8 +52,6 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 			verification = null; // Just delete the verification from their member information in the database, it's no longer needed.
 			updateMemberColumns(user_id, { verification });
 		} else if (verification !== null && !verification.verified) console.log(`Requesting member ${claimedUsername} to verify their account!`);
-
-		sendData.email = email; // This is their account, include their email with the response
 	}
 
 	// Return data
