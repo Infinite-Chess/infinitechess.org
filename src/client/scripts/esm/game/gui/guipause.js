@@ -4,13 +4,12 @@ import onlinegame from '../misc/onlinegame.js';
 import style from './style.js';
 import game from '../chess/game.js';
 import arrows from '../rendering/arrows.js';
-import guiclock from './guiclock.js';
 import guinavigation from './guinavigation.js';
 import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
 import drawoffers from '../misc/drawoffers.js';
 import guititle from './guititle.js';
-import movesscript from '../chess/movesscript.js';
+import movesscript from './movesscript.js';
 import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
 // Import End

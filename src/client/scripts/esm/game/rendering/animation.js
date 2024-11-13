@@ -5,7 +5,7 @@ import sound from '../misc/sound.js';
 import movement from './movement.js';
 import options from './options.js';
 import board from './board.js';
-import math from '../misc/math.js';
+import math from '../../util/math.js';
 import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 import frametracker from './frametracker.js';

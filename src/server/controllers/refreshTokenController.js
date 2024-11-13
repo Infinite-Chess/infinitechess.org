@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { findMemberFromRefreshToken, getUsernameCaseSensitive, updateLastSeen } from './members.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { isBrowserIDBanned } from '../middleware/banned.js';
-import uuid from '../../client/scripts/esm/game/misc/uuid.js';
+import uuid from '../../client/scripts/esm/util/uuid.js';
 const { generateID } = uuid;
 import { getTranslationForReq } from '../utility/translate.js';
 

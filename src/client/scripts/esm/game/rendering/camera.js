@@ -16,7 +16,7 @@ import preferences from '../../components/header/preferences.js';
 
 /**
  * Type Definitions
- * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
  */
 

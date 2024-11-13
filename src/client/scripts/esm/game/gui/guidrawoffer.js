@@ -4,7 +4,7 @@ import style from './style.js';
 import guigameinfo from './guigameinfo.js';
 import drawoffers from '../misc/drawoffers.js';
 import guiclock from './guiclock.js';
-import clock from '../misc/clock.js';
+import clock from '../../chess/logic/clock.js';
 import game from '../chess/game.js';
 // Import End
 

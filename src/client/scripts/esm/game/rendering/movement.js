@@ -4,14 +4,14 @@ import loadbalancer from '../misc/loadbalancer.js';
 import input from '../input.js';
 import perspective from './perspective.js';
 import board from './board.js';
-import math from '../misc/math.js';
+import math from '../../util/math.js';
 import transition from './transition.js';
 import guipromotion from '../gui/guipromotion.js';
 import guititle from '../gui/guititle.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
 import game from '../chess/game.js';
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../../chess/util/coordutil.js';
 // Import End
 
 "use strict";

@@ -1,6 +1,6 @@
 
 // Import Start
-import math from '../misc/math.js';
+import math from '../../util/math.js';
 // Import End
 
 /** This script loads textures. */

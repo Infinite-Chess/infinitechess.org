@@ -7,15 +7,15 @@
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
-import formatconverter from './formatconverter.js';
+import formatconverter from '../../chess/logic/formatconverter.js';
 import game from './game.js';
-import backcompatible from './backcompatible.js';
-import gamefile from './gamefile.js';
-import gamefileutility from './gamefileutility.js';
+import backcompatible from '../../chess/logic/backcompatible.js';
+import gamefile from '../../chess/logic/gamefile.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 import statustext from '../gui/statustext.js';
 import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
-import winconutil from '../misc/winconutil.js';
+import winconutil from '../../chess/util/winconutil.js';
 // Import End
 
 "use strict";

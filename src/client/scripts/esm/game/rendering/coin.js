@@ -1,6 +1,6 @@
 
 // Import Start
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../../chess/util/coordutil.js';
 import bufferdata from './bufferdata.js';
 import shapes from './shapes.js';
 // Import End

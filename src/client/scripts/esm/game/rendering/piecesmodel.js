@@ -1,10 +1,10 @@
 
 // Import Start
 import loadbalancer from '../misc/loadbalancer.js';
-import math from '../misc/math.js';
+import math from '../../util/math.js';
 import onlinegame from '../misc/onlinegame.js';
 import bufferdata from './bufferdata.js';
-import gamefileutility from '../chess/gamefileutility.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 import game from '../chess/game.js';
 import stats from '../gui/stats.js';
 import coin from './coin.js';
@@ -14,12 +14,12 @@ import movement from './movement.js';
 import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 import options from './options.js';
-import colorutil from '../misc/colorutil.js';
-import typeutil from '../misc/typeutil.js';
+import colorutil from '../../chess/util/colorutil.js';
+import typeutil from '../../chess/util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
-import thread from '../misc/thread.js';
-import coordutil from '../misc/coordutil.js';
+import thread from '../../util/thread.js';
+import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
 import shapes from './shapes.js';
 // Import End

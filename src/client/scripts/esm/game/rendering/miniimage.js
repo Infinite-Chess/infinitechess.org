@@ -11,7 +11,7 @@ import statustext from '../gui/statustext.js';
 import buffermodel from './buffermodel.js';
 import game from '../chess/game.js';
 import area from './area.js';
-import typeutil from '../misc/typeutil.js';
+import typeutil from '../../chess/util/typeutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import spritesheet from './spritesheet.js';

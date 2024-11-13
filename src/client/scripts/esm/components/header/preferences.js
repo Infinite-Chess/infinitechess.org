@@ -1,6 +1,6 @@
 import themes from "./themes.js";
 import localstorage from "../../util/localstorage.js";
-import timeutil from "../../game/misc/timeutil.js";
+import timeutil from "../../util/timeutil.js";
 import validatorama from "../../util/validatorama.js";
 import jsutil from "../../util/jsutil.js";
 

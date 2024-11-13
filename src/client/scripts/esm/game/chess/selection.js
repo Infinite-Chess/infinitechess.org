@@ -1,26 +1,26 @@
 
 // Import Start
 import guipause from '../gui/guipause.js';
-import legalmoves from './legalmoves.js';
+import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
 import onlinegame from '../misc/onlinegame.js';
-import movepiece from './movepiece.js';
-import gamefileutility from './gamefileutility.js';
+import movepiece from '../../chess/logic/movepiece.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 import game from './game.js';
-import specialdetect from './specialdetect.js';
+import specialdetect from '../../chess/logic/specialdetect.js';
 import guipromotion from '../gui/guipromotion.js';
 import highlights from '../rendering/highlights.js';
-import formatconverter from './formatconverter.js';
+import formatconverter from '../../chess/logic/formatconverter.js';
 import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 import board from '../rendering/board.js';
 import pieces from '../rendering/pieces.js';
 import movement from '../rendering/movement.js';
-import movesscript from './movesscript.js';
+import movesscript from '../gui/movesscript.js';
 import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
-import colorutil from '../misc/colorutil.js';
-import coordutil from '../misc/coordutil.js';
+import colorutil from '../../chess/util/colorutil.js';
+import coordutil from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
 // Import End

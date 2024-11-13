@@ -3,13 +3,13 @@
 import websocket from '../websocket.js';
 import localstorage from '../../util/localstorage.js';
 import sound from './sound.js';
-import clockutil from './clockutil.js';
+import clockutil from '../../chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
 import style from '../gui/style.js';
 import input from '../input.js';
 import statustext from '../gui/statustext.js';
-import uuid from './uuid.js';
+import uuid from '../../util/uuid.js';
 import validatorama from '../../util/validatorama.js';
 // Import End
 

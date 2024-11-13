@@ -6,7 +6,7 @@ import piecesmodel from './piecesmodel.js';
 import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
 import board from './board.js';
-import coordutil from '../misc/coordutil.js';
+import coordutil from '../../chess/util/coordutil.js';
 // Import End
 
 /** 

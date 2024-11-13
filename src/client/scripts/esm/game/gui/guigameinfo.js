@@ -3,7 +3,7 @@
 import style from './style.js';
 import game from '../chess/game.js';
 import onlinegame from '../misc/onlinegame.js';
-import winconutil from '../misc/winconutil.js';
+import winconutil from '../../chess/util/winconutil.js';
 // Import End
 
 /** 
