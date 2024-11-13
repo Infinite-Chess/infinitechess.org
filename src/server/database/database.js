@@ -13,8 +13,8 @@ const __dirname = path.dirname(__filename);
 
 // Create or connect to the SQLite database file
 const dbPath = path.join(__dirname, '../../../database.db');
-const db = new Database(dbPath);
-// const db = new Database(dbPath, { verbose: console.log }); // Outputs all queries to the console
+// const db = new Database(dbPath);
+const db = new Database(dbPath, { verbose: console.log }); // Outputs all queries to the console
 
 
 

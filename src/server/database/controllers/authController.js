@@ -67,7 +67,7 @@ async function handleLogin(req, res) {
 	createRefreshTokenCookie(res, refreshToken);
 	createMemberInfoCookie(res, user_id, username);
 
-	res.sendStatus(200); // Success!
+	res.status(200).json({ message: "Logged in! Issued refresh token cookie and member info cookie." }); // Success!
     
 	// Update our member's statistics in their data file!
 	updateLoginCountAndLastSeen(user_id);

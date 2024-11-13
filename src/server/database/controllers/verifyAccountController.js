@@ -16,6 +16,8 @@ const verifyAccount = async function(req, res) {
 		logEvents(`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST. Verification code "${claimedCode}"`, 'hackLog.txt', { print: true });
 		return res.status(400).redirect(`/400`); // Bad request
 	}
+	// The verification is string fight in the database. We need to parse it here.
+	verification = JSON.parse(verification);
 
 	if (!req.memberInfo.signedIn) { // Not logged in
 		logEvents(`Forwarding user '${username}' to login before they can verify!`, 'loginAttempts.txt', { print: true });
@@ -25,7 +27,7 @@ const verifyAccount = async function(req, res) {
 	}
 
 	if (req.memberInfo.username !== username) { // Forbid them if they are logged in and NOT who they're wanting to verify!
-		logEvents(`User ${req.memberInfo.username} attempted to verify ${username}!`, 'loginAttempts.txt', { print: true });
+		logEvents(`User "${req.memberInfo.username}" attempted to verify "${username}"!`, 'loginAttempts.txt', { print: true });
 		return res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req));
 	}
 
@@ -52,7 +54,7 @@ const verifyAccount = async function(req, res) {
 	if (!changesMade) return logEvents(`No changes made when saving verification for member with id "${user_id}"! Value: ${JSON.stringify(verification)}`, 'errLog.txt', { print: true });
 
 	logEvents(`Verified member ${username}'s account!`, 'loginAttempts.txt', { print: true });
-	res.redirect(`/member/${username.toLowercase()}`);
+	res.redirect(`/member/${username.toLowerCase()}`);
 };
 
 function onVerify(verification) { // { verified, notified, code }

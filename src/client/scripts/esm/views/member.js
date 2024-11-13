@@ -45,8 +45,13 @@ const member = docutil.getLastSegmentOfURL();
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		credentials: 'same-origin', // Allows cookie to be set from this request
 	};
+	// Add the access token if we don't want to verify using the refresh token
+	// const token = await validatorama.getAccessToken();
+	// if (token) {
+	// 	config.headers.Authorization = `Bearer ${token}`;
+	// }
+
 	// If we're logged in, include authorization
 	// if (token) config.headers.Authorization = `Bearer ${token}`; // DON'T NEED, server reads our refresh token cookie
 

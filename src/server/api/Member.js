@@ -17,7 +17,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	const claimedUsername = req.params.member;
 
 	// eslint-disable-next-line prefer-const
-	let { user_id, username, email, joined, verification, last_seen } = getMemberDataByCriteria(['user_id','username','email','joined','last_seen'], 'username', claimedUsername);
+	let { user_id, username, email, joined, verification, last_seen } = getMemberDataByCriteria(['user_id','username','email','joined','verification','last_seen'], 'username', claimedUsername);
 	if (user_id === undefined) return res.status(404).json({ message: getTranslationForReq("server.javascript.ws-member_not_found", req) }); // Remember not found
 
 	// What data are we going to send?

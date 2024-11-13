@@ -16,7 +16,7 @@ import { logEvents } from './logEvents.js';
 /**
  * Reads the request's bearer token (from the authorization header)
  * OR the refresh cookie (contains refresh token),
- * sets the connections `user` and `role` properties if it is valid (are signed in).
+ * sets req.memberInfo properties if it is valid (are signed in).
  * Further middleware can read these properties to not send
  * private information to unauthorized users.
  * @param {Object} req - The request object

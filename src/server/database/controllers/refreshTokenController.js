@@ -86,6 +86,7 @@ function getRefreshTokensByUserID(userId) {
  * @returns {object[]|undefined} - The updated array of valid refresh tokens: [ { token, expires }, { token, expires }, ... ], or undefined if the member doesn't exist.
  */
 function getRefreshTokensByUserID_DeleteExpired(userId) {
+	console.log('getting tokens and deleting expired');
 	// Step 1: Fetch the current refresh tokens for the user
 	const refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) return logEvents(`Cannot get refresh tokens (and delete expired) of a non-existent member of id "${userId}"!`, 'errLog.txt', { print: true });
@@ -106,6 +107,7 @@ function getRefreshTokensByUserID_DeleteExpired(userId) {
  * @param {string} token - The new refresh token to add.
  */
 function addRefreshTokenToMemberData(userId, token) {
+	console.log('getting tokens');
 	// Get the current refresh tokens
 	let refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) return logEvents(`Cannot add refresh token to non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });

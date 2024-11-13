@@ -367,6 +367,7 @@ export {
 	updateMemberColumns,
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
+	doesMemberOfIDExist,
 	doesMemberOfUsernameExist,
 	isUsernameTaken,
 	isEmailTaken,

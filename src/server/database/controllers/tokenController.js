@@ -2,7 +2,7 @@
 import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents.js';
 import { doesMemberHaveRefreshToken } from './refreshTokenController.js';
-import { updateLastSeen } from './memberController.js';
+import { doesMemberOfIDExist, updateLastSeen } from './memberController.js';
 
 
 
@@ -34,6 +34,12 @@ function isTokenValid(token, isRefreshToken) {
 	// Extract user ID and username from the token
 	const { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
 	if (user_id === undefined || username === undefined || roles === undefined) return { isValid: false }; // Expired or tampered token
+
+	if (!doesMemberOfIDExist(user_id)) {
+		// console.log(`Token is valid, but the users account of id "${user_id}" doesn't exist!`);
+		logEvents(`Token is valid, but the users account of id "${user_id}" doesn't exist! This is fine, did you just delete it?`, 'errLog.txt', { print: true });
+		return { isValid: false };
+	}
 
 	// If it's an access token, we already know it's valid.
 	if (!isRefreshToken) {

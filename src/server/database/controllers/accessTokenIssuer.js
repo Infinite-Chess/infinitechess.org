@@ -3,6 +3,7 @@
 // Returns a new access token if refresh token hasn't expired.
 // Called by a fetch(). ALWAYS RETURN a json!
 
+import { logEvents } from "../../middleware/logEvents.js";
 import { getTranslationForReq } from "../../utility/translate.js";
 import { createAccessTokenCookie } from "./accessTokenController.js";
 import { assignOrRenewBrowserID } from "./browserIDController.js";
@@ -17,17 +18,12 @@ import { isTokenValid, signAccessToken } from "./tokenController.js";
  * @param {*} res 
  */
 function accessTokenIssuer(req, res) {
-	const cookies = req.cookies;
-	// If we have cookies AND there's a jwt property..
-	if (!cookies?.jwt) {
-		assignOrRenewBrowserID(req, res);
-		return res.status(401).json({'message' : getTranslationForReq("server.javascript.ws-refresh_token_expired", req) });
+	if (!req.memberInfo) {
+		logEvents("req.memberInfo must be defined for access token issuer route!", 'errLog.txt', { print: true });
+		return res.status(500).json({'message' : "Server Error" });
 	}
-	const refreshToken = cookies.jwt;
 
-	// { isValid (boolean), user_id, username, roles }
-	const results = isTokenValid(refreshToken, true); // true for isRefreshToken
-	if (!results.isValid) {
+	if (!req.memberInfo.signedIn) {
 		assignOrRenewBrowserID(req, res);
 		return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_invalid", req) }); // Conflict. Expired or tampered token, or logged out (manually invalidated).
 		// return res.status(403).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found_logged_out", req) });
@@ -35,17 +31,13 @@ function accessTokenIssuer(req, res) {
 
 	// Token is valid! Send them new access token!
 
-	const { user_id, username, roles } = results;
-	const allowedActions = ['open-socket'];
-	const accessToken = signAccessToken(user_id, username, roles, allowedActions);
+	const { user_id, username, roles } = req.memberInfo;
+	const accessToken = signAccessToken(user_id, username, roles);
 
 	// SEND the token as a cookie!
 	createAccessTokenCookie(res, accessToken); // 10 second expiry time
 	res.json({ message: 'Issued access token!' }); // Their member information is now stored in a cookie when the refreshed token cookie is generated
 	console.log(`Issued access token for member "${username}" --------`);
-
-	// Update their last-seen variable
-	updateLastSeen(user_id);
 }
 
 export {
