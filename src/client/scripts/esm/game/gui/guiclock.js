@@ -133,7 +133,7 @@ function edit(gamefile) {
 }
 
 function rescheduleSoundEffects(gamefile) {
-	if (gamefileutility.isGameOver(gamefile)) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
+	if (!movesscript.isGameResignable(gamefile) || gamefileutility.isGameOver(gamefile)) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
 	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
 	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
 }
