@@ -299,7 +299,9 @@ function initListeners_Mouse() {
 		const mouseCoords = convertCoords_CenterOrigin(event);
 		mousePos = mouseCoords;
 		mouseMoved = true;
-		recalcMouseVel(mousePos);
+		const now = Date.now();
+		pushMousePosToHistory(now, mousePos);
+		recalcMouseVel(now, mousePos);
 
 		// Now calculate the mouse position in world-space, not just virtual pixels
 		calcMouseWorldLocation();
@@ -489,6 +491,11 @@ function initListeners_Keyboard() {
 	});
 }
 
+function update() {
+	resetKeyEvents();
+	recalcMouseVel(Date.now());
+}
+
 // Erase all key down events after updating game, called at the end of every frame from the game loop.
 function resetKeyEvents() {
 	touchDowns = []; // Touch points created this frame
@@ -502,27 +509,30 @@ function resetKeyEvents() {
 	ignoreMouseDown = false;
 }
 
+function pushMousePosToHistory(now, mousePos) {
+	// Store the current mouse position with a timestamp
+	const currentMousePosEntry = [jsutil.deepCopyObject(mousePos), now]; // { mousePos, time }
+	mousePosHistory.push(currentMousePosEntry); // Deep copy the mouse position to avoid modifying the original
+}
+
 /**
  * Calculates the mouse velocity based on recent mouse positions.
  * @param {number[]} mousePos - The current mouse position
  */
-function recalcMouseVel(mousePos) {
-	const now = Date.now();
-	// Store the current mouse position with a timestamp
-	const currentMousePosEntry = [jsutil.deepCopyObject(mousePos), now]; // { mousePos, time }
-	mousePosHistory.push(currentMousePosEntry); // Deep copy the mouse position to avoid modifying the original
-
+function recalcMouseVel(now) {
 	// Remove old entries, stop once we encounter recent enough data
 	const timeToRemoveEntriesBefore = now - mousePosHIstoryWindowMillis;
 	while (mousePosHistory.length > 0 && mousePosHistory[0][1] < timeToRemoveEntriesBefore) mousePosHistory.shift();
 
+	const latestMousePosEntry = mousePosHistory[mousePosHistory.length - 1];
+
 	// Calculate velocity if there are at least two positions
 	if (mousePosHistory.length >= 2) {
 		const firstMousePosEntry = mousePosHistory[0]; // { mousePos, time }
-		const timeDiffBetwFirstAndLastEntryMillis = (currentMousePosEntry[1] - firstMousePosEntry[1]);
+		const timeDiffBetwFirstAndLastEntryMillis = (latestMousePosEntry[1] - firstMousePosEntry[1]);
 
-		const mVX = (currentMousePosEntry[0][0] - firstMousePosEntry[0][0]) / timeDiffBetwFirstAndLastEntryMillis;
-		const mVY = (currentMousePosEntry[0][1] - firstMousePosEntry[0][1]) / timeDiffBetwFirstAndLastEntryMillis;
+		const mVX = (latestMousePosEntry[0][0] - firstMousePosEntry[0][0]) / timeDiffBetwFirstAndLastEntryMillis;
+		const mVY = (latestMousePosEntry[0][1] - firstMousePosEntry[0][1]) / timeDiffBetwFirstAndLastEntryMillis;
 
 		mouseVel = [mVX, mVY];
 	} else mouseVel = [0, 0];
@@ -692,7 +702,7 @@ export default {
 	doIgnoreMouseDown,
 	isMouseSupported,
 	initListeners,
-	resetKeyEvents,
+	update,
 	getMouseVel,
 	touchHeldsIncludesID,
 	getTouchHeldByID,
