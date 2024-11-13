@@ -1,6 +1,6 @@
 
 // Import Start
-import movesscript from '../../chess/logic/movesscript.js';
+import movesscript from './movesscript.js';
 import style from './style.js';
 import options from '../rendering/options.js';
 import camera from '../rendering/camera.js';

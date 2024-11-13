@@ -16,7 +16,7 @@ import transition from '../rendering/transition.js';
 import board from '../rendering/board.js';
 import pieces from '../rendering/pieces.js';
 import movement from '../rendering/movement.js';
-import movesscript from '../../chess/logic/movesscript.js';
+import movesscript from '../gui/movesscript.js';
 import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 import colorutil from '../../chess/util/colorutil.js';

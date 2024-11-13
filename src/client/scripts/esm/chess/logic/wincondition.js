@@ -5,7 +5,7 @@ import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
 import checkmate from './checkmate.js';
 import organizedlines from './organizedlines.js';
-import movesscript from './movesscript.js';
+import movesscript from '../../game/gui/movesscript.js';
 import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
 // Import End

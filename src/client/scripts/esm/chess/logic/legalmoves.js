@@ -15,7 +15,7 @@ import winconutil from '../util/winconutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('../../game/gui/movesscript.js').Move} Move
  * @typedef {import('./movepiece.js').Piece} Piece
 */
 

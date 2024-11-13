@@ -1,7 +1,7 @@
 
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import movesscript from './movesscript.js';
+import movesscript from '../../game/gui/movesscript.js';
 import legalmoves from './legalmoves.js';
 import typeutil from '../util/typeutil.js';
 // Import End
@@ -9,7 +9,7 @@ import typeutil from '../util/typeutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('../../game/gui/movesscript.js').Move} Move
 */
 
 "use strict";

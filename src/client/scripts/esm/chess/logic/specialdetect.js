@@ -13,7 +13,7 @@ import math from '../../util/math.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('../../game/gui/movesscript.js').Move} Move
 */
 
 "use strict";

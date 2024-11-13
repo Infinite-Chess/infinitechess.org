@@ -9,7 +9,7 @@ import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
 import drawoffers from '../misc/drawoffers.js';
 import guititle from './guititle.js';
-import movesscript from '../../chess/logic/movesscript.js';
+import movesscript from './movesscript.js';
 import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
 // Import End

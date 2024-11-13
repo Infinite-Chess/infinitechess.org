@@ -3,20 +3,20 @@
 // and detects if we're rewinding or fast-forwarding to view the game's history.
 
 // Import Start
-import movepiece from './movepiece.js';
-import stats from '../../game/gui/stats.js';
-import guinavigation from '../../game/gui/guinavigation.js';
-import selection from '../../game/chess/selection.js';
-import input from '../../game/input.js';
-import statustext from '../../game/gui/statustext.js';
-import game from '../../game/chess/game.js';
-import coordutil from '../util/coordutil.js';
-import frametracker from '../../game/rendering/frametracker.js';
+import movepiece from '../../chess/logic/movepiece.js';
+import stats from './stats.js';
+import guinavigation from './guinavigation.js';
+import selection from '../chess/selection.js';
+import input from '../input.js';
+import statustext from './statustext.js';
+import game from '../chess/game.js';
+import coordutil from '../../chess/util/coordutil.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 /** 
  * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
 */
 
 

@@ -11,7 +11,7 @@ import animation from '../../game/rendering/animation.js';
 import guinavigation from '../../game/gui/guinavigation.js';
 import piecesmodel from '../../game/rendering/piecesmodel.js';
 import guigameinfo from '../../game/gui/guigameinfo.js';
-import movesscript from './movesscript.js';
+import movesscript from '../../game/gui/movesscript.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 import colorutil from '../util/colorutil.js';
@@ -26,7 +26,7 @@ import game from '../../game/chess/game.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('./movesscript.js').Move} Move
+ * @typedef {import('../../game/gui/movesscript.js').Move} Move
 */
 
 "use strict";

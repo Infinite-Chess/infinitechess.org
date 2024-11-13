@@ -14,7 +14,7 @@ import game from '../chess/game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import selection from '../chess/selection.js';
 import board from '../rendering/board.js';
-import movesscript from '../../chess/logic/movesscript.js';
+import movesscript from '../gui/movesscript.js';
 import websocket from '../websocket.js';
 import perspective from '../rendering/perspective.js';
 import sound from './sound.js';

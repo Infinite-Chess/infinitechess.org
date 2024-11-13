@@ -1,5 +1,5 @@
 import style from "./style.js";
-import movesscript from "../../chess/logic/movesscript.js";
+import movesscript from "./movesscript.js";
 import onlinegame from "../misc/onlinegame.js";
 import sound from "../misc/sound.js";
 import clockutil from "../../chess/util/clockutil.js";

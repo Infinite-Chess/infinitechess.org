@@ -1,7 +1,7 @@
 
 // Import Start
 import board from '../rendering/board.js';
-import movesscript from '../../chess/logic/movesscript.js';
+import movesscript from './movesscript.js';
 import movement from '../rendering/movement.js';
 import game from '../chess/game.js';
 import style from './style.js';
