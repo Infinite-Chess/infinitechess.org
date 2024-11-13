@@ -13,15 +13,26 @@ import docutil from "./docutil.js";
 
 /** Our username, if we are logged in. @type {string} */
 let username;
+
+/** Access token for authentication, if we are logged in. @type {string | undefined} */
+let accessToken;
+
+/** Last refresh time of the access token, in milliseconds. @type {number | undefined} */
+let lastRefreshTime;
+
+/** Expiration time for the token in milliseconds. @type {number} */
+const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 60 * 15; // 15 minutes
+
+/** Cushion time in milliseconds before considering the token expired. @type {number} */
+const CUSHION_MILLIS = 10_000;
+
 let reqIsOut = false;
 
-document.addEventListener('logout', event => { // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
+document.addEventListener('logout', event => {
 	username = undefined;
+	accessToken = undefined;
+	lastRefreshTime = undefined;
 });
-
-
-// If we're logged in, the log in button will change to their profile,
-// and create account will change to log out...
 
 function areWeLoggedIn() {
 	return username !== undefined;
@@ -32,16 +43,38 @@ function getOurUsername() {
 }
 
 /**
- * Inits our token, and, if we're logged in, inits member, and changes navigation links if we're logged in.
+ * Checks if the access token is expired or near-expiring.
+ * If expired, it calls `refreshToken()` to get a new one.
  * 
- * If we're not signed in, the server will give/renew us a browser-id cookie for validating our identity.
+ * @returns {Promise<string | undefined>} Resolves with the access token, or undefined if not logged in.
+ */
+async function getAccessToken() {
+	if (reqIsOut) await waitUntilInitialRequestBack();
+
+	if (!areWeLoggedIn()) return;
+
+	const currentTime = Date.now();
+	const timeSinceLastRefresh = currentTime - (lastRefreshTime || 0);
+
+	// Check if token is expired or near expiring
+	if (!accessToken || timeSinceLastRefresh > (TOKEN_EXPIRE_TIME_MILLIS - CUSHION_MILLIS)) {
+		await refreshToken();
+	}
+
+	return accessToken;
+}
+
+/**
+ * Inits the access token and our username if we are logged in.
+ * 
+ * If we are not signed in, the server will give/renew us a browser-id cookie for validating our identity.
  * 
  * @returns {Promise<void>} Resolves when the token refresh process is complete.
  */
 async function refreshToken() {
 	reqIsOut = true;
 	let OK = false;
-	
+
 	try {
 		const response = await fetch('/refresh');
 		OK = response.ok;
@@ -49,30 +82,26 @@ async function refreshToken() {
 		const result = await response.json();
 
 		if (OK) { // Refresh token (from cookie) accepted!
-			// token = docutil.getCookieValue('token'); // The access token is provided in this cookie, with a 10-second expiry time
+			accessToken = docutil.getCookieValue('token'); // Access token provided in the cookie, 10-second expiry time, GRAB IT NOW!!
 			username = result.member;
-		} else { // Unauthorized, don't change any navigation links. Should have given us a browser-id!
+			lastRefreshTime = Date.now(); // Update the last refresh time
+		} else {
 			console.log(`Server: ${result.message}`);
 		}
 
-		// Delete the token cookie after reading it, so it doesn't bleed
-		// into future page refreshes, even after we have logged out
+		// Delete the token cookie after reading it to prevent it from bleeding into future page refreshes
 		docutil.deleteCookie('token');
 	} catch (error) {
-		// Handle the error
 		console.error('Error occurred during refreshing of token:', error);
-		// Optionally set areLoggedIn to false or perform other error handling logic here
 	} finally {
 		reqIsOut = false;
-		// Grey the background of the profile button if we are viewing our profile AND are logged in
-		document.dispatchEvent(new CustomEvent('validated')); // Our header script listens for this so it knows to change the links of the header.
+		// Our header script listens for this so it knows to change the links of the header.
+		document.dispatchEvent(new CustomEvent('validated')); // Inform header script to update links
 	}
 }
 
-
 /**
- * This function will not return until our initial request for an access token,
- * to see if we're logged in, is back.
+ * Waits until the initial request for an access token is completed.
  */
 async function waitUntilInitialRequestBack() {
 	while (reqIsOut) {
@@ -88,4 +117,5 @@ export default {
 	waitUntilInitialRequestBack,
 	areWeLoggedIn,
 	getOurUsername,
+	getAccessToken,
 };
