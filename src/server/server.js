@@ -2,6 +2,8 @@
 // Ensure our workspace is ready for the dev environment
 import { initDevEnvironment } from './config/setupDev.js';
 initDevEnvironment();
+import { initTables } from './database/initDatabase.js';
+initTables();
 
 // Dependancy/built-in imports
 import express from 'express';
@@ -11,10 +13,9 @@ import ejs from 'ejs';
 // Other imports
 import configureMiddleware from './middleware/middleware.js';
 import wsserver from './wsserver.js';
+import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';
 import { DEV_BUILD } from './config/config.js';
-import { saveMembersIfChangesMade } from './controllers/members.js';
-import { saveRolesIfChangesMade } from './controllers/roles.js';
 import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
 
@@ -48,9 +49,9 @@ async function handleCleanup(signal) {
 	cleanupDone = true;
 	console.log(`\nReceived ${signal}. Cleaning up...`);
 
-	await saveMembersIfChangesMade();
-	await saveRolesIfChangesMade();
 	await logAllGames();
+
+	db.close();  // Close the database when the server is shutting down.
 
 	process.exit(0);
 }

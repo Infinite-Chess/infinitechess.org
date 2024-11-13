@@ -1,46 +1,22 @@
 
 /**
  * This controller is used when a client submits login form data.
+ * 
+ * This rate limits a members login attempts,
+ * and when they successfully login:
+ * 
  * This generates an access token, and a refresh cookie for them,
  * and updates basic variables in their profile after logging in.
  */
 
-
-/*&@@@@@@@@@@@@@@@@&#/         
-      #&#/#@@@@@/&@%@@(@%&@@@*%@/      
-     @@%((*@&@&@@&,/*%@@#&@@@/#%@(     
-    @@&#((/@&&@@@@@%@@@&%@&@((#%%@(    
-   &@&##(((#&&&&%,* @,%#&&@(((##%&@/   
-  &@&&#((((##(@&&&&&&&&&&%#(((##%%@@   
-  @&@%##########&%%##%((########%#&&@  
- (@&&#######%###&&&&&&%%%#######%%%&@, 
- @&@%##%#%#%%%##@&&%&&%%%%######%%%&@/ 
- @&%%##########%&&&&&&%%%###(###%%%&&& 
-.@&%#(/((####%%%&&&&&&###(///*-/(#%&@@ 
-,%%#(/((((((((((#####%(((((/////(((##& 
-.&%(./@&%#(/** ##*,,,,.*#(.-/(*#%&&.%@ 
-.&%(.@&&%%%%%%&&@@#/((&@@&%%%%%* (&*%@ 
-.&%#/ #&&@@&&@%#@&@%@@@ . &%&@,..#.%%@ 
-.&%#( @ ..... @%@#, ,@@   &% ... @,%%@ 
-.&%%#/* . @.. &.. @ . @.. @ ..@..&*(%& 
-.&%%#(, .... #@*../.. @ . @ ..@..%/(%& 
-.&%%#(/.. @ ..*..#@...@ . &. .. .%(#%& 
-.&%%##(.. @ ..*..,... @   @%%%(*%/##%& 
-,&%%###.,(%@@&&%@@#... @&&%%&#@,((##*/
-
-
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController';
+import { logEvents } from '../../middleware/logEvents';
+import { signRefreshToken } from './tokenController';
+import { addRefreshTokenToMemberData, createMemberInfoCookie, createRefreshTokenCookie } from './refreshTokenController';
+import { getTranslationForReq } from '../../utility/translate';
+import { getClientIP } from '../../middleware/IP';
 
-import { getUsernameCaseSensitive, getHashedPassword, addRefreshToken, incrementLoginCount, updateLastSeen } from './members.js';
-import { getClientIP } from '../middleware/IP.js';
-import { logEvents } from '../middleware/logEvents.js';
-import { getTranslationForReq } from '../utility/translate.js';
-
-const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
-const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
-const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
-const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 
 // Rate limiting stuff...
 
@@ -77,26 +53,26 @@ async function handleLogin(req, res) {
 	if (!(await testPasswordForRequest(req, res))) return; // Incorrect password, it will have already sent a response.
 	// Correct password...
 
-	const username = req.body.username; // We already know this property is present on the request
-	const usernameLowercase = username.toLowerCase();
-	const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
+	const usernameCaseInsensitive = req.body.username; // We already know this property is present on the request
+
+	const { user_id, username, roles } = getMemberDataByCriteria(['user_id', 'username', 'roles'], 'username', usernameCaseInsensitive);
+	if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 
 	// The payload can be an object with their username and their roles.
-	const payload = { "username": usernameLowercase };
-	const { accessToken, refreshToken } = signTokens(payload);
+	const refreshToken = signRefreshToken(user_id, username, roles);
     
 	// Save the refresh token with current user so later when they log out we can invalidate it.
-	addRefreshToken(usernameLowercase, refreshToken);
+	addRefreshTokenToMemberData(user_id, refreshToken, ); // false for access token
     
 	createRefreshTokenCookie(res, refreshToken);
+	createMemberInfoCookie(res, user_id, username);
+
+	res.sendStatus(200); // Success!
     
 	// Update our member's statistics in their data file!
-	updateMembersInfo(usernameLowercase);
+	updateLoginCountAndLastSeen(user_id);
     
-	// Finally, send the access token! On front-end, don't store it anywhere except memory.
-	res.json({ accessToken });
-
-	logEvents(`Logged in member ${usernameCaseSensitive}`, "loginAttempts.txt", { print: true });
+	logEvents(`Logged in member "${username}".`, "loginAttempts.txt", { print: true });
 }
 
 /**
@@ -114,28 +90,24 @@ async function testPasswordForRequest(req, res) {
 	if (!verifyBodyHasLoginFormData(req, res)) return false; // If false, it will have already sent a response.
     
 	// eslint-disable-next-line prefer-const
-	let { username, password } = req.body;
-	if (!username) username = req.params.member;
-	const usernameLowercase = username.toLowerCase();
-	const usernameCaseSensitive = getUsernameCaseSensitive(usernameLowercase); // False if the member doesn't exist
-	const hashedPassword = getHashedPassword(usernameLowercase);
+	let { username: claimedUsername, password: claimedPassword } = req.body;
+	claimedUsername = claimedUsername || req.params.member;
 
-	if (!usernameCaseSensitive || !hashedPassword) {
+	const { user_id, username, hashed_password } = getMemberDataByCriteria(['user_id', 'username', 'hashed_password'], 'username', claimedUsername, { skipErrorLogging: true });
+	if (user_id === undefined) { // Username doesn't exist
 		res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-invalid_username", req)}); // Unauthorized, username not found
 		return false;
 	}
     
-	const browserAgent = getBrowserAgent(req, usernameLowercase);
-	if (!rateLimitLogin(req, res, browserAgent)) {
-		return false; // They are being rate limited from enterring incorrectly too many times
-	}
+	const browserAgent = getBrowserAgent(req, username);
+	if (!rateLimitLogin(req, res, browserAgent)) return false; // They are being rate limited from enterring incorrectly too many times
 
 	// Test the password
-	const match = await bcrypt.compare(password, hashedPassword);
+	const match = await bcrypt.compare(claimedPassword, hashed_password);
 	if (!match) {
-		logEvents(`Incorrect password for user ${usernameCaseSensitive}!`, "loginAttempts.txt", { print: true });
+		logEvents(`Incorrect password for user ${username}!`, "loginAttempts.txt", { print: true });
 		res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-incorrect_password", req )}); // Unauthorized, password not found
-		onIncorrectPassword(browserAgent, usernameCaseSensitive);
+		onIncorrectPassword(browserAgent, username);
 		return false;
 	}
 
@@ -173,50 +145,6 @@ function verifyBodyHasLoginFormData(req, res) {
 	}
 
 	return true;
-}
-
-/**
- * Signs and generates access and refresh tokens for the user.
- * These are forms of user identification issued after logging in.
- * 
- * ACCESS TOKEN: A browser should NOT store it in local storage or cookie, only memory. Expiry 5-15m.
- * 
- * REFRESH TOKEN: Issued in httpOnly cookie--not accesible wth JS. Expires in hours or days.
- * @param {Object} payload - The payload for the tokens, typically an object containing the username and roles.
- * @returns {Object} - An object containing the properties `accessToken` and `refreshToken`.
- */
-function signTokens(payload) {
-	const accessToken = jwt.sign(
-		payload, // Username is the payload, should NOT be password
-		process.env.ACCESS_TOKEN_SECRET,
-		{ expiresIn: accessTokenExpirySecs } // Good for as long as u stay on 1 page (stored in memory of script)
-	);
-	const refreshToken = jwt.sign(
-		payload, // Payload can contain roles
-		process.env.REFRESH_TOKEN_SECRET,
-		{ expiresIn: refreshTokenExpirySecs }
-	);
-
-	return { accessToken, refreshToken };
-}
-
-/**
- * Creates and sets an HTTP-only cookie containing the refresh token.
- * @param {Object} res - The response object.
- * @param {string} refreshToken - The refresh token to be stored in the cookie.
- */
-function createRefreshTokenCookie(res, refreshToken) {
-	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true
-	res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: refreshTokenExpiryMillis });
-}
-
-/**
- * Updates the member's common info after logging in.
- * @param {string} usernameLowercase - Their username, in lowercase
- */
-function updateMembersInfo(usernameLowercase) {
-	incrementLoginCount(usernameLowercase);
-	updateLastSeen(usernameLowercase);
 }
 
 // Rate limiting stuff...
@@ -268,12 +196,12 @@ function rateLimitLogin(req, res, browserAgent) {
 /**
  * Generates a unique browser agent string using the request object and username.
  * @param {Object} req - The request object.
- * @param {string} usernameLowercase - The lowercase username.
+ * @param {string} username - The username.
  * @returns {string} - The browser agent string, `${usernameLowercase}${clientIP}`
  */
-function getBrowserAgent(req, usernameLowercase) {
+function getBrowserAgent(req, username) {
 	const clientIP = getClientIP(req);
-	return `${usernameLowercase}${clientIP}`;
+	return `${username}${clientIP}`;
 }
 
 /**
@@ -333,13 +261,13 @@ function startTimerToDeleteBrowserAgent(browserAgent) {
  * Handles the rate limiting scenario when an incorrect password is entered.
  * Temporarily locks them out if they've entered too many incorrect passwords.
  * @param {string} browserAgent - The browser agent string.
- * @param {string} usernameCaseSensitive - The case-sensitive username.
+ * @param {string} username - The username.
  */
-function onIncorrectPassword(browserAgent, usernameCaseSensitive) {
+function onIncorrectPassword(browserAgent, username) {
 	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
 	// Lock them!
 	loginAttemptData[browserAgent].cooldownTimeSecs += loginCooldownIncrementorSecs;
-	logEvents(`${usernameCaseSensitive} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt", { print: true });
+	logEvents(`${username} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt", { print: true });
 }
 
 /**
@@ -355,5 +283,5 @@ function onCorrectPassword(browserAgent) {
 
 export {
 	handleLogin,
-	testPasswordForRequest
+	testPasswordForRequest,
 };

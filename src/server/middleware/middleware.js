@@ -15,7 +15,6 @@ import errorHandler from './errorHandler.js';
 import { logger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
-import { protectedStatic } from './protectedStatic.js';
 
 // External translation middleware
 import i18next from 'i18next';
@@ -30,6 +29,8 @@ import send404 from './send404.js';
 import corsOptions from '../config/corsOptions.js';
 
 import { fileURLToPath } from 'node:url';
+import { accessTokenIssuer } from '../database/controllers/accessTokenIssuer.js';
+import { verifyAccount } from '../database/controllers/verifyAccountController.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -82,20 +83,11 @@ function configureMiddleware(app) {
      */
 	app.use(express.urlencoded({ extended: false}));
 
+	// Sets the req.cookies property
 	app.use(cookieParser());
 
 	// Serve public assets. (e.g. css, scripts, images, audio)
 	app.use(express.static(path.join(__dirname, '..', '..', '..', 'dist'))); // Serve public assets
-
-	/**
-     * Sets the req.user and req.role properties if they have an authorization
-     * header (contains access token) or refresh cookie (contains refresh token).
-     * Don't send unauthorized people private stuff without the proper role.
-     */
-	app.use(verifyJWT);
-
-	// Serve protected assets. Needs to be after verifying their jwt and setting their role
-	app.use(protectedStatic);
 
 	// Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
 	app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')));
@@ -104,6 +96,19 @@ function configureMiddleware(app) {
 	app.use('/', rootRouter);
 	app.use('/createaccount(.html)?', accountRouter);
 	app.use('/member', memberRouter);
+
+	/**
+     * Sets the req.memberInfo properties if they have an authorization
+     * header (contains access token) or refresh cookie (contains refresh token).
+     * Don't send unauthorized people private stuff without the proper role.
+	 * 
+	 * PLACE AS LOW AS YOU CAN, BUT ABOVE ALL ROUTES THAT NEED AUTHENTICATION!!
+	 * This requires database requests.
+     */
+	app.use(verifyJWT);
+
+	app.post("/api/get-access-token", accessTokenIssuer);
+	app.get("/verify/:member/:code", verifyAccount);
 
 	// If we've reached this point, send our 404 page.
 	app.all('*', send404);

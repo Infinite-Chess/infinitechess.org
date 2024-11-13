@@ -8,8 +8,10 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { findMemberFromRefreshToken, doesMemberExist } from '../controllers/members.js';
-import { setRole, setRoleWebSocket } from '../controllers/roles.js';
+import { setRole, setRoleWebSocket } from '../database/controllers/roles.js';
+import { doesMemberHaveToken, isTokenValid } from '../database/controllers/tokenController.js';
+import { doesMemberOfIDExist } from '../database/controllers/memberController.js';
+import { logEvents } from './logEvents.js';
 
 /** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 
@@ -25,6 +27,8 @@ import { setRole, setRoleWebSocket } from '../controllers/roles.js';
  * @param {Function} next - The function to call, when finished, to continue the middleware waterfall.
  */
 const verifyJWT = (req, res, next) => {
+	req.memberInfo = { signedIn: false };
+
 	const hasAccessToken = verifyAccessToken(req);
 	if (!hasAccessToken) verifyRefreshToken(req);
 
@@ -38,56 +42,65 @@ const verifyJWT = (req, res, next) => {
 
 /**
  * Reads the request's bearer token (from the authorization header),
- * sets the connections `user` property if it is valid (are signed in).
+ * sets the connections `memberInfo` property if it is valid (are signed in).
  * @param {Object} req - The request object
  * @returns {boolean} true if a valid token was found (logged in)
  */
 function verifyAccessToken(req) {
 	const authHeader = req.headers.authorization || req.headers.Authorization;
-	if (!authHeader) return false;
-	if (!authHeader.startsWith('Bearer ')) return false;
+	if (!authHeader) return false; // No authentication header included
+	if (!authHeader.startsWith('Bearer ')) return false; // Authentication header doesn't look correct
 
 	const accessToken = authHeader.split(' ')[1];
-	if (!accessToken) return false; // Token empty
+	if (!accessToken) return false; // Authentication header doesn't contain a token
 
-	jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-		if (err) return console.log('Invalid access token (http)!'); // Forbidden, invalid token
-		if (!doesMemberExist(decoded.username)) return; // I have deleted their account, so their access token is no longer valid.
-		req.user = decoded.username; // Username was our payload when we generated the access token
-	});
+	// { isValid (boolean), user_id, username, roles }
+	const result = isTokenValid(accessToken, false); // False for access token
+	if (!result.isValid) {
+		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true }); // Forbidden, invalid token
+		return false; //Token was expired or tampered
+	}
 
-	return req.user != null; // true if they have a valid ACCESS token
+	// Token is valid and hasn't hit the 15m expiry
+	// ...
+
+	console.log("A valid access token was used! :D :D");
+
+	const { user_id, username, roles, allowed_actions } = result;
+	req.memberInfo = { signedIn: true, user_id, username, roles, allowed_actions }; // Username was our payload when we generated the access token
+
+	return true; // true if they have a valid ACCESS token
 }
 
 /**
  * Reads the request's refresh token cookie (http-only),
- * sets the connections `user` property if it is valid (are signed in).
+ * sets the connections `memberInfo` property if it is valid (are signed in).
  * Only call if they did not have a valid access token!
  * @param {Object} req - The request object
  * @returns {boolean} true if a valid token was found (logged in)
  */
 function verifyRefreshToken(req) {
 	const cookies = req.cookies;
-	if (!cookies) return console.log('req.cookies was undefined! Is the cookie parser working and before verifyJWT middleware? If they are, it could be that sometimes req.cookies is just undefined.');
+	if (!cookies) return logEvents("Cookie parser didn't set the req.cookies property!", 'errLog.txt', { print: true });
 
 	const refreshToken = cookies.jwt;
-	if (!refreshToken) return false; // Not logged in, don't set their user property
+	if (!refreshToken) return false; // No refresh token present
 
-	// First make sure we haven't manually invalidated this refresh token if they've logged out.
-	const memberWithThisRefreshToken = findMemberFromRefreshToken(refreshToken);
-	if (!memberWithThisRefreshToken) return false; // They've logged out since.
+	// { isValid (boolean), user_id, username }
+	const result = isTokenValid(refreshToken, true); // true for refresh token
+	if (!result.isValid) return false;
 
-	jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-		if (err || memberWithThisRefreshToken !== decoded.username) return console.log('Invalid refresh token! Expired or tampered. verifyJWT middleware.');
-		req.user = decoded.username;
-	});
+	// Valid! Set their req.memberInfo property!
 
-	return req.user != null; // true if they have a valid REFRESH token
+	const { user_id, username, roles } = result;
+	req.memberInfo = { signedIn: true, user_id, username, roles }; // Username was our payload when we generated the access token
+
+	return true; // true if they have a valid REFRESH token
 };
 
 
 
-// Checks bearer token, sets req.user to any matching user.
+// Checks bearer token, sets req.memberInfo to any matching user.
 
 /**
  * Reads the access token cookie OR the refresh cookie token,
@@ -121,7 +134,7 @@ function verifyAccessTokenWebSocket(ws, cookies) {
 
 	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
 		if (err) return console.log('Invalid access token (ws)!'); // Forbidden, invalid token
-		if (!doesMemberExist(decoded.username)) return; // I have deleted their account, so their access token is no longer valid.
+		if (!doesMemberOfIDExist(decoded.user_id)) return; // I have deleted their account, so their access token is no longer valid.
 		ws.metadata.user = decoded.username; // Username was our payload when we generated the access token
 	});
 

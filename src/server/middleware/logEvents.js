@@ -22,10 +22,10 @@ const giveLoggedItemsUUID = false;
  * @param {string} logName - The name of the log file.
  * @param {Object} [options] - Optional parameters.
  * @param {boolean} [options.print] - If true, prints the message to the console as an error.
- * @returns {Promise<void>} - A promise that resolves when the log operation is complete.
  */
 const logEvents = async(message, logName, { print } = {}) => {
 	if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.");
+	if (!logName) return console.trace("Log name MUST be provided when logging an event!");
 
 	if (print) console.error(message);
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');

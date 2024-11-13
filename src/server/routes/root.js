@@ -2,13 +2,10 @@ import express from "express";
 const router = express.Router();
 import path from "path";
 
-import { handleLogin } from '../controllers/authController.js';
-import { handleRefreshToken } from '../controllers/refreshTokenController.js';
-import { handleLogout } from '../controllers/logoutController.js';
-import { verifyAccount } from '../controllers/verifyAccountController.js';
-import { ensureOwner, ensurePatron } from '../middleware/verifyRoles.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import { fileURLToPath } from 'node:url';
+import { handleLogin } from "../database/controllers/authController.js";
+import { handleLogout } from "../database/controllers/logoutController.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -57,8 +54,6 @@ router.get("/login(.html)?", (req, res) => {
 
 router.post("/auth", handleLogin);
 
-router.get("/refresh", handleRefreshToken);
-
 router.get("/logout", handleLogout);
 
 router.get("/termsofservice(.html)?", (req, res) => {
@@ -67,8 +62,6 @@ router.get("/termsofservice(.html)?", (req, res) => {
 		path.join(htmlDirectory, language, "termsofservice.html"),
 	);
 });
-
-router.get("/verify/:member/:id", verifyAccount);
 
 router.get("/400(.html)?", (req, res) => {
 	const language = getLanguageToServe(req);
