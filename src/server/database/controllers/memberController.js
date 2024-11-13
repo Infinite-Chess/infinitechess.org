@@ -67,15 +67,15 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 
 	// SQL query to insert a new user into the 'members' table
 	const query = `
-		INSERT INTO members (
-		user_id,
-		username,
-		email,
-		hashed_password,
-		roles,
-		verification,
-		preferences
-		) VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO members (
+user_id,
+username,
+email,
+hashed_password,
+roles,
+verification,
+preferences
+) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`;
 	
 	try {
@@ -274,9 +274,9 @@ function updateLoginCountAndLastSeen(userId) {
 function updateLastSeen(userId) {
 	// SQL query to update the last_seen field
 	const query = `
-		UPDATE members
-		SET last_seen = CURRENT_TIMESTAMP
-		WHERE user_id = ?
+UPDATE members
+SET last_seen = CURRENT_TIMESTAMP
+WHERE user_id = ?
 	`;
 
 	// Execute the query with the provided userId

@@ -31,6 +31,11 @@ const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
  * @returns {Object} - An object containing the properties: { isValid (boolean), user_id, username, roles }
  */
 function isTokenValid(token, isRefreshToken) {
+	if (isRefreshToken === undefined) {
+		logEvents("When validating token, you must include the isRefreshToken parameter!", 'errLog.txt', { print: true });
+		return { isValid: false };
+	}
+
 	// Extract user ID and username from the token
 	const { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
 	if (user_id === undefined || username === undefined || roles === undefined) return { isValid: false }; // Expired or tampered token
@@ -85,7 +90,7 @@ function getTokenPayload(token, isRefreshToken) {
 		return jwt.verify(token, secret);
 	} catch (err) {
 		// Log the error event when verification fails
-		logEvents(`Failed to verify token (isRefreshToken: ${isRefreshToken}): ${err.message}`, 'errLog.txt', { print: true });
+		logEvents(`Failed to verify token (isRefreshToken: ${isRefreshToken}): ${err.message}. Token: "${token}"`, 'errLog.txt', { print: true });
 		// Return undefined if verification fails (e.g., token is invalid or expired)
 		return undefined;
 	}
@@ -144,5 +149,4 @@ export {
 	isTokenValid,
 	signAccessToken,
 	signRefreshToken,
-	getPayloadContentFromToken,
 };

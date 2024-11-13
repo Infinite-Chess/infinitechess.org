@@ -27,7 +27,7 @@ function callDotenvConfig() {
 
 function createDevelopmentAccounts() {
 	if (!doesMemberOfUsernameExist("owner")) {
-		generateAccount({ username: "Owner", email: "cardinknowles@gmail.com", password: "1" });
+		generateAccount({ username: "Owner", email: "cardinknowles@gmail.com", password: "1", autoVerify: true });
 		giveRole_Owner("owner", "developmental account");
 	}
 	if (!doesMemberOfUsernameExist("patron")) {

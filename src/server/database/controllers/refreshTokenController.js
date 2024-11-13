@@ -16,6 +16,15 @@ function createRefreshTokenCookie(res, refreshToken) {
 }
 
 /**
+ * Deletes the HTTP-only refresh token cookie.
+ * @param {Object} res - The response object.
+ */
+function deleteRefreshTokenCookie(res) {
+	// Clear the 'jwt' cookie by setting the same options as when it was created
+	res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+}
+
+/**
  * Creates and sets a cookie containing user info (user ID and username),
  * accessible by JavaScript, with the same expiration as the refresh token.
  * @param {Object} res - The response object.
@@ -86,7 +95,6 @@ function getRefreshTokensByUserID(userId) {
  * @returns {object[]|undefined} - The updated array of valid refresh tokens: [ { token, expires }, { token, expires }, ... ], or undefined if the member doesn't exist.
  */
 function getRefreshTokensByUserID_DeleteExpired(userId) {
-	console.log('getting tokens and deleting expired');
 	// Step 1: Fetch the current refresh tokens for the user
 	const refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) return logEvents(`Cannot get refresh tokens (and delete expired) of a non-existent member of id "${userId}"!`, 'errLog.txt', { print: true });
@@ -107,7 +115,6 @@ function getRefreshTokensByUserID_DeleteExpired(userId) {
  * @param {string} token - The new refresh token to add.
  */
 function addRefreshTokenToMemberData(userId, token) {
-	console.log('getting tokens');
 	// Get the current refresh tokens
 	let refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) return logEvents(`Cannot add refresh token to non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
@@ -140,7 +147,7 @@ function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 	newRefreshTokens = newRefreshTokens.filter(token => token.token !== deleteToken);
 
 	// Save the updated refresh tokens
-	if (newRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, refreshTokens);
+	if (newRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, newRefreshTokens);
 	else logEvents(`Unable to find refresh token to delete of member with id "${userId}"!`, 'errLog.txt', { print: true });
 }
 
@@ -196,6 +203,7 @@ function removeExpiredTokens(tokens) {
 
 export {
 	createRefreshTokenCookie,
+	deleteRefreshTokenCookie,
 	createMemberInfoCookie,
 	doesMemberHaveRefreshToken,
 	addRefreshTokenToMemberData,

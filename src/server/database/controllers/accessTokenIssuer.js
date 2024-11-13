@@ -25,8 +25,8 @@ function accessTokenIssuer(req, res) {
 
 	if (!req.memberInfo.signedIn) {
 		assignOrRenewBrowserID(req, res);
-		return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_invalid", req) }); // Conflict. Expired or tampered token, or logged out (manually invalidated).
-		// return res.status(403).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found_logged_out", req) });
+		// return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_invalid", req) }); // Conflict. Expired or tampered token, or logged out (manually invalidated).
+		return res.status(403).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found_logged_out", req) });
 	}
 
 	// Token is valid! Send them new access token!

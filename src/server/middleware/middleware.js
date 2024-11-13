@@ -34,6 +34,7 @@ import { getLanguageToServe } from '../utility/translate.js';
 import { removeAccount } from '../database/controllers/removeAccountController.js';
 import { requestConfirmEmail } from '../database/controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
+import { handleLogout } from '../database/controllers/logoutController.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -116,12 +117,18 @@ function configureMiddleware(app) {
      */
 	app.use(verifyJWT);
 
+	// ROUTES THAT NEED AUTHENTICATION ------------------------------------------------------
+
 	app.post("/api/get-access-token", accessTokenIssuer);
+
+	app.get("/logout", handleLogout);
 
 	// Member routes that do require authentication
 	app.get('/member/:member/data', getMemberData);
 	app.get('/member/:member/send-email', requestConfirmEmail);
 	app.get("/verify/:member/:code", verifyAccount);
+
+	// ---------------------------------------------------------------------------------------
 
 	// If we've reached this point, send our 404 page.
 	app.all('*', send404);

@@ -5,7 +5,6 @@ import path from "path";
 import { getLanguageToServe } from '../utility/translate.js';
 import { fileURLToPath } from 'node:url';
 import { handleLogin } from "../database/controllers/authController.js";
-import { handleLogout } from "../database/controllers/logoutController.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -53,8 +52,6 @@ router.get("/login(.html)?", (req, res) => {
 });
 
 router.post("/auth", handleLogin);
-
-router.get("/logout", handleLogout);
 
 router.get("/termsofservice(.html)?", (req, res) => {
 	const language = getLanguageToServe(req);
