@@ -1,9 +1,9 @@
 
 import websocketserver from '../../wsserver.js';
-import { getUserIDAndUsernameFromRefreshToken } from "./memberController.js";
-import { deleteAllInvitesOfMember } from '../../game/invitesmanager/invitesmanager';
 import { logEvents } from '../../middleware/logEvents.js';
 import { deleteRefreshTokenFromMemberData } from './refreshTokenController.js';
+import { deleteAllInvitesOfMember } from '../../game/invitesmanager/invitesmanager.js';
+import { getPayloadContentFromToken } from './tokenController.js';
 
 
 const handleLogout = async(req, res) => {
@@ -14,7 +14,7 @@ const handleLogout = async(req, res) => {
 	if (!cookies?.jwt) return res.redirect('/'); // Success, already logged out
 	const refreshToken = cookies.jwt;
 
-	const { user_id, username } = getUserIDAndUsernameFromRefreshToken(refreshToken);
+	const { user_id, username } = getPayloadContentFromToken(refreshToken);
 	if (user_id === undefined) {
 		logEvents(`When logging out, tampered refresh token did not decode to any user_id: "${refreshToken}" Perhaps it expired server-side but their client never deleted it?`, 'errLog.txt', { print: true });
 		// return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) });

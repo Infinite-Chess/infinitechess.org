@@ -3,11 +3,11 @@
 // Returns a new access token if refresh token hasn't expired.
 // Called by a fetch(). ALWAYS RETURN a json!
 
-import { getTranslationForReq } from "../../utility/translate";
-import { createAccessTokenCookie } from "./accessTokenController";
-import { assignOrRenewBrowserID } from "./browserIDController";
-import { updateLastSeen } from "./memberController";
-import { isTokenValid, signAccessToken } from "./tokenController";
+import { getTranslationForReq } from "../../utility/translate.js";
+import { createAccessTokenCookie } from "./accessTokenController.js";
+import { assignOrRenewBrowserID } from "./browserIDController.js";
+import { updateLastSeen } from "./memberController.js";
+import { isTokenValid, signAccessToken } from "./tokenController.js";
 
 /**
  * Called when the browser uses the /api/get-access-token API request. This reads any refresh token cookie present,

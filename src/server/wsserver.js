@@ -111,7 +111,7 @@ function onConnectionRequest(ws, req) {
 	// Initialize who they are. Member? Browser ID?...
 	verifyJWTWebSocket(ws); // Auto sets ws.metadata.memberInfo properties!
 
-	if (memberHasMaxSocketCount(ws.metadata.memberInfo.username)) {
+	if (ws.metadata.memberInfo.signedIn && memberHasMaxSocketCount(ws.metadata.memberInfo.username)) {
 		console.log(`Member ${ws.metadata.memberInfo.username} has too many sockets! Not connecting this one.`);
 		return ws.close(1009, 'Too Many Sockets');
 	}
@@ -425,7 +425,6 @@ function clientHasMaxSocketCount(IP) {
  * @returns {boolean} *true* if they have too many sockets.
  */
 function memberHasMaxSocketCount(member) {
-	if (member === undefined) return false;
 	return connectedMembers[member]?.length >= maxSocketsAllowedPerMember;
 }
 

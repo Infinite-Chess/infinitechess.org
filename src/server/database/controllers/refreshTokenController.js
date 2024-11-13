@@ -1,7 +1,7 @@
 
-import { getMemberDataByCriteria, updateMemberColumns } from './memberController';
-import { refreshTokenExpiryMillis } from './tokenController';
-import { logEvents } from '../../middleware/logEvents';
+import { getMemberDataByCriteria, updateMemberColumns } from './memberController.js';
+import { refreshTokenExpiryMillis } from './tokenController.js';
+import { logEvents } from '../../middleware/logEvents.js';
 
 
 

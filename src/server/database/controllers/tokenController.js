@@ -1,8 +1,8 @@
 
 import jwt from 'jsonwebtoken';
-import { logEvents } from '../../middleware/logEvents';
-import { doesMemberHaveRefreshToken } from './refreshTokenController';
-import { updateLastSeen } from './memberController';
+import { logEvents } from '../../middleware/logEvents.js';
+import { doesMemberHaveRefreshToken } from './refreshTokenController.js';
+import { updateLastSeen } from './memberController.js';
 
 
 
@@ -54,7 +54,7 @@ function isTokenValid(token, isRefreshToken) {
  * This does NOT check if the token was manually invalidated (e.g., user logged out early).
  * @param {string} token - The access or refresh token to decode.
  * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token (false if access token).
- * @returns {object} - An object: { user_id, username } if the token is valid, or an empty object {} if the token is invalid, or expired, NOT IF WE MANUALLY INVALIDATED IT.
+ * @returns {object} - An object: { user_id, username, roles, allowed_actions } if the token is valid, or an empty object {} if the token is invalid, or expired, NOT IF WE MANUALLY INVALIDATED IT.
  */
 function getPayloadContentFromToken(token, isRefreshToken) {
 	const payload = getTokenPayload(token, isRefreshToken);
@@ -134,8 +134,9 @@ function generatePayload(userId, username, roles, allowedActions) {
 
 
 export {
+	refreshTokenExpiryMillis,
 	isTokenValid,
 	signAccessToken,
 	signRefreshToken,
-	
+	getPayloadContentFromToken,
 };

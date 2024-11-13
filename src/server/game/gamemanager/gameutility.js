@@ -10,7 +10,6 @@
 import WebSocket from 'ws';
 
 // Middleware & other imports
-import { getUsernameCaseSensitive } from '../../controllers/members.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
 import { ensureJSONString } from '../../utility/JSONUtils.js';
@@ -28,6 +27,7 @@ import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
+import { getMemberDataByCriteria } from '../../database/controllers/memberController.js';
 
 // Type Definitions...
 
@@ -360,7 +360,13 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
  * @returns {string} The display name of the player.
  */
 function getDisplayNameOfPlayer(player) { // { member/browser }
-	return player.member ? getUsernameCaseSensitive(player.member) : "(Guest)";
+	// return player.member ? getUsernameCaseSensitive(player.member) : "(Guest)";
+	let displayName;
+	if (player.member) {
+		const { username } = getMemberDataByCriteria(['username'], 'username', player.member);
+		displayName = username;
+	} else displayName = "(Guest)";
+	return displayName;
 }
 
 /**

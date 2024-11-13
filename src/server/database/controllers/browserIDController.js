@@ -1,8 +1,12 @@
-import uuid from "../../../client/scripts/game/misc/uuid";
-import { logEvents } from "../../middleware/logEvents";
+
+
+import uuid from "../../../client/scripts/esm/util/uuid.js";
+import { logEvents } from "../../middleware/logEvents.js";
+
 
 
 const expireOfBrowserIDCookieMillis = 1000 * 60 * 60 * 24 * 7; // 7 days
+
 
 
 // ASSUMES they are not logged in

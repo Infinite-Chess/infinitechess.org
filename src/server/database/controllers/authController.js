@@ -10,12 +10,12 @@
  */
 
 import bcrypt from 'bcrypt';
-import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController';
-import { logEvents } from '../../middleware/logEvents';
-import { signRefreshToken } from './tokenController';
-import { addRefreshTokenToMemberData, createMemberInfoCookie, createRefreshTokenCookie } from './refreshTokenController';
-import { getTranslationForReq } from '../../utility/translate';
-import { getClientIP } from '../../middleware/IP';
+import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController.js';
+import { logEvents } from '../../middleware/logEvents.js';
+import { signRefreshToken } from './tokenController.js';
+import { addRefreshTokenToMemberData, createMemberInfoCookie, createRefreshTokenCookie } from './refreshTokenController.js';
+import { getTranslationForReq } from '../../utility/translate.js';
+import { getClientIP } from '../../middleware/IP.js';
 
 
 // Rate limiting stuff...

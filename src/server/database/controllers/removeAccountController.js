@@ -2,10 +2,10 @@
  * This module handles account deletion.
  */
 
-import { logEvents } from "../../middleware/logEvents";
-import { getTranslationForReq } from "../../utility/translate";
-import { testPasswordForRequest } from "./authController";
-import { deleteUser, getMemberDataByCriteria } from "./memberController";
+import { logEvents } from "../../middleware/logEvents.js";
+import { getTranslationForReq } from "../../utility/translate.js";
+import { testPasswordForRequest } from "./authController.js";
+import { deleteUser, getMemberDataByCriteria } from "./memberController.js";
 
 // Automatic deletion of accounts...
 
@@ -103,5 +103,4 @@ setInterval(removeOldUnverifiedMembers, intervalForRemovalOfOldUnverifiedAccount
 
 export {
 	removeAccount,
-	removeAccountByUsername
 };

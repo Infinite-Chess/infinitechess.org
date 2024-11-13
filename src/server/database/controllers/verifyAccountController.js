@@ -1,7 +1,7 @@
 
-import { logEvents } from "../../middleware/logEvents";
-import { getTranslationForReq } from "../../utility/translate";
-import { getMemberDataByCriteria, updateMemberColumns } from "./memberController";
+import { logEvents } from "../../middleware/logEvents.js";
+import { getTranslationForReq } from "../../utility/translate.js";
+import { getMemberDataByCriteria, updateMemberColumns } from "./memberController.js";
 
 // Called when clicked on verification link in email.
 // CAN redirect!
