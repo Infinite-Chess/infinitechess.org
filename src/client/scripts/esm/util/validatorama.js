@@ -11,7 +11,7 @@
 
 import docutil from "./docutil.js";
 
-/** Our username, if we are logged in. @type {string} */
+/** Our username, if we are logged in. @type {string | undefined} */
 let username;
 
 /** Access token for authentication, if we are logged in. @type {string | undefined} */
@@ -33,14 +33,6 @@ document.addEventListener('logout', event => { // Custom-event listener. Often f
 	accessToken = undefined;
 	lastRefreshTime = undefined;
 });
-
-function areWeLoggedIn() {
-	return username !== undefined;
-}
-
-function getOurUsername() {
-	return username;
-}
 
 /**
  * Checks if the access token is expired or near-expiring.
@@ -68,7 +60,8 @@ async function getAccessToken() {
 /**
  * Inits the access token and our username if we are logged in.
  * 
- * If we are not signed in, the server will give/renew us a browser-id cookie for validating our identity.
+ * Reads the `memberInfo` cookie to get the member details (username).
+ * If not signed in, the server will renew the browser-id cookie.
  * 
  * @returns {Promise<void>} Resolves when the token refresh process is complete.
  */
@@ -83,21 +76,27 @@ async function refreshToken() {
 		const result = await response.json();
 
 		if (OK) { // Refresh token (from cookie) accepted!
-			accessToken = docutil.getCookieValue('token'); // Access token provided in the cookie, 10-second expiry time, GRAB IT NOW!!
-			username = result.member;
+			accessToken = docutil.getCookieValue('token'); // Read access token from cookie
+			if (!accessToken) console.error("Token not found in the cookie!");
 			lastRefreshTime = Date.now(); // Update the last refresh time
+
+			// Read the member info from the cookie
+			const memberInfo = JSON.parse(docutil.getCookieValue('memberInfo')); // { user_id, username }
+			if (memberInfo) username = memberInfo.username;
+			else console.error("Member info cookie not found!");
+
 		} else {
 			console.log(`Server: ${result.message}`);
 		}
 
-		// Delete the token cookie after reading it to prevent it from bleeding into future page refreshes
+		// Delete the token cookie after reading it
 		docutil.deleteCookie('token');
 	} catch (error) {
-		console.error('Error occurred during refreshing of token:', error);
+		console.error('Error occurred during token refresh:', error);
 	} finally {
 		reqIsOut = false;
-		// Our header script listens for this so it knows to change the links of the header.
-		document.dispatchEvent(new CustomEvent('validated')); // Inform header script to update links
+		// Dispatch event to inform other parts of the app that validation is complete
+		document.dispatchEvent(new CustomEvent('validated'));
 	}
 }
 
@@ -108,6 +107,22 @@ async function waitUntilInitialRequestBack() {
 	while (reqIsOut) {
 		await new Promise(resolve => setTimeout(resolve, 100));
 	}
+}
+
+/**
+ * Checks if we are logged in based on whether the username is defined.
+ * @returns {boolean} True if logged in, false otherwise.
+ */
+function areWeLoggedIn() {
+	return username !== undefined;
+}
+
+/**
+ * Retrieves our username if we are logged in.
+ * @returns {string | undefined} The username, or undefined if not logged in.
+ */
+function getOurUsername() {
+	return username;
 }
 
 refreshToken();
