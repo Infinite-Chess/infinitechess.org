@@ -1,6 +1,10 @@
 {
+	"22": {
+		"note": "Deleted all of header.javascript. Changed the value of header.home. Added header.profile & header.logout. Deleted disable_holiday_theme_desktop and disable_holiday_theme_mobile. Added all of header.settings.",
+		"changes": []
+	},
 	"21": {
-		"note": "Added notices for how to disable the holiday theme, lines 299-300. DELETED IN FUTURE UPDATE (on the themes branch).",
+		"note": "Added notices for how to disable the holiday theme, lines 299-300. DELETED IN UPDATE 22.",
 		"changes": []
 	},	
 	"20": {

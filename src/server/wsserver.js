@@ -4,7 +4,7 @@ import { rateLimitWebSocket } from './middleware/rateLimit.js';
 import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from './middleware/logEvents.js';
 import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
 
-import uuid from '../client/scripts/game/misc/uuid.js';
+import uuid from '../client/scripts/esm/util/uuid.js';
 const { genUniqueID, generateNumbID } = uuid;
 import wsutility from './game/wsutility.js';
 import { handleGameRoute } from './game/gamemanager/gamerouter.js';
@@ -13,6 +13,7 @@ import { unsubClientFromGameBySocket } from './game/gamemanager/gamemanager.js';
 import { subToInvitesList, unsubFromInvitesList, userHasInvite } from './game/invitesmanager/invitesmanager.js';
 import { ensureJSONString } from './utility/JSONUtils.js';
 import { executeSafely } from './utility/errorGuard.js';
+import wsutil from '../client/scripts/esm/util/wsutil.js';
 
 /**
  * Type Definitions
@@ -62,34 +63,6 @@ const timeToWaitForEchoMillis = 5000; // 5 seconds until we assume we've disconn
 const echoTimers = {};
 
 const timeOfInactivityToRenewConnection = 10000;
-
-// Possible websocket closure reasons:
-
-// Server closure reasons:
-// 1000 "Connection expired"  (This can say this even if in dev tools we disable our network)
-// 1008 "Unable to identify client IP address"
-// 1008 "Authentication needed"
-// 1008 "Logged out"
-// 1009 "Too Many Requests. Try again soon."
-// 1009 "Message Too Big"
-// 1009 "Too Many Sockets"
-// 1009 "Origin Error"
-// 1014 "No echo heard"  (Client took too long to respond)
-
-// Client closure reasons:
-// 1000 "Connection closed by client"
-// 1000 "Connection closed by client. Renew."
-
-// Other:
-// 1006 "" Network error
-// 1001 "" Endpoint going away. (Closed tab without performing cleanup)
-
-// These are the closure reasons where we will RETAIN their invite for a set amount of time before deleting it by disconnection!
-// We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
-// If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
-// so IMMEDIATELY tell their opponent they disconnected!
-const closureCodesNotByChoice = [1006];
-const closureReasonsNotByChoice = ["Connection expired", "Logged out", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."];
 
 
 /**
@@ -285,7 +258,7 @@ function onclose(ws, code, reason) {
 	// True if client had no power over the closure,
 	// DON'T COUNT this as a disconnection!
 	// They would want to keep their invite, AND remain in their game!
-	const closureNotByChoice = wasSocketClosureNotByTheirChoice(code, reason);
+	const closureNotByChoice = wsutil.wasSocketClosureNotByTheirChoice(code, reason);
 
 	// Unsubscribe them from all. NO LIST. It doesn't matter if they want to keep their invite or remain
 	// connected to their game, without a websocket to send updates to, there's no point in any SUBSCRIPTION service!
@@ -585,12 +558,6 @@ function unsubClientFromAllSubs(ws, closureNotByChoice) {
 		const thisSubscription = subscriptions[key]; // invites/game
 		handleUnsubbing(ws, key, thisSubscription, closureNotByChoice);
 	}
-}
-
-// Returns true if the client had no power over the closure (they don't want their invite to be deleted!)
-// If true, we will also give them 5 seconds to reconnect before alerting their opponent they've disconnected.
-function wasSocketClosureNotByTheirChoice(code, reason) {
-	return closureCodesNotByChoice.includes(code) || closureReasonsNotByChoice.includes(reason.trim());
 }
 
 
