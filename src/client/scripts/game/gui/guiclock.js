@@ -133,6 +133,7 @@ function edit(gamefile) {
 }
 
 function rescheduleSoundEffects(gamefile) {
+	if (gamefileutility.isGameOver(gamefile)) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
 	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
 	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
 }
@@ -198,7 +199,9 @@ function rescheduleMinuteTick(gamefile) {
 	clearTimeout(lowtimeNotif.timeoutID);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
 	if (lowtimeNotif.colorsNotified.has(gamefile.clocks.colorTicking)) return;
-	const timeRemain = gamefile.clocks.timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd;
+	const timeRemainAtTurnStart = gamefile.clocks.timeRemainAtTurnStart;
+	const timeRemain = timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd; // Time remaining until sound it should start playing
+	if (timeRemain < 0) return;
 	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile.clocks.colorTicking);
 }
 
