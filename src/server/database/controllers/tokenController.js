@@ -1,8 +1,8 @@
 
 import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents.js';
-import { doesMemberHaveRefreshToken } from './refreshTokenController.js';
 import { doesMemberOfIDExist, updateLastSeen } from './memberController.js';
+import { doesMemberHaveRefreshToken_RenewSession } from './refreshTokenController.js';
 
 
 
@@ -12,8 +12,11 @@ import { doesMemberOfIDExist, updateLastSeen } from './memberController.js';
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
+// const refreshTokenExpiryMillis = 1000 * 60 * 2; // 2m
 const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
+// const timeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
+const timeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
 
 
 
@@ -28,9 +31,10 @@ const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
  * 2. If the token is manually invalidated, such as when a user logs out, or deletes their account, and the token was removed from their information in the members table.
  * @param {string} token - The token to validate.
  * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token. Pass `false` for access tokens.
+ * @param {string} res - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {Object} - An object containing the properties: { isValid (boolean), user_id, username, roles }
  */
-function isTokenValid(token, isRefreshToken) {
+function isTokenValid(token, isRefreshToken, res) {
 	if (isRefreshToken === undefined) {
 		logEvents("When validating token, you must include the isRefreshToken parameter!", 'errLog.txt', { print: true });
 		return { isValid: false };
@@ -53,7 +57,7 @@ function isTokenValid(token, isRefreshToken) {
 	}
 
 	// Check if the token was manually invalidated (e.g., user logged out)
-	if (!doesMemberHaveRefreshToken(user_id, token, isRefreshToken)) return { isValid: false };
+	if (!doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, res)) return { isValid: false };
 
 	// If all checks pass, return a success response with the decoded payload information, such as their user_id and username
 	updateLastSeen(user_id);
@@ -146,6 +150,7 @@ function generatePayload(userId, username, roles, allowedActions) {
 
 export {
 	refreshTokenExpiryMillis,
+	timeToWaitToRenewRefreshTokensMillis,
 	isTokenValid,
 	signAccessToken,
 	signRefreshToken,

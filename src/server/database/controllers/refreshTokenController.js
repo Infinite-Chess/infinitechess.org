@@ -1,7 +1,20 @@
 
 import { getMemberDataByCriteria, updateMemberColumns } from './memberController.js';
-import { refreshTokenExpiryMillis } from './tokenController.js';
+import { refreshTokenExpiryMillis, signRefreshToken, timeToWaitToRenewRefreshTokensMillis } from './tokenController.js';
 import { logEvents } from '../../middleware/logEvents.js';
+
+
+
+
+function issueNewRefreshToken(res, user_id, username, roles) {
+	// The payload can be an object with their username and their roles.
+	const refreshToken = signRefreshToken(user_id, username, roles);
+    
+	// Save the refresh token with current user so later when they log out we can invalidate it.
+	addRefreshTokenToMemberData(user_id, refreshToken); // false for access token
+    
+	createLoginCookies(res, user_id, username, refreshToken);
+}
 
 
 
@@ -91,20 +104,67 @@ function deleteMemberInfoCookie(res) {
 
 /**
  * Checks if a member has a specific refresh token.
+ * If they do, and it wasn't recently issued, we automatically
+ * refresh it by giving them a new refresh cookie!
  * @param {number} userId - The user ID of the member whose refresh tokens are to be checked.
+ * @param {number} username
+ * @param {number} roles
  * @param {string} token - The refresh token to check.
+ * @param {number} [res] - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {boolean} - Returns true if the member has the refresh token, false otherwise.
  */
-function doesMemberHaveRefreshToken(userId, token) {
+function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, res) {
 	// Get the valid refresh tokens for the user
-	const refreshTokens = getRefreshTokensByUserID_DeleteExpired(userId);
+	let refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) {
 		logEvents(`Cannot test if non-existent member of id "${userId}" has refresh token "${token}"!`, 'errLog.txt', { print: true });
 		return false;
 	}
 
-	// Check if any of the valid tokens match the provided refresh token
-	return refreshTokens.some(tokenObj => tokenObj.token === token);
+	// Remove expired tokens
+	refreshTokens = removeExpiredTokens(refreshTokens);
+
+	// Find the object where tokenObj.token matches the provided token
+	const matchingTokenObj = refreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires }
+	if (!matchingTokenObj) return false;
+
+	// We have the token...
+	
+	// When does it expire? Should we renew?
+	renewSession(res, userId, username, roles, refreshTokens, matchingTokenObj);
+
+	return true;
+}
+
+/**
+ * Renews a player's logging session
+ * @param {*} res 
+ * @param {*} userId 
+ * @param {*} username 
+ * @param {*} roles 
+ * @param {*} refreshTokens - The parsed refresh tokens from their data in the members table
+ * @param {*} tokenObject - The token that needs to be renewed (deleted + add new) if we are renewing!
+ */
+function renewSession(res, userId, username, roles, refreshTokens, tokenObject) {
+	if (!res) return; // Only renew if the response object is defined, the response object will not be defined for websocket upgrade requests.
+	
+	const now = Date.now();
+	const timeSinceIssued = now - tokenObject.issued;
+	if (timeSinceIssued < timeToWaitToRenewRefreshTokensMillis) return;
+
+	console.log(`Renewing member "${username}"s session by issuing them new login cookies! -------`);
+
+	refreshTokens = deleteRefreshTokenFromTokenList(refreshTokens, tokenObject.token);
+
+	// The payload can be an object with their username and their roles.
+	const newToken = signRefreshToken(userId, username, roles);
+
+	// Add the new token to the list
+	refreshTokens = addTokenToRefreshTokens(refreshTokens, newToken);
+
+	saveRefreshTokens(userId, refreshTokens);
+
+	createLoginCookies(res, userId, username, newToken);
 }
 
 /**
@@ -181,11 +241,21 @@ function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 	let newRefreshTokens = removeExpiredTokens(refreshTokens);
 
 	// Remove the specified refresh token from the array
-	newRefreshTokens = newRefreshTokens.filter(token => token.token !== deleteToken);
+	newRefreshTokens = deleteRefreshTokenFromTokenList(newRefreshTokens, deleteToken);
 
 	// Save the updated refresh tokens
 	if (newRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, newRefreshTokens);
 	else logEvents(`Unable to find refresh token to delete of member with id "${userId}"!`, 'errLog.txt', { print: true });
+}
+
+/**
+ * Deletes a specific refresh token in the database for a user based on their user_id.
+ * @param {number} userId - The user ID of the member whose refresh token is to be deleted.
+ * @param {string} token - The refresh token to be deleted from the user's refresh_tokens column.
+ */
+function deleteRefreshTokenFromTokenList(refreshTokens, deleteToken) {
+	// Remove the specified refresh token from the array
+	return refreshTokens.filter(token => token.token !== deleteToken);
 }
 
 /**
@@ -213,9 +283,11 @@ function saveRefreshTokens(userId, tokens) {
  */
 function addTokenToRefreshTokens(refreshTokens, token) {
 	// Create the new refresh token object
+	const now = Date.now();
 	const newRefreshToken = {
 		token,
-		expires: Date.now() + refreshTokenExpiryMillis // Expiry in milliseconds
+		issued: now,
+		expires: now + refreshTokenExpiryMillis // Expiry in milliseconds
 	};
 	
 	// Add the new token to the array
@@ -239,9 +311,9 @@ function removeExpiredTokens(tokens) {
 
 
 export {
+	issueNewRefreshToken,
 	createLoginCookies,
 	deleteLoginCookies,
-	doesMemberHaveRefreshToken,
-	addRefreshTokenToMemberData,
+	doesMemberHaveRefreshToken_RenewSession,
 	deleteRefreshTokenFromMemberData,
 };

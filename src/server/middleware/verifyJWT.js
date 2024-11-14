@@ -26,8 +26,8 @@ import { logEvents } from './logEvents.js';
 const verifyJWT = (req, res, next) => {
 	req.memberInfo = { signedIn: false };
 
-	const hasAccessToken = verifyAccessToken(req);
-	if (!hasAccessToken) verifyRefreshToken(req);
+	const hasAccessToken = verifyAccessToken(req, res);
+	if (!hasAccessToken) verifyRefreshToken(req, res);
 
 	next(); // Continue down the middleware waterfall
 };
@@ -36,9 +36,10 @@ const verifyJWT = (req, res, next) => {
  * Reads the request's bearer token (from the authorization header),
  * sets the connections `memberInfo` property if it is valid (are signed in).
  * @param {Object} req - The request object
+ * @param {Object} res - The response object
  * @returns {boolean} true if a valid token was found (logged in)
  */
-function verifyAccessToken(req) {
+function verifyAccessToken(req, res) {
 	const authHeader = req.headers.authorization || req.headers.Authorization;
 	if (!authHeader) return false; // No authentication header included
 	if (!authHeader.startsWith('Bearer ')) return false; // Authentication header doesn't look correct
@@ -47,7 +48,7 @@ function verifyAccessToken(req) {
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
 	// { isValid (boolean), user_id, username, roles }
-	const result = isTokenValid(accessToken, false); // False for access token
+	const result = isTokenValid(accessToken, false, res); // False for access token
 	if (!result.isValid) {
 		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered
@@ -69,9 +70,10 @@ function verifyAccessToken(req) {
  * sets the connections `memberInfo` property if it is valid (are signed in).
  * Only call if they did not have a valid access token!
  * @param {Object} req - The request object
+ * @param {Object} res - The response object
  * @returns {boolean} true if a valid token was found (logged in)
  */
-function verifyRefreshToken(req) {
+function verifyRefreshToken(req, res) {
 	const cookies = req.cookies;
 	if (!cookies) return logEvents("Cookie parser didn't set the req.cookies property!", 'errLog.txt', { print: true });
 
@@ -79,7 +81,7 @@ function verifyRefreshToken(req) {
 	if (!refreshToken) return false; // No refresh token present
 
 	// { isValid (boolean), user_id, username }
-	const result = isTokenValid(refreshToken, true); // true for refresh token
+	const result = isTokenValid(refreshToken, true, res); // true for refresh token
 	if (!result.isValid) {
 		logEvents(`Invalid refresh token, expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered

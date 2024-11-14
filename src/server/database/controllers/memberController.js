@@ -190,6 +190,7 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 	// If no row is found, return an empty object
 	if (!row) {
 		if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = "${searchValue}"`, 'errLog.txt', { print: true });
+		console.trace();
 		return {};
 	}
 

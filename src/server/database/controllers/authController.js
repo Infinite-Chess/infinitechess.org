@@ -12,8 +12,7 @@
 import bcrypt from 'bcrypt';
 import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController.js';
 import { logEvents } from '../../middleware/logEvents.js';
-import { signRefreshToken } from './tokenController.js';
-import { addRefreshTokenToMemberData, createLoginCookies } from './refreshTokenController.js';
+import { issueNewRefreshToken } from './refreshTokenController.js';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { getClientIP } from '../../middleware/IP.js';
 
@@ -58,13 +57,7 @@ async function handleLogin(req, res) {
 	const { user_id, username, roles } = getMemberDataByCriteria(['user_id', 'username', 'roles'], 'username', usernameCaseInsensitive);
 	if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 
-	// The payload can be an object with their username and their roles.
-	const refreshToken = signRefreshToken(user_id, username, roles);
-    
-	// Save the refresh token with current user so later when they log out we can invalidate it.
-	addRefreshTokenToMemberData(user_id, refreshToken, ); // false for access token
-    
-	createLoginCookies(res, user_id, username, refreshToken);
+	issueNewRefreshToken(res, user_id, username, roles);
 
 	res.status(200).json({ message: "Logged in! Issued refresh token cookie and member info cookie." }); // Success!
     
