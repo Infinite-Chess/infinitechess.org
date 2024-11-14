@@ -15,8 +15,8 @@ const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 // const refreshTokenExpiryMillis = 1000 * 60 * 2; // 2m
 const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
-// const timeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
-const timeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
+const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
+// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
 
 
 
@@ -150,7 +150,7 @@ function generatePayload(userId, username, roles, allowedActions) {
 
 export {
 	refreshTokenExpiryMillis,
-	timeToWaitToRenewRefreshTokensMillis,
+	minTimeToWaitToRenewRefreshTokensMillis as timeToWaitToRenewRefreshTokensMillis,
 	isTokenValid,
 	signAccessToken,
 	signRefreshToken,
