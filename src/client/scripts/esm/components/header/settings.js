@@ -51,7 +51,7 @@ let settingsIsOpen = settings.classList.contains('open');
 	document.addEventListener('click', closeSettingsDropdownIfClickedAway);
 	document.addEventListener('touchstart', closeSettingsDropdownIfClickedAway);
 
-	openSettingsDropdown(); // DELETE WHEN UPDATE DONE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// openSettingsDropdown(); // DELETE WHEN UPDATE DONE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 })();
 
 
