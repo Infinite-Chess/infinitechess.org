@@ -110,7 +110,7 @@ function checkDatabaseIntegrity() {
 		else console.log('Database integrity check passed.');
 
 	} catch (error) {
-		logEvents(`Error performing database integrity check: ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error performing database integrity check: ${error.message} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!` , 'errLog.txt', { print: true });
 	}
 }
   
