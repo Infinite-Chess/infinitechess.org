@@ -20,7 +20,7 @@ const uniqueMemberKeys = ['user_id', 'username', 'email'];
 	
 /** All columns of the members table each of these would be valid to retrieve from any member. */
 const allMemberColumns = [
-	'user_id', 'username', 'email', 'hashed_password', 'roles', 
+	'user_id', 'username', 'username_history', 'email', 'hashed_password', 'roles', 
 	'joined', 'refresh_tokens', 'preferences', 'verification', 
 	'login_count', 'last_seen'
 ];
@@ -164,12 +164,13 @@ function getAllUsers() {
 // console.log(getAllUsers());
 
 /**
- * Fetches specified columns of a single member, from either their user_id, username, or email.
+ * Fetches specified columns of a single member from the database based on user_id, username, or email.
  * @param {string[]} columns - The columns to retrieve (e.g., ['user_id', 'username', 'email']).
- * @param {string} searchKey - The search key to use, must be either 'user_id', 'username', or 'email'.
+ * @param {string} searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
  * @param {string | number} searchValue - The value to search for, can be a user ID, username, or email.
- * @param {boolean} [skipErrorLogging] If true, and we encounter an error that they don't exist, we will skip logging it to the error log.
- * @returns {object} - An object with the requested columns, or an empty object if no match is found.
+ * @param {Object} [options] - Optional settings for the function.
+ * @param {boolean} [options.skipErrorLogging] - If true, errors will not be logged when no match is found.
+ * @returns {Object} - An object containing the requested columns, or an empty object if no match is found.
  */
 function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLogging } = {}) {
 	if (!Array.isArray(columns)) {
@@ -246,7 +247,7 @@ function updateMemberColumns(userId, columnsAndValues) {
 	// Check if the update was successful
 	if (result.changes > 0) return true;
 	else {
-		logEvents(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`, 'errLog.txt', { print: true });
+		logEvents(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`, 'errLog.txt', { print: true }); // Typically means not found, user_id column doesn't exist.
 		return false;
 	}
 }

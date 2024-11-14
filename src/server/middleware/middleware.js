@@ -35,6 +35,7 @@ import { removeAccount } from '../database/controllers/removeAccountController.j
 import { requestConfirmEmail } from '../database/controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../database/controllers/logoutController.js';
+import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -53,7 +54,7 @@ function configureMiddleware(app) {
 
 	// This allows us to retrieve json-received-data as a parameter/data!
 	// The logger can't log the request body without this
-	app.use(express.json());
+	app.use(express.json({ limit: '10kb' })); // Limit the size to avoid parsing excessively large objects
 
 	app.use(logger); // Log the request
 
@@ -85,7 +86,7 @@ function configureMiddleware(app) {
      * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
      * (e.g. when the content-type header is 'application/x-www-form-urlencoded')
      */
-	app.use(express.urlencoded({ extended: false}));
+	app.use(express.urlencoded({ limit: '10kb', extended: false })); // Limit the size to avoid parsing excessively large objects
 
 	// Sets the req.cookies property
 	app.use(cookieParser());
@@ -95,6 +96,9 @@ function configureMiddleware(app) {
 
 	// Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
 	app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')));
+
+	// This sets the user preferences cookie on every request for an HTML file
+	app.use(setPrefsCookie);
 
 	// Provide a route
 	app.use('/', rootRouter);
@@ -121,6 +125,8 @@ function configureMiddleware(app) {
 	// ROUTES THAT NEED AUTHENTICATION ------------------------------------------------------
 
 	app.post("/api/get-access-token", accessTokenIssuer);
+
+	app.post('/api/set-preferences', postPrefs);
 
 	app.get("/logout", handleLogout);
 

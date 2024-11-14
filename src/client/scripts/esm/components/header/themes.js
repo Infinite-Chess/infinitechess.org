@@ -113,6 +113,7 @@ const themeDictionary = {
 		legalMovesHighlightColor_Friendly: [1, 1, 0, 0.48],
 		legalMovesHighlightColor_Opponent: [0.28, 0, 1, 0.31],
 		legalMovesHighlightColor_Premove: [1, 0.12, 0.12, 0.38],
+		lastMoveHighlightColor: [1, 1, 0, 0.4],
 	},
 	lime: {
 		lightTiles: [0.8, 0.94, 0.39, 1],
@@ -249,6 +250,7 @@ function getPropertyOfTheme(themeName, property) {
 }
 
 function isThemeValid(themeName) {
+	if (typeof themeName !== 'string') return false;
 	return themeDictionary[themeName] !== undefined;
 }
 

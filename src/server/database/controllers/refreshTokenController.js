@@ -2,6 +2,7 @@
 import { getMemberDataByCriteria, updateMemberColumns } from './memberController.js';
 import { refreshTokenExpiryMillis, signRefreshToken, timeToWaitToRenewRefreshTokensMillis } from './tokenController.js';
 import { logEvents } from '../../middleware/logEvents.js';
+import { deletePreferencesCookie } from '../../api/Prefs.js';
 
 
 
@@ -100,6 +101,7 @@ function revokeSession(res, userId, deleteToken) {
 	// Only delete the token from member data if it's specified (may be websocket related or an account deletion)
 	if (deleteToken !== undefined) deleteRefreshTokenFromMemberData(userId, deleteToken);
 	deleteLoginCookies(res);
+	deletePreferencesCookie(res); // Even though this cookie only lasts 10 seconds, it's good to delete it here.
 }
 
 

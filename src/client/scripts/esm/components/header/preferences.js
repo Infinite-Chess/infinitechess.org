@@ -3,13 +3,13 @@ import localstorage from "../../util/localstorage.js";
 import timeutil from "../../util/timeutil.js";
 import validatorama from "../../util/validatorama.js";
 import jsutil from "../../util/jsutil.js";
+import docutil from "../../util/docutil.js";
 
 
 let preferences; // { theme, legal_moves }
 
 // The legal moves shape preference
 const default_legal_moves = 'dots';
-const legal_move_shapes = ['squares','dots'];
 const default_perspective_sensitivity = 100;
 const default_perspective_fov = 90;
 
@@ -28,32 +28,67 @@ let changeWasMade = false;
 })();
 
 function loadPreferences() {
-	preferences = localstorage.loadItem('preferences') || {
+	const preferencesCookie = docutil.getCookieValue('preferences');
+	if (preferencesCookie) console.log("Preferences cookie was present!");
+	// else console.log("local storage preferences: " + JSON.stringify(localstorage.loadItem('preferences')));
+
+	// The cookie trump's local storage because it will be our member-specific preferences
+	preferences = preferencesCookie ? JSON.parse(decodeURIComponent(preferencesCookie)) : localstorage.loadItem('preferences') || {
 		theme: themes.defaultTheme,
 		legal_moves: default_legal_moves,
 		perspective_sensitivity: default_perspective_sensitivity,
+		perspective_fov: default_perspective_fov,
 	};
 
-	// Here send a request to the server for our preferences,
-	// Once our initial validation request is back. listen for the event maybe?
+	if (preferencesCookie) savePreferences(); // Save preferences for whoever was logged in last into local storage
 }
 
 function savePreferences() {
-	const oneYearInMillis = timeutil.getTotalMilliseconds({ years: 1});
+	const oneYearInMillis = timeutil.getTotalMilliseconds({ years: 1 });
 	localstorage.saveItem('preferences', preferences, oneYearInMillis);
 
 	// After a delay, also send a post request to the server to update our preferences.
 	// Auto send it if the window is closing
 }
 
-function sendPrefsToServer() {
-	if (!validatorama.areWeLoggedIn()) return;
-	if (!changeWasMade) return;
-	changeWasMade = false;
+async function sendPrefsToServer() {
+	if (!validatorama.areWeLoggedIn()) return;  // Ensure user is logged in
+	if (!changeWasMade) return;  // Only send if preferences were changed
+	changeWasMade = false;  // Reset the flag after sending
 
 	console.log('Sending preferences to the server!');
-	const preparedPrefs = preparePrefs();
-	// POST request...
+	const preparedPrefs = preparePrefs();  // Prepare the preferences to send
+	POSTPrefs(preparedPrefs);
+}
+
+async function POSTPrefs(preparedPrefs) {
+	// Configure the POST request
+	const config = {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ preferences: preparedPrefs }),  // Send the preferences as JSON
+	};
+
+	// Get the access token and add it to the Authorization header
+	const token = await validatorama.getAccessToken();
+	if (token) config.headers.Authorization = `Bearer ${token}`;  // If you use tokens for authentication
+
+	try {
+		const response = await fetch('/api/set-preferences', config);
+		
+		// Check if the response status code indicates success (e.g., 200-299 range)
+		if (response.ok) {
+			console.log('Preferences updated successfully on the server.');
+		} else {
+			// Handle unsuccessful response
+			const errorData = await response.json();
+			console.error('Failed to update preferences on the server:', errorData.message || errorData);
+		}
+	} catch (error) {
+		console.error('Error sending preferences to the server:', error);
+	}
 }
 
 function preparePrefs() {
@@ -61,8 +96,8 @@ function preparePrefs() {
 	Object.keys(prefsCopy).forEach(prefName => {
 		if (clientSidePrefs.includes(prefName)) delete prefsCopy[prefName];
 	});
-	console.log(`Original preferences: ${JSON.stringify(preferences)}`);
-	console.log(`Prepared preferences: ${JSON.stringify(prefsCopy)}`);
+	// console.log(`Original preferences: ${JSON.stringify(preferences)}`);
+	// console.log(`Prepared preferences: ${JSON.stringify(prefsCopy)}`);
 	return prefsCopy;
 }
 
