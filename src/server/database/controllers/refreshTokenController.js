@@ -95,6 +95,11 @@ function deleteMemberInfoCookie(res) {
 	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'None', secure: true });
 }
 
+function revokeSession(res, userId, deleteToken) {
+	deleteRefreshTokenFromMemberData(userId, deleteToken);
+	deleteLoginCookies(res);
+}
+
 
 
 
@@ -182,28 +187,6 @@ function getRefreshTokensByUserID(userId) {
 	if (refresh_tokens === undefined) return logEvents(`Cannot get refresh tokens of a non-existent member of id "${userId}"!`, 'errLog.txt', { print: true });
 
 	return JSON.parse(refresh_tokens);
-}
-
-
-/**
- * Fetches the refresh tokens for a given user ID, removes any expired tokens,
- * updates the database with the new list of valid tokens, and returns the updated list.
- * @param {number} userId - The user ID of the member whose refresh tokens are to be fetched and updated.
- * @returns {object[]|undefined} - The updated array of valid refresh tokens: [ { token, expires }, { token, expires }, ... ], or undefined if the member doesn't exist.
- */
-function getRefreshTokensByUserID_DeleteExpired(userId) {
-	// Step 1: Fetch the current refresh tokens for the user
-	const refreshTokens = getRefreshTokensByUserID(userId);
-	if (refreshTokens === undefined) return logEvents(`Cannot get refresh tokens (and delete expired) of a non-existent member of id "${userId}"!`, 'errLog.txt', { print: true });
-
-	// Step 2: Remove expired tokens
-	const validRefreshTokens = removeExpiredTokens(refreshTokens);
-
-	// Step 3: If the list of valid tokens has changed, save the new list
-	if (refreshTokens.length !== validRefreshTokens.length) saveRefreshTokens(userId, validRefreshTokens);
-
-	// Step 4: Return the array of valid refresh tokens
-	return validRefreshTokens;
 }
 
 /**
@@ -312,8 +295,6 @@ function removeExpiredTokens(tokens) {
 
 export {
 	issueNewRefreshToken,
-	createLoginCookies,
-	deleteLoginCookies,
 	doesMemberHaveRefreshToken_RenewSession,
-	deleteRefreshTokenFromMemberData,
+	revokeSession,
 };

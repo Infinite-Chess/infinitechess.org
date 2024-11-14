@@ -56,6 +56,8 @@ function isTokenValid(token, isRefreshToken, res) {
 		return { isValid: true, user_id, username, roles, allowed_actions }; // Access tokens can't be manually invalidated in the database. They need to remain quick.
 	}
 
+	// It's a refresh token...
+
 	// Check if the token was manually invalidated (e.g., user logged out)
 	if (!doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, res)) return { isValid: false };
 

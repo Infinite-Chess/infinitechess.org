@@ -1,6 +1,7 @@
 
 
 import uuid from "../../../client/scripts/esm/util/uuid.js";
+import { isBrowserIDBanned } from "../../middleware/banned.js";
 import { logEvents } from "../../middleware/logEvents.js";
 
 
@@ -33,8 +34,7 @@ function refreshBrowserID(req, res) {
 	const cookieName = 'browser-id';
 	const id = req.cookies[cookieName];
 
-	console.error("don't know how to test yet if browser ID is banned!");
-	// if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
+	if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
 	console.log(`Renewing browser-id: ${id}`);
 
