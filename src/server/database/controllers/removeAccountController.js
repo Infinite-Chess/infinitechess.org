@@ -7,6 +7,7 @@ import { logEvents } from "../../middleware/logEvents.js";
 import { getTranslationForReq } from "../../utility/translate.js";
 import { testPasswordForRequest } from "./authController.js";
 import { deleteUser, getMemberDataByCriteria } from "./memberController.js";
+import { doStuffOnLogout } from './logoutController.js';
 
 // Automatic deletion of accounts...
 
@@ -38,18 +39,18 @@ async function removeAccount(req, res) {
 
 	// DELETE ACCOUNT..
 
-	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
+	const { user_id, username, joined, login_count } = getMemberDataByCriteria(['user_id', 'username', 'joined', 'login_count'], 'username', claimedUsername);
 	if (user_id === undefined) {
-		logEvents(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt', { print: true });
+		return logEvents(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt', { print: true });
 		// if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 	}
 
-	if (deleteUser(claimedUsername)) {
+	// Close their sockets, delete their invites, delete their session cookies
+	doStuffOnLogout(res, user_id, username);
+
+	const reason_deleted = "user request";
+	if (deleteUser(user_id, username, joined, login_count, reason_deleted)) {
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
-
-		// Add their user_id to the deleted user_id's  table
-		// ...
-
 		return res.send('OK'); // 200 is default code
 	} else {
 		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered, they do not exist.`, 'errLog.txt', { print: true });
@@ -67,13 +68,15 @@ function removeOldUnverifiedMembers() {
 	const now = Date.now();
 
 	// Query to get all unverified accounts (where verification is not null)
-	const notNullVerificationMembersQuery = `SELECT user_id, username, joined, verification FROM members WHERE verification IS NOT NULL`;
+	const notNullVerificationMembersQuery = `SELECT user_id, username, joined, login_count, verification FROM members WHERE verification IS NOT NULL`;
 	const notNullVerificationMembers = db.all(notNullVerificationMembersQuery);
+
+	const reason_deleted = "unverified";
 
 	// Iterate through the unverified members
 	for (const memberRow of notNullVerificationMembers) {
 		// eslint-disable-next-line prefer-const
-		let { user_id, username, joined, verification } = memberRow;
+		let { user_id, username, joined, login_count, verification } = memberRow;
 		verification = JSON.parse(verification);
 		if (verification.verified) continue; // This guy is verified, just not notified.
 
@@ -81,7 +84,9 @@ function removeOldUnverifiedMembers() {
 
 		// If the account has been unverified for longer than the threshold, delete it
 		if (timeSinceJoined > maxExistenceTimeForUnverifiedAccountMillis) {
-			deleteUser(user_id);
+			deleteUser(user_id, username, joined, login_count, reason_deleted);
+			// Close their sockets, delete their invites, delete their session cookies
+			doStuffOnLogout(undefined, user_id, username);
 			logEvents(`Removed unverified account "${username}" of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt', { print: true });
 		}
 	}

@@ -125,7 +125,10 @@ function verifyRefreshToken_WebSocket(ws) {
 	if (!refreshToken) return false; // Not logged in, don't set their user property
 
 	const result = isTokenValid(refreshToken, true); // True for refresh token
-	if (!result.isValid) logEvents(`Invalid refresh token (websocket), expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true }); // Forbidden, invalid token
+	if (!result.isValid) {
+		logEvents(`Invalid refresh token (websocket), expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true }); // Forbidden, invalid token
+		return false; //Token was expired or tampered
+	}
 
 	const { user_id, username, roles } = result;
 	ws.metadata.memberInfo = { signedIn: true, user_id, username, roles }; // Username was our payload when we generated the access token

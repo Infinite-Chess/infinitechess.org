@@ -22,11 +22,7 @@ const handleLogout = async(req, res) => {
 
 	const { user_id, username } = req.memberInfo;
 
-	// Revoke our session and invalidate the refresh token from the database
-	revokeSession(res, user_id, refreshToken);
-
-	websocketserver.closeAllSocketsOfMember(username.toLowerCase(), 1008, "Logged out");
-	deleteAllInvitesOfMember(username.toLowerCase());
+	doStuffOnLogout(res, user_id, username, refreshToken);
 
 	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
 	res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
@@ -34,4 +30,15 @@ const handleLogout = async(req, res) => {
 	res.redirect('/');
 };
 
-export { handleLogout };
+function doStuffOnLogout(res, user_id, username, refreshToken) {
+	// Revoke our session and invalidate the refresh token from the database
+	revokeSession(res, user_id, refreshToken);
+
+	websocketserver.closeAllSocketsOfMember(username, 1008, "Logged out");
+	deleteAllInvitesOfMember(username);
+}
+
+export {
+	handleLogout,
+	doStuffOnLogout,
+};

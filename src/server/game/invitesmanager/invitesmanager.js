@@ -349,14 +349,14 @@ function deleteBrowsersExistingInvite(ws) {
 /**
  * Deletes all invites the belong to the member.
  * This is called after a member logs out.
- * @param {string} usernameLowercase 
+ * @param {string} username 
  */
-function deleteAllInvitesOfMember(usernameLowercase) {
-	if (usernameLowercase == null) return console.error("Cannot delete all invites of member without their username.");
+function deleteAllInvitesOfMember(username) {
+	if (username === undefined) return console.error("Cannot delete all invites of member without their username.");
 
 	let publicInviteDeleted = false;
 	invites = invites.filter((invite) => { // { id, owner, variant, clock, color, rated, publicity }
-		const inviteMatches = invite.owner.member === usernameLowercase;
+		const inviteMatches = invite.owner.member === username;
 		if (inviteMatches && isInvitePublic(invite)) publicInviteDeleted = true;
 		return !inviteMatches;
 	});

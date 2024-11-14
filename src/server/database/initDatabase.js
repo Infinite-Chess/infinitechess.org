@@ -20,6 +20,7 @@ function initTables() {
 CREATE TABLE IF NOT EXISTS members (
 	user_id INTEGER PRIMARY KEY,               
 	username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
+	username_history TEXT,
 	email TEXT UNIQUE NOT NULL,                
 	hashed_password TEXT NOT NULL,             
 	roles TEXT,                       
@@ -33,7 +34,7 @@ CREATE TABLE IF NOT EXISTS members (
 	`;
 	db.run(createTableSQLQuery);
 
-	// Members table
+	// Deleted Members table
 	createTableSQLQuery = `
 CREATE TABLE IF NOT EXISTS deleted_members (
 	user_id INTEGER PRIMARY KEY,               

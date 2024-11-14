@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents.js';
 import { doesMemberOfIDExist, updateLastSeen } from './memberController.js';
 import { doesMemberHaveRefreshToken_RenewSession } from './refreshTokenController.js';
+import { doStuffOnLogout } from './logoutController.js';
 
 
 
@@ -47,6 +48,7 @@ function isTokenValid(token, isRefreshToken, res) {
 	if (!doesMemberOfIDExist(user_id)) {
 		// console.log(`Token is valid, but the users account of id "${user_id}" doesn't exist!`);
 		logEvents(`Token is valid, but the users account of id "${user_id}" doesn't exist! This is fine, did you just delete it?`, 'errLog.txt', { print: true });
+		doStuffOnLogout(res, user_id, username);
 		return { isValid: false };
 	}
 

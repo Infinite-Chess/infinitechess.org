@@ -5,6 +5,7 @@
 
 import { logEvents } from '../../middleware/logEvents.js';
 import db from '../database.js';
+import { addDeletedMemberToDeletedMembersTable } from './deletedMembers.js';
 
 
 
@@ -97,11 +98,15 @@ preferences
 // addUser('na3v534', 'tes3t5em3a4il3', 'password');
 
 /**
- * Deletes a user from the members table based on their user ID.
+ * Deletes a user from the members table
  * @param {number} user_id - The ID of the user to delete.
+ * @param {string} username 
+ * @param {number} joined 
+ * @param {string} login_count 
+ * @param {string} reason_deleted 
  * @returns {boolean} true if there was a change made (deleted successfully)
  */
-function deleteUser(user_id) {
+function deleteUser(user_id, username, joined, login_count, reason_deleted) {
 	// SQL query to delete a user by their user_id
 	const query = 'DELETE FROM members WHERE user_id = ?';
 
@@ -113,6 +118,10 @@ function deleteUser(user_id) {
 		logEvents(`Cannot delete non-existent user of id "${user_id}"!`, 'errLog.txt', { print: true });
 		return false;
 	}
+
+	// Add their user_id to the deleted user_id's  table
+	addDeletedMemberToDeletedMembersTable(user_id, username, joined, login_count, reason_deleted);
+
 	return true; // Change made
 }
 // console.log(deleteUser(3408674));
@@ -190,7 +199,6 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 	// If no row is found, return an empty object
 	if (!row) {
 		if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = "${searchValue}"`, 'errLog.txt', { print: true });
-		console.trace();
 		return {};
 	}
 
@@ -299,7 +307,7 @@ WHERE user_id = ?
  * @returns {boolean} - Returns true if the member exists, false otherwise.
  */
 function doesMemberOfIDExist(userId) {
-	return isUserIdTaken(userId);
+	return isUserIdTaken(userId, { ignoreDeleted: true });
 }
 
 /**
@@ -307,16 +315,21 @@ function doesMemberOfIDExist(userId) {
  * @param {number} userId - The user ID to check.
  * @returns {boolean} - Returns true if the user ID exists, false otherwise.
  */
-function isUserIdTaken(userId) {
-	// SQL query to check if a user_id exists in the 'members' table
-	const query = 'SELECT 1 FROM members WHERE user_id = ?';
-    
-	// Execute the query with the user_id parameter
-	const row = db.get(query, [userId]); // { '1': 1 }
+function isUserIdTaken(userId, { ignoreDeleted } = {}) {
+	let query = 'SELECT 1 FROM members WHERE user_id = ?';
+	let row = db.get(query, [userId]); // { '1': 1 }
 
 	// If a row is found, the user_id exists
+	if (row !== undefined) return true;
+	if (ignoreDeleted) return false;
+
+	// Check if the user_id is in the deleted_members table (CAN'T USE)
+	query = 'SELECT 1 FROM deleted_members WHERE user_id = ?';
+	row = db.get(query, [userId]); // { '1': 1 }
+
 	return row !== undefined;
 }
+// console.log("taken? " + isUserIdTaken(14443702));
 
 /**
  * Checks if a member of a given username exists in the members table.

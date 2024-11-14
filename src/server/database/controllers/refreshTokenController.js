@@ -42,6 +42,7 @@ function createLoginCookies(res, userId, username, refreshToken) {
  * @param {string} refreshToken - The refresh token to be stored in the cookie.
  */
 function deleteLoginCookies(res) {
+	if (!res) return; // Websocket-related
 	deleteRefreshTokenCookie(res);
 	deleteMemberInfoCookie(res);
 }
@@ -96,7 +97,8 @@ function deleteMemberInfoCookie(res) {
 }
 
 function revokeSession(res, userId, deleteToken) {
-	deleteRefreshTokenFromMemberData(userId, deleteToken);
+	// Only delete the token from member data if it's specified (may be websocket related or an account deletion)
+	if (deleteToken !== undefined) deleteRefreshTokenFromMemberData(userId, deleteToken);
 	deleteLoginCookies(res);
 }
 
@@ -180,11 +182,14 @@ function renewSession(res, userId, username, roles, refreshTokens, tokenObject) 
 function getRefreshTokensByUserID(userId) {
 	let { refresh_tokens } = getMemberDataByCriteria(['refresh_tokens'], 'user_id', userId);
 
+	// If the user doesn't exist (row is undefined), return undefined.
+	if (refresh_tokens === undefined) {
+		logEvents(`Cannot get refresh tokens of a non-existent member of id "${userId}"!`, 'errLog.txt', { print: true });
+		return;
+	}
+
 	// If the user exists but has null or no refresh tokens, return an empty array.
 	if (refresh_tokens === null) refresh_tokens = '[]';
-
-	// If the user doesn't exist (row is undefined), return undefined.
-	if (refresh_tokens === undefined) return logEvents(`Cannot get refresh tokens of a non-existent member of id "${userId}"!`, 'errLog.txt', { print: true });
 
 	return JSON.parse(refresh_tokens);
 }
