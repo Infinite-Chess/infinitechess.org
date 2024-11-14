@@ -98,32 +98,42 @@ preferences
 // addUser('na3v534', 'tes3t5em3a4il3', 'password');
 
 /**
- * Deletes a user from the members table
+ * Deletes a user from the members table.
  * @param {number} user_id - The ID of the user to delete.
- * @param {string} username 
- * @param {number} joined 
- * @param {string} login_count 
- * @param {string} reason_deleted 
+ * @param {string} username - The username of the user to delete.
+ * @param {number} joined - The timestamp when the user joined.
+ * @param {string} login_count - The user's login count.
+ * @param {string} reason_deleted - The reason the user is being deleted.
  * @returns {boolean} true if there was a change made (deleted successfully)
  */
 function deleteUser(user_id, username, joined, login_count, reason_deleted) {
 	// SQL query to delete a user by their user_id
 	const query = 'DELETE FROM members WHERE user_id = ?';
 
-	// Execute the delete query
-	const result = db.run(query, [user_id]); // { changes: 1 }
+	try {
+		// Execute the delete query
+		const result = db.run(query, [user_id]); // { changes: 1 }
 
-	// Check if any rows were deleted
-	if (result.changes === 0) {
-		logEvents(`Cannot delete non-existent user of id "${user_id}"!`, 'errLog.txt', { print: true });
+		// Check if any rows were deleted
+		if (result.changes === 0) {
+			logEvents(`Cannot delete non-existent user with ID "${user_id}"!`, 'errLog.txt', { print: true });
+			return false;
+		}
+
+		// Add their user_id to the deleted members table
+		addDeletedMemberToDeletedMembersTable(user_id, username, joined, login_count, reason_deleted);
+
+		return true; // Change made successfully
+
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error deleting user with ID "${user_id}" (${username}): ${error.message}`, 'errLog.txt', { print: true });
+
+		// Return false indicating failure
 		return false;
 	}
-
-	// Add their user_id to the deleted user_id's  table
-	addDeletedMemberToDeletedMembersTable(user_id, username, joined, login_count, reason_deleted);
-
-	return true; // Change made
 }
+
 // console.log(deleteUser(3408674));
 
 /**
@@ -159,7 +169,15 @@ function generateRandomUserId() {
  * and contains all columns from the 'members' table. If there are no users, it returns an empty array.
  */
 function getAllUsers() {
-	return db.all('SELECT * FROM members');
+	try {
+		// Execute the query to get all users
+		return db.all('SELECT * FROM members');
+	} catch (error) {
+		// Log the error if the query fails
+		logEvents(`Error fetching all users: ${error.message}`, 'errLog.txt', { print: true });
+		// Return an empty array in case of error
+		return [];
+	}
 }
 // console.log(getAllUsers());
 
@@ -194,18 +212,25 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 	// Construct SQL query
 	const query = `SELECT ${columns.join(', ')} FROM members WHERE ${searchKey} = ?`;
 
-	// Execute the query and fetch result
-	const row = db.get(query, [searchValue]);
+	try {
+		// Execute the query and fetch result
+		const row = db.get(query, [searchValue]);
 
-	// If no row is found, return an empty object
-	if (!row) {
-		if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = "${searchValue}"`, 'errLog.txt', { print: true });
+		// If no row is found, return an empty object
+		if (!row) {
+			if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = "${searchValue}"`, 'errLog.txt', { print: true });
+			return {};
+		}
+
+		// Return the fetched row (single object)
+		return row;
+	} catch (error) {
+		// Log the error and return an empty object
+		logEvents(`Error executing query: ${error.message}`, 'errLog.txt', { print: true });
 		return {};
 	}
-
-	// Return the fetched row (single object)
-	return row;
 }
+
 
 
 /**
@@ -242,15 +267,26 @@ function updateMemberColumns(userId, columnsAndValues) {
 
 	// Update query to modify multiple columns
 	const updateQuery = `UPDATE members SET ${setStatements} WHERE user_id = ?`;
-	const result = db.run(updateQuery, values);
 
-	// Check if the update was successful
-	if (result.changes > 0) return true;
-	else {
-		logEvents(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`, 'errLog.txt', { print: true }); // Typically means not found, user_id column doesn't exist.
+	try {
+		// Execute the update query
+		const result = db.run(updateQuery, values);
+
+		// Check if the update was successful
+		if (result.changes > 0) return true;
+		else {
+			logEvents(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member with id "${userId}"!`, 'errLog.txt', { print: true });
+			return false;
+		}
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error updating columns ${JSON.stringify(columnsAndValues)} for user ID "${userId}": ${error.message}`, 'errLog.txt', { print: true });
+
+		// Return false indicating failure
 		return false;
 	}
 }
+
 
 
 
@@ -261,7 +297,6 @@ function updateMemberColumns(userId, columnsAndValues) {
 /**
  * Increments the login count and updates the last_seen column for a member based on their user ID.
  * @param {number} userId - The user ID of the member.
- * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), result }
  */
 function updateLoginCountAndLastSeen(userId) {
 	// SQL query to update the login_count and last_seen fields
@@ -271,29 +306,41 @@ function updateLoginCountAndLastSeen(userId) {
 		WHERE user_id = ?
 	`;
 
-	// Execute the query with the provided userId
-	const result = db.run(query, [userId]);
+	try {
+		// Execute the query with the provided userId
+		const result = db.run(query, [userId]);
 
-	if (result.changes === 0) logEvents(`No changes made when updating login_count and last_seen for member of id "${userId}"!`, 'errLog.txt', { print: true });
+		// Log if no changes were made
+		if (result.changes === 0) logEvents(`No changes made when updating login_count and last_seen for member of id "${userId}"!`, 'errLog.txt', { print: true });
+
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error updating login_count and last_seen for member of id "${userId}": ${error.message}`, 'errLog.txt', { print: true });
+	}
 }
 
 /**
  * Updates the last_seen column for a member based on their user ID.
  * @param {number} userId - The user ID of the member.
- * @returns {object} - The result of the database operation or an error message: { success (boolean), message (string), result }
  */
 function updateLastSeen(userId) {
 	// SQL query to update the last_seen field
 	const query = `
-UPDATE members
-SET last_seen = CURRENT_TIMESTAMP
-WHERE user_id = ?
+		UPDATE members
+		SET last_seen = CURRENT_TIMESTAMP
+		WHERE user_id = ?
 	`;
 
-	// Execute the query with the provided userId
-	const result = db.run(query, [userId]);
+	try {
+		// Execute the query with the provided userId
+		const result = db.run(query, [userId]);
 
-	if (result.changes === 0) logEvents(`No changes made when updating last_seen for member of id "${userId}"!`, 'errLog.txt', { print: true });
+		// Log if no changes were made
+		if (result.changes === 0) logEvents(`No changes made when updating last_seen for member of id "${userId}"!`, 'errLog.txt', { print: true });
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error updating last_seen for member of id "${userId}": ${error.message}`, 'errLog.txt', { print: true });
+	}
 }
 
 
@@ -314,22 +361,34 @@ function doesMemberOfIDExist(userId) {
 /**
  * Checks if a given user_id exists in the members table.
  * @param {number} userId - The user ID to check.
+ * @param {Object} [options] - Optional parameters for the function.
+ * @param {boolean} [options.ignoreDeleted] - If true, skips checking the deleted_members table.
  * @returns {boolean} - Returns true if the user ID exists, false otherwise.
  */
 function isUserIdTaken(userId, { ignoreDeleted } = {}) {
 	let query = 'SELECT 1 FROM members WHERE user_id = ?';
-	let row = db.get(query, [userId]); // { '1': 1 }
+	try {
+		// Execute query to check if the user_id exists in the members table
+		let row = db.get(query, [userId]); // { '1': 1 }
 
-	// If a row is found, the user_id exists
-	if (row !== undefined) return true;
-	if (ignoreDeleted) return false;
+		// If a row is found, the user_id exists
+		if (row !== undefined) return true;
+		if (ignoreDeleted) return false;
 
-	// Check if the user_id is in the deleted_members table (CAN'T USE)
-	query = 'SELECT 1 FROM deleted_members WHERE user_id = ?';
-	row = db.get(query, [userId]); // { '1': 1 }
+		// Check if the user_id is in the deleted_members table
+		query = 'SELECT 1 FROM deleted_members WHERE user_id = ?';
+		row = db.get(query, [userId]); // { '1': 1 }
 
-	return row !== undefined;
+		// Return true if found in deleted_members, false otherwise
+		return row !== undefined;
+
+	} catch (error) {
+		// Log the error if the query fails
+		logEvents(`Error checking user ID "${userId}": ${error.message}`, 'errLog.txt', { print: true });
+		return false; // Return false if an error occurs
+	}
 }
+
 // console.log("taken? " + isUserIdTaken(14443702));
 
 /**
@@ -351,12 +410,21 @@ function isUsernameTaken(username) {
 	// SQL query to check if a username exists in the 'members' table
 	const query = 'SELECT 1 FROM members WHERE username = ?';
 
-	// Execute the query with the username parameter
-	const row = db.get(query, [username]); // { '1': 1 }
+	try {
+		// Execute the query with the username parameter
+		const row = db.get(query, [username]); // { '1': 1 }
 
-	// If a row is found, the username exists
-	return row !== undefined;
+		// If a row is found, the username exists
+		return row !== undefined;
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error checking if username "${username}" is taken: ${error.message}`, 'errLog.txt', { print: true });
+
+		// Return false if there's an error (indicating the username is not found)
+		return false;
+	}
 }
+
 
 
 /**
@@ -367,13 +435,20 @@ function isUsernameTaken(username) {
 function isEmailTaken(email) {
 	// SQL query to check if an email exists in the 'members' table
 	const query = 'SELECT 1 FROM members WHERE email = ?';
-	
-	// Execute the query with the email parameter
-	const row = db.get(query, [email]); // { '1': 1 }
 
-	// If a row is found, the email exists
-	return row !== undefined;
+	try {
+		// Execute the query with the email parameter
+		const row = db.get(query, [email]); // { '1': 1 }
+
+		// If a row is found, the email exists
+		return row !== undefined;
+	} catch (error) {
+		// Log error if the query fails
+		logEvents(`Error checking if email "${email}" exists: ${error.message}`, 'errLog.txt', { print: true });
+		return false;  // Return false if there's an error
+	}
 }
+
 
 
 export {

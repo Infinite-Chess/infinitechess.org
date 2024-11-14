@@ -1,7 +1,12 @@
+
 /*
- * This module provides helper functions for managing SQLite database operations using the better-sqlite3 library.
- * It handles running queries, retrieving single  or multiple rows, and closing the database connection.
+ * This module provides utility functions for managing SQLite database operations 
+ * using the `better-sqlite3` library.
+ * 
+ * It supports executing SQL queries, retrieving  results (single or multiple rows),
+ * caching prepared statements for performance,  and handling database transactions.
  */
+
 
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
@@ -13,14 +18,21 @@ const __dirname = path.dirname(__filename);
 
 // Create or connect to the SQLite database file
 const dbPath = path.join(__dirname, '../../../database.db');
-const db = new Database(dbPath);
-// const db = new Database(dbPath, { verbose: console.log }); // Outputs all queries to the console
+const db = new Database(dbPath); // Optional for logging queries
+// const db = new Database(dbPath, { verbose: console.log }); // Optional for logging queries
 
 
+// Prepared statements cache
+const stmtCache = {};
 
-// Functions -----------------------------------------------------------------------------------
-
-
+// Utility function to retrieve or prepare statements
+function prepareStatement(query) {
+	if (!stmtCache[query]) {
+		// console.log(`Added statement to stmtCache: "${query}"`);
+		stmtCache[query] = db.prepare(query);
+	}
+	return stmtCache[query];
+}
 
 /**
  * Executes a given SQL query with optional parameters and returns the result.
@@ -29,7 +41,7 @@ const db = new Database(dbPath);
  * @returns {object} - The result of the query execution.
  */
 function run(query, params = []) {
-	const stmt = db.prepare(query);
+	const stmt = prepareStatement(query);
 	return stmt.run(...params);
 }
 
@@ -40,7 +52,7 @@ function run(query, params = []) {
  * @returns {object|null} - The row object if found, otherwise null.
  */
 function get(query, params = []) {
-	const stmt = db.prepare(query);
+	const stmt = prepareStatement(query);
 	return stmt.get(...params);
 }
 
@@ -51,8 +63,23 @@ function get(query, params = []) {
  * @returns {Array} - An array of row objects.
  */
 function all(query, params = []) {
-	const stmt = db.prepare(query);
+	const stmt = prepareStatement(query);
 	return stmt.all(...params);
+}
+
+/**
+ * Executes multiple queries in a single transaction for better performance.
+ * @param {Array} queries - An array of query objects containing SQL and parameters.
+ * @returns {Array} - An array of results for each query in the transaction.
+ */
+function transaction(queries) {
+	const transaction = db.transaction((queries) => {
+		return queries.map(({ query, params }) => {
+			const stmt = prepareStatement(query);
+			return stmt.run(...params);
+		});
+	});
+	return transaction(queries);
 }
 
 /** Closes the database connection. */
@@ -61,13 +88,11 @@ function close() {
 	console.log('Closed database.');
 }
 
-
-
-
 // Export the functions for use in other modules
 export default {
 	run,
 	get,
 	all,
+	transaction,
 	close,
 };
