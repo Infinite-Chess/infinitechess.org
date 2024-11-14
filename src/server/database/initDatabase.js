@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS members (
 	email TEXT UNIQUE NOT NULL,                
 	hashed_password TEXT NOT NULL,             
 	roles TEXT,                       
-	joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	joined INTEGER,
 	refresh_tokens TEXT,                        
 	preferences TEXT,                          
 	verification TEXT,                         

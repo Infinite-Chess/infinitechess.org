@@ -1,8 +1,6 @@
 
 /**
- * This script contains all of the queries we used to interact with the members table!
- * 
- * Queries should NOT be made to the members table outside of this script!
+ * This script almost all of the queries we use to interact with the members table!
  */
 
 import { logEvents } from '../../middleware/logEvents.js';
@@ -65,6 +63,8 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// Generate a unique user ID
 	const user_id = genUniqueUserID();
 
+	const joined = Date.now();
+
 	// SQL query to insert a new user into the 'members' table
 	const query = `
 INSERT INTO members (
@@ -73,14 +73,15 @@ username,
 email,
 hashed_password,
 roles,
+joined,
 verification,
 preferences
-) VALUES (?, ?, ?, ?, ?, ?, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 	
 	try {
 		// Execute the query with the provided values
-		const result = db.run(query, [user_id, username, email, hashed_password, roles, verification, preferences]); // { changes: 1, lastInsertRowid: 7656846 }
+		const result = db.run(query, [user_id, username, email, hashed_password, roles, joined, verification, preferences]); // { changes: 1, lastInsertRowid: 7656846 }
 		
 		// Return success result
 		return { success: true, result };
@@ -93,7 +94,7 @@ preferences
 		return { success: false };
 	}
 }
-// console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password'));
+// addUser('na3v534', 'tes3t5em3a4il3', 'password');
 
 /**
  * Deletes a user from the members table based on their user ID.

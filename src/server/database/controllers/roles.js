@@ -50,5 +50,5 @@ function removeAllRoles(userId) {
 // removeAllRoles(11784992);
 
 export {
-	giveRole
+	giveRole,
 };

@@ -2,6 +2,7 @@
  * This module handles account deletion.
  */
 
+import db from '../database.js';
 import { logEvents } from "../../middleware/logEvents.js";
 import { getTranslationForReq } from "../../utility/translate.js";
 import { testPasswordForRequest } from "./authController.js";
@@ -11,8 +12,12 @@ import { deleteUser, getMemberDataByCriteria } from "./memberController.js";
 
 /** The maximum time an account is allowed to remain unverified before the server will delete it from DataBase. */
 const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
+// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
 /** The interval for how frequent to check for unverified account that exists more than `maxExistenceTimeForUnverifiedAccount` */
 const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1; // 1 days
+// const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 30; // 30 seconds
+
+const millisecondsInADay = 1000 * 60 * 60 * 24;
 
 
 
@@ -33,9 +38,6 @@ async function removeAccount(req, res) {
 
 	// DELETE ACCOUNT..
 
-	console.error("Don't know how to delete all roles of mem yet");
-	// removeAllRoles(claimedUsername); // Remove roles
-
 	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
 	if (user_id === undefined) {
 		logEvents(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt', { print: true });
@@ -55,52 +57,41 @@ async function removeAccount(req, res) {
 	}
 }
 
-/**
- * Remove a user account by username.
- * @param {string} usernameLowercase - The username of the account to remove, in lowercase.
- * @param {string} reason - The reason for account deletion.
- */
-// function removeAccountByUsername(usernameLowercase, reason) {
-// 	removeAllRoles(usernameLowercase);
-// 	if (removeMember(usernameLowercase)) {
-// 		logEvents(`User ${usernameLowercase} was deleted for '${reason}'`, "deletedAccounts.txt", { print: true });
-// 	} else {
-// 		logEvents(`User ${usernameLowercase} was attempted to be removed for '${reason}' but failed`, 'hackLog.txt', { print: true });
-// 	}
-// }
-
 // Automatic deletion of old, unverified accounts...
 
 /**
- * This function is run every {@link intervalForRemovalOfOldUnverifiedAccountsMillis}.
- * It checkes for old unverified account and removes them from the database
+ * Removes unverified members who have not verified their account for more than 3 days.
  */
 function removeOldUnverifiedMembers() {
-	return console.error("Don't know how to delete old unverified accounts yet!")
-	// const now = new Date();
-	// const millisecondsInADay = 1000 * 60 * 60 * 24;
+	console.log("Checking for old unverified accounts...");
+	const now = Date.now();
 
-	// const allUserNames = getAllUsernames(); // An array of all usernames
+	// Query to get all unverified accounts (where verification is not null)
+	const notNullVerificationMembersQuery = `SELECT user_id, username, joined, verification FROM members WHERE verification IS NOT NULL`;
+	const notNullVerificationMembers = db.all(notNullVerificationMembersQuery);
 
-	// for (const username of allUserNames) {
-	// 	if (getVerified(username) !== false) continue; // Are verified, or they don't exist
-	// 	// Are not verified...
-        
-	// 	// Calculate the time since the user joined
-	// 	const timeJoined = getJoinDate(username); // A date object
-	// 	const timeSinceJoined = now - timeJoined; // Milliseconds (Date - Date = number)
+	// Iterate through the unverified members
+	for (const memberRow of notNullVerificationMembers) {
+		// eslint-disable-next-line prefer-const
+		let { user_id, username, joined, verification } = memberRow;
+		verification = JSON.parse(verification);
+		if (verification.verified) continue; // This guy is verified, just not notified.
 
-	// 	if (timeSinceJoined < maxExistenceTimeForUnverifiedAccountMillis) continue; // Account isn't old enough.
+		const timeSinceJoined = now - joined; // Milliseconds
 
-	// 	// Delete account...
-	// 	removeAccountByUsername(username, `Unverified for more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days`);
-	// }
+		// If the account has been unverified for longer than the threshold, delete it
+		if (timeSinceJoined > maxExistenceTimeForUnverifiedAccountMillis) {
+			deleteUser(user_id);
+			logEvents(`Removed unverified account "${username}" of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt', { print: true });
+		}
+	}
+	console.log("Done!");
 }
 
-removeOldUnverifiedMembers(); // Call once on startup.
 setInterval(removeOldUnverifiedMembers, intervalForRemovalOfOldUnverifiedAccountsMillis); // Repeatedly call once a day
 
 
 export {
 	removeAccount,
+	removeOldUnverifiedMembers,
 };

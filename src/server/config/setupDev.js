@@ -37,6 +37,7 @@ async function createDevelopmentAccounts() {
 	if (!doesMemberOfUsernameExist("member")) {
 		const user_id = await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
+	generateAccount({ username: "Member23", email: "email@teste3mail.com", password: "1", autoVerify: false });
 }
 
 
