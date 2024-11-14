@@ -23,14 +23,29 @@ CREATE TABLE IF NOT EXISTS members (
 	email TEXT UNIQUE NOT NULL,                
 	hashed_password TEXT NOT NULL,             
 	roles TEXT,                       
-	joined INTEGER,
+	joined INTEGER NOT NULL,
+	last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	refresh_tokens TEXT,                        
 	preferences TEXT,                          
 	verification TEXT,                         
-	login_count INTEGER DEFAULT 0,             
-	last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	login_count INTEGER DEFAULT 0
 );
 	`;
+	db.run(createTableSQLQuery);
+
+	// Members table
+	createTableSQLQuery = `
+CREATE TABLE IF NOT EXISTS deleted_members (
+	user_id INTEGER PRIMARY KEY,               
+	username TEXT NOT NULL COLLATE NOCASE,    
+	username_history TEXT,    
+	joined INTEGER NOT NULL,
+	left INTEGER NOT NULL,                              
+	login_count INTEGER NOT NULL,             
+	reason_deleted TEXT NOT NULL
+);
+	`;
+	// reason deleted: "user request" / "banned" / "inactive"
 	db.run(createTableSQLQuery);
 
 	// Bans table
