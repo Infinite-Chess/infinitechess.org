@@ -106,6 +106,7 @@ function configureMiddleware(app) {
 		res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'member.html'), {t: req.t});
 	});
 	app.delete('/member/:member/delete', removeAccount);
+	// app.get('/api/prefs/get', getPrefs)
 
 	/**
      * Sets the req.memberInfo properties if they have an authorization

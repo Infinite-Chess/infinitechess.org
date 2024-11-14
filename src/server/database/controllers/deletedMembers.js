@@ -38,11 +38,6 @@ function addDeletedMemberToDeletedMembersTable(user_id, username, joined, login_
 }
 
 
-
-// Create me a function that adds somebody to this table. It should have the parameters user_id, username, joined, login_count, and reason_deleted.
-
-// username_history should be left blank, and "left" should be equal to Date.now()
-
 export {
 	addDeletedMemberToDeletedMembersTable
 };
