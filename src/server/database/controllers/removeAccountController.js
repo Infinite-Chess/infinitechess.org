@@ -65,7 +65,7 @@ async function removeAccount(req, res) {
  */
 function removeOldUnverifiedMembers() {
 	try {
-		console.log("Checking for old unverified accounts...");
+		console.log("Checking for old unverified accounts.");
 		const now = Date.now();
 
 		// Query to get all unverified accounts (where verification is not null)
@@ -91,7 +91,7 @@ function removeOldUnverifiedMembers() {
 				logEvents(`Removed unverified account "${username}" of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt', { print: true });
 			}
 		}
-		console.log("Done!");
+		// console.log("Done!");
 	} catch (error) {
 		// Log any error that occurs during the process
 		logEvents(`Error removing old unverified accounts: ${error.message}`, 'errLog.txt', { print: true });
