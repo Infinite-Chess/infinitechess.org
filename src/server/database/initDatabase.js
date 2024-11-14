@@ -34,14 +34,14 @@ CREATE TABLE IF NOT EXISTS members (
 	db.run(createTableSQLQuery);
 
 	// Bans table
-	createTableSQLQuery = `
-CREATE TABLE IF NOT EXISTS bans (
-	emails TEXT DEFAULT '[]',
-	ips TEXT DEFAULT '[]',
-	browser_ids TEXT DEFAULT '[]'
-)
-	`;
-	db.run(createTableSQLQuery);
+	// createTableSQLQuery = `
+	// 	CREATE TABLE IF NOT EXISTS bans (
+	// 		emails TEXT DEFAULT '[]',
+	// 		ips TEXT DEFAULT '[]',
+	// 		browser_ids TEXT DEFAULT '[]'
+	// 	)
+	// `;
+	// db.run(createTableSQLQuery);
 
 	// Games table...
 }
