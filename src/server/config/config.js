@@ -59,11 +59,11 @@ const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 
 
 /** The maximum time an account is allowed to remain unverified before the server will delete it from DataBase. */
-// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
-const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
+const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
+// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
 /** The interval for how frequent to check for unverified account that exists more than `maxExistenceTimeForUnverifiedAccount` */
-// const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1; // 1 days
-const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 30; // 30 seconds
+const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1; // 1 days
+// const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 30; // 30 seconds
 
 
 
