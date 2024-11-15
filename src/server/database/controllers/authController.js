@@ -12,9 +12,9 @@
 import bcrypt from 'bcrypt';
 import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from './memberController.js';
 import { logEvents } from '../../middleware/logEvents.js';
-import { issueNewRefreshToken } from './refreshTokenController.js';
 import { getTranslationForReq } from '../../utility/translate.js';
 import { getClientIP } from '../../middleware/IP.js';
+import { issueNewRefreshToken } from '../../controllers/authenticationTokens/sessionManagement.js';
 
 
 // Rate limiting stuff...

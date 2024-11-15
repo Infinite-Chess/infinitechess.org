@@ -1,7 +1,7 @@
 
+import { initDatabase } from './config/databaseSetup.js';
+initDatabase();
 // Ensure our workspace is ready for the dev environment
-import { initTables } from './config/databaseTables.js';
-initTables();
 import { initDevEnvironment } from './config/setupDev.js';
 initDevEnvironment();
 
@@ -11,7 +11,7 @@ const app = express();
 import https from 'https';
 import ejs from 'ejs';
 // Other imports
-import configureMiddleware from './middleware/middleware.js';
+import configureMiddleware from './config/middleware.js';
 import wsserver from './wsserver.js';
 import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';

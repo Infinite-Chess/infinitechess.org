@@ -35,7 +35,7 @@ const allMemberColumns = [
 
 
 /** Creates the tables in our database if they do not exist. */
-function initTables() {
+function generateTables() {
 	// Members table
 	let createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS members (
@@ -109,5 +109,5 @@ export {
 	user_id_upper_cap,
 	uniqueMemberKeys,
 	allMemberColumns,
-	initTables,
+	generateTables,
 };

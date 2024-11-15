@@ -2,7 +2,7 @@
 import websocketserver from '../../wsserver.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { deleteAllInvitesOfMember } from '../../game/invitesmanager/invitesmanager.js';
-import { revokeSession } from './refreshTokenController.js';
+import { revokeSession } from '../../controllers/authenticationTokens/sessionManagement.js';
 
 
 const handleLogout = async(req, res) => {

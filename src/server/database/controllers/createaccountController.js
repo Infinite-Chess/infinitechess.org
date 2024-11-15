@@ -114,7 +114,7 @@ async function createNewMember(req, res) {
  * @param {string} param0.email - The email for the new account.
  * @param {string} param0.password - The password for the new account.
  * @param {boolean} [param0.autoVerify] - Whether to auto-verify this account.
- * @returns {number|undefined} The result of the database operation or an error message: { success (boolean), result: { lastInsertRowid } }
+ * @returns {number|undefined} If it was a success, the row ID of where the member was inserted. Parent is also the same as their user ID)
  */
 async function generateAccount({ username, email, password, autoVerify }) {
 	// Use bcrypt to hash & salt password

@@ -2,8 +2,8 @@
 import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents.js';
 import { doesMemberOfIDExist, updateLastSeen } from './memberController.js';
-import { doesMemberHaveRefreshToken_RenewSession } from './refreshTokenController.js';
 import { doStuffOnLogout } from './logoutController.js';
+import { doesMemberHaveRefreshToken_RenewSession } from '../../controllers/authenticationTokens/sessionManagement.js';
 
 
 

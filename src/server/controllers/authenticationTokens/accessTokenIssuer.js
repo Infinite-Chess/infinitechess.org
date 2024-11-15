@@ -4,11 +4,9 @@
 // Called by a fetch(). ALWAYS RETURN a json!
 
 import { logEvents } from "../../middleware/logEvents.js";
-import { getTranslationForReq } from "../../utility/translate.js";
 import { createAccessTokenCookie } from "./accessTokenController.js";
-import { assignOrRenewBrowserID } from "./browserIDController.js";
-import { updateLastSeen } from "./memberController.js";
-import { isTokenValid, signAccessToken } from "./tokenController.js";
+import { assignOrRenewBrowserID } from "../../database/controllers/browserIDController.js";
+import { signAccessToken } from "../../database/controllers/tokenController.js";
 
 /**
  * Called when the browser uses the /api/get-access-token API request. This reads any refresh token cookie present,
