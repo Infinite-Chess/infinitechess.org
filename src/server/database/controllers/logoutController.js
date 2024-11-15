@@ -18,7 +18,12 @@ async function handleLogout(req, res) {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return res.redirect('/'); // Cookie already deleted. (Already logged out)
 
-	if (!req.memberInfo.signedIn) return res.redirect('/'); // Existing cookie was invalid
+	if (!req.memberInfo.signedIn) { // Existing refresh token cookie was invalid (tampered, expired, manually invalidated, or account deleted)
+		// We can't use the higher-order doStuffOnLogout() here because we don't know their user_id and username
+		// BUT this will delete their existing session cookies!
+		revokeSession(res); 
+		return res.redirect('/');
+	}
 
 	const { user_id, username } = req.memberInfo;
 	

@@ -8,15 +8,10 @@ import { getTranslationForReq } from "../../utility/translate.js";
 import { deleteUser, getMemberDataByCriteria } from "../memberManager.js";
 import { doStuffOnLogout } from './logoutController.js';
 import { testPasswordForRequest } from './authController.js';
+import { intervalForRemovalOfOldUnverifiedAccountsMillis, maxExistenceTimeForUnverifiedAccountMillis } from '../../config/config.js';
 
 // Automatic deletion of accounts...
 
-/** The maximum time an account is allowed to remain unverified before the server will delete it from DataBase. */
-// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
-const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
-/** The interval for how frequent to check for unverified account that exists more than `maxExistenceTimeForUnverifiedAccount` */
-const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1; // 1 days
-// const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 30; // 30 seconds
 
 const millisecondsInADay = 1000 * 60 * 60 * 24;
 
