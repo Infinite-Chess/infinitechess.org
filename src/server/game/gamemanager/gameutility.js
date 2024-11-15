@@ -27,7 +27,7 @@ import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
-import { getMemberDataByCriteria } from '../../database/controllers/memberController.js';
+import { getMemberDataByCriteria } from '../../database/memberManager.js';
 
 // Type Definitions...
 

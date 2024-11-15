@@ -1,5 +1,5 @@
 import { logEvents } from './logEvents.js';
-import { getClientIP, getClientIP_Websocket } from './IP.js';
+import { getClientIP, getClientIP_Websocket } from '../utility/IP.js';
 
 import { isIPBanned } from './banned.js';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';

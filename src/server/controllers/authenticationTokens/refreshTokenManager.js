@@ -1,5 +1,5 @@
 
-import { getMemberDataByCriteria, updateMemberColumns } from '../../database/controllers/memberController.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../../database/memberManager.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens } from './refreshTokenObject.js';
 

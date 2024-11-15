@@ -7,7 +7,7 @@
  * if they are logged in.
  */
 
-import { isTokenValid } from '../database/controllers/tokenController.js';
+import { isTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
 import { logEvents } from './logEvents.js';
 
 /** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */

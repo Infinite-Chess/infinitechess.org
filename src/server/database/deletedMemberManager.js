@@ -3,8 +3,8 @@
  * This script interacts with our deleted_members table
  */
 
-import db from '../database.js';
-import { logEvents } from "../../middleware/logEvents.js";
+import db from './database.js';
+import { logEvents } from "../middleware/logEvents.js";
 
 function addDeletedMemberToDeletedMembersTable(user_id, username, joined, login_count, reason_deleted) {
 	if (user_id === undefined || username === undefined || joined === undefined || login_count === undefined || reason_deleted === undefined) {

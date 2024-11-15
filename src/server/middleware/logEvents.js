@@ -4,7 +4,7 @@ import { v4 as uuid } from 'uuid';
 import { promises as fsPromises } from 'fs';
 import path from 'path';
 
-import { getClientIP } from './IP.js';
+import { getClientIP } from '../utility/IP.js';
 import wsutility from '../game/wsutility.js';
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
 

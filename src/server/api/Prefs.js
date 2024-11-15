@@ -5,7 +5,7 @@
  */
 
 import themes from "../../client/scripts/esm/components/header/themes.js";
-import { getMemberDataByCriteria, updateMemberColumns } from "../database/controllers/memberController.js";
+import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 import { logEvents } from "../middleware/logEvents.js";
 import { ensureJSONString } from "../utility/JSONUtils.js";
 

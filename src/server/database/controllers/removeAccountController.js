@@ -5,9 +5,9 @@
 import db from '../database.js';
 import { logEvents } from "../../middleware/logEvents.js";
 import { getTranslationForReq } from "../../utility/translate.js";
-import { testPasswordForRequest } from "./authController.js";
-import { deleteUser, getMemberDataByCriteria } from "./memberController.js";
+import { deleteUser, getMemberDataByCriteria } from "../memberManager.js";
 import { doStuffOnLogout } from './logoutController.js';
+import { testPasswordForRequest } from './authController.js';
 
 // Automatic deletion of accounts...
 

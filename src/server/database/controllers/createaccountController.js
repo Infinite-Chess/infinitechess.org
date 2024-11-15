@@ -15,8 +15,8 @@ import { getTranslationForReq } from '../../utility/translate.js';
 import { isEmailBanned } from '../../middleware/banned.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { sendEmailConfirmation } from './sendMail.js';
-import { handleLogin } from './authController.js';
-import { addUser, isEmailTaken, isUsernameTaken } from './memberController.js';
+import { handleLogin } from './loginController.js';
+import { addUser, isEmailTaken, isUsernameTaken } from '../memberManager.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 
 

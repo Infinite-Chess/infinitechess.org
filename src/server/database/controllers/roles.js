@@ -4,7 +4,7 @@
  */
 
 import { logEvents } from "../../middleware/logEvents.js";
-import { getMemberDataByCriteria, updateMemberColumns } from "./memberController.js";
+import { getMemberDataByCriteria, updateMemberColumns } from "../memberManager.js";
 
 const validRoles = ['owner','patron'];
 
