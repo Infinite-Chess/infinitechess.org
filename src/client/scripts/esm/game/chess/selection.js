@@ -27,9 +27,9 @@ import config from '../config.js';
 
 /**
  * Type Definitions
- * @typedef {import('./movesscript.js').Move} Move
- * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
- * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('../gui/movesscript.js').Move} Move
+ * @typedef {import('../../chess/logic/legalmoves.js').LegalMoves} LegalMoves
+ * @typedef {import('../../chess/logic/movepiece.js').Piece} Piece
  */
 
 "use strict";

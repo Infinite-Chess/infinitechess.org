@@ -14,7 +14,7 @@ import spritesheet from './spritesheet.js';
 
 /**
  * Type Definitions
- * @typedef {import('../chess/movesscript.js').Move} Move
+ * @typedef {import('../gui/movesscript.js').Move} Move
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  */
 

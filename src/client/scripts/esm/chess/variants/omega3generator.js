@@ -3,7 +3,7 @@ import coordutil from '../util/coordutil.js';
 
 /** 
  * Type Definitions 
- * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  */
 
 'use strict';

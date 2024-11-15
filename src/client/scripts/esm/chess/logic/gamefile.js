@@ -11,9 +11,9 @@ import clock from './clock.js';
 
 // Type Definitions...
 
-/** @typedef {import('../misc/math.js').BoundingBox} BoundingBox */
+/** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
 /** @typedef {import('../../game/gui/movesscript.js').Move} Move */
-/** @typedef {import('../rendering/buffermodel.js').BufferModel} BufferModel */
+/** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 
 'use strict';

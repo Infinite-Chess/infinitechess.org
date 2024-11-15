@@ -24,10 +24,10 @@ import shapes from './shapes.js';
 
 /**
  * Type Definitions
- * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
+ * @typedef {import('../../chess/logic/legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
  */
 
 "use strict";
