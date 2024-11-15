@@ -6,6 +6,11 @@ import { getMemberDataByCriteria, updateMemberColumns } from "./memberController
 // Called when clicked on verification link in email.
 // CAN redirect!
 const verifyAccount = async function(req, res) {
+	if (!req.memberInfo) {
+		logEvents("req.memberInfo must be defined for verify account route!", 'errLog.txt', { print: true });
+		return res.status(500).json({'message' : "Server Error" });
+	}
+
 	// Get the parameters out of the url
 	const claimedUsername = req.params.member;
 	const claimedCode = req.params.code;

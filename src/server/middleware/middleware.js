@@ -23,8 +23,6 @@ import middleware from 'i18next-http-middleware';
 // Other imports
 import { useOriginWhitelist } from '../config/config.js';
 import { router as rootRouter } from '../routes/root.js';
-import { router as accountRouter } from '../routes/createaccount.js';
-import { router as memberRouter } from '../routes/member.js';
 import send404 from './send404.js';
 import corsOptions from '../config/corsOptions.js';
 
@@ -36,6 +34,8 @@ import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../database/controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { handleLogin } from '../database/controllers/authController.js';
+import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../database/controllers/createaccountController.js';
+import { removeAccount } from '../database/controllers/removeAccountController.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -98,9 +98,16 @@ function configureMiddleware(app) {
 
 	// Provide a route
 
+	// Root router
 	app.use('/', rootRouter); // Contains every html page.
-	app.use('/createaccount', accountRouter); // Contains routes that tell you if username/email is taken.
-	app.use('/member', memberRouter); // Contains delete account route
+
+	// Account router
+	app.post('/createaccount', createNewMember); // "/createaccount" POST request
+	app.get('/createaccount/username/:username', checkUsernameAvailable);
+	app.get('/createaccount/email/:email', checkEmailAssociated);
+
+	// Member router
+	app.delete('/member/:member/delete', removeAccount);
 
 
 	// API --------------------------------------------------------------------
@@ -137,7 +144,7 @@ function configureMiddleware(app) {
 	app.get('/member/:member/send-email', requestConfirmEmail);
 	app.get("/verify/:member/:code", verifyAccount);
 
-	// ---------------------------------------------------------------------------------------
+	// Last Resort 404 and Error Handler ----------------------------------------------------
 
 	// If we've reached this point, send our 404 page.
 	app.all('*', send404);
