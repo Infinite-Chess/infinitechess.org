@@ -1,8 +1,9 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
 import { logEvents } from "../../middleware/logEvents.js";
-import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, getRefreshTokensByUserID, saveRefreshTokens } from "./refreshTokenManager.js";
+import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens } from "./refreshTokenObject.js";
-import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis, signRefreshToken } from "./tokenSigner.js";
+import { signRefreshToken } from "./tokenSigner.js";
+import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from "../../config/config.js";
 
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
@@ -73,9 +74,20 @@ function renewSession(res, userId, username, roles, refreshTokens, tokenObject) 
 	createSessionCookies(res, userId, username, newToken);
 }
 
+function createNewSession(res, user_id, username, roles) {
+	// The payload can be an object with their username and their roles.
+	const refreshToken = signRefreshToken(user_id, username, roles);
+    
+	// Save the refresh token with current user so later when they log out we can invalidate it.
+	addRefreshTokenToMemberData(user_id, refreshToken);
+    
+	createSessionCookies(res, user_id, username, refreshToken);
+}
+
 function revokeSession(res, userId, deleteToken) {
 	// Only delete the token from member data if it's specified (may be websocket related or an account deletion)
 	if (deleteToken !== undefined) deleteRefreshTokenFromMemberData(userId, deleteToken);
+	if (!res) return; // Websocket-related, or deleted account automatically
 	deleteSessionCookies(res);
 	deletePreferencesCookie(res); // Even though this cookie only lasts 10 seconds, it's good to delete it here.
 }
@@ -99,16 +111,10 @@ function createSessionCookies(res, userId, username, refreshToken) {
 }
 
 /**
- * Creates and sets the cookies:
- * * memberInfo containing user info (user ID and username),
- * * jwt containing our refresh token.
+ * Deletes the cookies that store session information
  * @param {Object} res - The response object.
- * @param {string} userId - The ID of the user.
- * @param {string} username - The username of the user.
- * @param {string} refreshToken - The refresh token to be stored in the cookie.
  */
 function deleteSessionCookies(res) {
-	if (!res) return; // Websocket-related
 	deleteRefreshTokenCookie(res);
 	deleteMemberInfoCookie(res);
 }
@@ -159,18 +165,8 @@ function deleteMemberInfoCookie(res) {
 
 
 
-function createNewSession(res, user_id, username, roles) {
-	// The payload can be an object with their username and their roles.
-	const refreshToken = signRefreshToken(user_id, username, roles);
-    
-	// Save the refresh token with current user so later when they log out we can invalidate it.
-	addRefreshTokenToMemberData(user_id, refreshToken); // false for access token
-    
-	createSessionCookies(res, user_id, username, refreshToken);
-}
-
 export {
-	revokeSession,
-	doesMemberHaveRefreshToken_RenewSession,
 	createNewSession,
+	doesMemberHaveRefreshToken_RenewSession,
+	revokeSession,
 };

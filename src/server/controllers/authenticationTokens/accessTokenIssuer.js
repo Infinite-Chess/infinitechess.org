@@ -5,7 +5,7 @@
 
 import { logEvents } from "../../middleware/logEvents.js";
 import { createAccessTokenCookie } from "./accessTokenController.js";
-import { assignOrRenewBrowserID } from "../../database/controllers/browserIDController.js";
+import { assignOrRenewBrowserID } from "../../database/controllers/browserIDManager.js";
 import { signAccessToken } from "./tokenSigner.js";
 
 /**

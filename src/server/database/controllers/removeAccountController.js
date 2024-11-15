@@ -12,8 +12,8 @@ import { testPasswordForRequest } from './authController.js';
 // Automatic deletion of accounts...
 
 /** The maximum time an account is allowed to remain unverified before the server will delete it from DataBase. */
-const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
-// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
+// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
+const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
 /** The interval for how frequent to check for unverified account that exists more than `maxExistenceTimeForUnverifiedAccount` */
 const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1; // 1 days
 // const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 30; // 30 seconds
@@ -94,7 +94,7 @@ function removeOldUnverifiedMembers() {
 		// console.log("Done!");
 	} catch (error) {
 		// Log any error that occurs during the process
-		logEvents(`Error removing old unverified accounts: ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error removing old unverified accounts: ${error.stack}`, 'errLog.txt', { print: true });
 	}
 }
 

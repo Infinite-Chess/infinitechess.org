@@ -3,9 +3,9 @@
  * This script almost all of the queries we use to interact with the members table!
  */
 
-import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from '../config/databaseTables.js';
 import { logEvents } from '../middleware/logEvents.js';
 import db from './database.js';
+import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
 
 

@@ -1,22 +1,15 @@
 
 import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents.js';
-
-
-// Variables ---------------------------------------------------------------------------------
-
-
-const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
-const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
-// const refreshTokenExpiryMillis = 1000 * 60 * 2; // 2m
-const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
-const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
-const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
-// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
+import { accessTokenExpiryMillis, refreshTokenExpiryMillis } from '../../config/config.js';
 
 
 // Signing Tokens ------------------------------------------------------------------------------------
 
+/**
+ * Tokens can be signed with the payload that includes any information we want!
+ * We like to use user ID, username and roles.
+ */
 
 /**
  * Signs and generates an access token for the user.
@@ -29,6 +22,7 @@ const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
  */
 function signAccessToken(userId, username, roles, allowedActions) {
 	const payload = generatePayload(userId, username, roles, allowedActions);
+	const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 	return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: accessTokenExpirySecs }); // Typically short-lived, for in-memory storage only.
 }
   
@@ -42,6 +36,7 @@ function signAccessToken(userId, username, roles, allowedActions) {
  */
 function signRefreshToken(userId, username, roles) {
 	const payload = generatePayload(userId, username, roles);
+	const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 	return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: refreshTokenExpirySecs }); // Longer-lived, stored in an httpOnly cookie.
 }
 
@@ -61,8 +56,6 @@ function generatePayload(userId, username, roles, allowedActions) {
 
 
 export {
-	refreshTokenExpiryMillis,
-	minTimeToWaitToRenewRefreshTokensMillis,
 	signAccessToken,
 	signRefreshToken,
 };

@@ -46,6 +46,16 @@ const allowedOrigins = [ // Allowed sites
     'https://www.google.com'
 ];
 
+// Session tokens expiry times ------------------------------------------------------
+
+const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
+const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
+// const refreshTokenExpiryMillis = 1000 * 60 * 2; // 2m
+const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
+// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
+
+// ----------------------------------------------------------------------------------
+
 export {
 	DEV_BUILD,
 	BUNDLE_FILES,
@@ -54,5 +64,8 @@ export {
 	HOST_NAME,
 	GAME_VERSION,
 	useOriginWhitelist,
-	allowedOrigins
+	allowedOrigins,
+	accessTokenExpiryMillis,
+	refreshTokenExpiryMillis,
+	minTimeToWaitToRenewRefreshTokensMillis
 };

@@ -20,6 +20,9 @@ import { addUser, isEmailTaken, isUsernameTaken } from '../memberManager.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 
 
+// Variables -------------------------------------------------------------------------
+
+
 /**
  * Usernames that are reserved. New members cannot use these are their name.
  * 
@@ -76,6 +79,10 @@ const profainWords = [
     'poop'
 ];
 
+
+// Functions -------------------------------------------------------------------------
+
+
 // Called when create account form submitted
 async function createNewMember(req, res) {
 	if (!req.body) {
@@ -101,8 +108,8 @@ async function createNewMember(req, res) {
 
 	await generateAccount({ username, email, password }); // { success, result: { lastInsertRowid } }
 
-	// GENERATE ACCESS AND REFRESH TOKENS! They just created an account, so log them in!
-	// This will handle our response/redirect
+	// Create new login session! They just created an account, so log them in!
+	// This will handle our response/redirect too for us!
 	handleLogin(req, res);
 };
 
@@ -190,13 +197,13 @@ function doUsernameFormatChecks(username, req, res) {
 	return true; // Everything's good, no conflicts!
 };
 
-const onlyLettersAndNumbers = function(string) {
+function onlyLettersAndNumbers(string) {
 	if (!string) return true;
 	return /^[a-zA-Z0-9]+$/.test(string);
 };
 
 // Returns true if bad word is found
-const checkProfanity = function(string) {
+function checkProfanity(string) {
 	for (const profanity of profainWords) {
 		if (string.includes(profanity)) return true;
 	}
@@ -215,14 +222,14 @@ function doEmailFormatChecks(string, req, res) {
 	return true;
 };
 
-const isValidEmail = function(string) {
+function isValidEmail(string) {
 	// Credit for the regex: https://stackoverflow.com/a/201378
 	// eslint-disable-next-line no-control-regex
 	const regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 	return regex.test(string);
 };
 
-const doPasswordFormatChecks = function(password, req, res) {
+function doPasswordFormatChecks(password, req, res) {
 	// First we check password length
 	if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_length", req) });
 	if (!isValidPassword(password)) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_format", req) });
@@ -230,12 +237,14 @@ const doPasswordFormatChecks = function(password, req, res) {
 	return true;
 };
 
-const isValidPassword = function(string) {
+function isValidPassword(string) {
 	// eslint-disable-next-line no-useless-escape
 	const regex = /^[a-zA-Z0-9!@#$%^&*\?]+$/;
 	if (regex.test(string) === true) return true;
 	return false;
 };
+
+
 
 export {
 	createNewMember,

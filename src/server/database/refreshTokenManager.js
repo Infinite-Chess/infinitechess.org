@@ -1,7 +1,7 @@
 
-import { getMemberDataByCriteria, updateMemberColumns } from '../../database/memberManager.js';
-import { logEvents } from '../../middleware/logEvents.js';
-import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens } from './refreshTokenObject.js';
+import { getMemberDataByCriteria, updateMemberColumns } from './memberManager.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
 
 
 /**

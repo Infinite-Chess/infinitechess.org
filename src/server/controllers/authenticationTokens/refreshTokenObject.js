@@ -1,9 +1,9 @@
 
+import { refreshTokenExpiryMillis } from "../../config/config.js";
 import { logEvents } from "../../middleware/logEvents.js";
-import { refreshTokenExpiryMillis } from "./tokenSigner.js";
 
 /**
- * The script works with the rate of refresh token objects stored in the database.
+ * The script works with modifying refresh token objects stored in the database.
  * [ { token, issued, expires }, { token, issued, expires }, ...]
  * 
  * Very few dependancies.

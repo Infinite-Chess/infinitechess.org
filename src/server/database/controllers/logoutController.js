@@ -5,7 +5,7 @@ import { deleteAllInvitesOfMember } from '../../game/invitesmanager/invitesmanag
 import { revokeSession } from '../../controllers/authenticationTokens/sessionManager.js';
 
 
-const handleLogout = async(req, res) => {
+async function handleLogout(req, res) {
 	if (!req.memberInfo) {
 		logEvents("req.memberInfo must be defined for us to log out!", 'errLog.txt', { print: true });
 		return res.status(500).json({'message' : "Server Error" });
@@ -21,13 +21,12 @@ const handleLogout = async(req, res) => {
 	if (!req.memberInfo.signedIn) return res.redirect('/'); // Existing cookie was invalid
 
 	const { user_id, username } = req.memberInfo;
-
+	
 	doStuffOnLogout(res, user_id, username, refreshToken);
 
-	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
-	res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
-
 	res.redirect('/');
+
+	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
 };
 
 function doStuffOnLogout(res, user_id, username, refreshToken) {
