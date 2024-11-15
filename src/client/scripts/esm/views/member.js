@@ -62,12 +62,10 @@ const member = docutil.getLastSegmentOfURL();
 			return response.json();
 		})
 		.then(async(result) => { // result.verified = true/false
-			console.log(result); // { elo, joined, seen, username, email, verified }
+			console.log(result); // { joined, seen, username, email, verified }
 
 			// Change on-screen data of the member
 			element_memberName.textContent = result.username;
-			const eloElement = document.getElementById('elo');
-			eloElement.textContent = result.elo;
 			const joinedElement = document.getElementById('joined');
 			joinedElement.textContent = result.joined;
 			const seenElement = document.getElementById('seen');
