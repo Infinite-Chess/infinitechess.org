@@ -1,6 +1,6 @@
 
 // Ensure our workspace is ready for the dev environment
-import { initTables } from './database/initDatabase.js';
+import { initTables } from './config/databaseTables.js';
 initTables();
 import { initDevEnvironment } from './config/setupDev.js';
 initDevEnvironment();

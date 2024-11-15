@@ -3,6 +3,7 @@
  * This script almost all of the queries we use to interact with the members table!
  */
 
+import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from '../../config/databaseTables.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import db from '../database.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMembers.js';
@@ -13,17 +14,6 @@ import { addDeletedMemberToDeletedMembersTable } from './deletedMembers.js';
 
 
 
-const user_id_upper_cap = 14_776_336; // Limit of unique user id with 4-digit base-62 user ids!
-
-/** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
-const uniqueMemberKeys = ['user_id', 'username', 'email'];
-	
-/** All columns of the members table each of these would be valid to retrieve from any member. */
-const allMemberColumns = [
-	'user_id', 'username', 'username_history', 'email', 'hashed_password', 'roles', 
-	'joined', 'refresh_tokens', 'preferences', 'verification', 
-	'login_count', 'last_seen'
-];
 
 
 

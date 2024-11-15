@@ -36,6 +36,7 @@ import { requestConfirmEmail } from '../database/controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../database/controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
+import { handleLogin } from '../database/controllers/authController.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -54,7 +55,7 @@ function configureMiddleware(app) {
 
 	// This allows us to retrieve json-received-data as a parameter/data!
 	// The logger can't log the request body without this
-	app.use(express.json({ limit: '10kb' })); // Limit the size to avoid parsing excessively large objects
+	app.use(express.json({ limit: '10kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
 
 	app.use(logger); // Log the request
 
@@ -62,11 +63,7 @@ function configureMiddleware(app) {
 
 	app.use(credentials); // Handle credentials check. Must be before CORS.
 
-	app.use(
-		middleware.handle(i18next, {
-			removeLngFromUrl: false
-		})
-	);
+	app.use(middleware.handle(i18next, { removeLngFromUrl: false }));
 
 	/**
      * Cross Origin Resource Sharing
@@ -97,7 +94,7 @@ function configureMiddleware(app) {
 	// Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
 	app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')));
 
-	// This sets the user preferences cookie on every request for an HTML file
+	// This sets the user 'preferences' cookie on every request for an HTML file
 	app.use(setPrefsCookie);
 
 	// Provide a route
@@ -111,6 +108,17 @@ function configureMiddleware(app) {
 	});
 	app.delete('/member/:member/delete', removeAccount);
 	// app.get('/api/prefs/get', getPrefs)
+
+	// API --------------------------------------------
+
+	app.post("/auth", handleLogin);
+
+	app.post("/setlanguage", (req, res) => {
+		res.cookie("i18next", req.i18n.resolvedLanguage);
+		res.send(""); // Doesn't work without this for some reason
+	});
+
+	// ------------------------------------------------
 
 	/**
      * Sets the req.memberInfo properties if they have an authorization

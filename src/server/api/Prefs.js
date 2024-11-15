@@ -1,6 +1,7 @@
 
 /**
- * This script saves and sends a user's preferences when requested
+ * This script sets the preferences cookie on any request to an HTML file.
+ * And it has an API for setting your preferences in the database.
  */
 
 import themes from "../../client/scripts/esm/components/header/themes.js";
@@ -12,7 +13,7 @@ import { ensureJSONString } from "../utility/JSONUtils.js";
 // Variables -------------------------------------------------------------
 
 
-const lifetimeOfPrefsCookieMillis = 1000 * 10; // 10 sconds
+const lifetimeOfPrefsCookieMillis = 1000 * 10; // 10 seconds
 
 const validPrefs = ['theme', 'legal_moves'];
 const legal_move_shapes = ['squares', 'dots'];
@@ -21,6 +22,17 @@ const legal_move_shapes = ['squares', 'dots'];
 // Functions -------------------------------------------------------------
 
 
+/**
+ * Middleware to set the preferences cookie for logged-in users based on their memberInfo cookie.
+ * Only sets the preferences cookie on HTML requests (requests without an origin header).
+ * 
+ * It is possible for the memberInfo cookie to be tampered with, but preferences can be public information anyway.
+ * We are reading the memberInfo cookie instead of verifying their session token
+ * because that could take a little bit longer as it requires a database look up.
+ * @param {Object} req - The Express request object.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The Express next middleware function.
+ */
 function setPrefsCookie(req, res, next) {
 	if (!req.cookies) {
 		logEvents("req.cookies must be parsed before setting preferences cookie!", 'errLog.txt', { print: true });
@@ -115,7 +127,10 @@ async function postPrefs(req, res) {
 		return res.status(500).json({ message: "Server Error: No Authorization"});
 	}
 
-	if (!req.memberInfo.signedIn) return res.status(401).json({ message: "Can't save preferences, not signed in. "});
+	if (!req.memberInfo.signedIn) {
+		logEvents("User tried to save preferences when they weren't signed in!", 'errLog.txt', { print: true });
+		return res.status(401).json({ message: "Can't save preferences, not signed in."});
+	}
 
 	const { user_id, username } = req.memberInfo;
 
