@@ -88,20 +88,25 @@ const requestConfirmEmail = (req, res) => {
 		return res.status(500).json({ message: 'Internal Server Error' });
 	}
 
-	const usernameLowercase = req.params.member.toLowerCase();
+	if (!req.memberInfo.signedIn) {
+		logEvents("User tried to resend the account verification email when they're not signed in! Their page should have auto-refreshed.", 'errLog.txt', { print: true });
+		return res.status(401).json({ message: "Not signed in. Can't resent verification email." });
+	}
+
+	const username = req.params.member;
 
 	// Check to make sure they're logged in, then resend the email!
-	if (req.memberInfo.username.toLowerCase() === usernameLowercase) {
+	if (req.memberInfo.username.toLowerCase() === username.toLowerCase()) {
 
-		const { user_id, verification } = getMemberDataByCriteria(['user_id', 'verification'], 'username', usernameLowercase);
+		const { user_id, verification } = getMemberDataByCriteria(['user_id', 'verification'], 'username', username);
 		if (user_id === undefined) {
-			logEvents(`Could not find member of username "${usernameLowercase}" when requesting confirmation email!`, 'errLog.txt', { print: true });
+			logEvents(`Could not find member of username "${username}" when requesting confirmation email!`, 'errLog.txt', { print: true });
 			return res.status(400).json({ message: 'Bad Request. Username not found.' });
 		}
 
 		// ONLY send email if they haven't already verified!
 		if (verification !== null && verification.verified === true) {
-			const hackText = `User "${usernameLowercase}" tried requesting another verification email after they've already verified!`;
+			const hackText = `User "${username}" tried requesting another verification email after they've already verified!`;
 			logEvents(hackText, 'hackLog.txt', { print: true });
 			return res.status(401).json({sent: false});
 		}
@@ -111,7 +116,7 @@ const requestConfirmEmail = (req, res) => {
 
 		return res.json({sent: true});
 	} else {
-		const errText = `User ${req.memberInfo.username} attempted to send verification email for user ${usernameLowercase}!`;
+		const errText = `User ${req.memberInfo.username} attempted to send verification email for user ${username}!`;
 		logEvents(errText, 'hackLog.txt', { print: true });
 		return res.status(401).json({sent: false});
 	}

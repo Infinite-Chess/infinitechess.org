@@ -24,14 +24,13 @@ import middleware from 'i18next-http-middleware';
 import { useOriginWhitelist } from '../config/config.js';
 import { router as rootRouter } from '../routes/root.js';
 import { router as accountRouter } from '../routes/createaccount.js';
+import { router as memberRouter } from '../routes/member.js';
 import send404 from './send404.js';
 import corsOptions from '../config/corsOptions.js';
 
 import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../database/controllers/accessTokenIssuer.js';
 import { verifyAccount } from '../database/controllers/verifyAccountController.js';
-import { getLanguageToServe } from '../utility/translate.js';
-import { removeAccount } from '../database/controllers/removeAccountController.js';
 import { requestConfirmEmail } from '../database/controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../database/controllers/logoutController.js';
@@ -98,27 +97,22 @@ function configureMiddleware(app) {
 	app.use(setPrefsCookie);
 
 	// Provide a route
-	app.use('/', rootRouter);
-	app.use('/createaccount(.html)?', accountRouter);
 
-	// Member page routes that don't require authentication
-	app.get('/member/:member', (req, res) => {
-		const language = getLanguageToServe(req);
-		res.sendFile(path.join(__dirname, '..', '..', '..', 'dist', 'views', language, 'member.html'), {t: req.t});
-	});
-	app.delete('/member/:member/delete', removeAccount);
-	// app.get('/api/prefs/get', getPrefs)
+	app.use('/', rootRouter); // Contains every html page.
+	app.use('/createaccount', accountRouter); // Contains routes that tell you if username/email is taken.
+	app.use('/member', memberRouter); // Contains delete account route
 
-	// API --------------------------------------------
 
-	app.post("/auth", handleLogin);
+	// API --------------------------------------------------------------------
 
-	app.post("/setlanguage", (req, res) => {
+	app.post("/auth", handleLogin); // Login fetch POST request
+
+	app.post("/setlanguage", (req, res) => { // Language cookie setter POST request
 		res.cookie("i18next", req.i18n.resolvedLanguage);
 		res.send(""); // Doesn't work without this for some reason
 	});
 
-	// ------------------------------------------------
+	// Token Authenticator -------------------------------------------------------
 
 	/**
      * Sets the req.memberInfo properties if they have an authorization
