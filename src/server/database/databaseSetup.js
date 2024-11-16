@@ -5,6 +5,7 @@ import { generateTables } from "./databaseTables.js";
 function initDatabase() {
 	generateTables();
 	startPeriodicIntegrityCheck();
+	startPeriodicDeleteUnverifiedMembers();
 }
 
 export {

@@ -34,8 +34,8 @@ import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../database/controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { handleLogin } from '../database/controllers/loginController.js';
-import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../database/controllers/createaccountController.js';
-import { removeAccount } from '../database/controllers/removeAccountController.js';
+import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../database/controllers/createAccountController.js';
+import { removeAccount } from '../database/controllers/deleteAccountController.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**

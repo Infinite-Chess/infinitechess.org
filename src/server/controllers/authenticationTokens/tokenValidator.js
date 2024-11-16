@@ -5,6 +5,13 @@ import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManage
 import { doStuffOnLogout } from '../../database/controllers/logoutController.js';
 import { doesMemberHaveRefreshToken_RenewSession } from './sessionManager.js';
 
+/**
+ * This script tests provided tokens for validation,
+ * returning the decoded user information if they are,
+ * renews their session if possible,
+ * and updates their last_seen property in the database.
+ */
+
 
 // Validating Tokens ---------------------------------------------------------------------------------
 

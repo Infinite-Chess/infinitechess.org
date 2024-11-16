@@ -10,13 +10,6 @@ import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js
 
 
 
-// Variables ----------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
 // Create / Delete Member methods ---------------------------------------------------------------------------------------
 
 
@@ -374,11 +367,10 @@ function isUserIdTaken(userId, { ignoreDeleted } = {}) {
 
 	} catch (error) {
 		// Log the error if the query fails
-		logEvents(`Error checking user ID "${userId}": ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error checking if user ID "${userId}" is taken: ${error.message}`, 'errLog.txt', { print: true });
 		return false; // Return false if an error occurs
 	}
 }
-
 // console.log("taken? " + isUserIdTaken(14443702));
 
 /**

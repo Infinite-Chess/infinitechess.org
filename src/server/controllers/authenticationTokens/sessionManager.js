@@ -44,7 +44,7 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 }
 
 /**
- * Renews a player's logging session
+ * Renews a player's loggin session
  * @param {*} res 
  * @param {*} userId 
  * @param {*} username 
