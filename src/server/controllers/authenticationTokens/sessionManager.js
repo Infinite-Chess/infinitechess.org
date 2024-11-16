@@ -147,7 +147,10 @@ function deleteRefreshTokenCookie(res) {
  */
 function createMemberInfoCookie(res, userId, username) {
 	// Create an object with member info
-	const memberInfo = JSON.stringify({ user_id: userId, username });
+	const now = Date.now();
+	const issued = now;
+	const expires = now + refreshTokenExpiryMillis;
+	const memberInfo = JSON.stringify({ user_id: userId, username, issued, expires });
 
 	// Set the cookie (readable by JavaScript, not HTTP-only)
 	// Cross-site usage requires we set sameSite to 'None'! Also requires secure (https) true

@@ -118,7 +118,7 @@ function refreshOurUsername() {
 	}
 	// Decode the URL-encoded string
 	const memberInfoStringified = decodeURIComponent(encodedMemberInfo);
-	const memberInfo = JSON.parse(memberInfoStringified); // { user_id, username }
+	const memberInfo = JSON.parse(memberInfoStringified); // { user_id, username, issued, expires }
 
 	username = memberInfo.username;
 }
