@@ -1,6 +1,6 @@
 name = "简体中文" # Simplified Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "19"
+version = "20"
 maintainer = "Heinrich Xiao"
 
 [header]
@@ -237,6 +237,14 @@ join = "加入"
 copy = "复制"
 back = "返回"
 code = "邀请码"
+
+[play.gamebuttontooltips]
+undo_transition = "撤销过渡"
+expand_fit_all = "展开以适应所有"
+recenter = "重新居中"
+rewind_move = "倒回操作"
+forward_move = "前进操作"
+pause = "暂停"
 
 [play.footer]
 white_to_move = "白方走起"
