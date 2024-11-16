@@ -49,8 +49,8 @@ function generateTables() {
 			refresh_tokens TEXT,                        
 			preferences TEXT,                          
 			verification TEXT,                         
-			login_count INTEGER NOT NULL DEFAULT 0
-			username_history TEXT,
+			login_count INTEGER NOT NULL DEFAULT 0,
+			username_history TEXT
 		);
 	`;
 	db.run(createTableSQLQuery);

@@ -15,7 +15,7 @@ import { getMemberDataByCriteria, updateMemberColumns } from "../memberManager.j
 async function verifyAccount(req, res) {
 	if (!req.memberInfo) {
 		logEvents("req.memberInfo must be defined for verify account route!", 'errLog.txt', { print: true });
-		return res.status(500).redirect('/500')
+		return res.status(500).redirect('/500');
 	}
 
 	// Get the parameters out of the url

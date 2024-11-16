@@ -72,7 +72,7 @@ function sendEmailConfirmation(user_id) {
         `
 	};
 
-	transporter.sendMail(mailOptions, function (err, info) {
+	transporter.sendMail(mailOptions, function(err, info) {
 		if (err) logEvents(`Error when sending verification email: ${err.stack}`, 'errLog.txt', { print: true });
 		else console.log(`Email is sent to member ${username} of ID ${user_id}!`);
 	});
@@ -88,7 +88,7 @@ function sendEmailConfirmation(user_id) {
  */
 function requestConfirmEmail(req, res) {
 	if (req.memberInfo === undefined) {
-		logEvents("req.memberInfo needs to be defined before handling confirmation email request route!", 'errLog.txt', { print: true }));
+		logEvents("req.memberInfo needs to be defined before handling confirmation email request route!", 'errLog.txt', { print: true });
 		return res.status(500).json({ message: 'Internal Server Error' });
 	}
 
@@ -98,12 +98,12 @@ function requestConfirmEmail(req, res) {
 	}
 
 	const username = req.params.member;
+	const user_id = req.memberInfo.user_id;
 
 	// Check to make sure they are the person they are requesting the email for, then resend it!
 
 	if (req.memberInfo.username.toLowerCase() === username.toLowerCase()) { // Same person
 
-		const user_id = req.memberInfo.user_id;
 		const { verification } = getMemberDataByCriteria(['verification'], 'user_id', user_id);
 		if (verification === undefined) {
 			logEvents(`Could not find member "${req.memberInfo.username}" of ID "${user_id}" when requesting confirmation email! This should never happen.`, 'errLog.txt', { print: true });
