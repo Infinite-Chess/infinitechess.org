@@ -71,7 +71,6 @@ const member = docutil.getLastSegmentOfURL();
 			const seenElement = document.getElementById('seen');
 			seenElement.textContent = result.seen;
 
-			await validatorama.waitUntilInitialRequestBack(); // Wait until we know if we are logged in or not
 			const loggedInAs = validatorama.getOurUsername();
 
 			// Is it our own profile?

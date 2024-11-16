@@ -750,11 +750,8 @@ function getOpponentColor() {
  * a game to connect us to it and send us the game info.
  */
 async function askServerIfWeAreInGame() {
-	// await validation's first access token refreshing to come back
-	// because then we will atleast have a browser-id cookie
-	// when we try to create our websocket!
 	// The server only allows sockets if we are either logged in, or have a browser-id cookie.
-	await validatorama.waitUntilInitialRequestBack();
+	// browser-id cookies are issued/renewed on every html request.\
 
 	const messageContents = undefined;
 	websocket.sendmessage('game', 'joingame', messageContents, true);
