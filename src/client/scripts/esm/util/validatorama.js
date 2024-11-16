@@ -12,10 +12,13 @@
 import docutil from "./docutil.js";
 
 
-const minTimeToRenewSession = 1000 * 60 * 60 * 24; // 1 day
+// const minTimeToRenewSession = 1000 * 60 * 60 * 24; // 1 day
+const minTimeToRenewSession = 1000 * 30; // 30 seconds
+
 /** Expiration time for the access tokens. @type {number} */
 const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 60 * 15; // 15 minutes
-
+/** Cushion time in milliseconds before considering the token expired. @type {number} */
+const CUSHION_MILLIS = 10_000;
 
 let memberInfo = {
 	signedIn: false,
@@ -31,20 +34,32 @@ let tokenInfo = {
 	/** Last refresh time of the access token, in milliseconds. @type {number | undefined} */
 	lastRefreshTime: undefined,
 }
-/** Cushion time in milliseconds before considering the token expired. @type {number} */
-const CUSHION_MILLIS = 10_000;
 
 (function init() {
-	document.addEventListener('logout', event => { // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
-		memberInfo = { signedIn: false };
-		tokenInfo = {};
-	});
-	
-	// Sets our memberInfo properties if we are logged in
-	readMemberInfoCookie();
-	// Most of the time we don't need an immediate access token
-	// refreshToken();
+  document.addEventListener('logout', event => { // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
+    memberInfo = { signedIn: false };
+    tokenInfo = {};
+  });
+  
+  // Sets our memberInfo properties if we are logged in
+  readMemberInfoCookie();
+  // Most of the time we don't need an immediate access token
+  // refreshToken();
+
+  // Renew the session
+  renewSession();
 })();
+
+function renewSession() {
+	if (!memberInfo.signedIn) return;
+
+	// Check if the session is older than 1 day
+	const timeSinceSessionIssued = currentTime - (memberInfo.issued || 0);
+	if (timeSinceSessionIssued < minTimeToRenewSession) return; // Still freshly issued session!
+
+	console.log("Session is older than 1 day, refreshing by requesting access token...");
+	refreshToken(); // Refresh token if the session is too old
+}
 
 
 /**
@@ -55,19 +70,19 @@ const CUSHION_MILLIS = 10_000;
  * @returns {Promise<string | undefined>} Resolves with the access token, or undefined if not logged in.
  */
 async function getAccessToken() {
-	if (reqIsOut) await waitUntilInitialRequestBack();
+  if (reqIsOut) await waitUntilInitialRequestBack();
 
-	if (!memberInfo.signedIn) return;
+  if (!memberInfo.signedIn) return;
 
-	const currentTime = Date.now();
-	const timeSinceLastRefresh = currentTime - (tokenInfo.lastRefreshTime || 0);
+  const currentTime = Date.now();
+  const timeSinceLastRefresh = currentTime - (tokenInfo.lastRefreshTime || 0);
 
-	// Check if token is expired or near expiring
-	if (!tokenInfo.accessToken || timeSinceLastRefresh > (TOKEN_EXPIRE_TIME_MILLIS - CUSHION_MILLIS)) {
-		await refreshToken();
-	}
+  // Check if token is expired or near expiring
+  if (!tokenInfo.accessToken || timeSinceLastRefresh > (TOKEN_EXPIRE_TIME_MILLIS - CUSHION_MILLIS)) {
+    await refreshToken();
+  }
 
-	return tokenInfo.accessToken;
+  return tokenInfo.accessToken;
 }
 
 /**
@@ -79,40 +94,40 @@ async function getAccessToken() {
  * @returns {Promise<void>} Resolves when the token refresh process is complete.
  */
 async function refreshToken() {
-	try {
-		const response = await fetch('/api/get-access-token', {
-			method: 'POST', // Ensure it's a POST request
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		});
+  try {
+    const response = await fetch('/api/get-access-token', {
+      method: 'POST', // Ensure it's a POST request
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-		const result = await response.json();
+    const result = await response.json();
 
-		if (response.ok) { // Refresh token (from cookie) accepted!
-			const accessToken = docutil.getCookieValue('token'); // Read access token from cookie
-			if (!accessToken) throw new Error('Token cookie not found!');
-			tokenInfo = { accessToken, lastRefreshTime: Date.now() }
+    if (response.ok) { // Refresh token (from cookie) accepted!
+      const accessToken = docutil.getCookieValue('token'); // Read access token from cookie
+      if (!accessToken) throw new Error('Token cookie not found!');
+      tokenInfo = { accessToken, lastRefreshTime: Date.now() };
 
-			// Delete the token cookie after reading it
-			docutil.deleteCookie('token');
-			
-			// It's possible the server renewed our session. Let's read the memberInfo cookie again!
-			readMemberInfoCookie();
+      // Delete the token cookie after reading it
+      docutil.deleteCookie('token');
+      
+      // It's possible the server renewed our session. Let's read the memberInfo cookie again!
+      readMemberInfoCookie();
 
-			// Dispatch event to inform other parts of the app that we are logged in.
-			// document.dispatchEvent(new CustomEvent('login'));
+	  // Dispatch event to inform other parts of the app that we are logged in.
+	  // document.dispatchEvent(new CustomEvent('login'));
 
-		} else { // 403 or 500 error   Likely not signed in!
-			console.log(`Server: ${result.message}`);
-			docutil.deleteCookie('memberInfo');
-			memberInfo = { signedIn: false };
-		}
+    } else { // 403 or 500 error   Likely not signed in!
+      console.log(`Server: ${result.message}`);
+      docutil.deleteCookie('memberInfo');
+      memberInfo = { signedIn: false };
+    }
 
-	} catch (error) {
-		console.error('Error occurred during token refresh:', error);
-		readMemberInfoCookie();
-	}
+  } catch (error) {
+    console.error('Error occurred during token refresh:', error);
+    readMemberInfoCookie();
+  }
 }
 
 /**
@@ -140,7 +155,7 @@ function readMemberInfoCookie() {
  * @returns {boolean} True if logged in, false otherwise.
  */
 function areWeLoggedIn() {
-	return memberInfo.signedIn;
+  return memberInfo.signedIn;
 }
 
 /**
@@ -148,15 +163,15 @@ function areWeLoggedIn() {
  * @returns {string | undefined} The username, or undefined if not logged in.
  */
 function getOurUsername() {
-	return memberInfo.signedIn ? memberInfo.username : undefined;
+  return memberInfo.signedIn ? memberInfo.username : undefined;
 }
 
 
 
 // Export these methods to be used by other scripts
 export default {
-	waitUntilInitialRequestBack,
-	areWeLoggedIn,
-	getOurUsername,
-	getAccessToken,
+  waitUntilInitialRequestBack,
+  areWeLoggedIn,
+  getOurUsername,
+  getAccessToken,
 };
