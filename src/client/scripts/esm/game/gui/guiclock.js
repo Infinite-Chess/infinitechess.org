@@ -6,7 +6,7 @@ import clockutil from "../../chess/util/clockutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 
 /**
- * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
  */
 
 const element_timers = {

@@ -8,7 +8,7 @@ import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
 
 // Type Definitions...
-/** @typedef {import('./gamerules.js').GameRules} GameRules */
+/** @typedef {import('../logic/gamerules.js').GameRules} GameRules */
 
 "use strict";
 
