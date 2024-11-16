@@ -41,16 +41,16 @@ function generateTables() {
 		CREATE TABLE IF NOT EXISTS members (
 			user_id INTEGER PRIMARY KEY,               
 			username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
-			username_history TEXT,
 			email TEXT UNIQUE NOT NULL,                
 			hashed_password TEXT NOT NULL,             
 			roles TEXT,                       
 			joined INTEGER NOT NULL,
-			last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			refresh_tokens TEXT,                        
 			preferences TEXT,                          
 			verification TEXT,                         
-			login_count INTEGER DEFAULT 0
+			login_count INTEGER NOT NULL DEFAULT 0
+			username_history TEXT,
 		);
 	`;
 	db.run(createTableSQLQuery);
@@ -61,8 +61,8 @@ function generateTables() {
 			user_id INTEGER PRIMARY KEY,               
 			username TEXT NOT NULL COLLATE NOCASE,    
 			username_history TEXT,    
-			joined INTEGER NOT NULL,
-			left INTEGER NOT NULL,                              
+			joined TIMESTAMP NOT NULL,
+			left TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			login_count INTEGER NOT NULL,             
 			reason_deleted TEXT NOT NULL
 		);
