@@ -15,6 +15,8 @@ import zhTW from 'date-fns/locale/zh-TW/index.js';
 import zhCN from 'date-fns/locale/zh-CN/index.js';
 import pl from 'date-fns/locale/pl/index.js';
 
+import { BUNDLE_FILES } from "./config.js";
+
 /**
  * This dictionary tells use what code the date-fns package uses
  * to provide language-correct dates.
@@ -336,6 +338,7 @@ function translateStaticTemplates(translations) {
 						language: language,
 						newsHTML: translations[language].news,
 						viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
+						// BUNDLE_FILES, // EJS can read this to insert different attributes to elements if desired.
 					},
 				),
 			);

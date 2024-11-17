@@ -15,8 +15,8 @@ import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers,
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
-import uuid from '../../../client/scripts/game/misc/uuid.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import uuid from '../../../client/scripts/esm/util/uuid.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 /**
  * Type Definitions

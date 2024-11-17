@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\client",
+    "\\src\\client\\scripts",
+    "\\src\\client\\scripts\\esm",
+    "\\src\\client\\scripts\\esm\\chess",
+    "\\src\\client\\scripts\\esm\\chess\\logic"
+  ],
+  "PreviewInSolutionExplorer": false
+}

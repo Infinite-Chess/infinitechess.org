@@ -1,10 +1,10 @@
 import { logEvents } from './logEvents.js';
-import { getClientIP, getClientIP_Websocket } from './IP.js';
+import { getClientIP, getClientIP_Websocket } from '../utility/IP.js';
 
 import { isIPBanned } from './banned.js';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
 import { getTranslationForReq } from '../utility/translate.js';
-import jsutil from '../../client/scripts/game/misc/jsutil.js';
+import jsutil from '../../client/scripts/esm/util/jsutil.js';
 
 /** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
 

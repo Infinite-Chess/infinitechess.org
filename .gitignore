@@ -2,7 +2,9 @@ node_modules
 .env
 .vscode
 cert
-database
+# Old json data storage "database"
+/database
+# New database using SQLite
 database.db
 logs
 dist
@@ -14,4 +16,4 @@ dist
 pnpm-lock.yaml
 
 # Hidden mac file storing attributes of the directory
-.DS_Store 
+.DS_Store

@@ -10,6 +10,15 @@
 function Socket() {
 	console.error("THIS CONSTRUCTOR SHOULD NOT BE CALLED. It is purely for JSDoc info.");
 
+	
+	/** The parsed cookie object, this will contain the 'browser-id' cookie if they are not signed in */
+	this.cookies = {
+		/** If they are not signed in, this is present. */
+		'browser-id': undefined,
+		/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
+		i18next: undefined,
+	},
+
 	/** Our custom-entered information about this websocket.
      * To my knowledge (Naviary), the `metadata` property isn't already in use. */
 	this.metadata = {
@@ -27,12 +36,14 @@ function Socket() {
 		},
 		/** The user-agent property of the original websocket upgrade's req.headers */
 		userAgent: undefined,
-		/** The member's username, if they are signed in. This or {@link this.metadata['browser-id']} will always be defined. */
-		user: undefined,
-		/** The member's role, if they have one (e.g. "owner").*/
-		role: undefined,
-		/** The user's `browser-id` cookie, if they are not signed in. This or {@link this.metadata.user} will always be defined. */
-		'browser-id': undefined,
+		memberInfo: {
+			/** True if they are signed in, if not they MUST have a browser-id cookie! */
+			signedIn: undefined,
+			user_id: undefined,
+			username: undefined,
+			roles: undefined,
+		},
+		cookies: undefined,
 		/** The id of their websocket. */
 		id: undefined,
 		/** The socket's IP address. */
@@ -48,8 +59,6 @@ function Socket() {
 		renewConnectionTimeoutID: undefined,
 		/** A function that when called, returns true if this socket has an open invite. @type {Function} */
 		hasInvite: undefined,
-		/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
-		i18next: undefined,
 	};
 }
 

@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs';
 import { readFile, writeFile } from '../utility/lockFile.js';
-import timeutil from '../../client/scripts/game/misc/timeutil.js';
+import timeutil from '../../client/scripts/esm/util/timeutil.js';
 
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 

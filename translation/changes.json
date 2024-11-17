@@ -1,6 +1,17 @@
 {
+	"23": {
+		"note": [
+			"IGNORE THIS CHANGE FOR NOW IT'S NOT DONE YET!!! No need to translate. - Naviary :)",
+			"Deleted member.rating, line 105"
+		],
+		"changes": []
+	},
+	"22": {
+		"note": "Deleted all of header.javascript (lines 19-23). Changed the value of header.home (line 7). Added header.profile (line 11) & header.logout (line 10). Deleted disable_holiday_theme_desktop and disable_holiday_theme_mobile (lines 299-300). Added all of header.settings (lines 15-25).",
+		"changes": []
+	},
 	"21": {
-		"note": "Added notices for how to disable the holiday theme, lines 299-300. DELETED IN FUTURE UPDATE (on the themes branch).",
+		"note": "Added notices for how to disable the holiday theme, lines 299-300. DELETED IN UPDATE 22.",
 		"changes": []
 	},	
 	"20": {

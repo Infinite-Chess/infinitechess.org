@@ -1,58 +1,568 @@
+:root {
+    --header-height: 40px;
+    --header-link-hover-color: rgb(230, 230, 230);
+    --currPage-background-color: rgb(237, 237, 237);
+    --header-link-max-padding: 16px;
+    --header-link-min-padding: 8px;
+    --CBC-in: cubic-bezier(0,1.05,.47,1); /* Settings dropdown IN curve */
+    --CBC-out: cubic-bezier(.54,0,1,.97); /* Settings dropdown OUT curve */
+    --CBC-CM-in: cubic-bezier(.09,1.61,.36,1); /* Checkmark IN curve */
+    --CBC-CM-out: cubic-bezier(0,1.1,1,1); /* Checkmark OUT curve */
+}
+
 header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
+    /* 
     box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    height: 40px;
-    font-size: 0;
     overflow: scroll;
     white-space: nowrap;
     text-align: center;
     background-color: white;
+    z-index: 1; */
+
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
     z-index: 1;
-}
-
-.topnavitem {
-    display: inline-block;
-    text-decoration: none;
-    line-height: 40px;
-    margin-left: 4px;
-    min-width: 70px;
+    display: flex;
+    justify-content: space-between;
+    height: var(--header-height);
+    background-color: white;
+    border-bottom: 1px solid black;
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.08);
     font-size: 16px;
+    align-items: center;
+    user-select: none; /* Prevent text selection */
+}
+
+header a {
+    text-decoration: none;
     color: black;
+    display: flex;
+    align-items: center;
 }
 
-.topnavitem :hover {
-    background-color: rgb(211, 235, 255);
+/* All SVG settings. (Most settings dropdown SVGs are the same width in the document, we just scale them here to make them all VISUALLY the same size */
+
+.svg-play { /* The pawn svg and loading animation that we use in several spots */
+    position: relative;
+    bottom: 3px;
+    height: 65%;
+    aspect-ratio: 1;
+    transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
 }
 
-.topnavtext {
-    padding: 0 10px;
+.svg-language, .svg-board, .svg-legalmove, .svg-perspective,
+.svg-squares, .svg-mouse, .svg-camera,
+.checkmark {
+    width: 19px;
+    aspect-ratio: 1;
+    padding: 0 2px;
+}
+
+.svg-language {
+    transform: scale(1.21);
+}
+
+.svg-perspective {
+    transform: scale(1.1);
+}
+
+.svg-mouse {
+    transform: scale(1.47);
+}
+
+.svg-camera {
+    transform: scale(1.3);
 }
 
 
 
+/* The Infinite Chess text and logo, left side of header */
+
+.home {
+    display: flex;
+	gap: 5px;
+    height: 100%;
+    align-items: center;
+    padding: 0 8px;
+	white-space: nowrap; /* Prevent text from wrapping */
+	overflow: hidden; /* Hide overflow if needed */
+}
+
+.home picture {
+	height: 90%;
+}
+
+.home picture img {
+    height: 100%;
+}
+
+.home p {
+    font-family: georgia;
+    font-size: 24px;
+}
+
+.home:hover p {
+    text-decoration: underline;
+}
+
+/* Hide the "Infinite Chess" text when we are at compactness level 1 */
+.home.compact-1 p {
+    display: none;
+}
+
+.home.compact-1:hover {
+    background-color: var(--header-link-hover-color);
+}
+
+
+
+/* The navigation hyperlinks, middle of header. Play, News, Login, Create Account */
+
+nav {
+    display: flex;
+    height: 100%;
+}
+
+nav a {
+    padding: 0 calc(var(--header-link-max-padding)) 0;
+	white-space: nowrap; /* Prevent text from wrapping */
+	overflow: hidden; /* Hide overflow if needed */
+}
+
+nav span {
+    padding-left: 4px;
+}
+
+nav .svg-play {
+    bottom: 1px;
+}
+
+nav #svg-news {
+    height: 55%;
+    padding: 0 5px;
+}
+
+nav #svg-login {
+    height: 60%;
+    padding-left: 4px;
+}
+
+nav #svg-profile {
+    height: 47.5%;
+    padding: 0 4px 0 6px;
+}
+
+nav #svg-createaccount {
+    height: 50%;
+    padding-left: 7px;
+    position: relative;
+    top: 1px;
+}
+
+nav #svg-logout {
+    height: 63%;
+    padding-left: 5px;
+}
+
+nav a:hover {
+    background-color: var(--header-link-hover-color);
+}
+
+/* Hide the navigation SVGs when we are at compactness level 2 */
+nav.compact-2 svg {
+    display: none;
+}
+nav.compact-2 span {
+    padding: 0 4px;
+}
+
+/* Navigation SVGs are visible again, but not the text */
+nav.compact-3 span {
+    display: none;
+}
+nav.compact-3 #svg-news {
+    padding: 0 4px;
+}
+nav.compact-3 #svg-profile {
+    padding: 0 4px;
+}
+nav.compact-3 #svg-createaccount {
+    padding-left: 5px;
+}
+nav.compact-3 #svg-logout {
+    padding-left: 4px;
+}
+
+
+
+/* The gear and settings dropdown menu, right side of header. */
+
+.settings {
+    height: 100%;
+    width: var(--header-height);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.settings.open {
+    background-color: var(--currPage-background-color);
+}
+
+.settings:hover {
+    background-color: var(--header-link-hover-color);
+}
+
+.settings:active { /* Prevents blue highlight when holding finger over the gear button */
+    background-color: var(--header-link-hover-color); 
+    -webkit-tap-highlight-color: transparent;
+}
+
+.gear {
+    width: 45%;
+    transition: transform 0.2s var(--CBC-out);
+}
+
+.settings.open .gear {
+    transition: transform 0.3s var(--CBC-in);
+    transform: rotate(60deg);
+}
+
+.dropdown {
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
+    right: 0; 
+    width: 195px;
+    /* Can't enable these because words "Perspective Sensitivity" won't wrap but instead increase the length of the whole dropdown. */
+    /* min-width: 195px;
+    width: fit-content; */
+    background-color: white;
+    box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    border: 1px solid black;
+    border-right: unset;
+    cursor: auto;
+    border-radius: 0 0 0 5px;
+    overflow: hidden; /* Prevent children from rendering outside the border */
+    transform: translateX(0); /* Slide into view */
+    transition: transform 0.3s var(--CBC-in), visibility 0s, opacity 0.25s ease-in-out;
+}
+
+.dropdown.visibility-hidden {
+    transform: translateX(100%); /* Just off screen to the right, to start out, until it's animated in. */
+    transition: transform 0.2s var(--CBC-out), visibility 0s 0.2s, opacity 0.25s ease-in-out;
+}
+
+.dropdown-title { /* The back button at the top of 2+ deep dropdown */
+    display: flex;
+    align-items: center;
+    height: 43px;
+    padding: 0 15px;
+    cursor: pointer;
+    border-bottom: 1px solid grey;
+}
+
+.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover {
+    background-color: var(--header-link-hover-color);
+}
+
+/* Dropdown items */
+.settings-dropdown-item {
+    display: flex;
+    align-items: center;
+    height: 43px;
+    padding: 0 15px 0 8px;
+    cursor: pointer;
+}
+
+span.text {
+    padding: 0 6px;
+    margin-right: auto;
+}
+
+span.arrow-head-right, span.arrow-head-left {
+    width: 8px;
+    height: 8px;
+    border-right: 3px solid #666;
+    border-top: 3px solid #666;
+}
+span.arrow-head-right {
+    margin-left: auto;
+    transform: rotate(45deg) /* skew(10deg, 10deg); */;
+}
+span.arrow-head-left {
+    margin-right: auto;
+    transform: rotate(225deg) /* skew(10deg, 10deg); */;
+}
+
+.checkmark {
+    width: 30px;
+    aspect-ratio: 1;
+    margin-left: auto;
+    fill: #444;
+    transition: transform 0.5s var(--CBC-CM-in);
+    transform: scale(1);
+}
+
+.checkmark.visibility-hidden {
+    transition: transform 0.2s var(--CBC-CM-out), visibility 0s 0.5s;
+    transform: scale(0);
+}
+
+
+
+/* Language nested dropdown */
+
+.language-dropdown-item, .legalmove-option {
+    display:flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.language-dropdown-item {
+    height: 48px;
+    padding: 0 15px;
+}
+
+/* .language-dropdown-item p.name {
+
+} */
+
+.language-dropdown-item p.englishName {
+    color: grey;
+    font-size: 0.7em;
+}
+
+
+/* Board theme nested dropdown */
+
+.board-dropdown {
+    width: 211px;
+}
+
+.theme-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 45.5px);
+    justify-content: center;
+    gap: 14px; /* Combined margin from both axes (7px) */
+    padding: 16px;
+}
+
+.theme-list img {
+    width: 45.5px;
+    image-rendering: pixelated;
+    border-radius: 2px;
+    outline: 3px solid rgb(97, 97, 97);
+    cursor: pointer;
+    justify-self: center;
+    align-self: center;
+}
+
+.theme-list img:hover, .theme-list img.selected {
+    outline: 5px solid black;
+}
+
+
+
+/* Legalmove shape nested dropdown */
+
+/* .legalmove-dropdown {
+    
+} */
+
+.legalmove-option {
+    height: 43px;
+    padding: 0 15px 0 8px;
+}
+
+
+
+/* Perspective dropdown */
+
+.perspective-options {
+    text-align: center;
+}
+
+.perspective-option {
+    font-size: 14px;
+    padding: 5px 0 10px;
+}
+
+.perspective-option .perspective-option-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 35px;
+}
+
+.perspective-option .perspective-option-title p { /* "Mouse Sensitivity", "Field of View" */
+    padding-left: 6px;
+}
+
+.perspective-option .slider-container {
+    display: flex;
+    margin-left: 8px;
+}
+
+.perspective-option .slider {
+    width: 100%;
+}
+
+.perspective-option .slider:hover {
+    cursor: pointer;
+}
+
+.perspective-option .value {
+    padding-left: 5px;
+	text-align: left;
+    flex-shrink: 0;
+}
+
+.perspective-option.mouse-sensitivity .value {
+	width: 50px;
+}
+
+.perspective-option.fov .value {
+    width: 35px;
+}
+
+
+
+/* Reset default buttons */
+
+.reset-default-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 5px;
+}
+
+.reset-default {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    height: fit-content;
+    border-radius: 15px;
+    padding: 3px 8px;
+}
+
+.reset-default:hover {
+    background-color: rgb(233, 233, 233);
+    cursor: pointer;
+}
+
+.reset-default span {
+    padding-left: 2px;
+}
+
+.reset-default-container .svg-undo {
+    width: 19px;
+    aspect-ratio: 1;
+    transform-origin: 70% 55%; /* Rotate around the center of mass (slightly downward) */
+    transform: scale(1.8);
+}
+
+
+
+
+
+/* Ping Meter */
+
+.ping-meter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50px;
+    padding: 0 15px;
+    border-top: 1px solid grey;
+    overflow: hidden; /* Don't let the connection bars glow effect leak above */
+    font-size: 0px; /* Prevents a small amount of margin between each element */
+}
+
+.ping-meter .ping {
+    font-size: 15px;
+}
+
+.ping-meter .ping-value {
+    font-size: 15px;
+    padding: 0 3px 0 6px;
+}
+
+.ping-meter .ms {
+    font-size: 13px;
+}
+
+/* .ping-bars {
+    
+} */
+
+.ping-bar {
+    outline: 1px solid #0000008c;
+    display: inline-block;
+    width: 9px;
+    /* box-shadow: 0px 0px 5px 0px #0000007a; */
+    background-color: rgb(210, 210, 210);
+}
+
+.ping-bar.green {
+    background-color: #78ff78;
+}
+
+.ping-bar.yellow {
+    background-color: #f8f878;
+}
+
+.ping-bar.red {
+    background-color: #ff8b8b;
+}
+
+.ping-glow { /* Relatively positioned 0-space element that only glows */
+    box-shadow: 0px 0px 80px 30px #000000c4;
+    position: relative;
+    bottom: 7px;
+    z-index: -1; /* Places glow behind all bars */
+    left: 10px;
+    overflow: hidden;
+    /* transform: scaleY(0.7); */
+}
+
+.ping-meter .svg-play {
+    animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
+}
+
+
+
+
+/* Miscellaneous (some of these can probably be put in a universal stylesheet for all pages, not just the header stylesheet) */
+
+/* Greys the background of the navigation hyperlink we are currently in */
 .currPage {
-    background-color: rgb(236, 236, 236);
+    background-color: var(--currPage-background-color);
 }
 
-
-
-/* Start increasing header links width when screen is 450px+ */
-@media only screen and (min-width: 450px) {
-    header {
-        overflow: unset;
-    }
-
-    .topnavitem {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
+.hidden {
+    display: none;
 }
 
-/* Stop increasing header links width once screen reaches 715px+ */
-@media only screen and (min-width: 715px) {
-    .topnavitem {
-        min-width: 110px;
+.visibility-hidden {
+    visibility: hidden;
+}
+
+.transparent {
+    opacity: 0%;
+    pointer-events: none;
+}
+
+/* Animations */
+
+@keyframes spin {
+    0% {
+      transform: rotate(0deg); /* Start at 0 degrees */
+    }
+    100% {
+      transform: rotate(360deg); /* Complete a full 360 degree rotation */
     }
 }
