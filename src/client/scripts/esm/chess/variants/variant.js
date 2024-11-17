@@ -6,6 +6,8 @@ import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
+import fivedimensionalgenerator from './fivedimensionalgenerator.js';
+import movesets from '../logic/movesets.js';
 
 // Type Definitions...
 /** @typedef {import('../logic/gamerules.js').GameRules} GameRules */
@@ -164,6 +166,15 @@ const variantDictionary = {
 		},
 		gameruleModifications: gameruleModificationsOfOmegaShowcasings
 	},
+	Five_Dimensional: {
+		generator: {
+			algorithm: fivedimensionalgenerator.genPositionOfFiveDimensional,
+		},
+		gameruleModifications: {
+			promotionRanks: null
+		},
+		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional
+	}
 };
 
 
@@ -359,10 +370,54 @@ function getApplicableTimestampEntry(object, { UTCDate, UTCTime }) {
 	return object[timestampToUse];
 }
 
+/**
+ * 
+ * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
+ * @param {string} options.Variant - The name of the variant for which to get the moveset.
+ * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
+ * @param {number} [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
+ * @returns {Object} - The moveset in the form defined in movesets.js
+ */
+function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }) {
+	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
+	const variantEntry = variantDictionary[Variant];
+
+	let movesetModifications;
+	if (!variantEntry.movesetGenerator) {
+		console.log(`Variant ${Variant} does not have a moveset generator.`);
+		return getMovesets(variantEntry.gameruleModifications?.slideLimit ?? Infinity);
+	}
+
+	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) { // Multiple UTC timestamps
+		movesetModifications = getApplicableTimestampEntry(variantEntry.movesetGenerator, { UTCDate, UTCTime })();
+	} else { // Just one movesetGenerator entry
+		movesetModifications = variantEntry.movesetGenerator();
+	}
+
+	return getMovesets(movesetModifications);
+}
+
+function getMovesets(movesetModifications = {}, defaultSlideLimitForOldVariants = Infinity) {
+	const origMoveset = movesets.getPieceMovesets(defaultSlideLimitForOldVariants);
+	const moveset = {};
+
+	console.log(movesetModifications);
+
+	for (const [piece, moves] of Object.entries(origMoveset)) {
+		moveset[piece] = movesetModifications[piece] ? function () { return jsutil.deepCopyObject(movesetModifications[piece]); }
+			: function () { return jsutil.deepCopyObject(moves); };
+	}
+
+	console.log(moveset);
+
+	return moveset;
+}
+
 
 export default {
 	isVariantValid,
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	getPromotionsAllowed,
+	getMovesetsOfVariant
 };
