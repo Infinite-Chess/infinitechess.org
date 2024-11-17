@@ -385,7 +385,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 	let movesetModifications;
 	if (!variantEntry.movesetGenerator) {
 		console.log(`Variant ${Variant} does not have a moveset generator.`);
-		return getMovesets(variantEntry.gameruleModifications?.slideLimit ?? Infinity);
+		return getMovesets({}, variantEntry.gameruleModifications?.slideLimit ?? Infinity);
 	}
 
 	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) { // Multiple UTC timestamps
