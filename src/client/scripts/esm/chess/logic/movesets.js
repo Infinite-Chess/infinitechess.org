@@ -15,7 +15,7 @@
  * @param {number} slideLimit - Optional. The slideLimit gamerule value.
  * @returns {Object} Object containing the movesets of all pieces except pawns.
  */
-function getPieceMovesets(slideLimit = Infinity) {
+function getPieceDefaultMovesets(slideLimit = Infinity) {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	return {
@@ -168,5 +168,5 @@ function getPieceMovesets(slideLimit = Infinity) {
 }
 
 export default {
-	getPieceMovesets
+	getPieceDefaultMovesets,
 };

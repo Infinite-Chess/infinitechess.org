@@ -384,7 +384,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 
 	let movesetModifications;
 	if (!variantEntry.movesetGenerator) {
-		console.log(`Variant ${Variant} does not have a moveset generator.`);
+		console.log(`Variant ${Variant} does not have a moveset generator. Using default movesets.`);
 		return getMovesets({}, variantEntry.gameruleModifications?.slideLimit ?? Infinity);
 	}
 
@@ -397,8 +397,8 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 	return getMovesets(movesetModifications);
 }
 
-function getMovesets(movesetModifications = {}, defaultSlideLimitForOldVariants = Infinity) {
-	const origMoveset = movesets.getPieceMovesets(defaultSlideLimitForOldVariants);
+function getMovesets(movesetModifications = {}, defaultSlideLimitForOldVariants) {
+	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
 	const moveset = {};
 
 	console.log(movesetModifications);
