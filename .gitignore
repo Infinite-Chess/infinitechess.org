@@ -1,7 +1,7 @@
 node_modules
 .env
-.vscode
-.vs
+.vscode # VSCode automatically generated directory
+.vs # Visual Studio automatically generated directory
 cert
 # Old json data storage "database"
 /database
