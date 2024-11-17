@@ -97,6 +97,7 @@ function getPossibleSlides(gamefile) {
 /**
  * Initiates legalmoves's and the special detect, move, and undo scripts movesets they're using.
  * @param {gamefile} gamefile - The gamefile
+ * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  */
 function initPieceMovesets(gamefile, { Variant, UTCDate, UTCTime }) {
 	// The movesets and methods for detecting and executing special moves
