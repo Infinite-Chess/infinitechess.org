@@ -20,6 +20,7 @@ function genPositionOfFiveDimensional() {
 	// Loop through from the leftmost column that should be voids to the right most, and also vertically
 	for (let i = -(BOARD_SPACING * Math.floor(BOARDS_X / 2) + 1); i <= BOARD_SPACING * (Math.floor(BOARDS_X / 2) + 1); i++) {
 		for (let j = -(BOARD_SPACING * Math.floor(BOARDS_Y / 2) + 1); j <= BOARD_SPACING * (Math.floor(BOARDS_Y / 2) + 1); j++) {
+			// Only the edges of boards should be voids
 			if ((i % BOARD_SPACING === -1 || i % BOARD_SPACING === 0 || i % BOARD_SPACING === 9) || (j % BOARD_SPACING === -1 || j % BOARD_SPACING === 0 || j % BOARD_SPACING === 9)) {
 				standardPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 			}
