@@ -47,6 +47,7 @@ function genMovesetOfFiveDimensional() {
 		for (let baseV = -1; baseV <= 1; baseV++) {
 			for (let offsetH = -1; offsetH <= 1; offsetH++) {
 				for (let offsetV = -1; offsetV <= 1; offsetV++) {
+					moveset.kings.individual[kingIndex] = [10 * baseH + offsetH, 10 * baseV + offsetV];
 					if (moveset.queens.sliding[`${(-(10 * baseH + offsetH)).toString()},${(-(10 * baseV + offsetV.toString()))}`]) {
 						continue;
 					}
@@ -57,7 +58,6 @@ function genMovesetOfFiveDimensional() {
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1) {
 						moveset.rooks.sliding[`${(10 * baseH + offsetH).toString()},${(10 * baseV + offsetV).toString()}`] = [-Infinity, Infinity];
 					}
-					moveset.kings.individual[kingIndex] = [10 * baseH + offsetH, 10 * baseV + offsetV];
 					kingIndex++;
 				}
 			}
