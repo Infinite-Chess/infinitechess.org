@@ -47,6 +47,9 @@ function genMovesetOfFiveDimensional() {
 		for (let baseV = -1; baseV <= 1; baseV++) {
 			for (let offsetH = -1; offsetH <= 1; offsetH++) {
 				for (let offsetV = -1; offsetV <= 1; offsetV++) {
+					if (moveset.queens.sliding[`${(-(10 * baseH + offsetH)).toString()},${(-(10 * baseV + offsetV.toString()))}`]) {
+						continue;
+					}
 					moveset.queens.sliding[`${(10 * baseH + offsetH).toString()},${(10 * baseV + offsetV).toString()}`] = [-Infinity, Infinity];
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2) {
 						moveset.bishops.sliding[`${(10 * baseH + offsetH).toString()},${(10 * baseV + offsetV).toString()}`] = [-Infinity, Infinity];

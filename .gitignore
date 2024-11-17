@@ -1,6 +1,7 @@
 node_modules
 .env
 .vscode
+.vs
 cert
 # Old json data storage "database"
 /database
