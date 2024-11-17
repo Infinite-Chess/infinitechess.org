@@ -17,8 +17,8 @@ function genPositionOfFiveDimensional() {
 	const standardPos = formatconverter.ShortToLong_Format(standardPosStr).startingPosition;
 
 	for (let i = -(BOARD_SPACING * Math.floor(BOARDS_X / 2) + 1); i <= BOARD_SPACING * (Math.floor(BOARDS_X / 2) + 1); i++) {
-		for (let j = -(10 * Math.floor(BOARDS_Y / 2) + 1); j <= 10 * (Math.floor(BOARDS_Y / 2) + 1); j++) {
-			if ((i % 10 === -1 || i % 10 === 0 || i % 10 === 9) || (j % 10 === -1 || j % 10 === 0 || j % 10 === 9)) {
+		for (let j = -(BOARD_SPACING * Math.floor(BOARDS_Y / 2) + 1); j <= BOARD_SPACING * (Math.floor(BOARDS_Y / 2) + 1); j++) {
+			if ((i % BOARD_SPACING === -1 || i % BOARD_SPACING === 0 || i % BOARD_SPACING === 9) || (j % BOARD_SPACING === -1 || j % BOARD_SPACING === 0 || j % BOARD_SPACING === 9)) {
 				standardPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 			}
 		}
