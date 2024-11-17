@@ -171,7 +171,6 @@ const variantDictionary = {
 			algorithm: fivedimensionalgenerator.genPositionOfFiveDimensional,
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
 		},
-		gameruleModifications: { promotionRanks: null },
 		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional
 	}
 };
