@@ -58,10 +58,7 @@ function genMovesetOfFiveDimensional() {
 					const y = (BOARD_SPACING * baseV + offsetV);
 					moveset.kings.individual[kingIndex] = [x, y];
 					kingIndex++;
-					const isNegX = x < 0;
-					if (isNegX) { // If the x coordinate is negative, skip this iteration
-						continue;
-					}
+					if (x < 0) continue; // If the x coordinate is negative, skip this iteration
 					if (x === 0 && y <= 0) continue; // Skip if x is 0 and y is negative
 					// Add the moves
 					moveset.queens.sliding[coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
