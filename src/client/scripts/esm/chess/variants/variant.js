@@ -370,7 +370,7 @@ function getApplicableTimestampEntry(object, { UTCDate, UTCTime }) {
 }
 
 /**
- * Gets the piece movesets for the given variant and time, such that each piece contains a function returning its moveset
+ * Gets the piece movesets for the given variant and time, such that each piece contains a function returning a copy of its moveset (to avoid modifying originals)
  * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
  * @param {string} options.Variant - The name of the variant for which to get the moveset.
  * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
@@ -397,9 +397,9 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 }
 
 /**
- * Returns default movesets with provided modifications.
+ * Returns default movesets with provided modifications such that each piece contains a function returning a copy of its moveset (to avoid modifying originals).
  * Any piece type present in the modifications will replace the default move that for that piece.
- * The slide limit game Rob will only be applied to default movesets, not modified ones.
+ * The slidelimit gamerule will only be applied to default movesets, not modified ones.
  * @param {Object} movesetModifications - The modifications to the default movesets.
  * @returns {number} [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
  * @returns {Object} The pieceMovesets property of the gamefile.
