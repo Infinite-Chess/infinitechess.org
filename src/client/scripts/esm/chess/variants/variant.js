@@ -171,9 +171,7 @@ const variantDictionary = {
 			algorithm: fivedimensionalgenerator.genPositionOfFiveDimensional,
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
 		},
-		gameruleModifications: {
-			promotionRanks: null
-		},
+		gameruleModifications: { promotionRanks: null },
 		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional
 	}
 };
@@ -383,12 +381,12 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
 	const variantEntry = variantDictionary[Variant];
 
-	let movesetModifications;
 	if (!variantEntry.movesetGenerator) {
-		console.log(`Variant ${Variant} does not have a moveset generator. Using default movesets.`);
-		return getMovesets({}, variantEntry.gameruleModifications?.slideLimit ?? Infinity);
+		console.log(`Variant "${Variant}" does not have a moveset generator. Using default movesets.`);
+		return getMovesets({}, variantEntry.gameruleModifications?.slideLimit);
 	}
 
+	let movesetModifications;
 	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) { // Multiple UTC timestamps
 		movesetModifications = getApplicableTimestampEntry(variantEntry.movesetGenerator, { UTCDate, UTCTime })();
 	} else { // Just one movesetGenerator entry
@@ -398,6 +396,14 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 	return getMovesets(movesetModifications);
 }
 
+/**
+ * Returns default movesets with provided modifications.
+ * Any piece type present in the modifications will replace the default move that for that piece.
+ * The slide limit game Rob will only be applied to default movesets, not modified ones.
+ * @param {Object} movesetModifications - The modifications to the default movesets.
+ * @returns {number} [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
+ * @returns {Object} The pieceMovesets property of the gamefile.
+ */
 function getMovesets(movesetModifications = {}, defaultSlideLimitForOldVariants) {
 	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
 	const moveset = {};
@@ -405,11 +411,9 @@ function getMovesets(movesetModifications = {}, defaultSlideLimitForOldVariants)
 	console.log(movesetModifications);
 
 	for (const [piece, moves] of Object.entries(origMoveset)) {
-		moveset[piece] = movesetModifications[piece] ? function () { return jsutil.deepCopyObject(movesetModifications[piece]); }
-			: function () { return jsutil.deepCopyObject(moves); };
+		moveset[piece] = movesetModifications[piece] ? function() { return jsutil.deepCopyObject(movesetModifications[piece]); }
+													 : function() { return jsutil.deepCopyObject(moves); };
 	}
-
-	console.log(moveset);
 
 	return moveset;
 }
@@ -420,5 +424,5 @@ export default {
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	getPromotionsAllowed,
-	getMovesetsOfVariant
+	getMovesetsOfVariant,
 };
