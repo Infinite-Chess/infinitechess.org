@@ -8,7 +8,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
-import fivedimensional from './fivedimensional.js';
+import fivedimensionalpromote from './fivedimensionalpromote.js';
 // Import End
 
 /** 
@@ -290,7 +290,7 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
  */
 function isPawnPromotion(gamefile, type, coordsClicked) {
 	if (!type.startsWith('pawns')) return false;
-	if (gamefile.metadata.Variant === "Five_Dimensional") return fivedimensional.fivedimensionalpromote(gamefile, type, coordsClicked); /* Five dimensional promotion is
+	if (gamefile.metadata.Variant === "Five_Dimensional") return fivedimensionalpromote.fivedimensionalpromote(gamefile, type, coordsClicked); /* Five dimensional promotion is
 																														   hardcoded for now, this should be
 																														   replaced with multiple promotion
 																														   lines when they are finished.
