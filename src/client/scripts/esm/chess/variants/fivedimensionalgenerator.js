@@ -12,12 +12,15 @@ const BOARDS_Y = 5;
 const BOARD_SPACING = 10;
 
 function genPositionOfFiveDimensional() {
+	// Start with standard
 	const standardPosStr = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 
 	const standardPos = formatconverter.ShortToLong_Format(standardPosStr).startingPosition;
 
+	// Loop through from the leftmost column that should be voids to the right most, and also vertically
 	for (let i = -(BOARD_SPACING * Math.floor(BOARDS_X / 2) + 1); i <= BOARD_SPACING * (Math.floor(BOARDS_X / 2) + 1); i++) {
 		for (let j = -(10 * Math.floor(BOARDS_Y / 2) + 1); j <= 10 * (Math.floor(BOARDS_Y / 2) + 1); j++) {
+			// Only some tiles should be void, this allows for 8 by 8 boards
 			if ((i % 10 === -1 || i % 10 === 0 || i % 10 === 9) || (j % 10 === -1 || j % 10 === 0 || j % 10 === 9)) {
 				standardPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 			}
