@@ -15,192 +15,158 @@
  * @param {number} slideLimit - Optional. The slideLimit gamerule value.
  * @returns {Object} Object containing the movesets of all pieces except pawns.
  */
-function getPieceMovesets(slideLimit = Infinity) {
+function getPieceDefaultMovesets(slideLimit = Infinity) {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	return {
 		// Finitely moving
-		pawns: function() {
-			return { individual: [] };
+		pawns: {
+			individual: []
 		},
-		knights: function() {
-			return {
-				individual: [
-                    [-2,1],[-1,2],[1,2],[2,1],
-                    [-2,-1],[-1,-2],[1,-2],[2,-1]
-                ]
-			};
+		knights: {
+			individual: [
+                [-2,1],[-1,2],[1,2],[2,1],
+                [-2,-1],[-1,-2],[1,-2],[2,-1]
+            ]
 		},
-		hawks: function() {
-			return {
-				individual: [
-                    [-3,0],[-2,0],[2,0],[3,0],
-                    [0,-3],[0,-2],[0,2],[0,3],
-                    [-2,-2],[-2,2],[2,-2],[2,2],
-                    [-3,-3],[-3,3],[3,-3],[3,3]
-                ]
-			};
+		hawks: {
+			individual: [
+                [-3,0],[-2,0],[2,0],[3,0],
+                [0,-3],[0,-2],[0,2],[0,3],
+                [-2,-2],[-2,2],[2,-2],[2,2],
+                [-3,-3],[-3,3],[3,-3],[3,3]
+            ]
 		},
-		kings: function() {
-			return {
-				individual: [
-                    [-1,0],[-1,1],[0,1],[1,1],
-                    [1,0],[1,-1],[0,-1],[-1,-1]
-                ]
-			};
+		kings: {
+			individual: [
+                [-1,0],[-1,1],[0,1],[1,1],
+                [1,0],[1,-1],[0,-1],[-1,-1]
+            ]
 		},
-		guards: function() {
-			return {
-				individual: [
-                    [-1,0],[-1,1],[0,1],[1,1],
-                    [1,0],[1,-1],[0,-1],[-1,-1]
-                ]
-			};
+		guards: {
+			individual: [
+                [-1,0],[-1,1],[0,1],[1,1],
+                [1,0],[1,-1],[0,-1],[-1,-1]
+            ]
 		},
 		// Infinitely moving
-		rooks: function() {
-			return {
-				individual: [],
-				sliding: {
-					'1,0': [-slideLimit, slideLimit],
-					'0,1': [-slideLimit, slideLimit]
-				}
-			};
+		rooks: {
+			individual: [],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit]
+			}
 		},
-		bishops: function() {
-			return {
-				individual: [],
-				sliding: {
-					'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
-					'1,-1': [-slideLimit, slideLimit]
-				}
-			};
+		bishops: {
+			individual: [],
+			sliding: {
+				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,-1': [-slideLimit, slideLimit]
+			}
 		},
-		queens: function() {
-			return {
-				individual: [],
-				sliding: {
-					'1,0': [-slideLimit, slideLimit],
-					'0,1': [-slideLimit, slideLimit],
-					'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
-					'1,-1': [-slideLimit, slideLimit]
-				}
-			};
+		queens: {
+			individual: [],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit],
+				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,-1': [-slideLimit, slideLimit]
+			}
 		},
-		royalQueens: function() {
-			return {
-				individual: [],
-				sliding: {
-					'1,0': [-slideLimit, slideLimit],
-					'0,1': [-slideLimit, slideLimit],
-					'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
-					'1,-1': [-slideLimit, slideLimit]
-				}
-			};
+		royalQueens: {
+			individual: [],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit],
+				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,-1': [-slideLimit, slideLimit]
+			}
 		},
-		chancellors: function() {
-			return {
-				individual: [
-                    [-2,1],[-1,2],[1,2],[2,1],
-                    [-2,-1],[-1,-2],[1,-2],[2,-1]
-                ],
-				sliding: {
-					'1,0': [-slideLimit, slideLimit],
-					'0,1': [-slideLimit, slideLimit]
-				}            
-			};
+		chancellors: {
+			individual: [
+                [-2,1],[-1,2],[1,2],[2,1],
+                [-2,-1],[-1,-2],[1,-2],[2,-1]
+            ],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit]
+			}
 		},
-		archbishops: function() {
-			return {
-				individual: [
-                    [-2,1],[-1,2],[1,2],[2,1],
-                    [-2,-1],[-1,-2],[1,-2],[2,-1]
-                ],
-				sliding: {
-					'1,1': [-slideLimit, slideLimit],
-					'1,-1': [-slideLimit, slideLimit]
-				}
-			};
+		archbishops: {
+			individual: [
+                [-2,1],[-1,2],[1,2],[2,1],
+                [-2,-1],[-1,-2],[1,-2],[2,-1]
+            ],
+			sliding: {
+				'1,1': [-slideLimit, slideLimit],
+				'1,-1': [-slideLimit, slideLimit]
+			}
 		},
-		amazons: function() {
-			return {
-				individual: [
-                    [-2,1],[-1,2],[1,2],[2,1],
-                    [-2,-1],[-1,-2],[1,-2],[2,-1]
-                ],
-				sliding: {
-					'1,0': [-slideLimit, slideLimit],
-					'0,1': [-slideLimit, slideLimit],
-					'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
-					'1,-1': [-slideLimit, slideLimit]
-				}
-			};
+		amazons: {
+			individual: [
+                [-2,1],[-1,2],[1,2],[2,1],
+                [-2,-1],[-1,-2],[1,-2],[2,-1]
+            ],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit],
+				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,-1': [-slideLimit, slideLimit]
+			}
 		},
-		camels: function() {
-			return {
-				individual: [
-                    [-3,1],[-1,3],[1,3],[3,1],
-                    [-3,-1],[-1,-3],[1,-3],[3,-1]
-                ]
-			};
+		camels: {
+			individual: [
+                [-3,1],[-1,3],[1,3],[3,1],
+                [-3,-1],[-1,-3],[1,-3],[3,-1]
+            ]
 		},
-		giraffes: function() {
-			return {
-				individual: [
-                    [-4,1],[-1,4],[1,4],[4,1],
-                    [-4,-1],[-1,-4],[1,-4],[4,-1]
-                ]
-			};
+		giraffes: {
+			individual: [
+                [-4,1],[-1,4],[1,4],[4,1],
+                [-4,-1],[-1,-4],[1,-4],[4,-1]
+            ]
 		},
-		zebras: function() {
-			return {
-				individual: [
-                    [-3,2],[-2,3],[2,3],[3,2],
-                    [-3,-2],[-2,-3],[2,-3],[3,-2]
-                ]
-			};
+		zebras: {
+			individual: [
+                [-3,2],[-2,3],[2,3],[3,2],
+                [-3,-2],[-2,-3],[2,-3],[3,-2]
+            ]
 		},
-		knightriders: function() {
-			return {
-				individual: [],
-				sliding: {
-					'1,2' : [-slideLimit, slideLimit],
-					'1,-2' : [-slideLimit,slideLimit],
-					'2,1' : [-slideLimit,slideLimit],
-					'2,-1' : [-slideLimit,slideLimit],
-				}
-			};
+		knightriders: {
+			individual: [],
+			sliding: {
+				'1,2' : [-slideLimit, slideLimit],
+				'1,-2' : [-slideLimit,slideLimit],
+				'2,1' : [-slideLimit,slideLimit],
+				'2,-1' : [-slideLimit,slideLimit],
+			}
 		},
-		centaurs: function() {
-			return {
-				individual: [
-                    // Guard moveset
-                    [-1,0],[-1,1],[0,1],[1,1],
-                    [1,0],[1,-1],[0,-1],[-1,-1],
-                    // + Knight moveset!
-                    [-2,1],[-1,2],[1,2],[2,1],
-                    [-2,-1],[-1,-2],[1,-2],[2,-1]
-                ]
-			};
+		centaurs: {
+			individual: [
+                // Guard moveset
+                [-1,0],[-1,1],[0,1],[1,1],
+                [1,0],[1,-1],[0,-1],[-1,-1],
+                // + Knight moveset!
+                [-2,1],[-1,2],[1,2],[2,1],
+                [-2,-1],[-1,-2],[1,-2],[2,-1]
+            ]
 		},
-		royalCentaurs: function() {
-			return {
-				individual: [
-                    // Guard moveset
-                    [-1,0],[-1,1],[0,1],[1,1],
-                    [1,0],[1,-1],[0,-1],[-1,-1],
-                    // + Knight moveset!
-                    [-2,1],[-1,2],[1,2],[2,1],
-                    [-2,-1],[-1,-2],[1,-2],[2,-1]
-                ]
-			};
+		royalCentaurs: {
+			individual: [
+                // Guard moveset
+                [-1,0],[-1,1],[0,1],[1,1],
+                [1,0],[1,-1],[0,-1],[-1,-1],
+                // + Knight moveset!
+                [-2,1],[-1,2],[1,2],[2,1],
+                [-2,-1],[-1,-2],[1,-2],[2,-1]
+            ]
 		},
-		roses: function() {
-			return { individual: [] };
-		},
+		roses: {
+			individual: []
+		}
 	};
 }
 
 export default {
-	getPieceMovesets
+	getPieceDefaultMovesets,
 };
