@@ -53,30 +53,34 @@ function genMovesetOfFiveDimensional() {
 				for (let offsetV = 1; offsetV >= -1; offsetV--) {
 					moveset.kings.individual[kingIndex] = [10 * baseH + offsetH, 10 * baseV + offsetV];
 					kingIndex++;
-					const isNegX = (10 * baseH + offsetH) < 0;
-					if (isNegX) {
+					const x = (10 * baseH + offsetH);
+					const y = (10 * baseV + offsetV);
+					const isNegX = x < 0;
+					if (isNegX) { // If the x coordinate is negative, skip this iteration
 						continue;
 					}
-					if (moveset.queens.sliding[`${(-(10 * baseH + offsetH)).toString()},${(-(10 * baseV + offsetV).toString())}`]) {
-						continue;
-					}
-					moveset.queens.sliding[`${(10 * baseH + offsetH).toString()},${(10 * baseV + offsetV).toString()}`] = [-Infinity, Infinity];
+					// Add the moves
+					moveset.queens.sliding[`${x},${y}`] = [-Infinity, Infinity];
+					// Only add a bishop move if the move moves in two dimensions
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2) {
-						moveset.bishops.sliding[`${(10 * baseH + offsetH).toString()},${(10 * baseV + offsetV).toString()}`] = [-Infinity, Infinity];
+						moveset.bishops.sliding[`${x},${y}`] = [-Infinity, Infinity];
 					}
+					// Only add a rook move if the move moves in one dimension
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1) {
-						moveset.rooks.sliding[`${(10 * baseH + offsetH).toString()},${(10 * baseV + offsetV).toString()}`] = [-Infinity, Infinity];
+						moveset.rooks.sliding[`${x},${y}`] = [-Infinity, Infinity];
 					}
 				}
 			}
 		}
 	}
 
+	// Knights are special, since they can move two tiles in one dimension
 	let knightIndex = 0;
 	for (let baseH = 2; baseH >= -2; baseH--) {
 		for (let baseV = 2; baseV >= -2; baseV--) {
 			for (let offsetH = 2; offsetH >= -2; offsetH--) {
 				for (let offsetV = 2; offsetV >= -2; offsetV--) {
+					// If the squared distance to the tile is 5, then add the move
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
 						moveset.knights.individual[knightIndex] = [10 * baseH + offsetH, 10 * baseV + offsetV];
 						knightIndex++;
