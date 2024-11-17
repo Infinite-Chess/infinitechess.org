@@ -41,6 +41,9 @@ function genMovesetOfFiveDimensional() {
 		},
 		kings: {
 			individual: []
+		},
+		knights: {
+			individual: []
 		}
 	};
 	let kingIndex = 0;
@@ -50,6 +53,10 @@ function genMovesetOfFiveDimensional() {
 				for (let offsetV = 1; offsetV >= -1; offsetV--) {
 					moveset.kings.individual[kingIndex] = [10 * baseH + offsetH, 10 * baseV + offsetV];
 					kingIndex++;
+					const isNegX = (10 * baseH + offsetH) < 0;
+					if (isNegX) {
+						continue;
+					}
 					if (moveset.queens.sliding[`${(-(10 * baseH + offsetH)).toString()},${(-(10 * baseV + offsetV).toString())}`]) {
 						continue;
 					}
@@ -59,6 +66,20 @@ function genMovesetOfFiveDimensional() {
 					}
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1) {
 						moveset.rooks.sliding[`${(10 * baseH + offsetH).toString()},${(10 * baseV + offsetV).toString()}`] = [-Infinity, Infinity];
+					}
+				}
+			}
+		}
+	}
+
+	let knightIndex = 0;
+	for (let baseH = 2; baseH >= -2; baseH--) {
+		for (let baseV = 2; baseV >= -2; baseV--) {
+			for (let offsetH = 2; offsetH >= -2; offsetH--) {
+				for (let offsetV = 2; offsetV >= -2; offsetV--) {
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
+						moveset.knights.individual[knightIndex] = [10 * baseH + offsetH, 10 * baseV + offsetV];
+						knightIndex++;
 					}
 				}
 			}
