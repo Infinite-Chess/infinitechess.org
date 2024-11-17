@@ -62,6 +62,7 @@ function genMovesetOfFiveDimensional() {
 					if (isNegX) { // If the x coordinate is negative, skip this iteration
 						continue;
 					}
+					if (x === 0 && y <= 0) continue; // Skip if x is 0 and y is negative
 					// Add the moves
 					moveset.queens.sliding[coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					// Only add a bishop move if the move moves in two dimensions
