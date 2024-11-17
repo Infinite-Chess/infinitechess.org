@@ -370,7 +370,7 @@ function getApplicableTimestampEntry(object, { UTCDate, UTCTime }) {
 }
 
 /**
- * 
+ * Gets the piece movesets for the given variant and time, such that each piece contains a function returning its moveset
  * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
  * @param {string} options.Variant - The name of the variant for which to get the moveset.
  * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
