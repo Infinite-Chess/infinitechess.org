@@ -90,7 +90,6 @@ function genMovesetOfFiveDimensional() {
 			}
 		}
 	}
-	console.log(moveset);
 	return moveset;
 }
 
