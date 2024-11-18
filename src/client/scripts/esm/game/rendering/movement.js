@@ -38,6 +38,13 @@ let panVel = [0,0]; // Current panning velocity
 let boardScale = 1; // Current scale. Starts at 1.5 to be higher on the title screen.
 let scaleVel = 0; // Current scale velocity
 
+/**
+ * Stores past board positions from the last few frames. Used to calculate throw velocity.
+ * [ {time, boardPos, boardScale}, ]
+ */
+let positionHistory = [];
+const positionHistoryMillis = 80; // The amount of milliseconds to look back into for board velocity calculation.
+
 let boardIsGrabbed = 0; // Are we currently dragging the board?  0 = false   1 = mouse variant   2 = touch variant
 let boardPosMouseGrabbed; // What coordinates the mouse has grabbed the board.
 let boardPosFingerOneGrabbed; // {id, x, y}  What coordinates 1 finger has grabbed the board.
@@ -193,8 +200,13 @@ function checkIfBoardDropped() {
 	// boardIsGrabbed === 2
 
 	const touchHeldsLength = input.getTouchHelds().length;
+	
+	const now = Date.now();
+	if (touchHeldsLength<2 && boardPosFingerTwoGrabbed !== undefined)
+		throwScale(now); //One finger has been released.
 	if (touchHeldsLength !== 0) return;
-
+	throwBoard(now); //Both fingers have been released.
+	
 	// Drop board
 	boardIsGrabbed = 0;
 	boardPosFingerTwoGrabbed = undefined;
@@ -202,10 +214,40 @@ function checkIfBoardDropped() {
 }
 
 /** Called after letting go of the board. Applies velocity to the board according to how fast the mouse was moving */
-function throwBoard() {
-	const xVel = input.getMouseVel()[0] * -1 * droppedVelMultiplier;
-	const yVel = input.getMouseVel()[1] * -1 * droppedVelMultiplier;
-	panVel = [xVel, yVel];
+function throwBoard(time) {
+	//Bug: pinching near side of screen causes board to move in that direction
+	removeOldPositions(time);
+	if(positionHistory.length<2) return;
+	const firstBoardState = positionHistory[0];
+	const lastBoardState = positionHistory[positionHistory.length-1];
+	const deltaX = lastBoardState.boardPos[0] - firstBoardState.boardPos[0];
+	const deltaY = lastBoardState.boardPos[1] - firstBoardState.boardPos[1];
+	const deltaT = (lastBoardState.time - firstBoardState.time)/1000; 
+	panVel = [deltaX/deltaT*boardScale, deltaY/deltaT*boardScale];
+}
+
+function throwScale(time) {
+	removeOldPositions(time);
+	if(positionHistory.length<2) return;
+	const firstBoardState = positionHistory[0];
+	const lastBoardState = positionHistory[positionHistory.length-1];
+	const ratio = lastBoardState.boardScale / firstBoardState.boardScale;
+	const deltaTime = (lastBoardState.time - firstBoardState.time)/1000;
+	scaleVel = (ratio-1)/deltaTime;
+}
+
+function clearPositionHistory() {
+	positionHistory = [];
+}
+
+function addPositionToHistory(time) {
+	removeOldPositions(time);
+	positionHistory.push({time, boardPos, boardScale});
+}
+
+function removeOldPositions(time) {
+	const earliestTime = time - positionHistoryMillis;
+	while (positionHistory[0]?.time < earliestTime) positionHistory.shift();
 }
 
 // Checks if the mouse or finger has started dragging the board. Keep in mind if the
@@ -407,6 +449,7 @@ function randomizePanVelDir() {
 function dragBoard() {
 	if (boardIsGrabbed === 1) dragBoard_WithMouse(); // Mouse is dragging board
 	else if (boardIsGrabbed === 2) dragBoard_WithFingers(); // Finger is dragging board
+	if(boardIsGrabbed) addPositionToHistory(Date.now());
 }
 
 // Called when board is being dragged by mouse, calculates new board position.
