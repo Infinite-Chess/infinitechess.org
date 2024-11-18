@@ -58,10 +58,7 @@ function generateTables() {
 	// Deleted Members table
 	createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS deleted_members (
-			user_id INTEGER PRIMARY KEY,   
-			joined TIMESTAMP NOT NULL,
-			left TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                              
-			login_count INTEGER NOT NULL,             
+			user_id INTEGER PRIMARY KEY,             
 			reason_deleted TEXT NOT NULL
 		);
 	`;

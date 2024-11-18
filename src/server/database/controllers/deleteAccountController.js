@@ -28,7 +28,7 @@ async function removeAccount(req, res) {
 
 	// DELETE ACCOUNT..
 
-	const { user_id, username, joined, login_count } = getMemberDataByCriteria(['user_id', 'username', 'joined', 'login_count'], 'username', claimedUsername);
+	const { user_id, username } = getMemberDataByCriteria(['user_id', 'username'], 'username', claimedUsername);
 	if (user_id === undefined) {
 		return logEvents(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt', { print: true });
 		// if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
@@ -38,7 +38,7 @@ async function removeAccount(req, res) {
 	doStuffOnLogout(res, user_id, username);
 
 	const reason_deleted = "user request";
-	if (deleteUser(user_id, username, joined, login_count, reason_deleted)) {
+	if (deleteUser(user_id, reason_deleted)) {
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
 		return res.send('OK'); // 200 is default code
 	} else {
