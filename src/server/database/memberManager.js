@@ -54,8 +54,6 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// Generate a unique user ID
 	const user_id = genUniqueUserID();
 
-	const joined = Date.now();
-
 	// SQL query to insert a new user into the 'members' table
 	const query = `
 INSERT INTO members (
