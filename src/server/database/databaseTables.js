@@ -40,16 +40,16 @@ function generateTables() {
 	let createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS members (
 			user_id INTEGER PRIMARY KEY,               
-			username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
+			username TEXT UNIQUE NOT NULL COLLATE NOCASE,
 			email TEXT UNIQUE NOT NULL,                
 			hashed_password TEXT NOT NULL,             
 			roles TEXT,                       
-			joined INTEGER NOT NULL,
-			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			refresh_tokens TEXT,                        
-			preferences TEXT,                          
-			verification TEXT,                         
-			login_count INTEGER NOT NULL DEFAULT 0,
+			joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
+			login_count INTEGER NOT NULL DEFAULT 0,                        
+			preferences TEXT,
+			refresh_tokens TEXT,                          
+			verification TEXT, 
 			username_history TEXT
 		);
 	`;
@@ -58,11 +58,9 @@ function generateTables() {
 	// Deleted Members table
 	createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS deleted_members (
-			user_id INTEGER PRIMARY KEY,               
-			username TEXT NOT NULL COLLATE NOCASE,    
-			username_history TEXT,    
+			user_id INTEGER PRIMARY KEY,   
 			joined TIMESTAMP NOT NULL,
-			left TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			left TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                              
 			login_count INTEGER NOT NULL,             
 			reason_deleted TEXT NOT NULL
 		);
