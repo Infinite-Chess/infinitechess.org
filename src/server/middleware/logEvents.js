@@ -56,6 +56,7 @@ const logger = (req, res, next) => {
 	if (JSON.stringify(req.body) !== '{}') { // Not an empty object
 		sensoredBody = Object.assign({}, req.body);
 		delete sensoredBody.password;
+		delete sensoredBody.username;
 		logThis += `\n${JSON.stringify(sensoredBody)}`;
 	}
 
