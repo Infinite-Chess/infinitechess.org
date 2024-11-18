@@ -34,8 +34,7 @@ function removeOldUnverifiedMembers() {
 			verification = JSON.parse(verification);
 			if (verification.verified) continue; // This guy is verified, just not notified.
 
-			const timeSinceJoined = now - timeutil.isoToTimestamp(joined); // Milliseconds
-			console.log(now, timeutil.isoToTimestamp(joined), joined, timeSinceJoined);
+			const timeSinceJoined = now - timeutil.sqliteToTimestamp(joined); // Milliseconds
 
 			// If the account has been unverified for longer than the threshold, delete it
 			if (timeSinceJoined > maxExistenceTimeForUnverifiedAccountMillis) {

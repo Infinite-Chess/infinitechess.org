@@ -68,7 +68,7 @@ function addTokenToRefreshTokens(req, refreshTokens, token) {
 function removeExpiredTokens(tokens) {
 	const currentTime = Date.now();
 	// Filter out tokens that have expired using the isoToTimestamp conversion function
-	return tokens.filter(tokenObj => timeutil.isoToTimestamp(tokenObj.expires) > currentTime);
+	return tokens.filter(tokenObj => timeutil.sqliteToTimestamp(tokenObj.expires) > currentTime);
 }
 
 /**
@@ -78,7 +78,7 @@ function removeExpiredTokens(tokens) {
  */
 function getTimeMillisSinceIssued(tokenObj) {
 	// Convert the 'issued' ISO 8601 string to a timestamp
-	const issuedTimestamp = timeutil.isoToTimestamp(tokenObj.issued);
+	const issuedTimestamp = timeutil.sqliteToTimestamp(tokenObj.issued);
 	const currentTime = Date.now();
 	
 	// Return the difference in milliseconds

@@ -172,6 +172,31 @@ function isoToTimestamp(isoString) {
 	return new Date(isoString).getTime();
 }
 
+/**
+ * Converts a SQLite DATETIME string (in "YYYY-MM-DD HH:MM:SS" format) to a UTC timestamp in milliseconds.
+ * Assumes the SQLite timestamp is in UTC.
+ * 
+ * @param {string} sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
+ * @returns {number} - The corresponding UTC timestamp in milliseconds since the UNIX epoch.
+ */
+function sqliteToTimestamp(sqliteString) {
+	const isoString = sqliteToISO(sqliteString);
+	return Date.parse(isoString);
+}
+
+/**
+ * Converts a SQLite DATETIME string (in "YYYY-MM-DD HH:MM:SS" format) to an ISO 8601 string.
+ * Assumes the SQLite timestamp is in UTC.
+ * 
+ * @param {string} sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
+ * @returns {string} - The corresponding ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
+ */
+function sqliteToISO(sqliteString) {
+	return sqliteString.replace(' ', 'T') + 'Z';
+}
+
+
+
 export default {
 	minutesToMillis,
 	secondsToMillis,
@@ -185,4 +210,5 @@ export default {
 	isCurrentDateWithinRange,
 	timestampToISO,
 	isoToTimestamp,
+	sqliteToTimestamp,
 };
