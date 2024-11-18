@@ -56,7 +56,8 @@ const logger = (req, res, next) => {
 	if (JSON.stringify(req.body) !== '{}') { // Not an empty object
 		sensoredBody = Object.assign({}, req.body);
 		delete sensoredBody.password;
-		delete sensoredBody.username;
+		delete sensoredBody.username; // Since IP's are logged with each request, If you know a deleted account's username, it can be indirectly traced to their IP if we don't delete them here.
+		delete sensoredBody.email;
 		logThis += `\n${JSON.stringify(sensoredBody)}`;
 	}
 
