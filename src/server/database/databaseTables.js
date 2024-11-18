@@ -45,7 +45,7 @@ function generateTables() {
 			email TEXT UNIQUE NOT NULL,                
 			hashed_password TEXT NOT NULL,             
 			roles TEXT,                       
-			joined INTEGER NOT NULL,
+			joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			refresh_tokens TEXT,                        
 			preferences TEXT,                          
