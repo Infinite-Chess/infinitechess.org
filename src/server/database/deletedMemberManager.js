@@ -17,14 +17,14 @@ function addDeletedMemberToDeletedMembersTable(user_id, username, joined, login_
 	//     username TEXT NOT NULL COLLATE NOCASE,    
 	//     username_history TEXT,    
 	//     joined INTEGER NOT NULL,
-	//     left INTEGER NOT NULL,                              
+	//     left INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,                              
 	//     login_count INTEGER NOT NULL,             
 	//     reason_deleted TEXT NOT NULL,             
 	// );
 
 	const query = `
 		INSERT INTO deleted_members (user_id, username, joined, login_count, reason_deleted)
-		VALUES (?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?)
 	`;
 
 	try {

@@ -10,6 +10,7 @@
  */
 
 import docutil from "./docutil.js";
+import timeutil from "./timeutil.js";
 
 
 const minTimeToRenewSession = 1000 * 60 * 60 * 24; // 1 day
@@ -51,13 +52,17 @@ let tokenInfo = {
 	// Renew the session
 	renewSession();
 })();
-
+/**
+ * Renews the session if it is older than the specified time to renew.
+ */
 function renewSession() {
 	if (!memberInfo.signedIn) return;
 
-	// Check if the session is older than 1 day
-	const timeSinceSessionIssued = Date.now(); - (memberInfo.issued || 0);
-	if (timeSinceSessionIssued < minTimeToRenewSession) return; // Still freshly issued session!
+	// Convert the ISO 8601 issued time to a timestamp
+	const timeSinceSessionIssued = Date.now() - timeutil.isoToTimestamp(memberInfo.issued);
+	
+	// Check if the session is older than 1 day (minTimeToRenewSession)
+	if (timeSinceSessionIssued < minTimeToRenewSession) return; // Still a freshly issued session!
 
 	console.log("Session is older than 1 day, refreshing by requesting access token...");
 	refreshToken(); // Refresh token if the session is too old

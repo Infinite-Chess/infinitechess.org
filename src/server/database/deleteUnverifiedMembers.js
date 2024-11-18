@@ -1,6 +1,7 @@
 
 
 
+import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { intervalForRemovalOfOldUnverifiedAccountsMillis, maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js';
 import db from '../database/database.js';
 import { logEvents } from '../middleware/logEvents.js';
@@ -33,7 +34,8 @@ function removeOldUnverifiedMembers() {
 			verification = JSON.parse(verification);
 			if (verification.verified) continue; // This guy is verified, just not notified.
 
-			const timeSinceJoined = now - joined; // Milliseconds
+			const timeSinceJoined = now - timeutil.isoToTimestamp(joined); // Milliseconds
+			console.log(now, timeutil.isoToTimestamp(joined), joined, timeSinceJoined)
 
 			// If the account has been unverified for longer than the threshold, delete it
 			if (timeSinceJoined > maxExistenceTimeForUnverifiedAccountMillis) {

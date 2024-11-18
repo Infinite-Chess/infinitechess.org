@@ -1,7 +1,7 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
 import { logEvents } from "../../middleware/logEvents.js";
 import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
-import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens } from "./refreshTokenObject.js";
+import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
 import { signRefreshToken } from "./tokenSigner.js";
 import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from "../../config/config.js";
 
@@ -20,7 +20,7 @@ import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } fro
  * @param {number} [res] - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {boolean} - Returns true if the member has the refresh token, false otherwise.
  */
-function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, res) {
+function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, req, res) {
 	// Get the valid refresh tokens for the user
 	let refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) {
@@ -38,13 +38,14 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	// We have the token...
 	
 	// When does it expire? Should we renew?
-	renewSession(res, userId, username, roles, refreshTokens, matchingTokenObj);
+	renewSession(req, res, userId, username, roles, refreshTokens, matchingTokenObj);
 
 	return true;
 }
 
 /**
  * Renews a player's login session
+ * @param {*} req
  * @param {*} res 
  * @param {*} userId 
  * @param {*} username 
@@ -52,11 +53,10 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
  * @param {*} refreshTokens - The parsed refresh tokens from their data in the members table
  * @param {*} tokenObject - The token that needs to be renewed (deleted + add new) if we are renewing!
  */
-function renewSession(res, userId, username, roles, refreshTokens, tokenObject) {
-	if (!res) return; // Only renew if the response object is defined, the response object will not be defined for websocket upgrade requests.
+function renewSession(req, res, userId, username, roles, refreshTokens, tokenObject) {
+	if (!req || !res) return; // Only renew if the response object is defined, the response object will not be defined for websocket upgrade requests.
 	
-	const now = Date.now();
-	const timeSinceIssued = now - tokenObject.issued;
+	const timeSinceIssued = getTimeMillisSinceIssued(tokenObject);
 	if (timeSinceIssued < minTimeToWaitToRenewRefreshTokensMillis) return;
 
 	console.log(`Renewing member "${username}"s session by issuing them new login cookies! -------`);
@@ -67,19 +67,19 @@ function renewSession(res, userId, username, roles, refreshTokens, tokenObject) 
 	const newToken = signRefreshToken(userId, username, roles);
 
 	// Add the new token to the list
-	refreshTokens = addTokenToRefreshTokens(refreshTokens, newToken);
+	refreshTokens = addTokenToRefreshTokens(req, refreshTokens, newToken);
 
 	saveRefreshTokens(userId, refreshTokens);
 
 	createSessionCookies(res, userId, username, newToken);
 }
 
-function createNewSession(res, user_id, username, roles) {
+function createNewSession(req, res, user_id, username, roles) {
 	// The payload can be an object with their username and their roles.
 	const refreshToken = signRefreshToken(user_id, username, roles);
     
 	// Save the refresh token with current user so later when they log out we can invalidate it.
-	addRefreshTokenToMemberData(user_id, refreshToken);
+	addRefreshTokenToMemberData(req, user_id, refreshToken);
     
 	createSessionCookies(res, user_id, username, refreshToken);
 }

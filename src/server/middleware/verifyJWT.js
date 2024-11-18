@@ -48,7 +48,7 @@ function verifyAccessToken(req, res) {
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
 	// { isValid (boolean), user_id, username, roles }
-	const result = isTokenValid(accessToken, false, res); // False for access token
+	const result = isTokenValid(accessToken, false, req, res); // False for access token
 	if (!result.isValid) {
 		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered
@@ -81,7 +81,7 @@ function verifyRefreshToken(req, res) {
 	if (!refreshToken) return false; // No refresh token present
 
 	// { isValid (boolean), user_id, username }
-	const result = isTokenValid(refreshToken, true, res); // true for refresh token
+	const result = isTokenValid(refreshToken, true, req, res); // true for refresh token
 	if (!result.isValid) {
 		logEvents(`Invalid refresh token, expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered

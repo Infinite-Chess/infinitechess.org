@@ -26,7 +26,7 @@ import { doesMemberHaveRefreshToken_RenewSession } from './sessionManager.js';
  * @param {string} res - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {Object} - An object containing the properties: { isValid (boolean), user_id, username, roles }
  */
-function isTokenValid(token, isRefreshToken, res) {
+function isTokenValid(token, isRefreshToken, req, res) {
 	if (isRefreshToken === undefined) {
 		logEvents("When validating token, you must include the isRefreshToken parameter!", 'errLog.txt', { print: true });
 		return { isValid: false };
@@ -52,7 +52,7 @@ function isTokenValid(token, isRefreshToken, res) {
 	// It's a refresh token...
 
 	// Check if the token was manually invalidated (e.g., user logged out)
-	if (!doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, res)) return { isValid: false };
+	if (!doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, req, res)) return { isValid: false };
 
 	// If all checks pass, return a success response with the decoded payload information, such as their user_id and username
 	updateLastSeen(user_id);

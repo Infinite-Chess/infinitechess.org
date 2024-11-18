@@ -154,6 +154,24 @@ function isCurrentDateWithinRange(startMonth, startDay, endMonth, endDay) {
 	return today >= startDate && today <= endDate;
 }
 
+/**
+ * Converts a timestamp (milliseconds since the UNIX epoch) to an ISO 8601 string.
+ * @param {number} timestamp - The timestamp in milliseconds since the UNIX epoch.
+ * @returns {string} The ISO 8601 formatted string.
+ */
+function timestampToISO(timestamp) {
+	return new Date(timestamp).toISOString();
+}
+
+/**
+ * Converts an ISO 8601 string to a timestamp in milliseconds since the UNIX epoch.
+ * @param {string} isoString - The ISO 8601 formatted string.
+ * @returns {number} The timestamp in milliseconds since the UNIX epoch.
+ */
+function isoToTimestamp(isoString) {
+	return new Date(isoString).getTime();
+}
+
 export default {
 	minutesToMillis,
 	secondsToMillis,
@@ -165,4 +183,6 @@ export default {
 	getCurrentMonth,
 	getCurrentDay,
 	isCurrentDateWithinRange,
+	timestampToISO,
+	isoToTimestamp,
 };

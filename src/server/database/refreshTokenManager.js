@@ -33,10 +33,11 @@ function getRefreshTokensByUserID(userId) {
 
 /**
  * Adds a new refresh token in the database to the refresh_tokens column for a member.
+ * @param {object} req
  * @param {number} userId - The user ID of the member.
  * @param {string} token - The new refresh token to add.
  */
-function addRefreshTokenToMemberData(userId, token) {
+function addRefreshTokenToMemberData(req, userId, token) {
 	// Get the current refresh tokens
 	let refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) return logEvents(`Cannot add refresh token to non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
@@ -45,7 +46,7 @@ function addRefreshTokenToMemberData(userId, token) {
 	refreshTokens = removeExpiredTokens(refreshTokens);
 
 	// Add the new token to the list
-	refreshTokens = addTokenToRefreshTokens(refreshTokens, token);
+	refreshTokens = addTokenToRefreshTokens(req, refreshTokens, token);
 
 	// Save the tokens in the database
 	saveRefreshTokens(userId, refreshTokens);
