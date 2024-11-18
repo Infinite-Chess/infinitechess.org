@@ -4,6 +4,7 @@ import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, getRefre
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
 import { signRefreshToken } from "./tokenSigner.js";
 import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from "../../config/config.js";
+import { getClientIP } from "../../utility/IP.js";
 
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
@@ -17,10 +18,12 @@ import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } fro
  * @param {number} username
  * @param {number} roles
  * @param {string} token - The refresh token to check.
+ * @param {string} IP - The IP address they are connecting from.
+ * @param {number} [req] - The request object. 
  * @param {number} [res] - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {boolean} - Returns true if the member has the refresh token, false otherwise.
  */
-function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, req, res) {
+function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, IP, req, res) {
 	// Get the valid refresh tokens for the user
 	let refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) {
@@ -32,8 +35,14 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	refreshTokens = removeExpiredTokens(refreshTokens);
 
 	// Find the object where tokenObj.token matches the provided token
-	const matchingTokenObj = refreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires }
+	const matchingTokenObj = refreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires, IP }
 	if (!matchingTokenObj) return false;
+
+	// Does the request IP address match the IP address when the session token was originally issued?
+	if (IP !== matchingTokenObj.IP) {
+		logEvents(`Connected IP address doesn't match the IP address from session token creation!! Issued: "${matchingTokenObj.IP}" Current: "${IP}". Member "${username}" of ID "${userId}"`, 'errLog.txt', { print: true });
+		// return false; // For now, don't count the token as invalid. If people's IP changes commonly, this is this is viable.
+	}
 
 	// We have the token...
 	
