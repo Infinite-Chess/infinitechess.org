@@ -80,13 +80,10 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 /**
  * Deletes a user from the members table.
  * @param {number} user_id - The ID of the user to delete.
- * @param {string} username - The username of the user to delete.
- * @param {number} joined - The timestamp when the user joined.
- * @param {string} login_count - The user's login count.
  * @param {string} reason_deleted - The reason the user is being deleted.
  * @returns {boolean} true if there was a change made (deleted successfully)
  */
-function deleteUser(user_id, username, joined, login_count, reason_deleted) {
+function deleteUser(user_id, reason_deleted) {
 	// SQL query to delete a user by their user_id
 	const query = 'DELETE FROM members WHERE user_id = ?';
 
@@ -101,13 +98,13 @@ function deleteUser(user_id, username, joined, login_count, reason_deleted) {
 		}
 
 		// Add their user_id to the deleted members table
-		addDeletedMemberToDeletedMembersTable(user_id, username, joined, login_count, reason_deleted);
+		addDeletedMemberToDeletedMembersTable(user_id, reason_deleted);
 
 		return true; // Change made successfully
 
 	} catch (error) {
 		// Log the error for debugging purposes
-		logEvents(`Error deleting user with ID "${user_id}" (${username}): ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error deleting user with ID "${user_id}": ${error.message}`, 'errLog.txt', { print: true });
 
 		// Return false indicating failure
 		return false;
