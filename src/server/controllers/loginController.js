@@ -9,9 +9,9 @@
  * and updates last_seen and login_count in their profile.
  */
 
-import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../memberManager.js';
-import { logEvents } from '../../middleware/logEvents.js';
-import { createNewSession } from '../../controllers/authenticationTokens/sessionManager.js';
+import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { testPasswordForRequest } from './authController.js';
 
 

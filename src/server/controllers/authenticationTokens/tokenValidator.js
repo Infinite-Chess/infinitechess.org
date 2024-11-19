@@ -2,7 +2,7 @@
 import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents.js';
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
-import { doStuffOnLogout } from '../../database/controllers/logoutController.js';
+import { doStuffOnLogout } from '../../controllers/logoutController.js';
 import { doesMemberHaveRefreshToken_RenewSession } from './sessionManager.js';
 
 /**

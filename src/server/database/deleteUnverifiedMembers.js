@@ -3,9 +3,9 @@
 
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { intervalForRemovalOfOldUnverifiedAccountsMillis, maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js';
-import db from '../database/database.js';
+import db from './database.js';
 import { logEvents } from '../middleware/logEvents.js';
-import { doStuffOnLogout } from './controllers/logoutController.js';
+import { doStuffOnLogout } from '../controllers/logoutController.js';
 import { deleteUser } from './memberManager.js';
 
 // Automatic deletion of old, unverified accounts...

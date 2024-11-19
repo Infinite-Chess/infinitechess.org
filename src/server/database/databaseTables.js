@@ -3,7 +3,7 @@
  * This script creates our database tables if they aren't already present.
  */
 
-import db from '../database/database.js';
+import db from './database.js';
 
 
 // Variables -----------------------------------------------------------------------------------

@@ -10,14 +10,14 @@
 
 
 import bcrypt from 'bcrypt';
-import { getTranslationForReq } from '../../utility/translate.js';
+import { getTranslationForReq } from '../utility/translate.js';
 
-import { isEmailBanned } from '../../middleware/banned.js';
-import { logEvents } from '../../middleware/logEvents.js';
+import { isEmailBanned } from '../middleware/banned.js';
+import { logEvents } from '../middleware/logEvents.js';
 import { sendEmailConfirmation } from './sendMail.js';
 import { handleLogin } from './loginController.js';
-import { addUser, isEmailTaken, isUsernameTaken } from '../memberManager.js';
-import uuid from '../../../client/scripts/esm/util/uuid.js';
+import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManager.js';
+import uuid from '../../client/scripts/esm/util/uuid.js';
 
 
 // Variables -------------------------------------------------------------------------

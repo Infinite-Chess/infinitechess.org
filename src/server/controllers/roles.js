@@ -3,8 +3,8 @@
  * and removal of roles from members.
  */
 
-import { logEvents } from "../../middleware/logEvents.js";
-import { getMemberDataByCriteria, updateMemberColumns } from "../memberManager.js";
+import { logEvents } from "../middleware/logEvents.js";
+import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
 const validRoles = ['owner','patron'];
 

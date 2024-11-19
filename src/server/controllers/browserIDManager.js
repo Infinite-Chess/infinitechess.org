@@ -1,8 +1,8 @@
 
 
-import uuid from "../../../client/scripts/esm/util/uuid.js";
-import { isBrowserIDBanned } from "../../middleware/banned.js";
-import { logEvents } from "../../middleware/logEvents.js";
+import uuid from "../../client/scripts/esm/util/uuid.js";
+import { isBrowserIDBanned } from "../middleware/banned.js";
+import { logEvents } from "../middleware/logEvents.js";
 
 
 

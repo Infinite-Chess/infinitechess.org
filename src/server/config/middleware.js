@@ -9,22 +9,21 @@ import cors from 'cors';
 
 // Middleware
 import cookieParser from 'cookie-parser';
-import credentials from './credentials.js';
-import secureRedirect from './secureRedirect.js';
-import errorHandler from './errorHandler.js';
-import { logger } from './logEvents.js';
-import { verifyJWT } from './verifyJWT.js';
-import { rateLimit } from './rateLimit.js';
+import credentials from '../middleware/credentials.js';
+import secureRedirect from '../middleware/secureRedirect.js';
+import { logger } from '../middleware/logEvents.js';
+import { verifyJWT } from '../middleware/verifyJWT.js';
+import { rateLimit } from '../middleware/rateLimit.js';
 
 // External translation middleware
 import i18next from 'i18next';
 import middleware from 'i18next-http-middleware';
 
 // Other imports
-import { useOriginWhitelist } from '../config/config.js';
+import { useOriginWhitelist } from './config.js';
 import { router as rootRouter } from '../routes/root.js';
-import send404 from './send404.js';
-import corsOptions from '../config/corsOptions.js';
+import send404 from '../middleware/send404.js';
+import corsOptions from './corsOptions.js';
 
 import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
@@ -35,7 +34,8 @@ import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
-import { removeAccount } from '../controllers/deleteAccountController.js';
+import { removeAccount } from '../controllers/removeAccountController.js';
+import errorHandler from '../middleware/errorHandler.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**

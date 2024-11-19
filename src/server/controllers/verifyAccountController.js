@@ -1,7 +1,7 @@
 
-import { logEvents } from "../../middleware/logEvents.js";
-import { getTranslationForReq } from "../../utility/translate.js";
-import { getMemberDataByCriteria, updateMemberColumns } from "../memberManager.js";
+import { logEvents } from "../middleware/logEvents.js";
+import { getTranslationForReq } from "../utility/translate.js";
+import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
 
 

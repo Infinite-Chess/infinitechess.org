@@ -1,5 +1,5 @@
 
-import db from '../database/database.js';
+import db from './database.js';
 import { logEvents } from '../middleware/logEvents.js';
 
 
