@@ -9,6 +9,9 @@ import { accessTokenExpiryMillis, refreshTokenExpiryMillis } from '../../config/
 /**
  * Tokens can be signed with the payload that includes any information we want!
  * We like to use user ID, username and roles.
+ * 
+ * The benefit of signing access tokens with information is when we verify the tokens,
+ * we don't have to do a database lookup to know who they are!
  */
 
 /**

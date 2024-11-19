@@ -109,7 +109,7 @@ function onConnectionRequest(ws, req) {
 	}
 	
 	// Initialize who they are. Member? Browser ID?...
-	verifyJWTWebSocket(ws); // Auto sets ws.metadata.memberInfo properties!
+	verifyJWTWebSocket(req, ws); // Auto sets ws.metadata.memberInfo properties!
 
 	if (ws.metadata.memberInfo.signedIn && memberHasMaxSocketCount(ws.metadata.memberInfo.username)) {
 		console.log(`Member ${ws.metadata.memberInfo.username} has too many sockets! Not connecting this one.`);

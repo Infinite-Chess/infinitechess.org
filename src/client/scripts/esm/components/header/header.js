@@ -35,7 +35,7 @@ const header = (function() {
 	const logoutText = document.getElementById('logout');
 	const logoutSVG = document.getElementById('svg-logout');
 
-	document.addEventListener('validated', updateNavigationLinks); // Custom-event listener. Fired when the validator script receives a response from the server with either our access token or new browser-id cookie.
+	document.addEventListener('login', updateNavigationLinks); // Custom-event listener. Fired when the validator script receives a response from the server with either our access token or new browser-id cookie.
 	document.addEventListener('logout', updateNavigationLinks); // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
 
 	// If we're logged in, the log in button will change to their profile,

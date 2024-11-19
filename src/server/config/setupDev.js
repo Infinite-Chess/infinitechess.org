@@ -3,7 +3,7 @@ import { DEV_BUILD } from './config.js';
 import { ensureEnvFile } from './env.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
 import { doesMemberOfUsernameExist } from '../database/memberManager.js';
-import { generateAccount } from '../database/controllers/createaccountController.js';
+import { generateAccount } from '../database/controllers/createAccountController.js';
 import { giveRole } from '../database/controllers/roles.js';
 
 function initDevEnvironment() {
