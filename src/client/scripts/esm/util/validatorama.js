@@ -10,7 +10,6 @@
  */
 
 import docutil from "./docutil.js";
-import timeutil from "./timeutil.js";
 
 
 const minTimeToRenewSession = 1000 * 60 * 60 * 24; // 1 day
@@ -81,7 +80,7 @@ async function getAccessToken() {
 
 	if (!memberInfo.signedIn) return;
 
-	const timeSinceLastRefresh = Date.now(); - (tokenInfo.lastRefreshTime || 0);
+	const timeSinceLastRefresh = Date.now() - (tokenInfo.lastRefreshTime || 0);
 
 	// Check if token is expired or near expiring
 	if (!tokenInfo.accessToken || timeSinceLastRefresh > (TOKEN_EXPIRE_TIME_MILLIS - CUSHION_MILLIS)) {
@@ -111,7 +110,7 @@ async function refreshToken() {
 
 		const result = await response.json();
 
-		if (response.ok) { // Refresh token (from cookie) accepted!
+		if (response.ok) { // Session token (refresh token cookie) is valid!
 			const accessToken = docutil.getCookieValue('token'); // Read access token from cookie
 			if (!accessToken) throw new Error('Token cookie not found!');
 			tokenInfo = { accessToken, lastRefreshTime: Date.now() };
@@ -125,7 +124,7 @@ async function refreshToken() {
 			// Dispatch event to inform other parts of the app that we are logged in.
 			// document.dispatchEvent(new CustomEvent('login'));
 
-		} else { // 403 or 500 error   Likely not signed in!
+		} else { // 403 or 500 error   Likely not signed in! Our session token (refresh token cookie) was invalid or not present.
 			console.log(`Server: ${result.message}`);
 			docutil.deleteCookie('memberInfo');
 			memberInfo = { signedIn: false };
@@ -135,7 +134,6 @@ async function refreshToken() {
 		console.error('Error occurred during token refresh:', error);
 		readMemberInfoCookie();
 	} finally {
-
 		reqIsOut = false;
 	}
 }
@@ -148,7 +146,7 @@ async function refreshToken() {
 function readMemberInfoCookie() {
 	// Read the member info from the cookie
 	// Get the URL-encoded cookie value
-	// JSON objects can't be string into cookies because cookies can't hold special characters
+	// JSON objects can't be stringified into cookies because cookies can't hold special characters
 	const encodedMemberInfo = docutil.getCookieValue('memberInfo'); 
 	if (!encodedMemberInfo) {
 		memberInfo = { signedIn: false };
@@ -156,7 +154,7 @@ function readMemberInfoCookie() {
 	}
 	// Decode the URL-encoded string
 	const memberInfoStringified = decodeURIComponent(encodedMemberInfo);
-	memberInfo = JSON.parse(memberInfoStringified); // { user_id, username, issued, expires }
+	memberInfo = JSON.parse(memberInfoStringified); // { user_id, username, issued (timestamp), expires (timestamp) }
 	memberInfo.signedIn = true;
 }
 
@@ -165,6 +163,7 @@ function readMemberInfoCookie() {
  */
 async function waitUntilInitialRequestBack() {
 	while (reqIsOut) {
+		// console.log("Waiting for request back..");
 		await new Promise(resolve => setTimeout(resolve, 100));
 	}
 }

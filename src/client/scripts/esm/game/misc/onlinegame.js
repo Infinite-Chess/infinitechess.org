@@ -751,7 +751,7 @@ function getOpponentColor() {
  */
 async function askServerIfWeAreInGame() {
 	// The server only allows sockets if we are either logged in, or have a browser-id cookie.
-	// browser-id cookies are issued/renewed on every html request.\
+	// browser-id cookies are issued/renewed on every html request.
 
 	const messageContents = undefined;
 	websocket.sendmessage('game', 'joingame', messageContents, true);

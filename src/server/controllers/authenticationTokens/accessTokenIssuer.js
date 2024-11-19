@@ -56,7 +56,7 @@ function accessTokenIssuer(req, res) {
  */
 function createAccessTokenCookie(res, accessToken) {
 	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true
-	res.cookie('token', accessToken, { sameSite: 'None', secure: true, maxAge: expireTimeOfTokenCookieMillis }); // 10 second time limit. JavaScript needs to read it in that time!.
+	res.cookie('token', accessToken, { sameSite: 'None', secure: true, maxAge: expireTimeOfTokenCookieMillis }); // 10 second time limit. JavaScript needs to read it in that time!
 }
 
 export {

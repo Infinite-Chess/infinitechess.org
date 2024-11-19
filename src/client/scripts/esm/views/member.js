@@ -39,7 +39,12 @@ let isOurProfile = false;
 
 const member = docutil.getLastSegmentOfURL();
 
-(function loadMemberData() {
+(async function loadMemberData() {
+	// We have to wait for validatorama here because it might be attempting
+	// to refresh our session in which case our session cookies will change
+	// so our refresh token in this here fetch request here would then be invalid
+	await validatorama.waitUntilInitialRequestBack();
+
 	const config = {
 		method: 'GET',
 		headers: {

@@ -112,7 +112,7 @@ function requestConfirmEmail(req, res) {
 
 		// ONLY send email if they haven't already verified!
 		if (verification === null || verification.verified) {
-			const hackText = `Member "${username}"of ID "${user_id}" tried requesting another verification email after they've already verified!`;
+			const hackText = `Member "${username}" of ID "${user_id}" tried requesting another verification email after they've already verified!`;
 			logEvents(hackText, 'hackLog.txt', { print: true });
 			return res.status(401).json({ sent: false });
 		}

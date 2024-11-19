@@ -109,6 +109,10 @@ async function establishSocket() {
 	// No socket open yet, establish one!
 	// console.log("Opening new socket :D")
 
+	// Await validatorama because it may be attempting to refresh our session,
+	// in which case our session cookies will change
+	await validatorama.waitUntilInitialRequestBack();
+
 	let success = await openSocket();
 
 	while (!success && !zeroSubs()) {

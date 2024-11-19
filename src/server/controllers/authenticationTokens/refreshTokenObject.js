@@ -78,7 +78,7 @@ function removeExpiredTokens(tokens) {
  */
 function getTimeMillisSinceIssued(tokenObj) {
 	// Convert the 'issued' ISO 8601 string to a timestamp
-	const issuedTimestamp = timeutil.sqliteToTimestamp(tokenObj.issued);
+	const issuedTimestamp = timeutil.isoToTimestamp(tokenObj.issued);
 	const currentTime = Date.now();
 	
 	// Return the difference in milliseconds

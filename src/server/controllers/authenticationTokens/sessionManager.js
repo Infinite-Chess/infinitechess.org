@@ -31,10 +31,8 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	}
 
 	// Remove expired tokens
-	console.log(refreshTokens)
 	const validRefreshTokens = removeExpiredTokens(refreshTokens);
-	console.log(validRefreshTokens)
-	if (validRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, validRefreshTokens);
+	if (validRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, validRefreshTokens); // At least one token was deleted by expired, save the list.
 
 	// Find the object where tokenObj.token matches the provided token
 	const matchingTokenObj = validRefreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires, IP }
@@ -159,8 +157,8 @@ function deleteRefreshTokenCookie(res) {
 function createMemberInfoCookie(res, userId, username) {
 	// Create an object with member info
 	const now = Date.now();
-	const issued = now;
-	const expires = now + refreshTokenExpiryMillis;
+	const issued = now; // Timestamp, millis since Unix Epoch
+	const expires = now + refreshTokenExpiryMillis; // Timestamp, millis since Unix Epoch
 	const memberInfo = JSON.stringify({ user_id: userId, username, issued, expires });
 
 	// Set the cookie (readable by JavaScript, not HTTP-only)
