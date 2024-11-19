@@ -43,7 +43,7 @@ function generateTables() {
 			username TEXT UNIQUE NOT NULL COLLATE NOCASE,
 			email TEXT UNIQUE NOT NULL,                
 			hashed_password TEXT NOT NULL,             
-			roles TEXT,                       
+			roles TEXT,        
 			joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
 			login_count INTEGER NOT NULL DEFAULT 0,                        

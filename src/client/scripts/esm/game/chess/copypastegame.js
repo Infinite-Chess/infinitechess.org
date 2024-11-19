@@ -1,7 +1,7 @@
 
 /** 
  * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
  */
 
 // Import Start

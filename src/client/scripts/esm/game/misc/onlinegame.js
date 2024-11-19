@@ -32,8 +32,8 @@ import validatorama from '../../util/validatorama.js';
 
 /** 
  * Type Definitions 
- * @typedef {import('../chess/gamefile.js').gamefile} gamefile
- * @typedef {import('../chess/movesscript.js').Move} Move
+ * @typedef {import('../../chess/logic/gamefile.js'} gamefile
+ * @typedef {import('../gui/movesscript.js').Move} Move
  * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
 */
 

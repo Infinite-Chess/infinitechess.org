@@ -9,7 +9,7 @@ import docutil from "../../util/docutil.js";
 let preferences; // { theme, legal_moves }
 
 // The legal moves shape preference
-const default_legal_moves = 'dots';
+const default_legal_moves = 'squares'; // dots/squares
 const default_perspective_sensitivity = 100;
 const default_perspective_fov = 90;
 

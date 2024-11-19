@@ -5,7 +5,6 @@ import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
 import specialdetect from './specialdetect.js';
 import specialmove from './specialmove.js';
-import movesets from './movesets.js';
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
@@ -40,7 +39,7 @@ function setupVariant(gamefile, metadata, options) {
 	gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
 
 	initExistingTypes(gamefile);
-	initPieceMovesets(gamefile);
+	initPieceMovesets(gamefile, metadata);
 	initSlidingMoves(gamefile);
 }
 
@@ -98,12 +97,13 @@ function getPossibleSlides(gamefile) {
 /**
  * Initiates legalmoves's and the special detect, move, and undo scripts movesets they're using.
  * @param {gamefile} gamefile - The gamefile
+ * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  */
-function initPieceMovesets(gamefile) {
+function initPieceMovesets(gamefile, { Variant, UTCDate, UTCTime }) {
 	// The movesets and methods for detecting and executing special moves
 	// are attached to the gamefile. This is because different variants
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
-	gamefile.pieceMovesets = movesets.getPieceMovesets(gamefile.gameRules.slideLimit);
+	gamefile.pieceMovesets = variant.getMovesetsOfVariant({ Variant, UTCDate, UTCTime });
 	gamefile.specialDetects = specialdetect.getSpecialMoves();
 	gamefile.specialMoves = specialmove.getFunctions();
 	gamefile.specialUndos = specialundo.getFunctions();

@@ -17,7 +17,7 @@ import coordutil from '../util/coordutil.js';
  * @typedef {import('../../game/gui/movesscript.js').Move} Move
  * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('./movepiece.js').Piece} Piece
- * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  */
 
 "use strict";

@@ -8,7 +8,7 @@ import gamefileutility from '../util/gamefileutility.js';
 // Import End
 
 /**
- * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('./gamefile.js').gamefile} gamefile
  */
 
 "use strict";

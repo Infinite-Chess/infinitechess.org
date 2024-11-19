@@ -8,7 +8,7 @@ import winconutil from '../../chess/util/winconutil.js';
 
 /** 
  * Type Definitions 
- * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
 */
 
 "use strict";
