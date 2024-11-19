@@ -4,7 +4,6 @@ import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, getRefre
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
 import { signRefreshToken } from "./tokenSigner.js";
 import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from "../../config/config.js";
-import { getClientIP } from "../../utility/IP.js";
 
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
@@ -25,17 +24,20 @@ import { getClientIP } from "../../utility/IP.js";
  */
 function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, IP, req, res) {
 	// Get the valid refresh tokens for the user
-	let refreshTokens = getRefreshTokensByUserID(userId);
+	const refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) {
 		logEvents(`Cannot test if non-existent member of id "${userId}" has refresh token "${token}"!`, 'errLog.txt', { print: true });
 		return false;
 	}
 
 	// Remove expired tokens
-	refreshTokens = removeExpiredTokens(refreshTokens);
+	console.log(refreshTokens)
+	const validRefreshTokens = removeExpiredTokens(refreshTokens);
+	console.log(validRefreshTokens)
+	if (validRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, validRefreshTokens);
 
 	// Find the object where tokenObj.token matches the provided token
-	const matchingTokenObj = refreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires, IP }
+	const matchingTokenObj = validRefreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires, IP }
 	if (!matchingTokenObj) return false;
 
 	// Does the request IP address match the IP address when the session token was originally issued?
@@ -47,7 +49,7 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	// We have the token...
 	
 	// When does it expire? Should we renew?
-	renewSession(req, res, userId, username, roles, refreshTokens, matchingTokenObj);
+	renewSession(req, res, userId, username, roles, validRefreshTokens, matchingTokenObj);
 
 	return true;
 }

@@ -84,7 +84,7 @@ function verifyRefreshToken(req, res) {
 	// { isValid (boolean), user_id, username }
 	const result = isTokenValid(refreshToken, true, getClientIP(req), req, res); // true for refresh token
 	if (!result.isValid) {
-		logEvents(`Invalid refresh token, expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true });
+		logEvents(`Invalid refresh token, expired or tampered! Reason: "${result.reason}" "${refreshToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered
 	}
 

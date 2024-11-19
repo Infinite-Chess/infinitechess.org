@@ -30,8 +30,9 @@ import { doesMemberHaveRefreshToken_RenewSession } from './sessionManager.js';
  */
 function isTokenValid(token, isRefreshToken, IP, req, res) {
 	if (isRefreshToken === undefined) {
-		logEvents("When validating token, you must include the isRefreshToken parameter!", 'errLog.txt', { print: true });
-		return { isValid: false };
+		const reason = "When validating token, you must include the isRefreshToken parameter!";
+		logEvents(reason, 'errLog.txt', { print: true });
+		return { isValid: false, reason };
 	}
 
 	// Extract user ID and username from the token
@@ -39,10 +40,10 @@ function isTokenValid(token, isRefreshToken, IP, req, res) {
 	if (user_id === undefined || username === undefined || roles === undefined) return { isValid: false }; // Expired or tampered token
 
 	if (!doesMemberOfIDExist(user_id)) {
-		// console.log(`Token is valid, but the users account of id "${user_id}" doesn't exist!`);
-		logEvents(`Token is valid, but the users account of id "${user_id}" doesn't exist! This is fine, did you just delete it?`, 'errLog.txt', { print: true });
+		const reason = `Token is valid, but the users account of id "${user_id}" doesn't exist! This is fine, did you just delete it?`;
+		logEvents(reason, 'errLog.txt', { print: true });
 		doStuffOnLogout(res, user_id, username);
-		return { isValid: false };
+		return { isValid: false, reason };
 	}
 
 	// If it's an access token, we already know it's valid.
@@ -54,7 +55,7 @@ function isTokenValid(token, isRefreshToken, IP, req, res) {
 	// It's a refresh token...
 
 	// Check if the token was manually invalidated (e.g., user logged out)
-	if (!doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, IP, req, res)) return { isValid: false };
+	if (!doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, IP, req, res)) return { isValid: false, reason: "User doesn't have a matching refresh token in the database." };
 
 	// If all checks pass, return a success response with the decoded payload information, such as their user_id and username
 	updateLastSeen(user_id);

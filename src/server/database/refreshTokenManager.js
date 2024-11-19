@@ -85,7 +85,7 @@ function saveRefreshTokens(userId, tokens) {
 	if (tokens.length === 0) tokens = null;
 
 	// Update the refresh_tokens or access_tokens column
-	const updateResult = updateMemberColumns(userId, { refresh_tokens: tokens });  // Corrected: Use [column] to dynamically set the key
+	const updateResult = updateMemberColumns(userId, { refresh_tokens: tokens });
 
 	// If no changes were made, log the event
 	if (!updateResult) logEvents(`No changes made when saving refresh_tokens of member with id "${userId}"!`, 'errLog.txt', { print: true });

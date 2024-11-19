@@ -59,7 +59,7 @@ function renewSession() {
 	if (!memberInfo.signedIn) return;
 
 	// Convert the ISO 8601 issued time to a timestamp
-	const timeSinceSessionIssued = Date.now() - timeutil.sqliteToTimestamp(memberInfo.issued);
+	const timeSinceSessionIssued = Date.now() - memberInfo.issued;
 	
 	// Check if the session is older than 1 day (minTimeToRenewSession)
 	if (timeSinceSessionIssued < minTimeToRenewSession) return; // Still a freshly issued session!

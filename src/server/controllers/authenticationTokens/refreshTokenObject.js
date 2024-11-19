@@ -68,7 +68,7 @@ function addTokenToRefreshTokens(req, refreshTokens, token) {
 function removeExpiredTokens(tokens) {
 	const currentTime = Date.now();
 	// Filter out tokens that have expired using the isoToTimestamp conversion function
-	return tokens.filter(tokenObj => timeutil.sqliteToTimestamp(tokenObj.expires) > currentTime);
+	return tokens.filter(tokenObj => timeutil.isoToTimestamp(tokenObj.expires) > currentTime);
 }
 
 /**
