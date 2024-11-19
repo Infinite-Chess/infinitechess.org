@@ -168,7 +168,7 @@ function update() {
 
 /** Picks up the currently selected piece if we are allowed to. */
 function startDragging() {
-	draggingPiece = dragEnabled && !isOpponentPiece && (!isPremove /*|| premovesEnabled*/);
+	draggingPiece = dragEnabled && !isOpponentPiece && (!isPremove /*|| premovesEnabled*/) && !movement.hasMomentum();
 }
 
 /**

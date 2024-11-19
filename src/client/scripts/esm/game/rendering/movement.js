@@ -525,6 +525,10 @@ function eraseMomentum() {
 	scaleVel = 0;
 }
 
+function hasMomentum() {
+	return panVel[0] || panVel[1] || scaleVel;
+}
+
 // Password for modifying is stored in "passwordForSetting", or is "pidough"
 function setPositionToArea(area, password) {
 	if (!area) console.error("Cannot set position to an undefined area.");
@@ -551,6 +555,7 @@ export default {
 	randomizePanVelDir,
 	dragBoard,
 	eraseMomentum,
+	hasMomentum,
 	clearPositionHistory,
 	setPositionToArea
 };
