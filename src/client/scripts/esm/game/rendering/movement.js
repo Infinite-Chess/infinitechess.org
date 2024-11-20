@@ -215,7 +215,6 @@ function checkIfBoardDropped() {
 
 /** Called after letting go of the board. Applies velocity to the board according to how fast the mouse was moving */
 function throwBoard(time) {
-	//Bug: pinching near side of screen causes board to move in that direction
 	removeOldPositions(time);
 	if(positionHistory.length<2) return;
 	const firstBoardState = positionHistory[0];
