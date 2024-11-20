@@ -1,6 +1,6 @@
 
 // Import Start
-import moveutil from './moveutil.js';
+import moveutil from '../../chess/util/moveutil.js';
 import style from './style.js';
 import options from '../rendering/options.js';
 import camera from '../rendering/camera.js';

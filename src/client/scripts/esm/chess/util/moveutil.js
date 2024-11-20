@@ -3,12 +3,12 @@
 // and detects if we're rewinding or fast-forwarding to view the game's history.
 
 // Import Start
-import coordutil from '../../chess/util/coordutil.js';
+import coordutil from './coordutil.js';
 // Import End
 
 /** 
  * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../logic/gamefile.js').gamefile} gamefile
 */
 
 
@@ -95,8 +95,6 @@ function getMoveOneForward(gamefile) {
  * @returns {boolean}
  */
 function isIncrementingLegal(gamefile) {
-	if (gamefile == null) throw new Error("Cannot ask if incrementing moves is legal when there's no gamefile.");
-
 	const incrementedIndex = gamefile.moveIndex + 1;
 	return !isIndexOutOfRange(gamefile.moves, incrementedIndex);
 }
@@ -107,8 +105,6 @@ function isIncrementingLegal(gamefile) {
  * @returns {boolean}
  */
 function isDecrementingLegal(gamefile) {
-	if (gamefile == null) throw new Error("Cannot ask if decrementing moves is legal when there's no gamefile.");
-
 	const decrementedIndex = gamefile.moveIndex - 1;
 	return !isIndexOutOfRange(gamefile.moves, decrementedIndex);
 }
@@ -322,8 +318,6 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 export { Move };
 
 export default {
-	rewindMove,
-	forwardMove,
 	isIncrementingLegal,
 	isDecrementingLegal,
 	isIndexOutOfRange,

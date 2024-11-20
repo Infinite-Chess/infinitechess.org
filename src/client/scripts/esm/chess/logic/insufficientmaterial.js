@@ -1,7 +1,7 @@
 
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import moveutil from '../../game/gui/moveutil.js';
+import moveutil from '../util/moveutil.js';
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';

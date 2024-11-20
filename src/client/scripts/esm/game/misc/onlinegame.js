@@ -14,7 +14,7 @@ import game from '../chess/game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import selection from '../chess/selection.js';
 import board from '../rendering/board.js';
-import moveutil from '../gui/moveutil.js';
+import moveutil from '../../chess/util/moveutil.js';
 import websocket from '../websocket.js';
 import perspective from '../rendering/perspective.js';
 import sound from './sound.js';
@@ -33,7 +33,7 @@ import validatorama from '../../util/validatorama.js';
 /** 
  * Type Definitions 
  * @typedef {import('../../chess/logic/gamefile.js'} gamefile
- * @typedef {import('../gui/moveutil.js').Move} Move
+ * @typedef {import('../../chess/util/moveutil.js').Move} Move
  * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
 */
 

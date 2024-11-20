@@ -12,7 +12,7 @@ import clock from './clock.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
-/** @typedef {import('../../game/gui/moveutil.js').Move} Move */
+/** @typedef {import('../util/moveutil.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 

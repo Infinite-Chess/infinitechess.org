@@ -1,7 +1,7 @@
 
 // Import Start
 import board from '../rendering/board.js';
-import moveutil from './moveutil.js';
+import moveutil from '../../chess/util/moveutil.js';
 import movement from '../rendering/movement.js';
 import game from '../chess/game.js';
 import style from './style.js';
@@ -10,6 +10,11 @@ import guipause from './guipause.js';
 import area from '../rendering/area.js';
 import transition from '../rendering/transition.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import statustext from './statustext.js';
+import stats from './stats.js';
+import movepiece from '../../chess/logic/movepiece.js';
+import selection from '../chess/selection.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 "use strict";
@@ -158,14 +163,14 @@ function callback_MoveRewind(event) {
 	if (rewindIsLocked) return;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrForward = Date.now();
-	moveutil.rewindMove();
+	rewindMove();
 }
 
 function callback_MoveForward(event) {
 	event = event || window.event;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrForward = Date.now();
-	moveutil.forwardMove();
+	forwardMove();
 }
 
 function isItOkayToRewindOrForward() {
@@ -310,10 +315,6 @@ function lockRewind() {
 }
 let lockLayers = 0;
 
-function isRewindButtonLocked() {
-	return rewindIsLocked;
-}
-
 /** Tests if the arrow keys have been pressed, signaling to rewind/forward the game. */
 function update() {
 	testIfRewindMove();
@@ -323,7 +324,7 @@ function update() {
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
 function testIfRewindMove() {
 	if (!input.isKeyDown('arrowleft')) return;
-	if (guinavigation.isRewindButtonLocked()) return;
+	if (rewindIsLocked) return;
 	rewindMove();
 }
 
@@ -336,7 +337,7 @@ function testIfForwardMove() {
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function rewindMove() {
 	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
-	if (!isDecrementingLegal(game.getGamefile())) return stats.showMoves();
+	if (!moveutil.isDecrementingLegal(game.getGamefile())) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
@@ -344,7 +345,7 @@ function rewindMove() {
     
 	selection.unselectPiece();
 
-	guinavigation.update_MoveButtons();
+	update_MoveButtons();
 
 	stats.showMoves();
 }
@@ -352,16 +353,16 @@ function rewindMove() {
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
 	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
-	if (!isIncrementingLegal(game.getGamefile())) return stats.showMoves();
+	if (!moveutil.isIncrementingLegal(game.getGamefile())) return stats.showMoves();
 
-	const move = moveutil.getMoveOneForward();
+	const move = moveutil.getMoveOneForward(game.getGamefile());
 
 	// Only leave animate and updateData as true
 	movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false });
 
 	// transition.teleportToLastMove()
 
-	guinavigation.update_MoveButtons();
+	update_MoveButtons();
 
 	stats.showMoves();
 }
@@ -373,6 +374,5 @@ export default {
 	update_MoveButtons,
 	callback_Pause,
 	lockRewind,
-	isRewindButtonLocked,
 	update,
 };

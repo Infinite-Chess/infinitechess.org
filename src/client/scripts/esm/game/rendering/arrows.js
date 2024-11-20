@@ -16,7 +16,7 @@ import selection from '../chess/selection.js';
 import camera from './camera.js';
 import board from './board.js';
 import math from '../../util/math.js';
-import moveutil from '../gui/moveutil.js';
+import moveutil from '../../chess/util/moveutil.js';
 import buffermodel from './buffermodel.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';

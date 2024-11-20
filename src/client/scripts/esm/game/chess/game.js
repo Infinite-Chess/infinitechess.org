@@ -19,7 +19,7 @@ import movement from '../rendering/movement.js';
 import selection from './selection.js';
 import camera from '../rendering/camera.js';
 import board from '../rendering/board.js';
-import moveutil from '../gui/moveutil.js';
+import moveutil from '../../chess/util/moveutil.js';
 import animation from '../rendering/animation.js';
 import webgl from '../rendering/webgl.js';
 import { gl } from '../rendering/webgl.js';

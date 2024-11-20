@@ -1,7 +1,7 @@
 
 // Import Start
 import formatconverter from './formatconverter.js';
-import moveutil from '../../game/gui/moveutil.js';
+import moveutil from '../util/moveutil.js';
 import jsutil from '../../util/jsutil.js';
 import variant from '../variants/variant.js';
 // Import End

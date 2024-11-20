@@ -16,7 +16,7 @@ import transition from '../rendering/transition.js';
 import board from '../rendering/board.js';
 import pieces from '../rendering/pieces.js';
 import movement from '../rendering/movement.js';
-import moveutil from '../gui/moveutil.js';
+import moveutil from '../../chess/util/moveutil.js';
 import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 import colorutil from '../../chess/util/colorutil.js';
@@ -27,7 +27,7 @@ import config from '../config.js';
 
 /**
  * Type Definitions
- * @typedef {import('../gui/moveutil.js').Move} Move
+ * @typedef {import('../../chess/util/moveutil.js').Move} Move
  * @typedef {import('../../chess/logic/legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('../../chess/logic/movepiece.js').Piece} Piece
  */

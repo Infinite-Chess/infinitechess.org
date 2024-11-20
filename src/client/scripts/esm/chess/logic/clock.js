@@ -1,7 +1,7 @@
 
 // Import Start
 import onlinegame from '../../game/misc/onlinegame.js';
-import moveutil from '../../game/gui/moveutil.js';
+import moveutil from '../util/moveutil.js';
 import clockutil from '../util/clockutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
