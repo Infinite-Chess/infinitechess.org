@@ -602,15 +602,31 @@ function sendUpdatedClockToColor(game, color) {
 }
 
 /**
- * Return the clock values of the game that can be sent to a client
+ * Return the clock values of the game that can be sent to a client.
+ * This also updates the clocks, as the players current time should not be the same as when they return first started
  * @param {Game} game - The game
  */
 function getGameClockValues(game) {
+	updateClockValues();
 	return {
 		timerWhite: game.timerWhite,
 		timerBlack: game.timerBlack,
 		timeNextPlayerLosesAt: game.timeNextPlayerLosesAt,
 	};
+}
+
+/**
+ * Update the games clock values. This is NOT called after the clocks are pushed,
+ * This is called right before we send clock information to the client,
+ *  so that it's as accurate as possible.
+ * @param {Game} game - The game
+ */
+function updateClockValues(game) {
+	const now = Date.now();
+	const timeElapsedSinceTurnStart = now - game.timeAtTurnStart;
+	if (game.whosTurn === 'white') game.timerWhite -= timeElapsedSinceTurnStart;
+	else if (game.whosTurn === 'black') game.timerBlack -= timeElapsedSinceTurnStart;
+	else throw new Error(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`);
 }
 
 /**

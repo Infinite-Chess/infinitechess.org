@@ -190,7 +190,9 @@ function pushGameClock(game) {
 	game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
 	if (game.untimed) return; // Don't adjust the times if the game isn't timed.
 
-	if (!gameutility.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
+	if (!gameutility.isGameResignable(game)) return;
+
+	// Atleast 2 moves played
 
 	const now = Date.now();
 	const timeSpent = now - game.timeAtTurnStart;
