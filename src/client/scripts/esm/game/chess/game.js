@@ -19,7 +19,7 @@ import movement from '../rendering/movement.js';
 import selection from './selection.js';
 import camera from '../rendering/camera.js';
 import board from '../rendering/board.js';
-import movesscript from '../gui/movesscript.js';
+import moveutil from '../../chess/util/moveutil.js';
 import animation from '../rendering/animation.js';
 import webgl from '../rendering/webgl.js';
 import { gl } from '../rendering/webgl.js';
@@ -132,7 +132,7 @@ function updateBoard() {
 	movement.recalcPosition();
 	transition.update();
 	board.recalcVariables(); 
-	movesscript.update();
+	guinavigation.update();
 	arrows.update();
 	selection.update(); // Test if a piece was clicked on or moved. Needs to be before updateNavControls()
 	// We NEED THIS HERE as well as in gameLoop.render() so the game can detect mouse clicks
@@ -245,7 +245,7 @@ function closeListeners() {
  * Stops the clocks, darkens the board, displays who won, plays a sound effect.
  */
 function concludeGame() {
-	if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
+	if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile);
 	clock.endGame(gamefile);
 	guiclock.stopClocks(gamefile);
 	board.darkenColor();

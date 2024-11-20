@@ -14,7 +14,7 @@ import coordutil from '../util/coordutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../../game/gui/movesscript.js').Move} Move
+ * @typedef {import('../util/moveutil.js').Move} Move
  * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('./movepiece.js').Piece} Piece
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox

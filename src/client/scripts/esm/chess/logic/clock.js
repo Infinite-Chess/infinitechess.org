@@ -1,7 +1,7 @@
 
 // Import Start
 import onlinegame from '../../game/misc/onlinegame.js';
-import movesscript from '../../game/gui/movesscript.js';
+import moveutil from '../util/moveutil.js';
 import clockutil from '../util/clockutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
@@ -85,13 +85,13 @@ function push(gamefile) {
 	const clocks = gamefile.clocks;
 	if (onlinegame.areInOnlineGame()) return; // Only the server can push clocks
 	if (clocks.untimed) return;
-	if (!movesscript.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
+	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 
 	clocks.colorTicking = gamefile.whosTurn;
 
 	// Add increment if the last move has a clock ticking
 	if (clocks.timeAtTurnStart !== undefined) {
-		const prevcolor = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
+		const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 		clocks.currentTime[prevcolor] += timeutil.secondsToMillis(clocks.startTime.increment);
 	}
 
@@ -114,7 +114,7 @@ function endGame(gamefile) {
 */
 function update(gamefile) {
 	const clocks = gamefile.clocks;
-	if (clocks.untimed || gamefileutility.isGameOver(gamefile) || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
+	if (clocks.untimed || gamefileutility.isGameOver(gamefile) || !moveutil.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
 	// Update current values
 	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;

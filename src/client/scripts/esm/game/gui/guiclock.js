@@ -1,5 +1,5 @@
 import style from "./style.js";
-import movesscript from "./movesscript.js";
+import moveutil from "../../chess/util/moveutil.js";
 import onlinegame from "../misc/onlinegame.js";
 import sound from "../misc/sound.js";
 import clockutil from "../../chess/util/clockutil.js";
@@ -109,7 +109,7 @@ function resetClocks() {
  */
 function update(gamefile) {
 	const clocks = gamefile.clocks;
-	if (clocks.untimed || gamefile.gameConclusion || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
+	if (clocks.untimed || gamefile.gameConclusion || !moveutil.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
 	// Update border color
 	if (clocks.colorTicking !== undefined) {
@@ -128,12 +128,12 @@ function edit(gamefile) {
 		removeBorder(element_timers[color].timer);
 	}
 
-	if (!movesscript.isGameResignable(gamefile) || gamefile.gameConclusion) return;
+	if (!moveutil.isGameResignable(gamefile) || gamefile.gameConclusion) return;
 	rescheduleSoundEffects(gamefile);
 }
 
 function rescheduleSoundEffects(gamefile) {
-	if (!movesscript.isGameResignable(gamefile) || gamefileutility.isGameOver(gamefile)) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
+	if (!moveutil.isGameResignable(gamefile) || gamefileutility.isGameOver(gamefile)) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
 	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
 	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
 }
@@ -234,7 +234,7 @@ function rescheduleCountdown(gamefile) {
 function push(gamefile) {
 	const clocks = gamefile.clocks;
 	// Dont update if no clocks are ticking
-	if (clocks.untimed || gamefileutility.isGameOver(gamefile) || !movesscript.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
+	if (clocks.untimed || gamefileutility.isGameOver(gamefile) || !moveutil.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
 	rescheduleSoundEffects(gamefile);
 
