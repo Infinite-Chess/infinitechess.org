@@ -1,6 +1,6 @@
 
 // Import Start
-import movesscript from './movesscript.js';
+import moveutil from './moveutil.js';
 import style from './style.js';
 import options from '../rendering/options.js';
 import camera from '../rendering/camera.js';
@@ -55,7 +55,7 @@ function hideMoves() {
 function setTextContentOfMoves() {
 
 	const currentPly = game.getGamefile().moveIndex + 1;
-	const totalPlyCount = movesscript.getPlyCount(game.getGamefile().moves);
+	const totalPlyCount = moveutil.getPlyCount(game.getGamefile().moves);
 
 	elementStatusMoves.textContent = `${translations.move_counter} ${currentPly}/${totalPlyCount}`;
 }

@@ -16,7 +16,7 @@ import transition from '../rendering/transition.js';
 import board from '../rendering/board.js';
 import pieces from '../rendering/pieces.js';
 import movement from '../rendering/movement.js';
-import movesscript from '../gui/movesscript.js';
+import moveutil from '../gui/moveutil.js';
 import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 import colorutil from '../../chess/util/colorutil.js';
@@ -27,7 +27,7 @@ import config from '../config.js';
 
 /**
  * Type Definitions
- * @typedef {import('../gui/movesscript.js').Move} Move
+ * @typedef {import('../gui/moveutil.js').Move} Move
  * @typedef {import('../../chess/logic/legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('../../chess/logic/movepiece.js').Piece} Piece
  */
@@ -198,7 +198,7 @@ function handleSelectingPiece(pieceClickedType) {
 	const gamefile = game.getGamefile();
 
 	// If we're viewing history, return. But also if we clicked a piece, forward moves.
-	if (!movesscript.areWeViewingLatestMove(gamefile)) {
+	if (!moveutil.areWeViewingLatestMove(gamefile)) {
 		// if (clickedPieceColor === gamefile.whosTurn ||
 		//     options.getEM() && pieceClickedType !== 'voidsN') 
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece

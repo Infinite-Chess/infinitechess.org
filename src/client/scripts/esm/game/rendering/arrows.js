@@ -16,7 +16,7 @@ import selection from '../chess/selection.js';
 import camera from './camera.js';
 import board from './board.js';
 import math from '../../util/math.js';
-import movesscript from '../gui/movesscript.js';
+import moveutil from '../gui/moveutil.js';
 import buffermodel from './buffermodel.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
@@ -248,7 +248,7 @@ function update() {
 	}
 
 	// Do not render line highlights upon arrow hover, when game is rewinded
-	if (!movesscript.areWeViewingLatestMove(gamefile)) piecesHoveringOverThisFrame.length = 0;
+	if (!moveutil.areWeViewingLatestMove(gamefile)) piecesHoveringOverThisFrame.length = 0;
 
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves. 

@@ -1,7 +1,7 @@
 
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import movesscript from '../../game/gui/movesscript.js';
+import moveutil from '../../game/gui/moveutil.js';
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
@@ -156,7 +156,7 @@ function detectInsufficientMaterial(gamefile) {
 	if (gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'white') != 1 || gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'black') != 1) return false;
 
 	// Only make the draw check if the last move was a capture or if there is no last move
-	const lastMove = movesscript.getLastMove(gamefile.moves);
+	const lastMove = moveutil.getLastMove(gamefile.moves);
 	if (lastMove && !lastMove.captured) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle pieces

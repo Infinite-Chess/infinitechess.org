@@ -14,7 +14,7 @@ import game from '../chess/game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import selection from '../chess/selection.js';
 import board from '../rendering/board.js';
-import movesscript from '../gui/movesscript.js';
+import moveutil from '../gui/moveutil.js';
 import websocket from '../websocket.js';
 import perspective from '../rendering/perspective.js';
 import sound from './sound.js';
@@ -33,7 +33,7 @@ import validatorama from '../../util/validatorama.js';
 /** 
  * Type Definitions 
  * @typedef {import('../../chess/logic/gamefile.js'} gamefile
- * @typedef {import('../gui/movesscript.js').Move} Move
+ * @typedef {import('../gui/moveutil.js').Move} Move
  * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
 */
 
@@ -145,9 +145,9 @@ function updateAFK() {
 function rescheduleAlertServerWeAFK() {
 	clearTimeout(afk.timeoutID);
 	const gamefile = game.getGamefile();
-	if (!isItOurTurn() || gamefileutility.isGameOver(gamefile) || isPrivate && clock.isGameUntimed(gamefile) || !clock.isGameUntimed(gamefile) && movesscript.isGameResignable(gamefile)) return;
+	if (!isItOurTurn() || gamefileutility.isGameOver(gamefile) || isPrivate && clock.isGameUntimed(gamefile) || !clock.isGameUntimed(gamefile) && moveutil.isGameResignable(gamefile)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
-	const timeUntilAFKSecs = !movesscript.isGameResignable(gamefile) ? afk.timeUntilAFKSecs_Abortable
+	const timeUntilAFKSecs = !moveutil.isGameResignable(gamefile) ? afk.timeUntilAFKSecs_Abortable
         : clock.isGameUntimed(gamefile) ? afk.timeUntilAFKSecs_Untimed
             : afk.timeUntilAFKSecs;
 	afk.timeoutID = setTimeout(tellServerWeAFK, timeUntilAFKSecs * 1000);
@@ -183,7 +183,7 @@ function tellServerWeBackFromAFK() {
 }
 
 function displayWeAFK(secsRemaining) {
-	const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+	const resigningOrAborting = moveutil.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
 	statustext.showStatusForDuration(`${translations.onlinegame.afk_warning} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
@@ -316,7 +316,7 @@ function stopOpponentAFKCountdown() {
 }
 
 function displayOpponentAFK(secsRemaining) {
-	const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+	const resigningOrAborting = moveutil.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
 	statustext.showStatusForDuration(`${translations.onlinegame.opponent_afk} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
@@ -346,7 +346,7 @@ function stopOpponentDisconnectCountdown() {
 
 function displayOpponentDisconnect(secsRemaining, wasByChoice) {
 	const opponent_disconnectedOrLostConnection = wasByChoice ? translations.onlinegame.opponent_disconnected : translations.onlinegame.opponent_lost_connection;
-	const resigningOrAborting = movesscript.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+	const resigningOrAborting = moveutil.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
 	// The "You are AFK" message should overwrite, be on top of, this message,
 	// so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
 	if (!afk.timeWeLoseFromAFK) statustext.showStatusForDuration(`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`, 1000);
@@ -458,7 +458,7 @@ function cancelFlashTabTimer() {
 
 function scheduleMoveSound_timeoutID() {
 	if (!loadbalancer.isPageHidden()) return;
-	if (!movesscript.isGameResignable(game.getGamefile())) return;
+	if (!moveutil.isGameResignable(game.getGamefile())) return;
 	const timeNextFlashFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
 	tabNameFlash.moveSound_timeoutID = setTimeout(() => { sound.playSound_move(0); }, timeNextFlashFromNow);
 }
@@ -537,7 +537,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	// and the rest of the moves list matches, don't modify our moves,
 	// just re-submit our move!
 	const hasOneMoreMoveThanServer = gamefile.moves.length === moves.length + 1;
-	const finalMoveIsOurMove = gamefile.moves.length > 0 && movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) === ourColor;
+	const finalMoveIsOurMove = gamefile.moves.length > 0 && moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) === ourColor;
 	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1) || gamefile.moves.length > 1 && moves.length > 0 && gamefile.moves[gamefile.moves.length - 2].compact === moves[moves.length - 1];
 	if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
 		console.log("Sending our move again after resyncing..");
@@ -576,7 +576,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
 		const move = movepiece.calculateMoveFromShortmove(gamefile, thisShortmove);
 
-		const colorThatPlayedThisMove = movesscript.getColorThatPlayedMoveIndex(gamefile, i);
+		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
 
 
@@ -696,7 +696,7 @@ function sendMove() {
 
 	const gamefile = game.getGamefile();
 
-	const shortmove = movesscript.getLastMove(gamefile.moves).compact; // "x,y>x,yN"
+	const shortmove = moveutil.getLastMove(gamefile.moves).compact; // "x,y>x,yN"
 
 	const data = {
 		move: shortmove,
@@ -725,7 +725,7 @@ function onMainMenuPress() {
 		return;
 	}
 
-	if (movesscript.isGameResignable(gamefile)) resign();
+	if (moveutil.isGameResignable(gamefile)) resign();
 	else abort();
 }
 

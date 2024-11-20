@@ -1,7 +1,7 @@
 
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import movesscript from '../../game/gui/movesscript.js';
+import moveutil from '../../game/gui/moveutil.js';
 import legalmoves from './legalmoves.js';
 import typeutil from '../util/typeutil.js';
 // Import End
@@ -9,7 +9,7 @@ import typeutil from '../util/typeutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../../game/gui/movesscript.js').Move} Move
+ * @typedef {import('../../game/gui/moveutil.js').Move} Move
 */
 
 "use strict";
@@ -53,7 +53,7 @@ function detectCheckmateOrDraw(gamefile) {
 	// Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
 	const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate');
 	if (gamefile.inCheck && usingCheckmate) {
-		const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
 		return `${colorThatWon} checkmate`;
 	} else return 'draw stalemate';
 }

@@ -3,15 +3,7 @@
 // and detects if we're rewinding or fast-forwarding to view the game's history.
 
 // Import Start
-import movepiece from '../../chess/logic/movepiece.js';
-import stats from './stats.js';
-import guinavigation from './guinavigation.js';
-import selection from '../chess/selection.js';
-import input from '../input.js';
-import statustext from './statustext.js';
-import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
-import frametracker from '../rendering/frametracker.js';
 // Import End
 
 /** 
@@ -82,71 +74,19 @@ function Move() {
 }
 
 /**
- * This contains methods for working with the gamefile's moves list,
- * and detects if we're rewinding or fast-forwarding to view the game's history.
+ * This script contains methods for working with the gamefile's moves list.
  */
-
-/** Tests if the arrow keys have been pressed, signaling to rewind/forward the game. */
-function update() {
-	testIfRewindMove();
-	testIfForwardMove();
-}
-
-/** Tests if the left arrow key has been pressed, signaling to rewind the game. */
-function testIfRewindMove() {
-	if (!input.isKeyDown('arrowleft')) return;
-	if (guinavigation.isRewindButtonLocked()) return;
-	rewindMove();
-}
-
-/** Tests if the right arrow key has been pressed, signaling to forward the game. */
-function testIfForwardMove() {
-	if (!input.isKeyDown('arrowright')) return;
-	forwardMove();
-}
-
-/** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
-function rewindMove() {
-	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
-	if (!isDecrementingLegal(game.getGamefile())) return stats.showMoves();
-
-	frametracker.onVisualChange();
-
-	movepiece.rewindMove(game.getGamefile(), { removeMove: false });
-    
-	selection.unselectPiece();
-
-	guinavigation.update_MoveButtons();
-
-	stats.showMoves();
-}
-
-/** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
-function forwardMove() {
-	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
-	if (!isIncrementingLegal(game.getGamefile())) return stats.showMoves();
-
-	const move = getMoveOneForward();
-
-	// Only leave animate and updateData as true
-	movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false });
-
-	// transition.teleportToLastMove()
-
-	guinavigation.update_MoveButtons();
-
-	stats.showMoves();
-}
 
 /**
  * Returns the move one forward from the current position we're viewing, if it exists.
  * This is also the move we would execute if we forward the game 1 step.
+ * @param {gamefile} gamefile - The gamefile
  * @returns {Move | undefined} The move
  */
-function getMoveOneForward() {
-	const moveIndex = game.getGamefile().moveIndex;
+function getMoveOneForward(gamefile) {
+	const moveIndex = gamefile.moveIndex;
 	const incrementedIndex = moveIndex + 1;
-	return getMoveFromIndex(game.getGamefile().moves, incrementedIndex);
+	return getMoveFromIndex(gamefile.moves, incrementedIndex);
 }
 
 /**
@@ -382,7 +322,6 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 export { Move };
 
 export default {
-	update,
 	rewindMove,
 	forwardMove,
 	isIncrementingLegal,
@@ -405,4 +344,5 @@ export default {
 	getColorThatPlayedMoveIndex,
 	getWhosTurnAtMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
+	getMoveOneForward,
 };
