@@ -44,9 +44,16 @@ import animation from '../rendering/animation.js';
 let pieceSelected;
 /** If true `pieceSelected` is currently being held. */
 let draggingPiece = false;
-/** //True if the piece wasn't selected before we started dragging it. @type{boolean} */
-let didDragSelectPiece; 
+/**
+ * When dropped in the same square, pieces are unselected every second time.
+ * This alows players to move pieces by clicking if they don't want to use drag.
+ * @type{boolean} 
+ * */
+let didLastClickSelectPiece;
+/** Set to false if the user want to use the original click controls. @type {boolean} */
 let dragEnabled = true;
+/** Is the user using touchscreen. If so we should ignor mouse over. @type {boolean} */
+let touchscreenMode = false;
 /** The pre-calculated legal moves of the current selected piece.
  * @type {LegalMoves} */
 let legalMoves;
@@ -124,35 +131,64 @@ function update() {
 		if (promoteTo) makePromotionMove();
 		return;
 	}
+	if (perspective.isLookingUp() && draggingPiece) return animation.hideHeldPiece(); //Don't render the draggedPiece if we are looking at the sky.
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefile.gameConclusion || guipause.areWePaused() || perspective.isLookingUp()) return;
 
 	// Calculate if the hover square is legal so we know if we need to render a ghost image...
 
-	// What coordinates are we hovering over?
-	const touchClickedTile = input.getTouchClickedTile(); // { id, x, y }
-	hoverSquare = input.getTouchClicked() ? [touchClickedTile.x, touchClickedTile.y]
-        : input.getMouseClicked() ? input.getMouseClickedTile()
-            : board.gtile_MouseOver_Int();
-	if (!hoverSquare) return; // Undefined, this means we're in perspective and we shouldn't be listening to tile mouse over
+	const touchHelds = input.getTouchHelds();
+	if (touchHelds.length > 2) return; // The user is dragging or scaling. Don't select pieces.
+
+	//pointer = touch, mouse, or other input device.
+	const pointerHeld = input.isMouseHeld_Left() || touchHelds.length;
+	const pointerDown = input.isMouseDown_Left() || input.atleast1TouchDown();
+	
+	/**
+	 * On devices that support both mouse and touchscreen,
+	 * the mouse location should not overwrite hoversquare unless it is in use.
+	 * Otherwise when the user drops a piece it will go to the mouse location instead of where they last touched the screen.
+	 * Some devices move the mouse with the touchscreen but not all.
+	 */
+	let tile;
+	if (touchHelds.length) {
+		tile = board.gtileCoordsOver(touchHelds[0].x, touchHelds[0].y);
+		touchscreenMode = true;
+	} else if (input.isMouseHeld_Left() || input.getMouseMoved()) {
+		touchscreenMode = false;
+	}
+	if (!touchscreenMode) {
+		tile = board.getTileMouseOver();
+	}
+	//if tile === undefined,
+	// we are using the touchscreen but it is not currently pressed
+	// or we are in perspective mode, looking at the sky.
+	if (tile || !touchscreenMode) hoverSquare = tile.tile_Int;
+	
+	//// What coordinates are we hovering over?
+	//const touchClickedTile = input.getTouchClickedTile(); // { id, x, y }
+	//hoverSquare = input.getTouchClicked() ? [touchClickedTile.x, touchClickedTile.y]
+	//    : input.getMouseClicked() ? input.getMouseClickedTile()
+	//        : board.gtile_MouseOver_Int();
+	
 	updateHoverSquareLegal();
 	
 	const pieceClickedType = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
 	
-	if(draggingPiece) {
-		if(input.isMouseHeld_Left()) { //still dragging.
-			animation.dragPiece(pieceSelected.type, pieceSelected.coords, board.gtile_MouseOver_Float());
+	if (draggingPiece) {
+		if (pointerHeld) { //still dragging.
+			//Render the piece at the pointer.
+			animation.dragPiece(pieceSelected.type, pieceSelected.coords, tile.tile_Float);
 		} else {
 			animation.dropPiece();
 			handleMovingSelectedPiece(hoverSquare, pieceClickedType);
 			draggingPiece = false;
 		}
 	} else {
-		if (!input.isMouseDown_Left()) return; // Exit, we did not click
+		if (!pointerDown) return; // Exit, we did not click
 		
 		if (pieceSelected) {
 			handleMovingSelectedPiece(hoverSquare, pieceClickedType);
 		} else {
-			didDragSelectPiece = !pieceSelected;
 			if (pieceClickedType) handleSelectingPiece(pieceClickedType);
 		}
 	}
@@ -168,7 +204,7 @@ function update() {
 
 /** Picks up the currently selected piece if we are allowed to. */
 function startDragging() {
-	draggingPiece = dragEnabled && !isOpponentPiece && (!isPremove /*|| premovesEnabled*/) && !movement.hasMomentum();
+	return draggingPiece = dragEnabled && !isOpponentPiece && (!isPremove /*|| premovesEnabled*/) && !movement.hasMomentum();
 }
 
 /**
@@ -189,14 +225,15 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
 		// if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
 
 		if (hoverSquareLegal) break tag; // This piece is capturable, don't select it instead
-		
+
 		// If it clicked iteself, deselect or pick it up again.
 		if (coordutil.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
-			if(draggingPiece) {
-				if(!didDragSelectPiece) unselectPiece();
-			} else {
-				startDragging();
-				didDragSelectPiece = false;
+			if (draggingPiece) { //The piece was dropped in its original square.
+				if (!didLastClickSelectPiece) unselectPiece();
+			} else { //The selected piece was clicked.
+				//Try to pick up the piece. If we can't (it's not our turn or belongs to our opponent), unselect it. 
+				if (!startDragging()) unselectPiece();
+				didLastClickSelectPiece = false;
 			}
 		} else if (pieceClickedType !== 'voidsN' && !draggingPiece) { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
 			handleSelectingPiece(pieceClickedType);
@@ -279,6 +316,7 @@ function selectPiece(type, index, coords) {
 
 	highlights.regenModel(); // Generate the buffer model for the blue legal move fields.
 	startDragging();
+	didLastClickSelectPiece = true;
 }
 
 /**
