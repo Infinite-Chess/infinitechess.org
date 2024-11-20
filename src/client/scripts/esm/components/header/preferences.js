@@ -51,6 +51,11 @@ function savePreferences() {
 	// Auto send it if the window is closing
 }
 
+function onChangeMade() {
+	changeWasMade = true;
+	validatorama.getAccessToken(); // Preload the access token so that we are ready to quickly save our preferences on the server if the page is unloaded
+}
+
 async function sendPrefsToServer() {
 	if (!validatorama.areWeLoggedIn()) return;  // Ensure user is logged in
 	if (!changeWasMade) return;  // Only send if preferences were changed
@@ -107,7 +112,7 @@ function getTheme() {
 }
 function setTheme(theme) {
 	preferences.theme = theme;
-	changeWasMade = true;
+	onChangeMade();
 	savePreferences();
 }
 
@@ -117,7 +122,7 @@ function getLegalMovesShape() {
 function setLegalMovesShape(legal_moves) {
 	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
-	changeWasMade = true;
+	onChangeMade();
 	savePreferences();
 }
 
