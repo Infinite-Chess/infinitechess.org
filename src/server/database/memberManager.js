@@ -452,4 +452,5 @@ export {
 	doesMemberOfUsernameExist,
 	isUsernameTaken,
 	isEmailTaken,
+	genUniqueUserID
 };

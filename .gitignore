@@ -4,6 +4,8 @@ node_modules
 .vscode
 # Visual Studio automatically generated directory
 .vs
+# Typescript compilation output
+out
 cert
 # Old json data storage "database"
 /database
