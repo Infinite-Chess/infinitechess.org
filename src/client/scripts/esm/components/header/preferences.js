@@ -25,6 +25,7 @@ let changeWasMade = false;
 
 (function init() {
 	loadPreferences();
+	addEventListener('unload', sendPrefsToServer)
 })();
 
 function loadPreferences() {
