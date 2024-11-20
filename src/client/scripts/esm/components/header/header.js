@@ -8,7 +8,6 @@ import faviconselector from './faviconselector.js';
 import spacing from './spacing.js';
 import currpage_greyer from './currpage-greyer.js';
 import settings from './settings.js';
-import pingManager from '../../util/pingManager.js';
 
 
 

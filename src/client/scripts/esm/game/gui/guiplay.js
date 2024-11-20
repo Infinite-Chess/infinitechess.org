@@ -332,9 +332,10 @@ function startLocalGame(inviteOptions) {
  * `disconnect`, `gameConclusion`, `serverRestartingAt`, `drawOffer`
  * 
  * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.
- * The `clockValues` property contains the properties `timerWhite`, `timerBlack`, `timeNextPlayerLosesAt`.
+ * The `clockValues` property contains the properties `timerWhite`, `timerBlack`, `accountForPing`.
  */
 function startOnlineGame(gameOptions) {
+	if (gameOptions.clockValues !== undefined) gameOptions.clockValues.accountForPing = true; // Set this to true so our clock knows to account for ping.
 	gui.setScreen('game online'); // Change screen location
 	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
 	onlinegame.setColorAndGameID(gameOptions);

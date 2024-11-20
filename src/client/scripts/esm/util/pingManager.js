@@ -60,10 +60,10 @@ function getPing() {
 
 /**
  * Getter for the average ping value over the last 'MAX_PING_HISTORY' pings.
- * @returns {number|undefined} The average ping value or null if there is no history.
+ * @returns {number} The average ping value or 0 if there is no history.
  */
 function getAveragePing() {
-	if (pingHistory.length === 0) return undefined;
+	if (pingHistory.length === 0) return 0;
 	const sum = pingHistory.reduce((acc, ping) => acc + ping, 0);
 	return sum / pingHistory.length;
 }

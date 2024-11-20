@@ -607,11 +607,10 @@ function sendUpdatedClockToColor(game, color) {
  * @param {Game} game - The game
  */
 function getGameClockValues(game) {
-	updateClockValues();
+	updateClockValues(game);
 	return {
 		timerWhite: game.timerWhite,
 		timerBlack: game.timerBlack,
-		timeNextPlayerLosesAt: game.timeNextPlayerLosesAt,
 	};
 }
 
@@ -623,9 +622,13 @@ function getGameClockValues(game) {
  */
 function updateClockValues(game) {
 	const now = Date.now();
+	if (game.untimed || !isGameResignable(game) || isGameOver(game)) return;
+	if (game.timeAtTurnStart === undefined) throw new Error("cannot update clock values when timeAtTurnStart is not defined!");
+
 	const timeElapsedSinceTurnStart = now - game.timeAtTurnStart;
-	if (game.whosTurn === 'white') game.timerWhite -= timeElapsedSinceTurnStart;
-	else if (game.whosTurn === 'black') game.timerBlack -= timeElapsedSinceTurnStart;
+	const newTime = game.timeRemainAtTurnStart - timeElapsedSinceTurnStart;
+	if (game.whosTurn === 'white') game.timerWhite = newTime;
+	else if (game.whosTurn === 'black') game.timerBlack = newTime;
 	else throw new Error(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`);
 }
 
@@ -641,8 +644,8 @@ function sendMoveToColor(game, color) {
 		move: getLastMove(game),
 		gameConclusion: game.gameConclusion,
 		moveNumber: game.moves.length,
-		clockValues: getGameClockValues(game),
 	};
+	if (!game.untimed) message.clockValues = getGameClockValues(game);
 	const sendToSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
 	if (!sendToSocket) return; // They are not connected, can't send message
 	sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message);

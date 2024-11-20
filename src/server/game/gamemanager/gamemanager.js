@@ -201,7 +201,6 @@ function pushGameClock(game) {
 
 	if (colorWhoJustMoved === 'white') game.timeRemainAtTurnStart = game.timerBlack;
 	else                               game.timeRemainAtTurnStart = game.timerWhite;
-	game.timeNextPlayerLosesAt = game.timeAtTurnStart + game.timeRemainAtTurnStart;
 
 	// Start the timer that will auto-terminate the player when they lose on time
 	setAutoTimeLossTimer(game);
@@ -236,7 +235,6 @@ function stopGameClock(game) {
 	game.whosTurn = undefined;
 
 	game.timeAtTurnStart = undefined;
-	game.timeNextPlayerLosesAt = undefined;
 	game.timeRemainAtTurnStart = undefined;
 }
 

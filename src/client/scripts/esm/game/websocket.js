@@ -11,6 +11,7 @@ import config from './config.js';
 import thread from '../util/thread.js';
 import validatorama from '../util/validatorama.js';
 import wsutil from '../util/wsutil.js';
+import options from './rendering/options.js';
 // Import End
 
 "use strict";
@@ -71,8 +72,13 @@ const timerIDsToCancelOnNewSocket = [];
 // Debugging...
 const printAllSentMessages = true;
 const alsoPrintSentEchos = false;
-const printAllIncomingMessages = true;
 const alsoPrintIncomingEchos = false;
+
+/**
+ * The amount of milliseconds of delay to add to our scent socket messages.
+ * THIS SHOULD ALWAYS BE 0 IN PRODUCTION!!!!!!
+ */
+const simulatedWebsocketLatencyMillis = 0;
 
 /**
  * The last time the server closed our socket connection request because
@@ -240,7 +246,7 @@ function onmessage(serverMessage) { // data: { sub, action, value, id, replyto }
 
 	const isEcho = message.action === "echo";
 
-	if (printAllIncomingMessages && config.DEV_BUILD) {
+	if (options.isDebugModeOn()) {
 		if (isEcho) { if (alsoPrintIncomingEchos) console.log(`Incoming message: ${JSON.stringify(message)}`); }
 		else console.log(`Incoming message: ${JSON.stringify(message)}`);
 	}
@@ -514,8 +520,12 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 
 	if (!socket || socket.readyState !== WebSocket.OPEN) return false; // Closed state, can't send message.
 
-	socket.send(JSON.stringify(payload));
+	const stringifiedMessage = JSON.stringify(payload);
 
+	if (simulatedWebsocketLatencyMillis > 0) { // Add a simulated delay to the message
+		setTimeout(() => { socket.send(stringifiedMessage); }, simulatedWebsocketLatencyMillis);
+	} else socket.send(stringifiedMessage);
+	
 	return true;
 }
 

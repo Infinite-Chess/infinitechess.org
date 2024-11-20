@@ -233,7 +233,8 @@ function onmessage(data) { // { sub, action, value, id }
 			break;
 		case "clock": { // Contain this case in a block so that it's variables are not hoisted 
 			if (!inOnlineGame) return;
-			const message = data.value; // { clockValues: { timerWhite, timerBlack, timeNextPlayerLosesAtAt } }
+			const message = data.value; // { clockValues: { timerWhite, timerBlack } }
+			message.clockValues.accountForPing = true; // We are in an online game so we need to inform the clock script to account for ping
 			const gamefile = game.getGamefile();
 			clock.edit(gamefile, message.clockValues); // Edit the clocks
 			guiclock.edit(gamefile);
@@ -361,7 +362,7 @@ function handleJoinGame(message) {
 	// The server's message looks like:
 	// {
 	//     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
-	//	   clockValues: { timerWhite, timerBlack, timeNextPlayerLosesAt }
+	//	   clockValues: { timerWhite, timerBlack }
 	//     id, clock, publicity, youAreColor, , moves, autoAFKResignTime, disconnect, gameConclusion, drawOffer,
 	// }
 
@@ -379,9 +380,9 @@ function handleJoinGame(message) {
  * Called when we received our opponents move. This verifies they're move
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
- * @param {Object} message - The server's socket message, with the properties `move`, `gameConclusion`, `moveNumber`, `timerWhite`, `timerBlack`, `timeNextPlayerLosesAt`.
+ * @param {Object} message - The server's socket message, with the properties `move`, `gameConclusion`, `moveNumber`, `clockValues`.
  */
-function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, timerWhite, timerBlack, timeNextPlayerLosesAt }
+function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, clockValues }
 	if (!inOnlineGame) return;
 	const moveAndConclusion = { move: message.move, gameConclusion: message.gameConclusion };
     
@@ -427,6 +428,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, t
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
+	if (message.clockValues !== undefined) message.clockValues.accountForPing = true; // Set this to true so our clock knows to account for ping.
 	clock.edit(gamefile, message.clockValues);
 	guiclock.edit(gamefile);
 
@@ -478,10 +480,11 @@ function resyncToGame() {
  * Called when the server sends us the conclusion of the game when it ends,
  * OR we just need to resync! The game may not always be over.
  * @param {Object} messageContents - The contents of the server message, with the properties:
- * `gameConclusion`, `timerWhite`,`timerBlack`, `moves`, `autoAFKResignTime`, `offerDraw`
+ * `gameConclusion`, `clockValues`, `moves`, `autoAFKResignTime`, `offerDraw`
  */
-function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack, timeNextPlayerLosesAt }, moves, autoAFKResignTime, offerDraw }
+function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack }, moves, autoAFKResignTime, offerDraw }
 	if (!inOnlineGame) return;
+	if (messageContents.clockValues !== undefined) messageContents.clockValues.accountForPing = true; // Set this too true so our clock knows to account for ping
 	const gamefile = game.getGamefile();
 	const claimedGameConclusion = messageContents.gameConclusion;
 

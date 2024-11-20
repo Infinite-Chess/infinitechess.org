@@ -5,6 +5,7 @@ import moveutil from '../util/moveutil.js';
 import clockutil from '../util/clockutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
+import pingManager from '../../util/pingManager.js';
 // Import End
 
 /**
@@ -21,7 +22,7 @@ import gamefileutility from '../util/gamefileutility.js';
  * Sets the clocks.
  * @param {gamefile} gamefile 
  * @param {string} clock - The clock value (e.g. "600+5" => 10m+5s).
- * @param {Object} [currentTimes] - Optional. An object containing the properties `timerWhite`, `timerBlack`, and `timeNextPlayerLosesAt` (if an online game) for the current time of the players. Often used if we re-joining an online game.
+ * @param {Object} [currentTimes] - Optional. An object containing the properties `timerWhite`, `timerBlack`, and `accountForPing` (if an online game) for the current time of the players. Often used if we re-joining an online game.
  */
 function set(gamefile, currentTimes) {
 	const clock = gamefile.metadata.TimeControl; // "600+5"
@@ -52,27 +53,28 @@ function set(gamefile, currentTimes) {
 
 /**
  * Updates the gamefile with new clock information received from the server.
- * @param {object} gamefile - The current game state object containing clock information.
+ * @param {gamefile} gamefile - The current game state object containing clock information.
  * @param {object} clockValues - An object containing the updated clock values.
  * @param {number} clockValues.timerWhite - White's current time, in milliseconds.
  * @param {number} clockValues.timerBlack - Black's current time, in milliseconds.
- * @param {number} clockValues.timeNextPlayerLosesAt - The time (in epoch milliseconds) when the current player will lose on time if they don't make a move.
+ * @param {number} clockValues.accountForPing - True if it's an online game
  */
 function edit(gamefile, clockValues) {
 	if (!clockValues) return; // Likely a no-timed game
-	const { timerWhite, timerBlack, timeNextPlayerLosesAt } = clockValues;
+	const { timerWhite, timerBlack } = clockValues;
 	const clocks = gamefile.clocks;
 
 	clocks.colorTicking = gamefile.whosTurn;
 	clocks.currentTime.white = timerWhite;
 	clocks.currentTime.black = timerBlack;
-	clocks.timeNextPlayerLosesAt = timeNextPlayerLosesAt;
 	const now = Date.now();
 	clocks.timeAtTurnStart = now;
 
-	if (timeNextPlayerLosesAt) {
-		const nextPlayerTrueTime = timeNextPlayerLosesAt - now;
-		clocks.currentTime[clocks.colorTicking] = nextPlayerTrueTime;
+	if (clockValues.accountForPing && moveutil.isGameResignable(gamefile) && !gamefileutility.isGameOver(gamefile)) {
+		// Ping is round-trip time (RTT), So divided by two to get the approximate
+		// time that has elapsed since the server sent us the correct clock values
+		clocks.currentTime[gamefile.whosTurn] -= pingManager.getAveragePing() / 2; 
+		console.log(`Ping is ${pingManager.getPing()}. Average ping is ${pingManager.getAveragePing()}. Subtracted ${pingManager.getAveragePing() / 2} millis from ${gamefile.whosTurn}'s clock.`);
 	}
 	clocks.timeRemainAtTurnStart = clocks.colorTicking === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
 }
@@ -97,14 +99,12 @@ function push(gamefile) {
 
 	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking];
 	clocks.timeAtTurnStart = Date.now();
-	clocks.timeNextPlayerLosesAt = clocks.timeAtTurnStart + clocks.timeRemainAtTurnStart;
 }
 
 function endGame(gamefile) {
 	const clocks = gamefile.clocks;
 	clocks.timeRemainAtTurnStart = undefined;
 	clocks.timeAtTurnStart = undefined;
-	clocks.timeNextPlayerLosesAt = undefined;
 }
 
 /**
