@@ -45,6 +45,10 @@ main {
     margin-bottom: 40px;
 }
 
+#content h2 {
+    margin-bottom: 1em;
+}
+
 #content p {
     line-height: 1.5;
     font-size: 17px;
