@@ -25,7 +25,6 @@ let changeWasMade = false;
 
 (function init() {
 	loadPreferences();
-	addEventListener('unload', sendPrefsToServer);
 })();
 
 function loadPreferences() {
@@ -50,6 +49,11 @@ function savePreferences() {
 
 	// After a delay, also send a post request to the server to update our preferences.
 	// Auto send it if the window is closing
+}
+
+function onChangeMade() {
+	changeWasMade = true;
+	validatorama.getAccessToken(); // Preload the access token so that we are ready to quickly save our preferences on the server if the page is unloaded
 }
 
 async function sendPrefsToServer() {
@@ -108,7 +112,7 @@ function getTheme() {
 }
 function setTheme(theme) {
 	preferences.theme = theme;
-	changeWasMade = true;
+	onChangeMade();
 	savePreferences();
 }
 
@@ -118,7 +122,7 @@ function getLegalMovesShape() {
 function setLegalMovesShape(legal_moves) {
 	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
-	changeWasMade = true;
+	onChangeMade();
 	savePreferences();
 }
 

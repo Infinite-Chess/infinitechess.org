@@ -17,6 +17,7 @@ const minTimeToRenewSession = 1000 * 60 * 60 * 24; // 1 day
 
 /** Expiration time for the access tokens. @type {number} */
 const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 60 * 15; // 15 minutes
+// const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 30; // 30 seconds - CUSHION_MILLIS
 /** Cushion time in milliseconds before considering the token expired. @type {number} */
 const CUSHION_MILLIS = 10_000;
 
