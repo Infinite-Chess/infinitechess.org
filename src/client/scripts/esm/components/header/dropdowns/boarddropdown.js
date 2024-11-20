@@ -1,6 +1,6 @@
 import style from "../../../game/gui/style.js";
 import preferences from "../preferences.js";
-import checkerboardgenerator from "../../../game/rendering/checkerboardgenerator.js";
+import checkerboardgenerator from "../../../chess/rendering/checkerboardgenerator.js";
 import themes from "../themes.js";
 
 
