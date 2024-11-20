@@ -36,6 +36,7 @@ import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
+import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**

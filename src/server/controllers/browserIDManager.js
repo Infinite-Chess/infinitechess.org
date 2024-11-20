@@ -50,7 +50,7 @@ function refreshBrowserID(req, res) {
 
 	if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
-	console.log(`Renewing browser-id: ${id}`);
+	// console.log(`Renewing browser-id: ${id}`);
 
 	// Readable by server with web socket connections, NOT by javascript
 	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis });
