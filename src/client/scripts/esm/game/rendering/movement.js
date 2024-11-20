@@ -235,6 +235,7 @@ function throwScale(time) {
 	scaleVel = (ratio-1)/deltaTime;
 }
 
+/** Clears the list of past positions. Call this to prevent teleportation giving momentum.*/
 function clearPositionHistory() {
 	positionHistory = [];
 }
@@ -549,5 +550,6 @@ export default {
 	randomizePanVelDir,
 	dragBoard,
 	eraseMomentum,
+	clearPositionHistory,
 	setPositionToArea
 };
