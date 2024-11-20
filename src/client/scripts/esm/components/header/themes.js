@@ -156,9 +156,9 @@ const themeDictionary = {
 	olive: {
 		lightTiles: [0.71, 0.68, 0.62, 1],
 		darkTiles: [0.55, 0.51, 0.45, 1],
-		legalMovesHighlightColor_Friendly: [0, 0.48, 0.1, 0.32],
-		legalMovesHighlightColor_Opponent: [1, 0.18, 0, 0.27],
-		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.26],
+		legalMovesHighlightColor_Friendly: [0, 0.48, 0.1, 0.34],
+		legalMovesHighlightColor_Opponent: [1, 0.18, 0, 0.29],
+		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.28],
 	},
 	dark_grey: {
 		lightTiles: [0.45, 0.45, 0.45, 1],
