@@ -12,7 +12,7 @@ import https from 'https';
 import ejs from 'ejs';
 // Other imports
 import configureMiddleware from './middleware/middleware.js';
-import wsserver from './wsserver.js';
+import wsserver from './socket/wsserver.js';
 import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';
 import { DEV_BUILD } from './config/config.js';
