@@ -24,15 +24,23 @@ function migrateUsers() {
 	// 	username_history TEXT
 	// );
 
-	// Declare variables to hold the values
-	const members = JSON.parse(readFileSync('./database/members.json'));
+	console.log("Migrating members to SQLite database...");
+
+	let members;
+	try {
+		// Attempt to read and parse the members.json file
+		members = JSON.parse(readFileSync('./database/members.json'));
+	} catch (error) {
+		// Catch any errors and log them
+		console.error("Error reading or parsing members.json:", error.message);
+	}
+
 	if (members === undefined) {
 		console.error("Unable to migrate members, unable to read members.json file.");
 		return;
 	}
-
-	console.log("Migrating members to SQLite database...");
 	// console.log(members);
+
 
 	for (const member of Object.values(members)) {
 
