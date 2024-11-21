@@ -30,8 +30,6 @@ const maximumScale = 20.0;
 const scrollScaleVel = 0.015; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.03
 const scrollScaleVelCap = 2.5;
 
-const passwordForSetting = "pidough";
-
 // Camera position does not change, only the board position
 let boardPos = [0,0]; // Coordinates
 let panVel = [0,0]; // Current panning velocity
@@ -63,9 +61,7 @@ function getBoardPos() {
 	return coordutil.copyCoords(boardPos);
 }
 
-// Password for modifying is stored in "passwordForSetting", or is "pidough"
-function setBoardPos(newPos, password) {
-	if (password !== passwordForSetting) return newPos;
+function setBoardPos(newPos) {
 	if (!Array.isArray(newPos)) return console.error(`New position must be an array! ${newPos}`);
 	if (isNaN(newPos[0]) || isNaN(newPos[1])) return console.error(`Cannot set position to ${newPos}!`);
 	boardPos = newPos;
@@ -77,12 +73,7 @@ function getBoardScale() {
 	return boardScale;
 }
 
-// Password for modifying is stored in "passwordForSetting", or is "pidough"
-function setBoardScale(newScale, password) {
-	if (password !== passwordForSetting) {
-		if (config.DEV_BUILD) console.error("Incorrect pass");
-		return newScale;
-	}
+function setBoardScale(newScale) {
 	if (isNaN(newScale)) return console.error(`Cannot set scale to ${newScale}!`);
 	if (newScale <= 0) {
 		console.error(`Cannot set scale to ${newScale}!!`);
@@ -162,7 +153,7 @@ function recalcScale() {
 
 	frametracker.onVisualChange(); // Visual change, render the screen this frame.
 	const newScale = boardScale * (1 + loadbalancer.getDeltaTime() * scaleVel * damp);
-	setBoardScale(newScale, passwordForSetting);
+	setBoardScale(newScale);
 }
 
 // Called from game.updateBoard()
@@ -514,7 +505,7 @@ function dragBoard_WithFingers() {
 	}
 
 	const newScale = scale_WhenBoardPinched * ratio;
-	setBoardScale(newScale, passwordForSetting);
+	setBoardScale(newScale);
 
 	input.moveMouse(touchHeld1, touchHeld2);
 }
@@ -524,13 +515,12 @@ function eraseMomentum() {
 	scaleVel = 0;
 }
 
-// Password for modifying is stored in "passwordForSetting", or is "pidough"
-function setPositionToArea(area, password) {
+function setPositionToArea(area) {
 	if (!area) console.error("Cannot set position to an undefined area.");
 
 	const copiedCoords = coordutil.copyCoords(area.coords);
-	setBoardPos(copiedCoords, password);
-	setBoardScale(area.scale, password);
+	setBoardPos(copiedCoords);
+	setBoardScale(area.scale);
 }
 
 export default {
