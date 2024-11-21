@@ -41,7 +41,7 @@ function cleanUpExpiredRefreshTokens() {
 		logEvents(`Error cleaning up expired refresh tokens: ${error.stack}`, 'errLog.txt', { print: true });
 		return;
 	}
-	console.log("Finished cleaning up refresh tokens!");
+	// console.log("Finished cleaning up refresh tokens!");
 }
 
 /**
