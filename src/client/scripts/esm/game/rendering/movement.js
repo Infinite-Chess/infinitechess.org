@@ -26,7 +26,7 @@ const panVelCap_3D = 16.0; // Hyptenuse cap of x & y speeds   Default: 11
 const scaleAccel_Desktop = 6.0; // Acceleration of board scaling   Default: 6
 const scaleAccel_Mobile = 14.0; // Acceleration of board scaling   Default: 6
 const scaleVelCap = 1.0; // Default: 1.0
-const maximumScale = 20.0;
+const maximumScale = 5.0;
 const scrollScaleVel = 0.015; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.03
 const scrollScaleVelCap = 2.5;
 
