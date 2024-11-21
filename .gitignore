@@ -1,16 +1,17 @@
-node_modules
 .env
-# VSCode automatically generated directory
-.vscode
-# Visual Studio automatically generated directory
-.vs
 cert
+logs
+dist
 # Old json data storage "database"
 /database
 # New database using SQLite
 database.db
-logs
-dist
+
+# Visual Studio automatically generated directories
+node_modules
+.vs
+# VSCode automatically generated directory
+.vscode
 
 # JetBrains IDEs
 .idea/
