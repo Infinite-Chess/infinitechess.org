@@ -50,8 +50,8 @@ function addTokenToRefreshTokens(req, refreshTokens, token) {
 		token,
 		issued: nowISO,
 		expires: expiresISO,
-		IP: getClientIP(req),
 	};
+	if (req !== undefined) newRefreshToken.IP = getClientIP(req);
 	
 	// Add the new token to the array
 	refreshTokens.push(newRefreshToken);

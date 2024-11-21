@@ -31,7 +31,7 @@ function migrateUsers() {
 	}
 
 	console.log("Migrating members to SQLite database...");
-	console.log(members);
+	// console.log(members);
 
 	for (const member of Object.values(members)) {
 
@@ -65,14 +65,15 @@ function migrateUsers() {
 		let refresh_tokens = [];
 		refreshTokens.forEach(oldToken => {
 			// This function already exists, sorry about that >.<
-			addTokenToRefreshTokens(refresh_tokens, oldToken);
+			addTokenToRefreshTokens(undefined, refresh_tokens, oldToken);
 		});
-		refresh_tokens = JSON.stringify(refresh_tokens);
+		if (refreshTokens.length === 0) refreshTokens = null;
+		refresh_tokens = refreshTokens === null ? null : JSON.stringify(refresh_tokens);
 
 		// A modern verification object looks like: { verified (bool), notified (bool), code }.
 		let verification = verified === undefined ? undefined : {
 			verified: verified[0],
-			notified: verified[0] ? true : undefined,
+			notified: verified[0] ? false : undefined,
 			code: verified[0] ? undefined : verified[1],
 		};
 		verification = JSON.stringify(verification);
@@ -87,16 +88,16 @@ function migrateUsers() {
 			email,
 			hashed_password,
 			joined,
-			verification,
-			login_count,
 			last_seen,
-			refresh_tokens
+			login_count,
+			refresh_tokens,
+			verification
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
 		try {
 			// Execute the query with the provided values
-			db.run(query, [user_id, username, email, hashed_password, joined, verification, login_count, last_seen, refresh_tokens]); // { changes: 1, lastInsertRowid: 7656846 }
+			db.run(query, [user_id, username, email, hashed_password, joined, last_seen, login_count, refresh_tokens, verification]); // { changes: 1, lastInsertRowid: 7656846 }
 
 		} catch (error) {
 			// Log the error for debugging purposes
