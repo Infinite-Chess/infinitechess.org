@@ -158,6 +158,35 @@ function getAllUsers() {
 // console.log(getAllUsers());
 
 /**
+ * Fetches a single user from the 'members' table based on their username.
+ * @param {string} username - The username of the member to retrieve.
+ * @returns {Object | undefined} - An object representing the user, containing all columns 
+ * from the 'members' table. Returns `undefined` if an error occurs or if the user is not found.
+ */
+function getMemberRowByUsername(username) {
+	// SQL query to check if a username exists in the 'members' table
+	const query = 'SELECT * FROM members WHERE username = ?';
+
+	try {
+		// Execute the query with the username parameter
+		const row = db.get(query, [username]);
+		return row;
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error getting row of member "${username}": ${error.message}`, 'errLog.txt', { print: true });
+		return;
+	}
+}
+// console.log("Naviary:");
+// console.log(getMemberRowByUsername("Naviary"));
+// console.log("Naviary2:");
+// console.log(getMemberRowByUsername("Naviary2"));
+// console.log("Owner:");
+// console.log(getMemberRowByUsername("Owner"));
+// console.log("Patron:");
+// console.log(getMemberRowByUsername("Patron"));
+
+/**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
  * @param {string[]} columns - The columns to retrieve (e.g., ['user_id', 'username', 'email']).
  * @param {string} searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
