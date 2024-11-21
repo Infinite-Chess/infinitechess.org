@@ -27,7 +27,8 @@ import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
-import { getMemberDataByCriteria } from '../../database/memberManager.js';
+import { getMemberDataByCriteria, getUserIdByUsername } from '../../database/memberManager.js';
+import uuid from '../../../client/scripts/esm/util/uuid.js';
 
 // Type Definitions...
 
@@ -236,22 +237,10 @@ function removePlayerSocketFromGame(game, color) {
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
-
-	const RatedOrCasual = game.rated ? "Rated" : "Casual";
+	const metadata = getMetadataOfGame(game);
 	const opponentColor = colorutil.getOppositeColor(playerColor);
 	const gameOptions = {
-		metadata: {
-			Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
-			Site: "https://www.infinitechess.org/",
-			Round: "-",
-			Variant: game.variant,
-			White: getDisplayNameOfPlayer(game.white), // Protect browser's browser-id cookie
-			Black: getDisplayNameOfPlayer(game.black), // Protect browser's browser-id cookie
-			TimeControl: game.clock,
-			UTCDate,
-			UTCTime,
-		},
+		metadata,
 		id: game.id,
 		clock: game.clock,
 		publicity: game.publicity,
@@ -283,6 +272,46 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 	if (timeServerRestarting !== false) gameOptions.serverRestartingAt = timeServerRestarting;
 
 	playerSocket.metadata.sendmessage(playerSocket, 'game', 'joingame', gameOptions, replyto);
+}
+
+/**
+ * Generates metadata for a game including event details, player information, and timestamps.
+ * @param {Game} game - The game object containing details about the game.
+ * @returns {Object} - An object containing metadata for the game including event name, players, time control, and UTC timestamps.
+ */
+function getMetadataOfGame(game) {
+	const RatedOrCasual = game.rated ? "Rated" : "Casual";
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
+	const metadata = {
+		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
+		Site: "https://www.infinitechess.org/",
+		Round: "-",
+		Variant: game.variant,
+		White: getDisplayNameOfPlayer(game.white), // Protect browser's browser-id cookie
+		Black: getDisplayNameOfPlayer(game.black), // Protect browser's browser-id cookie
+		TimeControl: game.clock,
+		UTCDate,
+		UTCTime,
+	};
+	id: if (game.white.member !== undefined) {
+		const user_id = getUserIdByUsername(game.white.member);
+		if (user_id === undefined) {
+			logEvents(`Unable to find the user ID of member "${game.white.member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
+			break id;
+		}
+		const base62 = uuid.base10ToBase62(user_id);
+		metadata.WhiteID = base62;
+	}
+	id: if (game.black.member !== undefined) {
+		const user_id = getUserIdByUsername(game.black.member);
+		if (user_id === undefined) {
+			logEvents(`Unable to find the user ID of member "${game.black.member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
+			break id;
+		}
+		const base62 = uuid.base10ToBase62(user_id);
+		metadata.BlackID = base62;
+	}
+	return metadata;
 }
 
 /**

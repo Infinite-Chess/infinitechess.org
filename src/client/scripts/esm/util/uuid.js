@@ -53,9 +53,7 @@ function generateNumbID(length) {
  * @throws {Error} - If the input is not a non-negative integer.
  */
 function base10ToBase62(num) {
-	if (!Number.isInteger(num) || num < 0) {
-		throw new Error('Input must be a non-negative integer.');
-	}
+	if (!Number.isInteger(num) || num < 0) throw new Error('Input must be a non-negative integer when converting base 10 to base 62.');
 
 	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 	let result = '';
@@ -79,9 +77,7 @@ function base10ToBase62(num) {
  * @throws {Error} - If the input contains invalid base 62 characters.
  */
 function base62ToBase10(base62Str) {
-	if (typeof base62Str !== 'string' || base62Str.length === 0) {
-		throw new Error('Input must be a non-empty string.');
-	}
+	if (typeof base62Str !== 'string' || base62Str.length === 0) throw new Error('Input must be a non-empty string when converting base 62 to base 10.');
 
 	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 	const base = 62;

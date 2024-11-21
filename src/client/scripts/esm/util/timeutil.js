@@ -47,6 +47,7 @@ function getCurrentUTCTime() {
 
 /**
  * Converts a timestamp to an object with UTCDate and UTCTime.
+ * This time format is used for ICN metadata notation.
  * @param {number} timestamp - The timestamp in milliseconds since the Unix Epoch.
  * @returns {Object} An object with the properties { UTCDate: "YYYY.MM.DD", UTCTime: "HH:MM:SS" }.
  */

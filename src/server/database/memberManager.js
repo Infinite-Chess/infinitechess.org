@@ -368,6 +368,18 @@ function isUserIdTaken(userId, { ignoreDeleted } = {}) {
 // console.log("taken? " + isUserIdTaken(14443702));
 
 /**
+ * Fetches a member's user ID based on their username.
+ * @param {string} username - The username to search for.
+ * @returns {number | undefined} - The user ID if found, or undefined if no match is found.
+ */
+function getUserIdByUsername(username) {
+	// Use the getMemberDataByCriteria function to fetch the user ID
+	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', username); // { user_id } || {}
+	return user_id;
+}
+
+
+/**
  * Checks if a member of a given username exists in the members table.
  * @param {number} username - The username check.
  * @returns {boolean} - Returns true if the member exists, false otherwise.
@@ -435,6 +447,7 @@ export {
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
 	doesMemberOfIDExist,
+	getUserIdByUsername,
 	doesMemberOfUsernameExist,
 	isUsernameTaken,
 	isEmailTaken,
