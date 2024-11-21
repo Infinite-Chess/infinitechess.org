@@ -10,17 +10,18 @@ import { addTokenToRefreshTokens } from '../controllers/authenticationTokens/ref
 function migrateUsers() {
 	// The table looks like:
 	// CREATE TABLE IF NOT EXISTS members (
-	// 	user_id INTEGER PRIMARY KEY,
+	// 	user_id INTEGER PRIMARY KEY,               
 	// 	username TEXT UNIQUE NOT NULL COLLATE NOCASE,
-	// 	email TEXT UNIQUE NOT NULL,
-	// 	hashed_password TEXT NOT NULL,
-	// 	roles TEXT,
-	// 	joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	// 	refresh_tokens TEXT,
+	// 	email TEXT UNIQUE NOT NULL,                
+	// 	hashed_password TEXT NOT NULL,             
+	// 	roles TEXT,        
+	// 	joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	// 	last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
+	// 	login_count INTEGER NOT NULL DEFAULT 0,                        
 	// 	preferences TEXT,
-	// 	verification TEXT,
-	// 	login_count INTEGER DEFAULT 1,
-	// 	last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	// 	refresh_tokens TEXT,                          
+	// 	verification TEXT, 
+	// 	username_history TEXT
 	// );
 
 	// Declare variables to hold the values
