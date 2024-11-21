@@ -166,7 +166,7 @@ const variantDictionary = {
 		},
 		gameruleModifications: gameruleModificationsOfOmegaShowcasings
 	},
-	Five_Dimensional: {
+	'5D_Chess': {
 		generator: {
 			algorithm: fivedimensionalgenerator.genPositionOfFiveDimensional,
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
