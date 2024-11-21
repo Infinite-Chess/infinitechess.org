@@ -154,6 +154,21 @@ function isCurrentDateWithinRange(startMonth, startDay, endMonth, endDay) {
 	return today >= startDate && today <= endDate;
 }
 
+/**
+ * Converts an ISO 8601 string to SQLite's DATETIME format ("YYYY-MM-DD HH:MM:SS").
+ * 
+ * @param {string} isoString - The ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
+ * @returns {string} - The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
+ */
+function isoToSQLite(isoString) {
+	const date = new Date(isoString);
+	if (isNaN(date.getTime())) {
+		throw new Error("Invalid ISO 8601 string provided.");
+	}
+	
+	return date.toISOString().replace('T', ' ').split('.')[0];
+}
+
 export default {
 	minutesToMillis,
 	secondsToMillis,
@@ -165,4 +180,5 @@ export default {
 	getCurrentMonth,
 	getCurrentDay,
 	isCurrentDateWithinRange,
+	isoToSQLite,
 };
