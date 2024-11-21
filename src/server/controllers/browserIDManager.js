@@ -24,7 +24,11 @@ function assignOrRenewBrowserID(req, res, next) {
 		return next();
 	}
 
-	if (req.headers.origin !== undefined || !req.accepts('html')) return next(); // A fetch request, but we only want to set the browser-id cookie on HTML requests. HTML requests will have an origin of undefined
+	// We don't have to worry about the request being for a resource because those have already been served.
+	// The only scenario this request could be for now is an HTML or fetch API request
+	// Fetch requests will always have a defined origin, whereas HTML requests have an undefined origin.
+	// The accept header is only set if we specify it so that condition is extra
+	if (req.headers.origin !== undefined || !req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
 
 	if (!req.cookies['browser-id']) giveBrowserID(res);
 	else refreshBrowserID(req, res);

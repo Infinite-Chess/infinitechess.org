@@ -91,6 +91,9 @@ function configureMiddleware(app) {
 	// Serve public assets. (e.g. css, scripts, images, audio)
 	app.use(express.static(path.join(__dirname, '..', '..', '..', 'dist'))); // Serve public assets
 
+	// Every request beyond this point will not be for a resource like a script or image,
+	// but it will be a request for an HTML or API
+
 	// Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
 	app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')));
 
