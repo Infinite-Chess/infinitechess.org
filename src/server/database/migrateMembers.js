@@ -92,6 +92,6 @@ async function migrateUsers() {
 	return true;
 }
 
-export default {
+export {
 	migrateUsers
-}
+};

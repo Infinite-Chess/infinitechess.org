@@ -1,12 +1,12 @@
 import { startPeriodicIntegrityCheck } from "./databaseIntegrity.js";
 import { generateTables } from "./databaseTables.js";
-import copy from "./copyMembersJson.js";
+import { migrateUsers } from "./migrateMembers.js";
 
 
 function initDatabase() {
 	generateTables();
 	startPeriodicIntegrityCheck();
-	copy.migrateUsers();
+	migrateUsers();
 }
 
 export {
