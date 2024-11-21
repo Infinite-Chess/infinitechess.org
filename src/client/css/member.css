@@ -71,7 +71,6 @@ main {
     border: solid 1px rgba(0, 0, 0, 0.123);
     margin-bottom: 20px;
     padding: 12px;
-    position: relative;
 }
 
 .member {
@@ -166,6 +165,10 @@ main {
 
 .hidden {
     display: none;
+}
+
+.currPage {
+    background-color: rgb(236, 236, 236);
 }
 
 .center {

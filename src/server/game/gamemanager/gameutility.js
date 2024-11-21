@@ -10,7 +10,6 @@
 import WebSocket from 'ws';
 
 // Middleware & other imports
-import { getUsernameCaseSensitive } from '../../controllers/members.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
 import { ensureJSONString } from '../../utility/JSONUtils.js';
@@ -19,25 +18,25 @@ import { ensureJSONString } from '../../utility/JSONUtils.js';
 import clockweb from '../clockweb.js';
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
-import formatconverter from '../../../client/scripts/game/chess/formatconverter.js';
+import formatconverter from '../../../client/scripts/esm/chess/logic/formatconverter.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-import timeutil from '../../../client/scripts/game/misc/timeutil.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
-import variant from '../../../client/scripts/game/variants/variant.js';
-import jsutil from '../../../client/scripts/game/misc/jsutil.js';
-import winconutil from '../../../client/scripts/game/misc/winconutil.js';
+import timeutil from '../../../client/scripts/esm/util/timeutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import variant from '../../../client/scripts/esm/chess/variants/variant.js';
+import jsutil from '../../../client/scripts/esm/util/jsutil.js';
+import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
+import { getMemberDataByCriteria, getUserIdByUsername } from '../../database/memberManager.js';
+import uuid from '../../../client/scripts/esm/util/uuid.js';
 
 // Type Definitions...
 
 /**
  * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
+ * @typedef {import('../../../client/scripts/esm/chess/variants/gamerules.js').GameRules} GameRules
  */
-/* eslint-disable no-unused-vars */
-import { GameRules } from '../../../client/scripts/game/variants/gamerules.js';
-/* eslint-enable no-unused-vars */
 
 /**
  * Construct a new online game from the invite options,
@@ -238,22 +237,10 @@ function removePlayerSocketFromGame(game, color) {
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
-
-	const RatedOrCasual = game.rated ? "Rated" : "Casual";
+	const metadata = getMetadataOfGame(game);
 	const opponentColor = colorutil.getOppositeColor(playerColor);
 	const gameOptions = {
-		metadata: {
-			Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
-			Site: "https://www.infinitechess.org/",
-			Round: "-",
-			Variant: game.variant,
-			White: getDisplayNameOfPlayer(game.white), // Protect browser's browser-id cookie
-			Black: getDisplayNameOfPlayer(game.black), // Protect browser's browser-id cookie
-			TimeControl: game.clock,
-			UTCDate,
-			UTCTime,
-		},
+		metadata,
 		id: game.id,
 		clock: game.clock,
 		publicity: game.publicity,
@@ -285,6 +272,53 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 	if (timeServerRestarting !== false) gameOptions.serverRestartingAt = timeServerRestarting;
 
 	playerSocket.metadata.sendmessage(playerSocket, 'game', 'joingame', gameOptions, replyto);
+}
+
+/**
+ * Generates metadata for a game including event details, player information, and timestamps.
+ * @param {Game} game - The game object containing details about the game.
+ * @returns {Object} - An object containing metadata for the game including event name, players, time control, and UTC timestamps.
+ */
+function getMetadataOfGame(game) {
+	const RatedOrCasual = game.rated ? "Rated" : "Casual";
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
+	const metadata = {
+		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
+		Site: "https://www.infinitechess.org/",
+		Round: "-",
+		Variant: game.variant,
+		White: getDisplayNameOfPlayer(game.white), // Protect browser's browser-id cookie
+		Black: getDisplayNameOfPlayer(game.black), // Protect browser's browser-id cookie
+		TimeControl: game.clock,
+		UTCDate,
+		UTCTime,
+	};
+	id: if (game.white.member !== undefined) {
+		const user_id = getUserIdByUsername(game.white.member);
+		if (user_id === undefined) {
+			logEvents(`Unable to find the user ID of member "${game.white.member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
+			break id;
+		}
+		const base62 = uuid.base10ToBase62(user_id);
+		metadata.WhiteID = base62;
+	}
+	id: if (game.black.member !== undefined) {
+		const user_id = getUserIdByUsername(game.black.member);
+		if (user_id === undefined) {
+			logEvents(`Unable to find the user ID of member "${game.black.member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
+			break id;
+		}
+		const base62 = uuid.base10ToBase62(user_id);
+		metadata.BlackID = base62;
+	}
+
+	if (isGameOver(game)) { // Add on the Result and Termination metadata
+		const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
+		metadata.Result = winconutil.getResultFromVictor(victor);
+		metadata.Termination = getTerminationInEnglish(game.gameRules, condition);
+	}
+
+	return metadata;
 }
 
 /**
@@ -362,7 +396,13 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
  * @returns {string} The display name of the player.
  */
 function getDisplayNameOfPlayer(player) { // { member/browser }
-	return player.member ? getUsernameCaseSensitive(player.member) : "(Guest)";
+	// return player.member ? getUsernameCaseSensitive(player.member) : "(Guest)";
+	let displayName;
+	if (player.member) {
+		const { username } = getMemberDataByCriteria(['username'], 'username', player.member);
+		displayName = username;
+	} else displayName = "(Guest)";
+	return displayName;
 }
 
 /**
@@ -406,23 +446,8 @@ async function logGame(game) {
      * moves
      * gameRules
      */
-	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
-	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const gameRules = jsutil.deepCopyObject(game.gameRules);
-	const metadata = {
-		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
-		Site: "https://www.infinitechess.org/",
-		Round: "-",
-		Variant: game.variant, // Don't translate yet, as variant.js needs the variant code to fetch gamerules.
-		White: getDisplayNameOfPlayer(game.white),
-		Black: getDisplayNameOfPlayer(game.black),
-		TimeControl: game.clock,
-		UTCDate,
-		UTCTime,
-		Result: winconutil.getResultFromVictor(victor),
-		Termination: getTerminationInEnglish(gameRules, condition)
-	};
+	const metadata = getMetadataOfGame(game);
 	const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
 	delete gameRules.moveRule;
 	metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant.js has gotten the game rules.
@@ -598,15 +623,34 @@ function sendUpdatedClockToColor(game, color) {
 }
 
 /**
- * Return the clock values of the game that can be sent to a client
+ * Return the clock values of the game that can be sent to a client.
+ * This also updates the clocks, as the players current time should not be the same as when they return first started
  * @param {Game} game - The game
  */
 function getGameClockValues(game) {
+	updateClockValues(game);
 	return {
 		timerWhite: game.timerWhite,
 		timerBlack: game.timerBlack,
-		timeNextPlayerLosesAt: game.timeNextPlayerLosesAt,
 	};
+}
+
+/**
+ * Update the games clock values. This is NOT called after the clocks are pushed,
+ * This is called right before we send clock information to the client,
+ *  so that it's as accurate as possible.
+ * @param {Game} game - The game
+ */
+function updateClockValues(game) {
+	const now = Date.now();
+	if (game.untimed || !isGameResignable(game) || isGameOver(game)) return;
+	if (game.timeAtTurnStart === undefined) throw new Error("cannot update clock values when timeAtTurnStart is not defined!");
+
+	const timeElapsedSinceTurnStart = now - game.timeAtTurnStart;
+	const newTime = game.timeRemainAtTurnStart - timeElapsedSinceTurnStart;
+	if (game.whosTurn === 'white') game.timerWhite = newTime;
+	else if (game.whosTurn === 'black') game.timerBlack = newTime;
+	else throw new Error(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`);
 }
 
 /**
@@ -621,8 +665,8 @@ function sendMoveToColor(game, color) {
 		move: getLastMove(game),
 		gameConclusion: game.gameConclusion,
 		moveNumber: game.moves.length,
-		clockValues: getGameClockValues(game),
 	};
+	if (!game.untimed) message.clockValues = getGameClockValues(game);
 	const sendToSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
 	if (!sendToSocket) return; // They are not connected, can't send message
 	sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message);

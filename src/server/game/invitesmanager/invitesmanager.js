@@ -10,7 +10,7 @@ import wsutility from '../wsutility.js';
 import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
-import jsutil from '../../../client/scripts/game/misc/jsutil.js';
+import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
 /**
  * Type Definitions
@@ -228,11 +228,11 @@ function findSocketFromOwner(owner) { // { member/browser }
 	const subscribedClients = getInviteSubscribers(); // { id: ws }
 	if (owner.member) {
 		for (const ws of Object.values(subscribedClients)) {
-			if (ws.metadata.user === owner.member) return ws;
+			if (ws.metadata.memberInfo.username === owner.member) return ws;
 		}
 	} else if (owner.browser) {
 		for (const ws of Object.values(subscribedClients)) {
-			if (ws.metadata['browser-id'] === owner.browser) return ws;
+			if (ws.cookies['browser-id'] === owner.browser) return ws;
 		}
 	} else return console.error(`Cannot find socket from owner of invite when owner does not have a member nor browser property! Owner: ${JSON.stringify(owner)}`);
 
@@ -270,8 +270,8 @@ function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action
 	// The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
 	// console.log("Setting a 5-second timer to delete a user's invites!")
 
-	if (ws.metadata.user) timersMember[ws.metadata.user] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws);
-	if (ws.metadata['browser-id']) timersBrowser[ws.metadata['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws);
+	if (ws.metadata.memberInfo.signedIn) timersMember[ws.metadata.memberInfo.username] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws);
+	if (ws.cookies['browser-id']) timersBrowser[ws.cookies['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws);
 }
 
 /**
@@ -279,12 +279,12 @@ function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action
  * @param {Socket} ws - The socket of the new invite subscriber
  */
 function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws) {
-	if (ws.metadata.user) {
-		clearTimeout(timersMember[ws.metadata.user]);
-		delete timersMember[ws.metadata.user];
-	} if (ws.metadata['browser-id']) {
-		clearTimeout(timersBrowser[ws.metadata['browser-id']]);
-		delete timersBrowser[ws.metadata['browser-id']];
+	if (ws.metadata.memberInfo.signedIn) {
+		clearTimeout(timersMember[ws.metadata.memberInfo.username]);
+		delete timersMember[ws.metadata.memberInfo.username];
+	} if (ws.cookies['browser-id']) {
+		clearTimeout(timersBrowser[ws.cookies['browser-id']]);
+		delete timersBrowser[ws.cookies['browser-id']];
 	}
 }
 
@@ -314,7 +314,7 @@ function deleteUsersExistingInvite(ws) { // Set dontBroadcastChange to true if y
  * @param {Socket} ws - The socket of the member
  */
 function deleteMembersExistingInvite(ws) {
-	const member = ws.metadata.user;
+	const member = ws.metadata.memberInfo.username;
 	if (!member) return; // No username (guest), no invite!
 	let deleted1PublicInvite = false;
 	for (let i = invites.length - 1; i >= 0; i--) {
@@ -333,7 +333,7 @@ function deleteMembersExistingInvite(ws) {
  * @param {Socket} ws - The socket of the browser
  */
 function deleteBrowsersExistingInvite(ws) {
-	const browser = ws.metadata['browser-id'];
+	const browser = ws.cookies['browser-id'];
 	if (!browser) return; // No browser-id (logged in), no invite!
 	let deleted1PublicInvite = false;
 	for (let i = invites.length - 1; i >= 0; i--) {
@@ -349,14 +349,14 @@ function deleteBrowsersExistingInvite(ws) {
 /**
  * Deletes all invites the belong to the member.
  * This is called after a member logs out.
- * @param {string} usernameLowercase 
+ * @param {string} username 
  */
-function deleteAllInvitesOfMember(usernameLowercase) {
-	if (usernameLowercase == null) return console.error("Cannot delete all invites of member without their username.");
+function deleteAllInvitesOfMember(username) {
+	if (username === undefined) return console.error("Cannot delete all invites of member without their username.");
 
 	let publicInviteDeleted = false;
 	invites = invites.filter((invite) => { // { id, owner, variant, clock, color, rated, publicity }
-		const inviteMatches = invite.owner.member === usernameLowercase;
+		const inviteMatches = invite.owner.member === username;
 		if (inviteMatches && isInvitePublic(invite)) publicInviteDeleted = true;
 		return !inviteMatches;
 	});

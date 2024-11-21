@@ -1,32 +1,48 @@
 
-import { findMemberFromRefreshToken, deleteRefreshToken, getUsernameCaseSensitive } from './members.js';
 import websocketserver from '../wsserver.js';
+import { logEvents } from '../middleware/logEvents.js';
 import { deleteAllInvitesOfMember } from '../game/invitesmanager/invitesmanager.js';
-import { getTranslationForReq } from '../utility/translate.js';
+import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 
-const handleLogout = async(req, res) => {
+
+async function handleLogout(req, res) {
+	if (!req.memberInfo) {
+		logEvents("req.memberInfo must be defined for us to log out!", 'errLog.txt', { print: true });
+		return res.status(500).json({'message' : "Server Error" });
+	}
+
+	// Delete the refresh token cookie...
 	// On client, also delete the accessToken
 
 	const cookies = req.cookies;
-	// We need to delete refresh token cookie, but is it already?
-	if (!cookies?.jwt) return res.redirect('/'); // Success, already logged out
 	const refreshToken = cookies.jwt;
+	if (!refreshToken) return res.redirect('/'); // Cookie already deleted. (Already logged out)
 
-	// Is refreshToken in db?
-	const foundMemberKey = findMemberFromRefreshToken(refreshToken);
-	if (!foundMemberKey) return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_not_found", req) }); // Forbidden
+	if (!req.memberInfo.signedIn) { // Existing refresh token cookie was invalid (tampered, expired, manually invalidated, or account deleted)
+		// We can't use the higher-order doStuffOnLogout() here because we don't know their user_id and username
+		// BUT this will delete their existing session cookies!
+		revokeSession(res); 
+		return res.redirect('/');
+	}
 
-	// Delete refreshToken in db.
-	// This also saves the members file.
-	deleteRefreshToken(foundMemberKey, refreshToken);
-
-	websocketserver.closeAllSocketsOfMember(foundMemberKey, 1008, "Logged out");
-	deleteAllInvitesOfMember(foundMemberKey);
-
-	console.log(`Logged out member ${getUsernameCaseSensitive(foundMemberKey)}`);
-	res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+	const { user_id, username } = req.memberInfo;
+	
+	doStuffOnLogout(res, user_id, username, refreshToken);
 
 	res.redirect('/');
+
+	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
 };
 
-export { handleLogout };
+function doStuffOnLogout(res, user_id, username, refreshToken) {
+	// Revoke our session and invalidate the refresh token from the database
+	revokeSession(res, user_id, refreshToken);
+
+	websocketserver.closeAllSocketsOfMember(username, 1008, "Logged out");
+	deleteAllInvitesOfMember(username);
+}
+
+export {
+	handleLogout,
+	doStuffOnLogout,
+};

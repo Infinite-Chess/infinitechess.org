@@ -14,8 +14,8 @@ import wsutility from '../wsutility.js';
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
-import winconutil from '../../../client/scripts/game/misc/winconutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 
 /**
  * Type Definitions

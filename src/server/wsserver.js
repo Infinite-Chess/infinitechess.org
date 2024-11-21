@@ -4,7 +4,7 @@ import { rateLimitWebSocket } from './middleware/rateLimit.js';
 import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from './middleware/logEvents.js';
 import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
 
-import uuid from '../client/scripts/game/misc/uuid.js';
+import uuid from '../client/scripts/esm/util/uuid.js';
 const { genUniqueID, generateNumbID } = uuid;
 import wsutility from './game/wsutility.js';
 import { handleGameRoute } from './game/gamemanager/gamerouter.js';
@@ -13,6 +13,7 @@ import { unsubClientFromGameBySocket } from './game/gamemanager/gamemanager.js';
 import { subToInvitesList, unsubFromInvitesList, userHasInvite } from './game/invitesmanager/invitesmanager.js';
 import { ensureJSONString } from './utility/JSONUtils.js';
 import { executeSafely } from './utility/errorGuard.js';
+import wsutil from '../client/scripts/esm/util/wsutil.js';
 
 /**
  * Type Definitions
@@ -63,34 +64,6 @@ const echoTimers = {};
 
 const timeOfInactivityToRenewConnection = 10000;
 
-// Possible websocket closure reasons:
-
-// Server closure reasons:
-// 1000 "Connection expired"  (This can say this even if in dev tools we disable our network)
-// 1008 "Unable to identify client IP address"
-// 1008 "Authentication needed"
-// 1008 "Logged out"
-// 1009 "Too Many Requests. Try again soon."
-// 1009 "Message Too Big"
-// 1009 "Too Many Sockets"
-// 1009 "Origin Error"
-// 1014 "No echo heard"  (Client took too long to respond)
-
-// Client closure reasons:
-// 1000 "Connection closed by client"
-// 1000 "Connection closed by client. Renew."
-
-// Other:
-// 1006 "" Network error
-// 1001 "" Endpoint going away. (Closed tab without performing cleanup)
-
-// These are the closure reasons where we will RETAIN their invite for a set amount of time before deleting it by disconnection!
-// We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
-// If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
-// so IMMEDIATELY tell their opponent they disconnected!
-const closureCodesNotByChoice = [1006];
-const closureReasonsNotByChoice = ["Connection expired", "Logged out", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."];
-
 
 /**
  * 
@@ -112,12 +85,11 @@ function onConnectionRequest(ws, req) {
 	}
 
 	// Parse cookies from the Upgrade http headers
-	const cookies = getCookiesFromWebsocket(req);
+	ws.cookies = getCookiesFromWebsocket(req);
 
 	ws.metadata = {
 		subscriptions: {}, // NEEDS TO BE INITIALIZED before we do anything it will crash because it's undefined!
 		userAgent: req.headers['user-agent'],
-		i18next: cookies.i18next, // Their preferred language, i.e. 'en-US'
 	};
 
 	// Rate Limit Here
@@ -135,18 +107,16 @@ function onConnectionRequest(ws, req) {
 		console.log(`Client IP ${ws.metadata.IP} has too many sockets! Not connecting this one.`);
 		return ws.close(1009, 'Too Many Sockets');
 	}
-	if (memberHasMaxSocketCount(ws.metadata.user)) {
-		console.log(`Member ${ws.metadata.user} has too many sockets! Not connecting this one.`);
+	
+	// Initialize who they are. Member? Browser ID?...
+	verifyJWTWebSocket(req, ws); // Auto sets ws.metadata.memberInfo properties!
+
+	if (ws.metadata.memberInfo.signedIn && memberHasMaxSocketCount(ws.metadata.memberInfo.username)) {
+		console.log(`Member ${ws.metadata.memberInfo.username} has too many sockets! Not connecting this one.`);
 		return ws.close(1009, 'Too Many Sockets');
 	}
 
-	// Initialize who they are. Member? Browser ID?...
-
-
-	verifyJWTWebSocket(ws, cookies); // Auto sets ws.metadata.user/role properties!
-	if (cookies['browser-id']) ws.metadata['browser-id'] = cookies['browser-id']; // Sets the browser-id property
-
-	if (!ws.metadata.user && !ws.metadata['browser-id']) { // Terminate web socket connection request, they NEED authentication!
+	if (!ws.metadata.memberInfo.signedIn && ws.cookies['browser-id'] === undefined) { // Terminate web socket connection request, they NEED authentication!
 		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
 		wsutility.printSocket(ws);
 		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
@@ -156,7 +126,7 @@ function onConnectionRequest(ws, req) {
 
 	websocketConnections[id] = ws; // Add the connection to our list of all websocket connections
 	addConnectionToConnectedIPs(ws.metadata.IP, id); // Add the conenction to THIS IP's list of connections (so we can cap on a per-IP basis)
-	addConnectionToConnectedMembers(ws.metadata.user, id);
+	addConnectionToConnectedMembers(ws.metadata.memberInfo.username, id);
 
 	// Log the request
 	logWebsocketStart(req, ws);
@@ -275,7 +245,7 @@ function onclose(ws, code, reason) {
 	const id = ws.metadata.id;
 	delete websocketConnections[id];
 	removeConnectionFromConnectedIPs(ws.metadata.IP, id);
-	removeConnectionFromConnectedMembers(ws.metadata.user, id);
+	removeConnectionFromConnectedMembers(ws.metadata.memberInfo.username, id);
 
 	// What if the code is 1000, and reason is "Connection closed by client"?
 	// I then immediately want to delete their invite.
@@ -285,7 +255,7 @@ function onclose(ws, code, reason) {
 	// True if client had no power over the closure,
 	// DON'T COUNT this as a disconnection!
 	// They would want to keep their invite, AND remain in their game!
-	const closureNotByChoice = wasSocketClosureNotByTheirChoice(code, reason);
+	const closureNotByChoice = wsutil.wasSocketClosureNotByTheirChoice(code, reason);
 
 	// Unsubscribe them from all. NO LIST. It doesn't matter if they want to keep their invite or remain
 	// connected to their game, without a websocket to send updates to, there's no point in any SUBSCRIPTION service!
@@ -489,8 +459,11 @@ function closeWebSocketConnection(ws, code, message, messageID) {
 }
 
 function getCookiesFromWebsocket(req) { // req is the WEBSOCKET on-connection request!
-	//console.log(req.cookies) // UNDEFINED FOR WebSocket connections!!
-	const rawCookies = req.headers?.cookie; // In the format: "invite-tag=etg5b3bu; jwt=9732fIESLGIESLF"
+
+	// req.cookies is only defined from our cookie parser for REGULAR requests,
+	// NOT for websocket upgrade requests! We have to parse them manually!
+
+	const rawCookies = req.headers.cookie; // In the format: "invite-tag=etg5b3bu; jwt=9732fIESLGIESLF"
 	const cookies = {};
 	if (!rawCookies || typeof rawCookies !== 'string') return cookies;
 
@@ -503,7 +476,7 @@ function getCookiesFromWebsocket(req) { // req is the WEBSOCKET on-connection re
 		});
 	} catch (e) {
 		const errText = `Websocket connection request contained cookies in an invalid format!! Cookies: ${ensureJSONString(rawCookies)}\n${e.stack}`;
-		logEvents(errText, 'hackLog.txt', { print: true });
+		logEvents(errText, 'errLog.txt', { print: true });
 	}
 
 	return cookies;
@@ -585,12 +558,6 @@ function unsubClientFromAllSubs(ws, closureNotByChoice) {
 		const thisSubscription = subscriptions[key]; // invites/game
 		handleUnsubbing(ws, key, thisSubscription, closureNotByChoice);
 	}
-}
-
-// Returns true if the client had no power over the closure (they don't want their invite to be deleted!)
-// If true, we will also give them 5 seconds to reconnect before alerting their opponent they've disconnected.
-function wasSocketClosureNotByTheirChoice(code, reason) {
-	return closureCodesNotByChoice.includes(code) || closureReasonsNotByChoice.includes(reason.trim());
 }
 
 

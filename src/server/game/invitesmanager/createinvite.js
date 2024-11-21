@@ -21,8 +21,8 @@ import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { isServerRestarting } from '../updateServerRestart.js';
-import uuid from '../../../client/scripts/game/misc/uuid.js';
-import variant from '../../../client/scripts/game/variants/variant.js';
+import uuid from '../../../client/scripts/esm/util/uuid.js';
+import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 
 /**
  * Type Definitions
@@ -61,7 +61,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	// Invite has all legal parameters! Create the invite...
 
 	// Who is the owner of the invite?
-	const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] };
+	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.cookies["browser-id"] };
 	invite.owner = owner;
 
 	do { invite.id = uuid.generateID(5); } while (existingInviteHasID(invite.id));
@@ -106,7 +106,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 	do { id = uuid.generateID(IDLengthOfInvites); } while (existingInviteHasID(messageContents.id));
 	invite.id = id;
 
-	const owner = ws.metadata.user ? { member: ws.metadata.user } : { browser: ws.metadata["browser-id"] };
+	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.cookies["browser-id"] };
 	invite.owner = owner;
 	invite.name = getDisplayNameOfPlayer(owner);
 
@@ -156,8 +156,8 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 function reportForExploitingInvite(ws, invite, replyto) {
 	ws.metadata.sendmessage(ws, "general", "printerror", "You cannot modify invite parameters. If this was not intentional, try hard-refreshing the page.", replyto); // In order: socket, sub, action, value
 
-	const logText = ws.metadata.user ? `User ${ws.metadata.user} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
-                                     : `Browser ${ws.metadata["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
+	const logText = ws.metadata.memberInfo.signedIn ? `User ${ws.metadata.memberInfo.username} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
+                                     : `Browser ${ws.cookies["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
 
 	logEvents(logText, 'hackLog.txt', { print: true }); // Log the exploit to the hackLog!
 }
@@ -174,7 +174,7 @@ async function isAllowedToCreateInvite(ws, replyto) {
 
 	// Server is restarting... Do we have admin perms to create an invite anyway?
 
-	if (ws.metadata.role === 'owner') return true; // They are allowed to make an invite!
+	if (ws.metadata.memberInfo.roles.includes('owner')) return true; // They are allowed to make an invite!
 
 	// Making an invite is NOT allowed...
 

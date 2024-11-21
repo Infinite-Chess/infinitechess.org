@@ -35,7 +35,7 @@ const HOST_NAME = 'www.infinitechess.org';
  * 
  * THIS SHOULD ALWAYS MATCH src/client/scripts/game/config.GAME_VERSION
  */
-const GAME_VERSION = "1.4.4";
+const GAME_VERSION = "1.5";
 
 /** Whether we are currently using a whitelist for connections from other origins.
  * If we are getting unwanted origins, this can be enabled. */
@@ -46,6 +46,27 @@ const allowedOrigins = [ // Allowed sites
     'https://www.google.com'
 ];
 
+// Session tokens expiry times ------------------------------------------------------
+
+const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
+// const refreshTokenExpiryMillis = 1000 * 60 * 2; // 2m
+const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
+// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
+const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
+
+
+// Unverified Accounts Lifetime -------------------------------------------------------------------------------------------------
+
+
+/** The maximum time an account is allowed to remain unverified before the server will delete it from DataBase. */
+const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
+// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
+/** The interval for how frequent to check for unverified account that exists more than `maxExistenceTimeForUnverifiedAccount` */
+const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1; // 1 days
+// const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 30; // 30 seconds
+
+
+
 export {
 	DEV_BUILD,
 	BUNDLE_FILES,
@@ -54,5 +75,10 @@ export {
 	HOST_NAME,
 	GAME_VERSION,
 	useOriginWhitelist,
-	allowedOrigins
+	allowedOrigins,
+	accessTokenExpiryMillis,
+	refreshTokenExpiryMillis,
+	minTimeToWaitToRenewRefreshTokensMillis,
+	maxExistenceTimeForUnverifiedAccountMillis,
+	intervalForRemovalOfOldUnverifiedAccountsMillis,
 };

@@ -1,26 +1,34 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "21"
+version = "23"
 maintainer = "Naviary"
 
 [header]
-home = "Home"
+home = "Infinite Chess"
 play = "Play"
 news = "News"
 login = "Log In"
+profile = "Profile"
 createaccount = "Create Account"
+logout = "Log Out"
+
+[header.settings]
+language = "Language"
+board = "Board" # Board color/theme
+legalmoves = "Legal Moves" # Legal moves shape
+legalmoves-squares = "Squares"
+legalmoves-dots = "Dots" # Dots and 4 corner triangles
+perspective = "Perspective" # Perspective-mode
+perspective-mouse-sensitivity = "Mouse Sensitivity"
+perspective-fov = "Field of View"
+ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
+reset-to-default = "Reset to default"
 
 [footer]
 contact = "Contact us"
 terms_of_service = "Terms of Service"
 source_code = "Source Code"
 language = "Language"
-
-[header.javascript]
-js-profile = "Profile"
-js-logout = "Log Out"
-js-login = "Log In"
-js-createaccount = "Create Account"
 
 [member.javascript]
 js-confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
@@ -36,7 +44,7 @@ what_is_it_pargaraphs = [
 "As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
 how_to_title = "How can I play?"
-how_to_paragraph = ["The current version release is 1.4 on the ","Play"," page!"]
+how_to_paragraph = ["The current version release is 1.5 on the ","Play"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
@@ -94,7 +102,6 @@ title = "Member" # The tab name
 verify_message = "Please check your email to verify your account. Unverified accounts are deleted after 3 days."
 resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message us."]
 verify_confirm = "Thank you! Your account has been verified."
-rating = "Elo rating:"
 joined = "Joined:"
 seen = ["Seen:", " ago"]
 reveal_info = "Show Account Info"
@@ -217,6 +224,7 @@ Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
 Omega_Fourth = "Showcase: Omega^4"
+5D_Chess = "5D Chess"
 no_clock = "No Clock"
 clock = "Clock"
 minutes = "m"
@@ -296,8 +304,6 @@ webgl_unsupported = "Your browser does not support WebGL. This game requires tha
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
-disable_holiday_theme_desktop = "To disable holiday theme, press Enter."
-disable_holiday_theme_mobile = "To disable holiday theme, three-finger-tap the screen."
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
@@ -526,10 +532,6 @@ ws-you_are_banned = "You are banned."
 ws-password_length = "Password must be 6-72 characters long"
 ws-password_format = "Password is in an incorrect format"
 ws-password_password = "Password must not be 'password'"
-ws-refresh_token_not_found_logged_out = "No member has that refresh token (already logged out)"
-ws-refresh_token_not_found = "No member has that refresh token"
-ws-refresh_token_expired = "No refresh token found (expired session)"
-ws-refresh_token_invalid = "Refresh token expired or tampered"
 ws-member_not_found = "Member not found"
 ws-forbidden_wrong_account = "Forbidden. This is not your account."
 ws-deleting_account_not_found = "Failed to delete account. Account not found."
@@ -540,7 +542,6 @@ ws-too_many_requests_to_server = "Too Many Requests. Try again soon."
 ws-bad_request = "Bad Request"
 ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."
-ws-unauthorized_patron_page = "Unauthorized. This page is patron-exclusive."
 ws-already_in_game = "You are already in a game."
 ws-server_restarting = "The server is restarting in" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
 ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
