@@ -96,9 +96,9 @@ const themeDictionary = {
 	blue_soft: {
 		lightTiles: [0.59, 0.70, 0.78, 1],
 		darkTiles: [0.45, 0.55, 0.62, 1],
-		legalMovesHighlightColor_Friendly: [0, 0.60, 0.1, 0.34],
-		legalMovesHighlightColor_Opponent: [1, 0.46, 0, 0.35],
-		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.34],
+		legalMovesHighlightColor_Friendly: [0, 0.60, 0.1, 0.36],
+		legalMovesHighlightColor_Opponent: [1, 0.46, 0, 0.37],
+		legalMovesHighlightColor_Premove: [0, 0, 0.38, 0.36],
 	},
 	green_plastic: {
 		lightTiles: [0.95, 0.98, 0.73, 1],
