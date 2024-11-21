@@ -7,8 +7,8 @@ import { migrateUsers } from "./migrateMembers.js";
 function initDatabase() {
 	generateTables();
 	startPeriodicIntegrityCheck();
-	startPeriodicDeleteUnverifiedMembers();
 	// migrateUsers();
+	startPeriodicDeleteUnverifiedMembers();
 }
 
 export {
