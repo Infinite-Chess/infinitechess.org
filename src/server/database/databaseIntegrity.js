@@ -13,7 +13,7 @@ function checkDatabaseIntegrity() {
 		const result = db.get('PRAGMA integrity_check');
 	
 		if (result.integrity_check !== 'ok') logEvents(`Database integrity check failed: ${result.integrity_check} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`, 'errLog.txt', { print: true });
-		else console.log('Database integrity check passed.');
+		// else console.log('Database integrity check passed.');
 
 	} catch (error) {
 		logEvents(`Error performing database integrity check: ${error.message} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!` , 'errLog.txt', { print: true });
