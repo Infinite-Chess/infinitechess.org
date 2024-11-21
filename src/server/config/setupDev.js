@@ -3,8 +3,8 @@ import { DEV_BUILD } from './config.js';
 import { ensureEnvFile } from './env.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
 import { doesMemberOfUsernameExist } from '../database/memberManager.js';
-import { generateAccount } from '../database/controllers/createaccountController.js';
-import { giveRole } from '../database/controllers/roles.js';
+import { generateAccount } from '../controllers/createAccountController.js';
+import { giveRole } from '../controllers/roles.js';
 
 function initDevEnvironment() {
 	if (!DEV_BUILD) return callDotenvConfig(); // Production

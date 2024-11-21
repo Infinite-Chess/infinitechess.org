@@ -12,7 +12,7 @@ import clock from './clock.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
-/** @typedef {import('../../game/gui/movesscript.js').Move} Move */
+/** @typedef {import('../util/moveutil.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 
@@ -25,7 +25,7 @@ import clock from './clock.js';
  * @param {string[]} [options.moves=[]] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
- * @param {Object} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, timeNextPlayerLosesAt }`
+ * @param {Object} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, accountForPing }`
  * @returns {Object} The gamefile
  */
 function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues } = {}) {
@@ -199,7 +199,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		timeRemainAtTurnStart: undefined,
 		/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. */
 		timeAtTurnStart: undefined,
-		timeNextPlayerLosesAt: undefined,
 		/** True if the game is not timed. @type {Boolean}*/
 		untimed: undefined,
 	};

@@ -15,7 +15,7 @@ document.querySelectorAll('nav a').forEach(link => {
 	}
 });
 
-document.addEventListener('validated', updateColorOfProfileButton); // Custom-event listener. Fired when the validator script receives a response from the server with either our access token or new browser-id cookie.
+document.addEventListener('login', updateColorOfProfileButton); // Custom-event listener. Fired when the validator script receives a response from the server with either our access token or new browser-id cookie.
 
 // Greys the background color of the profile button if it is ours
 function updateColorOfProfileButton() {

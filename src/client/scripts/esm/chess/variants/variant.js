@@ -172,7 +172,7 @@ const variantDictionary = {
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
 		},
 		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional,
-		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed }
+		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed },
 	}
 };
 
@@ -407,8 +407,6 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 function getMovesets(movesetModifications = {}, defaultSlideLimitForOldVariants) {
 	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
 	const moveset = {};
-
-	console.log(movesetModifications);
 
 	for (const [piece, moves] of Object.entries(origMoveset)) {
 		moveset[piece] = movesetModifications[piece] ? function() { return jsutil.deepCopyObject(movesetModifications[piece]); }

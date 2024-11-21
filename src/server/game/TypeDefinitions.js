@@ -158,10 +158,6 @@ function Game() {
 	this.timeRemainAtTurnStart = undefined;
 	/** The time, in milliseconds, of the javascript process since the beginning of the current player's turn. */
 	this.timeAtTurnStart = undefined;
-	/** The time, in milliseconds since the Unix epoch,
-     * at which the current player will lose on time if they don't move,
-     * IF THE GAME IS TIMED, otherwise undefined. */
-	this.timeNextPlayerLosesAt = undefined;
 	/** The ID of the timeout which will auto-lose the player
      * whos turn it currently is when they run out of time. */
 	this.autoTimeLossTimeoutID = undefined;

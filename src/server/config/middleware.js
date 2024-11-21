@@ -27,14 +27,14 @@ import corsOptions from './corsOptions.js';
 
 import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
-import { verifyAccount } from '../database/controllers/verifyAccountController.js';
-import { requestConfirmEmail } from '../database/controllers/sendMail.js';
+import { verifyAccount } from '../controllers/verifyAccountController.js';
+import { requestConfirmEmail } from '../controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
-import { handleLogout } from '../database/controllers/logoutController.js';
+import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
-import { handleLogin } from '../database/controllers/loginController.js';
-import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../database/controllers/createaccountController.js';
-import { removeAccount } from '../database/controllers/removeAccountController.js';
+import { handleLogin } from '../controllers/loginController.js';
+import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
+import { removeAccount } from '../controllers/removeAccountController.js';
 import errorHandler from '../middleware/errorHandler.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

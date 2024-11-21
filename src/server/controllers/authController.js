@@ -1,9 +1,9 @@
 
 import bcrypt from 'bcrypt';
-import { getTranslationForReq } from "../../utility/translate.js";
-import { getMemberDataByCriteria } from "../memberManager.js";
+import { getTranslationForReq } from "../utility/translate.js";
+import { getMemberDataByCriteria } from "../database/memberManager.js";
 import { getBrowserAgent, onCorrectPassword, onIncorrectPassword, rateLimitLogin } from "./authRatelimiter.js";
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEvents } from '../middleware/logEvents.js';
 
 
 /**

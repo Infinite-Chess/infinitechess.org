@@ -3,7 +3,7 @@
  * This script creates our database tables if they aren't already present.
  */
 
-import db from '../database/database.js';
+import db from './database.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -40,17 +40,17 @@ function generateTables() {
 	let createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS members (
 			user_id INTEGER PRIMARY KEY,               
-			username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
-			username_history TEXT,
+			username TEXT UNIQUE NOT NULL COLLATE NOCASE,
 			email TEXT UNIQUE NOT NULL,                
 			hashed_password TEXT NOT NULL,             
-			roles TEXT,                       
-			joined INTEGER NOT NULL,
-			last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			refresh_tokens TEXT,                        
-			preferences TEXT,                          
-			verification TEXT,                         
-			login_count INTEGER DEFAULT 0
+			roles TEXT,        
+			joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
+			login_count INTEGER NOT NULL DEFAULT 0,                        
+			preferences TEXT,
+			refresh_tokens TEXT,                          
+			verification TEXT, 
+			username_history TEXT
 		);
 	`;
 	db.run(createTableSQLQuery);
@@ -58,12 +58,7 @@ function generateTables() {
 	// Deleted Members table
 	createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS deleted_members (
-			user_id INTEGER PRIMARY KEY,               
-			username TEXT NOT NULL COLLATE NOCASE,    
-			username_history TEXT,    
-			joined INTEGER NOT NULL,
-			left INTEGER NOT NULL,                              
-			login_count INTEGER NOT NULL,             
+			user_id INTEGER PRIMARY KEY,             
 			reason_deleted TEXT NOT NULL
 		);
 	`;

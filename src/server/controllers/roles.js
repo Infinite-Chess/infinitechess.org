@@ -3,8 +3,8 @@
  * and removal of roles from members.
  */
 
-import { logEvents } from "../../middleware/logEvents.js";
-import { getMemberDataByCriteria, updateMemberColumns } from "../memberManager.js";
+import { logEvents } from "../middleware/logEvents.js";
+import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
 const validRoles = ['owner','patron'];
 
@@ -35,6 +35,7 @@ function giveRole(userId, role) {
 	if (success) logEvents(`Added role "${role}" to member with user ID "${userId}".`, 'loginAttempts.txt', { print: true });
 	else logEvents(`Failed to update roles for member with user ID "${userId}".`, 'errLog.txt', { print: true });
 }
+
 /**
  * Deletes all roles for a member and sets the roles column to null in the database.
  * @param {number} userId - The user ID of the member whose roles are to be deleted.

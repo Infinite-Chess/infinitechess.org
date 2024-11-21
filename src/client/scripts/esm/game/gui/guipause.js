@@ -9,7 +9,7 @@ import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
 import drawoffers from '../misc/drawoffers.js';
 import guititle from './guititle.js';
-import movesscript from './movesscript.js';
+import moveutil from '../../chess/util/moveutil.js';
 import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
 // Import End
@@ -102,7 +102,7 @@ function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = 
 
 	if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
 
-	if (movesscript.isGameResignable(game.getGamefile())) {
+	if (moveutil.isGameResignable(game.getGamefile())) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
 		if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations.abort_game) {
 			element_mainmenu.disabled = true;

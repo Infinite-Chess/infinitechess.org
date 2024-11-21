@@ -10,7 +10,7 @@ import selection from '../chess/selection.js';
 import camera from './camera.js';
 import board from './board.js';
 import math from '../../util/math.js';
-import movesscript from '../gui/movesscript.js';
+import moveutil from '../../chess/util/moveutil.js';
 import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
@@ -452,7 +452,7 @@ function renderBoundingBoxOfRenderRange() {
 }
 
 function highlightLastMove() {
-	const lastMove = movesscript.getCurrentMove(game.getGamefile());
+	const lastMove = moveutil.getCurrentMove(game.getGamefile());
 	if (!lastMove) return; // Don't render if last move is undefined.
 
 	const color = options.getDefaultLastMoveHighlightColor();
