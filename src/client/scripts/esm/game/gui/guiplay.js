@@ -389,7 +389,7 @@ function loadGame(gameOptions) {
 	game.loadGamefile(newGamefile);
 
 	const centerArea = area.calculateFromUnpaddedBox(newGamefile.startSnapshot.box);
-	movement.setPositionToArea(centerArea, "pidough");
+	movement.setPositionToArea(centerArea);
     
 	options.setNavigationBar(true);
 	sound.playSound_gamestart();
