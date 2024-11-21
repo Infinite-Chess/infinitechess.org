@@ -33,7 +33,7 @@ function giveRole(userId, role) {
 	const success = updateMemberColumns(userId, { roles });
 
 	if (success) logEvents(`Added role "${role}" to member with user ID "${userId}".`, 'loginAttempts.txt', { print: true });
-	else logEvents(`Failed to update roles for member with user ID "${userId}".`, 'errLog.txt', { print: true });
+	else logEvents(`Failed to add role "${role}" to member with user ID "${userId}".`, 'errLog.txt', { print: true });
 }
 
 /**
