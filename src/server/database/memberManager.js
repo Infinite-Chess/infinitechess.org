@@ -1,6 +1,6 @@
 
 /**
- * This script almost all of the queries we use to interact with the members table!
+ * This script handles almost all of the queries we use to interact with the members table!
  */
 
 import { logEvents } from '../middleware/logEvents.js';
@@ -110,7 +110,6 @@ function deleteUser(user_id, reason_deleted) {
 		return false;
 	}
 }
-
 // console.log(deleteUser(3408674));
 
 /**

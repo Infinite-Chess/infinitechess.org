@@ -1,8 +1,9 @@
 {
 	"23": {
 		"note": [
-			"IGNORE THIS CHANGE FOR NOW IT'S NOT DONE YET!!! No need to translate. - Naviary :)",
-			"Deleted member.rating, line 105"
+			"Deleted member.rating, line 105",
+			"Deleted ws-unauthorized_patron_page, line 548",
+			"Deleted ws-refresh_token_not_found_logged_out, ws-refresh_token_not_found, ws-refresh_token_expired, and ws-refresh_token_invalid, lines 534-537"
 		],
 		"changes": []
 	},

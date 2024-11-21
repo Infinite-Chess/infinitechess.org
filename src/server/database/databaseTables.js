@@ -62,7 +62,7 @@ function generateTables() {
 			reason_deleted TEXT NOT NULL
 		);
 	`;
-	// reason deleted: "user request" / "banned" / "inactive"
+	// reason deleted: "unverified" / "user request" / "banned" / "inactive"
 	db.run(createTableSQLQuery);
 
 	// Bans table
