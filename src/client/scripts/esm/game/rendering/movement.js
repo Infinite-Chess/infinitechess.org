@@ -9,9 +9,9 @@ import transition from './transition.js';
 import guipromotion from '../gui/guipromotion.js';
 import guititle from '../gui/guititle.js';
 import frametracker from './frametracker.js';
-import config from '../config.js';
 import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
+import docutil from '../../util/docutil.js';
 // Import End
 
 "use strict";
@@ -19,12 +19,12 @@ import coordutil from '../../chess/util/coordutil.js';
 /** This script stores our board position and scale and controls our panning and zooming. */
 
 const panAccel_3D = 75; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 50
-const panAccel_2D = 100; // 2D mode: Deccelleration rate of panning.   Default: 15
-const droppedVelMultiplier = 14; // This times the mouse velocity is applied to the board after dropping it.   Default: 12
+const panAccel_2D = 145; // 2D mode: Deccelleration rate of panning.   Default: 100
 const panVelCap_2D = 22.0; // Hyptenuse cap of x & y speeds   Default: 11
 const panVelCap_3D = 16.0; // Hyptenuse cap of x & y speeds   Default: 11
 
-const scaleAccel = 6.0; // Acceleration of board scaling   Default: 6
+const scaleAccel_Desktop = 6.0; // Acceleration of board scaling   Default: 6
+const scaleAccel_Mobile = 14.0; // Acceleration of board scaling   Default: 6
 const scaleVelCap = 1.0; // Default: 1.0
 const maximumScale = 20.0;
 const scrollScaleVel = 0.015; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.03
@@ -179,51 +179,52 @@ function updateNavControls() {
 function checkIfBoardDropped() {
 	if (boardIsGrabbed === 0) return; // Not grabbed
 
-	if (boardIsGrabbed === 1) {
+	if (boardIsGrabbed === 1) { // Mouse grabbed
 
 		if (!input.isMouseHeld_Left()) { // Dropped board
 			boardIsGrabbed = 0;
 			throwBoard(); // Mouse throws the board
+			clearPositionHistory();
 		}
 		return;
 	}
     
-	// boardIsGrabbed === 2
+	// boardIsGrabbed === 2   (Finger grab)
 
 	const touchHeldsLength = input.getTouchHelds().length;
 	
 	const now = Date.now();
-	if (touchHeldsLength<2 && boardPosFingerTwoGrabbed !== undefined)
-		throwScale(now); //One finger has been released.
-	if (touchHeldsLength !== 0) return;
+	if (touchHeldsLength < 2 && boardPosFingerTwoGrabbed !== undefined) throwScale(now); // One finger has been released.
+	if (touchHeldsLength > 0) return;
 	throwBoard(now); //Both fingers have been released.
 	
 	// Drop board
 	boardIsGrabbed = 0;
 	boardPosFingerTwoGrabbed = undefined;
+	clearPositionHistory();
 	return;
 }
 
 /** Called after letting go of the board. Applies velocity to the board according to how fast the mouse was moving */
 function throwBoard(time) {
 	removeOldPositions(time);
-	if(positionHistory.length<2) return;
+	if (positionHistory.length < 2) return;
 	const firstBoardState = positionHistory[0];
-	const lastBoardState = positionHistory[positionHistory.length-1];
+	const lastBoardState = positionHistory[positionHistory.length - 1];
 	const deltaX = lastBoardState.boardPos[0] - firstBoardState.boardPos[0];
 	const deltaY = lastBoardState.boardPos[1] - firstBoardState.boardPos[1];
-	const deltaT = (lastBoardState.time - firstBoardState.time)/1000; 
-	panVel = [deltaX/deltaT*boardScale, deltaY/deltaT*boardScale];
+	const deltaT = (lastBoardState.time - firstBoardState.time) / 1000; 
+	panVel = [deltaX / deltaT * boardScale, deltaY / deltaT * boardScale];
 }
 
 function throwScale(time) {
 	removeOldPositions(time);
-	if(positionHistory.length<2) return;
+	if (positionHistory.length < 2) return;
 	const firstBoardState = positionHistory[0];
-	const lastBoardState = positionHistory[positionHistory.length-1];
+	const lastBoardState = positionHistory[positionHistory.length - 1];
 	const ratio = lastBoardState.boardScale / firstBoardState.boardScale;
-	const deltaTime = (lastBoardState.time - firstBoardState.time)/1000;
-	scaleVel = (ratio-1)/deltaTime;
+	const deltaTime = (lastBoardState.time - firstBoardState.time) / 1000;
+	scaleVel = (ratio - 1 ) / deltaTime;
 }
 
 /** Clears the list of past positions. Call this to prevent teleportation giving momentum.*/
@@ -231,9 +232,10 @@ function clearPositionHistory() {
 	positionHistory = [];
 }
 
-function addPositionToHistory(time) {
+function addCurrentPositionToHistory() {
+	const time = Date.now();
 	removeOldPositions(time);
-	positionHistory.push({time, boardPos, boardScale});
+	positionHistory.push({ time, boardPos, boardScale });
 }
 
 function removeOldPositions(time) {
@@ -393,11 +395,13 @@ function decceleratePanVel() {
 function deccelerateScaleVel() {
 	if (scaleVel === 0) return; // Already stopped
 
+	const deccelerationToUse = docutil.isTouchSupported() ? scaleAccel_Mobile : scaleAccel_Desktop;
+
 	if (scaleVel > 0) {
-		scaleVel -= loadbalancer.getDeltaTime() * scaleAccel;
+		scaleVel -= loadbalancer.getDeltaTime() * deccelerationToUse;
 		if (scaleVel < 0) scaleVel = 0;
 	} else { // scaleVel < 0
-		scaleVel += loadbalancer.getDeltaTime() * scaleAccel;
+		scaleVel += loadbalancer.getDeltaTime() * deccelerationToUse;
 		if (scaleVel > 0) scaleVel = 0;
 	}
 }
@@ -407,12 +411,12 @@ function detectZooming() {
 	let scaling = false;
 	if (input.isKeyHeld(' ')) {
 		scaling = true;
-		scaleVel -= loadbalancer.getDeltaTime() * scaleAccel;
+		scaleVel -= loadbalancer.getDeltaTime() * scaleAccel_Desktop;
 		if (scaleVel < -scaleVelCap) scaleVel = -scaleVelCap;
 	}
 	if (input.isKeyHeld('shift')) {
 		scaling = true;
-		scaleVel += loadbalancer.getDeltaTime() * scaleAccel;
+		scaleVel += loadbalancer.getDeltaTime() * scaleAccel_Desktop;
 		if (scaleVel > scaleVelCap) scaleVel = scaleVelCap;
 	}
 	if (!scaling) deccelerateScaleVel();
@@ -440,7 +444,8 @@ function randomizePanVelDir() {
 function dragBoard() {
 	if (boardIsGrabbed === 1) dragBoard_WithMouse(); // Mouse is dragging board
 	else if (boardIsGrabbed === 2) dragBoard_WithFingers(); // Finger is dragging board
-	if(boardIsGrabbed) addPositionToHistory(Date.now());
+	// Added > 0 so it's more clear
+	if (boardIsGrabbed > 0) addCurrentPositionToHistory();
 }
 
 // Called when board is being dragged by mouse, calculates new board position.
@@ -540,6 +545,5 @@ export default {
 	randomizePanVelDir,
 	dragBoard,
 	eraseMomentum,
-	clearPositionHistory,
 	setPositionToArea
 };
