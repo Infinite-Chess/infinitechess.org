@@ -54,6 +54,9 @@ const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 // const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 
+const intervalForRefreshTokenCleanupMillis = 1000 * 60 * 60 * 24; // 1 day
+// const intervalForRefreshTokenCleanupMillis = 1000 * 30; // 30s
+
 
 // Unverified Accounts Lifetime -------------------------------------------------------------------------------------------------
 
@@ -76,9 +79,10 @@ export {
 	GAME_VERSION,
 	useOriginWhitelist,
 	allowedOrigins,
-	accessTokenExpiryMillis,
 	refreshTokenExpiryMillis,
 	minTimeToWaitToRenewRefreshTokensMillis,
+	accessTokenExpiryMillis,
+	intervalForRefreshTokenCleanupMillis,
 	maxExistenceTimeForUnverifiedAccountMillis,
 	intervalForRemovalOfOldUnverifiedAccountsMillis,
 };
