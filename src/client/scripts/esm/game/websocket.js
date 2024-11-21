@@ -70,7 +70,6 @@ let onreplyFuncs = {}; // { messageID: onreplyFunc }
 const timerIDsToCancelOnNewSocket = [];
 
 // Debugging...
-const printAllSentMessages = true;
 const alsoPrintSentEchos = false;
 const alsoPrintIncomingEchos = false;
 
@@ -503,7 +502,7 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 	const isEcho = action === "echo";
 	if (!isEcho) payload.id = uuid.generateNumbID(10);
 
-	if (printAllSentMessages && config.DEV_BUILD) {
+	if (options.isDebugModeOn()) {
 		if (isEcho) { if (alsoPrintSentEchos) console.log(`Sending: ${JSON.stringify(payload)}`); }
 		else console.log(`Sending: ${JSON.stringify(payload)}`);
 	}
