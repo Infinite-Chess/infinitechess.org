@@ -71,7 +71,7 @@ function setPrefsCookie(req, res, next) {
 
 	createPrefsCookie(res, preferences);
 	
-	// console.log(`Set preferences cookie for member "${ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url);
+	console.log(`Set preferences cookie for member "${ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url);
 
 	next();
 }

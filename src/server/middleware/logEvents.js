@@ -50,13 +50,18 @@ const logEvents = async(message, logName, { print } = {}) => {
 const logger = (req, res, next) => {
 	const clientIP = getClientIP(req);
 
-	let logThis = `${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
-	// Delete passwords from incoming form data
+	// Extract Referer and Origin headers
+	const origin = req.headers.origin || 'Unknown origin';
+	const referer = req.headers.referer || 'No referer';
+
+	let logThis = `${origin}   ${referer}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+	
+	// Delete sensitive information from incoming form data
 	let sensoredBody;
 	if (JSON.stringify(req.body) !== '{}') { // Not an empty object
-		sensoredBody = Object.assign({}, req.body);
+		sensoredBody = { ...req.body };
 		delete sensoredBody.password;
-		delete sensoredBody.username; // Since IP's are logged with each request, If you know a deleted account's username, it can be indirectly traced to their IP if we don't delete them here.
+		delete sensoredBody.username; // Prevent indirect user-IP tracing
 		delete sensoredBody.email;
 		logThis += `\n${JSON.stringify(sensoredBody)}`;
 	}
