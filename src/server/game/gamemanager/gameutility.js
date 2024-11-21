@@ -311,6 +311,13 @@ function getMetadataOfGame(game) {
 		const base62 = uuid.base10ToBase62(user_id);
 		metadata.BlackID = base62;
 	}
+
+	if (isGameOver(game)) { // Add on the Result and Termination metadata
+		const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
+		metadata.Result = winconutil.getResultFromVictor(victor);
+		metadata.Termination = getTerminationInEnglish(game.gameRules, condition);
+	}
+
 	return metadata;
 }
 
@@ -439,23 +446,8 @@ async function logGame(game) {
      * moves
      * gameRules
      */
-	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
-	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const gameRules = jsutil.deepCopyObject(game.gameRules);
-	const metadata = {
-		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
-		Site: "https://www.infinitechess.org/",
-		Round: "-",
-		Variant: game.variant, // Don't translate yet, as variant.js needs the variant code to fetch gamerules.
-		White: getDisplayNameOfPlayer(game.white),
-		Black: getDisplayNameOfPlayer(game.black),
-		TimeControl: game.clock,
-		UTCDate,
-		UTCTime,
-		Result: winconutil.getResultFromVictor(victor),
-		Termination: getTerminationInEnglish(gameRules, condition)
-	};
+	const metadata = getMetadataOfGame(game);
 	const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
 	delete gameRules.moveRule;
 	metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant.js has gotten the game rules.
