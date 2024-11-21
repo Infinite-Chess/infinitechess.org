@@ -156,7 +156,6 @@ function isCurrentDateWithinRange(startMonth, startDay, endMonth, endDay) {
 
 /**
  * Converts an ISO 8601 string to SQLite's DATETIME format ("YYYY-MM-DD HH:MM:SS").
- * 
  * @param {string} isoString - The ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
  * @returns {string} - The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
  */
