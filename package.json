@@ -42,7 +42,7 @@
 		"madge": "^8.0.0"
 	},
 	"scripts": {
-		"build": "tsc --build && node build.js",
+		"build": "node build.js",
 		"watch": "nodemon",
 		"start": "node .",
 		"build-images": "node src/server/utility/generateImages.js",
