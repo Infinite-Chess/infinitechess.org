@@ -3,7 +3,8 @@
 		"note": [
 			"Deleted member.rating, line 105",
 			"Deleted ws-unauthorized_patron_page, line 548",
-			"Deleted ws-refresh_token_not_found_logged_out, ws-refresh_token_not_found, ws-refresh_token_expired, and ws-refresh_token_invalid, lines 534-537"
+			"Deleted ws-refresh_token_not_found_logged_out, ws-refresh_token_not_found, ws-refresh_token_expired, and ws-refresh_token_invalid, lines 534-537",
+			"Updated index.how_to_paragraph, line 47"
 		],
 		"changes": []
 	},
