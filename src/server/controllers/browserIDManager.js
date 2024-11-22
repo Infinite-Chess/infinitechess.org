@@ -30,18 +30,18 @@ function assignOrRenewBrowserID(req, res, next) {
 	// The accept header is only set if we specify it so that condition is extra
 	if (req.headers.origin !== undefined || !req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
 
-	if (!req.cookies['browser-id']) giveBrowserID(res);
+	if (!req.cookies['browser-id']) giveBrowserID(req, res);
 	else refreshBrowserID(req, res);
 
 	next();
 }
 
-function giveBrowserID(res) {
+function giveBrowserID(req, res) {
 
 	const cookieName = 'browser-id';
 	const id = uuid.generateID(12);
 
-	console.log(`Assigning new browser-id: ${id} --------`);
+	console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + '--------');
 
 	// Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
 	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis /* 1 day */ });
@@ -54,8 +54,8 @@ function refreshBrowserID(req, res) {
 
 	if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
-	console.log(`Renewing browser-id: ${id}`);
-
+	console.log(`Renewing browser-id: "${id}" for url: ` + req.url);
+	
 	// Readable by server with web socket connections, NOT by javascript
 	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis });
 }
