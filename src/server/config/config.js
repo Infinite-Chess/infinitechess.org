@@ -70,6 +70,16 @@ const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1;
 
 
 
+
+// Websockets -------------------------------------------------------------------------------------------------
+
+
+const printIncomingAndClosingSockets = false;
+const printIncomingAndOutgoingMessages = false;
+
+
+
+
 export {
 	DEV_BUILD,
 	BUNDLE_FILES,
@@ -85,4 +95,6 @@ export {
 	intervalForRefreshTokenCleanupMillis,
 	maxExistenceTimeForUnverifiedAccountMillis,
 	intervalForRemovalOfOldUnverifiedAccountsMillis,
+	printIncomingAndClosingSockets,
+	printIncomingAndOutgoingMessages,
 };
