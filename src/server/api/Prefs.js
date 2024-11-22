@@ -141,7 +141,7 @@ async function postPrefs(req, res) {
 	const preferences = req.body.preferences;
 
 	if (!arePrefsValid(preferences)) {
-		logEvents(`User "${username}" tried to save invalid preferences to the database! The preferences: "${ensureJSONString(preferences)}"`, 'errLog.txt', { print: true });
+		logEvents(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${ensureJSONString(preferences)}"`, 'errLog.txt', { print: true });
 		return res.status(400).json({ message: "Preferences not valid, cannot save on the server."});
 	}
 
@@ -150,7 +150,7 @@ async function postPrefs(req, res) {
 
 	// Send appropriate response
 	if (updateSuccess) {
-		console.log("Successfully saved user preferences");
+		console.log(`Successfully saved member "${username}" of id "${user_id}"s user preferences.`);
 		res.status(200).json({ message: 'Preferences updated successfully' });
 	} else {
 		logEvents(`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
