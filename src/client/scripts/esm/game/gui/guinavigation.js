@@ -68,6 +68,10 @@ function open() {
 	initListeners_Navigation();
 	update_MoveButtons();
 	teleportingEnabled = !onlinegame.areInOnlineGame();
+	element_CoordsX.disabled = !teleportingEnabled;
+	element_CoordsY.disabled = !teleportingEnabled;
+	element_CoordsX.className = teleportingEnabled ? "" : "set-cursor-to-not-allowed";
+	element_CoordsY.className = teleportingEnabled ? "" : "set-cursor-to-not-allowed";
 }
 
 function close() {
