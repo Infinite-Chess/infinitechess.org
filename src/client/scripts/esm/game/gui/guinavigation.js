@@ -15,6 +15,7 @@ import stats from './stats.js';
 import movepiece from '../../chess/logic/movepiece.js';
 import selection from '../chess/selection.js';
 import frametracker from '../rendering/frametracker.js';
+import onlinegame from '../misc/onlinegame.js';
 // Import End
 
 "use strict";
@@ -39,8 +40,8 @@ const element_moveRewind = document.getElementById('move-left');
 const element_moveForward = document.getElementById('move-right');
 const element_pause = document.getElementById('pause');
 
-const MAX_TELEPORT_DIST = 100;
-const TELEPORTING_ENABLED = true;
+const MAX_TELEPORT_DIST = Infinity;
+let teleportingEnabled = undefined;
 
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind
@@ -66,6 +67,7 @@ function open() {
 	style.revealElement(element_Navigation);
 	initListeners_Navigation();
 	update_MoveButtons();
+	teleportingEnabled = !onlinegame.areInOnlineGame();
 }
 
 function close() {
@@ -162,8 +164,8 @@ function callback_CoordsChange(event) {
 	if (element_CoordsY === document.activeElement) {
 		element_CoordsY.blur();
 	}
-	if (!TELEPORTING_ENABLED) {
-		statustext.showStatus("Cannot teleport in this gamemode.", true);
+	if (!teleportingEnabled) {
+		statustext.showStatus("Cannot teleport in this gamemode.", true, 1.5);
 		return;
 	}
 	const newX = element_CoordsX.value;
