@@ -82,10 +82,14 @@ function updateElement_Coords() {
 	// element_CoordsY.textContent = Math.floor(boardPos[1] + board.gsquareCenter())
 
 	// Tile mouse over
-	if (!(element_CoordsX === document.activeElement || element_CoordsY === document.activeElement)) { // Don't update the coordinates if the user is editing them
+	if (!isCoordinateActive()) { // Don't update the coordinates if the user is editing them
 		element_CoordsX.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[0] : Math.floor(boardPos[0] + board.gsquareCenter());
 		element_CoordsY.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[1] : Math.floor(boardPos[1] + board.gsquareCenter());
 	}
+}
+
+function isCoordinateActive() {
+	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
 }
 
 function initListeners_Navigation() {
@@ -407,4 +411,5 @@ export default {
 	callback_Pause,
 	lockRewind,
 	update,
+	isCoordinateActive,
 };
