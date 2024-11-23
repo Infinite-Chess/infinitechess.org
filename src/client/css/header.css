@@ -556,6 +556,13 @@ span.arrow-head-left {
     pointer-events: none;
 }
 
+/* Used for disallowing changing your coordinates in an online game */
+.set-cursor-to-not-allowed {
+    cursor: not-allowed;
+}
+
+
+
 /* Animations */
 
 @keyframes spin {
