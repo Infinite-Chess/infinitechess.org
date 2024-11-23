@@ -15,7 +15,6 @@ import stats from './stats.js';
 import movepiece from '../../chess/logic/movepiece.js';
 import selection from '../chess/selection.js';
 import frametracker from '../rendering/frametracker.js';
-import coordutil from '../../chess/util/coordutil.js';
 // Import End
 
 "use strict";
