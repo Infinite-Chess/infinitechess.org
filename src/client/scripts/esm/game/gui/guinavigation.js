@@ -39,6 +39,8 @@ const element_moveRewind = document.getElementById('move-left');
 const element_moveForward = document.getElementById('move-right');
 const element_pause = document.getElementById('pause');
 
+const MAX_TELEPORT_DIST = Infinity;
+
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind
 const minimumRewindIntervalMillis = 20; // Rewinding can never be spammed faster than this
@@ -59,10 +61,25 @@ const durationToLockRewindAfterMoveForwardingMillis = 750;
 
 // Functions
 
-function open() {
+function open({ allowEditCoords = true } = {}) {
 	style.revealElement(element_Navigation);
 	initListeners_Navigation();
 	update_MoveButtons();
+	initCoordinates({allowEditCoords});
+}
+
+function initCoordinates({ allowEditCoords }) {
+	if (allowEditCoords) {
+		element_CoordsX.disabled = false;
+		element_CoordsY.disabled = false;
+		element_CoordsX.classList.remove('set-cursor-to-not-allowed');
+		element_CoordsY.classList.remove('set-cursor-to-not-allowed');
+	} else {
+		element_CoordsX.disabled = true;
+		element_CoordsY.disabled = true;
+		element_CoordsX.classList.add('set-cursor-to-not-allowed');
+		element_CoordsY.classList.add('set-cursor-to-not-allowed');
+	}
 }
 
 function close() {
@@ -78,9 +95,19 @@ function updateElement_Coords() {
 	// element_CoordsX.textContent = Math.floor(boardPos[0] + board.gsquareCenter())
 	// element_CoordsY.textContent = Math.floor(boardPos[1] + board.gsquareCenter())
 
+	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
+
 	// Tile mouse over
-	element_CoordsX.textContent = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[0] : Math.floor(boardPos[0] + board.gsquareCenter());
-	element_CoordsY.textContent = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[1] : Math.floor(boardPos[1] + board.gsquareCenter());
+	element_CoordsX.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[0] : Math.floor(boardPos[0] + board.gsquareCenter());
+	element_CoordsY.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[1] : Math.floor(boardPos[1] + board.gsquareCenter());
+}
+
+/**
+ * Returns true if one of the coordinate fields is active (currently editing)
+ * @returns {boolean}
+ */
+function isCoordinateActive() {
+	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
 }
 
 function initListeners_Navigation() {
@@ -109,6 +136,9 @@ function initListeners_Navigation() {
 	element_moveForward.addEventListener('touchend', callback_MoveForwardTouchEnd);
 	element_moveForward.addEventListener('touchcancel', callback_MoveForwardTouchEnd);
 	element_pause.addEventListener('click', callback_Pause);
+
+	element_CoordsX.addEventListener('change', callback_CoordsChange);
+	element_CoordsY.addEventListener('change', callback_CoordsChange);
 }
 
 function closeListeners_Navigation() {
@@ -137,6 +167,26 @@ function closeListeners_Navigation() {
 	element_moveForward.removeEventListener('touchend', callback_MoveForwardTouchEnd);
 	element_moveForward.removeEventListener('touchcancel', callback_MoveForwardTouchEnd);
 	element_Back.removeEventListener('click', callback_Pause);
+
+	element_CoordsX.removeEventListener('change', callback_CoordsChange);
+	element_CoordsY.removeEventListener('change', callback_CoordsChange);
+}
+
+/** Is called when we hit enter after changing one of the coordinate fields */
+function callback_CoordsChange() {
+
+	if (element_CoordsX === document.activeElement) element_CoordsX.blur();
+	if (element_CoordsY === document.activeElement) element_CoordsY.blur();
+
+	const newX = Number(element_CoordsX.value);
+	const newY = Number(element_CoordsY.value);
+	// Make sure the teleport distance doesn't exceed the cap
+	if (newX < -MAX_TELEPORT_DIST || newX > MAX_TELEPORT_DIST || newY < -MAX_TELEPORT_DIST || newY > MAX_TELEPORT_DIST) {
+		statustext.showStatus(`Cannot teleport more than ${MAX_TELEPORT_DIST} squares in any direction.`, true);
+		return;
+	}
+
+	movement.setBoardPos([newX, newY]);
 }
 
 function callback_Back(event) {
@@ -375,4 +425,5 @@ export default {
 	callback_Pause,
 	lockRewind,
 	update,
+	isCoordinateActive,
 };
