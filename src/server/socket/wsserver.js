@@ -1,19 +1,19 @@
 import { WebSocketServer as Server, WebSocket } from 'ws';
-import { verifyJWTWebSocket } from './middleware/verifyJWT.js';
-import { rateLimitWebSocket } from './middleware/rateLimit.js';
-import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from './middleware/logEvents.js';
-import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from './config/config.js';
+import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
+import { rateLimitWebSocket } from '../middleware/rateLimit.js';
+import { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut, logEvents } from '../middleware/logEvents.js';
+import { DEV_BUILD, HOST_NAME, GAME_VERSION, simulatedWebsocketLatencyMillis } from '../config/config.js';
 
-import uuid from '../client/scripts/esm/util/uuid.js';
+import uuid from '../../client/scripts/esm/util/uuid.js';
 const { genUniqueID, generateNumbID } = uuid;
-import wsutility from './game/wsutility.js';
-import { handleGameRoute } from './game/gamemanager/gamerouter.js';
-import { handleInviteRoute } from './game/invitesmanager/invitesrouter.js';
-import { unsubClientFromGameBySocket } from './game/gamemanager/gamemanager.js';
-import { subToInvitesList, unsubFromInvitesList, userHasInvite } from './game/invitesmanager/invitesmanager.js';
-import { ensureJSONString } from './utility/JSONUtils.js';
-import { executeSafely } from './utility/errorGuard.js';
-import wsutil from '../client/scripts/esm/util/wsutil.js';
+import wsutility from '../game/wsutility.js';
+import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
+import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
+import { unsubClientFromGameBySocket } from '../game/gamemanager/gamemanager.js';
+import { subToInvitesList, unsubFromInvitesList, userHasInvite } from '../game/invitesmanager/invitesmanager.js';
+import { ensureJSONString } from '../utility/JSONUtils.js';
+import { executeSafely } from '../utility/errorGuard.js';
+import wsutil from '../../client/scripts/esm/util/wsutil.js';
 
 /**
  * Type Definitions

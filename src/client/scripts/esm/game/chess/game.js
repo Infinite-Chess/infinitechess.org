@@ -90,10 +90,12 @@ function updateVariablesAfterScreenResize() {
 
 // Update the game every single frame
 function update() {
-	if (input.isKeyDown('`')) options.toggleDeveloperMode();
-	if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
-	if (input.isKeyDown('m')) options.toggleFPS();
-	if (gamefile?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+	if (!guinavigation.isCoordinateActive()) {
+		if (input.isKeyDown('`')) options.toggleDeveloperMode();
+		if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
+		if (input.isKeyDown('m')) options.toggleFPS();
+		if (gamefile?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+	}
 
 	if (gui.getScreen().includes('title')) updateTitleScreen();
 	else updateBoard(); // Other screen, board is visible, update everything board related
@@ -113,11 +115,13 @@ function updateTitleScreen() {
 
 // Called within update() when we are in a game (not title screen)
 function updateBoard() {
-	if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
-	if (input.isKeyDown('escape')) guipause.toggle();
-	if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
-	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
-	if (input.isKeyDown('n')) options.toggleNavigationBar();
+	if (!guinavigation.isCoordinateActive()) {
+		if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
+		if (input.isKeyDown('escape')) guipause.toggle();
+		if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
+		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
+		if (input.isKeyDown('n')) options.toggleNavigationBar();
+	}
 
 	const timeWinner = clock.update(gamefile);
 	if (timeWinner) { // undefined if no clock has ran out

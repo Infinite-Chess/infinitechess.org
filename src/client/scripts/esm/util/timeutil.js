@@ -224,5 +224,6 @@ export default {
 	timestampToISO,
 	isoToTimestamp,
 	sqliteToTimestamp,
+	sqliteToISO,
 	isoToSQLite,
 };

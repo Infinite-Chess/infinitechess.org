@@ -4,7 +4,6 @@
 // Called by a fetch(). ALWAYS RETURN a json!
 
 import { logEvents } from "../../middleware/logEvents.js";
-import { assignOrRenewBrowserID } from "../browserIDManager.js";
 import { signAccessToken } from "./tokenSigner.js";
 
 

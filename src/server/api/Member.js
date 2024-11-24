@@ -9,6 +9,7 @@ import { format, formatDistance } from 'date-fns';
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 import { getTranslationForReq } from "../utility/translate.js";
 import { logEvents } from '../middleware/logEvents.js';
+import timeutil from '../../client/scripts/esm/util/timeutil.js';
 
 // SHOULD ONLY ever return a JSON.
 const getMemberData = async(req, res) => { // route: /member/:member/data
@@ -29,7 +30,8 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	const joinedPhrase = format(new Date(joined), 'PP');
 	let localeStr = req.i18n.resolvedLanguage.replace('-','');
 	if (!(localeStr in locale)) localeStr = req.i18n.resolvedLanguage.split('-')[0];
-	const seenPhrase = formatDistance(new Date(), new Date(last_seen), { locale: locale[localeStr] });
+	const lastSeenDate = new Date(timeutil.sqliteToISO(last_seen));
+	const seenPhrase = formatDistance(new Date(), lastSeenDate, { locale: locale[localeStr] });
 	const sendData = {
 		user_id,
 		username,

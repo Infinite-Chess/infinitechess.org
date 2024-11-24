@@ -69,7 +69,7 @@ function migrateUsers() {
 
 		// Convert each of them to the correct format...
 		joined = timeutil.isoToSQLite(joined);
-		last_seen = timeutil.isoToSQLite(joined);
+		last_seen = timeutil.isoToSQLite(last_seen);
 
 		let refresh_tokens = [];
 		refreshTokens.forEach(oldToken => {

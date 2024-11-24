@@ -39,7 +39,11 @@ function setPrefsCookie(req, res, next) {
 		return next();
 	}
 
-	if (req.headers.origin !== undefined || !req.accepts('html')) return next(); // A fetch request, but we only want to set the preferences cookie on HTML requests. HTML requests will have an origin of undefined
+	// We don't have to worry about the request being for a resource because those have already been served.
+	// The only scenario this request could be for now is an HTML or fetch API request
+	// Fetch requests will always have a defined origin, whereas HTML requests have an undefined origin.
+	// The accept header is only set if we specify it so that condition is extra
+	if (req.headers.origin !== undefined || !req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
 
 	// We give everyone this cookie as soon as they login.
 	// Since it is modifiable by JavaScript it's possible for them to
@@ -71,7 +75,7 @@ function setPrefsCookie(req, res, next) {
 
 	createPrefsCookie(res, preferences);
 	
-	// console.log(`Set preferences cookie for member "${ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url);
+	console.log(`Set preferences cookie for member "${ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url);
 
 	next();
 }
@@ -137,7 +141,7 @@ async function postPrefs(req, res) {
 	const preferences = req.body.preferences;
 
 	if (!arePrefsValid(preferences)) {
-		logEvents(`User "${username}" tried to save invalid preferences to the database! The preferences: "${ensureJSONString(preferences)}"`, 'errLog.txt', { print: true });
+		logEvents(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${ensureJSONString(preferences)}"`, 'errLog.txt', { print: true });
 		return res.status(400).json({ message: "Preferences not valid, cannot save on the server."});
 	}
 
@@ -146,7 +150,7 @@ async function postPrefs(req, res) {
 
 	// Send appropriate response
 	if (updateSuccess) {
-		console.log("Successfully saved user preferences");
+		console.log(`Successfully saved member "${username}" of id "${user_id}"s user preferences.`);
 		res.status(200).json({ message: 'Preferences updated successfully' });
 	} else {
 		logEvents(`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
