@@ -1,8 +1,6 @@
-
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import animation from '../../game/rendering/animation.js';
-import movepiece from './movepiece.js';
+import changes from './changes.js';
 import coordutil from '../util/coordutil.js';
 // Import End
 
@@ -37,14 +35,15 @@ function getFunctions() {
 // Called when the piece moved is a king.
 // Tests if the move contains "castle" special move, if so it executes it!
 // RETURNS FALSE if special move was not executed!
-function kings(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
+function kings(gamefile, piece, move) {
 
+	const moveChanges = [];
 	const specialTag = move.castle; // { dir: -1/1, coord }
-	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
+	if (!specialTag) return moveChanges; // No special move to execute, return false to signify we didn't move the piece.
 
 	// Move the king to new square
 
-	movepiece.movePiece(gamefile, piece, move.endCoords, { updateData }); // Make normal move
+	changes.queueMovePiece(moveChanges, piece, move.endCoords); // Make normal move
 
 	// Move the rook to new square
 
@@ -52,27 +51,23 @@ function kings(gamefile, piece, move, { updateData = true, animate = true, updat
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	// Delete the rook's special move rights
 	const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
-	delete gamefile.specialRights[key];
-	movepiece.movePiece(gamefile, pieceToCastleWith, landSquare, { updateData }); // Make normal move
+	changes.queueDeleteSpecialRights(moveChanges, pieceToCastleWith, gamefile.specialRights[key]);
 
-	if (animate) {
-		animation.animatePiece(piece.type, piece.coords, move.endCoords); // King
-		const resetAnimations = false;
-		animation.animatePiece(pieceToCastleWith.type, pieceToCastleWith.coords, landSquare, undefined, resetAnimations); // Castled piece
-	}
+	changes.queueMovePiece(moveChanges, pieceToCastleWith, landSquare); // Make normal move
 
 	// Special move was executed!
 	// There is no captured piece with castling
-	return true;
+	return moveChanges;
 }
 
-function pawns(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
+function pawns(gamefile, piece, move, {updateProperties = true, simulated = false } = {}) {
 
 	// If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
 	if (updateProperties && isPawnMoveADoublePush(piece.coords, move.endCoords)) {
 		gamefile.enpassant = getEnPassantSquare(piece.coords, move.endCoords);
 	}
 
+	const moveChanges = [];
 	const enpassantTag = move.enpassant; // -1/1
 	const promotionTag = move.promotion; // promote type
 	if (!enpassantTag && !promotionTag) return false; ; // No special move to execute, return false to signify we didn't move the piece.
@@ -84,23 +79,21 @@ function pawns(gamefile, piece, move, { updateData = true, animate = true, updat
 	if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
 
 	// Delete the piece captured
-	if (capturedPiece) movepiece.deletePiece(gamefile, capturedPiece, { updateData });
+	if (capturedPiece) changes.queueDeleteChange(moveChanges, capturedPiece);
 
 	if (promotionTag) {
 		// Delete original pawn
-		movepiece.deletePiece(gamefile, piece, { updateData });
+		changes.queueDeleteChange(moveChanges, piece);
 
-		movepiece.addPiece(gamefile, promotionTag, move.endCoords, null, { updateData });
+		changes.queueAddChange(moveChanges, promotionTag, move.endCoords, null);
 
 	} else /* enpassantTag */ {
 		// Move the pawn
-		movepiece.movePiece(gamefile, piece, move.endCoords, { updateData });
+		changes.queueMoveChange(moveChanges, piece, move.endCoords);
 	}
 
-	if (animate) animation.animatePiece(piece.type, piece.coords, move.endCoords, capturedPiece);
-
 	// Special move was executed!
-	return true;
+	return moveChanges;
 }
 
 function isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2; }
