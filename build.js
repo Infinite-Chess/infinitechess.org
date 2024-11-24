@@ -1,9 +1,10 @@
 // This script deploys all files from /src/client to /dist in order to run the website.
 // Depending on the value of DEV_BUILD in /src/server/config/config.js, this happens either in development mode or in production mode.
 // Development mode: All files are simply copied over unmodified.
-// Production mode: All non-script assets are copied over unmodified,
-//                  but all game scripts in /src/client/scripts/game are concatenated into main.js.
-//                  Further, all scripts are minified with the use of terser.
+// Production mode: All non-script and non-css assets are copied over unmodified,
+//                  but all ESM scripts are bundled by esbuild,
+//					all scripts are then minified with the use of @swc/core,
+//                  Further, all css files are minified by lightningcss.
 
 import { cp as copy, rm as remove, readFile, writeFile } from 'node:fs/promises';
 import swc from "@swc/core";
