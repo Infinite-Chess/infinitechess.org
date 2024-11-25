@@ -1,7 +1,7 @@
 
-import { getClientIP } from "../../utility/IP.js";
-import { logEvents } from "../../middleware/logEvents.js";
-import { getTranslationForReq } from "../../utility/translate.js";
+import { getClientIP } from "../utility/IP.js";
+import { logEvents } from "../middleware/logEvents.js";
+import { getTranslationForReq } from "../utility/translate.js";
 
 
 /**

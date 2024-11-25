@@ -9,9 +9,9 @@
  * and updates last_seen and login_count in their profile.
  */
 
-import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../memberManager.js';
-import { logEvents } from '../../middleware/logEvents.js';
-import { createNewSession } from '../../controllers/authenticationTokens/sessionManager.js';
+import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { testPasswordForRequest } from './authController.js';
 
 
@@ -33,7 +33,7 @@ async function handleLogin(req, res) {
 	const { user_id, username, roles } = getMemberDataByCriteria(['user_id', 'username', 'roles'], 'username', usernameCaseInsensitive);
 	if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 
-	createNewSession(res, user_id, username, roles);
+	createNewSession(req, res, user_id, username, roles);
 
 	res.status(200).json({ message: "Logged in! Issued refresh token cookie and member info cookie." }); // Success!
     

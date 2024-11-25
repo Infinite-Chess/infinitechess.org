@@ -15,7 +15,7 @@ import game from '../chess/game.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
-import checkerboardgenerator from './checkerboardgenerator.js';
+import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
 // Import End
@@ -360,12 +360,12 @@ function darkenColor() {
 	const defaultDarkTiles = options.getDefaultTiles(false);
 
 	const darkenBy = 0.09;
-	const darkWR = defaultLightTiles[0] - darkenBy;
-	const darkWG = defaultLightTiles[1] - darkenBy;
-	const darkWB = defaultLightTiles[2] - darkenBy;
-	const darkDR = defaultDarkTiles[0] - darkenBy;
-	const darkDG = defaultDarkTiles[1] - darkenBy;
-	const darkDB = defaultDarkTiles[2] - darkenBy;
+	const darkWR = Math.max(defaultLightTiles[0] - darkenBy, 0);
+	const darkWG = Math.max(defaultLightTiles[1] - darkenBy, 0);
+	const darkWB = Math.max(defaultLightTiles[2] - darkenBy, 0);
+	const darkDR = Math.max(defaultDarkTiles[0] - darkenBy, 0);
+	const darkDG = Math.max(defaultDarkTiles[1] - darkenBy, 0);
+	const darkDB = Math.max(defaultDarkTiles[2] - darkenBy, 0);
 
 	resetColor([darkWR, darkWG, darkWB, 1], [darkDR, darkDG, darkDB, 1]);
 }

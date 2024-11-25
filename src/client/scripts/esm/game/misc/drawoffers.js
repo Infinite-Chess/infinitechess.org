@@ -5,7 +5,7 @@ import statustext from '../gui/statustext.js';
 import websocket from '../websocket.js';
 import guipause from '../gui/guipause.js';
 import sound from './sound.js';
-import movesscript from '../gui/movesscript.js';
+import moveutil from '../../chess/util/moveutil.js';
 import onlinegame from './onlinegame.js';
 import game from '../chess/game.js';
 // Import End
@@ -43,7 +43,7 @@ let isAcceptingDraw = false;
 function isOfferingDrawLegal() {
 	const gamefile = game.getGamefile();
 	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
-	if (!movesscript.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
+	if (!moveutil.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
 	if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND

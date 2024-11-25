@@ -19,7 +19,7 @@ import movement from '../rendering/movement.js';
 import selection from './selection.js';
 import camera from '../rendering/camera.js';
 import board from '../rendering/board.js';
-import movesscript from '../gui/movesscript.js';
+import moveutil from '../../chess/util/moveutil.js';
 import animation from '../rendering/animation.js';
 import webgl from '../rendering/webgl.js';
 import { gl } from '../rendering/webgl.js';
@@ -91,10 +91,12 @@ function updateVariablesAfterScreenResize() {
 
 // Update the game every single frame
 function update() {
-	if (input.isKeyDown('`')) options.toggleDeveloperMode();
-	if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
-	if (input.isKeyDown('m')) options.toggleFPS();
-	if (gamefile?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+	if (!guinavigation.isCoordinateActive()) {
+		if (input.isKeyDown('`')) options.toggleDeveloperMode();
+		if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
+		if (input.isKeyDown('m')) options.toggleFPS();
+		if (gamefile?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+	}
 
 	if (gui.getScreen().includes('title')) updateTitleScreen();
 	else updateBoard(); // Other screen, board is visible, update everything board related
@@ -114,11 +116,13 @@ function updateTitleScreen() {
 
 // Called within update() when we are in a game (not title screen)
 function updateBoard() {
-	if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
-	if (input.isKeyDown('escape')) guipause.toggle();
-	if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
-	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
-	if (input.isKeyDown('n')) options.toggleNavigationBar();
+	if (!guinavigation.isCoordinateActive()) {
+		if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
+		if (input.isKeyDown('escape')) guipause.toggle();
+		if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
+		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
+		if (input.isKeyDown('n')) options.toggleNavigationBar();
+	}
 
 	const timeWinner = clock.update(gamefile);
 	if (timeWinner) { // undefined if no clock has ran out
@@ -133,7 +137,7 @@ function updateBoard() {
 	movement.recalcPosition();
 	transition.update();
 	board.recalcVariables(); 
-	movesscript.update();
+	guinavigation.update();
 	arrows.update();
 	selection.update(); // Test if a piece was clicked on or moved. Needs to be before updateNavControls()
 	// We NEED THIS HERE as well as in gameLoop.render() so the game can detect mouse clicks
@@ -248,7 +252,7 @@ function closeListeners() {
  * Stops the clocks, darkens the board, displays who won, plays a sound effect.
  */
 function concludeGame() {
-	if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) movesscript.flagLastMoveAsMate(gamefile);
+	if (winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile);
 	clock.endGame(gamefile);
 	guiclock.stopClocks(gamefile);
 	board.darkenColor();

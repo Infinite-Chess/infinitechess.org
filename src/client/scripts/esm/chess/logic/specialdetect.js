@@ -8,12 +8,13 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
+import fivedimensionalpromote from './fivedimensionalpromote.js';
 // Import End
 
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../../game/gui/movesscript.js').Move} Move
+ * @typedef {import('../util/moveutil.js').Move} Move
 */
 
 "use strict";
@@ -289,6 +290,11 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
  */
 function isPawnPromotion(gamefile, type, coordsClicked) {
 	if (!type.startsWith('pawns')) return false;
+	if (gamefile.metadata.Variant === "5D_Chess") return fivedimensionalpromote.fivedimensionalpromote(gamefile, type, coordsClicked); /* Five dimensional promotion is
+																														   hardcoded for now, this should be
+																														   replaced with multiple promotion
+																														   lines when they are finished.
+																														 */
 	if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
 	const color = colorutil.getPieceColorFromType(type);

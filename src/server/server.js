@@ -11,14 +11,13 @@ const app = express();
 import https from 'https';
 import ejs from 'ejs';
 // Other imports
-import configureMiddleware from './config/middleware.js';
-import wsserver from './wsserver.js';
+import configureMiddleware from './middleware/middleware.js';
+import wsserver from './socket/wsserver.js';
 import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';
 import { DEV_BUILD } from './config/config.js';
 import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
-import { removeOldUnverifiedMembers } from './database/controllers/removeAccountController.js';
 
 // Initiate translations
 initTranslations();
@@ -30,8 +29,6 @@ app.set("view engine", "html");
 const httpsServer = https.createServer(getCertOptions(DEV_BUILD), app);
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
 configureMiddleware(app); // Setup the middleware waterfall
-
-removeOldUnverifiedMembers(); // Call once on startup.	
  
 // Start the server
 const HTTPPORT = DEV_BUILD ? process.env.HTTPPORT_LOCAL : process.env.HTTPPORT;

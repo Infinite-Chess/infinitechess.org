@@ -1,6 +1,8 @@
 
+import timeutil from "../../../client/scripts/esm/util/timeutil.js";
 import { refreshTokenExpiryMillis } from "../../config/config.js";
 import { logEvents } from "../../middleware/logEvents.js";
+import { getClientIP } from "../../utility/IP.js";
 
 /**
  * The script works with modifying refresh token objects stored in the database.
@@ -33,18 +35,23 @@ function deleteRefreshTokenFromTokenList(refreshTokens, deleteToken) {
 
 /**
  * Adds a new refresh token to a parsed array of existing refresh tokens.
+ * @param {object} req
  * @param {Object[]} refreshTokens - The array of existing refresh tokens.
  * @param {string} token - The new refresh token to add.
  * @returns {Object[]} - The updated array of refresh tokens.
  */
-function addTokenToRefreshTokens(refreshTokens, token) {
+function addTokenToRefreshTokens(req, refreshTokens, token) {
 	// Create the new refresh token object
 	const now = Date.now();
+	const expires = now + refreshTokenExpiryMillis;
+	const nowISO = timeutil.timestampToISO(now);
+	const expiresISO = timeutil.timestampToISO(expires);
 	const newRefreshToken = {
 		token,
-		issued: now,
-		expires: now + refreshTokenExpiryMillis, // Expiry in milliseconds
+		issued: nowISO,
+		expires: expiresISO,
 	};
+	if (req !== undefined) newRefreshToken.IP = getClientIP(req);
 	
 	// Add the new token to the array
 	refreshTokens.push(newRefreshToken);
@@ -60,8 +67,22 @@ function addTokenToRefreshTokens(refreshTokens, token) {
  */
 function removeExpiredTokens(tokens) {
 	const currentTime = Date.now();
-	// Filter out tokens that have expired
-	return tokens.filter(tokenObj => tokenObj.expires > currentTime);
+	// Filter out tokens that have expired using the isoToTimestamp conversion function
+	return tokens.filter(tokenObj => timeutil.isoToTimestamp(tokenObj.expires) > currentTime);
+}
+
+/**
+ * Returns the time in milliseconds since the token was issued.
+ * @param {Object} tokenObj - The refresh token object containing the `issued` property in ISO 8601 format.
+ * @returns {number} The time in milliseconds since the token was issued.
+ */
+function getTimeMillisSinceIssued(tokenObj) {
+	// Convert the 'issued' ISO 8601 string to a timestamp
+	const issuedTimestamp = timeutil.isoToTimestamp(tokenObj.issued);
+	const currentTime = Date.now();
+	
+	// Return the difference in milliseconds
+	return currentTime - issuedTimestamp;
 }
 
 
@@ -70,4 +91,5 @@ export {
 	deleteRefreshTokenFromTokenList,
 	addTokenToRefreshTokens,
 	removeExpiredTokens,
+	getTimeMillisSinceIssued,
 };

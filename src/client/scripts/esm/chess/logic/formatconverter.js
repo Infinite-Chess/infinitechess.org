@@ -45,6 +45,8 @@ const metadata_key_ordering = [
     "TimeControl",
     "White",
     "Black",
+    "WhiteID",
+    "BlackID",
     "Result",
     "Termination"
 ];

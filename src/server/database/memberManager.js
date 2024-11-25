@@ -1,19 +1,12 @@
 
 /**
- * This script almost all of the queries we use to interact with the members table!
+ * This script handles almost all of the queries we use to interact with the members table!
  */
 
 import { logEvents } from '../middleware/logEvents.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
-
-
-
-// Variables ----------------------------------------------------------------------------------------------------------
-
-
-
 
 
 
@@ -54,25 +47,22 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// Generate a unique user ID
 	const user_id = genUniqueUserID();
 
-	const joined = Date.now();
-
 	// SQL query to insert a new user into the 'members' table
 	const query = `
-INSERT INTO members (
-user_id,
-username,
-email,
-hashed_password,
-roles,
-joined,
-verification,
-preferences
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO members (
+    user_id,
+    username,
+    email,
+    hashed_password,
+    roles,
+    verification,
+    preferences
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`;
 	
 	try {
 		// Execute the query with the provided values
-		const result = db.run(query, [user_id, username, email, hashed_password, roles, joined, verification, preferences]); // { changes: 1, lastInsertRowid: 7656846 }
+		const result = db.run(query, [user_id, username, email, hashed_password, roles, verification, preferences]); // { changes: 1, lastInsertRowid: 7656846 }
 		
 		// Return success result
 		return { success: true, result };
@@ -90,13 +80,10 @@ preferences
 /**
  * Deletes a user from the members table.
  * @param {number} user_id - The ID of the user to delete.
- * @param {string} username - The username of the user to delete.
- * @param {number} joined - The timestamp when the user joined.
- * @param {string} login_count - The user's login count.
  * @param {string} reason_deleted - The reason the user is being deleted.
  * @returns {boolean} true if there was a change made (deleted successfully)
  */
-function deleteUser(user_id, username, joined, login_count, reason_deleted) {
+function deleteUser(user_id, reason_deleted) {
 	// SQL query to delete a user by their user_id
 	const query = 'DELETE FROM members WHERE user_id = ?';
 
@@ -111,19 +98,18 @@ function deleteUser(user_id, username, joined, login_count, reason_deleted) {
 		}
 
 		// Add their user_id to the deleted members table
-		addDeletedMemberToDeletedMembersTable(user_id, username, joined, login_count, reason_deleted);
+		addDeletedMemberToDeletedMembersTable(user_id, reason_deleted);
 
 		return true; // Change made successfully
 
 	} catch (error) {
 		// Log the error for debugging purposes
-		logEvents(`Error deleting user with ID "${user_id}" (${username}): ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error deleting user with ID "${user_id}": ${error.message}`, 'errLog.txt', { print: true });
 
 		// Return false indicating failure
 		return false;
 	}
 }
-
 // console.log(deleteUser(3408674));
 
 /**
@@ -170,6 +156,29 @@ function getAllUsers() {
 	}
 }
 // console.log(getAllUsers());
+
+/**
+ * Fetches a single user from the 'members' table based on their username.
+ * @param {string} username - The username of the member to retrieve.
+ * @returns {Object | undefined} - An object representing the user, containing all columns 
+ * from the 'members' table. Returns `undefined` if an error occurs or if the user is not found.
+ */
+function getMemberRowByUsername(username) {
+	// SQL query to check if a username exists in the 'members' table
+	const query = 'SELECT * FROM members WHERE username = ?';
+
+	try {
+		// Execute the query with the username parameter
+		const row = db.get(query, [username]);
+		return row;
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error getting row of member "${username}": ${error.message}`, 'errLog.txt', { print: true });
+		return;
+	}
+}
+// console.log("User:");
+// console.log(getMemberRowByUsername("User"));
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
@@ -374,12 +383,23 @@ function isUserIdTaken(userId, { ignoreDeleted } = {}) {
 
 	} catch (error) {
 		// Log the error if the query fails
-		logEvents(`Error checking user ID "${userId}": ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error checking if user ID "${userId}" is taken: ${error.message}`, 'errLog.txt', { print: true });
 		return false; // Return false if an error occurs
 	}
 }
-
 // console.log("taken? " + isUserIdTaken(14443702));
+
+/**
+ * Fetches a member's user ID based on their username.
+ * @param {string} username - The username to search for.
+ * @returns {number | undefined} - The user ID if found, or undefined if no match is found.
+ */
+function getUserIdByUsername(username) {
+	// Use the getMemberDataByCriteria function to fetch the user ID
+	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', username); // { user_id } || {}
+	return user_id;
+}
+
 
 /**
  * Checks if a member of a given username exists in the members table.
@@ -449,7 +469,9 @@ export {
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
 	doesMemberOfIDExist,
+	getUserIdByUsername,
 	doesMemberOfUsernameExist,
 	isUsernameTaken,
 	isEmailTaken,
+	genUniqueUserID
 };

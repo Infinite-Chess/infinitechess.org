@@ -8,6 +8,7 @@
  */
 
 import { isTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
+import { getClientIP, getClientIP_Websocket } from '../utility/IP.js';
 import { logEvents } from './logEvents.js';
 
 /** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
@@ -48,7 +49,7 @@ function verifyAccessToken(req, res) {
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
 	// { isValid (boolean), user_id, username, roles }
-	const result = isTokenValid(accessToken, false, res); // False for access token
+	const result = isTokenValid(accessToken, false, getClientIP(req), req, res); // False for access token
 	if (!result.isValid) {
 		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered
@@ -81,9 +82,9 @@ function verifyRefreshToken(req, res) {
 	if (!refreshToken) return false; // No refresh token present
 
 	// { isValid (boolean), user_id, username }
-	const result = isTokenValid(refreshToken, true, res); // true for refresh token
+	const result = isTokenValid(refreshToken, true, getClientIP(req), req, res); // true for refresh token
 	if (!result.isValid) {
-		logEvents(`Invalid refresh token, expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true });
+		logEvents(`Invalid refresh token, expired or tampered! Reason: "${result.reason}" "${refreshToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered
 	}
 
@@ -103,12 +104,13 @@ function verifyRefreshToken(req, res) {
  * properties if it is valid (are signed in).
  * The invite and game managers can use these
  * properties to verify their identity.
+ * @param {Socket} req
  * @param {Socket} ws - The websocket object
  * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. These should be `token`, `jwt` (refresh token), and `browser-id`.
  */
-function verifyJWTWebSocket(ws) {
+function verifyJWTWebSocket(req, ws) {
 	ws.metadata.memberInfo = { signedIn: false };
-	verifyRefreshToken_WebSocket(ws);
+	verifyRefreshToken_WebSocket(req, ws);
 };
 
 /**
@@ -117,14 +119,14 @@ function verifyJWTWebSocket(ws) {
  * @param {Socket} ws - The websocket object
  * @returns {boolean} true if a valid token was found.
  */
-function verifyRefreshToken_WebSocket(ws) {
+function verifyRefreshToken_WebSocket(req, ws) {
 	const cookies = ws.cookies;
 	if (!cookies) return logEvents("Websocket needs to have the cookies property before verifying JWT!", 'errLog.txt', { print: true });
 
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return false; // Not logged in, don't set their user property
 
-	const result = isTokenValid(refreshToken, true); // True for refresh token
+	const result = isTokenValid(refreshToken, true, getClientIP_Websocket(req, ws)); // True for refresh token
 	if (!result.isValid) {
 		logEvents(`Invalid refresh token (websocket), expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true }); // Forbidden, invalid token
 		return false; //Token was expired or tampered

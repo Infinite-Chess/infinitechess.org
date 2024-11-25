@@ -1,7 +1,7 @@
 
 // Import Start
 import board from '../rendering/board.js';
-import movesscript from './movesscript.js';
+import moveutil from '../../chess/util/moveutil.js';
 import movement from '../rendering/movement.js';
 import game from '../chess/game.js';
 import style from './style.js';
@@ -10,6 +10,11 @@ import guipause from './guipause.js';
 import area from '../rendering/area.js';
 import transition from '../rendering/transition.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import statustext from './statustext.js';
+import stats from './stats.js';
+import movepiece from '../../chess/logic/movepiece.js';
+import selection from '../chess/selection.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 "use strict";
@@ -34,6 +39,8 @@ const element_moveRewind = document.getElementById('move-left');
 const element_moveForward = document.getElementById('move-right');
 const element_pause = document.getElementById('pause');
 
+const MAX_TELEPORT_DIST = Infinity;
+
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind
 const minimumRewindIntervalMillis = 20; // Rewinding can never be spammed faster than this
@@ -54,10 +61,25 @@ const durationToLockRewindAfterMoveForwardingMillis = 750;
 
 // Functions
 
-function open() {
+function open({ allowEditCoords = true } = {}) {
 	style.revealElement(element_Navigation);
 	initListeners_Navigation();
 	update_MoveButtons();
+	initCoordinates({allowEditCoords});
+}
+
+function initCoordinates({ allowEditCoords }) {
+	if (allowEditCoords) {
+		element_CoordsX.disabled = false;
+		element_CoordsY.disabled = false;
+		element_CoordsX.classList.remove('set-cursor-to-not-allowed');
+		element_CoordsY.classList.remove('set-cursor-to-not-allowed');
+	} else {
+		element_CoordsX.disabled = true;
+		element_CoordsY.disabled = true;
+		element_CoordsX.classList.add('set-cursor-to-not-allowed');
+		element_CoordsY.classList.add('set-cursor-to-not-allowed');
+	}
 }
 
 function close() {
@@ -73,9 +95,19 @@ function updateElement_Coords() {
 	// element_CoordsX.textContent = Math.floor(boardPos[0] + board.gsquareCenter())
 	// element_CoordsY.textContent = Math.floor(boardPos[1] + board.gsquareCenter())
 
+	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
+
 	// Tile mouse over
-	element_CoordsX.textContent = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[0] : Math.floor(boardPos[0] + board.gsquareCenter());
-	element_CoordsY.textContent = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[1] : Math.floor(boardPos[1] + board.gsquareCenter());
+	element_CoordsX.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[0] : Math.floor(boardPos[0] + board.gsquareCenter());
+	element_CoordsY.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[1] : Math.floor(boardPos[1] + board.gsquareCenter());
+}
+
+/**
+ * Returns true if one of the coordinate fields is active (currently editing)
+ * @returns {boolean}
+ */
+function isCoordinateActive() {
+	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
 }
 
 function initListeners_Navigation() {
@@ -104,6 +136,9 @@ function initListeners_Navigation() {
 	element_moveForward.addEventListener('touchend', callback_MoveForwardTouchEnd);
 	element_moveForward.addEventListener('touchcancel', callback_MoveForwardTouchEnd);
 	element_pause.addEventListener('click', callback_Pause);
+
+	element_CoordsX.addEventListener('change', callback_CoordsChange);
+	element_CoordsY.addEventListener('change', callback_CoordsChange);
 }
 
 function closeListeners_Navigation() {
@@ -132,6 +167,26 @@ function closeListeners_Navigation() {
 	element_moveForward.removeEventListener('touchend', callback_MoveForwardTouchEnd);
 	element_moveForward.removeEventListener('touchcancel', callback_MoveForwardTouchEnd);
 	element_Back.removeEventListener('click', callback_Pause);
+
+	element_CoordsX.removeEventListener('change', callback_CoordsChange);
+	element_CoordsY.removeEventListener('change', callback_CoordsChange);
+}
+
+/** Is called when we hit enter after changing one of the coordinate fields */
+function callback_CoordsChange() {
+
+	if (element_CoordsX === document.activeElement) element_CoordsX.blur();
+	if (element_CoordsY === document.activeElement) element_CoordsY.blur();
+
+	const newX = Number(element_CoordsX.value);
+	const newY = Number(element_CoordsY.value);
+	// Make sure the teleport distance doesn't exceed the cap
+	if (newX < -MAX_TELEPORT_DIST || newX > MAX_TELEPORT_DIST || newY < -MAX_TELEPORT_DIST || newY > MAX_TELEPORT_DIST) {
+		statustext.showStatus(`Cannot teleport more than ${MAX_TELEPORT_DIST} squares in any direction.`, true);
+		return;
+	}
+
+	movement.setBoardPos([newX, newY]);
 }
 
 function callback_Back(event) {
@@ -158,14 +213,14 @@ function callback_MoveRewind(event) {
 	if (rewindIsLocked) return;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrForward = Date.now();
-	movesscript.rewindMove();
+	rewindMove();
 }
 
 function callback_MoveForward(event) {
 	event = event || window.event;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrForward = Date.now();
-	movesscript.forwardMove();
+	forwardMove();
 }
 
 function isItOkayToRewindOrForward() {
@@ -178,8 +233,8 @@ function isItOkayToRewindOrForward() {
  * the very beginning or end of the game.
  */
 function update_MoveButtons() {
-	const decrementingLegal = movesscript.isDecrementingLegal(game.getGamefile());
-	const incrementingLegal = movesscript.isIncrementingLegal(game.getGamefile());
+	const decrementingLegal = moveutil.isDecrementingLegal(game.getGamefile());
+	const incrementingLegal = moveutil.isIncrementingLegal(game.getGamefile());
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -310,8 +365,56 @@ function lockRewind() {
 }
 let lockLayers = 0;
 
-function isRewindButtonLocked() {
-	return rewindIsLocked;
+/** Tests if the arrow keys have been pressed, signaling to rewind/forward the game. */
+function update() {
+	testIfRewindMove();
+	testIfForwardMove();
+}
+
+/** Tests if the left arrow key has been pressed, signaling to rewind the game. */
+function testIfRewindMove() {
+	if (!input.isKeyDown('arrowleft')) return;
+	if (rewindIsLocked) return;
+	rewindMove();
+}
+
+/** Tests if the right arrow key has been pressed, signaling to forward the game. */
+function testIfForwardMove() {
+	if (!input.isKeyDown('arrowright')) return;
+	forwardMove();
+}
+
+/** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
+function rewindMove() {
+	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
+	if (!moveutil.isDecrementingLegal(game.getGamefile())) return stats.showMoves();
+
+	frametracker.onVisualChange();
+
+	movepiece.rewindMove(game.getGamefile(), { removeMove: false });
+    
+	selection.unselectPiece();
+
+	update_MoveButtons();
+
+	stats.showMoves();
+}
+
+/** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
+function forwardMove() {
+	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
+	if (!moveutil.isIncrementingLegal(game.getGamefile())) return stats.showMoves();
+
+	const move = moveutil.getMoveOneForward(game.getGamefile());
+
+	// Only leave animate and updateData as true
+	movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false });
+
+	// transition.teleportToLastMove()
+
+	update_MoveButtons();
+
+	stats.showMoves();
 }
 
 export default {
@@ -321,5 +424,6 @@ export default {
 	update_MoveButtons,
 	callback_Pause,
 	lockRewind,
-	isRewindButtonLocked
+	update,
+	isCoordinateActive,
 };

@@ -124,7 +124,7 @@ function updateNormal(equaY) {
 	// Smoothly transition E, then convert back to scale
 	const newE = startE + diffE * equaY;
 	const newScale = Math.pow(Math.E, newE);
-	movement.setBoardScale(newScale, 'pidough');
+	movement.setBoardScale(newScale);
 
 	// Coords. Needs to be after changing scale because the new world-space is dependant on scale
 	// SEE GRAPH ON DESMOS "World-space converted to boardPos" for my notes while writing this algorithm
@@ -139,7 +139,7 @@ function updateNormal(equaY) {
 	const newX = targetCoords[0] - (newWorldX / boardScale);
 	const newY = targetCoords[1] - (newWorldY / boardScale);
 
-	movement.setBoardPos([newX, newY], "pidough");
+	movement.setBoardPos([newX, newY]);
 }
 
 function updatePanTel(equaX, equaY) {
@@ -186,14 +186,14 @@ function updatePanTel(equaX, equaY) {
 		newY = target[1] + addY;
 	}
 
-	movement.setBoardPos([newX, newY], "pidough");
+	movement.setBoardPos([newX, newY]);
 }
 
 function finish() { // Called at the end of a teleport
 
 	// Set the final coords and scale
-	movement.setBoardPos(endCoords, "pidough");
-	movement.setBoardScale(endScale, "pidough");
+	movement.setBoardPos(endCoords);
+	movement.setBoardScale(endScale);
 
 	if (secondTeleport) {
 

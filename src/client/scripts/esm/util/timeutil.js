@@ -47,6 +47,7 @@ function getCurrentUTCTime() {
 
 /**
  * Converts a timestamp to an object with UTCDate and UTCTime.
+ * This time format is used for ICN metadata notation.
  * @param {number} timestamp - The timestamp in milliseconds since the Unix Epoch.
  * @returns {Object} An object with the properties { UTCDate: "YYYY.MM.DD", UTCTime: "HH:MM:SS" }.
  */
@@ -154,6 +155,61 @@ function isCurrentDateWithinRange(startMonth, startDay, endMonth, endDay) {
 	return today >= startDate && today <= endDate;
 }
 
+/**
+ * Converts a timestamp (milliseconds since the UNIX epoch) to an ISO 8601 string.
+ * @param {number} timestamp - The timestamp in milliseconds since the UNIX epoch.
+ * @returns {string} The ISO 8601 formatted string.
+ */
+function timestampToISO(timestamp) {
+	return new Date(timestamp).toISOString();
+}
+
+/**
+ * Converts an ISO 8601 string to a timestamp in milliseconds since the UNIX epoch.
+ * @param {string} isoString - The ISO 8601 formatted string.
+ * @returns {number} The timestamp in milliseconds since the UNIX epoch.
+ */
+function isoToTimestamp(isoString) {
+	return new Date(isoString).getTime();
+}
+
+/**
+ * Converts a SQLite DATETIME string (in "YYYY-MM-DD HH:MM:SS" format) to a UTC timestamp in milliseconds.
+ * Assumes the SQLite timestamp is in UTC.
+ * @param {string} sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
+ * @returns {number} - The corresponding UTC timestamp in milliseconds since the UNIX epoch.
+ */
+function sqliteToTimestamp(sqliteString) {
+	const isoString = sqliteToISO(sqliteString);
+	return Date.parse(isoString);
+}
+
+/**
+ * Converts a SQLite DATETIME string (in "YYYY-MM-DD HH:MM:SS" format) to an ISO 8601 string.
+ * Assumes the SQLite timestamp is in UTC.
+ * @param {string} sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
+ * @returns {string} - The corresponding ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
+ */
+function sqliteToISO(sqliteString) {
+	return sqliteString.replace(' ', 'T') + 'Z';
+}
+
+/**
+ * Converts an ISO 8601 string to SQLite's DATETIME format ("YYYY-MM-DD HH:MM:SS").
+ * @param {string} isoString - The ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
+ * @returns {string} - The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
+ */
+function isoToSQLite(isoString) {
+	const date = new Date(isoString);
+	if (isNaN(date.getTime())) {
+		throw new Error("Invalid ISO 8601 string provided.");
+	}
+	
+	return date.toISOString().replace('T', ' ').split('.')[0];
+}
+
+
+
 export default {
 	minutesToMillis,
 	secondsToMillis,
@@ -165,4 +221,9 @@ export default {
 	getCurrentMonth,
 	getCurrentDay,
 	isCurrentDateWithinRange,
+	timestampToISO,
+	isoToTimestamp,
+	sqliteToTimestamp,
+	sqliteToISO,
+	isoToSQLite,
 };

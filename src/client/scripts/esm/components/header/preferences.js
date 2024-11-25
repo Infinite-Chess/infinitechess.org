@@ -28,19 +28,23 @@ let changeWasMade = false;
 })();
 
 function loadPreferences() {
-	const preferencesCookie = docutil.getCookieValue('preferences');
-	if (preferencesCookie) console.log("Preferences cookie was present!");
-	// else console.log("local storage preferences: " + JSON.stringify(localstorage.loadItem('preferences')));
-
-	// The cookie trump's local storage because it will be our member-specific preferences
-	preferences = preferencesCookie ? JSON.parse(decodeURIComponent(preferencesCookie)) : localstorage.loadItem('preferences') || {
+	
+	const browserStoragePrefs = localstorage.loadItem('preferences') || {
 		theme: themes.defaultTheme,
 		legal_moves: default_legal_moves,
 		perspective_sensitivity: default_perspective_sensitivity,
 		perspective_fov: default_perspective_fov,
 	};
+	preferences = browserStoragePrefs;
 
-	if (preferencesCookie) savePreferences(); // Save preferences for whoever was logged in last into local storage
+	let cookiePrefs = docutil.getCookieValue('preferences');
+	if (cookiePrefs) {
+		console.log("Preferences cookie was present!");
+		cookiePrefs = JSON.parse(decodeURIComponent(cookiePrefs));
+		clientSidePrefs.forEach(pref => { cookiePrefs[pref] = browserStoragePrefs[pref]; });
+		preferences = cookiePrefs;
+		savePreferences(); // Save preferences for whoever was logged in last into local storage
+	}
 }
 
 function savePreferences() {
@@ -49,6 +53,11 @@ function savePreferences() {
 
 	// After a delay, also send a post request to the server to update our preferences.
 	// Auto send it if the window is closing
+}
+
+function onChangeMade() {
+	changeWasMade = true;
+	validatorama.getAccessToken(); // Preload the access token so that we are ready to quickly save our preferences on the server if the page is unloaded
 }
 
 async function sendPrefsToServer() {
@@ -107,7 +116,7 @@ function getTheme() {
 }
 function setTheme(theme) {
 	preferences.theme = theme;
-	changeWasMade = true;
+	onChangeMade();
 	savePreferences();
 }
 
@@ -117,7 +126,7 @@ function getLegalMovesShape() {
 function setLegalMovesShape(legal_moves) {
 	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
-	changeWasMade = true;
+	onChangeMade();
 	savePreferences();
 }
 

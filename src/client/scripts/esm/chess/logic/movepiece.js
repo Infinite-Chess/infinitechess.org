@@ -11,7 +11,7 @@ import animation from '../../game/rendering/animation.js';
 import guinavigation from '../../game/gui/guinavigation.js';
 import piecesmodel from '../../game/rendering/piecesmodel.js';
 import guigameinfo from '../../game/gui/guigameinfo.js';
-import movesscript from '../../game/gui/movesscript.js';
+import moveutil from '../util/moveutil.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 import colorutil from '../util/colorutil.js';
@@ -26,7 +26,7 @@ import game from '../../game/chess/game.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../../game/gui/movesscript.js').Move} Move
+ * @typedef {import('../util/moveutil.js').Move} Move
 */
 
 "use strict";
@@ -281,7 +281,7 @@ function incrementMoveRule(gamefile, typeMoved, wasACapture) {
  * - `doGameOverChecks`: Whether game-over checks such as checkmate, or other win conditions, are performed for this move.
  */
 function flipWhosTurn(gamefile, { pushClock = true, doGameOverChecks = true } = {}) {
-	gamefile.whosTurn = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
+	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	if (doGameOverChecks) guigameinfo.updateWhosTurn(gamefile);
 	if (pushClock) {
 		clock.push(gamefile);
@@ -300,14 +300,14 @@ function updateInCheck(gamefile, flagMoveAsCheck = true) {
 
 	let attackers = undefined;
 	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
-	const whosTurnItWasAtMoveIndex = movesscript.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
+	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
 	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 
 	gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
 	gamefile.attackers = attackers || []; // Erase the checking pieces calculated from previous turn and pass in new ones!
 
-	if (gamefile.inCheck && flagMoveAsCheck) movesscript.flagLastMoveAsCheck(gamefile);
+	if (gamefile.inCheck && flagMoveAsCheck) moveutil.flagLastMoveAsCheck(gamefile);
 }
 
 /**
@@ -356,7 +356,7 @@ function makeAllMovesInGame(gamefile, moves) {
  * @returns {Move | undefined} The move object, or undefined if there was an error.
  */
 function calculateMoveFromShortmove(gamefile, shortmove) {
-	if (!movesscript.areWeViewingLatestMove(gamefile)) return console.error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
+	if (!moveutil.areWeViewingLatestMove(gamefile)) return console.error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
 
 	// Reconstruct the startCoords, endCoords, and promotion properties of the longmove
 
@@ -404,11 +404,11 @@ function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, upd
 
 	while (true) { // For as long as we have moves to forward...
 		const nextIndex = gamefile.moveIndex + 1;
-		if (movesscript.isIndexOutOfRange(gamefile.moves, nextIndex)) break;
+		if (moveutil.isIndexOutOfRange(gamefile.moves, nextIndex)) break;
 
-		const nextMove = movesscript.getMoveFromIndex(gamefile.moves, nextIndex);
+		const nextMove = moveutil.getMoveFromIndex(gamefile.moves, nextIndex);
 
-		const isLastMove = movesscript.isIndexTheLastMove(gamefile.moves, nextIndex);
+		const isLastMove = moveutil.isIndexTheLastMove(gamefile.moves, nextIndex);
 		const animate = animateLastMove && isLastMove;
 		makeMove(gamefile, nextMove, { recordMove: false, pushClock: false, doGameOverChecks: false, flipTurn, animate, updateData, updateProperties, simulated });
 	}
@@ -428,7 +428,7 @@ function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, upd
  * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
  */
 function rewindGameToIndex(gamefile, moveIndex, { removeMove = true, updateData = true } = {}) {
-	if (removeMove && !movesscript.areWeViewingLatestMove(gamefile)) return console.error("Cannot rewind game to index while deleting moves unless we start at the most recent move. forwardToFront() first.");
+	if (removeMove && !moveutil.areWeViewingLatestMove(gamefile)) return console.error("Cannot rewind game to index while deleting moves unless we start at the most recent move. forwardToFront() first.");
 	if (gamefile.moveIndex < moveIndex) return console.error("Cannot rewind game to index when we need to forward instead.");
 	while (gamefile.moveIndex > moveIndex) rewindMove(gamefile, { animate: false, updateData, removeMove });
 	guigameinfo.updateWhosTurn(gamefile);
@@ -447,7 +447,7 @@ function rewindGameToIndex(gamefile, moveIndex, { removeMove = true, updateData 
  */
 function rewindMove(gamefile, { updateData = true, removeMove = true, animate = true } = {}) {
 
-	const move = movesscript.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
+	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
 	const trimmedType = colorutil.trimColorExtensionFromType(move.type);
 
 	let isSpecialMove = false;
@@ -477,7 +477,7 @@ function rewindMove(gamefile, { updateData = true, removeMove = true, animate = 
 	delete move.rewindInfo.pawnIndex;
 
 	// Finally, delete the move off the top of our moves [] array list
-	if (removeMove) movesscript.deleteLastMove(gamefile.moves);
+	if (removeMove) moveutil.deleteLastMove(gamefile.moves);
 	gamefile.moveIndex--;
 
 	if (removeMove) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false });

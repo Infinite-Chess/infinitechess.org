@@ -174,7 +174,7 @@ async function isAllowedToCreateInvite(ws, replyto) {
 
 	// Server is restarting... Do we have admin perms to create an invite anyway?
 
-	if (ws.metadata.memberInfo.roles.includes('owner')) return true; // They are allowed to make an invite!
+	if (ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.roles?.includes('owner')) return true; // They are allowed to make an invite!
 
 	// Making an invite is NOT allowed...
 

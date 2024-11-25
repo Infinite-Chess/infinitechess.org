@@ -32,7 +32,7 @@ function open() {
 	perspective.disable();
 	if (!gui.getScreen()?.includes('title')) movement.randomizePanVelDir(); // Randomize pan velocity direction
 	gui.setScreen('title');
-	movement.setBoardScale(1.8, 'pidough'); // 1.8
+	movement.setBoardScale(1.8); // 1.8
 	style.revealElement(titleElement);
 	style.revealElement(element_menuExternalLinks);
 	initListeners(); // These need to be canceled when leaving screen

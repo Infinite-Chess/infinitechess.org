@@ -235,7 +235,8 @@ nav.compact-3 #svg-logout {
     position: absolute; /* Position relative to the nearest positioned ancestor */
     top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
     right: 0; 
-    width: 195px;
+    min-width: 195px;
+    width: fit-content; /* Polish needs to be able to fit content because it's a little bit wider */
     /* Can't enable these because words "Perspective Sensitivity" won't wrap but instead increase the length of the whole dropdown. */
     /* min-width: 195px;
     width: fit-content; */
@@ -555,6 +556,13 @@ span.arrow-head-left {
     opacity: 0%;
     pointer-events: none;
 }
+
+/* Used for disallowing changing your coordinates in an online game */
+.set-cursor-to-not-allowed {
+    cursor: not-allowed;
+}
+
+
 
 /* Animations */
 

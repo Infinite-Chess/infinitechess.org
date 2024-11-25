@@ -127,6 +127,8 @@ function getTransformedDataQuad_Color3D_FromCoord(coords, z, color) {
  * @returns {number[]} The vertex data for the circle, including position and color for each vertex.
  */
 function getDataCircle(x, y, radius, resolution, r, g, b, a) {
+	if (!Number.isInteger(resolution)) throw new Error("Resolution of circle data must be an integer!");
+
 	const vertices = [];
 	const angleStep = (2 * Math.PI) / resolution;
 

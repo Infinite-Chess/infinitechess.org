@@ -28,14 +28,15 @@ import corsOptions from '../config/corsOptions.js';
 
 import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
-import { verifyAccount } from '../database/controllers/verifyAccountController.js';
-import { requestConfirmEmail } from '../database/controllers/sendMail.js';
+import { verifyAccount } from '../controllers/verifyAccountController.js';
+import { requestConfirmEmail } from '../controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
-import { handleLogout } from '../database/controllers/logoutController.js';
+import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
-import { handleLogin } from '../database/controllers/loginController.js';
-import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../database/controllers/createaccountController.js';
-import { removeAccount } from '../database/controllers/removeAccountController.js';
+import { handleLogin } from '../controllers/loginController.js';
+import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
+import { removeAccount } from '../controllers/deleteAccountController.js';
+import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -90,9 +91,14 @@ function configureMiddleware(app) {
 	// Serve public assets. (e.g. css, scripts, images, audio)
 	app.use(express.static(path.join(__dirname, '..', '..', '..', 'dist'))); // Serve public assets
 
+	// Every request beyond this point will not be for a resource like a script or image,
+	// but it will be a request for an HTML or API
+
 	// Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
 	app.use('/.well-known/acme-challenge', express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')));
 
+	// This sets the 'browser-id' cookie on every request for an HTML file
+	app.use(assignOrRenewBrowserID);
 	// This sets the user 'preferences' cookie on every request for an HTML file
 	app.use(setPrefsCookie);
 

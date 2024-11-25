@@ -6,6 +6,8 @@ import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
+import fivedimensionalgenerator from './fivedimensionalgenerator.js';
+import movesets from '../logic/movesets.js';
 
 // Type Definitions...
 /** @typedef {import('../logic/gamerules.js').GameRules} GameRules */
@@ -164,6 +166,14 @@ const variantDictionary = {
 		},
 		gameruleModifications: gameruleModificationsOfOmegaShowcasings
 	},
+	'5D_Chess': {
+		generator: {
+			algorithm: fivedimensionalgenerator.genPositionOfFiveDimensional,
+			rules: { pawnDoublePush: true, castleWith: 'rooks' }
+		},
+		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional,
+		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed },
+	}
 };
 
 
@@ -359,10 +369,58 @@ function getApplicableTimestampEntry(object, { UTCDate, UTCTime }) {
 	return object[timestampToUse];
 }
 
+/**
+ * Gets the piece movesets for the given variant and time, such that each piece contains a function returning a copy of its moveset (to avoid modifying originals)
+ * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
+ * @param {string} options.Variant - The name of the variant for which to get the moveset.
+ * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
+ * @param {number} [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
+ * @returns {Object} - The moveset in the form defined in movesets.js
+ */
+function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }) {
+	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
+	const variantEntry = variantDictionary[Variant];
+
+	if (!variantEntry.movesetGenerator) {
+		console.log(`Variant "${Variant}" does not have a moveset generator. Using default movesets.`);
+		return getMovesets({}, variantEntry.gameruleModifications?.slideLimit);
+	}
+
+	let movesetModifications;
+	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) { // Multiple UTC timestamps
+		movesetModifications = getApplicableTimestampEntry(variantEntry.movesetGenerator, { UTCDate, UTCTime })();
+	} else { // Just one movesetGenerator entry
+		movesetModifications = variantEntry.movesetGenerator();
+	}
+
+	return getMovesets(movesetModifications);
+}
+
+/**
+ * Returns default movesets with provided modifications such that each piece contains a function returning a copy of its moveset (to avoid modifying originals).
+ * Any piece type present in the modifications will replace the default move that for that piece.
+ * The slidelimit gamerule will only be applied to default movesets, not modified ones.
+ * @param {Object} movesetModifications - The modifications to the default movesets.
+ * @returns {number} [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
+ * @returns {Object} The pieceMovesets property of the gamefile.
+ */
+function getMovesets(movesetModifications = {}, defaultSlideLimitForOldVariants) {
+	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
+	const moveset = {};
+
+	for (const [piece, moves] of Object.entries(origMoveset)) {
+		moveset[piece] = movesetModifications[piece] ? function() { return jsutil.deepCopyObject(movesetModifications[piece]); }
+													 : function() { return jsutil.deepCopyObject(moves); };
+	}
+
+	return moveset;
+}
+
 
 export default {
 	isVariantValid,
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	getPromotionsAllowed,
+	getMovesetsOfVariant,
 };

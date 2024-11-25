@@ -10,7 +10,7 @@ import selection from '../chess/selection.js';
 import camera from './camera.js';
 import board from './board.js';
 import math from '../../util/math.js';
-import movesscript from '../gui/movesscript.js';
+import moveutil from '../../chess/util/moveutil.js';
 import game from '../chess/game.js';
 import buffermodel from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
@@ -176,7 +176,7 @@ function getDataOfHighlightShapeDependingOnIfPieceOnSquare(coord, color, usingDo
 	const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
 	return usingDots ? (() => {
 		if (gamefileutility.isPieceOnCoords(gamefile, coord)) return legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, color);
-		else return legalmoveshapes.getDataLegalMoveDot(offsetCoord, color);
+		else return legalmoveshapes.getDataLegalMoveDot(offsetCoord, color, movement.getBoardScale(), perspective.getEnabled());
 	})() : shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
 }
 
@@ -288,7 +288,7 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color, us
 	const lineSet = new Set(Object.keys(legalMoves.sliding));
 
 	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
-	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, color)
+	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, color, movement.getBoardScale(), perspective.getEnabled())
 									: shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
 	const vertexDataCapture = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, color) : undefined;
 
@@ -452,7 +452,7 @@ function renderBoundingBoxOfRenderRange() {
 }
 
 function highlightLastMove() {
-	const lastMove = movesscript.getCurrentMove(game.getGamefile());
+	const lastMove = moveutil.getCurrentMove(game.getGamefile());
 	if (!lastMove) return; // Don't render if last move is undefined.
 
 	const color = options.getDefaultLastMoveHighlightColor();

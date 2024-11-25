@@ -16,6 +16,7 @@ import statustext from '../gui/statustext.js';
 import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
+import guinavigation from '../gui/guinavigation.js';
 // Import End
 
 "use strict";
@@ -31,7 +32,7 @@ const copySinglePosition = false;
  * A list of metadata properties that are retained from the current game when pasting an external game.
  * These will overwrite the pasted game's metadata with the current game's metadata.
  */
-const retainMetadataWhenPasting = ['White','Black','TimeControl','Event','Site','Round'];
+const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeControl','Event','Site','Round'];
 
 /**
  * Copies the current game to the clipboard in ICN notation.
@@ -39,6 +40,8 @@ const retainMetadataWhenPasting = ['White','Black','TimeControl','Event','Site',
  * @param {event} event - The event fired from the event listener
  */
 function callbackCopy(event) {
+	if (guinavigation.isCoordinateActive()) return;
+
 	const gamefile = game.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
@@ -97,6 +100,8 @@ function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for
  * @param {event} event - The event fired from the event listener
  */
 async function callbackPaste(event) {
+	if (guinavigation.isCoordinateActive()) return;
+	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
 
@@ -214,7 +219,8 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	// Retain most of the existing metadata on the currently loaded gamefile
 	const currentGameMetadata = game.getGamefile().metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
-		longformat.metadata[metadataName] = currentGameMetadata[metadataName];
+		delete longformat.metadata[metadataName];
+		if (currentGameMetadata[metadataName] !== undefined) longformat.metadata[metadataName] = currentGameMetadata[metadataName];
 	});
 	// Only keep the Date of the current game if the starting position of the pasted game isn't specified,
 	// because loading the variant version relies on that.

@@ -46,8 +46,61 @@ function generateNumbID(length) {
 	return Math.floor(zeroOne * multiplier);
 }
 
+/**
+ * Converts a number from base 10 to base 62.
+ * @param {number} num - The base 10 number to convert.
+ * @returns {string} - The base 62 representation of the number.
+ * @throws {Error} - If the input is not a non-negative integer.
+ */
+function base10ToBase62(num) {
+	if (!Number.isInteger(num) || num < 0) throw new Error('Input must be a non-negative integer when converting base 10 to base 62.');
+
+	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+	let result = '';
+
+	// Handle zero as a special case
+	if (num === 0) return '0';
+
+	while (num > 0) {
+		const remainder = num % 62;
+		result = characters[remainder] + result;
+		num = Math.floor(num / 62);
+	}
+
+	return result;
+}
+
+/**
+ * Converts a number from base 62 to base 10.
+ * @param {string} base62Str - The base 62 number to convert.
+ * @returns {number} - The base 10 representation of the number.
+ * @throws {Error} - If the input contains invalid base 62 characters.
+ */
+function base62ToBase10(base62Str) {
+	if (typeof base62Str !== 'string' || base62Str.length === 0) throw new Error('Input must be a non-empty string when converting base 62 to base 10.');
+
+	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+	const base = 62;
+
+	let result = 0;
+	for (let i = 0; i < base62Str.length; i++) {
+		const char = base62Str[i];
+		const value = characters.indexOf(char);
+
+		if (value === -1) {
+			throw new Error(`Invalid character '${char}' in base 62 string.`);
+		}
+
+		result = result * base + value;
+	}
+
+	return result;
+}
+
 export default {
 	generateID,
 	genUniqueID,
 	generateNumbID,
+	base10ToBase62,
+	base62ToBase10,
 };

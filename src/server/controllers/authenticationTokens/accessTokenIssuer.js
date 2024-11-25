@@ -4,9 +4,18 @@
 // Called by a fetch(). ALWAYS RETURN a json!
 
 import { logEvents } from "../../middleware/logEvents.js";
-import { createAccessTokenCookie } from "./accessTokenController.js";
-import { assignOrRenewBrowserID } from "../../database/controllers/browserIDManager.js";
 import { signAccessToken } from "./tokenSigner.js";
+
+
+
+/**
+ * How long until the cookie containing their new access token
+ * will last until expiring, in milliseconds.
+ * This is NOT when the token itself expires, only the cookie.
+ */
+const expireTimeOfTokenCookieMillis = 1000 * 10; // 10 seconds
+
+
 
 /**
  * Called when the browser uses the /api/get-access-token API request. This reads any refresh token cookie present,
@@ -22,8 +31,6 @@ function accessTokenIssuer(req, res) {
 	}
 
 	if (!req.memberInfo.signedIn) {
-		assignOrRenewBrowserID(req, res);
-		// return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_invalid", req) }); // Conflict. Expired or tampered token, or logged out (manually invalidated).
 		return res.status(403).json({'message': "Invalid or missing refresh token (logged out), cannot issue access token."}); // Forbidden
 	}
 
@@ -36,6 +43,17 @@ function accessTokenIssuer(req, res) {
 	createAccessTokenCookie(res, accessToken); // 10 second expiry time
 	res.json({ message: 'Issued access token!' }); // Their member information is now stored in a cookie when the refreshed token cookie is generated
 	console.log(`Issued access token for member "${username}" --------`);
+}
+
+
+/**
+ * Creates and sets an HTTP-only cookie containing the refresh token.
+ * @param {Object} res - The response object.
+ * @param {string} accessToken - The access token to be stored in the cookie.
+ */
+function createAccessTokenCookie(res, accessToken) {
+	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true
+	res.cookie('token', accessToken, { sameSite: 'None', secure: true, maxAge: expireTimeOfTokenCookieMillis }); // 10 second time limit. JavaScript needs to read it in that time!
 }
 
 export {

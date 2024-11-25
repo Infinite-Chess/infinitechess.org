@@ -1,7 +1,7 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
 import { logEvents } from "../../middleware/logEvents.js";
 import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
-import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens } from "./refreshTokenObject.js";
+import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
 import { signRefreshToken } from "./tokenSigner.js";
 import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from "../../config/config.js";
 
@@ -17,34 +17,44 @@ import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } fro
  * @param {number} username
  * @param {number} roles
  * @param {string} token - The refresh token to check.
+ * @param {string} IP - The IP address they are connecting from.
+ * @param {number} [req] - The request object. 
  * @param {number} [res] - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {boolean} - Returns true if the member has the refresh token, false otherwise.
  */
-function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, res) {
+function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, IP, req, res) {
 	// Get the valid refresh tokens for the user
-	let refreshTokens = getRefreshTokensByUserID(userId);
+	const refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) {
 		logEvents(`Cannot test if non-existent member of id "${userId}" has refresh token "${token}"!`, 'errLog.txt', { print: true });
 		return false;
 	}
 
 	// Remove expired tokens
-	refreshTokens = removeExpiredTokens(refreshTokens);
+	const validRefreshTokens = removeExpiredTokens(refreshTokens);
+	if (validRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, validRefreshTokens); // At least one token was deleted by expired, save the list.
 
 	// Find the object where tokenObj.token matches the provided token
-	const matchingTokenObj = refreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires }
+	const matchingTokenObj = validRefreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires, IP (not always present) }
 	if (!matchingTokenObj) return false;
+
+	// Does the request IP address match the IP address when the session token was originally issued?
+	if (matchingTokenObj.IP !== undefined && IP !== matchingTokenObj.IP) {
+		logEvents(`Connected IP address doesn't match the IP address from session token creation!! Issued: "${matchingTokenObj.IP}" Current: "${IP}". Member "${username}" of ID "${userId}"`, 'errLog.txt', { print: true });
+		// return false; // For now, don't count the token as invalid. If people's IP changes commonly, this is this is viable.
+	}
 
 	// We have the token...
 	
 	// When does it expire? Should we renew?
-	renewSession(res, userId, username, roles, refreshTokens, matchingTokenObj);
+	renewSession(req, res, userId, username, roles, validRefreshTokens, matchingTokenObj);
 
 	return true;
 }
 
 /**
- * Renews a player's logging session
+ * Renews a player's login session
+ * @param {*} req
  * @param {*} res 
  * @param {*} userId 
  * @param {*} username 
@@ -52,11 +62,10 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
  * @param {*} refreshTokens - The parsed refresh tokens from their data in the members table
  * @param {*} tokenObject - The token that needs to be renewed (deleted + add new) if we are renewing!
  */
-function renewSession(res, userId, username, roles, refreshTokens, tokenObject) {
-	if (!res) return; // Only renew if the response object is defined, the response object will not be defined for websocket upgrade requests.
+function renewSession(req, res, userId, username, roles, refreshTokens, tokenObject) {
+	if (!req || !res) return; // Only renew if the response object is defined, the response object will not be defined for websocket upgrade requests.
 	
-	const now = Date.now();
-	const timeSinceIssued = now - tokenObject.issued;
+	const timeSinceIssued = getTimeMillisSinceIssued(tokenObject);
 	if (timeSinceIssued < minTimeToWaitToRenewRefreshTokensMillis) return;
 
 	console.log(`Renewing member "${username}"s session by issuing them new login cookies! -------`);
@@ -67,19 +76,19 @@ function renewSession(res, userId, username, roles, refreshTokens, tokenObject) 
 	const newToken = signRefreshToken(userId, username, roles);
 
 	// Add the new token to the list
-	refreshTokens = addTokenToRefreshTokens(refreshTokens, newToken);
+	refreshTokens = addTokenToRefreshTokens(req, refreshTokens, newToken);
 
 	saveRefreshTokens(userId, refreshTokens);
 
 	createSessionCookies(res, userId, username, newToken);
 }
 
-function createNewSession(res, user_id, username, roles) {
+function createNewSession(req, res, user_id, username, roles) {
 	// The payload can be an object with their username and their roles.
 	const refreshToken = signRefreshToken(user_id, username, roles);
     
 	// Save the refresh token with current user so later when they log out we can invalidate it.
-	addRefreshTokenToMemberData(user_id, refreshToken);
+	addRefreshTokenToMemberData(req, user_id, refreshToken);
     
 	createSessionCookies(res, user_id, username, refreshToken);
 }
@@ -147,7 +156,10 @@ function deleteRefreshTokenCookie(res) {
  */
 function createMemberInfoCookie(res, userId, username) {
 	// Create an object with member info
-	const memberInfo = JSON.stringify({ user_id: userId, username });
+	const now = Date.now();
+	const issued = now; // Timestamp, millis since Unix Epoch
+	const expires = now + refreshTokenExpiryMillis; // Timestamp, millis since Unix Epoch
+	const memberInfo = JSON.stringify({ user_id: userId, username, issued, expires });
 
 	// Set the cookie (readable by JavaScript, not HTTP-only)
 	// Cross-site usage requires we set sameSite to 'None'! Also requires secure (https) true
