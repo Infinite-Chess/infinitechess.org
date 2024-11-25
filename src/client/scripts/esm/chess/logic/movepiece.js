@@ -55,11 +55,12 @@ import game from '../../game/chess/game.js';
  * - `doGameOverChecks`: Whether to perform game-over checks, such as checkmate or other win conditions.
  * - `concludeGameIfOver`: If true, and `doGameOverChecks` is true, then if this move ends the game, we will not stop the clocks, darken the board, display who won, or play a sound effect.
  * - `animate`: Whether to animate this move.
+ * - `animateSecondary`: Animate the pieces affected by the move without the piece that made the move. Used after dragging the king to castle.
  * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
  * - `updateProperties`: Whether to update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
  * - `simulated`: Whether you plan on undo'ing this move. If true, the `rewindInfo` property will be added to the `move` for easy restoring of the gamefile's properties when undo'ing the move.
  */
-function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushClock = true, doGameOverChecks = true, concludeGameIfOver = true, animate = true, updateData = true, updateProperties = true, simulated = false } = {}) {                
+function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushClock = true, doGameOverChecks = true, concludeGameIfOver = true, animate = true, animateSecondary = false, updateData = true, updateProperties = true, simulated = false } = {}) {                
 	const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
 	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
 	move.type = piece.type;
@@ -71,7 +72,7 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
 	if (recordMove || updateProperties) deleteEnpassantAndSpecialRightsProperties(gamefile, move.startCoords, move.endCoords);
     
 	let specialMoveMade;
-	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
+	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, animateSecondary, updateProperties, simulated });
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
 	const wasACapture = move.captured != null;
 

@@ -347,6 +347,7 @@ function reselectPiece() {
  */
 function unselectPiece() {
 	pieceSelected = undefined;
+	draggingPiece = false;
 	isOpponentPiece = false;
 	isPremove = false;
 	legalMoves = undefined;
@@ -369,7 +370,7 @@ function moveGamefilePiece(coords) {
 	const compact = formatconverter.LongToShort_CompactMove(move);
 	move.compact = compact;
 
-	movepiece.makeMove(game.getGamefile(), move);
+	movepiece.makeMove(game.getGamefile(), move, {animate: !draggingPiece, animateSecondary: draggingPiece});
 	onlinegame.sendMove();
 
 	unselectPiece();
