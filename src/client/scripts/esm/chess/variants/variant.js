@@ -378,6 +378,9 @@ function getApplicableTimestampEntry(object, { UTCDate, UTCTime }) {
  * @returns {Object} - The moveset in the form defined in movesets.js
  */
 function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }) {
+	// Pasted games with no variant specified use the default movesets
+	// TODO: Transfer the slide limit game rule of pasted games
+	if (Variant === undefined) return getMovesets();
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
 	const variantEntry = variantDictionary[Variant];
 
