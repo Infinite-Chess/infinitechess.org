@@ -23,7 +23,7 @@ import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
-import animation from '../rendering/animation.js';
+import draganimation from '../rendering/draganimation.js';
 // Import End
 
 /**
@@ -38,6 +38,15 @@ import animation from '../rendering/animation.js';
 /**
  * This script tests for piece selection and keeps track of the selected piece,
  * including the legal moves it has available.
+ */
+
+/**
+ * Bugs:
+ * - Capture sound is played when selecting our pieces.
+ * - Opponent pieces can be selected by dragging.
+ * To do:
+ * - Fix above bugs.
+ * - Move dragging logic from update into it's own methood.
  */
 
 /** The currently selected piece, if there is one: `{ type, index, coords }` @type {Piece} */
@@ -131,7 +140,7 @@ function update() {
 		if (promoteTo) makePromotionMove();
 		return;
 	}
-	if (perspective.isLookingUp() && draggingPiece) return animation.hideHeldPiece(); //Don't render the draggedPiece if we are looking at the sky.
+	if (perspective.isLookingUp() && draggingPiece) return draganimation.hideHeldPiece(); //Don't render the draggedPiece if we are looking at the sky.
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefile.gameConclusion || guipause.areWePaused() || perspective.isLookingUp()) return;
 
 	// Calculate if the hover square is legal so we know if we need to render a ghost image...
@@ -165,22 +174,18 @@ function update() {
 	if (tile || !touchscreenMode) hoverSquare = tile.tile_Int;
 	
 	//// What coordinates are we hovering over?
-	//const touchClickedTile = input.getTouchClickedTile(); // { id, x, y }
-	//hoverSquare = input.getTouchClicked() ? [touchClickedTile.x, touchClickedTile.y]
-	//    : input.getMouseClicked() ? input.getMouseClickedTile()
-	//        : board.gtile_MouseOver_Int();
 	
 	updateHoverSquareLegal();
 	
 	const pieceClickedType = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
 	
 	if (draggingPiece) {
-		if (pointerHeld) { //still dragging.
-			//Render the piece at the pointer.
-			animation.dragPiece(pieceSelected.type, pieceSelected.coords, tile.tile_Float);
+		if (pointerHeld) { // still dragging.
+			// Render the piece at the pointer.
+			draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, tile.tile_Float, touchscreenMode);
 		} else {
-			animation.dropPiece();
 			handleMovingSelectedPiece(hoverSquare, pieceClickedType);
+			draganimation.dropPiece(true, pieceClickedType);
 			draggingPiece = false;
 		}
 	} else {
@@ -204,7 +209,8 @@ function update() {
 
 /** Picks up the currently selected piece if we are allowed to. */
 function startDragging() {
-	return draggingPiece = dragEnabled && !isOpponentPiece && (!isPremove /*|| premovesEnabled*/) && !movement.hasMomentum();
+	if (!dragEnabled || isOpponentPiece || (isPremove /*&& premovesEnabled*/) || movement.hasMomentum()) return false;
+	return draggingPiece = true;
 }
 
 /**

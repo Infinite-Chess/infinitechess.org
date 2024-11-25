@@ -33,8 +33,6 @@ const maxDistB4Teleport = 80; // 80
 
 const animations = []; // { duration, startTime, type, startCoords, endCoords, captured, distIsGreater }
 
-let pieceDragged;
-
 /** Used for calculating the duration move animations. */
 const moveAnimationDuration = {
 	/** The base amount of duration, in millis. */
@@ -80,21 +78,6 @@ function animatePiece(type, startCoords, endCoords, captured, resetAnimations = 
 	animations.push(newAnimation);
 }
 
-function dragPiece(type, startCoords, endCoords) {
-	pieceDragged = { type, startCoords, endCoords };
-	frametracker.onVisualChange();
-}
-
-function dropPiece() {
-	pieceDragged = null;
-	frametracker.onVisualChange();
-}
-
-function hideHeldPiece() {
-	if (pieceDragged) pieceDragged.endCoords = null;
-	frametracker.onVisualChange();
-}
-
 /**
  * Calculates the duration in milliseconds a particular move would take to animate.
  * @param {Move} move 
@@ -121,7 +104,7 @@ function clearAnimations() {
 
 // For each animation, plays the sound if it's time, and deletes the animation if over.
 function update() {
-	if (animations.length === 0 && !pieceDragged) return;
+	if (animations.length === 0) return;
 
 	frametracker.onVisualChange();
 
@@ -144,7 +127,7 @@ function playAnimationsSound(animation, dampen) {
 }
 
 function renderTransparentSquares() {
-	if (animations.length === 0 && !pieceDragged) return;
+	if (animations.length === 0) return;
 
 	const transparentModel = genTransparentModel();
 	// render.renderModel(transparentModel, undefined, undefined, "TRIANGLES");
@@ -152,7 +135,7 @@ function renderTransparentSquares() {
 }
 
 function renderPieces() {
-	if (animations.length === 0 && !pieceDragged) return;
+	if (animations.length === 0) return;
 
 	const pieceModel = genPieceModel();
 	// render.renderModel(pieceModel, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet());
@@ -173,7 +156,6 @@ function genTransparentModel() {
 	for (const thisAnimation of animations) {
 		data.push(...getDataOfSquare3D(thisAnimation.endCoords, color));
 	}
-	if (pieceDragged) data.push(...getDataOfSquare3D(pieceDragged.startCoords, color));
 
 	// return buffermodel.createModel_Color3D(new Float32Array(data))
 	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
@@ -259,16 +241,12 @@ function genPieceModel() {
 
 		appendDataOfPiece3D(data, thisAnimation.type, newCoords);
 	}
-	
-	if (pieceDragged && pieceDragged.endCoords) {
-		appendDataOfPiece3D(data, pieceDragged.type, pieceDragged.endCoords, 1);
-	}
 
 	// return buffermodel.createModel_ColorTexture3D(new Float32Array(data))
 	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
 }
 
-function appendDataOfPiece3D(data, type, coords, height) {
+function appendDataOfPiece3D(data, type, coords) {
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
@@ -279,21 +257,16 @@ function appendDataOfPiece3D(data, type, coords, height) {
 	const startY = (coords[1] - boardPos[1] - board.gsquareCenter()) * boardScale;
 	const endX = startX + 1 * boardScale;
 	const endY = startY + 1 * boardScale;
-	
-	const Z = height === undefined? z:height*boardScale;
 
 	const { r, g, b, a } = options.getColorOfType(type);
 
-	const bufferData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, Z, texleft, texbottom, texright, textop, r, g, b, a);
+	const bufferData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texleft, texbottom, texright, textop, r, g, b, a);
 
 	data.push(...bufferData);
 }
 
 export default {
 	animatePiece,
-	dragPiece,
-	dropPiece,
-	hideHeldPiece,
 	update,
 	renderTransparentSquares,
 	renderPieces,
