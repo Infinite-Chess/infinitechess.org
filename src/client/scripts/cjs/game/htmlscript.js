@@ -44,12 +44,11 @@ const htmlscript = (function() {
 	// We have use a fetch to retrieve the sound instead of a <sound> tag,
 	// because otherwise we can't grab the buffer to duplicate the audio!
 	(async function decodeAudioBuffer() {
-		const pathToAllSoundsFile = '/sounds/soundspritesheet.mp3';
 
 		const audioContext = new AudioContext();
 		let audioDecodedBuffer;
 
-		await fetch(pathToAllSoundsFile)
+		await fetch('/sounds/soundspritesheet.mp3')
 			.then(response => response.arrayBuffer())
 			.then(async arrayBuffer => {
 				// Process the array buffer...

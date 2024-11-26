@@ -76,6 +76,7 @@ async function POSTPrefs(preparedPrefs) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
+			"Is-Fetch-Request": "true" // Custom header
 		},
 		body: JSON.stringify({ preferences: preparedPrefs }),  // Send the preferences as JSON
 	};
