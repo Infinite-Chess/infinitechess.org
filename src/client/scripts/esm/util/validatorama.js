@@ -106,6 +106,7 @@ async function refreshToken() {
 			method: 'POST', // Ensure it's a POST request
 			headers: {
 				'Content-Type': 'application/json',
+				"Is-Fetch-Request": "true" // Custom header
 			},
 		});
 
