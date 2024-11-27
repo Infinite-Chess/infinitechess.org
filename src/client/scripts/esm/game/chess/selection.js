@@ -24,6 +24,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
 import draganimation from '../rendering/draganimation.js';
+import space from '../misc/space.js';
 // Import End
 
 /**
@@ -42,7 +43,7 @@ import draganimation from '../rendering/draganimation.js';
 
 /**
  * Bugs:
- * - Capture sound is played when selecting our pieces.
+ * - Sound is played when selecting our pieces and after dragging an illeagal move.
  * - Opponent pieces can be selected by dragging.
  * To do:
  * - Fix above bugs.
@@ -159,14 +160,17 @@ function update() {
 	 * Some devices move the mouse with the touchscreen but not all.
 	 */
 	let tile;
+	let pointerWorldLocation
 	if (touchHelds.length) {
 		tile = board.gtileCoordsOver(touchHelds[0].x, touchHelds[0].y);
+		pointerWorldLocation = [space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
 		touchscreenMode = true;
 	} else if (input.isMouseHeld_Left() || input.getMouseMoved()) {
 		touchscreenMode = false;
 	}
 	if (!touchscreenMode) {
 		tile = board.getTileMouseOver();
+		pointerWorldLocation = input.getMouseWorldLocation();
 	}
 	//if tile === undefined,
 	// we are using the touchscreen but it is not currently pressed
@@ -182,7 +186,7 @@ function update() {
 	if (draggingPiece) {
 		if (pointerHeld) { // still dragging.
 			// Render the piece at the pointer.
-			draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, tile.tile_Float, touchscreenMode);
+			draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, pointerWorldLocation, touchscreenMode);
 		} else {
 			handleMovingSelectedPiece(hoverSquare, pieceClickedType);
 			draganimation.dropPiece(true, pieceClickedType);
