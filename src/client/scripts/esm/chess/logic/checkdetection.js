@@ -227,7 +227,7 @@ function appendAttackerToList(attackers, attacker) {
 // Auto disable this when the win condition is NOT checkmate!
 function removeMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) { // moves: { individual: [], horizontal: [], ... }
 	if (color === colorutil.colorOfNeutrals) return; // Neutral pieces can't be in check
-	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate')) return;
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, color, 'checkmate')) return;
 
 	// There's a couple type of moves that put you in check:
 
