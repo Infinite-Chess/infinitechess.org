@@ -24,7 +24,7 @@ const languageDropdownTitle = document.querySelector('.language-dropdown .dropdo
 		fetch("/setlanguage", {
 			method: "POST",
 			credentials: "same-origin",
-			"Is-Fetch-Request": "true" // Custom header
+			"is-fetch-request": "true" // Custom header
 		});
 	}
 	removeLngQueryParam();

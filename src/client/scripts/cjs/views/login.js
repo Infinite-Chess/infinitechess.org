@@ -42,7 +42,7 @@ const sendLogin = (username, password) => {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			"Is-Fetch-Request": "true" // Custom header
+			"is-fetch-request": "true" // Custom header
 		},
 		credentials: 'same-origin', // Allows cookie to be set from this request
 		body: JSON.stringify({username, password})

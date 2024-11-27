@@ -49,7 +49,7 @@ const member = docutil.getLastSegmentOfURL();
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
-			"Is-Fetch-Request": "true" // Custom header
+			"is-fetch-request": "true" // Custom header
 		},
 	};
 	// Add the access token if we don't want to verify using the refresh token
@@ -118,7 +118,7 @@ async function removeAccount(confirmation) {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
-				"Is-Fetch-Request": "true" // Custom header
+				"is-fetch-request": "true" // Custom header
 			},
 			body: JSON.stringify({ password }),
 			credentials: 'same-origin', // Allows cookie to be set from this request
@@ -144,7 +144,7 @@ function resendConfirmEmail() {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
-			"Is-Fetch-Request": "true" // Custom header
+			"is-fetch-request": "true" // Custom header
 		},
 		credentials: 'same-origin', // Allows cookie to be set from this request
 	};

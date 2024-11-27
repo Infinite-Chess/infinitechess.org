@@ -9,7 +9,7 @@ const element_submitButton = document.getElementById('submit');
 /** Default fetch options */
 const fetchOptions = {
 	headers: {
-		"Is-Fetch-Request": "true" // Custom header
+		"is-fetch-request": "true" // Custom header
 	}
 };
 
@@ -197,7 +197,7 @@ function sendForm(username, email, password) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			"Is-Fetch-Request": "true" // Custom header
+			"is-fetch-request": "true" // Custom header
 		},
 		credentials: 'same-origin', // Allows cookie to be set from this request
 		body: JSON.stringify({username, email, password})
