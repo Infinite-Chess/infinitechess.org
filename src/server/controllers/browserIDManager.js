@@ -40,7 +40,7 @@ function giveBrowserID(req, res) {
 	const cookieName = 'browser-id';
 	const id = uuid.generateID(12);
 
-	console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + ' --------');
+	// console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + ' --------');
 
 	// Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
 	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis /* 1 day */ });
@@ -53,7 +53,7 @@ function refreshBrowserID(req, res) {
 
 	if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
-	console.log(`Renewing browser-id: "${id}" for url: ` + req.url);
+	// console.log(`Renewing browser-id: "${id}" for url: ` + req.url);
 	
 	// Readable by server with web socket connections, NOT by javascript
 	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis });
