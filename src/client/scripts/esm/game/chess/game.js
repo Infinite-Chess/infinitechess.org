@@ -171,11 +171,11 @@ function renderEverythingInGame() {
 	dragAnimation.renderTransparentSquare();
 	pieces.renderPiecesInGame(gamefile);
 	animation.renderPieces();
-	dragAnimation.renderPiece();
 	
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
+		dragAnimation.renderPiece();
 		arrows.renderThem();
 		perspective.renderCrosshair();
 	});

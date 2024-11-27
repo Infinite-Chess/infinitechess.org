@@ -14,8 +14,6 @@ import movement from "./movement.js";
 "use strict";
 
 const z = 0.01;
-/** The hight the piece is rendered above the board when in perspective mode. */
-const perspectiveHeight = 1;
 /** When not in perspective the pieces size is independent of board scale. */
 const touchscreenScale = 2;
 const mouseScale = 1;
@@ -25,7 +23,11 @@ const touchscreenOffset = 2;
  * The minimum size of the dragged piece relative to the stationary pieces.
  * When zoomed in, this prevents it becoming tiny relative to the others.
  */
-const minimumScale = 0.75; 
+const minimumScale = 0.75;
+
+/** The hight the piece is rendered above the board when in perspective mode. */
+const perspectiveHeight = 0.6;
+const shadowColor = [0.1, 0.1, 0.1, 0.5];
 
 let startCoords;
 let endCoords;
@@ -71,8 +73,9 @@ function genPieceModel() {
 	const bottom = endCoords[1] - width / 2 + (touchscreen ? touchscreenOffset : 0);
 	const right = endCoords[0] + width / 2;
 	const top = endCoords[1] + width / 2 + (touchscreen ? touchscreenOffset : 0);
-	
-	let data = bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a);
+	let data = [];
+	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor));
+	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a));
 	pieceModel = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
 }
 
