@@ -46,7 +46,7 @@ function getGameConclusion(gamefile) {
 }
 
 function detectRoyalCapture(gamefile) {
-	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'royalcapture')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'royalcapture')) return false; // Not using this gamerule
 
 	// Was the last move capturing a royal piece?
 	if (wasLastMoveARoyalCapture(gamefile)) {
@@ -58,7 +58,7 @@ function detectRoyalCapture(gamefile) {
 }
 
 function detectAllroyalscaptured(gamefile) {
-	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'allroyalscaptured')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'allroyalscaptured')) return false; // Not using this gamerule
 	if (!wasLastMoveARoyalCapture(gamefile)) return false; // Last move wasn't a royal capture.
 
 	// Are there any royal pieces remaining?
@@ -74,7 +74,7 @@ function detectAllroyalscaptured(gamefile) {
 }
 
 function detectAllpiecescaptured(gamefile) {
-	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'allpiecescaptured')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
 	const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn);
@@ -88,7 +88,7 @@ function detectAllpiecescaptured(gamefile) {
 }
 
 function detectKoth(gamefile) {
-	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'koth')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'koth')) return false; // Not using this gamerule
 
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(gamefile.moves);
