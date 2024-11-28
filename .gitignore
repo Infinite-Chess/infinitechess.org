@@ -11,8 +11,6 @@ cert
 database.db
 logs
 dist
-# Typescript build file
-tsconfig.tsbuildinfo
 
 # JetBrains IDEs
 .idea/
