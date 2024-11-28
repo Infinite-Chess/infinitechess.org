@@ -133,7 +133,8 @@ if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) {
 	}
 	catch (e) {
 		console.error('TypeScript compilation failed with the following error:');
-		console.log(e.stack);
+		console.log(e.stdout.toString()); // Print TypeScript error output
+		console.log(e.stderr.toString()); // Print additional error details if available
 	}
 }
 
