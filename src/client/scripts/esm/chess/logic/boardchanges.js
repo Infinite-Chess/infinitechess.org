@@ -1,6 +1,6 @@
-import organizedlines from "./organizedlines";
-import gamefileutility from "../util/gamefileutility";
-import jsutil from "../../util/jsutil";
+import organizedlines from "./organizedlines.js";
+import gamefileutility from "../util/gamefileutility.js";
+import jsutil from "../../util/jsutil.js";
 
 /**
  * @typedef {import('./gamefile.js').gamefile} gamefile
@@ -40,23 +40,19 @@ const undoFuncs = {
 
 /**
  * @param {Array<BoardChange>} changes 
- * @param {*} type 
- * @param {*} coords 
- * @param {*} desiredIndex 
+ * @param {Piece} piece
  */
-function queueAddPiece(changes, type, coords, desiredIndex) {
-	changes.push({action: 'add', piece: {type: type, coords: coords, index: desiredIndex}});
+function queueAddPiece(changes, piece) {
+	changes.push({action: 'add', piece: piece});
 };
 
 /**
  * 
  * @param {Array<BoardChange>} changes 
- * @param {*} type 
- * @param {*} coords 
- * @param {*} index 
+ * @param {Piece} piece
  */
-function queueDeletePiece(changes, type, coords, index) {
-	changes.push({action: 'delete', piece: {type: type, coords: coords, index: index}});
+function queueDeletePiece(changes, piece) {
+	changes.push({action: 'delete', piece: piece});
 }
 
 /**
@@ -69,8 +65,12 @@ function queueMovePiece(changes, piece, endCoords) {
 	changes.push({action: 'movePiece', piece: piece, endCoords: endCoords});
 }
 
-function queueAddSpecialRights(changes, piece, curRights) {
-	changes.push({action: "addRights", piece: piece, curRights: curRights});
+function queueAddSpecialRights(changes, coords, curRights) {
+	changes.push({action: "addRights", coords: coords, curRights: curRights});
+}
+
+function queueDeleteSpecialRights(changes, coords, curRights) {
+	changes.push({action: "removeRights", coords: coords, curRights: curRights});
 }
 
 function queueSetEnPassant(changes, curPassant, newPassant) {
@@ -192,18 +192,18 @@ function returnPiece(gamefile, change) {
  * @param {*} change 
  */
 function addRights(gamefile, change) {
-	gamefile.specialRights[change.piece.coords] = true;
+	gamefile.specialRights[change.coords] = true;
 }
 
 function deleteRights(gamefile, change) {
-	delete gamefile.specialRights[change.piece.coords];
+	delete gamefile.specialRights[change.coords];
 }
 
 function revertRights(gamefile, change) {
 	if (change.curRights === undefined) {
-		delete gamefile.specialRights[change.piece.coords];
+		delete gamefile.specialRights[change.coords];
 	} else {
-		gamefile.specialRights[change.piece.coords] = change.curRights;
+		gamefile.specialRights[change.coords] = change.curRights;
 	}
 }
 
@@ -217,8 +217,11 @@ function setPassant(gamefile, change) {
 }
 
 function revertPassant(gamefile, change) {
-	i
-	gamefile.enpassant = change.curPassant;
+	if (change.curPassant === undefined) {
+		delete gamefile.enpassant;
+	} else {
+		gamefile.enpassant = change.curPassant;
+	}
 }
 
 export default {
@@ -226,6 +229,7 @@ export default {
 	queueDeletePiece,
 	queueMovePiece,
 	queueAddSpecialRights,
+	queueDeleteSpecialRights,
 	queueSetEnPassant,
 	applyChanges,
 	undoChanges,

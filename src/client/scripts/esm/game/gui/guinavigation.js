@@ -15,7 +15,7 @@ import stats from './stats.js';
 import movepiece from '../../chess/logic/movepiece.js';
 import selection from '../chess/selection.js';
 import frametracker from '../rendering/frametracker.js';
-import changes from '../../chess/logic/changes.js';
+import changes from '../../chess/logic/boardchanges.js';
 import movesequence from '../chess/movesequence.js';
 // Import End
 
