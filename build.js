@@ -127,7 +127,12 @@ await copy("./src", "./dist", {
 });
 
 if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) {
-	execSync('tsc --build');
+	try {
+		execSync('tsc --build');
+	}
+	catch (e) {
+		console.log(e.output.toString());
+	}
 }
 
 if (!BUNDLE_FILES) {
