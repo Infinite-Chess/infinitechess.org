@@ -132,7 +132,8 @@ if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) {
 		execSync('tsc --build');
 	}
 	catch (e) {
-		console.log(e.output.toString());
+		console.error('TypeScript compilation failed with the following error:');
+		console.log(e.stack);
 	}
 }
 
