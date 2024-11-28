@@ -4,7 +4,7 @@
 	"description": "infinitechess.org server",
 	"author": "Naviary",
 	"license": "AGPL",
-	"main": "src/server/server.js",
+	"main": "dist/server/server.js",
 	"type": "module",
 	"dependencies": {
 		"@swc/core": "^1.7.0",
@@ -45,7 +45,7 @@
 		"build": "node build.js",
 		"watch": "nodemon",
 		"start": "node .",
-		"build-images": "node src/server/utility/generateImages.js",
-		"generate-dependancy-graph": "node src/server/utility/generateDependancyGraph.js"
+		"build-images": "node dist/server/utility/generateImages.js",
+		"generate-dependancy-graph": "node dist/server/utility/generateDependancyGraph.js"
 	}
 }
