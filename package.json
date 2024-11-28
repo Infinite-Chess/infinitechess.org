@@ -30,6 +30,7 @@
 		"proper-lockfile": "^4.1.2",
 		"sharp": "^0.33.4",
 		"smol-toml": "^1.2.2",
+		"typescript": "^5.7.2",
 		"uuid": "^8.3.2",
 		"ws": "^8.16.0",
 		"xss": "^1.0.15"
