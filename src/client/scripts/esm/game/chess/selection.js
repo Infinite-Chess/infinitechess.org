@@ -145,70 +145,31 @@ function update() {
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefile.gameConclusion || guipause.areWePaused() || perspective.isLookingUp()) return;
 
 	// Calculate if the hover square is legal so we know if we need to render a ghost image...
-
-	const touchHelds = input.getTouchHelds();
-	if (touchHelds.length > 2) return; // The user is dragging or scaling. Don't select pieces.
-
-	//pointer = touch, mouse, or other input device.
-	const pointerHeld = input.isMouseHeld_Left() || touchHelds.length;
-	const pointerDown = input.isMouseDown_Left() || input.atleast1TouchDown();
 	
-	/**
-	 * On devices that support both mouse and touchscreen,
-	 * the mouse location should not overwrite hoversquare unless it is in use.
-	 * Otherwise when the user drops a piece it will go to the mouse location instead of where they last touched the screen.
-	 * Some devices move the mouse with the touchscreen but not all.
-	 */
-	let tile;
-	let pointerWorldLocation
-	if (touchHelds.length) {
-		tile = board.gtileCoordsOver(touchHelds[0].x, touchHelds[0].y);
-		pointerWorldLocation = [space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
-		touchscreenMode = true;
-	} else if (input.isMouseHeld_Left() || input.getMouseMoved()) {
-		touchscreenMode = false;
-	}
-	if (!touchscreenMode) {
-		tile = board.getTileMouseOver();
-		pointerWorldLocation = input.getMouseWorldLocation();
-	}
-	//if tile === undefined,
-	// we are using the touchscreen but it is not currently pressed
-	// or we are in perspective mode, looking at the sky.
-	if (tile || !touchscreenMode) hoverSquare = tile.tile_Int;
-	
-	//// What coordinates are we hovering over?
+	// What coordinates are we hovering over?
+	hoverSquare = input.getPointerClicked() ? input.getPointerClickedTile
+            : space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation());
 	
 	updateHoverSquareLegal();
 	
 	const pieceClickedType = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
 	
-	if (draggingPiece) {
-		if (pointerHeld) { // still dragging.
-			// Render the piece at the pointer.
-			draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, pointerWorldLocation, touchscreenMode);
-		} else {
-			handleMovingSelectedPiece(hoverSquare, pieceClickedType);
-			draganimation.dropPiece(true, pieceClickedType);
-			draggingPiece = false;
-		}
+	if (draggingPiece) handleDragging(hoverSquare, pieceClickedType);
+	else if (!input.getPointerDown() || input.isKeyHeld('control')) return; // Exit, we did not click
+	else if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClickedType); // A piece is already selected. Test if it was moved.
+	else if (pieceClickedType) handleSelectingPiece(pieceClickedType);
+	// Else we clicked, but there was no piece to select, *shrugs*
+}
+
+function handleDragging(hoverSquare, pieceHoveredType) {
+	if (input.getPointerHeld()) { // still dragging.
+		// Render the piece at the pointer.
+		draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, input.getPointerWorldLocation(), touchscreenMode);
 	} else {
-		if (!pointerDown) return; // Exit, we did not click
-		
-		if (pieceSelected) {
-			handleMovingSelectedPiece(hoverSquare, pieceClickedType);
-		} else {
-			if (pieceClickedType) handleSelectingPiece(pieceClickedType);
-		}
+		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
+		draganimation.dropPiece(true, pieceHoveredType);
+		draggingPiece = false;
 	}
-	
-	//if (!input.getMouseClicked() && !input.getTouchClicked()) return; // Exit, we did not click
-	//
-	//const pieceClickedType = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
-	//
-	//if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClickedType); // A piece is already selected. Test if it was moved.
-	//else if (pieceClickedType) handleSelectingPiece(pieceClickedType);
-	//// Else we clicked, but there was no piece to select, *shrugs*
 }
 
 /** Picks up the currently selected piece if we are allowed to. */

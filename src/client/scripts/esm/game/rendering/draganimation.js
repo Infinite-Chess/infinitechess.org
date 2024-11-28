@@ -9,6 +9,7 @@ import perspective from "./perspective.js";
 import sound from "../misc/sound.js";
 import frametracker from "./frametracker.js";
 import movement from "./movement.js";
+import input from "../input.js";
 // Import end
 
 "use strict";
@@ -37,7 +38,6 @@ let transparentModel;
 let pieceModel;
 
 let hidden = false;
-let touchscreen;
 
 function renderTransparentSquare() {
 	if(!startCoords) return;
@@ -59,6 +59,7 @@ function genTransparentModel() {
 
 function genPieceModel() {
 	const perspectiveEnabled = perspective.getEnabled();
+	const touchscreen = input.getUsingTouchscreen();
 	const boardScale = movement.getBoardScale();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
@@ -81,15 +82,14 @@ function genPieceModel() {
 
 /**
  * 
- * @param {string} type - The type of pieces being dragged
- * @param {number[]} coords 
- * @param {boolean} touchscreen renders the piece above the pointer location to prevent it being covered by fingers
+ * @param {string} type - The type of piece being dragged
+ * @param {number} pieceCoords - the square the piece was on
+ * @param {number[]} coords - the world coordinates the piece has been dragged to
  */
-function dragPiece(type, pieceCoords, coords, touchscreenMode) {
+function dragPiece(type, pieceCoords, coords) {
 	startCoords = pieceCoords;
 	endCoords = coords;
 	pieceType = type;
-	touchscreen = touchscreenMode;
 	hidden = false;
 	frametracker.onVisualChange();
 }
