@@ -146,9 +146,6 @@ if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) {
 
 if (BUNDLE_FILES) { // BUNDLE files in production! Far fewer requests, and each file is significantly smaller!
 
-	// Copy EVERYTHING over from src/client/ into dist/ EXCEPT SCRIPTS and CSS files,
-	// because those are compressed and minified manually.
-
 	// Minify all CJS scripts and copy them over to dist/
 	await minifyDirectory('./dist/client/scripts/cjs/', './dist/client/scripts/cjs/', false); // false for CommonJS Modules
 
