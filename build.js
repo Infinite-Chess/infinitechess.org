@@ -122,12 +122,18 @@ await remove("./dist", {
 	force: true,
 });
 
+
+/**
+	 * Start by copying all files to dist, including script files so they can be compiled without cluttering pull requests.
+	 * Files will be bundled later if bundling is enabled.
+	 */
+
 await copy("./src", "./dist", {
 	recursive: true,
 	force: true
 });
 
-if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) {
+if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) { // The compiler complains if there's nothing to compile
 	try {
 		execSync('tsc --build');
 	}
@@ -136,13 +142,7 @@ if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) {
 	}
 }
 
-if (!BUNDLE_FILES) {
-	/**
-	 * In development, copy all clientside files directly over to /dist AS THEY ARE.
-	 * No files are bundled. This means a LOT of requests! But, all our comments are there!
-	 */
-
-} else { // BUNDLE files in production! Far fewer requests, and each file is significantly smaller!
+if (BUNDLE_FILES) { // BUNDLE files in production! Far fewer requests, and each file is significantly smaller!
 
 	// Copy EVERYTHING over from src/client/ into dist/ EXCEPT SCRIPTS and CSS files,
 	// because those are compressed and minified manually.
