@@ -126,8 +126,9 @@ await copy("./src", "./dist", {
 	force: true
 });
 
-execSync('tsc --build');
-
+if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) {
+	execSync('tsc --build');
+}
 
 if (!BUNDLE_FILES) {
 	/**
