@@ -43,11 +43,10 @@ import space from '../misc/space.js';
 
 /**
  * Bugs:
- * - Sound is played when selecting our pieces and after dragging an illeagal move.
  * - Opponent pieces can be selected by dragging.
  * To do:
  * - Fix above bugs.
- * - Move dragging logic from update into it's own methood.
+ * - Allow touchscreen users to drag the board with a second finger while dragging a piece.
  */
 
 /** The currently selected piece, if there is one: `{ type, index, coords }` @type {Piece} */
@@ -167,7 +166,7 @@ function handleDragging(hoverSquare, pieceHoveredType) {
 		draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, input.getPointerWorldLocation(), touchscreenMode);
 	} else {
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
-		draganimation.dropPiece(true, pieceHoveredType);
+		draganimation.dropPiece(hoverSquareLegal, pieceHoveredType);
 		draggingPiece = false;
 	}
 }
