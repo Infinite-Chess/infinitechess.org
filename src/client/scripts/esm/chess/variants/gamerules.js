@@ -44,6 +44,16 @@ function swapCheckmateForRoyalCapture(gameRules) {
 	console.log("Swapped checkmate wincondition for royalcapture.");
 }
 
+/**
+ * @typedef Gamerules
+ * @property {{ white: string[], black: string[]} | undefined} winConditions
+ * @property {string[] | undefined} turnOrder
+ * @property {(number | null)[] | null | undefined} promotionRanks
+ * @property {{ white: string[], black: string[]} | undefined} promotionsAllowed
+ * @property {number | undefined | null} moveRule
+ * @property {number | undefined} slideLimit
+ */
+
 /** An object containing the gamerules of a gamefile. */
 function GameRules() {
 	console.error("This GameRules constructor should NEVER be called! It is purely for JSDoc dropdown info.");

@@ -13,15 +13,13 @@ import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import timeutil from '../../util/timeutil.js';
-// @ts-ignore
 import fivedimensionalgenerator from './fivedimensionalgenerator.js';
 // @ts-ignore
 import movesets from '../logic/movesets.js';
 // @ts-ignore
-import { GameRules } from '../logic/gamefile.js';
+import type { Gamerules } from '../logic/gamerules.js';
 
 // Type Definitions...
-/** @typedef {import('../logic/gamerules.js').GameRules} GameRules */
 
 "use strict";
 
@@ -53,7 +51,7 @@ interface Moveset {
 	}
 }
 
-interface Gamerules {
+/*interface Gamerules {
 	promotionRanks?: (number | null)[] | null,
 	moveRule?: number | null,
 	turnOrder?: string[],
@@ -66,7 +64,7 @@ interface Gamerules {
 		black: string[]
 	},
 	slideLimit?: number
-}
+}*/
 
 type TimeVariantProperty<T> = T | {
 	[key: number]: T
@@ -517,7 +515,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
  * @param {number} [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
  * @returns {Object} The pieceMovesets property of the gamefile.
  */
-function getMovesets(movesetModifications: Moveset = {}, defaultSlideLimitForOldVariants = Infinity) {
+function getMovesets(movesetModifications: Moveset = {}, defaultSlideLimitForOldVariants?: number) {
 	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
 	const moveset: {
 		[key: string]: () => {
