@@ -60,7 +60,8 @@ async function bundleESMScripts() {
 		splitting: true, 
 		legalComments: 'none', // Even skips copyright noticies, such as in gl-matrix
 		format: 'esm', // or 'cjs' for Common JS
-		allowOverwrite: true
+		allowOverwrite: true,
+		// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
 	});
 
 	// Further minify them. This cuts off their size a further 60%!!!
