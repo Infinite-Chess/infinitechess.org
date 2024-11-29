@@ -8,7 +8,7 @@
  * They will be compressed to the same directory within src/client/img/
 
  * 2. Run the command:
- * node src/server/utility/generateImages.js
+ * npm run generate-dependancy-graph
  */
 
 import sharp from "sharp";
@@ -96,7 +96,7 @@ function logProgress() {
 	}
 }
 
-// Generate optimised images and copy them to /dist/img
+// Generate optimised images and copy them to /client/img
 console.log("Converting images...");
 for (const img in optimised_images) {
 	const img_src_path = path.join(
