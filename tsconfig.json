@@ -12,8 +12,7 @@
 		"noPropertyAccessFromIndexSignature": true,
 		"noUncheckedIndexedAccess": true,
 		"strict": true,
-		"noEmitOnError": true,
-		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
+		"noEmitOnError": true
 	},
 	"include": [ "dist/**/*" ]
 }

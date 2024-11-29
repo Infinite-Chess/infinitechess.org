@@ -3,6 +3,7 @@
 import formatconverter from "../logic/formatconverter.js";
 // @ts-ignore
 import coordutil from "../util/coordutil.js";
+import type { Moveset } from "./variant.ts";
 
 'use strict';
 
@@ -12,15 +13,6 @@ const BOARDS_Y = 5;
 // Currently board spacings other than 10 are not supported by the position generator, but are supported
 // by the moveset generator.
 const BOARD_SPACING = 10;
-
-interface Moveset {
-	[key: string]: {
-		individual: number[][],
-		sliding?: {
-			[key: string]: number[]
-		}
-	}
-}
 
 function genPositionOfFiveDimensional() {
 	// Start with standard
