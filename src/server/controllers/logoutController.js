@@ -1,5 +1,5 @@
 
-import websocketserver from '../wsserver.js';
+import websocketserver from '../socket/wsserver.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { deleteAllInvitesOfMember } from '../game/invitesmanager/invitesmanager.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';

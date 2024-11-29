@@ -5,11 +5,23 @@ import shapes from "./shapes.js";
  * Generates the vertex data for a "legal move dot" (a circle) on the board.
  * @param {Array<number>} coords - The tile coordinates in [coordX, coordY] format.
  * @param {Array<number>} color - The color as an array [r, g, b, a].
+ * @param {number} scale - The current scale of the board, the smaller this is the simpler mesh we can get away with. The less edges we will put on the dots.
+ * @param {boolean} perspectiveOn - If perspective mode is on, the maximum resolution is always used
  * @returns {Array<number>} The vertex data for the "legal move dot" (circle).
  */
-function getDataLegalMoveDot(coords, color) {
+function getDataLegalMoveDot(coords, color, scale, perspectiveOn) {
 	const radius = 0.16;
-	const resolution = 32;  // Adjust resolution as needed for circle smoothness
+
+	// Dynamically adjust the number of vertices the circles have depending on the scale.
+	// This slightly improves performance.
+	const resolutionMultiplier = 28; // Multiplied by the scale
+	const resolutionCap = 32;
+	const resolutionMin = 5;
+	let resolution = perspectiveOn ? resolutionCap : Math.ceil(resolutionMultiplier * scale);  // Adjust resolution as needed for circle smoothness
+	if (resolution > resolutionCap) resolution = resolutionCap;
+	if (resolution < resolutionMin) resolution = resolutionMin;
+	// console.log(resolution);
+
 	const opacityOffset = 0.2; // Increase the opacity of dots because they are harder and smaller to see than squares
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color; a += opacityOffset;

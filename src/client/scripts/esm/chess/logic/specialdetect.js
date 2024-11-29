@@ -290,7 +290,7 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
  */
 function isPawnPromotion(gamefile, type, coordsClicked) {
 	if (!type.startsWith('pawns')) return false;
-	if (gamefile.metadata.Variant === "Five_Dimensional") return fivedimensionalpromote.fivedimensionalpromote(gamefile, type, coordsClicked); /* Five dimensional promotion is
+	if (gamefile.metadata.Variant === "5D_Chess") return fivedimensionalpromote.fivedimensionalpromote(gamefile, type, coordsClicked); /* Five dimensional promotion is
 																														   hardcoded for now, this should be
 																														   replaced with multiple promotion
 																														   lines when they are finished.

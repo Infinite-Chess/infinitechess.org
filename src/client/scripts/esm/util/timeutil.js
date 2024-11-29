@@ -47,6 +47,7 @@ function getCurrentUTCTime() {
 
 /**
  * Converts a timestamp to an object with UTCDate and UTCTime.
+ * This time format is used for ICN metadata notation.
  * @param {number} timestamp - The timestamp in milliseconds since the Unix Epoch.
  * @returns {Object} An object with the properties { UTCDate: "YYYY.MM.DD", UTCTime: "HH:MM:SS" }.
  */
@@ -193,6 +194,20 @@ function sqliteToISO(sqliteString) {
 	return sqliteString.replace(' ', 'T') + 'Z';
 }
 
+/**
+ * Converts an ISO 8601 string to SQLite's DATETIME format ("YYYY-MM-DD HH:MM:SS").
+ * @param {string} isoString - The ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
+ * @returns {string} - The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
+ */
+function isoToSQLite(isoString) {
+	const date = new Date(isoString);
+	if (isNaN(date.getTime())) {
+		throw new Error("Invalid ISO 8601 string provided.");
+	}
+	
+	return date.toISOString().replace('T', ' ').split('.')[0];
+}
+
 
 
 export default {
@@ -209,4 +224,6 @@ export default {
 	timestampToISO,
 	isoToTimestamp,
 	sqliteToTimestamp,
+	sqliteToISO,
+	isoToSQLite,
 };

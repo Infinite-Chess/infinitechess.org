@@ -4,7 +4,6 @@
 // Called by a fetch(). ALWAYS RETURN a json!
 
 import { logEvents } from "../../middleware/logEvents.js";
-import { assignOrRenewBrowserID } from "../browserIDManager.js";
 import { signAccessToken } from "./tokenSigner.js";
 
 
@@ -32,7 +31,6 @@ function accessTokenIssuer(req, res) {
 	}
 
 	if (!req.memberInfo.signedIn) {
-		// return res.status(409).json({'message': getTranslationForReq("server.javascript.ws-refresh_token_invalid", req) }); // Conflict. Expired or tampered token, or logged out (manually invalidated).
 		return res.status(403).json({'message': "Invalid or missing refresh token (logged out), cannot issue access token."}); // Forbidden
 	}
 

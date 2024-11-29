@@ -108,6 +108,52 @@ const serverRestart = {
 };
 
 
+
+(function init() {
+	addWarningLeaveGamePopupsToHyperlinks();
+})();
+
+/**
+ * Add an listener for every single hyperlink on the page that will
+ * confirm to us if we actually want to leave if we are in an online game.
+ */
+function addWarningLeaveGamePopupsToHyperlinks() {
+	document.querySelectorAll('a').forEach((link) => {
+		link.addEventListener('click', confirmNavigationAwayFromGame);
+	});
+}
+
+/**
+ * Confirm that the user DOES actually want to leave the page if they are in an online game.
+ * 
+ * Sometimes they could leave by accident, or even hit the "Logout" button by accident,
+ * which just ejects them out of the game
+ * @param {Event} event 
+ */
+function confirmNavigationAwayFromGame(event) {
+	// Check if Command (Meta) or Ctrl key is held down
+	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
+	if (!inOnlineGame || gamefileutility.isGameOver(game.getGamefile())) return;
+
+	const userConfirmed = confirm('Are you sure you want to leave the game?'); 
+	if (userConfirmed) return; // Follow link like normal. Server starts a 20-second auto-resign timer for disconnecting on purpose.
+	// Cancel the following of the link.
+	event.preventDefault();
+	return false;
+
+	/*
+	 * KEEP IN MIND that if we leave the pop-up open for 10 seconds,
+	 * JavaScript is frozen in that timeframe, which means as
+	 * far as the server can tell we're not communicating anymore,
+	 * so it automatically closes our websocket connection,
+	 * thinking we've disconnected, and starts a 60-second auto-resign timer.
+	 * 
+	 * As soon as we hit cancel, we are communicating again.
+	 */
+}
+
+
+
 /**
  * Returns the game id of the online game we're in.
  * @returns {string}

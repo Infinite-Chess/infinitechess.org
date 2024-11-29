@@ -8,6 +8,7 @@ import docutil from "../../../util/docutil.js";
 
 // Document Elements -------------------------------------------------------------------------
 
+const settingsDropdown = document.querySelector('.settings-dropdown');
 
 const languageDropdown = document.querySelector('.language-dropdown');
 const dropdownItems = document.querySelectorAll(".language-dropdown-item");
@@ -23,6 +24,7 @@ const languageDropdownTitle = document.querySelector('.language-dropdown .dropdo
 		fetch("/setlanguage", {
 			method: "POST",
 			credentials: "same-origin",
+			"is-fetch-request": "true" // Custom header
 		});
 	}
 	removeLngQueryParam();
@@ -88,10 +90,12 @@ function removeLngQueryParam() {
 function open() {
 	languageDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initListeners();
+	settingsDropdown.classList.add('transparent');
 }
 function close() {
 	languageDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeListeners();
+	settingsDropdown.classList.remove('transparent');
 }
 
 
@@ -130,6 +134,6 @@ export default {
 	initListeners,
 	closeListeners,
 	addLngQueryParamToLink,
-	close,
 	open,
+	close,
 };

@@ -50,11 +50,13 @@ const logEvents = async(message, logName, { print } = {}) => {
 const logger = (req, res, next) => {
 	const clientIP = getClientIP(req);
 
-	let logThis = `${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+	const origin = req.headers.origin || 'Unknown origin';
+
+	let logThis = `${origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 	// Delete passwords from incoming form data
 	let sensoredBody;
 	if (JSON.stringify(req.body) !== '{}') { // Not an empty object
-		sensoredBody = Object.assign({}, req.body);
+		sensoredBody = { ...req.body };
 		delete sensoredBody.password;
 		delete sensoredBody.username; // Since IP's are logged with each request, If you know a deleted account's username, it can be indirectly traced to their IP if we don't delete them here.
 		delete sensoredBody.email;

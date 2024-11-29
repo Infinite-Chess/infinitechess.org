@@ -176,7 +176,7 @@ function getDataOfHighlightShapeDependingOnIfPieceOnSquare(coord, color, usingDo
 	const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
 	return usingDots ? (() => {
 		if (gamefileutility.isPieceOnCoords(gamefile, coord)) return legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, color);
-		else return legalmoveshapes.getDataLegalMoveDot(offsetCoord, color);
+		else return legalmoveshapes.getDataLegalMoveDot(offsetCoord, color, movement.getBoardScale(), perspective.getEnabled());
 	})() : shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
 }
 
@@ -288,7 +288,7 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color, us
 	const lineSet = new Set(Object.keys(legalMoves.sliding));
 
 	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
-	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, color)
+	const vertexDataMove = usingDots ? legalmoveshapes.getDataLegalMoveDot(offsetCoord, color, movement.getBoardScale(), perspective.getEnabled())
 									: shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
 	const vertexDataCapture = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(offsetCoord, color) : undefined;
 

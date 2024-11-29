@@ -35,11 +35,11 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	if (validRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, validRefreshTokens); // At least one token was deleted by expired, save the list.
 
 	// Find the object where tokenObj.token matches the provided token
-	const matchingTokenObj = validRefreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires, IP }
+	const matchingTokenObj = validRefreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires, IP (not always present) }
 	if (!matchingTokenObj) return false;
 
 	// Does the request IP address match the IP address when the session token was originally issued?
-	if (IP !== matchingTokenObj.IP) {
+	if (matchingTokenObj.IP !== undefined && IP !== matchingTokenObj.IP) {
 		logEvents(`Connected IP address doesn't match the IP address from session token creation!! Issued: "${matchingTokenObj.IP}" Current: "${IP}". Member "${username}" of ID "${userId}"`, 'errLog.txt', { print: true });
 		// return false; // For now, don't count the token as invalid. If people's IP changes commonly, this is this is viable.
 	}

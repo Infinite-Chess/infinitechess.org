@@ -10,28 +10,37 @@ import { addTokenToRefreshTokens } from '../controllers/authenticationTokens/ref
 function migrateUsers() {
 	// The table looks like:
 	// CREATE TABLE IF NOT EXISTS members (
-	// 	user_id INTEGER PRIMARY KEY,
+	// 	user_id INTEGER PRIMARY KEY,               
 	// 	username TEXT UNIQUE NOT NULL COLLATE NOCASE,
-	// 	email TEXT UNIQUE NOT NULL,
-	// 	hashed_password TEXT NOT NULL,
-	// 	roles TEXT,
-	// 	joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	// 	refresh_tokens TEXT,
+	// 	email TEXT UNIQUE NOT NULL,                
+	// 	hashed_password TEXT NOT NULL,             
+	// 	roles TEXT,        
+	// 	joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	// 	last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
+	// 	login_count INTEGER NOT NULL DEFAULT 0,                        
 	// 	preferences TEXT,
-	// 	verification TEXT,
-	// 	login_count INTEGER DEFAULT 1,
-	// 	last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	// 	refresh_tokens TEXT,                          
+	// 	verification TEXT, 
+	// 	username_history TEXT
 	// );
 
-	// Declare variables to hold the values
-	const members = JSON.parse(readFileSync('./database/members.json'));
+	console.log("Migrating members to SQLite database...");
+
+	let members;
+	try {
+		// Attempt to read and parse the members.json file
+		members = JSON.parse(readFileSync('./database/members.json'));
+	} catch (error) {
+		// Catch any errors and log them
+		console.error("Error reading or parsing members.json:", error.message);
+	}
+
 	if (members === undefined) {
 		console.error("Unable to migrate members, unable to read members.json file.");
 		return;
 	}
+	// console.log(members);
 
-	console.log("Migrating members to SQLite database...");
-	console.log(members);
 
 	for (const member of Object.values(members)) {
 
@@ -60,19 +69,20 @@ function migrateUsers() {
 
 		// Convert each of them to the correct format...
 		joined = timeutil.isoToSQLite(joined);
-		last_seen = timeutil.isoToSQLite(joined);
+		last_seen = timeutil.isoToSQLite(last_seen);
 
 		let refresh_tokens = [];
 		refreshTokens.forEach(oldToken => {
 			// This function already exists, sorry about that >.<
-			addTokenToRefreshTokens(refresh_tokens, oldToken);
+			addTokenToRefreshTokens(undefined, refresh_tokens, oldToken);
 		});
-		refresh_tokens = JSON.stringify(refresh_tokens);
+		if (refreshTokens.length === 0) refreshTokens = null;
+		refresh_tokens = refreshTokens === null ? null : JSON.stringify(refresh_tokens);
 
 		// A modern verification object looks like: { verified (bool), notified (bool), code }.
 		let verification = verified === undefined ? undefined : {
 			verified: verified[0],
-			notified: verified[0] ? true : undefined,
+			notified: verified[0] ? false : undefined,
 			code: verified[0] ? undefined : verified[1],
 		};
 		verification = JSON.stringify(verification);
@@ -87,16 +97,16 @@ function migrateUsers() {
 			email,
 			hashed_password,
 			joined,
-			verification,
-			login_count,
 			last_seen,
-			refresh_tokens
+			login_count,
+			refresh_tokens,
+			verification
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
 		try {
 			// Execute the query with the provided values
-			db.run(query, [user_id, username, email, hashed_password, joined, verification, login_count, last_seen, refresh_tokens]); // { changes: 1, lastInsertRowid: 7656846 }
+			db.run(query, [user_id, username, email, hashed_password, joined, last_seen, login_count, refresh_tokens, verification]); // { changes: 1, lastInsertRowid: 7656846 }
 
 		} catch (error) {
 			// Log the error for debugging purposes

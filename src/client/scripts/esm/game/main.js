@@ -25,6 +25,7 @@ import guiloading from './gui/guiloading.js';
 // eslint-disable-next-line no-unused-vars
 import tooltips from './gui/tooltips.js';
 import frametracker from './rendering/frametracker.js';
+import gamefileutility from '../chess/util/gamefileutility.js';
 // Import End
 
 "use strict";
@@ -54,8 +55,8 @@ function start() {
 function initListeners() {
 	input.initListeners(); // Mouse, touch, & key event listeners
 
-	window.addEventListener('beforeunload', function() {
-		// console.log('Detecting unload')
+	window.addEventListener('beforeunload', (event) => {
+		// console.log('Detecting unload');
 
 		// This allows us to control the reason why the socket was closed.
 		// "1000 Closed by client" instead of "1001 Endpoint left"

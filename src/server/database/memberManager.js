@@ -1,6 +1,6 @@
 
 /**
- * This script almost all of the queries we use to interact with the members table!
+ * This script handles almost all of the queries we use to interact with the members table!
  */
 
 import { logEvents } from '../middleware/logEvents.js';
@@ -110,7 +110,6 @@ function deleteUser(user_id, reason_deleted) {
 		return false;
 	}
 }
-
 // console.log(deleteUser(3408674));
 
 /**
@@ -157,6 +156,29 @@ function getAllUsers() {
 	}
 }
 // console.log(getAllUsers());
+
+/**
+ * Fetches a single user from the 'members' table based on their username.
+ * @param {string} username - The username of the member to retrieve.
+ * @returns {Object | undefined} - An object representing the user, containing all columns 
+ * from the 'members' table. Returns `undefined` if an error occurs or if the user is not found.
+ */
+function getMemberRowByUsername(username) {
+	// SQL query to check if a username exists in the 'members' table
+	const query = 'SELECT * FROM members WHERE username = ?';
+
+	try {
+		// Execute the query with the username parameter
+		const row = db.get(query, [username]);
+		return row;
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error getting row of member "${username}": ${error.message}`, 'errLog.txt', { print: true });
+		return;
+	}
+}
+// console.log("User:");
+// console.log(getMemberRowByUsername("User"));
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
@@ -368,6 +390,18 @@ function isUserIdTaken(userId, { ignoreDeleted } = {}) {
 // console.log("taken? " + isUserIdTaken(14443702));
 
 /**
+ * Fetches a member's user ID based on their username.
+ * @param {string} username - The username to search for.
+ * @returns {number | undefined} - The user ID if found, or undefined if no match is found.
+ */
+function getUserIdByUsername(username) {
+	// Use the getMemberDataByCriteria function to fetch the user ID
+	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', username); // { user_id } || {}
+	return user_id;
+}
+
+
+/**
  * Checks if a member of a given username exists in the members table.
  * @param {number} username - The username check.
  * @returns {boolean} - Returns true if the member exists, false otherwise.
@@ -435,6 +469,7 @@ export {
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
 	doesMemberOfIDExist,
+	getUserIdByUsername,
 	doesMemberOfUsernameExist,
 	isUsernameTaken,
 	isEmailTaken,

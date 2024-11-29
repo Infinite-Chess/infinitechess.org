@@ -106,6 +106,7 @@ async function refreshToken() {
 			method: 'POST', // Ensure it's a POST request
 			headers: {
 				'Content-Type': 'application/json',
+				"is-fetch-request": "true" // Custom header
 			},
 		});
 
@@ -128,7 +129,8 @@ async function refreshToken() {
 		} else { // 403 or 500 error   Likely not signed in! Our session token (refresh token cookie) was invalid or not present.
 			console.log(`Server: ${result.message}`);
 			docutil.deleteCookie('memberInfo');
-			memberInfo = { signedIn: false };
+			// Dispatch a custom logout event so our header code knows to update the navigation links
+			document.dispatchEvent(new CustomEvent('logout'));
 		}
 
 	} catch (error) {

@@ -219,7 +219,7 @@ const variantDictionary: {
 		},
 		gameruleModifications: gameruleModificationsOfOmegaShowcasings
 	},
-	Five_Dimensional: {
+	'5D_Chess': {
 		generator: {
 			algorithm: fivedimensionalgenerator.genPositionOfFiveDimensional,
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
@@ -478,11 +478,11 @@ function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, 
  * @param {string} [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
  * @returns {Object} - The moveset in the form defined in movesets.js
  */
-function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
-	Variant: string,
-	UTCDate: string,
-	UTCTime: string
-}) {
+function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: { Variant: string, UTCDate: string, UTCTime: string }) {
+	// Pasted games with no variant specified use the default movesets
+	// TODO: Transfer the slide limit game rule of pasted games
+	if (Variant === undefined) return getMovesets();
+
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 

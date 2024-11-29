@@ -128,12 +128,16 @@ function edit(gamefile) {
 		removeBorder(element_timers[color].timer);
 	}
 
-	if (!moveutil.isGameResignable(gamefile) || gamefile.gameConclusion) return;
 	rescheduleSoundEffects(gamefile);
 }
 
+/**
+ * 
+ * @param {gamefile} gamefile 
+ * @returns 
+ */
 function rescheduleSoundEffects(gamefile) {
-	if (!moveutil.isGameResignable(gamefile) || gamefileutility.isGameOver(gamefile)) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
+	if (gamefile.clocks.untimed || !moveutil.isGameResignable(gamefile) || gamefileutility.isGameOver(gamefile) || gamefile.clocks.timeRemainAtTurnStart === undefined) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
 	rescheduleMinuteTick(gamefile); // Lowtime notif at 1 minute left
 	rescheduleCountdown(gamefile); // Schedule 10s drum countdown
 }

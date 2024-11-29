@@ -32,7 +32,7 @@ const copySinglePosition = false;
  * A list of metadata properties that are retained from the current game when pasting an external game.
  * These will overwrite the pasted game's metadata with the current game's metadata.
  */
-const retainMetadataWhenPasting = ['White','Black','TimeControl','Event','Site','Round'];
+const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeControl','Event','Site','Round'];
 
 /**
  * Copies the current game to the clipboard in ICN notation.
@@ -219,7 +219,8 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	// Retain most of the existing metadata on the currently loaded gamefile
 	const currentGameMetadata = game.getGamefile().metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
-		longformat.metadata[metadataName] = currentGameMetadata[metadataName];
+		delete longformat.metadata[metadataName];
+		if (currentGameMetadata[metadataName] !== undefined) longformat.metadata[metadataName] = currentGameMetadata[metadataName];
 	});
 	// Only keep the Date of the current game if the starting position of the pasted game isn't specified,
 	// because loading the variant version relies on that.
