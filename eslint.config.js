@@ -1,9 +1,13 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
+import pluginTypescript from "@typescript-eslint/eslint-plugin";
+import parserTypescript from "@typescript-eslint/parser";
 
 export default [
 	pluginJs.configs.recommended,
 	{
+		files: ["**/*.js","**/*.ts"],
+		plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object
 		rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above
 			'no-undef': 'error', // Undefined variables not allowed
 			'no-unused-vars': 'warn', // Unused variables give a warning
@@ -38,6 +42,7 @@ export default [
 			// "complexity": ["warn", { "max": 10 }] // Can choose to enable to cap the complexity, or number of independant paths, which can lead to methods.
 		},
 		languageOptions: {
+			parser: parserTypescript, // Use the TypeScript parser
 			sourceType: "module", // Can also be "commonjs", but "import" and "export" statements will give an eslint error
 			globals: {
 				...globals.node, // Defines "require" and "exports"
