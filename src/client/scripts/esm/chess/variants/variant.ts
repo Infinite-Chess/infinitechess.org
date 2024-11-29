@@ -544,4 +544,4 @@ export default {
 
 export type {
 	Moveset
-}
+};
