@@ -6,7 +6,7 @@ import parserTypescript from "@typescript-eslint/parser";
 export default [
 	pluginJs.configs.recommended,
 	{
-		files: ["**/*.js","**/*.ts"],
+		files: ["**/*.js","**/*.ts"], // Apply the following rule overrides to both js and ts files...
 		// plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object.  SUPPOSEDLY THIS IS NOT NEEDED??
 		rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above
 			'no-undef': 'error', // Undefined variables not allowed
