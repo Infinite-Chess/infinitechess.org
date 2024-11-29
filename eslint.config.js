@@ -7,7 +7,7 @@ export default [
 	pluginJs.configs.recommended,
 	{
 		files: ["**/*.js","**/*.ts"],
-		plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object
+		// plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object.  SUPPOSEDLY THIS IS NOT NEEDED??
 		rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above
 			'no-undef': 'error', // Undefined variables not allowed
 			'no-unused-vars': 'warn', // Unused variables give a warning
@@ -54,5 +54,12 @@ export default [
 				htmlscript: "readonly",
 			}
 		}
-	}
+	},
+	{ // TYPESCRIPT SETTINGS THAT OVERWRITE THE ABOVE
+		files: ["**/*.ts"],
+		rules: {
+			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
+			'dot-notation': 'off', 
+		},
+	},
 ];
