@@ -43,10 +43,9 @@ import space from '../misc/space.js';
 
 /**
  * Bugs:
- * - Opponent pieces can be selected by dragging.
+ * - Fixed I think?
  * To do:
- * - Fix above bugs.
- * - Allow touchscreen users to drag the board with a second finger while dragging a piece.
+ * - Allow dragging the board with a second finger while dragging a piece.
  */
 
 /** The currently selected piece, if there is one: `{ type, index, coords }` @type {Piece} */
@@ -59,7 +58,7 @@ let draggingPiece = false;
  * @type{boolean} 
  * */
 let didLastClickSelectPiece;
-/** Set to false if the user want to use the original click controls. @type {boolean} */
+/** Set to false if the user wants to use the original click controls. @type {boolean} */
 let dragEnabled = true;
 /** Is the user using touchscreen. If so we should ignor mouse over. @type {boolean} */
 let touchscreenMode = false;
@@ -146,16 +145,20 @@ function update() {
 	// Calculate if the hover square is legal so we know if we need to render a ghost image...
 	
 	// What coordinates are we hovering over?
-	hoverSquare = input.getPointerClicked() ? input.getPointerClickedTile
+	hoverSquare = input.getPointerClicked() ? input.getPointerClickedTile()
             : space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation());
 	
 	updateHoverSquareLegal();
 	
 	const pieceClickedType = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
 	
-	if (draggingPiece) handleDragging(hoverSquare, pieceClickedType);
-	else if (!input.getPointerDown() || input.isKeyHeld('control')) return; // Exit, we did not click
-	else if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClickedType); // A piece is already selected. Test if it was moved.
+	if (draggingPiece) return handleDragging(hoverSquare, pieceClickedType);
+	
+	// Pick up the piece on mousedown if we are allowed to move it. Otherwise only select when clicked.
+	const clicked = canMovePieceType(pieceClickedType) ? input.getPointerDown() : input.getPointerClicked();
+	if (!clicked || input.isKeyHeld('control')) return; // Exit, we did not click
+	
+	if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClickedType); // A piece is already selected. Test if it was moved.
 	else if (pieceClickedType) handleSelectingPiece(pieceClickedType);
 	// Else we clicked, but there was no piece to select, *shrugs*
 }
@@ -198,11 +201,11 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
 
 		// If it clicked iteself, deselect or pick it up again.
 		if (coordutil.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
-			if (draggingPiece) { //The piece was dropped in its original square.
-				if (!didLastClickSelectPiece) unselectPiece();
-			} else { //The selected piece was clicked.
-				//Try to pick up the piece. If we can't (it's not our turn or belongs to our opponent), unselect it. 
-				if (!startDragging()) unselectPiece();
+			if (draggingPiece) { // The piece was dropped in its original square.
+				if (!didLastClickSelectPiece) unselectPiece(); // Toggle selection
+			} else { // The selected piece was clicked.
+				//Pick up the piece if it's ours; otherwise, unselect it now.
+				if (!canMovePieceType(pieceClickedType) || !startDragging()) unselectPiece();
 				didLastClickSelectPiece = false;
 			}
 		} else if (pieceClickedType !== 'voidsN' && !draggingPiece) { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
@@ -237,7 +240,6 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
  * A piece is **not** already selected. This is called when you *click* a piece.
  * This will select the piece if it is a friendly, or forward
  * you to the game's front if your viewing past moves.
- * @param {number[]} coordsClicked - The square clicked: `[x,y]`.
  * @param {string} [pieceClickedType] - The type of piece clicked on, if there is one.
  */
 function handleSelectingPiece(pieceClickedType) {
@@ -262,9 +264,11 @@ function handleSelectingPiece(pieceClickedType) {
 	if (pieceClickedType === 'voidsN') return; // NEVER select voids, EVEN in edit mode.
 
 	const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare);
-
+	
 	// Select the piece
 	selectPiece(pieceClickedType, clickedPieceIndex, hoverSquare);
+	if (canMovePieceType(pieceClickedType)) startDragging();
+	didLastClickSelectPiece = true;
 }
 
 /**
@@ -285,8 +289,6 @@ function selectPiece(type, index, coords) {
 	isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 
 	highlights.regenModel(); // Generate the buffer model for the blue legal move fields.
-	startDragging();
-	didLastClickSelectPiece = true;
 }
 
 /**
@@ -369,10 +371,24 @@ function updateHoverSquareLegal() {
 	const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
 	const hoverSquareIsSameColor = typeAtHoverCoords && colorutil.getPieceColorFromType(pieceSelected.type) === colorutil.getPieceColorFromType(typeAtHoverCoords);
 	const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
-	// The next boolean ensures that only pieces of the same color as the current player's turn can have a ghost piece:
-	const selectionColorAgreesWithMoveTurn = colorutil.getPieceColorFromType(pieceSelected.type) === gamefile.whosTurn;
 	// This will also subtley transfer any en passant capture tags to our `hoverSquare` if the function found an individual move with the tag.
-	hoverSquareLegal = (selectionColorAgreesWithMoveTurn && !isOpponentPiece && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare)) || (options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor);
+	hoverSquareLegal = canMovePieceType(pieceSelected.type) && legalmoves.checkIfMoveLegal(legalMoves, pieceSelected.coords, hoverSquare) || options.getEM() && !hoverSquareIsVoid && !hoverSquareIsSameColor;
+}
+
+/**
+ * Returns true if the user is allowed to move the pieceType. It must be our piece and our turn.
+ * @param {string} pieceType - the type of piece 
+ * @param {boolean} editmode
+ */
+function canMovePieceType(pieceType) {
+	if (!pieceType || pieceType === 'voidsN') return false; // Never move voids
+	else if (options.getEM()) return true; //Edit mode allows pieces to be moved on any turn.
+	const pieceColor = colorutil.getPieceColorFromType(pieceType);
+	const isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
+	/* Local Game */ : pieceColor !== game.getGamefile().whosTurn;
+	if (isOpponentPiece) return false; // Don't move opponent pieces
+	const isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
+	return (!isPremove /*|| premovesEnabled*/);
 }
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */

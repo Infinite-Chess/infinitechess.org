@@ -491,6 +491,7 @@ function calcCrosshairWorldLocation() {
 	const y = hyp * Math.cos(rotZ);
 
 	mouseWorldLocation = [x, y];
+	if (!usingTouchscreen) pointerWorldLocation = mouseWorldLocation;
 }
 
 function addMouseWheel(event) {

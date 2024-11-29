@@ -14,6 +14,17 @@ import input from "../input.js";
 
 "use strict";
 
+/**
+ * This script hides the original piece and renders a copy at the pointer location.
+ * It also highlights the square that the piece would be dropped on (to do)
+ * and plays the sound when the piece is dropped.
+ */
+
+/**
+ * To Do:
+ * - Emphasise the hovered square like Lichess and Chess.com.
+ */
+
 const z = 0.01;
 /** When not in perspective the pieces size is independent of board scale. */
 const touchscreenScale = 2;
