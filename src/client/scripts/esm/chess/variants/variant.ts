@@ -332,8 +332,8 @@ function getStartSnapshotPosition({ positionString, startingPosition, specialRig
  * Returns the variant's gamerules at the provided date in time.
  * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
  * @param {string} options.Variant - The name of the variant for which to get the gamerules.
- * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the gamerules, in the format `YYYY.MM.DD`. Defaults to the current date.
- * @param {number} [options.UTCTime] - Optional. The UTCTime metadata for which to get the gamerules, in the format `HH:MM:SS`. Defaults to the current time.
+ * @param {string} [options.UTCDate] - Optional. The UTCDate metadata for which to get the gamerules, in the format `YYYY.MM.DD`. Defaults to the current date.
+ * @param {string} [options.UTCTime] - Optional. The UTCTime metadata for which to get the gamerules, in the format `HH:MM:SS`. Defaults to the current time.
  * @param {Object} [position] - The starting position of the game, organized by key `{ '1,2': 'queensB' }`, if it's already known. If not provided, it will be calculated.
  * @returns {GameRules} The gamerules object for the variant.
  */
@@ -382,7 +382,7 @@ function getGameRules(modifications: {
 		black: string[]
 	},
 	moveRule?: number | null
-} = {}) { // { slideLimit, promotionRanks, position }
+} = {}): Gamerules { // { slideLimit, promotionRanks, position }
 	const gameRules: Gamerules = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
@@ -474,8 +474,8 @@ function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, 
  * Gets the piece movesets for the given variant and time, such that each piece contains a function returning a copy of its moveset (to avoid modifying originals)
  * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
  * @param {string} options.Variant - The name of the variant for which to get the moveset.
- * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
- * @param {number} [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
+ * @param {string} [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
+ * @param {string} [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
  * @returns {Object} - The moveset in the form defined in movesets.js
  */
 function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
@@ -510,7 +510,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
  * Any piece type present in the modifications will replace the default move that for that piece.
  * The slidelimit gamerule will only be applied to default movesets, not modified ones.
  * @param {Object} movesetModifications - The modifications to the default movesets.
- * @returns {number} [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
+ * @param {number} [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
  * @returns {Object} The pieceMovesets property of the gamefile.
  */
 function getMovesets(movesetModifications: Moveset = {}, defaultSlideLimitForOldVariants = Infinity) {
