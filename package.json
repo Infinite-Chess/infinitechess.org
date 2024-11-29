@@ -30,17 +30,18 @@
 		"proper-lockfile": "^4.1.2",
 		"sharp": "^0.33.4",
 		"smol-toml": "^1.2.2",
-		"typescript": "^5.7.2",
 		"uuid": "^8.3.2",
 		"ws": "^8.16.0",
 		"xss": "^1.0.15"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.9.0",
+		"@eslint/js": "^9.15.0",
 		"@types/node": "^22.10.1",
-		"eslint": "^9.9.0",
+		"eslint": "^9.15.0",
 		"globals": "^15.9.0",
-		"madge": "^8.0.0"
+		"madge": "^8.0.0",
+		"typescript": "^5.7.2",
+		"typescript-eslint": "^8.16.0"
 	},
 	"scripts": {
 		"build": "node build.js",
