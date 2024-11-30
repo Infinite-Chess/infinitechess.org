@@ -352,7 +352,7 @@ function startOpponentAFKCountdown(millisUntilAutoAFKResign) {
 
 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// time that has elapsed since the server sent us the correct clock values
-	const halfPing = pingManager.getPing() / 2;
+	const halfPing = pingManager.getHalfPing();
 	const timeLeftMillis = millisUntilAutoAFKResign - halfPing;
 
 	afk.timeOpponentLoseFromAFK = Date.now() + timeLeftMillis;
@@ -413,7 +413,7 @@ function handleJoinGame(message) {
 	// {
 	//     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
 	//	   clockValues: { timerWhite, timerBlack }
-	//     id, clock, publicity, youAreColor, , moves, autoAFKResignTime, disconnect, gameConclusion, drawOffer,
+	//     id, clock, publicity, youAreColor, , moves, millisUntilAutoAFKResign, disconnect, gameConclusion, drawOffer,
 	// }
 
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
@@ -530,9 +530,9 @@ function resyncToGame() {
  * Called when the server sends us the conclusion of the game when it ends,
  * OR we just need to resync! The game may not always be over.
  * @param {Object} messageContents - The contents of the server message, with the properties:
- * `gameConclusion`, `clockValues`, `moves`, `autoAFKResignTime`, `offerDraw`
+ * `gameConclusion`, `clockValues`, `moves`, `millisUntilAutoAFKResign`, `offerDraw`
  */
-function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack }, moves, autoAFKResignTime, offerDraw }
+function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack }, moves, millisUntilAutoAFKResign, offerDraw }
 	if (!inOnlineGame) return;
 	if (messageContents.clockValues !== undefined) messageContents.clockValues.accountForPing = true; // Set this too true so our clock knows to account for ping
 	const gamefile = game.getGamefile();
@@ -550,7 +550,7 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
 	guigameinfo.updateWhosTurn(gamefile);
 
 	// If Opponent is currently afk, display that countdown
-	if (messageContents.autoAFKResignTime && !isItOurTurn()) startOpponentAFKCountdown(messageContents.autoAFKResignTime);
+	if (messageContents.millisUntilAutoAFKResign !== undefined && !isItOurTurn()) startOpponentAFKCountdown(messageContents.millisUntilAutoAFKResign);
 	else stopOpponentAFKCountdown();
 
 	// If opponent is currently disconnected, display that countdown
@@ -675,7 +675,7 @@ function reportOpponentsMove(reason) {
 /**
  * This has to be called before and separate from {@link initOnlineGame}
  * because loading the gamefile and the mesh generation requires this script to know our color.
- * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `autoAFKResignTime`, `disconnect`, `serverRestartingAt`
+ * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `millisUntilAutoAFKResign`, `disconnect`, `serverRestartingAt`
  */
 function setColorAndGameID(gameOptions) {
 	inOnlineGame = true;
@@ -687,12 +687,12 @@ function setColorAndGameID(gameOptions) {
 
 /**
  * Inits an online game according to the options provided by the server.
- * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `autoAFKResignTime`, `disconnect`, `serverRestartingAt`
+ * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `millisUntilAutoAFKResign`, `disconnect`, `serverRestartingAt`
  */
 function initOnlineGame(gameOptions) {
 	rescheduleAlertServerWeAFK();
 	// If Opponent is currently afk, display that countdown
-	if (gameOptions.autoAFKResignTime) startOpponentAFKCountdown(gameOptions.autoAFKResignTime);
+	if (gameOptions.millisUntilAutoAFKResign !== undefined) startOpponentAFKCountdown(gameOptions.millisUntilAutoAFKResign);
 	if (gameOptions.disconnect) startOpponentDisconnectCountdown(gameOptions.disconnect);
 	if (isItOurTurn()) {
 		flashTabNameYOUR_MOVE(true);
