@@ -28,11 +28,11 @@ const logoutSVG = document.getElementById('svg-logout');
 
 (function init() {
 	initListeners();
-	// updateNavigationLinks(); // If we don't do this once initially, our validatorama method might receive our token back before the event listener is set above
+	updateNavigationLinks(); // Do this once initially
 })();
 
 function initListeners() {
-	document.addEventListener('pageshow', updateNavigationLinks); // Fired on initial page load AND when hitting the back button to return.
+	window.addEventListener('pageshow', updateNavigationLinks); // Fired on initial page load AND when hitting the back button to return.
 	document.addEventListener('login', updateNavigationLinks); // Custom-event listener. Fired when the validator script receives a response from the server with either our access token or new browser-id cookie.
 	document.addEventListener('logout', updateNavigationLinks); // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
 }
