@@ -139,7 +139,6 @@ function confirmNavigationAwayFromGame(event) {
 	if (userConfirmed) return; // Follow link like normal. Server starts a 20-second auto-resign timer for disconnecting on purpose.
 	// Cancel the following of the link.
 	event.preventDefault();
-	return false;
 
 	/*
 	 * KEEP IN MIND that if we leave the pop-up open for 10 seconds,
