@@ -352,8 +352,7 @@ function startOpponentAFKCountdown(millisUntilAutoAFKResign) {
 
 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// time that has elapsed since the server sent us the correct clock values
-	const halfPing = pingManager.getHalfPing();
-	const timeLeftMillis = millisUntilAutoAFKResign - halfPing;
+	const timeLeftMillis = millisUntilAutoAFKResign - pingManager.getHalfPing();
 
 	afk.timeOpponentLoseFromAFK = Date.now() + timeLeftMillis;
 	// How much time is left? Usually starts at 20 seconds
@@ -376,17 +375,17 @@ function displayOpponentAFK(secsRemaining) {
 	afk.displayOpponentAFKTimeoutID = setTimeout(displayOpponentAFK, timeToPlayNextDisplayWeAFK, nextSecsRemaining);
 }
 
-function startOpponentDisconnectCountdown({ autoDisconnectResignTime, wasByChoice } = {}) {
-	if (!autoDisconnectResignTime) return console.error("Cannot display opponent has disconnected when autoResignTime not specified");
+function startOpponentDisconnectCountdown({ millisUntilAutoDisconnectResign, wasByChoice } = {}) {
+	if (millisUntilAutoDisconnectResign === undefined) return console.error("Cannot display opponent has disconnected when autoResignTime not specified");
 	if (wasByChoice === undefined) return console.error("Cannot display opponent has disconnected when wasByChoice not specified");
 	// This overwrites the "Opponent is AFK" timer
 	stopOpponentAFKCountdown();
 	// Cancel the previous one if this is overwriting
 	stopOpponentDisconnectCountdown();
-	disconnect.timeOpponentLoseFromDisconnect = autoDisconnectResignTime;
+	const timeLeftMillis = millisUntilAutoDisconnectResign - pingManager.getHalfPing();
+	disconnect.timeOpponentLoseFromDisconnect = Date.now() + timeLeftMillis;
 	// How much time is left? Usually starts at 20 / 60 seconds
-	const timeRemain = autoDisconnectResignTime - Date.now();
-	const secsRemaining = Math.ceil(timeRemain / 1000);
+	const secsRemaining = Math.ceil(timeLeftMillis / 1000);
 	displayOpponentDisconnect(secsRemaining, wasByChoice);
 }
 
@@ -554,7 +553,7 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
 	else stopOpponentAFKCountdown();
 
 	// If opponent is currently disconnected, display that countdown
-	if (messageContents.disconnect) startOpponentDisconnectCountdown(messageContents.disconnect); // { autoDisconnectResignTime, wasByChoice }
+	if (messageContents.disconnect !== undefined) startOpponentDisconnectCountdown(messageContents.disconnect); // { millisUntilAutoDisconnectResign, wasByChoice }
 	else stopOpponentDisconnectCountdown();
 
 	// If the server is restarting, start displaying that info.

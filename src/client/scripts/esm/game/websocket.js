@@ -78,6 +78,7 @@ const alsoPrintIncomingEchos = false;
  * THIS SHOULD ALWAYS BE 0 IN PRODUCTION!!!!!!
  */
 const simulatedWebsocketLatencyMillis = 0;
+// const simulatedWebsocketLatencyMillis = 1000; // 1 Second
 
 /**
  * The last time the server closed our socket connection request because

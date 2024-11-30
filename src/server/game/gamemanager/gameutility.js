@@ -255,17 +255,19 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 	// Include additional stuff if relevant
 	if (!game.untimed) gameOptions.clockValues = getGameClockValues(game);
 
+	const now = Date.now();
+
 	// If true, we know it's their opponent that's afk, because this client
 	// just refreshed the page and would have cancelled the timer if they were the ones afk.
 	if (isAFKTimerActive(game)) {
-		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - Date.now();
+		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
 		gameOptions.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
 	}
 
 	// If their opponent has disconnected, send them that info too.
 	if (game.disconnect.autoResign[opponentColor].timeToAutoLoss !== undefined) {
 		gameOptions.disconnect = {
-			autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
+			millisUntilAutoDisconnectResign: game.disconnect.autoResign[opponentColor].timeToAutoLoss - now,
 			wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
 		};
 	}
@@ -374,17 +376,19 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	};
 	// Include timer info if it's timed
 	if (!game.untimed) messageContents.clockValues = getGameClockValues(game);
+
+	const now = Date.now();
+
 	// Include other relevant stuff if defined
 	if (isAFKTimerActive(game)) {
-		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - Date.now();
+		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
 		messageContents.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
 	}
-	
 
 	// If their opponent has disconnected, send them that info too.
 	if (game.disconnect.autoResign[opponentColor].timeToAutoLoss !== undefined) {
 		messageContents.disconnect = {
-			autoDisconnectResignTime: game.disconnect.autoResign[opponentColor].timeToAutoLoss,
+			millisUntilAutoDisconnectResign: game.disconnect.autoResign[opponentColor].timeToAutoLoss - now,
 			wasByChoice: game.disconnect.autoResign[opponentColor].wasByChoice
 		};
 	}
