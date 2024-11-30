@@ -3,7 +3,13 @@
 import formatconverter from "../logic/formatconverter.js";
 // @ts-ignore
 import coordutil from "../util/coordutil.js";
-import type { Moveset } from "./variant.ts";
+
+// Type definitions...
+
+// @ts-ignore
+import type { Movesets } from "../logic/movesets.js";
+
+
 
 'use strict';
 
@@ -34,7 +40,7 @@ function genPositionOfFiveDimensional() {
 }
 
 function genMovesetOfFiveDimensional() {
-	const moveset: Moveset = {
+	const movesets: Movesets = {
 		queens: {
 			individual: [],
 			sliding: {}
@@ -61,19 +67,19 @@ function genMovesetOfFiveDimensional() {
 				for (let offsetV = 1; offsetV >= -1; offsetV--) {
 					const x = (BOARD_SPACING * baseH + offsetH);
 					const y = (BOARD_SPACING * baseV + offsetV);
-					moveset['kings']!.individual[kingIndex] = [x, y];
+					movesets['kings']!.individual[kingIndex] = [x, y];
 					kingIndex++;
 					if (x < 0) continue; // If the x coordinate is negative, skip this iteration
 					if (x === 0 && y <= 0) continue; // Skip if x is 0 and y is negative
 					// Add the moves
-					moveset['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+					movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					// Only add a bishop move if the move moves in two dimensions
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2) {
-						moveset['bishops']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						movesets['bishops']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					}
 					// Only add a rook move if the move moves in one dimension
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1) {
-						moveset['rooks']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						movesets['rooks']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					}
 				}
 			}
@@ -88,14 +94,14 @@ function genMovesetOfFiveDimensional() {
 				for (let offsetV = 2; offsetV >= -2; offsetV--) {
 					// If the squared distance to the tile is 5, then add the move
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
-						moveset['knights']!.individual[knightIndex] = [BOARD_SPACING * baseH + offsetH, BOARD_SPACING * baseV + offsetV];
+						movesets['knights']!.individual[knightIndex] = [BOARD_SPACING * baseH + offsetH, BOARD_SPACING * baseV + offsetV];
 						knightIndex++;
 					}
 				}
 			}
 		}
 	}
-	return moveset;
+	return movesets;
 }
 
 export default {

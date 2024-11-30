@@ -20,6 +20,8 @@ import movesets from '../logic/movesets.js';
 // Type Definitions...
 
 // @ts-ignore
+import type { Movesets } from '../logic/movesets.js';
+// @ts-ignore
 import type { GameRules } from './gamerules.js';
 
 "use strict";
@@ -43,15 +45,17 @@ const coaIPPromotionsAllowed = repeatPromotionsAllowedForEachColor(coaIPPromotio
 
 const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule: null, turnOrder: ['black', 'white'] }; // No promotions, no 50-move rule, and reversed turn order.
 
-interface Moveset {
-	[key: string]: {
-		individual: number[][],
-		sliding?: {
-			[key: string]: number[]
-		}
-	}
-}
+// Not needed since its imported
+// interface Movesets {
+// 	[key: string]: {
+// 		individual: number[][],
+// 		sliding?: {
+// 			[key: string]: number[]
+// 		}
+// 	}
+// }
 
+// Not needed since it's imported
 /*interface GameRules {
 	promotionRanks?: (number | null)[] | null,
 	moveRule?: number | null,
@@ -80,7 +84,7 @@ interface Variant {
 			castleWith: string | undefined
 		}
 	},
-	movesetGenerator?: TimeVariantProperty<() => Moveset>,
+	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRules>
 }
 
@@ -499,11 +503,11 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 		}
 	}
 
-	let movesetModifications: Moveset;
+	let movesetModifications: Movesets;
 	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) { // Multiple UTC timestamps
 		movesetModifications = getApplicableTimestampEntry(variantEntry.movesetGenerator, { UTCDate, UTCTime })();
 	} else { // Just one movesetGenerator entry
-		movesetModifications = (<() => Moveset>variantEntry.movesetGenerator)();
+		movesetModifications = (<() => Movesets>variantEntry.movesetGenerator)();
 	}
 
 	return getMovesets(movesetModifications);
@@ -517,7 +521,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
  * @param {number} [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
  * @returns {Object} The pieceMovesets property of the gamefile.
  */
-function getMovesets(movesetModifications: Moveset = {}, defaultSlideLimitForOldVariants?: number) {
+function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOldVariants?: number) {
 	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
 	const moveset: {
 		[key: string]: () => {
@@ -540,8 +544,4 @@ export default {
 	getGameRulesOfVariant,
 	getPromotionsAllowed,
 	getMovesetsOfVariant
-};
-
-export type {
-	Moveset
 };

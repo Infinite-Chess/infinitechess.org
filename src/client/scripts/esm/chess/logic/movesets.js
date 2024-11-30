@@ -7,6 +7,24 @@
  * ZERO dependancies
  */
 
+// Type definitions...
+
+/**
+ * A Movesets object containing the movesets for every piece type in a game
+ * @typedef {Object<string, PieceMoveset>} Movesets
+ * @property {number[][]} individual - Array of individual moves.
+ * @property {Object<string, number[]>} [sliding] - Optional sliding moves.
+ */
+
+/**
+ * A moveset for an single piece type in a game
+ * @typedef {Object} PieceMoveset
+ * @property {number[][]} individual - Array of individual moves.
+ * @property {Object<string, number[]>} [sliding] - Optional sliding moves.
+ */
+
+
+
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
  * 
