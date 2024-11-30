@@ -69,7 +69,7 @@ function GameRules() {
 		/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
 		black: undefined,
 	};
-	/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. */
+	/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. @type {string[]} */
 	this.turnOrder = undefined;
 
 	// Gamerules that also have dedicated slots in ICN notation...
@@ -78,7 +78,7 @@ function GameRules() {
      * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
      * If one side can't promote, their rank is `null`.
      * If neither side can promote, this should be left as undefined.
-     * @type {number[]}
+     * @type {number[] | null}
      */
 	this.promotionRanks = undefined;
 	/**
@@ -87,17 +87,17 @@ function GameRules() {
      * If no color can promote, this should be left undefined.
      */
 	this.promotionsAllowed = {
-		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
+		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */
 		white: undefined,
-		/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
+		/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */
 		black: undefined,
 	};
-	/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. */
+	/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. @type {number | undefined} */
 	this.moveRule = undefined;
 
 	// Gamerules that DON'T have a dedicated slot in ICN notation...
 
-	/** The maximum number of steps any sliding piece can take. */
+	/** The maximum number of steps any sliding piece can take. @type {number | undefined} */
 	this.slideLimit = undefined;
 }
 
