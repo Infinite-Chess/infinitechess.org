@@ -27,7 +27,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
-import validatorama from '../../util/validatorama.js';
+import pingManager from '../../util/pingManager.js';
 // Import End
 
 /** 
@@ -319,7 +319,7 @@ function onmessage(data) { // { sub, action, value, id }
 			guititle.open();
 			break;
 		case "opponentafk":
-			startOpponentAFKCountdown(data.value?.autoAFKResignTime);
+			startOpponentAFKCountdown(data.value.millisUntilAutoAFKResign);
 			break;
 		case "opponentafkreturn":
 			stopOpponentAFKCountdown(data.value);
@@ -345,14 +345,19 @@ function onmessage(data) { // { sub, action, value, id }
 	}
 }
 
-function startOpponentAFKCountdown(autoResignTime) {
+function startOpponentAFKCountdown(millisUntilAutoAFKResign) {
+	if (millisUntilAutoAFKResign === undefined) return console.error("Cannot display opponent is AFK when millisUntilAutoAFKResign not specified");
 	// Cancel the previous one if this is overwriting
 	stopOpponentAFKCountdown();
-	if (!autoResignTime) return console.error("Cannot display opponent is AFK when autoResignTime not specified");
-	afk.timeOpponentLoseFromAFK = autoResignTime;
+
+	// Ping is round-trip time (RTT), So divided by two to get the approximate
+	// time that has elapsed since the server sent us the correct clock values
+	const halfPing = pingManager.getPing() / 2;
+	const timeLeftMillis = millisUntilAutoAFKResign - halfPing;
+
+	afk.timeOpponentLoseFromAFK = Date.now() + timeLeftMillis;
 	// How much time is left? Usually starts at 20 seconds
-	const timeRemain = autoResignTime - Date.now();
-	const secsRemaining = Math.ceil(timeRemain / 1000);
+	const secsRemaining = Math.ceil(timeLeftMillis / 1000);
 	displayOpponentAFK(secsRemaining);
 }
 
