@@ -52,6 +52,7 @@ let tokenInfo = {
 
 function initListeners() {
 	document.addEventListener('logout', resetMemberInfo);
+	document.addEventListener('logout', deleteToken);
 	window.addEventListener('pageshow', readMemberInfoCookie); // Fired on initial page load AND when hitting the back button to return.
 }
 
@@ -166,6 +167,9 @@ function readMemberInfoCookie() {
 /** Resets our member info variables as if we were logged out. */
 function resetMemberInfo() {
 	memberInfo = { signedIn: false };
+}
+
+function deleteToken() {
 	tokenInfo = {};
 }
 
