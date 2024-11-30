@@ -16,10 +16,11 @@ import timeutil from '../../util/timeutil.js';
 import fivedimensionalgenerator from './fivedimensionalgenerator.js';
 // @ts-ignore
 import movesets from '../logic/movesets.js';
-// @ts-ignore
-import type { Gamerules } from '../logic/gamerules.js';
 
 // Type Definitions...
+
+// @ts-ignore
+import type { GameRules } from './gamerules.js';
 
 "use strict";
 
@@ -51,7 +52,7 @@ interface Moveset {
 	}
 }
 
-/*interface Gamerules {
+/*interface GameRules {
 	promotionRanks?: (number | null)[] | null,
 	moveRule?: number | null,
 	turnOrder?: string[],
@@ -80,7 +81,7 @@ interface Variant {
 		}
 	},
 	movesetGenerator?: TimeVariantProperty<() => Moveset>,
-	gameruleModifications: TimeVariantProperty<Gamerules>
+	gameruleModifications: TimeVariantProperty<GameRules>
 }
 
 /**
@@ -345,7 +346,8 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
-	let gameruleModifications: Gamerules;
+	let gameruleModifications: GameRules;
+	// gameruleModifications
 
 	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?
 
@@ -380,14 +382,14 @@ function getGameRules(modifications: {
 		black: string[]
 	},
 	moveRule?: number | null
-} = {}): Gamerules { // { slideLimit, promotionRanks, position }
-	const gameRules: Gamerules = {
+} = {}): GameRules { // { slideLimit, promotionRanks, position }
+	const gameRules: GameRules = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
 		turnOrder: modifications.turnOrder || defaultTurnOrder,
 	};
 
-	// Gamerules that have a dedicated ICN spot...
+	// GameRules that have a dedicated ICN spot...
 	if (modifications.promotionRanks !== null) { // Either undefined (use default), or custom
 		gameRules.promotionRanks = modifications.promotionRanks || [8,1];
 		if (!modifications.promotionsAllowed && !modifications.position) throw new Error("Cannot set promotionsAllowed gamerule when getting gamerules. Must be specified in the modifications, or the position passed as an argument so it can be auto-calculated.");
@@ -395,7 +397,7 @@ function getGameRules(modifications: {
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;
 
-	// Gamerules that DON'T have a dedicated ICN spot...
+	// GameRules that DON'T have a dedicated ICN spot...
 	if (modifications.slideLimit !== undefined) gameRules.slideLimit = modifications.slideLimit;
 
 	return jsutil.deepCopyObject(gameRules); // Copy it so the game doesn't modify the values in this module.
@@ -493,7 +495,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
 			return getMovesets({}, getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime }).slideLimit);
 		} else { // Just one movesetGenerator entry
-			return getMovesets({}, (variantEntry.gameruleModifications as Gamerules)?.slideLimit);
+			return getMovesets({}, (variantEntry.gameruleModifications as GameRules)?.slideLimit);
 		}
 	}
 

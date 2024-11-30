@@ -44,15 +44,17 @@ function swapCheckmateForRoyalCapture(gameRules) {
 	console.log("Swapped checkmate wincondition for royalcapture.");
 }
 
-/**
- * @typedef Gamerules
- * @property {{ white: string[], black: string[]} | undefined} winConditions
- * @property {string[] | undefined} turnOrder
- * @property {(number | null)[] | null | undefined} promotionRanks
- * @property {{ white: string[], black: string[]} | undefined} promotionsAllowed
- * @property {number | undefined | null} moveRule
- * @property {number | undefined} slideLimit
- */
+// I don't think this is needed as the type definition is already
+// exported in the function below
+// /**
+//  * @typedef GameRules
+//  * @property {{ white: string[], black: string[]} | undefined} winConditions
+//  * @property {string[] | undefined} turnOrder
+//  * @property {(number | null)[] | null | undefined} promotionRanks
+//  * @property {{ white: string[], black: string[]} | undefined} promotionsAllowed
+//  * @property {number | undefined | null} moveRule
+//  * @property {number | undefined} slideLimit
+//  */
 
 /** An object containing the gamerules of a gamefile. */
 function GameRules() {
