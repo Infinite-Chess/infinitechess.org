@@ -4,11 +4,16 @@
 
 import languagedropdown from "./dropdowns/languagedropdown.js";
 import validatorama from "../../util/validatorama.js";
-// Only imported so their code will run!
+
+// Only imported so their code will run! ...
+
+/* eslint-disable no-unused-vars */
 import faviconselector from './faviconselector.js';
 import spacing from './spacing.js';
 import currpage_greyer from './currpage-greyer.js';
 import settings from './settings.js';
+import tooltips from '../../util/tooltips.js'; // This should be imported on EVERY page!
+/* eslint-enable no-unused-vars */
 
 
 
