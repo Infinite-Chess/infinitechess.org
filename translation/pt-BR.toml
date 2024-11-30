@@ -1,6 +1,6 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "22"
+version = "23"
 maintainer = "Emerson P. Machado" # The_Skeleton on discord
 
 [header]
@@ -44,7 +44,7 @@ what_is_it_pargaraphs = [
 "Como você pode imaginar, existem infinitas possibilidades de posições iniciais, muitas das quais você pode jogar competitivamente! Seu objetivo final ainda é o xeque-mate, o que requer novas táticas, visto que não há paredes contra as quais possa prender o rei inimigo. Os jogos tipicamente não duram muito mais do que os jogos normais de xadrez. Peões ainda promovem nas fileiras 1 & 8!",
 ]
 how_to_title = "Como eu posso jogar?"
-how_to_paragraph = ["A versão atual é a 1.4 na página ","Jogar","!"]
+how_to_paragraph = ["A versão atual é a 1.5 na página ","Jogar","!"]
 about_title = "Sobre o Projeto"
 about_paragraphs = [
 "Eu sou Naviary. Desde que descobri o Xadrez Infinito (o conceito existia muito antes deste site), fiquei muito intrigado com ele e suas possibilidades! Até pouco tempo atrás, jogar era bastante difícil, exigindo que os membros do chess.com criassem imagens do tabuleiro atual e as enviassem de um lado para o outro a cada jogada realizada. Devido a isso, poucas pessoas conhecem ou conseguiram jogar.",
@@ -102,7 +102,6 @@ title = "Membro" # The tab name
 verify_message = "Por favor verifique seu e-mail para confirmar sua conta. Contas não confirmadas serão deletadas após 3 dias."
 resend_message = ["Não recebeu um? Verifique sua pasta de spam. Também, ", "enviar novamente.", " Se você ainda não consegue encontrar, ", "mande uma mensagem."]
 verify_confirm = "Obrigado! Sua conta foi verificada"
-rating = "Rating Elo:"
 joined = "Ingressou:"
 seen = ["Visto:", " desde de"]
 reveal_info = "Mostre informações da conta"
@@ -225,6 +224,7 @@ Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
 Omega_Fourth = "Showcase: Omega^4"
+5D_Chess = "5D Chess"
 no_clock = "Sem relógio"
 clock = "Relógio"
 minutes = "m"
@@ -532,10 +532,6 @@ ws-you_are_banned = "Você foi banido."
 ws-password_length = "A senha deve ter entre 6-72 caracteres"
 ws-password_format = "A senha está em um formato incorreto"
 ws-password_password = "A senha não deve ser 'password'"
-ws-refresh_token_not_found_logged_out = "Nenhum membro tem esse token de atualização (já desconectado)"
-ws-refresh_token_not_found = "Nenhum membro tem esse token de atualização"
-ws-refresh_token_expired = "Nenhum token de atualização encontrado (sessão expirada)"
-ws-refresh_token_invalid = "Token de atualização expirado ou adulterado"
 ws-member_not_found = "Membro não encontrado"
 ws-forbidden_wrong_account = "Proibido. Esta não é sua conta."
 ws-deleting_account_not_found = "Falha ao excluir a conta. Conta não encontrada."
@@ -546,10 +542,9 @@ ws-too_many_requests_to_server = "Muitas solicitações. Tente novamente em brev
 ws-bad_request = "Solitação ruim"
 ws-not_found = "404 Não Encontrado"
 ws-forbidden = "Proibido."
-ws-unauthorized_patron_page = "Não autorizado. Esta página é exclusiva para patronos."
 ws-already_in_game = "Você já está em um jogo."
 ws-server_restarting = "O servidor está reiniciando em" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
-ws-server_under_maintenance = "O servidor está em manutenção. Verifique novamente em breve" # Can be changed at will to change the display message.
+ws-server_under_maintenance = "O servidor está em manutenção. Verifique novamente mais tarde" # Pode ser alterado à vontade para mudar a mensagem exibida.
 ws-minutes = "minutos" # unidade de tempo
 ws-minute = "minuto" # unidade de tempo
 ws-no_abort_game_over = "Não é possível cancelar o jogo, pois ele já terminou."

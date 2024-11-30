@@ -41,7 +41,7 @@ function isTokenValid(token, isRefreshToken, IP, req, res) {
 
 	if (!doesMemberOfIDExist(user_id)) {
 		const reason = `Token is valid, but the users account of id "${user_id}" doesn't exist! This is fine, did you just delete it?`;
-		logEvents(reason, 'errLog.txt', { print: true });
+		console.log(reason);
 		doStuffOnLogout(res, user_id, username);
 		return { isValid: false, reason };
 	}

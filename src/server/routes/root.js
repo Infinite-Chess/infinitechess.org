@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const htmlDirectory = path.join(__dirname, "../../../dist/views");
+const htmlDirectory = path.join(__dirname, "../../../dist/client/views");
 
 /**
  * Serves an HTML file based on the requested path and language.

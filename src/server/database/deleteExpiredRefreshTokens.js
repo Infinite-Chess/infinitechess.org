@@ -32,7 +32,8 @@ function cleanUpExpiredRefreshTokens() {
 			// If there are changes, update the database
 			if (updatedTokens.length !== tokensArray.length) {
 				const updateQuery = `UPDATE members SET refresh_tokens = ? WHERE user_id = ?`;
-				db.run(updateQuery, [JSON.stringify(updatedTokens), user_id]);
+				const newValue = updatedTokens.length === 0 ? null : JSON.stringify(updatedTokens);
+				db.run(updateQuery, [newValue, user_id]);
 
 				logEvents(`Deleted atleast one expired token from member "${username}" of id "${user_id}".`, 'tokenCleanupLog.txt', { print: true });
 			}

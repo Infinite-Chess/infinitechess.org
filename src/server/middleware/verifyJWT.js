@@ -81,10 +81,10 @@ function verifyRefreshToken(req, res) {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return false; // No refresh token present
 
-	// { isValid (boolean), user_id, username }
+	// { isValid (boolean), user_id, username, reason (string, if not valid) }
 	const result = isTokenValid(refreshToken, true, getClientIP(req), req, res); // true for refresh token
 	if (!result.isValid) {
-		logEvents(`Invalid refresh token, expired or tampered! Reason: "${result.reason}" "${refreshToken}"`, 'errLog.txt', { print: true });
+		console.log(`Invalid refresh token: Expired, tampered, or account deleted! "${refreshToken}"`);
 		return false; //Token was expired or tampered
 	}
 
@@ -126,9 +126,10 @@ function verifyRefreshToken_WebSocket(req, ws) {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return false; // Not logged in, don't set their user property
 
+	// { isValid (boolean), user_id, username, reason (string, if not valid) }
 	const result = isTokenValid(refreshToken, true, getClientIP_Websocket(req, ws)); // True for refresh token
 	if (!result.isValid) {
-		logEvents(`Invalid refresh token (websocket), expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true }); // Forbidden, invalid token
+		console.log(`Invalid refresh token (websocket): Expired, tampered, or account deleted! "${refreshToken}"`);
 		return false; //Token was expired or tampered
 	}
 

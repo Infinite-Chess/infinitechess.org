@@ -39,10 +39,7 @@ let tokenInfo = {
 };
 
 (function init() {
-	document.addEventListener('logout', event => { // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
-		memberInfo = { signedIn: false };
-		tokenInfo = {};
-	});
+	initListeners();
   
 	// Sets our memberInfo properties if we are logged in
 	readMemberInfoCookie();
@@ -52,6 +49,13 @@ let tokenInfo = {
 	// Renew the session
 	renewSession();
 })();
+
+function initListeners() {
+	document.addEventListener('logout', resetMemberInfo);
+	document.addEventListener('logout', deleteToken);
+	window.addEventListener('pageshow', readMemberInfoCookie); // Fired on initial page load AND when hitting the back button to return.
+}
+
 /**
  * Renews the session if it is older than the specified time to renew.
  */
@@ -106,6 +110,7 @@ async function refreshToken() {
 			method: 'POST', // Ensure it's a POST request
 			headers: {
 				'Content-Type': 'application/json',
+				"is-fetch-request": "true" // Custom header
 			},
 		});
 
@@ -146,18 +151,26 @@ async function refreshToken() {
  * username and user_id properties if we are signed in.
  */
 function readMemberInfoCookie() {
+	resetMemberInfo();
+
 	// Read the member info from the cookie
 	// Get the URL-encoded cookie value
 	// JSON objects can't be stringified into cookies because cookies can't hold special characters
 	const encodedMemberInfo = docutil.getCookieValue('memberInfo'); 
-	if (!encodedMemberInfo) {
-		memberInfo = { signedIn: false };
-		return; // No cookie, not signed in.
-	}
+	if (!encodedMemberInfo) return; // No cookie, not signed in.
 	// Decode the URL-encoded string
 	const memberInfoStringified = decodeURIComponent(encodedMemberInfo);
 	memberInfo = JSON.parse(memberInfoStringified); // { user_id, username, issued (timestamp), expires (timestamp) }
 	memberInfo.signedIn = true;
+}
+
+/** Resets our member info variables as if we were logged out. */
+function resetMemberInfo() {
+	memberInfo = { signedIn: false };
+}
+
+function deleteToken() {
+	tokenInfo = {};
 }
 
 /**

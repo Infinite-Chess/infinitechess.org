@@ -41,6 +41,7 @@ function loadPreferences() {
 	if (cookiePrefs) {
 		console.log("Preferences cookie was present!");
 		cookiePrefs = JSON.parse(decodeURIComponent(cookiePrefs));
+		// console.log(cookiePrefs);
 		clientSidePrefs.forEach(pref => { cookiePrefs[pref] = browserStoragePrefs[pref]; });
 		preferences = cookiePrefs;
 		savePreferences(); // Save preferences for whoever was logged in last into local storage
@@ -76,6 +77,7 @@ async function POSTPrefs(preparedPrefs) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
+			"is-fetch-request": "true" // Custom header
 		},
 		body: JSON.stringify({ preferences: preparedPrefs }),  // Send the preferences as JSON
 	};

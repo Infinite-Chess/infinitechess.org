@@ -39,10 +39,11 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	if (!matchingTokenObj) return false;
 
 	// Does the request IP address match the IP address when the session token was originally issued?
-	if (matchingTokenObj.IP !== undefined && IP !== matchingTokenObj.IP) {
-		logEvents(`Connected IP address doesn't match the IP address from session token creation!! Issued: "${matchingTokenObj.IP}" Current: "${IP}". Member "${username}" of ID "${userId}"`, 'errLog.txt', { print: true });
-		// return false; // For now, don't count the token as invalid. If people's IP changes commonly, this is this is viable.
-	}
+	// CAN'T ENFORCE THIS!! Because IP can change across requests, perhaps by VPNs
+	// if (matchingTokenObj.IP !== undefined && IP !== matchingTokenObj.IP) {
+	// 	logEvents(`Connected IP address doesn't match the IP address from session token creation!! Issued: "${matchingTokenObj.IP}" Current: "${IP}". Member "${username}" of ID "${userId}"`, 'errLog.txt', { print: true });
+	// 	// return false; // For now, don't count the token as invalid. If people's IP changes commonly, this is this is viable.
+	// }
 
 	// We have the token...
 	

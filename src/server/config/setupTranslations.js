@@ -317,7 +317,7 @@ function translateStaticTemplates(translations) {
 		return { code: language, name, englishName };
 	});
   
-	const templatesPath = path.join(__dirname, "..", "..", "..", "dist", "views");
+	const templatesPath = path.join(__dirname, "../../client/views");
 	for (const language of languages) {
 		for (const template of staticTranslatedTemplates) {
 			createFileOrDir(path.join(templatesPath, language, template + ".html")); // Make sure it exists
@@ -337,7 +337,7 @@ function translateStaticTemplates(translations) {
 						languages: languages_list,
 						language: language,
 						newsHTML: translations[language].news,
-						viewsfolder: path.join(__dirname, '..', '..', '..', 'dist', 'views'),
+						viewsfolder: path.join(__dirname, '../../client/views'),
 						// BUNDLE_FILES, // EJS can read this to insert different attributes to elements if desired.
 					},
 				),

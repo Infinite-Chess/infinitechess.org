@@ -19,11 +19,6 @@ import camera from './rendering/camera.js';
 import invites from './misc/invites.js';
 import websocket from './websocket.js';
 import guiloading from './gui/guiloading.js';
-// The ONLY reason we import tooltips is so that it can be tied into the
-// dependancy tree of our game, otherwise it won't be included, since NOTHING depends on it,
-// yet it needs to be an ESM because IT depends on input.js!
-// eslint-disable-next-line no-unused-vars
-import tooltips from './gui/tooltips.js';
 import frametracker from './rendering/frametracker.js';
 // Import End
 
@@ -54,8 +49,8 @@ function start() {
 function initListeners() {
 	input.initListeners(); // Mouse, touch, & key event listeners
 
-	window.addEventListener('beforeunload', function() {
-		// console.log('Detecting unload')
+	window.addEventListener('beforeunload', (event) => {
+		// console.log('Detecting unload');
 
 		// This allows us to control the reason why the socket was closed.
 		// "1000 Closed by client" instead of "1001 Endpoint left"

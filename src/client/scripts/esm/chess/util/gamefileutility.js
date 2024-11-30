@@ -449,13 +449,15 @@ function getRoyalCountOfColor(piecesByKey, color) {
 }
 
 /**
- * Tests if the player who JUST played a move can win from the specified win condition.
- * @param {gamefile} gamefile - The gamefile containing game data.
+ * Tests if the color's opponent can win from the specified win condition.
+ * @param {gamefile} gamefile - The gamefile.
+ * @param {string} friendlyColor - The color of friendlies.
  * @param {string} winCondition - The win condition to check against.
  * @returns {boolean} True if the opponent can win from the specified win condition, otherwise false.
  */
-function isOpponentUsingWinCondition(gamefile, winCondition) {
-	const oppositeColor = colorutil.getOppositeColor(gamefile.whosTurn);
+function isOpponentUsingWinCondition(gamefile, friendlyColor, winCondition) {
+	if (!winconutil.isWinConditionValid(winCondition)) throw new Error(`Cannot test if opponent of color "${friendlyColor}" is using invalid win condition "${winCondition}"!`);
+	const oppositeColor = colorutil.getOppositeColor(friendlyColor);
 	return gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, winCondition);
 }
 

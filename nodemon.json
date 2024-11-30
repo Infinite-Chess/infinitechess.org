@@ -5,5 +5,5 @@
 		"./docs/*"
 	],
 	"exec": "npm run build && npm run start",
-	"ext": "js,html,css,jpg,png,gif,mp3,wav,webp,toml,ejs,json,mjs,md"
+	"ext": "js,html,css,jpg,png,gif,mp3,wav,webp,toml,ejs,json,mjs,md,ts"
 }

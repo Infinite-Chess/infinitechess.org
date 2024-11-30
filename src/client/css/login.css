@@ -68,7 +68,7 @@ label {
     margin-right: 2px;
 }
 
-input {
+form input {
     border: 0;
     border-radius: 4px;
     padding: 0.4em;
@@ -77,11 +77,11 @@ input {
     width: 180px;
 }
 
-input:focus {
+form input:focus {
     outline: solid 1px black;
 }
 
-input[type='text']:hover, input[type='password']:hover {
+form input[type='text']:hover, form input[type='password']:hover {
     box-shadow: 0 0 8px rgb(0, 0, 0);
 }
 
@@ -103,7 +103,7 @@ div.error {
     margin-top: 0.5em;
 }
 
-input[type='submit'] {
+form input[type='submit'] {
     height: 30px;
     min-width: 0;
     width: fit-content;
@@ -115,14 +115,14 @@ input[type='submit'] {
     outline: 0;
 }
 
-input[type='submit'].ready:hover {
+form input[type='submit'].ready:hover {
     transition: 0.1s;
     font-size: 18px;
     box-shadow: 0 0 8px rgb(0, 0, 0);
     margin: 23px;
 }
 
-input[type='submit'].ready:focus {
+form input[type='submit'].ready:focus {
     outline: solid 1px black;
 }
 
@@ -148,14 +148,14 @@ a {
         font-size: calc(40px + 0.027 * (100vw - 450px));
     }
 
-    input {
+    form input {
         width: calc(180px + 0.15 * (100vw - 450px));
     }
 }
 
 /* Stop increasing header links width */
 @media only screen and (min-width: 715px) {
-    input {
+    form input {
         width: 220px;
     }
 }
