@@ -43,7 +43,6 @@ function initListeners() {
  * go to our Profile or the Log Out route, or the Log In / Create Account pages.
  */
 function updateNavigationLinks() {
-	console.log("Updating nav links..");
 	const username = validatorama.getOurUsername();
 	if (username) { // Logged in
 		loginText.classList.add('hidden');
