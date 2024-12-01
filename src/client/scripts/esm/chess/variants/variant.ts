@@ -51,7 +51,7 @@ interface Variant {
 		algorithm: () => any,
 		rules: {
 			pawnDoublePush: boolean,
-			castleWith: string | undefined
+			castleWith?: string
 		}
 	},
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
@@ -200,7 +200,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		generator: {
 			algorithm: omega3generator.genPositionOfOmegaCubed,
 			// Additional properties that are normally stored in the position string in the form of '+', but isn't present since it's a generated position.
-			rules: { pawnDoublePush: false, castleWith: undefined },
+			rules: { pawnDoublePush: false },
 		},
 		gameruleModifications: gameruleModificationsOfOmegaShowcasings
 	},
@@ -208,7 +208,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		generator: {
 			algorithm: omega4generator.genPositionOfOmegaFourth,
 			// Additional properties that are normally stored in the position string in the form of '+', but isn't present since it's a generated position.
-			rules: { pawnDoublePush: false, castleWith: undefined },
+			rules: { pawnDoublePush: false },
 		},
 		gameruleModifications: gameruleModificationsOfOmegaShowcasings
 	},
