@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "16"
+version = "17"
 maintainer = "Naviary"
 
 [header]
@@ -78,6 +78,14 @@ code_heading = "Code"
 code_credits = [
 "by Brandon Jones and Colin MacKenzie IV.",
 "by Andreas Tsevas and Naviary.",
+]
+language_heading = "Language Translations"
+language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
+	"French by ", "Life Enjoyer", " and ", "cycy98", ".",
+	"Simplified Chinese by ", "Heinrich Xiao", ".",
+	"Traditional Chinese by ", "Heinrich Xiao", ".",
+	"Polish by ", "Tymon Becella", ".", # Apsurt
+	"Português by ", "The_Skeleton", "."
 ]
 
 [member]

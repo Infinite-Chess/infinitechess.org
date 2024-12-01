@@ -206,10 +206,13 @@ function getPieceMovesets(slideLimit = Infinity) {
 					'1,0': [-slideLimit, slideLimit],
 					'0,1': [-slideLimit, slideLimit]
 				},
-				ignore: function (distance) {
+				ignore: function(distance) {
 					return !isprime.primalityTest(Math.abs(distance), null);
 				}
 			};
+		},
+		roses: function() {
+			return { individual: [] };
 		},
 	};
 }

@@ -34,12 +34,12 @@ const bigint = (function() {
 
 		return [product, factor1];
 	}
-    
+
 	// Divides and returns a BigInt with the same factor as the first argument!
 	function divide([bigint1, factor1], [bigint2, factor2]) {
 		const adjustedNumerator = bigint1 * factor2;
 		const quotient = adjustedNumerator / bigint2;
-        
+
 		return [quotient, factor1];
 	}
 
@@ -47,12 +47,12 @@ const bigint = (function() {
 	function bigIntToString([bigInt, factor]) {
 
 		const string = bigInt.toString();
-    
+
 		// If the factor is 1, no need to insert a decimal point
 		if (factor === 1n) return string;
-    
+
 		const factorLength = factor.toString().length - 1; // Subtract 1 because '10' has 1 zero, '100' has 2 zeros, etc.
-    
+
 		if (string.length <= factorLength) {
 			// If the string length is less than or equal to the factor length, pad with zeros and place a decimal at the start
 			const padding = '0'.repeat(factorLength - string.length + 1); // +1 for the '0.' before the number
@@ -90,7 +90,7 @@ const bigint = (function() {
 	function log10(bigint) {
 		if (bigint < 0) return NaN;
 		const s = bigint.toString(10);
-      
+  
 		return s.length + Math.log10("0." + s.substring(0, 15));
 	}
 

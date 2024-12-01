@@ -48,10 +48,33 @@ function areCoordsEqual_noValidate(coord1, coord2) {
 	return coord1[0] === coord2[0] && coord1[1] === coord2[1];
 }
 
+/**
+ * Adds two coordinate pairs together component-wise.
+ *
+ * @param {number[]} coord1 - The first coordinate pair [x1, y1].
+ * @param {number[]} coord2 - The second coordinate pair [x2, y2].
+ * @returns {number[]} The resulting coordinate pair after addition [x1 + x2, y1 + y2].
+ */
+function addCoordinates(coord1, coord2) {
+	return [coord1[0] + coord2[0], coord1[1] + coord2[1]];
+}
+
+/**
+ * Makes a deep copy of the provided coordinates
+ * @param {number[]} coords - [x,y]
+ * @returns Copied coords
+ */
+function copyCoords(coords) {
+	return [coords[0], coords[1]];
+}
+
+
 export default {
 	areCoordsIntegers,
 	getKeyFromCoords,
 	getCoordsFromKey,
 	areCoordsEqual,
 	areCoordsEqual_noValidate,
+	addCoordinates,
+	copyCoords
 };

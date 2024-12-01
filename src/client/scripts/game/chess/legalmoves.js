@@ -4,7 +4,6 @@ import movepiece from './movepiece.js';
 import gamefileutility from './gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
-import math from '../misc/math.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../misc/colorutil.js';
 import typeutil from '../misc/typeutil.js';
@@ -196,7 +195,7 @@ function slide_CalcLegalLimit(line, direction, slideMoveset, coords, color, igno
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
 	const axis = direction[0] === 0 ? 1 : 0; 
-	const limit = math.copyCoords(slideMoveset);
+	const limit = coordutil.copyCoords(slideMoveset);
 	// Iterate through all pieces on same line
 	for (let i = 0; i < line.length; i++) {
 		// What are the coords of this piece?

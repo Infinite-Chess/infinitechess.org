@@ -7,6 +7,7 @@ import colorutil from '../misc/colorutil.js';
 import jsutil from '../misc/jsutil.js';
 import coordutil from '../misc/coordutil.js';
 import gamerules from '../variants/gamerules.js';
+import math from '../misc/math.js';
 // Import End
 
 /** 
@@ -39,7 +40,8 @@ function getSpecialMoves() {
 	return {
 		"kings": kings,
 		"royalCentaurs": kings,
-		"pawns": pawns
+		"pawns": pawns,
+		"roses": roses,
 	};
 }
 
@@ -184,24 +186,6 @@ function pawns(gamefile, coords, color, individualMoves) {
 	addPossibleEnPassant(gamefile, individualMoves, coords, color);
 }
 
-// Use as inspiration for generating the rose piece's legal moves.
-// function roses(startCol, startRow) {
-//     let allAvailableSquares = []
-//     let movements = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]
-    
-//     for(let i = 0; i < movements.length; i++) {
-//         let last = [getSquareFromCords(startCol, startRow)]
-//         for(let j = i; j < movements.length + i; j++) {
-//             last = universal(...getCordsOfSquare(last[0]), ...movements[j % movements.length], 1)
-//             allAvailableSquares.push(last)
-//             if(last.length == 0 || getPieceFromSquare(last[last.length-1]) != undefined) break
-//         }
-//     }
-
-//     allAvailableSquares = [].concat(...allAvailableSquares)
-//     return allAvailableSquares
-// }
-
 /**
  * Appends legal enpassant capture to the selected pawn's provided individual moves.
  * @param {gamefile} gamefile - The gamefile
@@ -236,6 +220,52 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	// on the individual move to detect en passant captures and to know what piece to delete
 	captureSquare.enpassant = -oneOrNegOne;
 	individualMoves.push(captureSquare);
+}
+
+/**
+ * Appends legal moves for the rose piece to the provided legal individual moves list.
+ * @param {gamefile} gamefile - The gamefile
+ * @param {number[]} coords - Coordinates of the rose selected
+ * @param {string} color - The color of the rose selected
+ * @param {array[]} individualMoves - The legal individual moves calculated so far
+ */
+function roses(gamefile, coords, color, individualMoves) {
+	const movements = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
+	const directions = [1, -1]; // Counter-clockwise and clockwise directions
+
+	for (let i = 0; i < movements.length; i++) {
+		for (const direction of directions) {
+			let currentCoord = coordutil.copyCoords(coords);
+			let b = i;
+			for (let c = 0; c < movements.length - 1; c++) { // Iterate 7 times, since we can't land on the square we started
+				const movement = movements[math.posMod(b, movements.length)];
+				currentCoord = coordutil.addCoordinates(currentCoord, movement);
+				const pieceOnSquare = gamefileutility.getPieceAtCoords(gamefile, currentCoord); // { type, index, coords }
+				if (pieceOnSquare) {
+					const colorOfPiece = colorutil.getPieceColorFromType(pieceOnSquare.type);
+					// eslint-disable-next-line max-depth
+					if (color !== colorOfPiece) appendCoordToIndividuals(individualMoves, currentCoord); // Capture is legal
+					break;
+				}
+				// There is not a piece
+				appendCoordToIndividuals(individualMoves, currentCoord);
+				b += direction; // Update 'b' for the next iteration
+			}
+		}
+	}
+}
+
+/**
+ * Appends a coordinate to the individual moves list if it's not already present.
+ * @param {array[]} individualMoves - The list of individual moves.
+ * @param {number[]} newCoord - The coordinate to append [x, y].
+ */
+function appendCoordToIndividuals(individualMoves, newCoord) {
+	for (let i = 0; i < individualMoves.length; i++) {
+		const coord = individualMoves[i];
+		if (coordutil.areCoordsEqual(coord, newCoord)) return;
+	}
+	individualMoves.push(newCoord);
 }
 
 /**
