@@ -1,16 +1,62 @@
 
+// @ts-ignore
 import formatconverter from '../logic/formatconverter.js';
+// @ts-ignore
 import omega3generator from './omega3generator.js';
+// @ts-ignore
 import omega4generator from './omega4generator.js';
+// @ts-ignore
 import colorutil from '../util/colorutil.js';
+// @ts-ignore
 import typeutil from '../util/typeutil.js';
+// @ts-ignore
 import jsutil from '../../util/jsutil.js';
+// @ts-ignore
 import timeutil from '../../util/timeutil.js';
 import fivedimensionalgenerator from './fivedimensionalgenerator.js';
+// @ts-ignore
 import movesets from '../logic/movesets.js';
 
 // Type Definitions...
-/** @typedef {import('../logic/gamerules.js').GameRules} GameRules */
+
+// @ts-ignore
+import type { Movesets, PieceMoveset } from '../logic/movesets.js';
+// @ts-ignore
+import type { GameRules } from './gamerules.js';
+
+/** An object that describes what modifications to make to default gamerules in a variant. */
+interface GameRuleModifications {
+	promotionRanks?: (number | null)[] | null,
+	moveRule?: number | null,
+	turnOrder?: string[],
+	promotionsAllowed?: ColorVariantProperty<string[]>
+	winConditions?: ColorVariantProperty<string[]>
+	slideLimit?: number
+}
+
+/** Keys (if present) should be timestamps */
+type TimeVariantProperty<T> = T | {
+	[key: number]: T
+}
+
+/** Keys should be colors */
+type ColorVariantProperty<T> = {
+	[key: string]: T
+}
+
+/** A single variant entry object in the variant dictionary */
+interface Variant {
+	positionString?: TimeVariantProperty<string>,
+	generator?: {
+		algorithm: () => any,
+		rules: {
+			pawnDoublePush: boolean,
+			castleWith: string | undefined
+		}
+	},
+	movesetGenerator?: TimeVariantProperty<() => Movesets>,
+	gameruleModifications: TimeVariantProperty<GameRuleModifications>
+}
 
 "use strict";
 
@@ -49,7 +95,7 @@ const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule
  * in time (variant has received an update), then it may contain nested UTC timestamps representing
  * the new values after that point in time.
  */
-const variantDictionary = {
+const variantDictionary: { [key: string]: Variant } = {
 	Classical: {
 		positionString: positionStringOfClassical,
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed }
@@ -181,19 +227,17 @@ const variantDictionary = {
  * Takes a single list of possible promotions: `['rooks','queens'...]`,
  * repeats it for every color to produce the full `promotionsAllowed` gamerule:
  * `{ white: ['rooks','queens'...], black: ['rooks','queens'...] }`
- * @param {string[]} promotions
- * @returns {Object}
  */
-function repeatPromotionsAllowedForEachColor(promotions) {
+function repeatPromotionsAllowedForEachColor(promotions: string[]) {
 	return { white: promotions, black: promotions };
 }
 
 /**
  * Tests if the provided variant is a valid variant
- * @param {string} variantName - The name of the variant
- * @returns {boolean} *true* if the variant is a valid variant
+ * @param variantName - The name of the variant
+ * @returns *true* if the variant is a valid variant
  */
-function isVariantValid(variantName) {
+function isVariantValid(variantName: string) {
 	return variantDictionary[variantName] !== undefined;
 }
 
@@ -201,15 +245,15 @@ function isVariantValid(variantName) {
 /**
  * Given the Variant and Date, calculates the startingPosition,
  * positionString, and specialRights properties for the startSnapshot of the game.
- * @param {Object} options - An object containing the properties `Variant`, and if desired, `Date`.
- * @returns {Object} An object containing 3 properties: `position`, `positionString`, and `specialRights`.
+ * @param options - An object containing the properties `Variant`, and if desired, `Date`.
+ * @returns An object containing 3 properties: `position`, `positionString`, and `specialRights`.
  */
-function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }) {
+function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: string, UTCDate: string, UTCTime: string }) {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
-	const variantEntry = variantDictionary[Variant];
+	const variantEntry: Variant = variantDictionary[Variant]!;
 
-	let positionString;
-	let startingPosition;
+	let positionString: string;
+	let startingPosition: { [key: string]: string };
 
 	// Does the entry have a `positionString` property, or a `generator` property?
 	if (variantEntry.positionString) {
@@ -236,13 +280,18 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }) {
 /**
  * Given the provided information, returns the `positionString`, `position`,
  * and `specialRights` properties for the gamefile's startSnapshot.
- * @param {Object} options - An object that may contain various properties, `positionString`,
+ * @param options - An object that may contain various properties, `positionString`,
  * `startingPosition`, `specialRights`, `pawnDoublePush`, `castleWith`. You can choose to
  * specify the positionString, startingPosition & specialRights, or startingPosition
  * & pawnDoublePush & castleWith properties.
- * @returns {Object}
  */
-function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush, castleWith }) {
+function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
+	positionString?: string,
+	startingPosition?: { [key: string]: string },
+	specialRights?: { [key: string]: boolean }
+	pawnDoublePush?: boolean,
+	castleWith?: string
+}) {
 	if (positionString) {
 		if (!startingPosition) {
 			const positionAndRights = formatconverter.getStartingPositionAndSpecialRightsFromShortPosition(positionString);
@@ -263,18 +312,21 @@ function getStartSnapshotPosition({ positionString, startingPosition, specialRig
 
 /**
  * Returns the variant's gamerules at the provided date in time.
- * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
- * @param {string} options.Variant - The name of the variant for which to get the gamerules.
- * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the gamerules, in the format `YYYY.MM.DD`. Defaults to the current date.
- * @param {number} [options.UTCTime] - Optional. The UTCTime metadata for which to get the gamerules, in the format `HH:MM:SS`. Defaults to the current time.
- * @param {Object} [position] - The starting position of the game, organized by key `{ '1,2': 'queensB' }`, if it's already known. If not provided, it will be calculated.
- * @returns {GameRules} The gamerules object for the variant.
+ * @param options - An object containing the metadata `Variant`, and if desired, `Date`.
+ * @param options.Variant - The name of the variant for which to get the gamerules.
+ * @param [position] - The starting position of the game, organized by key `{ '1,2': 'queensB' }`, if it's already known. If not provided, it will be calculated.
+ * @returns The gamerules object for the variant.
  */
-function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }, position) {
+function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
+	Variant: string,
+	UTCDate: string,
+	UTCTime: string
+}, position: { [key: string]: string }): GameRules {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
-	const variantEntry = variantDictionary[Variant];
+	const variantEntry: Variant = variantDictionary[Variant]!;
 
-	let gameruleModifications;
+	let gameruleModifications: GameRuleModifications;
+	// gameruleModifications
 
 	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?
 
@@ -285,56 +337,56 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 		gameruleModifications = variantEntry.gameruleModifications;
 	}
 
-	return getGameRules({...gameruleModifications, position });
+	return getGameRules(gameruleModifications, position);
 }
 
 /**
  * Returns default gamerules with provided modifications
- * @param {Object} modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
- * @returns {GameRules} The gamerules
+ * @param modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
+ * @returns The gamerules
  */
-function getGameRules(modifications = {}) { // { slideLimit, promotionRanks, position }
-	const gameRules = {
+function getGameRules(modifications: GameRuleModifications = {}, position?: { [key: string]: string }): GameRules { // { slideLimit, promotionRanks, position }
+	const gameRules: any = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
 		turnOrder: modifications.turnOrder || defaultTurnOrder,
 	};
 
-	// Gamerules that have a dedicated ICN spot...
+	// GameRules that have a dedicated ICN spot...
 	if (modifications.promotionRanks !== null) { // Either undefined (use default), or custom
 		gameRules.promotionRanks = modifications.promotionRanks || [8,1];
-		if (!modifications.promotionsAllowed && !modifications.position) throw new Error("Cannot set promotionsAllowed gamerule when getting gamerules. Must be specified in the modifications, or the position passed as an argument so it can be auto-calculated.");
-		gameRules.promotionsAllowed = modifications.promotionsAllowed || getPromotionsAllowed(modifications.position, gameRules.promotionRanks);
+		if (!modifications.promotionsAllowed && !position) throw new Error("Cannot set promotionsAllowed gamerule when getting gamerules. Must be specified in the modifications, or the position passed as an argument so it can be auto-calculated.");
+		gameRules.promotionsAllowed = modifications.promotionsAllowed || getPromotionsAllowed(position!, gameRules.promotionRanks);
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;
 
-	// Gamerules that DON'T have a dedicated ICN spot...
+	// GameRules that DON'T have a dedicated ICN spot...
 	if (modifications.slideLimit !== undefined) gameRules.slideLimit = modifications.slideLimit;
 
-	return jsutil.deepCopyObject(gameRules); // Copy it so the game doesn't modify the values in this module.
+	return jsutil.deepCopyObject(gameRules) as GameRules; // Copy it so the game doesn't modify the values in this module.
 }
 
 /**
  * Returns the `promotionsAllowed` property of the variant's gamerules.
  * You can promote to whatever pieces the game starts with.
- * @param {Object} position - The starting position of the game, organized by key `{ '1,2': 'queensB' }`
- * @param {number[]} promotionRanks - The `promotionRanks` gamerule of the variant. If one side's promotion rank is `null`, then we won't add legal promotions for them.
- * @returns {Object} The gamefile's `promotionsAllowed` gamerule.
+ * @param position - The starting position of the game, organized by key `{ '1,2': 'queensB' }`
+ * @param promotionRanks - The `promotionRanks` gamerule of the variant. If one side's promotion rank is `null`, then we won't add legal promotions for them.
+ * @returns The gamefile's `promotionsAllowed` gamerule.
  */
-function getPromotionsAllowed(position, promotionRanks) {
+function getPromotionsAllowed(position: { [key: string]: string }, promotionRanks: (number | null)[]): ColorVariantProperty<string[]> {
 	console.log("Parsing position to get the promotionsAllowed gamerule..");
 
 	// We can't promote to royals or pawns, whether we started the game with them.
 	const unallowedPromotes = jsutil.deepCopyObject(typeutil.royals); // ['kings', 'royalQueens', 'royalCentaurs']
 	unallowedPromotes.push('pawns'); // ['kings', 'royalQueens', 'royalCentaurs', 'pawns']
 
-	const white = [];
-	const black = [];
+	const white: string[] = [];
+	const black: string[] = [];
 
 	if (!promotionRanks) return { white, black };
 
 	for (const key in position) {
-		const thisPieceType = position[key];
+		const thisPieceType: string = position[key]!;
 		if (thisPieceType.endsWith('N')) continue; // Skip
 		const trimmedType = colorutil.trimColorExtensionFromType(thisPieceType); // Slices off W/B at the end
 		if (unallowedPromotes.includes(trimmedType)) continue; // Not allowed
@@ -350,50 +402,65 @@ function getPromotionsAllowed(position, promotionRanks) {
 /**
  * Accepts either a `positionString` or `gameruleModifications` property of a variant entry,
  * and a date, returns the value that should be used according to the date.
- * @param {Object} object - Either `positionString` or `gameruleModifications`
- * @param {Object} options - An object containing `UTCDate`, and `UTCTime`.
- * @returns 
+ * @param object - Either `positionString` or `gameruleModifications`
+ * @param options - An object containing `UTCDate`, and `UTCTime`.
  */
-function getApplicableTimestampEntry(object, { UTCDate, UTCTime }) {
+function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, { UTCDate, UTCTime }: {
+	UTCDate: string,
+	UTCTime: string
+}): Inner {
+	if (!(object as Object).hasOwnProperty(0)) {
+		return object as Inner;
+	}
 	const date = timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
 
-	let timeStampKeys = Object.keys(object);
+	let timeStampKeys = Object.keys(object as Object);
+	
 	timeStampKeys = timeStampKeys.sort().reverse(); // [1709017200000, 0]
-	let timestampToUse;
+	let timestampToUse: number;
 	for (const timestamp of timeStampKeys) {
-		if (timestamp <= date) {
-			timestampToUse = timestamp;
+		const thisTimestamp = Number.parseInt(timestamp);
+		if (thisTimestamp <= date) {
+			timestampToUse = thisTimestamp;
 			break;
 		}
 	}
-	return object[timestampToUse];
+	return (object as { [key: number]: Inner })[timestampToUse!]!;
 }
 
 /**
  * Gets the piece movesets for the given variant and time, such that each piece contains a function returning a copy of its moveset (to avoid modifying originals)
- * @param {Object} options - An object containing the metadata `Variant`, and if desired, `Date`.
- * @param {string} options.Variant - The name of the variant for which to get the moveset.
- * @param {number} [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
- * @param {number} [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
- * @returns {Object} - The moveset in the form defined in movesets.js
+ * @param options - An object containing the metadata `Variant`, and if desired, `Date`.
+ * @param options.Variant - The name of the variant for which to get the moveset.
+ * @param [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
+ * @param [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
+ * @returns {Object} The pieceMovesets property of the gamefile.
  */
-function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }) {
+function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
+	Variant: string,
+	UTCDate: string,
+	UTCTime: string
+}) {
 	// Pasted games with no variant specified use the default movesets
 	// TODO: Transfer the slide limit game rule of pasted games
 	if (Variant === undefined) return getMovesets();
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
-	const variantEntry = variantDictionary[Variant];
+	const variantEntry: Variant = variantDictionary[Variant]!;
 
 	if (!variantEntry.movesetGenerator) {
 		console.log(`Variant "${Variant}" does not have a moveset generator. Using default movesets.`);
-		return getMovesets({}, variantEntry.gameruleModifications?.slideLimit);
+		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
+			return getMovesets({}, getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime }).slideLimit);
+		} else { // Just one movesetGenerator entry
+			return getMovesets({}, (variantEntry.gameruleModifications as GameRuleModifications)?.slideLimit);
+		}
 	}
 
-	let movesetModifications;
+	let movesetModifications: Movesets;
 	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) { // Multiple UTC timestamps
 		movesetModifications = getApplicableTimestampEntry(variantEntry.movesetGenerator, { UTCDate, UTCTime })();
 	} else { // Just one movesetGenerator entry
-		movesetModifications = variantEntry.movesetGenerator();
+		movesetModifications = (<() => Movesets>variantEntry.movesetGenerator)();
 	}
 
 	return getMovesets(movesetModifications);
@@ -403,20 +470,23 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
  * Returns default movesets with provided modifications such that each piece contains a function returning a copy of its moveset (to avoid modifying originals).
  * Any piece type present in the modifications will replace the default move that for that piece.
  * The slidelimit gamerule will only be applied to default movesets, not modified ones.
- * @param {Object} movesetModifications - The modifications to the default movesets.
- * @returns {number} [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
- * @returns {Object} The pieceMovesets property of the gamefile.
+ * @param movesetModifications - The modifications to the default movesets.
+ * @param [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
+ * @returns The pieceMovesets property of the gamefile.
  */
-function getMovesets(movesetModifications = {}, defaultSlideLimitForOldVariants) {
+function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOldVariants?: number) {
 	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
-	const moveset = {};
+	// The running piece movesets property of the gamefile.
+	const pieceMovesets: {
+		[pieceType: string]: () => PieceMoveset
+	} = {};
 
 	for (const [piece, moves] of Object.entries(origMoveset)) {
-		moveset[piece] = movesetModifications[piece] ? function() { return jsutil.deepCopyObject(movesetModifications[piece]); }
-													 : function() { return jsutil.deepCopyObject(moves); };
+		pieceMovesets[piece] = movesetModifications[piece] ? () => jsutil.deepCopyObject(movesetModifications[piece])
+														   : () => jsutil.deepCopyObject(moves);
 	}
 
-	return moveset;
+	return pieceMovesets;
 }
 
 

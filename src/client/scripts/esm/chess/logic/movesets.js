@@ -7,13 +7,28 @@
  * ZERO dependancies
  */
 
+// Type definitions...
+
+/**
+ * A Movesets object containing the movesets for every piece type in a game
+ * @typedef {Object<string, PieceMoveset>} Movesets
+ */
+
+/**
+ * A moveset for an single piece type in a game
+ * @typedef {Object} PieceMoveset
+ * @property {number[][]} individual - Array of individual moves.
+ * @property {Object<string, number[]>} [sliding] - Optional sliding moves.
+ */
+
+
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
  * 
  * These movesets are called as functions so that they return brand
  * new copies of each moveset so there's no risk of accidentally modifying the originals.
  * @param {number} slideLimit - Optional. The slideLimit gamerule value.
- * @returns {Object} Object containing the movesets of all pieces except pawns.
+ * @returns {Object<string, PieceMoveset} Object containing the movesets of all pieces except pawns.
  */
 function getPieceDefaultMovesets(slideLimit = Infinity) {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
