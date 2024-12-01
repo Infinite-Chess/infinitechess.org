@@ -24,37 +24,7 @@ import type { Movesets } from '../logic/movesets.js';
 // @ts-ignore
 import type { GameRules } from './gamerules.js';
 
-"use strict";
-
-/**
- * This script stores our variants,
- * and prepares them when a game is generated
- */
-
-const positionStringOfClassical = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
-const positionStringOfCoaIP = 'P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|HA-2,-6|HA11,-6|ha-2,15|ha11,15|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
-
-const defaultWinConditions = { white: ['checkmate'], black: ['checkmate'] };
-const KOTHWinConditions = { white: ['checkmate','koth'], black: ['checkmate','koth'] };
-const defaultTurnOrder = ['white', 'black'];
-
-const defaultPromotions = ['knights','bishops','rooks','queens'];
-const defaultPromotionsAllowed = repeatPromotionsAllowedForEachColor(defaultPromotions);
-const coaIPPromotions = [...defaultPromotions,'guards','chancellors','hawks'];
-const coaIPPromotionsAllowed = repeatPromotionsAllowedForEachColor(coaIPPromotions);
-
-const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule: null, turnOrder: ['black', 'white'] }; // No promotions, no 50-move rule, and reversed turn order.
-
-// Not needed since its imported
-// interface Movesets {
-// 	[key: string]: {
-// 		individual: number[][],
-// 		sliding?: {
-// 			[key: string]: number[]
-// 		}
-// 	}
-// }
-
+// An object that describes what modifications to make to default gamerules in a variant.
 interface GameRuleModifications {
 	promotionRanks?: (number | null)[] | null,
 	moveRule?: number | null,
@@ -87,6 +57,28 @@ interface Variant {
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
 }
 
+"use strict";
+
+/**
+ * This script stores our variants,
+ * and prepares them when a game is generated
+ */
+
+const positionStringOfClassical = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
+const positionStringOfCoaIP = 'P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|HA-2,-6|HA11,-6|ha-2,15|ha11,15|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
+
+const defaultWinConditions = { white: ['checkmate'], black: ['checkmate'] };
+const KOTHWinConditions = { white: ['checkmate','koth'], black: ['checkmate','koth'] };
+const defaultTurnOrder = ['white', 'black'];
+
+const defaultPromotions = ['knights','bishops','rooks','queens'];
+const defaultPromotionsAllowed = repeatPromotionsAllowedForEachColor(defaultPromotions);
+const coaIPPromotions = [...defaultPromotions,'guards','chancellors','hawks'];
+const coaIPPromotionsAllowed = repeatPromotionsAllowedForEachColor(coaIPPromotions);
+
+const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule: null, turnOrder: ['black', 'white'] }; // No promotions, no 50-move rule, and reversed turn order.
+
+
 /**
  * An object that contains each variant's positional and gamerule information:
  * 
@@ -102,9 +94,7 @@ interface Variant {
  * in time (variant has received an update), then it may contain nested UTC timestamps representing
  * the new values after that point in time.
  */
-const variantDictionary: {
-	[key: string]: Variant
-} = {
+const variantDictionary: { [key: string]: Variant } = {
 	Classical: {
 		positionString: positionStringOfClassical,
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed }
@@ -259,16 +249,12 @@ function isVariantValid(variantName: string) {
  * @param {Object} options - An object containing the properties `Variant`, and if desired, `Date`.
  * @returns {Object} An object containing 3 properties: `position`, `positionString`, and `specialRights`.
  */
-function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: {
-	Variant: string,
-	UTCDate: string,
-	UTCTime: string
-}) {
+function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: string, UTCDate: string, UTCTime: string }) {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
-	let positionString;
-	let startingPosition;
+	let positionString: string;
+	let startingPosition: { [key: string]: string };
 
 	// Does the entry have a `positionString` property, or a `generator` property?
 	if (variantEntry.positionString) {
@@ -303,12 +289,8 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: {
  */
 function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
 	positionString?: string,
-	startingPosition?: {
-		[key: string]: string
-	},
-	specialRights?: {
-		[key: string]: boolean
-	}
+	startingPosition?: { [key: string]: string },
+	specialRights?: { [key: string]: boolean }
 	pawnDoublePush?: boolean,
 	castleWith?: string
 }) {
@@ -343,9 +325,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	Variant: string,
 	UTCDate: string,
 	UTCTime: string
-}, position: {
-	[key: string]: string
-}) {
+}, position: { [key: string]: string }) {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
@@ -358,7 +338,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
 		gameruleModifications = getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime });
 	} else { // Just one gameruleModifications entry
-		gameruleModifications = variantEntry.gameruleModifications as GameRuleModifications;
+		gameruleModifications = variantEntry.gameruleModifications;
 	}
 
 	return getGameRules(gameruleModifications, position);
@@ -369,9 +349,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
  * @param {Object} modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
  * @returns {GameRules} The gamerules
  */
-function getGameRules(modifications: GameRuleModifications = {}, position?: {
-		[key: string]: string
-	}): GameRules { // { slideLimit, promotionRanks, position }
+function getGameRules(modifications: GameRuleModifications = {}, position?: { [key: string]: string }): GameRules { // { slideLimit, promotionRanks, position }
 	const gameRules: any = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
@@ -399,12 +377,7 @@ function getGameRules(modifications: GameRuleModifications = {}, position?: {
  * @param {number[]} promotionRanks - The `promotionRanks` gamerule of the variant. If one side's promotion rank is `null`, then we won't add legal promotions for them.
  * @returns {Object} The gamefile's `promotionsAllowed` gamerule.
  */
-function getPromotionsAllowed(position: {
-	[key: string]: string
-}, promotionRanks: (number | null)[]): {
-	white: string[],
-	black: string[]
-} {
+function getPromotionsAllowed(position: { [key: string]: string }, promotionRanks: (number | null)[]): { [key: string]: string[] } {
 	console.log("Parsing position to get the promotionsAllowed gamerule..");
 
 	// We can't promote to royals or pawns, whether we started the game with them.
@@ -451,8 +424,9 @@ function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, 
 	timeStampKeys = timeStampKeys.sort().reverse(); // [1709017200000, 0]
 	let timestampToUse: number;
 	for (const timestamp of timeStampKeys) {
-		if (Number.parseInt(timestamp) <= date) {
-			timestampToUse = Number.parseInt(timestamp);
+		const thisTimestamp = Number.parseInt(timestamp);
+		if (thisTimestamp <= date) {
+			timestampToUse = thisTimestamp;
 			break;
 		}
 	}
@@ -475,7 +449,6 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 	// Pasted games with no variant specified use the default movesets
 	// TODO: Transfer the slide limit game rule of pasted games
 	if (Variant === undefined) return getMovesets();
-
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
@@ -484,7 +457,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
 			return getMovesets({}, getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime }).slideLimit);
 		} else { // Just one movesetGenerator entry
-			return getMovesets({}, (variantEntry.gameruleModifications as GameRules)?.slideLimit);
+			return getMovesets({}, (variantEntry.gameruleModifications as GameRuleModifications)?.slideLimit);
 		}
 	}
 
@@ -528,9 +501,5 @@ export default {
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	getPromotionsAllowed,
-	getMovesetsOfVariant
-};
-
-export type {
-	ColorVariantProperty
+	getMovesetsOfVariant,
 };
