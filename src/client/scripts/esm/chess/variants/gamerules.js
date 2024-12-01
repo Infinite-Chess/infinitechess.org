@@ -87,7 +87,7 @@ function GameRules() {
      * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
      * If one color can't promote, their list should be left undefined.
      * If no color can promote, this should be left undefined.
-	 * @type {Object<string, string[]>}
+	 * @type {Object<string, string[]> | undefined}
      */
 	this.promotionsAllowed = {
 		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */
