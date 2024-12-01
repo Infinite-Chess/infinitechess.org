@@ -87,6 +87,20 @@ const simulatedWebsocketLatencyMillis = 0;
 let lastTimeWeGotAuthorizationNeededMessage;
 
 
+
+(function init() {
+	initListeners();
+})();
+
+function initListeners() {
+	document.addEventListener('connection-lost', alertUserLostConnection); // A custom event that is dispatched when we lose websocket connection or its very bad.
+}
+
+function alertUserLostConnection() {
+	noConnection = true;
+	statustext.showStatusForDuration(translations.websocket.no_connection, timeToWaitForHTTPMillis); // Alert the user
+}
+
 function getSubs() {
 	return subs;
 }
@@ -146,7 +160,7 @@ async function establishSocket() {
  * @returns {boolean} *true* if the socket was opened successfully.
  */
 async function openSocket() {
-	onReqLeave(); // Start 5s timer to assume we've disconnected if we haven't heard anything back
+	onSocketUpgradeReqLeave();
 	return new Promise((resolve, reject) => {
 		let url = `wss://${window.location.hostname}`;
 		if (window.location.port !== '443') url += `:${window.location.port}`; // Enables localhost to work during development
@@ -165,9 +179,13 @@ async function openSocket() {
 	});
 }
 
-/** Sets a timer that within a few seconds after we haven't heard a response from the server,
- * we assume we've lost connection, and display a message on screen. Then keep waiting.*/
-function onReqLeave() {
+/**
+ * 1. Dispatches a socket opening event that lets other parts of our code know that we are attempting to open a websocket.
+ * 2. Sets a timer that within a few seconds after we haven't heard a response from the server,
+ * we assume we've lost connection, and display a message on screen. Then keep waiting.
+ */
+function onSocketUpgradeReqLeave() {
+	dispatchOpeningSocketCustomEvent();
 	reqOut = setTimeout(httpLostConnection, timeToWaitForHTTPMillis);
 }
 
@@ -209,7 +227,7 @@ function cancelTimerOfMessageID(message) { // { sub, action, value, id }
 }
 
 /**
- * Closes the current websocket. Displays "Lost connection".
+ * Closes the current websocket when an echo hasn't been heard for a while. Displays "Lost connection".
  * The cause specified will cause us to automatically
  * try to reconnect a new websocket and resub to everything.
  * Called a few seconds after not hearing a server echo from one of our message.
@@ -224,8 +242,7 @@ function renewConnection(messageID) {
 	}
 	if (!socket) return;
 	console.log(`Renewing connection after we haven't received an echo for ${timeToWaitForEchoMillis} milliseconds...`);
-	noConnection = true;
-	statustext.showStatusForDuration(translations.websocket.no_connection, timeToWaitForHTTPMillis);
+	dispatchLostConnectionCustomEvent();
 	socket.close(1000, "Connection closed by client. Renew.");
 }
 
@@ -447,15 +464,22 @@ function onclose(event) {
 			enterTimeout(timeToResubAfterTooManyRequestsMillis); // After timeout is over, we then resubscribe!
 			break;
 		case "No echo heard": // Client took too long to respond, assumed connection is broken
-			// statustext.showStatus("No echo. If this keeps appearing, report this bug to Naviary!")
-			noConnection = true;
-			statustext.showStatusForDuration(translations.websocket.no_connection, timeToWaitForHTTPMillis);
+			dispatchLostConnectionCustomEvent();
 			resubAll(); // Instantly reconnects.
 			break;
 		default:
 			statustext.showStatus(`${translations.websocket.connection_closed} "${trimmedReason}" ${translations.websocket.please_report_bug}`, true, 100);
 			console.error("Unknown reason why the WebSocket connection was closed. Not reopening or resubscribing.");
 	}
+}
+
+function dispatchLostConnectionCustomEvent() {
+	// Dispatch this custom event that the ping meter listens for, to know to display the loading animation
+	document.dispatchEvent(new CustomEvent('connection-lost'));
+}
+
+function dispatchOpeningSocketCustomEvent() {
+	document.dispatchEvent(new CustomEvent('socket-opening'));
 }
 
 /**
