@@ -95,7 +95,7 @@ const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule
  * in time (variant has received an update), then it may contain nested UTC timestamps representing
  * the new values after that point in time.
  */
-const variantDictionary: { [key: string]: Variant } = {
+const variantDictionary: { [variantName: string]: Variant } = {
 	Classical: {
 		positionString: positionStringOfClassical,
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed }
