@@ -1,7 +1,7 @@
 
 /**
- * This script stores our variants,
- * and prepares them when a game is generated
+ * This script stores our variants, and contains methods for
+ * retrieving the game rules, or move sets of any given variant.
  */
 
 // @ts-ignore
