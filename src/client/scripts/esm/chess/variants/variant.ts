@@ -36,12 +36,12 @@ interface GameRuleModifications {
 
 /** Keys (if present) should be timestamps */
 type TimeVariantProperty<T> = T | {
-	[key: number]: T
+	[timestamp: number]: T
 }
 
 /** Keys should be colors */
 type ColorVariantProperty<T> = {
-	[key: string]: T
+	[color: string]: T
 }
 
 /** A single variant entry object in the variant dictionary */
@@ -253,7 +253,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
 	let positionString: string;
-	let startingPosition: { [key: string]: string };
+	let startingPosition: { [coordKey: string]: string };
 
 	// Does the entry have a `positionString` property, or a `generator` property?
 	if (variantEntry.positionString) {
@@ -287,8 +287,8 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
  */
 function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
 	positionString?: string,
-	startingPosition?: { [key: string]: string },
-	specialRights?: { [key: string]: boolean }
+	startingPosition?: { [coordKey: string]: string },
+	specialRights?: { [coordKey: string]: boolean }
 	pawnDoublePush?: boolean,
 	castleWith?: string
 }) {
@@ -321,7 +321,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	Variant: string,
 	UTCDate: string,
 	UTCTime: string
-}, position: { [key: string]: string }): GameRules {
+}, position: { [coordKey: string]: string }): GameRules {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
@@ -345,7 +345,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
  * @param modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
  * @returns The gamerules
  */
-function getGameRules(modifications: GameRuleModifications = {}, position?: { [key: string]: string }): GameRules { // { slideLimit, promotionRanks, position }
+function getGameRules(modifications: GameRuleModifications = {}, position?: { [coordKey: string]: string }): GameRules { // { slideLimit, promotionRanks, position }
 	const gameRules: any = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
@@ -373,7 +373,7 @@ function getGameRules(modifications: GameRuleModifications = {}, position?: { [k
  * @param promotionRanks - The `promotionRanks` gamerule of the variant. If one side's promotion rank is `null`, then we won't add legal promotions for them.
  * @returns The gamefile's `promotionsAllowed` gamerule.
  */
-function getPromotionsAllowed(position: { [key: string]: string }, promotionRanks: (number | null)[]): ColorVariantProperty<string[]> {
+function getPromotionsAllowed(position: { [coordKey: string]: string }, promotionRanks: (number | null)[]): ColorVariantProperty<string[]> {
 	console.log("Parsing position to get the promotionsAllowed gamerule..");
 
 	// We can't promote to royals or pawns, whether we started the game with them.
@@ -425,7 +425,7 @@ function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, 
 			break;
 		}
 	}
-	return (object as { [key: number]: Inner })[timestampToUse!]!;
+	return (object as { [timestamp: number]: Inner })[timestampToUse!]!;
 }
 
 /**
