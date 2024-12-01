@@ -3,7 +3,7 @@
  * This script generates the dependancy tree graph of the project.
  * To use it, enter the command:
  * 
- * node src/server/utility/generateDependancyGraph.js
+ * npm run generate-dependancy-graph
  */
 
 import madge from 'madge';
