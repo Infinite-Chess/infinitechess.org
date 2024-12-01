@@ -59,17 +59,17 @@ interface GameRuleModifications {
 	promotionRanks?: (number | null)[] | null,
 	moveRule?: number | null,
 	turnOrder?: string[],
-	promotionsAllowed?: {
-		[key: string]: string[]
-	},
-	winConditions?: {
-		[key: string]: string[]
-	},
+	promotionsAllowed?: ColorVariantProperty<string[]>
+	winConditions?: ColorVariantProperty<string[]>
 	slideLimit?: number
 }
 
 type TimeVariantProperty<T> = T | {
 	[key: number]: T
+}
+
+type ColorVariantProperty<T> = {
+	[key: string]: T
 }
 
 interface Variant {
@@ -359,7 +359,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 		gameruleModifications = variantEntry.gameruleModifications as GameRuleModifications;
 	}
 
-	return getGameRules({...gameruleModifications, position });
+	return getGameRules(gameruleModifications, position);
 }
 
 /**
@@ -527,4 +527,8 @@ export default {
 	getGameRulesOfVariant,
 	getPromotionsAllowed,
 	getMovesetsOfVariant
+};
+
+export type {
+	ColorVariantProperty
 };
