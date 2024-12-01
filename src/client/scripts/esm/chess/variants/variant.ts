@@ -64,10 +64,12 @@ interface GameRuleModifications {
 	slideLimit?: number
 }
 
+// Keys (if present) should be timestamps
 type TimeVariantProperty<T> = T | {
 	[key: number]: T
 }
 
+// Keys should be colors
 type ColorVariantProperty<T> = {
 	[key: string]: T
 }
