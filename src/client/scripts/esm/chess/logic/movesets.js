@@ -28,7 +28,7 @@
  * These movesets are called as functions so that they return brand
  * new copies of each moveset so there's no risk of accidentally modifying the originals.
  * @param {number} slideLimit - Optional. The slideLimit gamerule value.
- * @returns {Object} Object containing the movesets of all pieces except pawns.
+ * @returns {Object<string, PieceMoveset} Object containing the movesets of all pieces except pawns.
  */
 function getPieceDefaultMovesets(slideLimit = Infinity) {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
