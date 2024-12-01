@@ -55,7 +55,6 @@ const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule
 // 	}
 // }
 
-// Not needed since it's imported
 interface GameRuleModifications {
 	promotionRanks?: (number | null)[] | null,
 	moveRule?: number | null,

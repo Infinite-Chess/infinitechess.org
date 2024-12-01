@@ -78,7 +78,7 @@ function GameRules() {
      * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
      * If one side can't promote, their rank is `null`.
      * If neither side can promote, this should be left as undefined.
-     * @type {(number | null)[] | undefined}
+     * @type {(number | null)[] | null}
      */
 	this.promotionRanks = undefined;
 	/**
