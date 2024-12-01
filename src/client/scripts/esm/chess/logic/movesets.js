@@ -3,9 +3,9 @@
 
 /**
  * This script contains the movesets for all pieces except specials (pawns, castling)
- * 
- * ZERO dependancies
  */
+
+import isprime from './isprime.js'; //For Huygens
 
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
@@ -160,6 +160,16 @@ function getPieceDefaultMovesets(slideLimit = Infinity) {
                 [-2,1],[-1,2],[1,2],[2,1],
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
             ]
+		},
+		huygens: {
+			individual: [],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit]
+			},
+			ignore: function(distance) {
+				return !isprime.primalityTest(Math.abs(distance), null);
+			}
 		},
 		roses: {
 			individual: []
