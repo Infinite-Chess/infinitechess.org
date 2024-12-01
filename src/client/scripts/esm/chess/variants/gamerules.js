@@ -62,7 +62,9 @@ function GameRules() {
 
 	// REQUIRED gamerules...
 
-	/** An object containing lists of what win conditions each color can win by. This is REQUIRED. */
+	/** An object containing lists of what win conditions each color can win by. This is REQUIRED.
+	 * @type {Object<string, string[]>}
+	 */
 	this.winConditions = {
 		/** A list of win conditions white can win by. REQUIRED. @type {string[]} */
 		white: undefined,
@@ -85,7 +87,7 @@ function GameRules() {
      * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
      * If one color can't promote, their list should be left undefined.
      * If no color can promote, this should be left undefined.
-	 * @type {{ white: string[], black: string[] }}
+	 * @type {Object<string, string[]>}
      */
 	this.promotionsAllowed = {
 		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */

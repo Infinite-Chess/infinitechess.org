@@ -60,12 +60,10 @@ interface GameRuleModifications {
 	moveRule?: number | null,
 	turnOrder?: string[],
 	promotionsAllowed?: {
-		white?: string[],
-		black?: string[]
+		[key: string]: string[]
 	},
 	winConditions?: {
-		white: string[],
-		black: string[]
+		[key: string]: string[]
 	},
 	slideLimit?: number
 }
@@ -358,7 +356,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
 		gameruleModifications = getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime });
 	} else { // Just one gameruleModifications entry
-		gameruleModifications = variantEntry.gameruleModifications as GameRules;
+		gameruleModifications = variantEntry.gameruleModifications as GameRuleModifications;
 	}
 
 	return getGameRules({...gameruleModifications, position });
@@ -376,13 +374,11 @@ function getGameRules(modifications: {
 		[key: string]: string
 	},
 	winConditions?: {
-		white: string[],
-		black: string[]
+		[key: string]: string[]
 	},
 	turnOrder?: string[],
 	promotionsAllowed?: {
-		white?: string[],
-		black?: string[]
+		[key: string]: string[]
 	},
 	moveRule?: number | null
 } = {}): GameRules { // { slideLimit, promotionRanks, position }
