@@ -78,13 +78,14 @@ function GameRules() {
      * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
      * If one side can't promote, their rank is `null`.
      * If neither side can promote, this should be left as undefined.
-     * @type {number[] | null}
+     * @type {(number | null)[] | undefined}
      */
 	this.promotionRanks = undefined;
 	/**
      * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
      * If one color can't promote, their list should be left undefined.
      * If no color can promote, this should be left undefined.
+	 * @type {{ white: string[], black: string[] }}
      */
 	this.promotionsAllowed = {
 		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */

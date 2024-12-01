@@ -56,20 +56,20 @@ const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule
 // }
 
 // Not needed since it's imported
-/*interface GameRules {
+interface GameRuleModifications {
 	promotionRanks?: (number | null)[] | null,
 	moveRule?: number | null,
 	turnOrder?: string[],
 	promotionsAllowed?: {
-		white: string[],
-		black: string[]
+		white?: string[],
+		black?: string[]
 	},
 	winConditions?: {
 		white: string[],
 		black: string[]
 	},
 	slideLimit?: number
-}*/
+}
 
 type TimeVariantProperty<T> = T | {
 	[key: number]: T
@@ -85,7 +85,7 @@ interface Variant {
 		}
 	},
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
-	gameruleModifications: TimeVariantProperty<GameRules>
+	gameruleModifications: TimeVariantProperty<GameRuleModifications>
 }
 
 /**
@@ -350,7 +350,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
-	let gameruleModifications: GameRules;
+	let gameruleModifications: GameRuleModifications;
 	// gameruleModifications
 
 	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?
@@ -359,7 +359,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
 		gameruleModifications = getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime });
 	} else { // Just one gameruleModifications entry
-		gameruleModifications = variantEntry.gameruleModifications;
+		gameruleModifications = variantEntry.gameruleModifications as GameRules;
 	}
 
 	return getGameRules({...gameruleModifications, position });
@@ -382,12 +382,12 @@ function getGameRules(modifications: {
 	},
 	turnOrder?: string[],
 	promotionsAllowed?: {
-		white: string[],
-		black: string[]
+		white?: string[],
+		black?: string[]
 	},
 	moveRule?: number | null
 } = {}): GameRules { // { slideLimit, promotionRanks, position }
-	const gameRules: GameRules = {
+	const gameRules: any = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
 		turnOrder: modifications.turnOrder || defaultTurnOrder,
@@ -404,7 +404,7 @@ function getGameRules(modifications: {
 	// GameRules that DON'T have a dedicated ICN spot...
 	if (modifications.slideLimit !== undefined) gameRules.slideLimit = modifications.slideLimit;
 
-	return jsutil.deepCopyObject(gameRules); // Copy it so the game doesn't modify the values in this module.
+	return jsutil.deepCopyObject(gameRules) as GameRules; // Copy it so the game doesn't modify the values in this module.
 }
 
 /**
