@@ -1,61 +1,80 @@
 
-import { getTranslationForReq } from '../utility/translate.js';
-import { logEvents } from '../middleware/logEvents.js';
-import { getUsernameCaseSensitive, getVerified, setVerified, doesVerificationIDMatch } from './members.js';
+import { logEvents } from "../middleware/logEvents.js";
+import { getTranslationForReq } from "../utility/translate.js";
+import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
-// Called when clicked on verification link in email.
-// CAN redirect!
-const verifyAccount = async function(req, res) {
-	// Get the parameters out of the url
-	const usernameLowercase = req.params.member.toLowerCase();
-	const ID = req.params.id;
 
-	// First check if the member exists
-	const username = getUsernameCaseSensitive(usernameLowercase);
-	if (!username) {
-		const hackTxt = `Invalid account verification link! User '${usernameLowercase}' DOESN'T EXIST. id '${ID}'`;
-		logEvents(hackTxt, 'hackLog.txt', { print: true });
-		res.status(400).redirect(`/400`); // Bad request
-		return;
+
+/**
+ * Route that verifies accounts.
+ * If they are not signed in, this forwards them to the login page.
+ * @param {object} req 
+ * @param {object} res 
+ * @returns 
+ */
+async function verifyAccount(req, res) {
+	if (!req.memberInfo) {
+		logEvents("req.memberInfo must be defined for verify account route!", 'errLog.txt', { print: true });
+		return res.status(500).redirect('/500');
 	}
 
-	if (!req.user) {
-		console.log(`Forwarding user '${username}' to login before they can verify!`);
-		// Redirect them to the login page,
-		// BUT add a query parameter with the original verification url they were visiting!
+	// Get the parameters out of the url
+	const claimedUsername = req.params.member;
+	const claimedCode = req.params.code; 
+
+	// eslint-disable-next-line prefer-const
+	let { user_id, username, verification } = getMemberDataByCriteria(['user_id', 'username', 'verification'], 'username', claimedUsername, { skipErrorLogging: true });
+	if (user_id === undefined) { // User not found
+		logEvents(`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST. Verification code "${claimedCode}"`, 'hackLog.txt', { print: true });
+		return res.status(400).redirect(`/400`); // Bad request
+	}
+	// The verification is stringified in the database. We need to parse it here.
+	verification = JSON.parse(verification);
+
+	if (!req.memberInfo.signedIn) { // Not logged in
+		logEvents(`Forwarding user '${username}' to login before they can verify!`, 'loginAttempts.txt', { print: true });
+		// Redirect them to the login page, BUT add a query parameter with the original verification url they were visiting!
 		const redirectTo = encodeURIComponent(req.originalUrl);
 		return res.redirect(`/login?redirectTo=${redirectTo}`);
 	}
 
-	if (req.user !== usernameLowercase) { // Forbid them if they are logged in and NOT who they're wanting to verify!
-		const errText = `User ${req.user} attempted to verify ${usernameLowercase}!`;
-		logEvents(errText, 'hackLog.txt', { print: true });
-		res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req));
-		return;
+	if (req.memberInfo.username !== username) { // Forbid them if they are logged in and NOT who they're wanting to verify!
+		logEvents(`Member "${req.memberInfo.username}" of ID "${req.memberInfo.user_id}" attempted to verify member "${username}"!`, 'loginAttempts.txt', { print: true });
+		return res.status(403).send(getTranslationForReq("server.javascript.ws-forbidden_wrong_account", req));
 	}
 
-	// Then check if the id parameter matches their id in the verify parameter of their profile!
-	const verified = getVerified(usernameLowercase);
-	if (verified === true || verified === 0) { // Bad request, member already verified
-		console.log(`Member '${username}' is already verified!`);
-		res.redirect(`/member/${usernameLowercase}`);
-		return;
+	// verification: { verified (boolean), notified (boolean), code (string) }
+
+	// Ignore if already verified.
+	if (verification === null || verification.verified) { // Bad request, member already verified
+		logEvents(`Member "${username}" of ID ${user_id} is already verified!`, 'loginAttempts.txt', { print: true });
+		return res.redirect(`/member/${username}`);
 	}
 
-	if (!doesVerificationIDMatch(usernameLowercase, ID)) {
-		const hackTxt = `Invalid account verification link! User '${username}', id '${ID}' INCORRECT`;
-		logEvents(hackTxt, 'hackLog.txt', { print: true });
-		res.status(400).redirect(`/400`);
-		return;
+	// Check if the verification code matches!
+	if (claimedCode !== verification.code) {
+		logEvents(`Invalid account verification link! User "${username}", code "${claimedCode}" INCORRECT`, 'loginAttempts.txt', { print: true });
+		return res.status(400).redirect(`/400`);
 	}
 
 	// VERIFY THEM..
-	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
-	const success = setVerified(usernameLowercase, true);
-	if (!success) return res.status(500).redirect(`/500`); // Server error, unable to update member's verified parameter.
+	onVerify(verification);
 
-	console.log(`Verified member ${username}'s account!`);
-	res.redirect(`/member/${usernameLowercase}`);
+	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
+
+	const changesMade = updateMemberColumns(user_id, { verification });
+	if (!changesMade) return logEvents(`No changes made when saving verification for member with id "${user_id}"! Value: ${JSON.stringify(verification)}`, 'errLog.txt', { print: true });
+
+	logEvents(`Verified member ${username}'s account! ID ${user_id}`, 'loginAttempts.txt', { print: true });
+	res.redirect(`/member/${username.toLowerCase()}`);
 };
+
+function onVerify(verification) { // { verified, notified, code }
+	verification.verified = true;
+	verification.notified = false;
+	delete verification.code;
+}
+
+
 
 export { verifyAccount };

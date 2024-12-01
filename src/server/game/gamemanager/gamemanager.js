@@ -15,8 +15,8 @@ import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers,
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
-import uuid from '../../../client/scripts/game/misc/uuid.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import uuid from '../../../client/scripts/esm/util/uuid.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 /**
  * Type Definitions
@@ -190,7 +190,9 @@ function pushGameClock(game) {
 	game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
 	if (game.untimed) return; // Don't adjust the times if the game isn't timed.
 
-	if (!gameutility.isGameResignable(game)) return; ///////////////////////// Atleast 2 moves played
+	if (!gameutility.isGameResignable(game)) return;
+
+	// Atleast 2 moves played
 
 	const now = Date.now();
 	const timeSpent = now - game.timeAtTurnStart;
@@ -199,7 +201,6 @@ function pushGameClock(game) {
 
 	if (colorWhoJustMoved === 'white') game.timeRemainAtTurnStart = game.timerBlack;
 	else                               game.timeRemainAtTurnStart = game.timerWhite;
-	game.timeNextPlayerLosesAt = game.timeAtTurnStart + game.timeRemainAtTurnStart;
 
 	// Start the timer that will auto-terminate the player when they lose on time
 	setAutoTimeLossTimer(game);
@@ -234,7 +235,6 @@ function stopGameClock(game) {
 	game.whosTurn = undefined;
 
 	game.timeAtTurnStart = undefined;
-	game.timeNextPlayerLosesAt = undefined;
 	game.timeRemainAtTurnStart = undefined;
 }
 

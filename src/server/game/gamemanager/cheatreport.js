@@ -9,7 +9,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 // Custom imports
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 /**
  * Type Definitions

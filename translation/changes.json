@@ -1,4 +1,36 @@
 {
+	"23": {
+		"note": [
+			"Deleted member.rating, line 105",
+			"Deleted ws-unauthorized_patron_page, line 548",
+			"Deleted ws-refresh_token_not_found_logged_out, ws-refresh_token_not_found, ws-refresh_token_expired, and ws-refresh_token_invalid, lines 534-537",
+			"Updated index.how_to_paragraph, line 47",
+			"Added play.play-menu.5D_Chess, line 227"
+		],
+		"changes": []
+	},
+	"22": {
+		"note": "Deleted all of header.javascript (lines 19-23). Changed the value of header.home (line 7). Added header.profile (line 11) & header.logout (line 10). Deleted disable_holiday_theme_desktop and disable_holiday_theme_mobile (lines 299-300). Added all of header.settings (lines 15-25).",
+		"changes": []
+	},
+	"21": {
+		"note": "Added notices for how to disable the holiday theme, lines 299-300. DELETED IN UPDATE 22.",
+		"changes": []
+	},	
+	"20": {
+		"note": "Added fields for game button tooltips, lines 241-247",
+		"changes": [
+			"play.gamebuttontooltips"
+		]
+	},	
+	"19": {
+		"note": "Updated wording of verify_message and resend_message, lines 94-95",
+		"changes": []
+	},
+	"18": {
+		"note": "Added Spanish translation credit, line 89",
+		"changes": []
+	},
 	"17": {
 		"note": "Added credits.language_heading and credits.language_credits, line 82",
 		"changes": []

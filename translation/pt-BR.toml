@@ -1,14 +1,28 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "14"
-maintainer = "The_Skeleton"
+version = "23"
+maintainer = "Emerson P. Machado" # The_Skeleton on discord
 
 [header]
-home = "Início"
+home = "Xadrez Infinito"
 play = "Jogar"
 news = "Notícias"
 login = "Entrar"
+profile = "Perfil"
 createaccount = "Criar conta"
+logout = "Sair"
+
+[header.settings]
+language = "Idioma"
+board = "Tabuleiro" # Cor/Tema do Tabuleiro
+legalmoves = "Lances Legais" # Legal moves shape
+legalmoves-squares = "Casas"
+legalmoves-dots = "Pontos" # Pontos e triângulos de 4 cantos
+perspective = "Perspectiva" # Modo da perspectiva
+perspective-mouse-sensitivity = "Sensibilidade do Mouse"
+perspective-fov = "Campo de Visão"
+ping = ["Ping", "ms"] # Um número é inserido dentro dessas 2 strings.
+reset-to-default = "Resetar para o Padrão"
 
 [footer]
 contact = "Contato"
@@ -16,30 +30,24 @@ terms_of_service = "Termos de serviço"
 source_code = "Código-fonte"
 language = "Idioma"
 
-[header.javascript]
-js-profile = "Perfil"
-js-logout = "Sair"
-js-login = "Entrar"
-js-createaccount = "Criar Conta"
-
 [member.javascript]
 js-confirm_delete = "Tem certeza de que deseja excluir sua conta? Isso NÃO PODE ser desfeito! Clique em OK para digitar sua senha."
 js-enter_password = "Digite sua senha para excluir PERMANENTEMENTE sua conta:"
 
 [index]
-title = "Infinite Chess | Início - O Site Oficial" # The tab title
+title = "Xadrez Infinito | Início - O Site Oficial" # The tab title
 secondary_title = "O site oficial para jogar ao vivo!"
 what_is_it_title = "O que é?"
 what_is_it_pargaraphs = [
-"Infinite Chess é uma variante do xadrez em que não há bordas, muito maior do que o seu familiar tabuleiro 8x8. A dama, as torres e os bispos <em>não têm limites</em> de quão longe podem se mover por turno. Escolha qualquer número natural até o infinito!",
+"Xadrez Infinito é uma variante do xadrez em que não há bordas, muito maior do que o seu familiar tabuleiro 8x8. A dama, as torres e os bispos <em>não têm limites</em> de quão longe podem se mover por turno. Escolha qualquer número natural até o infinito!",
 "Sem limite de quão longe você pode se mover, existem posições possíveis onde o número do relógio do xeque-mate, ou xeque-mate em <em>branco</em>, é representado pelo primeiro ordinal infinito, <strong>ômega ω</strong >. Na verdade, pesquisas descobriram que <strong>qualquer</strong> ordinal contável é alcançável para o relógio do xeque-mate!",
 "Como você pode imaginar, existem infinitas possibilidades de posições iniciais, muitas das quais você pode jogar competitivamente! Seu objetivo final ainda é o xeque-mate, o que requer novas táticas, visto que não há paredes contra as quais possa prender o rei inimigo. Os jogos tipicamente não duram muito mais do que os jogos normais de xadrez. Peões ainda promovem nas fileiras 1 & 8!",
 ]
 how_to_title = "Como eu posso jogar?"
-how_to_paragraph = ["A versão atual é a 1.4 na página ","Jogar","!"]
+how_to_paragraph = ["A versão atual é a 1.5 na página ","Jogar","!"]
 about_title = "Sobre o Projeto"
 about_paragraphs = [
-"Eu sou Naviary. Desde que descobri o Infinite Chess (o conceito existia muito antes deste site), fiquei muito intrigado com ele e suas possibilidades! Até pouco tempo atrás, jogar era bastante difícil, exigindo que os membros do chess.com criassem imagens do tabuleiro atual e as enviassem de um lado para o outro a cada jogada realizada. Devido a isso, poucas pessoas conhecem ou conseguiram jogar.",
+"Eu sou Naviary. Desde que descobri o Xadrez Infinito (o conceito existia muito antes deste site), fiquei muito intrigado com ele e suas possibilidades! Até pouco tempo atrás, jogar era bastante difícil, exigindo que os membros do chess.com criassem imagens do tabuleiro atual e as enviassem de um lado para o outro a cada jogada realizada. Devido a isso, poucas pessoas conhecem ou conseguiram jogar.",
 ["Meu objetivo é criar uma maneira de tornar esse jogo fácil de jogar para todos e desenvolver uma comunidade em torno dele. Gastei inúmeras horas do meu tempo livre neste site, mantendo e desenvolvendo o jogo. Tenho muitas outras ideias que me manterão ocupado por algum tempo. Embora eu queira manter o jogo gratuito, a vida tem suas exigências. Para me ajudar financeiramente, considere a possibilidade de se juntar ao meu", "Patreon"]
 ]
 patreon_title = "Apoiadores do Patreon"
@@ -79,13 +87,21 @@ code_credits = [
 "por Brandon Jones e Colin MacKenzie IV.",
 "por Andreas Tsevas e Naviary.",
 ]
+language_heading = "Traduções de Idiomas"
+language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
+	"Francês por ", "Life Enjoyer", " e ", "cycy98", ".",
+	"Chinês Simplificado por ", "Heinrich Xiao", ".",
+	"Chinês Tradicional por ", "Heinrich Xiao", ".",
+	"Polonês por ", "Tymon Becella", ".", # Apsurt
+	"Português por ", "Emerson P. Machado", ".", # The_Skeleton on discord
+	"Espanhol por ", "xa31er", "."
+]
 
 [member]
 title = "Membro" # The tab name
-verify_message = "Verifique seu e-mail para confirmar sua conta."
-resend_message = ["Não recebeu um? Verifique sua pasta de spam. Também, ", "enviar novamente.", " Se você ainda não consegue encontrar, ", "me mande uma mensagem."]
+verify_message = "Por favor verifique seu e-mail para confirmar sua conta. Contas não confirmadas serão deletadas após 3 dias."
+resend_message = ["Não recebeu um? Verifique sua pasta de spam. Também, ", "enviar novamente.", " Se você ainda não consegue encontrar, ", "mande uma mensagem."]
 verify_confirm = "Obrigado! Sua conta foi verificada"
-rating = "Rating Elo:"
 joined = "Ingressou:"
 seen = ["Visto:", " desde de"]
 reveal_info = "Mostre informações da conta"
@@ -114,7 +130,7 @@ js-pwd_too_long = "A senha não pode ter mais de 72 caracteres"
 js-pwd_not_pwd = "A senha não deve ser 'password'"
 
 [play]
-title = "Infinite Chess - Jogar" # The tab title
+title = "Xadrez Infinito - Jogar" # The tab title
 loading = "CARREGANDO"
 error = "ERRO"
 
@@ -128,7 +144,7 @@ editor = "Editor de tabuleiro"
 title = "Guia"
 rules = "Regras"
 rules_paragraphs = [
-"As regras do Infinite Chess são quase idênticas às do xadrez clássico, exceto pelo fato de o tabuleiro ser infinito em todas as direções! Essas são as únicas observações e alterações das quais você precisa estar ciente:",
+"As regras do Xadrez Infinito são quase idênticas às do xadrez clássico, exceto pelo fato de o tabuleiro ser infinito em todas as direções! Essas são as únicas observações e alterações das quais você precisa estar ciente:",
 "As peças com movimentos deslizantes, como as torres, os bispos e a dama, não têm limite para a distância que podem percorrer em um turno! Desde que o caminho delas esteja desobstruído, você pode mover milhões!",
 ["Na variante padrão \"Classical\", os peões brancos são promovidos na posição 8 e os peões pretos na posição 1. Nesta imagem, isso é indicado pelas linhas pretas finas. Elas são fracas, veja se você consegue identificá-las! Os peões só precisam alcançar a linha oposta para serem promovidos, ", "não", " cruzá-la."],
 "A notação dos quadrados não é mais descrita pela letra da coluna e pelo número da fileira (ou seja, a1); em vez disso, cada quadrado é definido por um par de coordenadas x e y. O quadrado a1 se tornou (1,1) e o quadrado h8 se tornou (8,8). Em dispositivos desktop, a coordenada sobre a qual o mouse está posicionado é exibida na parte superior da tela.",
@@ -201,13 +217,14 @@ Amazon_Chandelier = "Amazon Chandelier"
 Containment = "Containment"
 Classical_Limit_7 = "Classical - Limit 7"
 CoaIP_Limit_7 = "Coaip - Limit 7"
-Chess = "Chess"
+Chess = "Xadrez"
 Classical_KOTH = "Experimental: Classical - KOTH"
 CoaIP_KOTH = "Experimental: Coaip - KOTH"
 Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
 Omega_Fourth = "Showcase: Omega^4"
+5D_Chess = "5D Chess"
 no_clock = "Sem relógio"
 clock = "Relógio"
 minutes = "m"
@@ -228,6 +245,14 @@ join = "Entrar"
 copy = "Copiar"
 back = "Voltar"
 code = "Código"
+
+[play.gamebuttontooltips]
+undo_transition = "Voltar transição"
+expand_fit_all = "Expandir para caber tudo"
+recenter = "Recentralizar"
+rewind_move = "Lance anterior"
+forward_move = "Próximo lance"
+pause = "Pausar"
 
 [play.footer]
 white_to_move = "Brancas jogam"
@@ -483,65 +508,9 @@ login_button = "Entrar"
 409_message = ["Pode ter havido um conflito de nome de usuário ou e-mail. Por favor ", "recarregue", ", ta página."]
 500_message = "Isso não deveria acontecer. Há algum debug a ser feito!"
 
-########### NOTÍCIAS ###########
-
 [news]
 title = "Notícias"
 more_dev_logs = ["Mais registros de desenvolvimento são postados no ", "discord oficial", ", e nos ", "fóruns do chess.com!"]
-
-[news.aug1-2024] # Update 1.4
-date = "Agosto 1, 2024:"
-text_top = "A atualização 1.4 foi lançada! Foram adicionados muitos recursos de colaboração desde que abrimos o código-fonte!"
-update_list = [
-"Knightriders foram adicionados, que saltam infinitamente como um cavalo até serem obstruídos! A variante 'Knighted Chess' foi atualizada para substituir os cavalos por knightriders!",
-"Clique em suas peças ou nas do adversário a qualquer momento para ver os movimentos possíveis!",
-"Clique com o botão direito do mouse a qualquer momento para desmarcar a peça selecionada.",
-"Passar o mouse sobre os indicadores de seta na borda da tela agora renderiza os movimentos legais da peça que elas estão apontando!",
-"O jogo agora declara automaticamente um empate se não houver material suficiente no tabuleiro para forçar o xeque-mate.",
-"Traduzimos o site para o Francês! Você pode alterar o idioma acessando o rodapé de qualquer página.",
-"Melhoria no tempo de carregamento do site.",
-"Novo ícone do site, Ω! Ele corresponde automaticamente ao tema de seu dispositivo claro ou escuro preferido.",
-"Os metadados do código do jogo, ou do ICN, foram reformatados para se aproximarem mais das normas do PGN.",
-"Os usuários agora podem excluir suas contas na página de perfil, se assim desejarem, sem precisar nos enviar um e-mail."
-]
-
-[news.july22-2024]
-date = "Julho 22, 2024:"
-account_warning = "Se você ainda não verificou sua conta, faça isso em sua página de perfil! Todas as contas não verificadas serão excluídas em breve!"
-
-[news.july13-2024]
-date = "Julho 13, 2024:"
-tos_update = ["O ", "Termos de Serviço", " foram atualizados. Alterações feitas: Todos os jogos que você joga no site podem se tornar informações públicas, inclusive o horário aproximado em que sua conta esteve ativa pela última vez. Os termos podem ser atualizados a qualquer momento, e é sua responsabilidade certificar-se de que está em dia com eles."]
-game_history_warning = "Seu histórico de jogos poderá ficar disponível em seu perfil em um momento futuro."
-
-[news.july9-2024]
-date = "Julho 9, 2024:"
-text = ["O Infinite Chess agora é de código aberto! Veja e contribua com o projeto ", "no GitHub!"]
-
-[news.may27-2024]
-date = "Maio 27, 2024:"
-text = "1.3.2: Adicionadas variantes de mostruário para Ômega^3 e Ômega^4 que foram mostradas no meu último vídeo. Além disso, o algoritmo de xeque-mate agora é compatível com vários reis para cada lado."
-
-[news.may24-2024]
-date = "Maio 24, 2024:"
-text = "Atualização 1.3.1 lançada! Ela inclui o guia, dicas de ferramentas pop-up ao passar o mouse sobre os botões de navegação e links para o discord e os créditos do jogo na página de título!"
-
-[news.may14-2024]
-date = "Maio 14, 2024:"
-text_top = "A atualização 1.3 foi lançada hoje! Ela inclui MUITAS novas melhorias na velocidade e na experiência do usuário. Apenas algumas delas são:"
-update_list = [
-"A transição para websockets, diminuindo o atraso quando seu oponente se move.",
-"Você não é mais desconectado ao alternar entre guias.",
-"Avisos sonoros quando você ou outra pessoa cria um convite ou faz um lance.",
-"Adicionado a regra dos 50 Lances.",
-"Um efeito sonoro de bateria agora é reproduzido quando há 10 segundos restantes no relógio.",
-"Um cronômetro de desistência automática começará se seu oponente ficar ausente (com um aviso sonoro)."
-]
-text_box = ["E muitos outros! Para ver a lista completa, confira ", "o discord!"]
-
-[news.jan29-2024]
-date = "Janeiro 29, 2024:"
-text = "Novo vídeo lançado hoje!"
 
 [server.javascript]
 ws-invalid_username = "Nome de Usuário é inválido"
@@ -563,10 +532,6 @@ ws-you_are_banned = "Você foi banido."
 ws-password_length = "A senha deve ter entre 6-72 caracteres"
 ws-password_format = "A senha está em um formato incorreto"
 ws-password_password = "A senha não deve ser 'password'"
-ws-refresh_token_not_found_logged_out = "Nenhum membro tem esse token de atualização (já desconectado)"
-ws-refresh_token_not_found = "Nenhum membro tem esse token de atualização"
-ws-refresh_token_expired = "Nenhum token de atualização encontrado (sessão expirada)"
-ws-refresh_token_invalid = "Token de atualização expirado ou adulterado"
 ws-member_not_found = "Membro não encontrado"
 ws-forbidden_wrong_account = "Proibido. Esta não é sua conta."
 ws-deleting_account_not_found = "Falha ao excluir a conta. Conta não encontrada."
@@ -577,10 +542,9 @@ ws-too_many_requests_to_server = "Muitas solicitações. Tente novamente em brev
 ws-bad_request = "Solitação ruim"
 ws-not_found = "404 Não Encontrado"
 ws-forbidden = "Proibido."
-ws-unauthorized_patron_page = "Não autorizado. Esta página é exclusiva para patronos."
 ws-already_in_game = "Você já está em um jogo."
 ws-server_restarting = "O servidor está reiniciando em" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
-ws-server_under_maintenance = "O servidor está em manutenção. Verifique novamente em breve" # Can be changed at will to change the display message.
+ws-server_under_maintenance = "O servidor está em manutenção. Verifique novamente mais tarde" # Pode ser alterado à vontade para mudar a mensagem exibida.
 ws-minutes = "minutos" # unidade de tempo
 ws-minute = "minuto" # unidade de tempo
 ws-no_abort_game_over = "Não é possível cancelar o jogo, pois ele já terminou."

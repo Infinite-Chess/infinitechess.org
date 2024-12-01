@@ -1,41 +1,18 @@
 <!DOCTYPE html>
 <html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
-        <script>
-            const translations = <%-JSON.stringify({
-                ...t('header.javascript', {returnObjects: true})
-            })%>;
-        </script>
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title><%=t('terms.title')%></title>
+        <link rel='stylesheet' href='/css/header.css'>
         <link rel='stylesheet' href='/css/termsofservice.css'>
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
-        <script defer src="/scripts/memberHeader.js"></script>
     </head>
     <body>
-        <header>
-            <nav>
-                <a href="/">
-                    <p><%=t('header.home')%></p>
-                </a>
-                <a href="/play">
-                    <p><%=t('header.play')%></p>
-                </a>
-                <a href="/news">
-                    <p><%=t('header.news')%></p>
-                </a>
-                <a href="/login" id="loginlink">
-                    <p id="logintext"><%=t('header.login')%></p>
-                </a>
-                <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext"><%=t('header.createaccount')%></p>
-                </a>
-            </nav>
-        </header>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
             <div id="content">
                 <h1 class="center"><%=t('terms.title')%></h1>

@@ -15,68 +15,11 @@ html {
 :root {
     /* 100vw, but with a maximum, so some UIs don't get too big. */
     --vw-capped: clamp(0px, 100vw, 1086px);
-    --nav-bar-height: 40px;
+    --nav-bar-height: 41px; /* 40 + 1 for border */
     /* The viewport height, subtract the navigation bar height. */
     --vh-sub-nav: calc(100vh - var(--nav-bar-height));
     /* The minimum between the viewport width and height */
     --vwh: min(var(--vh-sub-nav), var(--vw-capped));
-}
-
-
-
-/* Header along the very top of the page */
-
-header {
-    position: fixed;
-    left: 0;
-    top: 0;
-    right: 0;
-    box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    height: var(--nav-bar-height);
-    font-size: 0;
-    overflow: scroll;
-    white-space: nowrap;
-    text-align: center;
-    background-color: white;
-    z-index: 1;
-}
-
-header a {
-    display: inline-block;
-    text-decoration: none;
-    line-height: var(--nav-bar-height);
-    margin-left: 4px;
-    min-width: 70px;
-    font-size: 16px;
-    color: black;
-}
-
-header a:hover {
-    background-color: rgb(211, 235, 255);
-}
-
-header p {
-    padding: 0 10px;
-}
-
-/* Start increasing header links width */
-@media only screen and (min-width: 450px) {
-
-    header {
-        overflow: unset;
-    }
-
-    header a {
-        min-width: calc(70px + (100vw - 450px) * 0.15);
-    }
-}
-
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-
-    header a {
-        min-width: 110px;
-    }
 }
 
 
@@ -843,10 +786,16 @@ button.join-button, button.copy-button {
     margin-right: 0.31em;
     padding: 0.06em 0.19em;
     border-radius: 0.19em;
-    min-width: 7.5em;
-    max-width: 8.75em;
+    width: 7.5em;
+    font-size: 1em;
     background-color: rgb(245, 245, 245);
     color: rgb(37, 37, 37);
+}
+
+/* The increment and decrement arrow heads spin buttons on the input element */
+#x::-webkit-inner-spin-button, #y::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
 }
 
 .navigation .button {
@@ -1031,7 +980,6 @@ button.join-button, button.copy-button {
 }
 
 @media only screen and (max-width: 502px) {
-
     .playerwhite, .playerblack {
         display: none;
     }
@@ -1439,10 +1387,6 @@ button.join-button, button.copy-button {
 
 
 /* General classes with basic properties */
-
-.currPage {
-    background-color: rgb(236, 236, 236);
-}
 
 .center {
     text-align: center;

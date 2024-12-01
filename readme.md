@@ -14,7 +14,6 @@ We are still far off from our vision. We refuse to stop until many crucial featu
 - Truly infinite move distance
 - Board Editor
 - Rating system, with leaderboards
-- Themes, colors, board textures
 - Premoving
 - Highlighting squares, drawing infinite lines
 - Engine play

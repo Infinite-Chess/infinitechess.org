@@ -1,9 +1,13 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
+// import pluginTypescript from "@typescript-eslint/eslint-plugin";
+import parserTypescript from "@typescript-eslint/parser";
 
 export default [
 	pluginJs.configs.recommended,
 	{
+		files: ["**/*.js","**/*.ts"], // Apply the following rule overrides to both js and ts files...
+		// plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object.  SUPPOSEDLY THIS IS NOT NEEDED??
 		rules: { // Overrides the preset defined by "pluginJs.configs.recommended" above
 			'no-undef': 'error', // Undefined variables not allowed
 			'no-unused-vars': 'warn', // Unused variables give a warning
@@ -38,6 +42,7 @@ export default [
 			// "complexity": ["warn", { "max": 10 }] // Can choose to enable to cap the complexity, or number of independant paths, which can lead to methods.
 		},
 		languageOptions: {
+			parser: parserTypescript, // Use the TypeScript parser
 			sourceType: "module", // Can also be "commonjs", but "import" and "export" statements will give an eslint error
 			globals: {
 				...globals.node, // Defines "require" and "exports"
@@ -45,9 +50,16 @@ export default [
 				// Game code scripts are considered public variables
 				// MOST OF THE GAME SCRIPTS are ESM scripts, importing their own definitions, so we don't need to list them below.
 				translations: "readonly", // Injected into the html through ejs
-				memberHeader: "readonly",
+				header: "readonly",
 				htmlscript: "readonly",
 			}
 		}
-	}
+	},
+	{ // TYPESCRIPT SETTINGS THAT OVERWRITE THE ABOVE
+		files: ["**/*.ts"],
+		rules: {
+			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
+			'dot-notation': 'off', 
+		},
+	},
 ];

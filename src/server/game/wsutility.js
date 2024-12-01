@@ -4,6 +4,7 @@
 
 import { getTranslation } from '../utility/translate.js';
 import { ensureJSONString } from '../utility/JSONUtils.js';
+import jsutil from '../../client/scripts/esm/util/jsutil.js';
 
 /** @typedef {import('./TypeDefinitions.js').Socket} Socket */
 
@@ -39,9 +40,8 @@ function getSimplifiedMetadata(ws) {
 	const metadata = ws.metadata;
 	if (!metadata) return console.error("We should not be simplifying a websockets metadata when it is undefined!");
 	const metadataCopy = {};
-	if (metadata.user) metadataCopy.user = metadata.user;
-	if (metadata.role) metadataCopy.role = metadata.role;
-	if (metadata['browser-id']) metadataCopy['browser-id'] = metadata['browser-id'];
+	metadataCopy.memberInfo = jsutil.deepCopyObject(metadata.memberInfo);
+	metadataCopy.cookies = jsutil.deepCopyObject(metadata.cookies);
 	metadataCopy.id = metadata.id;
 	if (metadata.IP) metadataCopy.IP = metadata.IP;
 	//if (metadata.id) metadataCopy.id = metadata.id;
@@ -55,8 +55,8 @@ function getSimplifiedMetadata(ws) {
  * @returns {Object} An object that contains either the `member` or `browser` property.
  */
 function getOwnerFromSocket(ws) {
-	if (ws.metadata.user) return { member: ws.metadata.user };
-	else if (ws.metadata['browser-id']) return { browser: ws.metadata['browser-id']};
+	if (ws.metadata.memberInfo.username) return { member: ws.metadata.memberInfo.username };
+	else if (ws.cookies['browser-id']) return { browser: ws.cookies['browser-id']};
 	else return console.error(`Cannot get owner info from socket in gamesweb.js when socket doesn't contain authentication! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
 }
 
@@ -69,7 +69,7 @@ function getOwnerFromSocket(ws) {
  * @param {number} [options.number] - A number to include with special messages if applicable, typically representing a duration in minutes.
  */
 function sendNotify(ws, translationCode, { replyto, number } = {}) {
-	const i18next = ws.metadata.i18next;
+	const i18next = ws.cookies.i18next;
 	let text = getTranslation(translationCode, i18next);
 	// Special case: number of minutes to be displayed upon server restart
 	if (translationCode === "server.javascript.ws-server_restarting" && number !== undefined) {
@@ -86,7 +86,7 @@ function sendNotify(ws, translationCode, { replyto, number } = {}) {
  * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
  */
 function sendNotifyError(ws, translationCode) {
-	ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.i18next));
+	ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.cookies.i18next));
 }
 
 export default {

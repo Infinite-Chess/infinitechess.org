@@ -4,7 +4,7 @@
  * with single invites, not multiple
  */
 
-import jsutil from '../../../client/scripts/game/misc/jsutil.js';
+import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
 /** @typedef {import('../TypeDefinitions.js').Socket} Socket */
 
@@ -72,8 +72,8 @@ function safelyCopyInvite(invite) {
  * @returns {boolean}
  */
 function isInviteOurs(ws, invite) {
-	return ws.metadata.user && ws.metadata.user === invite.owner.member
-        || ws.metadata['browser-id'] && ws.metadata['browser-id'] === invite.owner.browser;
+	return ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.username === invite.owner.member
+        || ws.cookies['browser-id'] && ws.cookies['browser-id'] === invite.owner.browser;
 }
 
 //-------------------------------------------------------------------------------------------

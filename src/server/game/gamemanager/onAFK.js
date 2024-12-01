@@ -7,7 +7,7 @@
 import gameutility from './gameutility.js';
 import { onPlayerLostByAbandonment } from './gamemanager.js';
 import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 /**
  * Type Definitions
@@ -56,7 +56,7 @@ function onAFK(ws, game) {
 	game.autoAFKResignTime = Date.now() + durationOfAutoResignTimerMillis;
 
 	// Alert their opponent
-	const value = { autoAFKResignTime: game.autoAFKResignTime };
+	const value = { millisUntilAutoAFKResign: durationOfAutoResignTimerMillis };
 	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafk', value);
 }
 

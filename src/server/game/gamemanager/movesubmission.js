@@ -14,8 +14,8 @@ import wsutility from '../wsutility.js';
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
-import winconutil from '../../../client/scripts/game/misc/winconutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 
 /**
  * Type Definitions
@@ -59,7 +59,7 @@ function submitMove(ws, game, messageContents) {
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 		logEvents(errString, 'hackLog.txt', { print: true });
-		return resyncToGame(ws, game);
+		return resyncToGame(ws, game, game.id);
 	}
 
 	// Make sure it's their turn

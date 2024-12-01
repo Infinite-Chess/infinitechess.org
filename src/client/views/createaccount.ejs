@@ -3,7 +3,6 @@
     <head>
         <script>
             const translations = <%-JSON.stringify({
-                ...t('header.javascript', {returnObjects: true}),
                 ...t('create-account.javascript', {returnObjects: true})
             })%>;
         </script>
@@ -11,33 +10,15 @@
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title><%=t('create-account.title')%></title>
+        <link rel='stylesheet' href='/css/header.css'>
         <link rel='stylesheet' href='/css/createaccount.css'>
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
-        <script defer src="/scripts/memberHeader.js"></script>
-        <script defer src="/scripts/createaccount.js"></script>
+        <script defer src="/scripts/cjs/views/createaccount.js"></script>
     </head>
     <body>
-        <header>
-            <nav>
-                <a href="/">
-                    <p><%=t('header.home')%></p>
-                </a>
-                <a href="/play">
-                    <p><%=t('header.play')%></p>
-                </a>
-                <a href="/news">
-                    <p><%=t('header.news')%></p>
-                </a>
-                <a href="/login" id="loginlink">
-                    <p id="logintext"><%=t('header.login')%></p>
-                </a>
-                <a href="/createaccount" id="createaccountlink">
-                    <p id="createaccounttext" class="currPage"><%=t('header.createaccount')%></p>
-                </a>
-            </nav>
-        </header>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
             <div id="content">
                 <h1 class="center"><%=t('create-account.title')%></h1>
