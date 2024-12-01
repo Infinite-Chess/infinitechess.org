@@ -358,7 +358,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
 		gameruleModifications = getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime });
 	} else { // Just one gameruleModifications entry
-		gameruleModifications = variantEntry.gameruleModifications as GameRuleModifications;
+		gameruleModifications = variantEntry.gameruleModifications;
 	}
 
 	return getGameRules(gameruleModifications, position);
