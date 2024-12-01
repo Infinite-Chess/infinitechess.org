@@ -367,21 +367,9 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
  * @param {Object} modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
  * @returns {GameRules} The gamerules
  */
-function getGameRules(modifications: {
-	slideLimit?: number,
-	promotionRanks?: (number | null)[] | null,
-	position?: {
+function getGameRules(modifications: GameRuleModifications = {}, position?: {
 		[key: string]: string
-	},
-	winConditions?: {
-		[key: string]: string[]
-	},
-	turnOrder?: string[],
-	promotionsAllowed?: {
-		[key: string]: string[]
-	},
-	moveRule?: number | null
-} = {}): GameRules { // { slideLimit, promotionRanks, position }
+	}): GameRules { // { slideLimit, promotionRanks, position }
 	const gameRules: any = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
@@ -391,8 +379,8 @@ function getGameRules(modifications: {
 	// GameRules that have a dedicated ICN spot...
 	if (modifications.promotionRanks !== null) { // Either undefined (use default), or custom
 		gameRules.promotionRanks = modifications.promotionRanks || [8,1];
-		if (!modifications.promotionsAllowed && !modifications.position) throw new Error("Cannot set promotionsAllowed gamerule when getting gamerules. Must be specified in the modifications, or the position passed as an argument so it can be auto-calculated.");
-		gameRules.promotionsAllowed = modifications.promotionsAllowed || getPromotionsAllowed(modifications.position!, gameRules.promotionRanks);
+		if (!modifications.promotionsAllowed && !position) throw new Error("Cannot set promotionsAllowed gamerule when getting gamerules. Must be specified in the modifications, or the position passed as an argument so it can be auto-calculated.");
+		gameRules.promotionsAllowed = modifications.promotionsAllowed || getPromotionsAllowed(position!, gameRules.promotionRanks);
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;
 
