@@ -2,12 +2,13 @@
 'use strict';
 
 /**
- * This script contains the movesets for all pieces except specials (pawns, castling)
+ * This script contains the default movesets for all pieces except specials (pawns, castling)
  * 
  * ZERO dependancies
  */
 
 // Type definitions...
+
 // @ts-ignore
 import type { gamefile } from './gamefile.js';
 
@@ -36,13 +37,14 @@ interface PieceMoveset {
 }
 
 
+
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
  * 
  * These movesets are called as functions so that they return brand
  * new copies of each moveset so there's no risk of accidentally modifying the originals.
- * @param {number} slideLimit Optional. The slideLimit gamerule value.
- * @returns {Movesets} Object containing the movesets of all pieces except pawns.
+ * @param [slideLimit] Optional. The slideLimit gamerule value.
+ * @returns Object containing the movesets of all pieces except pawns.
  */
 function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
@@ -195,6 +197,8 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		}
 	};
 }
+
+
 
 export default {
 	getPieceDefaultMovesets,
