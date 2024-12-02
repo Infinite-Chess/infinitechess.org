@@ -15,7 +15,7 @@ import type { gamefile } from './gamefile.js';
  * A Movesets object containing the movesets for every piece type in a game
  */
 interface Movesets {
-	[key: string]: PieceMoveset
+	[pieceType: string]: PieceMoveset
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -30,7 +30,7 @@ type IgnoreFunction = (distance?: number, gamefile?: gamefile, detectCheck?: (ga
 interface PieceMoveset {
     individual: number[][],
 	sliding?: {
-		[key: string]: number[]
+		[slideDirection: string]: number[]
 	},
 	ignore?: IgnoreFunction
 }
