@@ -19,7 +19,7 @@ interface Movesets {
 };
 
 // eslint-disable-next-line no-unused-vars
-type IgnoreFunction = (distance: number, gamefile: gamefile, detectCheck: (gamefile: gamefile, color: string, attackers: {
+type IgnoreFunction = (distance?: number, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
 	coords: number[],
 	slidingCheck: boolean
 }) => boolean) => boolean;
