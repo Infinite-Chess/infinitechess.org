@@ -56,7 +56,7 @@ function onAFK(ws, game) {
 	game.autoAFKResignTime = Date.now() + durationOfAutoResignTimerMillis;
 
 	// Alert their opponent
-	const value = { autoAFKResignTime: game.autoAFKResignTime };
+	const value = { millisUntilAutoAFKResign: durationOfAutoResignTimerMillis };
 	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafk', value);
 }
 

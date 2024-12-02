@@ -22,10 +22,15 @@ const loadingAnim = document.querySelector('.ping-meter .svg-play'); // Spinning
 
 
 (function init() {
-	document.addEventListener('ping', updatePing); // Custom event
-	document.addEventListener('socket-closed', socketClosed); // Custom event
+	initEventListeners();
 })();
 
+function initEventListeners() {
+	document.addEventListener('ping', updatePing); // Custom event. When we receive this event, we know we are connected
+	document.addEventListener('socket-opening', openMeterAndDisplayLoading); // Custom event that is dispatched whenever we start trying to open a new socket upgrade connection request.
+	document.addEventListener('connection-lost', openMeterAndDisplayLoading); // Custom event
+	document.addEventListener('socket-closed', socketClosed); // Custom event
+}
 
 function updatePing(event) {
 	showPing_hideLoadingAnim();
@@ -73,19 +78,32 @@ function showPing_hideLoadingAnim() {
 	loadingAnim.classList.add('hidden');
 }
 
-function socketClosed(event) {
-	const notByChoise = event.detail;
+/** Open meter. Hide the green bars, show the spinning-pawn loading animation, set the ping to ω */
+function openMeterAndDisplayLoading() {
+	pingMeter.classList.remove('hidden'); // Reveals ping meter
+	loadingAnim.classList.remove('hidden');
+	pingBars.classList.add('hidden');
+	pingValue.textContent = 'ω';
+}
 
-	if (notByChoise) { // Hide the green bars, show the spinning-pawn loading animation
-		pingMeter.classList.remove('hidden');
-		pingBars.classList.add('hidden');
-		loadingAnim.classList.remove('hidden');
-		pingValue.textContent = 'ω';
-	} else { // Just close the ping meter, we are no longer connected
-		pingMeter.classList.add('hidden');
-		loadingAnim.classList.remove('hidden');
-		pingValue.textContent = '-';
-	}
+/**
+ * A callback function that is executed when we receive the custom socket closed event.
+ * 1. If the soccer was close by choice, we close the ping meter.
+ * 2. If the socket was closed by bad network, we display the loading animation
+ * @param {CustomEvent} event 
+ */
+function socketClosed(event) {
+	const notByChoise = event.detail; // This will be true if the user didn't intend to close the connection, they could have bad network.
+
+	if (notByChoise) openMeterAndDisplayLoading(); // Hide the green bars, show the spinning-pawn loading animation
+	else closeMeter(); // By choice. Just close the ping meter, we are no longer connected
+}
+
+/** Hides the ping meter from the settings dropdown document element */
+function closeMeter() {
+	pingMeter.classList.add('hidden');
+	loadingAnim.classList.remove('hidden');
+	pingValue.textContent = '-';
 }
 
 

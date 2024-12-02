@@ -177,14 +177,8 @@ function getMemberRowByUsername(username) {
 		return;
 	}
 }
-// console.log("Naviary:");
-// console.log(getMemberRowByUsername("Naviary"));
-// console.log("Naviary2:");
-// console.log(getMemberRowByUsername("Naviary2"));
-// console.log("Owner:");
-// console.log(getMemberRowByUsername("Owner"));
-// console.log("Patron:");
-// console.log(getMemberRowByUsername("Patron"));
+// console.log("User:");
+// console.log(getMemberRowByUsername("User"));
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.

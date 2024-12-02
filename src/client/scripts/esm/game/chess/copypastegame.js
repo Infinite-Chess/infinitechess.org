@@ -16,6 +16,7 @@ import statustext from '../gui/statustext.js';
 import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
+import guinavigation from '../gui/guinavigation.js';
 // Import End
 
 "use strict";
@@ -39,6 +40,8 @@ const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeCont
  * @param {event} event - The event fired from the event listener
  */
 function callbackCopy(event) {
+	if (guinavigation.isCoordinateActive()) return;
+
 	const gamefile = game.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
@@ -97,6 +100,8 @@ function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for
  * @param {event} event - The event fired from the event listener
  */
 async function callbackPaste(event) {
+	if (guinavigation.isCoordinateActive()) return;
+	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
 

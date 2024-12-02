@@ -115,7 +115,7 @@ function toggleNavigationBar() {
 
 function onToggleNavigationBar() {
 	if (navigationVisible) {
-		guinavigation.open();
+		guinavigation.open({ allowEditCoords: !onlinegame.areInOnlineGame() });
 		guigameinfo.open();
 	}
 	else guinavigation.close();

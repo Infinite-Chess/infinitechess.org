@@ -27,7 +27,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
-import validatorama from '../../util/validatorama.js';
+import pingManager from '../../util/pingManager.js';
 // Import End
 
 /** 
@@ -106,6 +106,51 @@ const serverRestart = {
      * This can be used to cancel the timer when the server informs us it's already restarted. */
 	timeoutID: undefined
 };
+
+
+
+(function init() {
+	addWarningLeaveGamePopupsToHyperlinks();
+})();
+
+/**
+ * Add an listener for every single hyperlink on the page that will
+ * confirm to us if we actually want to leave if we are in an online game.
+ */
+function addWarningLeaveGamePopupsToHyperlinks() {
+	document.querySelectorAll('a').forEach((link) => {
+		link.addEventListener('click', confirmNavigationAwayFromGame);
+	});
+}
+
+/**
+ * Confirm that the user DOES actually want to leave the page if they are in an online game.
+ * 
+ * Sometimes they could leave by accident, or even hit the "Logout" button by accident,
+ * which just ejects them out of the game
+ * @param {Event} event 
+ */
+function confirmNavigationAwayFromGame(event) {
+	// Check if Command (Meta) or Ctrl key is held down
+	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
+	if (!inOnlineGame || gamefileutility.isGameOver(game.getGamefile())) return;
+
+	const userConfirmed = confirm('Are you sure you want to leave the game?'); 
+	if (userConfirmed) return; // Follow link like normal. Server starts a 20-second auto-resign timer for disconnecting on purpose.
+	// Cancel the following of the link.
+	event.preventDefault();
+
+	/*
+	 * KEEP IN MIND that if we leave the pop-up open for 10 seconds,
+	 * JavaScript is frozen in that timeframe, which means as
+	 * far as the server can tell we're not communicating anymore,
+	 * so it automatically closes our websocket connection,
+	 * thinking we've disconnected, and starts a 60-second auto-resign timer.
+	 * 
+	 * As soon as we hit cancel, we are communicating again.
+	 */
+}
+
 
 
 /**
@@ -274,7 +319,7 @@ function onmessage(data) { // { sub, action, value, id }
 			guititle.open();
 			break;
 		case "opponentafk":
-			startOpponentAFKCountdown(data.value?.autoAFKResignTime);
+			startOpponentAFKCountdown(data.value.millisUntilAutoAFKResign);
 			break;
 		case "opponentafkreturn":
 			stopOpponentAFKCountdown(data.value);
@@ -300,14 +345,18 @@ function onmessage(data) { // { sub, action, value, id }
 	}
 }
 
-function startOpponentAFKCountdown(autoResignTime) {
+function startOpponentAFKCountdown(millisUntilAutoAFKResign) {
+	if (millisUntilAutoAFKResign === undefined) return console.error("Cannot display opponent is AFK when millisUntilAutoAFKResign not specified");
 	// Cancel the previous one if this is overwriting
 	stopOpponentAFKCountdown();
-	if (!autoResignTime) return console.error("Cannot display opponent is AFK when autoResignTime not specified");
-	afk.timeOpponentLoseFromAFK = autoResignTime;
+
+	// Ping is round-trip time (RTT), So divided by two to get the approximate
+	// time that has elapsed since the server sent us the correct clock values
+	const timeLeftMillis = millisUntilAutoAFKResign - pingManager.getHalfPing();
+
+	afk.timeOpponentLoseFromAFK = Date.now() + timeLeftMillis;
 	// How much time is left? Usually starts at 20 seconds
-	const timeRemain = autoResignTime - Date.now();
-	const secsRemaining = Math.ceil(timeRemain / 1000);
+	const secsRemaining = Math.ceil(timeLeftMillis / 1000);
 	displayOpponentAFK(secsRemaining);
 }
 
@@ -326,17 +375,17 @@ function displayOpponentAFK(secsRemaining) {
 	afk.displayOpponentAFKTimeoutID = setTimeout(displayOpponentAFK, timeToPlayNextDisplayWeAFK, nextSecsRemaining);
 }
 
-function startOpponentDisconnectCountdown({ autoDisconnectResignTime, wasByChoice } = {}) {
-	if (!autoDisconnectResignTime) return console.error("Cannot display opponent has disconnected when autoResignTime not specified");
+function startOpponentDisconnectCountdown({ millisUntilAutoDisconnectResign, wasByChoice } = {}) {
+	if (millisUntilAutoDisconnectResign === undefined) return console.error("Cannot display opponent has disconnected when autoResignTime not specified");
 	if (wasByChoice === undefined) return console.error("Cannot display opponent has disconnected when wasByChoice not specified");
 	// This overwrites the "Opponent is AFK" timer
 	stopOpponentAFKCountdown();
 	// Cancel the previous one if this is overwriting
 	stopOpponentDisconnectCountdown();
-	disconnect.timeOpponentLoseFromDisconnect = autoDisconnectResignTime;
+	const timeLeftMillis = millisUntilAutoDisconnectResign - pingManager.getHalfPing();
+	disconnect.timeOpponentLoseFromDisconnect = Date.now() + timeLeftMillis;
 	// How much time is left? Usually starts at 20 / 60 seconds
-	const timeRemain = autoDisconnectResignTime - Date.now();
-	const secsRemaining = Math.ceil(timeRemain / 1000);
+	const secsRemaining = Math.ceil(timeLeftMillis / 1000);
 	displayOpponentDisconnect(secsRemaining, wasByChoice);
 }
 
@@ -363,7 +412,7 @@ function handleJoinGame(message) {
 	// {
 	//     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
 	//	   clockValues: { timerWhite, timerBlack }
-	//     id, clock, publicity, youAreColor, , moves, autoAFKResignTime, disconnect, gameConclusion, drawOffer,
+	//     id, clock, publicity, youAreColor, , moves, millisUntilAutoAFKResign, disconnect, gameConclusion, drawOffer,
 	// }
 
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
@@ -480,9 +529,9 @@ function resyncToGame() {
  * Called when the server sends us the conclusion of the game when it ends,
  * OR we just need to resync! The game may not always be over.
  * @param {Object} messageContents - The contents of the server message, with the properties:
- * `gameConclusion`, `clockValues`, `moves`, `autoAFKResignTime`, `offerDraw`
+ * `gameConclusion`, `clockValues`, `moves`, `millisUntilAutoAFKResign`, `offerDraw`
  */
-function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack }, moves, autoAFKResignTime, offerDraw }
+function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack }, moves, millisUntilAutoAFKResign, offerDraw }
 	if (!inOnlineGame) return;
 	if (messageContents.clockValues !== undefined) messageContents.clockValues.accountForPing = true; // Set this too true so our clock knows to account for ping
 	const gamefile = game.getGamefile();
@@ -500,11 +549,11 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
 	guigameinfo.updateWhosTurn(gamefile);
 
 	// If Opponent is currently afk, display that countdown
-	if (messageContents.autoAFKResignTime && !isItOurTurn()) startOpponentAFKCountdown(messageContents.autoAFKResignTime);
+	if (messageContents.millisUntilAutoAFKResign !== undefined && !isItOurTurn()) startOpponentAFKCountdown(messageContents.millisUntilAutoAFKResign);
 	else stopOpponentAFKCountdown();
 
 	// If opponent is currently disconnected, display that countdown
-	if (messageContents.disconnect) startOpponentDisconnectCountdown(messageContents.disconnect); // { autoDisconnectResignTime, wasByChoice }
+	if (messageContents.disconnect !== undefined) startOpponentDisconnectCountdown(messageContents.disconnect); // { millisUntilAutoDisconnectResign, wasByChoice }
 	else stopOpponentDisconnectCountdown();
 
 	// If the server is restarting, start displaying that info.
@@ -625,7 +674,7 @@ function reportOpponentsMove(reason) {
 /**
  * This has to be called before and separate from {@link initOnlineGame}
  * because loading the gamefile and the mesh generation requires this script to know our color.
- * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `autoAFKResignTime`, `disconnect`, `serverRestartingAt`
+ * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `millisUntilAutoAFKResign`, `disconnect`, `serverRestartingAt`
  */
 function setColorAndGameID(gameOptions) {
 	inOnlineGame = true;
@@ -637,12 +686,12 @@ function setColorAndGameID(gameOptions) {
 
 /**
  * Inits an online game according to the options provided by the server.
- * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `autoAFKResignTime`, `disconnect`, `serverRestartingAt`
+ * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `millisUntilAutoAFKResign`, `disconnect`, `serverRestartingAt`
  */
 function initOnlineGame(gameOptions) {
 	rescheduleAlertServerWeAFK();
 	// If Opponent is currently afk, display that countdown
-	if (gameOptions.autoAFKResignTime) startOpponentAFKCountdown(gameOptions.autoAFKResignTime);
+	if (gameOptions.millisUntilAutoAFKResign !== undefined) startOpponentAFKCountdown(gameOptions.millisUntilAutoAFKResign);
 	if (gameOptions.disconnect) startOpponentDisconnectCountdown(gameOptions.disconnect);
 	if (isItOurTurn()) {
 		flashTabNameYOUR_MOVE(true);
