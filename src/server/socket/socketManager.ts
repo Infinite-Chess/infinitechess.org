@@ -71,6 +71,7 @@ function addConnectionToConnectedIPs(IP: string, id: string) {
 	if (connectedIPs[IP] === undefined) connectedIPs[IP] = [];
 	connectedIPs[IP].push(id);
 }
+
 /**
  * Adds the websocket ID to the list of member's connected sockets.
  * @param username - The member's username, if they are signed in.
@@ -82,10 +83,14 @@ function addConnectionToConnectedMembers(username: string | undefined, id: strin
 	connectedMembers[username].push(id);
 }
 
-function removeConnectionFromConnectedIPs(IP, id) {
+function removeConnectionFromConnectionLists(ws: CustomWebSocket) {
+	removeConnectionFromConnectedIPs(ws.metadata.IP, ws.metadata.id);
+	removeConnectionFromConnectedMembers(ws.metadata.memberInfo.username, ws.metadata.id);
+}
+
+function removeConnectionFromConnectedIPs(IP: string, id: string) {
 	const connectionList = connectedIPs[IP];
-	if (!connectionList) return;
-	if (connectedIPs[IP].length === 0) return console.log("connectedIPs[IP] is DEFINED [], yet EMPTY! If it's empty, it should have been deleted!");
+	if (connectionList === undefined) return;
 	// Check if the value exists in the array
 	const index = connectionList.indexOf(id);
 	if (index === -1) return;
@@ -98,20 +103,21 @@ function removeConnectionFromConnectedIPs(IP, id) {
 
 /**
  * Removes the websocket ID from the list of member's connected sockets.
- * @param {string} member - The member's username, lowercase.
- * @param {number} socketID - The ID of their socket.
+ * @param username - The member's username, lowercase.
+ * @param id - The ID of their socket.
  */
-function removeConnectionFromConnectedMembers(member, socketID) {
-	if (!member) return; // Not logged in
-	const membersSocketIDsList = connectedMembers[member];
-	const indexOfSocketID = membersSocketIDsList.indexOf(socketID);
+function removeConnectionFromConnectedMembers(username: string | undefined, id: string) {
+	if (username === undefined) return; // Not logged in
+	const membersSocketIDsList = connectedMembers[username];
+	if (membersSocketIDsList === undefined) return;
+	const indexOfSocketID = membersSocketIDsList.indexOf(id);
 	membersSocketIDsList.splice(indexOfSocketID, 1);
-	if (membersSocketIDsList.length === 0) delete connectedMembers[member];
+	if (membersSocketIDsList.length === 0) delete connectedMembers[username];
 }
 
 function terminateAllIPSockets(IP: string) {
 	const connectionList = connectedIPs[IP];
-	if (!connectionList) return; // IP is defined, but they don't have any sockets to terminate!
+	if (connectionList === undefined) return; // IP is defined, but they don't have any sockets to terminate!
 	for (const id of connectionList) {
 		//console.log(`Terminating 1.. id ${id}`)
 		const ws = websocketConnections[id];
@@ -163,6 +169,7 @@ function startTimerToExpireSocket(ws: CustomWebSocket) {
 
 export {
 	addConnectionToConnectionLists,
+	removeConnectionFromConnectionLists,
 	terminateAllIPSockets,
 	doesClientHaveMaxSocketCount,
 	doesMemberHaveMaxSocketCount,
