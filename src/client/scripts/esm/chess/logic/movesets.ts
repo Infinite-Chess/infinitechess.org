@@ -8,7 +8,7 @@
  */
 
 // Type definitions...
-
+// @ts-ignore
 import type { gamefile } from './gamefile.js';
 
 /**
