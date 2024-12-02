@@ -18,19 +18,11 @@ interface Movesets {
 	[key: string]: PieceMoveset
 };
 
-/**
- * The return value of the ignore function
- */
-interface IgnoreResult {
-    legal: boolean,
-    blocking: boolean
-}
-
 // eslint-disable-next-line no-unused-vars
 type IgnoreFunction = (distance: number, gamefile: gamefile, detectCheck: (gamefile: gamefile, color: string, attackers: {
 	coords: number[],
 	slidingCheck: boolean
-}) => boolean) => IgnoreResult;
+}) => boolean) => boolean;
 
 /**
  * A moveset for an single piece type in a game
