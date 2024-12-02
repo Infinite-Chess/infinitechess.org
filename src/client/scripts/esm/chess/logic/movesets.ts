@@ -14,9 +14,9 @@ import type { gamefile } from './gamefile.js';
 /**
  * A Movesets object containing the movesets for every piece type in a game
  */
-type Movesets = {
+interface Movesets {
 	[key: string]: PieceMoveset
-}
+};
 
 /**
  * The return value of the ignore function
@@ -26,6 +26,12 @@ interface IgnoreResult {
     blocking: boolean
 }
 
+// eslint-disable-next-line no-unused-vars
+type IgnoreFunction = (distance: number, gamefile: gamefile, detectCheck: (gamefile: gamefile, color: string, attackers: {
+	coords: number[],
+	slidingCheck: boolean
+}) => boolean) => IgnoreResult;
+
 /**
  * A moveset for an single piece type in a game
  */
@@ -34,11 +40,7 @@ interface PieceMoveset {
 	sliding?: {
 		[key: string]: number[]
 	},
-	// eslint-disable-next-line no-unused-vars
-	ignore?: (distance: number, gamefile: gamefile, detectCheck: (gamefile: gamefile, color: string, attackers: {
-		coords: number[],
-		slidingCheck: boolean
-	}) => boolean) => IgnoreResult
+	ignore?: IgnoreFunction
 }
 
 
