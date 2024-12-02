@@ -8,18 +8,32 @@
  */
 
 // Type definitions...
+// @ts-ignore
+import type { gamefile } from './gamefile.js';
 
 /**
  * A Movesets object containing the movesets for every piece type in a game
- * @typedef {Object<string, PieceMoveset>} Movesets
  */
+interface Movesets {
+	[pieceType: string]: PieceMoveset
+};
+
+// eslint-disable-next-line no-unused-vars
+type IgnoreFunction = (distance?: number, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
+	coords: number[],
+	slidingCheck: boolean
+}) => boolean) => boolean;
 
 /**
  * A moveset for an single piece type in a game
- * @typedef {Object} PieceMoveset
- * @property {number[][]} individual - Array of individual moves.
- * @property {Object<string, number[]>} [sliding] - Optional sliding moves.
  */
+interface PieceMoveset {
+    individual: number[][],
+	sliding?: {
+		[slideDirection: string]: number[]
+	},
+	ignore?: IgnoreFunction
+}
 
 
 /**
@@ -27,10 +41,10 @@
  * 
  * These movesets are called as functions so that they return brand
  * new copies of each moveset so there's no risk of accidentally modifying the originals.
- * @param {number} slideLimit - Optional. The slideLimit gamerule value.
- * @returns {Object<string, PieceMoveset} Object containing the movesets of all pieces except pawns.
+ * @param {number} slideLimit Optional. The slideLimit gamerule value.
+ * @returns {Movesets} Object containing the movesets of all pieces except pawns.
  */
-function getPieceDefaultMovesets(slideLimit = Infinity) {
+function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	return {
@@ -185,3 +199,5 @@ function getPieceDefaultMovesets(slideLimit = Infinity) {
 export default {
 	getPieceDefaultMovesets,
 };
+
+export type { Movesets, PieceMoveset };
