@@ -200,6 +200,4 @@ export default {
 	getPieceDefaultMovesets,
 };
 
-export type {
-	Movesets
-};
+export type { Movesets, PieceMoveset };
