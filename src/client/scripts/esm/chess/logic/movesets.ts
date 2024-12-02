@@ -5,31 +5,48 @@
  * This script contains the movesets for all pieces except specials (pawns, castling)
  */
 
+// @ts-ignore
 import isprime from './isprime.js'; //For Huygens
+
 // Type definitions...
+
+// @ts-ignore
+import type { gamefile } from './gamefile.js';
 
 /**
  * A Movesets object containing the movesets for every piece type in a game
- * @typedef {Object<string, PieceMoveset>} Movesets
  */
+interface Movesets {
+	[pieceType: string]: PieceMoveset
+};
+
+// eslint-disable-next-line no-unused-vars
+type IgnoreFunction = (distance?: number, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
+	coords: number[],
+	slidingCheck: boolean
+}) => boolean) => boolean;
 
 /**
  * A moveset for an single piece type in a game
- * @typedef {Object} PieceMoveset
- * @property {number[][]} individual - Array of individual moves.
- * @property {Object<string, number[]>} [sliding] - Optional sliding moves.
- * @property {function} [ignore] - Optional squares to ignore.
  */
+interface PieceMoveset {
+    individual: number[][],
+	sliding?: {
+		[slideDirection: string]: number[]
+	},
+	ignore?: IgnoreFunction
+}
+
 
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
  * 
  * These movesets are called as functions so that they return brand
  * new copies of each moveset so there's no risk of accidentally modifying the originals.
- * @param {number} slideLimit - Optional. The slideLimit gamerule value.
- * @returns {Object<string, PieceMoveset} Object containing the movesets of all pieces except pawns.
+ * @param [slideLimit] Optional. The slideLimit gamerule value.
+ * @returns Object containing the movesets of all pieces except pawns.
  */
-function getPieceDefaultMovesets(slideLimit = Infinity) {
+function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	return {
@@ -181,7 +198,7 @@ function getPieceDefaultMovesets(slideLimit = Infinity) {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit]
 			},
-			ignore: function(distance) {
+			ignore: function(distance: number = 0) {
 				return !isprime.primalityTest(Math.abs(distance), null);
 			}
 		},
@@ -191,6 +208,10 @@ function getPieceDefaultMovesets(slideLimit = Infinity) {
 	};
 }
 
+
+
 export default {
 	getPieceDefaultMovesets,
 };
+
+export type { Movesets, PieceMoveset };
