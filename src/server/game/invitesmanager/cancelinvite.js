@@ -15,15 +15,16 @@ import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from '.
 
 /** 
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('./inviteutility.js').Invite} Invite
  */
+
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 
 
 /**
  * Cancels/deletes the specified invite.
- * @param {Socket} ws - Their socket
+ * @param {CustomWebSocket} ws - Their socket
  * @param {*} messageContents - The incoming socket message that SHOULD be the ID of the invite to be cancelled!
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */

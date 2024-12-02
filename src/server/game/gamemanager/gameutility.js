@@ -33,10 +33,11 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 // Type Definitions...
 
 /**
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  * @typedef {import('../../../client/scripts/esm/chess/variants/gamerules.js').GameRules} GameRules
  */
+
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * Construct a new online game from the invite options,
@@ -50,7 +51,7 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
  * @param {string} inviteOptions.rated - The rating type of the game. Can be "casual" or "rated".
  * @param {string} id - The unique identifier to give this game.
  * @param {Socket | undefined} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
- * @param {Socket} player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+ * @param {CustomWebSocket} player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  * @returns {Game} The new game.
  */
@@ -196,7 +197,7 @@ function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo =
  * Unsubscribes a websocket from the game their connected to.
  * Detaches their socket from the game, updates their metadata.subscriptions.
  * @param {Game} game
- * @param {Socket} ws - Their websocket.
+ * @param {CustomWebSocket} ws - Their websocket.
  * @param {Object} options - Additional options.
  * @param {Object} options.sendMessage - Whether to inform the client to unsub from the game. Default: true. This should be false if we're unsubbing because the socket is closing.
  */
@@ -232,7 +233,7 @@ function removePlayerSocketFromGame(game, color) {
  * 
  * Makes sure not to send sensitive info, such as player's browser-id cookies.
  * @param {Game} game - The game they're in.
- * @param {Socket} playerSocket - Their websocket
+ * @param {CustomWebSocket} playerSocket - Their websocket
  * @param {string} playerColor - The color the are. "white" / "black"
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
@@ -330,7 +331,7 @@ function getMetadataOfGame(game) {
  * Resyncs a client's websocket to a game. The client already
  * knows the game id and much other information. We only need to send
  * them the current move list, player timers, and game conclusion.
- * @param {Socket} ws - Their websocket
+ * @param {CustomWebSocket} ws - Their websocket
  * @param {Game} game - The game
  * @param {string} colorPlayingAs - Their color
  * @param {number} [replyToMessageID] - If specified, the id of the incoming socket message this update will be the reply to
@@ -488,7 +489,7 @@ async function logGame(game) {
 /**
  * Tests if the given socket belongs in the game. If so, it returns the color they are.
  * @param {Game} game - The game
- * @param {Socket} ws - The websocket
+ * @param {CustomWebSocket} ws - The websocket
  * @returns {string | false} The color they are, if they belong, otherwise *false*.
  */
 function doesSocketBelongToGame_ReturnColor(game, ws) {

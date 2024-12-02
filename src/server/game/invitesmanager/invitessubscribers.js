@@ -8,7 +8,7 @@
 
 import wsutility from '../wsutility.js';
 
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * List of clients currently subscribed to invites list events, with their
@@ -40,7 +40,7 @@ function broadcastToAllInviteSubs(action, message) {
 
 /**
  * Adds a new socket to the invite subscriber list.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  */
 function addSocketToInvitesSubs(ws) {
 	const socketID = ws.metadata.id;
@@ -55,7 +55,7 @@ function addSocketToInvitesSubs(ws) {
 /**
  * Removes a socket from the invite subscriber list.
  * DOES NOT delete any of their existing invites! That should be done before.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  */
 function removeSocketFromInvitesSubs(ws) {
 	if (!ws) return console.error("Can't remove socket from invites subs list because it's undefined!");

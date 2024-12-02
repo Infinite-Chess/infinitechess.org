@@ -87,7 +87,7 @@ function sendmessage(ws: CustomWebSocket, sub, action, value, replyto, { skipLat
  * @param {number} [options.number] - A number to include with special messages if applicable, typically representing a duration in minutes.
  */
 function sendNotify(ws: CustomWebSocket, translationCode, { replyto, number } = {}) {
-	const i18next = ws.cookies.i18next;
+	const i18next = ws.metadata.cookies.i18next;
 	let text = getTranslation(translationCode, i18next);
 	// Special case: number of minutes to be displayed upon server restart
 	if (translationCode === "server.javascript.ws-server_restarting" && number !== undefined) {
@@ -104,13 +104,13 @@ function sendNotify(ws: CustomWebSocket, translationCode, { replyto, number } = 
  * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
  */
 function sendNotifyError(ws: CustomWebSocket, translationCode) {
-	ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.cookies.i18next));
+	ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.cookies.i18next));
 }
 
 
 /**
  * Tell them to hard-refresh the page, there's a new update.
- * @param {Socket} ws - The websocket
+ * @param {CustomWebSocket} ws - The websocket
  */
 function informSocketToHardRefresh(ws) {
 	console.log(`Informing socket to hard refresh! ${wsutility.stringifySocketMetadata(ws)}`);

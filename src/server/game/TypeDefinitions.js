@@ -6,6 +6,8 @@
 
 
 
+/** @typedef {import("./wsutility").CustomWebSocket} CustomWebSocket */
+
 // I can declare this type definition like so, because there's no nesting.
 /**
  * An incoming websocket server message.
@@ -105,9 +107,9 @@ function Game() {
      * whos turn it currently is when they run out of time. */
 	this.autoTimeLossTimeoutID = undefined;
 
-	/** Player white's socket, if they are connected. @type {Socket} */
+	/** Player white's socket, if they are connected. @type {CustomWebSocket} */
 	this.whiteSocket = undefined;
-	/** Player black's socket, if they are connected. @type {Socket} */
+	/** Player black's socket, if they are connected. @type {CustomWebSocket} */
 	this.blackSocket = undefined;
 
 	/** The ID of the timeout which will auto-lose the player

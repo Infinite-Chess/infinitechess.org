@@ -20,12 +20,13 @@ import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 /**
  * Type Definitions
  * @typedef {import('./inviteutility.js').Invite} Invite
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  */
+
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * Attempts to accept an invite of given id.
- * @param {Socket} ws - The socket performing this action
+ * @param {CustomWebSocket} ws - The socket performing this action
  * @param {*} messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
@@ -104,7 +105,7 @@ function verifyMessageContents(messageContents) {
  * Called when a player clicks to accept an invite that gets deleted right before.
  * This tells them the game was aborted, or that the code
  * was invalid, if they entered a private invite code.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  * @param {boolean} isPrivate 
  * @param {string} inviteID 
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.

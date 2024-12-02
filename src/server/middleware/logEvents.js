@@ -11,7 +11,7 @@ import { ensureDirectoryExists } from '../utility/fileUtils.js';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
+/** @typedef {import("../game/wsutility.js").CustomWebSocket} CustomWebSocket */
 
 const giveLoggedItemsUUID = false;
 
@@ -71,7 +71,7 @@ const logger = (req, res, next) => {
 /**
  * Logs websocket connection upgrade requests into `wsInLog.txt`
  * @param {Object} req - The request object
- * @param {Socket} ws - The websocket object
+ * @param {CustomWebSocket} ws - The websocket object
  */
 function logWebsocketStart(req, ws) {
 	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
@@ -83,7 +83,7 @@ function logWebsocketStart(req, ws) {
 
 /**
  * Logs incoming websocket messages into `wsInLog.txt`
- * @param {Socket} ws - The websocket object
+ * @param {CustomWebSocket} ws - The websocket object
  * @param {string} messageData - The raw data of the incoming message, as a string
  */
 function logReqWebsocketIn(ws, messageData) {
@@ -95,7 +95,7 @@ function logReqWebsocketIn(ws, messageData) {
 
 /**
  * Logs outgoing websocket messages into `wsOutLog.txt`
- * @param {Socket} ws - The websocket object
+ * @param {CustomWebSocket} ws - The websocket object
  * @param {string} messageData - The raw data of the outgoing message, as a string
  */
 function logReqWebsocketOut(ws, messageData) {

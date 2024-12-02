@@ -1,17 +1,18 @@
 
 // This script contains generalized methods for working with websocket objects.
 
-import { getTranslation } from '../utility/translate.js';
 import { ensureJSONString } from '../utility/JSONUtils.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import { logEvents } from '../middleware/logEvents.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
-/** @typedef {import('./TypeDefinitions.js').Socket} Socket */
+import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 
-import WebSocket from 'ws';
+import type { Socket } from 'net'; // Import Socket type from the 'net' module
+import type WebSocket from 'ws';
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
 interface CustomWebSocket extends WebSocket {
@@ -33,12 +34,12 @@ interface CustomWebSocket extends WebSocket {
 		/** The parsed cookie object, this will contain the 'browser-id' cookie if they are not signed in */
 		cookies: {
 			/** This is ALWAYS present, even if signed in! */
-			'browser-id': string;
+			'browser-id'?: string;
 			/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
-			i18next: string;
+			i18next?: string;
 		};
 		/** The user-agent property of the original websocket upgrade's req.headers */
-		userAgent: string;
+		userAgent?: string;
 		memberInfo: {
 			/** True if they are signed in, if not they MUST have a browser-id cookie! */
 			signedIn: boolean;
@@ -113,15 +114,64 @@ function getSimplifiedMetadata(ws: CustomWebSocket) {
 function getOwnerFromSocket(ws: CustomWebSocket): { member: string } | { browser: string } {
 	const metadata = ws.metadata;
 	if (metadata.memberInfo.signedIn) return { member: ws.metadata.memberInfo.username! };
-	else return { browser: metadata.cookies['browser-id']};
+	else return { browser: metadata.cookies['browser-id']! };
 }
 
+/**
+ * Parses cookies from the WebSocket upgrade request headers.
+ * @param req - The WebSocket upgrade request object
+ * @returns An object with cookie names as keys and their corresponding values
+ */
+function getCookiesFromWebsocket(req: IncomingMessage): { [cookieName: string]: string } {
+	// req.cookies is only defined from our cookie parser for regular requests,
+	// NOT for websocket upgrade requests! We have to parse them manually!
 
+	const rawCookies = req.headers.cookie; // In the format: "invite-tag=etg5b3bu; jwt=9732fIESLGIESLF"
+	const cookies: { [cookieName: string]: string } = {}; // Declare the return type with index signature
+	if (rawCookies === undefined) return cookies;
+
+	try {
+		rawCookies.split(';').forEach(cookie => {
+			const parts = cookie.split('=');
+			const name = parts[0].trim();
+			const value = parts[1]?.trim(); // Optional chaining to handle undefined safely
+			if (name && value) cookies[name] = value;
+		});
+	} catch (e) {
+		const errText = `WebSocket connection request contained cookies in an invalid format!! Cookies: ${JSON.stringify(rawCookies)}\n${e.stack}`;
+		// console.error(errText); // Replace logEvents with console.error
+		logEvents(errText, 'errLog.txt', { print: true })
+	}
+
+	return cookies;
+}
+
+/**
+ * Reads the IP address attached to the incoming websocket connection request,
+ * and sets the websocket metadata's `IP` property to that value, then returns that IP.
+ * @param req - The request object.
+ * @param ws - The websocket object.
+ * @returns The IP address of the websocket connection, or `undefined` if not present.
+ */
+function getIPFromWebsocket(req: IncomingMessage, ws: WebSocket): string | undefined {
+	// Check the headers for the forwarded IP (useful if behind a proxy like Cloudflare)
+	const clientIP = req.headers['x-forwarded-for'];
+
+	// If we didn't get a string IP, return undefined
+	if (typeof clientIP !== 'string') return undefined;
+
+	// Store the IP in the websocket metadata so we don't need to find it again
+	(ws as CustomWebSocket).metadata.IP = clientIP;
+
+	return clientIP;
+}
 
 export default {
 	printSocket,
 	stringifySocketMetadata,
 	getOwnerFromSocket,
+	getCookiesFromWebsocket,
+	getIPFromWebsocket,
 };
 
 export type {

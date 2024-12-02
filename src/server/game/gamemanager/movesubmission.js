@@ -19,16 +19,17 @@ import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * 
  * Call when a websocket submits a move. Performs some checks,
  * adds the move to the game's move list, adjusts the game's
  * properties, and alerts their opponent of the move.
- * @param {Socket} ws - The websocket submitting the move
+ * @param {CustomWebSocket} ws - The websocket submitting the move
  * @param {Game | undefined} game - The game they are in, if they are in one.
  * @param {Object} messageContents - An object containing the properties `move`, `moveNumber`, and `gameConclusion`.
  */

@@ -18,15 +18,16 @@ import { onJoinGame } from './joingame.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').WebsocketMessage} WebsocketMessage
  */
+
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 
 /**
  * Handles all incoming websocket messages related to active games.
  * Possible actions: submitmove/offerdraw/abort/resign/joingame/resync...
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  * @param {WebsocketMessage} message - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
  */
 function handleGameRoute(ws, message) {

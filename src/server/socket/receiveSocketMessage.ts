@@ -6,9 +6,10 @@
 
 /**
  * Type Definitions
- * @typedef {import('../game/TypeDefinitions.js').Socket} Socket
  * @typedef {import('../game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
  */
+
+import type { CustomWebSocket } from '../game/wsutility.ts'
 
 
 
@@ -18,7 +19,7 @@
  * Sends an echo (unless this message itself **is** an echo), rate limits,
  * logs the message, then routes the message where it needs to go.
  * @param {*} req 
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  * @param {string} rawMessage 
  * @returns 
  */
@@ -101,7 +102,7 @@ function onmessage(req, ws, rawMessage) {
 /**
  * Reschedule the timer to send an empty message to the client
  * to verify they are still connected and responding.
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  */
 function rescheduleRenewConnection(ws) {
 	cancelRenewConnectionTimer(ws);
@@ -119,7 +120,7 @@ function cancelRenewConnectionTimer(ws) {
 
 /**
  * 
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  */
 function renewConnection(ws) {
 	sendmessage(ws, 'general', 'renewconnection');

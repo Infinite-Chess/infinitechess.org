@@ -1,12 +1,13 @@
 import { logEvents } from './logEvents.js';
-import { getClientIP, getClientIP_Websocket } from '../utility/IP.js';
+import { getClientIP } from '../utility/IP.js';
 
 import { isIPBanned } from './banned.js';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import wsutility from '../game/wsutility.js';
 
-/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
+/** @typedef {import('../game/wsutility.js').CustomWebSocket} Socket */
 
 // For rate limiting a client...
 
@@ -73,7 +74,7 @@ const maxWebsocketMessageSizeBytes = 100_000; // 100 megabytes
  * @returns {string|null} The combined key in the format "IP|User-Agent" or null if IP cannot be determined
  */
 function getIpBrowserAgentKey(req, ws) {
-	const clientIP = ws ? getClientIP_Websocket(req, ws) : getClientIP(req); // Get the client IP address
+	const clientIP = ws ? wsutility.getIPFromWebsocket(req, ws) : getClientIP(req); // Get the client IP address
 	const userAgent = req.headers['user-agent']; // Get the user agent string
 
 	if (!clientIP) return null; // Return null if IP is not found
@@ -125,19 +126,12 @@ function rateLimit(req, res, next) {
  * Counts this IP address's recent connections,
  * and returns false if they've sent too many requests/messages.
  * @param {Object} req - The request object
- * @param {Socket} ws - The websocket object
+ * @param {CustomWebSocket} ws - The websocket object
  * @returns {boolean} false if they've sent too many requests/messages.
  */
 function rateLimitWebSocket(req, ws) {
 
 	countRecentRequests();
-
-	const clientIP = getClientIP_Websocket(req, ws);
-	if (!clientIP) {
-		logEvents('Unable to identify client IP address from web socket connection when rate limiting!', 'hackLog.txt');
-		ws.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
-		return false;
-	}
 
 	const userKey = getIpBrowserAgentKey(req, ws); // By this point their IP is defined so this will be defined.
 
