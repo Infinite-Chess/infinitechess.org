@@ -6,6 +6,8 @@
 import { DEV_BUILD } from '../config/config.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 
+import { Request, Response } from 'express'; // This helps typescript inferred the correct type
+import WebSocket from 'ws';
 
 /**
  * Type Definitions
@@ -13,8 +15,9 @@ import { rateLimitWebSocket } from '../middleware/rateLimit.js';
  * @typedef {import('../game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
  */
 
+
 const maxSocketsAllowedPerIP = 10;
-const maxSocketsAllowedPerMember = 5;
+const maxSocketsAllowedPerMember = 10;
 
 
 
@@ -27,15 +30,15 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 
 
 
-
-
-
 /**
  * 
  * @param {Socket} ws 
- * @param {Object} req
+ * @param {Express.Request} req
  */
-function onConnectionRequest(ws, req) {
+function onConnectionRequest(ws: WebSocket, req: Request) { 
+
+	ws.metadata = 5;
+
 	// Make sure the connection is secure https
 	const origin = req.headers.origin;
 	if (!origin.startsWith('https')) {
