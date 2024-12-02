@@ -9,6 +9,7 @@
  * @typedef {import('../game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
  */
 
+import { IncomingMessage } from 'http';
 import type { CustomWebSocket } from '../game/wsutility.ts'
 
 
@@ -18,12 +19,8 @@ import type { CustomWebSocket } from '../game/wsutility.ts'
  * Callback function that is executed whenever we receive an incoming websocket message.
  * Sends an echo (unless this message itself **is** an echo), rate limits,
  * logs the message, then routes the message where it needs to go.
- * @param {*} req 
- * @param {CustomWebSocket} ws 
- * @param {string} rawMessage 
- * @returns 
  */
-function onmessage(req, ws, rawMessage) {
+function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 	/** @type {WebsocketMessage} */
 	let message;
 	try {
@@ -215,4 +212,8 @@ function unsubClientFromAllSubs(ws, closureNotByChoice) {
 		const thisSubscription = subscriptions[key]; // invites/game
 		handleUnsubbing(ws, key, thisSubscription, closureNotByChoice);
 	}
+}
+
+export {
+	onmessage,
 }

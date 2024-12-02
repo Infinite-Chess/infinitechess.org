@@ -11,7 +11,6 @@ import { logEvents } from '../middleware/logEvents.js';
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 
-import type { Socket } from 'net'; // Import Socket type from the 'net' module
 import type WebSocket from 'ws';
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
@@ -53,7 +52,7 @@ interface CustomWebSocket extends WebSocket {
 		IP: string;
 		/** The timeout ID that can be used to cancel the timer that will
          * expire the socket connection. This is useful if it closes early. */
-		clearafter?: NodeJS.Timeout;
+		clearafter?: NodeJS.Timeout | number;
 		/** The timeout ID to cancel the timer that will send an empty
          * message to this socket just to verify they are alive and thinking. */
 		renewConnectionTimeoutID?: NodeJS.Timeout;
@@ -77,7 +76,7 @@ function printSocket(ws: CustomWebSocket) { console.log(stringifySocketMetadata(
  * @param ws - The websocket object
  * @returns The stringified simplified websocket metadata.
  */
-function stringifySocketMetadata(ws: CustomWebSocket) {
+function stringifySocketMetadata(ws: CustomWebSocket): string {
 	// Removes the recursion from the metadata, making it safe to stringify.
 	const simplifiedMetadata = getSimplifiedMetadata(ws);
 	return ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');

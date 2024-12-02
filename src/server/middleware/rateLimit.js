@@ -127,7 +127,7 @@ function rateLimit(req, res, next) {
  * and returns false if they've sent too many requests/messages.
  * @param {Object} req - The request object
  * @param {CustomWebSocket} ws - The websocket object
- * @returns {boolean} false if they've sent too many requests/messages.
+ * @returns {boolean} false if they've sent too many requests/messages. THEY WILL HAVE ALREADY BEEN CLOSED
  */
 function rateLimitWebSocket(req, ws) {
 

@@ -12,7 +12,9 @@
  * @typedef {import('../game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
  */
 
+import { simulatedWebsocketLatencyMillis } from "../config/config.js";
 import type { CustomWebSocket } from "../game/wsutility.ts";
+import { logEvents } from "../middleware/logEvents.js";
 
 // Variables ---------------------------------------------------------------------------
 
@@ -36,18 +38,17 @@ const echoTimers = {};
 /**
  * Sends a message to this websocket's client.
  * @param ws - The websocket
- * @param {string} sub - What subscription/route this message should be forwarded to.
- * @param {string} action - What type of action the client should take within the subscription route.
- * @param {*} value - The contents of the message.
- * @param {number} [replyto] If applicable, the id of the socket message this message is a reply to.
- * @param {Object} [options] - Additional options for sending the message.
- * @param {boolean} [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
+ * @param sub - What subscription/route this message should be forwarded to.
+ * @param action - What type of action the client should take within the subscription route.
+ * @param value - The contents of the message.
+ * @param [replyto] If applicable, the id of the socket message this message is a reply to.
+ * @param [options] - Additional options for sending the message.
+ * @param [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendmessage(ws: CustomWebSocket, sub, action, value, replyto, { skipLatency } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, value: any, replyto?: number, { skipLatency }: { skipLatency?: boolean } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
 	// If we're applying simulated latency delay, set a timer to send this message.
-	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) return setTimeout(sendmessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
+	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) return setTimeout(sendSocketMessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
 
-	if (!ws) return console.error(`Cannot send a message to an undefined socket! Sub: ${sub}. Action: ${action}. Value: ${value}`);
 	if (ws.readyState === WebSocket.CLOSED) {
 		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'errLog.txt', { print: true });
@@ -95,7 +96,7 @@ function sendNotify(ws: CustomWebSocket, translationCode, { replyto, number } = 
 		const minutes_plurality = minutes === 1 ? getTranslation("server.javascript.ws-minute", i18next) : getTranslation("server.javascript.ws-minutes", i18next);
 		text += ` ${minutes} ${minutes_plurality}.`;
 	}
-	ws.metadata.sendmessage(ws, "general", "notify", text, replyto);
+	ws.metadata.sendSocketMessage(ws, "general", "notify", text, replyto);
 }
 
 /**
@@ -104,7 +105,7 @@ function sendNotify(ws: CustomWebSocket, translationCode, { replyto, number } = 
  * @param {string} translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
  */
 function sendNotifyError(ws: CustomWebSocket, translationCode) {
-	ws.metadata.sendmessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.cookies.i18next));
+	ws.metadata.sendSocketMessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.cookies.i18next));
 }
 
 
@@ -114,10 +115,10 @@ function sendNotifyError(ws: CustomWebSocket, translationCode) {
  */
 function informSocketToHardRefresh(ws) {
 	console.log(`Informing socket to hard refresh! ${wsutility.stringifySocketMetadata(ws)}`);
-	sendmessage(ws, 'general', 'hardrefresh', GAME_VERSION);
+	sendSocketMessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
 
 
-export default {
-	sendmessage,
+export {
+	sendSocketMessage,
 }

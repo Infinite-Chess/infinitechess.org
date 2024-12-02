@@ -4,14 +4,19 @@
  */
 
 
+// Type Definitions ---------------------------------------------------------------------------
+
+
+
 /**
  * Type Definitions
- * @typedef {import('../game/TypeDefinitions.js').Socket} Socket
  * @typedef {import('../game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
  */
 
+import type { CustomWebSocket } from "../game/wsutility";
 
-function onclose(ws, code, reason) {
+
+function onclose(ws: CustomWebSocket, code: number, reason: string) {
 	reason = reason.toString();
 
 	// Delete connection from object.
@@ -35,8 +40,7 @@ function onclose(ws, code, reason) {
 	// Unsubbing them from their game will start their auto-resignation timer.
 	unsubClientFromAllSubs(ws, closureNotByChoice);
 
-	// Cancel the timer to auto delete it at the end of its life
-	clearTimeout(ws.metadata.clearafter);
+	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
 	if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`);
 
 	cancelRenewConnectionTimer(ws);
@@ -45,13 +49,21 @@ function onclose(ws, code, reason) {
 }
 
 
-function closeWebSocketConnection(ws, code, message, messageID) {
+function closeWebSocketConnection(ws: CustomWebSocket, code: number, message: string, messageID) {
 	if (messageID) { // Timer is just now ringing. Delete the timer from the echoTimers list, so it doesn't fill up!
 		delete echoTimers[messageID];
 	}
+
 	//console.log(`Closing web socket connection.. Code ${code}. Message "${message}"`)
 	const readyStateClosed = ws.readyState === WebSocket.CLOSED;
 	if (readyStateClosed && message === "Connection expired") return console.log(`Web socket already closed! This function should not have been run. Code ${code}. Message ${message}`);
 	else if (readyStateClosed) return;
 	ws.close(code, message);
+}
+
+
+
+export {
+	onclose,
+	closeWebSocketConnection,
 }
