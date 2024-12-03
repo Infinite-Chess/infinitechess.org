@@ -27,9 +27,9 @@ interface CustomWebSocket extends WebSocket {
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {
 				/** The id of the game they're in. @type {string} */
-				id?: string;
+				id: string;
 				/** The color they are playing as. @type {string} */
-				color?: string;
+				color: string;
 			};
 		};
 		/** The parsed cookie object, this will contain the 'browser-id' cookie if they are not signed in */
