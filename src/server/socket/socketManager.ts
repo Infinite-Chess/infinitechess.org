@@ -12,15 +12,9 @@ import { closeWebSocketConnection } from "./closeSocket";
 // Type Definitions ---------------------------------------------------------------------------
 
 
-/**
- * Type Definitions
- * @typedef {import('../game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
- */
-
 import type { CustomWebSocket } from "../game/wsutility";
 import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager";
 import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager";
-import { logEvents } from "../middleware/logEvents";
 import { sendSocketMessage } from "./sendSocketMessage";
 
 

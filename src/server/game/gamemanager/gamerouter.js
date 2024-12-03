@@ -16,19 +16,17 @@ import { resyncToGame } from './resync.js';
 import { submitMove } from './movesubmission.js';
 import { onJoinGame } from './joingame.js';
 
-/**
- * Type Definitions
- * @typedef {import('../TypeDefinitions.js').WebsocketMessage} WebsocketMessage
- */
 
-/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+
+/** @typedef {import('../wsutility.js').CustomWebSocket} CustomWebSocket */
+/** @typedef {import('../../socket/receiveSocketMessage.js').WebsocketInMessage} WebsocketInMessage */
 
 
 /**
  * Handles all incoming websocket messages related to active games.
  * Possible actions: submitmove/offerdraw/abort/resign/joingame/resync...
  * @param {CustomWebSocket} ws - The socket
- * @param {WebsocketMessage} message - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
+ * @param {WebsocketInMessage} message - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
  */
 function handleGameRoute(ws, message) {
 	const game = getGameBySocket(ws); // The game they belong in, if they belong in one.

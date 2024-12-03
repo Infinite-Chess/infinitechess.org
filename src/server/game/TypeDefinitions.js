@@ -153,6 +153,5 @@ function Game() {
 }
 
 export {
-	//WebsocketMessage, // Type definitions declared in this manner don't need to be exported for some reason? Other scripts can still import it
 	Game
 };

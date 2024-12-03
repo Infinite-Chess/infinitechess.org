@@ -11,9 +11,9 @@
  * Represents an incoming WebSocket server message.
  */
 interface WebsocketOutMessage {
-	/** The subscription or route to forward the message to (e.g., "general", "invites", "game"). */
+	/** The subscription to forward the message to (e.g., "general", "invites", "game"). */
 	sub: string;
-	/** The action to perform with the message's data (e.g., "sub", "unsub", "createinvite"). */
+	/** The action to perform with the message's data (e.g., "sub", "unsub", "joingame", "opponentmove"). */
 	action: string;
 	/** The contents of the message. */
 	value: any;

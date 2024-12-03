@@ -4,14 +4,23 @@
  */
 
 
-/**
- * Type Definitions
- * @typedef {import('../game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
- */
-
 import { IncomingMessage } from 'http';
 import type { CustomWebSocket } from '../game/wsutility.ts'
 
+/**
+ * Represents an incoming WebSocket server message.
+ */
+interface WebsocketInMessage {
+	/** The route to forward the message to (e.g., "general", "invites", "game"). */
+	route: string;
+	/** The action to perform with the message's data (e.g., "sub", "unsub", "createinvite"). */
+	action: string;
+	/** The contents of the message. */
+	value: any;
+	/** The ID of the message to echo, indicating the connection is still active.
+	 * Or undefined if this message itself is an echo. */
+	id?: number;
+}
 
 
 
@@ -21,8 +30,7 @@ import type { CustomWebSocket } from '../game/wsutility.ts'
  * logs the message, then routes the message where it needs to go.
  */
 function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
-	/** @type {WebsocketMessage} */
-	let message;
+	let message: WebsocketInMessage;
 	try {
 		// Parse the stringified JSON message.
 		// Incoming message is in binary data, which can also be parsed into JSON
@@ -159,3 +167,5 @@ function handleSubbing(ws, value) {
 export {
 	onmessage,
 }
+
+export type { WebsocketInMessage }
