@@ -30,6 +30,7 @@ import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import { getMemberDataByCriteria, getUserIdByUsername } from '../../database/memberManager.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import socketUtility from '../../socket/socketUtility.js';
 
 // Type Definitions...
 
@@ -204,6 +205,7 @@ function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo =
  */
 function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
 	if (!ws) return; // Socket undefined, can't unsub.
+	if (ws.metadata.subscriptions.game === undefined) return logEvents(`Cannot unsub client from game when their socket isn't subbed to begin with!! Socket: ${socketUtility.stringifySocketMetadata(ws)}`, 'errLog.txt', { print: true });
 
 	// 1. Detach their socket from the game so we no longer send updates
 	removePlayerSocketFromGame(game, ws.metadata.subscriptions.game.color);
