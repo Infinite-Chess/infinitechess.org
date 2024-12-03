@@ -10,13 +10,15 @@ import uuid from "../../client/scripts/esm/util/uuid.js";
 // @ts-ignore
 import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
 // @ts-ignore
-import wsutility from "./socketUtility.js";
-// @ts-ignore
 import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
 // @ts-ignore
 import { ensureJSONString } from "../utility/JSONUtils.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
+// @ts-ignore
+import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
+import { addTimeoutToEchoTimers, timeToWaitForEchoMillis } from "./echoTracker.js";
+import wsutility from "./socketUtility.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -40,13 +42,14 @@ interface WebsocketOutMessage {
 }
 
 import type { CustomWebSocket } from "./socketUtility.js";
-import { addTimeoutToEchoTimers, timeToWaitForEchoMillis } from "./echoTracker.js";
-import { rescheduleRenewConnection } from "./renewSocketConnection.js";
 
 
 // Variables ---------------------------------------------------------------------------
 
 
+/** After this much time of no messages sent we send a message,
+ * expecting an echo, just to check if they are still connected. */
+const timeOfInactivityToRenewConnection = 10000;
 
 
 // Functions ---------------------------------------------------------------------------
@@ -138,6 +141,36 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: string) {
 function informSocketToHardRefresh(ws: CustomWebSocket) {
 	console.log(`Informing socket to hard refresh! ${wsutility.stringifySocketMetadata(ws)}`);
 	sendSocketMessage(ws, 'general', 'hardrefresh', GAME_VERSION);
+}
+
+// Renewing Connection ---------------------------------------------------------------------
+
+
+/**
+ * Reschedule the timer to send an empty message to the client
+ * to verify they are still connected and responding.
+ */
+function rescheduleRenewConnection(ws: CustomWebSocket) {
+	cancelRenewConnectionTimer(ws);
+	// Only reset the timer if they are subscribed to a game,
+	// or they have an open invite!
+	if (ws.metadata.subscriptions.game === undefined && !userHasInvite(ws)) return;
+
+	ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws);
+}
+
+function cancelRenewConnectionTimer(ws: CustomWebSocket) {
+	clearTimeout(ws.metadata.renewConnectionTimeoutID);
+	ws.metadata.renewConnectionTimeoutID = undefined;
+}
+
+
+/**
+ * Send an empty message to the client, expecting an echo
+ * within five seconds to make sure they are still connected.
+ */
+function renewConnection(ws: CustomWebSocket) {
+	sendSocketMessage(ws, 'general', 'renewconnection');
 }
 
 

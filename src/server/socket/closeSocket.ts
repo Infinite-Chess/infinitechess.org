@@ -10,7 +10,6 @@ import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./s
 import wsutil from "../../client/scripts/esm/util/wsutil.js";
 // @ts-ignore
 import wsutility from "./socketUtility.js";
-import { cancelRenewConnectionTimer } from './renewSocketConnection.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -48,6 +47,10 @@ function onclose(ws: CustomWebSocket, code: number, reason: string) {
 	if (reason === 'No echo heard') console.log(`Socket closed from no echo heard. ${wsutility.stringifySocketMetadata(ws)}`);
 }
 
+function cancelRenewConnectionTimer(ws: CustomWebSocket) {
+	clearTimeout(ws.metadata.renewConnectionTimeoutID);
+	ws.metadata.renewConnectionTimeoutID = undefined;
+}
 
 
 export {
