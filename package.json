@@ -37,6 +37,7 @@
 	"devDependencies": {
 		"@eslint/js": "^9.15.0",
 		"@types/node": "^22.10.1",
+		"@types/ws": "^8.5.13",
 		"eslint": "^9.15.0",
 		"globals": "^15.9.0",
 		"madge": "^8.0.0",

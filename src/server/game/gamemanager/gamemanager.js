@@ -20,9 +20,10 @@ import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -46,7 +47,7 @@ const timeBeforeGameDeletionMillis = 1000 * 15; // 15 seconds
  * Auto-subscribes the players to receive game updates.
  * @param {Object} invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`, `publicity`.
  * @param {Socket | undefined} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
- * @param {Socket} player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+ * @param {CustomWebSocket} player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
 function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1 is the invite owner.
@@ -83,7 +84,7 @@ function addGameToActiveGames(game) {
 /**
  * Unsubscribes a websocket from the game their connected to after a socket closure.
  * Detaches their socket from the game, updates their metadata.subscriptions.
- * @param {Socket} ws - Their websocket.
+ * @param {CustomWebSocket} ws - Their websocket.
  * @param {Object} options - Additional options.
  * @param {boolean} [unsubNotByChoice] When true, we will give them a 5-second cushion to re-sub before we start an auto-resignation timer. Set to false if we call this due to them closing the tab.
  */
@@ -131,7 +132,7 @@ function getGameByPlayer(player) {
 /**
  * Gets a game by socket, first checking if they are subscribed to a game,
  * if not then it checks if they are in the players in active games list.
- * @param {Socket} ws - Their websocket
+ * @param {CustomWebSocket} ws - Their websocket
  * @returns {Game | undefined} - The game they are in, if they belong in one, otherwise undefined.
  */
 function getGameBySocket(ws) {
@@ -154,7 +155,7 @@ function getGameBySocket(ws) {
  * THIS SHOULD ALSO be the point when the server knows this player
  * agrees with the resulting game conclusion (no cheating detected),
  * and the server may change the players elos once both players send this.
- * @param {Socket} ws - Their websocket
+ * @param {CustomWebSocket} ws - Their websocket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws, game) {

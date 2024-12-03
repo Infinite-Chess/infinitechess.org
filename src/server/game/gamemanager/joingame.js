@@ -9,10 +9,12 @@ import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect
 
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
 
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+
 /**
  * The method that fires when a client sends the 'joingame' command after refreshing the page.
  * This should fetch any game their in and reconnect them to it.
- * @param {Socket} ws - Their new websocket
+ * @param {CustomWebSocket} ws - Their new websocket
  * @param {Game | undefined} game - The game they are in, if they are in one.
  */
 function onJoinGame(ws, game) {

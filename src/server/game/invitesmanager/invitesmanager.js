@@ -11,12 +11,14 @@ import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvi
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
  * @typedef {import('./inviteutility.js').Invite} Invite 
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  */
+
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 //-------------------------------------------------------------------------------------------
 
@@ -80,8 +82,8 @@ function removeSensitiveInfoFromInvitesList(copyOfInvitesList) {
 
 /**
  * Adds any private invite that belongs to the socket to the provided invites list.
- * @param {Socket} ws 
- * @param {Invites[]} copyOfInvitesList - A copy of the invites list, so we don't modify the original
+ * @param {CustomWebSocket} ws 
+ * @param {Invite[]} copyOfInvitesList - A copy of the invites list, so we don't modify the original
  * @returns {Invite[]}
  */
 function addMyPrivateInviteToList(ws, copyOfInvitesList) {
@@ -98,7 +100,7 @@ function addMyPrivateInviteToList(ws, copyOfInvitesList) {
 
 /** 
  * Call when a public invite is added or deleted. 
- * @param {Socket} ws - The websocket that trigerred this public invites change.
+ * @param {CustomWebSocket} ws - The websocket that trigerred this public invites change.
  * @param {number} [replyto] - The ID of the incoming websocket message that triggered this method
  */
 function onPublicInvitesChange(ws, replyto) { // The message that this broadcast is the reply to
@@ -107,7 +109,7 @@ function onPublicInvitesChange(ws, replyto) { // The message that this broadcast
 
 /**
  * Broadcasts the invites list out to all subbed clients.
- * @param {Socket} ws - The websocket that trigerred this broadcast. Used to include the replyto id for ONLY THEIR message.
+ * @param {CustomWebSocket} ws - The websocket that trigerred this broadcast. Used to include the replyto id for ONLY THEIR message.
  * @param {number} [replyto] - The ID of the incoming websocket message that triggered this broadcast
  */
 function broadcastInvites(ws, replyto) {
@@ -127,7 +129,7 @@ function broadcastInvites(ws, replyto) {
 /**
  * Sends the invites list to a specified socket, including any private invites the player owns,
  * and also sends the current active game count.
- * @param {Socket} ws - The socket of the player to send the invites list to.
+ * @param {CustomWebSocket} ws - The socket of the player to send the invites list to.
  * @param {Object} [options] - Optional parameters.
  * @param {Invite[]} [options.invitesList=getPublicInvitesListSafe()] - The list of invites to send. Defaults to the public invites list if not provided.
  * @param {number} [options.currentGameCount=getActiveGameCount()] - The current active game count. Defaults to the current game count if not provided.
@@ -136,13 +138,13 @@ function broadcastInvites(ws, replyto) {
 function sendClientInvitesList(ws, { invitesList = getPublicInvitesListSafe(), currentGameCount = getActiveGameCount(), replyto } = {}) {
 	invitesList = addMyPrivateInviteToList(ws, invitesList);
 	const message = { invitesList, currentGameCount };
-	ws.metadata.sendmessage(ws, "invites", "inviteslist", message, replyto); // In order: socket, sub, action, value
+	sendSocketMessage(ws, "invites", "inviteslist", message, replyto); // In order: socket, sub, action, value
 }
 
 /**
  * Adds a new invite to the list of active invites.
  * Typically called when an invite is created. Sends the new invites list to the socket.
- * @param {Socket} ws - The socket of the player that created this invite. Used to send them the new invites list with their invite.
+ * @param {CustomWebSocket} ws - The socket of the player that created this invite. Used to send them the new invites list with their invite.
  * @param {Invite} invite - The invite to sdd
  * @param {number} [replyto] - The incoming websocket message ID, to include in the reply, if applicable
  */
@@ -161,7 +163,7 @@ function addInvite(ws, invite, replyto) {
 /**
  * Deletes an invite from the list of active invites.
  * Typically called when an invite is canceled. Sends the updated invites list to the socket.
- * @param {Socket} ws - The socket of the player that canceled this invite. Used to send them the updated invites list.
+ * @param {CustomWebSocket} ws - The socket of the player that canceled this invite. Used to send them the updated invites list.
  * @param {Invite} invite - The invite object to cancel. Contains details about the invite and its owner.
  * @param {number} index - The index of the invite in the invites array. This is found using {@link getInviteAndIndexByID}.
  * @param {Object} [options] - Optional parameters.
@@ -186,7 +188,7 @@ function deleteInviteByIndex(ws, invite, index, { dontBroadcast, replyto } = {})
 /**
  * Returns true if the provided socket is the owner of any active invites.
  * If so, they aren't allowed to create more.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  * @returns {boolean}
  */
 function userHasInvite(ws) {
@@ -232,7 +234,7 @@ function findSocketFromOwner(owner) { // { member/browser }
 		}
 	} else if (owner.browser) {
 		for (const ws of Object.values(subscribedClients)) {
-			if (ws.cookies['browser-id'] === owner.browser) return ws;
+			if (ws.metadata.cookies['browser-id'] === owner.browser) return ws;
 		}
 	} else return console.error(`Cannot find socket from owner of invite when owner does not have a member nor browser property! Owner: ${JSON.stringify(owner)}`);
 
@@ -244,7 +246,7 @@ function findSocketFromOwner(owner) { // { member/browser }
  * sends them the list of active invites,
  * and cancels any active timers to delete their invites if
  * their socket was previously closed by a network interruption.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  */
 function subToInvitesList(ws) { // data: { route, action, value, id }
 	if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
@@ -271,20 +273,20 @@ function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action
 	// console.log("Setting a 5-second timer to delete a user's invites!")
 
 	if (ws.metadata.memberInfo.signedIn) timersMember[ws.metadata.memberInfo.username] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws);
-	if (ws.cookies['browser-id']) timersBrowser[ws.cookies['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws);
+	if (ws.metadata.cookies['browser-id']) timersBrowser[ws.metadata.cookies['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws);
 }
 
 /**
  * Cancels any running timers to delete a users invites from a network interruption.
- * @param {Socket} ws - The socket of the new invite subscriber
+ * @param {CustomWebSocket} ws - The socket of the new invite subscriber
  */
 function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws) {
 	if (ws.metadata.memberInfo.signedIn) {
 		clearTimeout(timersMember[ws.metadata.memberInfo.username]);
 		delete timersMember[ws.metadata.memberInfo.username];
-	} if (ws.cookies['browser-id']) {
-		clearTimeout(timersBrowser[ws.cookies['browser-id']]);
-		delete timersBrowser[ws.cookies['browser-id']];
+	} if (ws.metadata.cookies['browser-id']) {
+		clearTimeout(timersBrowser[ws.metadata.cookies['browser-id']]);
+		delete timersBrowser[ws.metadata.cookies['browser-id']];
 	}
 }
 
@@ -293,7 +295,7 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws) {
 /**
  * Deletes all active invites from a specific user. They should only ever have one.
  * If a single public invite is deleted, this returns true.
- * @param {Socket} ws - The socket that belongs to the user we want to delete the invites of
+ * @param {CustomWebSocket} ws - The socket that belongs to the user we want to delete the invites of
  * @returns {boolean} Whether atleast 1 public invite was deleted
  */
 function deleteUsersExistingInvite(ws) { // Set dontBroadcastChange to true if you broadcast the change outside of this.
@@ -311,7 +313,7 @@ function deleteUsersExistingInvite(ws) { // Set dontBroadcastChange to true if y
 /**
  * Deletes all active invites from a specific member. They should only ever have one.
  * If any public invite is deleted, it broadcasts the new invites list to all subs.
- * @param {Socket} ws - The socket of the member
+ * @param {CustomWebSocket} ws - The socket of the member
  */
 function deleteMembersExistingInvite(ws) {
 	const member = ws.metadata.memberInfo.username;
@@ -330,10 +332,10 @@ function deleteMembersExistingInvite(ws) {
 /**
  * Deletes all active invites from a specific browser. They should only ever have one.
  * If any public invite is deleted, it broadcasts the new invites list to all subs.
- * @param {Socket} ws - The socket of the browser
+ * @param {CustomWebSocket} ws - The socket of the browser
  */
 function deleteBrowsersExistingInvite(ws) {
-	const browser = ws.cookies['browser-id'];
+	const browser = ws.metadata.cookies['browser-id'];
 	if (!browser) return; // No browser-id (logged in), no invite!
 	let deleted1PublicInvite = false;
 	for (let i = invites.length - 1; i >= 0; i--) {

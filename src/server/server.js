@@ -12,12 +12,12 @@ import https from 'https';
 import ejs from 'ejs';
 // Other imports
 import configureMiddleware from './middleware/middleware.js';
-import wsserver from './socket/wsserver.js';
 import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';
 import { DEV_BUILD } from './config/config.js';
 import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
+import wsserver from './socket/wsserver.js';
 
 // Initiate translations
 initTranslations();

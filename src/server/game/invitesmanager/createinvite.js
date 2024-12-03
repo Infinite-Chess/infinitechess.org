@@ -11,8 +11,6 @@
 import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-import wsutility from '../wsutility.js';
-const { sendNotify, sendNotifyError } = wsutility;
 import clockweb from '../clockweb.js';
 import gameutility from '../gamemanager/gameutility.js';
 const { getDisplayNameOfPlayer } = gameutility;
@@ -23,19 +21,21 @@ import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { isServerRestarting } from '../updateServerRestart.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
+import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
  * @typedef {import('./inviteutility.js').Invite} Invite
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  */
+
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * Creates a new invite from their websocket message.
  * 
  * This is async because we need to read allowinvites.json to see
  * if new invites are allowed, before we create it.
- * @param {Socket} ws - Their socket
+ * @param {CustomWebSocket} ws - Their socket
  * @param {*} messageContents - The incoming socket message that SHOULD contain the invite properties!
  * @param {number} replyto - The incoming websocket message ID, to include in the reply
  */
@@ -44,7 +44,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 
 	// Make sure they don't already have an existing invite
 	if (userHasInvite(ws)) {
-		ws.metadata.sendmessage(ws, 'general', 'printerror', "Can't create an invite when you have one already.", replyto);
+		sendSocketMessage(ws, 'general', 'printerror', "Can't create an invite when you have one already.", replyto);
 		logEvents("Player already has existing invite, can't create another!", 'errLog.txt', { print: true });
 		return;
 	}
@@ -61,7 +61,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	// Invite has all legal parameters! Create the invite...
 
 	// Who is the owner of the invite?
-	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.cookies["browser-id"] };
+	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.metadata.cookies["browser-id"] };
 	invite.owner = owner;
 
 	do { invite.id = uuid.generateID(5); } while (existingInviteHasID(invite.id));
@@ -72,7 +72,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 /**
  * Makes sure the socket message is an object, and strips it of all non-variant related properties.
  * STILL DO EXPLOIT checks on the specific invite values after this!!
- * @param {Socket} ws
+ * @param {CustomWebSocket} ws
  * @param {*} messageContents - The incoming websocket message contents (separate from route and action)
  * @param {number} replyto - The incoming websocket message ID, to include in the reply
  * @returns {Invite | undefined} The Invite object, or undefined it the message contents were invalid.
@@ -83,7 +83,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 
 	// Is it an object? (This may pass if it is an array, but arrays won't crash when accessing property names, so it doesn't matter. It will be rejected because it doesn't have the required properties.)
 	// We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
-	if (typeof messageContents !== 'object' || messageContents === null) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot create invite when incoming socket message body is not an object!" , replyto);
+	if (typeof messageContents !== 'object' || messageContents === null) return sendSocketMessage(ws, "general", "printerror", "Cannot create invite when incoming socket message body is not an object!" , replyto);
 
 	/**
      * What properties should the invite have from the incoming socket message?
@@ -106,7 +106,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 	do { id = uuid.generateID(IDLengthOfInvites); } while (existingInviteHasID(messageContents.id));
 	invite.id = id;
 
-	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.cookies["browser-id"] };
+	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.metadata.cookies["browser-id"] };
 	invite.owner = owner;
 	invite.name = getDisplayNameOfPlayer(owner);
 
@@ -149,15 +149,15 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 
 /**
  * Logs an incident of exploiting invite properties to the hack log.
- * @param {Socket} ws - The socket that exploited invite creation
+ * @param {CustomWebSocket} ws - The socket that exploited invite creation
  * @param {Invite} invite - The exploited invite
  * @param {number} replyto - The incoming websocket message ID, to include in the reply
  */
 function reportForExploitingInvite(ws, invite, replyto) {
-	ws.metadata.sendmessage(ws, "general", "printerror", "You cannot modify invite parameters. If this was not intentional, try hard-refreshing the page.", replyto); // In order: socket, sub, action, value
+	sendSocketMessage(ws, "general", "printerror", "You cannot modify invite parameters. If this was not intentional, try hard-refreshing the page.", replyto); // In order: socket, sub, action, value
 
 	const logText = ws.metadata.memberInfo.signedIn ? `User ${ws.metadata.memberInfo.username} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
-                                     : `Browser ${ws.cookies["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
+                                     : `Browser ${ws.metadata.cookies["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
 
 	logEvents(logText, 'hackLog.txt', { print: true }); // Log the exploit to the hackLog!
 }
@@ -165,7 +165,7 @@ function reportForExploitingInvite(ws, invite, replyto) {
 /**
  * Returns true if the user is allowed to create a new invite at this time,
  * depending on whether the server is about to restart, or they have the owner role.
- * @param {Socket} ws - The socket attempting to create a new invite
+ * @param {CustomWebSocket} ws - The socket attempting to create a new invite
  * @param {number} replyto - The incoming websocket message ID, to include in the reply
  * @returns {Promise<boolean>} true if invite creation is allowed
  */

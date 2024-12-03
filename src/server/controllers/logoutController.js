@@ -1,8 +1,8 @@
 
-import websocketserver from '../socket/wsserver.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { deleteAllInvitesOfMember } from '../game/invitesmanager/invitesmanager.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
+import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 
 
 async function handleLogout(req, res) {
@@ -38,7 +38,7 @@ function doStuffOnLogout(res, user_id, username, refreshToken) {
 	// Revoke our session and invalidate the refresh token from the database
 	revokeSession(res, user_id, refreshToken);
 
-	websocketserver.closeAllSocketsOfMember(username, 1008, "Logged out");
+	closeAllSocketsOfMember(username, 1008, "Logged out");
 	deleteAllInvitesOfMember(username);
 }
 

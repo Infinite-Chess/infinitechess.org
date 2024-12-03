@@ -6,7 +6,7 @@
 
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
 
 //-------------------------------------------------------------------------------------------
 
@@ -67,13 +67,13 @@ function safelyCopyInvite(invite) {
 
 /**
  * Tests if the provided invite belongs to the provided socket.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  * @param {Invite} invite 
  * @returns {boolean}
  */
 function isInviteOurs(ws, invite) {
 	return ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.username === invite.owner.member
-        || ws.cookies['browser-id'] && ws.cookies['browser-id'] === invite.owner.browser;
+        || ws.metadata.cookies['browser-id'] && ws.metadata.cookies['browser-id'] === invite.owner.browser;
 }
 
 //-------------------------------------------------------------------------------------------

@@ -5,6 +5,8 @@
 
 import wsutility from '../wsutility.js';
 
+/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+
 //--------------------------------------------------------------------------------------------------------
 
 /**
@@ -62,7 +64,7 @@ function removeUserFromActiveGame(user, gameID) { // { member/browser }
 /**
  * Returns true if the player behind the socket is already in an
  * active game, which means they're not allowed to join a new one.
- * @param {Socket} ws - The websocket
+ * @param {CustomWebSocket} ws - The websocket
  * @returns {boolean}
  */
 function isSocketInAnActiveGame(ws) {
