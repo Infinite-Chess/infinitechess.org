@@ -30,7 +30,6 @@ import { sendSocketMessage } from './sendSocketMessage.js';
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
-// @ts-ignore
 import type { CustomWebSocket } from './socketUtility.js';
 
 

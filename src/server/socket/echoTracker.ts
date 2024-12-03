@@ -15,7 +15,7 @@
  * An object containing the timeout ID's for the timers that auto terminate
  * websockets if we never hear an echo back: `{ messageID: timeoutID }`
  */
-const echoTimers: { [messageID: number]: NodeJS.Timeout} = {};
+const echoTimers: { [messageID: number]: NodeJS.Timeout | number } = {};
 
 
 /**
@@ -28,7 +28,7 @@ const timeToWaitForEchoMillis: number = 5000; // 5 seconds until we assume we've
 // Functions ---------------------------------------------------------------------------
 
 
-function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout) {
+function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | number) {
 	echoTimers[messageID] = timeout;
 }
 
@@ -39,7 +39,7 @@ function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout) {
 function deleteEchoTimerForMessageID(messageIDEchoIsFor: any): boolean {
 	if (typeof messageIDEchoIsFor !== 'number') return false; // Invalid echo (incoming socket message didn't include an echo ID)
 
-	const timeout: NodeJS.Timeout | undefined = echoTimers[messageIDEchoIsFor];
+	const timeout: NodeJS.Timeout | number | undefined = echoTimers[messageIDEchoIsFor];
 	if (timeout === undefined) return false; // Invalid echo (message ID wasn't from any recently sent socket message)
 
 	clearTimeout(timeout);

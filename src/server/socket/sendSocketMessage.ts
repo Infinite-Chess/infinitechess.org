@@ -39,9 +39,7 @@ interface WebsocketOutMessage {
 	replyto?: number;
 }
 
-// @ts-ignore
 import type { CustomWebSocket } from "./socketUtility.js";
-import { closeWebSocketConnection } from "./closeSocket.js";
 import { addTimeoutToEchoTimers, timeToWaitForEchoMillis } from "./echoTracker.js";
 import { rescheduleRenewConnection } from "./renewSocketConnection.js";
 
@@ -93,18 +91,15 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 	ws.send(stringifiedPayload); // Send the message
 	if (!isEcho) { // Not an echo
 		logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
-		const timeout = expectEchoForMessageID(ws, payload.id!);
+
+		// Set a timer. At the end, just assume we've disconnected and start again.
+		// This will be canceled if we here the echo in time.
+		const timeout = setTimeout(() => { if (ws.readyState !== WebSocket.CLOSED) ws.close(1014, "No echo heard"); }, timeToWaitForEchoMillis);
+		//console.log(`Set timer of message id "${id}"`)
 		addTimeoutToEchoTimers(payload.id!, timeout);
 	}
 
 	rescheduleRenewConnection(ws);
-}
-
-function expectEchoForMessageID(ws: CustomWebSocket, messageID: number): NodeJS.Timeout {
-	// Set a timer. At the end, just assume we've disconnected and start again.
-	// This will be canceled if we here the echo in time.
-	return setTimeout(closeWebSocketConnection, timeToWaitForEchoMillis, ws, 1014, "No echo heard", messageID); // Code 1014 is Bad Gateway
-	//console.log(`Set timer of message id "${id}"`)
 }
 
 /**

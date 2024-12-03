@@ -3,24 +3,20 @@
  * This script terminates websockets.
  */
 
-import WebSocket from 'ws';
 
 // @ts-ignore
 import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager.js";
 // @ts-ignore
 import wsutil from "../../client/scripts/esm/util/wsutil.js";
+// @ts-ignore
+import wsutility from "./socketUtility.js";
+import { cancelRenewConnectionTimer } from './renewSocketConnection.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
-// @ts-ignore
 import type { CustomWebSocket } from "./socketUtility.js";
-// @ts-ignore
-import { deleteEchoTimerForMessageID } from "./echoTracker.js";
-// @ts-ignore
-import wsutility from "./socketUtility.js";
-import { cancelRenewConnectionTimer } from './renewSocketConnection.js';
 
 
 // Functions ---------------------------------------------------------------------------
@@ -53,19 +49,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: string) {
 }
 
 
-function closeWebSocketConnection(ws: CustomWebSocket, code: number, message: string, messageID?: number) {
-	if (messageID !== undefined) deleteEchoTimerForMessageID(messageID); // Timer is just now ringing. Delete the timer from the echoTimers list, so it doesn't fill up!
-
-	//console.log(`Closing web socket connection.. Code ${code}. Message "${message}"`)
-	const readyStateClosed = ws.readyState === WebSocket.CLOSED;
-	if (readyStateClosed && message === "Connection expired") return console.log(`Web socket already closed! This function should not have been run. Code ${code}. Message ${message}`);
-	else if (readyStateClosed) return;
-	ws.close(code, message);
-}
-
-
 
 export {
 	onclose,
-	closeWebSocketConnection,
 };

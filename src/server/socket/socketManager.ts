@@ -9,14 +9,11 @@ import uuid from "../../client/scripts/esm/util/uuid.js";
 import { printIncomingAndClosingSockets } from "../config/config.js";
 // @ts-ignore
 import wsutility from "./socketUtility.js";
-// @ts-ignore
-import { closeWebSocketConnection } from "./closeSocket.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
-// @ts-ignore
 import type { CustomWebSocket } from "./socketUtility.js";
 // @ts-ignore
 import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager.js";
@@ -172,7 +169,7 @@ function closeAllSocketsOfMember(username: string, closureCode: number, closureR
 	connectedMembers[username]?.slice().forEach(socketID => { // slice() makes a copy of it
 		const ws = websocketConnections[socketID];
 		if (!ws) return;
-		closeWebSocketConnection(ws, closureCode, closureReason);
+		ws.close(closureCode, closureReason);
 	});
 }
 
@@ -181,7 +178,7 @@ function generateUniqueIDForSocket() {
 }
 
 function startTimerToExpireSocket(ws: CustomWebSocket) {
-	ws.metadata.clearafter = setTimeout(closeWebSocketConnection, maxWebSocketAgeMillis, ws, 1000, 'Connection expired'); // Code 1000 for normal closure
+	ws.metadata.clearafter = setTimeout(ws.close, maxWebSocketAgeMillis, 1000, 'Connection expired'); // Code 1000 for normal closure
 }
 
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
