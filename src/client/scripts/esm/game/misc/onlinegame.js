@@ -193,8 +193,8 @@ function rescheduleAlertServerWeAFK() {
 	if (!isItOurTurn() || gamefileutility.isGameOver(gamefile) || isPrivate && clock.isGameUntimed(gamefile) || !clock.isGameUntimed(gamefile) && moveutil.isGameResignable(gamefile)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
 	const timeUntilAFKSecs = !moveutil.isGameResignable(gamefile) ? afk.timeUntilAFKSecs_Abortable
-        : clock.isGameUntimed(gamefile) ? afk.timeUntilAFKSecs_Untimed
-            : afk.timeUntilAFKSecs;
+						   : clock.isGameUntimed(gamefile) ? afk.timeUntilAFKSecs_Untimed
+						   : afk.timeUntilAFKSecs;
 	afk.timeoutID = setTimeout(tellServerWeAFK, timeUntilAFKSecs * 1000);
 }
 
