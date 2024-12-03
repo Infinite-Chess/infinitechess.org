@@ -14,6 +14,7 @@ import wsutil from "../../client/scripts/esm/util/wsutil";
 import type { CustomWebSocket } from "../game/wsutility";
 import { cancelRenewConnectionTimer } from "./sendSocketMessage";
 import { deleteEchoTimerForMessageID } from "./echoTracker";
+import wsutility from "../game/wsutility";
 
 
 // Functions ---------------------------------------------------------------------------

@@ -211,4 +211,5 @@ export {
 	generateUniqueIDForSocket,
 	unsubSocketFromAllSubs,
 	handleUnsubbing,
+	closeAllSocketsOfMember,
 }

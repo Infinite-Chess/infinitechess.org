@@ -4,9 +4,6 @@
  */
 
 
-// Type Definitions ---------------------------------------------------------------------------
-
-
 import { IncomingMessage } from 'http';
 import type { CustomWebSocket } from '../game/wsutility.ts'
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
@@ -20,6 +17,10 @@ import { handleUnsubbing } from './socketManager.ts';
 import { deleteEchoTimerForMessageID } from './echoTracker.ts';
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
 import { ensureJSONString } from '../utility/JSONUtils.js';
+
+
+// Type Definitions ---------------------------------------------------------------------------
+
 
 /**
  * Represents an incoming WebSocket server message.
