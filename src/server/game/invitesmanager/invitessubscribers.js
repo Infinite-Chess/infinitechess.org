@@ -34,7 +34,7 @@ function getInviteSubscribers() { return subscribedClients; }
  */
 function broadcastToAllInviteSubs(action, message) {
 	for (const ws of Object.values(subscribedClients)) {
-		ws.metadata.sendmessage(ws, "invites", action, message); // In order: socket, sub, action, value
+		sendSocketMessage(ws, "invites", action, message); // In order: socket, sub, action, value
 	}
 }
 

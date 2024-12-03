@@ -30,23 +30,14 @@ import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
 import type { CustomWebSocket } from "../game/wsutility.ts";
 import wsutility from "../game/wsutility.ts";
 import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
+import { ensureJSONString } from "../utility/JSONUtils.js";
 import { getTranslation } from "../utility/translate.js";
 import { closeWebSocketConnection } from "./closeSocket.ts";
+
 
 // Variables ---------------------------------------------------------------------------
 
 
-/**
- * The time, after which we don't hear an expected echo from a websocket,
- * in which it be assumed disconnected, and auto terminated, in milliseconds.
-*/
-const timeToWaitForEchoMillis = 5000; // 5 seconds until we assume we've disconnected!
-
-/**
- * An object containing the timeout ID's for the timers that auto terminate
- * websockets if we never hear an echo back: `{ messageID: timeoutID }`
- */
-const echoTimers = {};
 
 /** After this much time of no messages sent we send a message,
  * expecting an echo, just to check if they are still connected. */

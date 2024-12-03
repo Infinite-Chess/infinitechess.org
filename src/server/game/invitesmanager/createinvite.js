@@ -45,7 +45,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 
 	// Make sure they don't already have an existing invite
 	if (userHasInvite(ws)) {
-		ws.metadata.sendmessage(ws, 'general', 'printerror', "Can't create an invite when you have one already.", replyto);
+		sendSocketMessage(ws, 'general', 'printerror', "Can't create an invite when you have one already.", replyto);
 		logEvents("Player already has existing invite, can't create another!", 'errLog.txt', { print: true });
 		return;
 	}
@@ -84,7 +84,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 
 	// Is it an object? (This may pass if it is an array, but arrays won't crash when accessing property names, so it doesn't matter. It will be rejected because it doesn't have the required properties.)
 	// We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
-	if (typeof messageContents !== 'object' || messageContents === null) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot create invite when incoming socket message body is not an object!" , replyto);
+	if (typeof messageContents !== 'object' || messageContents === null) return sendSocketMessage(ws, "general", "printerror", "Cannot create invite when incoming socket message body is not an object!" , replyto);
 
 	/**
      * What properties should the invite have from the incoming socket message?
@@ -155,7 +155,7 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
  * @param {number} replyto - The incoming websocket message ID, to include in the reply
  */
 function reportForExploitingInvite(ws, invite, replyto) {
-	ws.metadata.sendmessage(ws, "general", "printerror", "You cannot modify invite parameters. If this was not intentional, try hard-refreshing the page.", replyto); // In order: socket, sub, action, value
+	sendSocketMessage(ws, "general", "printerror", "You cannot modify invite parameters. If this was not intentional, try hard-refreshing the page.", replyto); // In order: socket, sub, action, value
 
 	const logText = ws.metadata.memberInfo.signedIn ? `User ${ws.metadata.memberInfo.username} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
                                      : `Browser ${ws.metadata.cookies["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;

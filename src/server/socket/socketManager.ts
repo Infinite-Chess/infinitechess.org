@@ -179,14 +179,11 @@ function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean
 
 	const subscriptions = ws.metadata.subscriptions;
 	const subscriptionsKeys = Object.keys(subscriptions);
-	for (const key of subscriptionsKeys) {
-		const thisSubscription = subscriptions[key]; // invites/game
-		handleUnsubbing(ws, key, thisSubscription, closureNotByChoice);
-	}
+	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, closureNotByChoice);
 }
 
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function handleUnsubbing(ws: CustomWebSocket, key: string, subscription: string, closureNotByChoice: boolean) { // subscription: game: { id, color }
+function handleUnsubbing(ws: CustomWebSocket, key: string, closureNotByChoice?: boolean) {
 	// What are they wanting to unsubscribe from updates from?
 	switch (key) {
 		case "invites":
@@ -213,4 +210,5 @@ export {
 	doesMemberHaveMaxSocketCount,
 	generateUniqueIDForSocket,
 	unsubSocketFromAllSubs,
+	handleUnsubbing,
 }

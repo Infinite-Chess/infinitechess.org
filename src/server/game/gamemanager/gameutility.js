@@ -213,7 +213,7 @@ function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
 	// We inform their opponent they have disconnected inside js when we call this method.
 
 	// Tell the client to unsub on their end, IF the socket isn't closing.
-	if (sendMessage && ws.readyState === WebSocket.OPEN) ws.metadata.sendmessage(ws, 'game', 'unsub');
+	if (sendMessage && ws.readyState === WebSocket.OPEN) sendSocketMessage(ws, 'game', 'unsub');
 }
 
 /**
@@ -526,7 +526,7 @@ function sendMessageToSocketOfColor(game, color, sub, action, value) {
 		if (action === 'notify') return sendNotify(ws, value); // The value needs translating
 		if (action === 'notifyerror') return sendNotifyError(ws, value); // The value needs translating
 	}
-	ws.metadata.sendmessage(ws, sub, action, value); // Value doesn't need translating, send normally.
+	sendSocketMessage(ws, sub, action, value); // Value doesn't need translating, send normally.
 }
 
 /**

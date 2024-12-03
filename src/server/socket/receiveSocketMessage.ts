@@ -4,8 +4,19 @@
  */
 
 
+// Type Definitions ---------------------------------------------------------------------------
+
+
 import { IncomingMessage } from 'http';
 import type { CustomWebSocket } from '../game/wsutility.ts'
+import { rateLimitWebSocket } from '../middleware/rateLimit.js';
+import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
+import wsutility from '../game/wsutility.ts';
+import { sendSocketMessage } from './sendSocketMessage.ts';
+import { printIncomingAndOutgoingMessages } from '../config/config.js';
+import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
+import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
+import { handleUnsubbing } from './socketManager.ts';
 
 /**
  * Represents an incoming WebSocket server message.
@@ -23,6 +34,8 @@ interface WebsocketInMessage {
 }
 
 
+// Functions ---------------------------------------------------------------------------
+
 
 /**
  * Callback function that is executed whenever we receive an incoming websocket message.
@@ -35,52 +48,40 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 		// Parse the stringified JSON message.
 		// Incoming message is in binary data, which can also be parsed into JSON
 		message = JSON.parse(rawMessage);
-		// {
-		//     route, // general/invites/game
-		//     action, // sub/unsub/createinvite/cancelinvite/acceptinvite
-		//     value,
-		//     id // ID of the message, for listening for the echo
-		// }
 	} catch (error) {
-		if (!rateLimitWebSocket(req, ws)) return; // Don't miss rate limiting
-		logReqWebsocketIn(ws, rawMessage); // Log it anyway before quitting
+		if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
 		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
-		console.error(errText);
 		logEvents(errText, 'hackLog.txt');
-		return sendmessage(ws, 'general', 'printerror', `Invalid JSON format!`);
+		return sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
 	}
 
-	// Is the parsed message body an object? If not, accessing properties would give us a crash.
-	// We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
-	if (typeof message !== 'object' || message === null) return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid websocket message.");
+	// Validate that the parsed object matches the expected structure
+	if (!isValidWebsocketInMessage(message)) return sendSocketMessage(ws, "general", "printerror", "Invalid websocket message structure.");	
+
+	// Valid...
 
 	const isEcho = message.action === "echo";
 	if (isEcho) {
 		const validEcho = cancelTimerOfMessageID(message); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
-			if (!rateLimitWebSocket(req, ws)) return; // Don't miss rate limiting
-			logReqWebsocketIn(ws, rawMessage); // Log the request anyway.
-			const errText = `User detected sending invalid echo! Message: ${JSON.stringify(message)}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`;
-			console.error(errText);
-			logEvents(errText, 'errLog.txt');
+			if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
+			const errText = `User detected sending invalid echo! Message: "${JSON.stringify(message)}". Metadata: ${wsutility.stringifySocketMetadata(ws)}`;
+			logEvents(errText, 'errLog.txt', { print: true });
 		}
 		return;
 	}
 
 	// Not an echo...
 
-	// Rate Limit Here
-	if (!rateLimitWebSocket(req, ws)) return; // Will have already returned if too many messages.
+	if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
 
-	// Log the request.
-	logReqWebsocketIn(ws, rawMessage);
-
-	if (printIncomingAndOutgoingMessages && !isEcho) console.log("Received message: " + JSON.stringify(message));
+	if (printIncomingAndOutgoingMessages && !isEcho) console.log("Received message: " + rawMessage);
 
 	// Send our echo here! We always send an echo to every message except echos themselves.
-	if (ws.metadata.sendmessage) ws.metadata.sendmessage(ws, "general", "echo", message.id);
+	sendSocketMessage(ws, "general", "echo", message.id);
 
 	// Route them to their specified location
+	
 	switch (message.route) {
 		case "general":
 			handleGeneralMessage(ws, message); // { route, action, value, id }
@@ -96,10 +97,35 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 		default: { // Surround this case in a block so it's variables are not hoisted
 			const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 			logEvents(errText, 'hackLog.txt', { print: true });
-			sendmessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
+			sendSocketMessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
 			return;
 		}
 	}
+}
+
+/**
+ * Logs and rate limits on incoming socket message.
+ * Returns true if the message is allowed, or false if the message
+ * is being rate limited and the socket has already been closed.
+ */
+function rateLimitAndLogMessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: string): boolean {
+	if (!rateLimitWebSocket(req, ws)) return false; // They are being rate limited, the socket will have already been closed.
+	logReqWebsocketIn(ws, rawMessage); // Only logged the message if it wasn't rate limited.
+	return true;
+}
+
+/**
+ * Type guard to validate if an object is a WebsocketInMessage.
+ */
+function isValidWebsocketInMessage(parsedIncomingMessage: WebsocketInMessage): boolean {
+	return (
+		typeof parsedIncomingMessage === 'object' &&
+		parsedIncomingMessage !== null &&
+		typeof parsedIncomingMessage.route === 'string' &&
+		typeof parsedIncomingMessage.action === 'string' &&
+		// Allow `value` to be any type, no validation needed for it.
+		(parsedIncomingMessage.id === undefined || typeof parsedIncomingMessage.id === 'number')
+	);
 }
 
 
@@ -133,7 +159,7 @@ function handleGeneralMessage(ws, data) { // data: { route, action, value, id }
 		default: { // Surround this case in a block so that it's variables are not hoisted
 			const errText = `UNKNOWN web socket received action in general route! ${data.action}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 			logEvents(errText, 'hackLog.txt', { print: true });
-			sendmessage(ws, 'general', 'printerror', `Unknown action "${data.action}" in route general.`);
+			sendSocketMessage(ws, 'general', 'printerror', `Unknown action "${data.action}" in route general.`);
 			return;
 		}
 	}
@@ -156,7 +182,7 @@ function handleSubbing(ws, value) {
 		default: { // Surround this case in a block so that it's variables are not hoisted
 			const errText = `Cannot subscribe user to strange new subscription list ${value}! Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 			logEvents(errText, 'hackLog.txt', { print: true });
-			sendmessage(ws, 'general', 'printerror', `Cannot subscribe to "${value}" list!`);
+			sendSocketMessage(ws, 'general', 'printerror', `Cannot subscribe to "${value}" list!`);
 			return;
 		}
 	}

@@ -13,6 +13,7 @@ import wsutil from "../../client/scripts/esm/util/wsutil";
 
 import type { CustomWebSocket } from "../game/wsutility";
 import { cancelRenewConnectionTimer } from "./sendSocketMessage";
+import { deleteEchoForMessageID } from "./echoTracker";
 
 
 // Functions ---------------------------------------------------------------------------
@@ -46,9 +47,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: string) {
 
 
 function closeWebSocketConnection(ws: CustomWebSocket, code: number, message: string, messageID?: number) {
-	if (messageID) { // Timer is just now ringing. Delete the timer from the echoTimers list, so it doesn't fill up!
-		delete echoTimers[messageID];
-	}
+	if (messageID !== undefined) deleteEchoForMessageID(messageID); // Timer is just now ringing. Delete the timer from the echoTimers list, so it doesn't fill up!
 
 	//console.log(`Closing web socket connection.. Code ${code}. Message "${message}"`)
 	const readyStateClosed = ws.readyState === WebSocket.CLOSED;

@@ -137,7 +137,7 @@ function broadcastInvites(ws, replyto) {
 function sendClientInvitesList(ws, { invitesList = getPublicInvitesListSafe(), currentGameCount = getActiveGameCount(), replyto } = {}) {
 	invitesList = addMyPrivateInviteToList(ws, invitesList);
 	const message = { invitesList, currentGameCount };
-	ws.metadata.sendmessage(ws, "invites", "inviteslist", message, replyto); // In order: socket, sub, action, value
+	sendSocketMessage(ws, "invites", "inviteslist", message, replyto); // In order: socket, sub, action, value
 }
 
 /**

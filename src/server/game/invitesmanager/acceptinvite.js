@@ -34,7 +34,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game", { replyto });
 
-	if (!verifyMessageContents(messageContents)) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot cancel invite when incoming socket message body is in an invalid format!", replyto);
+	if (!verifyMessageContents(messageContents)) return sendSocketMessage(ws, "general", "printerror", "Cannot cancel invite when incoming socket message body is in an invalid format!", replyto);
 	const { id, isPrivate } = messageContents;
 
 
@@ -46,7 +46,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 	// Make sure they are not accepting their own.
 	if (isInviteOurs(ws, invite)) {
-		ws.metadata.sendmessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
+		sendSocketMessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
 		const errString = `Player tried to accept their own invite! Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 		logEvents(errString, 'errLog.txt', { print: true });
 		return;
