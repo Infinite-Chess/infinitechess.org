@@ -304,7 +304,7 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color, us
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) { console.error(`Line only has one intersect with square.`); continue; }
         
-		concatData_HighlightedMoves_Diagonal(data, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[line], usingDots, vertexDataMove, vertexDataCapture, gamefile);
+		concatData_HighlightedMoves_Diagonal(data, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[line], usingDots, vertexDataMove, vertexDataCapture, legalMoves.ignore, gamefile);
 	}
 }
 
@@ -319,15 +319,16 @@ function concatData_HighlightedMoves_Sliding(data, coords, legalMoves, color, us
  * @param {boolean} usingDots - Whether legal move are being rendered as dots and corner tri's.
  * @param {number[]} vertexDataMove - The vertex data of a single legal move highlight (square or dot).
  * @param {number[]|undefined} [vertexDataCapture] The vertex data of a single legal move corner tri's (if usingDots).
+ * @param {function} ignoreFunction - The squares to ignore for drawing.
  * @param {gamefile} gamefile 
  */
-function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, usingDots, vertexDataMove, vertexDataCapture, gamefile) {
+function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, usingDots, vertexDataMove, vertexDataCapture, ignoreFunction, gamefile) {
 	// Right moveset
-	concatData_HighlightedMoves_Diagonal_Split(data, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		   usingDots,  jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), gamefile);
+	concatData_HighlightedMoves_Diagonal_Split(data, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		   usingDots,  jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), ignoreFunction, gamefile);
     
 	// Left moveset
 	const negStep = [step[0] * -1, step[1] * -1];
-	concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), usingDots, jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), gamefile);
+	concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), usingDots, jsutil.deepCopyObject(vertexDataMove), jsutil.deepCopyObject(vertexDataCapture), ignoreFunction, gamefile);
 }
 
 /**
@@ -341,9 +342,10 @@ function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, 
  * @param {boolean} usingDots - Whether legal move are being rendered as dots and corner tri's.
  * @param {number[]} vertexDataMove - The vertex data of a single legal move highlight (square or dot).
  * @param {number[]|undefined} [vertexDataCapture] The vertex data of a single legal move corner tri's (if usingDots).
+ * @param {function} ignoreFunction - The squares to ignore for drawing.
  * @param {gamefile} gamefile 
  */
-function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limit, usingDots, vertexDataMove, vertexDataCapture, gamefile) {
+function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limit, usingDots, vertexDataMove, vertexDataCapture, ignoreFunction, gamefile) {
 	if (limit === 0) return; // Quick exit
 
 	const lineIsVertical = step[0] === 0;
@@ -385,8 +387,9 @@ function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1
 	const xyDist = stepIsPositive ? endCoords[index] - startCoords[index] : startCoords[index] - endCoords[index];
 	if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
 	const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
+	const distanceAlongLine = (startCoords[index] - coords[index]) / Math.abs(step[index]);
 
-	addDataDiagonalVariant(data, usingDots, vertexDataMove, vertexDataCapture, step, iterationCount, startCoords, gamefile);
+	addDataDiagonalVariant(data, usingDots, vertexDataMove, vertexDataCapture, ignoreFunction, step, stepIsPositive, distanceAlongLine, iterationCount, startCoords, gamefile);
 }
 
 /**
@@ -396,22 +399,41 @@ function concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1
  * @param {boolean} usingDots - Whether legal move are being rendered as dots and corner tri's.
  * @param {number[]} vertexDataMove - The vertex data of a single legal move highlight (square or dot).
  * @param {number[]|undefined} [vertexDataCapture] The vertex data of a single legal move corner tri's (if usingDots).
+ * @param {function} ignoreFunction - The squares to ignore for drawing.
  * @param {number[]} step - [dx,dy]
  * @param {number} iterateCount 
+ * TODO
  */
-function addDataDiagonalVariant(data, usingDots, vertexDataMove, vertexDataCapture, step, iterateCount, startCoords, gamefile) {
+function addDataDiagonalVariant(data, usingDots, vertexDataMove, vertexDataCapture, ignoreFunction, step, stepIsPositive, distanceAlongLine, iterateCount, startCoords, gamefile) {
 	if (usingDots) {
 		for (let i = 0; i < iterateCount; i++) { 
 			const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i];
-			if (gamefileutility.isPieceOnCoords(gamefile, thisCoord)) data.push(...vertexDataCapture);
-			else data.push(...vertexDataMove);
+			if (!ignoreFunction(distanceAlongLine, step)) {
+				if (gamefileutility.isPieceOnCoords(gamefile, thisCoord)) data.push(...vertexDataCapture);
+				else data.push(...vertexDataMove);
+			}
 			
 			shiftVertexData(vertexDataMove, vertexDataCapture, step[0], step[1]);
+
+			if (stepIsPositive) {
+				distanceAlongLine++;
+			} else {
+				distanceAlongLine--;
+			}
+
 		}
 	} else {
 		for (let i = 0; i < iterateCount; i++) {
-			data.push(...vertexDataMove);
+			if (!ignoreFunction(distanceAlongLine, step)) {
+				data.push(...vertexDataMove);
+			}
 			shiftVertexData(vertexDataMove, vertexDataCapture, step[0], step[1]);
+			
+			if (stepIsPositive) {
+				distanceAlongLine++;
+			} else {
+				distanceAlongLine--;
+			}
 		}
 	}
 }

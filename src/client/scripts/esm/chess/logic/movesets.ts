@@ -2,10 +2,11 @@
 'use strict';
 
 /**
- * This script contains the default movesets for all pieces except specials (pawns, castling)
- * 
- * ZERO dependancies
+ * This script contains the movesets for all pieces except specials (pawns, castling)
  */
+
+// @ts-ignore
+import isprime from './isprime.js'; //For Huygens
 
 // Type definitions...
 
@@ -35,7 +36,6 @@ interface PieceMoveset {
 	},
 	ignore?: IgnoreFunction
 }
-
 
 
 /**
@@ -191,6 +191,16 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
                 [-2,1],[-1,2],[1,2],[2,1],
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
             ]
+		},
+		huygens: {
+			individual: [],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit]
+			},
+			ignore: function(distance: number = 0) {
+				return !isprime.primalityTest(Math.abs(distance), null);
+			}
 		},
 		roses: {
 			individual: []
