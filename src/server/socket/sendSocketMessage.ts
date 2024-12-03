@@ -7,7 +7,7 @@
 import { WebSocket } from "ws";
 
 import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID, timeToWaitForEchoMillis } from "./echoTracker.js";
-import wsutility from "./socketUtility.js";
+import socketUtility from "./socketUtility.js";
 // @ts-ignore
 import uuid from "../../client/scripts/esm/util/uuid.js";
 // @ts-ignore
@@ -73,7 +73,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 	}
 
 	if (ws.readyState === WebSocket.CLOSED) {
-		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'errLog.txt', { print: true });
 		return;
 	}
@@ -139,7 +139,7 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: string) {
  * Tell them to hard-refresh the page, there's a new update.
  */
 function informSocketToHardRefresh(ws: CustomWebSocket) {
-	console.log(`Informing socket to hard refresh! ${wsutility.stringifySocketMetadata(ws)}`);
+	console.log(`Informing socket to hard refresh! ${socketUtility.stringifySocketMetadata(ws)}`);
 	sendSocketMessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
 

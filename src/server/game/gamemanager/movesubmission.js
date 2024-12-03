@@ -9,7 +9,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import gameutility from './gameutility.js';
-import wsutility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketUtility.js';
 
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
@@ -59,7 +59,7 @@ function submitMove(ws, game, messageContents) {
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = game.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
-		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errString, 'hackLog.txt', { print: true });
 		return resyncToGame(ws, game, game.id);
 	}
@@ -69,13 +69,13 @@ function submitMove(ws, game, messageContents) {
 
 	// Legality checks...
 	if (!doesMoveCheckOut(messageContents.move)) {
-		const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		console.error(errString);
 		logEvents(errString, 'hackLog.txt');
 		return sendSocketMessage(ws, "general", "printerror", "Invalid move format.");
 	}
 	if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
-		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		console.error(errString);
 		logEvents(errString, 'hackLog.txt');
 		return sendSocketMessage(ws, "general", "printerror", "Invalid game conclusion.");

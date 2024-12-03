@@ -6,7 +6,7 @@
  * and broadcasts changes out to the clients.
  */
 
-import wsutility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketUtility.js';
 import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
@@ -249,7 +249,7 @@ function findSocketFromOwner(owner) { // { member/browser }
  * @param {CustomWebSocket} ws 
  */
 function subToInvitesList(ws) { // data: { route, action, value, id }
-	if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (ws.metadata.subscriptions.invites) return console.log(`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 	// if (ws.metadata.subscriptions.invites) return; // Already subscribed
 
 	addSocketToInvitesSubs(ws);
@@ -324,7 +324,7 @@ function deleteMembersExistingInvite(ws) {
 		if (member !== invite.owner.member) continue;
 		if (isInvitePublic(invite)) deleted1PublicInvite = true;
 		invites.splice(i, 1); // Delete the invite.
-		console.log(`Deleted members invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+		console.log(`Deleted members invite from disconnection. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 	}
 	if (deleted1PublicInvite) onPublicInvitesChange();
 }
@@ -343,7 +343,7 @@ function deleteBrowsersExistingInvite(ws) {
 		if (browser !== invite.owner.browser) continue;
 		if (isInvitePublic(invite)) deleted1PublicInvite = true;
 		invites.splice(i, 1); // Delete the invite.
-		console.log(`Deleted browsers invite from disconnection. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+		console.log(`Deleted browsers invite from disconnection. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 	}
 	if (deleted1PublicInvite) onPublicInvitesChange();
 }

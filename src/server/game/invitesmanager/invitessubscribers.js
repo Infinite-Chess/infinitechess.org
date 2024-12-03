@@ -7,7 +7,7 @@
  */
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import wsutility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketUtility.js';
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
@@ -49,7 +49,7 @@ function addSocketToInvitesSubs(ws) {
 
 	subscribedClients[socketID] = ws;
 	ws.metadata.subscriptions.invites = true;
-	if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 	if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
 
@@ -66,7 +66,7 @@ function removeSocketFromInvitesSubs(ws) {
 
 	delete subscribedClients[socketID];
 	delete ws.metadata.subscriptions.invites;
-	if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 	if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
 

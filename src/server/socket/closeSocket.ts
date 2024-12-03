@@ -4,7 +4,7 @@
  */
 
 
-import wsutility from "./socketUtility.js";
+import socketUtility from "./socketUtility.js";
 import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager.js";
 // @ts-ignore
 import wsutil from "../../client/scripts/esm/util/wsutil.js";
@@ -42,7 +42,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer) {
 
 	cancelRenewConnectionTimer(ws);
 
-	if (reasonString === 'No echo heard') console.log(`Socket closed from no echo heard. ${wsutility.stringifySocketMetadata(ws)}`);
+	if (reasonString === 'No echo heard') console.log(`Socket closed from no echo heard. ${socketUtility.stringifySocketMetadata(ws)}`);
 }
 
 function cancelRenewConnectionTimer(ws: CustomWebSocket) {

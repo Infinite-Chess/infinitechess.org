@@ -8,7 +8,7 @@
  */
 
 
-import wsutility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketUtility.js';
 
 import { createInvite } from './createinvite.js';
 import { cancelInvite } from './cancelinvite.js';
@@ -29,7 +29,7 @@ function handleInviteRoute(ws, data) { // data: { route, action, value, id }
 			acceptInvite(ws, data.value, data.id);
 			break;
 		default:
-			console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+			console.log(`Client sent unknown action "${data.action}" for invites route! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 			console.log(`Data: ${JSON.stringify(data)}`);
 			return;
 	}

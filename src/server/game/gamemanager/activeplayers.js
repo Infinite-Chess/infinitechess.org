@@ -3,7 +3,7 @@
  * This script keeps track of the ID's of games members and browsers are currently in.
  */
 
-import wsutility from '../../socket/socketUtility.js';
+import socketUtility from "../../socket/socketUtility.js";
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
@@ -68,7 +68,7 @@ function removeUserFromActiveGame(user, gameID) { // { member/browser }
  * @returns {boolean}
  */
 function isSocketInAnActiveGame(ws) {
-	const player = wsutility.getOwnerFromSocket(ws);
+	const player = socketUtility.getOwnerFromSocket(ws);
 	// Allow a member to still join a new game, even if they're browser may be connected to one already.
 	if (player.member) { // Their username trumps their browser id.
 		if (membersInActiveGames[player.member]) return true;

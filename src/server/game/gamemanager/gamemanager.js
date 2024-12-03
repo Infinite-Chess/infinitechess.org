@@ -6,7 +6,7 @@
 // Custom imports
 
 import gameutility from './gameutility.js';
-import wsutility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketUtility.js';
 import statlogger from '../statlogger.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
 
@@ -93,7 +93,7 @@ function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 	if (gameID == null) return console.error("Cannot unsub client from game when it's not subscribed to one.");
 
 	const game = getGameByID(gameID);
-	if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 
 	gameutility.unsubClientFromGame(game, ws, { sendMessage: false }); // Don't tell the client to unsub because their socket is CLOSING
 
@@ -142,8 +142,8 @@ function getGameBySocket(ws) {
 	// The socket is not subscribed to any game. Perhaps this is a resync/refresh?
 
 	// Is the client in a game? What's their username/browser-id?
-	const player = wsutility.getOwnerFromSocket(ws);
-	if (player.member == null && player.browser == null) return console.error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${wsutility.stringifySocketMetadata(ws)}`);
+	const player = socketUtility.getOwnerFromSocket(ws);
+	if (player.member == null && player.browser == null) return console.error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 
 	return getGameByPlayer(player);
 }
@@ -159,7 +159,7 @@ function getGameBySocket(ws) {
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws, game) {
-	const user = wsutility.getOwnerFromSocket(ws); // { member/browser }
+	const user = socketUtility.getOwnerFromSocket(ws); // { member/browser }
 	if (!game) return console.error("Can't remove player from players in active games list when they don't belong in a game");
 	removeUserFromActiveGame(user, game.id);
     

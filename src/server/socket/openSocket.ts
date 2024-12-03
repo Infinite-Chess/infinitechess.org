@@ -3,7 +3,7 @@
  * This script handles socket upgrade connection requests, and creating new sockets.
  */
 
-import wsutility from './socketUtility.js';
+import socketUtility from './socketUtility.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
 import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesMemberHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
 import { onmessage } from './receiveSocketMessage.js';
@@ -67,7 +67,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage) {
 
 	if (!ws.metadata.memberInfo.signedIn && ws.metadata.cookies['browser-id'] === undefined) { // Terminate web socket connection request, they NEED authentication!
 		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
-		wsutility.printSocket(ws);
+		socketUtility.printSocket(ws);
 		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
 	}
 
@@ -98,7 +98,7 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 		return;
 	}
 
-	const IP = wsutility.getIPFromWebsocketUpgradeRequest(req);
+	const IP = socketUtility.getIPFromWebsocketUpgradeRequest(req);
 	if (IP === undefined) {
 		logEvents('Unable to identify IP address from websocket connection!', 'hackLog.txt');
 		socket.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
@@ -109,7 +109,7 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 	const ws = socket as CustomWebSocket; // Cast WebSocket to CustomWebSocket
 	ws.metadata = {
 		// Parse cookies from the Upgrade http headers
-		cookies: wsutility.getCookiesFromWebsocket(req),
+		cookies: socketUtility.getCookiesFromWebsocket(req),
 		subscriptions: {},
 		userAgent: req.headers['user-agent'],
 		memberInfo: { signedIn: false },
@@ -130,7 +130,7 @@ function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket) {
 }
 
 function onerror(ws: CustomWebSocket, error: Error) {
-	const errText = `An error occurred in a websocket. The socket: ${wsutility.stringifySocketMetadata(ws)}\n${error.stack}`;
+	const errText = `An error occurred in a websocket. The socket: ${socketUtility.stringifySocketMetadata(ws)}\n${error.stack}`;
 	logEvents(errText, 'errLog.txt', { print: true });
 }
 

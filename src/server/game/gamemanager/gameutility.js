@@ -16,8 +16,6 @@ import { ensureJSONString } from '../../utility/JSONUtils.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';
-import wsutility from '../../socket/socketUtility.js';
-const { sendNotify, sendNotifyError } = wsutility;
 import formatconverter from '../../../client/scripts/esm/chess/logic/formatconverter.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
@@ -29,7 +27,7 @@ import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import { getMemberDataByCriteria, getUserIdByUsername } from '../../database/memberManager.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import socketUtility from '../../socket/socketUtility.js';
 
 // Type Definitions...
@@ -93,7 +91,7 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 
 	// Set the colors
 	const player1 = inviteOptions.owner; // { member/browser }  The invite owner
-	const player2 = wsutility.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
+	const player2 = socketUtility.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
 	const { white, black, player1Color, player2Color } = assignWhiteBlackPlayersFromInvite(inviteOptions.color, player1, player2);
 	newGame.white = white;
 	newGame.black = black;
@@ -498,7 +496,7 @@ async function logGame(game) {
 function doesSocketBelongToGame_ReturnColor(game, ws) {
 	if (game.id === ws.metadata.subscriptions.game?.id) return ws.metadata.subscriptions.game?.color;
 	// Color isn't provided in their subscriptions, perhaps this is a resync/refresh?
-	const player = wsutility.getOwnerFromSocket(ws);
+	const player = socketUtility.getOwnerFromSocket(ws);
 	return doesPlayerBelongToGame_ReturnColor(game, player);
 }
 
@@ -557,8 +555,8 @@ function getSimplifiedGameString(game) {
 	const originalDrawOffers = game.drawOffers;
 
 	// We can't print normal websockets because they contain self-referencing.
-	if (whiteSocket) game.whiteSocket = wsutility.stringifySocketMetadata(whiteSocket);
-	if (blackSocket) game.blackSocket = wsutility.stringifySocketMetadata(blackSocket);
+	if (whiteSocket) game.whiteSocket = socketUtility.stringifySocketMetadata(whiteSocket);
+	if (blackSocket) game.blackSocket = socketUtility.stringifySocketMetadata(blackSocket);
 	delete game.autoTimeLossTimeoutID;
 	delete game.disconnect;
 	delete game.autoAFKResignTimeoutID;

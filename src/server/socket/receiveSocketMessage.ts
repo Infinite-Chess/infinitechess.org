@@ -8,7 +8,7 @@
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
-import wsutility from './socketUtility.js';
+import socketUtility from './socketUtility.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
@@ -41,7 +41,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 		message = JSON.parse(rawMessage);
 	} catch (error) {
 		if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
-		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'hackLog.txt');
 		sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
 		return;
@@ -60,7 +60,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 		const validEcho = deleteEchoTimerForMessageID(message.value); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
 			if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
-			const errText = `User detected sending invalid echo! Message: "${JSON.stringify(message)}". Metadata: ${wsutility.stringifySocketMetadata(ws)}`;
+			const errText = `User detected sending invalid echo! Message: "${JSON.stringify(message)}". Metadata: ${socketUtility.stringifySocketMetadata(ws)}`;
 			logEvents(errText, 'errLog.txt', { print: true });
 		}
 		return;

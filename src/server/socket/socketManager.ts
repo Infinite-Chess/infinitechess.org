@@ -7,7 +7,7 @@
  * And unsubbing a socket from subscriptions.
  */
 
-import wsutility from "./socketUtility.js";
+import socketUtility from "./socketUtility.js";
 import { sendSocketMessage } from "./sendSocketMessage.js";
 // @ts-ignore
 import uuid from "../../client/scripts/esm/util/uuid.js";
@@ -63,7 +63,7 @@ function addConnectionToConnectionLists(ws: CustomWebSocket) {
 	addConnectionToConnectedMembers(ws.metadata.memberInfo.username, ws.metadata.id);
 
 	startTimerToExpireSocket(ws);
-	if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 }
 
 function addConnectionToConnectedIPs(IP: string, id: string) {
@@ -210,7 +210,7 @@ function handleUnsubbing(ws: CustomWebSocket, key: string, closureNotByChoice?: 
 			unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
 			break;
 		default:
-			console.log(`Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`);
+			console.log(`Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 			return sendSocketMessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`);
 	}
 }

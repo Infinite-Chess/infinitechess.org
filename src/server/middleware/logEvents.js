@@ -5,7 +5,7 @@ import { promises as fsPromises } from 'fs';
 import path from 'path';
 
 import { getClientIP } from '../utility/IP.js';
-import wsutility from '../socket/socketUtility.js';
+import socketUtility from '../socket/socketUtility.js';
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
@@ -75,7 +75,7 @@ const logger = (req, res, next) => {
  */
 function logWebsocketStart(req, ws) {
 	const socketID = ws.metadata.id;
-	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
+	const stringifiedSocketMetadata = socketUtility.stringifySocketMetadata(ws);
 	const userAgent = req.headers['user-agent'];
 	// const userAgent = ws.metadata.userAgent;
 	const logThis = `Opened socket of ID "${socketID}": ${stringifiedSocketMetadata}   User agent: ${userAgent}`;

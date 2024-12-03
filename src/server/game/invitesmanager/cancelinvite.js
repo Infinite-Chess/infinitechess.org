@@ -8,7 +8,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import { isInviteOurs } from './inviteutility.js';
-import wsutility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketUtility.js';
 
 import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -40,7 +40,7 @@ function cancelInvite(ws, messageContents, replyto) { // Value should be the ID 
 
 	// Make sure they are the owner.
 	if (!isInviteOurs(ws, invite)) {
-		const errText = `Player tried to delete an invite that wasn't theirs! Invite ID: ${id} Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errText = `Player tried to delete an invite that wasn't theirs! Invite ID: ${id} Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'hackLog.txt', { print: true });
 		return sendSocketMessage(ws, "general", "printerror", "You are forbidden to delete this invite.", replyto);
 	}

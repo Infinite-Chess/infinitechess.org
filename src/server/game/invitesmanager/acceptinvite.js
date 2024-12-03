@@ -9,14 +9,13 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import { isInviteOurs } from './inviteutility.js';
-import wsutility from '../../socket/socketUtility.js';
-const { sendNotify }  = wsutility;
+import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
@@ -48,7 +47,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 	// Make sure they are not accepting their own.
 	if (isInviteOurs(ws, invite)) {
 		sendSocketMessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
-		const errString = `Player tried to accept their own invite! Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errString = `Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errString, 'errLog.txt', { print: true });
 		return;
 	}
@@ -113,7 +112,7 @@ function verifyMessageContents(messageContents) {
  */
 function informThemGameAborted(ws, isPrivate, inviteID, replyto) {
 	const errString = isPrivate ? "server.javascript.ws-invalid_code" : "server.javascript.ws-game_aborted";
-	if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 	return sendNotify(ws, errString, { replyto });
 }
 
