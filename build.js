@@ -126,9 +126,9 @@ await remove("./dist", {
 
 
 /**
-	 * Start by copying all files to dist, including script files so they can be compiled without cluttering pull requests.
-	 * Files will be bundled later if bundling is enabled.
-	 */
+ * Start by copying all files to dist, including script files so they can be compiled without cluttering pull requests.
+ * Files will be bundled later if bundling is enabled.
+ */
 
 await copy("./src", "./dist", {
 	recursive: true,

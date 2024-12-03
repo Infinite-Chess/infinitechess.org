@@ -97,7 +97,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 		// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
 		const timeout = setTimeout(() => {
 			ws.close(1014, "No echo heard");
-			deleteEchoTimerForMessageID(payload.id!);
+			deleteEchoTimerForMessageID(payload.id);
 		}, timeToWaitForEchoMillis); // We pass in an arrow function so it doesn't lose scope of ws.
 		//console.log(`Set timer of message id "${id}"`)
 		addTimeoutToEchoTimers(payload.id!, timeout);
