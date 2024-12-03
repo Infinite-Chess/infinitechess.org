@@ -16,6 +16,7 @@ import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions

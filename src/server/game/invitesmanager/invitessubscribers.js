@@ -6,6 +6,7 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import wsutility from '../wsutility.js';
 
 /** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */

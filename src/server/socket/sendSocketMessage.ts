@@ -3,6 +3,7 @@
  * This script sends socket messages
  */
 
+import { WebSocket } from "ws";
 
 // @ts-ignore
 import uuid from "../../client/scripts/esm/util/uuid.js";

@@ -16,6 +16,7 @@ import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions

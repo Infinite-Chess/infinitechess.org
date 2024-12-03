@@ -104,7 +104,7 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 		return;
 	}
 
-	const IP = wsutility.getIPFromWebsocket(req, socket);
+	const IP = wsutility.getIPFromWebsocketUpgradeRequest(req);
 	if (IP === undefined) {
 		logEvents('Unable to identify IP address from websocket connection!', 'hackLog.txt');
 		socket.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation

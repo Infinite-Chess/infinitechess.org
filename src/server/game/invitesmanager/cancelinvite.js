@@ -12,6 +12,7 @@ import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError }  = wsutility;
 
 import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /** 
  * Type Definitions

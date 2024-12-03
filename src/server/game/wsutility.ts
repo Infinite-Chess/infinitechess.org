@@ -159,15 +159,12 @@ function getCookiesFromWebsocket(req: IncomingMessage): { [cookieName: string]: 
  * @param ws - The websocket object.
  * @returns The IP address of the websocket connection, or `undefined` if not present.
  */
-function getIPFromWebsocket(req: IncomingMessage, ws: WebSocket): string | undefined {
+function getIPFromWebsocketUpgradeRequest(req: IncomingMessage): string | undefined {
 	// Check the headers for the forwarded IP (useful if behind a proxy like Cloudflare)
 	const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress; // ws._socket.remoteAddress
 
 	// If we didn't get a string IP, return undefined
 	if (typeof clientIP !== 'string') return undefined;
-
-	// Store the IP in the websocket metadata so we don't need to find it again
-	(ws as CustomWebSocket).metadata.IP = clientIP;
 
 	return clientIP;
 }
@@ -179,7 +176,7 @@ export default {
 	stringifySocketMetadata,
 	getOwnerFromSocket,
 	getCookiesFromWebsocket,
-	getIPFromWebsocket,
+	getIPFromWebsocketUpgradeRequest,
 };
 
 export type {

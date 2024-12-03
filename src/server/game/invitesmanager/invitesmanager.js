@@ -11,6 +11,7 @@ import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvi
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
@@ -82,7 +83,7 @@ function removeSensitiveInfoFromInvitesList(copyOfInvitesList) {
 /**
  * Adds any private invite that belongs to the socket to the provided invites list.
  * @param {CustomWebSocket} ws 
- * @param {Invites[]} copyOfInvitesList - A copy of the invites list, so we don't modify the original
+ * @param {Invite[]} copyOfInvitesList - A copy of the invites list, so we don't modify the original
  * @returns {Invite[]}
  */
 function addMyPrivateInviteToList(ws, copyOfInvitesList) {

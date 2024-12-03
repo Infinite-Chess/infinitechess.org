@@ -3,6 +3,7 @@
  * This script terminates websockets.
  */
 
+import WebSocket from 'ws';
 
 // @ts-ignore
 import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager.js";

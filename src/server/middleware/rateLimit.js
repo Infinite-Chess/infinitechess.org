@@ -5,9 +5,8 @@ import { isIPBanned } from './banned.js';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-import wsutility from '../game/wsutility.js';
 
-/** @typedef {import('../game/wsutility.js').CustomWebSocket} Socket */
+/** @typedef {import('../game/wsutility.js').CustomWebSocket} CustomWebSocket */
 
 // For rate limiting a client...
 
@@ -70,11 +69,11 @@ const maxWebsocketMessageSizeBytes = 100_000; // 100 megabytes
 /**
  * Generates a key for rate limiting based on the client's IP address and user agent.
  * @param {Object} req - The request object
- * @param {Object} ws - The websocket object, IF it is a websocket connection!
+ * @param {CustomWebSocket} ws - The websocket object, IF it is a websocket connection!
  * @returns {string|null} The combined key in the format "IP|User-Agent" or null if IP cannot be determined
  */
 function getIpBrowserAgentKey(req, ws) {
-	const clientIP = ws ? wsutility.getIPFromWebsocket(req, ws) : getClientIP(req); // Get the client IP address
+	const clientIP = ws ? ws.metadata.IP : getClientIP(req); // Get the client IP address
 	const userAgent = req.headers['user-agent']; // Get the user agent string
 
 	if (!clientIP) return null; // Return null if IP is not found
