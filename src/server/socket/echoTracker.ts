@@ -6,6 +6,9 @@
  * we expect the connection to have been lost, and we close the websocket.
  */
 
+import { CustomWebSocket } from "../game/wsutility";
+import { closeWebSocketConnection } from "./closeSocket";
+
 
 // Variables ---------------------------------------------------------------------------
 
@@ -24,11 +27,31 @@ const echoTimers: { [messageID: number]: NodeJS.Timeout} = {};
 const timeToWaitForEchoMillis: number = 5000; // 5 seconds until we assume we've disconnected!
 
 
-function deleteEchoForMessageID(messageID: number) {
-	delete echoTimers[messageID];
+// Functions ---------------------------------------------------------------------------
+
+
+function expectEchoForMessageID(ws: CustomWebSocket, messageID: number) {
+	echoTimers[messageID] = setTimeout(closeWebSocketConnection, timeToWaitForEchoMillis, ws, 1014, "No echo heard", messageID); // Code 1014 is Bad Gateway
+}
+
+/**
+ * Cancel the timer that will close the socket when we don't hear an expected echo from a sent socket message.
+ * If there was no timer, this will return false meaning it was an invalid echo.
+ */
+function deleteEchoTimerForMessageID(messageIDEchoIsFor: any): boolean {
+	if (typeof messageIDEchoIsFor !== 'number') return false; // Invalid echo (incoming socket message didn't include an echo ID)
+
+	const timeout: NodeJS.Timeout | undefined = echoTimers[messageIDEchoIsFor];
+	if (timeout === undefined) return false; // Invalid echo (message ID wasn't from any recently sent socket message)
+
+	clearTimeout(timeout);
+	delete echoTimers[messageIDEchoIsFor];
+	return true; // Valid echo
 }
 
 
+
 export {
-	deleteEchoForMessageID
+	expectEchoForMessageID,
+	deleteEchoTimerForMessageID
 };

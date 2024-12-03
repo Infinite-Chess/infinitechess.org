@@ -45,7 +45,8 @@ export default [
 			parser: parserTypescript, // Use the TypeScript parser
 			sourceType: "module", // Can also be "commonjs", but "import" and "export" statements will give an eslint error
 			globals: {
-				...globals.node, // Defines "require" and "exports"
+				...globals.node, // Defines "require" and "exports" 
+				NodeJS: "readonly", // Manually add NodeJS namespace, BECAUSE FOR SOME REASON ESLINT DOESN'T KNOW IT
 				...globals.browser, // Defines all browser environment variables for the game code
 				// Game code scripts are considered public variables
 				// MOST OF THE GAME SCRIPTS are ESM scripts, importing their own definitions, so we don't need to list them below.

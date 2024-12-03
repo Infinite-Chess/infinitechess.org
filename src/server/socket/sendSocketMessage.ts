@@ -4,6 +4,16 @@
  */
 
 
+import uuid from "../../client/scripts/esm/util/uuid.js";
+import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
+import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
+import wsutility from "../game/wsutility.ts";
+import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
+import { ensureJSONString } from "../utility/JSONUtils.js";
+import { getTranslation } from "../utility/translate.js";
+import { expectEchoForMessageID } from "./echoTracker.ts";
+
+
 // Type Definitions ---------------------------------------------------------------------------
 
 
@@ -24,15 +34,7 @@ interface WebsocketOutMessage {
 	replyto?: number;
 }
 
-import uuid from "../../client/scripts/esm/util/uuid.js";
-import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
-import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
 import type { CustomWebSocket } from "../game/wsutility.ts";
-import wsutility from "../game/wsutility.ts";
-import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
-import { ensureJSONString } from "../utility/JSONUtils.js";
-import { getTranslation } from "../utility/translate.js";
-import { closeWebSocketConnection } from "./closeSocket.ts";
 
 
 // Variables ---------------------------------------------------------------------------
@@ -85,7 +87,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 		logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
 		// Set a timer. At the end, just assume we've disconnected and start again.
 		// This will be canceled if we here the echo in time.
-		echoTimers[payload.id!] = setTimeout(closeWebSocketConnection, timeToWaitForEchoMillis, ws, 1014, "No echo heard", payload.id); // Code 1014 is Bad Gateway
+		expectEchoForMessageID(ws, payload.id!)
 		//console.log(`Set timer of message id "${id}"`)
 	}
 

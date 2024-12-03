@@ -17,6 +17,9 @@ import { printIncomingAndOutgoingMessages } from '../config/config.js';
 import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
 import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
 import { handleUnsubbing } from './socketManager.ts';
+import { deleteEchoTimerForMessageID } from './echoTracker.ts';
+import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
+import { ensureJSONString } from '../utility/JSONUtils.js';
 
 /**
  * Represents an incoming WebSocket server message.
@@ -62,7 +65,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 
 	const isEcho = message.action === "echo";
 	if (isEcho) {
-		const validEcho = cancelTimerOfMessageID(message); // Cancel timer to assume they've disconnected
+		const validEcho = deleteEchoTimerForMessageID(message.value); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
 			if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
 			const errText = `User detected sending invalid echo! Message: "${JSON.stringify(message)}". Metadata: ${wsutility.stringifySocketMetadata(ws)}`;
@@ -80,27 +83,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 	// Send our echo here! We always send an echo to every message except echos themselves.
 	sendSocketMessage(ws, "general", "echo", message.id);
 
-	// Route them to their specified location
-	
-	switch (message.route) {
-		case "general":
-			handleGeneralMessage(ws, message); // { route, action, value, id }
-			break;
-		case "invites":
-			// Forward them to invites subscription to handle their action!
-			handleInviteRoute(ws, message); // { route, action, value, id }
-			break;
-		case "game":
-			// Forward them to our games module to handle their action
-			handleGameRoute(ws, message);
-			break;
-		default: { // Surround this case in a block so it's variables are not hoisted
-			const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
-			logEvents(errText, 'hackLog.txt', { print: true });
-			sendSocketMessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
-			return;
-		}
-	}
+	routeIncomingMessage(ws, message, rawMessage);
 }
 
 /**
@@ -128,50 +111,56 @@ function isValidWebsocketInMessage(parsedIncomingMessage: WebsocketInMessage): b
 	);
 }
 
-
-
-
-// Call when we received the echo from one of our messages.
-// This wil cancel the timer that assumes they've disconnected after a few seconds!
-function cancelTimerOfMessageID(data) { // { sub, action, value, id }
-	const echoMessageID = data.value; // If the action is an "echo", the message ID their echo'ing is stored in "value"!
-	const timeoutID = echoTimers[echoMessageID];
-	if (timeoutID === undefined) return false; // Timer doesn't exist. Invalid echo messageID!
-	clearTimeout(timeoutID);
-	delete echoTimers[echoMessageID];
-	return true;
-}
-
-
-// Route for this incoming message is "general". What is their action?
-function handleGeneralMessage(ws, data) { // data: { route, action, value, id }
-	// Listen for new subscriptions or unsubscriptions
-	switch (data.action) {
-		case "sub":
-			handleSubbing(ws, data.value);
+function routeIncomingMessage(ws: CustomWebSocket, message: WebsocketInMessage, rawMessage: string) {
+	// Route them to their specified location
+	switch (message.route) {
+		case "general":
+			handleGeneralMessage(ws, message); // { route, action, value, id }
 			break;
-		case "unsub":
-			handleUnsubbing(ws, data.value);
+		case "invites":
+			// Forward them to invites subscription to handle their action!
+			handleInviteRoute(ws, message); // { route, action, value, id }
 			break;
-		case 'feature-not-supported':
-			handleFeatureNotSupported(ws, data.value);
+		case "game":
+			// Forward them to our games module to handle their action
+			handleGameRoute(ws, message);
 			break;
-		default: { // Surround this case in a block so that it's variables are not hoisted
-			const errText = `UNKNOWN web socket received action in general route! ${data.action}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		default: { // Surround this case in a block so it's variables are not hoisted
+			const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 			logEvents(errText, 'hackLog.txt', { print: true });
-			sendSocketMessage(ws, 'general', 'printerror', `Unknown action "${data.action}" in route general.`);
+			sendSocketMessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
 			return;
 		}
 	}
 }
 
-function handleFeatureNotSupported(ws, description) {
-	const errText = `Client unsupported feature: ${ensureJSONString(description)}   Socket: ${wsutility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`;
-	logEvents(errText, 'featuresUnsupported.txt', { print: true });
+// Route for this incoming message is "general". What is their action?
+function handleGeneralMessage(ws: CustomWebSocket, message: WebsocketInMessage) { // data: { route, action, value, id }
+	// Listen for new subscriptions or unsubscriptions
+	switch (message.action) {
+		case "sub":
+			handleSubbing(ws, message.value);
+			break;
+		case "unsub":
+			handleUnsubbing(ws, message.value);
+			break;
+		case 'feature-not-supported':
+			handleFeatureNotSupported(ws, message.value);
+			break;
+		default: { // Surround this case in a block so that it's variables are not hoisted
+			const errText = `UNKNOWN web socket received action in general route! "${message.action}". Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+			logEvents(errText, 'hackLog.txt', { print: true });
+			sendSocketMessage(ws, 'general', 'printerror', `Unknown action "${message.action}" in route general.`);
+		}
+	}
 }
 
-function handleSubbing(ws, value) {
-	if (!ws.metadata.subscriptions) ws.metadata.subscriptions = {};
+function handleSubbing(ws: CustomWebSocket, value: any) {
+	if (typeof value !== 'string') {
+		const errText = `Websocket received sub is invalid! "${value}". Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		logEvents(errText, 'hackLog.txt', { print: true });
+		sendSocketMessage(ws, 'general', 'printerror', `Websocket received sub is invalid.`);
+	}
 
 	// What are they wanting to subscribe to for updates?
 	switch (value) {
@@ -186,6 +175,11 @@ function handleSubbing(ws, value) {
 			return;
 		}
 	}
+}
+
+function handleFeatureNotSupported(ws, description) {
+	const errText = `Client unsupported feature: ${ensureJSONString(description)}   Socket: ${wsutility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`;
+	logEvents(errText, 'featuresUnsupported.txt', { print: true });
 }
 
 
