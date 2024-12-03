@@ -45,25 +45,22 @@ let startCoords;
 let endCoords;
 let pieceType;
 
-let transparentModel;
-let pieceModel;
-
 function renderTransparentSquare() {
 	if(!startCoords) return;
-	genTransparentModel();
+	let transparentModel = genTransparentModel();
 	transparentModel.render();
 }
 
 function renderPiece() {
 	if(perspective.isLookingUp() || !endCoords) return;
-	genPieceModel();
+	let pieceModel = genPieceModel();
 	pieceModel.render();
 }
 
 function genTransparentModel() {
 	let color = [0,0,0,0];
 	let data = shapes.getTransformedDataQuad_Color3D_FromCoord(startCoords, z, color); //Hide orginal piece
-	transparentModel = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 }
 
 function genPieceModel() {
@@ -87,7 +84,7 @@ function genPieceModel() {
 	let data = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor));
 	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a));
-	pieceModel = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
+	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
 }
 
 /**
