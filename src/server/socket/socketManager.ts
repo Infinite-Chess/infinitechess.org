@@ -4,26 +4,26 @@
  */
 
 // @ts-ignore
-import uuid from "../../client/scripts/esm/util/uuid";
+import uuid from "../../client/scripts/esm/util/uuid.js";
 // @ts-ignore
-import { printIncomingAndClosingSockets } from "../config/config";
+import { printIncomingAndClosingSockets } from "../config/config.js";
 // @ts-ignore
-import wsutility from "../game/wsutility";
+import wsutility from "../game/wsutility.js";
 // @ts-ignore
-import { closeWebSocketConnection } from "./closeSocket";
+import { closeWebSocketConnection } from "./closeSocket.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
 // @ts-ignore
-import type { CustomWebSocket } from "../game/wsutility";
+import type { CustomWebSocket } from "../game/wsutility.js";
 // @ts-ignore
-import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager";
+import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager.js";
 // @ts-ignore
-import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager";
+import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager.js";
 // @ts-ignore
-import { sendSocketMessage } from "./sendSocketMessage";
+import { sendSocketMessage } from "./sendSocketMessage.js";
 
 
 // Variables ---------------------------------------------------------------------------
@@ -135,7 +135,7 @@ function terminateAllIPSockets(IP: string) {
 	for (const id of connectionList) {
 		//console.log(`Terminating 1.. id ${id}`)
 		const ws = websocketConnections[id];
-		ws.close(1009, 'Message Too Big');
+		ws?.close(1009, 'Message Too Big');
 	}
 
 	// console.log(`Terminated all of IP ${IP}`)
@@ -148,7 +148,8 @@ function terminateAllIPSockets(IP: string) {
  * @returns *true* if they have too many sockets.
  */
 function doesClientHaveMaxSocketCount(IP: string): boolean {
-	return connectedIPs[IP]?.length >= maxSocketsAllowedPerIP;
+	if (connectedIPs[IP] === undefined) return false;
+	return connectedIPs[IP].length >= maxSocketsAllowedPerIP;
 }
 
 /**
@@ -157,7 +158,8 @@ function doesClientHaveMaxSocketCount(IP: string): boolean {
  * @returns *true* if they have too many sockets.
  */
 function doesMemberHaveMaxSocketCount(username: string): boolean {
-	return connectedMembers[username]?.length >= maxSocketsAllowedPerMember;
+	if (connectedMembers[username] === undefined) return false;
+	return connectedMembers[username].length >= maxSocketsAllowedPerMember;
 }
 
 /**
@@ -169,6 +171,7 @@ function doesMemberHaveMaxSocketCount(username: string): boolean {
 function closeAllSocketsOfMember(username: string, closureCode: number, closureReason: string) {
 	connectedMembers[username]?.slice().forEach(socketID => { // slice() makes a copy of it
 		const ws = websocketConnections[socketID];
+		if (!ws) return;
 		closeWebSocketConnection(ws, closureCode, closureReason);
 	});
 }

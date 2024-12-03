@@ -5,22 +5,22 @@
 
 
 // @ts-ignore
-import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager";
+import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager.js";
 // @ts-ignore
-import wsutil from "../../client/scripts/esm/util/wsutil";
+import wsutil from "../../client/scripts/esm/util/wsutil.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
 // @ts-ignore
-import type { CustomWebSocket } from "../game/wsutility";
+import type { CustomWebSocket } from "../game/wsutility.js";
 // @ts-ignore
-import { cancelRenewConnectionTimer } from "./sendSocketMessage";
+import { cancelRenewConnectionTimer } from "./sendSocketMessage.js";
 // @ts-ignore
-import { deleteEchoTimerForMessageID } from "./echoTracker";
+import { deleteEchoTimerForMessageID } from "./echoTracker.js";
 // @ts-ignore
-import wsutility from "../game/wsutility";
+import wsutility from "../game/wsutility.js";
 
 
 // Functions ---------------------------------------------------------------------------

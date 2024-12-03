@@ -11,7 +11,7 @@ import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLaten
 // @ts-ignore
 import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
 // @ts-ignore
-import wsutility from "../game/wsutility.ts";
+import wsutility from "../game/wsutility.js";
 // @ts-ignore
 import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
 // @ts-ignore
@@ -19,7 +19,7 @@ import { ensureJSONString } from "../utility/JSONUtils.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
 // @ts-ignore
-import { expectEchoForMessageID } from "./echoTracker.ts";
+import { expectEchoForMessageID } from "./echoTracker.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ interface WebsocketOutMessage {
 }
 
 // @ts-ignore
-import type { CustomWebSocket } from "../game/wsutility.ts";
+import type { CustomWebSocket } from "../game/wsutility.js";
 
 
 // Variables ---------------------------------------------------------------------------
@@ -70,7 +70,10 @@ const timeOfInactivityToRenewConnection = 10000;
  */
 function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, value?: any, replyto?: number, { skipLatency }: { skipLatency?: boolean } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
 	// If we're applying simulated latency delay, set a timer to send this message.
-	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) return setTimeout(sendSocketMessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
+	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
+		setTimeout(sendSocketMessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
+		return;
+	}
 
 	if (ws.readyState === WebSocket.CLOSED) {
 		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${wsutility.stringifySocketMetadata(ws)}`;

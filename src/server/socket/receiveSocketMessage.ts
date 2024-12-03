@@ -6,15 +6,15 @@
 
 import { IncomingMessage } from 'http';
 // @ts-ignore
-import type { CustomWebSocket } from '../game/wsutility.ts'
+import type { CustomWebSocket } from '../game/wsutility.js'
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
 // @ts-ignore
-import wsutility from '../game/wsutility.ts';
+import wsutility from '../game/wsutility.js';
 // @ts-ignore
-import { sendSocketMessage } from './sendSocketMessage.ts';
+import { sendSocketMessage } from './sendSocketMessage.js';
 // @ts-ignore
 import { printIncomingAndOutgoingMessages } from '../config/config.js';
 // @ts-ignore
@@ -22,9 +22,9 @@ import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
 // @ts-ignore
 import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
 // @ts-ignore
-import { handleUnsubbing } from './socketManager.ts';
+import { handleUnsubbing } from './socketManager.js';
 // @ts-ignore
-import { deleteEchoTimerForMessageID } from './echoTracker.ts';
+import { deleteEchoTimerForMessageID } from './echoTracker.js';
 // @ts-ignore
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
 // @ts-ignore
@@ -68,11 +68,15 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 		if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
 		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'hackLog.txt');
-		return sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
+		sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
+		return ;
 	}
 
 	// Validate that the parsed object matches the expected structure
-	if (!isValidWebsocketInMessage(message)) return sendSocketMessage(ws, "general", "printerror", "Invalid websocket message structure.");	
+	if (!isValidWebsocketInMessage(message)) {
+		sendSocketMessage(ws, "general", "printerror", "Invalid websocket message structure.");
+		return;
+	}
 
 	// Valid...
 
@@ -190,7 +194,7 @@ function handleSubbing(ws: CustomWebSocket, value: any) {
 	}
 }
 
-function handleFeatureNotSupported(ws, description) {
+function handleFeatureNotSupported(ws: CustomWebSocket, description: any) {
 	const errText = `Client unsupported feature: ${ensureJSONString(description)}   Socket: ${wsutility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`;
 	logEvents(errText, 'featuresUnsupported.txt', { print: true });
 }
