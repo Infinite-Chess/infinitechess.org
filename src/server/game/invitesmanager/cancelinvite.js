@@ -8,7 +8,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import { isInviteOurs } from './inviteutility.js';
-import wsutility from '../wsutility.js';
+import wsutility from '../../socket/wsutility.js';
 
 import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -18,7 +18,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
  * @typedef {import('./inviteutility.js').Invite} Invite
  */
 
-/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
 
 
 

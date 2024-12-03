@@ -6,7 +6,7 @@
 
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
-/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
 
 //-------------------------------------------------------------------------------------------
 

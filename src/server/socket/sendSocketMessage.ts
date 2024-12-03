@@ -12,7 +12,7 @@ import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLaten
 // @ts-ignore
 import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
 // @ts-ignore
-import wsutility from "../game/wsutility.js";
+import wsutility from "./wsutility.js";
 // @ts-ignore
 import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
 // @ts-ignore
@@ -44,7 +44,7 @@ interface WebsocketOutMessage {
 }
 
 // @ts-ignore
-import type { CustomWebSocket } from "../game/wsutility.js";
+import type { CustomWebSocket } from "./wsutility.js";
 
 
 // Variables ---------------------------------------------------------------------------

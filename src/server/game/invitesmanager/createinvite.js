@@ -28,7 +28,7 @@ import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js
  * @typedef {import('./inviteutility.js').Invite} Invite
  */
 
-/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * Creates a new invite from their websocket message.

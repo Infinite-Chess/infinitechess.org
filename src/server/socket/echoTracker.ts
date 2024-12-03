@@ -7,7 +7,7 @@
  */
 
 // @ts-ignore
-import { CustomWebSocket } from "../game/wsutility.js";
+import { CustomWebSocket } from "./wsutility.js";
 // @ts-ignore
 import { closeWebSocketConnection } from "./closeSocket.js";
 

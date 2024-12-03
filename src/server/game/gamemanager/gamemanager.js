@@ -6,7 +6,7 @@
 // Custom imports
 
 import gameutility from './gameutility.js';
-import wsutility from '../wsutility.js';
+import wsutility from '../../socket/wsutility.js';
 import statlogger from '../statlogger.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
 
@@ -23,7 +23,7 @@ import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
 
-/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 

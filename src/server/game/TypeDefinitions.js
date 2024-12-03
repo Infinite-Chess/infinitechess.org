@@ -6,7 +6,7 @@
 
 
 
-/** @typedef {import("./wsutility").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../socket/wsutility").CustomWebSocket} CustomWebSocket */
 
 
 /** The Game type definition. THIS SHOULD NOT be called, it is purely for JSDoc dropdowns. */

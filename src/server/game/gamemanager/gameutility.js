@@ -16,7 +16,7 @@ import { ensureJSONString } from '../../utility/JSONUtils.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';
-import wsutility from '../wsutility.js';
+import wsutility from '../../socket/wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
 import formatconverter from '../../../client/scripts/esm/chess/logic/formatconverter.js';
 
@@ -38,7 +38,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
  * @typedef {import('../../../client/scripts/esm/chess/variants/gamerules.js').GameRules} GameRules
  */
 
-/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * Construct a new online game from the invite options,

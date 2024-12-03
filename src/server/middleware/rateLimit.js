@@ -6,7 +6,7 @@ import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
 
-/** @typedef {import('../game/wsutility.js').CustomWebSocket} CustomWebSocket */
+/** @typedef {import('../socket/wsutility.js').CustomWebSocket} CustomWebSocket */
 
 // For rate limiting a client...
 

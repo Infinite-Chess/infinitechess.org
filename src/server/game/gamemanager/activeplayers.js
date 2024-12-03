@@ -3,9 +3,9 @@
  * This script keeps track of the ID's of games members and browsers are currently in.
  */
 
-import wsutility from '../wsutility.js';
+import wsutility from '../../socket/wsutility.js';
 
-/** @typedef {import("../wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 

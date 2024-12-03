@@ -5,13 +5,13 @@ import { promises as fsPromises } from 'fs';
 import path from 'path';
 
 import { getClientIP } from '../utility/IP.js';
-import wsutility from '../game/wsutility.js';
+import wsutility from '../socket/wsutility.js';
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** @typedef {import("../game/wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
 
 const giveLoggedItemsUUID = false;
 
