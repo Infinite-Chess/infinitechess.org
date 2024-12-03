@@ -176,8 +176,8 @@ function closeAllSocketsOfMember(username: string, closureCode: number, closureR
 	});
 }
 
-function generateUniqueIDForSocket(ws: CustomWebSocket) {
-	return uuid.genUniqueID(12, websocketConnections)
+function generateUniqueIDForSocket() {
+	return uuid.genUniqueID(12, websocketConnections);
 }
 
 function startTimerToExpireSocket(ws: CustomWebSocket) {
@@ -223,4 +223,4 @@ export {
 	unsubSocketFromAllSubs,
 	handleUnsubbing,
 	closeAllSocketsOfMember,
-}
+};

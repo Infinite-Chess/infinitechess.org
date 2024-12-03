@@ -119,7 +119,7 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 		subscriptions: {},
 		userAgent: req.headers['user-agent'],
 		memberInfo: { signedIn: false },
-		id: generateUniqueIDForSocket(ws), // Sets the ws.metadata.id property of the websocket
+		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
 		IP,
 	};
 

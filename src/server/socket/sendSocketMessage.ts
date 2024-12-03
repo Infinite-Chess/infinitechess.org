@@ -99,7 +99,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 		logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
 		// Set a timer. At the end, just assume we've disconnected and start again.
 		// This will be canceled if we here the echo in time.
-		expectEchoForMessageID(ws, payload.id!)
+		expectEchoForMessageID(ws, payload.id!);
 		//console.log(`Set timer of message id "${id}"`)
 	}
 
@@ -178,4 +178,4 @@ export {
 	sendNotify,
 	sendNotifyError,
 	informSocketToHardRefresh,
-}
+};

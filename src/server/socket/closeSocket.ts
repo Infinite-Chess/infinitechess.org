@@ -68,4 +68,4 @@ function closeWebSocketConnection(ws: CustomWebSocket, code: number, message: st
 export {
 	onclose,
 	closeWebSocketConnection,
-}
+};

@@ -6,7 +6,7 @@
 
 import { IncomingMessage } from 'http';
 // @ts-ignore
-import type { CustomWebSocket } from '../game/wsutility.js'
+import type { CustomWebSocket } from '../game/wsutility.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
@@ -69,7 +69,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'hackLog.txt');
 		sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
-		return ;
+		return;
 	}
 
 	// Validate that the parsed object matches the expected structure
@@ -203,6 +203,6 @@ function handleFeatureNotSupported(ws: CustomWebSocket, description: any) {
 
 export {
 	onmessage,
-}
+};
 
-export type { WebsocketInMessage }
+export type { WebsocketInMessage };
