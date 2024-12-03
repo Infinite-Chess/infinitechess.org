@@ -10,8 +10,6 @@ import uuid from "../../client/scripts/esm/util/uuid.js";
 // @ts-ignore
 import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
 // @ts-ignore
-import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
-// @ts-ignore
 import wsutility from "./socketUtility.js";
 // @ts-ignore
 import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
@@ -19,8 +17,6 @@ import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
 import { ensureJSONString } from "../utility/JSONUtils.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
-// @ts-ignore
-import { expectEchoForMessageID } from "./echoTracker.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -45,15 +41,14 @@ interface WebsocketOutMessage {
 
 // @ts-ignore
 import type { CustomWebSocket } from "./socketUtility.js";
+import { closeWebSocketConnection } from "./closeSocket.js";
+import { addTimeoutToEchoTimers, timeToWaitForEchoMillis } from "./echoTracker.js";
+import { rescheduleRenewConnection } from "./renewSocketConnection.js";
 
 
 // Variables ---------------------------------------------------------------------------
 
 
-
-/** After this much time of no messages sent we send a message,
- * expecting an echo, just to check if they are still connected. */
-const timeOfInactivityToRenewConnection = 10000;
 
 
 // Functions ---------------------------------------------------------------------------
@@ -98,13 +93,18 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 	ws.send(stringifiedPayload); // Send the message
 	if (!isEcho) { // Not an echo
 		logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
-		// Set a timer. At the end, just assume we've disconnected and start again.
-		// This will be canceled if we here the echo in time.
-		expectEchoForMessageID(ws, payload.id!);
-		//console.log(`Set timer of message id "${id}"`)
+		const timeout = expectEchoForMessageID(ws, payload.id!);
+		addTimeoutToEchoTimers(payload.id!, timeout);
 	}
 
 	rescheduleRenewConnection(ws);
+}
+
+function expectEchoForMessageID(ws: CustomWebSocket, messageID: number): NodeJS.Timeout {
+	// Set a timer. At the end, just assume we've disconnected and start again.
+	// This will be canceled if we here the echo in time.
+	return setTimeout(closeWebSocketConnection, timeToWaitForEchoMillis, ws, 1014, "No echo heard", messageID); // Code 1014 is Bad Gateway
+	//console.log(`Set timer of message id "${id}"`)
 }
 
 /**
@@ -145,37 +145,9 @@ function informSocketToHardRefresh(ws: CustomWebSocket) {
 	sendSocketMessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
 
-/**
- * Reschedule the timer to send an empty message to the client
- * to verify they are still connected and responding.
- */
-function rescheduleRenewConnection(ws: CustomWebSocket) {
-	cancelRenewConnectionTimer(ws);
-	// Only reset the timer if they are subscribed to a game,
-	// or they have an open invite!
-	if (ws.metadata.subscriptions.game === undefined && !userHasInvite(ws)) return;
-
-	ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws);
-}
-
-function cancelRenewConnectionTimer(ws: CustomWebSocket) {
-	clearTimeout(ws.metadata.renewConnectionTimeoutID);
-	ws.metadata.renewConnectionTimeoutID = undefined;
-}
-
-
-/**
- * Send an empty message to the client, expecting an echo
- * within five seconds to make sure they are still connected.
- */
-function renewConnection(ws: CustomWebSocket) {
-	sendSocketMessage(ws, 'general', 'renewconnection');
-}
-
 
 export {
 	sendSocketMessage,
-	cancelRenewConnectionTimer,
 	sendNotify,
 	sendNotifyError,
 	informSocketToHardRefresh,

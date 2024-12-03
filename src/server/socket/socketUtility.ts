@@ -5,8 +5,6 @@
 import { ensureJSONString } from '../utility/JSONUtils.js';
 // @ts-ignore
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-// @ts-ignore
-import { logEvents } from '../middleware/logEvents.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -132,23 +130,19 @@ function getCookiesFromWebsocket(req: IncomingMessage): { [cookieName: string]: 
 
 	if (!rawCookies) return cookies;
 
-	try {
-		for (const cookie of rawCookies.split(';')) {
-			const parts = cookie.split('=');
-			if (parts.length < 2) continue; // Skip if no value part exists
+	for (const cookie of rawCookies.split(';')) {
+		const parts = cookie.split('=');
+		if (parts.length < 2) continue; // Skip if no value part exists
 
-			const name = parts[0]!.trim();
-			const value = parts[1]!.trim();
+		const name = parts[0]!.trim();
+		const value = parts[1]!.trim();
 
-			if (name && value) cookies[name] = value;
-		}
-	} catch (e) {
-		const errText = `WebSocket connection request contained cookies in an invalid format! Cookies: ${JSON.stringify(rawCookies)}\n${(e as Error).stack}`;
-		logEvents(errText, 'errLog.txt', { print: true });
+		if (name && value) cookies[name] = value;
 	}
 
 	return cookies;
 }
+
 
 
 

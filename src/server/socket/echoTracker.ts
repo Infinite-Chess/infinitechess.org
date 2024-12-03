@@ -6,13 +6,9 @@
  * we expect the connection to have been lost, and we close the websocket.
  */
 
-// @ts-ignore
-import { CustomWebSocket } from "./socketUtility.js";
-// @ts-ignore
-import { closeWebSocketConnection } from "./closeSocket.js";
-
 
 // Variables ---------------------------------------------------------------------------
+
 
 /**
  * 
@@ -32,8 +28,8 @@ const timeToWaitForEchoMillis: number = 5000; // 5 seconds until we assume we've
 // Functions ---------------------------------------------------------------------------
 
 
-function expectEchoForMessageID(ws: CustomWebSocket, messageID: number) {
-	echoTimers[messageID] = setTimeout(closeWebSocketConnection, timeToWaitForEchoMillis, ws, 1014, "No echo heard", messageID); // Code 1014 is Bad Gateway
+function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout) {
+	echoTimers[messageID] = timeout;
 }
 
 /**
@@ -54,6 +50,7 @@ function deleteEchoTimerForMessageID(messageIDEchoIsFor: any): boolean {
 
 
 export {
-	expectEchoForMessageID,
-	deleteEchoTimerForMessageID
+	addTimeoutToEchoTimers,
+	deleteEchoTimerForMessageID,
+	timeToWaitForEchoMillis,
 };
