@@ -7,9 +7,9 @@
  */
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import wsutility from '../../socket/wsutility.js';
+import wsutility from '../../socket/socketUtility.js';
 
-/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * List of clients currently subscribed to invites list events, with their

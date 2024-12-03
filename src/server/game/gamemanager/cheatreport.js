@@ -16,7 +16,7 @@ import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
  * @typedef {  import('../TypeDefinitions.js').Game} Game
  */
 
-/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * 

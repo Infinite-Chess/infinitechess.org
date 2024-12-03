@@ -9,7 +9,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import gameutility from './gameutility.js';
-import wsutility from '../../socket/wsutility.js';
+import wsutility from '../../socket/socketUtility.js';
 
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
@@ -23,7 +23,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
 
-/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * 

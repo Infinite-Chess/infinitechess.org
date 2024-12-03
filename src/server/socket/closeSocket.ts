@@ -15,13 +15,13 @@ import wsutil from "../../client/scripts/esm/util/wsutil.js";
 
 
 // @ts-ignore
-import type { CustomWebSocket } from "./wsutility.js";
+import type { CustomWebSocket } from "./socketUtility.js";
 // @ts-ignore
 import { cancelRenewConnectionTimer } from "./sendSocketMessage.js";
 // @ts-ignore
 import { deleteEchoTimerForMessageID } from "./echoTracker.js";
 // @ts-ignore
-import wsutility from "./wsutility.js";
+import wsutility from "./socketUtility.js";
 
 
 // Functions ---------------------------------------------------------------------------

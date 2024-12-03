@@ -8,7 +8,7 @@ import uuid from "../../client/scripts/esm/util/uuid.js";
 // @ts-ignore
 import { printIncomingAndClosingSockets } from "../config/config.js";
 // @ts-ignore
-import wsutility from "./wsutility.js";
+import wsutility from "./socketUtility.js";
 // @ts-ignore
 import { closeWebSocketConnection } from "./closeSocket.js";
 
@@ -17,7 +17,7 @@ import { closeWebSocketConnection } from "./closeSocket.js";
 
 
 // @ts-ignore
-import type { CustomWebSocket } from "./wsutility.js";
+import type { CustomWebSocket } from "./socketUtility.js";
 // @ts-ignore
 import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager.js";
 // @ts-ignore

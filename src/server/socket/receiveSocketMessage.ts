@@ -6,13 +6,13 @@
 
 import { IncomingMessage } from 'http';
 // @ts-ignore
-import type { CustomWebSocket } from './wsutility.js';
+import type { CustomWebSocket } from './socketUtility.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
 // @ts-ignore
-import wsutility from './wsutility.js';
+import wsutility from './socketUtility.js';
 // @ts-ignore
 import { sendSocketMessage } from './sendSocketMessage.js';
 // @ts-ignore

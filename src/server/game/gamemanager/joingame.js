@@ -9,7 +9,7 @@ import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect
 
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
 
-/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * The method that fires when a client sends the 'joingame' command after refreshing the page.

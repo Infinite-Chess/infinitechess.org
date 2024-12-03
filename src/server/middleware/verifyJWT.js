@@ -11,7 +11,7 @@ import { isTokenValid } from '../controllers/authenticationTokens/tokenValidator
 import { getClientIP } from '../utility/IP.js';
 import { logEvents } from './logEvents.js';
 
-/** @typedef {import('../socket/wsutility.js').CustomWebSocket} CustomWebSocket */
+/** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
 
 
 /**

@@ -9,7 +9,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import { isInviteOurs } from './inviteutility.js';
-import wsutility from '../../socket/wsutility.js';
+import wsutility from '../../socket/socketUtility.js';
 const { sendNotify }  = wsutility;
 import { createGame } from '../gamemanager/gamemanager.js';
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
@@ -23,7 +23,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
  * @typedef {import('./inviteutility.js').Invite} Invite
  */
 
-/** @typedef {import("../../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * Attempts to accept an invite of given id.

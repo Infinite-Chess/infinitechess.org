@@ -14,7 +14,7 @@ import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 // @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
 // @ts-ignore
-import wsutility from './wsutility.js';
+import wsutility from './socketUtility.js';
 // @ts-ignore
 import { onmessage } from './receiveSocketMessage.js';
 // @ts-ignore
@@ -31,7 +31,7 @@ import { sendSocketMessage } from './sendSocketMessage.js';
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
 // @ts-ignore
-import type { CustomWebSocket } from './wsutility.js';
+import type { CustomWebSocket } from './socketUtility.js';
 
 
 // Variables ---------------------------------------------------------------------------

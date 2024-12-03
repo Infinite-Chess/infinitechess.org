@@ -18,7 +18,7 @@ import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 
-/** @typedef {import("../socket/wsutility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 
