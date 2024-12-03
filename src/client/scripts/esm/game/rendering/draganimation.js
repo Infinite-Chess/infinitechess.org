@@ -48,8 +48,6 @@ let pieceType;
 let transparentModel;
 let pieceModel;
 
-let hidden = false;
-
 function renderTransparentSquare() {
 	if(!startCoords) return;
 	genTransparentModel();
@@ -57,7 +55,7 @@ function renderTransparentSquare() {
 }
 
 function renderPiece() {
-	if(hidden || !endCoords) return;
+	if(perspective.isLookingUp() || !endCoords) return;
 	genPieceModel();
 	pieceModel.render();
 }
@@ -69,6 +67,7 @@ function genTransparentModel() {
 }
 
 function genPieceModel() {
+	if(perspective.isLookingUp()) return;
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreen = input.getUsingTouchscreen();
 	const boardScale = movement.getBoardScale();
@@ -101,7 +100,6 @@ function dragPiece(type, pieceCoords, coords) {
 	startCoords = pieceCoords;
 	endCoords = coords;
 	pieceType = type;
-	hidden = false;
 	frametracker.onVisualChange();
 }
 
@@ -116,16 +114,9 @@ function dropPiece( playSound = true, wasCapture = false ) {
 	frametracker.onVisualChange();
 }
 
-//Used to hide the piece when looking up in perspective.
-function hideHeldPiece() {
-	hidden = true;
-	frametracker.onVisualChange();
-}
-
 export default {
 	dragPiece,
 	dropPiece,
-	hideHeldPiece,
 	renderTransparentSquare,
 	renderPiece
 }

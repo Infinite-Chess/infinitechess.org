@@ -43,7 +43,8 @@ import space from '../misc/space.js';
 
 /**
  * Bugs:
- * - Fixed I think?
+ * - Tap to select or move not working on mobile.
+ * - Pieces dragged and dropped quickly don't get moved.
  * To do:
  * - Allow dragging the board with a second finger while dragging a piece.
  */
@@ -60,8 +61,6 @@ let draggingPiece = false;
 let didLastClickSelectPiece;
 /** Set to false if the user wants to use the original click controls. @type {boolean} */
 let dragEnabled = true;
-/** Is the user using touchscreen. If so we should ignor mouse over. @type {boolean} */
-let touchscreenMode = false;
 /** The pre-calculated legal moves of the current selected piece.
  * @type {LegalMoves} */
 let legalMoves;
@@ -139,7 +138,6 @@ function update() {
 		if (promoteTo) makePromotionMove();
 		return;
 	}
-	if (perspective.isLookingUp() && draggingPiece) return draganimation.hideHeldPiece(); //Don't render the draggedPiece if we are looking at the sky.
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefile.gameConclusion || guipause.areWePaused() || perspective.isLookingUp()) return;
 
 	// Calculate if the hover square is legal so we know if we need to render a ghost image...
@@ -166,7 +164,7 @@ function update() {
 function handleDragging(hoverSquare, pieceHoveredType) {
 	if (input.getPointerHeld()) { // still dragging.
 		// Render the piece at the pointer.
-		draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, input.getPointerWorldLocation(), touchscreenMode);
+		draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, input.getPointerWorldLocation());
 	} else {
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
 		draganimation.dropPiece(hoverSquareLegal, pieceHoveredType);
