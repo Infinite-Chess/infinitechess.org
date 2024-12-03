@@ -99,8 +99,8 @@ function logReqWebsocketIn(ws, messageData) {
  * @param {string} messageData - The raw data of the outgoing message, as a string
  */
 function logReqWebsocketOut(ws, messageData) {
-	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-	const logThis = `To socket: ${stringifiedSocketMetadata}\n${messageData}`;
+	const socketID = ws.metadata.id;
+	const logThis = `To socket of ID "${socketID}": ${messageData}`;
 	logEvents(logThis, 'wsOutLog.txt');
 }
 
