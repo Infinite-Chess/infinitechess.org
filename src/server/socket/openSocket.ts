@@ -3,7 +3,7 @@
  * This script handles socket, upgrade connection requests, and creates new sockets
  */
 
-import { DEV_BUILD, GAME_VERSION, HOST_NAME, printIncomingAndClosingSockets } from '../config/config.js';
+import { DEV_BUILD, GAME_VERSION, HOST_NAME } from '../config/config.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { logEvents, logWebsocketStart } from '../middleware/logEvents.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';

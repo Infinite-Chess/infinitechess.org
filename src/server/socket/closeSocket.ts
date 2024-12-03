@@ -4,26 +4,25 @@
  */
 
 
+import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager";
+import wsutil from "../../client/scripts/esm/util/wsutil";
+
+
 // Type Definitions ---------------------------------------------------------------------------
 
 
-
-/**
- * Type Definitions
- * @typedef {import('../game/TypeDefinitions.js').WebsocketMessage} WebsocketMessage
- */
-
 import type { CustomWebSocket } from "../game/wsutility";
+import { cancelRenewConnectionTimer } from "./sendSocketMessage";
+
+
+// Functions ---------------------------------------------------------------------------
 
 
 function onclose(ws: CustomWebSocket, code: number, reason: string) {
 	reason = reason.toString();
 
 	// Delete connection from object.
-	const id = ws.metadata.id;
-	delete websocketConnections[id];
-	removeConnectionFromConnectedIPs(ws.metadata.IP, id);
-	removeConnectionFromConnectedMembers(ws.metadata.memberInfo.username, id);
+	removeConnectionFromConnectionLists(ws, code, reason);
 
 	// What if the code is 1000, and reason is "Connection closed by client"?
 	// I then immediately want to delete their invite.
@@ -38,10 +37,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: string) {
 	// Unsubscribe them from all. NO LIST. It doesn't matter if they want to keep their invite or remain
 	// connected to their game, without a websocket to send updates to, there's no point in any SUBSCRIPTION service!
 	// Unsubbing them from their game will start their auto-resignation timer.
-	unsubClientFromAllSubs(ws, closureNotByChoice);
-
-	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
-	if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`);
+	unsubSocketFromAllSubs(ws, closureNotByChoice);
 
 	cancelRenewConnectionTimer(ws);
 
@@ -49,7 +45,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: string) {
 }
 
 
-function closeWebSocketConnection(ws: CustomWebSocket, code: number, message: string, messageID) {
+function closeWebSocketConnection(ws: CustomWebSocket, code: number, message: string, messageID?: number) {
 	if (messageID) { // Timer is just now ringing. Delete the timer from the echoTimers list, so it doesn't fill up!
 		delete echoTimers[messageID];
 	}

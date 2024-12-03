@@ -52,7 +52,7 @@ interface CustomWebSocket extends WebSocket {
 		IP: string;
 		/** The timeout ID that can be used to cancel the timer that will
          * expire the socket connection. This is useful if it closes early. */
-		clearafter?: NodeJS.Timeout | number;
+		clearafter?: NodeJS.Timeout;
 		/** The timeout ID to cancel the timer that will send an empty
          * message to this socket just to verify they are alive and thinking. */
 		renewConnectionTimeoutID?: NodeJS.Timeout;
@@ -164,6 +164,8 @@ function getIPFromWebsocket(req: IncomingMessage, ws: WebSocket): string | undef
 
 	return clientIP;
 }
+
+
 
 export default {
 	printSocket,

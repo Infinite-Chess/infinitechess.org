@@ -8,16 +8,6 @@
 
 /** @typedef {import("./wsutility").CustomWebSocket} CustomWebSocket */
 
-// I can declare this type definition like so, because there's no nesting.
-/**
- * An incoming websocket server message.
- * @typedef {Object} WebsocketMessage
- * @property {string} route - What subscription/route the message should be forwarded to (e.g. "general", "invites", "game").
- * @property {string} action - What action to perform with this message's data (e.g. sub/unsub/createinvite/cancelinvite/acceptinvite).
- * @property {*} value - The message contents.
- * @property {number} id - The ID of the message to echo, so the client knows we're still connected.
- */
-
 
 /** The Game type definition. THIS SHOULD NOT be called, it is purely for JSDoc dropdowns. */
 function Game() {

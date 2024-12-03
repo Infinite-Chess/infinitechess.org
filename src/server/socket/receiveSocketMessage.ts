@@ -96,33 +96,6 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 
 
 
-/**
- * Reschedule the timer to send an empty message to the client
- * to verify they are still connected and responding.
- * @param {CustomWebSocket} ws - The socket
- */
-function rescheduleRenewConnection(ws) {
-	cancelRenewConnectionTimer(ws);
-	// Only reset the timer if they are subscribed to a game,
-	// or they have an open invite!
-	if (!ws.metadata.subscriptions.game && !userHasInvite(ws)) return;
-
-	ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws);
-}
-
-function cancelRenewConnectionTimer(ws) {
-	clearTimeout(ws.metadata.renewConnectionTimeoutID);
-	ws.metadata.renewConnectionTimeoutID = undefined;
-}
-
-/**
- * 
- * @param {CustomWebSocket} ws - The socket
- */
-function renewConnection(ws) {
-	sendmessage(ws, 'general', 'renewconnection');
-}
-
 
 // Call when we received the echo from one of our messages.
 // This wil cancel the timer that assumes they've disconnected after a few seconds!
@@ -181,38 +154,7 @@ function handleSubbing(ws, value) {
 	}
 }
 
-// Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function handleUnsubbing(ws, key, subscription, closureNotByChoice) { // subscription: game: { id, color }
-	// What are they wanting to unsubscribe from updates from?
-	switch (key) {
-		case "invites":
-			// Unsubscribe them from the invites list
-			unsubFromInvitesList(ws, closureNotByChoice);
-			break;
-		case "game":
-			// If the unsub is not by choice (network interruption instead of closing tab), then we give them
-			// a 5 second cushion before starting an auto-resignation timer
-			unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
-			break;
-		default: { // Surround this case in a block so that it's variables are not hoisted
-			const errText = `Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`;
-			logEvents(errText, 'hackLog.txt', { print: true });
-			return sendmessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`);
-		}
-	}
-}
 
-// Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function unsubClientFromAllSubs(ws, closureNotByChoice) {
-	if (!ws.metadata.subscriptions) return; // No subscriptions
-
-	const subscriptions = ws.metadata.subscriptions;
-	const subscriptionsKeys = Object.keys(subscriptions);
-	for (const key of subscriptionsKeys) {
-		const thisSubscription = subscriptions[key]; // invites/game
-		handleUnsubbing(ws, key, thisSubscription, closureNotByChoice);
-	}
-}
 
 export {
 	onmessage,

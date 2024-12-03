@@ -18,6 +18,10 @@ import { closeWebSocketConnection } from "./closeSocket";
  */
 
 import type { CustomWebSocket } from "../game/wsutility";
+import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager";
+import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager";
+import { logEvents } from "../middleware/logEvents";
+import { sendSocketMessage } from "./sendSocketMessage";
 
 
 // Variables ---------------------------------------------------------------------------
@@ -48,8 +52,6 @@ const maxSocketsAllowedPerMember = 10;
 const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes. 
 // const maxWebSocketAgeMillis = 1000 * 10; // 10 seconds for dev testing
 
-const timeOfInactivityToRenewConnection = 10000;
-
 
 // Functions ---------------------------------------------------------------------------
 
@@ -60,11 +62,11 @@ function addConnectionToConnectionLists(ws: CustomWebSocket) {
 	addConnectionToConnectedMembers(ws.metadata.memberInfo.username, ws.metadata.id);
 
 	startTimerToExpireSocket(ws);
+	if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
 }
 
 function addConnectionToConnectedWebsockets(ws: CustomWebSocket) {
 	websocketConnections[ws.metadata.id] = ws;
-	if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
 }
 
 function addConnectionToConnectedIPs(IP: string, id: string) {
@@ -83,9 +85,19 @@ function addConnectionToConnectedMembers(username: string | undefined, id: strin
 	connectedMembers[username].push(id);
 }
 
-function removeConnectionFromConnectionLists(ws: CustomWebSocket) {
+/**
+ * 
+ * @param ws - The socket
+ * @param code - The socket closure code
+ * @param reason - The socket closure reason
+ */
+function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, reason: string) {
+	delete websocketConnections[ws.metadata.id];
 	removeConnectionFromConnectedIPs(ws.metadata.IP, ws.metadata.id);
 	removeConnectionFromConnectedMembers(ws.metadata.memberInfo.username, ws.metadata.id);
+
+	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
+	if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`);
 }
 
 function removeConnectionFromConnectedIPs(IP: string, id: string) {
@@ -148,12 +160,12 @@ function doesMemberHaveMaxSocketCount(username: string): boolean {
 
 /**
  * Closes all sockets a given member has open.
- * @param {string} member - The member's username, in lowercase.
- * @param {number} closureCode - The code of the socket closure, sent to the client.
- * @param {string} closureReason - The closure reason, sent to the client.
+ * @param username - The member's username, in lowercase.
+ * @param closureCode - The code of the socket closure, sent to the client.
+ * @param closureReason - The closure reason, sent to the client.
  */
-function closeAllSocketsOfMember(member, closureCode, closureReason) {
-	connectedMembers[member]?.slice().forEach(socketID => { // slice() makes a copy of it
+function closeAllSocketsOfMember(username: string, closureCode: number, closureReason: string) {
+	connectedMembers[username]?.slice().forEach(socketID => { // slice() makes a copy of it
 		const ws = websocketConnections[socketID];
 		closeWebSocketConnection(ws, closureCode, closureReason);
 	});
@@ -167,6 +179,38 @@ function startTimerToExpireSocket(ws: CustomWebSocket) {
 	ws.metadata.clearafter = setTimeout(closeWebSocketConnection, maxWebSocketAgeMillis, ws, 1000, 'Connection expired'); // Code 1000 for normal closure
 }
 
+// Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
+function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean) {
+	if (!ws.metadata.subscriptions) return; // No subscriptions
+
+	const subscriptions = ws.metadata.subscriptions;
+	const subscriptionsKeys = Object.keys(subscriptions);
+	for (const key of subscriptionsKeys) {
+		const thisSubscription = subscriptions[key]; // invites/game
+		handleUnsubbing(ws, key, thisSubscription, closureNotByChoice);
+	}
+}
+
+// Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
+function handleUnsubbing(ws: CustomWebSocket, key: string, subscription: string, closureNotByChoice: boolean) { // subscription: game: { id, color }
+	// What are they wanting to unsubscribe from updates from?
+	switch (key) {
+		case "invites":
+			// Unsubscribe them from the invites list
+			unsubFromInvitesList(ws, closureNotByChoice);
+			break;
+		case "game":
+			// If the unsub is not by choice (network interruption instead of closing tab), then we give them
+			// a 5 second cushion before starting an auto-resignation timer
+			unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
+			break;
+		default: { // Surround this case in a block so that it's variables are not hoisted
+			console.log(`Cannot unsubscribe user from strange old subscription list ${key}! Socket: ${wsutility.stringifySocketMetadata(ws)}`);
+			return sendSocketMessage(ws, 'general', 'printerror', `Cannot unsubscribe from "${key}" list!`);
+		}
+	}
+}
+
 export {
 	addConnectionToConnectionLists,
 	removeConnectionFromConnectionLists,
@@ -174,4 +218,5 @@ export {
 	doesClientHaveMaxSocketCount,
 	doesMemberHaveMaxSocketCount,
 	generateUniqueIDForSocket,
+	unsubSocketFromAllSubs,
 }
