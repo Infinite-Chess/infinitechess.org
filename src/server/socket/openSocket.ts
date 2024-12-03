@@ -1,8 +1,13 @@
 
 /**
- * This script handles socket, upgrade connection requests, and creates new sockets
+ * This script handles socket upgrade connection requests, and creating new sockets.
  */
 
+import wsutility from './socketUtility.js';
+import { sendSocketMessage } from './sendSocketMessage.js';
+import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesMemberHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
+import { onmessage } from './receiveSocketMessage.js';
+import { onclose } from './closeSocket.js';
 // @ts-ignore
 import { DEV_BUILD, GAME_VERSION, HOST_NAME } from '../config/config.js';
 // @ts-ignore
@@ -13,16 +18,6 @@ import { logEvents, logWebsocketStart } from '../middleware/logEvents.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 // @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
-// @ts-ignore
-import wsutility from './socketUtility.js';
-// @ts-ignore
-import { onmessage } from './receiveSocketMessage.js';
-// @ts-ignore
-import { onclose } from './closeSocket.js';
-// @ts-ignore
-import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesMemberHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
-// @ts-ignore
-import { sendSocketMessage } from './sendSocketMessage.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -127,7 +122,6 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 
 /**
  * Adds the 'message', 'close', and 'error' event listeners to the socket
- * @param ws - The socket
  */
 function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket) {
 	ws.on('message', (message) => { executeSafely(onmessage, 'Error caught within websocket on-message event:', req, ws, message); });
@@ -136,7 +130,7 @@ function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket) {
 }
 
 function onerror(ws: CustomWebSocket, error: Error) {
-	const errText = `An error occurred in a websocket. ${wsutility.stringifySocketMetadata(ws)}\n${error.stack}`;
+	const errText = `An error occurred in a websocket. The socket: ${wsutility.stringifySocketMetadata(ws)}\n${error.stack}`;
 	logEvents(errText, 'errLog.txt', { print: true });
 }
 

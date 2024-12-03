@@ -19,7 +19,7 @@ import { onJoinGame } from './joingame.js';
 
 
 /** @typedef {import('../../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
-/** @typedef {import('../../socket/receiveSocketMessage.js').WebsocketInMessage} WebsocketInMessage */
+/** @typedef {import('../../socket/socketRouter.js').WebsocketInMessage} WebsocketInMessage */
 
 
 /**

@@ -9,6 +9,7 @@ import jsutil from '../../client/scripts/esm/util/jsutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------
 
+
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 
 import type WebSocket from 'ws';
@@ -56,8 +57,6 @@ interface CustomWebSocket extends WebSocket {
 		/** The timeout ID to cancel the timer that will send an empty
          * message to this socket just to verify they are alive and thinking. */
 		renewConnectionTimeoutID?: NodeJS.Timeout;
-		/** A function that when called, returns true if this socket has an open invite. @type {Function} */
-		hasInvite?: () => boolean;
 	};
 }
 
@@ -142,9 +141,6 @@ function getCookiesFromWebsocket(req: IncomingMessage): { [cookieName: string]: 
 
 	return cookies;
 }
-
-
-
 
 /**
  * Reads the IP address attached to the incoming websocket connection request,

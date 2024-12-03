@@ -1,11 +1,13 @@
 
 /**
  * This script sends socket messages,
- * and regularly sends messages by itself to confirm the socket is still connected and responding.
+ * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).
  */
 
 import { WebSocket } from "ws";
 
+import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID, timeToWaitForEchoMillis } from "./echoTracker.js";
+import wsutility from "./socketUtility.js";
 // @ts-ignore
 import uuid from "../../client/scripts/esm/util/uuid.js";
 // @ts-ignore
@@ -16,11 +18,10 @@ import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
 import { ensureJSONString } from "../utility/JSONUtils.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
-import { addTimeoutToEchoTimers, timeToWaitForEchoMillis } from "./echoTracker.js";
-import wsutility from "./socketUtility.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
+
 
 
 /**
@@ -51,7 +52,7 @@ import type { CustomWebSocket } from "./socketUtility.js";
 const timeOfInactivityToRenewConnection = 10000;
 
 
-// Functions ---------------------------------------------------------------------------
+// Sending Messages ---------------------------------------------------------------------------
 
 
 /**
@@ -93,9 +94,11 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 	if (!isEcho) { // Not an echo
 		logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
 
-		// Set a timer. At the end, just assume we've disconnected and start again.
-		// This will be canceled if we here the echo in time.
-		const timeout = setTimeout(() => ws.close(1014, "No echo heard"), timeToWaitForEchoMillis); // We pass in an arrow function so it doesn't lose scope of ws.
+		// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
+		const timeout = setTimeout(() => {
+			ws.close(1014, "No echo heard");
+			deleteEchoTimerForMessageID(payload.id!);
+		}, timeToWaitForEchoMillis); // We pass in an arrow function so it doesn't lose scope of ws.
 		//console.log(`Set timer of message id "${id}"`)
 		addTimeoutToEchoTimers(payload.id!, timeout);
 
@@ -132,7 +135,6 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: string) {
 	sendSocketMessage(ws, "general", "notifyerror", getTranslation(translationCode, ws.metadata.cookies.i18next));
 }
 
-
 /**
  * Tell them to hard-refresh the page, there's a new update.
  */
@@ -162,7 +164,6 @@ function cancelRenewConnectionTimer(ws: CustomWebSocket) {
 	ws.metadata.renewConnectionTimeoutID = undefined;
 }
 
-
 /**
  * Send an empty message to the client, expecting an echo
  * within five seconds to make sure they are still connected.
@@ -176,6 +177,5 @@ export {
 	sendSocketMessage,
 	sendNotify,
 	sendNotifyError,
-	informSocketToHardRefresh,
 	rescheduleRenewConnection,
 };
