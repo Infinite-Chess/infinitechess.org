@@ -4,10 +4,9 @@
  */
 
 import gameutility from './gameutility.js';
-import wsutility from '../wsutility.js';
-const { sendNotify, sendNotifyError } = wsutility;
 import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
 import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import { sendNotify } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions

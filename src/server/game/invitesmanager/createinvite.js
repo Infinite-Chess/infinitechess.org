@@ -11,8 +11,6 @@
 import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-import wsutility from '../wsutility.js';
-const { sendNotify, sendNotifyError } = wsutility;
 import clockweb from '../clockweb.js';
 import gameutility from '../gamemanager/gameutility.js';
 const { getDisplayNameOfPlayer } = gameutility;
@@ -23,7 +21,7 @@ import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { isServerRestarting } from '../updateServerRestart.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions

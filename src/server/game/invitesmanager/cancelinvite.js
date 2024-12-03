@@ -9,7 +9,6 @@ import { logEvents } from '../../middleware/logEvents.js';
 // Custom imports
 import { isInviteOurs } from './inviteutility.js';
 import wsutility from '../wsutility.js';
-const { sendNotify, sendNotifyError }  = wsutility;
 
 import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
