@@ -1,6 +1,7 @@
 
 /**
- * This script sends socket messages
+ * This script sends socket messages,
+ * and regularly sends messages by itself to confirm the socket is still connected and responding.
  */
 
 import { WebSocket } from "ws";
@@ -16,7 +17,6 @@ import { ensureJSONString } from "../utility/JSONUtils.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
 // @ts-ignore
-import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
 import { addTimeoutToEchoTimers, timeToWaitForEchoMillis } from "./echoTracker.js";
 import wsutility from "./socketUtility.js";
 
@@ -78,7 +78,6 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 		return;
 	}
     
-	
 	const isEcho = action === "echo";
 	const payload: WebsocketOutMessage = {
 		sub, // general/error/invites/game
@@ -100,9 +99,9 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 		const timeout = setTimeout(() => { if (ws.readyState !== WebSocket.CLOSED) ws.close(1014, "No echo heard"); }, timeToWaitForEchoMillis);
 		//console.log(`Set timer of message id "${id}"`)
 		addTimeoutToEchoTimers(payload.id!, timeout);
-	}
 
-	rescheduleRenewConnection(ws);
+		rescheduleRenewConnection(ws);
+	}
 }
 
 /**
@@ -143,7 +142,8 @@ function informSocketToHardRefresh(ws: CustomWebSocket) {
 	sendSocketMessage(ws, 'general', 'hardrefresh', GAME_VERSION);
 }
 
-// Renewing Connection ---------------------------------------------------------------------
+
+// Renewing Connection if we haven't sent a message in a while ----------------------------------------------------------
 
 
 /**
@@ -152,9 +152,8 @@ function informSocketToHardRefresh(ws: CustomWebSocket) {
  */
 function rescheduleRenewConnection(ws: CustomWebSocket) {
 	cancelRenewConnectionTimer(ws);
-	// Only reset the timer if they are subscribed to a game,
-	// or they have an open invite!
-	if (ws.metadata.subscriptions.game === undefined && !userHasInvite(ws)) return;
+	// Only reset the timer if they have atleast one subscription!
+	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
 
 	ws.metadata.renewConnectionTimeoutID = setTimeout(renewConnection, timeOfInactivityToRenewConnection, ws);
 }
@@ -179,4 +178,5 @@ export {
 	sendNotify,
 	sendNotifyError,
 	informSocketToHardRefresh,
+	rescheduleRenewConnection,
 };

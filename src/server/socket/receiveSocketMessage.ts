@@ -14,7 +14,7 @@ import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
 // @ts-ignore
 import wsutility from './socketUtility.js';
 // @ts-ignore
-import { sendSocketMessage } from './sendSocketMessage.js';
+import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 // @ts-ignore
 import { printIncomingAndOutgoingMessages } from '../config/config.js';
 // @ts-ignore
@@ -96,6 +96,8 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 	if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
 
 	if (printIncomingAndOutgoingMessages && !isEcho) console.log("Received message: " + rawMessage);
+
+	rescheduleRenewConnection(ws); // We know they are connected, so reset this
 
 	// Send our echo here! We always send an echo to every message except echos themselves.
 	sendSocketMessage(ws, "general", "echo", message.id);
