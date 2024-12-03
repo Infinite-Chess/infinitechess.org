@@ -74,10 +74,11 @@ const logger = (req, res, next) => {
  * @param {CustomWebSocket} ws - The websocket object
  */
 function logWebsocketStart(req, ws) {
+	const socketID = ws.metadata.id;
 	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
 	const userAgent = req.headers['user-agent'];
 	// const userAgent = ws.metadata.userAgent;
-	const logThis = `Socket: ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
+	const logThis = `Opened socket of ID "${socketID}": ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
 	logEvents(logThis, 'wsInLog.txt');
 }
 
@@ -87,9 +88,8 @@ function logWebsocketStart(req, ws) {
  * @param {string} messageData - The raw data of the incoming message, as a string
  */
 function logReqWebsocketIn(ws, messageData) {
-	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-	let logThis = `Socket: ${stringifiedSocketMetadata}`;
-	if (messageData) logThis += `\n${messageData}`;
+	const socketID = ws.metadata.id;
+	const logThis = `From socket of ID "${socketID}":   ${messageData}`;
 	logEvents(logThis, 'wsInLog.txt');
 }
 
@@ -100,7 +100,7 @@ function logReqWebsocketIn(ws, messageData) {
  */
 function logReqWebsocketOut(ws, messageData) {
 	const socketID = ws.metadata.id;
-	const logThis = `To socket of ID "${socketID}": ${messageData}`;
+	const logThis = `To socket of ID "${socketID}":   ${messageData}`;
 	logEvents(logThis, 'wsOutLog.txt');
 }
 

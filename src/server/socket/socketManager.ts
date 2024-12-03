@@ -178,7 +178,7 @@ function generateUniqueIDForSocket() {
 }
 
 function startTimerToExpireSocket(ws: CustomWebSocket) {
-	ws.metadata.clearafter = setTimeout(ws.close, maxWebSocketAgeMillis, 1000, 'Connection expired'); // Code 1000 for normal closure
+	ws.metadata.clearafter = setTimeout(() => ws.close(1000, 'Connection expired'), maxWebSocketAgeMillis); // We pass in an arrow function so it doesn't lose scope of ws.
 }
 
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds

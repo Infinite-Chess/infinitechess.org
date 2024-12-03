@@ -16,7 +16,6 @@ import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
 import { ensureJSONString } from "../utility/JSONUtils.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
-// @ts-ignore
 import { addTimeoutToEchoTimers, timeToWaitForEchoMillis } from "./echoTracker.js";
 import wsutility from "./socketUtility.js";
 
@@ -96,7 +95,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 
 		// Set a timer. At the end, just assume we've disconnected and start again.
 		// This will be canceled if we here the echo in time.
-		const timeout = setTimeout(() => { if (ws.readyState !== WebSocket.CLOSED) ws.close(1014, "No echo heard"); }, timeToWaitForEchoMillis);
+		const timeout = setTimeout(() => ws.close(1014, "No echo heard"), timeToWaitForEchoMillis); // We pass in an arrow function so it doesn't lose scope of ws.
 		//console.log(`Set timer of message id "${id}"`)
 		addTimeoutToEchoTimers(payload.id!, timeout);
 
