@@ -68,7 +68,7 @@ let ignoreMouseDown = false;
 let mouseIsSupported = true;
 
 /** Touchscreen and mouse */
-let usingTouchscreen; // True if the mouse recent pointer input was from a touch event.
+let pointerIsTouch; // True if the mouse recent pointer input was from a touch event. Used on devices that support both touchscreen and mouse.
 let pointerWorldLocation = [0,0];
 
 // The cursor that appears on touch screen when you select a piece and zoom out
@@ -120,27 +120,27 @@ function getMouseWorldLocation() {
 }
 
 function getPointerDown() {
-	return usingTouchscreen ? touchDowns.length === 1 : mouseDowns.includes(leftMouseKey);
+	return pointerIsTouch ? touchDowns.length === 1 : mouseDowns.includes(leftMouseKey);
 }
 
 function getPointerHeld() {
-	return usingTouchscreen ? touchHelds.length === 1 : mouseHelds.includes(leftMouseKey);
+	return pointerIsTouch ? touchHelds.length === 1 : mouseHelds.includes(leftMouseKey);
 }
 
 function getPointerClicked() {
-	return usingTouchscreen ? touchClicked : mouseClicked;
+	return pointerIsTouch ? touchClicked : mouseClicked;
 }
 
 function getPointerClickedTile() {
-	return usingTouchscreen ? touchClickedTile : mouseClickedTile;
+	return pointerIsTouch ? touchClickedTile : mouseClickedTile;
 }
 
 function getPointerWorldLocation() {
 	return [pointerWorldLocation[0], pointerWorldLocation[1]];
 }
 
-function getUsingTouchscreen() {
-	return usingTouchscreen;
+function getPointerIsTouch() {
+	return pointerIsTouch;
 }
 
 
@@ -242,7 +242,7 @@ function initTouchSimulatedClick() {
 		touchClickedWorld = [oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
 		if (!isMouseHeld_Left()) {
 			pointerWorldLocation = touchClickedWorld;
-			usingTouchscreen = true;
+			pointerIsTouch = true;
 		}
 	}
 }
@@ -291,7 +291,7 @@ function touchHelds_UpdateTouch(id, touchCoords) {
 		thisTouch.x = touchCoords[0];
 		thisTouch.y = touchCoords[1];
 	}
-	if (touchHelds.length === 1 && usingTouchscreen) {
+	if (touchHelds.length === 1 && pointerIsTouch) {
 		const oneOrNegOne = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 		pointerWorldLocation = [oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
 	}
@@ -328,7 +328,7 @@ function initListeners_Mouse() {
 		const renderThisFrame = !guipause.areWePaused() && (arrows.getMode() !== 0 || movement.isScaleLess1Pixel_Virtual() || selection.isAPieceSelected() || perspective.getEnabled());
 		if (renderThisFrame) frametracker.onVisualChange();
 		
-		usingTouchscreen = false;
+		pointerIsTouch = false;
 		
 		const mouseCoords = convertCoords_CenterOrigin(event);
 		mousePos = mouseCoords;
@@ -463,7 +463,7 @@ function calcMouseWorldLocation_Mouse() {
 	const mouseLocationX = (n * mousePos[0] / halfCanvasWidth) * boundingBoxToUse.right;
 	const mouseLocationY = (n * mousePos[1] / halfCanvasHeight) * boundingBoxToUse.top;
 	mouseWorldLocation = [mouseLocationX, mouseLocationY];
-	if (!usingTouchscreen) pointerWorldLocation = mouseWorldLocation;
+	if (!pointerIsTouch) pointerWorldLocation = mouseWorldLocation;
 }
 
 // We're using a touch screen, SETS THE mouse location to [0,0]!!!
@@ -491,7 +491,7 @@ function calcCrosshairWorldLocation() {
 	const y = hyp * Math.cos(rotZ);
 
 	mouseWorldLocation = [x, y];
-	if (!usingTouchscreen) pointerWorldLocation = mouseWorldLocation;
+	if (!pointerIsTouch) pointerWorldLocation = mouseWorldLocation;
 }
 
 function addMouseWheel(event) {
@@ -751,5 +751,5 @@ export default {
 	getPointerClicked,
 	getPointerClickedTile,
 	getPointerWorldLocation,
-	getUsingTouchscreen
+	getPointerIsTouch
 };

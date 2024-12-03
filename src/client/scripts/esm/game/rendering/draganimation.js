@@ -69,7 +69,7 @@ function genTransparentModel() {
 function genPieceModel() {
 	if(perspective.isLookingUp()) return;
 	const perspectiveEnabled = perspective.getEnabled();
-	const touchscreen = input.getUsingTouchscreen();
+	const touchscreen = input.getPointerIsTouch();
 	const boardScale = movement.getBoardScale();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
