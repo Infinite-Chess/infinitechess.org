@@ -169,14 +169,14 @@ function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo =
 	if (playerColor === 'white') {
 		// Tell the currently connected window that another window opened
 		if (game.whiteSocket) {
-			game.whiteSocket.metadata.sendmessage(game.whiteSocket, 'game','leavegame');
+			sendSocketMessage(game.whiteSocket, 'game','leavegame');
 			unsubClientFromGame(game, game.whiteSocket, { sendMessage: false });
 		}
 		game.whiteSocket = playerSocket;
 	} else { // 'black'
 		// Tell the currently connected window that another window opened
 		if (game.blackSocket) {
-			game.blackSocket.metadata.sendmessage(game.blackSocket, 'game','leavegame');
+			sendSocketMessage(game.blackSocket, 'game','leavegame');
 			unsubClientFromGame(game, game.blackSocket, { sendMessage: false });
 		}
 		game.blackSocket = playerSocket;
@@ -278,7 +278,7 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 	const timeServerRestarting = getTimeServerRestarting();
 	if (timeServerRestarting !== false) gameOptions.serverRestartingAt = timeServerRestarting;
 
-	playerSocket.metadata.sendmessage(playerSocket, 'game', 'joingame', gameOptions, replyto);
+	sendSocketMessage(playerSocket, 'game', 'joingame', gameOptions, replyto);
 }
 
 /**
@@ -399,7 +399,7 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	const timeServerRestarting = getTimeServerRestarting();
 	if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;
 
-	playerSocket.metadata.sendmessage(playerSocket, "game", "gameupdate", messageContents, replyTo);
+	sendSocketMessage(playerSocket, "game", "gameupdate", messageContents, replyTo);
 }
 
 /**
@@ -632,7 +632,7 @@ function sendUpdatedClockToColor(game, color) {
 	};
 	const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
 	if (!playerSocket) return; // They are not connected, can't send message
-	playerSocket.metadata.sendmessage(playerSocket, "game", "clock", message);
+	sendSocketMessage(playerSocket, "game", "clock", message);
 }
 
 /**
@@ -682,7 +682,7 @@ function sendMoveToColor(game, color) {
 	if (!game.untimed) message.clockValues = getGameClockValues(game);
 	const sendToSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
 	if (!sendToSocket) return; // They are not connected, can't send message
-	sendToSocket.metadata.sendmessage(sendToSocket, "game", "move", message);
+	sendSocketMessage(sendToSocket, "game", "move", message);
 }
 
 /**
