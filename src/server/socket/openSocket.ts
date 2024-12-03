@@ -3,15 +3,25 @@
  * This script handles socket, upgrade connection requests, and creates new sockets
  */
 
+// @ts-ignore
 import { DEV_BUILD, GAME_VERSION, HOST_NAME } from '../config/config.js';
+// @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
+// @ts-ignore
 import { logEvents, logWebsocketStart } from '../middleware/logEvents.js';
+// @ts-ignore
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
+// @ts-ignore
 import { executeSafely } from '../utility/errorGuard.js';
+// @ts-ignore
 import wsutility from '../game/wsutility.js';
+// @ts-ignore
 import { onmessage } from './receiveSocketMessage.js';
+// @ts-ignore
 import { onclose } from './closeSocket.js';
+// @ts-ignore
 import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesMemberHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
+// @ts-ignore
 import { sendSocketMessage } from './sendSocketMessage.js';
 
 
@@ -20,6 +30,7 @@ import { sendSocketMessage } from './sendSocketMessage.js';
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
+// @ts-ignore
 import type { CustomWebSocket } from '../game/wsutility.js';
 
 

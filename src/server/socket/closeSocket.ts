@@ -4,16 +4,22 @@
  */
 
 
+// @ts-ignore
 import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager";
+// @ts-ignore
 import wsutil from "../../client/scripts/esm/util/wsutil";
 
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
+// @ts-ignore
 import type { CustomWebSocket } from "../game/wsutility";
+// @ts-ignore
 import { cancelRenewConnectionTimer } from "./sendSocketMessage";
+// @ts-ignore
 import { deleteEchoTimerForMessageID } from "./echoTracker";
+// @ts-ignore
 import wsutility from "../game/wsutility";
 
 

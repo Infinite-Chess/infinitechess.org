@@ -4,13 +4,21 @@
  */
 
 
+// @ts-ignore
 import uuid from "../../client/scripts/esm/util/uuid.js";
+// @ts-ignore
 import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
+// @ts-ignore
 import { userHasInvite } from "../game/invitesmanager/invitesmanager.js";
+// @ts-ignore
 import wsutility from "../game/wsutility.ts";
+// @ts-ignore
 import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
+// @ts-ignore
 import { ensureJSONString } from "../utility/JSONUtils.js";
+// @ts-ignore
 import { getTranslation } from "../utility/translate.js";
+// @ts-ignore
 import { expectEchoForMessageID } from "./echoTracker.ts";
 
 
@@ -34,6 +42,7 @@ interface WebsocketOutMessage {
 	replyto?: number;
 }
 
+// @ts-ignore
 import type { CustomWebSocket } from "../game/wsutility.ts";
 
 

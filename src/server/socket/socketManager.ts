@@ -3,18 +3,26 @@
  * This script holds all open sockets.
  */
 
+// @ts-ignore
 import uuid from "../../client/scripts/esm/util/uuid";
+// @ts-ignore
 import { printIncomingAndClosingSockets } from "../config/config";
+// @ts-ignore
 import wsutility from "../game/wsutility";
+// @ts-ignore
 import { closeWebSocketConnection } from "./closeSocket";
 
 
 // Type Definitions ---------------------------------------------------------------------------
 
 
+// @ts-ignore
 import type { CustomWebSocket } from "../game/wsutility";
+// @ts-ignore
 import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager";
+// @ts-ignore
 import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager";
+// @ts-ignore
 import { sendSocketMessage } from "./sendSocketMessage";
 
 

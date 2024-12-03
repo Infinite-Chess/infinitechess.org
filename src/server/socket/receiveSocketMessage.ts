@@ -5,17 +5,29 @@
 
 
 import { IncomingMessage } from 'http';
+// @ts-ignore
 import type { CustomWebSocket } from '../game/wsutility.ts'
+// @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
+// @ts-ignore
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
+// @ts-ignore
 import wsutility from '../game/wsutility.ts';
+// @ts-ignore
 import { sendSocketMessage } from './sendSocketMessage.ts';
+// @ts-ignore
 import { printIncomingAndOutgoingMessages } from '../config/config.js';
+// @ts-ignore
 import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
+// @ts-ignore
 import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
+// @ts-ignore
 import { handleUnsubbing } from './socketManager.ts';
+// @ts-ignore
 import { deleteEchoTimerForMessageID } from './echoTracker.ts';
+// @ts-ignore
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
+// @ts-ignore
 import { ensureJSONString } from '../utility/JSONUtils.js';
 
 

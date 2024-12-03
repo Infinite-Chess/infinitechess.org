@@ -1,13 +1,15 @@
 
 // This script contains generalized methods for working with websocket objects.
 
+// @ts-ignore
 import { ensureJSONString } from '../utility/JSONUtils.js';
+// @ts-ignore
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
+// @ts-ignore
 import { logEvents } from '../middleware/logEvents.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
-
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 
@@ -125,25 +127,30 @@ function getCookiesFromWebsocket(req: IncomingMessage): { [cookieName: string]: 
 	// req.cookies is only defined from our cookie parser for regular requests,
 	// NOT for websocket upgrade requests! We have to parse them manually!
 
-	const rawCookies = req.headers.cookie; // In the format: "invite-tag=etg5b3bu; jwt=9732fIESLGIESLF"
-	const cookies: { [cookieName: string]: string } = {}; // Declare the return type with index signature
-	if (rawCookies === undefined) return cookies;
+	const rawCookies = req.headers.cookie;
+	const cookies: { [cookieName: string]: string } = {};
+
+	if (!rawCookies) return cookies;
 
 	try {
-		rawCookies.split(';').forEach(cookie => {
+		for (const cookie of rawCookies.split(';')) {
 			const parts = cookie.split('=');
-			const name = parts[0].trim();
-			const value = parts[1]?.trim(); // Optional chaining to handle undefined safely
+			if (parts.length < 2) continue; // Skip if no value part exists
+
+			const name = parts[0]!.trim();
+			const value = parts[1]!.trim();
+
 			if (name && value) cookies[name] = value;
-		});
+		}
 	} catch (e) {
-		const errText = `WebSocket connection request contained cookies in an invalid format!! Cookies: ${JSON.stringify(rawCookies)}\n${e.stack}`;
-		// console.error(errText); // Replace logEvents with console.error
-		logEvents(errText, 'errLog.txt', { print: true })
+		const errText = `WebSocket connection request contained cookies in an invalid format! Cookies: ${JSON.stringify(rawCookies)}\n${(e as Error).stack}`;
+		logEvents(errText, 'errLog.txt', { print: true });
 	}
 
 	return cookies;
 }
+
+
 
 /**
  * Reads the IP address attached to the incoming websocket connection request,

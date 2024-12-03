@@ -6,7 +6,9 @@
  * we expect the connection to have been lost, and we close the websocket.
  */
 
+// @ts-ignore
 import { CustomWebSocket } from "../game/wsutility";
+// @ts-ignore
 import { closeWebSocketConnection } from "./closeSocket";
 
 
