@@ -164,7 +164,7 @@ function update() {
 function handleDragging(hoverSquare, pieceHoveredType) {
 	if (input.getPointerHeld()) { // still dragging.
 		// Render the piece at the pointer.
-		draganimation.dragPiece(pieceSelected.type, pieceSelected.coords, input.getPointerWorldLocation());
+		draganimation.dragPiece(input.getPointerWorldLocation());
 	} else {
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
 		draganimation.dropPiece(hoverSquareLegal, pieceHoveredType);
@@ -175,6 +175,7 @@ function handleDragging(hoverSquare, pieceHoveredType) {
 /** Picks up the currently selected piece if we are allowed to. */
 function startDragging() {
 	if (!dragEnabled || isOpponentPiece || (isPremove /*&& premovesEnabled*/) || movement.hasMomentum()) return false;
+	draganimation.pickUpPiece(pieceSelected.type, pieceSelected.coords);
 	return draggingPiece = true;
 }
 

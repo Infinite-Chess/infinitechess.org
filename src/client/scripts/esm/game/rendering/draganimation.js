@@ -88,18 +88,29 @@ function genPieceModel() {
 }
 
 /**
- * 
+ * Start dragging a piece.
  * @param {string} type - The type of piece being dragged
  * @param {number} pieceCoords - the square the piece was on
+ */
+function pickUpPiece(type, pieceCoords) {
+	startCoords = pieceCoords;
+	pieceType = type;
+}
+
+/**
+ * Update the location of the piece being dragged.
  * @param {number[]} coords - the world coordinates the piece has been dragged to
  */
-function dragPiece(type, pieceCoords, coords) {
-	startCoords = pieceCoords;
+function dragPiece(coords) {
 	endCoords = coords;
-	pieceType = type;
 	frametracker.onVisualChange();
 }
 
+/**
+ * Stop dragging the piece and optionally play a sound.
+ * @param {boolean} playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
+ * @param {boolean} wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
+ */
 function dropPiece( playSound = true, wasCapture = false ) {
 	if (playSound) {
 		if (wasCapture) sound.playSound_capture(0, false);
@@ -112,6 +123,7 @@ function dropPiece( playSound = true, wasCapture = false ) {
 }
 
 export default {
+	pickUpPiece,
 	dragPiece,
 	dropPiece,
 	renderTransparentSquare,
