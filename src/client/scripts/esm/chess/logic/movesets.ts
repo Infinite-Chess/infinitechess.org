@@ -28,12 +28,34 @@ interface Movesets {
  * A moveset for an single piece type in a game
  */
 interface PieceMoveset {
+	/**
+	 * Jumping moves immediately surrounding the piece where it can move to.
+	 * 
+	 * TODO: Separate moving-moves from capturing-moves.
+	 */
     individual: Coords[],
+	/**
+	 * Sliding moves the piece can make.
+	 * 
+	 * `"1,0": [-Infinity, Infinity]` => Lets the piece slide horizontally infinitely in both directions.
+	 * 
+	 * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
+	 * 
+	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!!
+	 */
 	sliding?: {
 		[slideDirection: string]: Coords
 	},
-	ignore?: IgnoreFunction,
-	blocking?: BlockingFunction
+	/**
+	 * The initial function that determines how far a piece is legally able to slide
+	 * according to what pieces block it.
+	 */
+	blocking?: BlockingFunction,
+	/**
+	 * The secondary function that *actually* determines whether each individual
+	 * square in a slide is legal to move to.
+	 */
+	ignore?: IgnoreFunction
 }
 
 /**
@@ -125,7 +147,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		bishops: {
 			individual: [],
 			sliding: {
-				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
@@ -134,7 +156,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
@@ -143,7 +165,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
@@ -175,7 +197,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
@@ -238,4 +260,4 @@ export default {
 	getPieceDefaultMovesets,
 };
 
-export type { Movesets, PieceMoveset, Coords, IgnoreFunction, BlockingFunction };
+export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction };
