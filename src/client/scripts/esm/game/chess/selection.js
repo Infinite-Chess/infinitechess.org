@@ -143,7 +143,7 @@ function update() {
 	// Calculate if the hover square is legal so we know if we need to render a ghost image...
 	
 	// What coordinates are we hovering over?
-	hoverSquare = input.getPointerClicked() ? input.getPointerClickedTile()
+	hoverSquare = (input.getPointerClicked() && !draggingPiece) ? input.getPointerClickedTile()
             : space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation());
 	
 	updateHoverSquareLegal();
