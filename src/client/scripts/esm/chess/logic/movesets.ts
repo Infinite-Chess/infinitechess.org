@@ -11,6 +11,8 @@
 
 // @ts-ignore
 import type { gamefile } from './gamefile.js';
+// @ts-ignore
+import type { Piece } from './movepiece.js';
 
 /**
  * A Movesets object containing the movesets for every piece type in a game
@@ -19,16 +21,29 @@ interface Movesets {
 	[pieceType: string]: PieceMoveset
 };
 
+// TODO: move this to coordutil.js after that is converted to typescript.
 type Coords = [number, number];
 
+/**
+ * This runs once for every square you can slide to that's visible on the screen.
+ * It returns true if the square is legal to move to, false otherwise.
+ */
 // eslint-disable-next-line no-unused-vars
 type IgnoreFunction = (distance?: number, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
 	coords: Coords,
 	slidingCheck: boolean
 }) => boolean) => boolean;
 
+
+/**
+ * This runs once for every piece on the same line of the selected piece.
+ * 
+ * 0 => Piece doesn't block
+ * 1 => Blocked (friendly piece)
+ * 2 => Blocked 1 square after (enemy piece)
+ * */
 // eslint-disable-next-line no-unused-vars
-type BlockingFunction = (piecePos: Coords, gamefile?: gamefile) => number;
+type BlockingFunction = (blockingPiece: Piece, gamefile?: gamefile) => number;
 
 /**
  * A moveset for an single piece type in a game
