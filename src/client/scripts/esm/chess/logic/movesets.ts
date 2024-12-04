@@ -61,6 +61,11 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefi
  * 0 => Piece doesn't block
  * 1 => Blocked (friendly piece)
  * 2 => Blocked 1 square after (enemy piece)
+ * 
+ * The return value of 0 will be useful in the future for allowing pieces
+ * to *phase* through other pieces.
+ * An example of this would be the "witch", which makes all adjacent friendly
+ * pieces "transparent", allowing friendly pieces to phase through them.
  */
 // eslint-disable-next-line no-unused-vars
 type BlockingFunction = (blockingPiece: Piece, gamefile?: gamefile) => number;
