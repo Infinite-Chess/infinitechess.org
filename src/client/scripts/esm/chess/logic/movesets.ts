@@ -29,7 +29,7 @@ type Coords = [number, number];
  * It returns true if the square is legal to move to, false otherwise.
  */
 // eslint-disable-next-line no-unused-vars
-type IgnoreFunction = (distance?: number, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
+type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
 	coords: Coords,
 	slidingCheck: boolean
 }) => boolean) => boolean;
