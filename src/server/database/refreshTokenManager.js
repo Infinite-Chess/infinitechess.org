@@ -11,11 +11,13 @@ import { closeAllSocketsOfSession } from '../socket/socketManager.js';
  * We do NOT generate the tokens here.
  */
 
+/** @typedef {import('../controllers/authenticationTokens/refreshTokenObject.js').RefreshTokensList} RefreshTokensList */
+
 
 /**
  * Fetches the refresh tokens for a given user ID.
  * @param {number} userId - The user ID of the member whose refresh tokens are to be fetched.
- * @returns {object[]|undefined} - An array of all their refresh tokens: [ { token, issued, expires }, { token, issued, expires }, ...], or undefined if the member doesn't exist
+ * @returns {RefreshTokensList|undefined} - An array of all their refresh tokens: [ { token, issued, expires }, { token, issued, expires }, ...], or undefined if the member doesn't exist
  */
 function getRefreshTokensByUserID(userId) {
 	let { refresh_tokens } = getMemberDataByCriteria(['refresh_tokens'], 'user_id', userId);
@@ -81,7 +83,7 @@ function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 /**
  * Updates the refresh tokens for a given user.
  * @param {number} userId - The user ID of the member.
- * @param {object[]} tokens - The new array of refresh tokens to save.
+ * @param {RefreshTokensList} tokens - The new array of refresh tokens to save.
  * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token (false if access token).
  */
 function saveRefreshTokens(userId, tokens) {
