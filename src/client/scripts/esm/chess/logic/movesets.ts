@@ -41,7 +41,7 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefi
  * 0 => Piece doesn't block
  * 1 => Blocked (friendly piece)
  * 2 => Blocked 1 square after (enemy piece)
- * */
+ */
 // eslint-disable-next-line no-unused-vars
 type BlockingFunction = (blockingPiece: Piece, gamefile?: gamefile) => number;
 
