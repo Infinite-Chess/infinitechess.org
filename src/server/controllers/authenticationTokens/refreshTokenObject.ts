@@ -131,4 +131,4 @@ export {
 	trimTokensToSessionCap,
 };
 
-export type { RefreshTokensList, RefreshTokenObject}
+export type { RefreshTokensList, RefreshTokenObject };
