@@ -5,8 +5,8 @@ import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { intervalForRemovalOfOldUnverifiedAccountsMillis, maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js';
 import db from './database.js';
 import { logEvents } from '../middleware/logEvents.js';
-import { doStuffOnLogout } from '../controllers/logoutController.js';
 import { deleteUser } from './memberManager.js';
+import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 
 // Automatic deletion of old, unverified accounts...
 
@@ -40,7 +40,8 @@ function removeOldUnverifiedMembers() {
 			if (timeSinceJoined > maxExistenceTimeForUnverifiedAccountMillis) {
 				deleteUser(user_id, reason_deleted);
 				// Close their sockets, delete their invites, delete their session cookies
-				doStuffOnLogout(undefined, user_id, username);
+				closeAllSocketsOfMember(user_id, 1008, "Logged out");
+
 				logEvents(`Removed unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt', { print: true });
 			}
 		}

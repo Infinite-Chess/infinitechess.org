@@ -7,8 +7,8 @@
  */
 
 import socketUtility from '../../socket/socketUtility.js';
-import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic } from './inviteutility.js';
-import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs } from './invitessubscribers.js';
+import { isInvitePrivate, makeInviteSafe, safelyCopyInvite, isInviteOurs, isInvitePublic, isInviteOursByIdentifier } from './inviteutility.js';
+import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs, doesUserHaveActiveConnection } from './invitessubscribers.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -29,7 +29,7 @@ const printNewInviteCreationsAndDeletions = true;
 const IDLengthOfInvites = 5;
 
 /** The list of all active invites, including private ones. @type {Invite[]} */
-let invites = [];
+const invites = [];
 
 /**
  * Time to allow the client to reconnect after an UNEXPECTED (not purposeful)
@@ -261,19 +261,16 @@ function subToInvitesList(ws) { // data: { route, action, value, id }
 function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action, value, id }
 	removeSocketFromInvitesSubs(ws);
 
-	// One day this could be modified to not delete their existing invite
-	// IF THEY have another socket connected!
-	if (!closureNotByChoice) {
-		// Delete their existing invites
-		if (deleteUsersExistingInvite(ws)) onPublicInvitesChange();
-		return;
-	}
+	const { signedIn, identifier } = socketUtility.getSignedInAndIdentifierOfSocket(ws);
+
+	if (!closureNotByChoice) return deleteUserInvitesIfNotConnected(signedIn, identifier); // Delete their existing invites
+		
 
 	// The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
-	// console.log("Setting a 5-second timer to delete a user's invites!")
+	console.log("Setting a 5-second timer to delete a user's invites!");
 
-	if (ws.metadata.memberInfo.signedIn) timersMember[ws.metadata.memberInfo.username] = setTimeout(deleteMembersExistingInvite, cushionToDisconnectMillis, ws);
-	if (ws.metadata.cookies['browser-id']) timersBrowser[ws.metadata.cookies['browser-id']] = setTimeout(deleteBrowsersExistingInvite, cushionToDisconnectMillis, ws);
+	const timersToUse = signedIn ? timersMember : timersBrowser;
+	timersToUse[identifier] = setTimeout(deleteUserInvitesIfNotConnected, cushionToDisconnectMillis, signedIn, identifier);
 }
 
 /**
@@ -284,93 +281,63 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws) {
 	if (ws.metadata.memberInfo.signedIn) {
 		clearTimeout(timersMember[ws.metadata.memberInfo.username]);
 		delete timersMember[ws.metadata.memberInfo.username];
-	} if (ws.metadata.cookies['browser-id']) {
+	} else if (ws.metadata.cookies['browser-id']) {
 		clearTimeout(timersBrowser[ws.metadata.cookies['browser-id']]);
 		delete timersBrowser[ws.metadata.cookies['browser-id']];
 	}
 }
 
 //-------------------------------------------------------------------------------------------
+  
+/**
+ * Deletes the invite associated with a specific member or browser ID, 
+ * but only if they don't have an active connection.
+ * If the invite belongs to a signed-in member, checks username; 
+ * otherwise, it checks the browser ID.
+ * If any public invite is deleted, it broadcasts the new invites list to all subscribers.
+ * @param {boolean} signedIn - Flag to specify if the invite is for a signed-in member (true) or for a browser ID (false)
+ * @param {string} identifier - The identifier of the member or browser (username for signed-in members, browser ID for non-signed-in users)
+ */
+function deleteUserInvitesIfNotConnected(signedIn, identifier) {
+	// Don't delete invite if there is an active connection
+	const hasActiveConnection = doesUserHaveActiveConnection(signedIn, identifier);
+	if (hasActiveConnection) return console.log(`${signedIn ? `Member "${identifier}"` : `Browser "${identifier}"`} is still connected, not deleting invite.`);
+
+	// Proceed with deleting the invite if not connected
+	deleteUsersExistingInvite(signedIn, identifier);
+}
 
 /**
- * Deletes all active invites from a specific user. They should only ever have one.
- * If a single public invite is deleted, this returns true.
- * @param {CustomWebSocket} ws - The socket that belongs to the user we want to delete the invites of
- * @returns {boolean} Whether atleast 1 public invite was deleted
+ * Deletes the invite associated with a specific member or browser ID.
+ * If any public invite is deleted, it optionally broadcasts the new invites list to all subscribers.
+ * @param {boolean} signedIn - Flag to specify if the invite is for a signed-in member (true) or for a browser ID (false)
+ * @param {string} identifier - The identifier of the member or browser (username for signed-in members, browser ID for non-signed-in users)
+ * @param {Object} [options] - Optional configuration object.
+ * @param {boolean} [options.broadCastNewInvites=true] - Flag to specify whether to broadcast the new invites list after deleting (defaults to true).
+ * @returns {boolean} - Returns true if any public invite was deleted, otherwise false.
  */
-function deleteUsersExistingInvite(ws) { // Set dontBroadcastChange to true if you broadcast the change outside of this.
-	let deleted1PublicInvite = false;
+function deleteUsersExistingInvite(signedIn, identifier, { broadCastNewInvites = true } = {}) {
+	let deletedPublicInvite = false;
 	for (let i = invites.length - 1; i >= 0; i--) {
 		const invite = invites[i];
-		if (!isInviteOurs(ws, invite)) continue;
-		if (isInvitePublic(invite)) deleted1PublicInvite = true;
-		invites.splice(i, 1); // Delete the invite.
-		console.log(`Deleted users invite: ${JSON.stringify(invite.owner)}`);
+		if (!isInviteOursByIdentifier(signedIn, identifier, invite)) continue;
+		// Match! Delete
+		invites.splice(i, 1); // Delete the invite
+		if (isInvitePublic(invite)) deletedPublicInvite = true;
+		console.log(`${signedIn ? `Deleted member's invite` : `Deleted browser's invite`}. ${signedIn ? `Username: "${identifier}"` : `Browser: "${identifier}"`}`);
 	}
-	return deleted1PublicInvite;
+
+	if (deletedPublicInvite && broadCastNewInvites) onPublicInvitesChange(); // Broadcast the change if a public invite was deleted
+	return deletedPublicInvite;
 }
 
-/**
- * Deletes all active invites from a specific member. They should only ever have one.
- * If any public invite is deleted, it broadcasts the new invites list to all subs.
- * @param {CustomWebSocket} ws - The socket of the member
- */
-function deleteMembersExistingInvite(ws) {
-	const member = ws.metadata.memberInfo.username;
-	if (!member) return; // No username (guest), no invite!
-	let deleted1PublicInvite = false;
-	for (let i = invites.length - 1; i >= 0; i--) {
-		const invite = invites[i];
-		if (member !== invite.owner.member) continue;
-		if (isInvitePublic(invite)) deleted1PublicInvite = true;
-		invites.splice(i, 1); // Delete the invite.
-		console.log(`Deleted members invite from disconnection. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
-	}
-	if (deleted1PublicInvite) onPublicInvitesChange();
-}
 
-/**
- * Deletes all active invites from a specific browser. They should only ever have one.
- * If any public invite is deleted, it broadcasts the new invites list to all subs.
- * @param {CustomWebSocket} ws - The socket of the browser
- */
-function deleteBrowsersExistingInvite(ws) {
-	const browser = ws.metadata.cookies['browser-id'];
-	if (!browser) return; // No browser-id (logged in), no invite!
-	let deleted1PublicInvite = false;
-	for (let i = invites.length - 1; i >= 0; i--) {
-		const invite = invites[i];
-		if (browser !== invite.owner.browser) continue;
-		if (isInvitePublic(invite)) deleted1PublicInvite = true;
-		invites.splice(i, 1); // Delete the invite.
-		console.log(`Deleted browsers invite from disconnection. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
-	}
-	if (deleted1PublicInvite) onPublicInvitesChange();
-}
-
-/**
- * Deletes all invites the belong to the member.
- * This is called after a member logs out.
- * @param {string} username 
- */
-function deleteAllInvitesOfMember(username) {
-	if (username === undefined) return console.error("Cannot delete all invites of member without their username.");
-
-	let publicInviteDeleted = false;
-	invites = invites.filter((invite) => { // { id, owner, variant, clock, color, rated, publicity }
-		const inviteMatches = invite.owner.member === username;
-		if (inviteMatches && isInvitePublic(invite)) publicInviteDeleted = true;
-		return !inviteMatches;
-	});
-	if (publicInviteDeleted) onPublicInvitesChange();
-}
 
 //-------------------------------------------------------------------------------------------
 
 export {
 	subToInvitesList,
 	unsubFromInvitesList,
-	deleteAllInvitesOfMember,
 	existingInviteHasID,
 	userHasInvite,
 	addInvite,

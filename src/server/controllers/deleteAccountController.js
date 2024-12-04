@@ -6,8 +6,9 @@ import db from '../database/database.js';
 import { logEvents } from "../middleware/logEvents.js";
 import { getTranslationForReq } from "../utility/translate.js";
 import { deleteUser, getMemberDataByCriteria } from "../database/memberManager.js";
-import { doStuffOnLogout } from '../controllers/logoutController.js';
 import { testPasswordForRequest } from './authController.js';
+import { revokeSession } from './authenticationTokens/sessionManager.js';
+import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 
 
 
@@ -28,20 +29,21 @@ async function removeAccount(req, res) {
 
 	// DELETE ACCOUNT..
 
-	const { user_id, username } = getMemberDataByCriteria(['user_id', 'username'], 'username', claimedUsername);
+	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
 	if (user_id === undefined) {
 		return logEvents(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt', { print: true });
 		// if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 	}
-
-	// Close their sockets, delete their invites, delete their session cookies
-	doStuffOnLogout(res, user_id, username, req.cookies.jwt);
+	
+	// Close their sockets, delete their invites, delete their session cookies...
+	revokeSession(res, user_id);
+	closeAllSocketsOfMember(user_id, 1008, "Logged out");
 
 	const reason_deleted = "user request";
-	if (deleteUser(user_id, reason_deleted)) {
+	if (deleteUser(user_id, reason_deleted)) { // Success!!
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
 		return res.send('OK'); // 200 is default code
-	} else {
+	} else { // Failure
 		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered, they do not exist.`, 'errLog.txt', { print: true });
 		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_not_found", req) });
 	}

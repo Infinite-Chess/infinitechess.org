@@ -43,6 +43,11 @@ const connectedIPs: { [IP: string]: string[] } = {}; // Keys are the IP. Values 
  */
 const connectedSessions: { [username: string]: string[] } = {};
 
+/**
+ * A mapping of user IDs to arrays of socket IDs representing their active WebSocket connections.
+ */
+const connectedMembers: { [user_id: string]: string[] } = {};
+
 const maxSocketsAllowedPerIP = 10;
 const maxSocketsAllowedPerSession = 5;
 
@@ -59,27 +64,24 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 
 function addConnectionToConnectionLists(ws: CustomWebSocket) {
 	websocketConnections[ws.metadata.id] = ws;
-	addConnectionToConnectedIPs(ws.metadata.IP, ws.metadata.id); // Add the connection to THIS IP's list of connections (so we can cap on a per-IP basis)
-	addConnectionToConnectedSessions(ws.metadata.cookies.jwt, ws.metadata.id);
+	addConnectionToList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Add IP connection
+	addConnectionToList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Add session connection
+	addConnectionToList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Add user connection
 
 	startTimerToExpireSocket(ws);
 	if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 }
 
-function addConnectionToConnectedIPs(IP: string, id: string) {
-	if (connectedIPs[IP] === undefined) connectedIPs[IP] = [];
-	connectedIPs[IP].push(id);
-}
-
 /**
- * Adds the websocket ID to the list of member's connected sockets.
- * @param jwt - The member's session/refresh token, if they are signed in.
- * @param id - The ID of their socket.
+ * Adds a socket ID to the specified collection under the provided key.
+ * @param collection - The collection (e.g., connectedIPs, connectedSessions, etc.)
+ * @param key - The key in the collection (e.g., IP, session ID, user ID)
+ * @param id - The socket ID to add to the collection.
  */
-function addConnectionToConnectedSessions(jwt: string | undefined, id: string) {
-	if (jwt === undefined) return; // Not logged in
-	if (connectedSessions[jwt] === undefined) connectedSessions[jwt] = [];
-	connectedSessions[jwt].push(id);
+function addConnectionToList(collection: { [key: string]: string[] }, key: string | undefined, id: string) {
+	if (key === undefined) return; // No key, no operation
+	if (!collection[key]) collection[key] = []; // Initialize the array if it doesn't exist
+	collection[key].push(id); // Add the socket ID to the list
 }
 
 function startTimerToExpireSocket(ws: CustomWebSocket) {
@@ -87,45 +89,35 @@ function startTimerToExpireSocket(ws: CustomWebSocket) {
 }
 
 /**
- * 
- * @param ws - The socket
- * @param code - The socket closure code
- * @param reason - The socket closure reason
+ * Removes the given WebSocket connection from all tracking lists.
+ * @param ws - The WebSocket connection to remove.
+ * @param code - The WebSocket closure code.
+ * @param reason - The reason for the WebSocket closure.
  */
 function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, reason: string) {
 	delete websocketConnections[ws.metadata.id];
-	removeConnectionFromConnectedIPs(ws.metadata.IP, ws.metadata.id);
-	removeConnectionFromConnectedSessions(ws.metadata.cookies.jwt, ws.metadata.id);
+	removeConnectionFromList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Remove IP connection
+	removeConnectionFromList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Remove session connection
+	removeConnectionFromList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Remove member connection
 
 	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
 	if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`);
 }
 
-function removeConnectionFromConnectedIPs(IP: string, id: string) {
-	const connectionList = connectedIPs[IP];
-	if (connectionList === undefined) return;
-	// Check if the value exists in the array
-	const index = connectionList.indexOf(id);
-	if (index === -1) return;
-	// Remove the item at the found index
-	connectionList.splice(index, 1);
-
-	// If it's now empty, just delete the ip entirely
-	if (connectionList.length === 0) delete connectedIPs[IP];
-}
-
 /**
- * Removes the websocket ID from the list of member's connected sockets.
- * @param jwt - The member's session/refresh token, if they are signed in.
- * @param id - The ID of their socket.
+ * Removes a socket ID from the specified collection under the provided key.
+ * @param collection - The collection (e.g., connectedIPs, connectedSessions, etc.)
+ * @param key - The key in the collection (e.g., IP, session ID, user ID)
+ * @param id - The socket ID to remove from the collection.
  */
-function removeConnectionFromConnectedSessions(jwt: string | undefined, id: string) {
-	if (jwt === undefined) return; // Not logged in
-	const sessionsSocketIDsList = connectedSessions[jwt];
-	if (sessionsSocketIDsList === undefined) return;
-	const indexOfSocketID = sessionsSocketIDsList.indexOf(id);
-	sessionsSocketIDsList.splice(indexOfSocketID, 1);
-	if (sessionsSocketIDsList.length === 0) delete connectedSessions[jwt];
+function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | undefined, id: string) {
+	if (key === undefined || !collection[key]) return; // No key or collection doesn't exist
+	const index = collection[key].indexOf(id);
+	if (index !== -1) {
+		collection[key].splice(index, 1); // Remove the socket ID from the list
+		// Clean up if no connections left
+		if (collection[key].length === 0) delete collection[key];
+	}
 }
 
 
@@ -153,6 +145,23 @@ function terminateAllIPSockets(IP: string) {
  */
 function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReason: string) {
 	connectedSessions[jwt]?.slice().forEach(socketID => { // slice() makes a copy of it
+		const ws = websocketConnections[socketID];
+		if (!ws) return;
+		ws.close(closureCode, closureReason);
+	});
+}
+
+/**
+ * Closes all sockets associated with a given user ID.
+ * @param user_id - The unique ID of the user.
+ * @param closureCode - The code for closing the socket, sent to the client.
+ * @param closureReason - The reason for closure, sent to the client.
+ */
+function closeAllSocketsOfMember(user_id: string, closureCode: number, closureReason: string) {
+	const socketIDs = connectedMembers[user_id];
+	if (!socketIDs) return; // This member doesn't have any connected sockets
+
+	socketIDs.slice().forEach(socketID => { // slice() makes a copy of it
 		const ws = websocketConnections[socketID];
 		if (!ws) return;
 		ws.close(closureCode, closureReason);
@@ -220,7 +229,7 @@ function handleUnsubbing(ws: CustomWebSocket, key: string, closureNotByChoice?: 
 
 
 function generateUniqueIDForSocket() {
-	return uuid.genUniqueID(12, websocketConnections);
+	return uuid.genUniqueID(4, websocketConnections);
 }
 
 
@@ -235,4 +244,5 @@ export {
 	unsubSocketFromAllSubs,
 	handleUnsubbing,
 	closeAllSocketsOfSession,
+	closeAllSocketsOfMember,
 };

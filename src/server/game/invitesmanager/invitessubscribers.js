@@ -70,7 +70,18 @@ function removeSocketFromInvitesSubs(ws) {
 	if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
 
-
+/**
+ * Checks if a member or browser ID has at least one active connection.
+ * @param {boolean} signedIn - Flag to specify if the identifier is for a signed-in member (true) or a browser ID (false).
+ * @param {string} identifier - The identifier of the member (username for signed-in members) or browser ID (for non-signed-in users).
+ * @returns {boolean} - Returns true if the member or browser ID has at least one active connection, false otherwise.
+ */
+function doesUserHaveActiveConnection(signedIn, identifier) {
+	return Object.values(subscribedClients).some(ws => {
+		if (signedIn) return ws.metadata.memberInfo.username === identifier;
+		else return ws.metadata.cookies['browser-id'] === identifier;
+	});
+}
 
 
 
@@ -79,4 +90,5 @@ export {
 	broadcastToAllInviteSubs,
 	addSocketToInvitesSubs,
 	removeSocketFromInvitesSubs,
+	doesUserHaveActiveConnection,
 };

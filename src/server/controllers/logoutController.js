@@ -1,6 +1,5 @@
 
 import { logEvents } from '../middleware/logEvents.js';
-import { deleteAllInvitesOfMember } from '../game/invitesmanager/invitesmanager.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
@@ -27,19 +26,18 @@ async function handleLogout(req, res) {
 
 	const { user_id, username } = req.memberInfo;
 	
-	doStuffOnLogout(res, user_id, username, refreshToken);
+	doStuffOnLogout(res, user_id, refreshToken);
 
 	res.redirect('/');
 
 	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
 };
 
-function doStuffOnLogout(res, user_id, username, refreshToken) {
+function doStuffOnLogout(res, user_id, refreshToken) {
 	// Revoke our session and invalidate the refresh token from the database
 	revokeSession(res, user_id, refreshToken);
 
 	closeAllSocketsOfSession(refreshToken, 1008, "Logged out");
-	deleteAllInvitesOfMember(username);
 }
 
 export {

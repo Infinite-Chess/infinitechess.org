@@ -161,6 +161,17 @@ function getIPFromWebsocketUpgradeRequest(req: IncomingMessage): string | undefi
 	return clientIP;
 }
 
+/**
+ * Extracts the signed-in status and identifier (username or browser ID) from the provided socket.
+ * @param ws - The socket to extract the data from.
+ * @returns An object containing the `signedIn` status and `identifier` (either username or browser ID).
+ */
+function getSignedInAndIdentifierOfSocket(ws: CustomWebSocket) {
+	const signedIn = ws.metadata.memberInfo.signedIn;
+	const identifier = signedIn ? ws.metadata.memberInfo.username : ws.metadata.cookies['browser-id'];
+	return { signedIn, identifier };
+}
+
 
 
 export default {
@@ -169,6 +180,7 @@ export default {
 	getOwnerFromSocket,
 	getCookiesFromWebsocket,
 	getIPFromWebsocketUpgradeRequest,
+	getSignedInAndIdentifierOfSocket,
 };
 
 export type {
