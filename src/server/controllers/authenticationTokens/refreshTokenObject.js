@@ -38,7 +38,6 @@ function deleteRefreshTokenFromTokenList(refreshTokens, deleteToken) {
  * @param {object} req
  * @param {Object[]} refreshTokens - The array of existing refresh tokens.
  * @param {string} token - The new refresh token to add.
- * @returns {Object[]} - The updated array of refresh tokens.
  */
 function addTokenToRefreshTokens(req, refreshTokens, token) {
 	// Create the new refresh token object
@@ -55,9 +54,6 @@ function addTokenToRefreshTokens(req, refreshTokens, token) {
 	
 	// Add the new token to the array
 	refreshTokens.push(newRefreshToken);
-	
-	// Return the updated array
-	return refreshTokens;
 }
 
 /**

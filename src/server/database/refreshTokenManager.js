@@ -46,7 +46,7 @@ function addRefreshTokenToMemberData(req, userId, token) {
 	refreshTokens = removeExpiredTokens(refreshTokens);
 
 	// Add the new token to the list
-	refreshTokens = addTokenToRefreshTokens(req, refreshTokens, token);
+	addTokenToRefreshTokens(req, refreshTokens, token);
 
 	// Save the tokens in the database
 	saveRefreshTokens(userId, refreshTokens);
