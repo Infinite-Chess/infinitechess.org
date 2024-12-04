@@ -392,7 +392,7 @@ function canMovePieceType(pieceType) {
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
-	if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || draggingPiece || !input.isMouseSupported() || config.VIDEO_MODE) return;
+	if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || draggingPiece || !input.isMouseSupported() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
 	pieces.renderGhostPiece(pieceSelected.type, hoverSquare);
 }
 
