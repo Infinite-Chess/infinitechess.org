@@ -132,7 +132,7 @@ function getPointerClicked() {
 }
 
 function getPointerClickedTile() {
-	return pointerIsTouch ? touchClickedTile : mouseClickedTile;
+	return pointerIsTouch ? [touchClickedTile.x, touchClickedTile.y] : mouseClickedTile;
 }
 
 function getPointerWorldLocation() {
