@@ -210,4 +210,4 @@ export default {
 	getPieceDefaultMovesets,
 };
 
-export type { Movesets, PieceMoveset, Coords };
+export type { Movesets, PieceMoveset, Coords, IgnoreFunction, BlockingFunction };
