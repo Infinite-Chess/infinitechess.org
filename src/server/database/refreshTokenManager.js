@@ -1,7 +1,8 @@
 
 import { getMemberDataByCriteria, updateMemberColumns } from './memberManager.js';
 import { logEvents } from '../middleware/logEvents.js';
-import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
+import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens, trimTokensToSessionCap } from '../controllers/authenticationTokens/refreshTokenObject.js';
+import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 
 /**
@@ -45,11 +46,14 @@ function addRefreshTokenToMemberData(req, userId, token) {
 	// Remove any expired tokens
 	refreshTokens = removeExpiredTokens(refreshTokens);
 
-	// Add the new token to the list
+	// Add the new token to the list. MODIFIES the arrow
 	addTokenToRefreshTokens(req, refreshTokens, token);
 
-	// Save the tokens in the database
-	saveRefreshTokens(userId, refreshTokens);
+	// Make sure they don't exceed the maximum number of login sessions
+	const { trimmedTokens, deletedTokens } = trimTokensToSessionCap(refreshTokens);
+	deletedTokens.forEach(deletedTokenObject => closeAllSocketsOfSession(deletedTokenObject.token, 1008, "Logged out")); // When the client receives this closure message, it knows to delete their login info.
+
+	saveRefreshTokens(userId, trimmedTokens);
 }
 
 

@@ -1,6 +1,6 @@
 
 import timeutil from "../../../client/scripts/esm/util/timeutil.js";
-import { refreshTokenExpiryMillis } from "../../config/config.js";
+import { refreshTokenExpiryMillis, sessionCap } from "../../config/config.js";
 import { logEvents } from "../../middleware/logEvents.js";
 import { getClientIP } from "../../utility/IP.js";
 
@@ -81,6 +81,32 @@ function getTimeMillisSinceIssued(tokenObj) {
 	return currentTime - issuedTimestamp;
 }
 
+/**
+ * Removes the oldest refresh tokens until the list size is within sessionCap.
+ * Returns an object containing the remaining tokens (trimmedTokens) and the deleted tokens (deletedTokens).
+ * @param {Object[]} refreshTokens - The array of refresh tokens: [ { token, issued, expires }, ... ].
+ * @returns {Object} - An object with two properties: 
+ * - `trimmedTokens`: The updated array with tokens removed to meet the sessionCap.
+ * - `deletedTokens`: The array of tokens that were removed.
+ */
+function trimTokensToSessionCap(refreshTokens) {
+	const deletedTokens = []; // Array to store deleted tokens
+
+	// If the token list is within the session cap, no action is needed
+	if (refreshTokens.length <= sessionCap) return { trimmedTokens: refreshTokens, deletedTokens };
+
+	// Sort tokens by the issued timestamp (oldest first) in place
+	refreshTokens.sort((a, b) => timeutil.isoToTimestamp(a.issued) - timeutil.isoToTimestamp(b.issued));
+
+	// Identify and delete excess tokens (the ones that will be trimmed)
+	const excessTokens = refreshTokens.splice(0, refreshTokens.length - sessionCap);
+	deletedTokens.push(...excessTokens);
+
+	// Return the object with trimmed and deleted tokens
+	return { trimmedTokens: refreshTokens, deletedTokens };
+}
+
+
 
 
 export {
@@ -88,4 +114,5 @@ export {
 	addTokenToRefreshTokens,
 	removeExpiredTokens,
 	getTimeMillisSinceIssued,
+	trimTokensToSessionCap,
 };
