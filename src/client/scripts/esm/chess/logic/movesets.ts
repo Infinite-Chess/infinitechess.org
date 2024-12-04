@@ -19,21 +19,27 @@ interface Movesets {
 	[pieceType: string]: PieceMoveset
 };
 
+type Coords = [number, number];
+
 // eslint-disable-next-line no-unused-vars
 type IgnoreFunction = (distance?: number, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
-	coords: number[],
+	coords: Coords,
 	slidingCheck: boolean
 }) => boolean) => boolean;
+
+// eslint-disable-next-line no-unused-vars
+type BlockingFunction = (piecePos: Coords, gamefile?: gamefile) => number;
 
 /**
  * A moveset for an single piece type in a game
  */
 interface PieceMoveset {
-    individual: number[][],
+    individual: Coords[],
 	sliding?: {
-		[slideDirection: string]: number[]
+		[slideDirection: string]: Coords
 	},
-	ignore?: IgnoreFunction
+	ignore?: IgnoreFunction,
+	blocking?: BlockingFunction
 }
 
 
@@ -204,4 +210,4 @@ export default {
 	getPieceDefaultMovesets,
 };
 
-export type { Movesets, PieceMoveset };
+export type { Movesets, PieceMoveset, Coords };
