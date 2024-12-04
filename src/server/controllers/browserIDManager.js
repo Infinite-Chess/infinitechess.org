@@ -38,7 +38,7 @@ function assignOrRenewBrowserID(req, res, next) {
 function giveBrowserID(req, res) {
 
 	const cookieName = 'browser-id';
-	const id = uuid.generateID(12);
+	const id = uuid.generateID(6);
 
 	// console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + ' --------');
 

@@ -8,7 +8,7 @@
 import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
-import { isInviteOurs } from './inviteutility.js';
+import { isInviteOursByIdentifier } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
@@ -44,8 +44,10 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 	const { invite, index } = inviteAndIndex;
 
+	const { signedIn, identifier } = socketUtility.getSignedInAndIdentifierOfSocket(ws);
+
 	// Make sure they are not accepting their own.
-	if (isInviteOurs(ws, invite)) {
+	if (isInviteOursByIdentifier(signedIn, identifier, invite)) {
 		sendSocketMessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
 		const errString = `Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errString, 'errLog.txt', { print: true });
@@ -61,7 +63,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 	// Delete the invite accepted.
 	if (deleteInviteByIndex(ws, invite, index, { dontBroadcast: true })) hadPublicInvite = true;
 	// Delete their existing invites
-	if (deleteUsersExistingInvite(ws)) hadPublicInvite = true;
+	if (deleteUsersExistingInvite(signedIn, identifier, { broadCastNewInvites: false })) hadPublicInvite = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 

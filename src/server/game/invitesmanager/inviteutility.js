@@ -76,6 +76,18 @@ function isInviteOurs(ws, invite) {
         || ws.metadata.cookies['browser-id'] && ws.metadata.cookies['browser-id'] === invite.owner.browser;
 }
 
+/**
+ * Tests if the provided invite belongs to the provided identifier.
+ * @param {boolean} signedIn - Whether the user is signed in or not
+ * @param {string} identifier - The username (if signed in) or the browser ID (if not signed in)
+ * @param {Invite} invite - The invite object to test
+ * @returns {boolean} - Returns true if the invite belongs to the provided identifier, false otherwise
+ */
+function isInviteOursByIdentifier(signedIn, identifier, invite) {
+	if (signedIn) return invite.owner.member === identifier; // Compare with username if signed in
+	else return invite.owner.browser === identifier; // Compare with browser ID if not signed in
+}
+
 //-------------------------------------------------------------------------------------------
 
 export {
@@ -84,4 +96,5 @@ export {
 	makeInviteSafe,
 	safelyCopyInvite,
 	isInviteOurs,
+	isInviteOursByIdentifier,
 };

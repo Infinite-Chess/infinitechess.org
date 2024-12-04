@@ -37,6 +37,8 @@ interface CustomWebSocket extends WebSocket {
 			'browser-id'?: string;
 			/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
 			i18next?: string;
+			/** Their refresh/session token, if they are signed in. */
+			jwt?: string;
 		};
 		/** The user-agent property of the original websocket upgrade's req.headers */
 		userAgent?: string;
@@ -159,6 +161,17 @@ function getIPFromWebsocketUpgradeRequest(req: IncomingMessage): string | undefi
 	return clientIP;
 }
 
+/**
+ * Extracts the signed-in status and identifier (username or browser ID) from the provided socket.
+ * @param ws - The socket to extract the data from.
+ * @returns An object containing the `signedIn` status and `identifier` (either username or browser ID).
+ */
+function getSignedInAndIdentifierOfSocket(ws: CustomWebSocket) {
+	const signedIn = ws.metadata.memberInfo.signedIn;
+	const identifier = signedIn ? ws.metadata.memberInfo.username : ws.metadata.cookies['browser-id'];
+	return { signedIn, identifier };
+}
+
 
 
 export default {
@@ -167,6 +180,7 @@ export default {
 	getOwnerFromSocket,
 	getCookiesFromWebsocket,
 	getIPFromWebsocketUpgradeRequest,
+	getSignedInAndIdentifierOfSocket,
 };
 
 export type {
