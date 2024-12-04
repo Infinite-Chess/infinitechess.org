@@ -91,7 +91,7 @@ function doesVicinityAttackSquare(gamefile, coords, color, attackers) {
 	for (const key in vicinity) {
 		const thisVicinity = vicinity[key];
 		const thisSquare = coordutil.getCoordsFromKey(key); // Part of the moveset ( [1,2], [2,1] ... )
-		const actualSquare = [coords[0] + thisSquare[0], coords[1] + thisSquare[1]];
+		const actualSquare = [coords[0] - thisSquare[0], coords[1] - thisSquare[1]];
 
 		// Fetch the square from our pieces organized by key
 		const key2 = coordutil.getKeyFromCoords(actualSquare);
