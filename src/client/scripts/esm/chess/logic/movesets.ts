@@ -1,12 +1,14 @@
 
-'use strict';
-
-import colorutil from '../util/colorutil.js';
 /**
  * This script contains the default movesets for all pieces except specials (pawns, castling)
  * 
  * ZERO dependancies
  */
+
+'use strict';
+
+// @ts-ignore
+import colorutil from '../util/colorutil.js';
 
 // Type definitions...
 
