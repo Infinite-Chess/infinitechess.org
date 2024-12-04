@@ -39,6 +39,15 @@ interface PieceMoveset {
 /**
  * This runs once for every square you can slide to that's visible on the screen.
  * It returns true if the square is legal to move to, false otherwise.
+ * 
+ * If no ignore function is specified, the default ignore function that every piece
+ * has by default always returns *true*.
+ * 
+ * The start and end coords arguments are useful for the Huygen, as it can
+ * calculate the distance traveled, and then test if it's prime.
+ * 
+ * The gamefile and detectCheck method may be used for the Royal Queen,
+ * as it can test if the squares are check for positive.
  */
 // eslint-disable-next-line no-unused-vars
 type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
