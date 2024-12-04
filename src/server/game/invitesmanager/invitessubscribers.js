@@ -62,7 +62,7 @@ function removeSocketFromInvitesSubs(ws) {
 	if (!ws) return console.error("Can't remove socket from invites subs list because it's undefined!");
 
 	const socketID = ws.metadata.id;
-	if (!subscribedClients[socketID]) return console.error("Cannot unsub socket from invites list because they aren't subbed!");
+	if (!subscribedClients[socketID]) return; // Cannot unsub socket from invites list because they aren't subbed.
 
 	delete subscribedClients[socketID];
 	delete ws.metadata.subscriptions.invites;
