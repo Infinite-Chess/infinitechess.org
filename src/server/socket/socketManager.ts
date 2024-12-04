@@ -1,6 +1,6 @@
 
 /**
- * This script stores all open websockets organized by ID, IP, and username.
+ * This script stores all open websockets organized by ID, IP, and session.
  * 
  * This contains methods for terminating all websockets by given criteria,
  * Rate limiting the socket count per user,
@@ -38,13 +38,13 @@ const websocketConnections: { [id: string]: CustomWebSocket } = {}; // Object co
  */
 const connectedIPs: { [IP: string]: string[] } = {}; // Keys are the IP. Values are array lists containing all connection IDs they have going.
 /**
- * An object with member names for the keys, and arrays of their
- * socket id's they have open for the value: `{ naviary: ['fighe26'] }`
+ * An object with refresh tokens for the keys, and arrays of their
+ * socket id's they have open for the value: `{ uHrU85835...: ['fighe26'] }`
  */
-const connectedMembers: { [username: string]: string[] } = {};
+const connectedSessions: { [username: string]: string[] } = {};
 
 const maxSocketsAllowedPerIP = 10;
-const maxSocketsAllowedPerMember = 10;
+const maxSocketsAllowedPerSession = 5;
 
 /**
  * The maximum age a websocket connection will live before auto terminating, in milliseconds.
@@ -59,8 +59,8 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 
 function addConnectionToConnectionLists(ws: CustomWebSocket) {
 	websocketConnections[ws.metadata.id] = ws;
-	addConnectionToConnectedIPs(ws.metadata.IP, ws.metadata.id); // Add the conenction to THIS IP's list of connections (so we can cap on a per-IP basis)
-	addConnectionToConnectedMembers(ws.metadata.memberInfo.username, ws.metadata.id);
+	addConnectionToConnectedIPs(ws.metadata.IP, ws.metadata.id); // Add the connection to THIS IP's list of connections (so we can cap on a per-IP basis)
+	addConnectionToConnectedSessions(ws.metadata.cookies.jwt, ws.metadata.id);
 
 	startTimerToExpireSocket(ws);
 	if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
@@ -73,13 +73,13 @@ function addConnectionToConnectedIPs(IP: string, id: string) {
 
 /**
  * Adds the websocket ID to the list of member's connected sockets.
- * @param username - The member's username, if they are signed in.
+ * @param jwt - The member's session/refresh token, if they are signed in.
  * @param id - The ID of their socket.
  */
-function addConnectionToConnectedMembers(username: string | undefined, id: string) {
-	if (username === undefined) return; // Not logged in
-	if (connectedMembers[username] === undefined) connectedMembers[username] = [];
-	connectedMembers[username].push(id);
+function addConnectionToConnectedSessions(jwt: string | undefined, id: string) {
+	if (jwt === undefined) return; // Not logged in
+	if (connectedSessions[jwt] === undefined) connectedSessions[jwt] = [];
+	connectedSessions[jwt].push(id);
 }
 
 function startTimerToExpireSocket(ws: CustomWebSocket) {
@@ -95,7 +95,7 @@ function startTimerToExpireSocket(ws: CustomWebSocket) {
 function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, reason: string) {
 	delete websocketConnections[ws.metadata.id];
 	removeConnectionFromConnectedIPs(ws.metadata.IP, ws.metadata.id);
-	removeConnectionFromConnectedMembers(ws.metadata.memberInfo.username, ws.metadata.id);
+	removeConnectionFromConnectedSessions(ws.metadata.cookies.jwt, ws.metadata.id);
 
 	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
 	if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`);
@@ -116,16 +116,16 @@ function removeConnectionFromConnectedIPs(IP: string, id: string) {
 
 /**
  * Removes the websocket ID from the list of member's connected sockets.
- * @param username - The member's username, lowercase.
+ * @param jwt - The member's session/refresh token, if they are signed in.
  * @param id - The ID of their socket.
  */
-function removeConnectionFromConnectedMembers(username: string | undefined, id: string) {
-	if (username === undefined) return; // Not logged in
-	const membersSocketIDsList = connectedMembers[username];
-	if (membersSocketIDsList === undefined) return;
-	const indexOfSocketID = membersSocketIDsList.indexOf(id);
-	membersSocketIDsList.splice(indexOfSocketID, 1);
-	if (membersSocketIDsList.length === 0) delete connectedMembers[username];
+function removeConnectionFromConnectedSessions(jwt: string | undefined, id: string) {
+	if (jwt === undefined) return; // Not logged in
+	const sessionsSocketIDsList = connectedSessions[jwt];
+	if (sessionsSocketIDsList === undefined) return;
+	const indexOfSocketID = sessionsSocketIDsList.indexOf(id);
+	sessionsSocketIDsList.splice(indexOfSocketID, 1);
+	if (sessionsSocketIDsList.length === 0) delete connectedSessions[jwt];
 }
 
 
@@ -147,12 +147,12 @@ function terminateAllIPSockets(IP: string) {
 
 /**
  * Closes all sockets a given member has open.
- * @param username - The member's username, in lowercase.
+ * @param jwt - The member's session/refresh token, if they are signed in.
  * @param closureCode - The code of the socket closure, sent to the client.
  * @param closureReason - The closure reason, sent to the client.
  */
-function closeAllSocketsOfMember(username: string, closureCode: number, closureReason: string) {
-	connectedMembers[username]?.slice().forEach(socketID => { // slice() makes a copy of it
+function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReason: string) {
+	connectedSessions[jwt]?.slice().forEach(socketID => { // slice() makes a copy of it
 		const ws = websocketConnections[socketID];
 		if (!ws) return;
 		ws.close(closureCode, closureReason);
@@ -175,12 +175,12 @@ function doesClientHaveMaxSocketCount(IP: string): boolean {
 
 /**
  * Returns true if the given member has the maximum number of websockets opened.
- * @param username - The member name.
+ * @param jwt - The member's session/refresh token, if they are signed in.
  * @returns *true* if they have too many sockets.
  */
-function doesMemberHaveMaxSocketCount(username: string): boolean {
-	if (connectedMembers[username] === undefined) return false;
-	return connectedMembers[username].length >= maxSocketsAllowedPerMember;
+function doesSessionHaveMaxSocketCount(jwt: string): boolean {
+	if (connectedSessions[jwt] === undefined) return false;
+	return connectedSessions[jwt].length >= maxSocketsAllowedPerSession;
 }
 
 
@@ -230,9 +230,9 @@ export {
 	removeConnectionFromConnectionLists,
 	terminateAllIPSockets,
 	doesClientHaveMaxSocketCount,
-	doesMemberHaveMaxSocketCount,
+	doesSessionHaveMaxSocketCount,
 	generateUniqueIDForSocket,
 	unsubSocketFromAllSubs,
 	handleUnsubbing,
-	closeAllSocketsOfMember,
+	closeAllSocketsOfSession,
 };

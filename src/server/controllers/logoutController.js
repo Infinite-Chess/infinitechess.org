@@ -2,7 +2,7 @@
 import { logEvents } from '../middleware/logEvents.js';
 import { deleteAllInvitesOfMember } from '../game/invitesmanager/invitesmanager.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
-import { closeAllSocketsOfMember } from '../socket/socketManager.js';
+import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 
 async function handleLogout(req, res) {
@@ -38,7 +38,7 @@ function doStuffOnLogout(res, user_id, username, refreshToken) {
 	// Revoke our session and invalidate the refresh token from the database
 	revokeSession(res, user_id, refreshToken);
 
-	closeAllSocketsOfMember(username, 1008, "Logged out");
+	closeAllSocketsOfSession(refreshToken, 1008, "Logged out");
 	deleteAllInvitesOfMember(username);
 }
 

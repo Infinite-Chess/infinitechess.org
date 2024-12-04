@@ -35,7 +35,7 @@ async function removeAccount(req, res) {
 	}
 
 	// Close their sockets, delete their invites, delete their session cookies
-	doStuffOnLogout(res, user_id, username);
+	doStuffOnLogout(res, user_id, username, req.cookies.jwt);
 
 	const reason_deleted = "user request";
 	if (deleteUser(user_id, reason_deleted)) {

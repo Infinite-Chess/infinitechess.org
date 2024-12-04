@@ -5,7 +5,7 @@
 
 import socketUtility from './socketUtility.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
-import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesMemberHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
+import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessionHaveMaxSocketCount, generateUniqueIDForSocket, terminateAllIPSockets } from './socketManager.js';
 import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
 // @ts-ignore
@@ -60,8 +60,8 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage) {
 	// Initialize who they are. Member? Browser ID?...
 	verifyJWTWebSocket(ws); // Modifies ws.metadata.memberInfo if they are signed in to add the user_id, username, and roles properties.
 
-	if (ws.metadata.memberInfo.signedIn && doesMemberHaveMaxSocketCount(ws.metadata.memberInfo.username!)) {
-		console.log(`Member "${ws.metadata.memberInfo.username}" has too many sockets! Not connecting this one.`);
+	if (ws.metadata.memberInfo.signedIn && doesSessionHaveMaxSocketCount(ws.metadata.cookies.jwt!)) {
+		console.log(`Member "${ws.metadata.memberInfo.username}" has too many sockets for this session! Not connecting this one.`);
 		return ws.close(1009, 'Too Many Sockets');
 	}
 

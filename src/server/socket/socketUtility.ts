@@ -37,6 +37,8 @@ interface CustomWebSocket extends WebSocket {
 			'browser-id'?: string;
 			/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
 			i18next?: string;
+			/** Their refresh/session token, if they are signed in. */
+			jwt?: string;
 		};
 		/** The user-agent property of the original websocket upgrade's req.headers */
 		userAgent?: string;
