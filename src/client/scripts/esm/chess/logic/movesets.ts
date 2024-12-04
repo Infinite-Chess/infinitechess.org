@@ -93,15 +93,16 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefi
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
 // eslint-disable-next-line no-unused-vars
-type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile) => number;
+type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile) => 0 | 1 | 2;
 
 
 
 /** The default blocking function of each piece's sliding moves, if not specified. */
 // eslint-disable-next-line no-unused-vars
-function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile): number {
+function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile): 0 | 1 | 2 {
 	const colorOfBlockingPiece = colorutil.getPieceColorFromType(blockingPiece.type);
-	if (friendlyColor === colorOfBlockingPiece) return 1; // Block where it is if it is a friendly.
+	const isVoid = blockingPiece.type === 'voidsN';
+	if (friendlyColor === colorOfBlockingPiece || isVoid) return 1; // Block where it is if it is a friendly OR a void square.
 	else return 2; // Allow the capture if enemy, but block afterward
 }
 
