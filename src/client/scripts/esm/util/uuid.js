@@ -6,16 +6,16 @@
  */
 
 /**
- * Generates a random ID of the provided length, with the characters 0-9 and a-z.
+ * Generates a random ID of the provided length, with the characters 0-9, a-z, and A-Z.
  * @param {number} length - The length of the desired ID
  * @returns {string} The ID
  */
 function generateID(length) {
 	let result = '';
-	const characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+	const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'; // Base 62 characters
 	const charactersLength = characters.length;
 	for (let i = 0; i < length; i++) {
-		result += characters.charAt(Math.random() * charactersLength); // Coerc to an int
+		result += characters.charAt(Math.floor(Math.random() * charactersLength)); // Coercing to an int with Math.floor
 	}
 	return result;
 }

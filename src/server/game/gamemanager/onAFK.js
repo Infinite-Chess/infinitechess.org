@@ -11,9 +11,10 @@ import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -31,7 +32,7 @@ const durationOfAutoResignTimerMillis = 1000 * 20; // 20 seconds.
 /**
  * Called when a client alerts us they have gone AFK.
  * Alerts their opponent, and starts a timer to auto-resign.
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function onAFK(ws, game) {
@@ -56,14 +57,14 @@ function onAFK(ws, game) {
 	game.autoAFKResignTime = Date.now() + durationOfAutoResignTimerMillis;
 
 	// Alert their opponent
-	const value = { autoAFKResignTime: game.autoAFKResignTime };
+	const value = { millisUntilAutoAFKResign: durationOfAutoResignTimerMillis };
 	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafk', value);
 }
 
 /**
  * Called when a client alerts us they have returned from being AFK.
  * Alerts their opponent, and cancels the timer to auto-resign.
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function onAFK_Return(ws, game) {

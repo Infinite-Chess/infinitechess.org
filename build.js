@@ -15,6 +15,7 @@ import { BUNDLE_FILES } from './src/server/config/config.js';
 import esbuild from 'esbuild';
 import path from "node:path";
 import { getAllFilesInDirectoryWithExtension, writeFile_ensureDirectory } from './src/server/utility/fileUtils.js';
+import { execSync } from 'node:child_process';
 
 
 /**
@@ -25,9 +26,9 @@ import { getAllFilesInDirectoryWithExtension, writeFile_ensureDirectory } from '
  * into their own bundle!
  */
 const entryPoints = [
-	'src/client/scripts/esm/game/main.js',
-	'src/client/scripts/esm/components/header/header.js',
-	'src/client/scripts/esm/views/member.js',
+	'dist/client/scripts/esm/game/main.js',
+	'dist/client/scripts/esm/components/header/header.js',
+	'dist/client/scripts/esm/views/member.js',
 ];
 
 // Targetted browsers for CSS transpilation
@@ -47,7 +48,7 @@ async function bundleESMScripts() {
 		bundle: true,
 		entryPoints,
 		// outfile: './dist/scripts/game/main.js', // Old, for a single entry point
-		outdir: './dist/scripts/esm',
+		outdir: './dist/client/scripts/esm',
 		/**
 		 * Enable code splitting, which means if multiple entry points require the same module,
 		 * that dependancy will be separated out of both of them which means it isn't duplicated,
@@ -59,10 +60,12 @@ async function bundleESMScripts() {
 		splitting: true, 
 		legalComments: 'none', // Even skips copyright noticies, such as in gl-matrix
 		format: 'esm', // or 'cjs' for Common JS
+		allowOverwrite: true,
+		// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
 	});
 
 	// Further minify them. This cuts off their size a further 60%!!!
-	await minifyDirectory('./dist/scripts/esm/', './dist/scripts/esm/', true); // true for ES Modules
+	await minifyDirectory('./dist/client/scripts/esm/', './dist/client/scripts/esm/', true); // true for ES Modules
 }
 
 /**
@@ -100,16 +103,16 @@ async function minifyDirectory(inputDir, outputDir, isModule) {
  */
 async function minifyCSSFiles() {
 	// Bundle and compress all css files
-	const cssFiles = await getAllFilesInDirectoryWithExtension("./src/client/css", ".css");
+	const cssFiles = await getAllFilesInDirectoryWithExtension("./dist/client/css", ".css");
 	for (const file of cssFiles) {
 		// Minify css files
 		const { code } = transform({
 			targets: targets,
-			code: Buffer.from(await readFile(`./src/client/css/${file}`, 'utf8')),
+			code: Buffer.from(await readFile(`./dist/client/css/${file}`, 'utf8')),
 			minify: true,
 		});
 		// Write into /dist
-		await writeFile_ensureDirectory(`./dist/css/${file}`, code);
+		await writeFile_ensureDirectory(`./dist/client/css/${file}`, code);
 	}
 }
 
@@ -122,31 +125,31 @@ await remove("./dist", {
 });
 
 
-if (!BUNDLE_FILES) {
-	/**
-	 * In development, copy all clientside files directly over to /dist AS THEY ARE.
-	 * No files are bundled. This means a LOT of requests! But, all our comments are there!
-	 */
+/**
+ * Start by copying all files to dist, including script files so they can be compiled without cluttering pull requests.
+ * Files will be bundled later if bundling is enabled.
+ */
 
-	await copy("./src/client", "./dist", {
-		recursive: true,
-		force: true
-	});
+await copy("./src", "./dist", {
+	recursive: true,
+	force: true
+});
 
-} else { // BUNDLE files in production! Far fewer requests, and each file is significantly smaller!
+if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) { // The compiler complains if there's nothing to compile
+	try {
+		execSync('tsc --build');
+	}
+	catch (e) {
+		console.error('TypeScript compilation failed with the following error:');
+		console.log(e.stdout.toString()); // Print TypeScript error output
+		console.log(e.stderr.toString()); // Print additional error details if available
+	}
+}
 
-	// Copy EVERYTHING over from src/client/ into dist/ EXCEPT SCRIPTS and CSS files,
-	// because those are compressed and minified manually.
-	await copy("./src/client", "./dist", {
-		recursive: true,
-		force: true,
-		filter: filename => { // Only pass if it is not a script or css file.
-			return !/(\\|\/)scripts/.test(filename) && !/(\\|\/)css/.test(filename);
-		}
-	});
+if (BUNDLE_FILES) { // BUNDLE files in production! Far fewer requests, and each file is significantly smaller!
 
 	// Minify all CJS scripts and copy them over to dist/
-	await minifyDirectory('src/client/scripts/cjs/', './dist/scripts/cjs/', false); // false for CommonJS Modules
+	await minifyDirectory('./dist/client/scripts/cjs/', './dist/client/scripts/cjs/', false); // false for CommonJS Modules
 
 	// Bundle and Minify all ESM scripts and copy them over to dist/
 	await bundleESMScripts();
@@ -157,8 +160,8 @@ if (!BUNDLE_FILES) {
 
 // Overwrite play.ejs, directly inserting htmlscript.js into it.
 /** The relative path to play.ejs */
-const playEJSPath = './dist/views/play.ejs';
+const playEJSPath = './dist/client/views/play.ejs';
 const playEJS = await readFile(playEJSPath, 'utf8');
-const htmlscriptJS = await readFile('./dist/scripts/cjs/game/htmlscript.js');
+const htmlscriptJS = await readFile('./dist/client/scripts/cjs/game/htmlscript.js');
 const newPlayEJS = insertScriptIntoHTML(playEJS, htmlscriptJS, {}, '<!-- htmlscript inject here -->');
 await writeFile(playEJSPath, newPlayEJS, 'utf8');

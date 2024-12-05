@@ -24,6 +24,7 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) throw new Error("ARE_RATE_LIMITING must be
  * I recommend 2 seconds of latency for testing slow networks.
  */
 const simulatedWebsocketLatencyMillis = 0;
+// const simulatedWebsocketLatencyMillis = 1000; // 1 Second
 if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simulatedWebsocketLatencyMillis must be 0 in production!!");
 
 /** The domain name of the production website. */
@@ -57,6 +58,12 @@ const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 const intervalForRefreshTokenCleanupMillis = 1000 * 60 * 60 * 24; // 1 day
 // const intervalForRefreshTokenCleanupMillis = 1000 * 30; // 30s
 
+/**
+ * The maximum number of logging sessions a user can have at
+ * one time before creating new sessions will terminate old sessions.
+ * */
+const sessionCap = 10;
+
 
 // Unverified Accounts Lifetime -------------------------------------------------------------------------------------------------
 
@@ -67,6 +74,16 @@ const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3
 /** The interval for how frequent to check for unverified account that exists more than `maxExistenceTimeForUnverifiedAccount` */
 const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 60 * 60 * 24 * 1; // 1 days
 // const intervalForRemovalOfOldUnverifiedAccountsMillis = 1000 * 30; // 30 seconds
+
+
+
+
+// Websockets -------------------------------------------------------------------------------------------------
+
+
+const printIncomingAndClosingSockets = false;
+const printIncomingAndOutgoingMessages = false;
+
 
 
 
@@ -83,6 +100,9 @@ export {
 	minTimeToWaitToRenewRefreshTokensMillis,
 	accessTokenExpiryMillis,
 	intervalForRefreshTokenCleanupMillis,
+	sessionCap,
 	maxExistenceTimeForUnverifiedAccountMillis,
 	intervalForRemovalOfOldUnverifiedAccountsMillis,
+	printIncomingAndClosingSockets,
+	printIncomingAndOutgoingMessages,
 };

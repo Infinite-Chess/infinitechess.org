@@ -6,7 +6,12 @@ const element_emailInput = document.getElementById('email');
 const element_passwordInput = document.getElementById('password');
 const element_submitButton = document.getElementById('submit');
 
-
+/** Default fetch options */
+const fetchOptions = {
+	headers: {
+		"is-fetch-request": "true" // Custom header
+	}
+};
 
 let usernameHasError = false;
 element_usernameInput.addEventListener('input', () => { // When username field changes...
@@ -49,31 +54,34 @@ element_usernameInput.addEventListener('input', () => { // When username field c
 
 	updateSubmitButton();
 });
-element_usernameInput.addEventListener('focusout', () => { // Check username availability...
-	if (element_usernameInput.value.length === 0 || usernameHasError) return;
+element_usernameInput.addEventListener('focusout', () => {
+    // Check username availability...
+    if (element_usernameInput.value.length === 0 || usernameHasError) return;
 
-	fetch(`/createaccount/username/${element_usernameInput.value}`)
-		.then((response) => response.json())
-		.then((result) => { // { allowed, reason }
-			// We've got the result back from the server,
-			// Is this username available to use?
-			if (result.allowed === true) return; // Not in use
+    fetch(`/createaccount/username/${element_usernameInput.value}`, fetchOptions)
+        .then((response) => response.json())
+        .then((result) => {
+            // { allowed, reason }
+            // We've got the result back from the server,
+            // Is this username available to use?
+            if (result.allowed === true) return; // Not in use
 
-			// ERROR! In use!
-			usernameHasError = true;
-			createErrorElement('usernameerror', "usernameinputline");
-			// Change input box to red outline
-			element_usernameInput.style.outline = 'solid 1px red';
-			// Reset variable because it now exists.
-			const usernameError = document.getElementById("usernameerror");
+            // ERROR! In use!
+            usernameHasError = true;
+            createErrorElement('usernameerror', "usernameinputline");
+            // Change input box to red outline
+            element_usernameInput.style.outline = 'solid 1px red';
+            // Reset variable because it now exists.
+            const usernameError = document.getElementById("usernameerror");
 
-			// translate the message from the server if a translation is available
-			let result_message = result.reason;
-			if (translations[result_message]) result_message = translations[result_message];
-			usernameError.textContent = result_message;
-			updateSubmitButton();
-		});
+            // translate the message from the server if a translation is available
+            let result_message = result.reason;
+            if (translations[result_message]) result_message = translations[result_message];
+            usernameError.textContent = result_message;
+            updateSubmitButton();
+        });
 });
+
 
 let emailHasError = false;
 element_emailInput.addEventListener('input', () => { // When email field changes...
@@ -109,7 +117,7 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 element_emailInput.addEventListener('focusout', () => { // Check email availability...
 	// If it's blank, all the server would send back is the createaccount.html again..
 	if (element_emailInput.value.length > 1 && !emailHasError) { 
-		fetch(`/createaccount/email/${element_emailInput.value}`)
+		fetch(`/createaccount/email/${element_emailInput.value}`, fetchOptions)
 			.then((response) => response.json())
 			.then((result) => {
 				// We've got the result back from the server,
@@ -187,7 +195,10 @@ function sendForm(username, email, password) {
 	let OK = false;
 	const config = {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers: {
+			'Content-Type': 'application/json',
+			"is-fetch-request": "true" // Custom header
+		},
 		credentials: 'same-origin', // Allows cookie to be set from this request
 		body: JSON.stringify({username, email, password})
 	};

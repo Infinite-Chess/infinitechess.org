@@ -30,24 +30,31 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 		return false;
 	}
 
+	let changesMade = false;
+
 	// Remove expired tokens
 	const validRefreshTokens = removeExpiredTokens(refreshTokens);
-	if (validRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, validRefreshTokens); // At least one token was deleted by expired, save the list.
+	if (validRefreshTokens.length !== refreshTokens.length) changesMade = true; // At least one token was deleted by expired, save the list.
 
 	// Find the object where tokenObj.token matches the provided token
 	const matchingTokenObj = validRefreshTokens.find(tokenObj => tokenObj.token === token); // { token, issued, expires, IP (not always present) }
-	if (!matchingTokenObj) return false;
+	if (!matchingTokenObj) {
+		if (changesMade) saveRefreshTokens(userId, validRefreshTokens);
+		return false;
+	}
 
 	// Does the request IP address match the IP address when the session token was originally issued?
-	if (matchingTokenObj.IP !== undefined && IP !== matchingTokenObj.IP) {
-		logEvents(`Connected IP address doesn't match the IP address from session token creation!! Issued: "${matchingTokenObj.IP}" Current: "${IP}". Member "${username}" of ID "${userId}"`, 'errLog.txt', { print: true });
-		// return false; // For now, don't count the token as invalid. If people's IP changes commonly, this is this is viable.
+	// If not, update their most recent IP where the token was used.
+	if (IP !== matchingTokenObj.IP) {
+		matchingTokenObj.IP = IP;
+		changesMade = true;
 	}
 
 	// We have the token...
 	
 	// When does it expire? Should we renew?
-	renewSession(req, res, userId, username, roles, validRefreshTokens, matchingTokenObj);
+	const savedTokens = renewSession(req, res, userId, username, roles, validRefreshTokens, matchingTokenObj);
+	if (!savedTokens && changesMade) saveRefreshTokens(userId, validRefreshTokens);
 
 	return true;
 }
@@ -61,12 +68,13 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
  * @param {*} roles 
  * @param {*} refreshTokens - The parsed refresh tokens from their data in the members table
  * @param {*} tokenObject - The token that needs to be renewed (deleted + add new) if we are renewing!
+ * @returns {boolean} true if the session was renewed (the refresh tokens will have been saved in the database)
  */
 function renewSession(req, res, userId, username, roles, refreshTokens, tokenObject) {
 	if (!req || !res) return; // Only renew if the response object is defined, the response object will not be defined for websocket upgrade requests.
 	
 	const timeSinceIssued = getTimeMillisSinceIssued(tokenObject);
-	if (timeSinceIssued < minTimeToWaitToRenewRefreshTokensMillis) return;
+	if (timeSinceIssued < minTimeToWaitToRenewRefreshTokensMillis) return false;
 
 	console.log(`Renewing member "${username}"s session by issuing them new login cookies! -------`);
 
@@ -76,11 +84,13 @@ function renewSession(req, res, userId, username, roles, refreshTokens, tokenObj
 	const newToken = signRefreshToken(userId, username, roles);
 
 	// Add the new token to the list
-	refreshTokens = addTokenToRefreshTokens(req, refreshTokens, newToken);
+	addTokenToRefreshTokens(req, refreshTokens, newToken);
 
 	saveRefreshTokens(userId, refreshTokens);
 
 	createSessionCookies(res, userId, username, newToken);
+
+	return true;
 }
 
 function createNewSession(req, res, user_id, username, roles) {
