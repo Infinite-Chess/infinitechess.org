@@ -11,6 +11,7 @@ import frametracker from "./frametracker.js";
 import movement from "./movement.js";
 import input from "../input.js";
 import space from "../misc/space.js";
+import camera from "./camera.js";
 // Import end
 
 /**
@@ -43,7 +44,8 @@ const touchscreenOffset = 2;
  */
 const minimumScale = 0.9;
 /** The width of the box outline used to emphasize the hovered square. */
-const borderWidth = 0.1;
+const outlineWidth_Mouse = 0.1;
+const outlineWidth_Touch = 0.05;
 
 /** The hight the piece is rendered above the board when in perspective mode. */
 const perspectiveHeight = 0.6;
@@ -106,14 +108,23 @@ function genPieceModel() {
 function genOutlineModel() {
 	let data = [];
 	const hoveredCoords = space.convertWorldSpaceToCoords_Rounded(endCoords);
+	const pointerIsTouch = input.getPointerIsTouch()
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords);
-	const width = borderWidth * movement.getBoardScale();
+	const width = (pointerIsTouch ? outlineWidth_Touch : outlineWidth_Mouse) * movement.getBoardScale();
 	const color = options.getDefaultOutlineColor();
 	
-	data.push(...bufferdata.getDataQuad_Color3D({ left, right: left+width, bottom, top }, z, color)); // left
-	data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom, top: bottom+width }, z, color)); // bottom
-	data.push(...bufferdata.getDataQuad_Color3D({ left: right-width, right, bottom, top }, z, color)); // right
-	data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom: top-width, top }, z, color)); // top
+	if (pointerIsTouch) {
+		const boundingBox = camera.getScreenBoundingBox(false); // Outline the entire rank and file.
+		data.push(...bufferdata.getDataQuad_Color3D({ left, right: left+width, bottom: boundingBox.bottom, top: boundingBox.top }, z, color)); // left
+		data.push(...bufferdata.getDataQuad_Color3D({ left: boundingBox.left, right: boundingBox.right, bottom, top: bottom+width }, z, color)); // bottom
+		data.push(...bufferdata.getDataQuad_Color3D({ left: right-width, right, bottom: boundingBox.bottom, top: boundingBox.top }, z, color)); // right
+		data.push(...bufferdata.getDataQuad_Color3D({ left: boundingBox.left, right: boundingBox.right, bottom: top-width, top }, z, color)); // top
+	} else {
+		data.push(...bufferdata.getDataQuad_Color3D({ left, right: left+width, bottom, top }, z, color)); // left
+		data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom, top: bottom+width }, z, color)); // bottom
+		data.push(...bufferdata.getDataQuad_Color3D({ left: right-width, right, bottom, top }, z, color)); // right
+		data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom: top-width, top }, z, color)); // top
+	}
 	
 	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 }
