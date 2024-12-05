@@ -11,7 +11,6 @@ import frametracker from "./frametracker.js";
 import movement from "./movement.js";
 import input from "../input.js";
 import space from "../misc/space.js";
-import themes from "../../components/header/themes.js";
 // Import end
 
 /**
@@ -109,8 +108,7 @@ function genOutlineModel() {
 	const hoveredCoords = space.convertWorldSpaceToCoords_Rounded(endCoords);
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords);
 	const width = borderWidth * movement.getBoardScale();
-	//const color = themes.getPropertyOfTheme(options.getTheme(), "boxOutlineColor");
-	const color = [0.5, 0.5, 0.5, 0.9]; // Only for testing. This will be controled by the theme when finished.
+	const color = options.getDefaultOutlineColor();
 	
 	data.push(...bufferdata.getDataQuad_Color3D({ left, right: left+width, bottom, top }, z, color)); // left
 	data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom, top: bottom+width }, z, color)); // bottom
