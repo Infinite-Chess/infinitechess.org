@@ -138,8 +138,8 @@ function updateBoard() {
 	transition.update();
 	board.recalcVariables(); 
 	guinavigation.update();
-	arrows.update();
 	selection.update(); // Test if a piece was clicked on or moved. Needs to be before updateNavControls()
+	arrows.update(); // NEEDS TO BE AFTER selection.update(), because the arrows model regeneration DEPENDS on the piece selected!
 	// We NEED THIS HERE as well as in gameLoop.render() so the game can detect mouse clicks
 	// on the miniimages in perspective mode even when the screen isn't being rendered!
 	miniimage.genModel();

@@ -1,6 +1,6 @@
 
 // Import Start
-import input from "../input.js";
+import docutil from "./docutil.js";
 // Import End
 
 /**
@@ -73,7 +73,7 @@ import input from "../input.js";
 		return tooltipClasses.find(cls => element.classList.contains(cls)) || null;
 	}
 
-	if (!input.isMouseSupported()) return; // Don't add listeners for fast transition mode on mobile
+	if (!docutil.isMouseSupported()) return; // Don't add listeners for fast transition mode on mobile
     
 	/** Add event listeners for entering fast transition mode (tooltips appear immediately) */
 	tooltips.forEach(tooltip => {

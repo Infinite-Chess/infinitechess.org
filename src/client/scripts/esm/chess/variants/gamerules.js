@@ -50,14 +50,16 @@ function GameRules() {
 
 	// REQUIRED gamerules...
 
-	/** An object containing lists of what win conditions each color can win by. This is REQUIRED. */
+	/** An object containing lists of what win conditions each color can win by. This is REQUIRED.
+	 * @type {Object<string, string[]>}
+	 */
 	this.winConditions = {
 		/** A list of win conditions white can win by. REQUIRED. @type {string[]} */
 		white: undefined,
 		/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
 		black: undefined,
 	};
-	/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. */
+	/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. @type {string[]} */
 	this.turnOrder = undefined;
 
 	// Gamerules that also have dedicated slots in ICN notation...
@@ -66,26 +68,27 @@ function GameRules() {
      * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
      * If one side can't promote, their rank is `null`.
      * If neither side can promote, this should be left as undefined.
-     * @type {number[]}
+     * @type {(number | null)[] | undefined}
      */
 	this.promotionRanks = undefined;
 	/**
      * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
      * If one color can't promote, their list should be left undefined.
      * If no color can promote, this should be left undefined.
+	 * @type {Object<string, string[]> | undefined}
      */
 	this.promotionsAllowed = {
-		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
+		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */
 		white: undefined,
-		/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
+		/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */
 		black: undefined,
 	};
-	/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. */
+	/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. @type {number | undefined} */
 	this.moveRule = undefined;
 
 	// Gamerules that DON'T have a dedicated slot in ICN notation...
 
-	/** The maximum number of steps any sliding piece can take. */
+	/** The maximum number of steps any sliding piece can take. @type {number | undefined} */
 	this.slideLimit = undefined;
 }
 

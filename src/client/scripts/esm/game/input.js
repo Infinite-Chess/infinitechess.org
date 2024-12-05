@@ -15,6 +15,7 @@ import jsutil from '../util/jsutil.js';
 import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
+import game from './chess/game.js';
 // Import End
 
 "use strict";
@@ -404,7 +405,6 @@ function initListeners_Mouse() {
 		event = event || window.event;
 		if (!perspective.getEnabled()) return;
 		if (!perspective.isMouseLocked()) return;
-
 		removeMouseHeld(event);
 
 		executeMouseSimulatedClick();
@@ -424,8 +424,9 @@ function initMouseSimulatedClick() {
 }
 
 function executeMouseSimulatedClick() {
-	if (!timeMouseDownSeconds) return;
-	if (!mouseIsSupported) return;
+	if (!timeMouseDownSeconds || !mouseIsSupported) return;
+	// THIS PREVENTS A BUG THAT RANDOMLY SELECTS A PIECE AS SOON AS YOU START A GAME
+	if (!game.areInGame()) return;
 
 	// See if the mouse was released fast enough to simulate a click!
 	const nowSeconds = new Date().getTime() / 1000;

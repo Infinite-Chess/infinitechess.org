@@ -6,7 +6,7 @@
 
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 //-------------------------------------------------------------------------------------------
 
@@ -67,13 +67,25 @@ function safelyCopyInvite(invite) {
 
 /**
  * Tests if the provided invite belongs to the provided socket.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  * @param {Invite} invite 
  * @returns {boolean}
  */
 function isInviteOurs(ws, invite) {
 	return ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.username === invite.owner.member
-        || ws.cookies['browser-id'] && ws.cookies['browser-id'] === invite.owner.browser;
+        || ws.metadata.cookies['browser-id'] && ws.metadata.cookies['browser-id'] === invite.owner.browser;
+}
+
+/**
+ * Tests if the provided invite belongs to the provided identifier.
+ * @param {boolean} signedIn - Whether the user is signed in or not
+ * @param {string} identifier - The username (if signed in) or the browser ID (if not signed in)
+ * @param {Invite} invite - The invite object to test
+ * @returns {boolean} - Returns true if the invite belongs to the provided identifier, false otherwise
+ */
+function isInviteOursByIdentifier(signedIn, identifier, invite) {
+	if (signedIn) return invite.owner.member === identifier; // Compare with username if signed in
+	else return invite.owner.browser === identifier; // Compare with browser ID if not signed in
 }
 
 //-------------------------------------------------------------------------------------------
@@ -84,4 +96,5 @@ export {
 	makeInviteSafe,
 	safelyCopyInvite,
 	isInviteOurs,
+	isInviteOursByIdentifier,
 };

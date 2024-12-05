@@ -8,10 +8,10 @@
  */
 
 import { isTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
-import { getClientIP, getClientIP_Websocket } from '../utility/IP.js';
+import { getClientIP } from '../utility/IP.js';
 import { logEvents } from './logEvents.js';
 
-/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
+/** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
 
 
 /**
@@ -81,10 +81,10 @@ function verifyRefreshToken(req, res) {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return false; // No refresh token present
 
-	// { isValid (boolean), user_id, username }
+	// { isValid (boolean), user_id, username, reason (string, if not valid) }
 	const result = isTokenValid(refreshToken, true, getClientIP(req), req, res); // true for refresh token
 	if (!result.isValid) {
-		logEvents(`Invalid refresh token, expired or tampered! Reason: "${result.reason}" "${refreshToken}"`, 'errLog.txt', { print: true });
+		console.log(`Invalid refresh token: Expired, tampered, or account deleted! "${refreshToken}"`);
 		return false; //Token was expired or tampered
 	}
 
@@ -99,37 +99,36 @@ function verifyRefreshToken(req, res) {
 
 
 /**
- * Reads the access token cookie OR the refresh cookie token,
- * sets the socket metadata's `user` and `role`
- * properties if it is valid (are signed in).
- * The invite and game managers can use these
- * properties to verify their identity.
- * @param {Socket} req
- * @param {Socket} ws - The websocket object
+ * Reads the refresh cookie token,
+ * Modifies ws.metadata.memberInfo if they are signed in
+ * to add the user_id, username, and roles properties.
+ * @param {} req
+ * @param {CustomWebSocket} ws - The websocket object
  * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. These should be `token`, `jwt` (refresh token), and `browser-id`.
  */
-function verifyJWTWebSocket(req, ws) {
-	ws.metadata.memberInfo = { signedIn: false };
-	verifyRefreshToken_WebSocket(req, ws);
+function verifyJWTWebSocket(ws) {
+	verifyRefreshToken_WebSocket(ws);
 };
 
 /**
  * If they have a valid refresh token cookie (http-only), set's
  * the socket metadata's `user` property, ands returns true.
- * @param {Socket} ws - The websocket object
+ * @param {CustomWebSocket} ws - The websocket object
  * @returns {boolean} true if a valid token was found.
  */
-function verifyRefreshToken_WebSocket(req, ws) {
-	const cookies = ws.cookies;
+function verifyRefreshToken_WebSocket(ws) {
+	const cookies = ws.metadata.cookies;
 	if (!cookies) return logEvents("Websocket needs to have the cookies property before verifying JWT!", 'errLog.txt', { print: true });
 
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return false; // Not logged in, don't set their user property
 
-	const result = isTokenValid(refreshToken, true, getClientIP_Websocket(req, ws)); // True for refresh token
+	// { isValid (boolean), user_id, username, reason (string, if not valid) }
+	const ip = ws.metadata.IP;
+	const result = isTokenValid(refreshToken, true, ip); // True for refresh token
 	if (!result.isValid) {
-		logEvents(`Invalid refresh token (websocket), expired or tampered! "${refreshToken}"`, 'errLog.txt', { print: true }); // Forbidden, invalid token
-		return false; //Token was expired or tampered
+		console.log(`Invalid refresh token (websocket): Expired, tampered, or account deleted! "${refreshToken}"`);
+		return false; // Token was expired or tampered
 	}
 
 	const { user_id, username, roles } = result;

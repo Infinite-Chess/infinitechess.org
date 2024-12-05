@@ -26,9 +26,8 @@ function assignOrRenewBrowserID(req, res, next) {
 
 	// We don't have to worry about the request being for a resource because those have already been served.
 	// The only scenario this request could be for now is an HTML or fetch API request
-	// Fetch requests will always have a defined origin, whereas HTML requests have an undefined origin.
-	// The accept header is only set if we specify it so that condition is extra
-	if (req.headers.origin !== undefined || !req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
+	// The 'is-fetch-request' header is a custom header we add on all fetch requests to let us know is is a fetch request.
+	if (req.headers['is-fetch-request'] === 'true') return next(); // Not an HTML request (but a fetch), don't set the cookie
 
 	if (!req.cookies['browser-id']) giveBrowserID(req, res);
 	else refreshBrowserID(req, res);
@@ -39,9 +38,9 @@ function assignOrRenewBrowserID(req, res, next) {
 function giveBrowserID(req, res) {
 
 	const cookieName = 'browser-id';
-	const id = uuid.generateID(12);
+	const id = uuid.generateID(6);
 
-	console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + ' --------');
+	// console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + ' --------');
 
 	// Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
 	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis /* 1 day */ });
@@ -54,7 +53,7 @@ function refreshBrowserID(req, res) {
 
 	if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
-	console.log(`Renewing browser-id: "${id}" for url: ` + req.url);
+	// console.log(`Renewing browser-id: "${id}" for url: ` + req.url);
 	
 	// Readable by server with web socket connections, NOT by javascript
 	res.cookie(cookieName, id, { httpOnly: true, sameSite: 'None', secure: true, maxAge: expireOfBrowserIDCookieMillis });

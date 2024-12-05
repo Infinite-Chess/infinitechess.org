@@ -91,7 +91,7 @@ function doesVicinityAttackSquare(gamefile, coords, color, attackers) {
 	for (const key in vicinity) {
 		const thisVicinity = vicinity[key];
 		const thisSquare = coordutil.getCoordsFromKey(key); // Part of the moveset ( [1,2], [2,1] ... )
-		const actualSquare = [coords[0] + thisSquare[0], coords[1] + thisSquare[1]];
+		const actualSquare = [coords[0] - thisSquare[0], coords[1] - thisSquare[1]];
 
 		// Fetch the square from our pieces organized by key
 		const key2 = coordutil.getKeyFromCoords(actualSquare);
@@ -187,8 +187,9 @@ function doesLineAttackSquare(gamefile, line, direction, coords, color, attacker
 
 		if (!thisPieceMoveset.sliding) continue; // Piece has no sliding movesets.
 		const moveset = thisPieceMoveset.sliding[directionKey];
+		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 		if (!moveset) continue; // Piece can't slide in the direction our line is going
-		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor);
+		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(blockingFunc, line, direction, moveset, thisPiece.coords, thisPieceColor);
 		if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
 		if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)) continue; // This piece can't slide so far as to reach us, NEXT piece!
@@ -227,7 +228,7 @@ function appendAttackerToList(attackers, attacker) {
 // Auto disable this when the win condition is NOT checkmate!
 function removeMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) { // moves: { individual: [], horizontal: [], ... }
 	if (color === colorutil.colorOfNeutrals) return; // Neutral pieces can't be in check
-	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate')) return;
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, color, 'checkmate')) return;
 
 	// There's a couple type of moves that put you in check:
 
