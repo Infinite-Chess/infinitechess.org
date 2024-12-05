@@ -9,26 +9,28 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import gameutility from './gameutility.js';
-import wsutility from '../wsutility.js';
+import socketUtility from '../../socket/socketUtility.js';
 
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * 
  * Call when a websocket submits a move. Performs some checks,
  * adds the move to the game's move list, adjusts the game's
  * properties, and alerts their opponent of the move.
- * @param {Socket} ws - The websocket submitting the move
+ * @param {CustomWebSocket} ws - The websocket submitting the move
  * @param {Game | undefined} game - The game they are in, if they are in one.
  * @param {Object} messageContents - An object containing the properties `move`, `moveNumber`, and `gameConclusion`.
  */
@@ -36,13 +38,13 @@ function submitMove(ws, game, messageContents) {
 	// They can't submit a move if they aren't subscribed to a game
 	if (!ws.metadata.subscriptions.game) {
 		console.error("Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.");
-		ws.metadata.sendmessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.");
+		sendSocketMessage(ws, "general", "printerror", "Failed to submit move. You are not subscribed to a game.");
 		return;
 	}
 
 	if (!game) {
 		console.error(`Cannot submit move when player does not belong in a game! Game of id "${ws.metadata.subscriptions.game.id}" is deleted!`);
-		return ws.metadata.sendmessage(ws, "general", "printerror", "Server error. Cannot submit move. This game does not exist.");
+		return sendSocketMessage(ws, "general", "printerror", "Server error. Cannot submit move. This game does not exist.");
 	}
 
 	// Their subscription info should tell us what game they're in, including the color they are.
@@ -57,26 +59,26 @@ function submitMove(ws, game, messageContents) {
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = game.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
-		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errString, 'hackLog.txt', { print: true });
 		return resyncToGame(ws, game, game.id);
 	}
 
 	// Make sure it's their turn
-	if (game.whosTurn !== color) return ws.metadata.sendmessage(ws, "general", "printerror", "Cannot submit a move when it's not your turn.");
+	if (game.whosTurn !== color) return sendSocketMessage(ws, "general", "printerror", "Cannot submit a move when it's not your turn.");
 
 	// Legality checks...
 	if (!doesMoveCheckOut(messageContents.move)) {
-		const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		console.error(errString);
 		logEvents(errString, 'hackLog.txt');
-		return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid move format.");
+		return sendSocketMessage(ws, "general", "printerror", "Invalid move format.");
 	}
 	if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
-		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${wsutility.stringifySocketMetadata(ws)}`;
+		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		console.error(errString);
 		logEvents(errString, 'hackLog.txt');
-		return ws.metadata.sendmessage(ws, "general", "printerror", "Invalid game conclusion.");
+		return sendSocketMessage(ws, "general", "printerror", "Invalid game conclusion.");
 	}
     
 	game.moves.push(messageContents.move); // Add the move to the list!

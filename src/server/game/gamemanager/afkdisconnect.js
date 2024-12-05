@@ -91,7 +91,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
 	game.disconnect.autoResign[color].wasByChoice = !closureNotByChoice;
 
 	// Alert their opponent the time their opponent will be auto-resigned by disconnection.
-	const value = { autoDisconnectResignTime: timeToAutoLoss, wasByChoice: !closureNotByChoice };
+	const value = { millisUntilAutoDisconnectResign: timeBeforeAutoResign, wasByChoice: !closureNotByChoice };
 	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value);
 }
 

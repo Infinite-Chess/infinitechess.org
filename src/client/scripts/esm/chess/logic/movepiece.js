@@ -30,7 +30,16 @@ import frametracker from '../../game/rendering/frametracker.js';
 
 // Custom type definitions...
 
-
+/**
+ * TODO: Move this type definition to a new pieceutil TYPESCRIPT,
+ * and make the coordinates only length-2.
+ * 
+ * The Piece Object.
+ * @typedef {Object} Piece
+ * @property {string} type - The type of the piece (e.g. `queensW`).
+ * @property {number[]} coords - The coordinates of the piece: `[x,y]`
+ * @property {number} index - The index of the piece within the gamefile's piece list.
+ */
 
 /** Here lies the universal methods for moving pieces, forward or rewinding. */
 

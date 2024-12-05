@@ -6,9 +6,11 @@
  * This script is only used for subtracting the ping value from the clock values the server reported.
  */
 
-const MAX_PING_HISTORY = 3; // Maximum number of ping history entries to store
 
-let currentPing = undefined; // Stores the current ping value
+
+let currentPing = 0; // Stores the current ping value
+
+const MAX_PING_HISTORY = 3; // Maximum number of ping history entries to store
 const pingHistory = []; // Stores the last 'MAX_PING_HISTORY' ping values
 
 
@@ -37,7 +39,7 @@ function handlePingUpdate(event) {
  * @param {CustomEvent} event - The 'socket-closed' event.
  */
 function handleSocketClosed(event) {
-	currentPing = undefined;
+	currentPing = 0;
 }
 
 /**
@@ -52,10 +54,19 @@ function updatePingHistory(ping) {
 
 /**
  * Getter for the current ping value.
- * @returns {number|undefined} The current ping value or undefined if no ping is stored.
+ * @returns {number} The current ping value or undefined if no ping is stored.
  */
 function getPing() {
 	return currentPing;
+}
+
+/**
+ * Returns half the current ping value. This will approximately
+ * be the time it takes for a one-way websocket message.
+ * @returns {number} The current ping value or undefined if no ping is stored.
+ */
+function getHalfPing() {
+	return currentPing / 2;
 }
 
 /**
@@ -70,5 +81,6 @@ function getAveragePing() {
 
 export default {
 	getPing,
+	getHalfPing,
 	getAveragePing,
 };

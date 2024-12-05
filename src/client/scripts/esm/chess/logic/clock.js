@@ -74,10 +74,10 @@ function edit(gamefile, clockValues) {
 	if (clockValues.accountForPing && moveutil.isGameResignable(gamefile) && !gamefileutility.isGameOver(gamefile)) {
 		// Ping is round-trip time (RTT), So divided by two to get the approximate
 		// time that has elapsed since the server sent us the correct clock values
-		const ping = pingManager.getPing();
-		clocks.currentTime[gamefile.whosTurn] -= ping / 2; 
-		if (ping > 5000) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
-		if (options.isDebugModeOn()) console.log(`Ping is ${ping}. Subtracted ${ping / 2} millis from ${gamefile.whosTurn}'s clock.`);
+		const halfPing = pingManager.getHalfPing();
+		clocks.currentTime[gamefile.whosTurn] -= halfPing; 
+		if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
+		if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${gamefile.whosTurn}'s clock.`);
 	}
 	clocks.timeRemainAtTurnStart = clocks.colorTicking === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
 }

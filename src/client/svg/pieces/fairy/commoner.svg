@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+	<symbol id="commoner-white" viewBox="0 0 11.906 11.906">
+		<g stroke="#000" stroke-width="1.5"><g fill="#fff" stroke-linejoin="round" transform="translate(-.475 -1.286) scale(.28599)"><circle cx="22.5" cy="13.5" r="2.5"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-11c-5.5-7-26.5-7-32 0-3 6.5 5 10.5 5 10.5z"/></g><path d="M2.814 7.294c1.573-.858 4.433-.858 6.006 0m-6.006 1c1.573-.857 4.433-.857 6.006 0M2.814 9.297c1.573-.858 4.433-.858 6.006 0" fill="none" stroke-linecap="round" stroke-width=".42898500000000006"/></g>
+	</symbol>
+	<symbol id="commoner-black" viewBox="0 0 11.906 11.906">
+		<g stroke-linejoin="round" stroke-width="1.5" transform="translate(-.547 -1.368) scale(.28921)"><circle fill="#000" cx="22.5" cy="13.5" r="2.5" stroke="#000"/><circle fill="none" cx="22.5" cy="13.5" r="1.5" stroke="#fff"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-11c-5.5-7-26.5-7-32 0-3 6.5 5 10.5 5 10.5z" fill="#000" stroke="#000"/><g fill="none" stroke="#fff" stroke-linecap="round"><path d="M32 29.5s8.5-4 6-9.65C32.65 13 12.35 13 7 19.85c-2.5 5.65 4.85 9 4.85 9"/><path d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"/></g></g>
+	</symbol>
+</svg>

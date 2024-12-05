@@ -4,22 +4,22 @@
  */
 
 import gameutility from './gameutility.js';
-import wsutility from '../wsutility.js';
-const { sendNotify, sendNotifyError } = wsutility;
 import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
 import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import { sendNotify } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 
 /**
  * Called when a client tries to abort a game.
- * @param {Socket} ws - The websocket
+ * @param {CustomWebSocket} ws - The websocket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function abortGame(ws, game) {
@@ -58,7 +58,7 @@ function abortGame(ws, game) {
 
 /**
  * Called when a client tries to resign a game.
- * @param {Socket} ws - The websocket
+ * @param {CustomWebSocket} ws - The websocket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function resignGame(ws, game) {

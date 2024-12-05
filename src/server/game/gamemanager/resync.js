@@ -15,18 +15,20 @@
 import gameutility from './gameutility.js';
 import { getGameByID } from './gamemanager.js';
 import { cancelDisconnectTimer } from './afkdisconnect.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * Resyncs a client's websocket to a game. The client already
  * knows the game id and much other information. We only need to send
  * them the current move list, player timers, and game conclusion.
- * @param {Socket} ws - Their websocket
+ * @param {CustomWebSocket} ws - Their websocket
  * @param {Game | undefined} game - The game, if already known. If not specified we will find from the id they gave us.
  * @param {number} gameID - The game, if already known. If not specified we will find it.
  * @param {number} [replyToMessageID] - If specified, the id of the incoming socket message this resync will be the reply to
@@ -34,7 +36,7 @@ import { cancelDisconnectTimer } from './afkdisconnect.js';
 function resyncToGame(ws, game, gameID, replyToMessageID) {
 	if (game && game.id !== gameID) {
 		console.log(`Cannot resync client to game because they tried to resync to a game with id ${gameID} when they belong to game with id ${game.id}!`);
-		return ws.metadata.sendmessage(ws, 'game', 'nogame');
+		return sendSocketMessage(ws, 'game', 'nogame');
 	}
 
 	// Perhaps this is a socket reopening, and we weren't able to find their game because they are signed out.
@@ -43,11 +45,11 @@ function resyncToGame(ws, game, gameID, replyToMessageID) {
 
 	if (!game) {
 		console.log(`Cannot resync client to game because they aren't in one, and the ID they said it was ${gameID} doesn't exist.`);
-		return ws.metadata.sendmessage(ws, 'game', 'nogame');
+		return sendSocketMessage(ws, 'game', 'nogame');
 	}
 
 	const colorPlayingAs = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-	if (!colorPlayingAs) return ws.metadata.sendmessage(ws, 'game', 'login'); // Unable to verify their socket belongs to this game (probably logged out)
+	if (!colorPlayingAs) return sendSocketMessage(ws, 'game', 'login'); // Unable to verify their socket belongs to this game (probably logged out)
 
 	gameutility.resyncToGame(ws, game, colorPlayingAs, replyToMessageID);
 

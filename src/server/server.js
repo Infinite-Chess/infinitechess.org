@@ -12,12 +12,12 @@ import https from 'https';
 import ejs from 'ejs';
 // Other imports
 import configureMiddleware from './middleware/middleware.js';
-import wsserver from './socket/wsserver.js';
 import db from './database/database.js';
 import getCertOptions from './config/certOptions.js';
 import { DEV_BUILD } from './config/config.js';
 import { initTranslations } from './config/setupTranslations.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
+import socketServer from './socket/socketServer.js';
 
 // Initiate translations
 initTranslations();
@@ -37,7 +37,7 @@ app.listen(HTTPPORT, () => console.log(`HTTP listening on port ${HTTPPORT}`));
 httpsServer.listen(HTTPSPORT, () => console.log(`HTTPS listening on port ${HTTPSPORT}`));
 
 // WebSocket server
-wsserver.start(httpsServer);
+socketServer.start(httpsServer);
 
 // On closing...
 

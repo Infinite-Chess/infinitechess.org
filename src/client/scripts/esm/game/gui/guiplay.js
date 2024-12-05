@@ -328,7 +328,7 @@ function startLocalGame(inviteOptions) {
 /**
  * Starts an online game according to the options provided by the server.
  * @param {Object} gameOptions - An object that contains the properties
- * `metadata`, `clockValues`, `id`, `publicity`, `youAreColor`, `moves`, `autoAFKResignTime`,
+ * `metadata`, `clockValues`, `id`, `publicity`, `youAreColor`, `moves`, `millisUntilAutoAFKResign`,
  * `disconnect`, `gameConclusion`, `serverRestartingAt`, `drawOffer`
  * 
  * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.

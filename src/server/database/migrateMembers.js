@@ -74,7 +74,8 @@ function migrateUsers() {
 		let refresh_tokens = [];
 		refreshTokens.forEach(oldToken => {
 			// This function already exists, sorry about that >.<
-			addTokenToRefreshTokens(undefined, refresh_tokens, oldToken);
+			// THIS WILL NO LONGER WORK WITHOUT THE REQUEST OBJECT PROVIDED!!
+			// addTokenToRefreshTokens(undefined, refresh_tokens, oldToken);
 		});
 		if (refreshTokens.length === 0) refreshTokens = null;
 		refresh_tokens = refreshTokens === null ? null : JSON.stringify(refresh_tokens);

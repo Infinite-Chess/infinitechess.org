@@ -74,7 +74,7 @@
 // If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
 // so IMMEDIATELY tell their opponent they disconnected!
 const closureCodesNotByChoice = [1006];
-const closureReasonsNotByChoice = ["Connection expired", "Logged out", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."];
+const closureReasonsNotByChoice = ["Connection expired", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."];
 
 
 

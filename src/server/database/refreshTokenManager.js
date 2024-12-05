@@ -1,7 +1,8 @@
 
 import { getMemberDataByCriteria, updateMemberColumns } from './memberManager.js';
 import { logEvents } from '../middleware/logEvents.js';
-import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
+import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens, trimTokensToSessionCap } from '../controllers/authenticationTokens/refreshTokenObject.js';
+import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 
 /**
@@ -10,11 +11,13 @@ import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpired
  * We do NOT generate the tokens here.
  */
 
+/** @typedef {import('../controllers/authenticationTokens/refreshTokenObject.js').RefreshTokensList} RefreshTokensList */
+
 
 /**
  * Fetches the refresh tokens for a given user ID.
  * @param {number} userId - The user ID of the member whose refresh tokens are to be fetched.
- * @returns {object[]|undefined} - An array of all their refresh tokens: [ { token, issued, expires }, { token, issued, expires }, ...], or undefined if the member doesn't exist
+ * @returns {RefreshTokensList|undefined} - An array of all their refresh tokens: [ { token, issued, expires }, { token, issued, expires }, ...], or undefined if the member doesn't exist
  */
 function getRefreshTokensByUserID(userId) {
 	let { refresh_tokens } = getMemberDataByCriteria(['refresh_tokens'], 'user_id', userId);
@@ -45,11 +48,14 @@ function addRefreshTokenToMemberData(req, userId, token) {
 	// Remove any expired tokens
 	refreshTokens = removeExpiredTokens(refreshTokens);
 
-	// Add the new token to the list
-	refreshTokens = addTokenToRefreshTokens(req, refreshTokens, token);
+	// Add the new token to the list. MODIFIES the arrow
+	addTokenToRefreshTokens(req, refreshTokens, token);
 
-	// Save the tokens in the database
-	saveRefreshTokens(userId, refreshTokens);
+	// Make sure they don't exceed the maximum number of login sessions
+	const { trimmedTokens, deletedTokens } = trimTokensToSessionCap(refreshTokens);
+	deletedTokens.forEach(deletedTokenObject => closeAllSocketsOfSession(deletedTokenObject.token, 1008, "Logged out")); // When the client receives this closure message, it knows to delete their login info.
+
+	saveRefreshTokens(userId, trimmedTokens);
 }
 
 
@@ -77,7 +83,7 @@ function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 /**
  * Updates the refresh tokens for a given user.
  * @param {number} userId - The user ID of the member.
- * @param {object[]} tokens - The new array of refresh tokens to save.
+ * @param {RefreshTokensList} tokens - The new array of refresh tokens to save.
  * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token (false if access token).
  */
 function saveRefreshTokens(userId, tokens) {

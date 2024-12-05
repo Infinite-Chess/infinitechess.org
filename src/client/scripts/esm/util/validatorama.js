@@ -52,7 +52,7 @@ let tokenInfo = {
 
 function initListeners() {
 	document.addEventListener('logout', resetMemberInfo);
-	document.addEventListener('logout', deleteToken);
+	document.addEventListener('logout', onLogout);
 	window.addEventListener('pageshow', readMemberInfoCookie); // Fired on initial page load AND when hitting the back button to return.
 }
 
@@ -132,7 +132,7 @@ async function refreshToken() {
 
 		} else { // 403 or 500 error   Likely not signed in! Our session token (refresh token cookie) was invalid or not present.
 			console.log(`Server: ${result.message}`);
-			docutil.deleteCookie('memberInfo');
+			deleteMemberInfoCookie();
 			// Dispatch a custom logout event so our header code knows to update the navigation links
 			document.dispatchEvent(new CustomEvent('logout'));
 		}
@@ -169,7 +169,13 @@ function resetMemberInfo() {
 	memberInfo = { signedIn: false };
 }
 
-function deleteToken() {
+function deleteMemberInfoCookie() {
+	docutil.deleteCookie('memberInfo');
+	resetMemberInfo();
+}
+
+function onLogout() {
+	deleteMemberInfoCookie();
 	tokenInfo = {};
 }
 

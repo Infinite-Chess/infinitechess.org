@@ -5,13 +5,13 @@ import { promises as fsPromises } from 'fs';
 import path from 'path';
 
 import { getClientIP } from '../utility/IP.js';
-import wsutility from '../game/wsutility.js';
+import socketUtility from '../socket/socketUtility.js';
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
+/** @typedef {import("../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 const giveLoggedItemsUUID = false;
 
@@ -71,36 +71,36 @@ const logger = (req, res, next) => {
 /**
  * Logs websocket connection upgrade requests into `wsInLog.txt`
  * @param {Object} req - The request object
- * @param {Socket} ws - The websocket object
+ * @param {CustomWebSocket} ws - The websocket object
  */
 function logWebsocketStart(req, ws) {
-	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
+	const socketID = ws.metadata.id;
+	const stringifiedSocketMetadata = socketUtility.stringifySocketMetadata(ws);
 	const userAgent = req.headers['user-agent'];
 	// const userAgent = ws.metadata.userAgent;
-	const logThis = `Socket: ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
+	const logThis = `Opened socket of ID "${socketID}": ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
 	logEvents(logThis, 'wsInLog.txt');
 }
 
 /**
  * Logs incoming websocket messages into `wsInLog.txt`
- * @param {Socket} ws - The websocket object
+ * @param {CustomWebSocket} ws - The websocket object
  * @param {string} messageData - The raw data of the incoming message, as a string
  */
 function logReqWebsocketIn(ws, messageData) {
-	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-	let logThis = `Socket: ${stringifiedSocketMetadata}`;
-	if (messageData) logThis += `\n${messageData}`;
+	const socketID = ws.metadata.id;
+	const logThis = `From socket of ID "${socketID}":   ${messageData}`;
 	logEvents(logThis, 'wsInLog.txt');
 }
 
 /**
  * Logs outgoing websocket messages into `wsOutLog.txt`
- * @param {Socket} ws - The websocket object
+ * @param {CustomWebSocket} ws - The websocket object
  * @param {string} messageData - The raw data of the outgoing message, as a string
  */
 function logReqWebsocketOut(ws, messageData) {
-	const stringifiedSocketMetadata = wsutility.stringifySocketMetadata(ws);
-	const logThis = `To socket: ${stringifiedSocketMetadata}\n${messageData}`;
+	const socketID = ws.metadata.id;
+	const logThis = `To socket of ID "${socketID}":   ${messageData}`;
 	logEvents(logThis, 'wsOutLog.txt');
 }
 

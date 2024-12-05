@@ -17,7 +17,7 @@ This configures and starts our http, https, and websocket servers, and it cleans
 
 Both of these managers use websockets to broadcast changes out to the clients in real-time.
 
-The websocket server code is located [here](../src/server/wsserver.js).
+The websocket server code is located [here](../src/server/socket/).
 
 
 ## Client ##
