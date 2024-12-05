@@ -14,6 +14,7 @@ cd infinitechess.org
 docker build -t infinitechess .
 docker run --publish 3443:3443 infinitechess 
 ```
+Now you can directly access the website as described in 5.1.
 
 ## Step 1: Install Git ##
 
@@ -86,6 +87,8 @@ The first time you run this, you should see something like:
 Subsequent times you start up the server will look like:
 
 <img width="369" alt="Screen Shot 2024-07-02 at 11 14 00 PM copy" src="https://github.com/Infinite-Chess/infinitechess.org/assets/163621561/19682ebe-1a7d-4f10-a282-2a7f37e072fd">
+
+### 5.1
 
 You should now be able to connect to the server through local host! Open a web browser and go to:
 ```
