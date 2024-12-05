@@ -6,7 +6,14 @@ This guide walks you through the initial setup phase of the infinitechess.org se
 
 **Summary of the setup process below for experienced users:** Install VSCode and Node.js. Fork the repository and install the project dependencies via `npm install`. Now you can run `npx nodemon` to launch a live infinite chess server at `https://localhost:3443`. Optionally, you can also set up an email serivce now. You are now ready to test changes and contribute to the main project after reading the [Navigation Guide](./NAVIGATING.md)! **All these steps are explained in great detail below:**
 
-
+## Minimal setup with docker
+If you already have `git` and `docker` set up you can just run the project with:
+```sh
+git clone https://github.com/joendter/infinitechess.org.git
+cd infinitechess.org
+docker build -t infinitechess .
+docker run --publish 3443:3443 infinitechess 
+```
 
 ## Step 1: Install Git ##
 
