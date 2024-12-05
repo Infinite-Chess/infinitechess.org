@@ -41,14 +41,6 @@ import space from '../misc/space.js';
  * including the legal moves it has available.
  */
 
-/**
- * Bugs:
- * - Tap to select or move not working on mobile.
- * - Pieces dragged and dropped quickly don't get moved.
- * To do:
- * - Allow dragging the board with a second finger while dragging a piece.
- */
-
 /** The currently selected piece, if there is one: `{ type, index, coords }` @type {Piece} */
 let pieceSelected;
 /** If true `pieceSelected` is currently being held. */

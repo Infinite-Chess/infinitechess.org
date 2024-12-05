@@ -10,7 +10,14 @@ import sound from "../misc/sound.js";
 import frametracker from "./frametracker.js";
 import movement from "./movement.js";
 import input from "../input.js";
+import space from "../misc/space.js";
+import themes from "../../components/header/themes.js";
 // Import end
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 "use strict";
 
@@ -35,7 +42,9 @@ const touchscreenOffset = 2;
  * The minimum size of the dragged piece relative to the stationary pieces.
  * When zoomed in, this prevents it becoming tiny relative to the others.
  */
-const minimumScale = 0.75;
+const minimumScale = 0.9;
+/** The width of the box outline used to emphasize the hovered square. */
+const borderWidth = 0.1;
 
 /** The hight the piece is rendered above the board when in perspective mode. */
 const perspectiveHeight = 0.6;
@@ -53,8 +62,8 @@ function renderTransparentSquare() {
 
 function renderPiece() {
 	if(perspective.isLookingUp() || !endCoords) return;
-	let pieceModel = genPieceModel();
-	pieceModel.render();
+	genOutlineModel().render();
+	genPieceModel().render();
 }
 
 function genTransparentModel() {
@@ -63,6 +72,10 @@ function genTransparentModel() {
 	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 }
 
+/**
+ * Generates the model of the dragged piece and its shadow.
+ * @returns {BufferModel} The buffer model
+ */
 function genPieceModel() {
 	if(perspective.isLookingUp()) return;
 	const perspectiveEnabled = perspective.getEnabled();
@@ -74,17 +87,37 @@ function genPieceModel() {
 	const { r, g, b, a } = options.getColorOfType(pieceType);
 	const height = perspectiveEnabled ? perspectiveHeight * boardScale : z;
 	
-	let width = perspectiveEnabled ? boardScale : touchscreen ? touchscreenScale : mouseScale;
-	const minimumWidth = boardScale * minimumScale;
-	if (width < minimumWidth) width = minimumWidth; 
-	const left = endCoords[0] - width / 2;
-	const bottom = endCoords[1] - width / 2 + (touchscreen ? touchscreenOffset : 0);
-	const right = endCoords[0] + width / 2;
-	const top = endCoords[1] + width / 2 + (touchscreen ? touchscreenOffset : 0);
+	let size = perspectiveEnabled ? boardScale : touchscreen ? touchscreenScale : mouseScale;
+	const minimumSize = boardScale * minimumScale;
+	if (size < minimumSize) size = minimumSize;
+	const left = endCoords[0] - size / 2;
+	const bottom = endCoords[1] - size / 2 + (touchscreen ? touchscreenOffset : 0);
+	const right = endCoords[0] + size / 2;
+	const top = endCoords[1] + size / 2 + (touchscreen ? touchscreenOffset : 0);
 	let data = [];
-	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor));
-	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a));
+	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor)); // Shadow
+	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a)); // Piece
 	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
+}
+
+/**
+ * Generates a model to enphasize the hovered square.
+ * @returns {BufferModel} The buffer model
+ */
+function genOutlineModel() {
+	let data = [];
+	const hoveredCoords = space.convertWorldSpaceToCoords_Rounded(endCoords);
+	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords);
+	const width = borderWidth * movement.getBoardScale();
+	//const color = themes.getPropertyOfTheme(options.getTheme(), "boxOutlineColor");
+	const color = [0.5, 0.5, 0.5, 0.9]; // Only for testing. This will be controled by the theme when finished.
+	
+	data.push(...bufferdata.getDataQuad_Color3D({ left, right: left+width, bottom, top }, z, color)); // left
+	data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom, top: bottom+width }, z, color)); // bottom
+	data.push(...bufferdata.getDataQuad_Color3D({ left: right-width, right, bottom, top }, z, color)); // right
+	data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom: top-width, top }, z, color)); // top
+	
+	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 }
 
 /**
