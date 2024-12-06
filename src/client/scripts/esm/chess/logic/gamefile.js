@@ -69,7 +69,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** The bounding box surrounding the starting position, without padding.
          * @type {BoundingBox} */
 		box: undefined,
-		/** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
+		/** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
 		existingTypes: undefined,
 		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {number[][]}*/
 		slidingPossible: undefined
@@ -234,7 +234,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
 	this.checksGiven = undefined;
 
-	this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position);
+	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
     
 	organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });

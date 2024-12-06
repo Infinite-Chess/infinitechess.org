@@ -1,3 +1,5 @@
+import gamefileutility from "../../src/client/scripts/esm/chess/util/gamefileutility";
+
 const engine = (function() {
 	/**
 	 * returns all intersections of diagonal, horizontal and vertical lines emitting from all pieces.
@@ -64,7 +66,8 @@ const engine = (function() {
 			if (gamefile.whosTurn !== math.getPieceColorFromType(type)) continue;
 			for (const coords of gamefile.ourPieces[type]) {
 				if (!coords) continue;
-				const legalMoves = legalmoves.calculate(gamefile, { type, coords, index: gamefileutility.getPieceIndexByTypeAndCoords(gamefile, type, coords) });
+				const piece = gamefileutility.getPieceFromTypeAndCoords(gamefile, type, coords);
+				const legalMoves = legalmoves.calculate(gamefile, piece);
 				for (const intersection of intersections) {
 					const intersectionCoords = math.getCoordsFromKey(intersection);
 					if (legalmoves.checkIfMoveLegal(legalMoves, coords, intersectionCoords)) {
@@ -88,7 +91,8 @@ const engine = (function() {
 	function loneBlackKingEval(gamefile) {
 		let evaluation = 0;
 		const kingCoords = gamefile.ourPieces.kingsB[0];
-		const kingLegalMoves = legalmoves.calculate(gamefile, { type: 'kingsB', coords: kingCoords, index: gamefileutility.getPieceIndexByTypeAndCoords(gamefile, 'kingsB', kingCoords) });
+		const piece = gamefileutility.getPieceFromTypeAndCoords(gamefile, 'kingsB', kingCoords);
+		const kingLegalMoves = legalmoves.calculate(gamefile, piece);
 		evaluation += kingLegalMoves.individual.length;
 
 		// add a point to the evaluation for each piece the king is attacking.
@@ -98,7 +102,7 @@ const engine = (function() {
 				if (gamefileutility.getPieceAtCoords(gamefile, [kingCoords[0] + x, kingCoords[1] + y])) evaluation += 1;
 			}
 		}
-		const opponentPieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, 'white');
+		const opponentPieceCount = gamefileutility.getPieceCountOfColor(gamefile, 'white');
 		evaluation -= opponentPieceCount * 100;
 
 		// Pieces that can put a king in some sort of a box or a cage (for example two rooks can put a king in a cage)

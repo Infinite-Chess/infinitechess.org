@@ -7,7 +7,6 @@ import bufferdata from './bufferdata.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import game from '../chess/game.js';
 import stats from '../gui/stats.js';
-import coin from './coin.js';
 import voids from './voids.js';
 import statustext from '../gui/statustext.js';
 import movement from './movement.js';
@@ -15,7 +14,6 @@ import perspective from './perspective.js';
 import buffermodel from './buffermodel.js';
 import options from './options.js';
 import colorutil from '../../chess/util/colorutil.js';
-import typeutil from '../../chess/util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import thread from '../../util/thread.js';
@@ -52,7 +50,7 @@ const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrilli
 
 
 /**
- * Generates the model that contains every single piece on the board, *including* coins, but *excluding* voids.
+ * Generates the model that contains every single piece on the board, but *excluding* voids.
  * (But will herein call the method that regenerates the void mesh)
  * This is expensive. This is ~200 times slower than just rendering. Minimize calling this.
  * When drawing, we'll need to specify the uniform transformations according to our camera position.
@@ -74,10 +72,9 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
 
 	// How many indeces will we need?
-	const coinCount = coin.getCoinCount();
-	const totalPieceCount = gamefileutility.getPieceCount(game.getGamefile().ourPieces) + coinCount;
+	const totalPieceCount = gamefileutility.getPieceCount_IncludingUndefineds(gamefile);
 	const thisStride = colorArgs ? strideWithColoredTexture : strideWithTexture; // 4 or 8
-	const indicesPerPiece = thisStride * POINTS_PER_SQUARE; // 4|8 * 6
+	const indicesPerPiece = thisStride * POINTS_PER_SQUARE; // (4|8) * 6
 	const totalElements = totalPieceCount * indicesPerPiece;
 
 	const usingColoredTextures = colorArgs !== undefined;
@@ -95,9 +92,6 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 
 	let currIndex = 0;
 
-	// First, add the data of the coins!
-	currIndex = coin.appDat(gamefile, currIndex, mesh, usingColoredTextures);
-
 	// How much time can we spend on this potentially long task?
 	let pieceLimitToRecalcTime = 1000;
 	let startTime = performance.now();
@@ -108,7 +102,10 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	stats.showPiecesMesh();
 
 	// Iterates through every single piece and performs specified function on said piece
-	await typeutil.forEachPieceType_Async(concatBufferData, { ignoreVoids: true });
+	for (const pieceType in gamefile.ourPieces) {
+		if (pieceType.startsWith('voids')) continue;
+		await concatBufferData(pieceType);
+	}
 
 	// Adds pieces of that type's buffer to the overall data
 	async function concatBufferData(pieceType) {
@@ -370,20 +367,15 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 	if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged);
 }
 
-// Appends the index to account for coins within the data!
-
 /**
  * Calculates the specified piece's index, or position in line,
  * within the mesh vertex data of the gamefile.
- * Takes into account that coins are in the mesh as well.
  * @param {gamefile} gamefile - The gamefile
  * @param {Object} piece - The piece: { type, index }
  * @returns {number} The index of the piece within the mesh
  */
 function getPieceIndexInData(gamefile, piece) { // { type, index }
-	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
-	// Add onto it the coin count, because they are before the pieces in the data!
-	return index + coin.getCoinCount(); 
+	return gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 }
 
 /**
@@ -516,8 +508,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 	const stride = gamefile.mesh.stride; // 4 / 8
 	const indicesPerPiece = stride * POINTS_PER_SQUARE; // 4|8 * 6
     
-	const coinCount = coin.getCoinCount();
-	const totalPieceCount = (gamefileutility.getPieceCount(game.getGamefile().ourPieces) + coinCount) * 2; // * 2 for the data32 and data64 arrays
+	const totalPieceCount = gamefileutility.getPieceCount_IncludingUndefineds(gamefile) * 2; // * 2 for the data32 and data64 arrays
 
 	// How much time can we spend on this potentially long task?
 	let pieceLimitToRecalcTime = 1000;

@@ -1,7 +1,4 @@
 
-import texture from './texture.js';
-
-
 /**
  * This script stores the texture coordinates
  * of each piece in our spritesheet.
@@ -10,99 +7,154 @@ import texture from './texture.js';
  */
 
 
+
+import { fetchPieceSVGs } from '../../chess/api/fetchPieceSVGs.js';
+import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
+import { svgToImage } from '../../chess/rendering/svgtoimageconverter.js';
+import jsutil from '../../util/jsutil.js';
+import texture from './texture.js';
+
+/** @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile */
+
+
 let spritesheet; // Texture. 8x8 containing every texture of every piece, black and white.
 /**
  * Contains where each piece is located in the spritesheet (texture coord).
  * Texture coords of a piece range from 0-1
  */
-const spritesheetData = (() => {
+let spritesheetData;
 
-	const pieceWidth = 1 / 8; // In texture coords. Our spritesheet is 8x8
+/**
+ * These SIX types are all grouped together into one server resource!
+ * If we request one, we request them ALL!
+ */
+const piecesInTheClassicalSVGGroup = ['pawn','knight','bishop','rook','king','queen'];
 
-	return {
-		pieceWidth,
-        
-		// One-sided pieces
-		pawnsW: getSpriteCoords(1,1),
-		pawnsB: getSpriteCoords(2,1),
-		knightsW: getSpriteCoords(3,1),
-		knightsB: getSpriteCoords(4,1),
-		bishopsW: getSpriteCoords(5,1),
-		bishopsB: getSpriteCoords(6,1),
-		rooksW: getSpriteCoords(7,1),
-		rooksB: getSpriteCoords(8,1),
-		queensW: getSpriteCoords(1,2),
-		queensB: getSpriteCoords(2,2),
-		kingsW: getSpriteCoords(3,2),
-		kingsB: getSpriteCoords(4,2),
-		chancellorsW: getSpriteCoords(5,2),
-		chancellorsB: getSpriteCoords(6,2),
-		archbishopsW: getSpriteCoords(7,2),
-		archbishopsB: getSpriteCoords(8,2),
-		amazonsW: getSpriteCoords(1,3),
-		amazonsB: getSpriteCoords(2,3),
-		// Guard texture for the guard
-		guardsW: getSpriteCoords(3,3),
-		guardsB: getSpriteCoords(4,3),
-		// Commoner texture for the guard
-		// guardsW: getSpriteCoords(5,3),
-		// guardsB: getSpriteCoords(6,3),
-		hawksW: getSpriteCoords(8,3),
-		hawksB: getSpriteCoords(7,3),
-		camelsW: getSpriteCoords(1,4),
-		camelsB: getSpriteCoords(2,4),
-		giraffesW: getSpriteCoords(3,4),
-		giraffesB: getSpriteCoords(4,4),
-		zebrasW: getSpriteCoords(5,4),
-		zebrasB: getSpriteCoords(6,4),
-		knightridersW: getSpriteCoords(7,4),
-		knightridersB: getSpriteCoords(8,4),
-		unicornsW: getSpriteCoords(1,5),
-		unicornsB: getSpriteCoords(2,5),
-		evolvedUnicornsW: getSpriteCoords(3,5),
-		evolvedUnicornsB: getSpriteCoords(4,5),
-		rosesW: getSpriteCoords(5,5),
-		rosesB: getSpriteCoords(6,5),
-		centaursW: getSpriteCoords(7,5),
-		centaursB: getSpriteCoords(8,5),
-		royalCentaursW: getSpriteCoords(1,6),
-		royalCentaursB: getSpriteCoords(2,6),
-		royalQueensW: getSpriteCoords(3,6),
-		royalQueensB: getSpriteCoords(4,6),
-		kelpiesW: getSpriteCoords(5,6),
-		kelpiesB: getSpriteCoords(6,6),
-		dragonsW: getSpriteCoords(7,6),
-		dragonsB: getSpriteCoords(8,6),
-		// 2nd dragon texture, also used in 5D chess.
-		drakonsW: getSpriteCoords(1,7),
-		drakonsB: getSpriteCoords(2,7),
-		huygensW: getSpriteCoords(6,7),
-		huygensB: getSpriteCoords(7,7),
-
-		// Neutral pieces
-		air: getSpriteCoords(3,7),
-		obstaclesN: getSpriteCoords(4,7),
-
-		// Miscellaneous
-		yellow: getSpriteCoords(5,7) // COIN
-	};
-
-	// pieceWidth is how many textures in 1 row.  yColumn starts from the top. 
-	function getSpriteCoords(xPos, yPos) {
-		const texX = (xPos - 1) * pieceWidth;
-		const texY = 1 - yPos * pieceWidth;
-		return [texX, texY];
-	}
-})(); 
-
+/** Piece types, in singular form, that we have cached their SVG up to this point. @type {string[]} */
+const cachedPieceTypes = [];
+/**
+ * Piece SVG Elements that we have fetched-requested from the server, up to this point.
+ * In the form: 'pawn-white': SVGElement
+ * @type {{ [svgID: string]: SVGElement }}
+ */
+const cachedPieceSVGs = [];
 
 /**
  * Loads the spritesheet texture
  * @param {WebGL2RenderingContext} gl - The webgl context being used} gl 
+ * @param {gamefile} gamefile 
  */
-function initSpritesheet(gl) {
-	spritesheet = texture.loadTexture(gl, 'spritesheet', { useMipmaps: true });
+async function initSpritesheetForGame(gl, gamefile) {
+
+	/** Makes all the types in the game singular instead of plural */
+	const typesNeeded = gamefile.startSnapshot.existingTypes.map(type => type.slice(0, -1)); // Remove the "s" at the end
+
+	/** A list of svg IDs we need for the game @type {string[]} */
+	const svgIDs = getSVG_IDsFromPieceTypes(typesNeeded);
+
+	// This is what may take a while, waiting for the fetch requests to return.
+	await fetchMissingPieceSVGs(typesNeeded);
+
+	console.log("Finished acquiring all piece SVGs!");
+
+	/** The SVG elements we will use in the game to construct our spritesheet */
+	const svgElements = svgIDs.map(id => {
+		const cachedSVG = cachedPieceSVGs[id];
+		if (cachedSVG === undefined) throw new Error(`Piece SVG of ID "${id}" required for game wasn't cached! We shouldn't have reached this part of the code if the fetch requests didn't succeed.`);
+		return cachedSVG;
+	});
+
+	// Convert each SVG element to an Image
+	const readyImages = await convertSVGsToImages(svgElements);
+	if (readyImages === undefined) throw new Error("Images are undefined!")
+
+	// { spritesheet: HTMLImageElement, spritesheetData: Object }
+	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
+
+	// Optional: Append the spritesheet to the document for debugging
+	spritesheetAndSpritesheetData.spritesheet.style = 'display: none';
+	document.body.appendChild(spritesheetAndSpritesheetData.spritesheet);
+
+	// Load the texture into webgl and initiate our spritesheet
+	// data that contains the texture coordinates of each piece!
+	spritesheet = texture.loadTexture(gl, spritesheetAndSpritesheetData.spritesheet, { useMipmaps: true });
+	spritesheetData = spritesheetAndSpritesheetData.spritesheetData;
 }
+
+async function fetchMissingPieceSVGs(typesNeeded) {
+	const typesMissing = jsutil.getMissingStringsFromArray(cachedPieceTypes, typesNeeded);
+
+	if (typesMissing.length === 0) return console.log("All piece SVGs for the game are present! No need to fetch more.");
+	else console.log(`Fetching missing piece types: ${JSON.stringify(typesMissing)}`);
+
+	return await fetchAllPieceSVGs(typesMissing);
+}
+
+/**
+ * Fetches the SVGs of the provided piece types from the server.
+ * @param {string[]} types - ['archbishop','chancellor']
+ */
+async function fetchAllPieceSVGs(types) {
+	console.log(`Fetching missing piece types: ${JSON.stringify(types)}`);
+
+	// Map over the missing types and create promises for each fetch
+	const fetchPromises = types.map(pieceType => {
+		const svgIDs = getSVG_IDs_From_PieceType(pieceType);
+		return fetchPieceSVGs(`fairy/${pieceType}.svg`, svgIDs)
+			.then(pieceSVGs => {
+				console.log(`Fetched ${pieceType}!`);
+				cachedPieceTypes.push(pieceType);
+				pieceSVGs.forEach(svg => cachedPieceSVGs[svg.id] = svg);
+			})
+			.catch(error => {
+				console.error(`Failed to fetch ${pieceType}:`, error); // Log specific error
+			});
+	});
+
+	// Wait for all fetches to complete
+	await Promise.all(fetchPromises);
+
+	console.log("All fetched pieces have been cached!");
+}
+
+function getSVG_IDsFromPieceTypes(pieceTypes) { // In singular form
+	const svgIDs = [];
+	pieceTypes.forEach(type => { // 'pawn'
+		svgIDs.push(...getSVG_IDs_From_PieceType(type));
+	});
+	return svgIDs;
+}
+
+function getSVG_IDs_From_PieceType(type) {
+	const svgIDs = [];
+	svgIDs.push(type + '-white');
+	svgIDs.push(type + '-black');
+	return svgIDs;
+}
+
+async function convertSVGsToImages(svgElements) {
+	try {
+		const readyImages = [];
+		for (const svgElement of svgElements) {
+			const img = await svgToImage(svgElement); // You can adjust width and height as needed
+			// document.body.appendChild(img);
+			readyImages.push(img);
+		}
+		return readyImages;
+	} catch (e) {
+		console.log("Error caught while converting SVGs to Images:")
+		console.log(e.stack);
+	}
+}
+
+(async function fetchAndCacheClassicalPieceSVGs() {
+	console.log("Fetching all Classical SVGs...")
+	const svgIDs = getSVG_IDsFromPieceTypes(piecesInTheClassicalSVGGroup);
+	const classicalSVGElements = await fetchPieceSVGs('classical.svg', svgIDs);
+	cachedPieceTypes.push(...piecesInTheClassicalSVGGroup);
+	classicalSVGElements.forEach(svg => cachedPieceSVGs[svg.id] = svg);
+	console.log("Fetched all Classical SVGs!")
+})();
 
 function getSpritesheet() {
 	return spritesheet;
@@ -117,7 +169,7 @@ function getSpritesheetDataTexLocation(type) {
 }
 
 export default {
-	initSpritesheet,
+	initSpritesheetForGame,
 	getSpritesheet,
 	getSpritesheetDataPieceWidth,
 	getSpritesheetDataTexLocation,

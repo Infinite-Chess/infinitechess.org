@@ -371,8 +371,8 @@ function generateVariantOptionsIfReloadingPrivateCustomGame() {
  * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
  */
 function loadGame(gameOptions) {
-	console.log("Loading game with game options:");
-	console.log(gameOptions);
+	// console.log("Loading game with game options:");
+	// console.log(gameOptions);
 	frametracker.onVisualChange();
 	movement.eraseMomentum();
 	options.disableEM();

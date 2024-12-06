@@ -48,7 +48,7 @@ function addRefreshTokenToMemberData(req, userId, token) {
 	// Remove any expired tokens
 	refreshTokens = removeExpiredTokens(refreshTokens);
 
-	// Add the new token to the list. MODIFIES the arrow
+	// Add the new token to the list. MODIFIES the original array
 	addTokenToRefreshTokens(req, refreshTokens, token);
 
 	// Make sure they don't exceed the maximum number of login sessions

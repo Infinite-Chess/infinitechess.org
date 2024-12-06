@@ -74,7 +74,6 @@ function areInGame() {
 function init() {
 
 	options.initTheme();
-	spritesheet.initSpritesheet(gl);
 
 	guititle.open();
 
@@ -183,10 +182,12 @@ function renderEverythingInGame() {
  * Inits the promotion UI, mesh of all the pieces, and toggles miniimage rendering. (everything visual)
  * @param {gamefile} newGamefile - The gamefile
  */
-function loadGamefile(newGamefile) {
+async function loadGamefile(newGamefile) {
 	if (gamefile) return console.error("Must unloadGame() before loading a new one!");
 
 	gamefile = newGamefile;
+
+	await spritesheet.initSpritesheetForGame(gl, gamefile);
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {

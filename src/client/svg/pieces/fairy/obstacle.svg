@@ -1,5 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg">
-	<symbol id="obstacle-neutral" viewBox="0 0 5120 5120">
-		<path d="M2460 742a1827 1827 0 00-1435 843 1822 1822 0 00 19 1980c160 239 342 411 592 560A1818 1818 0 10 2739 750c-160-16-177-16-279-8" fill="#505050"/>
-	</symbol>
-</svg>
+<div>
+	<svg id="obstacle-neutral" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" version="1.0" viewBox="0 0 5120 5120"><path d="M2460 742a1827 1827 0 00-1435 843 1822 1822 0 00 19 1980c160 239 342 411 592 560A1818 1818 0 10 2739 750c-160-16-177-16-279-8" fill="#505050"/></svg>
+</div>

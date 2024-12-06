@@ -1,4 +1,5 @@
 import jsutil from "../../util/jsutil.js";
+import winconutil from "../util/winconutil.js";
 
 /**
  * This script contains the gameRules constructor,

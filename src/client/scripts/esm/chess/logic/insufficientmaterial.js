@@ -160,7 +160,7 @@ function detectInsufficientMaterial(gamefile) {
 	if (lastMove && !lastMove.captured) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle pieces
-	if (gamefileutility.getPieceCountOfGame(gamefile, {ignoreVoids: false, ignoreObstacles: true}) >= 11) return false;
+	if (gamefileutility.getPieceCountOfGame(gamefile, { ignoreObstacles: true }) >= 11) return false;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario = {};

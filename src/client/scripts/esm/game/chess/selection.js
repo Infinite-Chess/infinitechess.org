@@ -215,7 +215,7 @@ function handleSelectingPiece(pieceClickedType) {
 	if (!options.getEM() && clickedPieceColor === colorutil.colorOfNeutrals) return; // Don't select neutrals, unless we're in edit mode
 	if (pieceClickedType === 'voidsN') return; // NEVER select voids, EVEN in edit mode.
 
-	const clickedPieceIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceClickedType, hoverSquare);
+	const clickedPieceIndex = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceClickedType, hoverSquare).index;
 
 	// Select the piece
 	selectPiece(pieceClickedType, clickedPieceIndex, hoverSquare);
@@ -260,7 +260,7 @@ function reselectPiece() {
 	if (game.getGamefile().gameConclusion) return; // Don't reselect, game is over
 
 	// Reselect! Recalc its legal moves, and recolor.
-	const newIndex = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
+	const newIndex = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords).index;
 	selectPiece(pieceSelected.type, newIndex, pieceSelected.coords);
 }
 

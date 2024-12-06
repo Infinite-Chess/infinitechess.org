@@ -4,6 +4,7 @@ import gamefileutility from '../util/gamefileutility.js';
 import moveutil from '../util/moveutil.js';
 import legalmoves from './legalmoves.js';
 import typeutil from '../util/typeutil.js';
+import colorutil from '../util/colorutil.js';
 // Import End
 
 /** 
@@ -34,17 +35,16 @@ function detectCheckmateOrDraw(gamefile) {
 	// know the game is not over yet...
 
 	const whosTurn = gamefile.whosTurn;
-	const teamTypes = typeutil.colorsTypes[whosTurn];
-	for (const thisType of teamTypes) {
+
+	for (const thisType in gamefile.ourPieces) {
+		const thisTypeColor = colorutil.getPieceColorFromType(thisType);
+		if (thisTypeColor !== whosTurn) continue; // Skip all colors that don't belong to the next player's turn
 		const thesePieces = gamefile.ourPieces[thisType];
-		for (let a = 0; a < thesePieces.length; a++) {
-			const coords = thesePieces[a];
+		for (const coords of thesePieces) {
 			if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-			const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords);
-			const thisPiece = { type: thisType, coords, index }; // { index, coords }
+			const thisPiece = gamefileutility.getPieceFromTypeAndCoords(gamefile, thisType, coords);
 			const moves = legalmoves.calculate(gamefile, thisPiece);
-			if (!legalmoves.hasAtleast1Move(moves)) continue;
-			return false;
+			if (legalmoves.hasAtleast1Move(moves)) return false; // Not checkmate
 		}
 	}
 
@@ -82,7 +82,7 @@ function detectCheckmateOrDraw(gamefile) {
 //     // know the game is not over yet.
 
 //     // How much time can we spend on this potentially long task?
-//     const ourPieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, whosTurn);
+//     const ourPieceCount = gamefileutility.getPieceCountOfColor(gamefile, whosTurn);
 //     let pieceLimitToRecalcTime = 50;
 //     let piecesSinceLastCheck = 0;
 //     let piecesComplete = 0;

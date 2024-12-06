@@ -124,12 +124,17 @@ function removeOrganizedPiece(gamefile, coords) {
 }
 
 function initUndefineds(gamefile) {
+
 	// Add extra undefined pieces into each type array!
-	typeutil.forEachPieceType(init);
-	function init(listType) {
-		const list = gamefile.ourPieces[listType];
-		list.undefineds = [];
+	for (const pieceType in gamefile.ourPieces) {
+		gamefile.ourPieces[pieceType].undefineds = [];
 	}
+
+	// typeutil.forEachPieceType(init);
+	// function init(listType) {
+	// 	const list = gamefile.ourPieces[listType];
+	// 	list.undefineds = [];
+	// }
 }
 
 
@@ -220,27 +225,14 @@ function insertUndefinedIntoList(list) {
 	list.undefineds.push(insertedIndex);
 }
 
-function buildKeyListFromState(state) { // state is default piece list organized by type
-
-	const keyList = { };
-
-	gamefileutility.forEachPieceInPiecesByType(callback, state);
-
-	function callback(type, coords) {
-		const key = coordutil.getKeyFromCoords(coords);
-		keyList[key] = type;
-	}
-
-	return keyList;
-}
-
 /**
  * Converts a piece list organized by key to organized by type.
- * @param {Object} keyList - Pieces organized by key: `{ '1,2': 'pawnsW' }`
+ * @param {gamefile} gamefile
  * @returns {Object} Pieces organized by type: `{ pawnsW: [ [1,2], [2,2], ...]}`
  */
-function buildStateFromKeyList(keyList) {
-	const state = getEmptyTypeState();
+function buildStateFromKeyList(gamefile) {
+	const keyList = gamefile.startSnapshot.position;
+	const state = getEmptyTypeState(gamefile);
 
 	// For some reason, does not iterate through inherited properties?
 	for (const key in keyList) {
@@ -256,19 +248,32 @@ function buildStateFromKeyList(keyList) {
 	return state;
 }
 
-function getEmptyTypeState() {
+/**
+ * 
+ * @param {gamefile} gamefile
+ */
+function getEmptyTypeState(gamefile) {
 
+	const typesInGame = gamefile.startSnapshot.existingTypes; // ['pawns','queens']
 	const state = {};
 
+	const whiteExt = colorutil.getColorExtensionFromColor('white');
+	const blackExt = colorutil.getColorExtensionFromColor('black');
+	
+	for (const type of typesInGame) {
+		state[type + whiteExt] = [];
+		state[type + blackExt] = [];
+	}
+
 	// White and Black
-	for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
-		state[typeutil.colorsTypes.white[i]] = [];
-		state[typeutil.colorsTypes.black[i]] = [];
-	}
-	// Neutral
-	for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
-		state[typeutil.colorsTypes.neutral[i]] = [];
-	}
+	// for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
+	// 	state[typeutil.colorsTypes.white[i]] = [];
+	// 	state[typeutil.colorsTypes.black[i]] = [];
+	// }
+	// // Neutral
+	// for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
+	// 	state[typeutil.colorsTypes.neutral[i]] = [];
+	// }
 
 	return state;
 }
