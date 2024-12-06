@@ -159,7 +159,8 @@ function handleDragging(hoverSquare, pieceHoveredType) {
 		draganimation.dragPiece(input.getPointerWorldLocation());
 	} else {
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
-		draganimation.dropPiece(hoverSquareLegal, pieceHoveredType);
+		const wasCapture = pieceHoveredType || hoverSquare.hasOwnProperty('enpassant');
+		draganimation.dropPiece(hoverSquareLegal, wasCapture);
 		draggingPiece = false;
 	}
 }
