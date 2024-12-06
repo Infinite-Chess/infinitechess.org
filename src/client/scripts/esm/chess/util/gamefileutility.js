@@ -237,7 +237,7 @@ function deleteIndexFromPieceList(list, pieceIndex) {
  */
 function getCoordsOfAllPieces(gamefile) {
 	const allCoords = [];
-	forEachPieceInGame((type, coords) => allCoords.push(coords), gamefile);
+	forEachPieceInGame(gamefile, (type, coords) => allCoords.push(coords));
 	return allCoords;
 }
 
