@@ -4,7 +4,7 @@ version = "23"
 maintainer = "xa31"
 
 [header]
-home = "Inicio"
+home = "Infinite Chess"
 play = "Jugar"
 news = "Noticias"
 login = "Iniciar Sesión"
@@ -22,7 +22,7 @@ perspective = "Perspectiva" # Perspective-mode
 perspective-mouse-sensitivity = "Sensibilidad del ratón"
 perspective-fov = "Campo de visión (FOV)"
 ping = ["Latencia", "ms"] # A number is inserted between these 2 strings.
-reset-to-default = "Reiniciar opciones por defecto"
+reset-to-default = "Restablecer valores por defecto"
 
 [footer]
 contact = "Contacte con nosotros"
@@ -44,7 +44,7 @@ what_is_it_pargaraphs = [
 "Como puedes imaginar, hay infinitas posibilidades para la posición de inicio, ¡Muchas de las cuales puedes jugar competitivamente! Tu objetivo final sigue siendo el jaque mate, que requiere nuevas estrategias, dado que ya no hay muros para atrapar al rey rival. Las partidas no suelen durar mas que las de ajedrez normal. ¡Los Peones siguen coronando en las filas 1 y 8!",
 ]
 how_to_title = "¿Como Puedo Jugar?"
-how_to_paragraph = ["¡La actual versión es la 1.4, y esta disponible en la pagina ","Jugar","!"]
+how_to_paragraph = ["¡La actual versión es la 1.5, y esta disponible en la pagina ","Jugar","!"]
 about_title = "Sobre el proyecto"
 about_paragraphs = [
 "Soy Naviary. Desde que descubrí Infinte Chess (el concepto existe desde hace mucho antes que esta web), ¡Me han intrigado sus posibilidades! Hasta hace muy poco, jugar ha sido bastante complicado, usuarios de chess.com tenían que crear imágenes del tablero actual y enviarlas entre ellos cada jugada. Debido a esto, no mucha gente conoce o ha sido capaz de jugar a esto.",
