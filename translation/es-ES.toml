@@ -22,7 +22,7 @@ perspective = "Perspectiva" # Perspective-mode
 perspective-mouse-sensitivity = "Sensibilidad del ratón"
 perspective-fov = "Campo de visión (FOV)"
 ping = ["Latencia", "ms"] # A number is inserted between these 2 strings.
-reset-to-default = "Restablecer valores por defecto"
+reset-to-default = "Restablecer valores"
 
 [footer]
 contact = "Contacte con nosotros"
