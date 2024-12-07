@@ -52,21 +52,25 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	canvas.width = canvasWidth;
 	canvas.height = canvasHeight;
 	const ctx = canvas.getContext('2d');
-  
+
 	// Positioning variables
-	let x = 0;
-	let y = 0;
+	let xIndex = 0;
+	let yIndex = 0;
   
 	// Draw all the images onto the canvas
 	for (let i = 0; i < numImages; i++) {
+
+		const x = xIndex * actualImgSize;
+		const y = yIndex * actualImgSize;
+
 		// Draw the image at the current position
 		ctx?.drawImage(images[i]!, x, y, actualImgSize, actualImgSize);
 	
 		// Update the position for the next image
-		x += actualImgSize;
-		if (x >= canvasWidth) {
-			x = 0;
-			y += actualImgSize;
+		xIndex++;
+		if (xIndex === gridSize) {
+			xIndex = 0;
+			yIndex++;
 		}
 	}
   
