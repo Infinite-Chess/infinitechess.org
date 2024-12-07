@@ -35,11 +35,10 @@ function detectCheckmateOrDraw(gamefile) {
 	// know the game is not over yet...
 
 	const whosTurn = gamefile.whosTurn;
-
-	for (const thisType in gamefile.ourPieces) {
-		const thisTypeColor = colorutil.getPieceColorFromType(thisType);
-		if (thisTypeColor !== whosTurn) continue; // Skip all colors that don't belong to the next player's turn
+	const teamTypes = typeutil.colorsTypes[whosTurn];
+	for (const thisType of teamTypes) {
 		const thesePieces = gamefile.ourPieces[thisType];
+		if (!thesePieces) continue; // The game doesn't have this type of piece
 		for (const coords of thesePieces) {
 			if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
 			const thisPiece = gamefileutility.getPieceFromTypeAndCoords(gamefile, thisType, coords);
