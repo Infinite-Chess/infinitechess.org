@@ -362,7 +362,7 @@ function calcPieceIndexInAllPieces(gamefile, piece) {
 
 	// We need to use the same iteration function that our regenPiecesModel() uses!
 	for (const listType in gamefile.ourPieces) { // 'pawnsW'
-		if (listType.startsWith('voids')) return; // SKIP Voids!
+		if (listType.startsWith('voids')) continue; // SKIP Voids!
 		const list = gamefile.ourPieces[listType];
 
 		if (listType !== type) index += list.length; // Our piece isnt in this list 
