@@ -10,28 +10,23 @@ import guigameinfo from "../gui/guigameinfo";
 import movepiece from "../../chess/logic/movepiece";
 
 import boardchanges from "../../chess/logic/boardchanges";
+import { animatableChanges, meshChanges } from "./graphicalchanges";
 
-import animation from "../rendering/animation";
-import piecesmodel from "../rendering/piecesmodel";
-import organizedlines from "../../chess/logic/organizedlines";
-
-import type { ChangeApplication, Change } from "../../chess/logic/boardchanges";
+// @ts-ignore
 import type gamefile from "../../chess/logic/gamefile";
 
-function runMove(gamefile, { doGameOverChecks = true, updateData = true, concludeGameIfOver = true}) {
+function makeMove(gamefile: gamefile, { doGameOverChecks = true, concludeGameIfOver = true}) {
 
-	movepiece.nextTurn(gamefile);
+	movepiece.updateTurn(gamefile, { pushClock: !onlinegame.areInOnlineGame() });
 
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
 		if (concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) game.concludeGame();
 	}
 
-	if (updateData) {
-		guinavigation.update_MoveButtons();
-		stats.setTextContentOfMoves(); // Making a move should change the move number in the stats
-		frametracker.onVisualChange();
-	}
+	guinavigation.update_MoveButtons();
+	stats.setTextContentOfMoves(); // Making a move should change the move number in the stats
+	frametracker.onVisualChange();
 
 	arrows.clearListOfHoveredPieces();
 }
@@ -66,64 +61,6 @@ function forwardToFront(gamefile, { animateLastMove = true } = {}) {
 	guinavigation.lockRewind();
 }
 
-const animatableChanges: ChangeApplication = {
-	forward: {
-		"movePiece": animateMove,
-		"capturedPiece": animateCapture,
-	},
-
-	backward: {
-		"movePiece": animateReturn,
-		"capturePiece": animateReturn,
-	}
-};
-
-function animateMove(gamefile: gamefile, change: Change) {
-	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords);
-}
-
-function animateReturn(gamefile: gamefile, change: Change) {
-	animation.animatePiece(change.piece.type, change.endCoords, change.piece.coords);
-}
-
-function animateCapture(gamefile: gamefile, change: Change) {
-	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, change.capturedPiece);
-}
-
-const meshChanges: ChangeApplication = {
-	forward: {
-		"add": addMeshPiece,
-		"delete": deleteMeshPiece,
-		"movePiece": moveMeshPiece,
-	},
-
-	backward: {
-		"delete": addMeshPiece,
-		"add": deleteMeshPiece,
-		"movePiece": returnMeshPiece,
-	}
-};
-
-function addMeshPiece(gamefile: gamefile, change) {
-	piecesmodel.overwritebufferdata(gamefile, change.piece, change.piece.coords, change.piecetype);
-
-	// Do we need to add more undefineds?
-	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
-	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
-}
-
-function deleteMeshPiece(gamefile: gamefile, change: Change) {
-	piecesmodel.deletebufferdata(gamefile, change.piece);
-}
-
-function moveMeshPiece(gamefile: gamefile, change: Change) {
-	piecesmodel.movebufferdata(gamefile, change.piece, change.endCoords);
-}
-
-function returnMeshPiece(gamefile: gamefile, change: Change) {
-	piecesmodel.movebufferdata(gamefile, change.piece, change.piece.coords);
-}
-
 function animateMoveAtIdx(gamefile: gamefile, moveIdx = gamefile.moveIndex, forward = true) {
 	const move = gamefile.moves[moveIdx]
 	if (move === undefined) return
@@ -131,7 +68,12 @@ function animateMoveAtIdx(gamefile: gamefile, moveIdx = gamefile.moveIndex, forw
 }
 
 export default {
-	runMove,
-	forwardToFront,
+	makeMove,
+	rewindMove,
+
+	viewForward,
+	viewBackward,
+	viewFront,
+	viewIdx,
 	animateMoveAtIdx,
 };

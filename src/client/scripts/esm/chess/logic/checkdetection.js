@@ -10,6 +10,7 @@ import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import boardchanges from './boardchanges.js';
+import moveutil from '../util/moveutil.js';
 // Import End
 
 /** 
@@ -255,7 +256,7 @@ function removeIndividualMovesThatPutYouInCheck(gamefile, individualMoves, piece
 // Simulates the move, tests for check, undos the move. Color is the color of the piece we're moving
 function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pieceSelected: { type, index, coords }
 	/** @type {Move} */
-	const move = { type: pieceSelected.type, startCoords: jsutil.deepCopyObject(pieceSelected.coords), endCoords: movepiece.stripSpecialMoveTagsFromCoords(destCoords) };
+	const move = { type: pieceSelected.type, startCoords: jsutil.deepCopyObject(pieceSelected.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, move);
 	return movepiece.simulateMove(gamefile, move, color).isCheck;
 }
@@ -374,8 +375,8 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	if (sameLines.length === 0) return;
 
 	// Delete the piece, and add it back when we're done!
-	const deletedPiece = jsutil.deepCopyObject(pieceSelected);
-	movepiece.deletePiece(gamefile, pieceSelected, { updateData: false });
+	let deleteChange = boardchanges.queueDeletePiece([], pieceSelected);
+	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.forward)
     
 	// let checklines = []; // For Idon's code below
 	// For every line direction we share with the king...
@@ -393,7 +394,6 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 			if (coordutil.areCoordsEqual(direction1, direction2NumbArray)) continue; // Same line, it's okay to keep because it wouldn't open a discovered
 			delete moves.sliding[direction2]; // Not same line, delete it because it would open a discovered.
 		}
-
 	}
 
 	// Idon us's code that handles the situation where moving off a line could expose multiple checks
@@ -451,7 +451,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	// }
 
 	// Add the piece back with the EXACT SAME index it had before!!
-	movepiece.addPiece(gamefile, deletedPiece.type, deletedPiece.coords, deletedPiece.index, { updateData: false });
+	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.backward)
 }
 
 // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2

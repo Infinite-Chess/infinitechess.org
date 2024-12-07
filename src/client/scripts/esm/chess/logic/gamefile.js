@@ -8,7 +8,7 @@ import area from '../../game/rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
-
+import movesequence from '../../game/chess/movesequence.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
@@ -241,6 +241,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	// movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
 	// gamefileutility.doGameOverChecks(this);
 	movepiece.makeAllMovesInGame(this, moves);
+	movesequence.animateMoveAtIdx(gamefile) // Start animation for last move
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	this.gameConclusion = gameConclusion || this.gameConclusion;

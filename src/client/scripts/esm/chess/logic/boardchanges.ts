@@ -9,17 +9,38 @@ import type { Move } from "../util/moveutil.js";
 interface Piece {
 	type: string // - The type of the piece (e.g. `queensW`).
 	coords: Coords // - The coordinates of the piece: `[x,y]`
-	index: Number // - The index of the piece within the gamefile's piece list.
+	index: number // - The index of the piece within the gamefile's piece list.
 }
 
 interface Change {
 	action: string,
+}
 
-	[data: string]: any
+interface PieceChange extends Change {
+	piece: Piece
+}
+
+interface MoveChange extends PieceChange {
+	endCoords: Coords
+}
+
+interface CaptureChange extends MoveChange {
+	capturedPiece: Piece
+}
+
+interface RightsChange extends Change {
+	coords: string
+	curRights: any
+	rights: any
+}
+
+interface EnpassantChange extends Change {
+	curPassant: Coords | undefined
+	newPassant: Coords | undefined
 }
 
 interface ActionList {
-	[actionName: string]: (gamefile: gamefile, change: Change) => void
+	[actionName: string]: (gamefile: gamefile, change: any) => void
 }
 
 interface ChangeApplication {
@@ -48,31 +69,37 @@ const changeFuncs: ChangeApplication = {
 	}
 };
 
-function queueCaputure(changes: Array<Change>, piece: Piece, endCoords: Coords, capturedPiece: Piece) {
+function queueCaputure(changes: Array<CaptureChange|any>, piece: Piece, endCoords: Coords, capturedPiece: Piece) {
 	changes.push({action: 'capturePiece', piece: piece, endCoords: endCoords, capturedPiece: capturedPiece}) // Need to differentiate this from move so animations can work
+	return changes;
 }
 
-function queueAddPiece(changes: Array<Change>, piece: Piece) {
+function queueAddPiece(changes: Array<PieceChange|any>, piece: Piece) {
 	changes.push({action: 'add', piece: piece});
+	return changes;
 };
 
-function queueDeletePiece(changes: Array<Change>, piece: Piece) {
+function queueDeletePiece(changes: Array<PieceChange|any>, piece: Piece) {
 	changes.push({action: 'delete', piece: piece});
+	return changes;
 }
 
-function queueMovePiece(changes: Array<Change>, piece: Piece, endCoords: Coords) {
+function queueMovePiece(changes: Array<MoveChange|any>, piece: Piece, endCoords: Coords) {
 	changes.push({action: 'movePiece', piece: piece, endCoords: endCoords});
+	return changes;
 }
 
-function queueSetSpecialRights(changes, coords, curRights, rights) {
+function queueSetSpecialRights(changes: Array<RightsChange|any>, coords: string, curRights: any, rights: any) {
 	changes.push({action: "setRights", coords: coords, curRights: curRights, rights: rights});
+	return changes;
 }
 
-function queueSetEnPassant(changes, curPassant, newPassant) {
+function queueSetEnPassant(changes: Array<EnpassantChange|any>, curPassant: any, newPassant: any) {
 	changes.push({action: "setPassant", curPassant: curPassant, newPassant: newPassant});
+	return changes;
 }
 
-function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionList) {
+function applyChanges(gamefile: gamefile, changes: Array<any>, funcs: ActionList) {
 	for (const c of changes) {
 		if (c.action in funcs) {
 			funcs[c.action](gamefile, c);
@@ -91,7 +118,7 @@ function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication,
  * @param gamefile - The gamefile
  * @param change - the data of the piece to be added
  */
-function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
+function addPiece(gamefile: gamefile, change: PieceChange) { // desiredIndex optional
 	const piece = change.piece;
 
 	const list = gamefile.ourPieces[piece.type];
@@ -116,7 +143,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
 }
 
-function deletePiece(gamefile, change) { // piece: { type, index }
+function deletePiece(gamefile: gamefile, change: PieceChange) { // piece: { type, index }
 	const piece = change.piece;
 
 	const list = gamefile.ourPieces[piece.type];
@@ -126,7 +153,7 @@ function deletePiece(gamefile, change) { // piece: { type, index }
 	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
 }
 
-function movePiece(gamefile, change) {
+function movePiece(gamefile: gamefile, change: MoveChange) {
 	const piece = change.piece;
 	const endCoords = change.endCoords;
 
@@ -140,7 +167,7 @@ function movePiece(gamefile, change) {
 	organizedlines.organizePiece(piece.type, endCoords, gamefile);
 }
 
-function returnPiece(gamefile, change) {
+function returnPiece(gamefile: gamefile, change: MoveChange) {
 	const piece = change.piece;
 	const endCoords = change.endCoords;
 
@@ -154,17 +181,17 @@ function returnPiece(gamefile, change) {
 	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
 }
 
-function capturePiece(gamefile: gamefile, change: Change) {
+function capturePiece(gamefile: gamefile, change: CaptureChange) {
 	deletePiece(gamefile, {piece: change.capturedPiece, action: ""})
 	movePiece(gamefile, change)
 }
 
-function uncapturePiece(gamefile: gamefile, change: Change) {
+function uncapturePiece(gamefile: gamefile, change: CaptureChange) {
 	returnPiece(gamefile, change)
 	addPiece(gamefile, {piece: change.capturedPiece, action:""})
 }
 
-function setRights(gamefile, change) {
+function setRights(gamefile: gamefile, change: RightsChange) {
 	if (change.rights === undefined) {
 		delete gamefile.specialRights[change.coords];
 	} else {
@@ -172,7 +199,7 @@ function setRights(gamefile, change) {
 	}
 }
 
-function revertRights(gamefile, change) {
+function revertRights(gamefile: gamefile, change: RightsChange) {
 	if (change.curRights === undefined) {
 		delete gamefile.specialRights[change.coords];
 	} else {
@@ -180,23 +207,27 @@ function revertRights(gamefile, change) {
 	}
 }
 
-/**
- * 
- * @param {gamefile} gamefile 
- * @param {*} change 
- */
-function setPassant(gamefile, change) {
+function setPassant(gamefile: gamefile, change: EnpassantChange) {
 	gamefile.enpassant = change.newPassant;
 }
 
-function revertPassant(gamefile, change) {
+function revertPassant(gamefile: gamefile, change: EnpassantChange) {
 	if (change.curPassant === undefined) {
 		delete gamefile.enpassant;
 	} else {
 		gamefile.enpassant = change.curPassant;
 	}
 }
-export type { ChangeApplication, Change }
+
+export type {
+	ChangeApplication,
+	Change,
+	PieceChange,
+	MoveChange,
+	CaptureChange,
+	RightsChange,
+	EnpassantChange,
+}
 
 export default {
 	queueAddPiece,
@@ -207,4 +238,6 @@ export default {
 	queueSetEnPassant,
 
 	runMove,
+	applyChanges,
+	changeFuncs,
 };

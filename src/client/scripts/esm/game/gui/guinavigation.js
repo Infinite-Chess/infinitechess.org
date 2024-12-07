@@ -12,10 +12,8 @@ import transition from '../rendering/transition.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import statustext from './statustext.js';
 import stats from './stats.js';
-import movepiece from '../../chess/logic/movepiece.js';
 import selection from '../chess/selection.js';
 import frametracker from '../rendering/frametracker.js';
-import changes from '../../chess/logic/boardchanges.js';
 import movesequence from '../chess/movesequence.js';
 // Import End
 
@@ -393,7 +391,7 @@ function rewindMove() {
 
 	frametracker.onVisualChange();
 
-	movepiece.rewindMove(game.getGamefile(), { removeMove: false });
+	movesequence.viewBackward(game.getGamefile());
     
 	selection.unselectPiece();
 
@@ -409,11 +407,7 @@ function forwardMove() {
 	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
 	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
 
-	const move = moveutil.getMoveOneForward(gamefile);
-
-	gamefile.moveIndex++;
-	changes.applyChanges(gamefile, move.changes);
-	movesequence.animateChanges(gamefile, move.changes);
+	movesequence.viewForward(gamefile);
 
 	// transition.teleportToLastMove()
 
