@@ -63,6 +63,7 @@ function configureMiddleware(app) {
 
 	app.use(credentials); // Handle credentials check. Must be before CORS.
 
+	/** This sets req.i18n, and req.i18n.resolvedLanguage */
 	app.use(middleware.handle(i18next, { removeLngFromUrl: false }));
 
 	/**
