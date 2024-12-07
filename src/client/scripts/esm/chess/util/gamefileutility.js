@@ -86,7 +86,7 @@ function forEachPieceInTypeList(callback, typeList) { // typeList = pieces organ
 
 /**
  * Iterates through each piece in the provided keys-state and executes a callback function.
- * @param {Function} callback - The callback function to execute for each piece. The function will receive two arguments: the type of the piece and its coordinates.
+ * @param {Function} callback - The callback function to execute for each piece: `(type, coords) => {}`
  * @param {Object} state - The keys-state object containing pieces organized by key.
  * @param {Object} [options] - Optional settings.
  * @param {boolean} [options.ignoreNeutrals] - If true, neutral pieces (those with types ending in 'N') will be ignored.
