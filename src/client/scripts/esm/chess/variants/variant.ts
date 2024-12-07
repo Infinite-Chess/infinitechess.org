@@ -505,4 +505,4 @@ export default {
 
 export type {
 	Position
-}
+};
