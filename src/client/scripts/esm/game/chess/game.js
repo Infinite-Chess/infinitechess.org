@@ -59,6 +59,12 @@ import spritesheet from '../rendering/spritesheet.js';
 let gamefile;
 
 /**
+ * True when a game is currently loading and SVGs are being requested
+ * or the spritesheet is being generated.
+ */
+let gameIsLoading = false;
+
+/**
  * Returns the gamefile currently loaded
  * @returns {gamefile} The current gamefile
  */
@@ -89,6 +95,8 @@ function updateVariablesAfterScreenResize() {
 
 // Update the game every single frame
 function update() {
+	if (gameIsLoading) return;
+
 	if (!guinavigation.isCoordinateActive()) {
 		if (input.isKeyDown('`')) options.toggleDeveloperMode();
 		if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
@@ -150,6 +158,7 @@ function updateBoard() {
 } 
 
 function render() {
+	if (gameIsLoading) return; // Don't render anything while the game is loading.
     
 	board.render();
 	renderEverythingInGame();
@@ -184,6 +193,7 @@ function renderEverythingInGame() {
  */
 async function loadGamefile(newGamefile) {
 	if (gamefile) return console.error("Must unloadGame() before loading a new one!");
+	gameIsLoading = true;
 
 	gamefile = newGamefile;
 
@@ -216,6 +226,7 @@ async function loadGamefile(newGamefile) {
 	initListeners();
 
 	guiclock.set(newGamefile);
+	gameIsLoading = false;
 }
 
 /** The canvas will no longer render the current game */
