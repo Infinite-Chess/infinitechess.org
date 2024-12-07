@@ -9,6 +9,7 @@ import math from '../../util/math.js';
 import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
+import boardchanges from './boardchanges.js';
 // Import End
 
 /** 

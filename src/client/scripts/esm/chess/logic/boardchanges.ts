@@ -2,110 +2,96 @@ import organizedlines from "./organizedlines.js";
 import gamefileutility from "../util/gamefileutility.js";
 import jsutil from "../../util/jsutil.js";
 
-/**
- * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import()}
- */
+import type { gamefile } from "./gamefile.js";
+import type { Coords } from "./movesets.js";
+import type { Move } from "../util/moveutil.js";
 
-/**
- * @typedef {Object} Piece
- * @property {string} type - The type of the piece (e.g. `queensW`).
- * @property {number[]} coords - The coordinates of the piece: `[x,y]`
- * @property {number} index - The index of the piece within the gamefile's piece list.
- */
+interface Piece {
+	type: string // - The type of the piece (e.g. `queensW`).
+	coords: Coords // - The coordinates of the piece: `[x,y]`
+	index: Number // - The index of the piece within the gamefile's piece list.
+}
 
-/**
- * @typedef {Object} BoardChange
- * @property {string} action
- * @property {Piece} piece
- */
+interface Change {
+	action: string,
 
-const changeFuncs = {
-	"add": addPiece,
-	"delete": deletePiece,
-	"movePiece": movePiece,
-	"addRights": addRights,
-	"deleteRights": deleteRights,
-	"setPassant": setPassant,
+	[data: string]: any
+}
+
+interface ActionList {
+	[actionName: string]: (gamefile: gamefile, change: Change) => void
+}
+
+interface ChangeApplication {
+	forward: ActionList
+
+	backward: ActionList
+}
+
+const changeFuncs: ChangeApplication = {
+	forward: {
+		"add": addPiece,
+		"delete": deletePiece,
+		"movePiece": movePiece,
+		"capturePiece": capturePiece,
+		"setRights": setRights,
+		"setPassant": setPassant,
+	},
+
+	backward: {
+		"delete": addPiece,
+		"add": deletePiece,
+		"movePiece": returnPiece,
+		"capturePiece": uncapturePiece,
+		"setRights": revertRights,
+		"setPassant": revertPassant,
+	}
 };
 
-const undoFuncs = {
-	"delete": addPiece,
-	"add": deletePiece,
-	"movePiece": returnPiece,
-	"addRights": revertRights,
-	"deleteRights": revertRights,
-	"setPassant": revertPassant,
-};
+function queueCaputure(changes: Array<Change>, piece: Piece, endCoords: Coords, capturedPiece: Piece) {
+	changes.push({action: 'capturePiece', piece: piece, endCoords: endCoords, capturedPiece: capturedPiece}) // Need to differentiate this from move so animations can work
+}
 
-/**
- * @param {Array<BoardChange>} changes 
- * @param {Piece} piece
- */
-function queueAddPiece(changes, piece) {
+function queueAddPiece(changes: Array<Change>, piece: Piece) {
 	changes.push({action: 'add', piece: piece});
 };
 
-/**
- * 
- * @param {Array<BoardChange>} changes 
- * @param {Piece} piece
- */
-function queueDeletePiece(changes, piece) {
+function queueDeletePiece(changes: Array<Change>, piece: Piece) {
 	changes.push({action: 'delete', piece: piece});
 }
 
-/**
- * 
- * @param {Array<BoardChange>} changes 
- * @param {*} piece 
- * @param {*} endCoords 
- */
-function queueMovePiece(changes, piece, endCoords) {
+function queueMovePiece(changes: Array<Change>, piece: Piece, endCoords: Coords) {
 	changes.push({action: 'movePiece', piece: piece, endCoords: endCoords});
 }
 
-function queueAddSpecialRights(changes, coords, curRights) {
-	changes.push({action: "addRights", coords: coords, curRights: curRights});
-}
-
-function queueDeleteSpecialRights(changes, coords, curRights) {
-	changes.push({action: "removeRights", coords: coords, curRights: curRights});
+function queueSetSpecialRights(changes, coords, curRights, rights) {
+	changes.push({action: "setRights", coords: coords, curRights: curRights, rights: rights});
 }
 
 function queueSetEnPassant(changes, curPassant, newPassant) {
 	changes.push({action: "setPassant", curPassant: curPassant, newPassant: newPassant});
 }
 
-/**
- * 
- * @param {gamefile} gamefile 
- * @param {Array<BoardChange>} changes 
- */
-function applyChanges(gamefile, changes) {
+function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionList) {
 	for (const c of changes) {
-		changeFuncs[c.type](gamefile, c);
+		if (c.action in funcs) {
+			funcs[c.action](gamefile, c);
+		}
 	}
 }
 
-/**
- * 
- * @param {gamefile} gamefile 
- * @param {Array<BoardChange>} changes 
- */
-function undoChanges(gamefile, changes) {
-	for (const c of changes) {
-		undoFuncs[c.type](gamefile, c);
-	}
+function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication, forward: boolean = true) {
+	let funcs = forward ? changeFuncs.forward : changeFuncs.backward
+	applyChanges(gamefile, move.changes, funcs)
 }
 
 /**
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
  * organizes the piece in the organized lists, and updates its mesh data.
- * @param {gamefile} gamefile - The gamefile
- * @param {BoardChange} change - the data of the piece to be added
+ * @param gamefile - The gamefile
+ * @param change - the data of the piece to be added
  */
-function addPiece(gamefile, change) { // desiredIndex optional
+function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const piece = change.piece;
 
 	const list = gamefile.ourPieces[piece.type];
@@ -121,7 +107,7 @@ function addPiece(gamefile, change) { // desiredIndex optional
 		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
 
 		// Remove the undefined from the undefineds list
-		const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[piece.type].undefineds, piece.index) !== false;
+		const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[piece.type].undefineds, piece.index) !== undefined;
 		if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
 
 		list[piece.index] = piece.coords;
@@ -130,12 +116,6 @@ function addPiece(gamefile, change) { // desiredIndex optional
 	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
 }
 
-/**
- * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
- * from the organized lists, and deletes its mesh data (overwrites with zeros).
- * @param {gamefile} gamefile - The gamefile
- * @param {BoardChange} change 
- */
 function deletePiece(gamefile, change) { // piece: { type, index }
 	const piece = change.piece;
 
@@ -146,12 +126,6 @@ function deletePiece(gamefile, change) { // piece: { type, index }
 	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
 }
 
-/**
- * Most basic move-a-piece method. Adjusts its coordinates in the gamefile's piece lists,
- * reorganizes the piece in the organized lists, and updates its mesh data.
- * @param {gamefile} gamefile - The gamefile
- * @param {BoardChange} change - 
- */
 function movePiece(gamefile, change) {
 	const piece = change.piece;
 	const endCoords = change.endCoords;
@@ -166,12 +140,6 @@ function movePiece(gamefile, change) {
 	organizedlines.organizePiece(piece.type, endCoords, gamefile);
 }
 
-/**
- * Most basic move-a-piece method. Adjusts its coordinates in the gamefile's piece lists,
- * reorganizes the piece in the organized lists, and updates its mesh data.
- * @param {gamefile} gamefile - The gamefile
- * @param {BoardChange} change
- */
 function returnPiece(gamefile, change) {
 	const piece = change.piece;
 	const endCoords = change.endCoords;
@@ -186,17 +154,22 @@ function returnPiece(gamefile, change) {
 	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
 }
 
-/**
- * 
- * @param {gamefile} gamefile 
- * @param {*} change 
- */
-function addRights(gamefile, change) {
-	gamefile.specialRights[change.coords] = true;
+function capturePiece(gamefile: gamefile, change: Change) {
+	deletePiece(gamefile, {piece: change.capturedPiece, action: ""})
+	movePiece(gamefile, change)
 }
 
-function deleteRights(gamefile, change) {
-	delete gamefile.specialRights[change.coords];
+function uncapturePiece(gamefile: gamefile, change: Change) {
+	returnPiece(gamefile, change)
+	addPiece(gamefile, {piece: change.capturedPiece, action:""})
+}
+
+function setRights(gamefile, change) {
+	if (change.rights === undefined) {
+		delete gamefile.specialRights[change.coords];
+	} else {
+		gamefile.specialRights[change.coords] = change.rights;
+	}
 }
 
 function revertRights(gamefile, change) {
@@ -223,14 +196,15 @@ function revertPassant(gamefile, change) {
 		gamefile.enpassant = change.curPassant;
 	}
 }
+export type { ChangeApplication, Change }
 
 export default {
 	queueAddPiece,
 	queueDeletePiece,
 	queueMovePiece,
-	queueAddSpecialRights,
-	queueDeleteSpecialRights,
+	queueCaputure,
+	queueSetSpecialRights,
 	queueSetEnPassant,
-	applyChanges,
-	undoChanges,
+
+	runMove,
 };

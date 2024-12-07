@@ -7,10 +7,20 @@ import stats from "../gui/stats";
 import guinavigation from "../gui/guinavigation";
 import moveutil from "../../chess/util/moveutil";
 import guigameinfo from "../gui/guigameinfo";
+import movepiece from "../../chess/logic/movepiece";
+
+import boardchanges from "../../chess/logic/boardchanges";
+
+import animation from "../rendering/animation";
+import piecesmodel from "../rendering/piecesmodel";
+import organizedlines from "../../chess/logic/organizedlines";
+
+import type { ChangeApplication, Change } from "../../chess/logic/boardchanges";
+import type gamefile from "../../chess/logic/gamefile";
 
 function runMove(gamefile, { doGameOverChecks = true, updateData = true, concludeGameIfOver = true}) {
 
-	if (flipTurn) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
+	movepiece.nextTurn(gamefile);
 
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
@@ -56,7 +66,72 @@ function forwardToFront(gamefile, { animateLastMove = true } = {}) {
 	guinavigation.lockRewind();
 }
 
+const animatableChanges: ChangeApplication = {
+	forward: {
+		"movePiece": animateMove,
+		"capturedPiece": animateCapture,
+	},
+
+	backward: {
+		"movePiece": animateReturn,
+		"capturePiece": animateReturn,
+	}
+};
+
+function animateMove(gamefile: gamefile, change: Change) {
+	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords);
+}
+
+function animateReturn(gamefile: gamefile, change: Change) {
+	animation.animatePiece(change.piece.type, change.endCoords, change.piece.coords);
+}
+
+function animateCapture(gamefile: gamefile, change: Change) {
+	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, change.capturedPiece);
+}
+
+const meshChanges: ChangeApplication = {
+	forward: {
+		"add": addMeshPiece,
+		"delete": deleteMeshPiece,
+		"movePiece": moveMeshPiece,
+	},
+
+	backward: {
+		"delete": addMeshPiece,
+		"add": deleteMeshPiece,
+		"movePiece": returnMeshPiece,
+	}
+};
+
+function addMeshPiece(gamefile: gamefile, change) {
+	piecesmodel.overwritebufferdata(gamefile, change.piece, change.piece.coords, change.piecetype);
+
+	// Do we need to add more undefineds?
+	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
+	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
+}
+
+function deleteMeshPiece(gamefile: gamefile, change: Change) {
+	piecesmodel.deletebufferdata(gamefile, change.piece);
+}
+
+function moveMeshPiece(gamefile: gamefile, change: Change) {
+	piecesmodel.movebufferdata(gamefile, change.piece, change.endCoords);
+}
+
+function returnMeshPiece(gamefile: gamefile, change: Change) {
+	piecesmodel.movebufferdata(gamefile, change.piece, change.piece.coords);
+}
+
+function animateMoveAtIdx(gamefile: gamefile, moveIdx = gamefile.moveIndex, forward = true) {
+	const move = gamefile.moves[moveIdx]
+	if (move === undefined) return
+	boardchanges.runMove(gamefile, move, animatableChanges, forward)
+}
+
 export default {
 	runMove,
 	forwardToFront,
+	animateMoveAtIdx,
 };
