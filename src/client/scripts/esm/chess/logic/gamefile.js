@@ -8,6 +8,8 @@ import area from '../../game/rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
+import wincondition from './wincondition.js';
+import gamerules from '../variants/gamerules.js';
 
 // Type Definitions...
 
@@ -236,10 +238,13 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
+
+	// THIS HAS TO BE BEFORE movepiece.makeAllMovesInGame() AS THAT PERFORMS GAME-OVER CHECKS!!!
+	// Do we need to convert any checkmate win conditions to royalcapture?
+	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
     
 	organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
-	// movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
-	// gamefileutility.doGameOverChecks(this);
+	// THIS HAS TO BE AFTER gamerules.swapCheckmateForRoyalCapture() AS THIS DOES GAME-OVER CHECKS!!!
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */

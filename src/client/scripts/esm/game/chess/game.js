@@ -206,9 +206,6 @@ async function loadGamefile(newGamefile) {
 		// Checkmate is swapped out for royalcapture further down
 	} else miniimage.enable();
 
-	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
-
 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
 	// Regenerate the mesh of all the pieces.
