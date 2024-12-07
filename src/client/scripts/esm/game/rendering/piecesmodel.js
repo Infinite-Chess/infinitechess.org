@@ -225,7 +225,7 @@ function movebufferdata(gamefile, piece, newCoords) {
 	if (!gamefile.mesh.data64) throw new Error("Should not be moving piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) throw new Error("Should not be moving piece data when data32 is not defined!");
     
-	const index = getPieceIndexInData(gamefile, piece);
+	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 
@@ -279,7 +279,7 @@ function movebufferdata(gamefile, piece, newCoords) {
 function deletebufferdata(gamefile, piece) {
 	if (!gamefile.mesh.data64) throw new Error("Should not be deleting piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) throw new Error("Should not be deleting piece data when data32 is not defined!");
-	const index = getPieceIndexInData(gamefile, piece);
+	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece; // Start index of deleted piece
@@ -319,7 +319,7 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 	if (!gamefile.mesh.data64) return console.error("Should not be overwriting piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) return console.error("Should not be overwriting piece data when data32 is not defined!");
     
-	const index = getPieceIndexInData(gamefile, undefinedPiece);
+	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, undefinedPiece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece;
@@ -368,17 +368,6 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 }
 
 /**
- * Calculates the specified piece's index, or position in line,
- * within the mesh vertex data of the gamefile.
- * @param {gamefile} gamefile - The gamefile
- * @param {Object} piece - The piece: { type, index }
- * @returns {number} The index of the piece within the mesh
- */
-function getPieceIndexInData(gamefile, piece) { // { type, index }
-	return gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
-}
-
-/**
  * Utility function for printing the vertex data of the specific piece at
  * the specified coords, within the mesh data of the gamefile.
  * @param {gamefile} coords - The gamefile
@@ -389,7 +378,7 @@ function printbufferdataOnCoords(gamefile, coords) {
 	const piece = gamefileutility.getPieceAtCoords(gamefile, coords);
 	if (!piece) console.log("No piece at these coords to retrieve data from!");
 
-	const index = getPieceIndexInData(gamefile, piece);
+	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 	printbufferdataOnIndex(index);
 }
 
