@@ -54,20 +54,10 @@ function forEachPieceType(callback, { ignoreNeutrals, ignoreVoids } = {}) { // C
 	});
 }
 
-// Iterates through every single piece TYPE in the game state of specified COLOR,
-// and performs specified function on the type
-function forEachPieceTypeOfColor(color, callback) {
-	if (!colorutil.isValidColor_NoNeutral(color)) throw new Error(`Cannot iterate through each piece type of invalid color '${color}'!`);
-	for (let i = 0; i < types.length; i++) {
-		callback(colorsTypes[color][i]);
-	}
-}
-
 export default {
 	neutralTypes,
 	colorsTypes,
 	royals,
 	jumpingRoyals,
 	forEachPieceType,
-	forEachPieceTypeOfColor,
 };
