@@ -64,8 +64,7 @@ function forEachPieceInPiecesByType(callback, typeList, ignoreVoids, gamefile) {
 	for (const type in typeList) {
 		if (ignoreVoids && type.startsWith('voids')) continue;
 		const thisTypeList = typeList[type];
-		for (let a = 0; a < thisTypeList.length; a++) {
-			const thisPieceCoords = thisTypeList[a];
+		for (const thisPieceCoords of thisTypeList) {
 			if (thisPieceCoords === undefined) continue; // An undefined placeholder
 			callback(type, thisPieceCoords, gamefile); 
 		}
