@@ -212,6 +212,8 @@ function getPieceCount_IncludingUndefineds(gamefile) {
 
 
 /**
+ * TODO: Perhaps move this method into a utility script that works with pieces organize by TYPE ?
+ * 
  * Deletes the index from the provided piece list and updates its `undefineds` property.
  * No deleting a piece ever changes the size of this list, because the index becomes *undefined*,
  * this is so that the mesh doesn't get screwed up.
