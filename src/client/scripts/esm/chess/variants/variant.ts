@@ -63,9 +63,9 @@ interface Variant {
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
 }
 
-/** A position in JSON format */
+/** A position in keys format. Entries look like: `"5,2": "pawnsW"` */
 interface Position {
-	[key: string]: string
+	[coordKey: string]: string
 }
 
 "use strict";
