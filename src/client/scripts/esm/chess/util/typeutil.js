@@ -82,6 +82,7 @@ function forEachPieceTypeOfColor(color, callback) {
 }
 
 export default {
+	neutralTypes,
 	colorsTypes,
 	royals,
 	jumpingRoyals,

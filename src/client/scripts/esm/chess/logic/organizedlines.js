@@ -253,27 +253,23 @@ function buildStateFromKeyList(gamefile) {
  * @param {gamefile} gamefile
  */
 function getEmptyTypeState(gamefile) {
-
 	const typesInGame = gamefile.startSnapshot.existingTypes; // ['pawns','queens']
 	const state = {};
 
+	const neutralTypes = typeutil.neutralTypes; // ['obstacles', 'voids']
+
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
+	const neutralExt = colorutil.getColorExtensionFromColor('neutral');
 	
 	for (const type of typesInGame) {
-		state[type + whiteExt] = [];
-		state[type + blackExt] = [];
+		if (neutralTypes.includes(type)) {
+			state[type + neutralExt] = [];
+		} else {
+			state[type + whiteExt] = [];
+			state[type + blackExt] = [];
+		}
 	}
-
-	// White and Black
-	// for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
-	// 	state[typeutil.colorsTypes.white[i]] = [];
-	// 	state[typeutil.colorsTypes.black[i]] = [];
-	// }
-	// // Neutral
-	// for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
-	// 	state[typeutil.colorsTypes.neutral[i]] = [];
-	// }
 
 	return state;
 }

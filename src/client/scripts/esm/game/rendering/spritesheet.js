@@ -39,6 +39,9 @@ const cachedPieceTypes = [];
  */
 const cachedPieceSVGs = [];
 
+/** Piece types that don't need, nor have, an SVG */
+const typesThatDontNeedAnSVG = ['voids'];
+
 /**
  * Loads the spritesheet texture
  * @param {WebGL2RenderingContext} gl - The webgl context being used} gl 
@@ -46,8 +49,11 @@ const cachedPieceSVGs = [];
  */
 async function initSpritesheetForGame(gl, gamefile) {
 
+	const existingTypes = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes);  // ['pawns','voids']
+	removeTypesThatDontNeedAnSVG(existingTypes); // ['pawns']
+
 	/** Makes all the types in the game singular instead of plural */
-	const typesNeeded = gamefile.startSnapshot.existingTypes.map(type => type.slice(0, -1)); // Remove the "s" at the end
+	const typesNeeded = existingTypes.map(type => type.slice(0, -1)); // Remove the "s" at the end
 
 	/** A list of svg IDs we need for the game @type {string[]} */
 	const svgIDs = getSVG_IDsFromPieceTypes(typesNeeded);
@@ -66,7 +72,7 @@ async function initSpritesheetForGame(gl, gamefile) {
 
 	// Convert each SVG element to an Image
 	const readyImages = await convertSVGsToImages(svgElements);
-	if (readyImages === undefined) throw new Error("Images are undefined!")
+	if (readyImages === undefined) throw new Error("Images are undefined!");
 
 	// { spritesheet: HTMLImageElement, spritesheetData: Object }
 	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
@@ -79,6 +85,21 @@ async function initSpritesheetForGame(gl, gamefile) {
 	// data that contains the texture coordinates of each piece!
 	spritesheet = texture.loadTexture(gl, spritesheetAndSpritesheetData.spritesheet, { useMipmaps: true });
 	spritesheetData = spritesheetAndSpritesheetData.spritesheetData;
+}
+
+/**
+ * Removes piece types from the provided types that don't need nor have an SVG.
+ * DESTRUCTIVE, modifies the original array.
+ * @param {string[]} types - ['pawns','voids']
+ */
+function removeTypesThatDontNeedAnSVG(types) {
+	typesThatDontNeedAnSVG.forEach(typeThatDoesntNeedAnSVG => {
+		const indexOfType = types.indexOf(typeThatDoesntNeedAnSVG);
+		if (indexOfType !== -1) {
+			types.splice(indexOfType, 1); // Remove this type from the list.
+			// console.log(`Piece type "${typeThatDoesntNeedAnSVG}" in new game doesn't need an SVG, skipping.`);
+		}
+	});
 }
 
 async function fetchMissingPieceSVGs(typesNeeded) {
@@ -95,8 +116,6 @@ async function fetchMissingPieceSVGs(typesNeeded) {
  * @param {string[]} types - ['archbishop','chancellor']
  */
 async function fetchAllPieceSVGs(types) {
-	console.log(`Fetching missing piece types: ${JSON.stringify(types)}`);
-
 	// Map over the missing types and create promises for each fetch
 	const fetchPromises = types.map(pieceType => {
 		const svgIDs = getSVG_IDs_From_PieceType(pieceType);
@@ -142,18 +161,18 @@ async function convertSVGsToImages(svgElements) {
 		}
 		return readyImages;
 	} catch (e) {
-		console.log("Error caught while converting SVGs to Images:")
+		console.log("Error caught while converting SVGs to Images:");
 		console.log(e.stack);
 	}
 }
 
 (async function fetchAndCacheClassicalPieceSVGs() {
-	console.log("Fetching all Classical SVGs...")
+	console.log("Fetching all Classical SVGs...");
 	const svgIDs = getSVG_IDsFromPieceTypes(piecesInTheClassicalSVGGroup);
 	const classicalSVGElements = await fetchPieceSVGs('classical.svg', svgIDs);
 	cachedPieceTypes.push(...piecesInTheClassicalSVGGroup);
 	classicalSVGElements.forEach(svg => cachedPieceSVGs[svg.id] = svg);
-	console.log("Fetched all Classical SVGs!")
+	console.log("Fetched all Classical SVGs!");
 })();
 
 function getSpritesheet() {
