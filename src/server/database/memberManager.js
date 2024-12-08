@@ -26,18 +26,20 @@ import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js
  */
 function addUser(username, email, hashed_password, { roles, verification, preferences } = {}) {
 	// The table looks like:
+
 	// CREATE TABLE IF NOT EXISTS members (
 	// 	user_id INTEGER PRIMARY KEY,               
-	// 	username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
+	// 	username TEXT UNIQUE NOT NULL COLLATE NOCASE,
 	// 	email TEXT UNIQUE NOT NULL,                
 	// 	hashed_password TEXT NOT NULL,             
-	// 	roles TEXT,                       
-	// 	joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	// 	refresh_tokens TEXT,                       
-	// 	preferences TEXT,                          
-	// 	verification TEXT,                         
-	// 	login_count INTEGER DEFAULT 1,             
-	// 	last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	// 	roles TEXT,        
+	// 	joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	// 	last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
+	// 	login_count INTEGER NOT NULL DEFAULT 0,                        
+	// 	preferences TEXT,
+	// 	refresh_tokens TEXT,                          
+	// 	verification TEXT, 
+	// 	username_history TEXT
 	// );
 
 	if (roles !== undefined && typeof roles !== 'string') throw new Error('Roles must be a string.');
