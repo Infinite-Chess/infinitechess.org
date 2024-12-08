@@ -116,7 +116,7 @@ function deleteUser(user_id, reason_deleted) {
 
 /**
  * Generates a **UNIQUE** user_id. It queries if it is taken to do so.
- * @returns {number} The length of the desired id
+ * @returns {number} The length of the desired user_id
  */
 function genUniqueUserID(length) {
 	let id;
