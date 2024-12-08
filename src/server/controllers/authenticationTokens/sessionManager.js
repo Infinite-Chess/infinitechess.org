@@ -53,8 +53,8 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	// We have the token...
 	
 	// When does it expire? Should we renew?
-	const savedTokens = renewSession(req, res, userId, username, roles, validRefreshTokens, matchingTokenObj);
-	if (!savedTokens && changesMade) saveRefreshTokens(userId, validRefreshTokens);
+	const didSaveTokens = renewSession(req, res, userId, username, roles, validRefreshTokens, matchingTokenObj);
+	if (!didSaveTokens && changesMade) saveRefreshTokens(userId, validRefreshTokens); // Save it now since the renew session function didn't
 
 	return true;
 }
