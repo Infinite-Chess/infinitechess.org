@@ -116,9 +116,9 @@ function deleteUser(user_id, reason_deleted) {
 
 /**
  * Generates a **UNIQUE** user_id. It queries if it is taken to do so.
- * @returns {string} The ID
+ * @returns {number} The length of the desired id
  */
-function genUniqueUserID(length) { // object contains the key value list where the keys are the ids we want to not have duplicates of.
+function genUniqueUserID(length) {
 	let id;
 	do {
 		id = generateRandomUserId(length);
