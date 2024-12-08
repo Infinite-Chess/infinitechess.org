@@ -17,6 +17,16 @@ const htmlDirectory = path.join(__dirname, "../../../dist/client/views");
 const serveFile = (filePath) => (req, res) => {
 	const language = getLanguageToServe(req);
 	const file = path.join(htmlDirectory, language, filePath);
+	/**
+	 * sendFile() will AUTOMATICALLY check if the file's Last-Modified
+	 * value is after the request's 'If-Modified-Since' header...
+	 * 
+	 * If so, it will send 200 OK with the updated file content!
+	 * 
+	 * Otherwise, it sends 304 Not Modified, signaling the client
+	 * to use their cached version for another duration of the
+	 * max-age property of the Cache-Control header we send!
+	 */
 	res.sendFile(file);
 };
 
