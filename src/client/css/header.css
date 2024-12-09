@@ -52,7 +52,7 @@ header a {
     transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
 }
 
-.svg-language, .svg-board, .svg-legalmove, .svg-perspective,
+.svg-language, .svg-board, .svg-legalmove, .svg-perspective, .svg-selection,
 .svg-squares, .svg-mouse, .svg-camera,
 .checkmark {
     width: 19px;
@@ -266,7 +266,7 @@ nav.compact-3 #svg-logout {
     border-bottom: 1px solid grey;
 }
 
-.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover {
+.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover, .selection-option:hover {
     background-color: var(--header-link-hover-color);
 }
 
@@ -317,7 +317,7 @@ span.arrow-head-left {
 
 /* Language nested dropdown */
 
-.language-dropdown-item, .legalmove-option {
+.language-dropdown-item, .legalmove-option, .selection-option {
     display:flex;
     align-items: center;
     cursor: pointer;
@@ -379,7 +379,18 @@ span.arrow-head-left {
     padding: 0 15px 0 8px;
 }
 
+/* Selection dropdown */
 
+.selection-option-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 35px;
+}
+
+.selection-option {
+    padding: 0 15px 0 8px;
+}
 
 /* Perspective dropdown */
 

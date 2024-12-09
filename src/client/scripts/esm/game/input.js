@@ -69,8 +69,9 @@ let ignoreMouseDown = false;
 let mouseIsSupported = true;
 
 /** Touchscreen and mouse */
-let pointerIsTouch; // True if the mouse recent pointer input was from a touch event. Used on devices that support both touchscreen and mouse.
-let pointerWorldLocation = [0,0];
+let pointerIsTouch; // True if the most recent pointer input was from a touch event. Used on devices that support both touchscreen and mouse.
+let pointerPos; // The location of the mouse or touch point. This is used to save the location of the touch point after it is released.
+let pointerWorldLocation = [0,0]; // Same as above, but records world space
 
 // The cursor that appears on touch screen when you select a piece and zoom out
 const dampeningToMoveMouseInTouchMode = 0.5;
@@ -134,6 +135,10 @@ function getPointerClicked() {
 
 function getPointerClickedTile() {
 	return pointerIsTouch ? [touchClickedTile.x, touchClickedTile.y] : mouseClickedTile;
+}
+
+function getPointerPos() {
+	return [pointerPos[0], pointerPos[1]];
 }
 
 function getPointerWorldLocation() {
@@ -242,6 +247,7 @@ function initTouchSimulatedClick() {
 		const oneOrNegOne = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 		touchClickedWorld = [oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
 		if (!isMouseHeld_Left()) {
+			pointerPos = [touchHelds[0].x, touchHelds[0].y];
 			pointerWorldLocation = touchClickedWorld;
 			pointerIsTouch = true;
 		}
@@ -293,6 +299,7 @@ function touchHelds_UpdateTouch(id, touchCoords) {
 		thisTouch.y = touchCoords[1];
 	}
 	if (touchHelds.length === 1 && pointerIsTouch) {
+		pointerPos = [touchHelds[0].x, touchHelds[0].y];
 		const oneOrNegOne = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 		pointerWorldLocation = [oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
 	}
@@ -464,7 +471,10 @@ function calcMouseWorldLocation_Mouse() {
 	const mouseLocationX = (n * mousePos[0] / halfCanvasWidth) * boundingBoxToUse.right;
 	const mouseLocationY = (n * mousePos[1] / halfCanvasHeight) * boundingBoxToUse.top;
 	mouseWorldLocation = [mouseLocationX, mouseLocationY];
-	if (!pointerIsTouch) pointerWorldLocation = mouseWorldLocation;
+	if (!pointerIsTouch) {
+		pointerPos = mousePos;
+		pointerWorldLocation = mouseWorldLocation;
+	}
 }
 
 // We're using a touch screen, SETS THE mouse location to [0,0]!!!
@@ -751,6 +761,7 @@ export default {
 	getPointerHeld,
 	getPointerClicked,
 	getPointerClickedTile,
+	getPointerPos,
 	getPointerWorldLocation,
 	getPointerIsTouch
 };

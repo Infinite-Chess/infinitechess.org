@@ -154,10 +154,16 @@ function update() {
 }
 
 function handleDragging(hoverSquare, pieceHoveredType) {
+	// Prevents accidently dragging pieces when trying to zoom.
+	if (input.getTouchHelds().length > 1) {
+		draganimation.dropPiece();
+		draggingPiece = false;
+		return;
+	}
 	if (input.getPointerHeld()) { // still dragging.
 		// Render the piece at the pointer.
 		draganimation.dragPiece(input.getPointerWorldLocation());
-	} else {
+	} else { // piece dropped
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
 		const wasCapture = pieceHoveredType || hoverSquare.hasOwnProperty('enpassant');
 		draganimation.dropPiece(hoverSquareLegal, wasCapture);

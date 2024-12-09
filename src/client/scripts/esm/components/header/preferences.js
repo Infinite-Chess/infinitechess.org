@@ -12,9 +12,11 @@ let preferences; // { theme, legal_moves }
 const default_legal_moves = 'squares'; // dots/squares
 const default_perspective_sensitivity = 100;
 const default_perspective_fov = 90;
+const default_drag_enabled = true;
+const default_premove_mode = 'many';
 
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs = ['perspective_sensitivity', 'perspective_fov'];
+const clientSidePrefs = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'constant', 'center', 'premove_mode'];
 
 /**
  * Whether a change was made to the preferences since the last time we sent them over to the server.
@@ -132,6 +134,43 @@ function setLegalMovesShape(legal_moves) {
 	savePreferences();
 }
 
+function getDragEnabled() {
+	return preferences.drag_enabled ?? default_drag_enabled;
+}
+function setDragEnabled(drag_enabled) {
+	if (typeof drag_enabled !== 'boolean') throw new Error('Cannot set preference drag_enabled when it is not a boolean.');
+	preferences.drag_enabled = drag_enabled;
+	onChangeMade();
+	savePreferences();
+}
+function getConstantMaxSpeed() {
+	return preferences.constant;
+}
+function setConstantMaxSpeed(enabled) {
+	if (typeof enabled !== 'boolean') throw new Error('Cannot set preference enabled when it is not a boolean.');
+	preferences.constant = enabled;
+	onChangeMade();
+	savePreferences();
+}
+function getPanFromCenter() {
+	return preferences.center;
+}
+function setPanFromCenter(enabled) {
+	if (typeof enabled !== 'boolean') throw new Error('Cannot set preference enabled when it is not a boolean.');
+	preferences.center = enabled;
+	onChangeMade();
+	savePreferences();
+}
+function getPremoveMode() {
+	return preferences.premove_mode ?? default_premove_mode;
+}
+function setPremoveMode(premove_mode) {
+	if (typeof premove_mode !== 'string') throw new Error('Cannot set preference premove_mode when it is not a string.');
+	preferences.premove_mode = premove_mode;
+	onChangeMade();
+	savePreferences();
+}
+
 function getPerspectiveSensitivity() {
 	return preferences.perspective_sensitivity || default_perspective_sensitivity;
 }
@@ -160,6 +199,14 @@ export default {
 	setTheme,
 	getLegalMovesShape,
 	setLegalMovesShape,
+	getDragEnabled,
+	setDragEnabled,
+	getConstantMaxSpeed,
+	setConstantMaxSpeed,
+	getPanFromCenter,
+	setPanFromCenter,
+	getPremoveMode,
+	setPremoveMode,
 	getPerspectiveSensitivity,
 	setPerspectiveSensitivity,
 	getPerspectiveFOV,

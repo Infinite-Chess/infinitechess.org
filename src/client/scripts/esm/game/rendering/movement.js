@@ -13,6 +13,8 @@ import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
+import camera from './camera.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 "use strict";
@@ -330,40 +332,69 @@ function detectPanning() {
 
 	if (boardIsGrabbed !== 0) return; // Only pan if we aren't dragging the board
 
-	let panning = false; // Any panning key pressed this frame?
-	if (input.atleast1KeyHeld()) { // Skip all if no key is pressed, saves cpu.
-		if (input.isKeyHeld('d')) {
-			panning = true;
-			// if (perspective.getEnabled()) panAccel_Perspective(0)
-			// else panVel[0] += loadbalancer.getDeltaTime() * panAccel;
-			panAccel_Perspective(0);
-		} if (input.isKeyHeld('a')) {
-			panning = true;
-			// if (perspective.getEnabled()) panAccel_Perspective(180)
-			// else panVel[0] -= loadbalancer.getDeltaTime() * panAccel;
-			panAccel_Perspective(180);
-		} if (input.isKeyHeld('w')) {
-			panning = true;
-			// if (perspective.getEnabled()) panAccel_Perspective(90)
-			// else panVel[1] += loadbalancer.getDeltaTime() * panAccel;
-			panAccel_Perspective(90);
-		} if (input.isKeyHeld('s')) {
-			panning = true;
-			// if (perspective.getEnabled()) panAccel_Perspective(-90)
-			// else panVel[1] -= loadbalancer.getDeltaTime() * panAccel;
-			panAccel_Perspective(-90);
+	let controlX = 0;
+	let controlY = 0;
+	if (input.atleast1KeyHeld()) {
+		controlX += input.isKeyHeld('d');
+		controlX -= input.isKeyHeld('a');
+		controlY += input.isKeyHeld('w');
+		controlY -= input.isKeyHeld('s');
+	} else if (selection.areDraggingPiece()) {
+		controlX += isPieceDraggedToEdge('right');
+		controlX -= isPieceDraggedToEdge('left');
+		controlY += isPieceDraggedToEdge('top');
+		controlY -= isPieceDraggedToEdge('bottom');
+		let targetSpeed;
+		if (preferences.getConstantMaxSpeed()) {
+			targetSpeed = 1;
+		} else {
+			targetSpeed = Math.hypot(controlX, controlY);
+			if (targetSpeed>1) targetSpeed = 1;
 		}
+		if ((controlX || controlY) && preferences.getPanFromCenter()) {
+			const pointerPos = input.getPointerPos();
+			controlX = pointerPos[0];
+			controlY = pointerPos[1];
+		}
+		const hyp = Math.hypot(controlX, controlY);
+		if (hyp) {
+			controlX *= targetSpeed / hyp;
+			controlY *= targetSpeed / hyp;
+		} else {
+			controlX = 0;
+			controlY = 0;
+		}
+		
 	}
-	if (panning) { // Make sure velocity hypotenuse hasn't gone over cap
+	let capToUse = perspective.getEnabled() ? panVelCap_3D : panVelCap_2D;
+	controlX *= capToUse;
+	controlY *= capToUse;
+	
+	const theta = -perspective.getRotZ() * (Math.PI / 180);
+	const sin = Math.sin(theta);
+	const cos = Math.cos(theta);
+	
+	const targetVelX = controlX * cos - controlY * sin;
+	const targetVelY = controlX * sin + controlY * cos;
+	
+	// Accelerating to a target velocity is the same as decelerating in the reference frame with that velocity.
+	panVel[0] -= targetVelX;
+	panVel[1] -= targetVelY;
+	decceleratePanVel();
+	panVel[0] += targetVelX;
+	panVel[1] += targetVelY;
+	
+	if (controlX || controlY) {
+		// Make sure velocity hypotenuse hasn't gone over cap
 		// Calculate hypotenuse
 		const hyp = Math.hypot(...panVel);
-		const capToUse = perspective.getEnabled() ? panVelCap_3D : panVelCap_2D;
+		
 		const ratio = capToUse / hyp;
 		if (ratio < 1) { // Too fast, multiply components by the ratio to cap our velocity
 			panVel[0] *= ratio;
 			panVel[1] *= ratio;
 		}
-	} else decceleratePanVel();
+	}
 }
 
 function panAccel_Perspective(angle) {
@@ -514,6 +545,31 @@ function dragBoard_WithFingers() {
 	setBoardScale(newScale);
 
 	input.moveMouse(touchHeld1, touchHeld2);
+}
+
+/**
+ * Checks if a piece is being dragged close to the edge of the visible area.
+ * @param {string} edge - 'left', 'right', 'bottom', or 'top'
+ * @returns {number} 
+ */
+function isPieceDraggedToEdge(edge) {
+	if(!selection.areDraggingPiece() || perspective.getEnabled()) return;
+	const [pointerX, pointerY] = input.getPointerPos();
+	const dragArea = 100;
+	let distanceFromEdge
+	switch (edge) {
+		case 'left':
+			distanceFromEdge = pointerX + camera.getCanvasWidthVirtualPixels()/2; break;
+		case 'right':
+			distanceFromEdge = -pointerX + camera.getCanvasWidthVirtualPixels()/2; break;
+		case 'bottom':
+			distanceFromEdge = pointerY + camera.getCanvasHeightVirtualPixels()/2 - camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV(); break;
+		case 'top':
+			distanceFromEdge = -pointerY + camera.getCanvasHeightVirtualPixels()/2 - camera.getPIXEL_HEIGHT_OF_TOP_NAV(); break;
+	}
+	if (distanceFromEdge > dragArea) return false;
+	if (distanceFromEdge < 0) distanceFromEdge = 0;
+	return 1-distanceFromEdge/dragArea;
 }
 
 function eraseMomentum() {

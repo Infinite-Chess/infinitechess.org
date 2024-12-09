@@ -153,7 +153,7 @@ function dragPiece(coords) {
  * @param {boolean} playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
  * @param {boolean} wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
  */
-function dropPiece( playSound = true, wasCapture = false ) {
+function dropPiece( playSound = false, wasCapture = false ) {
 	if (playSound) {
 		if (wasCapture) sound.playSound_capture(0, false);
 		else sound.playSound_move(0, false);
