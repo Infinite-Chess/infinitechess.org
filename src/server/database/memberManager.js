@@ -9,6 +9,17 @@ import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databas
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
 
 
+// Variables ----------------------------------------------------------
+
+
+/**
+ * A list of all valid reasons to delete an account.
+ * These reasons are stored in the deleted_members table in the database.
+ * @type {string[]}
+ */
+const validDeleteReasons = ['unverified','user request'];
+
+
 
 // Create / Delete Member methods ---------------------------------------------------------------------------------------
 
@@ -83,9 +94,14 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
  * Deletes a user from the members table.
  * @param {number} user_id - The ID of the user to delete.
  * @param {string} reason_deleted - The reason the user is being deleted.
- * @returns {boolean} true if there was a change made (deleted successfully)
+ * @returns {boolean} true if there was a change made (deleted successfully), or false if they weren't found, or the reason was invalid.
  */
 function deleteUser(user_id, reason_deleted) {
+	if (!validDeleteReasons.includes(reason_deleted)) {
+		logEvents(`Cannot delete user with ID "${user_id}" for an invalid reason "${reason_deleted}"!`, 'errLog.txt', { print: true });
+		return false;
+	}
+
 	// SQL query to delete a user by their user_id
 	const query = 'DELETE FROM members WHERE user_id = ?';
 

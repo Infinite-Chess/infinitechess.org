@@ -105,6 +105,8 @@ function createNewSession(req, res, user_id, username, roles) {
 
 function revokeSession(res, userId, deleteToken) {
 	// Only delete the token from member data if it's specified (may be websocket related or an account deletion)
+	// Sometimes we may want to skip this, in the event their account is being deleted right after anyway,
+	// in that case all refresh_tokens are being deleted so this line doesn't matter.
 	if (deleteToken !== undefined) deleteRefreshTokenFromMemberData(userId, deleteToken);
 	if (!res) return; // Websocket-related, or deleted account automatically
 	deleteSessionCookies(res);
