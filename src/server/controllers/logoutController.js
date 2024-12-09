@@ -19,7 +19,7 @@ async function handleLogout(req, res) {
 
 	// Delete their existing session cookies WHETHER OR NOT they
 	// are signed in, because they may THINK they are...
-	revokeSession(res); 
+	revokeSession(res);
 
 	if (!req.memberInfo.signedIn) return res.redirect('/'); // Existing refresh token cookie was invalid (tampered, expired, manually invalidated, or account deleted)
 
