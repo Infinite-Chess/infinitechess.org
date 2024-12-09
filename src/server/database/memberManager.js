@@ -213,6 +213,11 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 		return {};
 	}
 
+	if (typeof searchKey !== 'string' || typeof searchValue !== 'string' && typeof searchValue !== 'number') {
+		logEvents("When getting member data by criteria, searchKey must be a string and searchValue must be a number or string!", 'errLog.txt', { print: true });
+		return {};
+	}
+
 	// Check if the searchKey is valid
 	if (!uniqueMemberKeys.includes(searchKey)) {
 		logEvents(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt', { print: true });
