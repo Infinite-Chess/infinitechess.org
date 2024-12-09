@@ -14,8 +14,8 @@ const htmlDirectory = path.join(__dirname, "../../../dist/client/views");
  * @param {boolean} [isError=false] - If the file is an error page.
  * @returns {Function} Express middleware handler.
  */
-const serveFile = (filePath) => (req, res) => {
-	const language = getLanguageToServe(req);
+const serveFile = (filePath, localized = true) => (req, res) => {
+	const language = localized ? getLanguageToServe(req) : "";
 	const file = path.join(htmlDirectory, language, filePath);
 	res.sendFile(file);
 };
@@ -29,6 +29,7 @@ router.get("/login(.html)?", serveFile("login.html"));
 router.get("/createaccount(.html)?", serveFile("createaccount.html"));
 router.get("/termsofservice(.html)?", serveFile("termsofservice.html"));
 router.get("/member(.html)?/:member", serveFile("member.html"));
+router.get("/admin(.html)?", serveFile("admin.html", false));
 
 // Error pages
 router.get("/400(.html)?", serveFile("errors/400.html", true));
