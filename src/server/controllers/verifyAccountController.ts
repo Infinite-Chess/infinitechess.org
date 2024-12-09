@@ -118,6 +118,11 @@ async function verifyAccount(req: CustomRequest, res: Response) {
 	res.redirect(`/member/${username.toLowerCase()}`);
 };
 
+/**
+ * Returns the verification object that it should look like
+ * right after verifying and before we've notified them
+ * that they've been verified on their profile page.
+ */
 function getNewVerificationAfterVerifying(): Verification { // { verified, notified, code }
 	return {
 		verified: true,
