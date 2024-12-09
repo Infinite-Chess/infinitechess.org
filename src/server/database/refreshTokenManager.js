@@ -83,18 +83,27 @@ function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 /**
  * Updates the refresh tokens for a given user.
  * @param {number} userId - The user ID of the member.
- * @param {RefreshTokensList} tokens - The new array of refresh tokens to save.
+ * @param {RefreshTokensList | null} tokens - The new array of refresh tokens to save, or null if we want to delete them.
  * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token (false if access token).
  */
 function saveRefreshTokens(userId, tokens) {
 	// If the tokens array is empty, set it to null
-	if (tokens.length === 0) tokens = null;
+	if (tokens !== null && tokens.length === 0) tokens = null;
 
 	// Update the refresh_tokens or access_tokens column
 	const updateResult = updateMemberColumns(userId, { refresh_tokens: tokens });
 
 	// If no changes were made, log the event
 	if (!updateResult) logEvents(`No changes made when saving refresh_tokens of member with id "${userId}"!`, 'errLog.txt', { print: true });
+}
+
+/**
+ * Deletes all the refresh_tokens of a user by user_id.
+ * It does so by setting the cell to null.
+ * @param {number} user_id 
+ */
+function deleteRefreshTokensOfUser(user_id) {
+	saveRefreshTokens(user_id, null); // Saving `null` effectively deletes them
 }
 
 
@@ -104,4 +113,5 @@ export {
 	deleteRefreshTokenFromMemberData,
 	getRefreshTokensByUserID,
 	saveRefreshTokens,
+	deleteRefreshTokensOfUser,
 };

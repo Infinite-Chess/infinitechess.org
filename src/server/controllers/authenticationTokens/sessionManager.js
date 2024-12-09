@@ -1,6 +1,6 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
 import { logEvents } from "../../middleware/logEvents.js";
-import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
+import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, deleteRefreshTokensOfUser, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
 import { signRefreshToken } from "./tokenSigner.js";
 import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from "../../config/config.js";
@@ -187,10 +187,26 @@ function deleteMemberInfoCookie(res) {
 	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'None', secure: true });
 }
 
+/**
+ * Revokes all login sessions of a user by user_id.
+ * It does this by deleting their refresh_tokens cell, invalidating all of them.
+ * 
+ * IF YOU ARE DELETING THEIR ACCOUNT: You don't have to do this step.
+ * 
+ * Since it doesn't have access to the response object,
+ * the user affected will have to refresh the page for
+ * their navigation links to change.
+ * @param {number} user_id 
+ */
+function deleteAllSessionsOfUser(user_id) {
+	deleteRefreshTokensOfUser(user_id);
+}
+
 
 
 export {
 	createNewSession,
 	doesMemberHaveRefreshToken_RenewSession,
 	revokeSession,
+	deleteAllSessionsOfUser,
 };
