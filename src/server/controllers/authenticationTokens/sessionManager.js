@@ -18,8 +18,8 @@ import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } fro
  * @param {number} roles
  * @param {string} token - The refresh token to check.
  * @param {string} IP - The IP address they are connecting from.
- * @param {number} [req] - The request object. 
- * @param {number} [res] - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
+ * @param {number} req - The request object. 
+ * @param {number} res - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {boolean} - Returns true if the member has the refresh token, false otherwise.
  */
 function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, IP, req, res) {
@@ -107,6 +107,7 @@ function revokeSession(res, userId, deleteToken) {
 	// Only delete the token from member data if it's specified (may be websocket related or an account deletion)
 	// Sometimes we may want to skip this, in the event their account is being deleted right after anyway,
 	// in that case all refresh_tokens are being deleted so this line doesn't matter.
+	// Or if we know the token isn't present anyway.
 	if (deleteToken !== undefined) deleteRefreshTokenFromMemberData(userId, deleteToken);
 	if (!res) return; // Websocket-related, or deleted account automatically
 	deleteSessionCookies(res);
