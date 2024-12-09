@@ -49,7 +49,7 @@ function verifyAccessToken(req, res) {
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
 	// { isValid (boolean), user_id, username, roles }
-	const result = isTokenValid(accessToken, false, getClientIP(req), req, res); // False for access token
+	const result = isTokenValid(accessToken, false, getClientIP(req)); // False for access token
 	if (!result.isValid) {
 		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered

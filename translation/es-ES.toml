@@ -1,26 +1,34 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "21"
+version = "23"
 maintainer = "xa31"
 
 [header]
-home = "Inicio"
+home = "Infinite Chess"
 play = "Jugar"
 news = "Noticias"
 login = "Iniciar Sesión"
+profile = "Perfíl"
 createaccount = "Crear Cuenta"
+logout = "Cerrar sesión"
+
+[header.settings]
+language = "Idioma"
+board = "Tablero" # Board color/theme
+legalmoves = "Jugadas Legales" # Legal moves shape
+legalmoves-squares = "Casillas"
+legalmoves-dots = "Puntos" # Dots and 4 corner triangles
+perspective = "Perspectiva" # Perspective-mode
+perspective-mouse-sensitivity = "Sensibilidad del ratón"
+perspective-fov = "Campo de visión (FOV)"
+ping = ["Latencia", "ms"] # A number is inserted between these 2 strings.
+reset-to-default = "Restablecer valores"
 
 [footer]
 contact = "Contacte con nosotros"
 terms_of_service = "Términos de Servicio"
 source_code = "Código Fuente"
 language = "Idioma"
-
-[header.javascript]
-js-profile = "Cuenta"
-js-logout = "Cerrar Sesión"
-js-login = "Iniciar Sesión"
-js-createaccount = "Crear Cuenta"
 
 [member.javascript]
 js-confirm_delete = "¿Esta seguro que desea eliminar su cuenta? !Esta acción NO puede ser deshecha! Haga clic en OK para introducir su contraseña."
@@ -36,7 +44,7 @@ what_is_it_pargaraphs = [
 "Como puedes imaginar, hay infinitas posibilidades para la posición de inicio, ¡Muchas de las cuales puedes jugar competitivamente! Tu objetivo final sigue siendo el jaque mate, que requiere nuevas estrategias, dado que ya no hay muros para atrapar al rey rival. Las partidas no suelen durar mas que las de ajedrez normal. ¡Los Peones siguen coronando en las filas 1 y 8!",
 ]
 how_to_title = "¿Como Puedo Jugar?"
-how_to_paragraph = ["¡La actual versión es la 1.4, y esta disponible en la pagina ","Jugar","!"]
+how_to_paragraph = ["¡La actual versión es la 1.5, y esta disponible en la pagina ","Jugar","!"]
 about_title = "Sobre el proyecto"
 about_paragraphs = [
 "Soy Naviary. Desde que descubrí Infinte Chess (el concepto existe desde hace mucho antes que esta web), ¡Me han intrigado sus posibilidades! Hasta hace muy poco, jugar ha sido bastante complicado, usuarios de chess.com tenían que crear imágenes del tablero actual y enviarlas entre ellos cada jugada. Debido a esto, no mucha gente conoce o ha sido capaz de jugar a esto.",
@@ -94,7 +102,6 @@ title = "Miembro" # The tab name
 verify_message = "Por favor comprueba tu e-mail para verificar tu cuenta. Las cuentas sin verificar se eliminan tras 3 días."
 resend_message = ["¿El e-mail no ha llegado? Comprueba la carpeta de spam. También puedes, ", "mandarlo otra vez.", "Si no puedes encontrarlo, ", "mandanos un mensaje."]
 verify_confirm = "¡Gracias! Tu cuenta ha sido verificada."
-rating = "Rating Elo:"
 joined = "Se unió:"
 seen = ["Visto hace:", ""]
 reveal_info = "Mostrar información de la Cuenta"
@@ -217,6 +224,7 @@ Omega = "Demostración: Omega"
 Omega_Squared = "Demostración: Omega^2"
 Omega_Cubed = "Demostración: Omega^3"
 Omega_Fourth = "Demostración: Omega^4"
+5D_Chess = "5D Chess"
 no_clock = "Sin Reloj"
 clock = "Reloj"
 minutes = "m"
@@ -296,8 +304,6 @@ webgl_unsupported = "Tu navegador no tiene soporte para WebGL. Este juego lo req
 bigints_unsupported = "Las BigInts no tienen soporte. Por favor actualiza tu navegador.\nLas BigInts son necesarias para hacer que el tablero sea infinito."
 shaders_failed = "No ha sido posible inicializar el programa de sombreado"
 failed_compiling_shaders = "Ha ocurrido un error compilando los shaders:"
-disable_holiday_theme_desktop = "Para desactivar el tema de celebración, pulsa Enter."
-disable_holiday_theme_mobile = "Para desactivar el tema de celebración, pulsa con tres dedos a la vez."
 
 [play.javascript.copypaste]
 copied_game = "¡Posición copiada en el portapapeles!"
@@ -352,7 +358,7 @@ opponent_disconnected = "Tu oponente se ha desconectado."
 opponent_lost_connection = "Tu oponente ha perdido conexión."
 auto_resigning_in = "Auto-rindiéndose en"
 auto_aborting_in = "Auto-abortando en"
-not_logged_in = "No has iniciado sesión. Por favór inicia sesión para reconectarse a esta partida."
+not_logged_in = "No has iniciado sesión. Por favor inicia sesión para reconectarse a esta partida."
 game_no_longer_exists = "Esta partida ya no existe"
 another_window_connected = "Otra ventana se ha conectado."
 server_restarting = "Servidor reiniciándose inminentemente..."
@@ -365,7 +371,7 @@ no_connection = "Sin conexión."
 reconnected = "Reconectado."
 unable_to_identify_ip = "Incapaz de identificar IP."
 online_play_disabled = "Juego Online desactivado. Las Cookies no están soportadas. Prueba con otro buscador."
-too_many_requests = "Demasiadas conexiones. Intentalo otra vez dentro de un rato."
+too_many_requests = "Demasiadas conexiones. Inténtalo otra vez dentro de un rato."
 message_too_big = "Mensaje demasiado grande."
 too_many_sockets = "Demasiados sockets"
 origin_error = "Error de origen."
@@ -419,26 +425,26 @@ opponent_koth = "¡Pierdes por king of the hill!"
 opponent_generic = "¡Pierdes!"
 white_checkmate = "¡Las blancas ganan por jaque mate!"
 black_checkmate = "¡Las negras ganan por jaque mate!"
-bug_checkmate = "Esto es un bug, por favor reportalo. El juego acaba en jaque mate."
+bug_checkmate = "Esto es un bug, por favor repórtalo. El juego acaba en jaque mate."
 white_time = "¡Las blancas ganan por tiempo!"
 black_time = "¡Las negras ganan por tiempo!"
-bug_time = "Esto es un bug, por favor reportalo. El juego acaba por tiempo."
+bug_time = "Esto es un bug, por favor repórtalo. El juego acaba por tiempo."
 white_royalcapture = "¡Las blancas ganan por captura real!"
 black_royalcapture = "¡Las negras ganan por captura real!"
-bug_royalcapture = "Esto es un bug, por favor reportalo. El juego acaba por captura real."
+bug_royalcapture = "Esto es un bug, por favor repórtalo. El juego acaba por captura real."
 white_allroyalscaptured = "¡Las blancas ganan por captura real total!"
 black_allroyalscaptured = "¡Las negras ganan por captura real total!"
-bug_allroyalscaptured = "Esto es un bug, por favor reportalo. El juego acaba por captura real total."
+bug_allroyalscaptured = "Esto es un bug, por favor repórtalo. El juego acaba por captura real total."
 white_allpiecescaptured = "¡Las blancas ganan por captura de todas las piezas!"
 black_allpiecescaptured = "¡Las negras ganan por captura de todas las piezas!"
-bug_allpiecescaptured = "Esto es un bug, por favor reportalo. El juego acaba por captura de todas las piezas."
+bug_allpiecescaptured = "Esto es un bug, por favor repórtalo. El juego acaba por captura de todas las piezas."
 white_threecheck = "¡Las blancas ganan por jaque triple!"
 black_threecheck = "¡Las negras ganan por jaque triple!"
-bug_threecheck = "Esto es un bug, por favor reportalo. El juego acaba por jaque triple."
+bug_threecheck = "Esto es un bug, por favor repórtalo. El juego acaba por jaque triple."
 white_koth = "¡Las blancas ganan por king of the hill!"
 black_koth = "¡Las negras ganan por king of the hill!"
-bug_koth = "Esto es un bug, por favor reportalo. El juego acaba por king of the hill."
-bug_generic = "¡Esto es un bug, por favor reportalo!"
+bug_koth = "Esto es un bug, por favor repórtalo. El juego acaba por king of the hill."
+bug_generic = "¡Esto es un bug, por favor repórtalo!"
 
 [terms]
 title = "Términos del Servicio"
@@ -494,7 +500,7 @@ thanks = "¡Gracias!"
 title = "Inicio de Sesión" # The tab name
 username = "Nombre de usuario:"
 password = "Contraseña:"
-forgot_password = ["Olvidaste tu contraseña? ", "Mandanos un correo."]
+forgot_password = ["Olvidaste tu contraseña? ", "Mándanos un correo."]
 login_button = "Iniciar Sesión"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
@@ -511,7 +517,7 @@ ws-invalid_username = "El nombre de usuario no es válido"
 ws-incorrect_password = "La contraseña es incorrecta"
 ws-username_and_password_required = "Se necesita un usuario y contraseña."
 ws-username_and_password_string = "El usuario y la contraseña deben ser texto."
-ws-login_failure_retry_in = "Inicio de sesión fallido, intentalo de nuevo en"
+ws-login_failure_retry_in = "Inicio de sesión fallido, inténtalo de nuevo en"
 ws-seconds = "segundos" # unit of time
 ws-second = "segundo" # unit of time
 ws-username_length = "El nombre de usuario debe tener entre 3 y 20 caracteres"
@@ -526,10 +532,6 @@ ws-you_are_banned = "Estás baneado."
 ws-password_length = "La contraseña debe tener entre 6 y 72 caracteres"
 ws-password_format = "La contraseña está en un formato incorrecto"
 ws-password_password = "La contraseña no debe ser 'password'"
-ws-refresh_token_not_found_logged_out = "Ningún miembro tiene ese token de refresco (Ya has cerrado la sesión)"
-ws-refresh_token_not_found = "Ningún miembro tiene ese token de refresco"
-ws-refresh_token_expired = "No se ha encontrado ningún token de refresco (Tu sesión ha expirado)"
-ws-refresh_token_invalid = "Token de refresco expirado o manipulado"
 ws-member_not_found = "No se ha encontrado ese miembro"
 ws-forbidden_wrong_account = "Prohibido. Esta no es tu cuenta"
 ws-deleting_account_not_found = "Error al eliminar la cuenta. No se ha encontrado la cuenta."
@@ -540,7 +542,6 @@ ws-too_many_requests_to_server = "Demasiadas peticiones. Intentalo otra vez lueg
 ws-bad_request = "Petición errónea."
 ws-not_found = "404 Página no encontrada"
 ws-forbidden = "Prohibido."
-ws-unauthorized_patron_page = "Desautorizado. Esta página es exclusiva para Patreons."
 ws-already_in_game = "Ya estas en una partida."
 ws-server_restarting = "El servidor se reiniciará en" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
 ws-server_under_maintenance = "El servidor esta bajo mantenimiento. ¡Vuelve en un rato!" # Can be changed at will to change the display message.

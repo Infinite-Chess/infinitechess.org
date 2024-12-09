@@ -1,11 +1,16 @@
 
+import { NODE_ENV } from './env.js';
+
+
+// Variables -----------------------------------------------------------
+
+
 /**
- * Whether to run the server in development mode.
+ * Whether the server is running in development mode.
  * It will be hosted on a different port for local host,
  * and a few other minor adjustments.
- * Disable in production.
  */
-const DEV_BUILD = true;
+const DEV_BUILD = NODE_ENV === 'development';
 
 /** 
  * Whether we bundle and minify files to send to the client

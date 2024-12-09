@@ -15,12 +15,7 @@ function addDeletedMemberToDeletedMembersTable(user_id, reason_deleted) {
 	
 	// The table looks like:
 	// CREATE TABLE IF NOT EXISTS deleted_members (
-	//     user_id INTEGER PRIMARY KEY,               
-	//     username TEXT NOT NULL COLLATE NOCASE,    
-	//     username_history TEXT,    
-	//     joined INTEGER NOT NULL,
-	//     left INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,                              
-	//     login_count INTEGER NOT NULL,             
+	//     user_id INTEGER PRIMARY KEY,           
 	//     reason_deleted TEXT NOT NULL,             
 	// );
 

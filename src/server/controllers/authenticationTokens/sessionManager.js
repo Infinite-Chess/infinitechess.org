@@ -1,6 +1,6 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
 import { logEvents } from "../../middleware/logEvents.js";
-import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
+import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, deleteRefreshTokensOfUser, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
 import { signRefreshToken } from "./tokenSigner.js";
 import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from "../../config/config.js";
@@ -18,8 +18,8 @@ import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } fro
  * @param {number} roles
  * @param {string} token - The refresh token to check.
  * @param {string} IP - The IP address they are connecting from.
- * @param {number} [req] - The request object. 
- * @param {number} [res] - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
+ * @param {number} req - The request object. 
+ * @param {number} res - The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {boolean} - Returns true if the member has the refresh token, false otherwise.
  */
 function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token, IP, req, res) {
@@ -53,8 +53,8 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	// We have the token...
 	
 	// When does it expire? Should we renew?
-	const savedTokens = renewSession(req, res, userId, username, roles, validRefreshTokens, matchingTokenObj);
-	if (!savedTokens && changesMade) saveRefreshTokens(userId, validRefreshTokens);
+	const didSaveTokens = renewSession(req, res, userId, username, roles, validRefreshTokens, matchingTokenObj);
+	if (!didSaveTokens && changesMade) saveRefreshTokens(userId, validRefreshTokens); // Save it now since the renew session function didn't
 
 	return true;
 }
@@ -103,12 +103,18 @@ function createNewSession(req, res, user_id, username, roles) {
 	createSessionCookies(res, user_id, username, refreshToken);
 }
 
-function revokeSession(res, userId, deleteToken) {
-	// Only delete the token from member data if it's specified (may be websocket related or an account deletion)
-	if (deleteToken !== undefined) deleteRefreshTokenFromMemberData(userId, deleteToken);
-	if (!res) return; // Websocket-related, or deleted account automatically
+/** Terminates the session of a client by deleting their session & preferences cookies.
+ * 
+ * DOES NOT delete/invalidate their session token from the database!!!
+ * To do that too, use {@link deleteRefreshTokenFromMemberData}.
+ * But you DON'T have to do that if the account is being deleted,
+ * OR if they're being logged out of all session at one,
+ * because their refresh tokens are being deleted anyway.
+ * Only use that when they're logging out a SINGLE session.
+ */
+function revokeSession(res) {
 	deleteSessionCookies(res);
-	deletePreferencesCookie(res); // Even though this cookie only lasts 10 seconds, it's good to delete it here.
+	deletePreferencesCookie(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
 }
 
 
@@ -185,10 +191,26 @@ function deleteMemberInfoCookie(res) {
 	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'None', secure: true });
 }
 
+/**
+ * Revokes all login sessions of a user by user_id.
+ * It does this by deleting their refresh_tokens cell, invalidating all of them.
+ * 
+ * IF YOU ARE DELETING THEIR ACCOUNT: You don't have to do this step.
+ * 
+ * Since it doesn't have access to the response object,
+ * the user affected will have to refresh the page for
+ * their navigation links to change.
+ * @param {number} user_id 
+ */
+function deleteAllSessionsOfUser(user_id) {
+	deleteRefreshTokensOfUser(user_id);
+}
+
 
 
 export {
 	createNewSession,
 	doesMemberHaveRefreshToken_RenewSession,
 	revokeSession,
+	deleteAllSessionsOfUser,
 };
