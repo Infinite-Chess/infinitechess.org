@@ -2,7 +2,6 @@
  * This module handles account deletion.
  */
 
-import db from '../database/database.js';
 import { logEvents } from "../middleware/logEvents.js";
 import { getTranslationForReq } from "../utility/translate.js";
 import { deleteUser, getMemberDataByCriteria } from "../database/memberManager.js";

@@ -2,7 +2,6 @@
 import jwt from 'jsonwebtoken';
 import { logEvents } from '../../middleware/logEvents.js';
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
-import { doStuffOnLogout } from '../../controllers/logoutController.js';
 import { doesMemberHaveRefreshToken_RenewSession, revokeSession } from './sessionManager.js';
 
 /**
@@ -24,8 +23,8 @@ import { doesMemberHaveRefreshToken_RenewSession, revokeSession } from './sessio
  * @param {string} token - The token to validate.
  * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token. Pass `false` for access tokens.
  * @param {string} IP - The IP address they are connecting from.
- * @param {string} [req] - Required if it's a refresh token.
- * @param {string} [res] - Required if it's a refresh token. The response object. If provided, we will renew their refresh token cookie if it's been a bit.
+ * @param {string} [req] - Required if it's a refresh token AND an http request (not socket).
+ * @param {string} [res] - Required if it's a refresh token AND an http request (not socket). The response object. If provided, we will renew their refresh token cookie if it's been a bit.
  * @returns {Object} - An object containing the properties: { isValid (boolean), user_id, username, roles }
  */
 function isTokenValid(token, isRefreshToken, IP, req, res) {
@@ -42,7 +41,7 @@ function isTokenValid(token, isRefreshToken, IP, req, res) {
 	if (!doesMemberOfIDExist(user_id)) {
 		const reason = `Token is valid, but the users account of id "${user_id}" doesn't exist! This is fine, did you just delete it?`;
 		console.log(reason);
-		revokeSession(res);
+		if (res) revokeSession(res); // The response may not be defined if we called this method on a websocket upgrade connection request.
 		return { isValid: false, reason };
 	}
 
@@ -56,7 +55,7 @@ function isTokenValid(token, isRefreshToken, IP, req, res) {
 
 	// Check if the token was manually invalidated (e.g., user logged out)
 	if (!doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, IP, req, res)) {
-		revokeSession(res);
+		if (res) revokeSession(res); // Revoke their session in case they were manually logged out, and their client didn't know that. The response may not be defined if we called this method on a websocket upgrade connection request.
 		return { isValid: false, reason: "User doesn't have a matching refresh token in the database." };
 	}
 

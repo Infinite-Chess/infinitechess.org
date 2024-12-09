@@ -103,15 +103,18 @@ function createNewSession(req, res, user_id, username, roles) {
 	createSessionCookies(res, user_id, username, refreshToken);
 }
 
-function revokeSession(res, userId, deleteToken) {
-	// Only delete the token from member data if it's specified (may be websocket related or an account deletion)
-	// Sometimes we may want to skip this, in the event their account is being deleted right after anyway,
-	// in that case all refresh_tokens are being deleted so this line doesn't matter.
-	// Or if we know the token isn't present anyway.
-	if (deleteToken !== undefined) deleteRefreshTokenFromMemberData(userId, deleteToken);
-	if (!res) return; // Websocket-related, or deleted account automatically
+/** Terminates the session of a client by deleting their session & preferences cookies.
+ * 
+ * DOES NOT delete/invalidate their session token from the database!!!
+ * To do that too, use {@link deleteRefreshTokenFromMemberData}.
+ * But you DON'T have to do that if the account is being deleted,
+ * OR if they're being logged out of all session at one,
+ * because their refresh tokens are being deleted anyway.
+ * Only use that when they're logging out a SINGLE session.
+ */
+function revokeSession(res) {
 	deleteSessionCookies(res);
-	deletePreferencesCookie(res); // Even though this cookie only lasts 10 seconds, it's good to delete it here.
+	deletePreferencesCookie(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
 }
 
 
