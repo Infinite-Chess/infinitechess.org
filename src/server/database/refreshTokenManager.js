@@ -2,7 +2,7 @@
 import { getMemberDataByCriteria, updateMemberColumns } from './memberManager.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens, trimTokensToSessionCap } from '../controllers/authenticationTokens/refreshTokenObject.js';
-import { closeAllSocketsOfSession } from '../socket/socketManager.js';
+import { closeAllSocketsOfMember, closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 
 /**
@@ -65,6 +65,10 @@ function addRefreshTokenToMemberData(req, userId, token) {
  * @param {string} token - The refresh token to be deleted from the user's refresh_tokens column.
  */
 function deleteRefreshTokenFromMemberData(userId, deleteToken) {
+	// Whenever we delete/invalidate a session token from the database,
+	// we should also close any sockets that were authenticated/logged in by it.
+	closeAllSocketsOfSession(deleteToken, 1008, "Logged out");
+
 	// Fetch the current refresh tokens for the user
 	const refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) return logEvents(`Cannot delete refresh token from non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
@@ -104,6 +108,7 @@ function saveRefreshTokens(userId, tokens) {
  */
 function deleteRefreshTokensOfUser(user_id) {
 	saveRefreshTokens(user_id, null); // Saving `null` effectively deletes them
+	closeAllSocketsOfMember(user_id, 1008, "Logged out");
 }
 
 

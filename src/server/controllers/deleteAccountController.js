@@ -2,7 +2,6 @@
  * This module handles account deletion.
  */
 
-import db from '../database/database.js';
 import { logEvents } from "../middleware/logEvents.js";
 import { getTranslationForReq } from "../utility/translate.js";
 import { deleteUser, getMemberDataByCriteria } from "../database/memberManager.js";
@@ -37,7 +36,7 @@ async function removeAccount(req, res) {
 	}
 	
 	// Close their sockets, delete their invites, delete their session cookies...
-	revokeSession(res, user_id);
+	revokeSession(res);
 
 	const reason_deleted = "user request";
 	if (deleteAccount(user_id, reason_deleted)) { // Success!!
