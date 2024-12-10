@@ -11,6 +11,19 @@ import { deleteAccount } from "../controllers/deleteAccountController.js";
 // @ts-ignore
 import { deleteAllSessionsOfUser } from "../controllers/authenticationTokens/sessionManager.js";
 
+const validCommands = [
+	"ban",
+	"delete",
+	"username",
+	"logout",
+	"verify",
+	"post",
+	"invites",
+	"announce",
+	"userinfo",
+	"help"
+];
+
 function processCommand(req: CustomRequest, res: Response): void {
 	const command = req.params["command"]!;
 	const commandAndArgs = command.split(" ");
@@ -73,12 +86,13 @@ function deleteCommand(command: string, commandAndArgs: string[], res: Response)
 
 function usernameCommand(command: string, commandAndArgs: string[], res: Response) {
 	if (commandAndArgs[1] === "get") {
-		logEvents("Command executed: " + command + "\nResult: " + getMemberDataByCriteria(["username"], "user_id", parsedId)["username"] + "\n", "adminCommands");
 		if (commandAndArgs.length < 3) {
+			logCommand(command);
 			res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
 			return;
 		}
 		const parsedId = Number.parseInt(commandAndArgs[2]!);
+		logEvents("Command executed: " + command + "\nResult: " + getMemberDataByCriteria(["username"], "user_id", parsedId)["username"] + "\n", "adminCommands");
 		const username = getMemberDataByCriteria(["username"], "user_id", parsedId)["username"];
 		res.status(username === undefined ? 422 : 200).send(username ?? "User with id " + parsedId + " does not exist.");
 	}
@@ -111,29 +125,29 @@ function logoutUser(command: string, commandAndArgs: string[], res: Response) {
 }
 
 function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
-	logEvents("Command executed: " + command + "\n" + getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"],
-		"username",
-		commandAndArgs[1]) + "\n", "adminCommands");
 	if (commandAndArgs.length < 2) {
+		logCommand(command);
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
-	res.status(200).send(getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"],
+	const memberInfo = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"],
 		"username",
-		commandAndArgs[1]));
+		commandAndArgs[1]);
+	logEvents("Command executed: " + command + "\n" + memberInfo + "\n", "adminCommands");
+	res.status(Object.keys(memberInfo).length === 0 ? 422 : 200).send(Object.keys(memberInfo).length === 0 ? "User " + commandAndArgs[1] + " does not exist." : memberInfo);
 }
 
 function helpCommand(commandAndArgs: string[], res: Response) {
 	if (commandAndArgs.length === 1) {
-		res.status(200).send("Commands: ban, delete, username, logout, verify, post, invites, announce, userinfo, help\nUse help <command> to get more information about a command.");
+		res.status(200).send("Commands: " + validCommands.join(", ") + "\nUse help <command> to get more information about a command.");
 		return;
 	}
 	switch (commandAndArgs[1]) {
 		case "ban":
-			res.status(200).send("Syntax: ban email|ip|browser <username> <reason> [days]\nBans a user for a duration for the given reason.");
+			res.status(200).send("Syntax: ban <username> [days]\nBans a user for a duration or permanently.");
 			return;
 		case "unban":
-			res.status(200).send("Syntax: unban <username>\nUnbans the given user.");
+			res.status(200).send("Syntax: unban <email>\nUnbans the given email.");
 			return;
 		case "delete":
 			res.status(200).send("Syntax: delete <username> [reason]\nDeletes the given user's account for an optional reason.");
@@ -142,7 +156,7 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 			res.status(200).send("Syntax: username get <userid>\n        username set <userid> <newUsername>\nGets or sets the username of the account with the given userid");
 			return;
 		case "logout":
-			res.status(200).send("Syntax: logout <username>\nLogs out the account with the given username.");
+			res.status(200).send("Syntax: logout <username>\nLogs out all sessions of the account with the given username.");
 			return;
 		case "verify":
 			return;
