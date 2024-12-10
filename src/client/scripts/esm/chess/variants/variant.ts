@@ -53,7 +53,7 @@ type ColorVariantProperty<T> = {
 interface Variant {
 	positionString?: TimeVariantProperty<string>,
 	generator?: {
-		algorithm: () => any,
+		algorithm: () => Position,
 		rules: {
 			pawnDoublePush: boolean,
 			castleWith?: string
@@ -61,6 +61,11 @@ interface Variant {
 	},
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
+}
+
+/** A position in keys format. Entries look like: `"5,2": "pawnsW"` */
+interface Position {
+	[coordKey: string]: string
 }
 
 "use strict";
@@ -496,4 +501,8 @@ export default {
 	getGameRulesOfVariant,
 	getPromotionsAllowed,
 	getMovesetsOfVariant,
+};
+
+export type {
+	Position
 };

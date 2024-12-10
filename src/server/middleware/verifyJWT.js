@@ -49,7 +49,7 @@ function verifyAccessToken(req, res) {
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
 	// { isValid (boolean), user_id, username, roles }
-	const result = isTokenValid(accessToken, false, getClientIP(req), req, res); // False for access token
+	const result = isTokenValid(accessToken, false, getClientIP(req)); // False for access token
 	if (!result.isValid) {
 		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true });
 		return false; //Token was expired or tampered
@@ -84,7 +84,7 @@ function verifyRefreshToken(req, res) {
 	// { isValid (boolean), user_id, username, reason (string, if not valid) }
 	const result = isTokenValid(refreshToken, true, getClientIP(req), req, res); // true for refresh token
 	if (!result.isValid) {
-		console.log(`Invalid refresh token: Expired, tampered, or account deleted! "${refreshToken}"`);
+		console.log(`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
 		return false; //Token was expired or tampered
 	}
 
@@ -127,7 +127,7 @@ function verifyRefreshToken_WebSocket(ws) {
 	const ip = ws.metadata.IP;
 	const result = isTokenValid(refreshToken, true, ip); // True for refresh token
 	if (!result.isValid) {
-		console.log(`Invalid refresh token (websocket): Expired, tampered, or account deleted! "${refreshToken}"`);
+		console.log(`Invalid refresh token (websocket): Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`);
 		return false; // Token was expired or tampered
 	}
 
