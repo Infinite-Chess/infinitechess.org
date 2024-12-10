@@ -18,6 +18,7 @@ async function createDevelopmentAccounts() {
 	if (!doesMemberOfUsernameExist("owner")) {
 		const user_id = await generateAccount({ username: "Owner", email: "email1", password: "1", autoVerify: true });
 		giveRole(user_id, "owner");
+		giveRole(user_id, "admin");
 	}
 	if (!doesMemberOfUsernameExist("patron")) {
 		const user_id = await generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
