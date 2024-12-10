@@ -8,7 +8,7 @@ type MemberInfo = {
 	signedIn: true,
 	user_id: number,
 	username: string,
-	roles: string[]
+	roles: string[] | null
 } | {
 	signedIn: false
 }

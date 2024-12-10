@@ -11,7 +11,7 @@ const htmlDirectory = path.join(__dirname, "../../../dist/client/views");
 /**
  * Serves an HTML file based on the requested path and language.
  * @param {string} filePath - The relative file path to serve.
- * @param {boolean} [isError=false] - If the file is an error page.
+ * @param {boolean} [localized=true] - If the file is not localized to other languages.
  * @returns {Function} Express middleware handler.
  */
 const serveFile = (filePath, localized = true) => (req, res) => {

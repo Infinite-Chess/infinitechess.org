@@ -6,7 +6,7 @@
 import { logEvents } from "../middleware/logEvents.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
-const validRoles = ['owner','patron','admin'];
+const validRoles = ['owner', 'admin', 'patron'];
 
 
 /**
