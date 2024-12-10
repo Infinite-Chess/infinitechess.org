@@ -239,6 +239,8 @@ function unloadGame() {
 
 	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
 	guiclock.resetClocks();
+
+	spritesheet.deleteSpritesheet();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */

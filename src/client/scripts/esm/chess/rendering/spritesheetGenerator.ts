@@ -1,6 +1,11 @@
 
 // @ts-ignore
 import math from "../../util/math.js";
+// @ts-ignore
+import colorutil from "../util/colorutil.js";
+
+
+import type { Coords } from "../logic/movesets.js";
 
 
 /**
@@ -92,37 +97,39 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  * @param images - An array of HTMLImageElement objects to be merged into a spritesheet.
  * @returns A sprite data object with texture coordinates for each image.
  */
-function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): object {  
+function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {  
 	// Create the sprite data object
-	const spriteData: { [key: string]: number | [number,number] } = {};
+	const texLocs: { [key: string]: Coords } = {};
 	const pieceWidth = 1 / gridSize;
-	spriteData['pieceWidth'] = pieceWidth;
 
 	// Positioning variables
 	let x = 0;
-	let y = 1 - pieceWidth;
+	let y = 0;
   
 	// Loop through the images to create the sprite data
 	images.forEach(image => { 
-		const texX = x;  // Normalize the x texture coordinate
-		const texY = y;  // Normalize the y texture coordinate
+		const texX = (x / gridSize);  // Normalize the x texture coordinate
+		const texY = 1 - (y + 1) / gridSize;  // Normalize the y texture coordinate
 
 		// Assuming the image has an ID, use it as the key for the data object
 		const imageId = image.id;
 		const mappedKey = mapIdToKey(imageId);
 
 		// Store the texture coordinates in the spriteData object
-		spriteData[mappedKey] = [texX, texY];
+		texLocs[mappedKey] = [texX, texY];
     
 		// Update the position for the next image
-		x += pieceWidth;
-		if (x >= 1) {
+		x++;
+		if (x === gridSize) {
 			x = 0;
-			y -= pieceWidth;
+			y++;
 		}
 	});
   
-	return spriteData;
+	return {
+		pieceWidth,
+		texLocs
+	};
 }
 
 /**
@@ -130,7 +137,7 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number): 
  */
 function mapIdToKey(id: string): string {
 	const [pieceSingular, color] = id.split('-'); // ['pawn','white']
-	const colorSuffix = color === 'white' ? 'W' : color === 'black' ? 'B' : undefined;
+	const colorSuffix = colorutil.getColorExtensionFromColor(color);
 	if (colorSuffix === null) throw new Error(`Color not valid: "${color}"`);
 	return `${pieceSingular}s${colorSuffix}`;
 }

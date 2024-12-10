@@ -7,56 +7,91 @@
  */
 
 
-
 import { fetchPieceSVGs } from '../../chess/api/fetchPieceSVGs.js';
+import { Coords } from '../../chess/logic/movesets.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 import { svgToImage } from '../../chess/rendering/svgtoimageconverter.js';
+// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
+// @ts-ignore
 import jsutil from '../../util/jsutil.js';
+// @ts-ignore
 import texture from './texture.js';
 
-/** @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile */
+
+// Type Definitions ----------------------------------------------------------
 
 
-let spritesheet; // Texture. 8x8 containing every texture of every piece, black and white.
+// @ts-ignore
+import type gamefile from '../../chess/logic/gamefile.js';
+
+
+// Variables ---------------------------------------------------------------------------
+
+
+/**
+ * The spritesheet texture for rendering the pieces of the current game.
+ * 
+ * Using a spritesheet instead of 1 texture for each piece allows us to
+ * render all the pieces with a single mesh, and a single texture.
+ */
+let spritesheet: WebGLTexture | undefined; // Texture. 8x8 containing every texture of every piece, black and white.
 /**
  * Contains where each piece is located in the spritesheet (texture coord).
- * Texture coords of a piece range from 0-1
+ * Texture coords of a piece range from 0-1, where (0,0) is the bottom-left corner.
  */
-let spritesheetData;
+let spritesheetData: {
+	/** The width of each texture in the whole spritesheet, as a fraction. */
+	pieceWidth: number,
+	/**
+	 * The texture locations of each piece type in the spritesheet,
+	 * where (0,0) is the bottom-left corner of the spritesheet,
+	 * and the coordinates provided are the bottom-left corner of the corresponding type.
+	 */
+	texLocs: { [type: string]: Coords }
+} | undefined;
+
 
 /**
  * These SIX types are all grouped together into one server resource!
  * If we request one, we request them ALL!
  */
 const piecesInTheClassicalSVGGroup = ['pawn','knight','bishop','rook','king','queen'];
-
-/** Piece types, in singular form, that we have cached their SVG up to this point. @type {string[]} */
-const cachedPieceTypes = [];
-/**
- * Piece SVG Elements that we have fetched-requested from the server, up to this point.
- * In the form: 'pawn-white': SVGElement
- * @type {{ [svgID: string]: SVGElement }}
- */
-const cachedPieceSVGs = [];
-
 /** Piece types that don't need, nor have, an SVG */
 const typesThatDontNeedAnSVG = ['voids'];
 
 /**
- * Loads the spritesheet texture
- * @param {WebGL2RenderingContext} gl - The webgl context being used} gl 
- * @param {gamefile} gamefile 
+ * Piece types, in singular form, that we have cached their SVG up to this point.
+ * In the form: ['pawn','obstacle']
  */
-async function initSpritesheetForGame(gl, gamefile) {
+const cachedPieceTypes: string[] = [];
+/**
+ * Piece SVG Elements that we have fetch-requested from the server, up to this point.
+ * In the form: 'pawn-white': SVGElement
+ */
+const cachedPieceSVGs: { [svgID: string]: SVGElement } = {};
 
-	const existingTypes = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes);  // ['pawns','voids']
-	removeTypesThatDontNeedAnSVG(existingTypes); // ['pawns']
+
+
+// Functions ---------------------------------------------------------------------------
+
+
+/**
+ * Loads the spritesheet texture
+ * @param gl - The webgl context being used} gl 
+ * @param gamefile 
+ */
+async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: gamefile) {
+
+	/** All piece types in the game. */
+	let existingTypes: string[] = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes);
+	// Remove the pieces that don't need/have an SVG, such as VOIDS
+	existingTypes = existingTypes.filter(type => !typesThatDontNeedAnSVG.includes(type));
 
 	/** Makes all the types in the game singular instead of plural */
 	const typesNeeded = existingTypes.map(type => type.slice(0, -1)); // Remove the "s" at the end
-
 	/** A list of svg IDs we need for the game @type {string[]} */
-	const svgIDs = getSVG_IDsFromPieceTypes(typesNeeded);
+	const svgIDs: string[] = getSVG_IDsFromPieceTypes(typesNeeded);
 
 	// This is what may take a while, waiting for the fetch requests to return.
 	await fetchMissingPieceSVGs(typesNeeded);
@@ -71,14 +106,13 @@ async function initSpritesheetForGame(gl, gamefile) {
 	});
 
 	// Convert each SVG element to an Image
-	const readyImages = await convertSVGsToImages(svgElements);
-	if (readyImages === undefined) throw new Error("Images are undefined!");
+	const readyImages: HTMLImageElement[] = await convertSVGsToImages(svgElements);
 
-	// { spritesheet: HTMLImageElement, spritesheetData: Object }
 	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
+	console.log(spritesheetAndSpritesheetData.spritesheetData);
 
 	// Optional: Append the spritesheet to the document for debugging
-	spritesheetAndSpritesheetData.spritesheet.style = 'display: none';
+	spritesheetAndSpritesheetData.spritesheet.style.display = 'none';
 	document.body.appendChild(spritesheetAndSpritesheetData.spritesheet);
 
 	// Load the texture into webgl and initiate our spritesheet
@@ -88,21 +122,10 @@ async function initSpritesheetForGame(gl, gamefile) {
 }
 
 /**
- * Removes piece types from the provided types that don't need nor have an SVG.
- * DESTRUCTIVE, modifies the original array.
- * @param {string[]} types - ['pawns','voids']
+ * Tests what of the provided types we don't have yet,
+ * fetches them, and appends them to our cache.
  */
-function removeTypesThatDontNeedAnSVG(types) {
-	typesThatDontNeedAnSVG.forEach(typeThatDoesntNeedAnSVG => {
-		const indexOfType = types.indexOf(typeThatDoesntNeedAnSVG);
-		if (indexOfType !== -1) {
-			types.splice(indexOfType, 1); // Remove this type from the list.
-			// console.log(`Piece type "${typeThatDoesntNeedAnSVG}" in new game doesn't need an SVG, skipping.`);
-		}
-	});
-}
-
-async function fetchMissingPieceSVGs(typesNeeded) {
+async function fetchMissingPieceSVGs(typesNeeded: string[]) {
 	const typesMissing = jsutil.getMissingStringsFromArray(cachedPieceTypes, typesNeeded);
 
 	if (typesMissing.length === 0) return console.log("All piece SVGs for the game are present! No need to fetch more.");
@@ -113,11 +136,11 @@ async function fetchMissingPieceSVGs(typesNeeded) {
 
 /**
  * Fetches the SVGs of the provided piece types from the server.
- * @param {string[]} types - ['archbishop','chancellor']
+ * @param types - ['archbishop','chancellor']
  */
-async function fetchAllPieceSVGs(types) {
+async function fetchAllPieceSVGs(types: string[]) {
 	// Map over the missing types and create promises for each fetch
-	const fetchPromises = types.map(pieceType => {
+	const fetchPromises = types.map(async pieceType => {
 		const svgIDs = getSVG_IDs_From_PieceType(pieceType);
 		return fetchPieceSVGs(`fairy/${pieceType}.svg`, svgIDs)
 			.then(pieceSVGs => {
@@ -136,36 +159,54 @@ async function fetchAllPieceSVGs(types) {
 	console.log("All fetched pieces have been cached!");
 }
 
-function getSVG_IDsFromPieceTypes(pieceTypes) { // In singular form
-	const svgIDs = [];
-	pieceTypes.forEach(type => { // 'pawn'
-		svgIDs.push(...getSVG_IDs_From_PieceType(type));
-	});
+/**
+ * Returns a string of the ids of the svgs of
+ * each color that makes up all of the provided types.
+ * `['pawn','obstacle'] => ['pawn-white','pawn-black','obstacle-neutral']
+ */
+function getSVG_IDsFromPieceTypes(pieceTypes: string[]) { // In singular form
+	const svgIDs: string[] = [];
+	pieceTypes.forEach(type => svgIDs.push(...getSVG_IDs_From_PieceType(type)) );
 	return svgIDs;
 }
 
-function getSVG_IDs_From_PieceType(type) {
-	const svgIDs = [];
-	svgIDs.push(type + '-white');
-	svgIDs.push(type + '-black');
+/**
+ * Returns a string of the ids of the
+ * svgs of each color that makes up a type.
+ * 'pawn' => ['pawn-white','pawn-black']
+ */
+function getSVG_IDs_From_PieceType(type: string): string[] {
+	const svgIDs: string[] = [];
+
+	const pieceInPluralForm = type + 's';
+	const isNeutral = typeutil.neutralTypes.includes(pieceInPluralForm);
+	if (isNeutral) {
+		svgIDs.push(type + '-neutral');
+	} else {
+		svgIDs.push(type + '-white');
+		svgIDs.push(type + '-black');
+	}
+
 	return svgIDs;
 }
 
-async function convertSVGsToImages(svgElements) {
+/** Converts a list of SVGs into a list of HTMLImageElements */
+async function convertSVGsToImages(svgElements: SVGElement[]) {
+	const readyImages: HTMLImageElement[] = [];
 	try {
-		const readyImages = [];
 		for (const svgElement of svgElements) {
 			const img = await svgToImage(svgElement); // You can adjust width and height as needed
 			// document.body.appendChild(img);
 			readyImages.push(img);
 		}
-		return readyImages;
 	} catch (e) {
 		console.log("Error caught while converting SVGs to Images:");
-		console.log(e.stack);
+		console.log((e as Error).stack);
 	}
+	return readyImages;
 }
 
+// Do this by default whenever we load the page, as EVERY variant requires most of these pieces!
 (async function fetchAndCacheClassicalPieceSVGs() {
 	console.log("Fetching all Classical SVGs...");
 	const svgIDs = getSVG_IDsFromPieceTypes(piecesInTheClassicalSVGGroup);
@@ -180,16 +221,24 @@ function getSpritesheet() {
 }
 
 function getSpritesheetDataPieceWidth() {
-	return spritesheetData.pieceWidth;
+	return spritesheetData?.pieceWidth;
 }
 
-function getSpritesheetDataTexLocation(type) {
-	return spritesheetData[type];
+function getSpritesheetDataTexLocation(type: number) {
+	return spritesheetData?.texLocs[type]!;
 }
+
+function deleteSpritesheet() {
+	spritesheet = undefined;
+	spritesheetData = undefined;
+}
+
+
 
 export default {
 	initSpritesheetForGame,
 	getSpritesheet,
 	getSpritesheetDataPieceWidth,
 	getSpritesheetDataTexLocation,
+	deleteSpritesheet,
 };
