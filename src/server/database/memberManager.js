@@ -231,7 +231,6 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 		return {};
 	}
 
-
 	// Arguments are valid, move onto the SQL query...
 
 	// Construct SQL query
