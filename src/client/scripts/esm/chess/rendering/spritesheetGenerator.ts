@@ -6,8 +6,6 @@
 
 // @ts-ignore
 import math from "../../util/math.js";
-// @ts-ignore
-import colorutil from "../util/colorutil.js";
 
 
 import type { Coords } from "../logic/movesets.js";
@@ -113,10 +111,9 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {
 
 		// Use the image id as the key for the data object
 		const imageId = image.id;
-		const mappedKey = mapIdToKey(imageId);
 
 		// Store the texture coordinates
-		texLocs[mappedKey] = [texX, texY];
+		texLocs[imageId] = [texX, texY];
     
 		// Update the position for the next image
 		x++;
@@ -130,13 +127,6 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {
 		pieceWidth,
 		texLocs
 	};
-}
-
-/** Maps IDs like "pawn-white" to "pawnsW" and "pawn-black" to "pawnsB". */
-function mapIdToKey(id: string): string {
-	const [pieceSingular, color] = id.split('-'); // ['pawn','white']
-	const colorSuffix = colorutil.getColorExtensionFromColor(color);
-	return `${pieceSingular}s${colorSuffix}`;
 }
 
 
