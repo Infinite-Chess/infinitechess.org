@@ -79,21 +79,19 @@ function pawns(gamefile, piece, move, { updateProperties = true } = {}) {
 
 	// Delete the piece captured
 
+	if (capturedPiece) {
+		boardchanges.queueCaputure(moveChanges, piece, move.endCoords, capturedPiece);
+	} else {
+		// Move the pawn
+		boardchanges.queueMovePiece(moveChanges, piece, move.endCoords);
+	}
+
 	if (promotionTag) {
-		if (capturedPiece) boardchanges.queueDeletePiece(moveChanges, capturedPiece);
-
 		// Delete original pawn
-		boardchanges.queueDeletePiece(moveChanges, piece);
+		boardchanges.queueDeletePiece(moveChanges, {type: piece.type, coords: move.endCoords, index: piece.index});
 
-		boardchanges.queueAddPiece(moveChanges, promotionTag, move.endCoords, null);
+		boardchanges.queueAddPiece(moveChanges, {type: promotionTag, coords: move.endCoords, index: null});
 
-	} else /* enpassantTag */ {
-		if (capturedPiece) {
-			boardchanges.queueCaputure(moveChanges, piece, move.endCoords, capturedPiece);
-		} else {
-			// Move the pawn
-			boardchanges.queueMovePiece(moveChanges, piece, move.endCoords);
-		}
 	}
 
 	// Special move was executed!
