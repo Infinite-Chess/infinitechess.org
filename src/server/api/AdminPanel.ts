@@ -84,7 +84,7 @@ function deleteCommand(command: string, commandAndArgs: string[], res: Response)
 		res.status(404).send("User " + username + " does not exist.");
 		return;
 	}
-	res.status(200).send("");
+	res.status(200).send("Successfully deleted user " + username + ".");
 }
 
 function usernameCommand(command: string, commandAndArgs: string[], res: Response) {
