@@ -6,7 +6,7 @@
  * @returns A promise that resolves with the created image element.
  */
 function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
-	const svgID = svgElement.id; // 'pawn-white'
+	const svgID = svgElement.id; // 'pawnsW'
 
 	// Serialize the SVG element back to a string
 	const svgString = new XMLSerializer().serializeToString(svgElement);

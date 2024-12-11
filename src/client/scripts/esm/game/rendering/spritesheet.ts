@@ -25,6 +25,7 @@ import texture from './texture.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 import type { Coords } from '../../chess/logic/movesets.js';
+import colorutil from '../../chess/util/colorutil.js';
 
 
 // Variables ---------------------------------------------------------------------------
@@ -68,7 +69,7 @@ const typesThatDontNeedAnSVG = ['voids'];
 const cachedPieceTypes: string[] = [];
 /**
  * Piece SVG Elements that we have fetch-requested from the server, up to this point.
- * In the form: { 'pawn-white': SVGElement }
+ * In the form: { 'pawnsW': SVGElement }
  */
 const cachedPieceSVGs: { [svgID: string]: SVGElement } = {};
 
@@ -179,7 +180,7 @@ async function fetchAllPieceSVGs(types: string[]) {
 /**
  * Returns a string of the ids of the svgs of
  * each color that makes up all of the provided types.
- * `['pawn','obstacle'] => ['pawn-white','pawn-black','obstacle-neutral']
+ * `['pawn','obstacle'] => ['pawnsW','pawnsB','obstaclesN']
  */
 function getSVG_IDsFromPieceTypes(pieceTypes: string[]) { // In singular form
 	const svgIDs: string[] = [];
@@ -190,18 +191,19 @@ function getSVG_IDsFromPieceTypes(pieceTypes: string[]) { // In singular form
 /**
  * Returns a string of the ids of the
  * svgs of each color that makes up a type.
- * 'pawn' => ['pawn-white','pawn-black']
+ * 'pawn' => ['pawnsW','pawnsB']
  */
 function getSVG_IDs_From_PieceType(type: string): string[] {
 	const svgIDs: string[] = [];
 
 	const pieceInPluralForm = type + 's';
 	const isNeutral = typeutil.neutralTypes.includes(pieceInPluralForm);
+
 	if (isNeutral) {
-		svgIDs.push(type + '-neutral');
+		svgIDs.push(pieceInPluralForm + colorutil.getColorExtensionFromColor('neutral'));
 	} else {
-		svgIDs.push(type + '-white');
-		svgIDs.push(type + '-black');
+		svgIDs.push(pieceInPluralForm + colorutil.getColorExtensionFromColor('white'));
+		svgIDs.push(pieceInPluralForm + colorutil.getColorExtensionFromColor('black'));
 	}
 
 	return svgIDs;
