@@ -25,6 +25,7 @@ import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
 import draganimation from '../rendering/draganimation.js';
 import space from '../misc/space.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 /**
@@ -47,12 +48,10 @@ let pieceSelected;
 let draggingPiece = false;
 /**
  * When dropped in the same square, pieces are unselected every second time.
- * This alows players to move pieces by clicking if they don't want to use drag.
+ * This alows players to move pieces by clicking.
  * @type{boolean} 
  * */
 let didLastClickSelectPiece;
-/** Set to false if the user wants to use the original click controls. @type {boolean} */
-let dragEnabled = true;
 /** The pre-calculated legal moves of the current selected piece.
  * @type {LegalMoves} */
 let legalMoves;
@@ -142,10 +141,10 @@ function update() {
 	
 	const pieceClickedType = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
 	
-	if (draggingPiece) return handleDragging(hoverSquare, pieceClickedType);
+	if (draggingPiece) return handleDragging(pieceClickedType);
 	
 	// Pick up the piece on mousedown if we are allowed to move it. Otherwise only select when clicked.
-	const clicked = canMovePieceType(pieceClickedType) ? input.getPointerDown() : input.getPointerClicked();
+	const clicked = (canMovePieceType(pieceClickedType) && preferences.getDragEnabled()) ? input.getPointerDown() : input.getPointerClicked();
 	if (!clicked || input.isKeyHeld('control')) return; // Exit, we did not click
 	
 	if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClickedType); // A piece is already selected. Test if it was moved.
@@ -153,10 +152,15 @@ function update() {
 	// Else we clicked, but there was no piece to select, *shrugs*
 }
 
-function handleDragging(hoverSquare, pieceHoveredType) {
+function handleDragging(pieceHoveredType) {
+	if (input.getTouchHelds().length > 1) {
+		//Prevents accidental dragging when trying to zoom.
+		if (didLastClickSelectPiece) return unselectPiece();
+		return cancelDragging();
+	}
 	if (input.getPointerHeld()) { // still dragging.
 		// Render the piece at the pointer.
-		draganimation.dragPiece(input.getPointerWorldLocation());
+		draganimation.dragPiece(input.getPointerWorldLocation(), hoverSquare);
 	} else {
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
 		const wasCapture = pieceHoveredType || hoverSquare.hasOwnProperty('enpassant');
@@ -167,9 +171,16 @@ function handleDragging(hoverSquare, pieceHoveredType) {
 
 /** Picks up the currently selected piece if we are allowed to. */
 function startDragging() {
-	if (!dragEnabled || isOpponentPiece || (isPremove /*&& premovesEnabled*/) || movement.hasMomentum()) return false;
-	draganimation.pickUpPiece(pieceSelected.type, pieceSelected.coords);
+	if (!preferences.getDragEnabled() || !canMovePieceType(pieceSelected.type) || movement.hasMomentum()) return false;
+	draganimation.pickUpPiece(pieceSelected.type, pieceSelected.coords, hoverSquare);
 	return draggingPiece = true;
+}
+
+/** Puts the dragged piece back. Doesn't make a move. */
+function cancelDragging() {
+	draggingPiece = false;
+	didLastClickSelectPiece = false;
+	draganimation.dropPiece();
 }
 
 /**
@@ -311,13 +322,13 @@ function reselectPiece() {
  */
 function unselectPiece() {
 	pieceSelected = undefined;
-	draggingPiece = false;
 	isOpponentPiece = false;
 	isPremove = false;
 	legalMoves = undefined;
 	pawnIsPromoting = false;
 	promoteTo = undefined;
 	guipromotion.close(); // Close the promotion UI
+	if (draggingPiece) cancelDragging();
 	frametracker.onVisualChange();
 }
 
@@ -368,7 +379,7 @@ function updateHoverSquareLegal() {
 }
 
 /**
- * Returns true if the user is allowed to move the pieceType. It must be our piece and our turn.
+ * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
  * @param {string} pieceType - the type of piece 
  * @param {boolean} editmode
  */
