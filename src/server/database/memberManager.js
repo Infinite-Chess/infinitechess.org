@@ -4,6 +4,7 @@
  */
 
 import { logEvents } from '../middleware/logEvents.js';
+import { ensureJSONString } from '../utility/JSONUtils.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
@@ -208,28 +209,29 @@ function getMemberRowByUsername(username) {
  * @returns {Object} - An object containing the requested columns, or an empty object if no match is found.
  */
 function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLogging } = {}) {
+
+	// Guard clauses... Validating the arguments...
+
 	if (!Array.isArray(columns)) {
-		logEvents("When getting member data by criteria, columns must be an array of strings!", 'errLog.txt', { print: true });
+		logEvents(`When getting member data by criteria, columns must be an array of strings! Received: ${ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		return {};
+	}
+	if (!columns.every(column => typeof column === 'string' && allMemberColumns.includes(column))) {
+		logEvents(`Invalid columns requested from members table: ${ensureJSONString(columns)}`, 'errLog.txt', { print: true });
 		return {};
 	}
 
+	// Check if the searchKey and searchValue are valid
 	if (typeof searchKey !== 'string' || typeof searchValue !== 'string' && typeof searchValue !== 'number') {
-		logEvents("When getting member data by criteria, searchKey must be a string and searchValue must be a number or string!", 'errLog.txt', { print: true });
+		logEvents(`When getting member data by criteria, searchKey must be a string and searchValue must be a number or string! Received: ${ensureJSONString(searchKey)}, ${ensureJSONString(searchValue)}`, 'errLog.txt', { print: true });
 		return {};
 	}
-
-	// Check if the searchKey is valid
 	if (!uniqueMemberKeys.includes(searchKey)) {
 		logEvents(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt', { print: true });
 		return {};
 	}
 
-	// Validate columns
-	const invalidColumns = columns.filter(column => !allMemberColumns.includes(column));
-	if (invalidColumns.length > 0) {
-		logEvents(`Invalid columns requested from members table: ${invalidColumns.join(', ')}`, 'errLog.txt', { print: true });
-		return {};
-	}
+	// Arguments are valid, move onto the SQL query...
 
 	// Construct SQL query
 	const query = `SELECT ${columns.join(', ')} FROM members WHERE ${searchKey} = ?`;
@@ -240,7 +242,7 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 
 		// If no row is found, return an empty object
 		if (!row) {
-			if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = "${searchValue}"`, 'errLog.txt', { print: true });
+			if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = ${searchValue}`, 'errLog.txt', { print: true });
 			return {};
 		}
 
