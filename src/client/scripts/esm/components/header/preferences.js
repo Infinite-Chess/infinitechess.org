@@ -10,6 +10,7 @@ let preferences; // { theme, legal_moves }
 
 // The legal moves shape preference
 const default_legal_moves = 'squares'; // dots/squares
+const default_drag_enabled = true;
 const default_perspective_sensitivity = 100;
 const default_perspective_fov = 90;
 
@@ -132,6 +133,16 @@ function setLegalMovesShape(legal_moves) {
 	savePreferences();
 }
 
+function getDragEnabled() {
+	return preferences.drag_enabled || default_drag_enabled;
+}
+function setDragEnabled(drag_enabled) {
+	if (typeof drag_enabled !== 'boolean') throw new Error('Cannot set preference legal_moves when it is not a boolean.');
+	preferences.drag_enabled = drag_enabled;
+	onChangeMade();
+	savePreferences();
+}
+
 function getPerspectiveSensitivity() {
 	return preferences.perspective_sensitivity || default_perspective_sensitivity;
 }
@@ -160,6 +171,8 @@ export default {
 	setTheme,
 	getLegalMovesShape,
 	setLegalMovesShape,
+	getDragEnabled,
+	setDragEnabled,
 	getPerspectiveSensitivity,
 	setPerspectiveSensitivity,
 	getPerspectiveFOV,

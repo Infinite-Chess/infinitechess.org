@@ -38,6 +38,7 @@ import jsutil from '../../util/jsutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
+import dragAnimation from '../rendering/draganimation.js';
 // Import End
 
 /** 
@@ -167,12 +168,14 @@ function renderEverythingInGame() {
 	});
     
 	animation.renderTransparentSquares();
+	dragAnimation.renderTransparentSquare();
 	pieces.renderPiecesInGame(gamefile);
 	animation.renderPieces();
-    
+	
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
+		dragAnimation.renderPiece();
 		arrows.renderThem();
 		perspective.renderCrosshair();
 	});
