@@ -109,11 +109,9 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {
 		const texX = (x / gridSize);
 		const texY = 1 - (y + 1) / gridSize;
 
-		// Use the image id as the key for the data object
-		const imageId = image.id;
-
 		// Store the texture coordinates
-		texLocs[imageId] = [texX, texY];
+		// Use the image id as the key for the data object
+		texLocs[image.id] = [texX, texY];
     
 		// Update the position for the next image
 		x++;
