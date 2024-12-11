@@ -10,7 +10,7 @@
 
 import { fetchPieceSVGs } from '../../chess/api/fetchPieceSVGs.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import { svgToImage } from '../../chess/rendering/svgtoimageconverter.js';
+import { convertSVGsToImages, svgToImage } from '../../chess/rendering/svgtoimageconverter.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
@@ -207,22 +207,6 @@ function getSVG_IDs_From_PieceType(type: string): string[] {
 	}
 
 	return svgIDs;
-}
-
-/** Converts a list of SVGs into a list of HTMLImageElements */
-async function convertSVGsToImages(svgElements: SVGElement[]) {
-	const readyImages: HTMLImageElement[] = [];
-	try {
-		for (const svgElement of svgElements) {
-			const img = await svgToImage(svgElement); // You can adjust width and height as needed
-			// document.body.appendChild(img);
-			readyImages.push(img);
-		}
-	} catch (e) {
-		console.log("Error caught while converting SVGs to Images:");
-		console.log((e as Error).stack);
-	}
-	return readyImages;
 }
 
 // Do this by default whenever we load the page, as EVERY variant requires most of these pieces!

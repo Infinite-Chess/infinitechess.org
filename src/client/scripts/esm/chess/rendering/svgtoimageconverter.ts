@@ -1,4 +1,22 @@
 
+
+/** Converts a list of SVGs into a list of HTMLImageElements */
+async function convertSVGsToImages(svgElements: SVGElement[]) {
+	const readyImages: HTMLImageElement[] = [];
+	try {
+		for (const svgElement of svgElements) {
+			const img = await svgToImage(svgElement); // You can adjust width and height as needed
+			// document.body.appendChild(img);
+			readyImages.push(img);
+		}
+	} catch (e) {
+		console.log("Error caught while converting SVGs to Images:");
+		console.log((e as Error).stack);
+	}
+	return readyImages;
+}
+
+
 /**
  * Converts an SVG element to an Image element by serializing the SVG and creating a data URL.
  * The image does NOT have a specified width or height.
@@ -37,5 +55,6 @@ function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
 
 
 export {
-	svgToImage
+	convertSVGsToImages,
+	svgToImage,
 };
