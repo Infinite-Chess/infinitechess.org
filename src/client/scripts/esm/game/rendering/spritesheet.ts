@@ -10,7 +10,7 @@
 
 import { fetchPieceSVGs } from '../../chess/api/fetchPieceSVGs.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import { convertSVGsToImages, svgToImage } from '../../chess/rendering/svgtoimageconverter.js';
+import { convertSVGsToImages } from '../../chess/rendering/svgtoimageconverter.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
