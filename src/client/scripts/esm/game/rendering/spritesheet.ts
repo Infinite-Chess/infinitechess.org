@@ -1,8 +1,7 @@
 
 /**
- * This script stores the texture coordinates
- * of each piece in our spritesheet
- * FOR THE CURRENT GAME.
+ * This script stores the spritesheet FOR THE CURRENT GAME,
+ * and all the piece's texture coordinates within it.
  * 
  * If no game is loaded, no spritesheet is loaded.
  */
