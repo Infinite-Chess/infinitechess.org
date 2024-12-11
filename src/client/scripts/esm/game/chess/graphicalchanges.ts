@@ -39,7 +39,7 @@ function animateReturn(change: MoveChange, clearanimations: boolean) {
 }
 
 function animateCapture(change: CaptureChange, clearanimations: boolean) {
-	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, change.capturedPiece.type, clearanimations);
+	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, change.capturedPiece, clearanimations);
 }
 
 const meshChanges: ChangeApplication = {
