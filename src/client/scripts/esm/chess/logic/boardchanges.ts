@@ -1,9 +1,15 @@
+// @ts-ignore
 import organizedlines from "./organizedlines.js";
+// @ts-ignore
 import gamefileutility from "../util/gamefileutility.js";
+// @ts-ignore
 import jsutil from "../../util/jsutil.js";
 
+// @ts-ignore
 import type { gamefile } from "./gamefile.js";
+// @ts-ignore
 import type { Coords } from "./movesets.js";
+// @ts-ignore
 import type { Move } from "../util/moveutil.js";
 
 interface Piece {
@@ -13,7 +19,8 @@ interface Piece {
 }
 
 interface Change {
-	action: string,
+	action: string
+	[changeData: string]: any
 }
 
 interface PieceChange extends Change {
@@ -39,14 +46,14 @@ interface EnpassantChange extends Change {
 	newPassant: Coords | undefined
 }
 
-interface ActionList {
-	[actionName: string]: (gamefile: gamefile, change: any) => void
+interface ActionList<T extends CallableFunction> {
+	[actionName: string]: T
 }
 
 interface ChangeApplication {
-	forward: ActionList
+	forward: ActionList<(gamefile: gamefile, change: any) => void>
 
-	backward: ActionList
+	backward: ActionList<(gamefile: gamefile, change: any) => void>
 }
 
 const changeFuncs: ChangeApplication = {
@@ -70,7 +77,7 @@ const changeFuncs: ChangeApplication = {
 };
 
 function queueCaputure(changes: Array<CaptureChange|any>, piece: Piece, endCoords: Coords, capturedPiece: Piece) {
-	changes.push({action: 'capturePiece', piece: piece, endCoords: endCoords, capturedPiece: capturedPiece}) // Need to differentiate this from move so animations can work
+	changes.push({action: 'capturePiece', piece: piece, endCoords: endCoords, capturedPiece: capturedPiece}); // Need to differentiate this from move so animations can work
 	return changes;
 }
 
@@ -99,17 +106,18 @@ function queueSetEnPassant(changes: Array<EnpassantChange|any>, curPassant: any,
 	return changes;
 }
 
-function applyChanges(gamefile: gamefile, changes: Array<any>, funcs: ActionList) {
+function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionList<(gamefile: gamefile, change: any) => void>) {
 	for (const c of changes) {
-		if (c.action in funcs) {
-			funcs[c.action](gamefile, c);
-		}
+		if (typeof c.action !== "string") continue;
+		if (!(c.action in funcs)) continue;
+		// @ts-ignore
+		funcs[c.action](gamefile, c);
 	}
 }
 
 function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication, forward: boolean = true) {
-	let funcs = forward ? changeFuncs.forward : changeFuncs.backward
-	applyChanges(gamefile, move.changes, funcs)
+	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
+	applyChanges(gamefile, move.changes, funcs);
 }
 
 /**
@@ -182,13 +190,13 @@ function returnPiece(gamefile: gamefile, change: MoveChange) {
 }
 
 function capturePiece(gamefile: gamefile, change: CaptureChange) {
-	deletePiece(gamefile, {piece: change.capturedPiece, action: ""})
-	movePiece(gamefile, change)
+	deletePiece(gamefile, {piece: change.capturedPiece, action: ""});
+	movePiece(gamefile, change);
 }
 
 function uncapturePiece(gamefile: gamefile, change: CaptureChange) {
-	returnPiece(gamefile, change)
-	addPiece(gamefile, {piece: change.capturedPiece, action:""})
+	returnPiece(gamefile, change);
+	addPiece(gamefile, {piece: change.capturedPiece, action:""});
 }
 
 function setRights(gamefile: gamefile, change: RightsChange) {
@@ -220,6 +228,7 @@ function revertPassant(gamefile: gamefile, change: EnpassantChange) {
 }
 
 export type {
+	ActionList,
 	ChangeApplication,
 	Change,
 	PieceChange,
@@ -227,7 +236,7 @@ export type {
 	CaptureChange,
 	RightsChange,
 	EnpassantChange,
-}
+};
 
 export default {
 	queueAddPiece,

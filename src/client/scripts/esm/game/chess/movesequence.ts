@@ -1,23 +1,34 @@
-import gamefileutility from "../../chess/util/gamefileutility";
-import onlinegame from "../misc/onlinegame";
-import game from "./game";
-import arrows from "../rendering/arrows";
-import frametracker from "../rendering/frametracker";
-import stats from "../gui/stats";
-import guinavigation from "../gui/guinavigation";
-import moveutil from "../../chess/util/moveutil";
-import guigameinfo from "../gui/guigameinfo";
-import movepiece from "../../chess/logic/movepiece";
+// @ts-ignore
+import gamefileutility from "../../chess/util/gamefileutility.js";
+// @ts-ignore
+import onlinegame from "../misc/onlinegame.js";
+// @ts-ignore
+import game from "./game.js";
+// @ts-ignore
+import arrows from "../rendering/arrows.js";
+// @ts-ignore
+import frametracker from "../rendering/frametracker.js";
+// @ts-ignore
+import stats from "../gui/stats.js";
+// @ts-ignore
+import guinavigation from "../gui/guinavigation.js";
+// @ts-ignore
+import movepiece from "../../chess/logic/movepiece.js";
 
-import boardchanges from "../../chess/logic/boardchanges";
-import { animatableChanges, meshChanges } from "./graphicalchanges";
+import boardchanges from "../../chess/logic/boardchanges.js";
+import { animatableChanges, meshChanges } from "./graphicalchanges.js";
 
 // @ts-ignore
-import type gamefile from "../../chess/logic/gamefile";
+import type gamefile from "../../chess/logic/gamefile.js";
+// @ts-ignore
+import type { Move } from "../../chess/util/moveutil.js";
 
-function makeMove(gamefile: gamefile, { doGameOverChecks = true, concludeGameIfOver = true}) {
+function makeMove(gamefile: gamefile, move: Move, { doGameOverChecks = true, concludeGameIfOver = true} = {}) {
 
+	movepiece.generateMove(gamefile, move);
+	movepiece.makeMove(gamefile, move);
 	movepiece.updateTurn(gamefile, { pushClock: !onlinegame.areInOnlineGame() });
+	boardchanges.runMove(gamefile, move, meshChanges, true);
 
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
@@ -31,49 +42,49 @@ function makeMove(gamefile: gamefile, { doGameOverChecks = true, concludeGameIfO
 	arrows.clearListOfHoveredPieces();
 }
 
-/**
- * Fast-forwards the game to front, to the most-recently played move.
- * @param {gamefile} gamefile - The gamefile
- * @param {Object} options - An object containing various options (ALL of these are default *true*):
- * - `flipTurn`: Whether each forwarded move should flip whosTurn. This should be false when forwarding to the game's front after rewinding.
- * - `animateLastMove`: Whether to animate the last move, or most-recently played.
- * - `updateData`: Whether to modify the mesh of all the pieces. Should be false if we plan on regenerating the model manually after forwarding.
- * - `updateProperties`: Whether each move should update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
- * - `simulated`: Whether you plan on undo'ing this forward, rewinding back to where you were. If true, the `rewindInfo` property will be added to each forwarded move in the gamefile for easy reverting when it comes time.
- */
-
-function forwardToFront(gamefile, { animateLastMove = true } = {}) {
-
-	while (true) { // For as long as we have moves to forward...
-		const nextIndex = gamefile.moveIndex + 1;
-		if (moveutil.isIndexOutOfRange(gamefile.moves, nextIndex)) break;
-
-		const nextMove = moveutil.getMoveFromIndex(gamefile.moves, nextIndex);
-
-		const isLastMove = moveutil.isIndexTheLastMove(gamefile.moves, nextIndex);
-		const animate = animateLastMove && isLastMove;
-		makeMove(gamefile, nextMove, { recordMove: false, pushClock: false, doGameOverChecks: false, flipTurn: false, animate, updateData: true, updateProperties:false, simulated: false });
+function animateMove(gamefile: gamefile, move: Move, forward = true) {
+	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
+	let clearanimations = true;
+	for (const c of move.changes) {
+		if (c.action) continue;
+		if (!(c.action in funcs)) continue;
+		// @ts-ignore
+		funcs[c.action](c, clearanimations);
+		clearanimations = false;
 	}
-
-	guigameinfo.updateWhosTurn(gamefile);
-
-	// lock the rewind/forward buttons for a brief moment.
-	guinavigation.lockRewind();
 }
 
-function animateMoveAtIdx(gamefile: gamefile, moveIdx = gamefile.moveIndex, forward = true) {
-	const move = gamefile.moves[moveIdx]
-	if (move === undefined) return
-	boardchanges.runMove(gamefile, move, animatableChanges, forward)
+function rewindMove(gamefile: gamefile) {
+	boardchanges.runMove(gamefile, gamefile.moves[gamefile.moveIndex], meshChanges, false);
+	movepiece.rewindMove(gamefile);
+	guinavigation.update_MoveButtons();
+	frametracker.onVisualChange();
+}
+
+function viewFront(gamefile: gamefile) {
+	movepiece.forEachMove(gamefile, gamefile.moves.length - 1, (m: Move) => viewMove(gamefile, m, true));
+	gamefile.moveIndex = gamefile.moves.length - 1;
+	guinavigation.update_MoveButtons();
+	stats.showMoves();
+}
+
+function viewMove(gamefile: gamefile, move: Move, forward = true) {
+	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
+	boardchanges.runMove(gamefile, move, meshChanges, forward);
+}
+
+function viewIndex(gamefile: gamefile, index: number) {
+	movepiece.forEachMove(gamefile, index, (m: Move) => viewMove(gamefile, m, index >= gamefile.moveIndex));
+	gamefile.moveIndex = index;
+	guinavigation.update_MoveButtons();
+	stats.showMoves();
 }
 
 export default {
 	makeMove,
 	rewindMove,
-
-	viewForward,
-	viewBackward,
+	viewMove,
 	viewFront,
-	viewIdx,
-	animateMoveAtIdx,
+	viewIndex,
+	animateMove,
 };

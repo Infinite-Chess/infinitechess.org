@@ -38,6 +38,7 @@ import jsutil from '../../util/jsutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
+import movesequence from './movesequence.js';
 // Import End
 
 /** 
@@ -202,6 +203,9 @@ function loadGamefile(newGamefile) {
 
 	// Regenerate the mesh of all the pieces.
 	piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+
+	let move = gamefile.moves[gamefile.moveIndex];
+	if (move !== undefined) movesequence.animateMove(gamefile, move, true);
 
 	guinavigation.update_MoveButtons();
 
