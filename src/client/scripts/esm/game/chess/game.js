@@ -205,7 +205,7 @@ function loadGamefile(newGamefile) {
 	piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
 
 	let move = gamefile.moves[gamefile.moveIndex];
-	if (move !== undefined) movesequence.animateMove(gamefile, move, true);
+	if (move !== undefined) movesequence.animateMove(move, true);
 
 	guinavigation.update_MoveButtons();
 

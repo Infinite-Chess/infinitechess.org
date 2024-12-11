@@ -21,7 +21,7 @@ interface ChangeAnimations {
 const animatableChanges: ChangeAnimations = {
 	forward: {
 		"movePiece": animateMove,
-		"capturedPiece": animateCapture,
+		"capturePiece": animateCapture,
 	},
 
 	backward: {

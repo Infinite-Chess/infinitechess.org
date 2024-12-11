@@ -289,7 +289,7 @@ function moveGamefilePiece(coords) {
 	move.compact = compact;
 
 	movesequence.makeMove(game.getGamefile(), move);
-	movesequence.animateMove(game.getGamefile(), move, true);
+	movesequence.animateMove(move, true);
 	onlinegame.sendMove();
 
 	unselectPiece();

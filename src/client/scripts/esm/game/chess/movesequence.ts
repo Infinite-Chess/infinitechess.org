@@ -49,13 +49,13 @@ function makeMove(gamefile: gamefile, move: Move, { doGameOverChecks = true, con
 	arrows.clearListOfHoveredPieces();
 }
 
-function animateMove(gamefile: gamefile, move: Move, forward = true) {
+function animateMove(move: Move, forward = true) {
 	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
 	let clearanimations = true;
 	for (const c of move.changes) {
-		if (c.action) continue;
+		if (c.action === undefined) continue;
 		if (!(c.action in funcs)) continue;
-		// @ts-ignore
+		// @ts-ignore WHY NOT????
 		funcs[c.action](c, clearanimations);
 		clearanimations = false;
 	}
