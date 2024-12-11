@@ -74,11 +74,14 @@ function deleteCommand(command: string, commandAndArgs: string[], res: Response)
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
-	try {
-		deleteAccount(getMemberDataByCriteria(["user_id"], "username", commandAndArgs[1])["user_id"] ?? (() => { throw new Error(); })(), commandAndArgs[2] ?? "");
+	const reason = commandAndArgs[2];
+	const username = commandAndArgs[1];
+	const userid = getMemberDataByCriteria(["user_id"], "username", username)["user_id"];
+	if (userid !== undefined) {
+		deleteAccount(userid, reason ?? "");
 	}
-	catch {
-		res.status(422).send("User " + commandAndArgs[1] + " does not exist.");
+	else {
+		res.status(404).send("User " + username + " does not exist.");
 		return;
 	}
 	res.status(200).send("");
@@ -87,14 +90,22 @@ function deleteCommand(command: string, commandAndArgs: string[], res: Response)
 function usernameCommand(command: string, commandAndArgs: string[], res: Response) {
 	if (commandAndArgs[1] === "get") {
 		if (commandAndArgs.length < 3) {
-			logCommand(command);
 			res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
 			return;
 		}
 		const parsedId = Number.parseInt(commandAndArgs[2]!);
+		if (Number.isNaN(parsedId)) {
+			res.status(422).send("User id must be an integer.");
+			return;
+		}
 		logEvents("Command executed: " + command + "\nResult: " + getMemberDataByCriteria(["username"], "user_id", parsedId)["username"] + "\n", "adminCommands");
 		const username = getMemberDataByCriteria(["username"], "user_id", parsedId)["username"];
-		res.status(username === undefined ? 422 : 200).send(username ?? "User with id " + parsedId + " does not exist.");
+		if (username === undefined) {
+			res.status(404).send("User with id " + parsedId + " does not exist.");
+		}
+		else {
+			res.status(200).send(username);
+		}
 	}
 	else if (commandAndArgs[1] === "set") {
 		if (commandAndArgs.length < 4) {
@@ -104,37 +115,47 @@ function usernameCommand(command: string, commandAndArgs: string[], res: Respons
 		// TODO add username changing logic
 		res.status(503).send("Changing usernames is not yet supported.");
 	}
+	else if (commandAndArgs[1] === undefined) {
+		res.status(422).send("Expected either get or set as a subcommand.");
+	}
 	else {
 		res.status(422).send("Invalid subcommand, expected either get or set, got " + commandAndArgs[1] + ".");
 	}
 }
 
 function logoutUser(command: string, commandAndArgs: string[], res: Response) {
-	logCommand(command);
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
-	try {
-		deleteAllSessionsOfUser(getMemberDataByCriteria(["user_id"], "username", commandAndArgs[1])["user_id"] ?? (() => { throw new Error(); })());
+	logCommand(command);
+	const username = commandAndArgs[1];
+	const userid = getMemberDataByCriteria(["user_id"], "username", username)["user_id"];
+	if (userid !== undefined) {
+		deleteAllSessionsOfUser(userid);
 	}
-	catch {
-		res.status(422).send("User " + commandAndArgs[1] + " does not exist.");
+	else {
+		res.status(404).send("User " + username + " does not exist.");
 	}
-	res.status(200).send("");
+	res.status(200).send("User " + username + " successfully logged out.");
 }
 
 function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
 	if (commandAndArgs.length < 2) {
-		logCommand(command);
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
+	const username = commandAndArgs[1];
 	const memberInfo = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"],
 		"username",
-		commandAndArgs[1]);
+		username);
 	logEvents("Command executed: " + command + "\n" + memberInfo + "\n", "adminCommands");
-	res.status(Object.keys(memberInfo).length === 0 ? 422 : 200).send(Object.keys(memberInfo).length === 0 ? "User " + commandAndArgs[1] + " does not exist." : memberInfo);
+	if (Object.keys(memberInfo).length === 0) {
+		res.status(404).send("User " + username + " does not exist.");
+	}
+	else {
+		res.status(200).send(memberInfo);
+	}
 }
 
 function helpCommand(commandAndArgs: string[], res: Response) {
