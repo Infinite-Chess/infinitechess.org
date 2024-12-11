@@ -1,9 +1,7 @@
 import type { CustomRequest } from "../../types.js";
 import type { Response } from "express";
 // @ts-ignore
-import { deleteUser, getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
-// @ts-ignore
-import { deleteRefreshTokensOfUser } from "../database/refreshTokenManager.js";
+import { getMemberDataByCriteria } from "../database/memberManager.js";
 // @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 // @ts-ignore
@@ -26,7 +24,26 @@ const validCommands = [
 
 function processCommand(req: CustomRequest, res: Response): void {
 	const command = req.params["command"]!;
-	const commandAndArgs = command.split(" ");
+	const commandAndArgs: string[] = [];
+	let inQuote: boolean = false;
+	let temp: string = "";
+	for (let i = 0; i < command.length; i++) {
+		if (command[i] === '"') {
+			if (i === 0 || command[i - 1] !== '\\') {
+				inQuote = !inQuote;
+			}
+			else {
+				temp += '"';
+			}
+		}
+		else if (command[i] === ' ' && !inQuote) {
+			commandAndArgs.push(temp);
+			temp = "";
+		}
+		else if (inQuote || (command[i] !== '"' && command[i] !== ' ')) {
+			temp += command[i];
+		}
+	}
 	if (!req.memberInfo.signedIn) {
 		res.status(401).send("Cannot send commands while logged out.");
 		return;
