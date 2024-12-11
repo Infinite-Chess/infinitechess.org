@@ -111,11 +111,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	console.log("Finished acquiring all piece SVGs!");
 
 	/** The SVG elements we will use in the game to construct our spritesheet */
-	const svgElements = svgIDs.map(id => {
-		const cachedSVG = cachedPieceSVGs[id];
-		if (cachedSVG === undefined) throw new Error(`Piece SVG of ID "${id}" required for game wasn't cached! We shouldn't have reached this part of the code if the fetch requests didn't succeed.`);
-		return cachedSVG;
-	});
+	const svgElements = getCachedSVGElements(svgIDs);
 
 	// Convert each SVG element to an Image
 	const readyImages: HTMLImageElement[] = await convertSVGsToImages(svgElements);
@@ -218,6 +214,15 @@ function getSVG_IDs_From_PieceType(type: string): string[] {
 	console.log("Fetched all Classical SVGs!");
 })();
 
+function getCachedSVGElements(svgIDs: string[]) {
+	/** The SVG elements we will use in the game to construct our spritesheet */
+	return svgIDs.map(id => {
+		const cachedSVG = cachedPieceSVGs[id];
+		if (cachedSVG === undefined) throw new Error(`Piece SVG of ID "${id}" required for game wasn't cached!`);
+		return cachedSVG;
+	});
+}
+
 
 
 export default {
@@ -226,4 +231,5 @@ export default {
 	getSpritesheetDataPieceWidth,
 	getSpritesheetDataTexLocation,
 	deleteSpritesheet,
+	getCachedSVGElements,
 };
