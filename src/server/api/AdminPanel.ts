@@ -98,8 +98,8 @@ function usernameCommand(command: string, commandAndArgs: string[], res: Respons
 			res.status(422).send("User id must be an integer.");
 			return;
 		}
-		logEvents("Command executed: " + command + "\nResult: " + getMemberDataByCriteria(["username"], "user_id", parsedId)["username"] + "\n", "adminCommands");
 		const username = getMemberDataByCriteria(["username"], "user_id", parsedId)["username"];
+		logEvents("Command executed: " + command + "\nResult: " + username + "\n", "adminCommands");
 		if (username === undefined) {
 			res.status(404).send("User with id " + parsedId + " does not exist.");
 		}
