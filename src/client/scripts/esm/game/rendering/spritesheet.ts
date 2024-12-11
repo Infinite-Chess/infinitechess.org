@@ -1,14 +1,14 @@
 
 /**
  * This script stores the texture coordinates
- * of each piece in our spritesheet.
+ * of each piece in our spritesheet
+ * FOR THE CURRENT GAME.
  * 
- * It should have ZERO dependancies!
+ * If no game is loaded, no spritesheet is loaded.
  */
 
 
 import { fetchPieceSVGs } from '../../chess/api/fetchPieceSVGs.js';
-import { Coords } from '../../chess/logic/movesets.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 import { svgToImage } from '../../chess/rendering/svgtoimageconverter.js';
 // @ts-ignore
@@ -24,6 +24,7 @@ import texture from './texture.js';
 
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
+import type { Coords } from '../../chess/logic/movesets.js';
 
 
 // Variables ---------------------------------------------------------------------------
@@ -67,7 +68,7 @@ const typesThatDontNeedAnSVG = ['voids'];
 const cachedPieceTypes: string[] = [];
 /**
  * Piece SVG Elements that we have fetch-requested from the server, up to this point.
- * In the form: 'pawn-white': SVGElement
+ * In the form: { 'pawn-white': SVGElement }
  */
 const cachedPieceSVGs: { [svgID: string]: SVGElement } = {};
 
@@ -76,11 +77,22 @@ const cachedPieceSVGs: { [svgID: string]: SVGElement } = {};
 // Functions ---------------------------------------------------------------------------
 
 
-/**
- * Loads the spritesheet texture
- * @param gl - The webgl context being used} gl 
- * @param gamefile 
- */
+function getSpritesheet() {
+	if (!spritesheet) throw new Error("Should not be getting the spritesheet when not loaded!");
+	return spritesheet!;
+}
+
+function getSpritesheetDataPieceWidth() {
+	if (!spritesheetData) throw new Error("Should not be getting piece width when the spritesheet is not loaded!");
+	return spritesheetData!.pieceWidth;
+}
+
+function getSpritesheetDataTexLocation(type: number) {
+	if (!spritesheetData) throw new Error("Should not be getting texture locations when the spritesheet is not loaded!");
+	return spritesheetData!.texLocs[type]!;
+}
+
+/** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
 async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: gamefile) {
 
 	/** All piece types in the game. */
@@ -119,6 +131,11 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	// data that contains the texture coordinates of each piece!
 	spritesheet = texture.loadTexture(gl, spritesheetAndSpritesheetData.spritesheet, { useMipmaps: true });
 	spritesheetData = spritesheetAndSpritesheetData.spritesheetData;
+}
+
+function deleteSpritesheet() {
+	spritesheet = undefined;
+	spritesheetData = undefined;
 }
 
 /**
@@ -215,23 +232,6 @@ async function convertSVGsToImages(svgElements: SVGElement[]) {
 	classicalSVGElements.forEach(svg => cachedPieceSVGs[svg.id] = svg);
 	console.log("Fetched all Classical SVGs!");
 })();
-
-function getSpritesheet() {
-	return spritesheet;
-}
-
-function getSpritesheetDataPieceWidth() {
-	return spritesheetData?.pieceWidth;
-}
-
-function getSpritesheetDataTexLocation(type: number) {
-	return spritesheetData?.texLocs[type]!;
-}
-
-function deleteSpritesheet() {
-	spritesheet = undefined;
-	spritesheetData = undefined;
-}
 
 
 
