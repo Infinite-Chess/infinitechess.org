@@ -1,9 +1,7 @@
 
 /**
- * Fetches SVG elements from a specified SVG file based on an array of element IDs.
- * Returns an array of matching SVG elements.
+ * Fetches piece SVGs from the server.
  */
-
 
 
 /**
@@ -26,14 +24,12 @@ async function fetchPieceSVGs(relativeURL: string, svgIds: string[]): Promise<SV
 	const svgElements: SVGElement[] = [];
 
 	// Loop through the array of svgIds and fetch each corresponding SVG element
-	for (const svgId of svgIds) {
+	svgIds.forEach(svgId => {
 		const svgElement = svgDoc.querySelector(`#${svgId}`) as SVGElement;
-		if (!svgElement) {
-			throw new Error(`SVG with ID ${svgId} not found`);
-		}
+		if (!svgElement) throw new Error(`SVG with ID ${svgId} not found from server-sent svg data.`);
 		// Push the found SVG element into the array
 		svgElements.push(svgElement);
-	}
+	});
 
 	// Return the array of SVG elements
 	return svgElements;
