@@ -100,7 +100,7 @@ function resetUI() {
 }
 
 function callback_promote(event: Event) {
-	const type = (event.srcElement as HTMLElement).classList[1];
+	const type = (event.currentTarget as HTMLElement).id;
 	// TODO: Dispatch a custom 'promote-selected' event!
 	// That way this script doesn't depend on selection.js
 	selection.promoteToType(type);
