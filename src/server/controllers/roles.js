@@ -74,8 +74,8 @@ function areRolesHigherInPriority(roles1, roles2) {
 		if (priorityOfRole > roles2HighestRoles) roles2HighestRoles = priorityOfRole;
 	});
 
-	console.log('roles1 highest role: ' + roles1HighestRoles);
-	console.log('roles2 highest role: ' + roles2HighestRoles);
+	// console.log('roles1 highest role: ' + roles1HighestRoles);
+	// console.log('roles2 highest role: ' + roles2HighestRoles);
 
 	return roles1HighestRoles > roles2HighestRoles;
 }
