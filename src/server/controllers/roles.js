@@ -59,8 +59,8 @@ function removeAllRoles(userId) {
  */
 function areRolesHigherInPriority(roles1, roles2) {
 	// Make sure they are not null
-	roles1 = roles1 ?? [];
-	roles2 = roles2 ?? [];
+	roles1 = roles1 || [];
+	roles2 = roles2 || [];
 
 	let roles1HighestRoles = -1;
 	roles1.forEach(role => {
