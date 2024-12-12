@@ -1045,7 +1045,7 @@ button.join-button, button.copy-button {
     flex-wrap: wrap;
 }
 
-.promotepiececontainer {
+.promotepiece {
     width: 80px;
     height: 80px;
     padding: 3px;
@@ -1053,17 +1053,12 @@ button.join-button, button.copy-button {
     border-radius: 10px;
 }
 
-.promotepiececontainer:hover {
+.promotepiece:hover {
     background-color: rgba(0, 0, 0, 0.099);
 }
 
-.promotepiececontainer:active {
+.promotepiece:active {
     background-color: rgba(0, 0, 0, 0.158);
-}
-
-.promotepiece {
-    width: 80px;
-    height: 80px;
 }
 
 

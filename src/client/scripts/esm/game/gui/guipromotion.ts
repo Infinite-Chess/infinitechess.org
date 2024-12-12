@@ -69,7 +69,7 @@ function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	// Create and append allowed promotion options for white
 	whiteSVGs.forEach(svg => {
 		// TODO: Make a copy instead of modifying the cached piece
-		svg.classList.add('promotepiececontainer');
+		svg.classList.add('promotepiece');
 		svg.addEventListener('click', callback_promote);
         element_PromoteWhite!.appendChild(svg);
 	});
@@ -77,7 +77,7 @@ function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	// Create and append allowed promotion options for black
 	blackSVGs.forEach(svg => {
 		// TODO: Make a copy instead of modifying the cached piece
-		svg.classList.add('promotepiececontainer');
+		svg.classList.add('promotepiece');
 		svg.addEventListener('click', callback_promote);
         element_PromoteBlack!.appendChild(svg);
 	});
