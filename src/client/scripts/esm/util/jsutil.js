@@ -149,6 +149,8 @@ function copyPropertiesToObject(objSrc, objDest) {
 
 /**
  * O(1) method of checking if an object/dict is empty
+ * I think??? I may be wrong. I think before the first iteration of
+ * a for-in loop the program still has to calculate the keys...
  * @param {Object} obj 
  * @returns {Boolean}
  */

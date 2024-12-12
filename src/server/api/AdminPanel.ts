@@ -102,27 +102,19 @@ function deleteCommand(command: string, commandAndArgs: string[], req: CustomReq
 		res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
+	// Valid Syntax
 	logCommand(command);
 	const reason = commandAndArgs[2];
 	const usernameArgument = commandAndArgs[1];
 	const { user_id, username, roles } = getMemberDataByCriteria(["user_id","username","roles"], "username", usernameArgument);
-	if (user_id === undefined) {
-		res.status(404).send("User " + usernameArgument + " does not exist.");
-		return;
-	}
+	if (user_id === undefined) return sendAndLogResponse(res, 404, "User " + usernameArgument + " does not exist.");
 	// They were found...
 	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
 	const rolesOfAffectedUser = JSON.parse(roles);
 	// Don't delete them if they are equal or higher than your status
-	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) {
-		res.status(403).send("Forbidden to delete " + username + ".");
-		return;
-	}
-	if (!deleteAccount(user_id, reason)) {
-		res.status(500).send("Failed to delete " + username + ".");
-		return;
-	}
-	res.status(200).send("Successfully deleted user " + username + ".");
+	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) return sendAndLogResponse(res, 403, "Forbidden to delete " + username + ".");
+	if (!deleteAccount(user_id, reason)) return sendAndLogResponse(res, 500, "Failed to delete " + username + ".");
+	sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
 }
 
 function usernameCommand(command: string, commandAndArgs: string[], res: Response) {
@@ -136,14 +128,11 @@ function usernameCommand(command: string, commandAndArgs: string[], res: Respons
 			res.status(422).send("User id must be an integer.");
 			return;
 		}
+		// Valid Syntax
+		logCommand(command);
 		const username = getMemberDataByCriteria(["username"], "user_id", parsedId)["username"];
-		logEvents("Command executed: " + command + "\nResult: " + username + "\n", "adminCommands", { print: true });
-		if (username === undefined) {
-			res.status(404).send("User with id " + parsedId + " does not exist.");
-		}
-		else {
-			res.status(200).send(username);
-		}
+		if (username === undefined) sendAndLogResponse(res, 404, "User with id " + parsedId + " does not exist.");
+		else sendAndLogResponse(res, 200, username);
 	}
 	else if (commandAndArgs[1] === "set") {
 		if (commandAndArgs.length < 4) {
@@ -166,16 +155,17 @@ function logoutUser(command: string, commandAndArgs: string[], res: Response) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
+	// Valid Syntax
 	logCommand(command);
 	const username = commandAndArgs[1];
 	const userid = getMemberDataByCriteria(["user_id"], "username", username)["user_id"];
 	if (userid !== undefined) {
 		deleteAllSessionsOfUser(userid);
+		sendAndLogResponse(res, 200, "User " + username + " successfully logged out.");
 	}
 	else {
-		res.status(404).send("User " + username + " does not exist.");
+		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
 	}
-	res.status(200).send("User " + username + " successfully logged out.");
 }
 
 function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
@@ -183,14 +173,15 @@ function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
+	// Valid Syntax
+	logCommand(command);
 	const username = commandAndArgs[1];
 	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"], "username", username);
-	logEvents("Command executed: " + command + "\nResult: " + memberData + "\n", "adminCommands", { print: true });
-	if (Object.keys(memberData).length === 0) {
-		res.status(404).send("User " + username + " does not exist.");
+	if (Object.keys(memberData).length === 0) { // Empty (member not found)
+		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
 	}
 	else {
-		res.status(200).send(memberData);
+		sendAndLogResponse(res, 200, memberData);
 	}
 }
 
@@ -236,7 +227,13 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 }
 
 function logCommand(command: string) {
-	logEvents("Command executed: " + command + "\n", "adminCommands", { print: true });
+	logEvents("Command executed: " + command + "\n", "adminCommands.txt", { print: true });
+}
+
+function sendAndLogResponse(res: Response, code: number, message: any) {
+	res.status(code).send(message);
+	// Also log the sent response
+	logEvents(message + "\n", "adminCommands.txt", { print: true });
 }
 
 export {
