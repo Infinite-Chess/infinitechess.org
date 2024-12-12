@@ -21,7 +21,10 @@ function clickSubmitIfReturnPressed(event: any) {
  * @param container - The container to scroll.
  */
 function scrollToBottom(container: HTMLElement) {
-	container.scrollTop = container.scrollHeight;
+	container.scrollTo({
+		top: container.scrollHeight,
+		behavior: 'smooth',
+	});
 }
 
 sendCommandButton.addEventListener("click", sendCommand);
