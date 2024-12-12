@@ -180,6 +180,7 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
 	if (specialdetect.isPawnPromotion(gamefile, pieceSelected.type, coordsClicked)) {
 		const color = colorutil.getPieceColorFromType(pieceSelected.type);
 		guipromotion.open(color);
+		perspective.unlockMouse();
 		pawnIsPromoting = coordsClicked;
 		return;
 	}

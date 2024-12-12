@@ -1,49 +1,51 @@
 
-// Import Start
-import perspective from '../rendering/perspective.js';
-import selection from '../chess/selection.js';
-import style from './style.js';
-import spritesheet from '../rendering/spritesheet.js';
-import colorutil from '../../chess/util/colorutil.js';
-// Import End
-
-"use strict";
-
 /**
  * This script handles our promotion menu, when
  * pawns reach the promotion line.
  */
 
-// Variables
+import spritesheet from '../rendering/spritesheet.js';
+// @ts-ignore
+import perspective from '../rendering/perspective.js';
+// @ts-ignore
+import selection from '../chess/selection.js';
+// @ts-ignore
+import style from './style.js';
+// @ts-ignore
+import colorutil from '../../chess/util/colorutil.js';
 
-// Promotion
+"use strict";
+
+
+// Variables --------------------------------------------------------------------
+
+
 const element_Promote = document.getElementById('promote');
 const element_PromoteWhite = document.getElementById('promotewhite');
 const element_PromoteBlack = document.getElementById('promoteblack');
 
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
-// Functions
+
+// Functions --------------------------------------------------------------------
+
 
 function isUIOpen() { return selectionOpen; }
 
-function open(color) {
+function open(color: string) {
 	selectionOpen = true;
-	style.revealElement(element_Promote);
-	if (color === 'white') {
-		style.hideElement(element_PromoteBlack);
-		style.revealElement(element_PromoteWhite);
-	} else {
-		style.hideElement(element_PromoteWhite);
-		style.revealElement(element_PromoteBlack);
-	}
-	perspective.unlockMouse();
+	style.revealElement(element_Promote!);
+	if (color === 'white') style.revealElement(element_PromoteWhite!);
+	else if (color === 'black') style.revealElement(element_PromoteBlack!);
+	else throw new Error(`Promotion UI does not support color "${color}"`)
 }
 
 /** Closes the promotion UI */
 function close() {
 	selectionOpen = false;
-	style.hideElement(element_Promote);
+	style.hideElement(element_PromoteWhite!);
+	style.hideElement(element_PromoteBlack!);
+	style.hideElement(element_Promote!);
 }
 
 /**
@@ -51,21 +53,19 @@ function close() {
  * @param {Object} promotionsAllowed - An object that contains the information about what promotions are allowed.
  * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
  */
-function initUI(promotionsAllowed) {
-    promotionsAllowed = promotionsAllowed || { white: [], black: [] };
-	/** @type {string[]} */
+function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
+	if (promotionsAllowed === undefined) return;
     const white = promotionsAllowed.white; // ['queens','bishops']
-	/** @type {string[]} */
     const black = promotionsAllowed.black;
 
-	if (element_PromoteWhite.childElementCount > 0 || element_PromoteBlack.childElementCount > 0) {
+	if (element_PromoteWhite!.childElementCount > 0 || element_PromoteBlack!.childElementCount > 0) {
 		throw new Error("Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.");
 	}
 
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
 
-	const whiteSVGs = spritesheet.getCachedSVGElements(black.map(promotion => promotion + whiteExt))
+	const whiteSVGs = spritesheet.getCachedSVGElements(white.map(promotion => promotion + whiteExt))
 	const blackSVGs = spritesheet.getCachedSVGElements(black.map(promotion => promotion + blackExt))
 
     // Create and append allowed promotion options for white
@@ -73,7 +73,7 @@ function initUI(promotionsAllowed) {
 		// TODO: Make a copy instead of modifying the cached piece
         svg.classList.add('promotepiececontainer');
 		svg.addEventListener('click', callback_promote);
-        element_PromoteWhite.appendChild(svg);
+        element_PromoteWhite!.appendChild(svg);
     });
 
     // Create and append allowed promotion options for black
@@ -81,7 +81,7 @@ function initUI(promotionsAllowed) {
 		// TODO: Make a copy instead of modifying the cached piece
         svg.classList.add('promotepiececontainer');
 		svg.addEventListener('click', callback_promote);
-        element_PromoteBlack.appendChild(svg);
+        element_PromoteBlack!.appendChild(svg);
     });
 }
 
@@ -89,14 +89,14 @@ function initUI(promotionsAllowed) {
  * Resets the promotion UI by clearing all promotion options.
  */
 function resetUI() {
-    while (element_PromoteWhite.firstChild) {
-		const svg = element_PromoteWhite.firstChild;
-		element_PromoteWhite.removeChild(svg);
+    while (element_PromoteWhite!.firstChild) {
+		const svg = element_PromoteWhite!.firstChild;
+		element_PromoteWhite!.removeChild(svg);
 		svg.removeEventListener('click', callback_promote);
 	}
-    while (element_PromoteBlack.firstChild) {
-		const svg = element_PromoteBlack.firstChild;
-		element_PromoteBlack.removeChild(svg);
+    while (element_PromoteBlack!.firstChild) {
+		const svg = element_PromoteBlack!.firstChild;
+		element_PromoteBlack!.removeChild(svg);
 		svg.removeEventListener('click', callback_promote);
 	}
 }
