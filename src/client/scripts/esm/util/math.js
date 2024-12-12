@@ -462,6 +462,16 @@ function LCM(arr) {
 	return ans; 
 }
 
+/**
+ * 
+ * @param {Number} s 
+ * @param {Number} e 
+ * @param {Number} progress 
+ */
+function moveTowards(s, e, progress) {
+	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
+}
+
 export default {
 	isPowerOfTwo,
 	isAproxEqual,
@@ -492,4 +502,5 @@ export default {
 	expandBoxToContainSquare,
 	GCD,
 	LCM,
+	moveTowards,
 };

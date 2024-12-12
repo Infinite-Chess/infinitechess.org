@@ -8,7 +8,6 @@ import area from '../../game/rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
-
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
