@@ -132,7 +132,7 @@ function usernameCommand(command: string, commandAndArgs: string[], res: Respons
 			return;
 		}
 		const username = getMemberDataByCriteria(["username"], "user_id", parsedId)["username"];
-		logEvents("Command executed: " + command + "\nResult: " + username + "\n", "adminCommands");
+		logEvents("Command executed: " + command + "\nResult: " + username + "\n", "adminCommands", { print: true });
 		if (username === undefined) {
 			res.status(404).send("User with id " + parsedId + " does not exist.");
 		}
@@ -180,7 +180,7 @@ function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
 	}
 	const username = commandAndArgs[1];
 	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"], "username", username);
-	logEvents("Command executed: " + command + "\nResult: " + memberData + "\n", "adminCommands");
+	logEvents("Command executed: " + command + "\nResult: " + memberData + "\n", "adminCommands", { print: true });
 	if (Object.keys(memberData).length === 0) {
 		res.status(404).send("User " + username + " does not exist.");
 	}
@@ -231,7 +231,7 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 }
 
 function logCommand(command: string) {
-	logEvents("Command executed: " + command + "\n", "adminCommands");
+	logEvents("Command executed: " + command + "\n", "adminCommands", { print: true });
 }
 
 export {
