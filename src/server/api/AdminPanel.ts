@@ -27,28 +27,7 @@ const validCommands = [
 function processCommand(req: CustomRequest, res: Response): void {
 	const command = req.params["command"]!;
 
-	// Parse command
-	const commandAndArgs: string[] = [];
-	let inQuote: boolean = false;
-	let temp: string = "";
-	for (let i = 0; i < command.length; i++) {
-		if (command[i] === '"') {
-			if (i === 0 || command[i - 1] !== '\\') {
-				inQuote = !inQuote;
-			}
-			else {
-				temp += '"';
-			}
-		}
-		else if (command[i] === ' ' && !inQuote) {
-			commandAndArgs.push(temp);
-			temp = "";
-		}
-		else if (inQuote || (command[i] !== '"' && command[i] !== ' ')) {
-			temp += command[i];
-		}
-	}
-	commandAndArgs.push(temp);
+	const commandAndArgs = parseArgumentsFromCommand(command);
 
 	if (!req.memberInfo.signedIn) {
 		res.status(401).send("Cannot send commands while logged out.");
@@ -91,6 +70,33 @@ function processCommand(req: CustomRequest, res: Response): void {
 	}
 }
 
+function parseArgumentsFromCommand(command: string): string[] {
+	// Parse command
+	const commandAndArgs: string[] = [];
+	let inQuote: boolean = false;
+	let temp: string = "";
+	for (let i = 0; i < command.length; i++) {
+		if (command[i] === '"') {
+			if (i === 0 || command[i - 1] !== '\\') {
+				inQuote = !inQuote;
+			}
+			else {
+				temp += '"';
+			}
+		}
+		else if (command[i] === ' ' && !inQuote) {
+			commandAndArgs.push(temp);
+			temp = "";
+		}
+		else if (inQuote || (command[i] !== '"' && command[i] !== ' ')) {
+			temp += command[i];
+		}
+	}
+	commandAndArgs.push(temp);
+
+	return commandAndArgs;
+}
+
 function deleteCommand(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
 	if (commandAndArgs.length < 3) {
 		res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
@@ -100,14 +106,13 @@ function deleteCommand(command: string, commandAndArgs: string[], req: CustomReq
 	const reason = commandAndArgs[2];
 	const usernameArgument = commandAndArgs[1];
 	const { user_id, username, roles } = getMemberDataByCriteria(["user_id","username","roles"], "username", usernameArgument);
-	const rolesOfAffectedUser = JSON.parse(roles);
-	console.log("affected roles: " + JSON.stringify(rolesOfAffectedUser));
 	if (user_id === undefined) {
 		res.status(404).send("User " + usernameArgument + " does not exist.");
 		return;
 	}
 	// They were found...
 	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
+	const rolesOfAffectedUser = JSON.parse(roles);
 	// Don't delete them if they are equal or higher than your status
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) {
 		res.status(403).send("Forbidden to delete " + username + ".");
