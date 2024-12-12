@@ -68,13 +68,13 @@ function areRolesHigherInPriority(roles1, roles2) {
 
 	let roles1HighestRoles = -1;
 	roles1.forEach(role => {
-		const priorityOfRole = validRoles.indexOf(role); // Lower = Higher priority. 0 being the highest.
+		const priorityOfRole = validRoles.indexOf(role);
 		if (priorityOfRole > roles1HighestRoles) roles1HighestRoles = priorityOfRole;
 	});
 
 	let roles2HighestRoles = -1;
 	roles2.forEach(role => {
-		const priorityOfRole = validRoles.indexOf(role); // Lower = Higher priority. 0 being the highest.
+		const priorityOfRole = validRoles.indexOf(role);
 		if (priorityOfRole > roles2HighestRoles) roles2HighestRoles = priorityOfRole;
 	});
 
