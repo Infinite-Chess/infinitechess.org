@@ -1,4 +1,5 @@
 
+import { manuallyVerifyUser } from "../controllers/verifyAccountController.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
 // @ts-ignore
@@ -55,6 +56,7 @@ function processCommand(req: CustomRequest, res: Response): void {
 			logoutUser(command, commandAndArgs, res);
 			return;
 		case "verify":
+			verify(command, commandAndArgs, res);
 			return;
 		case "post":
 			return;
@@ -161,15 +163,29 @@ function logoutUser(command: string, commandAndArgs: string[], res: Response) {
 	}
 	// Valid Syntax
 	logCommand(command);
-	const username = commandAndArgs[1];
-	const { user_id } = getMemberDataByCriteria(["user_id"], "username", username, { skipErrorLogging: true });
+	const usernameArgument = commandAndArgs[1];
+	const { user_id, username } = getMemberDataByCriteria(["user_id","username"], "username", usernameArgument, { skipErrorLogging: true });
 	if (user_id !== undefined) {
 		deleteAllSessionsOfUser(user_id);
-		sendAndLogResponse(res, 200, "User " + username + " successfully logged out.");
+		sendAndLogResponse(res, 200, "User " + username + " successfully logged out."); // Use their case-sensitive username
 	}
 	else {
-		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
+		sendAndLogResponse(res, 404, "User " + usernameArgument + " does not exist.");
 	}
+}
+
+function verify(command: string, commandAndArgs: string[], res: Response) {
+	if (commandAndArgs.length < 2) {
+		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
+		return;
+	}
+	// Valid Syntax
+	logCommand(command);
+	const usernameArgument = commandAndArgs[1];
+	// This method works without us having to confirm they exist first
+	const result = manuallyVerifyUser(usernameArgument!);  // { success, username, reason }
+	if (result.success) sendAndLogResponse(res, 200, "User " + result.username + " has been verified!");
+	else sendAndLogResponse(res, 500, result.reason); // Failure message
 }
 
 function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
@@ -211,6 +227,7 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 			res.status(200).send("Syntax: logout <username>\nLogs out all sessions of the account with the given username.");
 			return;
 		case "verify":
+			res.status(200).send("Syntax: verify <username>\nVerifies the account of the given username.");
 			return;
 		case "post":
 			return;
