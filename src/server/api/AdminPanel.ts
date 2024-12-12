@@ -55,13 +55,13 @@ function processCommand(req: CustomRequest, res: Response): void {
 			deleteCommand(command, commandAndArgs, req, res);
 			return;
 		case "username":
-			usernameCommand(command, commandAndArgs, res);
+			usernameCommand(command, commandAndArgs, req, res);
 			return;
 		case "logout":
-			logoutUser(command, commandAndArgs, res);
+			logoutUser(command, commandAndArgs, req, res);
 			return;
 		case "verify":
-			verify(command, commandAndArgs, res);
+			verify(command, commandAndArgs, req, res);
 			return;
 		case "post":
 			return;
@@ -70,7 +70,7 @@ function processCommand(req: CustomRequest, res: Response): void {
 		case "announce":
 			return;
 		case "userinfo":
-			getUserInfo(command, commandAndArgs, res);
+			getUserInfo(command, commandAndArgs, req, res);
 			return;
 		case "help":
 			helpCommand(commandAndArgs, res);
@@ -114,7 +114,7 @@ function deleteCommand(command: string, commandAndArgs: string[], req: CustomReq
 		return;
 	}
 	// Valid Syntax
-	logCommand(command);
+	logCommand(command, req);
 	const reason = commandAndArgs[2];
 	const usernameArgument = commandAndArgs[1];
 	const { user_id, username, roles } = getMemberDataByCriteria(["user_id","username","roles"], "username", usernameArgument, { skipErrorLogging: true });
@@ -128,7 +128,7 @@ function deleteCommand(command: string, commandAndArgs: string[], req: CustomReq
 	sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
 }
 
-function usernameCommand(command: string, commandAndArgs: string[], res: Response) {
+function usernameCommand(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
 	if (commandAndArgs[1] === "get") {
 		if (commandAndArgs.length < 3) {
 			res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
@@ -140,7 +140,7 @@ function usernameCommand(command: string, commandAndArgs: string[], res: Respons
 			return;
 		}
 		// Valid Syntax
-		logCommand(command);
+		logCommand(command, req);
 		const { username } = getMemberDataByCriteria(["username"], "user_id", parsedId, { skipErrorLogging: true });
 		if (username === undefined) sendAndLogResponse(res, 404, "User with id " + parsedId + " does not exist.");
 		else sendAndLogResponse(res, 200, username);
@@ -161,13 +161,13 @@ function usernameCommand(command: string, commandAndArgs: string[], res: Respons
 	}
 }
 
-function logoutUser(command: string, commandAndArgs: string[], res: Response) {
+function logoutUser(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
 	// Valid Syntax
-	logCommand(command);
+	logCommand(command, req);
 	const usernameArgument = commandAndArgs[1];
 	const { user_id, username } = getMemberDataByCriteria(["user_id","username"], "username", usernameArgument, { skipErrorLogging: true });
 	if (user_id !== undefined) {
@@ -179,13 +179,13 @@ function logoutUser(command: string, commandAndArgs: string[], res: Response) {
 	}
 }
 
-function verify(command: string, commandAndArgs: string[], res: Response) {
+function verify(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
 	// Valid Syntax
-	logCommand(command);
+	logCommand(command, req);
 	const usernameArgument = commandAndArgs[1];
 	// This method works without us having to confirm they exist first
 	const result = manuallyVerifyUser(usernameArgument!);  // { success, username, reason }
@@ -193,13 +193,13 @@ function verify(command: string, commandAndArgs: string[], res: Response) {
 	else sendAndLogResponse(res, 500, result.reason); // Failure message
 }
 
-function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
+function getUserInfo(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
 	// Valid Syntax
-	logCommand(command);
+	logCommand(command, req);
 	const username = commandAndArgs[1];
 	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"], "username", username, { skipErrorLogging: true });
 	if (Object.keys(memberData).length === 0) { // Empty (member not found)
@@ -252,14 +252,16 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 	}
 }
 
-function logCommand(command: string) {
-	logEvents("Command executed: " + command, "adminCommands.txt", { print: true });
+function logCommand(command: string, req: CustomRequest) {
+	if (req.memberInfo.signedIn) {
+		logEvents(`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` + command, "adminCommands.txt", { print: true });
+	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');
 }
 
 function sendAndLogResponse(res: Response, code: number, message: any) {
 	res.status(code).send(message);
 	// Also log the sent response
-	logEvents("Result: " + message + "\n", "adminCommands.txt", { print: true });
+	logEvents("Result:   " + message + "\n", "adminCommands.txt", { print: true });
 }
 
 export {
