@@ -38,6 +38,7 @@ import jsutil from '../../util/jsutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
+import movesequence from './movesequence.js';
 // Import End
 
 /** 
@@ -124,7 +125,7 @@ function updateBoard() {
 	}
 
 	const timeWinner = clock.update(gamefile);
-	if (timeWinner) { // undefined if no clock has ran out
+	if (timeWinner && !onlinegame.areInOnlineGame()) { // undefined if no clock has ran out
 		gamefile.gameConclusion = `${timeWinner} time`;
 		concludeGame();
 	}
@@ -202,6 +203,9 @@ function loadGamefile(newGamefile) {
 
 	// Regenerate the mesh of all the pieces.
 	piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+
+	let move = gamefile.moves[gamefile.moveIndex];
+	if (move !== undefined) movesequence.animateMove(move, true);
 
 	guinavigation.update_MoveButtons();
 
