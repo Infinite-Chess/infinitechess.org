@@ -66,22 +66,22 @@ function areRolesHigherInPriority(roles1, roles2) {
 	roles1 = roles1 || [];
 	roles2 = roles2 || [];
 
-	let roles1HighestRoles = -1;
+	let roles1HighestPriority = -1; // -1 is the same as someone with zero roles
 	roles1.forEach(role => {
 		const priorityOfRole = validRoles.indexOf(role);
-		if (priorityOfRole > roles1HighestRoles) roles1HighestRoles = priorityOfRole;
+		if (priorityOfRole > roles1HighestPriority) roles1HighestPriority = priorityOfRole;
 	});
 
-	let roles2HighestRoles = -1;
+	let roles2HighestPriority = -1; // -1 is the same as someone with zero roles
 	roles2.forEach(role => {
 		const priorityOfRole = validRoles.indexOf(role);
-		if (priorityOfRole > roles2HighestRoles) roles2HighestRoles = priorityOfRole;
+		if (priorityOfRole > roles2HighestPriority) roles2HighestPriority = priorityOfRole;
 	});
 
 	// console.log('roles1 highest role: ' + roles1HighestRoles);
 	// console.log('roles2 highest role: ' + roles2HighestRoles);
 
-	return roles1HighestRoles > roles2HighestRoles;
+	return roles1HighestPriority > roles2HighestPriority;
 }
 
 
