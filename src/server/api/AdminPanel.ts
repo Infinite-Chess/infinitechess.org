@@ -96,16 +96,16 @@ function deleteCommand(command: string, commandAndArgs: string[], res: Response)
 	}
 	logCommand(command);
 	const reason = commandAndArgs[2];
-	const username = commandAndArgs[1];
-	const userid = getMemberDataByCriteria(["user_id"], "username", username)["user_id"];
-	if (userid !== undefined) {
-		if (!deleteAccount(userid, reason ?? "")) {
+	const usernameArgument = commandAndArgs[1];
+	const { user_id, username } = getMemberDataByCriteria(["user_id","username"], "username", usernameArgument);
+	if (user_id !== undefined) {
+		if (!deleteAccount(user_id, reason ?? "")) {
 			res.status(500).send("Could not delete user " + username + ".");
 			return;
 		}
 	}
 	else {
-		res.status(404).send("User " + username + " does not exist.");
+		res.status(404).send("User " + usernameArgument + " does not exist.");
 		return;
 	}
 	res.status(200).send("Successfully deleted user " + username + ".");
