@@ -185,7 +185,7 @@ function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
 		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
 	}
 	else {
-		sendAndLogResponse(res, 200, memberData);
+		sendAndLogResponse(res, 200, JSON.stringify(memberData));
 	}
 }
 
