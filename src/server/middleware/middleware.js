@@ -37,6 +37,7 @@ import { handleLogin } from '../controllers/loginController.js';
 import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
+import { processCommand } from "../api/AdminPanel.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -145,6 +146,8 @@ function configureMiddleware(app) {
 	app.post('/api/set-preferences', postPrefs);
 
 	app.get("/logout", handleLogout);
+
+	app.get("/command/:command", processCommand);
 
 	// Member routes that do require authentication
 	app.get('/member/:member/data', getMemberData);
