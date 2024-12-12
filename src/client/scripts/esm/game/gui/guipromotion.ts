@@ -6,8 +6,6 @@
 
 import spritesheet from '../rendering/spritesheet.js';
 // @ts-ignore
-import perspective from '../rendering/perspective.js';
-// @ts-ignore
 import selection from '../chess/selection.js';
 // @ts-ignore
 import style from './style.js';
@@ -37,7 +35,7 @@ function open(color: string) {
 	style.revealElement(element_Promote!);
 	if (color === 'white') style.revealElement(element_PromoteWhite!);
 	else if (color === 'black') style.revealElement(element_PromoteBlack!);
-	else throw new Error(`Promotion UI does not support color "${color}"`)
+	else throw new Error(`Promotion UI does not support color "${color}"`);
 }
 
 /** Closes the promotion UI */
@@ -55,8 +53,8 @@ function close() {
  */
 function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	if (promotionsAllowed === undefined) return;
-    const white = promotionsAllowed.white; // ['queens','bishops']
-    const black = promotionsAllowed.black;
+	const white = promotionsAllowed['white']!; // ['queens','bishops']
+	const black = promotionsAllowed['black']!;
 
 	if (element_PromoteWhite!.childElementCount > 0 || element_PromoteBlack!.childElementCount > 0) {
 		throw new Error("Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.");
@@ -65,44 +63,44 @@ function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
 
-	const whiteSVGs = spritesheet.getCachedSVGElements(white.map(promotion => promotion + whiteExt))
-	const blackSVGs = spritesheet.getCachedSVGElements(black.map(promotion => promotion + blackExt))
+	const whiteSVGs = spritesheet.getCachedSVGElements(white.map(promotion => promotion + whiteExt));
+	const blackSVGs = spritesheet.getCachedSVGElements(black.map(promotion => promotion + blackExt));
 
-    // Create and append allowed promotion options for white
-    whiteSVGs.forEach(svg => {
+	// Create and append allowed promotion options for white
+	whiteSVGs.forEach(svg => {
 		// TODO: Make a copy instead of modifying the cached piece
-        svg.classList.add('promotepiececontainer');
+		svg.classList.add('promotepiececontainer');
 		svg.addEventListener('click', callback_promote);
         element_PromoteWhite!.appendChild(svg);
-    });
+	});
 
-    // Create and append allowed promotion options for black
-    blackSVGs.forEach(svg => {
+	// Create and append allowed promotion options for black
+	blackSVGs.forEach(svg => {
 		// TODO: Make a copy instead of modifying the cached piece
-        svg.classList.add('promotepiececontainer');
+		svg.classList.add('promotepiececontainer');
 		svg.addEventListener('click', callback_promote);
         element_PromoteBlack!.appendChild(svg);
-    });
+	});
 }
 
 /**
  * Resets the promotion UI by clearing all promotion options.
  */
 function resetUI() {
-    while (element_PromoteWhite!.firstChild) {
+	while (element_PromoteWhite!.firstChild) {
 		const svg = element_PromoteWhite!.firstChild;
 		element_PromoteWhite!.removeChild(svg);
 		svg.removeEventListener('click', callback_promote);
 	}
-    while (element_PromoteBlack!.firstChild) {
+	while (element_PromoteBlack!.firstChild) {
 		const svg = element_PromoteBlack!.firstChild;
 		element_PromoteBlack!.removeChild(svg);
 		svg.removeEventListener('click', callback_promote);
 	}
 }
 
-function callback_promote(event) {
-	const type = event.srcElement.classList[1];
+function callback_promote(event: Event) {
+	const type = (event.srcElement as HTMLElement).classList[1];
 	// TODO: Dispatch a custom 'promote-selected' event!
 	// That way this script doesn't depend on selection.js
 	selection.promoteToType(type);

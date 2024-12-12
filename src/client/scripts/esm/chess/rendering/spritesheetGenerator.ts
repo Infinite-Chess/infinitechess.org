@@ -7,7 +7,7 @@
 // @ts-ignore
 import math from "../../util/math.js";
 
-
+// @ts-ignore
 import type { Coords } from "../logic/movesets.js";
 
 

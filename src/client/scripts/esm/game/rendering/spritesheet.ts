@@ -6,7 +6,6 @@
  * If no game is loaded, no spritesheet is loaded.
  */
 
-
 import { fetchPieceSVGs } from '../../chess/api/fetchPieceSVGs.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 import { convertSVGsToImages } from '../../chess/rendering/svgtoimageconverter.js';
@@ -16,6 +15,8 @@ import typeutil from '../../chess/util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import texture from './texture.js';
+// @ts-ignore
+import colorutil from '../../chess/util/colorutil.js';
 
 
 // Type Definitions ----------------------------------------------------------
@@ -24,7 +25,6 @@ import texture from './texture.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 import type { Coords } from '../../chess/logic/movesets.js';
-import colorutil from '../../chess/util/colorutil.js';
 
 
 // Variables ---------------------------------------------------------------------------

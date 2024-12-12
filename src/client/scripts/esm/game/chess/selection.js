@@ -102,7 +102,7 @@ function isPawnCurrentlyPromoting() { return pawnIsPromoting; }
 /**
  * Flags the currently selected pawn to be promoted next frame.
  * Call when a choice is made on the promotion UI.
- * @param {boolean} type
+ * @param {string} type
  */
 function promoteToType(type) { promoteTo = type; }
 
