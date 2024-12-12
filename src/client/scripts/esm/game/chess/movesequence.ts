@@ -26,6 +26,7 @@ import { animatableChanges, meshChanges } from "./graphicalchanges.js";
 import type gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
 import type { Move } from "../../chess/util/moveutil.js";
+import type { Change } from "../../chess/logic/boardchanges.js";
 
 function makeMove(gamefile: gamefile, move: Move, { doGameOverChecks = true, concludeGameIfOver = true} = {}) {
 
@@ -53,10 +54,8 @@ function animateMove(move: Move, forward = true) {
 	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
 	let clearanimations = true;
 	for (const c of move.changes) {
-		if (c.action === undefined) continue;
 		if (!(c.action in funcs)) continue;
-		// @ts-ignore WHY NOT????
-		funcs[c.action](c, clearanimations);
+		funcs[c.action]!(c, clearanimations);
 		clearanimations = false;
 	}
 }
