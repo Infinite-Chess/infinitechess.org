@@ -239,6 +239,7 @@ function unloadGame() {
 	guiclock.resetClocks();
 
 	spritesheet.deleteSpritesheet();
+	guipromotion.resetUI();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
