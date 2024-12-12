@@ -1,5 +1,4 @@
-import type { CustomRequest } from "../../types.js";
-import type { Response } from "express";
+
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
 // @ts-ignore
@@ -10,6 +9,11 @@ import { deleteAccount } from "../controllers/deleteAccountController.js";
 import { deleteAllSessionsOfUser } from "../controllers/authenticationTokens/sessionManager.js";
 // @ts-ignore
 import { areRolesHigherInPriority } from "../controllers/roles.js";
+
+import type { CustomRequest } from "../../types.js";
+import type { Response } from "express";
+
+
 
 const validCommands = [
 	"ban",
