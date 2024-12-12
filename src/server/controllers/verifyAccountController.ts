@@ -134,14 +134,14 @@ function getNewVerificationAfterVerifying(): Verification { // { verified, notif
  * Manually verifies a user by the provided name.
  * 
  * DOES NOT CHECK IF YOU HAVE THE REQUIRED PERMISSIONS.
- * @param username 
+ * @param usernameCaseInsensitive 
  * @returns A success object: `{ success (boolean}, reason (string, if failed) }`
  */
-function manuallyVerifyUser(username: string): { success: true } | { success: false, reason: string } {
-	const { user_id, verification: stringifiedVerificationOrNull } = getMemberDataByCriteria(['user_id', 'username', 'verification'], 'username', username, { skipErrorLogging: true });
+function manuallyVerifyUser(usernameCaseInsensitive: string): { success: true, username: string } | { success: false, reason: string } {
+	const { user_id, username, verification: stringifiedVerificationOrNull } = getMemberDataByCriteria(['user_id', 'username', 'verification'], 'username', usernameCaseInsensitive, { skipErrorLogging: true });
 	if (user_id === undefined) { // User not found
-		logEvents(`Cannot manually verify user "${username}" when they don't exist.`, 'errLog.txt', { print: true });
-		return { success: false, reason: `User "${username}" doesn't exist.` };
+		logEvents(`Cannot manually verify user "${usernameCaseInsensitive}" when they don't exist.`, 'errLog.txt', { print: true });
+		return { success: false, reason: `User "${usernameCaseInsensitive}" doesn't exist.` };
 	}
 
 	// The verification is stringified in the database. We need to parse it here.
@@ -164,7 +164,7 @@ function manuallyVerifyUser(username: string): { success: true } | { success: fa
 	}
 
 	logEvents(`Manually verified member ${username}'s account! ID ${user_id}`, 'loginAttempts.txt', { print: true });
-	return { success: true };
+	return { success: true, username };
 }
 
 

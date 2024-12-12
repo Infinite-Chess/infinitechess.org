@@ -61,7 +61,8 @@ function verifyAccessToken(req, res) {
 	console.log("A valid access token was used! :D :D");
 
 	const { user_id, username, roles, allowed_actions } = result;
-	req.memberInfo = { signedIn: true, user_id, username, roles, allowed_actions }; // Username was our payload when we generated the access token
+	const parsedRoles = JSON.parse(roles);
+	req.memberInfo = { signedIn: true, user_id, username, roles: parsedRoles, allowed_actions }; // Username was our payload when we generated the access token
 
 	return true; // true if they have a valid ACCESS token
 }
@@ -91,7 +92,8 @@ function verifyRefreshToken(req, res) {
 	// Valid! Set their req.memberInfo property!
 
 	const { user_id, username, roles } = result;
-	req.memberInfo = { signedIn: true, user_id, username, roles }; // Username was our payload when we generated the access token
+	const parsedRoles = JSON.parse(roles);
+	req.memberInfo = { signedIn: true, user_id, username, roles: parsedRoles }; // Username was our payload when we generated the access token
 
 	return true; // true if they have a valid REFRESH token
 };
@@ -132,7 +134,8 @@ function verifyRefreshToken_WebSocket(ws) {
 	}
 
 	const { user_id, username, roles } = result;
-	ws.metadata.memberInfo = { signedIn: true, user_id, username, roles }; // Username was our payload when we generated the access token
+	const parsedRoles = JSON.parse(roles);
+	ws.metadata.memberInfo = { signedIn: true, user_id, username, roles: parsedRoles }; // Username was our payload when we generated the access token
 }
 
 export {

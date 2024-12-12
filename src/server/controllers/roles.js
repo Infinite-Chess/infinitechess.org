@@ -6,7 +6,7 @@
 import { logEvents } from "../middleware/logEvents.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
-const validRoles = ['owner','patron'];
+const validRoles = ['patron', 'admin', 'owner'];
 
 
 /**
@@ -50,6 +50,39 @@ function removeAllRoles(userId) {
 }
 // removeAllRoles(11784992);
 
+/**
+ * Returns true if roles1 contains atleast one role that is higher in priority than the highest role in roles2.
+ * 
+ * If so, the user with roles1 would be able to perform commands on user with roles2.
+ * @param {string[] | null} roles1 
+ * @param {string[] | null} roles2 
+ */
+function areRolesHigherInPriority(roles1, roles2) {
+	// Make sure they are not null
+	roles1 = roles1 || [];
+	roles2 = roles2 || [];
+
+	let roles1HighestRoles = -1;
+	roles1.forEach(role => {
+		const priorityOfRole = validRoles.indexOf(role); // Lower = Higher priority. 0 being the highest.
+		if (priorityOfRole > roles1HighestRoles) roles1HighestRoles = priorityOfRole;
+	});
+
+	let roles2HighestRoles = -1;
+	roles2.forEach(role => {
+		const priorityOfRole = validRoles.indexOf(role); // Lower = Higher priority. 0 being the highest.
+		if (priorityOfRole > roles2HighestRoles) roles2HighestRoles = priorityOfRole;
+	});
+
+	// console.log('roles1 highest role: ' + roles1HighestRoles);
+	// console.log('roles2 highest role: ' + roles2HighestRoles);
+
+	return roles1HighestRoles > roles2HighestRoles;
+}
+
+
+
 export {
 	giveRole,
+	areRolesHigherInPriority,
 };
