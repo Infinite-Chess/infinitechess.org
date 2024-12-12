@@ -24,6 +24,8 @@ const validCommands = [
 
 function processCommand(req: CustomRequest, res: Response): void {
 	const command = req.params["command"]!;
+
+	// Parse command
 	const commandAndArgs: string[] = [];
 	let inQuote: boolean = false;
 	let temp: string = "";
@@ -44,6 +46,7 @@ function processCommand(req: CustomRequest, res: Response): void {
 			temp += command[i];
 		}
 	}
+
 	if (!req.memberInfo.signedIn) {
 		res.status(401).send("Cannot send commands while logged out.");
 		return;
@@ -86,16 +89,19 @@ function processCommand(req: CustomRequest, res: Response): void {
 }
 
 function deleteCommand(command: string, commandAndArgs: string[], res: Response) {
-	logCommand(command);
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
+	logCommand(command);
 	const reason = commandAndArgs[2];
 	const username = commandAndArgs[1];
 	const userid = getMemberDataByCriteria(["user_id"], "username", username)["user_id"];
 	if (userid !== undefined) {
-		deleteAccount(userid, reason ?? "");
+		if (!deleteAccount(userid, reason ?? "")) {
+			res.status(500).send("Could not delete user " + username + ".");
+			return;
+		}
 	}
 	else {
 		res.status(404).send("User " + username + " does not exist.");
@@ -166,7 +172,7 @@ function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
 	const memberInfo = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"],
 		"username",
 		username);
-	logEvents("Command executed: " + command + "\n" + memberInfo + "\n", "adminCommands");
+	logEvents("Command executed: " + command + "\nResult: " + memberInfo + "\n", "adminCommands");
 	if (Object.keys(memberInfo).length === 0) {
 		res.status(404).send("User " + username + " does not exist.");
 	}
