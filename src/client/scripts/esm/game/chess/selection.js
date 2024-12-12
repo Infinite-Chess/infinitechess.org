@@ -102,7 +102,7 @@ function isPawnCurrentlyPromoting() { return pawnIsPromoting; }
 /**
  * Flags the currently selected pawn to be promoted next frame.
  * Call when a choice is made on the promotion UI.
- * @param {boolean} type
+ * @param {string} type
  */
 function promoteToType(type) { promoteTo = type; }
 
@@ -180,6 +180,7 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
 	if (specialdetect.isPawnPromotion(gamefile, pieceSelected.type, coordsClicked)) {
 		const color = colorutil.getPieceColorFromType(pieceSelected.type);
 		guipromotion.open(color);
+		perspective.unlockMouse();
 		pawnIsPromoting = coordsClicked;
 		return;
 	}
