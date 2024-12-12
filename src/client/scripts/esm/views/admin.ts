@@ -8,11 +8,20 @@ async function sendCommand() {
 	commandInput.value = "";
 	const response = await fetch("command/" + commandString);
 	commandHistory.textContent += commandString + '\n' + await response.text() + "\n\n";
+	scrollToBottom(commandHistory);
 }
 
 function clickSubmitIfReturnPressed(event: any) {
 	// 13 is the key code for Enter key
 	if (event.keyCode === 13) sendCommandButton.click();
+}
+
+/**
+ * Automatically scrolls to the bottom of the container.
+ * @param container - The container to scroll.
+ */
+function scrollToBottom(container: HTMLElement) {
+	container.scrollTop = container.scrollHeight;
 }
 
 sendCommandButton.addEventListener("click", sendCommand);
