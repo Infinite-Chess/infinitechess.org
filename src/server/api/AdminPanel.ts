@@ -46,6 +46,7 @@ function processCommand(req: CustomRequest, res: Response): void {
 			temp += command[i];
 		}
 	}
+	commandAndArgs.push(temp);
 
 	if (!req.memberInfo.signedIn) {
 		res.status(401).send("Cannot send commands while logged out.");
