@@ -9,4 +9,10 @@ async function sendCommand() {
 	commandHistory.textContent += commandString + '\n' + await response.text() + "\n\n";
 }
 
+function clickSubmitIfReturnPressed(event: any) {
+	// 13 is the key code for Enter key
+	if (event.keyCode === 13) sendCommandButton.click();
+}
+
 sendCommandButton.addEventListener("click", sendCommand);
+commandInput.addEventListener('keyup', clickSubmitIfReturnPressed);
