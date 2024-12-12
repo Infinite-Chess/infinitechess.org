@@ -227,13 +227,13 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 }
 
 function logCommand(command: string) {
-	logEvents("Command executed: " + command + "\n", "adminCommands.txt", { print: true });
+	logEvents("Command executed: " + command, "adminCommands.txt", { print: true });
 }
 
 function sendAndLogResponse(res: Response, code: number, message: any) {
 	res.status(code).send(message);
 	// Also log the sent response
-	logEvents(message + "\n", "adminCommands.txt", { print: true });
+	logEvents("Result: " + message + "\n", "adminCommands.txt", { print: true });
 }
 
 export {
