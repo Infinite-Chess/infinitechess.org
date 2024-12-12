@@ -106,7 +106,7 @@ function deleteCommand(command: string, commandAndArgs: string[], req: CustomReq
 	logCommand(command);
 	const reason = commandAndArgs[2];
 	const usernameArgument = commandAndArgs[1];
-	const { user_id, username, roles } = getMemberDataByCriteria(["user_id","username","roles"], "username", usernameArgument);
+	const { user_id, username, roles } = getMemberDataByCriteria(["user_id","username","roles"], "username", usernameArgument, { skipErrorLogging: true });
 	if (user_id === undefined) return sendAndLogResponse(res, 404, "User " + usernameArgument + " does not exist.");
 	// They were found...
 	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
@@ -130,7 +130,7 @@ function usernameCommand(command: string, commandAndArgs: string[], res: Respons
 		}
 		// Valid Syntax
 		logCommand(command);
-		const username = getMemberDataByCriteria(["username"], "user_id", parsedId)["username"];
+		const { username } = getMemberDataByCriteria(["username"], "user_id", parsedId, { skipErrorLogging: true });
 		if (username === undefined) sendAndLogResponse(res, 404, "User with id " + parsedId + " does not exist.");
 		else sendAndLogResponse(res, 200, username);
 	}
@@ -158,9 +158,9 @@ function logoutUser(command: string, commandAndArgs: string[], res: Response) {
 	// Valid Syntax
 	logCommand(command);
 	const username = commandAndArgs[1];
-	const userid = getMemberDataByCriteria(["user_id"], "username", username)["user_id"];
-	if (userid !== undefined) {
-		deleteAllSessionsOfUser(userid);
+	const { user_id } = getMemberDataByCriteria(["user_id"], "username", username, { skipErrorLogging: true });
+	if (user_id !== undefined) {
+		deleteAllSessionsOfUser(user_id);
 		sendAndLogResponse(res, 200, "User " + username + " successfully logged out.");
 	}
 	else {
@@ -176,7 +176,7 @@ function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
 	// Valid Syntax
 	logCommand(command);
 	const username = commandAndArgs[1];
-	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"], "username", username);
+	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"], "username", username, { skipErrorLogging: true });
 	if (Object.keys(memberData).length === 0) { // Empty (member not found)
 		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
 	}
