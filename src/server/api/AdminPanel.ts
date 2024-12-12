@@ -8,6 +8,8 @@ import { logEvents } from "../middleware/logEvents.js";
 import { deleteAccount } from "../controllers/deleteAccountController.js";
 // @ts-ignore
 import { deleteAllSessionsOfUser } from "../controllers/authenticationTokens/sessionManager.js";
+// @ts-ignore
+import { areRolesHigherInPriority } from "../controllers/roles.js";
 
 const validCommands = [
 	"ban",
@@ -61,7 +63,7 @@ function processCommand(req: CustomRequest, res: Response): void {
 		case "ban":
 			return;
 		case "delete":
-			deleteCommand(command, commandAndArgs, res);
+			deleteCommand(command, commandAndArgs, req, res);
 			return;
 		case "username":
 			usernameCommand(command, commandAndArgs, res);
@@ -89,23 +91,30 @@ function processCommand(req: CustomRequest, res: Response): void {
 	}
 }
 
-function deleteCommand(command: string, commandAndArgs: string[], res: Response) {
-	if (commandAndArgs.length < 2) {
-		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
+function deleteCommand(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+	if (commandAndArgs.length < 3) {
+		res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
 		return;
 	}
 	logCommand(command);
 	const reason = commandAndArgs[2];
 	const usernameArgument = commandAndArgs[1];
-	const { user_id, username } = getMemberDataByCriteria(["user_id","username"], "username", usernameArgument);
-	if (user_id !== undefined) {
-		if (!deleteAccount(user_id, reason ?? "")) {
-			res.status(500).send("Could not delete user " + username + ".");
-			return;
-		}
-	}
-	else {
+	const { user_id, username, roles } = getMemberDataByCriteria(["user_id","username","roles"], "username", usernameArgument);
+	const rolesOfAffectedUser = JSON.parse(roles);
+	console.log("affected roles: " + JSON.stringify(rolesOfAffectedUser));
+	if (user_id === undefined) {
 		res.status(404).send("User " + usernameArgument + " does not exist.");
+		return;
+	}
+	// They were found...
+	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
+	// Don't delete them if they are equal or higher than your status
+	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) {
+		res.status(403).send("Forbidden to delete " + username + ".");
+		return;
+	}
+	if (!deleteAccount(user_id, reason)) {
+		res.status(500).send("Failed to delete " + username + ".");
 		return;
 	}
 	res.status(200).send("Successfully deleted user " + username + ".");
@@ -170,15 +179,13 @@ function getUserInfo(command: string, commandAndArgs: string[], res: Response) {
 		return;
 	}
 	const username = commandAndArgs[1];
-	const memberInfo = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"],
-		"username",
-		username);
-	logEvents("Command executed: " + command + "\nResult: " + memberInfo + "\n", "adminCommands");
-	if (Object.keys(memberInfo).length === 0) {
+	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"], "username", username);
+	logEvents("Command executed: " + command + "\nResult: " + memberData + "\n", "adminCommands");
+	if (Object.keys(memberData).length === 0) {
 		res.status(404).send("User " + username + " does not exist.");
 	}
 	else {
-		res.status(200).send(memberInfo);
+		res.status(200).send(memberData);
 	}
 }
 
