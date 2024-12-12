@@ -1,6 +1,13 @@
+* {
+	background-color: rgb(20, 20, 20);
+	color: white;
+}
+body {
+	padding: 30px 40px;
+}
 textarea {
 	width: 100%;
-	height: 1000px;
+	height: 80vh;
 }
 .inputContainer {
 	display: flex;
