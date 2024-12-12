@@ -6,6 +6,10 @@
 import { logEvents } from "../middleware/logEvents.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
+/**
+ * All possible roles, IN ORDER FROM LEAST TO MOST IMPORTANCE!
+ * The ordering determines admin's capabilities in the admin console.
+ */
 const validRoles = ['patron', 'admin', 'owner'];
 
 
