@@ -656,7 +656,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		aChangeWasMade = true;
 	}
 
-	if (!aChangeWasMade) movesequence.viewToIndex(gamefile, originalMoveIndex);
+	if (!aChangeWasMade) movesequence.viewIndex(gamefile, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
 	return true; // No cheating detected
