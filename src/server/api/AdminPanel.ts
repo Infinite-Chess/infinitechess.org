@@ -1,4 +1,9 @@
 
+/**
+ * This script handles all incoming commands send from the admin console page
+ * /admin
+ */
+
 import { manuallyVerifyUser } from "../controllers/verifyAccountController.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
