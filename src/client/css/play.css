@@ -151,6 +151,34 @@ canvas {
     height: 100%;
 }
 
+/* The game loading screen when loading svgs and generating spritesheet */
+
+.game-loading-screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game-loading-screen.transparent {
+    /* Adding this rule here instead of in the non-transparent loading screen
+    means that the opacity will only be transitioned one-way */
+    transition: opacity 0.3s;
+}
+
+.game-loading-screen .spinny-pawn {
+    --width: 90px;
+    --color: #e5e5e5;
+    width: var(--width);
+    height: var(--width);
+    stroke: var(--color);
+    fill: var(--color);
+}
+
+/* The overlay that contains all UI elements overtop the canvas. */
+
 #overlay {
     position: absolute;
     width: 100%;

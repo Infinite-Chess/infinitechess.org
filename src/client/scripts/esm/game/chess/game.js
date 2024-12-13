@@ -36,6 +36,7 @@ import jsutil from '../../util/jsutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
+import loadingscreen from '../gui/loadingscreen.js';
 // Import End
 
 /** 
@@ -190,26 +191,25 @@ function renderEverythingInGame() {
  * @param {gamefile} newGamefile - The gamefile
  */
 async function loadGamefile(newGamefile) {
-	if (gamefile) return console.error("Must unloadGame() before loading a new one!");
+	if (gamefile) throw new Error("Must unloadGame() before loading a new one.");
 	gameIsLoading = true;
+	loadingscreen.open();
 
 	gamefile = newGamefile;
+	guiclock.set(newGamefile);
+	guinavigation.update_MoveButtons();
 
 	await spritesheet.initSpritesheetForGame(gl, gamefile);
+	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disables arrows
-		// Checkmate is swapped out for royalcapture further down
 	} else miniimage.enable();
-
-	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
 	// Regenerate the mesh of all the pieces.
 	piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
-
-	guinavigation.update_MoveButtons();
 
 	guigameinfo.updateWhosTurn(gamefile);
 	// Immediately conclude the game if we loaded a game that's over already
@@ -220,8 +220,8 @@ async function loadGamefile(newGamefile) {
 
 	initListeners();
 
-	guiclock.set(newGamefile);
 	gameIsLoading = false;
+	loadingscreen.close();
 }
 
 /** The canvas will no longer render the current game */

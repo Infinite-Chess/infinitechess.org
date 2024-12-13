@@ -3,8 +3,8 @@
     <div class="hidden"> 
         <!-- The pawn svg and loading animation svg we use in several places -->
         <svg>
-            <symbol id="svg-play" viewBox="0 0 45 45">
-                <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#666" fill-opacity="1" fill-rule="nonzero" stroke="#666" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/>
+            <symbol id="svg-pawn" viewBox="0 0 45 45">
+                <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill-opacity="1" fill-rule="nonzero" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/>
             </symbol>
         </svg>
         <!-- Checkmark svg commonly found in the settings dropdowns -->
@@ -68,7 +68,7 @@
     <nav class="compact-3">
         <a href="/play">
             <span><%=t('header.play')%></span>
-            <svg class="svg-play"><use href="#svg-play"></use></svg>
+            <svg class="svg-pawn"><use href="#svg-pawn"></use></svg>
         </a>
         <a href="/news">
             <span><%=t('header.news')%></span>
@@ -124,7 +124,7 @@
                     <div class="ping-bar" style="height: 24px;"></div>
                     <div class="ping-glow"></div>
                 </div>
-                <svg class="svg-play hidden"><use href="#svg-play"></use></svg>
+                <svg class="svg-pawn spinny-pawn hidden"><use href="#svg-pawn"></use></svg>
             </div>
         </div>
         <div class="language-dropdown dropdown visibility-hidden">

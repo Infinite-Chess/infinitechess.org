@@ -44,12 +44,19 @@ header a {
 
 /* All SVG settings. (Most settings dropdown SVGs are the same width in the document, we just scale them here to make them all VISUALLY the same size */
 
-.svg-play { /* The pawn svg and loading animation that we use in several spots */
+.svg-pawn { /* The pawn svg and loading animation that we use in several spots */
     position: relative;
     bottom: 3px;
     height: 65%;
     aspect-ratio: 1;
+    stroke: #666;
+    fill: #666;
+}
+
+/* The spinny pawn animation */
+.spinny-pawn {
     transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
+    animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
 }
 
 .svg-language, .svg-board, .svg-legalmove, .svg-perspective,
@@ -135,7 +142,7 @@ nav span {
     padding-left: 4px;
 }
 
-nav .svg-play {
+nav .svg-pawn {
     bottom: 1px;
 }
 
@@ -528,10 +535,6 @@ span.arrow-head-left {
     left: 10px;
     overflow: hidden;
     /* transform: scaleY(0.7); */
-}
-
-.ping-meter .svg-play {
-    animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
 }
 
 

@@ -43,6 +43,12 @@
             <!-- The webgl context will render the game onto here -->
             <canvas id="game" class="hidden"></canvas>
 
+            <!-- The spinny pawn loading animation when a game is loading,
+            whil the svgs are being requested and spritesheet generated -->
+            <div class="game-loading-screen transparent">
+                <svg class="svg-pawn spinny-pawn"><use href="#svg-pawn"></use></svg>
+            </div>
+
             <div id="overlay" class="overlay">
 
                 <!-- The external discord & game credits links on the title screen -->
