@@ -155,11 +155,13 @@ function recalcTile_MouseOver() {
 	const tile_MouseOver_IntAndFloat = getTileMouseOver();
     
 	tile_MouseOver_Float = tile_MouseOver_IntAndFloat.tile_Float;
+	if (options.isDebugModeOn()) console.log("Set tile_MouseOver_Float: " + JSON.stringify(tile_MouseOver_Float));
 	tile_MouseOver_Int = tile_MouseOver_IntAndFloat.tile_Int;
 }
 
 function setTile_MouseOverToUndefined() {
 	tile_MouseOver_Float = undefined;
+	if (options.isDebugModeOn()) console.log("Set tile_MouseOver_Float: " + JSON.stringify(tile_MouseOver_Float));
 	tile_MouseOver_Int = undefined;
 }
 
@@ -169,6 +171,7 @@ function recalcTile_CrosshairOver() {
 	const coords = space.convertWorldSpaceToCoords(input.getMouseWorldLocation());
 
 	tile_MouseOver_Float = coords;
+	if (options.isDebugModeOn()) console.log("Set tile_MouseOver_Float: " + JSON.stringify(tile_MouseOver_Float));
 	tile_MouseOver_Int = [Math.floor(coords[0] + squareCenter), Math.floor(coords[1] + squareCenter)];
 }
 
