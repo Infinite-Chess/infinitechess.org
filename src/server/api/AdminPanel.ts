@@ -124,7 +124,8 @@ function deleteCommand(command: string, commandAndArgs: string[], req: CustomReq
 	const rolesOfAffectedUser = JSON.parse(roles);
 	// Don't delete them if they are equal or higher than your status
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) return sendAndLogResponse(res, 403, "Forbidden to delete " + username + ".");
-	if (!deleteAccount(user_id, reason)) return sendAndLogResponse(res, 500, "Failed to delete " + username + ".");
+	const result = deleteAccount(user_id, reason); // { success, reason (if failed) }
+	if (!result.success) return sendAndLogResponse(res, 500, `Failed to delete user ${username} for reason: ${result.reason}`);
 	sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
 }
 

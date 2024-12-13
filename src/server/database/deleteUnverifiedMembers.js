@@ -38,10 +38,11 @@ function removeOldUnverifiedMembers() {
 			// If the account has been unverified for longer than the threshold, delete it
 			if (timeSinceJoined > maxExistenceTimeForUnverifiedAccountMillis) {
 				// Delete the account.
-				if (deleteAccount(user_id, reason_deleted)) {
+				const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
+				if (result.success) {
 					logEvents(`Removed unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt', { print: true });
 				} else { // Failure, either invalid delete reason, or they do not exist.
-					logEvents(`FAILED to remove unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days!!!`, 'errorLog.txt', { print: true });
+					logEvents(`FAILED to remove unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days!!! Reason: ${result.reason}`, 'errorLog.txt', { print: true });
 				}
 			}
 		}

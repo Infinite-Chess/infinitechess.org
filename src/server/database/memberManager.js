@@ -18,7 +18,11 @@ import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js
  * These reasons are stored in the deleted_members table in the database.
  * @type {string[]}
  */
-const validDeleteReasons = ['unverified','user request'];
+const validDeleteReasons = [
+	'unverified', // They failed to verify after 3 days
+	'user request', // They deleted their own account, or requested it to be deleted.
+	'security', // A choice by server admins, for security purpose.
+];
 
 
 
@@ -95,12 +99,15 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
  * Deletes a user from the members table.
  * @param {number} user_id - The ID of the user to delete.
  * @param {string} reason_deleted - The reason the user is being deleted.
- * @returns {boolean} true if there was a change made (deleted successfully), or false if they weren't found, or the reason was invalid.
+ * @param {Object} [options] - Optional settings for the function.
+ * @param {boolean} [options.skipErrorLogging] - If true, errors will not be logged when no match is found.
+ * @returns {object} A result object: { success (boolean), reason (string, if failed) }
  */
-function deleteUser(user_id, reason_deleted) {
+function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 	if (!validDeleteReasons.includes(reason_deleted)) {
-		logEvents(`Cannot delete user with ID "${user_id}" for an invalid reason "${reason_deleted}"!`, 'errLog.txt', { print: true });
-		return false;
+		const reason = `Cannot delete user of ID "${user_id}". Reason "${reason_deleted}" is invalid.`;
+		if (!skipErrorLogging) logEvents(reason, 'errLog.txt', { print: true });
+		return { success: false, reason };
 	}
 
 	// SQL query to delete a user by their user_id
@@ -112,21 +119,20 @@ function deleteUser(user_id, reason_deleted) {
 
 		// Check if any rows were deleted
 		if (result.changes === 0) {
-			logEvents(`Cannot delete non-existent user with ID "${user_id}"!`, 'errLog.txt', { print: true });
-			return false;
+			const reason = `Cannot delete user of ID "${user_id}", they were not found.`;
+			if (!skipErrorLogging) logEvents(reason, 'errLog.txt', { print: true });
+			return { success: false, reason };
 		}
 
 		// Add their user_id to the deleted members table
 		addDeletedMemberToDeletedMembersTable(user_id, reason_deleted);
 
-		return true; // Change made successfully
+		return { success: true }; // Change made successfully
 
 	} catch (error) {
 		// Log the error for debugging purposes
-		logEvents(`Error deleting user with ID "${user_id}": ${error.message}`, 'errLog.txt', { print: true });
-
-		// Return false indicating failure
-		return false;
+		logEvents(`Error deleting user with ID "${user_id}": ${error.stack}`, 'errLog.txt', { print: true });
+		return { succes: false, reason: `Failed to delete user of ID "${user_id}", an internal error ocurred.`};
 	}
 }
 // console.log(deleteUser(3408674));
