@@ -129,7 +129,7 @@ function glimitToDampScale() {
 
 // Recalculate board velicity, scale, and other common variables.
 function recalcVariables() {
-	recalcTileWidth_Pixels(); // This needs to be after recalcPosition(), else dragging & scaling has a spring to it.
+	recalcTileWidth_Pixels();
 	recalcTile_MouseCrosshairOver();
 	recalcTiles_FingersOver();
 	recalcBoundingBox();

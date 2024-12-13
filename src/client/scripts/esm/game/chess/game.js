@@ -133,17 +133,16 @@ function updateBoard() {
 	animation.update();
 	if (guipause.areWePaused() && !onlinegame.areInOnlineGame()) return;
 
-	movement.recalcPosition();
+	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
+	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
 	transition.update();
-	board.recalcVariables(); 
+	board.recalcVariables(); // Variables dependant on the board position & scale
+
 	guinavigation.update();
-	selection.update(); // Test if a piece was clicked on or moved. Needs to be before updateNavControls()
+	selection.update();
 	arrows.update(); // NEEDS TO BE AFTER selection.update(), because the arrows model regeneration DEPENDS on the piece selected!
-	// We NEED THIS HERE as well as in gameLoop.render() so the game can detect mouse clicks
-	// on the miniimages in perspective mode even when the screen isn't being rendered!
 	miniimage.genModel();
 	highlightline.genModel();
-	movement.updateNavControls(); // Navigation controls
 
 	if (guipause.areWePaused()) return;
 
