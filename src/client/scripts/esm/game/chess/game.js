@@ -197,6 +197,7 @@ async function loadGamefile(newGamefile) {
 	gamefile = newGamefile;
 	guiclock.set(newGamefile);
 	guinavigation.update_MoveButtons();
+	guigameinfo.updateWhosTurn(gamefile);
 
 	await spritesheet.initSpritesheetForGame(gl, gamefile);
 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
@@ -210,7 +211,6 @@ async function loadGamefile(newGamefile) {
 	// Regenerate the mesh of all the pieces.
 	piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
 
-	guigameinfo.updateWhosTurn(gamefile);
 	// Immediately conclude the game if we loaded a game that's over already
 	if (gamefileutility.isGameOver(gamefile)) {
 		concludeGame();
