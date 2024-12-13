@@ -117,11 +117,11 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	const readyImages: HTMLImageElement[] = await convertSVGsToImages(svgElements);
 
 	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
-	console.log(spritesheetAndSpritesheetData.spritesheetData);
+	// console.log(spritesheetAndSpritesheetData.spritesheetData);
 
 	// Optional: Append the spritesheet to the document for debugging
-	spritesheetAndSpritesheetData.spritesheet.style.display = 'none';
-	document.body.appendChild(spritesheetAndSpritesheetData.spritesheet);
+	// spritesheetAndSpritesheetData.spritesheet.style.display = 'none';
+	// document.body.appendChild(spritesheetAndSpritesheetData.spritesheet);
 
 	// Load the texture into webgl and initiate our spritesheet
 	// data that contains the texture coordinates of each piece!
