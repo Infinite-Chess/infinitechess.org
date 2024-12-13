@@ -139,7 +139,9 @@ function deleteSpritesheet() {
  * fetches them, and appends them to our cache.
  */
 async function fetchMissingPieceSVGs(typesNeeded: string[]) {
-	const typesMissing = jsutil.getMissingStringsFromArray(cachedPieceTypes, typesNeeded);
+	let typesMissing = jsutil.getMissingStringsFromArray(cachedPieceTypes, typesNeeded);
+	// Remove the classical pieces, are they are being fetched already by fetchAndCacheClassicalPieceSVGs()
+	typesMissing = typesMissing.filter((type: string) => !piecesInTheClassicalSVGGroup.includes(type));
 
 	if (typesMissing.length === 0) return console.log("All piece SVGs for the game are present! No need to fetch more.");
 	else console.log(`Fetching missing piece types: ${JSON.stringify(typesMissing)}`);
