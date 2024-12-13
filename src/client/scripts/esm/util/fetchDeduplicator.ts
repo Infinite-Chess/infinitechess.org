@@ -22,15 +22,18 @@ const inProgressRequests: InProgressRequests = {};
   
 /**
  * Fetch with deduplication to prevent multiple requests to the same URL.
- * @param url - The URL to fetch.
+ * @param url - The relative URL to fetch (e.g., "/api/data").
  * @param options - Optional fetch options.
  * @returns A promise resolving to the fetch response.
  */
 function fetchWithDeduplication(url: string, options?: RequestOptions): Promise<Response> {
-	// Construct a unique key for the URL including the path and query parameters
-	const { origin, pathname, searchParams } = new URL(url);
-	const queryParams = searchParams.toString();
-	const requestKey = `${origin}${pathname}?${queryParams}`; // Key based on the full URL
+	// Resolve the full URL using the current origin
+	const baseURL = window.location.origin; // Use the current page's origin as the base
+	const fullURL = new URL(url, baseURL).toString();
+
+	// Construct a unique key for deduplication
+	const { origin, pathname, search } = new URL(fullURL);
+	const requestKey = `${origin}${pathname}${search}`;
   
 	// Check if there's already an ongoing request for the same URL
 	if (inProgressRequests[requestKey]) {
@@ -51,6 +54,8 @@ function fetchWithDeduplication(url: string, options?: RequestOptions): Promise<
 			throw error;  // Re-throw the error to allow error handling in the caller
 	  });
   
+	// Return the promise that will eventually resolve with the response,
+	// which you can then use `await response.json()` on or something.
 	return inProgressRequests[requestKey];
 }
 

@@ -158,8 +158,12 @@ async function fetchAllPieceSVGs(types: string[]) {
 		return fetchPieceSVGs(`fairy/${pieceType}.svg`, svgIDs)
 			.then(pieceSVGs => {
 				console.log(`Fetched ${pieceType}!`);
-				cachedPieceTypes.push(pieceType);
-				pieceSVGs.forEach(svg => cachedPieceSVGs[svg.id] = svg);
+				// cachedPieceTypes.push(pieceType);
+				if (!cachedPieceTypes.includes(pieceType)) cachedPieceTypes.push(pieceType);
+				pieceSVGs.forEach(svg => {
+					if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
+					else cachedPieceSVGs[svg.id] = svg;
+				});
 			})
 			.catch(error => {
 				console.error(`Failed to fetch ${pieceType}:`, error); // Log specific error
@@ -209,8 +213,12 @@ function getSVG_IDs_From_PieceType(type: string): string[] {
 	console.log("Fetching all Classical SVGs...");
 	const svgIDs = getSVG_IDsFromPieceTypes(piecesInTheClassicalSVGGroup);
 	const classicalSVGElements = await fetchPieceSVGs('classical.svg', svgIDs);
-	cachedPieceTypes.push(...piecesInTheClassicalSVGGroup);
-	classicalSVGElements.forEach(svg => cachedPieceSVGs[svg.id] = svg);
+	// cachedPieceTypes.push(...piecesInTheClassicalSVGGroup);
+	piecesInTheClassicalSVGGroup.forEach(pieceInClassicalGroup => { if (!cachedPieceTypes.includes(pieceInClassicalGroup)) cachedPieceTypes.push(pieceInClassicalGroup); } );
+	classicalSVGElements.forEach(svg => {
+		if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
+		else cachedPieceSVGs[svg.id] = svg;
+	});
 	console.log("Fetched all Classical SVGs!");
 })();
 

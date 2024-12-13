@@ -3,6 +3,8 @@
  * Fetches piece SVGs from the server.
  */
 
+import { fetchWithDeduplication } from "../../util/fetchDeduplicator.js";
+
 
 /**
  * Fetches SVG elements from an SVG file located at the provided relative URL and
@@ -15,7 +17,7 @@
  */
 async function fetchPieceSVGs(relativeURL: string, svgIds: string[]): Promise<SVGElement[]> {
 	// Fetch and parse the SVG document
-	const response = await fetch(`svg/pieces/${relativeURL}`);
+	const response = await fetchWithDeduplication(`svg/pieces/${relativeURL}`);
 	const svgText = await response.text();
 	const parser = new DOMParser();
 	const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
