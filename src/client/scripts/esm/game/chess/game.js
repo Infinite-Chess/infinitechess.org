@@ -26,18 +26,17 @@ import { gl } from '../rendering/webgl.js';
 import perspective from '../rendering/perspective.js';
 import highlightline from '../rendering/highlightline.js';
 import transition from '../rendering/transition.js';
-import wincondition from '../../chess/logic/wincondition.js';
 import options from '../rendering/options.js';
 import copypastegame from './copypastegame.js';
 import highlights from '../rendering/highlights.js';
 import promotionlines from '../rendering/promotionlines.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import loadbalancer from '../misc/loadbalancer.js';
-import gamerules from '../../chess/variants/gamerules.js';
 import jsutil from '../../util/jsutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
+import loadingscreen from '../gui/loadingscreen.js';
 // Import End
 
 /** 
@@ -59,6 +58,12 @@ import spritesheet from '../rendering/spritesheet.js';
 let gamefile;
 
 /**
+ * True when a game is currently loading and SVGs are being requested
+ * or the spritesheet is being generated.
+ */
+let gameIsLoading = false;
+
+/**
  * Returns the gamefile currently loaded
  * @returns {gamefile} The current gamefile
  */
@@ -74,7 +79,6 @@ function areInGame() {
 function init() {
 
 	options.initTheme();
-	spritesheet.initSpritesheet(gl);
 
 	guititle.open();
 
@@ -90,6 +94,8 @@ function updateVariablesAfterScreenResize() {
 
 // Update the game every single frame
 function update() {
+	if (gameIsLoading) return;
+
 	if (!guinavigation.isCoordinateActive()) {
 		if (input.isKeyDown('`')) options.toggleDeveloperMode();
 		if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
@@ -150,6 +156,7 @@ function updateBoard() {
 } 
 
 function render() {
+	if (gameIsLoading) return; // Don't render anything while the game is loading.
     
 	board.render();
 	renderEverythingInGame();
@@ -182,27 +189,26 @@ function renderEverythingInGame() {
  * Inits the promotion UI, mesh of all the pieces, and toggles miniimage rendering. (everything visual)
  * @param {gamefile} newGamefile - The gamefile
  */
-function loadGamefile(newGamefile) {
-	if (gamefile) return console.error("Must unloadGame() before loading a new one!");
+async function loadGamefile(newGamefile) {
+	if (gamefile) throw new Error("Must unloadGame() before loading a new one.");
+	gameIsLoading = true;
+	loadingscreen.open();
 
 	gamefile = newGamefile;
+	guiclock.set(newGamefile);
+	guinavigation.update_MoveButtons();
+
+	await spritesheet.initSpritesheetForGame(gl, gamefile);
+	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disables arrows
-		// Checkmate is swapped out for royalcapture further down
 	} else miniimage.enable();
-
-	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
-
-	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
 	// Regenerate the mesh of all the pieces.
 	piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
-
-	guinavigation.update_MoveButtons();
 
 	guigameinfo.updateWhosTurn(gamefile);
 	// Immediately conclude the game if we loaded a game that's over already
@@ -213,7 +219,8 @@ function loadGamefile(newGamefile) {
 
 	initListeners();
 
-	guiclock.set(newGamefile);
+	gameIsLoading = false;
+	loadingscreen.close();
 }
 
 /** The canvas will no longer render the current game */
@@ -229,6 +236,9 @@ function unloadGame() {
 
 	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
 	guiclock.resetClocks();
+
+	spritesheet.deleteSpritesheet();
+	guipromotion.resetUI();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */

@@ -77,7 +77,7 @@ function detectAllpiecescaptured(gamefile) {
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
-	const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn);
+	const count = gamefileutility.getPieceCountOfColor(gamefile, gamefile.whosTurn);
 
 	if (count === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -157,21 +157,7 @@ function isCheckmateCompatibleWithGame(gamefile) {
 	return true; // Checkmate compatible!
 }
 
-/**
- * Returns the termination of the game in english language.
- * @param {GameRules} gameRules
- * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
- */
-function getTerminationInEnglish(gameRules, condition) {
-	if (condition === 'moverule') { // One exception
-		const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
-		return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
-	}
-	return translations.termination[condition];
-}
-
 export default {
 	getGameConclusion,
 	isCheckmateCompatibleWithGame,
-	getTerminationInEnglish,
 };

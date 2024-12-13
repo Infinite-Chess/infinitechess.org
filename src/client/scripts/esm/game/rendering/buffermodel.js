@@ -339,7 +339,7 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
      */
 	this.updateBufferIndices = function(changedIndicesStart, changedIndicesCount) {
 		const endIndice = changedIndicesStart + changedIndicesCount - 1;
-		if (endIndice > data.length - 1) return console.error("Cannot update buffer indices when they overflow the data.");
+		if (endIndice > data.length - 1) return console.error(`Cannot update buffer indices when they overflow the data. data length: ${data.length}, changedIndicesStart: ${changedIndicesStart}, changedIndicesCount: ${changedIndicesCount}, endIndice: ${endIndice}`);
 
 		// Calculate the byte offset and length based on the changed indices
 		const offsetInBytes = changedIndicesStart * data.BYTES_PER_ELEMENT;

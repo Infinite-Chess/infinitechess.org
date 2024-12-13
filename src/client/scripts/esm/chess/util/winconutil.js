@@ -88,10 +88,26 @@ function getResultFromVictor(victor) {
 	throw new Error(`Cannot get game result from strange victor "${victor}"!`);
 }
 
+/**
+ * Returns the termination of the game in english language.
+ * @param {GameRules} gameRules
+ * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
+ */
+function getTerminationInEnglish(gameRules, condition) {
+	if (condition === 'moverule') { // One exception
+		const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
+		return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
+	}
+	return translations.termination[condition];
+}
+
+
+
 export default {
 	isWinConditionValid,
 	isGameConclusionDecisive,
 	isConclusionDecisive,
 	getVictorAndConditionFromGameConclusion,
 	getResultFromVictor,
+	getTerminationInEnglish,
 };

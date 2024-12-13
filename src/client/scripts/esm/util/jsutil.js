@@ -191,6 +191,25 @@ function invertObj(obj) {
 	return inv;
 }
 
+/**
+ * Checks if array1 contains all the strings that array2 has and returns a list of missing strings.
+ * @param {string[]} array1 - The first array to check against.
+ * @param {string[]} array2 - The second array whose elements need to be present in array1.
+ * @returns {string[]} - Returns an array of missing strings from array1. If none are missing, returns an empty array.
+ */
+function getMissingStringsFromArray(array1, array2) {
+	// Convert array1 to a Set for efficient lookup
+	const set1 = new Set(array1);
+	const missing = [];
+ 
+	// Check if each element in array2 is present in set1
+	for (const item of array2) {
+		if (!set1.has(item)) missing.push(item); // If element from array2 is missing in array1, add it to the missing list
+	}
+ 
+	return missing; // Return the list of missing strings
+}
+
 export default {
 	deepCopyObject,
 	copyFloat32Array,
@@ -202,5 +221,6 @@ export default {
 	isEmpty,
 	isJson,
 	invertObj,
-	removeObjectFromArray
+	removeObjectFromArray,
+	getMissingStringsFromArray,
 };

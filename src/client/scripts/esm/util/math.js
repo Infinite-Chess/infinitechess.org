@@ -462,6 +462,16 @@ function LCM(arr) {
 	return ans; 
 }
 
+/**
+ * Rounds up the given number to the nearest power of two.
+ * @param {number} num - The number to round up.
+ * @returns {number} - The nearest power of two greater than or equal to the given number.
+ */
+function roundUpToPowerOf2(num) {
+	if (num <= 0) throw new Error("Input must be a positive number.");
+	return Math.pow(2, Math.ceil(Math.log2(num)));
+}
+
 export default {
 	isPowerOfTwo,
 	isAproxEqual,
@@ -492,4 +502,5 @@ export default {
 	expandBoxToContainSquare,
 	GCD,
 	LCM,
+	roundUpToPowerOf2,
 };

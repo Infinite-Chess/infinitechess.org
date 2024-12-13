@@ -60,7 +60,7 @@ function initExistingTypes(gamefile) {
 		rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
 	}
 
-	gamefile.startSnapshot.existingTypes = rawtypes;
+	gamefile.startSnapshot.existingTypes = [...rawtypes];
 }
 
 /**

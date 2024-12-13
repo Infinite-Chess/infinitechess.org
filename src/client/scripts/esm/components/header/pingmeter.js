@@ -11,7 +11,7 @@
 const pingMeter = document.querySelector('.ping-meter');
 const pingBars = document.querySelector('.ping-bars');
 const pingValue = document.querySelector('.ping-value');
-const loadingAnim = document.querySelector('.ping-meter .svg-play'); // Spinning-pawn loading animation
+const loadingAnim = document.querySelector('.ping-meter .svg-pawn'); // Spinning-pawn loading animation
 
 
 // Variables ---------------------------------------------------------------------------------
