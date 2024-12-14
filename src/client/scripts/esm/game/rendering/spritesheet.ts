@@ -152,30 +152,37 @@ async function fetchMissingPieceSVGs(typesNeeded: string[]) {
 /**
  * Fetches the SVGs of the provided piece types from the server.
  * @param types - ['archbishop','chancellor']
+ * @returns {boolean} - Returns `true` if all fetches succeed, `false` if any fetch fails.
  */
-async function fetchAllPieceSVGs(types: string[]) {
-	// Map over the missing types and create promises for each fetch
-	const fetchPromises = types.map(async pieceType => {
-		const svgIDs = getSVG_IDs_From_PieceType(pieceType);
-		return fetchPieceSVGs(`fairy/${pieceType}.svg`, svgIDs)
-			.then(pieceSVGs => {
-				console.log(`Fetched ${pieceType}!`);
+async function fetchAllPieceSVGs(types: string[]): Promise<boolean> {
+    // Map over the missing types and create promises for each fetch
+    const fetchPromises = types.map(async pieceType => {
+        const svgIDs = getSVG_IDs_From_PieceType(pieceType);
+        return fetchPieceSVGs(`fairy/${pieceType}.svg`, svgIDs)
+            .then(pieceSVGs => {
+                console.log(`Fetched ${pieceType}!`);
 				// cachedPieceTypes.push(pieceType);
-				if (!cachedPieceTypes.includes(pieceType)) cachedPieceTypes.push(pieceType);
-				pieceSVGs.forEach(svg => {
-					if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
-					else cachedPieceSVGs[svg.id] = svg;
-				});
-			})
-			.catch(error => {
-				console.error(`Failed to fetch ${pieceType}:`, error); // Log specific error
-			});
-	});
+                if (!cachedPieceTypes.includes(pieceType)) cachedPieceTypes.push(pieceType);
+                pieceSVGs.forEach(svg => {
+                    if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
+                    else cachedPieceSVGs[svg.id] = svg;
+                });
+            })
+            .catch(error => {
+                console.error(`Failed to fetch ${pieceType}:`, error);
+                throw error;  // Propagate the error
+            });
+    });
 
-	// Wait for all fetches to complete
-	await Promise.all(fetchPromises);
-
-	console.log("All fetched pieces have been cached!");
+    try {
+        // Wait for all fetches to complete
+        await Promise.all(fetchPromises);
+        console.log("All fetched pieces have been cached!");
+        return true;  // Return true if all fetches succeed
+    } catch (error) {
+        // If any fetch fails, catch the error and return false
+        return false;  // Return false if any fetch fails
+    }
 }
 
 /**
