@@ -47,6 +47,10 @@
             whil the svgs are being requested and spritesheet generated -->
             <div class="game-loading-screen transparent">
                 <svg class="svg-pawn spinny-pawn"><use href="#svg-pawn"></use></svg>
+                <div class="loading-error hidden">
+                    <h1><%=t('play.error')%></h1>
+                    <p class="loading-error-text"></p>
+                </div>
             </div>
 
             <div id="overlay" class="overlay">

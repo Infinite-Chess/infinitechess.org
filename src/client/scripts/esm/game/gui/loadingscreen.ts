@@ -19,6 +19,10 @@ const darknessLevel = 0.22;
 /** Percentage of the viewport minimum. 0-100 */
 const widthOfTiles = 16;
 
+const element_spinnyPawn = document.querySelector('.game-loading-screen .spinny-pawn');
+const element_loadingError = document.querySelector('.game-loading-screen .loading-error');
+const element_loadingErrorText = document.querySelector('.game-loading-screen .loading-error-text');
+
 
 (function init() {
 
@@ -51,8 +55,25 @@ function close() {
 	loadingScreen.classList.add('transparent');
 }
 
+function callback_LoadingError(event: Event) {
+	// const type = event.type; // Event type: "error"/"abort"
+	// const target = event.target; // Element that triggered the event
+	// const elementType = target?.tagName.toLowerCase();
+	// const sourceURL = target?.src || target?.href; // URL of the resource that failed to load
+	// console.error(`Event ${type} ocurred loading ${elementType} at ${sourceURL}.`);
+
+	
+	// Hide the "LOADING" text
+	element_spinnyPawn!.classList.add('hidden');
+
+	// Show the ERROR text
+	const lostNetwork = !navigator.onLine;
+	element_loadingError!.classList.remove('hidden');
+	element_loadingErrorText!.textContent = lostNetwork ? translations['lost_network'] : translations['failed_to_load'];
+}
 
 export default {
 	open,
 	close,
+	callback_LoadingError,
 };
