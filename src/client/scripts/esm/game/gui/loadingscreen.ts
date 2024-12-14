@@ -53,27 +53,30 @@ function open() {
 
 function close() {
 	loadingScreen.classList.add('transparent');
+
+	// Hide the error text and show the spinny pawn
+	element_spinnyPawn!.classList.remove('hidden');
+	element_loadingError!.classList.add('hidden');
 }
 
-function callback_LoadingError(event: Event) {
+function onError(event: Event) {
 	// const type = event.type; // Event type: "error"/"abort"
 	// const target = event.target; // Element that triggered the event
 	// const elementType = target?.tagName.toLowerCase();
 	// const sourceURL = target?.src || target?.href; // URL of the resource that failed to load
 	// console.error(`Event ${type} ocurred loading ${elementType} at ${sourceURL}.`);
 
-	
-	// Hide the "LOADING" text
 	element_spinnyPawn!.classList.add('hidden');
 
 	// Show the ERROR text
-	const lostNetwork = !navigator.onLine;
 	element_loadingError!.classList.remove('hidden');
-	element_loadingErrorText!.textContent = lostNetwork ? translations['lost_network'] : translations['failed_to_load'];
+	// const lostNetwork = !navigator.onLine;
+	// element_loadingErrorText!.textContent = lostNetwork ? translations['lost_network'] : translations['failed_to_load'];
+	element_loadingErrorText!.textContent = translations['failed_to_load'];
 }
 
 export default {
 	open,
 	close,
-	callback_LoadingError,
+	onError,
 };
