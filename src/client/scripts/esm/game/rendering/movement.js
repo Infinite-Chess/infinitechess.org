@@ -62,8 +62,8 @@ function getBoardPos() {
 }
 
 function setBoardPos(newPos) {
-	if (!Array.isArray(newPos)) return console.error(`New position must be an array! ${newPos}`);
-	if (isNaN(newPos[0]) || isNaN(newPos[1])) return console.error(`Cannot set position to ${newPos}!`);
+	if (!Array.isArray(newPos)) throw new Error(`New position must be an array! ${newPos}`);
+	if (isNaN(newPos[0]) || isNaN(newPos[1])) throw new Error(`Cannot set position to ${newPos}!`);
 	boardPos = newPos;
 	frametracker.onVisualChange();
 }
@@ -74,11 +74,8 @@ function getBoardScale() {
 }
 
 function setBoardScale(newScale) {
-	if (isNaN(newScale)) return console.error(`Cannot set scale to ${newScale}!`);
-	if (newScale <= 0) {
-		console.error(`Cannot set scale to ${newScale}!!`);
-		return console.trace();
-	}
+	if (isNaN(newScale)) throw new Error(`Cannot set scale to ${newScale}!`);
+	if (newScale <= 0) throw new Error(`Cannot set scale to ${newScale}!`);
 
 	boardScale = newScale;
 
