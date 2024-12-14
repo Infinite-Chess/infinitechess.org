@@ -38,6 +38,7 @@ import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import movepiece from '../../chess/logic/movepiece.js';
+import frametracker from '../rendering/frametracker.js';
 // Import End
 
 /** 
@@ -245,6 +246,8 @@ async function loadGamefile(newGamefile) {
 
 	gameIsLoading = false;
 	loadingscreen.close();
+	// Required so the first frame of the game & tiles is rendered once the animation page fades away
+	frametracker.onVisualChange();
 }
 
 /** The canvas will no longer render the current game */
