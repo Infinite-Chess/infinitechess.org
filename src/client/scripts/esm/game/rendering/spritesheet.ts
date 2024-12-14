@@ -169,6 +169,8 @@ async function fetchAllPieceSVGs(types: string[]) {
 			})
 			.catch(error => {
 				console.error(`Failed to fetch ${pieceType}:`, error); // Log specific error
+				// Propagate the error so that Promise.all() can reject
+				throw error;
 			});
 	});
 

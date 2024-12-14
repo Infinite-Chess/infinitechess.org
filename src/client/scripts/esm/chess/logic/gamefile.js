@@ -143,7 +143,20 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		terminateIfGenerating: () => { if (this.mesh.isGenerating) this.mesh.terminate = true; },
 		/** A flag the mesh generation reads to know whether to terminate or not.
          * Do ***NOT*** set manually, call `terminateIfGenerating()` instead. */
-		terminate: false
+		terminate: false,
+		/** A list of functions to execute as soon as the mesh is unlocked. @type {(gamefile => {})[]} */
+		callbacksOnUnlock: [],
+		/**
+		 * Releases a single lock off of the mesh.
+		 * If there are zero locks, we execute all functions in callbacksOnUnlock
+		 */
+		releaseLock: () => {
+			this.mesh.locked--;
+			if (this.mesh.locked > 0) return; // Still Locked
+			// Fully Unlocked
+			this.mesh.callbacksOnUnlock.forEach(callback => callback(this));
+			this.mesh.callbacksOnUnlock.length = 0;
+		}
 	};
 
 	/** The object that contains the buffer model to render the voids */
@@ -248,7 +261,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
-	this.gameConclusion = gameConclusion || this.gameConclusion;
+	if (gameConclusion) this.gameConclusion = gameConclusion;
+	else gamefileutility.doGameOverChecks(this);
 
 	organizedlines.addMoreUndefineds(this, { regenModel: false });
 
