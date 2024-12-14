@@ -154,25 +154,25 @@ async function fetchMissingPieceSVGs(typesNeeded: string[]) {
  * @param types - ['archbishop','chancellor']
  */
 async function fetchAllPieceSVGs(types: string[]) {
-    // Map over the missing types and create promises for each fetch
-    const fetchPromises = types.map(async pieceType => {
-        const svgIDs = getSVG_IDs_From_PieceType(pieceType);
-        return fetchPieceSVGs(`fairy/${pieceType}.svg`, svgIDs)
-            .then(pieceSVGs => {
-                console.log(`Fetched ${pieceType}!`);
+	// Map over the missing types and create promises for each fetch
+	const fetchPromises = types.map(async pieceType => {
+		const svgIDs = getSVG_IDs_From_PieceType(pieceType);
+		return fetchPieceSVGs(`fairy/${pieceType}.svg`, svgIDs)
+			.then(pieceSVGs => {
+				console.log(`Fetched ${pieceType}!`);
 				// cachedPieceTypes.push(pieceType);
-                if (!cachedPieceTypes.includes(pieceType)) cachedPieceTypes.push(pieceType);
-                pieceSVGs.forEach(svg => {
+				if (!cachedPieceTypes.includes(pieceType)) cachedPieceTypes.push(pieceType);
+				pieceSVGs.forEach(svg => {
 					if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
 					else cachedPieceSVGs[svg.id] = svg;
-                });
-            })
-            .catch(error => {
-                console.error(`Failed to fetch ${pieceType}:`, error); // Log specific error
+				});
+			})
+			.catch(error => {
+				console.error(`Failed to fetch ${pieceType}:`, error); // Log specific error
 				// Propagate the error so that Promise.all() can reject
 				throw error;
 			});
-    });
+	});
 
 	// Wait for all fetches to complete
 	await Promise.all(fetchPromises);

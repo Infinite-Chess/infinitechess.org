@@ -37,6 +37,7 @@ import winconutil from '../../chess/util/winconutil.js';
 import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
 import loadingscreen from '../gui/loadingscreen.js';
+import movepiece from '../../chess/logic/movepiece.js';
 // Import End
 
 /** 
@@ -208,7 +209,7 @@ async function loadGamefile(newGamefile) {
 
 	// A small delay to animate the very last move, so the loading screen
 	// spinny pawn animation has time to fade away.
-	setTimeout(movepiece.forwardToFront, 1000, gamefile, { flipTurn = false, updateProperties = false });
+	setTimeout(movepiece.forwardToFront, 1000, gamefile, { flipTurn: false, updateProperties: false });
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
