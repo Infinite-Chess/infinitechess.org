@@ -65,6 +65,19 @@ let gamefile;
 let gameIsLoading = false;
 
 /**
+ * The timeout id of the timer that animates the latest-played
+ * move when rejoining a game, after a short delay
+ */
+let animateLastMoveTimeoutID;
+/**
+ * The delay, in millis, until the latest-played
+ * move is animated, after rejoining a game.
+ */
+const delayOfLatestMoveAnimationOnRejoinMillis = 150;
+
+
+
+/**
  * Returns the gamefile currently loaded
  * @returns {gamefile} The current gamefile
  */
@@ -207,9 +220,11 @@ async function loadGamefile(newGamefile) {
 	}
 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
+	// Rewind one move so that we can animate the very final move.
+	if (newGamefile.moveIndex > -1) movepiece.rewindMove(newGamefile,  { updateData: false, removeMove: false, animate: false });
 	// A small delay to animate the very last move, so the loading screen
 	// spinny pawn animation has time to fade away.
-	setTimeout(movepiece.forwardToFront, 1000, gamefile, { flipTurn: false, updateProperties: false });
+	animateLastMoveTimeoutID = setTimeout(movepiece.forwardToFront, delayOfLatestMoveAnimationOnRejoinMillis, gamefile, { flipTurn: false, updateProperties: false });
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
@@ -248,6 +263,10 @@ function unloadGame() {
 
 	spritesheet.deleteSpritesheet();
 	guipromotion.resetUI();
+
+	// Stop the timer that animates the latest-played move when rejoining a game, after a short delay
+	clearTimeout(animateLastMoveTimeoutID);
+	animateLastMoveTimeoutID = undefined;
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */

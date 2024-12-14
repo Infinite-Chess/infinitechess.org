@@ -337,9 +337,9 @@ function makeAllMovesInGame(gamefile, moves) {
 
 		// Make the move in the game!
 
-		const isLastMove = i === moves.length - 1;
-		const animate = isLastMove;
-		makeMove(gamefile, move, { pushClock: false, updateData: false, concludeGameIfOver: false, doGameOverChecks: false, animate });
+		// const isLastMove = i === moves.length - 1;
+		// const animate = isLastMove;
+		makeMove(gamefile, move, { pushClock: false, updateData: false, concludeGameIfOver: false, doGameOverChecks: false, animate: false });
 	}
 
 	if (moves.length === 0) updateInCheck(gamefile, false);
@@ -404,7 +404,7 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, updateData = true, updateProperties = true, simulated = false } = {}) {
 	if (updateData && gamefile.mesh.locked > 0) { // The mesh is locked (we cannot forward moves right now)
 		// Call this function again with the same arguments as soon as the mesh is unlocked
-		gamefile.callbacksOnUnlock.push(gamefile => forwardToFront(gamefile, { flipTurn, animateLastMove, updateData, updateProperties, simulated }));
+		gamefile.mesh.callbacksOnUnlock.push(gamefile => forwardToFront(gamefile, { flipTurn, animateLastMove, updateData, updateProperties, simulated }));
 		return;
 	}
 
