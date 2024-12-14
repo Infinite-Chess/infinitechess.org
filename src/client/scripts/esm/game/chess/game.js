@@ -199,7 +199,11 @@ async function loadGamefile(newGamefile) {
 	guinavigation.update_MoveButtons();
 	guigameinfo.updateWhosTurn(gamefile);
 
-	await spritesheet.initSpritesheetForGame(gl, gamefile);
+	try {
+		await spritesheet.initSpritesheetForGame(gl, gamefile);
+	} catch (e) { // An error ocurred during the fetching of piece svgs and spritesheet gen
+		loadingscreen.onError();
+	}
 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
