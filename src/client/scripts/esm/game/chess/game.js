@@ -206,6 +206,8 @@ async function loadGamefile(newGamefile) {
 	}
 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
+	// A small delay to animate the very last move, so the loading screen
+	// spinny pawn animation has time to fade away.
 	setTimeout(movepiece.forwardToFront, 1000, gamefile, { flipTurn = false, updateProperties = false });
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
