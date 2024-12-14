@@ -402,6 +402,11 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
  */
 
 function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, updateData = true, updateProperties = true, simulated = false } = {}) {
+	if (updateData && gamefile.mesh.locked > 0) { // The mesh is locked (we cannot forward moves right now)
+		// Call this function again with the same arguments as soon as the mesh is unlocked
+		gamefile.callbacksOnUnlock.push(gamefile => forwardToFront(gamefile, { flipTurn, animateLastMove, updateData, updateProperties, simulated }));
+		return;
+	}
 
 	while (true) { // For as long as we have moves to forward...
 		const nextIndex = gamefile.moveIndex + 1;

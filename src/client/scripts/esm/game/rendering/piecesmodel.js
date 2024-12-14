@@ -182,7 +182,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	if (gamefile.mesh.terminate) {
 		console.log("Mesh generation terminated.");
 		gamefile.mesh.terminate = false;
-		gamefile.mesh.locked--;
+		gamefile.mesh.releaseLock();
 		gamefile.mesh.isGenerating--;
 		return;
 	}
@@ -198,7 +198,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 
 	if (gamefile.mesh.terminate) {
 		gamefile.mesh.terminate = false;
-		gamefile.mesh.locked--;
+		gamefile.mesh.releaseLock();
 		gamefile.mesh.isGenerating--;
 		return;
 	}
@@ -209,7 +209,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
     
 	frametracker.onVisualChange();
 
-	gamefile.mesh.locked--;
+	gamefile.mesh.releaseLock();
 	gamefile.mesh.isGenerating--;
 }
 
@@ -516,7 +516,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 		console.log("Mesh generation terminated.");
 		stats.hideRotateMesh();
 		if (!ignoreGenerating) gamefile.mesh.terminate = false;
-		gamefile.mesh.locked--;
+		gamefile.mesh.releaseLock();
 		gamefile.mesh.isGenerating--;
 		return;
 	}
@@ -525,7 +525,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 		console.log("Mesh generation terminated.");
 		stats.hideRotateMesh();
 		if (!ignoreGenerating) gamefile.mesh.terminate = false;
-		gamefile.mesh.locked--;
+		gamefile.mesh.releaseLock();
 		gamefile.mesh.isGenerating--;
 		return;
 	}
@@ -684,7 +684,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 	gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet())
         : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet());
 
-	gamefile.mesh.locked--;
+	gamefile.mesh.releaseLock();
 	gamefile.mesh.isGenerating--;
 	frametracker.onVisualChange();
 }
