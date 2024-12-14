@@ -260,7 +260,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	// THIS HAS TO BE AFTER gamerules.swapCheckmateForRoyalCapture() AS THIS DOES GAME-OVER CHECKS!!!
 	movepiece.makeAllMovesInGame(this, moves);
 	// Rewind one move so that we can animate the very final move after the spritesheet has been generated.
-	movepiece.rewindMove(this,  { updateData = false, removeMove = false, animate = false })
+	movepiece.rewindMove(this,  { updateData: false, removeMove: false, animate: false });
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) this.gameConclusion = gameConclusion;
