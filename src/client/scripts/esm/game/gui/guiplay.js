@@ -2,7 +2,6 @@
 // Import Start
 import websocket from '../websocket.js';
 import guigameinfo from './guigameinfo.js';
-import area from '../rendering/area.js';
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import style from './style.js';
@@ -387,9 +386,6 @@ function loadGame(gameOptions) {
 		clockValues: gameOptions.clockValues
 	});
 	game.loadGamefile(newGamefile);
-
-	const centerArea = area.calculateFromUnpaddedBox(newGamefile.startSnapshot.box);
-	movement.setPositionToArea(centerArea);
     
 	options.setNavigationBar(true);
 	sound.playSound_gamestart();

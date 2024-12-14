@@ -39,6 +39,7 @@ import spritesheet from '../rendering/spritesheet.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import movepiece from '../../chess/logic/movepiece.js';
 import frametracker from '../rendering/frametracker.js';
+import area from '../rendering/area.js';
 // Import End
 
 /** 
@@ -248,6 +249,19 @@ async function loadGamefile(newGamefile) {
 	loadingscreen.close();
 	// Required so the first frame of the game & tiles is rendered once the animation page fades away
 	frametracker.onVisualChange();
+
+	startStartingTransition();
+}
+
+/**
+ * Sets the camera to the recentered position, plus a little zoomed in.
+ * THEN transitions to normal zoom.
+ */
+function startStartingTransition() {
+	const centerArea = area.calculateFromUnpaddedBox(gamefile.startSnapshot.box);
+	movement.setPositionToArea(centerArea);
+	movement.setBoardScale(movement.getBoardScale() * 1.75);
+	guinavigation.callback_Recenter();
 }
 
 /** The canvas will no longer render the current game */
