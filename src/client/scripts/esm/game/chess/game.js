@@ -206,6 +206,8 @@ async function loadGamefile(newGamefile) {
 	}
 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
+	setTimeout(movepiece.forwardToFront, 300, gamefile, { flipTurn = false, updateProperties = false });
+
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
 		miniimage.disable();

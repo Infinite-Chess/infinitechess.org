@@ -343,8 +343,6 @@ function makeAllMovesInGame(gamefile, moves) {
 	}
 
 	if (moves.length === 0) updateInCheck(gamefile, false);
-
-	gamefileutility.doGameOverChecks(gamefile); // Update the gameConclusion
 }
 
 /**
