@@ -310,7 +310,7 @@ function getStartSnapshotPosition({ positionString, startingPosition, specialRig
 		positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
 	} else throw new Error("Not enough information to calculate the positionString, position, and specialRights of variant.");
 
-	console.log({ positionString, position: startingPosition, specialRights });
+	// console.log({ positionString, position: startingPosition, specialRights });
 
 	return { positionString, position: startingPosition, specialRights };
 }

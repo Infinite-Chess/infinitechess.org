@@ -39,11 +39,12 @@ async function removeAccount(req, res) {
 	revokeSession(res);
 
 	const reason_deleted = "user request";
-	if (deleteAccount(user_id, reason_deleted)) { // Success!!
+	const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
+	if (result.success) { // Success!!
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
 		return res.send('OK'); // 200 is default code
 	} else { // Failure
-		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered. Either the reason for deletion was invalid, or they do not exist.`, 'errLog.txt', { print: true });
+		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered. Reason: ${result.reason}`, 'errLog.txt', { print: true });
 		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_not_found", req) });
 	}
 }
@@ -54,13 +55,16 @@ async function removeAccount(req, res) {
  * and closes all their open websockets.
  * @param {number} user_id 
  * @param {string} reason_deleted - Must be one of memberManager.validDeleteReasons
- * @returns {boolean} Whether or not it was successful. (false often means they weren't found)
+ * @returns {object} A result object: { success (boolean), reason (string, if failed) }
  */
 function deleteAccount(user_id, reason_deleted) {
-	// Close their sockets, delete their invites, delete their session cookies...
-	closeAllSocketsOfMember(user_id, 1008, "Logged out");
+	
+	const result = deleteUser(user_id, reason_deleted); // { success, result (if failed) }
 
-	return deleteUser(user_id, reason_deleted); // A success boolean
+	// Close their sockets, delete their invites, delete their session cookies...
+	if (result.success) closeAllSocketsOfMember(user_id, 1008, "Logged out");
+
+	return result;
 
 	// Account deleting automatically invalidates all their sessions,
 	// because their refresh_tokens are deleted.

@@ -64,7 +64,7 @@ function addTokenToRefreshTokens(req: Request, refreshTokens: RefreshTokensList,
 		token,
 		issued: nowISO,
 		expires: expiresISO,
-		IP: getClientIP(req)!, // If req is undefined, provide a fallback
+		IP: getClientIP(req)!,
 	};
 
 	// Add the new token to the array

@@ -43,7 +43,7 @@ function detectCheck(gamefile, color, attackers) {
 	if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
 
 	// Coordinates of ALL royals of this color!
-	const royalCoords = gamefileutility.getRoyalCoords(gamefile, color); // [ coords1, coords2 ]
+	const royalCoords = gamefileutility.getRoyalCoordsOfColor(gamefile, color); // [ coords1, coords2 ]
 	// Array of coordinates of royal pieces that are in check
 	const royalsInCheck = [];
 
@@ -274,7 +274,7 @@ function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, col
 	if (!moves.sliding) return; // No sliding moves to remove
 
 	/** List of coordinates of all our royal jumping pieces @type {number[][]} */
-	const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color);
+	const royalCoords = gamefileutility.getJumpingRoyalCoordsOfColor(gamefile, color);
 	if (royalCoords.length === 0) return; // No king, no open discoveries, don't remove any sliding moves
 
 	// There are 2 ways a sliding move can put you in check:
@@ -344,7 +344,7 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
  * @returns {boolean} true if atleast one of our royals is included in the gamefile's list of royals in check this turn
  */
 function isColorInCheck(gamefile, color) {
-	const royals = gamefileutility.getRoyalCoords(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const royals = gamefileutility.getRoyalCoordsOfColor(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
 	const checkedRoyals = gamefile.inCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
 	return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length);
 }

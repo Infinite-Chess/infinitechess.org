@@ -1,6 +1,8 @@
 
 // This module stores our themes. Straight forward :P
 
+import jsutil from "../../util/jsutil.js";
+
 /*
  * Strings for computed property names.
  *
@@ -267,7 +269,8 @@ const themeDictionary = {
  * @returns {Object} - The property of the theme
  */
 function getPropertyOfTheme(themeName, property) {
-	return themeDictionary[themeName][property] !== undefined ? themeDictionary[themeName][property] : defaults[property];
+	const value = themeDictionary[themeName][property] !== undefined ? themeDictionary[themeName][property] : defaults[property];
+	return jsutil.deepCopyObject(value); // Return a deep copy so the originals have no risk of modification.
 }
 
 function isThemeValid(themeName) {

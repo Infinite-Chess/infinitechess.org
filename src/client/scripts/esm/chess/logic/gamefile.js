@@ -8,6 +8,8 @@ import area from '../../game/rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
+import wincondition from './wincondition.js';
+import gamerules from '../variants/gamerules.js';
 
 // Type Definitions...
 
@@ -69,7 +71,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** The bounding box surrounding the starting position, without padding.
          * @type {BoundingBox} */
 		box: undefined,
-		/** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
+		/** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
 		existingTypes: undefined,
 		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {number[][]}*/
 		slidingPossible: undefined
@@ -141,7 +143,20 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		terminateIfGenerating: () => { if (this.mesh.isGenerating) this.mesh.terminate = true; },
 		/** A flag the mesh generation reads to know whether to terminate or not.
          * Do ***NOT*** set manually, call `terminateIfGenerating()` instead. */
-		terminate: false
+		terminate: false,
+		/** A list of functions to execute as soon as the mesh is unlocked. @type {(gamefile => {})[]} */
+		callbacksOnUnlock: [],
+		/**
+		 * Releases a single lock off of the mesh.
+		 * If there are zero locks, we execute all functions in callbacksOnUnlock
+		 */
+		releaseLock: () => {
+			this.mesh.locked--;
+			if (this.mesh.locked > 0) return; // Still Locked
+			// Fully Unlocked
+			this.mesh.callbacksOnUnlock.forEach(callback => callback(this));
+			this.mesh.callbacksOnUnlock.length = 0;
+		}
 	};
 
 	/** The object that contains the buffer model to render the voids */
@@ -234,16 +249,20 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
 	this.checksGiven = undefined;
 
-	this.ourPieces = organizedlines.buildStateFromKeyList(this.startSnapshot.position);
+	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
+
+	// THIS HAS TO BE BEFORE movepiece.makeAllMovesInGame() AS THAT PERFORMS GAME-OVER CHECKS!!!
+	// Do we need to convert any checkmate win conditions to royalcapture?
+	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
     
 	organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
-	// movepiece.forwardToFront(this, { updateData: false }); // Fast-forward to the most-recently played move, or the front of the game.
-	// gamefileutility.doGameOverChecks(this);
+	// THIS HAS TO BE AFTER gamerules.swapCheckmateForRoyalCapture() AS THIS DOES GAME-OVER CHECKS!!!
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
-	this.gameConclusion = gameConclusion || this.gameConclusion;
+	if (gameConclusion) this.gameConclusion = gameConclusion;
+	else gamefileutility.doGameOverChecks(this);
 
 	organizedlines.addMoreUndefineds(this, { regenModel: false });
 

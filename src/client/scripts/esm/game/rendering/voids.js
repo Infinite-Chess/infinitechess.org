@@ -32,6 +32,7 @@ const POINTS_PER_SQUARE_WIREFRAME = 12; // Compared to  piecesmodel.POINTS_PER_S
 function regenModel(gamefile) {
 	/** A list of coordinates of all voids in the gamefile */
 	const voidList = game.getGamefile().ourPieces.voidsN;
+	if (!voidList) return; // No voids are present in this game
 
 	// Simplify the mesh by combining adjacent voids into larger rectangles!
 	const simplifiedMesh = simplifyMesh(voidList);

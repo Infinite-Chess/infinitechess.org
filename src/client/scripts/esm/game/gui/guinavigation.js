@@ -426,4 +426,5 @@ export default {
 	lockRewind,
 	update,
 	isCoordinateActive,
+	callback_Recenter,
 };

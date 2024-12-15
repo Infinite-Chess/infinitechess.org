@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "23"
+version = "24"
 maintainer = "Naviary"
 
 [header]
@@ -320,7 +320,6 @@ piece_count = "Piece count"
 exceeded = "exceeded"
 changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
 loaded_from_clipboard = "Loaded game from clipboard!"
-loaded = "Loaded game!"
 slidelimit_not_number = "slideLimit gamerule must be a number. Received"
 
 [play.javascript.rendering]

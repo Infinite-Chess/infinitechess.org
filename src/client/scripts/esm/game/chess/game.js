@@ -26,18 +26,20 @@ import { gl } from '../rendering/webgl.js';
 import perspective from '../rendering/perspective.js';
 import highlightline from '../rendering/highlightline.js';
 import transition from '../rendering/transition.js';
-import wincondition from '../../chess/logic/wincondition.js';
 import options from '../rendering/options.js';
 import copypastegame from './copypastegame.js';
 import highlights from '../rendering/highlights.js';
 import promotionlines from '../rendering/promotionlines.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import loadbalancer from '../misc/loadbalancer.js';
-import gamerules from '../../chess/variants/gamerules.js';
 import jsutil from '../../util/jsutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
+import loadingscreen from '../gui/loadingscreen.js';
+import movepiece from '../../chess/logic/movepiece.js';
+import frametracker from '../rendering/frametracker.js';
+import area from '../rendering/area.js';
 import dragAnimation from '../rendering/draganimation.js';
 // Import End
 
@@ -60,6 +62,25 @@ import dragAnimation from '../rendering/draganimation.js';
 let gamefile;
 
 /**
+ * True when a game is currently loading and SVGs are being requested
+ * or the spritesheet is being generated.
+ */
+let gameIsLoading = false;
+
+/**
+ * The timeout id of the timer that animates the latest-played
+ * move when rejoining a game, after a short delay
+ */
+let animateLastMoveTimeoutID;
+/**
+ * The delay, in millis, until the latest-played
+ * move is animated, after rejoining a game.
+ */
+const delayOfLatestMoveAnimationOnRejoinMillis = 150;
+
+
+
+/**
  * Returns the gamefile currently loaded
  * @returns {gamefile} The current gamefile
  */
@@ -75,7 +96,6 @@ function areInGame() {
 function init() {
 
 	options.initTheme();
-	spritesheet.initSpritesheet(gl);
 
 	guititle.open();
 
@@ -91,6 +111,8 @@ function updateVariablesAfterScreenResize() {
 
 // Update the game every single frame
 function update() {
+	if (gameIsLoading) return;
+
 	if (!guinavigation.isCoordinateActive()) {
 		if (input.isKeyDown('`')) options.toggleDeveloperMode();
 		if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
@@ -134,17 +156,16 @@ function updateBoard() {
 	animation.update();
 	if (guipause.areWePaused() && !onlinegame.areInOnlineGame()) return;
 
-	movement.recalcPosition();
+	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
+	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
 	transition.update();
-	board.recalcVariables(); 
+	board.recalcVariables(); // Variables dependant on the board position & scale
+
 	guinavigation.update();
-	selection.update(); // Test if a piece was clicked on or moved. Needs to be before updateNavControls()
+	selection.update();
 	arrows.update(); // NEEDS TO BE AFTER selection.update(), because the arrows model regeneration DEPENDS on the piece selected!
-	// We NEED THIS HERE as well as in gameLoop.render() so the game can detect mouse clicks
-	// on the miniimages in perspective mode even when the screen isn't being rendered!
 	miniimage.genModel();
 	highlightline.genModel();
-	movement.updateNavControls(); // Navigation controls
 
 	if (guipause.areWePaused()) return;
 
@@ -152,6 +173,7 @@ function updateBoard() {
 } 
 
 function render() {
+	if (gameIsLoading) return; // Don't render anything while the game is loading.
     
 	board.render();
 	renderEverythingInGame();
@@ -186,29 +208,38 @@ function renderEverythingInGame() {
  * Inits the promotion UI, mesh of all the pieces, and toggles miniimage rendering. (everything visual)
  * @param {gamefile} newGamefile - The gamefile
  */
-function loadGamefile(newGamefile) {
-	if (gamefile) return console.error("Must unloadGame() before loading a new one!");
+async function loadGamefile(newGamefile) {
+	if (gamefile) throw new Error("Must unloadGame() before loading a new one.");
+	gameIsLoading = true;
+	loadingscreen.open();
 
 	gamefile = newGamefile;
+	guiclock.set(newGamefile);
+	guinavigation.update_MoveButtons();
+	guigameinfo.updateWhosTurn(gamefile);
+
+	try {
+		await spritesheet.initSpritesheetForGame(gl, gamefile);
+	} catch (e) { // An error ocurred during the fetching of piece svgs and spritesheet gen
+		loadingscreen.onError();
+	}
+	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
+
+	// Rewind one move so that we can animate the very final move.
+	if (newGamefile.moveIndex > -1) movepiece.rewindMove(newGamefile,  { updateData: false, removeMove: false, animate: false });
+	// A small delay to animate the very last move, so the loading screen
+	// spinny pawn animation has time to fade away.
+	animateLastMoveTimeoutID = setTimeout(movepiece.forwardToFront, delayOfLatestMoveAnimationOnRejoinMillis, gamefile, { flipTurn: false, updateProperties: false });
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disables arrows
-		// Checkmate is swapped out for royalcapture further down
 	} else miniimage.enable();
-
-	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
-
-	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
 	// Regenerate the mesh of all the pieces.
 	piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
 
-	guinavigation.update_MoveButtons();
-
-	guigameinfo.updateWhosTurn(gamefile);
 	// Immediately conclude the game if we loaded a game that's over already
 	if (gamefileutility.isGameOver(gamefile)) {
 		concludeGame();
@@ -217,7 +248,23 @@ function loadGamefile(newGamefile) {
 
 	initListeners();
 
-	guiclock.set(newGamefile);
+	gameIsLoading = false;
+	loadingscreen.close();
+	// Required so the first frame of the game & tiles is rendered once the animation page fades away
+	frametracker.onVisualChange();
+
+	startStartingTransition();
+}
+
+/**
+ * Sets the camera to the recentered position, plus a little zoomed in.
+ * THEN transitions to normal zoom.
+ */
+function startStartingTransition() {
+	const centerArea = area.calculateFromUnpaddedBox(gamefile.startSnapshot.box);
+	movement.setPositionToArea(centerArea);
+	movement.setBoardScale(movement.getBoardScale() * 1.75);
+	guinavigation.callback_Recenter();
 }
 
 /** The canvas will no longer render the current game */
@@ -233,6 +280,13 @@ function unloadGame() {
 
 	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
 	guiclock.resetClocks();
+
+	spritesheet.deleteSpritesheet();
+	guipromotion.resetUI();
+
+	// Stop the timer that animates the latest-played move when rejoining a game, after a short delay
+	clearTimeout(animateLastMoveTimeoutID);
+	animateLastMoveTimeoutID = undefined;
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */

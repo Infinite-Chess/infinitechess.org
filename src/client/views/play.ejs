@@ -43,6 +43,16 @@
             <!-- The webgl context will render the game onto here -->
             <canvas id="game" class="hidden"></canvas>
 
+            <!-- The spinny pawn loading animation when a game is loading,
+            whil the svgs are being requested and spritesheet generated -->
+            <div class="game-loading-screen transparent">
+                <svg class="svg-pawn spinny-pawn"><use href="#svg-pawn"></use></svg>
+                <div class="loading-error hidden">
+                    <h1><%=t('play.error')%></h1>
+                    <p class="loading-error-text"></p>
+                </div>
+            </div>
+
             <div id="overlay" class="overlay">
 
                 <!-- The external discord & game credits links on the title screen -->
@@ -448,40 +458,11 @@
 
                 <!-- Promotion UI -->
                 <div id="promote" class="center hidden">
-                    <div id="promotewhite" class="promotecolor">
-                        <!--                                                                "amazonsW" MUST remain the 2nd class! -->
-                        <div id="amazonsW" class="promotepiececontainer hidden"><div class="promotepiece amazonsW button"></div></div>
-                        <div id="queensW" class="promotepiececontainer hidden"><div class="promotepiece queensW button"></div></div>
-                        <div id="knightridersW" class="promotepiececontainer hidden"><div class="promotepiece knightridersW button"></div></div>
-                        <div id="chancellorsW" class="promotepiececontainer hidden"><div class="promotepiece chancellorsW button"></div></div>
-                        <div id="archbishopsW" class="promotepiececontainer hidden"><div class="promotepiece archbishopsW button"></div></div>
-                        <div id="rooksW" class="promotepiececontainer hidden"><div class="promotepiece rooksW button"></div></div>
-                        <div id="bishopsW" class="promotepiececontainer hidden"><div class="promotepiece bishopsW button"></div></div>
-                        <div id="rosesW" class="promotepiececontainer hidden"><div class="promotepiece rosesW button"></div></div>
-                        <div id="hawksW" class="promotepiececontainer hidden"><div class="promotepiece hawksW button"></div></div>
-                        <div id="giraffesW" class="promotepiececontainer hidden"><div class="promotepiece giraffesW button"></div></div>
-                        <div id="zebrasW" class="promotepiececontainer hidden"><div class="promotepiece zebrasW button"></div></div>
-                        <div id="camelsW" class="promotepiececontainer hidden"><div class="promotepiece camelsW button"></div></div>
-                        <div id="centaursW" class="promotepiececontainer hidden"><div class="promotepiece centaursW button"></div></div>
-                        <div id="knightsW" class="promotepiececontainer hidden"><div class="promotepiece knightsW button"></div></div>
-                        <div id="guardsW" class="promotepiececontainer hidden"><div class="promotepiece guardsW button"></div></div>
+                    <div id="promotewhite" class="promotecolor hidden">
+                        <!-- <svg id="knightsW" class="promotepiececontainer"></svg> -->
                     </div>
-                    <div id="promoteblack" class="promotecolor">
-                        <div id="amazonsB" class="promotepiececontainer hidden"><div class="promotepiece amazonsB button"></div></div>
-                        <div id="queensB" class="promotepiececontainer hidden"><div class="promotepiece queensB button"></div></div>
-                        <div id="knightridersB" class="promotepiececontainer hidden"><div class="promotepiece knightridersB button"></div></div>
-                        <div id="chancellorsB" class="promotepiececontainer hidden"><div class="promotepiece chancellorsB button"></div></div>
-                        <div id="archbishopsB" class="promotepiececontainer hidden"><div class="promotepiece archbishopsB button"></div></div>
-                        <div id="rooksB" class="promotepiececontainer hidden"><div class="promotepiece rooksB button"></div></div>
-                        <div id="bishopsB" class="promotepiececontainer hidden"><div class="promotepiece bishopsB button"></div></div>
-                        <div id="rosesB" class="promotepiececontainer hidden"><div class="promotepiece rosesB button"></div></div>
-                        <div id="hawksB" class="promotepiececontainer hidden"><div class="promotepiece hawksB button"></div></div>
-                        <div id="giraffesB" class="promotepiececontainer hidden"><div class="promotepiece giraffesB button"></div></div>
-                        <div id="zebrasB" class="promotepiececontainer hidden"><div class="promotepiece zebrasB button"></div></div>
-                        <div id="camelsB" class="promotepiececontainer hidden"><div class="promotepiece camelsB button"></div></div>
-                        <div id="centaursB" class="promotepiececontainer hidden"><div class="promotepiece centaursB button"></div></div>
-                        <div id="knightsB" class="promotepiececontainer hidden"><div class="promotepiece knightsB button"></div></div>
-                        <div id="guardsB" class="promotepiececontainer hidden"><div class="promotepiece guardsB button"></div></div>
+                    <div id="promoteblack" class="promotecolor hidden">
+                        <!-- <svg id="knightsB" class="promotepiececontainer"></svg> -->
                     </div>
                 </div>
 
@@ -501,11 +482,7 @@
                 <div id="statusmessage" class="statusmessage hidden">
                     <p id="statustext" class="statustext"></p>
                 </div>
-                
             </div>
-
-            <!-- Game images -->
-            <img id="spritesheet" src="/img/game/spritesheet64_cburnett.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="htmlscript.removeOnerror.call(this);">
         </main>
     </body>
 </html>
