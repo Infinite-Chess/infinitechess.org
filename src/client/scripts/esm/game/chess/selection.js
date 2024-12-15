@@ -129,7 +129,11 @@ function update() {
 		if (promoteTo) makePromotionMove();
 		return;
 	}
-	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefile.gameConclusion || guipause.areWePaused() || perspective.isLookingUp()) return;
+	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting()) {
+		if(draggingPiece) handleDragging(undefined, false);
+		return;
+	}
+	if (gamefile.gameConclusion || guipause.areWePaused() || perspective.isLookingUp()) return;
 
 	// Calculate if the hover square is legal so we know if we need to render a ghost image...
 	
@@ -152,7 +156,7 @@ function update() {
 	// Else we clicked, but there was no piece to select, *shrugs*
 }
 
-function handleDragging(pieceHoveredType) {
+function handleDragging(pieceHoveredType, allowDrop=true) {
 	if (input.getTouchHelds().length > 1) {
 		//Prevents accidental dragging when trying to zoom.
 		if (didLastClickSelectPiece) return unselectPiece();
@@ -160,8 +164,9 @@ function handleDragging(pieceHoveredType) {
 	}
 	if (input.getPointerHeld()) { // still dragging.
 		// Render the piece at the pointer.
-		draganimation.dragPiece(input.getPointerWorldLocation(), hoverSquare);
+		draganimation.dragPiece(input.getPointerWorldLocation(), allowDrop ? hoverSquare : null);
 	} else {
+		if (!allowDrop) cancelDragging();
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
 		const wasCapture = pieceHoveredType || hoverSquare.hasOwnProperty('enpassant');
 		draganimation.dropPiece(hoverSquareLegal, wasCapture);

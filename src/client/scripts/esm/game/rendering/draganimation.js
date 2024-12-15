@@ -62,14 +62,17 @@ let hoveredCoords;
 let pieceType;
 
 function renderTransparentSquare() {
-	if(!startCoords) return;
+	if (!startCoords) return;
 	let transparentModel = genTransparentModel();
 	transparentModel.render();
 }
 
 function renderPiece() {
-	if(perspective.isLookingUp() || !worldLocation) return;
-	genOutlineModel().render();
+	if (perspective.isLookingUp() || !worldLocation) return;
+	let outlineModel;
+	if (hoveredCoords) outlineModel = genOutlineModel();
+	else outlineModel = genIntersectingLines();
+	outlineModel.render();
 	genPieceModel().render();
 }
 
@@ -84,7 +87,7 @@ function genTransparentModel() {
  * @returns {BufferModel} The buffer model
  */
 function genPieceModel() {
-	if(perspective.isLookingUp()) return;
+	if (perspective.isLookingUp()) return;
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreen = input.getPointerIsTouch();
 	const boardScale = movement.getBoardScale();
@@ -134,6 +137,18 @@ function genOutlineModel() {
 	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 }
 
+function genIntersectingLines() {
+	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
+	const [ r, g, b, a ] = options.getDefaultOutlineColor();
+	let data = [
+		left, worldLocation[1], r, g, b, a,
+		right, worldLocation[1],r, g, b, a,
+		worldLocation[0], bottom, r, g, b, a,
+		worldLocation[0], top, r, g, b, a,
+	];
+	return buffermodel.createModel_Colored(new Float32Array(data), 2, "LINES");
+}
+
 /**
  * Start dragging a piece.
  * @param {string} type - The type of piece being dragged
@@ -147,11 +162,11 @@ function pickUpPiece(type, pieceCoords) {
 /**
  * Update the location of the piece being dragged.
  * @param {number[]} coords - the world coordinates the piece has been dragged to
- * @param {number[]} [hoverSquare] - The square to draw a box outline around
+ * @param {number[]} [hoverSquare] - The square the piece would be moved to if dropped now.
  */
 function dragPiece(coords, hoverSquare) {
 	worldLocation = coords;
-	hoveredCoords = hoverSquare ?? space.convertWorldSpaceToCoords_Rounded(coords);
+	hoveredCoords = hoverSquare;
 	frametracker.onVisualChange();
 }
 
