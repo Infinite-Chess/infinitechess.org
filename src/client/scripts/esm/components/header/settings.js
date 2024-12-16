@@ -83,6 +83,7 @@ function closeAllSettingsDropdownsExceptMainOne() {
 	languagedropdown.close();
 	boarddropdown.close();
 	legalmovedropdown.close();
+	selectiondropdown.close();
 	perspectivedropdown.close();
 }
 
