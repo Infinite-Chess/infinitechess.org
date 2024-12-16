@@ -40,6 +40,7 @@ import loadingscreen from '../gui/loadingscreen.js';
 import movepiece from '../../chess/logic/movepiece.js';
 import frametracker from '../rendering/frametracker.js';
 import area from '../rendering/area.js';
+import dragAnimation from '../rendering/draganimation.js';
 // Import End
 
 /** 
@@ -190,12 +191,14 @@ function renderEverythingInGame() {
 	});
     
 	animation.renderTransparentSquares();
+	dragAnimation.renderTransparentSquare();
 	pieces.renderPiecesInGame(gamefile);
 	animation.renderPieces();
-    
+	
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
+		dragAnimation.renderPiece();
 		arrows.renderThem();
 		perspective.renderCrosshair();
 	});
