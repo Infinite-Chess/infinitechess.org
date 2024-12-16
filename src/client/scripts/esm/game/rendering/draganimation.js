@@ -61,12 +61,14 @@ let hoveredCoords;
 /** The type of piece being dragged. @type {string} */
 let pieceType;
 
+// Hides the original piece
 function renderTransparentSquare() {
 	if (!startCoords) return;
 	let transparentModel = genTransparentModel();
 	transparentModel.render();
 }
 
+// Renders the box outline, the dragged piece and its shadow
 function renderPiece() {
 	if (perspective.isLookingUp() || !worldLocation) return;
 	let outlineModel;
@@ -76,6 +78,10 @@ function renderPiece() {
 	genPieceModel().render();
 }
 
+/**
+ * Generates a transparent model to hide the original piece.
+ * @returns {BufferModel} The buffer model
+ */
 function genTransparentModel() {
 	let color = [0,0,0,0];
 	let data = shapes.getTransformedDataQuad_Color3D_FromCoord(startCoords, z, color); //Hide orginal piece
@@ -95,8 +101,12 @@ function genPieceModel() {
 	
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
 	const { r, g, b, a } = options.getColorOfType(pieceType);
+	
+	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveHeight * boardScale : z;
 	
+	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
+	// it being covered by the finger.
 	let size = perspectiveEnabled ? boardScale : touchscreen ? touchscreenScale : mouseScale;
 	const minimumSize = boardScale * minimumScale;
 	if (size < minimumSize) size = minimumSize;
@@ -104,6 +114,7 @@ function genPieceModel() {
 	const bottom = worldLocation[1] - size / 2 + (touchscreen ? touchscreenOffset : 0);
 	const right = worldLocation[0] + size / 2;
 	const top = worldLocation[1] + size / 2 + (touchscreen ? touchscreenOffset : 0);
+	
 	let data = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor)); // Shadow
 	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a)); // Piece
@@ -112,6 +123,8 @@ function genPieceModel() {
 
 /**
  * Generates a model to enphasize the hovered square.
+ * If mouse is being used the square is outlined.
+ * On touchscreen the entire rank and file are outlined.
  * @returns {BufferModel} The buffer model
  */
 function genOutlineModel() {
@@ -121,13 +134,16 @@ function genOutlineModel() {
 	const width = (pointerIsTouch ? outlineWidth_Touch : outlineWidth_Mouse) * movement.getBoardScale();
 	const color = options.getDefaultOutlineColor();
 	
+	// Checking if the coords are equal prevents the large lines flashing when tapping to select.
 	if (pointerIsTouch && !coordutil.areCoordsEqual(hoveredCoords, startCoords)) {
-		const boundingBox = camera.getScreenBoundingBox(false); // Outline the entire rank and file.
+		// Outline the entire rank and file
+		const boundingBox = camera.getScreenBoundingBox(false);
 		data.push(...bufferdata.getDataQuad_Color3D({ left, right: left + width, bottom: boundingBox.bottom, top: boundingBox.top }, z, color)); // left
 		data.push(...bufferdata.getDataQuad_Color3D({ left: boundingBox.left, right: boundingBox.right, bottom, top: bottom+width }, z, color)); // bottom
 		data.push(...bufferdata.getDataQuad_Color3D({ left: right - width, right, bottom: boundingBox.bottom, top: boundingBox.top }, z, color)); // right
 		data.push(...bufferdata.getDataQuad_Color3D({ left: boundingBox.left, right: boundingBox.right, bottom: top - width, top }, z, color)); // top
 	} else {
+		// Outline the hovered square
 		data.push(...bufferdata.getDataQuad_Color3D({ left, right: left + width, bottom, top }, z, color)); // left
 		data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom, top: bottom + width }, z, color)); // bottom
 		data.push(...bufferdata.getDataQuad_Color3D({ left: right - width, right, bottom, top }, z, color)); // right
@@ -137,6 +153,12 @@ function genOutlineModel() {
 	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
 }
 
+/**
+ * Generates a model of two lines intersecting at the piece.
+ * Used when the piece is unable to be dropped such as when
+ * zoomed far out or teleporting.
+ * @returns {BufferModel} The buffer model
+ */
 function genIntersectingLines() {
 	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
 	const [ r, g, b, a ] = options.getDefaultOutlineColor();
