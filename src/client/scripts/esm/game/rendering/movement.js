@@ -165,9 +165,6 @@ function updateNavControls() {
 		return; 
 	}
 
-	// Mouse clicks
-	checkIfBoardDragged();
-
 	// Keyboard
 	detectPanning(); // Movement (WASD)
 	detectZooming(); // Zoom/Scale (Space shift, mouse wheel)
@@ -542,5 +539,6 @@ export default {
 	randomizePanVelDir,
 	dragBoard,
 	eraseMomentum,
-	setPositionToArea
+	setPositionToArea,
+	checkIfBoardDragged,
 };
