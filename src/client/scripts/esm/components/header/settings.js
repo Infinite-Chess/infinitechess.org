@@ -5,6 +5,7 @@ import languagedropdown from "./dropdowns/languagedropdown.js";
 import boarddropdown from "./dropdowns/boarddropdown.js";
 import legalmovedropdown from "./dropdowns/legalmovedropdown.js";
 import perspectivedropdown from "./dropdowns/perspectivedropdown.js";
+import selectiondropdown from "./dropdowns/selectiondropdown.js";
 // Only imported so its code runs
 import pingmeter from "./pingmeter.js";
 import preferences from "./preferences.js";
@@ -22,13 +23,15 @@ const languageDropdownSelection = document.getElementById('language-settings-dro
 const boardDropdownSelection = document.getElementById('board-settings-dropdown-item');
 const legalmoveDropdownSelection = document.getElementById('legalmove-settings-dropdown-item');
 const mouseDropdownSelection = document.getElementById('perspective-settings-dropdown-item');
+const selectionDropdownSelection = document.getElementById('selection-settings-dropdown-item');
 
 // All nested dropdowns
 const languageDropdown = document.querySelector('.language-dropdown');
 const boardDropdown = document.querySelector('.board-dropdown');
 const legalmoveDropdown = document.querySelector('.legalmove-dropdown');
 const perspectiveDropdown = document.querySelector('.perspective-dropdown');
-const allSettingsDropdownsExceptMainOne = [languageDropdown, boardDropdown, legalmoveDropdown, perspectiveDropdown];
+const selectionDropdown = document.querySelector('.selection-dropdown');
+const allSettingsDropdownsExceptMainOne = [languageDropdown, boardDropdown, legalmoveDropdown, perspectiveDropdown, selectionDropdown];
 
 
 // Variables ---------------------------------------------------------------------------------
@@ -93,6 +96,8 @@ function initSettingsListeners() {
 	legalmoveDropdownSelection.addEventListener('click', legalmovedropdown.open);
 	mouseDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	mouseDropdownSelection.addEventListener('click', perspectivedropdown.open);
+	selectionDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	selectionDropdownSelection.addEventListener('click', selectiondropdown.open);
 }
 function closeSettingsListeners() {
 	languageDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
@@ -103,6 +108,8 @@ function closeSettingsListeners() {
 	legalmoveDropdownSelection.removeEventListener('click', legalmovedropdown.open);
 	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
+	mouseDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	mouseDropdownSelection.addEventListener('click', perspectivedropdown.open);
 }
 
 
