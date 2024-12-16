@@ -164,6 +164,7 @@ function updateBoard() {
 	guinavigation.update();
 	selection.update();
 	arrows.update(); // NEEDS TO BE AFTER selection.update(), because the arrows model regeneration DEPENDS on the piece selected!
+	movement.checkIfBoardDragged(); // ALSO depends on whether or not a piece is selected/being dragged!
 	miniimage.genModel();
 	highlightline.genModel();
 
