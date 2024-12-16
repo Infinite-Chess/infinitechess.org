@@ -10,7 +10,6 @@ import sound from "../misc/sound.js";
 import frametracker from "./frametracker.js";
 import movement from "./movement.js";
 import input from "../input.js";
-import space from "../misc/space.js";
 import camera from "./camera.js";
 import coordutil from "../../chess/util/coordutil.js";
 // Import end
@@ -26,11 +25,6 @@ import coordutil from "../../chess/util/coordutil.js";
  * This script hides the original piece and renders a copy at the pointer location.
  * It also highlights the square that the piece would be dropped on (to do)
  * and plays the sound when the piece is dropped.
- */
-
-/**
- * To Do:
- * - Emphasise the hovered square like Lichess and Chess.com.
  */
 
 const z = 0.01;

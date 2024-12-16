@@ -15,7 +15,7 @@ const default_perspective_sensitivity = 100;
 const default_perspective_fov = 90;
 
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs = ['perspective_sensitivity', 'perspective_fov'];
+const clientSidePrefs = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled'];
 
 /**
  * Whether a change was made to the preferences since the last time we sent them over to the server.
@@ -134,10 +134,10 @@ function setLegalMovesShape(legal_moves) {
 }
 
 function getDragEnabled() {
-	return preferences.drag_enabled || default_drag_enabled;
+	return preferences.drag_enabled ?? default_drag_enabled;
 }
 function setDragEnabled(drag_enabled) {
-	if (typeof drag_enabled !== 'boolean') throw new Error('Cannot set preference legal_moves when it is not a boolean.');
+	if (typeof drag_enabled !== 'boolean') throw new Error('Cannot set preference drag_enabled when it is not a boolean.');
 	preferences.drag_enabled = drag_enabled;
 	onChangeMade();
 	savePreferences();
