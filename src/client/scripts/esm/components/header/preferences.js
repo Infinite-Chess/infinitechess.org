@@ -11,7 +11,7 @@ let preferences; // { theme, legal_moves }
 // The legal moves shape preference
 const default_legal_moves = 'squares'; // dots/squares
 const default_drag_enabled = true;
-const default_premove_mode = true;
+const default_premove_mode = false; // Change this to true when premoves are implemented.
 const default_perspective_sensitivity = 100;
 const default_perspective_fov = 90;
 
