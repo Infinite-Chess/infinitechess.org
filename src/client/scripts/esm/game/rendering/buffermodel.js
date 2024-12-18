@@ -117,6 +117,11 @@ function getPrepDrawFunc(shaderProgram, numPositionComponents, usingTextureCoord
 		const stride_bytes = stride * BYTES_PER_ELEMENT; // # bytes in each vertex/line.
 		let current_offset_bytes = 0; // how many bytes inside the buffer to start from.
 
+		// IF WE BIND A VERTEX ARRAY OBJECT here, then unbind it after our initAttribute() calls,
+		// then for future render calls we don't need to make the same initAttribute() calls,
+		// but instead we just bind the vertex array object!
+		// ...
+
 		// Tell WebGL how to pull out the positions from the position buffer into the vertexPosition attribute.
 		initAttribute(shaderProgram.attribLocations.vertexPosition, stride_bytes, numPositionComponents, current_offset_bytes);
 		current_offset_bytes += numPositionComponents * BYTES_PER_ELEMENT;
