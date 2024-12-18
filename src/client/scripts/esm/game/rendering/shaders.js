@@ -63,7 +63,11 @@ const programs = {
      * or just by sending the uniform value into {@link BufferModel.render}
      * @type {ShaderProgram}
      */
-	tintedTextureProgram: undefined, // Renders textures with color
+	tintedTextureProgram: undefined,
+	/**
+	 * Uses instanced rendering to render the legal move squares and dots.
+	 */
+	legalMovesProgram: undefined,
 };
 
 /** Initiates the shader programs we will be using.
@@ -75,6 +79,7 @@ function initPrograms() {
 	programs.textureProgram = createTextureProgram(isWebGL2);
 	programs.coloredTextureProgram = createColoredTextureProgram(isWebGL2);
 	programs.tintedTextureProgram = createTintedTextureProgram();
+	programs.legalMovesProgram = createLegalMovesProgram();
 }
 
 /**
@@ -354,6 +359,71 @@ function createTintedTextureProgram() {
 
 	return tintedTextureProgram;
 }
+
+/**
+ * Creates and return a shader program that is
+ * capable of instace rendering two different shapes
+ * @returns {ShaderProgram}
+ */
+function createLegalMovesProgram() {
+	// Vertex shader. For every vertex, applies matrix multiplication to find it's position on the canvas.
+	// Attributes receive data from buffer. Uniforms are like global variables, they stay the same.
+	const vsSource = `
+		attribute vec4 aVertexPosition;  // Vertex position (relative to a single instance)
+		attribute vec4 aVertexColor;     // Vertex color (relative to a single instance)
+		attribute vec4 aInstancePosition; // Instance position
+		attribute float aShapeType;      // Instance attribute: 0 for square, 1 for dot, 1 for corner triangles
+
+		uniform mat4 uWorldMatrix;
+		uniform mat4 uViewMatrix;
+		uniform mat4 uProjMatrix;
+
+		// Add the instance position to the vertex position before applying transformations
+		vec4 transformedVertexPosition = aVertexPosition + aInstancePosition; 
+
+		varying lowp vec4 vColor;        // Color to pass to fragment shader
+		varying float vShapeType;        // Pass shape type to fragment shader
+
+        void main() {
+            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * transformedVertexPosition;
+            vColor = aVertexColor;
+        }
+    `;
+	// Fragment shader. Called for every pixel on each shape to be drawn. Color.
+	const fsSource = `
+		varying lowp vec4 vColor;   // Color passed from vertex shader
+		varying float vShapeType;   // Shape type (0 for square, 1 for dot, 1 for corner triangles)
+
+        void main() {
+			// Change the color based on the shape type (0 = square, 1 = circle)
+			if (vShapeType == 0.0) {
+				// Square
+				gl_FragColor = vColor;
+			} else if (vShape == 1.0) { // Circle
+				
+				gl_FragColor = vColor;  // Color for circle
+			} else {
+
+			}
+        }
+    `;
+
+	const program = createShaderProgram(vsSource, fsSource);
+
+	return {
+		program,
+		attribLocations: {
+			vertexPosition: gl.getAttribLocation(program, 'aVertexPosition'),
+			vertexColor: gl.getAttribLocation(program, 'aVertexColor')
+		},
+		uniformLocations: {
+			projectionMatrix: gl.getUniformLocation(program, 'uProjMatrix'),
+			viewMatrix: gl.getUniformLocation(program, 'uViewMatrix'),
+			worldMatrix: gl.getUniformLocation(program, 'uWorldMatrix')
+		},
+	};
+}
+
 /**
  * Creates an actual program from the provided vertex shader and fragment shader source codes
  * in which our webgl context can switch to via gl.useProgram() before rendering.
