@@ -6,7 +6,7 @@
  * The positional data should be between 0-1
  * @returns The renderable webgl texture
  */
-function convertVertexDataToTexture(gl: WebGL2RenderingContext, vertexData: number[]}): WebGLTexture {
+function convertVertexDataToTexture(gl: WebGL2RenderingContext, vertexData: number[]): WebGLTexture {
     const stride = 6; // Each vertex has 2 values for the x & y position, and 4 for the color
     const resolution = 500; // 500px by 500px
 
