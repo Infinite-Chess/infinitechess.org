@@ -347,6 +347,10 @@ function updateNavColor() {
         .footer {
             background: linear-gradient(to bottom, rgba(${navR}, ${navG}, ${navB}, 0.307), rgba(${navR}, ${navG}, ${navB}, 1), rgba(${navR}, ${navG}, ${navB}, 0.84));
         }
+        
+        .switch {
+            --switch-on-color: rgb(${avgR*255}, ${avgG*255}, ${avgB*255});
+        }
     `);
 }
 

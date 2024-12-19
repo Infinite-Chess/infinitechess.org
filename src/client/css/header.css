@@ -8,6 +8,8 @@
     --CBC-out: cubic-bezier(.54,0,1,.97); /* Settings dropdown OUT curve */
     --CBC-CM-in: cubic-bezier(.09,1.61,.36,1); /* Checkmark IN curve */
     --CBC-CM-out: cubic-bezier(0,1.1,1,1); /* Checkmark OUT curve */
+    --CBC-switch-slider: cubic-bezier(0,1.05,.47,1); /* Toggle switch curve */
+    --CBC-switch-color: cubic-bezier(.54,0,1,.97);
 }
 
 header {
@@ -59,7 +61,7 @@ header a {
     animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
 }
 
-.svg-language, .svg-board, .svg-legalmove, .svg-perspective,
+.svg-language, .svg-board, .svg-legalmove, .svg-perspective, .svg-selection,
 .svg-squares, .svg-mouse, .svg-camera,
 .checkmark {
     width: 19px;
@@ -273,7 +275,7 @@ nav.compact-3 #svg-logout {
     border-bottom: 1px solid grey;
 }
 
-.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover {
+.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover, .selection-option:hover {
     background-color: var(--header-link-hover-color);
 }
 
@@ -320,11 +322,47 @@ span.arrow-head-left {
     transform: scale(0);
 }
 
+.switch {
+    position: relative;
+    --switch-on-color: #737373; /* Default value */
+}
+
+.switch input {
+    visibility: none;
+    width: 0;
+    height: 0;
+}
+
+.switch > input + * {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background-color: #0000008c;
+    outline: 2px solid rgb(97, 97, 97);
+    transition: background-color 0.2s var(--CBC-switch-color);
+}
+
+.switch > input + ::before {
+    content: '';
+    display: inline-block;
+    border-radius: 14px;
+    background-color: #000000c4;
+    width: 50%;
+    height: 100%;
+    transition: transform 0.2s var(--CBC-switch-slider), background-color 0.2s linear;
+}
+
+.switch input:checked + ::before {
+    transform: translateX(100%);
+}
+.switch input:checked + * {
+    background-color: var(--switch-on-color);
+}
 
 
 /* Language nested dropdown */
 
-.language-dropdown-item, .legalmove-option {
+.language-dropdown-item, .legalmove-option, .selection-option {
     display:flex;
     align-items: center;
     cursor: pointer;
@@ -386,7 +424,24 @@ span.arrow-head-left {
     padding: 0 15px 0 8px;
 }
 
+/* Selection dropdown */
 
+.selection-option-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 35px;
+}
+
+.selection-option {
+    height: 43px;
+    padding: 0 8px 0 8px;
+}
+
+.selection-option .switch {
+    width: 40px;
+    height: 40%;
+}
 
 /* Perspective dropdown */
 
