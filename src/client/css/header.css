@@ -338,6 +338,7 @@ span.arrow-head-left {
     inset: 0;
     border-radius: 14px;
     background-color: #0000008c;
+    outline: 2px solid rgb(97, 97, 97);
     transition: background-color 0.2s var(--CBC-switch-color);
 }
 
@@ -434,12 +435,12 @@ span.arrow-head-left {
 
 .selection-option {
     height: 43px;
-    padding: 0 15px 0 8px;
+    padding: 0 8px 0 8px;
 }
 
 .selection-option .switch {
-    width: 50px;
-    height: 50%;
+    width: 40px;
+    height: 40%;
 }
 
 /* Perspective dropdown */
