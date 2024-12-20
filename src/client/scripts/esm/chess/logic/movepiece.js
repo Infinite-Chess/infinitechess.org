@@ -165,7 +165,7 @@ function updateTurn(gamefile) {
     * @param {gamefile} gamefile - The gamefile
     * @param {boolean} [flagMoveAsCheck] - If *true*, flags the last played move as a check. Default: true
     */
-function updateInCheck(gamefile, flagMoveAsCheck = true) {
+function updateInCheck(gamefile) {
 
 	let attackers = undefined;
 	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
@@ -176,7 +176,7 @@ function updateInCheck(gamefile, flagMoveAsCheck = true) {
 	gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
 	gamefile.attackers = attackers || []; // Erase the checking pieces calculated from previous turn and pass in new ones!
 
-	if (gamefile.inCheck && flagMoveAsCheck) moveutil.flagLastMoveAsCheck(gamefile);
+	if (gamefile.inCheck && gamefile.moveIndex !== -1) moveutil.flagLastMoveAsCheck(gamefile);
 }
 
 /**
@@ -210,9 +210,9 @@ function makeAllMovesInGame(gamefile, moves) {
 		gamefile.moveIndex++;
 		gamefile.moves.push(move);
 	}
-
-	// FIXME: REENABLE, TESTING
-	// if (moves.length === 0) updateInCheck(gamefile, false);
+	
+	updateTurn(gamefile);
+	updateInCheck(gamefile);
 
 	gamefileutility.doGameOverChecks(gamefile); // Update the gameConclusion
 }
