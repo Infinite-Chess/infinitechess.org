@@ -6,16 +6,16 @@ import piecesmodel from "../rendering/piecesmodel.js";
 import organizedlines from "../../chess/logic/organizedlines.js";
 
 // @ts-ignore
-import type { ChangeApplication, PieceChange, MoveChange, CaptureChange, ActionList } from "../../chess/logic/boardchanges.js";
+import type { ChangeApplication, Change, ActionList } from "../../chess/logic/boardchanges.js";
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
 
 // ESLint, THIS IS A TYPE INTERFACE SHUT UP
 interface ChangeAnimations {
 	// eslint-disable-next-line no-unused-vars
-	forward: ActionList<(change: CaptureChange, clearanimations: boolean) => void>
+	forward: ActionList<(change: Change, clearanimations: boolean) => void>
 	// eslint-disable-next-line no-unused-vars
-	backward: ActionList<(change: MoveChange, clearanimations: boolean) => void>
+	backward: ActionList<(change: Change, clearanimations: boolean) => void>
 }
 
 const animatableChanges: ChangeAnimations = {
@@ -30,16 +30,16 @@ const animatableChanges: ChangeAnimations = {
 	}
 };
 
-function animateMove(change: MoveChange, clearanimations: boolean) {
-	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, undefined, clearanimations);
+function animateMove(change: Change, clearanimations: boolean) {
+	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], undefined, clearanimations);
 }
 
-function animateReturn(change: MoveChange, clearanimations: boolean) {
-	animation.animatePiece(change.piece.type, change.endCoords, change.piece.coords, undefined, clearanimations);
+function animateReturn(change: Change, clearanimations: boolean) {
+	animation.animatePiece(change['piece'].type, change['endCoords'], change['piece'].coords, undefined, clearanimations);
 }
 
-function animateCapture(change: CaptureChange, clearanimations: boolean) {
-	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, change.capturedPiece, clearanimations);
+function animateCapture(change: Change, clearanimations: boolean) {
+	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], change['capturedPiece'], clearanimations);
 }
 
 const meshChanges: ChangeApplication = {
@@ -58,34 +58,34 @@ const meshChanges: ChangeApplication = {
 	}
 };
 
-function addMeshPiece(gamefile: gamefile, change: PieceChange) {
-	piecesmodel.overwritebufferdata(gamefile, change.piece, change.piece.coords, change.piece.type);
+function addMeshPiece(gamefile: gamefile, change: Change) {
+	piecesmodel.overwritebufferdata(gamefile, change['piece'], change['piece'].coords, change['piece'].type);
 
 	// Do we need to add more undefineds?
 	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
 	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
 }
 
-function deleteMeshPiece(gamefile: gamefile, change: PieceChange) {
-	piecesmodel.deletebufferdata(gamefile, change.piece);
+function deleteMeshPiece(gamefile: gamefile, change: Change) {
+	piecesmodel.deletebufferdata(gamefile, change['piece']);
 }
 
-function moveMeshPiece(gamefile: gamefile, change: MoveChange) {
-	piecesmodel.movebufferdata(gamefile, change.piece, change.endCoords);
+function moveMeshPiece(gamefile: gamefile, change: Change) {
+	piecesmodel.movebufferdata(gamefile, change['piece'], change['endCoords']);
 }
 
-function returnMeshPiece(gamefile: gamefile, change: MoveChange) {
-	piecesmodel.movebufferdata(gamefile, change.piece, change.piece.coords);
+function returnMeshPiece(gamefile: gamefile, change: Change) {
+	piecesmodel.movebufferdata(gamefile, change['piece'], change['piece'].coords);
 }
 
-function captureMeshPiece(gamefile: gamefile, change: CaptureChange) {
-	piecesmodel.deletebufferdata(gamefile, change.capturedPiece);
+function captureMeshPiece(gamefile: gamefile, change: Change) {
+	piecesmodel.deletebufferdata(gamefile, change['capturedPiece']);
 	moveMeshPiece(gamefile, change);
 }
 
-function uncaptureMeshPiece(gamefile: gamefile, change: CaptureChange) {
+function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 	returnMeshPiece(gamefile, change);
-	addMeshPiece(gamefile, {action: "addPiece", piece: change.capturedPiece});
+	addMeshPiece(gamefile, {action: "addPiece", piece: change['capturedPiece']});
 }
 
 export {
