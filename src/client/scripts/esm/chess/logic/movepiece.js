@@ -149,10 +149,10 @@ function incrementMoveRule(gamefile, typeMoved, wasACapture) {
  * @param {Object} options - An object that may contain the options (all are default *true*):
  * - `pushClock`: Whether to push the clock.
  */
-function updateTurnData(gamefile, { pushClock = true } = {}) {
+function updateTurn(gamefile, { pushClock = true } = {}) {
 	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	if (pushClock) {
-		clock.push(gamefile);
+		return clock.push(gamefile);
 	};
 }
 
@@ -373,22 +373,13 @@ function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = f
 	return info; // Info from simulating the move: { isCheck, gameConclusion }
 }
 
-/**
- * Strips the coordinates of their special move properties.
- * For example, unstripped coords may look like: `[2,7,enpassant:true]`
- * @param {number[]} coords - The coordinates
- * @returns {number[]} The stripped coordinates: `[2,7]`
- */
-function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]]; }
-
 export default {
 	makeMove,
-	nextTurn,
+	updateTurn,
 	makeAllMovesInGame,
 	calculateMoveFromShortmove,
 	forwardToFront,
 	rewindGameToIndex,
 	rewindMove,
 	simulateMove,
-	stripSpecialMoveTagsFromCoords
 };

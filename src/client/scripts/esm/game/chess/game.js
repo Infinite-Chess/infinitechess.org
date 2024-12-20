@@ -146,7 +146,7 @@ function updateBoard() {
 	}
 
 	const timeWinner = clock.update(gamefile);
-	if (timeWinner) { // undefined if no clock has ran out
+	if (timeWinner && !onlinegame.areInOnlineGame()) { // undefined if no clock has ran out
 		gamefile.gameConclusion = `${timeWinner} time`;
 		concludeGame();
 	}

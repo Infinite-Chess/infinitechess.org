@@ -9,7 +9,6 @@ import guititle from '../gui/guititle.js';
 import clock from '../../chess/logic/clock.js';
 import guiclock from '../gui/guiclock.js';
 import statustext from '../gui/statustext.js';
-import movepiece from '../../chess/logic/movepiece.js';
 import game from '../chess/game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import selection from '../chess/selection.js';
@@ -28,6 +27,8 @@ import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
 import pingManager from '../../util/pingManager.js';
+import movesequence from '../chess/movesequence.js';
+import options from '../rendering/options.js';
 // Import End
 
 /** 
@@ -281,7 +282,7 @@ function onmessage(data) { // { sub, action, value, id }
 			const message = data.value; // { clockValues: { timerWhite, timerBlack } }
 			message.clockValues.accountForPing = true; // We are in an online game so we need to inform the clock script to account for ping
 			const gamefile = game.getGamefile();
-			clock.edit(gamefile, message.clockValues); // Edit the clocks
+			clock.edit(gamefile, message.clockValues, options.isDebugModeOn()); // Edit the clocks
 			guiclock.edit(gamefile);
 			break;
 		} case "gameupdate": // When the game has ended by time/disconnect/resignation/aborted, OR we are resyncing to the game.
@@ -461,7 +462,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(moveAndConclusion)}`);
 	if (moveIsLegal !== true && !isPrivate) return reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateProperties: false });
+	movesequence.viewFront(gamefile);
 
 	// Forward the move...
 
@@ -472,13 +473,13 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 
 	move.type = piecemoved.type;
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move);
-	movepiece.makeMove(gamefile, move);
+	movesequence.makeMove(gamefile, move);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
 	if (message.clockValues !== undefined) message.clockValues.accountForPing = true; // Set this to true so our clock knows to account for ping.
-	clock.edit(gamefile, message.clockValues);
+	clock.edit(gamefile, message.clockValues, options.isDebugModeOn());
 	guiclock.edit(gamefile);
 
 	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
@@ -566,7 +567,7 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// When the game has ended by time/disconnect/resignation/aborted
-	clock.edit(gamefile, messageContents.clockValues);
+	clock.edit(gamefile, messageContents.clockValues, options.isDebugModeOn());
 
 	if (gamefileutility.isGameOver(gamefile)) {
 		game.concludeGame();
@@ -597,11 +598,11 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	}
 
 	const originalMoveIndex = gamefile.moveIndex;
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateProperties: false });
+	movesequence.viewFront(gamefile);
 	let aChangeWasMade = false;
 
 	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..
-		movepiece.rewindMove(gamefile, { animate: false });
+		movesequence.rewindMove(gamefile, { animate: false });
 		console.log("Rewound one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
@@ -613,7 +614,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		if (thisGamefileMove) { // The move is defined
 			if (thisGamefileMove.compact === moves[i]) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
-			movepiece.rewindMove(gamefile, { animate: false });
+			movesequence.rewindMove(gamefile, { animate: false });
 			console.log("Rewound one INCORRECT move while resyncing to online game.");
 			aChangeWasMade = true;
 		}
@@ -626,7 +627,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		const move = movepiece.calculateMoveFromShortmove(gamefile, thisShortmove);
+		const move = moveutil.calculateMoveFromShortmove(gamefile, thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
@@ -648,12 +649,13 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		} else cancelFlashTabTimer();
         
 		const isLastMove = i === moves.length - 1;
-		movepiece.makeMove(gamefile, move, { doGameOverChecks: isLastMove, concludeGameIfOver: false, animate: isLastMove });
+		movesequence.makeMove(gamefile, move, { doGameOverChecks: isLastMove, concludeGameIfOver: false});
+		if (isLastMove) movesequence.animateMoveAtIdx(gamefile)
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
 
-	if (!aChangeWasMade) movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false });
+	if (!aChangeWasMade) movesequence.viewIndex(gamefile, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
 	return true; // No cheating detected
