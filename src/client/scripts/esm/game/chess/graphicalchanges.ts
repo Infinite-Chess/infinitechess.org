@@ -1,15 +1,24 @@
-
-import animation from "../rendering/animation";
-import piecesmodel from "../rendering/piecesmodel";
-import organizedlines from "../../chess/logic/organizedlines";
-import coordutil from "../../chess/util/coordutil";
+// @ts-ignore
+import animation from "../rendering/animation.js";
+// @ts-ignore
+import piecesmodel from "../rendering/piecesmodel.js";
+// @ts-ignore
+import organizedlines from "../../chess/logic/organizedlines.js";
 
 // @ts-ignore
-import type { ChangeApplication, PieceChange, MoveChange, CaptureChange } from "../../chess/logic/boardchanges";
+import type { ChangeApplication, PieceChange, MoveChange, CaptureChange, ActionList } from "../../chess/logic/boardchanges.js";
 // @ts-ignore
-import type gamefile from "../../chess/logic/gamefile";
+import type gamefile from "../../chess/logic/gamefile.js";
 
-const animatableChanges: ChangeApplication = {
+// ESLint, THIS IS A TYPE INTERFACE SHUT UP
+interface ChangeAnimations {
+	// eslint-disable-next-line no-unused-vars
+	forward: ActionList<(change: CaptureChange, clearanimations: boolean) => void>
+	// eslint-disable-next-line no-unused-vars
+	backward: ActionList<(change: MoveChange, clearanimations: boolean) => void>
+}
+
+const animatableChanges: ChangeAnimations = {
 	forward: {
 		"movePiece": animateMove,
 		"capturedPiece": animateCapture,
@@ -21,16 +30,16 @@ const animatableChanges: ChangeApplication = {
 	}
 };
 
-function animateMove(gamefile: gamefile, change: MoveChange) {
-	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords);
+function animateMove(change: MoveChange, clearanimations: boolean) {
+	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, undefined, clearanimations);
 }
 
-function animateReturn(gamefile: gamefile, change: MoveChange) {
-	animation.animatePiece(change.piece.type, change.endCoords, change.piece.coords);
+function animateReturn(change: MoveChange, clearanimations: boolean) {
+	animation.animatePiece(change.piece.type, change.endCoords, change.piece.coords, undefined, clearanimations);
 }
 
-function animateCapture(gamefile: gamefile, change: CaptureChange) {
-	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, coordutil.getKeyFromCoords(change.capturedPiece.coords));
+function animateCapture(change: CaptureChange, clearanimations: boolean) {
+	animation.animatePiece(change.piece.type, change.piece.coords, change.endCoords, change.capturedPiece.type, clearanimations);
 }
 
 const meshChanges: ChangeApplication = {
@@ -38,14 +47,14 @@ const meshChanges: ChangeApplication = {
 		"add": addMeshPiece,
 		"delete": deleteMeshPiece,
 		"movePiece": moveMeshPiece,
-		"capturePiece": moveMeshPiece,
+		"capturePiece":	captureMeshPiece,
 	},
 
 	backward: {
 		"delete": addMeshPiece,
 		"add": deleteMeshPiece,
 		"movePiece": returnMeshPiece,
-		"capturePiece": returnMeshPiece,
+		"capturePiece": uncaptureMeshPiece,
 	}
 };
 
@@ -69,7 +78,17 @@ function returnMeshPiece(gamefile: gamefile, change: MoveChange) {
 	piecesmodel.movebufferdata(gamefile, change.piece, change.piece.coords);
 }
 
+function captureMeshPiece(gamefile: gamefile, change: CaptureChange) {
+	piecesmodel.deletebufferdata(gamefile, change.capturedPiece);
+	moveMeshPiece(gamefile, change);
+}
+
+function uncaptureMeshPiece(gamefile: gamefile, change: CaptureChange) {
+	returnMeshPiece(gamefile, change);
+	addMeshPiece(gamefile, {action: "addPiece", piece: change.capturedPiece});
+}
+
 export {
 	animatableChanges,
 	meshChanges,
-}
+};

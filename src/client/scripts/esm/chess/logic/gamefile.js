@@ -8,7 +8,6 @@ import area from '../../game/rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
-import movesequence from '../../game/chess/movesequence.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
 // Type Definitions...
@@ -259,7 +258,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	organizedlines.initOrganizedPieceLists(this, { appendUndefineds: false });
 	// THIS HAS TO BE AFTER gamerules.swapCheckmateForRoyalCapture() AS THIS DOES GAME-OVER CHECKS!!!
 	movepiece.makeAllMovesInGame(this, moves);
-	movesequence.animateMoveAtIdx(gamefile) // Start animation for last move
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) this.gameConclusion = gameConclusion;

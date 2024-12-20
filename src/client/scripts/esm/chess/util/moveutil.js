@@ -9,8 +9,8 @@ import coordutil from './coordutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../logic/boardchanges.js').Change} Change
 */
-
 
 "use strict";
 
@@ -22,7 +22,7 @@ function Move() {
 
 	/** The type of piece moved (e.g. `queensW`). */
 	this.type = undefined;
-	/** @type {Array} */
+	/** @type {Array<Change>} */
 	this.changes = undefined;
 	/** The start coordinates of the piece: `[x,y]` */
 	this.startCoords = undefined;

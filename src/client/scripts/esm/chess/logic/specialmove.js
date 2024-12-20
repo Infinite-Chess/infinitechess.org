@@ -37,9 +37,9 @@ function getFunctions() {
 // RETURNS FALSE if special move was not executed!
 function kings(gamefile, piece, move) {
 
-	const moveChanges = [];
+	const moveChanges = move.changes;
 	const specialTag = move.castle; // { dir: -1/1, coord }
-	if (!specialTag) return moveChanges; // No special move to execute, return false to signify we didn't move the piece.
+	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	// Move the king to new square
 
@@ -51,17 +51,17 @@ function kings(gamefile, piece, move) {
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	// Delete the rook's special move rights
 	const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
-	boardchanges.queueDeleteSpecialRights(moveChanges, pieceToCastleWith, gamefile.specialRights[key]);
+	boardchanges.queueSetSpecialRights(moveChanges, pieceToCastleWith, gamefile.specialRights[key], undefined);
 
 	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, landSquare); // Make normal move
 
 	// Special move was executed!
 	// There is no captured piece with castling
-	return moveChanges;
+	return true;
 }
 
-function pawns(gamefile, piece, move, {updateProperties = true, simulated = false } = {}) {
-	const moveChanges = [];
+function pawns(gamefile, piece, move, { updateProperties = true } = {}) {
+	const moveChanges = move.changes;
 
 	// If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
 	if (updateProperties && isPawnMoveADoublePush(piece.coords, move.endCoords)) {
@@ -76,24 +76,28 @@ function pawns(gamefile, piece, move, {updateProperties = true, simulated = fals
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
 
 	if (capturedPiece) move.captured = capturedPiece.type;
-	if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
 
 	// Delete the piece captured
-	if (capturedPiece) boardchanges.queueDeleteChange(moveChanges, capturedPiece);
 
 	if (promotionTag) {
-		// Delete original pawn
-		boardchanges.queueDeleteChange(moveChanges, piece);
+		if (capturedPiece) boardchanges.queueDeletePiece(moveChanges, capturedPiece);
 
-		boardchanges.queueAddChange(moveChanges, promotionTag, move.endCoords, null);
+		// Delete original pawn
+		boardchanges.queueDeletePiece(moveChanges, piece);
+
+		boardchanges.queueAddPiece(moveChanges, promotionTag, move.endCoords, null);
 
 	} else /* enpassantTag */ {
-		// Move the pawn
-		boardchanges.queueMoveChange(moveChanges, piece, move.endCoords);
+		if (capturedPiece) {
+			boardchanges.queueCaputure(moveChanges, piece, move.endCoords, capturedPiece);
+		} else {
+			// Move the pawn
+			boardchanges.queueMovePiece(moveChanges, piece, move.endCoords);
+		}
 	}
 
 	// Special move was executed!
-	return moveChanges;
+	return true;
 }
 
 function isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2; }

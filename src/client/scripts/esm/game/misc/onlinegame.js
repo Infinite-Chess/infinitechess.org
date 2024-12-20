@@ -33,7 +33,7 @@ import options from '../rendering/options.js';
 
 /** 
  * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js'} gamefile
+ * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
  * @typedef {import('../../chess/util/moveutil.js').Move} Move
  * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
 */
@@ -474,6 +474,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	move.type = piecemoved.type;
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move);
 	movesequence.makeMove(gamefile, move);
+	movesequence.animateMove(gamefile, move, true);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
@@ -602,7 +603,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	let aChangeWasMade = false;
 
 	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..
-		movesequence.rewindMove(gamefile, { animate: false });
+		movesequence.rewindMove(gamefile);
 		console.log("Rewound one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
@@ -614,7 +615,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		if (thisGamefileMove) { // The move is defined
 			if (thisGamefileMove.compact === moves[i]) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
-			movesequence.rewindMove(gamefile, { animate: false });
+			movesequence.rewindMove(gamefile);
 			console.log("Rewound one INCORRECT move while resyncing to online game.");
 			aChangeWasMade = true;
 		}
@@ -650,12 +651,12 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
         
 		const isLastMove = i === moves.length - 1;
 		movesequence.makeMove(gamefile, move, { doGameOverChecks: isLastMove, concludeGameIfOver: false});
-		if (isLastMove) movesequence.animateMoveAtIdx(gamefile)
+		if (isLastMove) movesequence.animateMove(gamefile, move, true);
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
 
-	if (!aChangeWasMade) movesequence.viewIndex(gamefile, originalMoveIndex);
+	if (!aChangeWasMade) movesequence.viewToIndex(gamefile, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
 	return true; // No cheating detected

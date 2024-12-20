@@ -46,10 +46,14 @@ function generateMove(gamefile, move) {
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move); // Move piece regularly (no special tag)
 }
 
-function makeMove(gamefile, move, { updateProperties, recordCheck }) {
+function applyMove(gamefile, move, forward = true) {
+	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
+}
+
+function makeMove(gamefile, move, { updateProperties = true } = {}) {
 	const wasACapture = move.captured != null;
 
-	boardchanges.applyChanges(gamefile, move.changes);
+	applyMove(gamefile, move);
 
 	gamefile.moveIndex++;
 	gamefile.moves.push(move);
@@ -60,7 +64,7 @@ function makeMove(gamefile, move, { updateProperties, recordCheck }) {
 	if (updateProperties) incrementMoveRule(gamefile, move.type, wasACapture);
 
 	// ALWAYS DO THIS NOW, no matter what. 
-	updateInCheck(gamefile, recordCheck);
+	updateInCheck(gamefile);
 }
 
 /**
@@ -96,9 +100,9 @@ function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false }
 function deleteEnpassantAndSpecialRightsProperties(gamefile, move) {
 	boardchanges.queueSetEnPassant(move.changes, gamefile.enpassant, undefined);
 	let key = coordutil.getKeyFromCoords(move.startCoords);
-	boardchanges.queueDeleteSpecialRights(move.changes, key, gamefile.specialRights[key]);
+	boardchanges.queueSetSpecialRights(move.changes, key, gamefile.specialRights[key], undefined);
 	key = coordutil.getKeyFromCoords(move.endCoords);
-	boardchanges.queueDeleteSpecialRights(move.changes, key, gamefile.specialRights[key]); // We also delete the captured pieces specialRights for ANY move.
+	boardchanges.queueSetSpecialRights(move.changes, key, gamefile.specialRights[key], undefined); // We also delete the captured pieces specialRights for ANY move.
 }
 
 // RETURNS index of captured piece! Required for undo'ing moves.
@@ -190,7 +194,9 @@ function updateInCheck(gamefile, flagMoveAsCheck = true) {
  */
 function makeAllMovesInGame(gamefile, moves) {
 	if (gamefile.moveIndex !== -1) throw new Error("Cannot make all moves in game when we're not at the beginning.");
-        
+    
+	gamefile.moves = [];
+
 	for (let i = 0; i < moves.length; i++) {
 
 		const shortmove = moves[i];
@@ -201,12 +207,16 @@ function makeAllMovesInGame(gamefile, moves) {
 
 		// Make the move in the game!
 
-		// const isLastMove = i === moves.length - 1;
-		// const animate = isLastMove;
-		makeMove(gamefile, move, { pushClock: false, updateData: false, concludeGameIfOver: false, doGameOverChecks: false, animate: false });
+		applyMove(gamefile, move);
+		
+		gamefile.moveIndex++;
+		gamefile.moves.push(move);
 	}
 
-	if (moves.length === 0) updateInCheck(gamefile, false);
+	// FIXME: REENABLE, TESTING
+	// if (moves.length === 0) updateInCheck(gamefile, false);
+
+	gamefileutility.doGameOverChecks(gamefile); // Update the gameConclusion
 }
 
 /**
@@ -251,7 +261,7 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 		break;
 	}
 
-	generateMove(gamefile, move)
+	generateMove(gamefile, move);
 
 	return move;
 }
@@ -262,53 +272,17 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
  * @param {number} targetIndex 
  */
 function forEachMove(gamefile, targetIndex, callback) {
-	if (gamefile.moves.length >= targetIndex) return console.error("Cannot!"); //TODO: make this error useful
+	console.log(gamefile.moves.length, targetIndex);
+	if (gamefile.moves.length <= targetIndex) return console.error("Cannot!"); //TODO: make this error useful
 
 	let i = gamefile.moveIndex;
 
-	while (true) {
-		i = math.moveTowards(i, targetIndex, 1)
-		const move = gamefile.moves[i]
+	while (i !== targetIndex) {
+		i = math.moveTowards(i, targetIndex, 1);
+		const move = gamefile.moves[i];
 
-		callback(move)
-
-		if (i === moveIndex) break;
+		callback(move);
 	}
-
-}
-
-/**
- * Fast-forwards the game to front, to the most-recently played move.
- * @param {gamefile} gamefile - The gamefile
- * @param {Object} options - An object containing various options (ALL of these are default *true*):
- * - `flipTurn`: Whether each forwarded move should flip whosTurn. This should be false when forwarding to the game's front after rewinding.
- * - `animateLastMove`: Whether to animate the last move, or most-recently played.
- * - `updateData`: Whether to modify the mesh of all the pieces. Should be false if we plan on regenerating the model manually after forwarding.
- * - `updateProperties`: Whether each move should update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
- * - `simulated`: Whether you plan on undo'ing this forward, rewinding back to where you were. If true, the `rewindInfo` property will be added to each forwarded move in the gamefile for easy reverting when it comes time.
- */
-
-function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, updateData = true, updateProperties = true, simulated = false } = {}) {
-	if (updateData && gamefile.mesh.locked > 0) { // The mesh is locked (we cannot forward moves right now)
-		// Call this function again with the same arguments as soon as the mesh is unlocked
-		gamefile.mesh.callbacksOnUnlock.push(gamefile => forwardToFront(gamefile, { flipTurn, animateLastMove, updateData, updateProperties, simulated }));
-		return;
-	}
-
-}
-
-/**
- * Rewinds the game until we reach the desired move index.
- * @param {gamefile} gamefile - The gamefile
- * @param {number} moveIndex - The desired move index
- * @param {Object} options - An object containing various options (ALL of these are default *true*, EXCEPT `simulated` which is default *false*):
- * - `removeMove`: Whether to delete the moves in the gamefile's moves list while rewinding.
- * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
- */
-function rewindGameToIndex(gamefile, moveIndex, { removeMove = true } = {}) {
-	if (removeMove && !moveutil.areWeViewingLatestMove(gamefile)) return console.error("Cannot rewind game to index while deleting moves unless we start at the most recent move. forwardToFront() first.");
-	if (gamefile.moveIndex < moveIndex) return console.error("Cannot rewind game to index when we need to forward instead.");
-	while (gamefile.moveIndex > moveIndex) rewindMove(gamefile, removeMove);
 }
 
 /**
@@ -325,7 +299,7 @@ function rewindMove(gamefile, { removeMove = true } = {} ) {
 
 	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
 
-	boardchanges.undoChanges(gamefile, move.changes);
+	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, false);
 
 	// inCheck and attackers are always restored, no matter if we're deleting the move or not.
 	gamefile.inCheck = move.rewindInfo.inCheck;
@@ -356,7 +330,7 @@ function rewindMove(gamefile, { removeMove = true } = {} ) {
 function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = false } = {}) {
 	// Moves the piece without unselecting it or regenerating the pieces model.
 	generateMove(gamefile, move);
-	makeMove(gamefile, move, {recordCheck: true, updateProperties: doGameOverChecks});
+	makeMove(gamefile, move, { updateProperties: doGameOverChecks });
 
 	// What info can we pull from the game after simulating this move?
 	const info = {
@@ -374,12 +348,13 @@ function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = f
 }
 
 export default {
+	generateMove,
 	makeMove,
 	updateTurn,
+	forEachMove,
 	makeAllMovesInGame,
 	calculateMoveFromShortmove,
-	forwardToFront,
-	rewindGameToIndex,
+	applyMove,
 	rewindMove,
 	simulateMove,
 };

@@ -479,8 +479,7 @@ function roundUpToPowerOf2(num) {
  * @param {Number} progress 
  */
 function moveTowards(s, e, progress) {
-	const maxProg = s + Math.sign(e - s) * min(abs(e - s), progress);
-
+	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
 }
 
 export default {

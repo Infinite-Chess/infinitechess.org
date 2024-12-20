@@ -205,7 +205,7 @@ function handleSelectingPiece(pieceClickedType) {
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
 		// it will still forward you to front!
         
-		return movesequence.viewFront(gamefile, { flipTurn: false, updateProperties: false });
+		return movesequence.viewFront(gamefile);
 	}
 
 	if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
@@ -290,6 +290,7 @@ function moveGamefilePiece(coords) {
 	move.compact = compact;
 
 	movesequence.makeMove(game.getGamefile(), move);
+	movesequence.animateMove(game.getGamefile(), move, true);
 	onlinegame.sendMove();
 
 	unselectPiece();

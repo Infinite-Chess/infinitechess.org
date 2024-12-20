@@ -385,13 +385,18 @@ function testIfForwardMove() {
 }
 
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
-function rewindMove() {
-	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
+function rewindMove() {4
+	const gamefile = game.getGamefile()
+
+	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
 	if (!moveutil.isDecrementingLegal(game.getGamefile())) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
-	movesequence.viewBackward(game.getGamefile());
+	const idx = gamefile.moveIndex;
+	gamefile.moveIndex--;
+	movesequence.viewMove(gamefile, gamefile.moves[idx], false);
+	movesequence.animateMove(gamefile, gamefile.moves[idx], false);
     
 	selection.unselectPiece();
 
@@ -402,12 +407,14 @@ function rewindMove() {
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
-	const gamefile = game.getGamefile()
+	const gamefile = game.getGamefile();
 
 	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
 	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
 
-	movesequence.viewForward(gamefile);
+	gamefile.moveIndex++;
+	movesequence.viewMove(gamefile, gamefile.moves[gamefile.moveIndex], true);
+	movesequence.animateMove(gamefile, gamefile.moves[gamefile.moveIndex], true);
 
 	// transition.teleportToLastMove()
 
