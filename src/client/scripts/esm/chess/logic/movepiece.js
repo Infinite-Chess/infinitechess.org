@@ -52,7 +52,7 @@ function applyMove(gamefile, move, forward = true) {
 }
 
 function makeMove(gamefile, move, { updateProperties = true } = {}) {
-	const wasACapture = move.captured != null;
+	const wasACapture = move.captured !== undefined;
 
 	applyMove(gamefile, move);
 
@@ -206,11 +206,12 @@ function makeAllMovesInGame(gamefile, moves) {
 		// Make the move in the game!
 
 		applyMove(gamefile, move);
-		
+		incrementMoveRule(gamefile, move.type, move.captured !== undefined);
+
 		gamefile.moveIndex++;
 		gamefile.moves.push(move);
 	}
-	
+
 	updateTurn(gamefile);
 	updateInCheck(gamefile);
 
@@ -270,10 +271,13 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
  * @param {number} targetIndex 
  */
 function forEachMove(gamefile, targetIndex, callback) {
+	if (targetIndex === gamefile.moveIndex) return;
+
 	const forwards = targetIndex >= gamefile.moveIndex;
 	targetIndex = forwards ? targetIndex : targetIndex + 1; 
 	let i = forwards ? gamefile.moveIndex : gamefile.moveIndex + 1;
-	if (gamefile.moves.length <= targetIndex || targetIndex < 0) return console.error("Target index is outside of the movelist!");
+	
+	if (gamefile.moves.length <= targetIndex || targetIndex < 0) throw new Error("Target index is outside of the movelist!");
 
 	console.trace(gamefile.moves.length - 1, targetIndex);
 
