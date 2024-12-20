@@ -396,7 +396,7 @@ function rewindMove() {4
 	const idx = gamefile.moveIndex;
 	gamefile.moveIndex--;
 	movesequence.viewMove(gamefile, gamefile.moves[idx], false);
-	movesequence.animateMove(gamefile, gamefile.moves[idx], false);
+	movesequence.animateMove(gamefile.moves[idx], false);
     
 	selection.unselectPiece();
 
@@ -414,7 +414,7 @@ function forwardMove() {
 
 	gamefile.moveIndex++;
 	movesequence.viewMove(gamefile, gamefile.moves[gamefile.moveIndex], true);
-	movesequence.animateMove(gamefile, gamefile.moves[gamefile.moveIndex], true);
+	movesequence.animateMove(gamefile.moves[gamefile.moveIndex], true);
 
 	// transition.teleportToLastMove()
 

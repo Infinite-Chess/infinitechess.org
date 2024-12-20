@@ -474,7 +474,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	move.type = piecemoved.type;
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move);
 	movesequence.makeMove(gamefile, move);
-	movesequence.animateMove(gamefile, move, true);
+	movesequence.animateMove(move, true);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
@@ -651,7 +651,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
         
 		const isLastMove = i === moves.length - 1;
 		movesequence.makeMove(gamefile, move, { doGameOverChecks: isLastMove, concludeGameIfOver: false});
-		if (isLastMove) movesequence.animateMove(gamefile, move, true);
+		if (isLastMove) movesequence.animateMove(move, true);
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
