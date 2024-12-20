@@ -29,6 +29,7 @@ import config from '../config.js';
 import pingManager from '../../util/pingManager.js';
 import movesequence from '../chess/movesequence.js';
 import options from '../rendering/options.js';
+import movepiece from '../../chess/logic/movepiece.js';
 // Import End
 
 /** 
@@ -628,7 +629,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		const move = moveutil.calculateMoveFromShortmove(gamefile, thisShortmove);
+		const move = movepiece.calculateMoveFromShortmove(gamefile, thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
