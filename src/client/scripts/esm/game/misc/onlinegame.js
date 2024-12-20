@@ -464,7 +464,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 
 	movesequence.viewFront(gamefile);
 
-	// Forward the move...
+	// // Forward the move...
 
 	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
 	const legalMoves = legalmoves.calculate(gamefile, piecemoved);

@@ -375,8 +375,8 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	if (sameLines.length === 0) return;
 
 	// Delete the piece, and add it back when we're done!
-	let deleteChange = boardchanges.queueDeletePiece([], pieceSelected);
-	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.forward)
+	const deleteChange = boardchanges.queueDeletePiece([], pieceSelected);
+	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.forward);
     
 	// let checklines = []; // For Idon's code below
 	// For every line direction we share with the king...
@@ -451,7 +451,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	// }
 
 	// Add the piece back with the EXACT SAME index it had before!!
-	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.backward)
+	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.backward);
 }
 
 // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2

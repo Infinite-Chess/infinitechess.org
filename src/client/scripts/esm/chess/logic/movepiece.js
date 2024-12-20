@@ -154,11 +154,8 @@ function incrementMoveRule(gamefile, typeMoved, wasACapture) {
  * @param {Object} options - An object that may contain the options (all are default *true*):
  * - `pushClock`: Whether to push the clock.
  */
-function updateTurn(gamefile, { pushClock = true } = {}) {
+function updateTurn(gamefile) {
 	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
-	if (pushClock) {
-		return clock.push(gamefile);
-	};
 }
 
 /**
@@ -293,6 +290,11 @@ function forEachMove(gamefile, targetIndex, callback) {
 	}
 }
 
+function gotoMove(gamefile, index, callback) {
+	forEachMove(gamefile, index, callback);
+	gamefile.moveIndex = index;
+}
+
 /**
  * **Universal** function for undo'ing or rewinding moves.
  * Called when we're rewinding the game to view past moves,
@@ -360,6 +362,7 @@ export default {
 	makeMove,
 	updateTurn,
 	forEachMove,
+	gotoMove,
 	makeAllMovesInGame,
 	calculateMoveFromShortmove,
 	applyMove,

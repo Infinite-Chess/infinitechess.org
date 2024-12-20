@@ -311,9 +311,8 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.attackers);
 
 	const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
-	movepiece.forEachMove(gamefile, gamefile.moves.length - 1, (m) => movepiece.applyMove(gamefile, m, true));
-	gamefile.moveIndex = gamefile.moves.length - 1;
-	movepiece.updateTurn(gamefile, { pushClock: false });
+	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (m) => movepiece.applyMove(gamefile, m, true));
+	movepiece.updateTurn(gamefile);
 
 	// Make sure a piece exists on the start coords
 	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveCopy.startCoords); // { type, index, coords }
@@ -380,15 +379,15 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// ...
 
 	// Rewind the game back to the index we were originally on before simulating
-	movepiece.forEachMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
-	movepiece.updateTurn(gamefile, { pushClock: false });
+	movepiece.gotoMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
+	movepiece.updateTurn(gamefile);
 
 	return true; // By this point, nothing illegal!
 
 	function rewindGameAndReturnReason(reasonIllegal) {
 		// Rewind the game back to the index we were originally on
-		movepiece.forEachMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
-		movepiece.updateTurn(gamefile, { pushClock: false });
+		movepiece.gotoMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
+		movepiece.updateTurn(gamefile);
 		return reasonIllegal;
 	}
 }
