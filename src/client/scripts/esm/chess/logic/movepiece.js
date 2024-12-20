@@ -273,14 +273,21 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
  * @param {number} targetIndex 
  */
 function forEachMove(gamefile, targetIndex, callback) {
-	console.log(gamefile.moves.length, targetIndex);
+	console.trace(gamefile.moves.length, targetIndex);
 	if (gamefile.moves.length <= targetIndex) return console.error("Cannot!"); //TODO: make this error useful
+
+	targetIndex = targetIndex >= gamefile.moveIndex ? targetIndex : targetIndex + 1;
 
 	let i = gamefile.moveIndex;
 
 	while (i !== targetIndex) {
 		i = math.moveTowards(i, targetIndex, 1);
 		const move = gamefile.moves[i];
+
+		if (move === undefined) {
+			console.log(`Undefined! ${i}, ${targetIndex}`);
+			continue;
+		}
 
 		callback(move);
 	}
