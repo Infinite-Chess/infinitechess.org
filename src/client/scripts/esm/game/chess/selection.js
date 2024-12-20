@@ -23,6 +23,7 @@ import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
+import movesequence from './movesequence.js';
 // Import End
 
 /**
@@ -205,12 +206,9 @@ function handleSelectingPiece(pieceClickedType) {
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
 		// it will still forward you to front!
         
-		return movepiece.forwardToFront(gamefile, { flipTurn: false, updateProperties: false });
+		return movesequence.forwardToFront(gamefile, { flipTurn: false, updateProperties: false });
 	}
 
-	// If it's your turn, select that piece.
-
-	// if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
 	if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
 	const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
 	if (!options.getEM() && clickedPieceColor === colorutil.colorOfNeutrals) return; // Don't select neutrals, unless we're in edit mode
@@ -292,7 +290,7 @@ function moveGamefilePiece(coords) {
 	const compact = formatconverter.LongToShort_CompactMove(move);
 	move.compact = compact;
 
-	movepiece.makeMove(game.getGamefile(), move);
+	movesequence.makeMove(game.getGamefile(), move);
 	onlinegame.sendMove();
 
 	unselectPiece();

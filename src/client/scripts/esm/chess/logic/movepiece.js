@@ -3,7 +3,7 @@
 import legalmoves from './legalmoves.js';
 import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
-import arrows from '../../game/rendering/arrows.js';
+import changes from './changes.js';
 import clock from './clock.js';
 import guiclock from '../../game/gui/guiclock.js';
 import organizedlines from './organizedlines.js';
@@ -18,9 +18,6 @@ import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import frametracker from '../../game/rendering/frametracker.js';
-import stats from '../../game/gui/stats.js';
-import onlinegame from '../../game/misc/onlinegame.js';
-import game from '../../game/chess/game.js';
 // Import End
 
 /** 
@@ -33,18 +30,42 @@ import game from '../../game/chess/game.js';
 
 // Custom type definitions...
 
-/**
- * TODO: Move this type definition to a new pieceutil TYPESCRIPT,
- * and make the coordinates only length-2.
- * 
- * The Piece Object.
- * @typedef {Object} Piece
- * @property {string} type - The type of the piece (e.g. `queensW`).
- * @property {number[]} coords - The coordinates of the piece: `[x,y]`
- * @property {number} index - The index of the piece within the gamefile's piece list.
- */
+
 
 /** Here lies the universal methods for moving pieces, forward or rewinding. */
+
+function generateMove(gamefile, move) {
+	const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
+	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
+	move.type = piece.type;
+	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
+    
+	storeRewindInfoOnMove(gamefile, move, piece.index); // Keep track if important stuff to remember, for rewinding the game if we undo moves
+
+	// Do this before making the move, so that if its a pawn double push, enpassant can be reinstated and not deleted.
+	if (recordMove || updateProperties) deleteEnpassantAndSpecialRightsProperties(gamefile, move.startCoords, move.endCoords);
+    
+	let specialMoveMade;
+	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
+	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
+}
+
+function makeMove(gamefile, move) {
+	const wasACapture = move.captured != null;
+
+	changes.applyChanges(gamefile, move.changes);
+
+	gamefile.moveIndex++;
+	gamefile.moves.push(move);
+
+	// The "check" property will be added inside updateInCheck()...
+	// The "mate" property will be added inside our game conclusion checks...
+
+	if (updateProperties) incrementMoveRule(gamefile, piece.type, wasACapture);
+
+	// ALWAYS DO THIS NOW, no matter what. 
+	updateInCheck(gamefile, recordMove);
+}
 
 /**
  * **Universal** function for executing forward (not rewinding) moves.
@@ -63,46 +84,6 @@ import game from '../../game/chess/game.js';
  * - `updateProperties`: Whether to update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
  * - `simulated`: Whether you plan on undo'ing this move. If true, the `rewindInfo` property will be added to the `move` for easy restoring of the gamefile's properties when undo'ing the move.
  */
-function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushClock = true, doGameOverChecks = true, concludeGameIfOver = true, animate = true, updateData = true, updateProperties = true, simulated = false } = {}) {                
-	const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
-	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
-	move.type = piece.type;
-	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
-    
-	storeRewindInfoOnMove(gamefile, move, piece.index, { simulated }); // Keep track if important stuff to remember, for rewinding the game if we undo moves
-
-	// Do this before making the move, so that if its a pawn double push, enpassant can be reinstated and not deleted.
-	if (recordMove || updateProperties) deleteEnpassantAndSpecialRightsProperties(gamefile, move.startCoords, move.endCoords);
-    
-	let specialMoveMade;
-	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
-	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
-	const wasACapture = move.captured != null;
-
-	gamefile.moveIndex++;
-	if (recordMove) gamefile.moves.push(move);
-	// The "check" property will be added inside updateInCheck()...
-	// The "mate" property will be added inside our game conclusion checks...
-
-	if (updateProperties) incrementMoveRule(gamefile, piece.type, wasACapture);
-
-	if (flipTurn) flipWhosTurn(gamefile, { pushClock, doGameOverChecks });
-
-	// ALWAYS DO THIS NOW, no matter what. 
-	updateInCheck(gamefile, recordMove);
-	if (doGameOverChecks) {
-		gamefileutility.doGameOverChecks(gamefile);
-		if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) game.concludeGame();
-	}
-
-	if (updateData) {
-		guinavigation.update_MoveButtons();
-		stats.setTextContentOfMoves(); // Making a move should change the move number in the stats
-		frametracker.onVisualChange();
-	}
-
-	if (!simulated) arrows.clearListOfHoveredPieces();
-}
 
 /**
  * Stores crucial game information for rewinding this move on the move object.
@@ -162,6 +143,8 @@ function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoo
  * - `simulated`: Whether you plan on undo'ing this move. If true, the index of the captured piece within the gamefile's piece list will be stored in the `rewindInfo` property of the move for easy undo'ing without screwing up the mesh.
  */
 function movePiece_NoSpecial(gamefile, piece, move, { updateData = true, animate = true, simulated = false } = {}) { // piece: { coords, type, index }
+	const moveChanges = [];
+
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 	if (capturedPiece) move.captured = capturedPiece.type;
 	if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
@@ -170,7 +153,7 @@ function movePiece_NoSpecial(gamefile, piece, move, { updateData = true, animate
 
 	movePiece(gamefile, piece, move.endCoords, { updateData });
 
-	if (animate) animation.animatePiece(piece.type, move.startCoords, move.endCoords, capturedPiece);
+	//if (animate) animation.animatePiece(piece.type, move.startCoords, move.endCoords, capturedPiece);
 }
 
 /**
@@ -560,9 +543,6 @@ function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]];
 
 export default {
 	makeMove,
-	movePiece,
-	addPiece,
-	deletePiece,
 	makeAllMovesInGame,
 	calculateMoveFromShortmove,
 	forwardToFront,
