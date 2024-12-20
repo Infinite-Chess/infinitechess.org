@@ -5,19 +5,13 @@ import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import boardchanges from './boardchanges.js';
 import clock from './clock.js';
-import guiclock from '../../game/gui/guiclock.js';
-import organizedlines from './organizedlines.js';
-import wincondition from './wincondition.js';
-import guinavigation from '../../game/gui/guinavigation.js';
-import piecesmodel from '../../game/rendering/piecesmodel.js';
-import guigameinfo from '../../game/gui/guigameinfo.js';
+import math from '../../util/math.js';
 import moveutil from '../util/moveutil.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
-import frametracker from '../../game/rendering/frametracker.js';
 // Import End
 
 /** 
@@ -123,101 +117,16 @@ function deleteEnpassantAndSpecialRightsProperties(gamefile, move) {
 function movePiece_NoSpecial(gamefile, piece, move) { // piece: { coords, type, index }
 
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
-	if (capturedPiece) move.captured = capturedPiece.type;
 
-	if (capturedPiece) boardchanges.queueDeletePiece(move.changes, capturedPiece);
+	if (capturedPiece) {
+		boardchanges.queueCaputure(move.changes, piece, move.endCoords, capturedPiece);
+		return;
+	};
 
 	boardchanges.queueMovePiece(move.changes, piece, move.endCoords);
 
 }
 
-/**
- * Most basic move-a-piece method. Adjusts its coordinates in the gamefile's piece lists,
- * reorganizes the piece in the organized lists, and updates its mesh data.
- * @param {gamefile} gamefile - The gamefile
- * @param {Piece} piece - The piece being moved
- * @param {number[]} endCoords - The destination coordinates
- * @param {Object} options - An object that may contain the property `updateData`, that when true will update the piece in the mesh.
- */
-function movePiece(gamefile, piece, endCoords, { updateData = true } = {}) {
-	// Move the piece, change the coordinates
-	gamefile.ourPieces[piece.type][piece.index] = endCoords;
-
-	// Remove selected piece from all the organized piece lists (piecesOrganizedByKey, etc.)
-	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
-
-	// Add the piece to organized lists with new destination
-	organizedlines.organizePiece(piece.type, endCoords, gamefile);
-
-	// Edit its data within the mesh of the pieces!
-	if (updateData) piecesmodel.movebufferdata(gamefile, piece, endCoords);
-}
-
-/**
- * Most basic add-a-piece method. Adds it the gamefile's piece list,
- * organizes the piece in the organized lists, and updates its mesh data.
- * @param {gamefile} gamefile - The gamefile
- * @param {string} type - The type of piece to place
- * @param {number[]} coords - The coordinates
- * @param {number} [desiredIndex] - Optional. If specified, this will place the piece at that index within the gamefile's piece list. This is crucial for undo'ing simulated moves so as to not screw up the mesh.
- * @param {Object} options - An object that may contain the property `updateData`, that when true will update the piece in the mesh.
- */
-function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = {}) { // desiredIndex optional
-
-	const list = gamefile.ourPieces[type];
-
-	// If no index specified, make the default the first undefined in the list!
-	if (desiredIndex == null) desiredIndex = list.undefineds[0];
-
-	// If there are no undefined placeholders left, updateData better be false, because we are going to append on the end!
-	if (desiredIndex == null && updateData) throw new Error("Cannot add a piece and update the data when there are no undefined placeholders remaining!");
-
-	if (desiredIndex == null) list.push(coords);
-	else { // desiredIndex specified
-
-		const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, coords) != null;
-		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
-
-		// Remove the undefined from the undefineds list
-		const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
-		if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
-
-		list[desiredIndex] = coords;
-	}
-
-	organizedlines.organizePiece(type, coords, gamefile);
-
-	if (!updateData) return;
-
-	// Edit its data within the pieces buffer!
-	const undefinedPiece = { type, index: desiredIndex };
-	piecesmodel.overwritebufferdata(gamefile, undefinedPiece, coords, type);
-
-	// Do we need to add more undefineds?
-	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
-	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
-}
-
-/**
- * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
- * from the organized lists, and deletes its mesh data (overwrites with zeros).
- * @param {gamefile} gamefile - The gamefile
- * @param {string} type - The type of piece to place
- * @param {number[]} coords - The coordinates
- * @param {number} [desiredIndex] - Optional. If specified, this will place the piece at that index within the gamefile's piece list. This is crucial for undo'ing simulated moves so as to not screw up the mesh.
- * @param {Object} options - An object that may contain the property `updateData`, that when true will update the piece in the mesh.
- */
-function deletePiece(gamefile, piece, { updateData = true } = {}) { // piece: { type, index }
-
-	const list = gamefile.ourPieces[piece.type];
-	gamefileutility.deleteIndexFromPieceList(list, piece.index);
-
-	// Remove captured piece from organized piece lists
-	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
-
-	// Delete its data within the pieces buffer! Overwrite with 0's
-	if (updateData) piecesmodel.deletebufferdata(gamefile, piece);
-}
 
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
@@ -239,9 +148,8 @@ function incrementMoveRule(gamefile, typeMoved, wasACapture) {
  * @param {gamefile} gamefile - The gamefile
  * @param {Object} options - An object that may contain the options (all are default *true*):
  * - `pushClock`: Whether to push the clock.
- * - `doGameOverChecks`: Whether game-over checks such as checkmate, or other win conditions, are performed for this move.
  */
-function nextTurn(gamefile, { pushClock = true } = {}) {
+function updateTurnData(gamefile, { pushClock = true } = {}) {
 	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	if (pushClock) {
 		clock.push(gamefile);
@@ -343,7 +251,30 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 		break;
 	}
 
+	generateMove(gamefile, move)
+
 	return move;
+}
+
+/**
+ * 
+ * @param {gamefile} gamefile
+ * @param {number} targetIndex 
+ */
+function forEachMove(gamefile, targetIndex, callback) {
+	if (gamefile.moves.length >= targetIndex) return console.error("Cannot!"); //TODO: make this error useful
+
+	let i = gamefile.moveIndex;
+
+	while (true) {
+		i = math.moveTowards(i, targetIndex, 1)
+		const move = gamefile.moves[i]
+
+		callback(move)
+
+		if (i === moveIndex) break;
+	}
+
 }
 
 /**
@@ -364,21 +295,6 @@ function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, upd
 		return;
 	}
 
-	while (true) { // For as long as we have moves to forward...
-		const nextIndex = gamefile.moveIndex + 1;
-		if (moveutil.isIndexOutOfRange(gamefile.moves, nextIndex)) break;
-
-		const nextMove = moveutil.getMoveFromIndex(gamefile.moves, nextIndex);
-
-		const isLastMove = moveutil.isIndexTheLastMove(gamefile.moves, nextIndex);
-		const animate = animateLastMove && isLastMove;
-		makeMove(gamefile, nextMove, { recordMove: false, pushClock: false, doGameOverChecks: false, flipTurn, animate, updateData, updateProperties, simulated });
-	}
-
-	if (!simulated) guigameinfo.updateWhosTurn(gamefile);
-
-	// If updateData is true, lock the rewind/forward buttons for a brief moment.
-	if (updateData) guinavigation.lockRewind();
 }
 
 /**

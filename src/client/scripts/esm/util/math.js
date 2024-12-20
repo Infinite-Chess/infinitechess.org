@@ -472,6 +472,17 @@ function roundUpToPowerOf2(num) {
 	return Math.pow(2, Math.ceil(Math.log2(num)));
 }
 
+/**
+ * 
+ * @param {Number} s 
+ * @param {Number} e 
+ * @param {Number} progress 
+ */
+function moveTowards(s, e, progress) {
+	const maxProg = s + Math.sign(e - s) * min(abs(e - s), progress);
+
+}
+
 export default {
 	isPowerOfTwo,
 	isAproxEqual,
@@ -503,4 +514,5 @@ export default {
 	GCD,
 	LCM,
 	roundUpToPowerOf2,
+	moveTowards,
 };
