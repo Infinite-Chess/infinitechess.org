@@ -12,6 +12,7 @@ import formatconverter from './formatconverter.js';
 import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
+import wincondition from './wincondition.js';
 // Import End
 
 /** 
