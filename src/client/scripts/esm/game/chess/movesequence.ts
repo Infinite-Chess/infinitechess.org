@@ -14,6 +14,10 @@ import stats from "../gui/stats.js";
 import guinavigation from "../gui/guinavigation.js";
 // @ts-ignore
 import movepiece from "../../chess/logic/movepiece.js";
+// @ts-ignore
+import guigameinfo from "../gui/guigameinfo.js";
+// @ts-ignore
+import guiclock from "../gui/guiclock.js";
 
 import boardchanges from "../../chess/logic/boardchanges.js";
 import { animatableChanges, meshChanges } from "./graphicalchanges.js";
@@ -27,8 +31,11 @@ function makeMove(gamefile: gamefile, move: Move, { doGameOverChecks = true, con
 
 	movepiece.generateMove(gamefile, move);
 	movepiece.makeMove(gamefile, move);
-	movepiece.updateTurn(gamefile, { pushClock: !onlinegame.areInOnlineGame() });
 	boardchanges.runMove(gamefile, move, meshChanges, true);
+
+	movepiece.updateTurn(gamefile, { pushClock: !onlinegame.areInOnlineGame() });
+	guigameinfo.updateWhosTurn(gamefile);
+	if (!onlinegame.areInOnlineGame()) guiclock.push(gamefile);
 
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
