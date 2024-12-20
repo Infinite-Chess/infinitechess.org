@@ -204,8 +204,9 @@ function handleSelectingPiece(pieceClickedType) {
 		//     options.getEM() && pieceClickedType !== 'voidsN') 
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
 		// it will still forward you to front!
-        
-		return movesequence.viewFront(gamefile);
+		movesequence.viewFront(gamefile);
+		movesequence.animateMove(gamefile.moves[gamefile.moveIndex]);
+		return;
 	}
 
 	if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
