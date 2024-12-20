@@ -1,6 +1,6 @@
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import changes from './changes.js';
+import boardchanges from './boardchanges.js';
 import coordutil from '../util/coordutil.js';
 // Import End
 
@@ -43,7 +43,7 @@ function kings(gamefile, piece, move) {
 
 	// Move the king to new square
 
-	changes.queueMovePiece(moveChanges, piece, move.endCoords); // Make normal move
+	boardchanges.queueMovePiece(moveChanges, piece, move.endCoords); // Make normal move
 
 	// Move the rook to new square
 
@@ -51,9 +51,9 @@ function kings(gamefile, piece, move) {
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	// Delete the rook's special move rights
 	const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
-	changes.queueDeleteSpecialRights(moveChanges, pieceToCastleWith, gamefile.specialRights[key]);
+	boardchanges.queueDeleteSpecialRights(moveChanges, pieceToCastleWith, gamefile.specialRights[key]);
 
-	changes.queueMovePiece(moveChanges, pieceToCastleWith, landSquare); // Make normal move
+	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, landSquare); // Make normal move
 
 	// Special move was executed!
 	// There is no captured piece with castling
@@ -61,13 +61,13 @@ function kings(gamefile, piece, move) {
 }
 
 function pawns(gamefile, piece, move, {updateProperties = true, simulated = false } = {}) {
+	const moveChanges = [];
 
 	// If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
 	if (updateProperties && isPawnMoveADoublePush(piece.coords, move.endCoords)) {
-		gamefile.enpassant = getEnPassantSquare(piece.coords, move.endCoords);
+		boardchanges.queueSetEnPassant(moveChanges, gamefile.enpassant, getEnPassantSquare(piece.coords, move.endCoords));
 	}
 
-	const moveChanges = [];
 	const enpassantTag = move.enpassant; // -1/1
 	const promotionTag = move.promotion; // promote type
 	if (!enpassantTag && !promotionTag) return false; ; // No special move to execute, return false to signify we didn't move the piece.
@@ -79,17 +79,17 @@ function pawns(gamefile, piece, move, {updateProperties = true, simulated = fals
 	if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
 
 	// Delete the piece captured
-	if (capturedPiece) changes.queueDeleteChange(moveChanges, capturedPiece);
+	if (capturedPiece) boardchanges.queueDeleteChange(moveChanges, capturedPiece);
 
 	if (promotionTag) {
 		// Delete original pawn
-		changes.queueDeleteChange(moveChanges, piece);
+		boardchanges.queueDeleteChange(moveChanges, piece);
 
-		changes.queueAddChange(moveChanges, promotionTag, move.endCoords, null);
+		boardchanges.queueAddChange(moveChanges, promotionTag, move.endCoords, null);
 
 	} else /* enpassantTag */ {
 		// Move the pawn
-		changes.queueMoveChange(moveChanges, piece, move.endCoords);
+		boardchanges.queueMoveChange(moveChanges, piece, move.endCoords);
 	}
 
 	// Special move was executed!

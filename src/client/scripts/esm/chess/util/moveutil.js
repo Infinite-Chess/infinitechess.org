@@ -22,6 +22,8 @@ function Move() {
 
 	/** The type of piece moved (e.g. `queensW`). */
 	this.type = undefined;
+	/** @type {Array} */
+	this.changes = undefined;
 	/** The start coordinates of the piece: `[x,y]` */
 	this.startCoords = undefined;
 	/** The end coordinates of the piece: `[x,y]`  */

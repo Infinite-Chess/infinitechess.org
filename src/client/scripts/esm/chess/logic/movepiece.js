@@ -3,11 +3,11 @@
 import legalmoves from './legalmoves.js';
 import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
-import changes from './changes.js';
+import boardchanges from './boardchanges.js';
 import clock from './clock.js';
 import guiclock from '../../game/gui/guiclock.js';
 import organizedlines from './organizedlines.js';
-import animation from '../../game/rendering/animation.js';
+import wincondition from './wincondition.js';
 import guinavigation from '../../game/gui/guinavigation.js';
 import piecesmodel from '../../game/rendering/piecesmodel.js';
 import guigameinfo from '../../game/gui/guigameinfo.js';
@@ -35,6 +35,8 @@ import frametracker from '../../game/rendering/frametracker.js';
 /** Here lies the universal methods for moving pieces, forward or rewinding. */
 
 function generateMove(gamefile, move) {
+	move.changes = [];
+
 	const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
 	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
 	move.type = piece.type;
@@ -43,17 +45,17 @@ function generateMove(gamefile, move) {
 	storeRewindInfoOnMove(gamefile, move, piece.index); // Keep track if important stuff to remember, for rewinding the game if we undo moves
 
 	// Do this before making the move, so that if its a pawn double push, enpassant can be reinstated and not deleted.
-	if (recordMove || updateProperties) deleteEnpassantAndSpecialRightsProperties(gamefile, move.startCoords, move.endCoords);
+	deleteEnpassantAndSpecialRightsProperties(gamefile, move);
     
 	let specialMoveMade;
-	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
-	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
+	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
+	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move); // Move piece regularly (no special tag)
 }
 
-function makeMove(gamefile, move) {
+function makeMove(gamefile, move, { updateProperties, recordCheck }) {
 	const wasACapture = move.captured != null;
 
-	changes.applyChanges(gamefile, move.changes);
+	boardchanges.applyChanges(gamefile, move.changes);
 
 	gamefile.moveIndex++;
 	gamefile.moves.push(move);
@@ -61,10 +63,10 @@ function makeMove(gamefile, move) {
 	// The "check" property will be added inside updateInCheck()...
 	// The "mate" property will be added inside our game conclusion checks...
 
-	if (updateProperties) incrementMoveRule(gamefile, piece.type, wasACapture);
+	if (updateProperties) incrementMoveRule(gamefile, move.type, wasACapture);
 
 	// ALWAYS DO THIS NOW, no matter what. 
-	updateInCheck(gamefile, recordMove);
+	updateInCheck(gamefile, recordCheck);
 }
 
 /**
@@ -118,15 +120,14 @@ function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false }
  * Deletes the gamefile's enpassant property, and the moving piece's special right.
  * This needs to be done every time we make a move.
  * @param {gamefile} gamefile - The gamefile
- * @param {number[]} startCoords - The coordinates of the piece moving
- * @param {number[]} endCoords - The destination of the piece moving
+ * @param {Move} move
  */
-function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoords) {
-	delete gamefile.enpassant;
-	let key = coordutil.getKeyFromCoords(startCoords);
-	delete gamefile.specialRights[key]; // We also delete its special move right for ANY piece moved
-	key = coordutil.getKeyFromCoords(endCoords);
-	delete gamefile.specialRights[key]; // We also delete the captured pieces specialRights for ANY move.
+function deleteEnpassantAndSpecialRightsProperties(gamefile, move) {
+	boardchanges.queueSetEnPassant(move.changes, gamefile.enpassant, undefined);
+	let key = coordutil.getKeyFromCoords(move.startCoords);
+	boardchanges.queueDeleteSpecialRights(move.changes, key, gamefile.specialRights[key]);
+	key = coordutil.getKeyFromCoords(move.endCoords);
+	boardchanges.queueDeleteSpecialRights(move.changes, key, gamefile.specialRights[key]); // We also delete the captured pieces specialRights for ANY move.
 }
 
 // RETURNS index of captured piece! Required for undo'ing moves.
@@ -142,18 +143,15 @@ function deleteEnpassantAndSpecialRightsProperties(gamefile, startCoords, endCoo
  * - `animate`: Whether to animate this move.
  * - `simulated`: Whether you plan on undo'ing this move. If true, the index of the captured piece within the gamefile's piece list will be stored in the `rewindInfo` property of the move for easy undo'ing without screwing up the mesh.
  */
-function movePiece_NoSpecial(gamefile, piece, move, { updateData = true, animate = true, simulated = false } = {}) { // piece: { coords, type, index }
-	const moveChanges = [];
+function movePiece_NoSpecial(gamefile, piece, move) { // piece: { coords, type, index }
 
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 	if (capturedPiece) move.captured = capturedPiece.type;
-	if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
 
-	if (capturedPiece) deletePiece(gamefile, capturedPiece, { updateData });
+	if (capturedPiece) boardchanges.queueDeletePiece(move.changes, capturedPiece);
 
-	movePiece(gamefile, piece, move.endCoords, { updateData });
+	boardchanges.queueMovePiece(move.changes, piece, move.endCoords);
 
-	//if (animate) animation.animatePiece(piece.type, move.startCoords, move.endCoords, capturedPiece);
 }
 
 /**
@@ -434,72 +432,26 @@ function rewindGameToIndex(gamefile, moveIndex, { removeMove = true, updateData 
  * - `removeMove`: Whether to delete the move from the gamefile's move list. Should be true if we're undo'ing simulated moves.
  * - `animate`: Whether to animate this rewinding.
  */
-function rewindMove(gamefile, { updateData = true, removeMove = true, animate = true } = {}) {
+function rewindMove(gamefile, removeMove = true ) {
 
 	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
-	const trimmedType = colorutil.trimColorExtensionFromType(move.type);
 
-	let isSpecialMove = false;
-	if (gamefile.specialUndos[trimmedType]) isSpecialMove = gamefile.specialUndos[trimmedType](gamefile, move, { updateData, animate });
-	if (!isSpecialMove) rewindMove_NoSpecial(gamefile, move, { updateData, animate });
+	boardchanges.undoChanges(gamefile, move.changes);
 
 	// inCheck and attackers are always restored, no matter if we're deleting the move or not.
 	gamefile.inCheck = move.rewindInfo.inCheck;
 	if (move.rewindInfo.attackers) gamefile.attackers = move.rewindInfo.attackers;
 	if (removeMove) { // Restore original values
-		gamefile.enpassant = move.rewindInfo.enpassant;
 		gamefile.moveRuleState = move.rewindInfo.moveRuleState;
 		gamefile.checksGiven = move.rewindInfo.checksGiven;
-		if (move.rewindInfo.specialRightStart) { // Restore their special right
-			const key = coordutil.getKeyFromCoords(move.startCoords);
-			gamefile.specialRights[key] = true;
-		}
-		if (move.rewindInfo.specialRightEnd) { // Restore their special right
-			const key = coordutil.getKeyFromCoords(move.endCoords);
-			gamefile.specialRights[key] = true;
-		}
 		gamefile.gameConclusion = move.rewindInfo.gameConclusion; // Simulated moves may or may not have performed game over checks.
 	}
-	// The capturedIndex and pawnIndex are only used for undo'ing
-	// simulated moves, so that we don't screw up the mesh
-	delete move.rewindInfo.capturedIndex;
-	delete move.rewindInfo.pawnIndex;
 
 	// Finally, delete the move off the top of our moves [] array list
 	if (removeMove) moveutil.deleteLastMove(gamefile.moves);
 	gamefile.moveIndex--;
 
 	if (removeMove) flipWhosTurn(gamefile, { pushClock: false, doGameOverChecks: false });
-
-	// if (animate) updateInCheck(gamefile, false)
-	// No longer needed, as rewinding the move restores the inCheck property.
-	// updateInCheck(gamefile, false)
-
-	if (updateData) {
-		guinavigation.update_MoveButtons();
-		frametracker.onVisualChange();
-	}
-}
-
-/**
- * Standardly rewinds a move. Adds back any captured piece. Animates if specified.
- * If the move was a special move, a separate method is needed.
- * @param {gamefile} gamefile - The gamefile
- * @param {Move} move - The move that's being undo'd
- * @param {Object} options - An object containing various options (ALL of these are default *true*):
- * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh afterward.
- * - `animate`: Whether to animate this move.
- */
-function rewindMove_NoSpecial(gamefile, move, { updateData = true, animate = true } = {}) {
-	const movedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords); // Returns { type, index, coords }
-	movePiece(gamefile, movedPiece, move.startCoords, { updateData }); // Changes the pieces coords and data in the organized lists without making any captures.
-
-	if (move.captured) { // Replace the piece captured
-		const type = move.captured;
-		addPiece(gamefile, type, move.endCoords, move.rewindInfo.capturedIndex, { updateData });
-	}
-
-	if (animate) animation.animatePiece(move.type, move.endCoords, move.startCoords);
 }
 
 /**
@@ -516,19 +468,20 @@ function rewindMove_NoSpecial(gamefile, move, { updateData = true, animate = tru
  */
 function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = false } = {}) {
 	// Moves the piece without unselecting it or regenerating the pieces model.
-	makeMove(gamefile, move, { pushClock: false, animate: false, updateData: false, simulated: true, doGameOverChecks, updateProperties: doGameOverChecks });
-    
+	generateMove(gamefile, move);
+	makeMove(gamefile, move, {recordCheck: true, updateProperties: doGameOverChecks});
+
 	// What info can we pull from the game after simulating this move?
 	const info = {
 		isCheck: doGameOverChecks ? gamefile.inCheck : checkdetection.detectCheck(gamefile, colorToTestInCheck, []),
-		gameConclusion: doGameOverChecks ? gamefile.gameConclusion : undefined
+		gameConclusion: doGameOverChecks ? wincondition.getGameConclusion(gamefile) : undefined
 	};
 
 	// Undo the move, REWIND.
 	// We don't have to worry about the index changing, it is the same.
 	// BUT THE CAPTURED PIECE MUST be inserted in the exact location!
 	// Only remove the move
-	rewindMove(gamefile, { updateData: false, animate: false });
+	rewindMove(gamefile, true);
 
 	return info; // Info from simulating the move: { isCheck, gameConclusion }
 }
