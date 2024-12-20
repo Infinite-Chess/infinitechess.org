@@ -4,7 +4,6 @@ import guipause from '../gui/guipause.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
 import onlinegame from '../misc/onlinegame.js';
-import movepiece from '../../chess/logic/movepiece.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import game from './game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
@@ -23,6 +22,7 @@ import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
+import movesequence from './movesequence.js';
 // Import End
 
 /**
@@ -204,13 +204,11 @@ function handleSelectingPiece(pieceClickedType) {
 		//     options.getEM() && pieceClickedType !== 'voidsN') 
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
 		// it will still forward you to front!
-        
-		return movepiece.forwardToFront(gamefile, { flipTurn: false, updateProperties: false });
+		movesequence.viewFront(gamefile);
+		movesequence.animateMove(gamefile.moves[gamefile.moveIndex]);
+		return;
 	}
 
-	// If it's your turn, select that piece.
-
-	// if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
 	if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
 	const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
 	if (!options.getEM() && clickedPieceColor === colorutil.colorOfNeutrals) return; // Don't select neutrals, unless we're in edit mode
@@ -285,14 +283,15 @@ function unselectPiece() {
  * @param {number[]} coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
 function moveGamefilePiece(coords) {
-	const strippedCoords = movepiece.stripSpecialMoveTagsFromCoords(coords);
+	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords);
 	/** @type {Move} */
 	const move = { type: pieceSelected.type, startCoords: pieceSelected.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move);
 	const compact = formatconverter.LongToShort_CompactMove(move);
 	move.compact = compact;
 
-	movepiece.makeMove(game.getGamefile(), move);
+	movesequence.makeMove(game.getGamefile(), move);
+	movesequence.animateMove(move, true);
 	onlinegame.sendMove();
 
 	unselectPiece();

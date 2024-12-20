@@ -1,12 +1,10 @@
 
 // Import Start
-import onlinegame from '../../game/misc/onlinegame.js';
 import moveutil from '../util/moveutil.js';
 import clockutil from '../util/clockutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import pingManager from '../../util/pingManager.js';
-import options from '../../game/rendering/options.js';
 // Import End
 
 /**
@@ -60,7 +58,7 @@ function set(gamefile, currentTimes) {
  * @param {number} clockValues.timerBlack - Black's current time, in milliseconds.
  * @param {number} clockValues.accountForPing - True if it's an online game
  */
-function edit(gamefile, clockValues) {
+function edit(gamefile, clockValues, debug = false) {
 	if (!clockValues) return; // Likely a no-timed game
 	const { timerWhite, timerBlack } = clockValues;
 	const clocks = gamefile.clocks;
@@ -77,7 +75,7 @@ function edit(gamefile, clockValues) {
 		const halfPing = pingManager.getHalfPing();
 		clocks.currentTime[gamefile.whosTurn] -= halfPing; 
 		if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
-		if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${gamefile.whosTurn}'s clock.`);
+		if (debug) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${gamefile.whosTurn}'s clock.`);
 	}
 	clocks.timeRemainAtTurnStart = clocks.colorTicking === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
 }
@@ -88,7 +86,6 @@ function edit(gamefile, clockValues) {
  */
 function push(gamefile) {
 	const clocks = gamefile.clocks;
-	if (onlinegame.areInOnlineGame()) return; // Only the server can push clocks
 	if (clocks.untimed) return;
 	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 
@@ -125,7 +122,6 @@ function update(gamefile) {
 	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
-	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
 	// TODO: update when lose conditions are added
 	if (clocks.currentTime.white <= 0) {
 		clocks.currentTime.white = 0;

@@ -9,8 +9,8 @@ import coordutil from './coordutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../logic/boardchanges.js').Change} Change
 */
-
 
 "use strict";
 
@@ -22,6 +22,8 @@ function Move() {
 
 	/** The type of piece moved (e.g. `queensW`). */
 	this.type = undefined;
+	/** @type {Array<Change>} */
+	this.changes = undefined;
 	/** The start coordinates of the piece: `[x,y]` */
 	this.startCoords = undefined;
 	/** The end coordinates of the piece: `[x,y]`  */
@@ -314,6 +316,14 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 	return false;
 }
 
+/**
+ * Strips the coordinates of their special move properties.
+ * For example, unstripped coords may look like: `[2,7,enpassant:true]`
+ * @param {number[]} coords - The coordinates
+ * @returns {number[]} The stripped coordinates: `[2,7]`
+ */
+function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]]; }
+
 // Type export DO NOT USE
 export { Move };
 
@@ -339,4 +349,5 @@ export default {
 	getWhosTurnAtMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
 	getMoveOneForward,
+	stripSpecialMoveTagsFromCoords,
 };
