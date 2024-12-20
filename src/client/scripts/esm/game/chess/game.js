@@ -227,7 +227,7 @@ async function loadGamefile(newGamefile) {
 	// spinny pawn animation has time to fade away.
 	animateLastMoveTimeoutID = setTimeout(() => {
 		const move = gamefile.moves[gamefile.moveIndex];
-		if (move !== undefined) movesequence.animateMove(gamefile, move, true);
+		if (move !== undefined) movesequence.animateMove(move, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
