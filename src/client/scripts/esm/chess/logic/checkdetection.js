@@ -240,8 +240,6 @@ function removeMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) { /
 
 	// 2. Individual moves. We can iterate through these and use detectCheck() to test them.
 	removeIndividualMovesThatPutYouInCheck(gamefile, moves.individual, pieceSelected, color);
-
-	console.log(moves);
 }
 
 // Time complexity O(1)

@@ -105,7 +105,8 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 // TODO: doc
 function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
-	applyChanges(gamefile, move.changes, funcs);
+	const changes = forward ? move.changes : [...move.changes].reverse();
+	applyChanges(gamefile, changes, funcs);
 }
 
 // TODO: doc

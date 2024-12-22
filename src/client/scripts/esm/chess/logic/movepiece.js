@@ -275,13 +275,9 @@ function forEachMove(gamefile, targetIndex, callback) {
 	
 	if (gamefile.moves.length <= targetIndex || targetIndex < 0) throw new Error("Target index is outside of the movelist!");
 
-	console.trace(gamefile.moves.length - 1, targetIndex);
-
 	while (i !== targetIndex) {
 		i = math.moveTowards(i, targetIndex, 1);
 		const move = gamefile.moves[i];
-		
-		console.log(move.compact, forwards);
 
 		if (move === undefined) {
 			console.log(`Undefined! ${i}, ${targetIndex}`);
