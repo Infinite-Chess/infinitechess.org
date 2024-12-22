@@ -16,7 +16,7 @@ dotenv.config();
 
 /** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
  * This should be periodically refreshed. 
- * collaborator {
+ * example collaborator {
  * 		name: "Infinite-Chess",
  * 		iconUrl: "https://avatars.githubusercontent.com/u/174292850?v=4",
  * 		linkUrl: "https://github.com/Infinite-Chess"
@@ -32,8 +32,6 @@ let intervalId;
 /**
  * Uses GitHub's API to fetch all contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
  * and updates our list!
- * 
- * WRITTEN
  */
 function refreshGitHubContributorsList() {
 	if (process.env.GITHUB_API_KEY.length === 0) {
