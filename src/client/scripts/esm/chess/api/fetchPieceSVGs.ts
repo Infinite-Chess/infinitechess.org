@@ -18,6 +18,10 @@ import { fetchWithDeduplication } from "../../util/fetchDeduplicator.js";
 async function fetchPieceSVGs(relativeURL: string, svgIds: string[]): Promise<SVGElement[]> {
 	// Fetch and parse the SVG document
 	const response = await fetchWithDeduplication(`svg/pieces/${relativeURL}`);
+
+	// Check if the SVG was not found (name or path is probably incorrect)
+	if (!response.ok) throw new Error(`Failed to fetch SVG file. Server responded with status: ${response.status} ${response.statusText}`);
+
 	const svgText = await response.text();
 	const parser = new DOMParser();
 	const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
