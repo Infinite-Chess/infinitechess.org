@@ -103,7 +103,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 	const invite = {};
 
 	let id;
-	do { id = uuid.generateID(IDLengthOfInvites); } while (existingInviteHasID(messageContents.id));
+	do { id = uuid.generateID_Base62(IDLengthOfInvites); } while (existingInviteHasID(messageContents.id));
 	invite.id = id;
 
 	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.metadata.cookies["browser-id"] };

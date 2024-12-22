@@ -13,7 +13,7 @@ const BASE_62_CHARSET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRS
  * @param {number} length - The length of the desired ID
  * @returns {string} The ID
  */
-function generateID(length) {
+function generateID_Base62(length) {
 	return generateIDWithCharset(length, BASE_62_CHARSET);
 }
 
@@ -51,7 +51,7 @@ function generateIDWithCharset(length, characters) {
 function genUniqueID(length, object) { // object contains the key value list where the keys are the ids we want to not have duplicates of.
 	let id;
 	do {
-		id = generateID(length);
+		id = generateID_Base62(length);
 	} while (object[id] !== undefined);
 	return id;
 }
@@ -119,7 +119,7 @@ function base62ToBase10(base62Str) {
 }
 
 export default {
-	generateID,
+	generateID_Base62,
 	generateID_Base36,
 	genUniqueID,
 	generateNumbID,
