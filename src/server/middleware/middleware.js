@@ -129,9 +129,9 @@ function configureMiddleware(app) {
 	});
 
 	app.get("/api/contributors", (req, res) => {
-		const contributors = getContributors()
-		res.send(JSON.stringify(contributors))
-	})
+		const contributors = getContributors();
+		res.send(JSON.stringify(contributors));
+	});
 
 	// Token Authenticator -------------------------------------------------------
 
