@@ -11,7 +11,7 @@ import dotenv from 'dotenv';
 import { logEvents } from '../middleware/logEvents.js';
 import { readFile, writeFile } from '../utility/lockFile.js';
 import { join } from 'node:path';
-dotenv.config()
+dotenv.config();
 
 
 /** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
@@ -36,13 +36,13 @@ let intervalId;
  * WRITTEN
  */
 function refreshGitHubContributorsList() {
-	if (process.env.GITHUB_API_KEY.length == 0) {
-		console.log("No Github API key detected. Not updating until restarted")
+	if (process.env.GITHUB_API_KEY.length === 0) {
+		console.log("No Github API key detected. Not updating until restarted");
 		clearInterval(intervalId);
-		return
+		return;
 	}
 
-	const repo = process.env.GITHUB_REPO || "Infinite-Chess/infinitechess.org"
+	const repo = process.env.GITHUB_REPO || "Infinite-Chess/infinitechess.org";
 
 	const options = {
 		"method": "GET",
@@ -58,25 +58,26 @@ function refreshGitHubContributorsList() {
 		}
 	};
 
-	const req = request(options, function (res) {
+	const req = request(options, function(res) {
 		const chunks = [];
 
-		res.on("data", function (chunk) {
+		res.on("data", function(chunk) {
 			chunks.push(chunk);
 		});
 
-		res.on("end", function () {
+		res.on("end", function() {
 			const body = Buffer.concat(chunks);
 
-			if (res.statusCode != 200) {
-				return
+			if (res.statusCode !== 200) {
+				return;
 			}
 
-			const response = body.toString()
+			const response = body.toString();
 			try {
-				const json = JSON.parse(response)
+				const json = JSON.parse(response);
 
-				let newContributors = []
+				/* eslint-disable-next-line prefer-const */
+				let newContributors = [];
 				for (const contributor of json) {
 					newContributors.push(
 						{
@@ -84,16 +85,16 @@ function refreshGitHubContributorsList() {
 							"iconUrl": contributor.avatar_url,
 							"linkUrl": contributor.html_url
 						}
-					)
+					);
 				}
 				if (newContributors.length > 0) {
-					contributors = newContributors
-					writeFile(join(import.meta.dirname, '..', '..', '..', 'database', 'contributors.json'), JSON.stringify(contributors))
+					contributors = newContributors;
+					writeFile(join(import.meta.dirname, '..', '..', '..', 'database', 'contributors.json'), JSON.stringify(contributors));
 					
-					console.log("Contributors updated!", contributors)
+					console.log("Contributors updated!", contributors);
 				}
 			} catch {
-				logEvents("Error parsing contributors JSON," + response, 'errLog.txt', { print: true })
+				logEvents("Error parsing contributors JSON," + response, 'errLog.txt', { print: true });
 			}
 		});
 	});
@@ -109,10 +110,10 @@ function refreshGitHubContributorsList() {
 function getContributors() { return contributors; }
 
 // Load most recent contributors from file
-contributors = await readFile(join(import.meta.dirname, '..', '..', '..', 'database', 'contributors.json'))
+contributors = await readFile(join(import.meta.dirname, '..', '..', '..', 'database', 'contributors.json'));
 
 // Update contributors on a interval
-setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis)
+setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis);
 
 export {
 	refreshGitHubContributorsList,
