@@ -48,8 +48,8 @@ const timeUntilAFK = { normal: 30000, dev: 2000 }; // Seconds of inactivity to p
 let AFKTimeoutID;
 
 let isHibernating = false;
-const timeUntilHibernation = 1000 * 60 * 60; // 1 hour
-// const timeUntilHibernation = 10000 // 10s for dev testing
+const timeUntilHibernation = 1000 * 60 * 30; // 30 minutes
+// const timeUntilHibernation = 10000; // 10s for dev testing
 let hibernateTimeoutID; // ID of the timer to declare we are hibernating!
 
 let windowInFocus = true; // false = blurred. Not necessarily off-screen, just clicked on another window.
