@@ -140,6 +140,8 @@ function getDataOfSquare_Wireframe(startX, startY, endX, endY, color) {
  * @param {number} diffYOffset - The y-amount to shift the voids vertex data
  */
 function shiftModel(gamefile, diffXOffset, diffYOffset) {
+	if (gamefile.voidMesh.model === undefined) return;
+	
 	const data64 = gamefile.voidMesh.data64;
 	const data32 = gamefile.voidMesh.data32;
 	for (let i = 0; i < data32.length; i += stride) {

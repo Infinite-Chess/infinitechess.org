@@ -126,7 +126,7 @@ async function createNewMember(req, res) {
 async function generateAccount({ username, email, password, autoVerify }) {
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, 10); // Passes 10 salt rounds. (standard)
-	const verification = autoVerify ? undefined : JSON.stringify({ verified: false, code: uuid.generateID(8) });
+	const verification = autoVerify ? undefined : JSON.stringify({ verified: false, code: uuid.generateID_Base62(8) });
 
 	const result = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
 	if (!result.success) return; // Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
