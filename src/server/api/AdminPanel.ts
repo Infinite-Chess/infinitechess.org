@@ -14,7 +14,7 @@ import { deleteAccount } from "../controllers/deleteAccountController.js";
 // @ts-ignore
 import { deleteAllSessionsOfUser } from "../controllers/authenticationTokens/sessionManager.js";
 // @ts-ignore
-import { refreshGitHubContributorsList } from "./GitHub.js"
+import { refreshGitHubContributorsList } from "./GitHub.js";
 // @ts-ignore
 import { areRolesHigherInPriority } from "../controllers/roles.js";
 
@@ -219,7 +219,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: CustomReque
 
 function updateContributorsCommand(command: string, req: CustomRequest, res: Response) {
 	logCommand(command, req);
-	refreshGitHubContributorsList()
+	refreshGitHubContributorsList();
 	sendAndLogResponse(res, 200, "Contributors should now be updated!");
 }
 
