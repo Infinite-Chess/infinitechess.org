@@ -5,19 +5,16 @@
  * ZERO dependancies.
  */
 
+const BASE_36_CHARSET = '0123456789abcdefghijklmnopqrstuvwxyz';
+const BASE_62_CHARSET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 /**
  * Generates a random ID of the provided length, with the characters 0-9, a-z, and A-Z.
  * @param {number} length - The length of the desired ID
  * @returns {string} The ID
  */
 function generateID(length) {
-	let result = '';
-	const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'; // Base 62 characters
-	const charactersLength = characters.length;
-	for (let i = 0; i < length; i++) {
-		result += characters.charAt(Math.floor(Math.random() * charactersLength)); // Coercing to an int with Math.floor
-	}
-	return result;
+	return generateIDWithCharset(length, BASE_62_CHARSET);
 }
 
 /**
@@ -26,11 +23,20 @@ function generateID(length) {
  * @returns {string} The ID
  */
 function generateID_Base36(length) {
+	return generateIDWithCharset(length, BASE_36_CHARSET);
+}
+
+/**
+ * Generates a random ID of the provided length using the specified character set.
+ * @param {number} length - The length of the desired ID
+ * @param {string} characters - The character set to use for generating the ID
+ * @returns {string} The ID
+ */
+function generateIDWithCharset(length, characters) {
 	let result = '';
-	const characters = '0123456789abcdefghijklmnopqrstuvwxyz'; // Base 62 characters
 	const charactersLength = characters.length;
 	for (let i = 0; i < length; i++) {
-		result += characters.charAt(Math.floor(Math.random() * charactersLength)); // Coercing to an int with Math.floor
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
 	}
 	return result;
 }
