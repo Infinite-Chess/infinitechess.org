@@ -363,11 +363,10 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// Only do so if the win condition is decisive (exclude win conditions declared by the server,
 	// such as time, aborted, resignation, disconnect)
 	if (claimedGameConclusion === false || winconutil.isGameConclusionDecisive(claimedGameConclusion)) {
-		const color = colorutil.getPieceColorFromType(piecemoved.type);
-		const infoAboutSimulatedMove = movepiece.simulateMove(gamefile, moveCopy, color, { doGameOverChecks: true }); // { isCheck, gameConclusion }
-		if (infoAboutSimulatedMove.gameConclusion !== claimedGameConclusion) {
-			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${infoAboutSimulatedMove.gameConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`);
-			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${infoAboutSimulatedMove.gameConclusion}`);
+		const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveCopy); // { isCheck, gameConclusion }
+		if (simulatedConclusion !== claimedGameConclusion) {
+			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${simulatedConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`);
+			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${simulatedConclusion}`);
 		}
 	}
 

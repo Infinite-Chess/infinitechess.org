@@ -29,6 +29,7 @@ import wincondition from './wincondition.js';
 
 /** Here lies the universal methods for moving pieces, forward or rewinding. */
 
+// TODO: doc
 function generateMove(gamefile, move) {
 	move.changes = [];
 
@@ -47,23 +48,32 @@ function generateMove(gamefile, move) {
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move); // Move piece regularly (no special tag)
 }
 
+// TODO: doc
 function applyMove(gamefile, move, forward = true) {
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
 }
 
+// TODO: doc
 function makeMove(gamefile, move, { updateProperties = true } = {}) {
-	const wasACapture = move.captured !== undefined;
-
 	applyMove(gamefile, move);
 
 	gamefile.moveIndex++;
 	gamefile.moves.push(move);
 
+	updateTurn(gamefile);
 	// The "check" property will be added inside updateInCheck()...
 	// The "mate" property will be added inside our game conclusion checks...
 
-	if (updateProperties) incrementMoveRule(gamefile, move.type, wasACapture);
-
+	if (updateProperties) {
+		let wasACapture = false;
+		for (const c of move.changes) {
+			if (c.action === 'capturePiece') {
+				wasACapture = true;
+				break;
+			}
+		}
+		incrementMoveRule(gamefile, move.type, wasACapture);
+	}
 	// ALWAYS DO THIS NOW, no matter what. 
 	updateInCheck(gamefile);
 }
@@ -106,20 +116,14 @@ function deleteEnpassantAndSpecialRightsProperties(gamefile, move) {
 	boardchanges.queueSetSpecialRights(move.changes, key, gamefile.specialRights[key], undefined); // We also delete the captured pieces specialRights for ANY move.
 }
 
-// RETURNS index of captured piece! Required for undo'ing moves.
-
 /**
  * Standardly moves a piece. Deletes any captured piece. Animates if specified.
  * If the move is a special move, a separate method is needed.
  * @param {gamefile} gamefile - The gamefile
  * @param {Piece} piece - The piece to move
  * @param {Move} move - The move that's being made
- * @param {Object} options - An object containing various options (ALL of these are default *true*):
- * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
- * - `animate`: Whether to animate this move.
- * - `simulated`: Whether you plan on undo'ing this move. If true, the index of the captured piece within the gamefile's piece list will be stored in the `rewindInfo` property of the move for easy undo'ing without screwing up the mesh.
- */
-function movePiece_NoSpecial(gamefile, piece, move) { // piece: { coords, type, index }
+*/
+function movePiece_NoSpecial(gamefile, piece, move) {
 
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 
@@ -148,11 +152,8 @@ function incrementMoveRule(gamefile, typeMoved, wasACapture) {
 }
 
 /**
- * Flips the `whosTurn` property of the gamefile, updates
- * the text on-screen, then pushes the clock.
+ * Flips the `whosTurn` property of the gamefile.
  * @param {gamefile} gamefile - The gamefile
- * @param {Object} options - An object that may contain the options (all are default *true*):
- * - `pushClock`: Whether to push the clock.
  */
 function updateTurn(gamefile) {
 	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
@@ -160,11 +161,10 @@ function updateTurn(gamefile) {
 
 /**
  * Updates the `inCheck` and `attackers` properties of the gamefile after making a move or rewinding.
-
-    * Needs to be called AFTER flipping the `whosTurn` property.
-    * @param {gamefile} gamefile - The gamefile
-    * @param {boolean} [flagMoveAsCheck] - If *true*, flags the last played move as a check. Default: true
-    */
+* Needs to be called AFTER flipping the `whosTurn` property.
+* @param {gamefile} gamefile - The gamefile
+* @param {boolean} [flagMoveAsCheck] - If *true*, flags the last played move as a check. Default: true
+*/
 function updateInCheck(gamefile) {
 
 	let attackers = undefined;
@@ -265,11 +265,7 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 	return move;
 }
 
-/**
- * 
- * @param {gamefile} gamefile
- * @param {number} targetIndex 
- */
+// TODO: doc
 function forEachMove(gamefile, targetIndex, callback) {
 	if (targetIndex === gamefile.moveIndex) return;
 
@@ -296,6 +292,7 @@ function forEachMove(gamefile, targetIndex, callback) {
 	}
 }
 
+// TODO: doc
 function gotoMove(gamefile, index, callback) {
 	forEachMove(gamefile, index, callback);
 	gamefile.moveIndex = index;
@@ -329,30 +326,17 @@ function rewindMove(gamefile, { removeMove = true } = {} ) {
 	// Finally, delete the move off the top of our moves [] array list
 	if (removeMove) moveutil.deleteLastMove(gamefile.moves);
 	gamefile.moveIndex--;
+	updateTurn(gamefile);
 }
 
-/**
- * Simulates the provided move, testing if it's in check and, if specified, also the game conclusion,
- * then undo's the move, restoring it to how the gamefile was before.
- * @param {gamefile} gamefile - The gamefile
- * @param {Move} The move to simulate.
- * @param {string} colorToTestInCheck - The side to test if they are in check. Usually this is the color of the side making the move, because we don't want to step into check.
- * @param {Object} options - An object that may contain the properties:
- * - `doGameOverChecks`: Whether, while simulating this move, to perform game over checks such as checkmate or other win conditions. SLOWER, but this can be used to verify the game conclusion the opponent claimed. Default: *false*
- * @returns {Object} An object that may contains the properties:
- * - `isCheck`: Whether making this move puts the specified color in check. Usually it's you stepping into check.
- * - `gameConclusion`: The resulting `gameConclusion` after the move, if `doGameOverChecks` was specified as *true*.
- */
-function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = false } = {}) {
+// TODO: doc
+function simulateMoveWrapper(gamefile, move, callback, {updateProperties = true} = {}) {
 	// Moves the piece without unselecting it or regenerating the pieces model.
 	generateMove(gamefile, move);
-	makeMove(gamefile, move, { updateProperties: doGameOverChecks });
+	makeMove(gamefile, move, { updateProperties: updateProperties });
 
 	// What info can we pull from the game after simulating this move?
-	const info = {
-		isCheck: doGameOverChecks ? gamefile.inCheck : checkdetection.detectCheck(gamefile, colorToTestInCheck, []),
-		gameConclusion: doGameOverChecks ? wincondition.getGameConclusion(gamefile) : undefined
-	};
+	const info = callback();
 
 	// Undo the move, REWIND.
 	// We don't have to worry about the index changing, it is the same.
@@ -360,7 +344,26 @@ function simulateMove(gamefile, move, colorToTestInCheck, { doGameOverChecks = f
 	// Only remove the move
 	rewindMove(gamefile, true);
 
-	return info; // Info from simulating the move: { isCheck, gameConclusion }
+	return info;
+}
+
+// TODO: doc
+function getSimulatedCheck(gamefile, move, colorToTestInCheck) {
+	return simulateMoveWrapper(
+		gamefile,
+		move,
+		() => checkdetection.detectCheck(gamefile, colorToTestInCheck, []),
+		{updateProperties: false}
+	);	
+}
+
+// TODO: doc
+function getSimulatedConclusion(gamefile, move) {
+	return simulateMoveWrapper(
+		gamefile,
+		move,
+		() => wincondition.getGameConclusion(gamefile)
+	);
 }
 
 export default {
@@ -373,5 +376,7 @@ export default {
 	calculateMoveFromShortmove,
 	applyMove,
 	rewindMove,
-	simulateMove,
+	simulateMoveWrapper,
+	getSimulatedCheck,
+	getSimulatedConclusion,
 };

@@ -29,13 +29,12 @@ import type gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
 import type { Move } from "../../chess/util/moveutil.js";
 
+// TODO: doc
 function makeMove(gamefile: gamefile, move: Move, { doGameOverChecks = true, concludeGameIfOver = true} = {}) {
-
 	movepiece.generateMove(gamefile, move);
 	movepiece.makeMove(gamefile, move);
 	boardchanges.runMove(gamefile, move, meshChanges, true);
 
-	movepiece.updateTurn(gamefile);
 	guigameinfo.updateWhosTurn(gamefile);
 
 	if (!onlinegame.areInOnlineGame()) {
@@ -55,6 +54,7 @@ function makeMove(gamefile: gamefile, move: Move, { doGameOverChecks = true, con
 	arrows.clearListOfHoveredPieces();
 }
 
+// TODO: doc
 function animateMove(move: Move, forward = true) {
 	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
 	let clearanimations = true;
@@ -65,6 +65,7 @@ function animateMove(move: Move, forward = true) {
 	}
 }
 
+// TODO: doc
 function rewindMove(gamefile: gamefile) {
 	boardchanges.runMove(gamefile, gamefile.moves[gamefile.moveIndex], meshChanges, false);
 	movepiece.rewindMove(gamefile);
@@ -72,17 +73,20 @@ function rewindMove(gamefile: gamefile) {
 	frametracker.onVisualChange();
 }
 
+// TODO: doc
 function viewFront(gamefile: gamefile) {
 	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (m: Move) => viewMove(gamefile, m, true));
 	guinavigation.update_MoveButtons();
 	stats.showMoves();
 }
 
+// TODO: doc
 function viewMove(gamefile: gamefile, move: Move, forward = true) {
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
 	boardchanges.runMove(gamefile, move, meshChanges, forward);
 }
 
+// TODO: doc
 function viewIndex(gamefile: gamefile, index: number) {
 	movepiece.gotoMove(gamefile, index, (m: Move) => viewMove(gamefile, m, index >= gamefile.moveIndex));
 	guinavigation.update_MoveButtons();

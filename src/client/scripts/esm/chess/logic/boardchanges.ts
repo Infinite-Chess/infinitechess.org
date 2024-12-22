@@ -56,36 +56,45 @@ const changeFuncs: ChangeApplication = {
 	}
 };
 
+// TODO: doc
 function queueCaputure(changes: Array<Change>, piece: Piece, endCoords: Coords, capturedPiece: Piece) {
 	changes.push({action: 'capturePiece', piece: piece, endCoords: endCoords, capturedPiece: capturedPiece}); // Need to differentiate this from move so animations can work
 	return changes;
 }
 
+// TODO: doc
 function queueAddPiece(changes: Array<Change>, piece: Piece) {
 	changes.push({action: 'add', piece: piece});
 	return changes;
 };
 
+// TODO: doc
 function queueDeletePiece(changes: Array<Change>, piece: Piece) {
 	changes.push({action: 'delete', piece: piece});
 	return changes;
 }
 
+// TODO: doc
 function queueMovePiece(changes: Array<Change>, piece: Piece, endCoords: Coords) {
 	changes.push({action: 'movePiece', piece: piece, endCoords: endCoords});
 	return changes;
 }
 
+// TODO: doc
 function queueSetSpecialRights(changes: Array<Change>, coords: string, curRights: any, rights: any) {
+	if (curRights === rights) return changes; // Nothing has changed
 	changes.push({action: "setRights", coords: coords, curRights: curRights, rights: rights});
 	return changes;
 }
 
+// TODO: doc
 function queueSetEnPassant(changes: Array<Change>, curPassant: any, newPassant: any) {
+	if (curPassant === newPassant) return changes; // Nothing has changed
 	changes.push({action: "setPassant", curPassant: curPassant, newPassant: newPassant});
 	return changes;
 }
 
+// TODO: doc
 function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionList<genericChangeFunc>) {
 	for (const c of changes) {
 		if (!(c.action in funcs)) continue;
@@ -93,17 +102,13 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 	}
 }
 
+// TODO: doc
 function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
 	applyChanges(gamefile, move.changes, funcs);
 }
 
-/**
- * Most basic add-a-piece method. Adds it the gamefile's piece list,
- * organizes the piece in the organized lists, and updates its mesh data.
- * @param gamefile - The gamefile
- * @param change - the data of the piece to be added
- */
+// TODO: doc
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const piece = change['piece'];
 
@@ -129,6 +134,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
 }
 
+// TODO: doc
 function deletePiece(gamefile: gamefile, change: Change) { // piece: { type, index }
 	const piece = change['piece'];
 
@@ -139,6 +145,7 @@ function deletePiece(gamefile: gamefile, change: Change) { // piece: { type, ind
 	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
 }
 
+// TODO: doc
 function movePiece(gamefile: gamefile, change: Change) {
 	const piece = change['piece'];
 	const endCoords = change['endCoords'];
@@ -153,6 +160,7 @@ function movePiece(gamefile: gamefile, change: Change) {
 	organizedlines.organizePiece(piece.type, endCoords, gamefile);
 }
 
+// TODO: doc
 function returnPiece(gamefile: gamefile, change: Change) {
 	const piece = change['piece'];
 	const endCoords = change['endCoords'];
@@ -167,16 +175,19 @@ function returnPiece(gamefile: gamefile, change: Change) {
 	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
 }
 
+// TODO: doc
 function capturePiece(gamefile: gamefile, change: Change) {
 	deletePiece(gamefile, {piece: change['capturedPiece'], action: ""});
 	movePiece(gamefile, change);
 }
 
+// TODO: doc
 function uncapturePiece(gamefile: gamefile, change: Change) {
 	returnPiece(gamefile, change);
 	addPiece(gamefile, {piece: change['capturedPiece'], action:""});
 }
 
+// TODO: doc
 function setRights(gamefile: gamefile, change: Change) {
 	if (change['rights'] === undefined) {
 		delete gamefile.specialRights[change['coords']];
@@ -185,6 +196,7 @@ function setRights(gamefile: gamefile, change: Change) {
 	}
 }
 
+// TODO: doc
 function revertRights(gamefile: gamefile, change: Change) {
 	if (change['curRights'] === undefined) {
 		delete gamefile.specialRights[change['coords']];
@@ -193,10 +205,12 @@ function revertRights(gamefile: gamefile, change: Change) {
 	}
 }
 
+// TODO: doc
 function setPassant(gamefile: gamefile, change: Change) {
 	gamefile.enpassant = change['newPassant'];
 }
 
+// TODO: doc
 function revertPassant(gamefile: gamefile, change: Change) {
 	if (change['curPassant'] === undefined) {
 		delete gamefile.enpassant;
