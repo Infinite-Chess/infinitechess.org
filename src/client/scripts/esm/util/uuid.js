@@ -21,6 +21,21 @@ function generateID(length) {
 }
 
 /**
+ * Generates a random ID of the provided length, with the characters 0-9, a-z.
+ * @param {number} length - The length of the desired ID
+ * @returns {string} The ID
+ */
+function generateID_Base36(length) {
+	let result = '';
+	const characters = '0123456789abcdefghijklmnopqrstuvwxyz'; // Base 62 characters
+	const charactersLength = characters.length;
+	for (let i = 0; i < length; i++) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength)); // Coercing to an int with Math.floor
+	}
+	return result;
+}
+
+/**
  * Generates a **UNIQUE** ID of the provided length, with the characters 0-9 and a-z.
  * The provided object should contain the keys of the existing IDs.
  * @param {number} length - The length of the desired ID
@@ -99,6 +114,7 @@ function base62ToBase10(base62Str) {
 
 export default {
 	generateID,
+	generateID_Base36,
 	genUniqueID,
 	generateNumbID,
 	base10ToBase62,

@@ -64,7 +64,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.metadata.cookies["browser-id"] };
 	invite.owner = owner;
 
-	do { invite.id = uuid.generateID(5); } while (existingInviteHasID(invite.id));
+	do { invite.id = uuid.generateID_Base36(5); } while (existingInviteHasID(invite.id));
 
 	addInvite(ws, invite, replyto);
 }
