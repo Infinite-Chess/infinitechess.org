@@ -40,7 +40,9 @@ const touchscreenOffset = 2;
  * The minimum size of the dragged piece relative to the stationary pieces.
  * When zoomed in, this prevents it becoming tiny relative to the others.
  */
-const minimumScale = 1;
+const minScale = 1;
+/** When the scale is smaller (more zoomed out) than this, we render rank/column outlines instead of the box. */
+const maxScaleToDrawOutline = 0.6;
 /** The width of the box outline used to emphasize the hovered square. */
 const outlineWidth_Mouse = 0.08; // Default: 0.1
 const outlineWidth_Touch = 0.05;
@@ -68,6 +70,7 @@ function renderTransparentSquare() {
 // Renders the box outline, the dragged piece and its shadow
 function renderPiece() {
 	if (perspective.isLookingUp() || !worldLocation) return;
+
 	let outlineModel;
 	if (hoveredCoords) outlineModel = genOutlineModel();
 	else outlineModel = genIntersectingLines();
@@ -106,9 +109,8 @@ function genPieceModel() {
 	
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
-	let size = perspectiveEnabled ? boardScale : touchscreen ? touchscreenScale : mouseScale;
-	const minimumSize = boardScale * minimumScale;
-	if (size < minimumSize) size = minimumSize;
+	let size = (perspectiveEnabled ? boardScale : touchscreen ? touchscreenScale : mouseScale) * boardScale;
+	if (size < minScale) size = minScale;
 	const left = worldLocation[0] - size / 2;
 	const bottom = worldLocation[1] - size / 2 + (touchscreen ? touchscreenOffset : 0);
 	const right = worldLocation[0] + size / 2;
@@ -127,6 +129,7 @@ function genPieceModel() {
  * @returns {BufferModel} The buffer model
  */
 function genOutlineModel() {
+	const boardScale = movement.getBoardScale();
 	const data = [];
 	const pointerIsTouch = input.getPointerIsTouch();
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords);
@@ -134,7 +137,7 @@ function genOutlineModel() {
 	const color = options.getDefaultOutlineColor();
 	
 	// Checking if the coords are equal prevents the large lines flashing when tapping to select.
-	if (pointerIsTouch && !coordutil.areCoordsEqual(hoveredCoords, startCoords)) {
+	if (pointerIsTouch && !coordutil.areCoordsEqual(hoveredCoords, startCoords) || boardScale < maxScaleToDrawOutline) {
 		// Outline the entire rank and file
 		const boundingBox = camera.getScreenBoundingBox(false);
 		data.push(...bufferdata.getDataQuad_Color({ left, right: left + width, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // left
