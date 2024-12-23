@@ -34,9 +34,8 @@ import coordutil from '../util/coordutil.js';
  * if we know the coordinates of a piece, we don't have to iterate
  * through the entire list of pieces to find its type.
  * @param {gamefile} gamefile - The gamefile
- * @param {Object} [options] - An object that may contain the `appendUndefineds` option. If false, no undefined *null* placeholder pieces will be left for the mesh generation. Defaults to *true*. Set to false if you're planning on regenerating manually.
  */
-function initOrganizedPieceLists(gamefile, { appendUndefineds = true} = {}) {
+function initOrganizedPieceLists(gamefile) {
 	if (!gamefile.ourPieces) return console.error("Cannot init the organized lines before ourPieces is defined.");
     
 	// console.log("Begin organizing lists...")
@@ -49,10 +48,7 @@ function initOrganizedPieceLists(gamefile, { appendUndefineds = true} = {}) {
     
 	// console.log("Finished organizing lists!")
 
-	// Add extra undefined pieces into each type array!
 	initUndefineds(gamefile);
-
-	if (appendUndefineds) appendUndefineds(gamefile);
 }
 
 function resetOrganizedLists(gamefile) {
@@ -135,26 +131,6 @@ function initUndefineds(gamefile) {
 	// 	const list = gamefile.ourPieces[listType];
 	// 	list.undefineds = [];
 	// }
-}
-
-
-/**
- * Adds more undefined placeholders, or *null* pieces, into the piece lists,
- * to allocate more space in the mesh of all the pieces.
- * Only called within `initOrganizedPieceLists()` because this assumes
- * each piece list has zero, so it adds the exact same amount to each list.
- * These placeholders are used up when pawns promote.
- * @param {gamefile} gamefile - The gamefile
- */
-function appendUndefineds(gamefile) {
-	typeutil.forEachPieceType(append);
-
-	function append(listType) {
-		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
-
-		const list = gamefile.ourPieces[listType];
-		for (let i = 0; i < pieces.extraUndefineds; i++) insertUndefinedIntoList(list);
-	}
 }
 
 function areWeShortOnUndefineds(gamefile) {

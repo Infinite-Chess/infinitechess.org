@@ -33,7 +33,6 @@ function showStatus(text, isError, durationMultiplier = 1) {
  */
 function showStatusForDuration(text, durationMillis, isError) {
 	if (!text) return; // Not defined (can happen if translation unavailable)
-	if (text == null) return console.error("Cannot show status of undefined text!!");
     
 	layers++;
     

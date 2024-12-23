@@ -4,17 +4,6 @@
 
 
 /**
- * Injects a string after a certain string segment found within a source string.
- * @param {string} src - The source string
- * @param {string} after - The string segment for which the first match is found within the src, where the inject string will be inserted.
- * @param {string} inject - The string to inject
- * @returns {string} The injected string. If no match was found, the string will have not changed.
- */
-function injectStringIntoStringAfter(src, after, inject) {
-	return src.replace(after, `${after}${inject}`);
-}
-
-/**
  * Takes an HTML document as a string, inserts a script tag into its head, 
  * with the script content being the provided JavaScript code, and any corresponding attributes provided.
  * @param {string} HTML - The HTML string.

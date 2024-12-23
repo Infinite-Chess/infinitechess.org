@@ -187,9 +187,9 @@ function update() {
             
 			const x = piece.coords[0];
 			const y = piece.coords[1];
-			const axis = line[0] == 0 ? 1 : 0;
+			const axis = line[0] === 0 ? 1 : 0;
 
-			const rightSide = x > paddedBoundingBox.right || y > rightCorner[1] == (rightCorner[1] == paddedBoundingBox.top);
+			const rightSide = x > paddedBoundingBox.right || y > rightCorner[1] === (rightCorner[1] === paddedBoundingBox.top);
 			if (rightSide) {
 				if (!right) right = piece;
 				else if (piece.coords[axis] < right.coords[axis]) right = piece;
@@ -308,7 +308,7 @@ function removeUnnecessaryArrows(arrows) {
 	function doesTypeHaveMoveset(gamefile, type, direction) {
 		const moveset = legalmoves.getPieceMoveset(gamefile, type);
 		if (!moveset.sliding) return false;
-		return moveset.sliding[direction] != null;
+		return moveset.sliding[direction] !== undefined;
 	}
 }
 
@@ -409,7 +409,7 @@ function applyTransform(points, rotation, translation) {
 
 function renderThem() {
 	if (mode === 0) return;
-	if (model == null) return;
+	if (!model) return;
 
 	// render.renderModel(model, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet())
 	model.render();

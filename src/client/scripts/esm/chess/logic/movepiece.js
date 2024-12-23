@@ -77,7 +77,7 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
 	let specialMoveMade;
 	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
-	const wasACapture = move.captured != null;
+	const wasACapture = move.captured !== undefined;
 
 	gamefile.moveIndex++;
 	if (recordMove) gamefile.moves.push(move);
@@ -113,7 +113,7 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
  * - `simulated`: Whether you plan on undo'ing this move. If *true*, then `capturedIndex` and `pawnIndex` will also be remembered, so the mesh doesn't get screwed up when rewinding. Default: *false*
  */
 function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false } = {}) {
-	const rewindInfoAlreadyPresent = move.rewindInfo != null;
+	const rewindInfoAlreadyPresent = move.rewindInfo !== undefined;
 	const rewindInfo = move.rewindInfo || {};
 
 	if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
@@ -122,7 +122,7 @@ function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false }
 		rewindInfo.gameConclusion = gamefile.gameConclusion;
 		if (gamefile.attackers) rewindInfo.attackers = jsutil.deepCopyObject(gamefile.attackers);
 		if (gamefile.enpassant) rewindInfo.enpassant = gamefile.enpassant;
-		if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
+		if (gamefile.moveRuleState !== undefined) rewindInfo.moveRuleState = gamefile.moveRuleState;
 		if (gamefile.checksGiven) rewindInfo.checksGiven = gamefile.checksGiven;
 		let key = coordutil.getKeyFromCoords(move.startCoords);
 		if (gamefile.specialRights[key]) rewindInfo.specialRightStart = true;
@@ -209,15 +209,15 @@ function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = 
 	const list = gamefile.ourPieces[type];
 
 	// If no index specified, make the default the first undefined in the list!
-	if (desiredIndex == null) desiredIndex = list.undefineds[0];
+	if (desiredIndex === undefined) desiredIndex = list.undefineds[0];
 
 	// If there are no undefined placeholders left, updateData better be false, because we are going to append on the end!
-	if (desiredIndex == null && updateData) throw new Error("Cannot add a piece and update the data when there are no undefined placeholders remaining!");
+	if (desiredIndex === undefined && updateData) throw new Error("Cannot add a piece and update the data when there are no undefined placeholders remaining!");
 
-	if (desiredIndex == null) list.push(coords);
+	if (desiredIndex === undefined) list.push(coords);
 	else { // desiredIndex specified
 
-		const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, coords) != null;
+		const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, coords) !== undefined;
 		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
 
 		// Remove the undefined from the undefineds list

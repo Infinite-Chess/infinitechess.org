@@ -53,7 +53,7 @@ function createModel_Colored(data, numPositionComponents, mode) {
  */
 function createModel_Textured(data, numPositionComponents, mode, texture) {
 	if (numPositionComponents < 2 || numPositionComponents > 3) return console.error(`Unsupported numPositionComponents ${numPositionComponents}`);
-	if (texture == null) return console.error("Cannot create a textured buffer model without a texture!");
+	if (!texture) return console.error("Cannot create a textured buffer model without a texture!");
 	const stride = numPositionComponents + 2;
 	const prepDrawFunc = getPrepDrawFunc(shaders.programs.textureProgram, numPositionComponents, true, false);
 	return new BufferModel(shaders.programs.textureProgram, data, stride, mode, texture, prepDrawFunc);
@@ -88,7 +88,7 @@ function createModel_ColorTextured(data, numPositionComponents, mode, texture) {
  */
 function createModel_TintTextured(data, numPositionComponents, mode, texture) {
 	if (numPositionComponents < 2 || numPositionComponents > 3) return console.error(`Unsupported numPositionComponents ${numPositionComponents}`);
-	if (texture == null) return console.error("Cannot create a tinted textured buffer model without a texture!");
+	if (!texture) return console.error("Cannot create a tinted textured buffer model without a texture!");
 	const stride = numPositionComponents + 2;
 	const prepDrawFunc = getPrepDrawFunc(shaders.programs.tintedTextureProgram, numPositionComponents, true, false);
 	return new BufferModel(shaders.programs.tintedTextureProgram, data, stride, mode, texture, prepDrawFunc);

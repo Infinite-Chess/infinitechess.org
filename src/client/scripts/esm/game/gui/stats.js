@@ -20,7 +20,6 @@ import config from '../config.js';
 const element_Statuses = document.getElementById('stats');
 
 // Various statuses
-const elementStatusMoveLooking = document.getElementById('status-move-looking');
 const elementStatusFPS = document.getElementById('status-fps');
 const elementStatusPiecesMesh = document.getElementById('status-pieces-mesh');
 const elementStatusRotateMesh = document.getElementById('status-rotate-mesh');

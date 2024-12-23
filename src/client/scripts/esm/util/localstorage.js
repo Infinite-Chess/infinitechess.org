@@ -23,7 +23,7 @@ function saveItem(key, value, expiryMillis = defaultExpiryTimeMillis) {
 
 function loadItem(key) {
 	const stringifiedSave = localStorage.getItem(key); // "{ value, expiry }"
-	if (stringifiedSave == null) return;
+	if (stringifiedSave === null) return;
 	let save;
 	try {
 		save = JSON.parse(stringifiedSave); // { value, expires }
@@ -45,7 +45,7 @@ function deleteItem(key) {
 }
 
 function hasItemExpired(save) {
-	if (save.expires == null) {
+	if (save.expires === undefined) {
 		console.log(`Local storage item was in an old format. Deleting it! Value: ${JSON.stringify(save)}}`);
 		return true;
 	}

@@ -190,26 +190,21 @@ function callback_CoordsChange() {
 }
 
 function callback_Back(event) {
-	event = event || window.event;
 	transition.telToPrevTel();
 }
 
 function callback_Expand(event) {
-	event = event || window.event;
 	const allCoords = gamefileutility.getCoordsOfAllPieces(game.getGamefile());
 	area.initTelFromCoordsList(allCoords);
 }
 
 function callback_Recenter(event) {
-	event = event || window.event;
-
 	const boundingBox = game.getGamefile().startSnapshot.box;
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
 
 function callback_MoveRewind(event) {
-	event = event || window.event;
 	if (rewindIsLocked) return;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrForward = Date.now();
@@ -217,7 +212,6 @@ function callback_MoveRewind(event) {
 }
 
 function callback_MoveForward(event) {
-	event = event || window.event;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrForward = Date.now();
 	forwardMove();
@@ -244,7 +238,6 @@ function update_MoveButtons() {
 }
 
 function callback_Pause(event) {
-	event = event || window.event;
 	guipause.open();
 }
 
