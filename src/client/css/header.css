@@ -370,6 +370,10 @@ span.arrow-head-left {
     cursor: pointer;
 }
 
+.selection-option.premove {
+    cursor: not-allowed;
+}
+
 .language-dropdown-item {
     height: 48px;
     padding: 0 15px;
