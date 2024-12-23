@@ -112,6 +112,76 @@ iframe {
     text-shadow: -2px 0px 0.6em rgba(0, 38, 255, 0.2);
 }
 
+.github-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.github-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1em;
+}
+
+.github-container a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.github-container a, .github-container img {
+    border-radius: 50%;
+    width: 5em;
+    height: 5em;
+    aspect-ratio: 1 / 1;
+}
+
+.github-container .github-stats {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    width: 100%;
+    transition: 200ms;
+    background-color: rgb(244, 244, 244);
+    opacity: 0;
+    box-sizing: border-box;
+
+    transform: translate(0, -104%); /* TODO why does it require 4 more percent? */
+}
+
+.github-stats p {
+    text-align: center;
+    font-size: x-small !important;
+}
+
+.github-container a:hover .github-stats {
+    opacity: 0.5;
+}
+
+/*.github-stats {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    background-color: #4CAF50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}*/
+
+/*.github-container a:hover .github-stats {
+    transform: translateX(0);
+}*/
+
 .grey {
     color:rgba(0, 0, 0, 0.345)
 }
