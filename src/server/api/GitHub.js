@@ -56,7 +56,7 @@ if (process.env.GITHUB_API_KEY === undefined || process.env.GITHUB_REPO === unde
  */
 function refreshGitHubContributorsList() {
 	if (process.env.GITHUB_API_KEY.length === 0 || process.env.GITHUB_REPO.length === 0) {
-		console.log("Either Github API key not detected, or repository not specified. Stopping updating contributor list.");
+		logEvents("Either Github API key not detected, or repository not specified. Stopping updating contributor list.", 'errLog.txt', { print: true });
 		clearInterval(intervalId);
 		return;
 	}
