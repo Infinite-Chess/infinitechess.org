@@ -2,7 +2,7 @@
 // This script allows us to enable or disable premoves and dragging pieces
 
 import preferences from "../preferences.js";
-import statustext from "../../../game/gui/statustext.js";
+import themes from "../themes.js";
 
 // Document Elements -------------------------------------------------------------------------
 
@@ -19,6 +19,8 @@ const premoveCheckbox = document.querySelector('.selection-option.premove input'
 (function init() {
 
 	showCheckmarkOnSelectedOptions();
+	updateSwitchColor();
+	document.addEventListener('theme-change', updateSwitchColor);
 
 })();
 
@@ -53,12 +55,20 @@ function toggleDrag() {
 	preferences.setDragEnabled(dragCheckbox.checked);
 }
 function togglePremove() {
-	statustext.showStatus(translations.planned_feature);
-	// If the checkbox is disabled it stops sending onclick events.
-	// Uncheck the box
-	premoveCheckbox.checked = false;
-	
 	//preferences.setPremoveMode(premoveCheckbox.checked);
+}
+
+function updateSwitchColor() {
+	const theme = preferences.getTheme();
+	const lightTiles = themes.getPropertyOfTheme(theme, "lightTiles");
+	const darkTiles = themes.getPropertyOfTheme(theme, "darkTiles");
+	
+	const AvgR = (lightTiles[0] + darkTiles[0]) / 2;
+	const AvgG = (lightTiles[1] + darkTiles[1]) / 2;
+	const AvgB = (lightTiles[2] + darkTiles[2]) / 2;
+	
+	const css = `rgb(${AvgR*255}, ${AvgG*255}, ${AvgB*255})`;
+	selectionDropdown.style.setProperty('--switch-on-color', css);
 }
 
 export default {

@@ -2,6 +2,7 @@
     --header-height: 40px;
     --header-link-hover-color: rgb(230, 230, 230);
     --currPage-background-color: rgb(237, 237, 237);
+    --switch-on-color: rgb(97, 97, 97); /* Default value */
     --header-link-max-padding: 16px;
     --header-link-min-padding: 8px;
     --CBC-in: cubic-bezier(0,1.05,.47,1); /* Settings dropdown IN curve */
@@ -41,6 +42,10 @@ header a {
     color: black;
     display: flex;
     align-items: center;
+}
+
+header label {
+    font-size: inherit; /* Prevents createaccount.css changing the font size. */
 }
 
 /* All SVG settings. (Most settings dropdown SVGs are the same width in the document, we just scale them here to make them all VISUALLY the same size */
@@ -325,7 +330,6 @@ span.arrow-head-left {
 
 .switch {
     position: relative;
-    --switch-on-color: rgb(97, 97, 97); /* Default value */
 }
 
 .switch input {
@@ -344,7 +348,7 @@ span.arrow-head-left {
 
 .switch > input + ::before {
     content: '';
-    display: inline-block;
+    display: block;
     border-radius: 14px;
     background-color: white;
     width: 50%;
@@ -371,6 +375,7 @@ span.arrow-head-left {
 }
 
 .selection-option.premove {
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
