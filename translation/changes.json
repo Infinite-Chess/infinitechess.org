@@ -1,4 +1,12 @@
 {
+	"25": {
+		"note": "Added selection menu dropdown, lines 21-23",
+		"changes": [
+			"header.settings.selection",
+			"header.settings.selection-drag",
+			"header.settings.selection-premove"
+		]
+	},
 	"24": {
 		"note": "Deleted play.javascript.copypaste.loaded, line 323",
 		"changes": []
