@@ -14,6 +14,8 @@ import { deleteAccount } from "../controllers/deleteAccountController.js";
 // @ts-ignore
 import { deleteAllSessionsOfUser } from "../controllers/authenticationTokens/sessionManager.js";
 // @ts-ignore
+import { refreshGitHubContributorsList } from "./GitHub.js";
+// @ts-ignore
 import { areRolesHigherInPriority } from "../controllers/roles.js";
 
 import type { CustomRequest } from "../../types.js";
@@ -31,7 +33,8 @@ const validCommands = [
 	"invites",
 	"announce",
 	"userinfo",
-	"help"
+	"help",
+	"contributorsUpdate"
 ];
 
 function processCommand(req: CustomRequest, res: Response): void {
@@ -74,6 +77,9 @@ function processCommand(req: CustomRequest, res: Response): void {
 			return;
 		case "help":
 			helpCommand(commandAndArgs, res);
+			return;
+		case "contributorsUpdate":
+			updateContributorsCommand(command, req, res);
 			return;
 		default:
 			res.status(422).send("Unknown command.");
@@ -211,6 +217,12 @@ function getUserInfo(command: string, commandAndArgs: string[], req: CustomReque
 	}
 }
 
+function updateContributorsCommand(command: string, req: CustomRequest, res: Response) {
+	logCommand(command, req);
+	refreshGitHubContributorsList();
+	sendAndLogResponse(res, 200, "Contributors should now be updated!");
+}
+
 function helpCommand(commandAndArgs: string[], res: Response) {
 	if (commandAndArgs.length === 1) {
 		res.status(200).send("Commands: " + validCommands.join(", ") + "\nUse help <command> to get more information about a command.");
@@ -243,6 +255,9 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 			return;
 		case "userinfo":
 			res.status(200).send("Syntax: userinfo <username>\nPrints info about a user.");
+			return;
+		case "contributorsUpdate":
+			res.status(200).send("Syntax: contributorsUpdate\nManually update to the most recent contributors list from the Github API. Should be used for testing");
 			return;
 		case "help":
 			res.status(200).send("Syntax: help [command]\nPrints the list of commands or information about a command.");
