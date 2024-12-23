@@ -321,6 +321,8 @@ span.arrow-head-left {
     transform: scale(0);
 }
 
+/* Switch toggles */
+
 .switch {
     position: relative;
     --switch-on-color: rgb(97, 97, 97); /* Default value */
