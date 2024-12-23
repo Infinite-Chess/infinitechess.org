@@ -336,8 +336,8 @@ span.arrow-head-left {
     position: absolute;
     inset: 0;
     border-radius: 14px;
-    background-color: rgb(97, 97, 97);
-    border: 2px solid rgb(97, 97, 97);
+    background-color: #777;
+    border: 2px solid #777;
     transition: 0.2s var(--CBC-switch);
     transition-property: background-color, border-color;
 }
