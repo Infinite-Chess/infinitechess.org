@@ -71,7 +71,7 @@ textures_credits = [
 ]
 sounds_heading = "Äänet"
 sounds_credits = [
-["Jotkin äänet tarjotaa ", "projekti lisenssillä"],
+["Jotkin äänet tarjoaa ", "projekti lisenssillä"],
 "Muut äänet on luonut Naviary.",
 ]
 code_heading = "Koodi"
