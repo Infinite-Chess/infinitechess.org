@@ -439,14 +439,19 @@ span.arrow-head-left {
     height: 35px;
 }
 
+.selection-options span.text {
+    padding: 0 6px 0 3px;
+}
+
 .selection-option {
     height: 43px;
     padding: 0 8px 0 8px;
 }
 
 .selection-option .switch {
-    width: 40px;
-    height: 22px;
+    width: 36px;
+    height: 20px;
+    margin: 0 2px 0 4px;
 }
 
 /* Perspective dropdown */
