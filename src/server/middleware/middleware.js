@@ -38,6 +38,7 @@ import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '.
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from "../api/AdminPanel.js";
+import { getContributors } from '../api/GitHub.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -125,6 +126,11 @@ function configureMiddleware(app) {
 	app.post("/setlanguage", (req, res) => { // Language cookie setter POST request
 		res.cookie("i18next", req.i18n.resolvedLanguage);
 		res.send(""); // Doesn't work without this for some reason
+	});
+
+	app.get("/api/contributors", (req, res) => {
+		const contributors = getContributors();
+		res.send(JSON.stringify(contributors));
 	});
 
 	// Token Authenticator -------------------------------------------------------

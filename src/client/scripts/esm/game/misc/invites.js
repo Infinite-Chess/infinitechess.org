@@ -109,7 +109,7 @@ function cancel(id = ourInviteID) {
 // Generates a tag id for the invite parameters before we send off action "createinvite" to the server
 function generateTagForInvite(inviteOptions) {
 	// Create and send invite with a tag so we know which ones ours
-	const tag = uuid.generateID(8);
+	const tag = uuid.generateID_Base62(8);
 
 	// NEW browser storage method!
 	localstorage.saveItem('invite-tag', tag);

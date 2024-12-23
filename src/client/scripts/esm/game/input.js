@@ -69,7 +69,11 @@ let ignoreMouseDown = false;
 let mouseIsSupported = true;
 
 /** Touchscreen and mouse */
-let pointerIsTouch; // True if the mouse recent pointer input was from a touch event. Used on devices that support both touchscreen and mouse.
+/**
+ * True if the most recent pointer input was from a touch event.
+ * Used on devices that support both touchscreen and mouse to determine which is currently in use. @type {boolean}
+*/
+let pointerIsTouch;
 let pointerWorldLocation = [0,0];
 
 // The cursor that appears on touch screen when you select a piece and zoom out
