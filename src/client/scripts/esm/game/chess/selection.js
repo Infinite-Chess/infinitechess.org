@@ -156,7 +156,12 @@ function update() {
 	// Else we clicked, but there was no piece to select, *shrugs*
 }
 
-function handleDragging(pieceHoveredType, allowDrop=true) {
+/**
+ * Update the location of the dragged piece or make a move if it was dropped.
+ * @param {Piece} [pieceHoveredType] - The type of piece hovered over, if there is one.
+ * @param {boolean} allowDrop - If false, dropping the piece will not make a move. Default is true.
+ */
+function handleDragging(pieceHoveredType, allowDrop = true) {
 	if (input.getTouchHelds().length > 1) {
 		//Prevents accidental dragging when trying to zoom.
 		if (didLastClickSelectPiece) return unselectPiece();
