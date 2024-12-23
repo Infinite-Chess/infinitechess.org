@@ -12,6 +12,9 @@ import movement from "./movement.js";
 import input from "../input.js";
 import camera from "./camera.js";
 import coordutil from "../../chess/util/coordutil.js";
+import themes from "../../components/header/themes.js";
+import preferences from "../../components/header/preferences.js";
+import board from "./board.js";
 // Import end
 
 /**
@@ -39,7 +42,7 @@ const touchscreenOffset = 2;
  */
 const minimumScale = 0.9;
 /** The width of the box outline used to emphasize the hovered square. */
-const outlineWidth_Mouse = 0.1;
+const outlineWidth_Mouse = 0.08; // Default: 0.1
 const outlineWidth_Touch = 0.05;
 
 /** The hight the piece is rendered above the board when in perspective mode. */
@@ -58,8 +61,8 @@ let pieceType;
 // Hides the original piece
 function renderTransparentSquare() {
 	if (!startCoords) return;
-	let transparentModel = genTransparentModel();
-	transparentModel.render();
+	const transparentModel = genTransparentModel();
+	transparentModel.render([0,0,z]); // Since this data did NOT contain the z coordinates, we can translate it by it here
 }
 
 // Renders the box outline, the dragged piece and its shadow
@@ -69,7 +72,9 @@ function renderPiece() {
 	if (hoveredCoords) outlineModel = genOutlineModel();
 	else outlineModel = genIntersectingLines();
 	outlineModel.render();
-	genPieceModel().render();
+
+	const draggedPieceModel = genPieceModel();
+	draggedPieceModel.render();
 }
 
 /**
@@ -77,9 +82,9 @@ function renderPiece() {
  * @returns {BufferModel} The buffer model
  */
 function genTransparentModel() {
-	let color = [0,0,0,0];
-	let data = shapes.getTransformedDataQuad_Color3D_FromCoord(startCoords, z, color); //Hide orginal piece
-	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	const color = [0,0,0,0];
+	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
+	return buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
 }
 
 /**
@@ -109,7 +114,7 @@ function genPieceModel() {
 	const right = worldLocation[0] + size / 2;
 	const top = worldLocation[1] + size / 2 + (touchscreen ? touchscreenOffset : 0);
 	
-	let data = [];
+	const data = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor)); // Shadow
 	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a)); // Piece
 	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
@@ -122,8 +127,8 @@ function genPieceModel() {
  * @returns {BufferModel} The buffer model
  */
 function genOutlineModel() {
-	let data = [];
-	const pointerIsTouch = input.getPointerIsTouch()
+	const data = [];
+	const pointerIsTouch = input.getPointerIsTouch();
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords);
 	const width = (pointerIsTouch ? outlineWidth_Touch : outlineWidth_Mouse) * movement.getBoardScale();
 	const color = options.getDefaultOutlineColor();
@@ -132,19 +137,96 @@ function genOutlineModel() {
 	if (pointerIsTouch && !coordutil.areCoordsEqual(hoveredCoords, startCoords)) {
 		// Outline the entire rank and file
 		const boundingBox = camera.getScreenBoundingBox(false);
-		data.push(...bufferdata.getDataQuad_Color3D({ left, right: left + width, bottom: boundingBox.bottom, top: boundingBox.top }, z, color)); // left
-		data.push(...bufferdata.getDataQuad_Color3D({ left: boundingBox.left, right: boundingBox.right, bottom, top: bottom+width }, z, color)); // bottom
-		data.push(...bufferdata.getDataQuad_Color3D({ left: right - width, right, bottom: boundingBox.bottom, top: boundingBox.top }, z, color)); // right
-		data.push(...bufferdata.getDataQuad_Color3D({ left: boundingBox.left, right: boundingBox.right, bottom: top - width, top }, z, color)); // top
+		data.push(...bufferdata.getDataQuad_Color({ left, right: left + width, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // left
+		data.push(...bufferdata.getDataQuad_Color({ left: boundingBox.left, right: boundingBox.right, bottom, top: bottom + width }, color)); // bottom
+		data.push(...bufferdata.getDataQuad_Color({ left: right - width, right, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // right
+		data.push(...bufferdata.getDataQuad_Color({ left: boundingBox.left, right: boundingBox.right, bottom: top - width, top }, color)); // top
 	} else {
 		// Outline the hovered square
-		data.push(...bufferdata.getDataQuad_Color3D({ left, right: left + width, bottom, top }, z, color)); // left
-		data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom, top: bottom + width }, z, color)); // bottom
-		data.push(...bufferdata.getDataQuad_Color3D({ left: right - width, right, bottom, top }, z, color)); // right
-		data.push(...bufferdata.getDataQuad_Color3D({ left, right, bottom: top - width, top }, z, color)); // top
+		data.push(...getBoxFrameData(hoveredCoords));
 	}
 	
-	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	return buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
+}
+
+/**
+ * Generates vertex data for a rectangular frame (box).
+ * @param {number[]} coords - The coordinate of the box frame
+ * @returns {number[]} The vertex data for the frame.
+ */
+function getBoxFrameData(coords) {
+	const boardPos = movement.getBoardPos();
+	const boardScale = movement.getBoardScale();
+	const squareCenter = board.gsquareCenter();
+	const edgeWidth = 0.07 * boardScale;
+	const color = themes.getPropertyOfTheme(preferences.getTheme(), 'boxOutlineColor');
+
+	const centerXOfBox = coords[0] + 0.5 - squareCenter;
+	const centerYOfBox = coords[1] + 0.5 - squareCenter;
+	const centerX = (centerXOfBox - boardPos[0]) * boardScale;
+	const centerY = (centerYOfBox - boardPos[1]) * boardScale;
+
+	const vertices = [];
+	const [r, g, b, a] = color;
+
+	// Calculate outer bounds
+	const halfBox = (1 / 2) * boardScale;
+	const outerLeft = centerX - halfBox;
+	const outerRight = centerX + halfBox;
+	const outerTop = centerY + halfBox;
+	const outerBottom = centerY - halfBox;
+
+	// Calculate inner bounds
+	const innerLeft = outerLeft + edgeWidth;
+	const innerRight = outerRight - edgeWidth;
+	const innerTop = outerTop - edgeWidth;
+	const innerBottom = outerBottom + edgeWidth;
+
+	// Helper function to add a rectangle (two triangles)
+	function addRectangle(x1, y1, x2, y2, x3, y3, x4, y4) {
+		vertices.push(
+			x1, y1, r, g, b, a, // Triangle 1, Vertex 1
+			x2, y2, r, g, b, a, // Triangle 1, Vertex 2
+			x3, y3, r, g, b, a, // Triangle 1, Vertex 3
+			x3, y3, r, g, b, a, // Triangle 2, Vertex 1
+			x4, y4, r, g, b, a, // Triangle 2, Vertex 2
+			x1, y1, r, g, b, a  // Triangle 2, Vertex 3
+		);
+	}
+
+	// Top edge
+	addRectangle(
+		outerLeft, outerTop,  // Outer top-left
+		outerRight, outerTop, // Outer top-right
+		innerRight, innerTop, // Inner top-right
+		innerLeft, innerTop   // Inner top-left
+	);
+
+	// Bottom edge
+	addRectangle(
+		outerLeft, outerBottom,  // Outer bottom-left
+		innerLeft, innerBottom,  // Inner bottom-left
+		innerRight, innerBottom, // Inner bottom-right
+		outerRight, outerBottom  // Outer bottom-right
+	);
+
+	// Left edge
+	addRectangle(
+		outerLeft, outerTop,    // Outer top-left
+		innerLeft, innerTop,    // Inner top-left
+		innerLeft, innerBottom, // Inner bottom-left
+		outerLeft, outerBottom  // Outer bottom-left
+	);
+
+	// Right edge
+	addRectangle(
+		outerRight, outerTop,    // Outer top-right
+		outerRight, outerBottom, // Outer bottom-right
+		innerRight, innerBottom, // Inner bottom-right
+		innerRight, innerTop     // Inner top-right
+	);
+
+	return vertices;
 }
 
 /**
@@ -156,7 +238,7 @@ function genOutlineModel() {
 function genIntersectingLines() {
 	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
 	const [ r, g, b, a ] = options.getDefaultOutlineColor();
-	let data = [
+	const data = [
 		left, worldLocation[1], r, g, b, a,
 		right, worldLocation[1],r, g, b, a,
 		worldLocation[0], bottom, r, g, b, a,
@@ -208,4 +290,4 @@ export default {
 	dropPiece,
 	renderTransparentSquare,
 	renderPiece
-}
+};

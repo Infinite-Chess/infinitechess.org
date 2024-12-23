@@ -25,7 +25,7 @@ const boxOutlineColor = "boxOutlineColor";
 const defaults = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
-	[boxOutlineColor]: [0.5, 0.5, 0.5, 1],
+	[boxOutlineColor]: [1, 1, 1, 0.45],
 	// If this is false, we will render them white,
 	// utilizing the more efficient color-less shader program!
 	useColoredPieces: false,
