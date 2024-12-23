@@ -521,8 +521,12 @@ function eraseMomentum() {
 	scaleVel = 0;
 }
 
-function hasMomentum() {
-	return panVel[0] || panVel[1] || scaleVel;
+function boardOrScaleHasMomentum() {
+	return panVel[0] !== 0 || panVel[1] !== 0 || scaleVel !== 0;
+}
+
+function boardHasMomentum() {
+	return panVel[0] !== 0 || panVel[1] !== 0;
 }
 
 function setPositionToArea(area) {
@@ -549,7 +553,8 @@ export default {
 	updateNavControls,
 	randomizePanVelDir,
 	dragBoard,
-	hasMomentum,
+	boardOrScaleHasMomentum,
+	boardHasMomentum,
 	eraseMomentum,
 	setPositionToArea,
 	checkIfBoardDragged,

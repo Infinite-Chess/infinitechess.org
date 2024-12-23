@@ -13,7 +13,6 @@ import highlights from '../rendering/highlights.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
-import board from '../rendering/board.js';
 import pieces from '../rendering/pieces.js';
 import movement from '../rendering/movement.js';
 import moveutil from '../../chess/util/moveutil.js';
@@ -130,7 +129,7 @@ function update() {
 		return;
 	}
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting()) {
-		if(draggingPiece) handleDragging(undefined, false);
+		if (draggingPiece) handleDragging(undefined, false);
 		return;
 	}
 	if (gamefile.gameConclusion || guipause.areWePaused() || perspective.isLookingUp()) return;
@@ -181,7 +180,7 @@ function handleDragging(pieceHoveredType, allowDrop = true) {
 
 /** Picks up the currently selected piece if we are allowed to. */
 function startDragging() {
-	if (!preferences.getDragEnabled() || !canMovePieceType(pieceSelected.type) || movement.hasMomentum()) return false;
+	if (!preferences.getDragEnabled() || !canMovePieceType(pieceSelected.type) || movement.boardHasMomentum()) return false;
 	draganimation.pickUpPiece(pieceSelected.type, pieceSelected.coords, hoverSquare);
 	return draggingPiece = true;
 }
