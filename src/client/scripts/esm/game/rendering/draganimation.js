@@ -35,7 +35,7 @@ const z = 0.01;
 const touchscreenScale = 2;
 const mouseScale = 1;
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
-const touchscreenOffset = 2;
+const touchscreenOffset = 1.6; // Default: 2
 /**
  * The minimum size of the dragged piece relative to the stationary pieces.
  * When zoomed in, this prevents it becoming tiny relative to the others.
