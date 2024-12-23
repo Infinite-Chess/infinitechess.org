@@ -33,8 +33,8 @@ const validCommands = [
 	"invites",
 	"announce",
 	"userinfo",
+	"updatecontributors",
 	"help",
-	"contributorsUpdate"
 ];
 
 function processCommand(req: CustomRequest, res: Response): void {
@@ -75,11 +75,11 @@ function processCommand(req: CustomRequest, res: Response): void {
 		case "userinfo":
 			getUserInfo(command, commandAndArgs, req, res);
 			return;
+		case "updatecontributors":
+			updateContributorsCommand(command, req, res);
+			return;
 		case "help":
 			helpCommand(commandAndArgs, res);
-			return;
-		case "contributorsUpdate":
-			updateContributorsCommand(command, req, res);
 			return;
 		default:
 			res.status(422).send("Unknown command.");
@@ -256,8 +256,8 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 		case "userinfo":
 			res.status(200).send("Syntax: userinfo <username>\nPrints info about a user.");
 			return;
-		case "contributorsUpdate":
-			res.status(200).send("Syntax: contributorsUpdate\nManually update to the most recent contributors list from the Github API. Should be used for testing");
+		case "updatecontributors":
+			res.status(200).send("Syntax: updatecontributors\nManually update to the most recent contributors list from the Github API. Should be used for testing");
 			return;
 		case "help":
 			res.status(200).send("Syntax: help [command]\nPrints the list of commands or information about a command.");
