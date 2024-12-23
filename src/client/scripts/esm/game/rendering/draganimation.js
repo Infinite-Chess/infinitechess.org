@@ -40,7 +40,7 @@ const touchscreenOffset = 2;
  * The minimum size of the dragged piece relative to the stationary pieces.
  * When zoomed in, this prevents it becoming tiny relative to the others.
  */
-const minimumScale = 0.9;
+const minimumScale = 1;
 /** The width of the box outline used to emphasize the hovered square. */
 const outlineWidth_Mouse = 0.08; // Default: 0.1
 const outlineWidth_Touch = 0.05;
