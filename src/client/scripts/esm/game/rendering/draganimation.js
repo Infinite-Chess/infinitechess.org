@@ -42,7 +42,7 @@ const touchscreenOffset = 1.6; // Default: 2
  */
 const minScale = 1;
 /** When the scale is smaller (more zoomed out) than this, we render rank/column outlines instead of the box. */
-const maxScaleToDrawOutline = 0.6;
+const maxScaleToDrawOutline = 0.65;
 /** The width of the box outline used to emphasize the hovered square. */
 const outlineWidth_Mouse = 0.08; // Default: 0.1
 const outlineWidth_Touch = 0.05;
@@ -109,12 +109,21 @@ function genPieceModel() {
 	
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
-	let size = (perspectiveEnabled ? boardScale : touchscreen ? touchscreenScale : mouseScale) * boardScale;
-	if (size < minScale) size = minScale;
-	const left = worldLocation[0] - size / 2;
-	const bottom = worldLocation[1] - size / 2 + (touchscreen ? touchscreenOffset : 0);
-	const right = worldLocation[0] + size / 2;
-	const top = worldLocation[1] + size / 2 + (touchscreen ? touchscreenOffset : 0);
+	let size;
+	if (touchscreen) {
+		size = boardScale;
+		if (size < touchscreenScale) size = touchscreenScale;
+	} else if (perspectiveEnabled) {
+		size = boardScale;
+	} else { // 2D Mode
+		size = mouseScale * boardScale;
+		if (size < minScale) size = minScale;
+	}
+	const halfSize = size / 2;
+	const left = worldLocation[0] - halfSize;
+	const bottom = worldLocation[1] - halfSize + (touchscreen ? touchscreenOffset : 0);
+	const right = worldLocation[0] + halfSize;
+	const top = worldLocation[1] + halfSize + (touchscreen ? touchscreenOffset : 0);
 	
 	const data = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor)); // Shadow
