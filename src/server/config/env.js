@@ -36,6 +36,8 @@ HTTPPORT=80
 HTTPSPORT=443
 HTTPPORT_LOCAL=3000
 HTTPSPORT_LOCAL=3443
+GITHUB_API_KEY=
+GITHUB_REPO=
     `;
 	fs.writeFileSync(envPath, content.trim());
 	console.log('Generated .env file');

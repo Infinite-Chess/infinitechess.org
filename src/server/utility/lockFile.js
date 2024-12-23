@@ -30,7 +30,7 @@ const readFile = async(path, errorString) => {
 		})
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
-			const errText = `${errorString}${e.stack}`;
+			const errText = `Error when reading file in lockFile: ${errorString}${e.stack}`;
 			logEvents(errText, 'errLog.txt', { print: true });
 		});
 	return data;
@@ -55,7 +55,7 @@ const writeFile = async(path, object, errorString) => {
 		})
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
-			const errText = `${errorString}${e.stack}`;
+			const errText = `Error while writing file in lockFile: ${errorString}${e.stack}`;
 			logEvents(errText, 'errLog.txt', { print: true });
 			status = false;
 		});
@@ -79,7 +79,7 @@ const editFile = async(path, callback, errorString) => {
 		})
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
-			const errText = `${errorString}${e.stack}`;
+			const errText = `Error while editing file in lockFile: ${errorString}${e.stack}`;
 			logEvents(errText, 'errLog.txt', { print: true });
 			status = false;
 		});
