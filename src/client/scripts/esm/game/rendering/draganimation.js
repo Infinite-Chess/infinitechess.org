@@ -148,7 +148,12 @@ function genOutlineModel() {
 	// Checking if the coords are equal prevents the large lines flashing when tapping to select.
 	if (pointerIsTouch && !coordutil.areCoordsEqual(hoveredCoords, startCoords) || boardScale < maxScaleToDrawOutline) {
 		// Outline the entire rank and file
-		const boundingBox = camera.getScreenBoundingBox(false);
+		let boundingBox;
+		if (perspective.getEnabled()) {
+			const dist = perspective.distToRenderBoard;
+			boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
+		} else boundingBox = camera.getScreenBoundingBox(false);
+
 		data.push(...bufferdata.getDataQuad_Color({ left, right: left + width, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // left
 		data.push(...bufferdata.getDataQuad_Color({ left: boundingBox.left, right: boundingBox.right, bottom, top: bottom + width }, color)); // bottom
 		data.push(...bufferdata.getDataQuad_Color({ left: right - width, right, bottom: boundingBox.bottom, top: boundingBox.top }, color)); // right
@@ -248,7 +253,13 @@ function getBoxFrameData(coords) {
  * @returns {BufferModel} The buffer model
  */
 function genIntersectingLines() {
-	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
+	let boundingBox;
+	if (perspective.getEnabled()) {
+		const dist = perspective.distToRenderBoard;
+		boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
+	} else boundingBox = camera.getScreenBoundingBox(false);
+	
+	const { left, right, bottom, top } = boundingBox;
 	const [ r, g, b, a ] = options.getDefaultOutlineColor();
 	const data = [
 		left, worldLocation[1], r, g, b, a,
