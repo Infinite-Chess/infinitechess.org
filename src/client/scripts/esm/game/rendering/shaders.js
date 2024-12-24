@@ -69,11 +69,9 @@ const programs = {
 /** Initiates the shader programs we will be using.
  * Call this after initiating the webgl context. */
 function initPrograms() {
-	// Check if WebGL 2 is supported
-	const isWebGL2 = webgl.areWeUsingWebGL2();
 	programs.colorProgram = createColorProgram();
-	programs.textureProgram = createTextureProgram(isWebGL2);
-	programs.coloredTextureProgram = createColoredTextureProgram(isWebGL2);
+	programs.textureProgram = createTextureProgram();
+	programs.coloredTextureProgram = createColoredTextureProgram();
 	programs.tintedTextureProgram = createTintedTextureProgram();
 }
 
@@ -132,12 +130,11 @@ function createColorProgram() {
 /**
  * Creates and returns a shader program that is capable of rendering meshes with a bound texture.
  * If WebGL 2 is supported, this shader will apply a bias to the LOD (mipmap level) to sharpen the textures.
- * @param {boolean} isWebGL2 - Whether WebGL 2 is enabled and supported in the webgl context. If it is enabled, we will apply a mipmap bias of -0.5
  * @returns {ShaderProgram}
  */
-function createTextureProgram(isWebGL2) {
+function createTextureProgram() {
 	// GLSL version 300 for WebGL 2, otherwise WebGL 1 shader code
-	const vsSource = isWebGL2 ? `#version 300 es
+	const vsSource = `#version 300 es
         in vec4 aVertexPosition;
         in vec2 aTextureCoord;
 
@@ -151,23 +148,9 @@ function createTextureProgram(isWebGL2) {
             gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
             vTextureCoord = aTextureCoord;
         }
-    ` : `
-        attribute vec4 aVertexPosition;
-        attribute vec2 aTextureCoord;
-
-        uniform mat4 uWorldMatrix;
-        uniform mat4 uViewMatrix;
-        uniform mat4 uProjMatrix;
-
-        varying lowp vec2 vTextureCoord;
-
-        void main(void) {
-            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
-            vTextureCoord = aTextureCoord;
-        }
     `;
 
-	const fsSource = isWebGL2 ? `#version 300 es
+	const fsSource = `#version 300 es
         precision lowp float;
 
         in vec2 vTextureCoord;
@@ -177,13 +160,6 @@ function createTextureProgram(isWebGL2) {
 
         void main(void) {
             fragColor = texture(uSampler, vTextureCoord, -0.5); // Apply a mipmap level bias so as to make the textures sharper. (For devices only compatible with WebGL1, their textures will be a little more blurred)
-        }
-    ` : `
-        varying lowp vec2 vTextureCoord;
-        uniform sampler2D uSampler;
-
-        void main(void) {
-            gl_FragColor = texture2D(uSampler, vTextureCoord);
         }
     `;
 
@@ -207,13 +183,12 @@ function createTextureProgram(isWebGL2) {
 /**
  * Creates and return a shader program that is capable of
  * rendering meshes with a bound texture AND colored vertices.
- * @param {boolean} isWebGL2 - Whether WebGL 2 is enabled and supported in the webgl context. If it is enabled, we will apply a mipmap bias of -0.5
  * @returns {ShaderProgram}
 */
-function createColoredTextureProgram(isWebGL2) {
+function createColoredTextureProgram() {
 	// Vertex shader. For every vertex, applies matrix multiplication to find it's position on the canvas.
 	// Attributes receive data from buffer. Uniforms are like global variables, they stay the same.
-	const vsSource = isWebGL2 ? `#version 300 es
+	const vsSource = `#version 300 es
 		in vec4 aVertexPosition;
 		in vec2 aTextureCoord;
 		in vec4 aVertexColor;
@@ -230,26 +205,9 @@ function createColoredTextureProgram(isWebGL2) {
 			vTextureCoord = aTextureCoord;
 			vColor = aVertexColor;
 		}
-    ` : `
-        attribute vec4 aVertexPosition;
-        attribute vec2 aTextureCoord;
-        attribute vec4 aVertexColor;
-
-        uniform mat4 uWorldMatrix;
-        uniform mat4 uViewMatrix;
-        uniform mat4 uProjMatrix;
-
-        varying lowp vec2 vTextureCoord;
-        varying lowp vec4 vColor;
-
-        void main(void) {
-            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
-            vTextureCoord = aTextureCoord;
-            vColor = aVertexColor;
-        }
     `;
 	// Fragment shader. Called for every pixel on each shape to be drawn. Color.
-	const fsSource = isWebGL2 ? `#version 300 es
+	const fsSource = `#version 300 es
 		precision lowp float;
 
 		in vec2 vTextureCoord;
@@ -263,15 +221,6 @@ function createColoredTextureProgram(isWebGL2) {
 			// Apply a LOD bias of -0.5 to the texture lookup
 			fragColor = texture(uSampler, vTextureCoord, -0.5) * vColor;
 		}
-    ` : `
-        varying lowp vec2 vTextureCoord;
-        varying lowp vec4 vColor;
-
-        uniform sampler2D uSampler;
-
-        void main(void) {
-            gl_FragColor = texture2D(uSampler, vTextureCoord) * vColor;
-        }
     `;
 
 	const program = createShaderProgram(vsSource, fsSource);

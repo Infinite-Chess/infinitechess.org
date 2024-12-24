@@ -35,11 +35,6 @@ let clearColor = [0.5, 0.5, 0.5]; // Grey
 const defaultDepthFuncParam = 'LEQUAL';
 
 /**
- * True if our device supports WebGL 2. If not, they'll use 1
- */
-let WebGL2IsSupported = true;
-
-/**
  * Whether to cull (skip) rendering back faces.
  * We can prevent the rasteurizer from calculating pixels on faces facing AWAY from us with backface culling.
  * 
@@ -63,33 +58,24 @@ const frontFaceVerticesAreClockwise = true;
 function setClearColor(newClearColor) { clearColor = newClearColor; }
 
 /**
- * True if our device supports WebGL 2. If not, we'll avoid using features that require v2.0
- * @returns {boolean}
- */
-function areWeUsingWebGL2() {
-	// return gl instanceof WebGL2RenderingContext;
-	return WebGL2IsSupported;
-}
-
-/**
  * Initiate the WebGL context. This is our web-based render engine.
  */
 function init() {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
 	gl = camera.canvas.getContext('webgl2', { alpha: false });
-	if (!gl) { // Init WebGL-1
-		console.log("Browser doesn't support WebGL-2, falling back to WebGL-1.");
-		WebGL2IsSupported = false;
-		gl = camera.canvas.getContext('webgl', { alpha: false });
-	}
-	if (!gl) { // Init WebGL experimental
-		console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.");
-		gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
-	}
-	if (!gl) { // Experimental also failed to init
+	if (!gl) { // WebGL2 not supported
 		alert(translations.webgl_unsupported);
-		throw new Error("WebGL not supported.");
+		throw new Error("WebGL2 not supported by browser.");
+		// gl = camera.canvas.getContext('webgl', { alpha: false });
 	}
+	// if (!gl) { // Init WebGL experimental
+	// 	console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.");
+	// 	gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
+	// }
+	// if (!gl) { // Experimental also failed to init
+	// 	alert(translations.webgl_unsupported);
+	// 	throw new Error("WebGL not supported.");
+	// }
 
 	gl.clearDepth(1.0); // Set the clear depth value
 	clearScreen();
@@ -275,7 +261,6 @@ function disableDepthTest() {
 export default {
 	init,
 	clearScreen,
-	areWeUsingWebGL2,
 	executeWithDepthFunc_ALWAYS,
 	executeWithInverseBlending,
 	setClearColor,
