@@ -40,6 +40,8 @@
 		"@types/express": "^5.0.0",
 		"@types/node": "^22.10.1",
 		"@types/ws": "^8.5.13",
+		"@typescript-eslint/eslint-plugin": "^8.18.2",
+		"@typescript-eslint/parser": "^8.18.2",
 		"eslint": "^9.16.0",
 		"globals": "^15.9.0",
 		"madge": "^8.0.0",
