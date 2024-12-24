@@ -4,7 +4,6 @@ import gamefileutility from '../util/gamefileutility.js';
 import moveutil from '../util/moveutil.js';
 import legalmoves from './legalmoves.js';
 import typeutil from '../util/typeutil.js';
-import colorutil from '../util/colorutil.js';
 // Import End
 
 /** 

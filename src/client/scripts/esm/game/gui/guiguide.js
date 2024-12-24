@@ -57,7 +57,6 @@ function callback_Back() {
 }
 
 function callback_FairyBack(event) {
-	event = event || window.event;
 	if (fairyIndex === 0) return;
 	hideCurrentFairy();
 	fairyIndex--;
@@ -66,7 +65,6 @@ function callback_FairyBack(event) {
 }
 
 function callback_FairyForward(event) {
-	event = event || window.event;
 	if (fairyIndex === maxFairyIndex) return;
 	hideCurrentFairy();
 	fairyIndex++;

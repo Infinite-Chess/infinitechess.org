@@ -4,13 +4,12 @@ import legalmoves from './legalmoves.js';
 import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import boardchanges from './boardchanges.js';
-import clock from './clock.js';
+import state from './state.js';
 import math from '../../util/math.js';
 import moveutil from '../util/moveutil.js';
 import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 import colorutil from '../util/colorutil.js';
-import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import wincondition from './wincondition.js';
 // Import End
@@ -29,16 +28,20 @@ import wincondition from './wincondition.js';
 
 /** Here lies the universal methods for moving pieces, forward or rewinding. */
 
-// TODO: doc
+/**
+ * Generates all move data needed before move execution
+ * @param {gamefile} gamefile 
+ * @param {Move} move 
+ */
 function generateMove(gamefile, move) {
 	move.changes = [];
+	move.generateIndex = gamefile.moveIndex + 1;
+	state.initMoveStates(move);
 
 	const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
 	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
 	move.type = piece.type;
 	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
-    
-	storeRewindInfoOnMove(gamefile, move, piece.index); // Keep track if important stuff to remember, for rewinding the game if we undo moves
 
 	// Do this before making the move, so that if its a pawn double push, enpassant can be reinstated and not deleted.
 	deleteEnpassantAndSpecialRightsProperties(gamefile, move);
@@ -46,60 +49,54 @@ function generateMove(gamefile, move) {
 	let specialMoveMade;
 	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move); // Move piece regularly (no special tag)
+
+	let wasACapture = false;
+	for (const c of move.changes) {
+		if (c.action === 'capturePiece') {
+			wasACapture = true;
+			break;
+		}
+	}
+
+	incrementMoveRule(gamefile, move, wasACapture);
+
+	state.collectState(move);	
 }
 
-// TODO: doc
+/**
+ * Changes the board with move.changes
+ * Does not apply any graphical effects
+ * @param {*} gamefile 
+ * @param {*} move 
+ * @param {*} forward 
+ */
 function applyMove(gamefile, move, forward = true) {
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
 }
 
-// TODO: doc
-function makeMove(gamefile, move, { updateProperties = true } = {}) {
+/**
+ * **Universal** function for executing forward (not rewinding) moves.
+ * Called when we move the selected piece, receive our opponent's move,
+ * or need to simulate a move within the checkmate algorithm.
+ * @param {gamefile} gamefile 
+ * @param {Move} move 
+ */
+function makeMove(gamefile, move) {
 	applyMove(gamefile, move);
+	state.applyMove(gamefile, move, true, {globalChange: true});
 
 	gamefile.moveIndex++;
+	if (gamefile.moveIndex !== move.generateIndex) console.warn(`Move was expected at index ${move.generateIndex} but applied at ${gamefile.moveIndex}, this is unintended and may cause some issues!`);
 	gamefile.moves.push(move);
 
 	updateTurn(gamefile);
+
 	// The "check" property will be added inside updateInCheck()...
 	// The "mate" property will be added inside our game conclusion checks...
 
-	if (updateProperties) {
-		let wasACapture = false;
-		for (const c of move.changes) {
-			if (c.action === 'capturePiece') {
-				wasACapture = true;
-				break;
-			}
-		}
-		incrementMoveRule(gamefile, move.type, wasACapture);
-	}
-	// ALWAYS DO THIS NOW, no matter what. 
-	updateInCheck(gamefile);
-}
-
-/**
- * Stores crucial game information for rewinding this move on the move object.
- * Upon rewinding, this information will be deleted.
- * @param {gamefile} gamefile - The gamefile
- * @param {Move} move - The move
- * @param {Object} options - An object that may contain the following options:
- * - `simulated`: Whether you plan on undo'ing this move. If *true*, then `capturedIndex` and `pawnIndex` will also be remembered, so the mesh doesn't get screwed up when rewinding. Default: *false*
- */
-function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false } = {}) {
-	const rewindInfoAlreadyPresent = move.rewindInfo != null;
-	const rewindInfo = move.rewindInfo || {};
-
-	if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
-	if (!rewindInfoAlreadyPresent) {
-		rewindInfo.inCheck = jsutil.deepCopyObject(gamefile.inCheck);
-		rewindInfo.gameConclusion = gamefile.gameConclusion;
-		if (gamefile.attackers) rewindInfo.attackers = jsutil.deepCopyObject(gamefile.attackers);
-		if (gamefile.moveRuleState !== undefined) rewindInfo.moveRuleState = gamefile.moveRuleState;
-		if (gamefile.checksGiven) rewindInfo.checksGiven = gamefile.checksGiven;
-	}
-
-	move.rewindInfo = rewindInfo;
+	// ALWAYS DO THIS NOW, no matter what.
+	createCheckState(gamefile, move);
+	if (gamefile.inCheck) moveutil.flagLastMoveAsCheck(gamefile);
 }
 
 /**
@@ -109,11 +106,11 @@ function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false }
  * @param {Move} move
  */
 function deleteEnpassantAndSpecialRightsProperties(gamefile, move) {
-	boardchanges.queueSetEnPassant(move.changes, gamefile.enpassant, undefined);
+	state.queueSetState(move.changes, "enpassant", gamefile.enpassant, undefined);
 	let key = coordutil.getKeyFromCoords(move.startCoords);
-	boardchanges.queueSetSpecialRights(move.changes, key, gamefile.specialRights[key], undefined);
+	state.queueSetState(move.changes, `specialRights.${key}`, gamefile.specialRights[key], undefined);
 	key = coordutil.getKeyFromCoords(move.endCoords);
-	boardchanges.queueSetSpecialRights(move.changes, key, gamefile.specialRights[key], undefined); // We also delete the captured pieces specialRights for ANY move.
+	state.queueSetState(move.changes, `specialRights.${key}`, gamefile.specialRights[key], undefined); // We also delete the captured pieces specialRights for ANY move.
 }
 
 /**
@@ -140,15 +137,15 @@ function movePiece_NoSpecial(gamefile, piece, move) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  * @param {gamefile} gamefile - The gamefile
- * @param {string} typeMoved - The type of piece moved
+ * @param {Move} move - The move
  * @param {boolean} wasACapture Whether the move made a capture
  */
-function incrementMoveRule(gamefile, typeMoved, wasACapture) {
+function incrementMoveRule(gamefile, move, wasACapture) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
-	if (wasACapture || typeMoved.startsWith('pawns')) gamefile.moveRuleState = 0;
-	else gamefile.moveRuleState++;
+	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
+	state.queueSetState(move.changes, 'moveRuleState', gamefile.moveRuleState, newMoveRule, {global: true});
 }
 
 /**
@@ -159,14 +156,28 @@ function updateTurn(gamefile) {
 	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 }
 
+function createCheckState(gamefile, move) {
+	let attackers = undefined;
+	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
+	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
+	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
+	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
+
+	state.setState(
+		gamefile,
+		move,
+		"inCheck",
+		checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers)
+	); // Passes in the gamefile as an argument
+	state.setState(gamefile, move, "attackers", attackers || []); // Erase the checking pieces calculated from previous turn and pass in new on
+}
+
 /**
  * Updates the `inCheck` and `attackers` properties of the gamefile after making a move or rewinding.
 * Needs to be called AFTER flipping the `whosTurn` property.
 * @param {gamefile} gamefile - The gamefile
-* @param {boolean} [flagMoveAsCheck] - If *true*, flags the last played move as a check. Default: true
 */
 function updateInCheck(gamefile) {
-
 	let attackers = undefined;
 	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
@@ -175,8 +186,6 @@ function updateInCheck(gamefile) {
 
 	gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
 	gamefile.attackers = attackers || []; // Erase the checking pieces calculated from previous turn and pass in new ones!
-
-	if (gamefile.inCheck && gamefile.moveIndex !== -1) moveutil.flagLastMoveAsCheck(gamefile);
 }
 
 /**
@@ -214,6 +223,7 @@ function makeAllMovesInGame(gamefile, moves) {
 
 	updateTurn(gamefile);
 	updateInCheck(gamefile);
+	if (gamefile.inCheck && gamefile.moveIndex !== -1) moveutil.flagLastMoveAsCheck(gamefile);
 
 	gamefileutility.doGameOverChecks(gamefile); // Update the gameConclusion
 }
@@ -265,7 +275,12 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 	return move;
 }
 
-// TODO: doc
+/**
+ * Iterates from a certain move to the target index
+ * @param {gamefile} gamefile 
+ * @param {number} targetIndex 
+ * @param {CallableFunction} callback 
+ */
 function forEachMove(gamefile, targetIndex, callback) {
 	if (targetIndex === gamefile.moveIndex) return;
 
@@ -288,7 +303,12 @@ function forEachMove(gamefile, targetIndex, callback) {
 	}
 }
 
-// TODO: doc
+/**
+ * Iterates to a certain move index. Callable should be a move application function
+ * @param {gamefile} gamefile 
+ * @param {number} index 
+ * @param {CallableFunction} callback 
+ */
 function gotoMove(gamefile, index, callback) {
 	forEachMove(gamefile, index, callback);
 	gamefile.moveIndex = index;
@@ -304,32 +324,30 @@ function gotoMove(gamefile, index, callback) {
  * - `removeMove`: Whether to delete the move from the gamefile's move list. Should be true if we're undo'ing simulated moves.
  * - `animate`: Whether to animate this rewinding.
  */
-function rewindMove(gamefile, { removeMove = true } = {} ) {
+function rewindMove(gamefile) {
 
 	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
 
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, false);
-
-	// inCheck and attackers are always restored, no matter if we're deleting the move or not.
-	gamefile.inCheck = move.rewindInfo.inCheck;
-	if (move.rewindInfo.attackers) gamefile.attackers = move.rewindInfo.attackers;
-	if (removeMove) { // Restore original values
-		gamefile.moveRuleState = move.rewindInfo.moveRuleState;
-		gamefile.checksGiven = move.rewindInfo.checksGiven;
-		gamefile.gameConclusion = move.rewindInfo.gameConclusion; // Simulated moves may or may not have performed game over checks.
-	}
+	state.applyMove(gamefile, move, false, {globalChange: true});
 
 	// Finally, delete the move off the top of our moves [] array list
-	if (removeMove) moveutil.deleteLastMove(gamefile.moves);
+	moveutil.deleteLastMove(gamefile.moves);
 	gamefile.moveIndex--;
 	updateTurn(gamefile);
 }
 
-// TODO: doc
-function simulateMoveWrapper(gamefile, move, callback, {updateProperties = true} = {}) {
+/**
+ * Wraps a function in a simulated move
+ * @param {gamefile} gamefile 
+ * @param {Move} move 
+ * @param {CallableFunction} callback
+ * @returns whatever is returned by the callback
+ */
+function simulateMoveWrapper(gamefile, move, callback) {
 	// Moves the piece without unselecting it or regenerating the pieces model.
 	generateMove(gamefile, move);
-	makeMove(gamefile, move, { updateProperties: updateProperties });
+	makeMove(gamefile, move);
 
 	// What info can we pull from the game after simulating this move?
 	const info = callback();
@@ -343,17 +361,27 @@ function simulateMoveWrapper(gamefile, move, callback, {updateProperties = true}
 	return info;
 }
 
-// TODO: doc
+/**
+ * Simulates a move to get the check
+ * @param {gamefile} gamefile 
+ * @param {Move} move 
+ * @param {*} colorToTestInCheck 
+ * @returns 
+ */
 function getSimulatedCheck(gamefile, move, colorToTestInCheck) {
 	return simulateMoveWrapper(
 		gamefile,
 		move,
 		() => checkdetection.detectCheck(gamefile, colorToTestInCheck, []),
-		{updateProperties: false}
 	);	
 }
 
-// TODO: doc
+/**
+ * Simulates a move to get the gameConclusion
+ * @param {gamefile} gamefile 
+ * @param {Move} move 
+ * @returns the gameConclusion
+ */
 function getSimulatedConclusion(gamefile, move) {
 	return simulateMoveWrapper(
 		gamefile,
@@ -363,6 +391,7 @@ function getSimulatedConclusion(gamefile, move) {
 }
 
 export default {
+	updateInCheck,
 	generateMove,
 	makeMove,
 	updateTurn,

@@ -176,9 +176,8 @@ function checkIfBoardDropped() {
 	if (boardIsGrabbed === 1) { // Mouse grabbed
 
 		if (!input.isMouseHeld_Left()) { // Dropped board
-			boardIsGrabbed = 0;
 			throwBoard(); // Mouse throws the board
-			clearPositionHistory();
+			cancelBoardDrag();
 		}
 		return;
 	}
@@ -193,10 +192,17 @@ function checkIfBoardDropped() {
 	throwBoard(now); //Both fingers have been released.
 	
 	// Drop board
-	boardIsGrabbed = 0;
 	boardPosFingerTwoGrabbed = undefined;
-	clearPositionHistory();
+	cancelBoardDrag();
 	return;
+}
+
+/**
+ * Forcefully terminates a board drag WITHOUT throwing the board.
+ */
+function cancelBoardDrag() {
+	boardIsGrabbed = 0;
+	clearPositionHistory();
 }
 
 /** Called after letting go of the board. Applies velocity to the board according to how fast the mouse was moving */
@@ -240,7 +246,7 @@ function removeOldPositions(time) {
 // Checks if the mouse or finger has started dragging the board. Keep in mind if the
 // user clicked a piece, then the click event has been removed, so you can't do both at once.
 function checkIfBoardDragged() {
-	if (perspective.getEnabled()) return;
+	if (perspective.getEnabled() || transition.areWeTeleporting()) return;
 
 	if (boardIsGrabbed === 0) { // Not already grabbed
 		if (input.isMouseDown_Left()) grabBoard_WithMouse();
@@ -541,4 +547,5 @@ export default {
 	eraseMomentum,
 	setPositionToArea,
 	checkIfBoardDragged,
+	cancelBoardDrag,
 };

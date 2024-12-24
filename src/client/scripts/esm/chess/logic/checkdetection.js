@@ -42,7 +42,7 @@ function detectCheck(gamefile, color, attackers) {
 	// Input validation
 	if (!gamefile) throw new Error("Cannot detect check of an undefined game!");
 	if (color !== 'white' && color !== 'black') throw new Error(`Cannot detect check of the team of color ${color}!`);
-	if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
+	if (attackers !== undefined && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
 
 	// Coordinates of ALL royals of this color!
 	const royalCoords = gamefileutility.getRoyalCoordsOfColor(gamefile, color); // [ coords1, coords2 ]

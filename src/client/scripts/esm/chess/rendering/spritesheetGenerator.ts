@@ -57,7 +57,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	canvas.width = canvasWidth;
 	canvas.height = canvasHeight;
 	const ctx = canvas.getContext('2d');
-	if (ctx === null) throw new Error('2D context null.')
+	if (ctx === null) throw new Error('2D context null.');
 
 	// Positioning variables
 	let xIndex = 0;

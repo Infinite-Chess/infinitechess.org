@@ -247,7 +247,7 @@ function sendViewMatrixToGPU() {
 		/** @type {ShaderProgram} */
 		const program = shaders.programs[programName];
 		const viewMatrixLocation = program.uniformLocations.viewMatrix;
-		if (viewMatrixLocation == null) continue; // This shader program doesn't have the viewMatrix uniform, skip.
+		if (viewMatrixLocation === undefined) continue; // This shader program doesn't have the viewMatrix uniform, skip.
 		gl.useProgram(program.program);
 		gl.uniformMatrix4fv(viewMatrixLocation, false, viewMatrix);
 	}
@@ -261,7 +261,7 @@ function initProjMatrix() {
 		/** @type {ShaderProgram} */
 		const program = shaders.programs[programName];
 		const projMatrixLocation = program.uniformLocations.projectionMatrix;
-		if (projMatrixLocation == null) continue; // This shader program doesn't have the projectionMatrix uniform, skip.
+		if (projMatrixLocation === undefined) continue; // This shader program doesn't have the projectionMatrix uniform, skip.
 		gl.useProgram(program.program);
 		gl.uniformMatrix4fv(projMatrixLocation, gl.FALSE, projectionMatrix);
 	}
