@@ -32,7 +32,7 @@ const PATH_TO_CONTRIBUTORS_FILE = '../../../database/contributors.json';
  */
 let contributors = (() => {
 	const fileIfExists = readFileIfExists(join(dirname, PATH_TO_CONTRIBUTORS_FILE));
-	if (fileIfExists) return JSON.parse(fileIfExists); 
+	if (fileIfExists) return JSON.parse(fileIfExists);
 	return [];
 })();
 // console.log(contributors);
@@ -43,7 +43,7 @@ const intervalToRefreshContributorsMillis = 1000 * 60 * 60 * 3; // 3 hours
 
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
 const intervalId = setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis);
-// refreshGitHubContributorsList(); // Initial refreshal for dev testing
+refreshGitHubContributorsList(); // Initial refreshal for dev testing
 
 if (process.env.GITHUB_API_KEY === undefined || process.env.GITHUB_REPO === undefined) throw new Error('.env file is missing GITHUB_API_KEY or GITHUB_REPO, please regenerate the file or add the lines manually.');
 
