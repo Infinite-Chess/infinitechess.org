@@ -473,7 +473,7 @@ function roundUpToPowerOf2(num) {
 }
 
 /**
- * 
+ * Produce a number that is `progress` away from `s` in the direction of `e` form `s`
  * @param {Number} s 
  * @param {Number} e 
  * @param {Number} progress 
