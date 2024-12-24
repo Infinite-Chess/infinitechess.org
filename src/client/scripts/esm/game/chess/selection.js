@@ -172,6 +172,7 @@ function handleDragging(pieceHoveredType, allowDrop = true) {
 	} else {
 		if (!allowDrop) cancelDragging();
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
+		if (pawnIsPromoting) return; // The sound will be played after the user selects the piece to promote to.
 		const wasCapture = pieceHoveredType || hoverSquare.hasOwnProperty('enpassant');
 		draganimation.dropPiece(hoverSquareLegal, wasCapture);
 		draggingPiece = false;
@@ -365,6 +366,7 @@ function moveGamefilePiece(coords) {
 function makePromotionMove() {
 	const coords = pawnIsPromoting;
 	coords.promotion = promoteTo; // Add a tag on the coords of what piece we're promoting to
+	if (draggingPiece) draganimation.dropPiece(true, gamefileutility.isPieceOnCoords(game.getGamefile(), coords));
 	moveGamefilePiece(coords);
 	perspective.relockMouse();
 }
