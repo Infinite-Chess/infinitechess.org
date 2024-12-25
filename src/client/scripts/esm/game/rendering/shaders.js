@@ -2,7 +2,6 @@
 // Import Start
 import { gl } from './webgl.js';
 import camera from './camera.js';
-import webgl from './webgl.js';
 // Import End
 
 "use strict";
@@ -34,6 +33,14 @@ const programs = {
      * @type {ShaderProgram}
      */
 	colorProgram: undefined,
+	/**
+	 * Uses Instanced rendering to render instances that contain positional and color data.
+	 * 
+	 * The vertex data of the instance needs to have a stride of 6-7 (2-3 position, 4 color),
+	 * while the instance-specific data array needs to have a stride of 2-3 (2-3 position offset).
+     * @type {ShaderProgram}
+     */
+	colorProgram_Instanced: undefined,
 	/** 
      * Renders meshes with bound textures.
      * 
@@ -70,6 +77,7 @@ const programs = {
  * Call this after initiating the webgl context. */
 function initPrograms() {
 	programs.colorProgram = createColorProgram();
+	programs.colorProgram_Instanced = createColorProgram_Instanced();
 	programs.textureProgram = createTextureProgram();
 	programs.coloredTextureProgram = createColoredTextureProgram();
 	programs.tintedTextureProgram = createTintedTextureProgram();
@@ -118,6 +126,63 @@ function createColorProgram() {
 		attribLocations: {
 			vertexPosition: gl.getAttribLocation(program, 'aVertexPosition'),
 			vertexColor: gl.getAttribLocation(program, 'aVertexColor')
+		},
+		uniformLocations: {
+			projectionMatrix: gl.getUniformLocation(program, 'uProjMatrix'),
+			viewMatrix: gl.getUniformLocation(program, 'uViewMatrix'),
+			worldMatrix: gl.getUniformLocation(program, 'uWorldMatrix')
+		},
+	};
+}
+
+/**
+ * Creates and return a shader program that is
+ * capable of rendering meshes with colored vertices
+ * USING INSTANCED RENDERING.
+ * @returns {ShaderProgram}
+ */
+function createColorProgram_Instanced() {
+	// Vertex shader. For every vertex, applies matrix multiplication to find it's position on the canvas.
+	// Attributes receive data from buffer. Uniforms are like global variables, they stay the same.
+	const vsSource = `#version 300 es
+        in vec4 aVertexPosition;
+        in vec4 aVertexColor;
+		in vec4 aInstanceOffset; // Per-instance position offset attribute
+
+        uniform mat4 uWorldMatrix;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjMatrix;
+
+        out lowp vec4 vColor;
+
+        void main() {
+			// Add the instance offset to the vertex position
+			vec4 transformedVertexPosition = aVertexPosition + aInstanceOffset;
+
+            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * transformedVertexPosition;
+            vColor = aVertexColor;
+        }
+    `;
+	// Fragment shader. Called for every pixel on each shape to be drawn. Color.
+	const fsSource = `#version 300 es
+        precision lowp float;
+
+        in lowp vec4 vColor;
+        out vec4 fragColor;
+
+        void main() {
+            fragColor = vColor;
+        }
+    `;
+
+	const program = createShaderProgram(vsSource, fsSource);
+
+	return {
+		program,
+		attribLocations: {
+			vertexPosition: gl.getAttribLocation(program, 'aVertexPosition'),
+			vertexColor: gl.getAttribLocation(program, 'aVertexColor'),
+			instanceOffset: gl.getAttribLocation(program, 'aInstanceOffset')
 		},
 		uniformLocations: {
 			projectionMatrix: gl.getUniformLocation(program, 'uProjMatrix'),
