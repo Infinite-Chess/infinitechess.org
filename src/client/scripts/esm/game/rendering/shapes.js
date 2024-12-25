@@ -298,7 +298,6 @@ function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 
 export default {
 	getBoundingBoxOfCoord,
-	getTransformedBoundingBoxOfSquare,
 	getDataCircle,
 	getDataCircle_3D,
 	getDataQuad_Color_FromCoord,
