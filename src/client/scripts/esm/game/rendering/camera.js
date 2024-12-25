@@ -263,7 +263,7 @@ function initProjMatrix() {
 		const projMatrixLocation = program.uniformLocations.projectionMatrix;
 		if (projMatrixLocation === undefined) continue; // This shader program doesn't have the projectionMatrix uniform, skip.
 		gl.useProgram(program.program);
-		gl.uniformMatrix4fv(projMatrixLocation, gl.FALSE, projectionMatrix);
+		gl.uniformMatrix4fv(projMatrixLocation, false, projectionMatrix);
 	}
 
 	frametracker.onVisualChange();
