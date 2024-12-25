@@ -70,7 +70,7 @@ function createModel_Textured(data, numPositionComponents, mode, texture) {
  */
 function createModel_ColorTextured(data, numPositionComponents, mode, texture) {
 	if (numPositionComponents < 2 || numPositionComponents > 3) return console.error(`Unsupported numPositionComponents ${numPositionComponents}`);
-	if (texture == null) return console.error("Cannot create a textured buffer model without a texture!");
+	if (!texture) return console.error("Cannot create a textured buffer model without a texture!");
 	const stride = numPositionComponents + 6;
 	const prepDrawFunc = getPrepDrawFunc(shaders.programs.coloredTextureProgram, numPositionComponents, true, true);
 	return new BufferModel(shaders.programs.coloredTextureProgram, data, stride, mode, texture, prepDrawFunc);
@@ -119,10 +119,6 @@ function getPrepDrawFunc(shaderProgram, numPositionComponents, usingTextureCoord
 
 		// Tell WebGL how to pull out the positions from the position buffer into the vertexPosition attribute.
 		initAttribute(shaderProgram.attribLocations.vertexPosition, stride_bytes, numPositionComponents, current_offset_bytes);
-		// Reset divisor to 0 for non-instanced rendering.
-		// If another shader changed the same attribute index to be
-		// used for instanced rendering, it otherwise will never be reset.
-		gl.vertexAttribDivisor(shaderProgram.attribLocations.vertexPosition, 0); // 0 = attrib updated once per vertex   1 = updated once per isntance
 		current_offset_bytes += numPositionComponents * BYTES_PER_ELEMENT;
 
 		if (usingTextureCoords) { // Tell WebGL how to pull out the texture coords
@@ -130,19 +126,11 @@ function getPrepDrawFunc(shaderProgram, numPositionComponents, usingTextureCoord
 			// coordinate data and texture data in separate buffers!
 			const numComponents = 2;
 			initAttribute(shaderProgram.attribLocations.textureCoord, stride_bytes, numComponents, current_offset_bytes);
-			// Reset divisor to 0 for non-instanced rendering.
-			// If another shader changed the same attribute index to be
-			// used for instanced rendering, it otherwise will never be reset.
-			gl.vertexAttribDivisor(shaderProgram.attribLocations.textureCoord, 0); // 0 = attrib updated once per vertex   1 = updated once per isntance
 			current_offset_bytes += numComponents * BYTES_PER_ELEMENT;
 		}
 		if (usingColorValues) { // Tell WebGL how to pull out the color
 			const numComponents = 4;
 			initAttribute(shaderProgram.attribLocations.vertexColor, stride_bytes, numComponents, current_offset_bytes);
-			// Reset divisor to 0 for non-instanced rendering.
-			// If another shader changed the same attribute index to be
-			// used for instanced rendering, it otherwise will never be reset.
-			gl.vertexAttribDivisor(shaderProgram.attribLocations.vertexColor, 0); // 0 = attrib updated once per vertex   1 = updated once per isntance
 			current_offset_bytes += numComponents * BYTES_PER_ELEMENT;
 		}
 
@@ -164,6 +152,10 @@ function initAttribute(attribLocation, stride_bytes, numComponents, offset) { //
 	gl.vertexAttribPointer(attribLocation, numComponents, type, normalize, stride_bytes, offset);
 	// Enables the attribute for use
 	gl.enableVertexAttribArray(attribLocation);
+	// Reset divisor to 0 for non-instanced rendering.
+	// If another shader set the same attribute index to be
+	// used for instanced rendering, it would otherwise never be reset!
+	gl.vertexAttribDivisor(attribLocation, 0); // 0 = attrib updated once per vertex   1 = updated once per instance
 }
 
 /**
@@ -184,7 +176,7 @@ function renderPreppedModel(program, position = [0,0,0], scale = [1,1,1], vertex
 	mat4.translate(worldMatrix, worldMatrix, position);
 
 	// Update the world matrix on our shader program, translating our models into the correct position.
-	gl.uniformMatrix4fv(program.uniformLocations.worldMatrix, gl.FALSE, worldMatrix);
+	gl.uniformMatrix4fv(program.uniformLocations.worldMatrix, false, worldMatrix);
 
 	// Send any custom-provided uniform values over to the gpu now!
 	for (const key in customUniformValues) { sendCustomUniformToGPU(program, key, customUniformValues[key]); }
