@@ -157,7 +157,7 @@ function createColorProgram_Instanced() {
 
         void main() {
 			// Add the instance offset to the vertex position
-			vec4 transformedVertexPosition = aVertexPosition + aInstanceOffset;
+			vec4 transformedVertexPosition = vec4(aVertexPosition.xyz + aInstanceOffset.xyz, 1.0);
 
             gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * transformedVertexPosition;
             vColor = aVertexColor;
@@ -224,7 +224,7 @@ function createTextureProgram() {
         out vec4 fragColor;
 
         void main(void) {
-            fragColor = texture(uSampler, vTextureCoord, -0.5); // Apply a mipmap level bias so as to make the textures sharper. (For devices only compatible with WebGL1, their textures will be a little more blurred)
+            fragColor = texture(uSampler, vTextureCoord, -0.5); // Apply a mipmap level bias so as to make the textures sharper.
         }
     `;
 
