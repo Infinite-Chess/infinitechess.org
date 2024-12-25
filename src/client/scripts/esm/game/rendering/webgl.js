@@ -5,7 +5,7 @@ import camera from './camera.js';
 
 /**
  * The WebGL rendering context. This is our web-based render engine.
- * @type {WebGLRenderingContext}
+ * @type {WebGL2RenderingContext}
  */
 let gl; // The WebGL context. Is initiated in initGL()
 
