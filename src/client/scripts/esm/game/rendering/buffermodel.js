@@ -119,6 +119,10 @@ function getPrepDrawFunc(shaderProgram, numPositionComponents, usingTextureCoord
 
 		// Tell WebGL how to pull out the positions from the position buffer into the vertexPosition attribute.
 		initAttribute(shaderProgram.attribLocations.vertexPosition, stride_bytes, numPositionComponents, current_offset_bytes);
+		// Reset divisor to 0 for non-instanced rendering.
+		// If another shader changed the same attribute index to be
+		// used for instanced rendering, it otherwise will never be reset.
+		gl.vertexAttribDivisor(shaderProgram.attribLocations.vertexPosition, 0); // 0 = attrib updated once per vertex   1 = updated once per isntance
 		current_offset_bytes += numPositionComponents * BYTES_PER_ELEMENT;
 
 		if (usingTextureCoords) { // Tell WebGL how to pull out the texture coords
@@ -126,11 +130,19 @@ function getPrepDrawFunc(shaderProgram, numPositionComponents, usingTextureCoord
 			// coordinate data and texture data in separate buffers!
 			const numComponents = 2;
 			initAttribute(shaderProgram.attribLocations.textureCoord, stride_bytes, numComponents, current_offset_bytes);
+			// Reset divisor to 0 for non-instanced rendering.
+			// If another shader changed the same attribute index to be
+			// used for instanced rendering, it otherwise will never be reset.
+			gl.vertexAttribDivisor(shaderProgram.attribLocations.textureCoord, 0); // 0 = attrib updated once per vertex   1 = updated once per isntance
 			current_offset_bytes += numComponents * BYTES_PER_ELEMENT;
 		}
 		if (usingColorValues) { // Tell WebGL how to pull out the color
 			const numComponents = 4;
 			initAttribute(shaderProgram.attribLocations.vertexColor, stride_bytes, numComponents, current_offset_bytes);
+			// Reset divisor to 0 for non-instanced rendering.
+			// If another shader changed the same attribute index to be
+			// used for instanced rendering, it otherwise will never be reset.
+			gl.vertexAttribDivisor(shaderProgram.attribLocations.vertexColor, 0); // 0 = attrib updated once per vertex   1 = updated once per isntance
 			current_offset_bytes += numComponents * BYTES_PER_ELEMENT;
 		}
 
