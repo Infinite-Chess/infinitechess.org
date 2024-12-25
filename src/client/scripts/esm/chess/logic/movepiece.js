@@ -106,11 +106,11 @@ function makeMove(gamefile, move) {
  * @param {Move} move
  */
 function deleteEnpassantAndSpecialRightsProperties(gamefile, move) {
-	state.queueSetState(move.changes, "enpassant", gamefile.enpassant, undefined);
+	state.queueSetState(gamefile, move.changes, "enpassant", undefined);
 	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.queueSetState(move.changes, `specialRights.${key}`, gamefile.specialRights[key], undefined);
+	state.queueSetState(gamefile, move.changes, `specialRights.${key}`, undefined);
 	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.queueSetState(move.changes, `specialRights.${key}`, gamefile.specialRights[key], undefined); // We also delete the captured pieces specialRights for ANY move.
+	state.queueSetState(gamefile, move.changes, `specialRights.${key}`, undefined); // We also delete the captured pieces specialRights for ANY move.
 }
 
 /**
@@ -145,7 +145,7 @@ function incrementMoveRule(gamefile, move, wasACapture) {
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
-	state.queueSetState(move.changes, 'moveRuleState', gamefile.moveRuleState, newMoveRule, {global: true});
+	state.queueSetState(gamefile, move.changes, 'moveRuleState', newMoveRule, {global: true});
 }
 
 /**
