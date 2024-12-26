@@ -3,7 +3,7 @@
 import board from './board.js';
 import game from '../chess/game.js';
 import movement from './movement.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 // Import End
 
 /**
@@ -56,7 +56,7 @@ function initModel() {
 	const yLow2 = gamefile.gameRules.promotionRanks[1] - board.gsquareCenter() - thickness;
 	const yHigh2 = gamefile.gameRules.promotionRanks[1] - board.gsquareCenter() + thickness;
 
-	const data = new Float32Array([
+	const data = [
         // x      y             r g b a
         startX, yLow1,        0, 0, 0,  1,
         startX, yHigh1,       0, 0, 0,  1,
@@ -71,10 +71,9 @@ function initModel() {
         endX, yLow2,          0, 0, 0,  1,
         startX, yHigh2,       0, 0, 0,  1,
         endX, yHigh2,         0, 0, 0,  1,
-    ]);
+    ];
 
-	// return buffermodel.createModel_Color(data)
-	return buffermodel.createModel_Colored(data, 2, "TRIANGLES");
+	return createModel(data, 2, "TRIANGLES", true);
 }
 
 export default {

@@ -8,7 +8,7 @@ import voids from './voids.js';
 import board from './board.js';
 import onlinegame from '../misc/onlinegame.js';
 import options from './options.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import shapes from './shapes.js';
 import spritesheet from './spritesheet.js';
 // Import End
@@ -76,7 +76,7 @@ function renderPieces(gamefile) {
 function renderGhostPiece(type, coords) {
 	const color = options.getColorOfType(type); color.a *= ghostOpacity;
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
-	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", spritesheet.getSpritesheet());
+	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
 }
 

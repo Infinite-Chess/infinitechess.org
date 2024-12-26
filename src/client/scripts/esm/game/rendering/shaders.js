@@ -22,18 +22,6 @@ import camera from './camera.js';
  * to make it look the same size on retina displays as non-retina? */
 const pointSize = 1;
 
-/**
- * Shader uniforms that MUST BE SET every before every single render call,
- * or the value from the previous render call's setting will bleed through.
- * 
- * For example, the position of the last rendered item,
- * or the tint-color of the last rendered item.
- * 
- * These uniforms should be optional, BUT if they are not provided,
- * we have to set them to a default value, before rendering, to avoid this!
- */
-const manualUniforms = ['worldMatrix','tintColor'];
-
 
 /** The shader programs at our disposal.
  * The world matrix uniform needs to be set with each draw call,
@@ -375,9 +363,9 @@ function createTintedTextureProgram() {
 	// Set a default color of WHITE for the uVertexColor uniform.
 	// Otherwise, if we forget to set it when rendering, the pieces will be invisible,
 	// and you will have no clue why and spend 30 minutes trying to figure it out.
-	gl.useProgram(tintedTextureProgram.program);
-	const defaultColor = [1,1,1, 1]; // White
-	gl.uniform4fv(tintedTextureProgram.uniformLocations.uVertexColor, defaultColor);
+	// gl.useProgram(tintedTextureProgram.program);
+	// const defaultColor = [1,1,1, 1]; // White
+	// gl.uniform4fv(tintedTextureProgram.uniformLocations.uVertexColor, defaultColor);
 
 	return tintedTextureProgram;
 }
@@ -465,11 +453,14 @@ function shaderPicker(attributes, uniforms = []) {
 		const leastComplexComplexity = getShaderComplexity(leastComplex);
 		const currentComplexity = getShaderComplexity(current);
 		if (leastComplexComplexity === currentComplexity) throw new Error(`Shaders have the same level of complexity, can't pick which one to use! Requested attributes and uniforms: ${JSON.stringify(attributes)}, ${JSON.stringify(uniforms)}`);
-		return currentComplexity < leastComplexComplexity;
+		// Return the shader with the least complexity
+		return currentComplexity < leastComplexComplexity ? current : leastComplex;
 	});
 
-	console.log(`Chose shader with attributes and uniforms: ${JSON.stringify(attributes)}, ${JSON.stringify(uniforms)}\nTo use for requested attributes and uniforms: ${JSON.stringify(attributes)}, ${JSON.stringify(uniforms)}`);
-
+	// Debug
+	// console.log(`Chose shader for requested attributes and uniforms ${JSON.stringify(attributes)}, ${JSON.stringify(uniforms)}:`);
+	// console.log(leastComplexShader);
+	
 	return leastComplexShader;
 }
 
@@ -483,5 +474,4 @@ export default {
 	initPrograms,
 	programs,
 	shaderPicker,
-	manualUniforms,
 };

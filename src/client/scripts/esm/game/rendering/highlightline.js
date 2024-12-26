@@ -12,7 +12,7 @@ import selection from '../chess/selection.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
 import movement from './movement.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import space from '../misc/space.js';
@@ -102,7 +102,7 @@ function genModel() {
 		closestPoint = snapPoint;
 	};
     
-	modelLines = buffermodel.createModel_Colored(new Float32Array(dataLines), 2, "LINES");
+	modelLines = createModel(dataLines, 2, "LINES", true);
 
 	// Ghost image...
 
@@ -137,7 +137,7 @@ function genModel() {
 
 	dataGhost.push(...data);
     
-	modelGhost = buffermodel.createModel_ColorTextured(new Float32Array(dataGhost), 2, "TRIANGLES", spritesheet.getSpritesheet());
+	modelGhost = createModel(dataGhost, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
     
 	// If we clicked, teleport to the point on the line closest to the click location.
 	// BUT we have to recalculate it in coords format instead of world-space

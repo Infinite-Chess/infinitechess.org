@@ -11,7 +11,7 @@ import voids from './voids.js';
 import statustext from '../gui/statustext.js';
 import movement from './movement.js';
 import perspective from './perspective.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import options from './options.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
@@ -187,9 +187,8 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 		return;
 	}
 
-	mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-                            : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
-	//                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+	mesh.model = colorArgs ? createModel(mesh.data32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+                            : createModel(mesh.data32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
 
 	jsutil.copyPropertiesToObject(mesh, gamefile.mesh);
     
@@ -440,9 +439,8 @@ function shiftPiecesModel(gamefile) {
 			gamefile.mesh.data32[i + 1] = gamefile.mesh.data64[i + 1];
 		}
 
-		// gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.data32)
-		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? createModel(gamefile.mesh.data32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+            : createModel(gamefile.mesh.data32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
 	}
 
 	function shiftBothModels() {            
@@ -457,12 +455,10 @@ function shiftPiecesModel(gamefile) {
 			gamefile.mesh.rotatedData32[i + 1] = gamefile.mesh.rotatedData64[i + 1];
 		}
 
-		// gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.data32)
-		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
-		// gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
-		gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? createModel(gamefile.mesh.data32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+            : createModel(gamefile.mesh.data32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
+		gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? createModel(gamefile.mesh.rotatedData32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+            : createModel(gamefile.mesh.rotatedData32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
 	}
 
 	voids.shiftModel(gamefile, diffXOffset, diffYOffset);
@@ -680,9 +676,8 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 
 	stats.hideRotateMesh();
 
-	// gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
-	gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-        : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+	gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? createModel(gamefile.mesh.rotatedData32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+        : createModel(gamefile.mesh.rotatedData32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
 
 	gamefile.mesh.releaseLock();
 	gamefile.mesh.isGenerating--;

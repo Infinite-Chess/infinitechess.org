@@ -8,7 +8,7 @@ import transition from './transition.js';
 import movement from './movement.js';
 import options from './options.js';
 import statustext from '../gui/statustext.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import game from '../chess/game.js';
 import area from './area.js';
 import typeutil from '../../chess/util/typeutil.js';
@@ -161,9 +161,7 @@ function genModel() {
 		}
 	}
 
-	const floatData = new Float32Array(data);
-	// model = buffermodel.createModel_ColorTexture(data)
-	model = buffermodel.createModel_ColorTextured(floatData, 2, "TRIANGLES", spritesheet.getSpritesheet());
+	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 
 	// Teleport to clicked pieces
 	if (piecesClicked.length > 0) {
