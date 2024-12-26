@@ -67,8 +67,9 @@ function updateSwitchColor() {
 	const AvgG = (lightTiles[1] + darkTiles[1]) / 2;
 	const AvgB = (lightTiles[2] + darkTiles[2]) / 2;
 	
-	const css = `rgb(${AvgR*255}, ${AvgG*255}, ${AvgB*255})`;
-	selectionDropdown.style.setProperty('--switch-on-color', css);
+	const css = `rgb(${AvgR * 255}, ${AvgG * 255}, ${AvgB * 255})`;
+	const root = document.documentElement;
+	root.style.setProperty('--switch-on-color', css);
 }
 
 export default {

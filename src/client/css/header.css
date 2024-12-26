@@ -2,7 +2,7 @@
     --header-height: 40px;
     --header-link-hover-color: rgb(230, 230, 230);
     --currPage-background-color: rgb(237, 237, 237);
-    --switch-on-color: rgb(97, 97, 97); /* Default value */
+    --switch-on-color: rgb(97, 97, 97); /* Default value. Can be modified using javascript */
     --header-link-max-padding: 16px;
     --header-link-min-padding: 8px;
     --CBC-in: cubic-bezier(0,1.05,.47,1); /* Settings dropdown IN curve */
@@ -421,8 +421,6 @@ span.arrow-head-left {
 .theme-list img:hover, .theme-list img.selected {
     outline: 5px solid black;
 }
-
-
 
 /* Legalmove shape nested dropdown */
 

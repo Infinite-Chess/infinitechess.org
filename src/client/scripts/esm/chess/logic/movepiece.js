@@ -59,7 +59,7 @@ import game from '../../game/chess/game.js';
  * - `doGameOverChecks`: Whether to perform game-over checks, such as checkmate or other win conditions.
  * - `concludeGameIfOver`: If true, and `doGameOverChecks` is true, then if this move ends the game, we will not stop the clocks, darken the board, display who won, or play a sound effect.
  * - `animate`: Whether to animate this move.
- * - `animateSecondary`: Animate the pieces affected by the move without the piece that made the move. Used after dragging the king to castle. Has no effect if `animate` is true.
+ * - `animateSecondary`: Animate the pieces affected by the move without the piece that made the move. Used after dragging the king to castle. Is only used when `animate` is false.
  * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
  * - `updateProperties`: Whether to update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
  * - `simulated`: Whether you plan on undo'ing this move. If true, the `rewindInfo` property will be added to the `move` for easy restoring of the gamefile's properties when undo'ing the move.
