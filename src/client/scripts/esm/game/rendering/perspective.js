@@ -5,7 +5,7 @@ import webgl from './webgl.js';
 import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import statustext from '../gui/statustext.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import onlinegame from '../misc/onlinegame.js';
 import mat4 from './gl-matrix.js';
 import game from '../chess/game.js';
@@ -245,7 +245,7 @@ function initCrosshairModel() {
         //     innerSide,  -innerSide,       r, g, b, a,
         //     -innerSide,  -innerSide,      r, g, b, a,
     ]);
-	crosshairModel = buffermodel.createModel_Colored(data, 2, "TRIANGLES"); 
+	crosshairModel = createModel(data, 2, "TRIANGLES", true); 
 }
 
 function renderCrosshair() {

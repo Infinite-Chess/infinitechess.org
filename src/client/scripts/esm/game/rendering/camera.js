@@ -75,7 +75,7 @@ let screenBoundingBox_devMode;
 
 /** Contains the matrix for transforming our camera to look like it's in perspective.
  * This ONLY needs to update on the gpu whenever the screen size changes. */
-let projectionMatrix; // Same for every shader program
+let projMatrix; // Same for every shader program
 
 /** Contains the camera's position and rotation, updated once per frame on the gpu.
  * 
@@ -164,7 +164,7 @@ function init() {
 // Inits the matrix uniforms: viewMatrix (camera) & projMatrix
 function initMatrixes() {
     
-	projectionMatrix = mat4.create(); // Same for every shader program
+	projMatrix = mat4.create(); // Same for every shader program
 
 	initPerspective(); // Initiates perspective, including the projection matrix
 
@@ -255,15 +255,15 @@ function sendViewMatrixToGPU() {
 
 /** Inits the projection matrix uniform and sends that over to the gpu for each of our shader programs. */
 function initProjMatrix() {
-	mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
-	// Send the projectionMatrix to the gpu
+	mat4.perspective(projMatrix, fieldOfView, aspect, zNear, zFar);
+	// Send the projMatrix to the gpu
 	for (const programName in shaders.programs) { // Iterate over an object's properties
 		/** @type {ShaderProgram} */
 		const program = shaders.programs[programName];
-		const projMatrixLocation = program.uniformLocations.projectionMatrix;
-		if (projMatrixLocation === undefined) continue; // This shader program doesn't have the projectionMatrix uniform, skip.
+		const projMatrixLocation = program.uniformLocations.projMatrix;
+		if (projMatrixLocation === undefined) continue; // This shader program doesn't have the projMatrix uniform, skip.
 		gl.useProgram(program.program);
-		gl.uniformMatrix4fv(projMatrixLocation, gl.FALSE, projectionMatrix);
+		gl.uniformMatrix4fv(projMatrixLocation, false, projMatrix);
 	}
 
 	frametracker.onVisualChange();

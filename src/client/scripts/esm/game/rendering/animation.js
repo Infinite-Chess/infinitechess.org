@@ -7,7 +7,7 @@ import options from './options.js';
 import board from './board.js';
 import math from '../../util/math.js';
 import perspective from './perspective.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
 import spritesheet from './spritesheet.js';
 // Import End
@@ -157,8 +157,7 @@ function genTransparentModel() {
 		data.push(...getDataOfSquare3D(thisAnimation.endCoords, color));
 	}
 
-	// return buffermodel.createModel_Color3D(new Float32Array(data))
-	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	return createModel(data, 3, "TRIANGLES", true);
 }
 
 // This can be merged with the functions within buferdata module
@@ -242,8 +241,7 @@ function genPieceModel() {
 		appendDataOfPiece3D(data, thisAnimation.type, newCoords);
 	}
 
-	// return buffermodel.createModel_ColorTexture3D(new Float32Array(data))
-	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
+	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 
 function appendDataOfPiece3D(data, type, coords) {

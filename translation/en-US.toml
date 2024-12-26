@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "24"
+version = "100"
 maintainer = "Naviary"
 
 [header]
@@ -300,7 +300,7 @@ constructing_mesh = "Constructing mesh"
 rotating_mesh = "Rotating mesh"
 lost_connection = "Lost connection."
 please_wait = "Please wait a moment to perform this task."
-webgl_unsupported = "Your browser does not support WebGL. This game requires that to function. Please update your browser."
+webgl_unsupported = "Please upgrade your browser! It does not support WebGL2."
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"

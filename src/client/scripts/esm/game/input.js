@@ -10,7 +10,7 @@ import selection from './chess/selection.js';
 import camera from './rendering/camera.js';
 import board from './rendering/board.js';
 import arrows from './rendering/arrows.js';
-import buffermodel from './rendering/buffermodel.js';
+import { createModel } from './rendering/buffermodel.js';
 import jsutil from '../util/jsutil.js';
 import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
@@ -654,9 +654,8 @@ function renderMouse() {
 	const mouseOuterWidthWorld = space.convertPixelsToWorldSpace_Virtual(mouseOuterWidth);
 
 	const mouseData = bufferdata.getDataRingSolid(x, y, mouseInnerWidthWorld, mouseOuterWidthWorld, 32, [0,0,0,mouseOpacity]);
-	const data32 = new Float32Array(mouseData);
 
-	const model = buffermodel.createModel_Colored(data32, 2, "TRIANGLES");
+	const model = createModel(mouseData, 2, "TRIANGLES", true);
 
 	model.render();
 }
