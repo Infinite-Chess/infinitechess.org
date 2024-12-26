@@ -7,7 +7,6 @@ import stats from '../gui/stats.js';
 import options from './options.js';
 import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';
-import shaders from './shaders.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
@@ -152,6 +151,16 @@ function getViewMatrix() {
 	return jsutil.copyFloat32Array(viewMatrix);
 }
 
+/**
+ * Returns a copy of both the projMatrix and viewMatrix
+ */
+function getProjAndViewMatrixes() {
+	return {
+		projMatrix: jsutil.copyFloat32Array(projMatrix),
+		viewMatrix: jsutil.copyFloat32Array(viewMatrix)
+	};
+}
+
 // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
 function init() {
 	initFOV();
@@ -221,7 +230,6 @@ function recalcCanvasVariables() {
 // Set view matrix
 function setViewMatrix(newMatrix) {
 	viewMatrix = newMatrix;
-	sendViewMatrixToGPU();
 }
 
 // Initiates the camera matrix. View matrix.
@@ -238,34 +246,15 @@ function initViewMatrix(ignoreRotations) {
 
 	viewMatrix = newViewMatrix;
 
-	sendViewMatrixToGPU();
-}
-
-/** Updates the view matrix uniform on the gpu for each of our shader programs. */
-function sendViewMatrixToGPU() {
-	for (const programName in shaders.programs) { // Iterate over an object's properties
-		/** @type {ShaderProgram} */
-		const program = shaders.programs[programName];
-		const viewMatrixLocation = program.uniformLocations.viewMatrix;
-		if (viewMatrixLocation === undefined) continue; // This shader program doesn't have the viewMatrix uniform, skip.
-		gl.useProgram(program.program);
-		gl.uniformMatrix4fv(viewMatrixLocation, false, viewMatrix);
-	}
+	// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
+	// because the combined transformMatrix is recalculated on every draw call.
 }
 
 /** Inits the projection matrix uniform and sends that over to the gpu for each of our shader programs. */
 function initProjMatrix() {
 	mat4.perspective(projMatrix, fieldOfView, aspect, zNear, zFar);
-	// Send the projMatrix to the gpu
-	for (const programName in shaders.programs) { // Iterate over an object's properties
-		/** @type {ShaderProgram} */
-		const program = shaders.programs[programName];
-		const projMatrixLocation = program.uniformLocations.projMatrix;
-		if (projMatrixLocation === undefined) continue; // This shader program doesn't have the projMatrix uniform, skip.
-		gl.useProgram(program.program);
-		gl.uniformMatrix4fv(projMatrixLocation, false, projMatrix);
-	}
-
+	// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
+	// because the combined transformMatrix is recalculated on every draw call.
 	frametracker.onVisualChange();
 }
 
@@ -332,6 +321,7 @@ function onPositionChange() {
 }
 
 
+
 export default {
 	getPosition,
 	getPixelDensity,
@@ -344,9 +334,10 @@ export default {
 	getScreenBoundingBox,
 	getScreenHeightWorld,
 	getViewMatrix,
+	setViewMatrix,
+	getProjAndViewMatrixes,
 	init,
 	updatePIXEL_HEIGHT_OF_NAVS,
-	setViewMatrix,
 	onPositionChange,
 	initViewMatrix,
 	getZFar,

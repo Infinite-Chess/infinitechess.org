@@ -99,14 +99,12 @@ function createColorProgram() {
         attribute vec4 aVertexPosition;
         attribute vec4 aVertexColor;
 
-        uniform mat4 uWorldMatrix;
-        uniform mat4 uViewMatrix;
-        uniform mat4 uProjMatrix;
+        uniform mat4 uTransformMatrix;
 
         varying lowp vec4 vColor;
 
         void main() {
-            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
+            gl_Position = uTransformMatrix * aVertexPosition;
             vColor = aVertexColor;
             ${pointSizeLine}
         }
@@ -129,9 +127,7 @@ function createColorProgram() {
 			color: gl.getAttribLocation(program, 'aVertexColor')
 		},
 		uniformLocations: {
-			projMatrix: gl.getUniformLocation(program, 'uProjMatrix'),
-			viewMatrix: gl.getUniformLocation(program, 'uViewMatrix'),
-			worldMatrix: gl.getUniformLocation(program, 'uWorldMatrix')
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')
 		},
 	};
 }
@@ -150,9 +146,7 @@ function createColorProgram_Instanced() {
         in vec4 aVertexColor;
 		in vec4 aInstancePosition; // Per-instance position offset attribute
 
-        uniform mat4 uWorldMatrix;
-        uniform mat4 uViewMatrix;
-        uniform mat4 uProjMatrix;
+        uniform mat4 uTransformMatrix;
 
         out lowp vec4 vColor;
 
@@ -160,7 +154,7 @@ function createColorProgram_Instanced() {
 			// Add the instance offset to the vertex position
 			vec4 transformedVertexPosition = vec4(aVertexPosition.xyz + aInstancePosition.xyz, 1.0);
 
-            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * transformedVertexPosition;
+            gl_Position = uTransformMatrix * transformedVertexPosition;
             vColor = aVertexColor;
         }
     `;
@@ -186,9 +180,7 @@ function createColorProgram_Instanced() {
 			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
 		},
 		uniformLocations: {
-			projMatrix: gl.getUniformLocation(program, 'uProjMatrix'),
-			viewMatrix: gl.getUniformLocation(program, 'uViewMatrix'),
-			worldMatrix: gl.getUniformLocation(program, 'uWorldMatrix')
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')
 		},
 	};
 }
@@ -204,14 +196,12 @@ function createTextureProgram() {
         in vec4 aVertexPosition;
         in vec2 aTextureCoord;
 
-        uniform mat4 uWorldMatrix;
-        uniform mat4 uViewMatrix;
-        uniform mat4 uProjMatrix;
+        uniform mat4 uTransformMatrix;
 
         out vec2 vTextureCoord;
 
         void main(void) {
-            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
+            gl_Position = uTransformMatrix * aVertexPosition;
             vTextureCoord = aTextureCoord;
         }
     `;
@@ -238,9 +228,7 @@ function createTextureProgram() {
 			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
 		},
 		uniformLocations: {
-			projMatrix: gl.getUniformLocation(program, 'uProjMatrix'),
-			viewMatrix: gl.getUniformLocation(program, 'uViewMatrix'),
-			worldMatrix: gl.getUniformLocation(program, 'uWorldMatrix'),
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix'),
 			uSampler: gl.getUniformLocation(program, 'uSampler'),
 		},
 	};
@@ -259,15 +247,13 @@ function createColoredTextureProgram() {
 		in vec2 aTextureCoord;
 		in vec4 aVertexColor;
 
-		uniform mat4 uWorldMatrix;
-		uniform mat4 uViewMatrix;
-		uniform mat4 uProjMatrix;
+		uniform mat4 uTransformMatrix;
 
 		out lowp vec2 vTextureCoord;
 		out lowp vec4 vColor;
 
 		void main(void) {
-			gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
+			gl_Position = uTransformMatrix * aVertexPosition;
 			vTextureCoord = aTextureCoord;
 			vColor = aVertexColor;
 		}
@@ -299,9 +285,7 @@ function createColoredTextureProgram() {
 			color: gl.getAttribLocation(program, 'aVertexColor')
 		},
 		uniformLocations: {
-			projMatrix: gl.getUniformLocation(program, 'uProjMatrix'),
-			viewMatrix: gl.getUniformLocation(program, 'uViewMatrix'),
-			worldMatrix: gl.getUniformLocation(program, 'uWorldMatrix'),
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix'),
 			uSampler: gl.getUniformLocation(program, 'uSampler')
 		},
 	};
@@ -319,14 +303,12 @@ function createTintedTextureProgram() {
         attribute vec4 aVertexPosition;
         attribute vec2 aTextureCoord;
 
-        uniform mat4 uWorldMatrix;
-        uniform mat4 uViewMatrix;
-        uniform mat4 uProjMatrix;
+        uniform mat4 uTransformMatrix;
 
         varying lowp vec2 vTextureCoord;
 
         void main(void) {
-            gl_Position = uProjMatrix * uViewMatrix * uWorldMatrix * aVertexPosition;
+            gl_Position = uTransformMatrix * aVertexPosition;
             vTextureCoord = aTextureCoord;
         }
     `;
@@ -353,9 +335,7 @@ function createTintedTextureProgram() {
 		},
 		uniformLocations: {
 			tintColor: gl.getUniformLocation(program, 'uTintColor'),
-			projMatrix: gl.getUniformLocation(program, 'uProjMatrix'),
-			viewMatrix: gl.getUniformLocation(program, 'uViewMatrix'),
-			worldMatrix: gl.getUniformLocation(program, 'uWorldMatrix'),
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix'),
 			uSampler: gl.getUniformLocation(program, 'uSampler')
 		},
 	};
@@ -423,14 +403,14 @@ function createShader(type, sourceText) { // type: gl.VERTEX_SHADER / gl.FRAGMEN
 /**
  * Picks a compatible shader that will work with all the provided attributes and uniforms.
  * 
- * Uniforms you NEVER have to provide are [projMatrix, viewMatrix, worldMatrix, uSampler],
+ * Uniforms you NEVER have to provide are [transformMatrix, uSampler],
  * because those are either present in every shader already, OR the uSampler uniform
  * is assumed if you're using the 'texcoord' attribute.
  * 
  * An example of a uniform you WOULD specify is 'tintColor'.
  * 
  * @param {string[]} attributes - A list of all attributes we need to use. (e.g. `['position','color']` for vertex data that doesn't use a texture)
- * @param {string[]} [uniforms] - Optional. Only provide if you need to use a uniform that is not one of the assumed [projMatrix, viewMatrix, worldMatrix, uSampler]
+ * @param {string[]} [uniforms] - Optional. Only provide if you need to use a uniform that is not one of the assumed [transformMatrix, uSampler]
  */
 function shaderPicker(attributes, uniforms = []) {
 

@@ -5,6 +5,8 @@ import shaders, { ShaderProgram } from './shaders.js';
 import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';
+// @ts-ignore
+import camera from './camera.js';
 import { createBufferFromData, updateBufferIndices } from './buffers.js';
 
 "use strict";
@@ -173,7 +175,7 @@ function ensureFloat32Array(data: number[] | Float32Array): Float32Array {
  * @param scale - The scale transformation of the object: `[x,y,z]`
  * @param stride - The vertex data's stride per vertex.
  * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
- * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [projMatrix, viewMatrix, worldMatrix, uSampler]
+ * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param vertexCount - The mesh's vertex count.
  * @param mode - Primitive rendering mode (e.g. "TRIANGLES" / "LINES"). See {@link validRenderModes}.
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
@@ -250,15 +252,36 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
  * @param shader - The currently bound shader program, and the one we'll be rendering with.
  * @param position - The positional translation of the object: `[x,y,z]`
  * @param scale - The scale transformation of the object: `[x,y,z]`
- * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [projMatrix, viewMatrix, worldMatrix, uSampler]
+ * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
  */
 function setUniforms(shader: ShaderProgram, position: [number,number,number], scale: [number,number,number], uniforms?: { [uniform: string]: any }, texture?: WebGLTexture): void {
-	// Update the world matrix on our shader program, translating our models into the correct position.
-	// THIS UNIFORM MUST BE SET WITH EVERY SINGLE DRAW CALL because otherwise the position of previously-rendered
-	// items would bleed into this item's position!
-	const worldMatrix = genWorldMatrix(position, scale);
-	gl.uniformMatrix4fv(shader.uniformLocations.worldMatrix, false, worldMatrix); // Send to the gpu
+
+	{
+		// Update the transformMatrix on the gpu, EVERY render call!!
+		// This contains our camera, perspective projection, and the
+		// positional and scale transformations of the mesh we're rendering!
+		// If we do not update this every frame, the uniform value from
+		// the previous draw call will bleed through.
+	
+		const { projMatrix, viewMatrix } = camera.getProjAndViewMatrixes();
+	
+		// Order of matrix multiplication goes:
+		// uProjMatrix * uViewMatrix * uWorldMatrix ==> transformMatrix
+		// Then in the shader we will do:
+		// transformMatrix * positionVec4
+	
+		// The positional and scale transformation matrix of the mesh we're rendering
+		const worldMatrix = genWorldMatrix(position, scale);
+	
+		// Multiply the matrices in order
+		const transformMatrix = mat4.create();
+		mat4.multiply(transformMatrix, projMatrix, viewMatrix);  // First multiply projMatrix and viewMatrix
+		mat4.multiply(transformMatrix, transformMatrix, worldMatrix); // Then multiply the result by worldMatrix
+		
+		// Send the transformMatrix to the gpu
+		gl.uniformMatrix4fv(shader.uniformLocations.transformMatrix, false, transformMatrix);
+	}
 
 	if (texture) {
 		// The active texture unit is 0 by default, but needs to be set before you bind each texture IF YOU ARE PLANNING ON USING MULTIPLE TEXTURES,
