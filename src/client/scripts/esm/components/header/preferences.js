@@ -140,7 +140,6 @@ function getDragEnabled() {
 function setDragEnabled(drag_enabled) {
 	if (typeof drag_enabled !== 'boolean') throw new Error('Cannot set preference drag_enabled when it is not a boolean.');
 	preferences.drag_enabled = drag_enabled;
-	onChangeMade();
 	savePreferences();
 }
 function getPremoveMode() {
@@ -149,7 +148,6 @@ function getPremoveMode() {
 function setPremoveMode(premove_mode) {
 	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a string.');
 	preferences.premove_mode = premove_mode;
-	onChangeMade();
 	savePreferences();
 }
 
