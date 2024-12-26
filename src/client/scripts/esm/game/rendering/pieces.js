@@ -8,7 +8,7 @@ import voids from './voids.js';
 import board from './board.js';
 import onlinegame from '../misc/onlinegame.js';
 import options from './options.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import shapes from './shapes.js';
 import spritesheet from './spritesheet.js';
 // Import End
@@ -69,14 +69,14 @@ function renderPieces(gamefile) {
 
 	modelToUse.render(position, scale);
 	// Use this line when rendering with the tinted texture shader program.
-	// modelToUse.render(position, scale, { uVertexColor: [1,0,0, 1] }); // Specifies the tint uniform value before rendering
+	// modelToUse.render(position, scale, { tintColor: [1,0,0, 1] }); // Specifies the tint uniform value before rendering
 }
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type, coords) {
 	const color = options.getColorOfType(type); color.a *= ghostOpacity;
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
-	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", spritesheet.getSpritesheet());
+	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
 }
 

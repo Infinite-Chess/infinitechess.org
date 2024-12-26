@@ -3,11 +3,6 @@
 import spritesheet from './spritesheet.js';
 // Import End
 
-/**
- * Type Definitions
- * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- * @typedef {import('./highlights.js').BoundingBox} BoundingBox
- */
 
 "use strict";
 

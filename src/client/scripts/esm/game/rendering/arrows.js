@@ -17,7 +17,7 @@ import camera from './camera.js';
 import board from './board.js';
 import math from '../../util/math.js';
 import moveutil from '../../chess/util/moveutil.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../../chess/util/coordutil.js';
@@ -264,8 +264,8 @@ function update() {
 		onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
 	}
     
-	model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", spritesheet.getSpritesheet());
-	modelArrows = buffermodel.createModel_Colored(new Float32Array(dataArrows), 2, "TRIANGLES");
+	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+	modelArrows = createModel(dataArrows, 2, "TRIANGLES", true);
 }
 
 /**
@@ -445,7 +445,7 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 	highlights.concatData_HighlightedMoves_Individual(data, thisPieceLegalMoves, color, usingDots, gamefile);
 	highlights.concatData_HighlightedMoves_Sliding(data, pieceCoords, thisPieceLegalMoves, color, usingDots, gamefile);
-	const model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
+	const model = createModel(data, 2, "TRIANGLES", true);
 
 	// Store both these objects inside piecesHoveredOver
 
@@ -522,7 +522,7 @@ function regenModelsOfHoveredPieces() {
 		const data = [];
 		highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color, usingDots, gamefile);
 		// Overwrite the model inside piecesHoveredOver
-		value.model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
+		value.model = createModel(data, 2, "TRIANGLES", true);
 	}
 }
 

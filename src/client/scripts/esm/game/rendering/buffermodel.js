@@ -70,7 +70,7 @@ function createModel_Textured(data, numPositionComponents, mode, texture) {
  */
 function createModel_ColorTextured(data, numPositionComponents, mode, texture) {
 	if (numPositionComponents < 2 || numPositionComponents > 3) return console.error(`Unsupported numPositionComponents ${numPositionComponents}`);
-	if (texture == null) return console.error("Cannot create a textured buffer model without a texture!");
+	if (!texture) return console.error("Cannot create a textured buffer model without a texture!");
 	const stride = numPositionComponents + 6;
 	const prepDrawFunc = getPrepDrawFunc(shaders.programs.coloredTextureProgram, numPositionComponents, true, true);
 	return new BufferModel(shaders.programs.coloredTextureProgram, data, stride, mode, texture, prepDrawFunc);
@@ -152,6 +152,10 @@ function initAttribute(attribLocation, stride_bytes, numComponents, offset) { //
 	gl.vertexAttribPointer(attribLocation, numComponents, type, normalize, stride_bytes, offset);
 	// Enables the attribute for use
 	gl.enableVertexAttribArray(attribLocation);
+	// Reset divisor to 0 for non-instanced rendering.
+	// If another shader set the same attribute index to be
+	// used for instanced rendering, it would otherwise never be reset!
+	gl.vertexAttribDivisor(attribLocation, 0); // 0 = attrib updated once per vertex   1 = updated once per instance
 }
 
 /**
@@ -172,7 +176,7 @@ function renderPreppedModel(program, position = [0,0,0], scale = [1,1,1], vertex
 	mat4.translate(worldMatrix, worldMatrix, position);
 
 	// Update the world matrix on our shader program, translating our models into the correct position.
-	gl.uniformMatrix4fv(program.uniformLocations.worldMatrix, gl.FALSE, worldMatrix);
+	gl.uniformMatrix4fv(program.uniformLocations.worldMatrix, false, worldMatrix);
 
 	// Send any custom-provided uniform values over to the gpu now!
 	for (const key in customUniformValues) { sendCustomUniformToGPU(program, key, customUniformValues[key]); }
@@ -198,7 +202,7 @@ function renderPreppedModel(program, position = [0,0,0], scale = [1,1,1], vertex
  * Sends a custom-specified uniform to the gpu before rendering.
  * ASSUMES the provided program has been set already with gl.useProgram()!
  * @param {ShaderProgram} program - The shader program
- * @param {string} name - The name of the uniform, for example, `uVertexColor`.
+ * @param {string} name - The name of the uniform, for example, `tintColor`.
  * @param {number[] | Float32Array | number} value - The value of the uniform, for example, `[1,0,0,1]`.
  */
 function sendCustomUniformToGPU(program, name, value) {
@@ -363,7 +367,7 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
      * Applies any custom uniform values before rendering.
      * @param {number[]} position - The positional translation
      * @param {number[]} scale - The scaling transformation
-     * @param {Object} [customUniformValues] - If applicable, an object containing any custom uniform values. For example, `{ uVertexColor: [1,0,0,1] }` - This particular uniform is used for the tintedTextureProgram.
+     * @param {Object} [customUniformValues] - If applicable, an object containing any custom uniform values. For example, `{ tintColor: [1,0,0,1] }` - This particular uniform is used for the tintedTextureProgram.
      */
 	this.render = function(position, scale, customUniformValues) { // [0,0,0], [1,1,1]  Can be undefined, render will use defaults.
 		// Must be called before every time we render the model.
