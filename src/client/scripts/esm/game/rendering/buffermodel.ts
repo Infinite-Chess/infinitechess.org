@@ -240,6 +240,7 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
 		// used for instanced rendering, it would otherwise never be reset!
 		gl.vertexAttribDivisor(shader.attribLocations[attrib.name], 0); // 0 = attrib updated once per vertex   1 = updated once per instance
 
+		// Adjust our offset for the next attribute
 		currentOffsetBytes += attrib.numComponents * BYTES_PER_ELEMENT;
 	}
 
