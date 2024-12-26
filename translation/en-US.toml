@@ -51,6 +51,7 @@ about_paragraphs = [
 ["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
 ]
 patreon_title = "Patreon Supporters"
+github_title = "Github Contributors"
 
 [credits]
 title = "Credits"

@@ -6,7 +6,6 @@ res.then(function(contributors) {
 		console.log(json);
 		json.forEach(contributor => {
 			const link = document.createElement('a');
-			link.id = 'github-template';
 			link.href = contributor.linkUrl;
 
 			const img = document.createElement('img');
@@ -16,7 +15,7 @@ res.then(function(contributors) {
 			div.className = 'github-stats';
 
 			const paragraph = document.createElement('p');
-			paragraph.textContent = `${contributor.contributionCount} contributions`;
+			paragraph.innerText = `${contributor.name}\n${contributor.contributionCount} contributions`;
 
 			div.appendChild(paragraph);
 			link.appendChild(img);

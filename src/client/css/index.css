@@ -151,7 +151,7 @@ iframe {
     height: 100%;
     width: 100%;
     transition: 200ms;
-    background-color: rgb(244, 244, 244);
+    background-color: rgb(33, 33, 33);
     opacity: 0;
     box-sizing: border-box;
 
@@ -161,10 +161,15 @@ iframe {
 .github-stats p {
     text-align: center;
     font-size: x-small !important;
+    color: #fff;
 }
 
 .github-container a:hover .github-stats {
     opacity: 0.5;
+}
+
+.github-container a:hover .github-stats p {
+    opacity: 1 !important;
 }
 
 /*.github-stats {
