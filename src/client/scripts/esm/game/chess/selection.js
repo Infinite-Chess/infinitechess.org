@@ -217,7 +217,7 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
 			if (draggingPiece) { // The piece was dropped in its original square.
 				if (!didLastClickSelectPiece) unselectPiece(); // Toggle selection
 			} else { // The selected piece was clicked.
-				//Pick up the piece if it's ours; otherwise, unselect it now.
+				// Pick up the piece if it's ours; otherwise, unselect it now.
 				if (!canMovePieceType(pieceClickedType) || !startDragging()) unselectPiece();
 				didLastClickSelectPiece = false;
 			}
@@ -356,7 +356,7 @@ function moveGamefilePiece(coords) {
 	const compact = formatconverter.LongToShort_CompactMove(move);
 	move.compact = compact;
 
-	movepiece.makeMove(game.getGamefile(), move, {animate: !draggingPiece, animateSecondary: draggingPiece});
+	movepiece.makeMove(game.getGamefile(), move, { animate: !draggingPiece, animateSecondary: draggingPiece });
 	onlinegame.sendMove();
 
 	unselectPiece();

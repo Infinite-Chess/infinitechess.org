@@ -146,7 +146,7 @@ function genOutlineModel() {
 	const color = options.getDefaultOutlineColor();
 	
 	// Checking if the coords are equal prevents the large lines flashing when tapping to select.
-	if (pointerIsTouch && !coordutil.areCoordsEqual(hoveredCoords, startCoords) || boardScale < maxScaleToDrawOutline) {
+	if ((pointerIsTouch || boardScale < maxScaleToDrawOutline) && !coordutil.areCoordsEqual(hoveredCoords, startCoords)) {
 		// Outline the entire rank and file
 		let boundingBox;
 		if (perspective.getEnabled()) {

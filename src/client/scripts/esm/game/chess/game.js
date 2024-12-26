@@ -190,8 +190,8 @@ function renderEverythingInGame() {
 		highlightline.render();
 	});
     
-	animation.renderTransparentSquares();
-	dragAnimation.renderTransparentSquare();
+	animation.renderTransparentSquares(); // Required to hide the piece currently being animated
+	dragAnimation.renderTransparentSquare(); // Required to hide the piece currently being animated
 	pieces.renderPiecesInGame(gamefile);
 	animation.renderPieces();
 	
