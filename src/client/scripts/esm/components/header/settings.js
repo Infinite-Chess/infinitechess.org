@@ -110,8 +110,8 @@ function closeSettingsListeners() {
 	legalmoveDropdownSelection.removeEventListener('click', legalmovedropdown.open);
 	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
-	mouseDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	mouseDropdownSelection.addEventListener('click', perspectivedropdown.open);
+	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
 }
 
 
