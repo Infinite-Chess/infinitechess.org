@@ -1,7 +1,7 @@
 
 // Import start
 import shapes from "./shapes.js";
-import buffermodel from "./buffermodel.js";
+import { createModel } from "./buffermodel.js";
 import bufferdata from "./bufferdata.js";
 import options from "./options.js";
 import spritesheet from "./spritesheet.js";
@@ -87,7 +87,7 @@ function renderPiece() {
 function genTransparentModel() {
 	const color = [0,0,0,0];
 	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
-	return buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
+	return createModel(data, 2, "TRIANGLES", true);
 }
 
 /**
@@ -128,7 +128,7 @@ function genPieceModel() {
 	const data = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor)); // Shadow
 	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a)); // Piece
-	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
+	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 
 /**
@@ -163,7 +163,7 @@ function genOutlineModel() {
 		data.push(...getBoxFrameData(hoveredCoords));
 	}
 	
-	return buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
+	return createModel(data, 2, "TRIANGLES", true);
 }
 
 /**
@@ -267,7 +267,7 @@ function genIntersectingLines() {
 		worldLocation[0], bottom, r, g, b, a,
 		worldLocation[0], top, r, g, b, a,
 	];
-	return buffermodel.createModel_Colored(new Float32Array(data), 2, "LINES");
+	return createModel(data, 2, "LINES", true);
 }
 
 /**

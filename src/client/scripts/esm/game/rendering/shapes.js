@@ -312,4 +312,5 @@ export default {
 	getDataRect_FromTileBoundingBox,
 	getDataQuad_ColorTexture_FromCoordAndType,
 	getDataQuad_ColorTexture3D_FromCoordAndType,
+	getTransformedBoundingBoxOfSquare,
 };
