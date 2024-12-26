@@ -202,7 +202,7 @@ function renderPreppedModel(program, position = [0,0,0], scale = [1,1,1], vertex
  * Sends a custom-specified uniform to the gpu before rendering.
  * ASSUMES the provided program has been set already with gl.useProgram()!
  * @param {ShaderProgram} program - The shader program
- * @param {string} name - The name of the uniform, for example, `uVertexColor`.
+ * @param {string} name - The name of the uniform, for example, `tintColor`.
  * @param {number[] | Float32Array | number} value - The value of the uniform, for example, `[1,0,0,1]`.
  */
 function sendCustomUniformToGPU(program, name, value) {
@@ -367,7 +367,7 @@ function BufferModel(program, data, stride, mode, texture, prepDrawFunc) { // da
      * Applies any custom uniform values before rendering.
      * @param {number[]} position - The positional translation
      * @param {number[]} scale - The scaling transformation
-     * @param {Object} [customUniformValues] - If applicable, an object containing any custom uniform values. For example, `{ uVertexColor: [1,0,0,1] }` - This particular uniform is used for the tintedTextureProgram.
+     * @param {Object} [customUniformValues] - If applicable, an object containing any custom uniform values. For example, `{ tintColor: [1,0,0,1] }` - This particular uniform is used for the tintedTextureProgram.
      */
 	this.render = function(position, scale, customUniformValues) { // [0,0,0], [1,1,1]  Can be undefined, render will use defaults.
 		// Must be called before every time we render the model.

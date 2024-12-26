@@ -69,7 +69,7 @@ function renderPieces(gamefile) {
 
 	modelToUse.render(position, scale);
 	// Use this line when rendering with the tinted texture shader program.
-	// modelToUse.render(position, scale, { uVertexColor: [1,0,0, 1] }); // Specifies the tint uniform value before rendering
+	// modelToUse.render(position, scale, { tintColor: [1,0,0, 1] }); // Specifies the tint uniform value before rendering
 }
 
 /** Renders a semi-transparent piece at the specified coordinates. */
