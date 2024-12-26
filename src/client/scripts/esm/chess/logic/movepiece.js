@@ -214,15 +214,9 @@ function makeAllMovesInGame(gamefile, moves) {
 
 		// Make the move in the game!
 
-		applyMove(gamefile, move);
-		incrementMoveRule(gamefile, move.type, move.captured !== undefined);
-
-		gamefile.moveIndex++;
-		gamefile.moves.push(move);
+		makeMove(gamefile, move);
 	}
 
-	updateTurn(gamefile);
-	updateInCheck(gamefile);
 	if (gamefile.inCheck && gamefile.moveIndex !== -1) moveutil.flagLastMoveAsCheck(gamefile);
 
 	gamefileutility.doGameOverChecks(gamefile); // Update the gameConclusion
@@ -260,7 +254,9 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 
 	const selectedPiece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
 	if (!selectedPiece) return move; // Return without any special move properties, this will automatically be an illegal move.
-    
+	
+	move.type = selectedPiece.type;
+
 	const legalSpecialMoves = legalmoves.calculate(gamefile, selectedPiece, { onlyCalcSpecials: true }).individual;
 	for (let i = 0; i < legalSpecialMoves.length; i++) {
 		const thisCoord = legalSpecialMoves[i];
