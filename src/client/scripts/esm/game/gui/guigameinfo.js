@@ -4,6 +4,7 @@ import style from './style.js';
 import game from '../chess/game.js';
 import onlinegame from '../misc/onlinegame.js';
 import winconutil from '../../chess/util/winconutil.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 // Import End
 
 /** 
@@ -56,6 +57,10 @@ function revealPlayerNames(gameOptions) {
  * @param {gamefile} gamefile - The gamefile
  */
 function updateWhosTurn(gamefile) {
+	// In the scenario we forward the game to front after the game has adjudicated,
+	// don't modify the game over text saying who won!
+	if (gamefileutility.isGameOver(gamefile)) return;
+
 	const color = gamefile.whosTurn;
 
 	if (color !== 'white' && color !== 'black')

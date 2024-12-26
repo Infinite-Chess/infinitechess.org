@@ -10,7 +10,7 @@ import movement from './movement.js';
 import options from './options.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import game from '../chess/game.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
@@ -273,7 +273,7 @@ function regenBoardModel() {
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
     
 	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, 1, 1, 1, 1);
-	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
+	return createModel(data, 3, "TRIANGLES", true, boardTexture);
 }
 
 function renderMainBoard() {
@@ -430,7 +430,7 @@ function renderSolidCover() {
 	const boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
 	data.push(...bufferdata.getDataQuad_Color3D(boundingBox, z, [r, g, b, a])); // Floor of the box
 
-	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	const model = createModel(data, 3, "TRIANGLES", true);
 
 	model.render();
 }
@@ -465,7 +465,7 @@ function renderZoomedBoard(zoom, opacity) {
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
     
 	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texleft, texbottom, texright, textop, 1, 1, 1, opacity);
-	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
+	const model = createModel(data, 3, "TRIANGLES", true, boardTexture);
 
 	model.render();
 }

@@ -32,7 +32,7 @@ const PATH_TO_CONTRIBUTORS_FILE = '../../../database/contributors.json';
  */
 let contributors = (() => {
 	const fileIfExists = readFileIfExists(join(dirname, PATH_TO_CONTRIBUTORS_FILE));
-	if (fileIfExists) return JSON.parse(fileIfExists); 
+	if (fileIfExists) return JSON.parse(fileIfExists);
 	return [];
 })();
 // console.log(contributors);

@@ -12,7 +12,7 @@ import board from './board.js';
 import math from '../../util/math.js';
 import moveutil from '../../chess/util/moveutil.js';
 import game from '../chess/game.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import frametracker from './frametracker.js';
@@ -125,7 +125,7 @@ function regenModel() {
 	usingDots = false;
 	data.push(...getDataOfHighlightShapeDependingOnIfPieceOnSquare(coords, color, usingDots, gamefile));
 
-	model = buffermodel.createModel_Colored(new Float32Array(data), 2, "TRIANGLES");
+	model = createModel(data, 2, "TRIANGLES", true);
 }
 
 /**
@@ -445,8 +445,7 @@ function renderBoundingBoxOfRenderRange() {
 	const color = [1,0,1, 1];
 	const data = shapes.getDataRect_FromTileBoundingBox(boundingBoxOfRenderRange, color);
 
-	// const model = buffermodel.createModel_Color(new Float32Array(data));
-	const model = buffermodel.createModel_Colored(new Float32Array(data), 2, "LINE_LOOP");
+	const model = createModel(data, 2, "LINE_LOOP", true);
 
 	model.render();
 }
@@ -462,7 +461,7 @@ function highlightLastMove() {
 	data.push(...shapes.getTransformedDataQuad_Color3D_FromCoord(lastMove.startCoords, z, color));
 	data.push(...shapes.getTransformedDataQuad_Color3D_FromCoord(lastMove.endCoords, z, color));
 
-	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	const model = createModel(data, 3, "TRIANGLES", true);
 
 	model.render();
 }

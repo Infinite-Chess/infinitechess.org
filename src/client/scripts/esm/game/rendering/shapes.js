@@ -1,7 +1,7 @@
 
 import board from "./board.js";
 import bufferdata from "./bufferdata.js";
-import buffermodel from "./buffermodel.js";
+import { createModel } from "./buffermodel.js";
 import movement from "./movement.js";
 import perspective from "./perspective.js";
 
@@ -228,8 +228,7 @@ function getModelCircle3D(x, y, z, radius, resolution, r, g, b, a) {
 		data.push(thisX, thisY, z, r, g, b, a);
 	}
 
-	// return buffermodel.createModel_Color3D(new Float32Array(data))
-	return buffermodel.createModel_Colored(new Float32Array(data), 3, 'TRIANGLE_FAN');
+	return createModel(data, 3, 'TRIANGLE_FAN', true);
 }
 
 /**
@@ -264,8 +263,7 @@ function getModelRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g
 		data.push(outerX, outerY, z, r2, g2, b2, a2);
 	}
 
-	// return buffermodel.createModel_Color3D(new Float32Array(data))
-	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLE_STRIP");
+	return createModel(data, 3, "TRIANGLE_STRIP", true);
 }
 
 function getDataRect_FromTileBoundingBox(boundingBox, color) {
@@ -298,7 +296,6 @@ function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 
 export default {
 	getBoundingBoxOfCoord,
-	getTransformedBoundingBoxOfSquare,
 	getDataCircle,
 	getDataCircle_3D,
 	getDataQuad_Color_FromCoord,
