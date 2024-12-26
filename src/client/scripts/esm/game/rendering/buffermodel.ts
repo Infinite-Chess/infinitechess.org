@@ -228,6 +228,11 @@ function render(
 function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo: AttributeInfo, stride: number, BYTES_PER_ELEMENT: number) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
+	// IF WE BIND A VERTEX ARRAY OBJECT here, then unbind it after our initAttribute() calls,
+	// then for future render calls we don't need to make the same initAttribute() calls,
+	// but instead we just bind the vertex array object!
+	// ...
+
 	const stride_bytes = stride * BYTES_PER_ELEMENT; // # bytes in each vertex/line.
 	let currentOffsetBytes = 0; // how many bytes inside the buffer to start from.
 
