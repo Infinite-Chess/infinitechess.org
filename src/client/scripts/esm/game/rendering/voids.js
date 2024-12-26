@@ -4,7 +4,7 @@ import movement from './movement.js';
 import options from './options.js';
 import piecesmodel from './piecesmodel.js';
 import game from '../chess/game.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import board from './board.js';
 import coordutil from '../../chess/util/coordutil.js';
 // Import End
@@ -75,7 +75,7 @@ function regenModel(gamefile) {
 	}
 
 	const mode = inDevMode ? "LINES" : "TRIANGLES";
-	gamefile.voidMesh.model = buffermodel.createModel_Colored(data32, 2, mode);
+	gamefile.voidMesh.model = createModel(data32, 2, mode, true);
 }
 
 // The passed in sides should be the center-coordinate value of the square in the corner

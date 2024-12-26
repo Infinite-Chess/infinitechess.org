@@ -4,14 +4,10 @@ import bufferdata from './bufferdata.js';
 import game from '../chess/game.js';
 import movement from './movement.js';
 import options from './options.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import space from '../misc/space.js';
 // Import End
 
-/**
- * Type Definitions
- * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- */
 
 "use strict";
 
@@ -56,7 +52,7 @@ function genCheckHighlightModel(royalsInCheck) {
 		data.push(...dataRing);
 	}
 
-	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	return createModel(data, 3, "TRIANGLES", true);
 }
 
 export default {

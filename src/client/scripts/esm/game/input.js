@@ -10,7 +10,7 @@ import selection from './chess/selection.js';
 import camera from './rendering/camera.js';
 import board from './rendering/board.js';
 import arrows from './rendering/arrows.js';
-import buffermodel from './rendering/buffermodel.js';
+import { createModel } from './rendering/buffermodel.js';
 import jsutil from '../util/jsutil.js';
 import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
@@ -304,6 +304,11 @@ function initListeners_Mouse() {
 
 		// If we're in perspective, mouse movement should rotate the camera
 		perspective.update(event.movementX, event.movementY); // Pass in the change in mouse coords
+
+		// This line, whenever the mouse moves offscreen,
+		// triggers the board to be dropped, instead of continuously
+		// being held and dragged, even when your mouse is off the page.
+		// if (isMouseOffScreen(event)) mouseHelds.length = 0;
 	});
 
 	overlayElement.addEventListener('wheel', (event) => {
@@ -369,6 +374,27 @@ function initListeners_Mouse() {
 
 		executeMouseSimulatedClick();
 	});
+
+	// window.addEventListener('blur', function() {
+	// 	// Clear all keys being held, as when the window isn't in focus,
+	// 	// we don't hear the key-up events.
+	// 	// So if we held down the shift key, then click off, then let go,
+	// 	// the game would CONTINUOUSLY keep zooming in without you pushing anything,
+	// 	// and you'd have to push the shift again to cancel it.
+	// 	mouseHelds.length = 0;
+	// });
+}
+
+/**
+ * Detects if, by the provided 'mousemove' event,
+ * whether the mouse is now offscreen.
+ * @param {Event} mouseMoveEvent - The event fired from a 'mousemove' event listener.
+ * @returns {boolean} true if the mouse is now off the screen.
+ */
+function isMouseOffScreen(mouseMoveEvent) {
+	const mouseX = mouseMoveEvent.clientX;
+	const mouseY = mouseMoveEvent.clientY;
+	return mouseX < 0 || mouseX > window.innerWidth || mouseY < 0 || mouseY > window.innerHeight;
 }
 
 function initMouseSimulatedClick() {
@@ -483,6 +509,15 @@ function initListeners_Keyboard() {
 		event = event || window.event;
 		const index = keyHelds.indexOf(event.key.toLowerCase());
 		if (index !== -1) keyHelds.splice(index, 1); // Removes the key
+	});
+
+	window.addEventListener('blur', function() {
+		// Clear all keys being held, as when the window isn't in focus,
+		// we don't hear the key-up events.
+		// So if we held down the shift key, then click off, then let go,
+		// the game would CONTINUOUSLY keep zooming in without you pushing anything,
+		// and you'd have to push the shift again to cancel it.
+		keyHelds.length = 0;
 	});
 }
 
@@ -619,9 +654,8 @@ function renderMouse() {
 	const mouseOuterWidthWorld = space.convertPixelsToWorldSpace_Virtual(mouseOuterWidth);
 
 	const mouseData = bufferdata.getDataRingSolid(x, y, mouseInnerWidthWorld, mouseOuterWidthWorld, 32, [0,0,0,mouseOpacity]);
-	const data32 = new Float32Array(mouseData);
 
-	const model = buffermodel.createModel_Colored(data32, 2, "TRIANGLES");
+	const model = createModel(mouseData, 2, "TRIANGLES", true);
 
 	model.render();
 }

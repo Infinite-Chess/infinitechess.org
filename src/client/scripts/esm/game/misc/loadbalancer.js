@@ -52,7 +52,6 @@ const timeUntilHibernation = 1000 * 60 * 30; // 30 minutes
 // const timeUntilHibernation = 10000; // 10s for dev testing
 let hibernateTimeoutID; // ID of the timer to declare we are hibernating!
 
-let windowInFocus = true; // false = blurred. Not necessarily off-screen, just clicked on another window.
 let windowIsVisible = true;
 
 const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 60 * 30; // 30 minutes
@@ -215,15 +214,9 @@ function onHibernate() {
 }
 
 
-// These 2 fire the most common, when you so much as click a different window on-screen,
+// The 'focus' and 'blur' event listeners fire the MOST common, when you so much as click a different window on-screen,
 // EVEN though the game is still visible on screen, it just means it lost focus!
 
-window.addEventListener('focus', () => {
-	windowInFocus = true;
-});
-window.addEventListener('blur', function() {
-	windowInFocus = false;
-});
 
 // This fires the next most commonly, whenever
 // the page becomes NOT visible on the screen no more!
