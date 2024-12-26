@@ -90,7 +90,7 @@ function addGameToActiveGames(game) {
  */
 function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 	const gameID = ws.metadata.subscriptions.game?.id;
-	if (gameID == null) return console.error("Cannot unsub client from game when it's not subscribed to one.");
+	if (gameID === undefined) return console.error("Cannot unsub client from game when it's not subscribed to one.");
 
 	const game = getGameByID(gameID);
 	if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
@@ -143,7 +143,7 @@ function getGameBySocket(ws) {
 
 	// Is the client in a game? What's their username/browser-id?
 	const player = socketUtility.getOwnerFromSocket(ws);
-	if (player.member == null && player.browser == null) return console.error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
+	if (player.member === undefined && player.browser === undefined) return console.error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 
 	return getGameByPlayer(player);
 }

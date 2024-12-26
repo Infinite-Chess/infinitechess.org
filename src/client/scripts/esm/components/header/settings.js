@@ -6,9 +6,10 @@ import boarddropdown from "./dropdowns/boarddropdown.js";
 import legalmovedropdown from "./dropdowns/legalmovedropdown.js";
 import perspectivedropdown from "./dropdowns/perspectivedropdown.js";
 import selectiondropdown from "./dropdowns/selectiondropdown.js";
-// Only imported so its code runs
-import pingmeter from "./pingmeter.js";
 import preferences from "./preferences.js";
+// Only imported so its code runs
+// eslint-disable-next-line no-unused-vars
+import pingmeter from "./pingmeter.js";
 
 
 // Document Elements -------------------------------------------------------------------------

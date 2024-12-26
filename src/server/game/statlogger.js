@@ -47,7 +47,7 @@ const stats = await readFile('database/stats.json', 'Unable to read stats.json o
  * @returns 
  */
 async function logGame(game) {
-	if (game == null) return console.error("Cannot log a null game!");
+	if (!game) return console.error("Cannot log a null game!");
 
 	// Only log the game if atleast 2 moves were played! (resignable)
 	// Black-moves-first games are logged if atleast 1 move is played!
@@ -66,18 +66,18 @@ async function logGame(game) {
 	// Now record the number of moves played
 
 	const plyCount = game.moves.length; 
-	if (stats.moveCount.all == null) stats.moveCount.all = 0;
+	if (stats.moveCount.all === undefined) stats.moveCount.all = 0;
 	stats.moveCount.all += plyCount;
-	if (stats.moveCount[variant] == null) stats.moveCount[variant] = 0;
+	if (stats.moveCount[variant] === undefined) stats.moveCount[variant] = 0;
 	stats.moveCount[variant] += plyCount;
-	if (stats.moveCount[month] == null) stats.moveCount[month] = 0;
+	if (stats.moveCount[month] === undefined) stats.moveCount[month] = 0;
 	stats.moveCount[month] += plyCount;
 
 
 
 
 	// Increment the games played today
-	if (stats.gamesPlayed.byDay[day] == null) stats.gamesPlayed.byDay[day] = 1;
+	if (stats.gamesPlayed.byDay[day] === undefined) stats.gamesPlayed.byDay[day] = 1;
 	else stats.gamesPlayed.byDay[day]++;
 
 
@@ -95,14 +95,14 @@ async function logGame(game) {
 
 function incrementMonthsGamesPlayed(parent, month, variant) { // allTime / yyyy-mm=
 	// Does this month's property exist yet?
-	if (parent[month] == null) parent[month] = {};
+	if (parent[month] === undefined) parent[month] = {};
 
 	// Increment this month's all-variants by 1
-	if (parent[month].all == null) parent[month].all = 1;
+	if (parent[month].all === undefined) parent[month].all = 1;
 	else parent[month].all++;
 
 	// Increment this month's this variant by 1
-	if (parent[month][variant] == null) parent[month][variant] = 1;
+	if (parent[month][variant] === undefined) parent[month][variant] = 1;
 	else parent[month][variant]++;
 }
 

@@ -341,17 +341,6 @@ function click(element) {
 	}
 }
 
-function getInviteFromID(id) {
-	if (!id) return console.error('Cannot find the invite with undefined id!');
-
-	for (let i = 0; i < activeInvites.length; i++) {
-		const invite = activeInvites[i];
-		if (invite.id === id) return invite;
-	}
-
-	console.error(`Could not find invite with id ${id} in the document!`);
-}
-
 function updateCreateInviteButton() {
 	if (guiplay.getModeSelected() !== 'online') return;
 	if (weHaveInvite) guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);

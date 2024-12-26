@@ -90,7 +90,7 @@ function pawns(gamefile, piece, move, { updateData = true, animate = true, updat
 		// Delete original pawn
 		movepiece.deletePiece(gamefile, piece, { updateData });
 
-		movepiece.addPiece(gamefile, promotionTag, move.endCoords, null, { updateData });
+		movepiece.addPiece(gamefile, promotionTag, move.endCoords, undefined, { updateData });
 
 	} else /* enpassantTag */ {
 		// Move the pawn

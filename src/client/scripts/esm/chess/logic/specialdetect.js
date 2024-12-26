@@ -338,7 +338,7 @@ function transferSpecialFlags_FromMoveToCoords(move, coords) {
  */
 function transferSpecialFlags_FromCoordsToCoords(srcCoords, destCoords) {
 	for (const special of allSpecials) {
-		if (srcCoords[special] != null) destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
+		if (srcCoords[special] !== undefined) destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
 	}
 }
 
