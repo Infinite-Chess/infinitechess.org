@@ -254,8 +254,6 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 
 	const selectedPiece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
 	if (!selectedPiece) return move; // Return without any special move properties, this will automatically be an illegal move.
-	
-	move.type = selectedPiece.type;
 
 	const legalSpecialMoves = legalmoves.calculate(gamefile, selectedPiece, { onlyCalcSpecials: true }).individual;
 	for (let i = 0; i < legalSpecialMoves.length; i++) {

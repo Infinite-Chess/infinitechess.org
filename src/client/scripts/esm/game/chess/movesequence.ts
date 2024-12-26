@@ -20,6 +20,8 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import clock from "../../chess/logic/clock.js";
+// @ts-ignore
+import coordutil from "../../chess/util/coordutil.js";
 
 import state from "../../chess/logic/state.js";
 import boardchanges from "../../chess/logic/boardchanges.js";
@@ -67,15 +69,23 @@ function makeMove(gamefile: gamefile, move: Move, { doGameOverChecks = true, con
  * @param move the move to animate
  * @param forward whether this is a forward or back animation
  */
-function animateMove(move: Move, forward = true) {
+function animateMove(move: Move, forward = true, animateMain = true) {
 	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
 	let clearanimations = true; // The first animation of a turn should clear prev turns animation
 	// TODO: figure out a way to animate multiple moves of the same piece
 	// Keyframing or smth
 
+	let mainCoords = move.startCoords;
+
 	// How does the rose animate?
 	for (const c of move.changes) {
 		if (!(c.action in funcs)) continue;
+		if (!animateMain && c['piece'].type === move.type) {
+			if (coordutil.getKeyFromCoords(c['piece'].coords) === coordutil.getKeyFromCoords(mainCoords)) {
+				mainCoords = c['endCoords'];
+				continue;
+			}
+		}
 		funcs[c.action]!(c, clearanimations);
 		clearanimations = false;
 	}
