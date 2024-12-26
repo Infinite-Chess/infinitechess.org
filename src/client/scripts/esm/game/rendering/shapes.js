@@ -6,6 +6,9 @@ import movement from "./movement.js";
 import perspective from "./perspective.js";
 
 
+/**
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ */
 
 /**
  * Returns a bounding box of a coordinate.
@@ -309,4 +312,5 @@ export default {
 	getDataRect_FromTileBoundingBox,
 	getDataQuad_ColorTexture_FromCoordAndType,
 	getDataQuad_ColorTexture3D_FromCoordAndType,
+	getTransformedBoundingBoxOfSquare,
 };

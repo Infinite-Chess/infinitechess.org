@@ -2,12 +2,14 @@
     --header-height: 40px;
     --header-link-hover-color: rgb(230, 230, 230);
     --currPage-background-color: rgb(237, 237, 237);
+    --switch-on-color: rgb(97, 97, 97); /* Default value. Can be modified using javascript */
     --header-link-max-padding: 16px;
     --header-link-min-padding: 8px;
     --CBC-in: cubic-bezier(0,1.05,.47,1); /* Settings dropdown IN curve */
     --CBC-out: cubic-bezier(.54,0,1,.97); /* Settings dropdown OUT curve */
     --CBC-CM-in: cubic-bezier(.09,1.61,.36,1); /* Checkmark IN curve */
     --CBC-CM-out: cubic-bezier(0,1.1,1,1); /* Checkmark OUT curve */
+    --CBC-switch: cubic-bezier(0,1.05,.47,1); /* Toggle switch curve */
 }
 
 header {
@@ -42,6 +44,10 @@ header a {
     align-items: center;
 }
 
+header label {
+    font-size: inherit; /* Prevents createaccount.css changing the font size. */
+}
+
 /* All SVG settings. (Most settings dropdown SVGs are the same width in the document, we just scale them here to make them all VISUALLY the same size */
 
 .svg-pawn { /* The pawn svg and loading animation that we use in several spots */
@@ -59,7 +65,7 @@ header a {
     animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
 }
 
-.svg-language, .svg-board, .svg-legalmove, .svg-perspective,
+.svg-language, .svg-board, .svg-legalmove, .svg-perspective, .svg-selection,
 .svg-squares, .svg-mouse, .svg-camera,
 .checkmark {
     width: 19px;
@@ -273,7 +279,7 @@ nav.compact-3 #svg-logout {
     border-bottom: 1px solid grey;
 }
 
-.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover {
+.dropdown-title:hover, .settings-dropdown-item:hover, .language-dropdown-item:hover, .legalmove-option:hover, .selection-option:hover {
     background-color: var(--header-link-hover-color);
 }
 
@@ -320,14 +326,57 @@ span.arrow-head-left {
     transform: scale(0);
 }
 
+/* Switch toggles */
+
+.switch {
+    position: relative;
+}
+
+.switch input {
+    display: none;
+}
+
+.switch > input + * {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background-color: #777;
+    border: 2px solid #777;
+    transition: 0.2s var(--CBC-switch);
+    transition-property: background-color, border-color;
+}
+
+.switch > input + ::before {
+    content: '';
+    display: block;
+    border-radius: 14px;
+    background-color: white;
+    width: 50%;
+    height: 100%;
+    transition: transform 0.2s var(--CBC-switch);
+    box-shadow: 0px 1px 2px #00000076;
+}
+
+.switch input:checked + ::before {
+    transform: translateX(100%);
+}
+.switch input:checked + * {
+    background-color: var(--switch-on-color);
+    border-color: var(--switch-on-color);
+}
 
 
 /* Language nested dropdown */
 
-.language-dropdown-item, .legalmove-option {
+.language-dropdown-item, .legalmove-option, .selection-option {
     display:flex;
     align-items: center;
     cursor: pointer;
+}
+
+.selection-option.premove {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .language-dropdown-item {
@@ -373,8 +422,6 @@ span.arrow-head-left {
     outline: 5px solid black;
 }
 
-
-
 /* Legalmove shape nested dropdown */
 
 /* .legalmove-dropdown {
@@ -386,7 +433,29 @@ span.arrow-head-left {
     padding: 0 15px 0 8px;
 }
 
+/* Selection dropdown */
 
+.selection-option-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 35px;
+}
+
+.selection-options span.text {
+    padding: 0 6px 0 3px;
+}
+
+.selection-option {
+    height: 43px;
+    padding: 0 8px 0 8px;
+}
+
+.selection-option .switch {
+    width: 36px;
+    height: 20px;
+    margin: 0 2px 0 4px;
+}
 
 /* Perspective dropdown */
 

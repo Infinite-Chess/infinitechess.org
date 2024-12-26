@@ -49,6 +49,12 @@
                 <path d="M120 160a30 30 0 10 0-60 30 30 0 00 0 60Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/><path d="M30 168V92c0-11.2 0-16.8 2.2-21a20 20 0 01 8.7-8.8C45.2 60 50.9 60 62 60h13a10 10 0 00 7.2-4.5l1.1-2.2 2.3-4.2a20 20 0 01 14.5-9h39.8a20 20 0 01 14.5 9l2.3 4.2 1.1 2.2a10 10 0 00 7.2 4.4h13c11.2 0 16.8 0 21 2.3 3.8 2 7 5 8.8 8.7 2.2 4.3 2.2 10 2.2 21v76.1c0 11.2 0 16.8-2.2 21a20 20 0 01-8.7 8.8c-4.3 2.2-9.9 2.2-21 2.2H62c-11.2 0-16.8 0-21-2.2a20 20 0 01-8.8-8.7C30 184.8 30 179.2 30 168.1Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/>
             </symbol>
         </svg>
+        <!-- Selection svg -->
+        <svg>
+            <symbol id="svg-selection" fill="none" viewBox="0 0 24 24">
+              <path d="M7.92098 2.29951C6.93571 1.5331 5.5 2.23523 5.5 3.48349V20.4923C5.5 21.9145 7.2945 22.5382 8.17661 21.4226L12.3676 16.1224C12.6806 15.7267 13.1574 15.4958 13.6619 15.4958H20.5143C21.9425 15.4958 22.5626 13.6887 21.4353 12.8119L7.92098 2.29951Z" stroke="#555" stroke-linecap="round" stroke-width="3"/>
+            </symbol>
+        </svg>          
         <!-- Undo arrow for resetting to default -->
         <svg>
             <symbol id="svg-undo" fill="none" viewBox="-200 0 1900 1900">
@@ -104,6 +110,11 @@
             <div id="legalmove-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
                 <span class="text"><%=t('header.settings.legalmoves')%></span>
+                <span class="arrow-head-right"></span>
+            </div>
+            <div id="selection-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-selection"><use href="#svg-selection"></use></svg>
+                <span class="text"><%=t('header.settings.selection')%></span>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden"> <!-- Hidden Initially until we test if mouse (& perspective mode) is supported -->
@@ -170,6 +181,29 @@
                 </div>
             </div>
         </div>
+        <div class="selection-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-selection"><use href="#svg-selection"></use></svg>
+                <span class="text"><%=t('header.settings.selection')%></span>
+            </div>
+            <div class="selection-options">
+                <label class="selection-option drag">
+                    <span class="text"><%=t('header.settings.selection-drag')%></span>
+                    <div class="switch">
+                        <input type="checkbox">
+                        <span></span>
+                    </div>
+                </label>
+                <label class="selection-option premove">
+                    <span class="text"><%=t('header.settings.selection-premove')%></span>
+                    <div class="switch">
+                        <input type="checkbox" disabled>
+                        <span></span>
+                    </div>
+                </label>
+            </div>
+        </div>
         <div class="perspective-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
@@ -181,7 +215,7 @@
                     <div class="perspective-option-title">
                         <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
                         <p><%=t('header.settings.perspective-mouse-sensitivity')%></p>
-                    </div>          
+                    </div>
                     <div class="slider-container">
                         <input class="slider" type="range" min="25" max="200" value="100">
                         <span class="value"></span>
