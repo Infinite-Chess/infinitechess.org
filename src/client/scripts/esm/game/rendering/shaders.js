@@ -464,6 +464,7 @@ function shaderPicker(attributes, uniforms = []) {
 	return leastComplexShader;
 }
 
+/** The total number of attributes + uniforms in a given shader program. */
 function getShaderComplexity(program) {
 	return Object.keys(program.attribLocations).length + Object.keys(program.uniformLocations).length;
 }
