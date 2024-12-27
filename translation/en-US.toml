@@ -53,6 +53,9 @@ about_paragraphs = [
 patreon_title = "Patreon Supporters"
 github_title = "Github Contributors"
 
+[index.javascript]
+contribution_count = ["", "contributions"] # A number is inserted between these 2 strings.
+
 [credits]
 title = "Credits"
 copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"

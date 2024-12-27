@@ -10,6 +10,12 @@
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <script>
+            const translations = <%-JSON.stringify({
+                ...t('index.javascript', {returnObjects: true})
+            })%>;
+        </script>
+        <script defer src="/scripts/esm/views/index.js"></script>
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
@@ -64,7 +70,6 @@
                     </div>
                     <h3 class="center"><%=t('index.github_title')%></h3>
                     <div class="github-container">
-                        <script defer src="/scripts/esm/views/index.js"></script>
                     </div>
             </div>
         </main>

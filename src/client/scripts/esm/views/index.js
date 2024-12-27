@@ -15,7 +15,8 @@ res.then(function(contributors) {
 			div.className = 'github-stats';
 
 			const paragraph = document.createElement('p');
-			paragraph.innerText = `${contributor.name}\n${contributor.contributionCount} contributions`;
+			const contributionText = `${translations.contribution_count[0]} ${contributor.contributionCount} ${translations.contribution_count[1]}`;
+			paragraph.innerText = `${contributor.name}\n${contributionText}`;
 
 			div.appendChild(paragraph);
 			link.appendChild(img);
