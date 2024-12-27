@@ -9,18 +9,18 @@ import { logEvents } from '../../middleware/logEvents.js';
 // Custom imports
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {  import('../TypeDefinitions.js').Game} Game
  */
 
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * 
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  * @param {*} messageContents - The contents of the socket report message
  * @returns {true | undefined} true if the cheat report was valid (the game manager should terminate the game), otherwise undefined.

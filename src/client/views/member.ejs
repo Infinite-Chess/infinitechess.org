@@ -3,7 +3,6 @@
     <head>
         <script>
             const translations = <%-JSON.stringify({
-                ...t('header.javascript', {returnObjects: true}),
                 ...t('member.javascript', {returnObjects: true})
             })%>;
         </script>
@@ -16,8 +15,7 @@
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
-        <script defer src="/scripts/memberHeader.js"></script>
-        <script defer src="/scripts/member.js"></script>
+        <script defer src="/scripts/esm/views/member.js" type="module"></script>
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
@@ -37,13 +35,12 @@
                     <h1 id="membername"></h1>
                 </div>
                 <section id="stats" class="center">
-                    <p><strong><%=t('member.rating')%> </strong><spam id="elo"></spam></p>
                     <p><strong><%=t('member.joined')%> </strong><spam id="joined"></spam></p>
                     <p><strong><%=t('member.seen.0')%> </strong><spam id="seen"></spam><%=t('member.seen.1')%></p>
                 </section>
                 <div id="content-container">
                     <div style="flex-grow: 1;">
-                        <button id="show-account-info" class="hidden action-button" onclick="showAccountInfo()"><%=t('member.reveal_info')%></button>
+                        <button id="show-account-info" class="hidden action-button"><%=t('member.reveal_info')%></button>
                         <section id="accountinfo" class="hidden">
                             <h6 class="center"><%=t('member.account_info_heading')%></h6>
                             <p><strong><%=t('member.email')%> </strong><spam id="email"> - </spam></p>

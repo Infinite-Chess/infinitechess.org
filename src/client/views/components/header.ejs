@@ -1,25 +1,245 @@
 <header>
-    <nav>
-        <a class="topnavitem" href="/">
-            <p class="topnavtext"><%=t('header.home')%></p>
+    <!-- Reusable SVGs (here to reduce redundancy) -->
+    <div class="hidden"> 
+        <!-- The pawn svg and loading animation svg we use in several places -->
+        <svg>
+            <symbol id="svg-pawn" viewBox="0 0 45 45">
+                <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill-opacity="1" fill-rule="nonzero" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/>
+            </symbol>
+        </svg>
+        <!-- Checkmark svg commonly found in the settings dropdowns -->
+        <svg>
+            <symbol id="checkmark" viewBox="0 0 320 320">
+                <path d="m290 85-21-21a10 10 0 00-15 0L126 192l-60-61A10 10 0 00 50 130l-20 20a10 10 0 00 0 15l88 90c4 4 10 4 15 0L290 100c4-4 4-10 0-15"/>
+            </symbol>
+        </svg>
+        <!-- Language globe svg -->
+        <svg>
+            <symbol id="svg-language" fill="none" viewBox="0 0 240 240">
+                <path d="m30 75 44 30 4 3h3l4-4 9-12V90h2s0 0 0 0l40-18 3-2v0l1-4 3-42m-8 112 26 11 6 3v4l-2 5-13 18c0 2 0 2-2 3h0l-3 1h-24l-2-2-2-3-7-22v-7l6-10c0-3 2-4 2-5h8l8 3ZM220 120a100 100 0 11-200 0 100 100 0 01 200 0Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/>
+            </symbol>
+        </svg>
+        <!-- 2x2 Board tile theme selection svg -->
+        <svg>
+            <symbol id="svg-board" viewBox="0 0 479 479">
+                <path d="M0 240v239h480V0H0v240m0 0v240l1-120V120L0 1v239m60-90v90h180v180h180V240H240V60H60v90" fill="#777" fill-rule="evenodd"/>
+            </symbol>
+        </svg>
+        <!-- Dot and corner tris legal move selection svg -->
+        <svg>
+            <symbol id="svg-legalmove" viewBox="0 0 3710 3700">
+                <path d="M0 740v730l740-730 730-740H0v740m2980-10 730 730V0H2250l730 730m-1260 360h-40l-30 10-10 10h-30l-20 10-20 10h-10l-90 50-20 10-50 30-30 20a840 840 0 00-200 230v10l-10 20-30 50-10 30-40 120a1420 1420 0 00 10 340l20 60v20l10 20 20 50 30 50 10 10 60 90a740 740 0 00 340 250l140 40a1500 1500 0 00 330-20l30-10h20l20-10 10-10c10 10 150-60 200-110 90-80 200-210 190-230l10-10a430 430 0 00 70-160l10-80 10-40a670 670 0 00 0-230l-10-40-10-10a540 540 0 00-90-220c0-30-110-150-190-210l-100-70-40-20c-40-20-120-50-130-40l-10-10c-20-20-310-30-320-10M0 2970v730h1480l-730-730-740-740-10 740m2980 0-730 730h1460V2240l-730 730" fill="#666" fill-rule="evenodd"/>
+            </symbol>
+        </svg>
+        <!-- Perspective mode svg -->
+        <svg>
+            <symbol id="svg-perspective" fill="none" viewBox="0 0 480 480">
+                <path d="M0 0h480v480H0" fill="none"/><path d="M440 280v80l-130 26M440 280 40 320m400-40v-80M40 320v120l130-26M40 320V160m400 40v-80L310 94M440 200 40 160m0 0V40l130 26m140 28v292m0-292L170 66m140 320-140 28m0-348v348" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="40"/>
+            </symbol>
+        </svg>
+        <!-- Mouse svg -->
+        <svg>
+            <symbol id="svg-mouse" viewBox="0 0 240 240" fill="none">
+                <path d="M120 70v20m53.3 70 4.8-71.9.1-2a50 50 0 00-19.1-41.5l-1.7-1.2a60 60 0 00-72.2-2l-2.6 2-1.7 1.3a50 50 0 00-19 43.8l4.8 72a53.4 53.4 0 00 106.6 0Z" stroke="#555" stroke-linecap="round" stroke-width="20"/></svg>
+            </symbol>
+        </svg>
+        <!-- Camera perspective fov svg -->
+        <svg>
+            <symbol id="svg-camera" fill="none" viewBox="0 0 240 240">
+                <path d="M120 160a30 30 0 10 0-60 30 30 0 00 0 60Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/><path d="M30 168V92c0-11.2 0-16.8 2.2-21a20 20 0 01 8.7-8.8C45.2 60 50.9 60 62 60h13a10 10 0 00 7.2-4.5l1.1-2.2 2.3-4.2a20 20 0 01 14.5-9h39.8a20 20 0 01 14.5 9l2.3 4.2 1.1 2.2a10 10 0 00 7.2 4.4h13c11.2 0 16.8 0 21 2.3 3.8 2 7 5 8.8 8.7 2.2 4.3 2.2 10 2.2 21v76.1c0 11.2 0 16.8-2.2 21a20 20 0 01-8.7 8.8c-4.3 2.2-9.9 2.2-21 2.2H62c-11.2 0-16.8 0-21-2.2a20 20 0 01-8.8-8.7C30 184.8 30 179.2 30 168.1Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/>
+            </symbol>
+        </svg>
+        <!-- Selection svg -->
+        <svg>
+            <symbol id="svg-selection" fill="none" viewBox="0 0 24 24">
+              <path d="M7.92098 2.29951C6.93571 1.5331 5.5 2.23523 5.5 3.48349V20.4923C5.5 21.9145 7.2945 22.5382 8.17661 21.4226L12.3676 16.1224C12.6806 15.7267 13.1574 15.4958 13.6619 15.4958H20.5143C21.9425 15.4958 22.5626 13.6887 21.4353 12.8119L7.92098 2.29951Z" stroke="#555" stroke-linecap="round" stroke-width="3"/>
+            </symbol>
+        </svg>          
+        <!-- Undo arrow for resetting to default -->
+        <svg>
+            <symbol id="svg-undo" fill="none" viewBox="-200 0 1900 1900">
+                <path d="M910 1473c147-169 90-414-136-388 9 56 18 110 20 130 9 47-30 54-30 54l-438-310 423-378s43 0 35 64l-16 128C1142 724 1372 1230 940 1490l-30-17Z" fill="#555" fill-rule="evenodd" clip-rule="evenodd"/>
+            </symbol>
+        </svg>
+    </div>
+    <a class="home compact-1" href="/">
+        <!-- <img class="headerlogo" src="img/logo/light-theme.png"/> -->
+        <picture class="headerlogo" >
+            <source srcset="/img/logo/light-theme.avif" type="image/avif" />
+            <source srcset="/img/logo/light-theme.webp" type="image/webp" />
+            <img src="img/logo/light-theme.png" alt="Omega one, the logo of Infinite Chess.">
+        </picture>
+        <p><%=t('header.home')%></p>
+    </a>
+    <nav class="compact-3">
+        <a href="/play">
+            <span><%=t('header.play')%></span>
+            <svg class="svg-pawn"><use href="#svg-pawn"></use></svg>
         </a>
-        <a class="topnavitem" href="/play">
-            <p class="topnavtext"><%=t('header.play')%></p>
+        <a href="/news">
+            <span><%=t('header.news')%></span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" id="svg-news" viewBox="0 0 240 240"><g fill="#555"><path d="M110 50a10 10 0 10 0 20h70a10 10 0 10 0-20h-70Zm-10 50c0-6 4-10 10-10h20a10 10 0 11 0 20h-20a10 10 0 01-10-10Zm10 30a10 10 0 10 0 20h20a10 10 0 00 0-20h-20Zm-10 50c0-6 4-10 10-10h20a10 10 0 11 0 20h-20a10 10 0 01-10-10Zm60-90a10 10 0 10 0 20h20a10 10 0 00 0-20h-20Zm-10 50c0-6 4-10 10-10h20a10 10 0 11 0 20h-20a10 10 0 01-10-10Zm10 30a10 10 0 10 0 20h20a10 10 0 00 0-20h-20Z"/><path d="M45 230H190a40 40 0 00 23-6c6-4 10-10 12-15A47 47 0 00 230 190V40a30 30 0 00-30-30H90a30 30 0 00-30 30v90H40a30 30 0 00-30 30v30c0 18 8 30 17 35a37 37 0 00 18 5ZM210 40c0-6-4-10-10-10H90a10 10 0 00-10 10v150c0 8-2 15-4 20H190c6 0 10-1 12-3l5-6c2-4 3-7 3-11V40ZM40 150h20v40c0 12-5 16-8 18-4 3-10 2-14 0-3-2-8-6-8-18v-30c0-6 4-10 10-10Z" fill-rule="evenodd" clip-rule="evenodd"/></g></svg>
         </a>
-        <a class="topnavitem" href="/news">
-            <p class="topnavtext"><%=t('header.news')%></p>
+        <a id="login-link" href="/login">
+            <span id="login" class="login"><%=t('header.login')%></span>
+            <span id="profile" class="hidden"><%=t('header.profile')%></span>
+            <svg id="svg-login" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="M150 165V190a20 20 0 01-20 20H60a20 20 0 01-20-20V50c0-11 9-20 20-20h70a20 20 0 01 20 20v30m50 40H90m0 0 25 25M90 120l25-25" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/></svg>
+            <svg id="svg-profile" class="hidden" xmlns="http://www.w3.org/2000/svg" fill="#000" stroke="#000" version="1.1" viewBox="0 0 2000 2000"><path d="M1656 1800H344c-70 0-123-70-96-134C370 1370 662 1200 1000 1200s629 170 752 466c27 64-25 134-96 134M592 600c0-220 183-400 408-400s408 180 408 400-183 400-408 400a405 405 0 01-408-400m1404 1164a952 952 0 00-612-697 593 593 0 00 220-560 610 610 0 00-530-503A608 608 0 00 388 600c0 190 89 357 228 467a952 952 0 00-612 697c-27 122 74 236 200 236h1590c128 0 229-114 200-236" fill="#555" fill-rule="evenodd" stroke="none"/></svg>
         </a>
-        <a class="topnavitem" href="/login" id="loginlink">
-            <p class="topnavtext" id="logintext"><%=t('header.login')%></p>
-        </a>
-        <a class="topnavitem" href="/createaccount" id="createaccountlink">
-            <p class="topnavtext" id="createaccounttext"><%=t('header.createaccount')%></p>
+        <a id="createaccount-link" href="/createaccount">
+            <span id="createaccount"><%=t('header.createaccount')%></span>
+            <span id="logout" class="hidden"><%=t('header.logout')%></span>
+            <svg id="svg-createaccount" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" fill="#555" stroke="#555" version="1.1" viewBox="0 0 3100 3100"><path d="m3006 1597-453-453a150 150 0 00-212 0l-91 90V150a150 150 0 00-150-150H200A150 150 0 00 50 150v2400a150 150 0 00 150 150h850v250a150 150 0 00 150 150h453c40 0 78-16 106-44L3006 1810a150 150 0 00 0-212zM350 300h1600v1235L1094 2390l-9 10H350V300zm1241 2500H1350v-241l1097-1097 240 241L1592 2800"/></svg>
+            <svg id="svg-logout" class="hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="m160 170 50-50m0 0-50-50m50 50H90m30 50-.1 5.7a30 30 0 01-24 26.9l-5.7.7-10.2 1.1c-15.4 1.8-23 2.6-29.1.7a30 30 0 01-18.3-16.4C30 183 30 175.2 30 159.7V80.3c0-15.5 0-23.2 2.6-29A30 30 0 01 51 34.9c6-2 13.7-1 29 .7l10.3 1 5.7.8A30 30 0 01 120 64.3V70" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/></svg>
         </a>
     </nav>
+    <!-- gear svg for settings -->
+    <div id="settings" class="settings">
+        <svg class="gear" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240"><path d="M128 4c10 0 20 8 21 18v4a30 30 0 00 40 22l4-2c10-3 21 0 26 10l8 13c5 9 3 20-4 26l-4 3a28 28 0 00 0 44l4 3c7 6 10 17 4 26l-8 13c-5 10-16 13-26 10l-4-2a30 30 0 00-40 22v4c-2 10-10 18-21 18h-16c-10 0-20-8-21-18v-4a30 30 0 00-40-22l-4 2c-10 3-21 0-26-10l-8-13a20 20 0 01 4-26l4-3a28 28 0 00 0-44l-4-3A20 20 0 01 13 70L20 56c5-10 16-13 26-10l4 2a30 30 0 00 40-22v-4c2-10 10-18 21-18h16ZM120 153a33 33 0 10 0-66 33 33 0 00 0 66Z" fill="#555" fill-rule="evenodd" clip-rule="evenodd"/></svg>
+        <div class="settings-dropdown dropdown visibility-hidden">
+            <div id="language-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-language"><use href="#svg-language"></use></svg>
+                <span class="text"><%=t('header.settings.language')%></span>
+                <span class="arrow-head-right"></span>
+            </div>
+            <div id="board-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-board"><use href="#svg-board"></use></svg>
+                <span class="text"><%=t('header.settings.board')%></span>
+                <span class="arrow-head-right"></span>
+            </div>
+            <div id="legalmove-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
+                <span class="text"><%=t('header.settings.legalmoves')%></span>
+                <span class="arrow-head-right"></span>
+            </div>
+            <div id="selection-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-selection"><use href="#svg-selection"></use></svg>
+                <span class="text"><%=t('header.settings.selection')%></span>
+                <span class="arrow-head-right"></span>
+            </div>
+            <div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden"> <!-- Hidden Initially until we test if mouse (& perspective mode) is supported -->
+                <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
+                <span class="text"><%=t('header.settings.perspective')%></span>
+                <span class="arrow-head-right"></span>
+            </div>
+            <div class="ping-meter hidden">
+                <div>
+                    <span class="ping"><%=t('header.settings.ping.0')%></span>
+                    <strong class="ping-value">-</strong>
+                    <span class="ms"><%=t('header.settings.ping.1')%></span>
+                </div>
+                <div class="ping-bars">
+                    <div class="ping-bar" style="height: 6px;"></div>
+                    <div class="ping-bar" style="height: 12px;"></div>
+                    <div class="ping-bar" style="height: 18px;"></div>
+                    <div class="ping-bar" style="height: 24px;"></div>
+                    <div class="ping-glow"></div>
+                </div>
+                <svg class="svg-pawn spinny-pawn hidden"><use href="#svg-pawn"></use></svg>
+            </div>
+        </div>
+        <div class="language-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-language"><use href="#svg-language"></use></svg>
+                <span class="text"><%=t('header.settings.language')%></span>
+            </div>
+            <% for(let i = 0; i < languages.length; i++) { %>
+                <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>" value="<%= languages[i].code %>">
+                    <div class="language-names">
+                        <p class="name"><%= languages[i].name %></p>
+                        <p class="englishName"><%= languages[i].englishName %></p>
+                    </div>
+                    <%- languages[i].code === language ? '<svg class="checkmark"><use href="#checkmark"></use></svg>' : '' %>
+                </div>
+            <% } %>
+        </div>
+        <div class="board-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-board"><use href="#svg-board"></use></svg>
+                <span class="text"><%=t('header.settings.board')%></span>
+            </div>
+            <div class="theme-list"></div>
+        </div>
+        <div class="legalmove-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
+                <span class="text"><%=t('header.settings.legalmoves')%></span>
+            </div>
+            <div class="legalmove-options">
+                <div class="legalmove-option squares">
+                    <svg class="svg-squares" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3780 3780"><path d="M1890 950v940H0v1890h1890V1890h1890v940a34850 34850 0 00 10-950L3780 0H1890v950M0 2840" fill="#777" fill-rule="evenodd"/></svg>
+                    <span class="text"><%=t('header.settings.legalmoves-squares')%></span>
+                    <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
+                </div>
+                <div class="legalmove-option dots">
+                    <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
+                    <span class="text"><%=t('header.settings.legalmoves-dots')%></span>
+                    <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
+                </div>
+            </div>
+        </div>
+        <div class="selection-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-selection"><use href="#svg-selection"></use></svg>
+                <span class="text"><%=t('header.settings.selection')%></span>
+            </div>
+            <div class="selection-options">
+                <label class="selection-option drag">
+                    <span class="text"><%=t('header.settings.selection-drag')%></span>
+                    <div class="switch">
+                        <input type="checkbox">
+                        <span></span>
+                    </div>
+                </label>
+                <label class="selection-option premove">
+                    <span class="text"><%=t('header.settings.selection-premove')%></span>
+                    <div class="switch">
+                        <input type="checkbox" disabled>
+                        <span></span>
+                    </div>
+                </label>
+            </div>
+        </div>
+        <div class="perspective-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
+                <span class="text"><%=t('header.settings.perspective')%></span>
+            </div>
+            <div class="perspective-options">
+                <div class="perspective-option mouse-sensitivity">   
+                    <div class="perspective-option-title">
+                        <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
+                        <p><%=t('header.settings.perspective-mouse-sensitivity')%></p>
+                    </div>
+                    <div class="slider-container">
+                        <input class="slider" type="range" min="25" max="200" value="100">
+                        <span class="value"></span>
+                    </div>
+                </div>
+                <div class="perspective-option fov">   
+                    <div class="perspective-option-title">
+                        <svg class="svg-camera"><use href="#svg-camera"></use></svg>
+                        <p><%=t('header.settings.perspective-fov')%></p>
+                    </div> 
+                    <div class="slider-container">
+                        <input class="slider" type="range" min="60" max="150" value="90">
+                        <span class="value"></span>
+                    </div>
+                    <div class="reset-default-container hidden">
+                        <div class="reset-default">
+                            <svg class="svg-undo"><use href="#svg-undo"></use></svg>
+                            <span><%=t('header.settings.reset-to-default')%></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </header>
 
-<script>
-    document.querySelectorAll('.topnavitem').forEach(link => {
-        if (link.getAttribute('href') === window.location.pathname) link.classList.add('currPage');
-    });
-</script>
+<script defer src="/scripts/esm/components/header/header.js" type="module"></script>

@@ -8,7 +8,7 @@
 // Custom imports
 
 import gameutility from './gameutility.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 // Type imports
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
@@ -91,7 +91,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
 	game.disconnect.autoResign[color].wasByChoice = !closureNotByChoice;
 
 	// Alert their opponent the time their opponent will be auto-resigned by disconnection.
-	const value = { autoDisconnectResignTime: timeToAutoLoss, wasByChoice: !closureNotByChoice };
+	const value = { millisUntilAutoDisconnectResign: timeBeforeAutoResign, wasByChoice: !closureNotByChoice };
 	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value);
 }
 

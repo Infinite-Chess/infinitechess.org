@@ -4,8 +4,7 @@
         <script>
             const translations = <%-JSON.stringify({
                 ...t('play.javascript', {returnObjects: true}),
-                ...t('play.play-menu', {returnObjects: true}),
-                ...t('header.javascript', {returnObjects: true})
+                ...t('play.play-menu', {returnObjects: true})
             })%>;
         </script>
         <!-- Do not modify the next line under any circumstances!! It is used by build.js as a reference point of where to inject js -->
@@ -21,8 +20,7 @@
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
         <!-- Custom fonts: Merriweather, Open Sans -->
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Open+Sans:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-        
-        <script defer src="/scripts/memberHeader.js"></script>
+        <script defer src="/scripts/esm/game/main.js" type="module" onerror="htmlscript.callback_LoadingError(event)" onload="(() => { htmlscript.removeOnerror.call(this); })()"></script>
         <!-- Javascript will add future styles in here. NEEDS TO BE BELOW OTHER STYLESHEET SO THIS TAKES PRECEDENCE -->
         <style id="style"></style>
     </head>
@@ -44,6 +42,16 @@
 
             <!-- The webgl context will render the game onto here -->
             <canvas id="game" class="hidden"></canvas>
+
+            <!-- The spinny pawn loading animation when a game is loading,
+            whil the svgs are being requested and spritesheet generated -->
+            <div class="game-loading-screen transparent">
+                <svg class="svg-pawn spinny-pawn"><use href="#svg-pawn"></use></svg>
+                <div class="loading-error hidden">
+                    <h1><%=t('play.error')%></h1>
+                    <p class="loading-error-text"></p>
+                </div>
+            </div>
 
             <div id="overlay" class="overlay">
 
@@ -270,6 +278,8 @@
                                         <option value="Omega_Squared"><%=t('play.play-menu.Omega_Squared')%></option>
                                         <option value="Omega_Cubed"><%=t('play.play-menu.Omega_Cubed')%></option>
                                         <option value="Omega_Fourth"><%=t('play.play-menu.Omega_Fourth')%></option>
+                                        <!-- Coming Soon 5-Dimensional variant -->
+										<!-- <option value="5D_Chess"><%=t('play.play-menu.5D_Chess')%></option> -->
                                     </select>
                                 </div>
                             </div>
@@ -277,8 +287,8 @@
                                 <p><%=t('play.play-menu.clock')%></p>
                                 <div class="option">
                                     <select id="option-clock" class="button">
-                                        <!-- Developmental time control: 15 seconds -->
-                                        <!-- <option value="15+2">0.25<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option> -->
+                                        <!-- Developmental time control: 20 seconds -->
+                                        <!-- <option value="20+2">0.33<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option> -->
                                         <option value="60+2">1<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
                                         <option value="120+2">2<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
                                         <option value="180+2">3<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
@@ -387,8 +397,8 @@
                         </div>
                         <div class="coords selectable" >
                             <div id="position">
-                                <div class="x">X: <spam id='x'></spam></div>
-                                <div class="y">Y: <spam id='y'></spam></div>
+                                <div class="x">X: <input type="number" id='x'></input></div>
+                                <div class="y">Y: <input type="number" id='y'></input></div>
                             </div>
                         </div>
                         <div class="right-nav">
@@ -448,40 +458,11 @@
 
                 <!-- Promotion UI -->
                 <div id="promote" class="center hidden">
-                    <div id="promotewhite" class="promotecolor">
-                        <!--                                                                "amazonsW" MUST remain the 2nd class! -->
-                        <div id="amazonsW" class="promotepiececontainer hidden"><div class="promotepiece amazonsW button"></div></div>
-                        <div id="queensW" class="promotepiececontainer hidden"><div class="promotepiece queensW button"></div></div>
-                        <div id="knightridersW" class="promotepiececontainer hidden"><div class="promotepiece knightridersW button"></div></div>
-                        <div id="chancellorsW" class="promotepiececontainer hidden"><div class="promotepiece chancellorsW button"></div></div>
-                        <div id="archbishopsW" class="promotepiececontainer hidden"><div class="promotepiece archbishopsW button"></div></div>
-                        <div id="rooksW" class="promotepiececontainer hidden"><div class="promotepiece rooksW button"></div></div>
-                        <div id="bishopsW" class="promotepiececontainer hidden"><div class="promotepiece bishopsW button"></div></div>
-                        <div id="rosesW" class="promotepiececontainer hidden"><div class="promotepiece rosesW button"></div></div>
-                        <div id="hawksW" class="promotepiececontainer hidden"><div class="promotepiece hawksW button"></div></div>
-                        <div id="giraffesW" class="promotepiececontainer hidden"><div class="promotepiece giraffesW button"></div></div>
-                        <div id="zebrasW" class="promotepiececontainer hidden"><div class="promotepiece zebrasW button"></div></div>
-                        <div id="camelsW" class="promotepiececontainer hidden"><div class="promotepiece camelsW button"></div></div>
-                        <div id="centaursW" class="promotepiececontainer hidden"><div class="promotepiece centaursW button"></div></div>
-                        <div id="knightsW" class="promotepiececontainer hidden"><div class="promotepiece knightsW button"></div></div>
-                        <div id="guardsW" class="promotepiececontainer hidden"><div class="promotepiece guardsW button"></div></div>
+                    <div id="promotewhite" class="promotecolor hidden">
+                        <!-- <svg id="knightsW" class="promotepiececontainer"></svg> -->
                     </div>
-                    <div id="promoteblack" class="promotecolor">
-                        <div id="amazonsB" class="promotepiececontainer hidden"><div class="promotepiece amazonsB button"></div></div>
-                        <div id="queensB" class="promotepiececontainer hidden"><div class="promotepiece queensB button"></div></div>
-                        <div id="knightridersB" class="promotepiececontainer hidden"><div class="promotepiece knightridersB button"></div></div>
-                        <div id="chancellorsB" class="promotepiececontainer hidden"><div class="promotepiece chancellorsB button"></div></div>
-                        <div id="archbishopsB" class="promotepiececontainer hidden"><div class="promotepiece archbishopsB button"></div></div>
-                        <div id="rooksB" class="promotepiececontainer hidden"><div class="promotepiece rooksB button"></div></div>
-                        <div id="bishopsB" class="promotepiececontainer hidden"><div class="promotepiece bishopsB button"></div></div>
-                        <div id="rosesB" class="promotepiececontainer hidden"><div class="promotepiece rosesB button"></div></div>
-                        <div id="hawksB" class="promotepiececontainer hidden"><div class="promotepiece hawksB button"></div></div>
-                        <div id="giraffesB" class="promotepiececontainer hidden"><div class="promotepiece giraffesB button"></div></div>
-                        <div id="zebrasB" class="promotepiececontainer hidden"><div class="promotepiece zebrasB button"></div></div>
-                        <div id="camelsB" class="promotepiececontainer hidden"><div class="promotepiece camelsB button"></div></div>
-                        <div id="centaursB" class="promotepiececontainer hidden"><div class="promotepiece centaursB button"></div></div>
-                        <div id="knightsB" class="promotepiececontainer hidden"><div class="promotepiece knightsB button"></div></div>
-                        <div id="guardsB" class="promotepiececontainer hidden"><div class="promotepiece guardsB button"></div></div>
+                    <div id="promoteblack" class="promotecolor hidden">
+                        <!-- <svg id="knightsB" class="promotepiececontainer"></svg> -->
                     </div>
                 </div>
 
@@ -501,17 +482,7 @@
                 <div id="statusmessage" class="statusmessage hidden">
                     <p id="statustext" class="statustext"></p>
                 </div>
-                
             </div>
-
-            <!-- Game images -->
-            <img id="tiles" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAACXBIWXMAADXUAAA11AFeZeUIAAAAFElEQVQImWP4////fwYY+P///38AR8oH+QG3t1YAAAAASUVORK5CYII="
-            width="0" onerror="htmlscript.callback_LoadingError(event)" onload="htmlscript.removeOnerror.call(this);">
-            <img id="tilesGrey78" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAADXUAAA11AFeZeUIAAAAF0lEQVQImWP8////yZMnGU6cOPH//38ASt0Kr4co274AAAAASUVORK5CYII="
-            width="0" onerror="htmlscript.callback_LoadingError(event)" onload="htmlscript.removeOnerror.call(this);">
-            <!-- This transparent tiles texture gives us freedom of color, but the moiré effect is heavier -->
-            <img id="tiles256" src="/img/game/tiles/tiles256.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="htmlscript.removeOnerror.call(this);">
-            <img id="spritesheet" src="/img/game/spritesheet64_cburnett.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="htmlscript.removeOnerror.call(this);">
         </main>
     </body>
 </html>

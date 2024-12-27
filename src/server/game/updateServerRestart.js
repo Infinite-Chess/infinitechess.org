@@ -18,6 +18,8 @@ import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 
+/** @typedef {import("../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+
 //--------------------------------------------------------------------------------------------------------
 
 /** The path to the allowinvites.json file in the "database" */
@@ -57,7 +59,7 @@ const intervalToReadAllowinviteMillis = 5000; // 5 seconds
  * Returns true if the server is about to restart.
  * This will re-read allowinvites.json if it's
  * been a little bit since it was last read.
- * @param {Socket} ws - The socket attempting to create a new invite
+ * @param {CustomWebSocket} ws - The socket attempting to create a new invite
  * @returns {Promise<boolean>} true if invite creation is allowed
  */
 async function isServerRestarting() {

@@ -1,43 +1,7 @@
 /**
- * This module accepts HTML strings and either injects a link
- * to a script, or the script text itself, into it.
+ * This module accepts HTML strings and injects the script text itself into it.
  */
 
-
-/**
- * Injects a string after a certain string segment found within a source string.
- * @param {string} src - The source string
- * @param {string} after - The string segment for which the first match is found within the src, where the inject string will be inserted.
- * @param {string} inject - The string to inject
- * @returns {string} The injected string. If no match was found, the string will have not changed.
- */
-function injectStringIntoStringAfter(src, after, inject) {
-	return src.replace(after, `${after}${inject}`);
-}
-
-/**
- * Takes an html document as a string, inserts a script tag into its head, with the src being the scriptPath,
- * and any corresponding attributes provided.
- * @param {string} HTML - The html string
- * @param {string} src - The path for which the client should request this script at
- * @param {boolean} defer - Whether or not to defer the execution of the script until the document fully loads.
- * @param {Object} [attributes] An object with attribute-value pairs to insert into the script tag.
- * @returns {string} - The modified HTML string with the inserted script tag.
- */
-function insertScriptLinkIntoHTML(HTML, src, defer, attributes = {}) {
-	let scriptTag = `<script`; // Start of the tag
-	if (defer) scriptTag += ' defer'; // Add the defer attribute first if required
-	scriptTag += ` src="${src}"`; // Then add the src attribute
-	for (const [key, value] of Object.entries(attributes)) scriptTag += ` ${key}="${value}"`; // Add any additional attributes
-	scriptTag += '></script>'; // Close the script tag
-
-	// Find the position to insert the script tag
-	const headEndIndex = HTML.indexOf('</head>');
-	if (headEndIndex === -1) throw new Error(`Cannot insert script of src '${src}' into HTML when it doesn't contain a head!`);
-    
-	// Insert the script tag at the determined position and return the modified HTML
-	return HTML.slice(0, headEndIndex) + scriptTag + HTML.slice(headEndIndex);
-}
 
 /**
  * Takes an HTML document as a string, inserts a script tag into its head, 
@@ -66,9 +30,6 @@ function insertScriptIntoHTML(HTML, JS, attributes = {}, after) {
 	return HTML.slice(0, insertionIndex) + scriptTag + HTML.slice(insertionIndex);
 }
 
-
-
 export {
-	insertScriptLinkIntoHTML,
 	insertScriptIntoHTML,
 };

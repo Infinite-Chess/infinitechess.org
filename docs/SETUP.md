@@ -10,7 +10,11 @@ This guide walks you through the initial setup phase of the infinitechess.org se
 
 ## Step 1: Install Git ##
 
-[Here's a guide](https://github.com/git-guides/install-git) for how to check if you have Git installed already, and if not, how to install it.
+Let's check to make sure you have Git already installed. Open a command prompt (windows) or terminal (mac), and enter the following:
+```
+git version
+```
+If this outputs a version number, you have it installed, proceed to the next step! If it outputted unknown command, [follow this guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to install it!
 
 ## Step 2: Download VSCode ##
 
@@ -102,7 +106,9 @@ If done correctly, you should be met with the following. This means the server h
 
 
 
-## Step 6: Install ESLint ##
+## Step 6: Install VSCode Extensions ##
+
+1. ESLint
 
 Installing the ESLint VSCode extension will help your pull requests be approved quicker, by holding your code semantics to the standards of the project! ESLint will give you errors when you have undefined variables, missing semicolons, and other items, making it easier to catch bugs before runtime!
 
@@ -111,8 +117,13 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 <img width="1081" alt="Screen Shot 2024-08-16 at 10 26 33 PM copy" src="https://github.com/user-attachments/assets/7df938ff-da69-4675-934f-4a61e93e69c1">
 
 
+2. SQLite
 
-Another highly recommended extension to install is "GitHub Pull Requests", which allows you to test-run other people's code suggestions on the repository, but it is not required.
+Installing this extension will allow you to preview the contents of the database during development. The database stores all account information.
+
+3. GitHub Pull Requests
+
+Installing this extension is not required, but highly recommended. It allows you to test run the code of other peoples pull requests on your system, so you can give collective feedback!
 
 
 

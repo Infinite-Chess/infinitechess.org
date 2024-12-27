@@ -17,7 +17,7 @@ This configures and starts our http, https, and websocket servers, and it cleans
 
 Both of these managers use websockets to broadcast changes out to the clients in real-time.
 
-The websocket server code is located [here](../src/server/wsserver.js).
+The websocket server code is located [here](../src/server/socket/).
 
 
 ## Client ##
@@ -30,9 +30,9 @@ It has subfolders for all the EJS, CSS, JavaScript, sound and image files of the
 
 The routers that actually send these as HTMLs to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
-[src/client/scripts/game](../src/client/scripts/game/) contains all our javascipt code for running the game in the `/play` page in the user's browser.
+[src/client/scripts/game](../src/client/scripts/esm/game/) contains all our javascipt code for running the game in the `/play` page in the user's browser.
 
-The main script is [main.js](../src/client/scripts/game/main.js), which initiates the WebGL context and input listeners, and runs the main game loop.
+The main script is [main.js](../src/client/scripts/esm/game/main.js), which initiates the WebGL context and input listeners, and runs the main game loop.
 
 
 ## Translations ##
@@ -60,7 +60,9 @@ The password for every one of these accounts is `1`.
 
 ## Making changes to the repository ##
 
-Every game script includes a basic description at the top. [Ask for help](https://discord.com/channels/1114425729569017918/1115358966642393190) in the discord for greater understanding of how each script works!
+PLEASE PLEASE seek approval in the [discord server](https://discord.com/channels/1114425729569017918/1115358966642393190) before you start making changes you expect will be merged! Some people will put in a lot of work, to show us, only for someone to tell them oh we can't merge it yet because of this XX reason or we had previously discussed to do it another way. Please discuss with others in the discord so we can be unified on the best course of action for implementing each feature! Thank you :) :)
+
+Every game script includes a basic description at the top. Feel free to ask for greater details on what something does.
 
 After you make changes to the game code and refresh the page, get in the habit of hard refreshing it, as sometimes the browser doesn't recognize that there's new code to load. In chrome, you can do this by right clicking the refresh button and selecting "Hard Reload":
 

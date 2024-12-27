@@ -1,6 +1,6 @@
 name = "繁體中文" # Traditional Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "19"
+version = "20"
 maintainer = "Heinrich Xiao"
 
 [header]
@@ -85,7 +85,7 @@ language_credits = [
     "繁體中文由 ", "Heinrich Xiao", " 貢獻。",
     "簡體中文由 ", "Heinrich Xiao", " 貢獻。",
     "波蘭語由 ", "Tymon Becella", " 貢獻。",
-    "葡萄牙語由 ", "The_Skeleton", " 貢獻。",
+    "葡萄牙語由 ", "Emerson P. Machado", " 貢獻。", # The_Skeleton on discord
 		"西班牙語由 ", "xa31er", " 貢獻。"
 ]
 
@@ -237,6 +237,14 @@ join = "加入"
 copy = "復制"
 back = "返回"
 code = "邀請碼"
+
+[play.gamebuttontooltips]
+undo_transition = "撤銷過渡"
+expand_fit_all = "展開以適應所有"
+recenter = "重新居中"
+rewind_move = "倒回操作"
+forward_move = "前進操作"
+pause = "暫停"
 
 [play.footer]
 white_to_move = "白方走起"

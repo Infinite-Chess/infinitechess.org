@@ -1,11 +1,12 @@
 import { logEvents } from './logEvents.js';
-import { getClientIP, getClientIP_Websocket } from './IP.js';
+import { getClientIP } from '../utility/IP.js';
 
 import { isIPBanned } from './banned.js';
 import { DEV_BUILD, ARE_RATE_LIMITING } from '../config/config.js';
 import { getTranslationForReq } from '../utility/translate.js';
+import jsutil from '../../client/scripts/esm/util/jsutil.js';
 
-/** @typedef {import('../game/TypeDefinitions.js').Socket} Socket */
+/** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
 
 // For rate limiting a client...
 
@@ -14,17 +15,18 @@ const maxRequestsPerMinute = DEV_BUILD ? 400 : 200; // Default: 400 / 200
 const minuteInMillis = 60000;
 
 /**
- * Interval to forget recently connected IP addresses, if they
- * haven't connected within the last minute.
+ * Interval to clear out an agent's list of recent connection timestamps if they
+ * are longer ago than {@link minuteInMillis}
  */
-const rateToClearDeadConnectionsMillis = 60000;
+const rateToUpdateRecentConnections = 1000; // 1 Second
 
 /**
- * The object containing IP addresses for the key, and for the value-
- * the number of times they have sent a request the past minute.
- * `{ "192.538.1.1": 7 }`
+ * The object containing a combination of IP addresses and user agents for the key,
+ * and for the value - an array of timestamps of their recent connections.
+ * The key format will be `{ "192.538.1.1|User-Agent-String": [timestamp1, timestamp2, ...] }`
  */
 const rateLimitHash = {};
+
 
 // For detecting if we're under a DDOS attack...
 
@@ -61,13 +63,24 @@ const recentRequests = []; // List of times of recent connections
  * Above this will be rejected, and an error sent to the client.
  */
 const maxWebsocketMessageSizeBytes = 100_000; // 100 megabytes
+
+
+
 /**
- * How many requests should an over-sized incoming websocket message
- * stand for? Increase this to make them be rate limited sooner when sending over-sized messages.
+ * Generates a key for rate limiting based on the client's IP address and user agent.
+ * @param {Object} req - The request object
+ * @param {CustomWebSocket} ws - The websocket object, IF it is a websocket connection!
+ * @returns {string|null} The combined key in the format "IP|User-Agent" or null if IP cannot be determined
  */
-const connectionsLargeMessageCountsFor = 34;
+function getIpBrowserAgentKey(req, ws) {
+	const clientIP = ws ? ws.metadata.IP : getClientIP(req); // Get the client IP address
+	const userAgent = req.headers['user-agent']; // Get the user agent string
 
+	if (!clientIP) return null; // Return null if IP is not found
 
+	// Construct the key combining IP and user agent
+	return `${clientIP}|${userAgent}`;
+}
 
 /**
  * Middleware that counts this IP address's recent connections,
@@ -80,27 +93,28 @@ function rateLimit(req, res, next) {
 	if (!ARE_RATE_LIMITING) return next(); // Not rate limiting
     
 	countRecentRequests();
-    
+
 	const clientIP = getClientIP(req);
 	if (!clientIP) {
-		console.log('Unable to identify client IP address');
+		logEvents('Unable to identify client IP address when rate limiting!', 'hackLog.txt');
 		return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
 	}
 
 	if (isIPBanned(clientIP)) {
 		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
-		logEvents(logThis, 'bannedIPLog.txt', { print: true });
+		logEvents(logThis, 'bannedIPLog.txt');
 		return res.status(403).json({ message: getTranslationForReq("server.javascript.ws-you_are_banned_by_server", req) });
 	}
 
-	if (rateLimitHash[clientIP] > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
-		console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
+	const userKey = getIpBrowserAgentKey(req); // By this point their IP is defined so this will be defined.
+
+	// Add the current timestamp to their list of recent connection timestamps.
+	incrementClientConnectionCount(userKey);
+
+	if (rateLimitHash[userKey].length > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
+		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'hackLog.txt');
 		return res.status(429).json({ message: getTranslationForReq("server.javascript.ws-too_many_requests_to_server", req) });
 	}
-
-	// Increment their recent connection count,
-	// and set a timer to decrement their recent connection count after 1 min
-	incrementClientConnectionCount(clientIP);
 
 	next(); // Continue the middleware waterfall
 }
@@ -111,22 +125,20 @@ function rateLimit(req, res, next) {
  * Counts this IP address's recent connections,
  * and returns false if they've sent too many requests/messages.
  * @param {Object} req - The request object
- * @param {Socket} ws - The websocket object
- * @returns {boolean} false if they've sent too many requests/messages.
+ * @param {CustomWebSocket} ws - The websocket object
+ * @returns {boolean} false if they've sent too many requests/messages. THEY WILL HAVE ALREADY BEEN CLOSED
  */
 function rateLimitWebSocket(req, ws) {
 
 	countRecentRequests();
 
-	const clientIP = getClientIP_Websocket(req, ws);
-	if (!clientIP) {
-		console.log('Unable to identify client IP address from web socket connection');
-		ws.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
-		return false;
-	}
+	const userKey = getIpBrowserAgentKey(req, ws); // By this point their IP is defined so this will be defined.
 
-	if (rateLimitHash[clientIP] > maxRequestsPerMinute) {
-		console.log(`IP ${clientIP} has too many requests! Count: ${rateLimitHash[clientIP]}`);
+	// Add the current timestamp to their list of recent connection timestamps.
+	incrementClientConnectionCount(userKey);
+
+	if (rateLimitHash[userKey].length > maxRequestsPerMinute) {
+		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'hackLog.txt');
 		ws.close(1009, 'Too Many Requests. Try again soon.');
 		return false;
 	}
@@ -136,42 +148,66 @@ function rateLimitWebSocket(req, ws) {
 	// Then again.. Unless their initial http websocket upgrade request contains a massive amount of bytes, this will immediately reject them anyway!
 	const messageSize = ws._socket.bytesRead;
 	if (messageSize > maxWebsocketMessageSizeBytes) {
+		logEvents(`Agent ${userKey} sent too big a websocket message.`, 'hackLog.txt');
 		ws.close(1009, 'Message Too Big');
-		incrementClientConnectionCount(clientIP, connectionsLargeMessageCountsFor);
 		return false;
 	}
-
-	incrementClientConnectionCount(clientIP);
 
 	return true; // Connection allowed!
 }
 
 /**
- * Increment the provided IP address's recent connection count,
- * and set a timer to decrement their recent connection count after 1 min.
+ * Increment the provided user key's recent connection count by adding the current timestamp
+ * to their list of recent connection timestamps.
  * Only call if we haven't already rejected them for too many requests.
- * @param {string} clientIP - The client's IP address
- * @param {number|undefined} [amount=1] The weight of this request. Default: 1. Higher => rate limit sooner.
+ * @param {string} userKey - The unique key combining IP address and user agent.
  */
-function incrementClientConnectionCount(clientIP, amount = 1) {
-	if (rateLimitHash[clientIP] === undefined) rateLimitHash[clientIP] = amount;
-	else rateLimitHash[clientIP] += amount; // Will only increment if we haven't already rejected them for too many requests.
-
-	setTimeout(() => { rateLimitHash[clientIP] -= amount; }, minuteInMillis);
+function incrementClientConnectionCount(userKey) {
+	// Initialize the array if it doesn't exist
+	if (!rateLimitHash[userKey]) rateLimitHash[userKey] = [];
+	// Add the current timestamp to the user's recent connection timestamp list
+	rateLimitHash[userKey].push(Date.now());
 }
 
 /**
- * Set an interval to every so often,
- * clear {@link rateLimitHash} of IP addresses
- * with 0 recent connections.
+ * Set an interval to periodically clear {@link rateLimitHash}
+ * of IP addresses with no recent connections or outdated timestamps.
  */
 setInterval(() => {
 	const hashKeys = Object.keys(rateLimitHash);
-	for (const ip of hashKeys) {
-		if (rateLimitHash[ip] !== 0) continue;
-		delete rateLimitHash[ip];
+	const currentTimeMillis = Date.now();
+
+	for (const key of hashKeys) {
+		const timestamps = rateLimitHash[key];
+
+		// Check if there are no timestamps
+		if (timestamps.length === 0) {
+			const logMessage = "Agent recent connection timestamp list was empty. This should never happen! It should have been deleted.";
+			logEvents(logMessage, 'errLog.txt', { print: true });
+			delete rateLimitHash[key];
+			continue;
+		}
+
+		// Check the first timestamp. If the first timestamp is within the valid window, skip processing
+		const firstTimestamp = timestamps[0];
+		if (currentTimeMillis - firstTimestamp <= minuteInMillis) continue;
+
+		// If all timestamps are older, delete the key
+		const mostRecentTimestamp = timestamps[timestamps.length - 1];
+		if (currentTimeMillis - mostRecentTimestamp >= minuteInMillis) {
+			delete rateLimitHash[key];
+			continue;
+		}
+
+		// Use binary search to find the index to split at
+		const indexToSplitAt = jsutil.binarySearch_findValue(timestamps, currentTimeMillis - minuteInMillis);
+
+		// Remove all timestamps to the left of the found index
+		timestamps.splice(0, indexToSplitAt);
+		if (timestamps.length === 0) delete rateLimitHash[key];
 	}
-}, rateToClearDeadConnectionsMillis);
+}, rateToUpdateRecentConnections);
+
 
 /**
  * Adds the current timestamp to {@link recentRequests}.
@@ -195,11 +231,10 @@ function countRecentRequests() {
 setInterval(() => {
 	// Delete recent requests longer than 2 seconds ago
 	const twoSecondsAgo = Date.now() - requestWindowToToggleAttackModeMillis;
-	const indexToSplitAt = binarySearch_findValue(recentRequests, twoSecondsAgo);
+	const indexToSplitAt = jsutil.binarySearch_findValue(recentRequests, twoSecondsAgo);
 	recentRequests.splice(0, indexToSplitAt + 1);
 
 	if (recentRequests.length > requestCapToToggleAttackMode) {
-		//console.log(`Probable DDOS attack happening now. The past ${requestWindowToToggleAttackModeMillis} milliseconds contained ${recentRequests.length} reqests!`)
 		if (!underAttackMode) { // Toggle on
 			underAttackMode = true;
 			logAttackBegin();
@@ -209,30 +244,6 @@ setInterval(() => {
 		logAttackEnd();
 	}
 }, requestWindowToToggleAttackModeMillis);
-
-/**
- * Calculates the index at which you could insert the given value
- * and keep the array organized, OR returns the index of the given value.
- * @param {number[]} sortedArray - An Array of NUMBERS. If not all numbers, this will crash.
- * @param {number} value - The number to find the split point of, or exact index position of.
- * @returns {number} The index
- */
-function binarySearch_findValue(sortedArray, value) {
-	let left = 0;
-	let right = sortedArray.length - 1;
-
-	while (left <= right) {
-		const mid = Math.floor((left + right) / 2);
-		const midValue = sortedArray[mid];
-
-		if (value < midValue) right = mid - 1;
-		else if (value > midValue) left = mid + 1;
-		else if (midValue === value) return mid;
-	}
-
-	// The left is the index at which you could insert the new value at the correct location!
-	return left;
-}
 
 function logAttackBegin() {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;

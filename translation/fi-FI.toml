@@ -8,19 +8,30 @@ home = "Koti"
 play = "Pelaa"
 news = "Uutiset"
 login = "Kirjaudu"
+profile = "Profiili"
 createaccount = "Luo Tili"
+logout = "Kirjaudu Ulos"
+
+[header.settings]
+language = "Kieli"
+board = "Värit" # Board color/theme
+legalmoves = "Sallitut siirrot" # Legal moves shape
+legalmoves-squares = "Neliöt"
+legalmoves-dots = "Pisteet" # Dots and 4 corner triangles
+selection = "Valitseminen"
+selection-drag = "Vetämällä"
+selection-premove = "Aikaissiirrot"
+perspective = "Perspectiivi" # Perspective-mode
+perspective-mouse-sensitivity = "Hiiren Herkkyys"
+perspective-fov = "Field of View"
+ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
+reset-to-default = "Reset to default"
 
 [footer]
 contact = "Ota yhteyttä"
 terms_of_service = "Käyttöehdot"
 source_code = "Lähdekoodi"
 language = "Kieli"
-
-[header.javascript]
-js-profile = "Profiili"
-js-logout = "Kirjaudu Ulos"
-js-login = "Kirjaudu Sisään"
-js-createaccount = "Luo Tili"
 
 [member.javascript]
 js-confirm_delete = "Oletko varma, että haluat poistaa tilisi? Tätä EI VOI peruuttaa! Paina OK syöttääksesi salasanasi."
@@ -95,7 +106,6 @@ title = "Jäsen" # The tab name
 verify_message = "Tarkista sähköpostisi todentaaksesi tilisi. Vahvistamattomat tilit poistetaan 3 päivän jälkeen."
 resend_message = ["Etkö saanut postia? Tarkista roskapostisi. Jos et löydä sitä sieltä, ", "lähetä se uudelleen.", " Jos et vieläkään löydä sitä, ", "ota meihin yhteyttä."]
 verify_confirm = "Kiitos! Tilisi on todennettu."
-rating = "Elo luokitus:"
 joined = "Liityi:"
 seen = ["Nähty:", " sitten"]
 reveal_info = "Näytä Tilitiedot"
@@ -218,6 +228,7 @@ Omega = "Näyte: Omega"
 Omega_Squared = "Näyte: Omega^2"
 Omega_Cubed = "Näyte: Omega^3"
 Omega_Fourth = "Näyte: Omega^4"
+5D_Chess = "5D Shakki"
 no_clock = "Ei Kelloa"
 clock = "Kello"
 minutes = "m"
@@ -297,8 +308,6 @@ webgl_unsupported = "Sinun nettiselain ei tue WebGLää. Tämä peli tarvitsee s
 bigints_unsupported = "BigInts ei ole tuettu. Päivitä nettiselaimesi.\nBigIntsiä tarvitaan, jotta lauta olisi loputon."
 shaders_failed = "Varjostin ohjelmaa ei pystytty alustamaan:"
 failed_compiling_shaders = "Virhe tapahtui varjostimien kokoamisessa:"
-disable_holiday_theme_desktop = "Poistaaksesi loma teeman, paina Enteriä."
-disable_holiday_theme_mobile = "Poistaaksesi loma teeman, näpäytä näyttöä kolmella sormella."
 
 [play.javascript.copypaste]
 copied_game = "Peli kopioitu leikepöydälle!"
@@ -315,7 +324,6 @@ piece_count = "Nappuloiden määrä"
 exceeded = "ylitettiin"
 changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
 loaded_from_clipboard = "Peli ladattu leikepöydältä!"
-loaded = "Peli ladattu!"
 slidelimit_not_number = "slideLimit pelisääntö täytyy olla numero. Saatiin"
 
 [play.javascript.rendering]
@@ -527,10 +535,6 @@ ws-you_are_banned = "Sinut on kielletty."
 ws-password_length = "Salasanan tulee olla 6-72 kirjaimen pitkä"
 ws-password_format = "Salasana on väärässä muodossa"
 ws-password_password = "Salasana ei saa olla 'password'"
-ws-refresh_token_not_found_logged_out = "No member has that refresh token (already logged out)"
-ws-refresh_token_not_found = "No member has that refresh token"
-ws-refresh_token_expired = "No refresh token found (expired session)"
-ws-refresh_token_invalid = "Refresh token expired or tampered"
 ws-member_not_found = "Jäsentä ei löydetty"
 ws-forbidden_wrong_account = "Kielletty. Tämä ei ole sinun tilisi."
 ws-deleting_account_not_found = "Tilin poisto epäonnistui. Tiliä ei löydetty."
@@ -541,7 +545,6 @@ ws-too_many_requests_to_server = "Liian Monta Pyyntöä. Yritä myöhemmin uudel
 ws-bad_request = "Huono Pyyntö"
 ws-not_found = "404 Ei Löydetty"
 ws-forbidden = "Kielletty."
-ws-unauthorized_patron_page = "Epäoikeutettu. Tämä sivu on vain Patreon-tukijoille."
 ws-already_in_game = "Olet jo pelissä."
 ws-server_restarting = "Palvelin uudelleenkäynnistyy" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
 ws-server_under_maintenance = "Palvelin on huollossa. Tule pian takaisin!" # Can be changed at will to change the display message.

@@ -1,26 +1,34 @@
-name = "Polski" # Name of language
+name = "Polski" # Polish - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "17"
+version = "22"
 maintainer = "Apsurt"
 
 [header]
-home = "Strona Główna"
+home = "Infinite Chess"
 play = "Graj"
 news = "Aktualności"
-login = "Zaloguj"
+login = "Zaloguj się"
+profile = "Profil"
 createaccount = "Utwórz konto"
+logout = "Wyloguj się"
+
+[header.settings]
+language = "Język"
+board = "Motywy" # Board color/theme
+legalmoves = "Wskaźnik ruchów" # Legal moves shape
+legalmoves-squares = "Pola"
+legalmoves-dots = "Kropki" # Dots and 4 corner triangles
+perspective = "Widok 3D" # Perspective-mode
+perspective-mouse-sensitivity = "Czułość myszki"
+perspective-fov = "Pole widzenia"
+ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
+reset-to-default = "Domyślne"
 
 [footer]
 contact = "Kontakt"
 terms_of_service = "Warunki korzystania z usługi"
 source_code = "Kod źródłowy"
 language = "Język"
-
-[header.javascript]
-js-profile = "Profil"
-js-logout = "Wyloguj"
-js-login = "Zaloguj"
-js-createaccount = "Utwórz konto"
 
 [member.javascript]
 js-confirm_delete = "Czy napewno chcesz usunąć swoje konto? Usunięcie konta jest NIEODWRACALNE! Naciśnij OK, aby wpisać hasło"
@@ -85,13 +93,14 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Chiński uproszczony - ", "Heinrich Xiao", ".",
 	"Chiński tradycyjny - ", "Heinrich Xiao", ".",
 	"Polski - ", "Tymon Becella", ".", # Apsurt
-	"Portugalski - ", "The_Skeleton", "."
+	"Portugalski - ", "Emerson P. Machado", ".", # The_Skeleton on discord
+	"Hiszpański - ", "xa31er", "."
 ]
 
 [member]
 title = "Twój Profil"
-verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację."
-resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu lub ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do nas."]
+verify_message = "Sprawdź swojego e-mail'a, aby potwierdzić rejestrację. Konto, które nie zostanie zwerifikowane w ciągu 3 dni, zostanie usunięte."
+resend_message = ["Nie widzisz wiadomości? Sprawdź folder spamu. Możesz również ", "wyślij ponownie.", " Jeśli dalej nie widzisz wiadomości, ", "napisz do nas."]
 verify_confirm = "Dziękujemy! Twoje konto zostało zarejestrowane pomyślnie."
 rating = "Ranking ELO:"
 joined = "Dołączył:"
@@ -236,6 +245,14 @@ join = "Dołącz"
 copy = "Skopiuj"
 back = "Powrót"
 code = "Kod"
+
+[play.gamebuttontooltips]
+undo_transition = "Cofnij"
+expand_fit_all = "Oddal by zobaczyć wszystko"
+recenter = "Wyśrodkuj"
+rewind_move = "Cofnij"
+forward_move = "Następny"
+pause = "Pauza"
 
 [play.footer]
 white_to_move = "Ruch białego"

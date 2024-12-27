@@ -4,11 +4,13 @@
 	"description": "infinitechess.org server",
 	"author": "Naviary",
 	"license": "AGPL",
-	"main": "src/server/server.js",
+	"main": "dist/server/server.js",
 	"type": "module",
 	"dependencies": {
 		"@swc/core": "^1.7.0",
+		"abort-controller": "^3.0.0",
 		"bcrypt": "^5.1.1",
+		"better-sqlite3": "^11.5.0",
 		"browserslist": "^4.23.2",
 		"cookie-parser": "^1.4.6",
 		"cors": "^2.8.5",
@@ -34,11 +36,17 @@
 		"xss": "^1.0.15"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.9.0",
-		"@types/node": "^20.14.10",
-		"eslint": "^9.9.0",
+		"@eslint/js": "^9.15.0",
+		"@types/express": "^5.0.0",
+		"@types/node": "^22.10.1",
+		"@types/ws": "^8.5.13",
+		"@typescript-eslint/eslint-plugin": "^8.18.2",
+		"@typescript-eslint/parser": "^8.18.2",
+		"eslint": "^9.16.0",
 		"globals": "^15.9.0",
-		"madge": "^8.0.0"
+		"madge": "^8.0.0",
+		"typescript": "^5.7.2",
+		"typescript-eslint": "^8.16.0"
 	},
 	"scripts": {
 		"build": "node build.js",

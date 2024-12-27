@@ -6,9 +6,10 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
-import wsutility from '../wsutility.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import socketUtility from '../../socket/socketUtility.js';
 
-/** @typedef {import('../TypeDefinitions.js').Socket} Socket */
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * List of clients currently subscribed to invites list events, with their
@@ -34,13 +35,13 @@ function getInviteSubscribers() { return subscribedClients; }
  */
 function broadcastToAllInviteSubs(action, message) {
 	for (const ws of Object.values(subscribedClients)) {
-		ws.metadata.sendmessage(ws, "invites", action, message); // In order: socket, sub, action, value
+		sendSocketMessage(ws, "invites", action, message); // In order: socket, sub, action, value
 	}
 }
 
 /**
  * Adds a new socket to the invite subscriber list.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  */
 function addSocketToInvitesSubs(ws) {
 	const socketID = ws.metadata.id;
@@ -48,28 +49,39 @@ function addSocketToInvitesSubs(ws) {
 
 	subscribedClients[socketID] = ws;
 	ws.metadata.subscriptions.invites = true;
-	if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (printNewAndClosedSubscriptions) console.log(`Subscribed client to invites list! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 	if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
 
 /**
  * Removes a socket from the invite subscriber list.
  * DOES NOT delete any of their existing invites! That should be done before.
- * @param {Socket} ws 
+ * @param {CustomWebSocket} ws 
  */
 function removeSocketFromInvitesSubs(ws) {
 	if (!ws) return console.error("Can't remove socket from invites subs list because it's undefined!");
 
 	const socketID = ws.metadata.id;
-	if (!subscribedClients[socketID]) return console.error("Cannot unsub socket from invites list because they aren't subbed!");
+	if (!subscribedClients[socketID]) return; // Cannot unsub socket from invites list because they aren't subbed.
 
 	delete subscribedClients[socketID];
 	delete ws.metadata.subscriptions.invites;
-	if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${wsutility.stringifySocketMetadata(ws)}`);
+	if (printNewAndClosedSubscriptions) console.log(`Unsubscribed client from invites list. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 	if (printSubscriberCount) console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
 
-
+/**
+ * Checks if a member or browser ID has at least one active connection.
+ * @param {boolean} signedIn - Flag to specify if the identifier is for a signed-in member (true) or a browser ID (false).
+ * @param {string} identifier - The identifier of the member (username for signed-in members) or browser ID (for non-signed-in users).
+ * @returns {boolean} - Returns true if the member or browser ID has at least one active connection, false otherwise.
+ */
+function doesUserHaveActiveConnection(signedIn, identifier) {
+	return Object.values(subscribedClients).some(ws => {
+		if (signedIn) return ws.metadata.memberInfo.username === identifier;
+		else return ws.metadata.cookies['browser-id'] === identifier;
+	});
+}
 
 
 
@@ -78,4 +90,5 @@ export {
 	broadcastToAllInviteSubs,
 	addSocketToInvitesSubs,
 	removeSocketFromInvitesSubs,
+	doesUserHaveActiveConnection,
 };

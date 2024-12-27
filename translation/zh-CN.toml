@@ -1,26 +1,34 @@
 name = "简体中文" # Simplified Chinese - Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "19"
+version = "22"
 maintainer = "Heinrich Xiao"
 
 [header]
-home = "主页"
+home = "无限棋"
 play = "开始"
 news = "消息"
 login = "登录"
+profile = "个人资料"
 createaccount = "注册"
+logout = "登出"
+
+[header.settings]
+language = "语言"
+board = "棋盘" # Board color/theme
+legalmoves = "合法移动" # Legal moves shape
+legalmoves-squares = "方块"
+legalmoves-dots = "点" # Dots and 4 corner triangles
+perspective = "视角" # Perspective-mode
+perspective-mouse-sensitivity = "鼠标灵敏度"
+perspective-fov = "视野范围"
+ping = ["延迟", "毫秒"] # A number is inserted between these 2 strings.
+reset-to-default = "恢复默认"
 
 [footer]
 contact = "联系"
 terms_of_service = "服务条款"
 source_code = "程序"
 language = "语言"
-
-[header.javascript]
-js-profile = "个人账户"
-js-logout = "登出"
-js-login = "登录"
-js-createaccount = "注册"
 
 [member.javascript]
 js-confirm_delete = "您确定要删除账号吗？这无法撤销！要是你确定删除账号，点OK。"
@@ -85,7 +93,7 @@ language_credits = [
     "简体中文由 ", "Heinrich Xiao", " 贡献。",
     "繁体中文由 ", "Heinrich Xiao", " 贡献。",
     "波兰语由 ", "Tymon Becella", " 贡献。",
-    "葡萄牙语由 ", "The_Skeleton", " 贡献。",
+    "葡萄牙语由 ", "Emerson P. Machado", " 贡献。", # The_Skeleton on discord
 		"西班牙语由 ", "xa31er", " 贡献。"
 ]
 
@@ -237,6 +245,14 @@ join = "加入"
 copy = "复制"
 back = "返回"
 code = "邀请码"
+
+[play.gamebuttontooltips]
+undo_transition = "撤销过渡"
+expand_fit_all = "展开以适应所有"
+recenter = "重新居中"
+rewind_move = "倒回操作"
+forward_move = "前进操作"
+pause = "暂停"
 
 [play.footer]
 white_to_move = "白方走起"

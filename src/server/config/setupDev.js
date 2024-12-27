@@ -1,16 +1,11 @@
-import dotenv from 'dotenv';
 import { DEV_BUILD } from './config.js';
-import { generateAccount } from '../controllers/createaccountController.js';
-import { giveRole_Owner, giveRole_Patron } from '../controllers/roles.js';
-import { doesMemberExist } from '../controllers/members.js';
-import { ensureEnvFile } from './env.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
+import { doesMemberOfUsernameExist } from '../database/memberManager.js';
+import { generateAccount } from '../controllers/createAccountController.js';
+import { giveRole } from '../controllers/roles.js';
 
 function initDevEnvironment() {
-	if (!DEV_BUILD) return callDotenvConfig(); // Production
-    
-	ensureEnvFile();
-	callDotenvConfig();
+	if (!DEV_BUILD) return; // Production
 
 	if (ensureSelfSignedCertificate()) { 
 		// Let's also display the url to the page!
@@ -19,24 +14,20 @@ function initDevEnvironment() {
 	createDevelopmentAccounts();
 }
 
-function callDotenvConfig() {
-	// Load the .env file contents into process.env
-	// This needs to be as early as possible
-	dotenv.config(); 
-}
-
-function createDevelopmentAccounts() {
-	if (!doesMemberExist("owner")) {
-		generateAccount({ username: "Owner", email: "exampleemail@gmail.com", password: "1", autoVerify: true });
-		giveRole_Owner("owner", "developmental account");
+async function createDevelopmentAccounts() {
+	if (!doesMemberOfUsernameExist("owner")) {
+		const user_id = await generateAccount({ username: "Owner", email: "email1", password: "1", autoVerify: true });
+		giveRole(user_id, "owner");
+		giveRole(user_id, "admin");
 	}
-	if (!doesMemberExist("patron")) {
-		generateAccount({ username: "Patron", email: "exampleemail@gmail.com", password: "1", autoVerify: true });
-		giveRole_Patron("patron", "developmental account");
+	if (!doesMemberOfUsernameExist("patron")) {
+		const user_id = await generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
+		giveRole(user_id, "patron");
 	}
-	if (!doesMemberExist("member")) {
-		generateAccount({ username: "Member", email: "exampleemail@gmail.com", password: "1", autoVerify: true });
+	if (!doesMemberOfUsernameExist("member")) {
+		const user_id = await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
+	// generateAccount({ username: "Member23", email: "email@teste3mail.com", password: "1", autoVerify: false });
 }
 
 

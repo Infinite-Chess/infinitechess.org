@@ -7,19 +7,20 @@
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
 import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
-import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+
+/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 
 /** 
  * Called when client wants to offer a draw. Sends confirmation to opponent.
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function offerDraw(ws, game) {
@@ -44,7 +45,7 @@ function offerDraw(ws, game) {
 
 /** 
  * Called when client accepts a draw. Ends the game.
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  * @returns {true | undefined} true if the draw accept was a success (the game manager should terminate the game), otherwise undefined.
  */
@@ -68,7 +69,7 @@ function acceptDraw(ws, game) {
 
 /** 
  * Called when client declines a draw. Alerts opponent.
- * @param {Socket} ws - The socket
+ * @param {CustomWebSocket} ws - The socket
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function declineDraw(ws, game) {
