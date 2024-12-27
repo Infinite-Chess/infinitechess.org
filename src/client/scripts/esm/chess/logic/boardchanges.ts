@@ -11,66 +11,110 @@ import type { Coords } from "./movesets.js";
 // @ts-ignore
 import type { Move } from "../util/moveutil.js";
 
+
 interface Piece {
 	type: string // - The type of the piece (e.g. `queensW`).
 	coords: Coords // - The coordinates of the piece: `[x,y]`
 	index: number // - The index of the piece within the gamefile's piece list.
 }
 
+/**
+ * Generic type to describe any changes to the board
+ */
 interface Change {
-	action: string,
+	// The action is used to differentiated the type of change made and the data it has
+	action: 'add' | "delete" | "move" | "capture", 
 	[changeData: string]: any
 }
 
-interface ActionList<T extends CallableFunction> {
-	[actionName: string]: T
-}
-
+/**
+ * A change func takes change data and alters the board depending on the change
+ */
 // I dislike eslint
 // eslint-disable-next-line no-unused-vars
 type genericChangeFunc = (gamefile: gamefile, change: any) => void;
 
-interface ChangeApplication {
-	forward: ActionList<genericChangeFunc>
-
-	backward: ActionList<genericChangeFunc>
+/**
+ * An actionlist is a dictionary links actions to functions.
+ * The function uses the change data for operations. Eg animation, updating mesh, logic 
+ * It won't always include every action.
+ * If an action is looked up and there isn't a function for it, it's change is ignored
+ */
+interface ActionList<F extends CallableFunction> {
+	[actionName: string]: F
 }
 
-const changeFuncs: ChangeApplication = {
+/**
+ * A change application is used for applying the changelist of a move in both directions.
+ */
+interface ChangeApplication<F extends CallableFunction> {
+	forward: ActionList<F>
+
+	backward: ActionList<F>
+}
+
+// This is the logical board change application
+const changeFuncs: ChangeApplication<genericChangeFunc> = {
 	forward: {
 		"add": addPiece,
 		"delete": deletePiece,
-		"movePiece": movePiece,
-		"capturePiece": capturePiece,
+		"move": movePiece,
+		"capture": capturePiece,
 	},
 
 	backward: {
 		"delete": addPiece,
 		"add": deletePiece,
-		"movePiece": returnPiece,
-		"capturePiece": uncapturePiece,
+		"move": returnPiece,
+		"capture": uncapturePiece,
 	}
 };
 
 // All queue functions queue a change to the board.
-// They add to a changelist which is then executed using a set of changefuncs
-function queueCaputure(changes: Array<Change>, piece: Piece, endCoords: Coords, capturedPiece: Piece) {
-	changes.push({action: 'capturePiece', piece: piece, endCoords: endCoords, capturedPiece: capturedPiece}); // Need to differentiate this from move so animations can work
+// They add to a changelist which is then executed using a set of changefuncs, see above.
+
+/**
+ * Queues a move with catpure
+ * Need to differentiate this from move so animations can work and so that royal capture can be recognised
+ * @param changes
+ * @param piece The piece moved. Its coords are used as starting coords
+ * @param endCoords 
+ * @param capturedPiece The piece captured
+ */
+function queueCapture(changes: Array<Change>, piece: Piece, endCoords: Coords, capturedPiece: Piece) {
+	changes.push({action: 'capture', piece: piece, endCoords: endCoords, capturedPiece: capturedPiece});
 	return changes;
 }
 
+/**
+ * Queues the addition of a piece to the board
+ * @param changes 
+ * @param piece the piece to add
+ * the pieces index is optional and will get assigned one if none is present
+ */
 function queueAddPiece(changes: Array<Change>, piece: Piece) {
 	changes.push({action: 'add', piece: piece});
 	return changes;
 };
 
+/**
+ * Queues the removal of a piece
+ * @param changes 
+ * @param piece 
+ */
 function queueDeletePiece(changes: Array<Change>, piece: Piece) {
 	changes.push({action: 'delete', piece: piece});
 	return changes;
 }
 
+/**
+ * Moves a piece without capture
+ * @param changes 
+ * @param piece The piece moved. Its coords are used as starting coords
+ * @param endCoords 
+ */
 function queueMovePiece(changes: Array<Change>, piece: Piece, endCoords: Coords) {
-	changes.push({action: 'movePiece', piece: piece, endCoords: endCoords});
+	changes.push({action: 'move', piece: piece, endCoords: endCoords});
 	return changes;
 }
 
@@ -88,13 +132,13 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 }
 
 /**
- * 
+ * Applies a moves changes in a direction
  * @param gamefile 
  * @param move 
  * @param changeFuncs 
  * @param forward 
  */
-function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication, forward: boolean = true) {
+function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication<genericChangeFunc>, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
 	const changes = forward ? move.changes : [...move.changes].reverse();
 	applyChanges(gamefile, changes, funcs);
@@ -104,9 +148,7 @@ function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication,
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
  * organizes the piece in the organized lists
  * @param gamefile 
- * @param change the add data
- * change.piece is the piece to add
- * the pieces index is optional and will get assigned one if none are present
+ * @param change
  */
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const piece = change['piece'];
@@ -209,7 +251,30 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
 	addPiece(gamefile, {piece: change['capturedPiece'], action:"add"});
 }
 
+const captureActions = new Set("capture");
+/**
+ * Gets every captured piece in changes
+ * @param move 
+ * @returns 
+ */
+function getCapturedPieces(move: Move): Piece[] {
+	const pieces: Piece[] = [];
+	for (const c of move.changes) {
+		if (!(c.action in captureActions)) continue;
+		pieces.push(c['capturedPiece']);
+	}
+	return pieces;
+}
+
+function wasACapture(move: Move): boolean {
+	for (const c of move.changes) {
+		if ((c.action in captureActions)) return true;
+	}
+	return false;
+}
+
 export type {
+	genericChangeFunc,
 	ActionList,
 	ChangeApplication,
 	Change,
@@ -219,8 +284,10 @@ export default {
 	queueAddPiece,
 	queueDeletePiece,
 	queueMovePiece,
-	queueCaputure,
+	queueCapture,
 
+	getCapturedPieces,
+	wasACapture,
 	runMove,
 	applyChanges,
 	changeFuncs,

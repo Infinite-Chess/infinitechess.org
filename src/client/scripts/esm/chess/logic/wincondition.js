@@ -8,6 +8,7 @@ import organizedlines from './organizedlines.js';
 import moveutil from '../util/moveutil.js';
 import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
+import boardchanges from './boardchanges.js';
 // Import End
 
 // Type Definitions...
@@ -136,9 +137,8 @@ function wasLastMoveARoyalCapture(gamefile) {
 
 	const capturedTypes = new Set();
 
-	for (const c of lastMove.changes) {
-		if (c.action !== "capturePiece") continue;
-		capturedTypes.add(colorutil.trimColorExtensionFromType(c.capturedPiece.type));
+	for (const pieceType of boardchanges.getCapturedPieces(lastMove)) {
+		capturedTypes.add(colorutil.trimColorExtensionFromType(pieceType));
 	}
 
 	if (!capturedTypes.size) return false; // Last move not a capture

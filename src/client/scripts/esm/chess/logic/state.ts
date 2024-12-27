@@ -1,4 +1,3 @@
-import type { Change } from "./boardchanges.js";
 // @ts-ignore
 import type { Move } from "../util/moveutil.js";
 // @ts-ignore
@@ -6,31 +5,29 @@ import type gamefile from "./gamefile.js";
 
 // This is oh so very cursed, however it works
 
+/**
+ * A statechange contains the changes in gamefile from one turn to another
+ * When a statechange is applied gamefile variables are set directly
+ */
 interface StateChange {
-	action: "stateChange",
-	path: string
-	currentState: any
-	futureState: any
-	global: boolean // Whether it can be reverted by viewing moves
-}
-
-interface State {
 	[path: string]: any
 }
 
 /**
- * Sets the state by queueing it in the changelist
- * @param gamefile the gamefile
- * @param changes the changelist
- * @param path the path of variable to change in the format of `a.b.c.d` can be indicies of arrays
- * @param futureState what the variable is set to
- * @param global // See StateChange.global
+ * Contains the statechanges for the turn before and after a move is made
+ * Local statechanges are always applied
+ * Global statechanges are not applied when VIEWING a move
+ * They are only applied when they are rewound or made.
  */
-function queueSetState(gamefile: gamefile, changes: Array<Change | StateChange>, path: string, futureState: any, global: boolean = false) {
-	const currentState = getPath(gamefile, path);
-	if (currentState === futureState) return changes; // Nothing has changed
-	changes.push({action: "stateChange", path: path, currentState: currentState, futureState: futureState, global: global});
-	return changes;
+interface MoveState {
+	local: {
+		current: StateChange,
+		future: StateChange,
+	},
+	global: {
+		current: StateChange,
+		future: StateChange,
+	}
 }
 
 /**
@@ -65,21 +62,6 @@ function addToState(move: Move, path: string, currentState: any, futureState: an
 
 	states.current[path] = currentState;
 	states.future[path] = futureState;
-}
-
-/**
- * Collects every StateChange into move states
- * Removes all StateChanges from the change list
- * @param move move
- */
-function collectState(move: Move) {
-	const changes = move.changes.filter((c: Change) => {return c.action === "stateChange";});
-
-	for (const change of changes) {
-		addToState(move, change.path, change.currentState, change.futureState, {global: change.global});
-	}
-
-	move.changes = move.changes.filter((c: Change) => {return c.action !== "stateChange";});
 }
 
 /**
@@ -125,7 +107,7 @@ function getPath(gamefile: gamefile, path: string): any {
 	}
 }
 
-function applyState(gamefile: gamefile, state: State) {
+function applyState(gamefile: gamefile, state: StateChange) {
 	for (const path in state) {
 		setPath(gamefile, path, state[path]);
 	}
@@ -144,6 +126,21 @@ function applyMove(gamefile: gamefile, move: Move, forward: boolean, { globalCha
 }
 
 /**
+ * Used when generating moves. Adds state changes to movestate
+ * @param gamefile 
+ * @param move 
+ * @param path 
+ * @param value 
+ * @returns if a change is needed
+ */
+function queueSetState(gamefile: gamefile, move: Move, path: string, value: any, {global = false } = {}): boolean {
+	const curState = getPath(gamefile, path);
+	if (curState === value) return false;
+	addToState(move, path, curState, value, {global: global});
+	return true;
+}
+
+/**
  * Sets the gamefile variable and adds it to the state.
  * This is used after the move is generated
  * @param gamefile 
@@ -152,10 +149,8 @@ function applyMove(gamefile: gamefile, move: Move, forward: boolean, { globalCha
  * @param value  
  */
 function setState(gamefile: gamefile, move: Move, path: string, value: any, { global = false } = {}) {
-	const curState = getPath(gamefile, path);
-	if (curState === value) return;
-	setPath(gamefile, path, value);
-	addToState(move, path, curState, value, {global: global});
+	const similar = queueSetState(gamefile, move, path, value, {global: global});
+	if (similar) setPath(gamefile, path, value);
 }
 
 /**
@@ -164,8 +159,8 @@ function setState(gamefile: gamefile, move: Move, path: string, value: any, { gl
  * @param current current moves state
  * @returns the merged state
  */
-function mergeStates(previous: State, current: State, { validate = false } = {}): State {
-	const newState: State = {};
+function mergeStates(previous: StateChange, current: StateChange, { validate = false } = {}): StateChange {
+	const newState: StateChange = {};
 	for (const key in previous) {
 		newState[key] = previous[key]!;
 	}
@@ -192,10 +187,10 @@ function mergeMoveStates(previous: Move, current: Move) {
 	previous.state.global.future = current.state.global.current = mergeStates(previous.state.global.future, current.state.global.current);
 }
 
-function unmergeState(current: State, future: State, forwardLink: boolean = true): State {
+function unmergeState(current: StateChange, future: StateChange, forwardLink: boolean = true): StateChange {
 	const ref = forwardLink ? current : future;
 	const mergedState = forwardLink ? future : current;
-	const newState: State = {};
+	const newState: StateChange = {};
 	for (const path in ref) {
 		if (!(path in mergedState)) continue;
 		if (JSON.stringify(ref[path]) === JSON.stringify(mergedState[path])) continue;
@@ -210,10 +205,11 @@ function unmergeMoveStates(move: Move, forwardLink: boolean = true) {
 	move.state.local[mergedState] = unmergeState(move.state.local.future, move.state.local.current, forwardLink);
 }
 
+export type { MoveState };
+
 export default {
 	initMoveStates,
 	queueSetState,
-	collectState,
 	applyMove,
 	setState,
 	// mergeMoveStates, Not using them yet cause they can slow down move simulation

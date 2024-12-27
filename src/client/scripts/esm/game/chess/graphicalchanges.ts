@@ -6,19 +6,16 @@ import piecesmodel from "../rendering/piecesmodel.js";
 import organizedlines from "../../chess/logic/organizedlines.js";
 
 // @ts-ignore
-import type { ChangeApplication, Change, ActionList } from "../../chess/logic/boardchanges.js";
+import type { ChangeApplication, Change, genericChangeFunc } from "../../chess/logic/boardchanges.js";
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
 
-// ESLint, THIS IS A TYPE INTERFACE SHUT UP
-interface ChangeAnimations {
-	// eslint-disable-next-line no-unused-vars
-	forward: ActionList<(change: Change, clearanimations: boolean) => void>
-	// eslint-disable-next-line no-unused-vars
-	backward: ActionList<(change: Change, clearanimations: boolean) => void>
-}
 
-const animatableChanges: ChangeAnimations = {
+// The functions for animating changes, does not use/alter gamefile directly
+// eslint-disable-next-line no-unused-vars
+type animationFunc = (change: Change, clearanimations: boolean) => void
+
+const animatableChanges: ChangeApplication<animationFunc> = {
 	forward: {
 		"movePiece": animateMove,
 		"capturePiece": animateCapture,
@@ -42,7 +39,7 @@ function animateCapture(change: Change, clearanimations: boolean) {
 	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], change['capturedPiece'], clearanimations);
 }
 
-const meshChanges: ChangeApplication = {
+const meshChanges: ChangeApplication<genericChangeFunc> = {
 	forward: {
 		"add": addMeshPiece,
 		"delete": deleteMeshPiece,

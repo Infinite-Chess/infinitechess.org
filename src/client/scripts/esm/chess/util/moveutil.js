@@ -10,6 +10,7 @@ import coordutil from './coordutil.js';
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
  * @typedef {import('../logic/boardchanges.js').Change} Change
+ * @typedef {import('../logic/state.js').MoveState} MoveState
 */
 
 "use strict";
@@ -25,16 +26,8 @@ function Move() {
 	/** @type {Array<Change>} */
 	this.changes = undefined;
 
-	this.state = {
-		local: {
-			current: {},
-			future: {},
-		},
-		global: {
-			current: {},
-			future: {},
-		}
-	};
+	/** @type {MoveState} */
+	this.state = undefined;
 
 	/** @type {number} */
 	this.generateIndex = undefined;

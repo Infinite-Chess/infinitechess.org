@@ -50,17 +50,7 @@ function generateMove(gamefile, move) {
 	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move); // Move piece regularly (no special tag)
 
-	let wasACapture = false;
-	for (const c of move.changes) {
-		if (c.action === 'capturePiece') {
-			wasACapture = true;
-			break;
-		}
-	}
-
-	incrementMoveRule(gamefile, move, wasACapture);
-
-	state.collectState(move);	
+	incrementMoveRule(gamefile, move, boardchanges.wasACapture(move));
 }
 
 /**
@@ -106,11 +96,11 @@ function makeMove(gamefile, move) {
  * @param {Move} move
  */
 function deleteEnpassantAndSpecialRightsProperties(gamefile, move) {
-	state.queueSetState(gamefile, move.changes, "enpassant", undefined);
+	state.queueSetState(gamefile, move, "enpassant", undefined);
 	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.queueSetState(gamefile, move.changes, `specialRights.${key}`, undefined);
+	state.queueSetState(gamefile, move, `specialRights.${key}`, undefined);
 	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.queueSetState(gamefile, move.changes, `specialRights.${key}`, undefined); // We also delete the captured pieces specialRights for ANY move.
+	state.queueSetState(gamefile, move, `specialRights.${key}`, undefined); // We also delete the captured pieces specialRights for ANY move.
 }
 
 /**
@@ -145,7 +135,7 @@ function incrementMoveRule(gamefile, move, wasACapture) {
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
-	state.queueSetState(gamefile, move.changes, 'moveRuleState', newMoveRule, {global: true});
+	state.queueSetState(gamefile, move, 'moveRuleState', newMoveRule, {global: true});
 }
 
 /**
