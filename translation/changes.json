@@ -1,11 +1,15 @@
 {
-	"100": {
-		"note": "THIS UPDATE IS NOT YET FINISHED. TRANSLATORS IGNORE THIS UPDATE.   Modified webgl_unsupported, line 303",
+	"27": {
+		"note": "Added Github contributor title, line 54",
+		"changes": ["index.github_title"]
+	},
+	"26": {
+		"note": "Modified webgl_unsupported, line 303",
 		"changes": ["play.javascript.webgl_unsupported"]
 	},
 	"25": {
-		"note": "Added Github contributor title, line 54",
-		"changes": ["index.github_title"]
+		"note": "Added the following in header.settings, lines 21-23: selection, selection-drag, selection-premove.",
+		"changes": []
 	},
 	"24": {
 		"note": "Deleted play.javascript.copypaste.loaded, line 323",

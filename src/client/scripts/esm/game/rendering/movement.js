@@ -12,6 +12,7 @@ import frametracker from './frametracker.js';
 import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
+import selection from '../chess/selection.js';
 // Import End
 
 "use strict";
@@ -246,7 +247,7 @@ function removeOldPositions(time) {
 // Checks if the mouse or finger has started dragging the board. Keep in mind if the
 // user clicked a piece, then the click event has been removed, so you can't do both at once.
 function checkIfBoardDragged() {
-	if (perspective.getEnabled() || transition.areWeTeleporting()) return;
+	if (perspective.getEnabled() || transition.areWeTeleporting() || selection.areDraggingPiece()) return;
 
 	if (boardIsGrabbed === 0) { // Not already grabbed
 		if (input.isMouseDown_Left()) grabBoard_WithMouse();
@@ -520,6 +521,14 @@ function eraseMomentum() {
 	scaleVel = 0;
 }
 
+function boardOrScaleHasMomentum() {
+	return panVel[0] !== 0 || panVel[1] !== 0 || scaleVel !== 0;
+}
+
+function boardHasMomentum() {
+	return panVel[0] !== 0 || panVel[1] !== 0;
+}
+
 function setPositionToArea(area) {
 	if (!area) console.error("Cannot set position to an undefined area.");
 
@@ -544,6 +553,8 @@ export default {
 	updateNavControls,
 	randomizePanVelDir,
 	dragBoard,
+	boardOrScaleHasMomentum,
+	boardHasMomentum,
 	eraseMomentum,
 	setPositionToArea,
 	checkIfBoardDragged,
