@@ -1,7 +1,7 @@
 {
 	"27": {
-		"note": "Added Github contributor title, line 54",
-		"changes": ["index.github_title"]
+		"note": "Added Github contributor title and javascript translation, lines 57 and 60",
+		"changes": ["index.github_title", "index.javascript"]
 	},
 	"26": {
 		"note": "Modified webgl_unsupported, line 303",
