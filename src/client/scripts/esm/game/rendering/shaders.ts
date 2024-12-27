@@ -73,7 +73,7 @@ function createColorProgram(): ShaderProgram {
 
 		uniform mat4 uTransformMatrix;
 
-		out lowp vec4 vColor;
+		out vec4 vColor;
 
 		void main() {
 			gl_Position = uTransformMatrix * aVertexPosition;
@@ -121,7 +121,7 @@ function createColorProgram_Instanced(): ShaderProgram {
 
         uniform mat4 uTransformMatrix;
 
-        out lowp vec4 vColor;
+        out vec4 vColor;
 
         void main() {
 			// Add the instance offset to the vertex position
@@ -134,7 +134,8 @@ function createColorProgram_Instanced(): ShaderProgram {
 	const fsSource = `#version 300 es
         precision lowp float;
 
-        in lowp vec4 vColor;
+        in vec4 vColor;
+
         out vec4 fragColor;
 
         void main() {
@@ -230,8 +231,8 @@ function createColoredTextureProgram(): ShaderProgram  {
 
 		uniform mat4 uTransformMatrix;
 
-		out lowp vec2 vTextureCoord;
-		out lowp vec4 vColor;
+		out vec2 vTextureCoord;
+		out vec4 vColor;
 
 		void main(void) {
 			gl_Position = uTransformMatrix * aVertexPosition;
@@ -290,7 +291,7 @@ function createTintedTextureProgram(): ShaderProgram  {
 
 		uniform mat4 uTransformMatrix;
 
-		out lowp vec2 vTextureCoord;
+		out vec2 vTextureCoord;
 
 		void main(void) {
 			gl_Position = uTransformMatrix * aVertexPosition;
