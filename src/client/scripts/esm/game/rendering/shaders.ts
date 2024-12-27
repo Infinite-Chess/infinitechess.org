@@ -67,27 +67,31 @@ function initPrograms() {
 function createColorProgram(): ShaderProgram {
 	const specifyPointSize = false; // Can toggle true if we start rendering with gl.POINTS somewhere in the project
 	const pointSizeLine = specifyPointSize ? `gl_PointSize = ${(pointSize * camera.getPixelDensity()).toFixed(1)};` : ''; // Default: 7.0
-	const vsSource = `
-        attribute vec4 aVertexPosition;
-        attribute vec4 aVertexColor;
+	const vsSource = `#version 300 es
+		in vec4 aVertexPosition;
+		in vec4 aVertexColor;
 
-        uniform mat4 uTransformMatrix;
+		uniform mat4 uTransformMatrix;
 
-        varying lowp vec4 vColor;
+		out lowp vec4 vColor;
 
-        void main() {
-            gl_Position = uTransformMatrix * aVertexPosition;
-            vColor = aVertexColor;
-            ${pointSizeLine}
-        }
-    `;
-	const fsSource = `
-        varying lowp vec4 vColor;
+		void main() {
+			gl_Position = uTransformMatrix * aVertexPosition;
+			vColor = aVertexColor;
+			${pointSizeLine}
+		}
+	`;
+	const fsSource = `#version 300 es
+		precision lowp float;
 
-        void main() {
-            gl_FragColor = vColor;
-        }
-    `;
+		in vec4 vColor;
+
+		out vec4 fragColor;
+
+		void main() {
+			fragColor = vColor;
+		}
+	`;
 
 	const program = createShaderProgram(vsSource, fsSource);
 
@@ -155,6 +159,7 @@ function createColorProgram_Instanced(): ShaderProgram {
 
 /**
  * Creates and returns a shader program that is capable of rendering meshes with a bound texture.
+ * 
  * Also applies a bias to the LOD (mipmap level) to sharpen the textures a bit,
  * as mipmaps by themselves will automatically pick a level that is slightly blurry.
  * 
@@ -184,7 +189,7 @@ function createTextureProgram(): ShaderProgram  {
         out vec4 fragColor;
 
         void main(void) {
-            fragColor = texture(uSampler, vTextureCoord, -0.5); // Apply a mipmap level bias so as to make the textures sharper.
+            fragColor = texture(uSampler, vTextureCoord, -0.5); // Apply a mipmap LOD bias so as to make the textures sharper.
         }
     `;
 
@@ -207,6 +212,9 @@ function createTextureProgram(): ShaderProgram  {
  * Creates and return a shader program that is capable of
  * rendering meshes with a bound texture AND colored vertices,
  * tinting each point a specified color.
+ * 
+ * Also applies a bias to the LOD (mipmap level) to sharpen the textures a bit,
+ * as mipmaps by themselves will automatically pick a level that is slightly blurry.
  * 
  * Each point in the vertex data must contain positional data (2 or 3 numbers),
  * followed by the texture data (2 numbers),
@@ -242,8 +250,7 @@ function createColoredTextureProgram(): ShaderProgram  {
 		out vec4 fragColor;
 
 		void main(void) {
-			// Apply a LOD bias of -0.5 to the texture lookup
-			fragColor = texture(uSampler, vTextureCoord, -0.5) * vColor;
+			fragColor = texture(uSampler, vTextureCoord, -0.5) * vColor; // Apply a mipmap LOD bias so as to make the textures sharper.
 		}
     `;
 
@@ -277,29 +284,34 @@ function createColoredTextureProgram(): ShaderProgram  {
  * if you don't require a unique tint value on each point.
  */
 function createTintedTextureProgram(): ShaderProgram  {
-	const vsSource = `  
-        attribute vec4 aVertexPosition;
-        attribute vec2 aTextureCoord;
+	const vsSource = `#version 300 es
+		in vec4 aVertexPosition;
+		in vec2 aTextureCoord;
 
-        uniform mat4 uTransformMatrix;
+		uniform mat4 uTransformMatrix;
 
-        varying lowp vec2 vTextureCoord;
+		out lowp vec2 vTextureCoord;
 
-        void main(void) {
-            gl_Position = uTransformMatrix * aVertexPosition;
-            vTextureCoord = aTextureCoord;
-        }
-    `;
-	const fsSource = `
-        varying lowp vec2 vTextureCoord;
+		void main(void) {
+			gl_Position = uTransformMatrix * aVertexPosition;
+			vTextureCoord = aTextureCoord;
+		}
+	`;
+	const fsSource = `#version 300 es
+		precision lowp float;
 
-        uniform lowp vec4 uTintColor;
-        uniform sampler2D uSampler;
+		in vec2 vTextureCoord;
 
-        void main(void) {
-            gl_FragColor = texture2D(uSampler, vTextureCoord) * uTintColor;
-        }
-    `;
+		uniform vec4 uTintColor;
+		uniform sampler2D uSampler;
+
+		out vec4 fragColor;
+
+		void main(void) {
+			fragColor = texture(uSampler, vTextureCoord, -0.5) * uTintColor; // Apply a mipmap LOD bias so as to make the textures sharper.
+		}
+	`;
+
 
 	const program = createShaderProgram(vsSource, fsSource);
 
