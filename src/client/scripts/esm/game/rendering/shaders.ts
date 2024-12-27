@@ -421,3 +421,6 @@ export default {
 	programs,
 	shaderPicker,
 };
+
+// Type definitions
+export { ShaderProgram };

@@ -16,7 +16,6 @@ import preferences from '../../components/header/preferences.js';
 /**
  * Type Definitions
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
  */
 
 "use strict";

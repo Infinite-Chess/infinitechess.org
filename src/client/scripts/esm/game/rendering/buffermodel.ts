@@ -462,7 +462,7 @@ function setUniforms(shader: ShaderProgram, position: [number,number,number], sc
 		mat4.multiply(transformMatrix, transformMatrix, worldMatrix); // Then multiply the result by worldMatrix
 		
 		// Send the transformMatrix to the gpu
-		gl.uniformMatrix4fv(shader.uniformLocations.transformMatrix, false, transformMatrix);
+		gl.uniformMatrix4fv(shader.uniformLocations['transformMatrix'], false, transformMatrix);
 	}
 
 	if (texture) {
@@ -471,7 +471,7 @@ function setUniforms(shader: ShaderProgram, position: [number,number,number], sc
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		// Tell the gpu we bound the texture to texture unit 0
-		gl.uniform1i(shader.uniformLocations.uSampler, 0);
+		gl.uniform1i(shader.uniformLocations['uSampler'], 0);
 	}
 
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
