@@ -66,13 +66,6 @@ interface BufferModel extends BaseBufferModel {
      * If this is modified, we can use updateBufferIndices() to pass those changes
      * on to the gpu, without having to create a new buffer model! */
 	data: Float32Array,
-	/**
-	 * **Call this** when you update specific vertex data within the source Float32Array!
-	 * FAST. Prevents you having to create a whole new model!
-	 * For example, when a single piece in the mesh moves.
-     * @param {number} changedIndicesStart - The index in the vertex data marking the first value changed.
-     * @param {number} changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
-	 */
 	updateBufferIndices: UpdateBufferIndicesFunc,
 }
 
@@ -124,9 +117,8 @@ function createModel(
 }
 
 /**
- * The universal function for creating a renderable model,
- * given the vertex data, attribute information,
- * primitive rendering mode, and texture.
+ * The universal function for creating a renderable model THAT USES INSTANCED RENDERING,
+ * given the vertex data and instance data, both attribute informations, primitive rendering mode, and texture!
  */
 function createModel_Instanced(
 	/** The array of vertex data of a single instance of the mesh. */
