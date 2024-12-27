@@ -11,7 +11,8 @@ import perspective from "./perspective.js";
  */
 
 /**
- * Returns a bounding box of a coordinate.
+ * Returns a bounding box of a square.
+ * ACCOUNTS FOR SQUARE CENTER.
  * REQUIRES uniform transformations before rendering.
  * @param {number[]} coords 
  * @returns {BoundingBox}
