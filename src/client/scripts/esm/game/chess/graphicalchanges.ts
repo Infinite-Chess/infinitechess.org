@@ -17,13 +17,13 @@ type animationFunc = (change: Change, clearanimations: boolean) => void
 
 const animatableChanges: ChangeApplication<animationFunc> = {
 	forward: {
-		"movePiece": animateMove,
-		"capturePiece": animateCapture,
+		"move": animateMove,
+		"capture": animateCapture,
 	},
 
 	backward: {
-		"movePiece": animateReturn,
-		"capturePiece": animateReturn,
+		"move": animateReturn,
+		"capture": animateReturn,
 	}
 };
 
@@ -43,15 +43,15 @@ const meshChanges: ChangeApplication<genericChangeFunc> = {
 	forward: {
 		"add": addMeshPiece,
 		"delete": deleteMeshPiece,
-		"movePiece": moveMeshPiece,
-		"capturePiece":	captureMeshPiece,
+		"move": moveMeshPiece,
+		"capture":	captureMeshPiece,
 	},
 
 	backward: {
 		"delete": addMeshPiece,
 		"add": deleteMeshPiece,
-		"movePiece": returnMeshPiece,
-		"capturePiece": uncaptureMeshPiece,
+		"move": returnMeshPiece,
+		"capture": uncaptureMeshPiece,
 	}
 };
 

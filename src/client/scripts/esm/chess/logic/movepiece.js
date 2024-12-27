@@ -115,7 +115,7 @@ function movePiece_NoSpecial(gamefile, piece, move) {
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 
 	if (capturedPiece) {
-		boardchanges.queueCaputure(move.changes, piece, move.endCoords, capturedPiece);
+		boardchanges.queueCapture(move.changes, piece, move.endCoords, capturedPiece);
 		return;
 	};
 

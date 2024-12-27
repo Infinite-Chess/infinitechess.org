@@ -30,7 +30,6 @@ function getFunctions() {
 // ALL FUNCTIONS NEED TO:
 // * Make the move
 // * Append the move
-// * Animate the piece
 
 
 // Called when the piece moved is a king.
@@ -81,7 +80,7 @@ function pawns(gamefile, piece, move, { updateProperties = true } = {}) {
 	// Delete the piece captured
 
 	if (capturedPiece) {
-		boardchanges.queueCaputure(moveChanges, piece, move.endCoords, capturedPiece);
+		boardchanges.queueCapture(moveChanges, piece, move.endCoords, capturedPiece);
 	} else {
 		// Move the pawn
 		boardchanges.queueMovePiece(moveChanges, piece, move.endCoords);
