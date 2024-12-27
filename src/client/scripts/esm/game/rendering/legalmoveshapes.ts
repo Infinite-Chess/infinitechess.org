@@ -43,8 +43,8 @@ const CORNER_TRIS = {
 
 /**
  * Generates the legal move square instance mesh, centered on [0,0]
- * @param color - The color [r, g, b, a]. This should MATCH the current theme's legal move color! An offset will be applied to its opacity.
- * @returns The vertex data for the "legal move dot" (circle).
+ * @param color - The color [r, g, b, a]. This should MATCH the current theme's legal move color!
+ * @returns The vertex data for the legal move square.
  */
 function getDataLegalMoveSquare(color: [number,number,number,number]): number[] {
 	const coords = [0,0]; // The instance is going to be at [0,0]
