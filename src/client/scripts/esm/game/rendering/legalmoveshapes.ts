@@ -1,7 +1,6 @@
 
 // @ts-ignore
 import board from "./board.js";
-import bufferdata from "./bufferdata.js";
 // @ts-ignore
 import shapes from "./shapes.js";
 
@@ -50,8 +49,7 @@ function getDataLegalMoveSquare(color: [number,number,number,number]): number[] 
 	const coords = [0,0]; // The instance is going to be at [0,0]
 
 	// Generate and return the vertex data for the legal move square.
-	const boundingBox = shapes.getBoundingBoxOfCoord(coords); // This accounts for square center.
-	return bufferdata.getDataQuad_Color(boundingBox, color);
+	return shapes.getDataQuad_Color_FromCoord(coords, color);
 }
 
 /**
