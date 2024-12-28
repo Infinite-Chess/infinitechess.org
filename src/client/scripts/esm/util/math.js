@@ -472,6 +472,16 @@ function roundUpToPowerOf2(num) {
 	return Math.pow(2, Math.ceil(Math.log2(num)));
 }
 
+/**
+ * Produces a number that is `progress` away from `s` in the direction of `e` from `s`
+ * @param {Number} s 
+ * @param {Number} e 
+ * @param {Number} progress 
+ */
+function moveTowards(s, e, progress) {
+	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
+}
+
 export default {
 	isPowerOfTwo,
 	isAproxEqual,
@@ -503,4 +513,5 @@ export default {
 	GCD,
 	LCM,
 	roundUpToPowerOf2,
+	moveTowards,
 };

@@ -9,8 +9,9 @@ import coordutil from './coordutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../logic/boardchanges.js').Change} Change
+ * @typedef {import('../logic/state.js').MoveState} MoveState
 */
-
 
 "use strict";
 
@@ -22,6 +23,15 @@ function Move() {
 
 	/** The type of piece moved (e.g. `queensW`). */
 	this.type = undefined;
+	/** @type {Array<Change>} */
+	this.changes = undefined;
+
+	/** @type {MoveState} */
+	this.state = undefined;
+
+	/** @type {number} */
+	this.generateIndex = undefined;
+
 	/** The start coordinates of the piece: `[x,y]` */
 	this.startCoords = undefined;
 	/** The end coordinates of the piece: `[x,y]`  */
@@ -42,33 +52,6 @@ function Move() {
 	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
 	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
 	this.castle = undefined;
-	/** Contains information for undoing simulated moves.
-     * Several of these properties are impossible to recalculate without
-     * looking at previous moves, or replaying the whole game. */
-	this.rewindInfo = {
-		/** The index of the captured piece within the gamefile's piece list.
-         * Required to not screw up the mesh when simulating. */
-		capturedIndex: undefined,
-		/** The index of the promoted pawn within the gamefile's piece list.
-         * Required to not screw up the mesh when simulating. */
-		pawnIndex: undefined,
-		/** Whether the moved piece had its special right before moving. */
-		specialRightStart: undefined,
-		/** Whether the piece on the destination had its special rights before being captured. */
-		specialRightEnd: undefined,
-		/** The gamefile's `enpassant` property before this move was made. */
-		enpassant: undefined,
-		/** The gamefile's `moveRuleState` property before this move was made. */
-		moveRuleState: undefined,
-		/** The gamefile's `checksGiven` property before this move was made. */
-		checksGiven: undefined,
-		/** The gamefile's `inCheck` property before this move was made. */
-		inCheck: undefined,
-		/** The gamefile's `attackers` property before this move was made. */
-		attackers: undefined,
-		/** The gamefile's `gameConclusion` property before this move was made. */
-		gameConclusion: undefined,
-	};
 	/** The move in most compact notation: `8,7>8,8Q` */
 	this.compact = undefined;
 }
@@ -314,6 +297,14 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 	return false;
 }
 
+/**
+ * Strips the coordinates of their special move properties.
+ * For example, unstripped coords may look like: `[2,7,enpassant:true]`
+ * @param {number[]} coords - The coordinates
+ * @returns {number[]} The stripped coordinates: `[2,7]`
+ */
+function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]]; }
+
 // Type export DO NOT USE
 export { Move };
 
@@ -339,4 +330,5 @@ export default {
 	getWhosTurnAtMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
 	getMoveOneForward,
+	stripSpecialMoveTagsFromCoords,
 };

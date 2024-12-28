@@ -10,7 +10,6 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
-
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */

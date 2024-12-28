@@ -8,6 +8,7 @@ import organizedlines from './organizedlines.js';
 import moveutil from '../util/moveutil.js';
 import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
+import boardchanges from './boardchanges.js';
 // Import End
 
 // Type Definitions...
@@ -131,14 +132,20 @@ function detectMoveRule(gamefile) {
 // Returns true if the very last move captured a royal piece.
 function wasLastMoveARoyalCapture(gamefile) {
 	const lastMove = moveutil.getLastMove(gamefile.moves);
+
 	if (!lastMove) return false;
 
-	if (!lastMove.captured) return false; // Last move not a capture
+	const capturedTypes = new Set();
 
-	const trimmedTypeCaptured = colorutil.trimColorExtensionFromType(lastMove.captured);
+	for (const pieceType of boardchanges.getCapturedPieces(lastMove)) {
+		capturedTypes.add(colorutil.trimColorExtensionFromType(pieceType));
+	}
+
+	if (!capturedTypes.size) return false; // Last move not a capture
 
 	// Does the piece type captured equal any royal piece?
-	return typeutil.royals.includes(trimmedTypeCaptured);
+	// Idk why vscode does not hve set methods
+	return !capturedTypes.isDisjointFrom(new Set(typeutil.royals));
 }
 
 /**

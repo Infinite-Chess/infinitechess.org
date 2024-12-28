@@ -13,7 +13,7 @@
 		"noUncheckedIndexedAccess": true,
 		"strict": true,
 		"noEmitOnError": true,
-		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
+		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
 	},
 	"include": [ "dist/**/*" ]
 }

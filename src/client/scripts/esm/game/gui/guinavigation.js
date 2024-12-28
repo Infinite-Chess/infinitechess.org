@@ -12,9 +12,9 @@ import transition from '../rendering/transition.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import statustext from './statustext.js';
 import stats from './stats.js';
-import movepiece from '../../chess/logic/movepiece.js';
 import selection from '../chess/selection.js';
 import frametracker from '../rendering/frametracker.js';
+import movesequence from '../chess/movesequence.js';
 // Import End
 
 "use strict";
@@ -379,12 +379,14 @@ function testIfForwardMove() {
 
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function rewindMove() {
-	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
+	const gamefile = game.getGamefile();
+
+	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
 	if (!moveutil.isDecrementingLegal(game.getGamefile())) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
-	movepiece.rewindMove(game.getGamefile(), { removeMove: false });
+	movesequence.navigateMove(gamefile, false);
     
 	selection.unselectPiece();
 
@@ -395,13 +397,12 @@ function rewindMove() {
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
-	if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
-	if (!moveutil.isIncrementingLegal(game.getGamefile())) return stats.showMoves();
+	const gamefile = game.getGamefile();
 
-	const move = moveutil.getMoveOneForward(game.getGamefile());
+	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
+	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
 
-	// Only leave animate and updateData as true
-	movepiece.makeMove(game.getGamefile(), move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false });
+	movesequence.navigateMove(gamefile, true);
 
 	// transition.teleportToLastMove()
 

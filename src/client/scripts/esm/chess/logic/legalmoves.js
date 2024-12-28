@@ -311,7 +311,8 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.attackers);
 
 	const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateData: false, updateProperties: false, simulated: true });
+	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (m) => movepiece.applyMove(gamefile, m, true));
+	movepiece.updateTurn(gamefile);
 
 	// Make sure a piece exists on the start coords
 	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveCopy.startCoords); // { type, index, coords }
@@ -362,11 +363,10 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// Only do so if the win condition is decisive (exclude win conditions declared by the server,
 	// such as time, aborted, resignation, disconnect)
 	if (claimedGameConclusion === false || winconutil.isGameConclusionDecisive(claimedGameConclusion)) {
-		const color = colorutil.getPieceColorFromType(piecemoved.type);
-		const infoAboutSimulatedMove = movepiece.simulateMove(gamefile, moveCopy, color, { doGameOverChecks: true }); // { isCheck, gameConclusion }
-		if (infoAboutSimulatedMove.gameConclusion !== claimedGameConclusion) {
-			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${infoAboutSimulatedMove.gameConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`);
-			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${infoAboutSimulatedMove.gameConclusion}`);
+		const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveCopy); // { isCheck, gameConclusion }
+		if (simulatedConclusion !== claimedGameConclusion) {
+			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${simulatedConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`);
+			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${simulatedConclusion}`);
 		}
 	}
 
@@ -378,13 +378,15 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// ...
 
 	// Rewind the game back to the index we were originally on before simulating
-	movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false, updateData: false });
+	movepiece.gotoMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
+	movepiece.updateTurn(gamefile);
 
 	return true; // By this point, nothing illegal!
 
 	function rewindGameAndReturnReason(reasonIllegal) {
 		// Rewind the game back to the index we were originally on
-		movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false, updateData: false });
+		movepiece.gotoMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
+		movepiece.updateTurn(gamefile);
 		return reasonIllegal;
 	}
 }
