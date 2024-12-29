@@ -17,14 +17,12 @@ import camera from './camera.js';
 import board from './board.js';
 import math from '../../util/math.js';
 import moveutil from '../../chess/util/moveutil.js';
-import { createModel, createModel_Instanced } from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import space from '../misc/space.js';
 import spritesheet from './spritesheet.js';
-import preferences from '../../components/header/preferences.js';
-import legalmoveshapes from './legalmoveshapes.js';
 // Import End
 
 /**
@@ -437,32 +435,16 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 
 	// Calculate the mesh...
 
-
-
+	// Determine what color the legal move highlights should be...
 	const pieceColor = colorutil.getPieceColorFromType(type);
 	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
-	const usingDots = preferences.getLegalMovesShape() === 'dots';
 
-	/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
-	const vertexData_NonCapture = usingDots ? legalmoveshapes.getDataLegalMoveDot(color) : legalmoveshapes.getDataLegalMoveSquare(color);
-	/** The instance-specific data of the NON-CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
-	const instanceData_NonCapture = [];
-	/** The vertex data OF A SINGLE INSTANCE of the CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
-	const vertexData_Capture = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(color) : legalmoveshapes.getDataLegalMoveSquare(color);
-	/** The instance-specific data of the CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
-	const instanceData_Capture = [];
-
-	legalmovehighlights.concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, thisPieceLegalMoves, gamefile);
-	legalmovehighlights.concatData_HighlightedMoves_Sliding(instanceData_NonCapture, instanceData_Capture, pieceCoords, thisPieceLegalMoves, gamefile);
-	const model_NonCapture = createModel_Instanced(vertexData_NonCapture, instanceData_NonCapture, "TRIANGLES", true);
-	const model_Capture = createModel_Instanced(vertexData_Capture, instanceData_Capture, "TRIANGLES", true);
-
+	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(pieceCoords, thisPieceLegalMoves, color);
 	// Store both these objects inside piecesHoveredOver
-
-	piecesHoveredOver[key] = { legalMoves: thisPieceLegalMoves, model_NonCapture, model_Capture, color };
+	piecesHoveredOver[key] = { legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color };
 }
 
 /**
@@ -527,28 +509,16 @@ function regenModelsOfHoveredPieces() {
 	if (!Object.keys(piecesHoveredOver).length) return; // No arrows being hovered over
 
 	console.log("Updating models of hovered piece's legal moves..");
-	const usingDots = preferences.getLegalMovesShape() === 'dots';
-	const gamefile = game.getGamefile();
 
 	for (const [coordsKey, hoveredArrow] of Object.entries(piecesHoveredOver)) { // { legalMoves, model, color }
 		const coords = coordutil.getCoordsFromKey(coordsKey);
 
 		// Calculate the mesh...
+		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(coords, hoveredArrow.legalMoves, hoveredArrow.color);
 		
-		/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
-		const vertexData_NonCapture = usingDots ? legalmoveshapes.getDataLegalMoveDot(hoveredArrow.color) : legalmoveshapes.getDataLegalMoveSquare(hoveredArrow.color);
-		/** The instance-specific data of the NON-CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
-		const instanceData_NonCapture = [];
-		/** The vertex data OF A SINGLE INSTANCE of the CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
-		const vertexData_Capture = usingDots ? legalmoveshapes.getDataLegalMoveCornerTris(hoveredArrow.color) : legalmoveshapes.getDataLegalMoveSquare(hoveredArrow.color);
-		/** The instance-specific data of the CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
-		const instanceData_Capture = [];
-		
-		legalmovehighlights.concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, hoveredArrow.legalMoves, gamefile);
-		legalmovehighlights.concatData_HighlightedMoves_Sliding(instanceData_NonCapture, instanceData_Capture, coords, hoveredArrow.legalMoves, gamefile);
 		// Overwrite the model inside piecesHoveredOver
-		hoveredArrow.model_NonCapture = createModel_Instanced(vertexData_NonCapture, instanceData_NonCapture, "TRIANGLES", true);
-		hoveredArrow.model_Capture = createModel_Instanced(vertexData_Capture, instanceData_Capture, "TRIANGLES", true);
+		hoveredArrow.model_NonCapture = NonCaptureModel;
+		hoveredArrow.model_Capture = CaptureModel;
 	}
 }
 

@@ -50,6 +50,8 @@ import game from '../../chess/game.js';
 
 // TO DO: MOVE TO coordutil.ts ONCE THAT'S CONVERTED TO TS
 type Coords = [number,number];
+// TO DO: MOVE TO colorutil.ts ONCE THAT'S CONVERTED TO TS
+type Color = [number,number,number,number];
 
 
 // Variables -----------------------------------------------------------------------------
@@ -144,7 +146,7 @@ function isPieceSelected() {
 function onPieceSelected(piece: Piece, legalMoves: LegalMoves) {
 	pieceSelected = piece;
 	selectedPieceLegalMoves = legalMoves;
-	regenSelectedPieceHighlightsModel();
+	regenSelectedPieceLegalMovesHighlightsModel();
 }
 
 function onPieceUnselected() {
@@ -311,20 +313,38 @@ function getDimensionsOfPerspectiveViewRange(): Coords {
  * and the models of pieces legal moves of which we're currently hovering over their arrow.
  */
 function regenerateAll() {
-	regenSelectedPieceHighlightsModel();
+	regenSelectedPieceLegalMovesHighlightsModel();
 	arrows.regenModelsOfHoveredPieces();
 
 	frametracker.onVisualChange();
 }
 
-// Regenerates the model for all highlighted squares. Expensive, minimize calling this.
-function regenSelectedPieceHighlightsModel() {
+// Regenerates the model for all highlighted legal moves.
+function regenSelectedPieceLegalMovesHighlightsModel() {
 	if (!isPieceSelected()) return;
 	// console.log("Regenerating legal moves model..");
 
-	const coords = pieceSelected!.coords;
+	// The model of the selected piece's legal moves
 	const color = options.getLegalMoveHighlightColor(); // [r,g,b,a]
-	console.log(color);
+	const { NonCaptureModel, CaptureModel } = generateModelsForPiecesLegalMoveHighlights(pieceSelected!.coords, selectedPieceLegalMoves!, color);
+	model_NonCapture = NonCaptureModel;
+	model_Capture = CaptureModel;
+	
+	// The selected piece highlight model
+	const coords = pieceSelected!.coords;
+	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
+	const dataSelectedPieceHighlight = shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
+	model_SelectedPiece = createModel(dataSelectedPieceHighlight, 2, "TRIANGLES", true);
+}
+
+/**
+ * Generates the renderable instanced rendering buffer models for the
+ * legal move highlights of the given piece's legal moves.
+ * @param coords - The coordinates of the piece with the provided legal moves
+ * @param legalMoves - The legal moves of which to generate the highlights models for.
+ * @param color - The color to use, which may vary depending on if the highlights are for your piece, opponent's, or a premove.
+ */
+function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: LegalMoves, color: Color): { NonCaptureModel: BufferModelInstanced, CaptureModel: BufferModelInstanced } {
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 
 	/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
@@ -339,20 +359,16 @@ function regenSelectedPieceHighlightsModel() {
 	const gamefile = game.getGamefile();
 
 	// Data of short range moves within 3 tiles
-	concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, selectedPieceLegalMoves!, gamefile);
+	concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, legalMoves!, gamefile);
 	// Potentially infinite data on sliding moves...
-	concatData_HighlightedMoves_Sliding(instanceData_NonCapture, instanceData_Capture, coords, selectedPieceLegalMoves!, gamefile);
-	
-	// The selected piece highlight model
-	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
-	const dataSelectedPieceHighlight = shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
-	model_SelectedPiece = createModel(dataSelectedPieceHighlight, 2, "TRIANGLES", true);
+	concatData_HighlightedMoves_Sliding(instanceData_NonCapture, instanceData_Capture, coords, legalMoves!, gamefile);
 
-	// The NON-CAPTURING legal move highlights model
-	model_NonCapture = createModel_Instanced(vertexData_NonCapture, instanceData_NonCapture, "TRIANGLES", true);
-
-	// The CAPTURING legal move highlights model
-	model_Capture = createModel_Instanced(vertexData_Capture, instanceData_Capture, "TRIANGLES", true);
+	return {
+		// The NON-CAPTURING legal move highlights model
+		NonCaptureModel: createModel_Instanced(vertexData_NonCapture, instanceData_NonCapture, "TRIANGLES", true),
+		// The CAPTURING legal move highlights model
+		CaptureModel: createModel_Instanced(vertexData_Capture, instanceData_Capture, "TRIANGLES", true),
+	};
 }
 
 /**
@@ -545,6 +561,5 @@ export default {
 	getOffset,
 	onPieceSelected,
 	onPieceUnselected,
-	concatData_HighlightedMoves_Individual,
-	concatData_HighlightedMoves_Sliding
+	generateModelsForPiecesLegalMoveHighlights,
 };
