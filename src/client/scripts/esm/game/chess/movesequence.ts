@@ -127,7 +127,7 @@ function viewFront(gamefile: gamefile) {
  * @param forward 
  */
 function viewMove(gamefile: gamefile, move: Move, forward = true) {
-	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
+	movepiece.applyMove(gamefile, move, forward);
 	boardchanges.runMove(gamefile, move, meshChanges, forward);
 	state.applyMove(gamefile, move, forward);
 }

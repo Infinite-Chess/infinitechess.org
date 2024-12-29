@@ -36,6 +36,7 @@ import jsutil from '../../util/jsutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import sound from '../misc/sound.js';
 import spritesheet from '../rendering/spritesheet.js';
+import movepiece from '../../chess/logic/movepiece.js';
 import movesequence from './movesequence.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import frametracker from '../rendering/frametracker.js';
@@ -226,13 +227,17 @@ async function loadGamefile(newGamefile) {
 	}
 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
-	// A small delay to animate the very last move, so the loading screen
-	// spinny pawn animation has time to fade away.
-	animateLastMoveTimeoutID = setTimeout(() => {
-		const move = gamefile.moves[gamefile.moveIndex];
-		if (move !== undefined) movesequence.animateMove(move, true);
-	}, delayOfLatestMoveAnimationOnRejoinMillis);
+	const lastmove = gamefile.moves[gamefile.moveIndex];
+	if (lastmove !== undefined) {
+		movepiece.applyMove(gamefile, lastmove, false);
 
+		// A small delay to animate the very last move, so the loading screen
+		// spinny pawn animation has time to fade away.
+		animateLastMoveTimeoutID = setTimeout(() => {
+			movesequence.viewMove(gamefile, lastmove, true);
+			movesequence.animateMove(lastmove, true);
+		}, delayOfLatestMoveAnimationOnRejoinMillis);
+	}
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
 		miniimage.disable();
