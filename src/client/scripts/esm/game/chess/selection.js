@@ -353,9 +353,10 @@ function moveGamefilePiece(coords) {
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move);
 	const compact = formatconverter.LongToShort_CompactMove(move);
 	move.compact = compact;
+	const animateSelectedPiece = !draggingPiece;
 
 	movesequence.makeMove(game.getGamefile(), move);
-	movesequence.animateMove(move, true, !draggingPiece);
+	movesequence.animateMove(move, true, animateSelectedPiece);
 	onlinegame.sendMove();
 
 	unselectPiece();
