@@ -9,7 +9,7 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import game from './game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import guipromotion from '../gui/guipromotion.js';
-import highlights from '../rendering/highlights.js';
+import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
@@ -302,7 +302,7 @@ function selectPiece(type, index, coords) {
     /* Local Game */ : pieceColor !== game.getGamefile().whosTurn;
 	isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 
-	highlights.regenModel(); // Generate the buffer model for the blue legal move fields.
+	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
 
 /**
@@ -341,6 +341,7 @@ function unselectPiece() {
 	guipromotion.close(); // Close the promotion UI
 	if (draggingPiece) cancelDragging();
 	frametracker.onVisualChange();
+	legalmovehighlights.onPieceUnselected();
 }
 
 /**

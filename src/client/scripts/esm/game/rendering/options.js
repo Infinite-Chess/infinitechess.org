@@ -2,7 +2,6 @@
 // Import Start
 import input from '../input.js';
 import onlinegame from '../misc/onlinegame.js';
-import highlights from './highlights.js';
 import stats from '../gui/stats.js';
 import perspective from './perspective.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -41,15 +40,19 @@ let em = false; // editMode, allows moving pieces anywhere else on the board!
 
 let fps = false;
 
-function initTheme() {
-	const selectedThemeName = preferences.getTheme();
-	setTheme(selectedThemeName);
 
+
+(function() {
 	document.addEventListener('theme-change', function(event) { // Custom Event listener.   detail: themeName
 		const selectedTheme = event.detail;
 		console.log(`Theme change event detected: ${selectedTheme}`);
 		setTheme(selectedTheme);
 	});
+})();
+
+function initTheme() {
+	const selectedThemeName = preferences.getTheme();
+	setTheme(selectedThemeName);
 }
 
 function isDebugModeOn() {
@@ -160,7 +163,6 @@ function setTheme(newTheme) {
 
 	board.updateTheme();
 	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
-	highlights.regenModel();
 }
 
 /**

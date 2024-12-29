@@ -5,6 +5,11 @@ import board from "./board.js";
 import shapes from "./shapes.js";
 
 
+
+type Coords = [number,number];
+
+
+
 // Variables ------------------------------------------------------------------------------
 
 
@@ -63,7 +68,7 @@ function getDataLegalMoveDot(color: [number,number,number,number]): number[] {
 	a += DOTS.OPACITY_OFFSET; // Add the offset
 	a = Math.min(a, 1); // Cap it
 
-	const coords = [0,0]; // The instance is going to be at [0,0]
+	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
 	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
 	const x = coords[0] + (1 - board.gsquareCenter()) - 0.5;
 	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
@@ -84,7 +89,7 @@ function getDataLegalMoveCornerTris(color: [number,number,number,number]): numbe
 	a += opacityOffset; // Add the offset
 	a = Math.min(a, 1); // Cap it
 
-	const coords = [0,0]; // The instance is going to be at [0,0]
+	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
 	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
 	const x = coords[0] + (1 - board.gsquareCenter()) - 0.5;
 	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
@@ -118,10 +123,10 @@ function getDataCornerTriangles(centerX: number, centerY: number, triWidth: numb
 	}
 
 	// Calculate the corner positions
-	const topLeft = [centerX - pointFive, centerY + pointFive];
-	const topRight = [centerX + pointFive, centerY + pointFive];
-	const bottomLeft = [centerX - pointFive, centerY - pointFive];
-	const bottomRight = [centerX + pointFive, centerY - pointFive];
+	const topLeft: Coords = [centerX - pointFive, centerY + pointFive];
+	const topRight: Coords = [centerX + pointFive, centerY + pointFive];
+	const bottomLeft: Coords = [centerX - pointFive, centerY - pointFive];
+	const bottomRight: Coords = [centerX + pointFive, centerY - pointFive];
 
 	// Offset triangles into each corner
 	const cornerOffset = triWidth / 2;

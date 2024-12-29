@@ -50,7 +50,7 @@ function detectCheckmateOrDraw(gamefile) {
 	// So is this draw or checkmate? Depends on whether the current state is check!
 	// Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
 	const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'checkmate');
-	if (gamefile.inCheck && usingCheckmate) {
+	if (gamefileutility.isCurrentViewedPositionInCheck(gamefile) && usingCheckmate) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
 		return `${colorThatWon} checkmate`;
 	} else return 'draw stalemate';
@@ -159,7 +159,7 @@ function detectCheckmateOrDraw(gamefile) {
 //     // So is this draw or checkmate? Depends on whether the current state is check!
 //     // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
 //     const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'checkmate')
-//     if (gamefile.inCheck && usingCheckmate) {
+//     if (gamefileutility.isCurrentViewedPositionInCheck && usingCheckmate) {
 
 //         if (whosTurn === 'white') return 'black checkmate' // Black wins
 //         else                      return 'white checkmate' // White wins

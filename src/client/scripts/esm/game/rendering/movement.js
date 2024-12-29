@@ -56,8 +56,13 @@ let scale_When1TileIs1Pixel_Virtual; // Scale limit where each tile takes up exa
 let scaleIsLess1Pixel_Physical = false;
 let scaleIsLess1Pixel_Virtual = false; // Set to true when we're so zoomed out, 1 cell is smaller than 1 pixel!! Everything renders differently!
 
-// Returns a copy of the boardPos in memory, otherwise the memory location
-// could be used to modify the original.
+// 
+
+/**
+ * Returns a copy of the boardPos in memory, otherwise the memory location
+ * could be used to modify the original.
+ * @returns {[number,number]}
+ */
 function getBoardPos() {
 	return coordutil.copyCoords(boardPos);
 }

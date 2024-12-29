@@ -41,9 +41,6 @@ const mouseSensitivityMultiplier = 0.13; // 0.13 Default   This is Multiplied by
 // How far to render the board into the distance
 const distToRenderBoard = 1500; // Default 1500. When changing this, also change  camera.getZFar()
 
-// If in perspective, our box to render highlights gets out of range of this distance, they are regenerated.
-const viewRange = 1000;
-
 // Crosshair
 const crosshairThickness = 2.5; // Default: 2.5
 const crosshairWidth = 18; // Default: 16.7
@@ -277,7 +274,6 @@ export default {
 	getRotX,
 	getRotZ,
 	distToRenderBoard,
-	viewRange,
 	getIsViewingBlackPerspective,
 	toggle,
 	disable,

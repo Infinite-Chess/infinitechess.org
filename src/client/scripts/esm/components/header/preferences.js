@@ -120,6 +120,7 @@ function getTheme() {
 }
 function setTheme(theme) {
 	preferences.theme = theme;
+	console.log('Set theme')
 	onChangeMade();
 	savePreferences();
 }

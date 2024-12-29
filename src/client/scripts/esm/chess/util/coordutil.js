@@ -27,7 +27,7 @@ function getKeyFromCoords(coords) {
 /**
  * Returns a length-2 array of the provided coordinates
  * @param {string} key - 'x,y'
- * @return {number[]} The coordinates of the piece, [x,y]
+ * @return {[number,number]} The coordinates of the piece, [x,y]
  */
 function getCoordsFromKey(key) {
 	return key.split(',').map(Number);
@@ -64,7 +64,7 @@ function addCoordinates(coord1, coord2) {
  *
  * @param {number[]} minuendCoord - The first coordinate pair [x1, y1] to start with.
  * @param {number[]} subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
- * @returns {number[]} The resulting coordinate pair after subtracting [x1 - x2, y1 - y2].
+ * @returns {[number,number]} The resulting coordinate pair after subtracting [x1 - x2, y1 - y2].
  */
 function subtractCoordinates(minuendCoord, subtrahendCoord) {
 	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];

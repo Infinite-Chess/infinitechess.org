@@ -156,6 +156,41 @@ function getDataCircle(x, y, radius, r, g, b, a, resolution) { // res is resolut
 	return data;
 }
 
+/**
+ * A circle, solid color.
+ * Resolution is the number of points around on the edge.
+ * REQUIRES TRIANGLES mode to render.
+ * @returns {number[]}
+ */
+function getDataCircle_TRIANGLES(x, y, radius, resolution, [r,g,b,a]) {
+	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a circle.");
+
+	const data = [];
+
+	for (let i = 0; i < resolution; i++) {
+		const theta = (i / resolution) * 2 * Math.PI;
+		const nextTheta = ((i + 1) / resolution) * 2 * Math.PI;
+
+		const centerX = x;
+		const centerY = y;
+
+		const thisX = x + radius * Math.cos(theta);
+		const thisY = y + radius * Math.sin(theta);
+
+		const nextX = x + radius * Math.cos(nextTheta);
+		const nextY = y + radius * Math.sin(nextTheta);
+
+		// Center point
+		data.push(centerX, centerY, r, g, b, a);
+
+		// Points around the circle
+		data.push(thisX, thisY, r, g, b, a);
+		data.push(nextX, nextY, r, g, b, a);
+	}
+
+	return data;
+}
+
 
 
 // Other odd shapes...
@@ -192,38 +227,6 @@ function getDataBoxTunnel(left, bottom, startZ, right, top, endZ, r, g, b, a) {
         left, top, endZ,         r, g, b,  a,
         left, bottom, endZ,       r, g, b,  a
     ];
-}
-
-// A circle, solid color.
-// Resolution is the number of points around on the edge.
-// REQUIRES TRIANGLES mode to render.
-function getDataCircle3D(x, y, z, radius, resolution, [r,g,b,a]) {
-	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a circle.");
-
-	const data = [];
-
-	for (let i = 0; i < resolution; i++) {
-		const theta = (i / resolution) * 2 * Math.PI;
-		const nextTheta = ((i + 1) / resolution) * 2 * Math.PI;
-
-		const centerX = x;
-		const centerY = y;
-
-		const thisX = x + radius * Math.cos(theta);
-		const thisY = y + radius * Math.sin(theta);
-
-		const nextX = x + radius * Math.cos(nextTheta);
-		const nextY = y + radius * Math.sin(nextTheta);
-
-		// Center point
-		data.push(centerX, centerY, z, r, g, b, a);
-
-		// Points around the circle
-		data.push(thisX, thisY, z, r, g, b, a);
-		data.push(nextX, nextY, z, r, g, b, a);
-	}
-
-	return data;
 }
 
 
@@ -281,10 +284,20 @@ function getDataRingSolid(x, y, inRad, outRad, resolution, [r,g,b,a]) {
 	return data;
 }
 
-// A ring with color points for the inner and outer edges.
-// Resolution is the number of points around the ring.
-// REQUIRES TRIANGLES mode to render.
-function getDataRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
+/**
+ * A ring with color points for the inner and outer edges.
+ * Resolution is the number of points around the ring.
+ * REQUIRES TRIANGLES mode to render.
+ * @param {*} x 
+ * @param {*} y 
+ * @param {*} inRad 
+ * @param {*} outRad 
+ * @param {*} resolution 
+ * @param {*} param5 
+ * @param {number[]} param6 
+ * @returns {number[]}
+ */
+function getDataRing(x, y, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
 	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a ring.");
 
 	const data = [];
@@ -305,13 +318,13 @@ function getDataRing3D(x, y, z, inRad, outRad, resolution, [r1,g1,b1,a1], [r2,g2
 
 		// Add triangles for the current and next segments
 		data.push(
-			innerX, innerY, z, r1, g1, b1, a1,
-			outerX, outerY, z, r2, g2, b2, a2,
-			innerXNext, innerYNext, z, r1, g1, b1, a1,
+			innerX, innerY, r1, g1, b1, a1,
+			outerX, outerY, r2, g2, b2, a2,
+			innerXNext, innerYNext, r1, g1, b1, a1,
 
-			outerX, outerY, z, r2, g2, b2, a2,
-			outerXNext, outerYNext, z, r2, g2, b2, a2,
-			innerXNext, innerYNext, z, r1, g1, b1, a1
+			outerX, outerY, r2, g2, b2, a2,
+			outerXNext, outerYNext, r2, g2, b2, a2,
+			innerXNext, innerYNext, r1, g1, b1, a1
 		);
 	}
 
@@ -398,10 +411,10 @@ export default {
 	getDataRect,
 	getDataCircle,
 	getDataBoxTunnel,
-	getDataCircle3D,
+	getDataCircle_TRIANGLES,
 	getDataFuzzBall3D,
 	getDataRingSolid,
-	getDataRing3D,
+	getDataRing,
 	rotateDataTexture,
 	rotateDataColorTexture,
 };

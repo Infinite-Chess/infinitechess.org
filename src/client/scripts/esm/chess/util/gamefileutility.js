@@ -403,6 +403,25 @@ function isGameOver(gamefile) {
 }
 
 /**
+ * Returns true if the currently-viewed position of the game file is in check
+ * @param {gamefile} gamefile 
+ * @returns {boolean}
+ */
+function isCurrentViewedPositionInCheck(gamefile) {
+	return gamefile.inCheck !== false;
+}
+
+/**
+ * Returns a list of coordinates of all royals
+ * in check in the currently-viewed position.
+ * @param {gamefile} gamefile 
+ * @returns {[number,number][]}
+ */
+function getCheckCoordsOfCurrentViewedPosition(gamefile) {
+	return gamefile.inCheck || []; // Return an empty array if we're not in check.
+}
+
+/**
  * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
  * @param {gamefile} gamefile - The gamefile
  */
@@ -466,6 +485,8 @@ export default {
 	calcPieceIndexInAllPieces,
 	isPieceOnCoords,
 	isGameOver,
+	isCurrentViewedPositionInCheck,
+	getCheckCoordsOfCurrentViewedPosition,
 	setTerminationMetadata,
 	isOpponentUsingWinCondition,
 	doGameOverChecks,

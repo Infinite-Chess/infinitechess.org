@@ -105,14 +105,13 @@ function getDataQuad_Color3D_FromCoord(coords, z, color) {
 	return bufferdata.getDataQuad_Color3D(boundingBox, z, color);
 }
 
+/**
+ * Calculates the exact vertex data a square can be rendered at a given coordinate,
+ * WITHOUT REQUIRING a positional or scale transformation when rendering!
+ */
 function getTransformedDataQuad_Color_FromCoord(coords, color) {
 	const boundingBox = getTransformedBoundingBoxOfSquare(coords);
 	return bufferdata.getDataQuad_Color(boundingBox, color);
-}
-
-function getTransformedDataQuad_Color3D_FromCoord(coords, z, color) {
-	const boundingBox = getTransformedBoundingBoxOfSquare(coords);
-	return bufferdata.getDataQuad_Color3D(boundingBox, z, color);
 }
 
 
@@ -305,7 +304,6 @@ export default {
 	getDataQuad_Color_FromCoord,
 	getDataQuad_Color3D_FromCoord,
 	getTransformedDataQuad_Color_FromCoord,
-	getTransformedDataQuad_Color3D_FromCoord,
 	expandTileBoundingBoxToEncompassWholeSquare,
 	applyWorldTransformationsToBoundingBox,
 	getModelCircle3D,

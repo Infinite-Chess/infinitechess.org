@@ -51,7 +51,7 @@ const pixelDensity = window.devicePixelRatio;
 let PIXEL_HEIGHT_OF_TOP_NAV = undefined; // In virtual pixels
 let PIXEL_HEIGHT_OF_BOTTOM_NAV = undefined; // In virtual pixels.
 
-/** The canvas document element that WebGL renders the game onto. */
+/** The canvas document element that WebGL renders the game onto. @type {HTMLCanvasElement} */
 const canvas = document.getElementById('game');
 let canvasWidthVirtualPixels;
 let canvasHeightVirtualPixels;

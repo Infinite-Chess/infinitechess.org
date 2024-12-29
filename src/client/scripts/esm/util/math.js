@@ -76,8 +76,13 @@ function getXYComponents_FromAngle(theta) { // x & y will be between -1 & 1
 	return [Math.cos(theta), Math.sin(theta)]; // When hypotenuse is 1.0
 }
 
-// Whenever you move 10,000 tiles away, the piece rendering starts to get gittery, so we generate it with an offset.
-// This function calculates that offset by rounding our coords to the nearest 10,000 by default.  returns [x,y]
+/**
+ * Whenever you move 10,000 tiles away, the piece rendering starts to get gittery, so we generate it with an offset.
+ * This function calculates that offset by rounding our coords to the nearest 10,000 by default.  returns [x,y]
+ * @param {[number,number]} point 
+ * @param {number} gridSize 
+ * @returns {[number,number]}
+ */
 function roundPointToNearestGridpoint(point, gridSize) { // point: [x,y]  gridSize is width of cells, typically 10,000
 	const nearestX = Math.round(point[0] / gridSize) * gridSize;
 	const nearestY = Math.round(point[1] / gridSize) * gridSize;
@@ -304,7 +309,7 @@ function getCornerOfBoundingBox(boundingBox, corner) {
  * @param {number} c - The c value of the line
  * @param {BoundingBox} boundingBox - The box
  * @param {string} corner - What side/corner the line intersects, in english language. "left"/"topright"...
- * @returns {number[] | undefined} - The tile the line intersects, on the specified side, of the provided box, if it does intersect, otherwise undefined.
+ * @returns {[number,number] | undefined} - The tile the line intersects, on the specified side, of the provided box, if it does intersect, otherwise undefined.
  */
 function getLineIntersectionEntryTile(dx, dy, c, boundingBox, corner) {
 	const { left, right, top, bottom } = boundingBox;

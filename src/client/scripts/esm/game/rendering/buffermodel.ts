@@ -185,7 +185,7 @@ function createModel_GivenAttribInfo(
 	mode: 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES',
 	texture?: WebGLTexture
 ): BufferModel {
-	if (!validRenderModes.includes(mode)) throw new Error(`Mode "${mode}" is not an accepted value!`);
+	if (!validRenderModes.includes(mode)) throw new Error(`Primitive mode "${mode}" is not an accepted value!`);
 	const stride = getStrideFromAttributeInfo(attribInfo);
 	if (data.length % stride !== 0) throw new Error("Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.");
 
@@ -222,7 +222,7 @@ function createModel_Instanced_GivenAttribInfo(
 	mode: 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES',
 	texture?: WebGLTexture
 ): BufferModelInstanced {
-	if (!validRenderModes.includes(mode)) throw new Error(`Mode "${mode}" is not an accepted value!`);
+	if (!validRenderModes.includes(mode)) throw new Error(`Primitive mode "${mode}" is not an accepted value!`);
 	const vertexDataStride = getStrideFromAttributeInfo(vertexDataAttribInfo);
 	const instanceDataStride = getStrideFromAttributeInfo(instanceDataAttribInfo);
 	if (vertexData.length % vertexDataStride !== 0) throw new Error("Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");

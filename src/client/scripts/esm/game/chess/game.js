@@ -24,11 +24,11 @@ import animation from '../rendering/animation.js';
 import webgl from '../rendering/webgl.js';
 import { gl } from '../rendering/webgl.js';
 import perspective from '../rendering/perspective.js';
-import highlightline from '../rendering/highlightline.js';
+import highlightline from '../rendering/highlights/highlightline.js';
 import transition from '../rendering/transition.js';
 import options from '../rendering/options.js';
 import copypastegame from './copypastegame.js';
-import highlights from '../rendering/highlights.js';
+import highlights from '../rendering/highlights/highlights.js';
 import promotionlines from '../rendering/promotionlines.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import loadbalancer from '../misc/loadbalancer.js';
@@ -185,17 +185,30 @@ function renderEverythingInGame() {
 
 	input.renderMouse();
 
+	/**
+	 * What is the order or rendering?
+	 * 
+	 * Board tiles
+	 * Highlights
+	 * Pieces
+	 * Arrows
+	 * Crosshair
+	 */
+
+	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
-		highlights.render(); // Needs to be before and underneath the pieces
-		highlightline.render();
+		highlights.render(gamefile);
+		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
+		dragAnimation.renderTransparentSquare(); // Required to hide the piece currently being animated
 	});
     
-	animation.renderTransparentSquares(); // Required to hide the piece currently being animated
-	dragAnimation.renderTransparentSquare(); // Required to hide the piece currently being animated
+	// The rendering of the pieces needs to use the normal depth function, because the
+	// rendering of currently-animated pieces needs to be blocked by animations.
 	pieces.renderPiecesInGame(gamefile);
-	animation.renderPieces();
 	
+	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
+		animation.renderPieces();
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		dragAnimation.renderPiece();
