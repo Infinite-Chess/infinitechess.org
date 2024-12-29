@@ -416,7 +416,7 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
 		// Tell WebGL how to pull out the values from the vertex data and into the attribute in the shader code...
 		gl.vertexAttribPointer(shader.attribLocations[attrib.name], attrib.numComponents, gl.FLOAT, false, stride_bytes, currentOffsetBytes);
 		gl.enableVertexAttribArray(shader.attribLocations[attrib.name]); // Enable the attribute for use
-		// Reset divisor to 0 for non-instanced rendering.
+		// Be sure to set this every time, even if it's to 0!
 		// If another shader set the same attribute index to be
 		// used for instanced rendering, it would otherwise never be reset!
 		gl.vertexAttribDivisor(shader.attribLocations[attrib.name], vertexAttribDivisor); // 0 = attrib updated once per vertex   1 = updated once per instance
@@ -453,7 +453,7 @@ function setUniforms(shader: ShaderProgram, position: [number,number,number], sc
 		// Then in the shader we will do:
 		// transformMatrix * positionVec4
 	
-		// The positional and scale transformation matrix of the mesh we're rendering
+		// The positional and scale transformation matrix of the single object we're rendering
 		const worldMatrix = genWorldMatrix(position, scale);
 	
 		// Multiply the matrices in order
@@ -461,7 +461,7 @@ function setUniforms(shader: ShaderProgram, position: [number,number,number], sc
 		mat4.multiply(transformMatrix, projMatrix, viewMatrix);  // First multiply projMatrix and viewMatrix
 		mat4.multiply(transformMatrix, transformMatrix, worldMatrix); // Then multiply the result by worldMatrix
 		
-		// Send the transformMatrix to the gpu
+		// Send the transformMatrix to the gpu (every shader has this uniform)
 		gl.uniformMatrix4fv(shader.uniformLocations['transformMatrix'], false, transformMatrix);
 	}
 
@@ -474,10 +474,11 @@ function setUniforms(shader: ShaderProgram, position: [number,number,number], sc
 		gl.uniform1i(shader.uniformLocations['uSampler'], 0);
 	}
 
+	// Custom uniforms provided in the render call, for example 'tintColor'...
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
 	for (const [name, value] of Object.entries(uniforms)) { // Send each custom uniform to the gpu
-		if (name === 'tintColor') return gl.uniform4fv(shader.uniformLocations[name], value);
-		throw new Error(`Uniform "${name}" is not a supported uniform we can set!`);
+		if (name === 'tintColor') gl.uniform4fv(shader.uniformLocations[name], value);
+		else throw Error(`Uniform "${name}" is not a supported uniform we can set!`);
 	}
 }
 
