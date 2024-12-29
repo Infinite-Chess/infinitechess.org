@@ -208,8 +208,6 @@ function makeAllMovesInGame(gamefile, moves) {
 	}
 
 	if (gamefile.inCheck && gamefile.moveIndex !== -1) moveutil.flagLastMoveAsCheck(gamefile);
-
-	gamefileutility.doGameOverChecks(gamefile); // Update the gameConclusion
 }
 
 /**

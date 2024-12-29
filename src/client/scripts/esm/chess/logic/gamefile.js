@@ -256,7 +256,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
     
 	organizedlines.initOrganizedPieceLists(this);
-	// THIS HAS TO BE AFTER gamerules.swapCheckmateForRoyalCapture() AS THIS DOES GAME-OVER CHECKS!!!
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
