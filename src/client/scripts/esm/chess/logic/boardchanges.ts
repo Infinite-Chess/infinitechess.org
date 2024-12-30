@@ -1,3 +1,10 @@
+
+/*
+ * This script both contructs the changes list of a Move, and executes them
+ * when requested, modifying the piece lists according to what moved
+ * or was captured, forward or backward.
+ */
+
 // @ts-ignore
 import organizedlines from "./organizedlines.js";
 // @ts-ignore
