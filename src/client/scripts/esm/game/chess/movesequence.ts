@@ -116,7 +116,7 @@ function rewindMove(gamefile: gamefile) {
  * @param gamefile 
  */
 function viewFront(gamefile: gamefile) {
-	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (m: Move) => viewMove(gamefile, m, true));
+	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (move: Move) => viewMove(gamefile, move, true));
 	updateGui();
 }
 
