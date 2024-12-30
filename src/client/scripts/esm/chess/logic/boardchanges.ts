@@ -1,8 +1,12 @@
 
-/*
+/**
  * This script both contructs the changes list of a Move, and executes them
  * when requested, modifying the piece lists according to what moved
  * or was captured, forward or backward.
+ * 
+ * The change functions here do NOT modify the mesh or animate anything,
+ * however, graphicalchanges.ts may rely on these changes present to
+ * know how to change the mesh, or what to animate.
  */
 
 // @ts-ignore
