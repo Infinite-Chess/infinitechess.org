@@ -90,8 +90,7 @@ function pawns(gamefile, piece, move, { updateProperties = true } = {}) {
 		// Delete original pawn
 		boardchanges.queueDeletePiece(moveChanges, {type: piece.type, coords: move.endCoords, index: piece.index});
 
-		boardchanges.queueAddPiece(moveChanges, {type: promotionTag, coords: move.endCoords, index: undefined});
-
+		boardchanges.queueAddPiece(moveChanges, {type: promotionTag, coords: move.endCoords, index: undefined });
 	}
 
 	// Special move was executed!
