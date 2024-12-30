@@ -15,12 +15,12 @@
                 ...t('index.javascript', {returnObjects: true})
             })%>;
         </script>
-        <script defer src="/scripts/esm/views/index.js"></script>
+        <script defer src="/scripts/esm/views/index.js" type="module"></script>
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
-            <div id="content">
+            <div class="content">
                 <div class="logo">
                     <picture>
                         <source srcset="/img/king_w.avif" type="image/avif" />
@@ -70,6 +70,14 @@
                     </div>
                     <h3 class="center"><%=t('index.github_title')%></h3>
                     <div class="github-container">
+                        <!-- Example contributor, appended by javascript -->
+                        <!-- <a href="https://github.com/Naviary2">
+                            <img src="https://avatars.githubusercontent.com/u/163621561?v=4">
+                            <div class="github-stats">
+                                <p class="name">Naviary2</p>
+                                <p class="contribution-count">1568 contributions</p>
+                            </div>
+                        </a> -->
                     </div>
             </div>
         </main>

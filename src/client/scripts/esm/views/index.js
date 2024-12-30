@@ -1,28 +1,51 @@
-const githubContributors = document.getElementsByClassName("github-container")[0];
 
-const res = fetch("/api/contributors");
-res.then(function(contributors) {
-	contributors.json().then(function(json) {
-		json.forEach(contributor => {
-			const link = document.createElement('a');
-			const iconImg = document.createElement('img');
-			const githubStatsContainer = document.createElement('div');
-			githubStatsContainer.className = 'github-stats';
-			const paragraph = document.createElement('p');
-			
-			const contributionText = `${translations.contribution_count[0]} ${contributor.contributionCount} ${translations.contribution_count[1]}`;
+/**
+ * Fetches GitHub contributors and appends them to the document.
+ */
+(async function fetchGitHubContributors() {
+	try {
+		const githubContributors = document.querySelector(".github-container");
+		if (!githubContributors) {
+			console.warn("GitHub contributors container not found.");
+			return;
+		}
+
+		const response = await fetch("/api/contributors");
+		if (!response.ok) {
+			throw new Error(`Failed to fetch contributors: ${response.statusText}`);
+		}
+
+		const contributors = await response.json();
+		const fragment = document.createDocumentFragment();
+
+		contributors.forEach((contributor) => {
+			const link = document.createElement("a");
 			link.href = contributor.linkUrl;
-			iconImg.src = contributor.iconUrl;
-			paragraph.innerText = `${contributor.name}\n${contributionText}`;
 
+			const iconImg = document.createElement("img");
+			iconImg.src = contributor.iconUrl;
+
+			const githubStatsContainer = document.createElement("div");
+			githubStatsContainer.className = "github-stats";
+
+			const name = document.createElement("p");
+			name.className = "name";
+			name.innerText = contributor.name;
+
+			const paragraph = document.createElement("p");
+			paragraph.className = "contribution-count";
+			paragraph.innerText = `${translations.contribution_count[0]}${contributor.contributionCount}${translations.contribution_count[1]}`;
+
+			githubStatsContainer.appendChild(name);
 			githubStatsContainer.appendChild(paragraph);
 			link.appendChild(iconImg);
 			link.appendChild(githubStatsContainer);
-			githubContributors.appendChild(link);
+			fragment.appendChild(link);
 		});
-	});
-});
-res.catch(function(reason) {
-	console.warn("COULD NOT LOAD CONTRIBUTOR LIST");
-	console.error(reason);
-});
+
+		githubContributors.appendChild(fragment);
+	} catch (error) {
+		console.error(`Error while loading contributor list: ${error}`);
+	}
+})();
+
