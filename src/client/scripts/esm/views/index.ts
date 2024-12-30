@@ -55,7 +55,6 @@ interface Contributor {
 
 		githubContributors.appendChild(fragment);
 	} catch (error) {
-		console.warn("COULD NOT LOAD CONTRIBUTOR LIST");
-		console.error(error);
+		console.error(`Error during loading of contributor list: ${error}`);
 	}
 })();
