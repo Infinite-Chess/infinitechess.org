@@ -1,3 +1,6 @@
+
+
+
 // @ts-ignore
 import animation from "../rendering/animation.js";
 // @ts-ignore
@@ -5,40 +8,18 @@ import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
 import organizedlines from "../../chess/logic/organizedlines.js";
 
+
+// Type Definitions -----------------------------------------------------------------------------------------
+
+
 // @ts-ignore
 import type { ChangeApplication, Change, genericChangeFunc } from "../../chess/logic/boardchanges.js";
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
 
-
-// The functions for animating changes, does not use/alter gamefile directly
-// eslint-disable-next-line no-unused-vars
-type animationFunc = (change: Change, clearanimations: boolean) => void
-
-const animatableChanges: ChangeApplication<animationFunc> = {
-	forward: {
-		"move": animateMove,
-		"capture": animateCapture,
-	},
-
-	backward: {
-		"move": animateReturn,
-		"capture": animateReturn,
-	}
-};
-
-function animateMove(change: Change, clearanimations: boolean) {
-	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], undefined, clearanimations);
-}
-
-function animateReturn(change: Change, clearanimations: boolean) {
-	animation.animatePiece(change['piece'].type, change['endCoords'], change['piece'].coords, undefined, clearanimations);
-}
-
-function animateCapture(change: Change, clearanimations: boolean) {
-	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], change['capturedPiece'], clearanimations);
-}
-
+/**
+ * An object mapping move changes to a function that performs the graphical mesh change for that action.
+ */
 const meshChanges: ChangeApplication<genericChangeFunc> = {
 	forward: {
 		"add": addMeshPiece,
@@ -46,7 +27,6 @@ const meshChanges: ChangeApplication<genericChangeFunc> = {
 		"move": moveMeshPiece,
 		"capture":	captureMeshPiece,
 	},
-
 	backward: {
 		"delete": addMeshPiece,
 		"add": deleteMeshPiece,
@@ -54,6 +34,32 @@ const meshChanges: ChangeApplication<genericChangeFunc> = {
 		"capture": uncaptureMeshPiece,
 	}
 };
+
+/**
+ * A generic function that animates a move change.
+ * 
+ * DOES NOT ALTER the mesh or piece lists.
+ */
+// eslint-disable-next-line no-unused-vars
+type animationFunc = (change: Change, clearanimations: boolean) => void
+
+/**
+ * An object mapping move changes to a function that starts the animation for that action.
+ */
+const animatableChanges: ChangeApplication<animationFunc> = {
+	forward: {
+		"move": animateMove,
+		"capture": animateCapture,
+	},
+	backward: {
+		"move": animateReturn,
+		"capture": animateReturn,
+	}
+};
+
+
+// Mesh Changes -----------------------------------------------------------------------------------------
+
 
 function addMeshPiece(gamefile: gamefile, change: Change) {
 	piecesmodel.overwritebufferdata(gamefile, change['piece'], change['piece'].coords, change['piece'].type);
@@ -84,6 +90,23 @@ function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 	returnMeshPiece(gamefile, change);
 	addMeshPiece(gamefile, {action: "add", piece: change['capturedPiece']});
 }
+
+
+// Animate -----------------------------------------------------------------------------------------
+
+
+function animateMove(change: Change, clearanimations: boolean) {
+	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], undefined, clearanimations);
+}
+
+function animateReturn(change: Change, clearanimations: boolean) {
+	animation.animatePiece(change['piece'].type, change['endCoords'], change['piece'].coords, undefined, clearanimations);
+}
+
+function animateCapture(change: Change, clearanimations: boolean) {
+	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], change['capturedPiece'], clearanimations);
+}
+
 
 export {
 	animatableChanges,

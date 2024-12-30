@@ -38,9 +38,10 @@ interface Change {
 }
 
 /**
- * A change func takes change data and alters the board depending on the change
+ * A generic function that takes the changes list of a move, and modifies either
+ * the piece lists to reflect that move, or modifies the mesh of the pieces,
+ * depending on the function, BUT NOT BOTH.
  */
-// I dislike eslint
 // eslint-disable-next-line no-unused-vars
 type genericChangeFunc = (gamefile: gamefile, change: any) => void;
 
@@ -62,7 +63,9 @@ interface ChangeApplication<F extends CallableFunction> {
 	backward: ActionList<F>
 }
 
-// This is the logical board change application
+/**
+ * An object mapping move changes to a function that performs the piece list changes for that action.
+ */
 const changeFuncs: ChangeApplication<genericChangeFunc> = {
 	forward: {
 		"add": addPiece,
