@@ -15,9 +15,15 @@ interface StateChange {
 
 /**
  * Contains the statechanges for the turn before and after a move is made
- * Local statechanges are always applied
- * Global statechanges are not applied when VIEWING a move
- * They are only applied when they are rewound or made.
+ * 
+ * Local statechanges are unique to the position you're viewing, and are always applied.
+ * 
+ * Global statechanges are a property of the game as a whole, not unique to the move,
+ * and are not applied when VIEWING a move.
+ * However, they are applied only when we make a new move, or rewind a simulated one.
+ * 
+ * Local state change examples: (check, attackers, enpassant, specialrights)
+ * Global state change examples: (moverule state, running check counter)
  */
 interface MoveState {
 	local: {
@@ -133,10 +139,10 @@ function applyMove(gamefile: gamefile, move: Move, forward: boolean, { globalCha
  * @param value 
  * @returns if a change is needed
  */
-function queueSetState(gamefile: gamefile, move: Move, path: string, value: any, {global = false } = {}): boolean {
+function queueSetState(gamefile: gamefile, move: Move, path: string, value: any, { global = false } = {}): boolean {
 	const curState = getPath(gamefile, path);
 	if (curState === value) return false;
-	addToState(move, path, curState, value, {global: global});
+	addToState(move, path, curState, value, { global });
 	return true;
 }
 
@@ -149,61 +155,63 @@ function queueSetState(gamefile: gamefile, move: Move, path: string, value: any,
  * @param value  
  */
 function setState(gamefile: gamefile, move: Move, path: string, value: any, { global = false } = {}) {
-	const similar = queueSetState(gamefile, move, path, value, {global: global});
+	const similar = queueSetState(gamefile, move, path, value, { global });
 	if (similar) setPath(gamefile, path, value);
 }
 
-/**
- * Merges the previous moves state and the current moves state for this turn
- * @param previous previous moves state
- * @param current current moves state
- * @returns the merged state
- */
-function mergeStates(previous: StateChange, current: StateChange, { validate = false } = {}): StateChange {
-	const newState: StateChange = {};
-	for (const key in previous) {
-		newState[key] = previous[key]!;
-	}
-	for (const key in current) {
-		if ((key in newState)) {
-			if (validate && (JSON.stringify(newState[key]!) !== JSON.stringify(current[key]!))) {
-				throw Error("Cannot merge states: states do not match");
-			}
-			continue;
-		}
-		newState[key] = current[key]!;
-	}
-	return newState;
-}
+// Commented out unused methods for now
 
-/**
- * Merges two moves states and sets both to the same state
- * This can be done to save memory as they both have states for the same turn.
- * @param previous 
- * @param current 
- */
-function mergeMoveStates(previous: Move, current: Move) {
-	previous.state.local.future = current.state.local.current = mergeStates(previous.state.local.future, current.state.local.current);
-	previous.state.global.future = current.state.global.current = mergeStates(previous.state.global.future, current.state.global.current);
-}
+// /**
+//  * Merges the previous moves state and the current moves state for this turn
+//  * @param previous previous moves state
+//  * @param current current moves state
+//  * @returns the merged state
+//  */
+// function mergeStates(previous: StateChange, current: StateChange, { validate = false } = {}): StateChange {
+// 	const newState: StateChange = {};
+// 	for (const key in previous) {
+// 		newState[key] = previous[key]!;
+// 	}
+// 	for (const key in current) {
+// 		if ((key in newState)) {
+// 			if (validate && (JSON.stringify(newState[key]!) !== JSON.stringify(current[key]!))) {
+// 				throw Error("Cannot merge states: states do not match");
+// 			}
+// 			continue;
+// 		}
+// 		newState[key] = current[key]!;
+// 	}
+// 	return newState;
+// }
 
-function unmergeState(current: StateChange, future: StateChange, forwardLink: boolean = true): StateChange {
-	const ref = forwardLink ? current : future;
-	const mergedState = forwardLink ? future : current;
-	const newState: StateChange = {};
-	for (const path in ref) {
-		if (!(path in mergedState)) continue;
-		if (JSON.stringify(ref[path]) === JSON.stringify(mergedState[path])) continue;
-		newState[path] = mergedState[path];
-	}
-	return newState;
-}
+// /**
+//  * Merges two moves states and sets both to the same state
+//  * This can be done to save memory as they both have states for the same turn.
+//  * @param previous 
+//  * @param current 
+//  */
+// function mergeMoveStates(previous: Move, current: Move) {
+// 	previous.state.local.future = current.state.local.current = mergeStates(previous.state.local.future, current.state.local.current);
+// 	previous.state.global.future = current.state.global.current = mergeStates(previous.state.global.future, current.state.global.current);
+// }
 
-function unmergeMoveStates(move: Move, forwardLink: boolean = true) {
-	const mergedState = forwardLink ? "future" : "current";
-	move.state.global[mergedState] = unmergeState(move.state.global.future, move.state.global.current, forwardLink);
-	move.state.local[mergedState] = unmergeState(move.state.local.future, move.state.local.current, forwardLink);
-}
+// function unmergeState(current: StateChange, future: StateChange, forwardLink: boolean = true): StateChange {
+// 	const ref = forwardLink ? current : future;
+// 	const mergedState = forwardLink ? future : current;
+// 	const newState: StateChange = {};
+// 	for (const path in ref) {
+// 		if (!(path in mergedState)) continue;
+// 		if (JSON.stringify(ref[path]) === JSON.stringify(mergedState[path])) continue;
+// 		newState[path] = mergedState[path];
+// 	}
+// 	return newState;
+// }
+
+// function unmergeMoveStates(move: Move, forwardLink: boolean = true) {
+// 	const mergedState = forwardLink ? "future" : "current";
+// 	move.state.global[mergedState] = unmergeState(move.state.global.future, move.state.global.current, forwardLink);
+// 	move.state.local[mergedState] = unmergeState(move.state.local.future, move.state.local.current, forwardLink);
+// }
 
 export type { MoveState };
 

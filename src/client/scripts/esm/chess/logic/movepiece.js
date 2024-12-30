@@ -311,7 +311,7 @@ function rewindMove(gamefile) {
 	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
 
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, false);
-	state.applyMove(gamefile, move, false, {globalChange: true});
+	state.applyMove(gamefile, move, false, { globalChange: true });
 
 	// Finally, delete the move off the top of our moves [] array list
 	moveutil.deleteLastMove(gamefile.moves);

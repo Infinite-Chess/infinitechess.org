@@ -121,10 +121,13 @@ function viewFront(gamefile: gamefile) {
 }
 
 /**
- * Apply the move to the board state and the mesh
- * @param gamefile 
- * @param move 
- * @param forward 
+ * Apply the move to the board state and the mesh, whether forward or backward,
+ * as if we were wanting to *view* the move, instead of making it.
+ * 
+ * This does not change the game state, for example, whos turn it is,
+ * what square enpassant is legal on, or the running count of checks given.
+ * 
+ * But it does change the check state.
  */
 function viewMove(gamefile: gamefile, move: Move, forward = true) {
 	movepiece.applyMove(gamefile, move, forward);
