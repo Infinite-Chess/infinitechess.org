@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "26"
+version = "27"
 maintainer = "Naviary"
 
 [header]
@@ -54,6 +54,10 @@ about_paragraphs = [
 ["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
 ]
 patreon_title = "Patreon Supporters"
+github_title = "Github Contributors"
+
+[index.javascript]
+contribution_count = ["", " contributions"] # A number is inserted between these 2 strings.
 
 [credits]
 title = "Credits"
