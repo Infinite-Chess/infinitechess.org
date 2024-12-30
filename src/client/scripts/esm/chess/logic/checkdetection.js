@@ -35,7 +35,7 @@ import moveutil from '../util/moveutil.js';
  * Appends any attackers to the `attackers` list.
  * @param {gamefile} gamefile - The gamefile
  * @param {string} color - The side to test if their king is in check. "white" or "black"
- * @param {Array} attackers - An empty array []
+ * @param {[]} [attackers] - An empty array [], or undefined if we don't care about who is checking us, just whether we are in check or not, this can save compute.
  * @returns {boolean} true if in check
  */
 function detectCheck(gamefile, color, attackers) {
