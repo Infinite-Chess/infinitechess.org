@@ -18,7 +18,7 @@ import moveutil from '../util/moveutil.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
  * @typedef {import('../util/moveutil.js').Move} Move
  * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
- * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  */
 

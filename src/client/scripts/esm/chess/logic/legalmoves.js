@@ -21,7 +21,7 @@ import movesets from './movesets.js';
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
  * @typedef {import('../util/moveutil.js').Move} Move
- * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('./movesets.js').PieceMoveset} PieceMoveset
  * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction
 */

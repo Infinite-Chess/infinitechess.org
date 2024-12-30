@@ -16,7 +16,7 @@ import spritesheet from './spritesheet.js';
  * Type Definitions
  * @typedef {import('../../chess/util/moveutil.js').Move} Move
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- * @typedef {import('../../chess/logic/movepiece.js').Piece} Piece
+ * @typedef {import('../../chess/logic/boardchanges.js').Piece} Piece
  */
 
 "use strict";

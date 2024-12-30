@@ -31,7 +31,7 @@ import preferences from '../../components/header/preferences.js';
  * Type Definitions
  * @typedef {import('../../chess/util/moveutil.js').Move} Move
  * @typedef {import('../../chess/logic/legalmoves.js').LegalMoves} LegalMoves
- * @typedef {import('../../chess/logic/movepiece.js').Piece} Piece
+ * @typedef {import('../../chess/logic/boardchanges.js').Piece} Piece
  */
 
 "use strict";

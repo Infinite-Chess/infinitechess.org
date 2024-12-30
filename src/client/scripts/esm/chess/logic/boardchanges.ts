@@ -275,6 +275,7 @@ export type {
 	ActionList,
 	ChangeApplication,
 	Change,
+	Piece,
 };
 
 export default {

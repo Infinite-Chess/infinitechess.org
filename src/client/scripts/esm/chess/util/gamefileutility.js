@@ -24,7 +24,7 @@ import gamerules from '../variants/gamerules.js';
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
- * @typedef {import('../logic/movepiece.js').Piece} Piece
+ * @typedef {import('../logic/boardchanges.js').Piece} Piece
 */
 
 
