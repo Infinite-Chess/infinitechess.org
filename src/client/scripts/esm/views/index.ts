@@ -1,10 +1,20 @@
 
 /**
+ * Type definition for a contributor object.
+ */
+interface Contributor {
+	name: string;
+	contributionCount: number;
+	linkUrl: string;
+	iconUrl: string;
+}
+
+/**
  * Fetches GitHub contributors and appends them to the document.
  */
-(async function fetchGitHubContributors() {
+(async function fetchGitHubContributors(): Promise<void> {
 	try {
-		const githubContributors = document.querySelector(".github-container");
+		const githubContributors = document.querySelector<HTMLElement>(".github-container");
 		if (!githubContributors) {
 			console.warn("GitHub contributors container not found.");
 			return;
@@ -15,7 +25,7 @@
 			throw new Error(`Failed to fetch contributors: ${response.statusText}`);
 		}
 
-		const contributors = await response.json();
+		const contributors: Contributor[] = await response.json();
 		const fragment = document.createDocumentFragment();
 
 		contributors.forEach((contributor) => {
@@ -34,7 +44,7 @@
 
 			const paragraph = document.createElement("p");
 			paragraph.className = "contribution-count";
-			paragraph.innerText = `${translations.contribution_count[0]}${contributor.contributionCount}${translations.contribution_count[1]}`;
+			paragraph.innerText = `${translations['contribution_count']?.[0] || ""}${contributor.contributionCount}${translations['contribution_count']?.[1] || ""}`;
 
 			githubStatsContainer.appendChild(name);
 			githubStatsContainer.appendChild(paragraph);
@@ -45,7 +55,7 @@
 
 		githubContributors.appendChild(fragment);
 	} catch (error) {
-		console.error(`Error while loading contributor list: ${error}`);
+		console.warn("COULD NOT LOAD CONTRIBUTOR LIST");
+		console.error(error);
 	}
 })();
-
