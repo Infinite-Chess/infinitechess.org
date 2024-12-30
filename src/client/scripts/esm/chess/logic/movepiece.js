@@ -86,7 +86,7 @@ function makeMove(gamefile, move) {
 
 	// ALWAYS DO THIS NOW, no matter what.
 	createCheckState(gamefile, move);
-	if (gamefile.inCheck) moveutil.flagLastMoveAsCheck(gamefile);
+	if (gamefile.inCheck) move.check = true;
 }
 
 /**
@@ -206,8 +206,6 @@ function makeAllMovesInGame(gamefile, moves) {
 
 		makeMove(gamefile, move);
 	}
-
-	if (gamefile.inCheck && gamefile.moveIndex !== -1) moveutil.flagLastMoveAsCheck(gamefile);
 }
 
 /**
