@@ -42,6 +42,7 @@ import loadingscreen from '../gui/loadingscreen.js';
 import frametracker from '../rendering/frametracker.js';
 import area from '../rendering/area.js';
 import dragAnimation from '../rendering/draganimation.js';
+import state from '../../chess/logic/state.js';
 // Import End
 
 /** 
@@ -229,13 +230,16 @@ async function loadGamefile(newGamefile) {
 
 	const lastmove = gamefile.moves[gamefile.moveIndex];
 	if (lastmove !== undefined) {
+		gamefile.moveIndex--;
 		movepiece.applyMove(gamefile, lastmove, false);
+		state.applyMove(gamefile, lastmove, false);
 
 		// A small delay to animate the very last move, so the loading screen
 		// spinny pawn animation has time to fade away.
 		animateLastMoveTimeoutID = setTimeout(() => {
 			movesequence.viewMove(gamefile, lastmove, true);
 			movesequence.animateMove(lastmove, true);
+			gamefile.moveIndex++;
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 	}
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.

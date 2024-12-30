@@ -171,6 +171,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	if (piece.index === undefined) change['piece'].index = list.undefineds[0];
 
 	if (piece.index === undefined) {
+		piece.index = list.length;
 		list.push(piece.coords);
 	} else { // desiredIndex specified
 
@@ -191,7 +192,12 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
  * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
  * from the organized lists.
  */
-function deletePiece(gamefile: gamefile, change: Change) { // piece: { type, index }
+function deletePiece(gamefile: gamefile, change: Change) {
+	if (change['piece'].index === undefined) {
+		console.warn("Deleted piece does not have index supplied! Attemping to get idx from other info");
+		console.log(change);
+		change['piece'] = gamefileutility.getPieceFromTypeAndCoords(gamefile, change['piece'].type, change['piece'].coords);
+	}
 	const piece = change['piece'];
 
 	const list = gamefile.ourPieces[piece.type];
