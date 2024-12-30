@@ -143,12 +143,12 @@ function viewIndex(gamefile: gamefile, index: number) {
 }
 
 function navigateMove(gamefile: gamefile, forward: boolean): void {
+	// Determine the index of the move to apply
+	const idx = forward ? gamefile.moveIndex + 1 : gamefile.moveIndex;
+
 	// Adjust move index based on direction
 	if (forward) gamefile.moveIndex++;
 	else gamefile.moveIndex--;
-	
-	// Determine the index of the move to apply
-	const idx = forward ? gamefile.moveIndex : gamefile.moveIndex - 1;
 
 	viewMove(gamefile, gamefile.moves[idx], forward);
 	animateMove(gamefile.moves[idx], forward);
