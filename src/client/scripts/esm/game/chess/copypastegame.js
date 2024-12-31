@@ -197,7 +197,7 @@ function verifyWinConditions(winConditions) {
  * Loads a game from the provided game in longformat.
  * @param {Object} longformat - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
  */
-function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
+async function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
 	console.log(translations.copypaste.pasting_game);
 
 	/** longformat properties:
@@ -263,40 +263,22 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 		localstorage.saveItem(gameID, variantOptions);
 	}
 
-	const newGamefile = new gamefile(longformat.metadata, { moves: longformat.moves, variantOptions });
-
 	// What is the warning message if pasting in a private match?
 	const privateMatchWarning = onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : "";
 
-	// Change win condition of there's too many pieces!
-	let tooManyPieces = false;
-	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) { // TOO MANY pieces!
-		tooManyPieces = true;
-		statustext.showStatus(`${translations.copypaste.piece_count} ${newGamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
-
-		// Make win condition from checkmate to royal capture
-		const whiteHasCheckmate = newGamefile.gameRules.winConditions.white.includes('checkmate');
-		const blackHasCheckmate = newGamefile.gameRules.winConditions.black.includes('checkmate');
-		if (whiteHasCheckmate) {
-			jsutil.removeObjectFromArray(newGamefile.gameRules.winConditions.white, 'checkmate', true);
-			newGamefile.gameRules.winConditions.white.push('royalcapture');
-		}
-		if (blackHasCheckmate) {
-			jsutil.removeObjectFromArray(newGamefile.gameRules.winConditions.black, 'checkmate', true);
-			newGamefile.gameRules.winConditions.black.push('royalcapture');
-		}
-	}
-
-	// Only print "Loaded game!" if we haven't already shown a different status message cause of too many pieces
-	if (!tooManyPieces) {
-		const message = `${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`;
-		statustext.showStatus(message);
-	}
-
 	game.unloadGame();
-	game.loadGamefile(newGamefile);
+	await game.loadGamefile(longformat.metadata, { moves: longformat.moves, variantOptions });
 
-	console.log(translations.copypaste.loaded);
+	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
+	const gamefile = game.getGamefile();
+	const tooManyPieces = gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate;
+	if (tooManyPieces) { // TOO MANY pieces!
+		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
+	} else { // Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces
+		statustext.showStatus(`${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`);
+	}
+
+	console.log(translations.copypaste.loaded_from_clipboard);
 }
 
 function convertVariantFromSpokenLanguageToCode(Variant) {
