@@ -41,7 +41,7 @@ function loadPreferences() {
 
 	let cookiePrefs = docutil.getCookieValue('preferences');
 	if (cookiePrefs) {
-		console.log("Preferences cookie was present!");
+		// console.log("Preferences cookie was present!");
 		cookiePrefs = JSON.parse(decodeURIComponent(cookiePrefs));
 		// console.log(cookiePrefs);
 		clientSidePrefs.forEach(pref => { cookiePrefs[pref] = browserStoragePrefs[pref]; });
