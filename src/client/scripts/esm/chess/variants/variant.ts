@@ -453,7 +453,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
 	if (!variantEntry.movesetGenerator) {
-		console.log(`Variant "${Variant}" does not have a moveset generator. Using default movesets.`);
+		// console.log(`Variant "${Variant}" does not have a moveset generator. Using default movesets.`);
 		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
 			return getMovesets({}, getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime }).slideLimit);
 		} else { // Just one movesetGenerator entry

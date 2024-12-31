@@ -227,7 +227,7 @@ function getSVG_IDs_From_PieceType(type: string): string[] {
 		if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
 		else cachedPieceSVGs[svg.id] = svg;
 	});
-	console.log("Fetched all Classical SVGs!");
+	// console.log("Fetched all Classical SVGs!");
 })();
 
 function getCachedSVGElements(svgIDs: string[]) {
