@@ -13,8 +13,8 @@ import type { Position } from "./variant.js";
 
 'use strict';
 
-const BOARDS_X = 11;
-const BOARDS_Y = 11;
+const BOARDS_X = 8;
+const BOARDS_Y = 8;
 
 // Currently board spacings other than 10 are not supported by the position generator, but are supported
 // by the moveset generator.
