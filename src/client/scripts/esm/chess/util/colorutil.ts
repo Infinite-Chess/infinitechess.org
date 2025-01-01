@@ -6,6 +6,17 @@
  * ZERO depancies.
  */
 
+
+// Type Definitions -----------------------------------------------------------------------------
+
+
+/** A color in a length-4 array: `[r,g,b,a]` */
+type Color = [number,number,number,number];
+
+
+// Variables -----------------------------------------------------------------------------
+
+
 /** All colors that are compatible with the game, EXCLUDING 'neutral'. */
 const validColors_NoNeutral = ['white','black'];
 const colorOfNeutrals = 'neutral';
@@ -18,12 +29,14 @@ const validColors = [...validColors_NoNeutral, colorOfNeutrals];
 /** All color-extensions that are compatible with the game. */
 const validColorExtensions = [...validColorExtensions_NoNeutral, colorExtensionOfNeutrals];
 
+
+// Functions -----------------------------------------------------------------------------
+
+
 /**
- * Checks if a given color is a valid color.
- * @param {string} color - The color to check.
- * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
+ * Checks if a given player color is a valid color.
  */
-function isValidColor(color) {
+function isValidColor(color: string): boolean {
 	return validColors.includes(color);
 }
 
@@ -32,7 +45,7 @@ function isValidColor(color) {
  * @param {string} color - The color to check.
  * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
  */
-function isValidColor_NoNeutral(color) {
+function isValidColor_NoNeutral(color: string): boolean {
 	return validColors_NoNeutral.includes(color);
 }
 
@@ -41,7 +54,7 @@ function isValidColor_NoNeutral(color) {
  * @param {string} colorExtension - 'W' or 'B' or 'N'
  * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
  */
-function isValidColorExtension(colorExtension) {
+function isValidColorExtension(colorExtension: string): boolean {
 	return validColorExtensions.includes(colorExtension);
 }
 
@@ -50,7 +63,7 @@ function isValidColorExtension(colorExtension) {
  * @param {string} colorExtension - The color to check.
  * @returns {boolean} - Returns `true` if the color is valid, `false` otherwise.
  */
-function isValidColorExtension_NoNeutral(colorExtension) {
+function isValidColorExtension_NoNeutral(colorExtension: string): boolean {
 	return validColorExtensions_NoNeutral.includes(colorExtension);
 }
 
@@ -59,7 +72,7 @@ function isValidColorExtension_NoNeutral(colorExtension) {
  * @param {string} type - The type of the piece (e.g., "pawnsW")
  * @returns {string | undefined} The color of the piece, "white", "black", or "neutral", or undefined if not valid
  */
-function getPieceColorFromType(type) {
+function getPieceColorFromType(type: string): string {
 	const colorExtension = getColorExtensionFromType(type);
 	return getColorFromExtension(colorExtension);
 }
@@ -69,10 +82,10 @@ function getPieceColorFromType(type) {
  * @param {string} colorExtention - The color extension: "W" / "B" / "N"
  * @returns {string} - The color (e.g. "white"/"black"/"neutral")
  */
-function getColorFromExtension(colorExtention) {
+function getColorFromExtension(colorExtention: string): string {
 	const index = validColorExtensions.indexOf(colorExtention);
 	if (index === -1) throw new Error(`Cannot get the color of invalid color extension "${colorExtention}"!`);
-	return validColors[index];
+	return validColors[index]!;
 }
 
 /**
@@ -80,7 +93,7 @@ function getColorFromExtension(colorExtention) {
  * @param {string} color - "White" / "Black"
  * @returns {string} The opposite color, "White" / "Black"
  */
-function getOppositeColor(color) {
+function getOppositeColor(color: string): string {
 	if (color === 'white') return 'black';
 	else if (color === 'black') return 'white';
 	else throw new Error(`Cannot return the opposite color of color ${color}!`);
@@ -92,14 +105,14 @@ function getOppositeColor(color) {
  * @param {string} type - "queensW"
  * @returns {string} The color extension: "W"
  */
-function getColorExtensionFromType(type) {
+function getColorExtensionFromType(type: string): string {
 	return type.charAt(type.length - 1);
 }
 
-function getColorExtensionFromColor(color) {
+function getColorExtensionFromColor(color: string): string {
 	const index = validColors.indexOf(color);
 	if (index === -1) throw new Error(`Cannot get the extension of invalid color "${color}"!`);
-	return validColorExtensions[index];
+	return validColorExtensions[index]!;
 }
 
 /**
@@ -107,9 +120,11 @@ function getColorExtensionFromColor(color) {
  * @param {string} type - The type of piece (eg "pawnsW").
  * @returns {string} The trimmed type.
  */
-function trimColorExtensionFromType(type) {
+function trimColorExtensionFromType(type: string): string {
 	return type.slice(0, -1); // Returns a new string that starts from the first character (index 0) and excludes the last character (because of -1).
 }
+
+
 
 export default {
 	validColors,
@@ -128,4 +143,8 @@ export default {
 	getColorExtensionFromType,
 	getColorExtensionFromColor,
 	trimColorExtensionFromType,
+};
+
+export type {
+	Color
 };

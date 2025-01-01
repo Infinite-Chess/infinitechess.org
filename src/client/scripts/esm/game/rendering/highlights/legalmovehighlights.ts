@@ -47,9 +47,8 @@ import type { Piece } from '../../../chess/logic/movepiece.js';
 // @ts-ignore
 import game from '../../chess/game.js';
 import { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
+import { Color } from '../../../chess/util/colorutil.js';
 
-// TO DO: MOVE TO colorutil.ts ONCE THAT'S CONVERTED TO TS
-type Color = [number,number,number,number];
 
 
 // Variables -----------------------------------------------------------------------------
