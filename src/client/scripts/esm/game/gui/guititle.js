@@ -70,5 +70,5 @@ function callback_Guide(event) {
 export default {
 	boardVel,
 	open,
-	close
+	close,
 };

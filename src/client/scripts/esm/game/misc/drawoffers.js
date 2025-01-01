@@ -7,7 +7,7 @@ import guipause from '../gui/guipause.js';
 import sound from './sound.js';
 import moveutil from '../../chess/util/moveutil.js';
 import onlinegame from './onlinegame.js';
-import game from '../chess/game.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 'use strict';
@@ -41,7 +41,7 @@ let isAcceptingDraw = false;
  * @returns {boolean}
  */
 function isOfferingDrawLegal() {
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
 	if (!moveutil.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
 	if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
@@ -55,7 +55,7 @@ function isOfferingDrawLegal() {
  * @returns {boolean}
  */
 function isTooSoonToOfferDraw() {
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
 
 	const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
@@ -83,7 +83,7 @@ function onOpponentExtendedOffer() {
  */
 function extendOffer() {
 	websocket.sendmessage('game', 'offerdraw');
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	plyOfLastOfferedDraw = gamefile.moves.length;
 	statustext.showStatus(`Waiting for opponent to accept...`);
 	guipause.updateDrawOfferButton();

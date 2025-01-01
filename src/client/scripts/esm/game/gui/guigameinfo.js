@@ -1,10 +1,10 @@
 
 // Import Start
 import style from './style.js';
-import game from '../chess/game.js';
 import onlinegame from '../misc/onlinegame.js';
 import winconutil from '../../chess/util/winconutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /** 
@@ -30,7 +30,7 @@ const element_playerBlack = document.getElementById('playerblack');
 // Functions
 
 function open() {
-	if (game.getGamefile().gameConclusion) return;
+	if (gameslot.getGamefile().gameConclusion) return;
 	style.revealElement(element_dot);
 }
 
@@ -39,7 +39,7 @@ function hidePlayerNames() {
 	style.hideElement(element_playerBlack);
 }
 
-function revealPlayerNames(gameOptions) {
+function setAndRevealPlayerNames(gameOptions) {
 	if (gameOptions) {
 		const white = gameOptions.metadata.White;
 		const black = gameOptions.metadata.Black;
@@ -106,7 +106,7 @@ function gameEnd(conclusion) {
                                                                             : resultTranslations.you_generic;
 		else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
                                                                     : condition === 'repetition' ? resultTranslations.draw_repetition
-                                                                    : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(game.getGamefile().gameRules.moveRule / 2)}${resultTranslations.draw_moverule[1]}`
+                                                                    : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(gameslot.getGamefile().gameRules.moveRule / 2)}${resultTranslations.draw_moverule[1]}`
                                                                                                     : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
                                                                     : condition === 'agreement' ? resultTranslations.draw_agreement
                                                                     : resultTranslations.draw_generic;
@@ -145,7 +145,7 @@ function gameEnd(conclusion) {
                                                                     : resultTranslations.bug_koth;
 		else if (condition === 'stalemate') element_whosturn.textContent = resultTranslations.draw_stalemate;
 		else if (condition === 'repetition') element_whosturn.textContent = resultTranslations.draw_repetition;
-		else if (condition === 'moverule') element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${(game.getGamefile().gameRules.moveRule / 2)}${resultTranslations.draw_moverule[1]}`;
+		else if (condition === 'moverule') element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${(gameslot.getGamefile().gameRules.moveRule / 2)}${resultTranslations.draw_moverule[1]}`;
 		else if (condition === 'insuffmat') element_whosturn.textContent = resultTranslations.draw_insuffmat;
 		else {
 			element_whosturn.textContent = resultTranslations.bug_generic;
@@ -157,7 +157,7 @@ function gameEnd(conclusion) {
 export default {
 	open,
 	hidePlayerNames,
-	revealPlayerNames,
+	setAndRevealPlayerNames,
 	updateWhosTurn,
 	gameEnd
 };

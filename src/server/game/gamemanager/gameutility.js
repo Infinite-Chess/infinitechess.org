@@ -29,6 +29,7 @@ import { getMemberDataByCriteria, getUserIdByUsername } from '../../database/mem
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import socketUtility from '../../socket/socketUtility.js';
+import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 
 // Type Definitions...
 
@@ -289,7 +290,7 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 function getMetadataOfGame(game) {
 	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
-	const metadata = {
+	const gameMetadata = {
 		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
 		Site: "https://www.infinitechess.org/",
 		Round: "-",
@@ -307,7 +308,7 @@ function getMetadataOfGame(game) {
 			break id;
 		}
 		const base62 = uuid.base10ToBase62(user_id);
-		metadata.WhiteID = base62;
+		gameMetadata.WhiteID = base62;
 	}
 	id: if (game.black.member !== undefined) {
 		const user_id = getUserIdByUsername(game.black.member);
@@ -316,16 +317,16 @@ function getMetadataOfGame(game) {
 			break id;
 		}
 		const base62 = uuid.base10ToBase62(user_id);
-		metadata.BlackID = base62;
+		gameMetadata.BlackID = base62;
 	}
 
 	if (isGameOver(game)) { // Add on the Result and Termination metadata
 		const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
-		metadata.Result = winconutil.getResultFromVictor(victor);
-		metadata.Termination = getTerminationInEnglish(game.gameRules, condition);
+		gameMetadata.Result = metadata.getResultFromVictor(victor);
+		gameMetadata.Termination = getTerminationInEnglish(game.gameRules, condition);
 	}
 
-	return metadata;
+	return gameMetadata;
 }
 
 /**

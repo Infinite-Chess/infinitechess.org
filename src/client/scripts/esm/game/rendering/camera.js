@@ -11,6 +11,8 @@ import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
+import guinavigation from '../gui/guinavigation.js';
+import movement from './movement.js';
 // Import End
 
 /**
@@ -207,12 +209,12 @@ function updateCanvasDimensions() {
 }
 
 function updatePIXEL_HEIGHT_OF_NAVS() {
-	PIXEL_HEIGHT_OF_TOP_NAV = !options.getNavigationVisible() ? 0
+	PIXEL_HEIGHT_OF_TOP_NAV = !guinavigation.isOpen() ? 0
                                     : window.innerWidth > 700 ? 84  // Update with the css stylesheet!
                                     : window.innerWidth > 550 ? window.innerWidth * 0.12
                                     : window.innerWidth > 368 ? 66
                                                                 : window.innerWidth * 0.179;
-	PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.getNavigationVisible() ? 0 : 84;
+	PIXEL_HEIGHT_OF_BOTTOM_NAV = !guinavigation.isOpen() ? 0 : 84;
 	frametracker.onVisualChange();
 
 	stats.updateStatsCSS();
@@ -222,7 +224,11 @@ function recalcCanvasVariables() {
 	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	initScreenBoundingBox();
 
-	game.updateVariablesAfterScreenResize();
+	// Recalculate scale at which 1 tile = 1 pixel       world-space                physical pixels
+	movement.setScale_When1TileIs1Pixel_Physical((screenBoundingBox.right * 2) / canvas.width);
+	movement.setScale_When1TileIs1Pixel_Virtual(movement.getScale_When1TileIs1Pixel_Physical() * pixelDensity);
+	// console.log(`Screen width: ${camera.getScreenBoundingBox(false).right * 2}. Canvas width: ${camera.canvas.width}`)
+
 	miniimage.recalcWidthWorld();
 }
 

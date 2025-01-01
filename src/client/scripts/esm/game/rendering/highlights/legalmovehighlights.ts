@@ -33,6 +33,7 @@ import legalmoveshapes from '../legalmoveshapes.js';
 import shapes from '../shapes.js';
 import { BufferModel, BufferModelInstanced, createModel, createModel_Instanced } from '../buffermodel.js';
 import coordutil from '../../../chess/util/coordutil.js';
+import gameslot from '../../chess/gameslot.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------
@@ -44,8 +45,6 @@ import type gamefile from '../../../chess/logic/gamefile.js';
 import type { LegalMoves } from '../../chess/selection.js';
 // @ts-ignore
 import type { Piece } from '../../../chess/logic/movepiece.js';
-// @ts-ignore
-import game from '../../chess/game.js';
 import { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import { Color } from '../../../chess/util/colorutil.js';
 
@@ -353,7 +352,7 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
 	/** The instance-specific data of the CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
 	const instanceData_Capture: number[] = [];
 
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile()!;
 
 	// Data of short range moves within 3 tiles
 	concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, legalMoves!, gamefile);

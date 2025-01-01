@@ -35,7 +35,7 @@ function isWinConditionValid(winCondition) {
  * This is any conclusion that can happen after a move is made.
  * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
  * which can happen at any point in time.
- * @param {string} gameConclusion - The gameConclusion
+ * @param {string | false} gameConclusion - The gameConclusion
  * @returns {boolean} *true* if the gameConclusion is decisive.
  */
 function isGameConclusionDecisive(gameConclusion) {
@@ -76,19 +76,6 @@ function getVictorAndConditionFromGameConclusion(gameConclusion) {
 }
 
 /**
- * Returns the value of the game's Result metadata, depending on the victor.
- * @param {string} victor - The victor of the game. Can be 'white', 'black', 'draw', or 'aborted'.
- * @returns {string} The result of the game in the format '1-0', '0-1', '0.5-0.5', or '0-0'.
- */
-function getResultFromVictor(victor) {
-	if (victor === 'white') return '1-0';
-	else if (victor === 'black') return '0-1';
-	else if (victor === 'draw') return '1/2-1/2';
-	else if (victor === undefined) return '0-0';
-	throw new Error(`Cannot get game result from strange victor "${victor}"!`);
-}
-
-/**
  * Returns the termination of the game in english language.
  * @param {GameRules} gameRules
  * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
@@ -108,6 +95,5 @@ export default {
 	isGameConclusionDecisive,
 	isConclusionDecisive,
 	getVictorAndConditionFromGameConclusion,
-	getResultFromVictor,
 	getTerminationInEnglish,
 };

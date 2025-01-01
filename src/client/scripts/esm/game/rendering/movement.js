@@ -13,6 +13,7 @@ import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -139,7 +140,7 @@ function recalcPosition() {
 
 // Updates board position dependant on panVel
 function panBoard() {
-	if (loadbalancer.gisAFK() && !game.areInGame()) return; // Exit if we're AFK. Save our CPU!
+	if (loadbalancer.gisAFK() && gameslot.areWeLoading()) return; // Exit if we're AFK. Save our CPU!
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
     
 	frametracker.onVisualChange(); // Visual change, render the screen this frame.
