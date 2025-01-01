@@ -46,9 +46,8 @@ import type { LegalMoves } from '../../chess/selection.js';
 import type { Piece } from '../../../chess/logic/movepiece.js';
 // @ts-ignore
 import game from '../../chess/game.js';
+import { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 
-// TO DO: MOVE TO coordutil.ts ONCE THAT'S CONVERTED TO TS
-type Coords = [number,number];
 // TO DO: MOVE TO colorutil.ts ONCE THAT'S CONVERTED TO TS
 type Color = [number,number,number,number];
 
@@ -429,7 +428,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 	const slideLines = Object.keys(legalMoves.sliding); // ['1,0','1,1', ...]
 
 	for (const lineKey of slideLines) { // '1,0'
-		const line: Coords = coordutil.getCoordsFromKey(lineKey); // [dx,dy]
+		const line: Coords = coordutil.getCoordsFromKey(lineKey as CoordsKey); // [dx,dy]
 		const C = organizedlines.getCFromLine(line, coords);
 
 		const corner1 = math.getAABBCornerOfLine(line, true); // "right"

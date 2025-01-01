@@ -110,5 +110,6 @@ export default {
 };
 
 export type {
-	Coords
-}
+	Coords,
+	CoordsKey,
+};
