@@ -125,7 +125,6 @@ function updateBoard(gamefile: gamefile) {
 	guiclock.update(gamefile);
 	miniimage.testIfToggled();
 	animation.update();
-	if (guipause.areWePaused() && !onlinegame.areInOnlineGame()) return;
 
 	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
 	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
