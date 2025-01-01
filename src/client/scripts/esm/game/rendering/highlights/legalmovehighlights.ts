@@ -22,8 +22,6 @@ import board from '../board.js';
 // @ts-ignore
 import math, { BoundingBox } from '../../../util/math.js';
 // @ts-ignore
-import coordutil from '../../../chess/util/coordutil.js';
-// @ts-ignore
 import frametracker from '../frametracker.js';
 // @ts-ignore
 import preferences from '../../../components/header/preferences.js';
@@ -34,6 +32,7 @@ import legalmoveshapes from '../legalmoveshapes.js';
 // @ts-ignore
 import shapes from '../shapes.js';
 import { BufferModel, BufferModelInstanced, createModel, createModel_Instanced } from '../buffermodel.js';
+import coordutil from '../../../chess/util/coordutil.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------

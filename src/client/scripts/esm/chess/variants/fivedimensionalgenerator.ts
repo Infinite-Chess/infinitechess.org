@@ -1,7 +1,6 @@
 /* eslint-disable max-depth */
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
-// @ts-ignore
 import coordutil from "../util/coordutil.js";
 
 // Type definitions...
