@@ -1,16 +1,10 @@
 
 /**
- * The game slot holds a gamefile object, most of the logic stuff, not much GUI.
- * But it will init UI stuff that is common across all types of games.
- * For example, it will init the promotion UI.
  * 
- * A gamefile object could be used for ANY of the following reasons:
- * * Local
- * * Online
- * * Analysis
- * * Board Editor
+ * Whether we're in a local game, online game, analysis board, or board editor,
+ * what they ALL have in common is a gamefile! This script stores THAT gamefile!
  * 
- * This also contains the loader and unloader methods for the game slot.
+ * It also has the loader and unloader methods for the gamefile.
  */
 
 // @ts-ignore
