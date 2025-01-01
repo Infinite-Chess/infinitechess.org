@@ -2,10 +2,8 @@
 // Import Start
 import loadbalancer from '../misc/loadbalancer.js';
 import math from '../../util/math.js';
-import onlinegame from '../misc/onlinegame.js';
 import bufferdata from './bufferdata.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
-import game from '../chess/game.js';
 import stats from '../gui/stats.js';
 import voids from './voids.js';
 import statustext from '../gui/statustext.js';
@@ -20,6 +18,7 @@ import thread from '../../util/thread.js';
 import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
 import shapes from './shapes.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /** 
@@ -87,8 +86,8 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 		usingColoredTextures
 	};
 
-	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
-	const rotation = weAreBlack ? -1 : 1;
+	const weAreWhite = gameslot.isLoadedGameViewingWhitePerspective();
+	const rotation = weAreWhite ? 1 : -1;
 
 	let currIndex = 0;
 
@@ -110,7 +109,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	// Adds pieces of that type's buffer to the overall data
 	async function concatBufferData(pieceType) {
 		if (gamefile.mesh.terminate) return;
-		const thesePieces = game.getGamefile().ourPieces[pieceType];
+		const thesePieces = gamefile.ourPieces[pieceType];
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
 
@@ -193,7 +192,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	jsutil.copyPropertiesToObject(mesh, gamefile.mesh);
     
 	// If we are also in perspective mode, init the rotated model as well!
-	if (perspective.getEnabled()) await initRotatedPiecesModel(game.getGamefile(), true); // ignoreLock
+	if (perspective.getEnabled()) await initRotatedPiecesModel(gamefile, true); // ignoreLock
 
 	if (gamefile.mesh.terminate) {
 		gamefile.mesh.terminate = false;
@@ -323,8 +322,8 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece;
 
-	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
-	const rotation = weAreBlack ? -1 : 1;
+	const weAreWhite = gameslot.isLoadedGameViewingWhitePerspective();
+	const rotation = weAreWhite ? 1 : -1;
 
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const offsetCoord = coordutil.subtractCoordinates(coords, gamefile.mesh.offset);
@@ -483,9 +482,9 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 	// console.log('Begin rotating model..')
 
 	// Amount to transition the points
-	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
+	const weAreWhite = gameslot.isLoadedGameViewingWhitePerspective();
 	const spritesheetPieceWidth = spritesheet.getSpritesheetDataPieceWidth();
-	const texWidth = weAreBlack ? -spritesheetPieceWidth : spritesheetPieceWidth;
+	const texWidth = weAreWhite ? spritesheetPieceWidth : -spritesheetPieceWidth;
 
 	gamefile.mesh.rotatedData64 = new Float64Array(gamefile.mesh.data32.length); // Empty it for re-initialization
 	gamefile.mesh.rotatedData32 = new Float32Array(gamefile.mesh.data32.length); // Empty it for re-initialization

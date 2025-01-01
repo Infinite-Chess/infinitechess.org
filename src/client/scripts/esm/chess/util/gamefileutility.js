@@ -15,6 +15,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from './coordutil.js';
 import winconutil from './winconutil.js';
 import gamerules from '../variants/gamerules.js';
+import metadata from './metadata.js';
 // Import End
 
 
@@ -433,7 +434,7 @@ function setTerminationMetadata(gamefile) {
 	gamefile.metadata.Termination = condition;
 
 	const victor = victorAndCondition.victor; // white/black/draw/undefined
-	gamefile.metadata.Result = winconutil.getResultFromVictor(victor);
+	gamefile.metadata.Result = metadata.getResultFromVictor(victor);
 }
 
 /**

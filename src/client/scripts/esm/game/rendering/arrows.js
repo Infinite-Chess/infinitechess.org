@@ -7,7 +7,6 @@ import onlinegame from '../misc/onlinegame.js';
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
-import game from '../chess/game.js';
 import transition from './transition.js';
 import organizedlines from '../../chess/logic/organizedlines.js';
 import movement from './movement.js';
@@ -23,6 +22,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import space from '../misc/space.js';
 import spritesheet from './spritesheet.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /**
@@ -141,7 +141,7 @@ function update() {
 		paddedBoundingBox.bottom += space.convertWorldSpaceToGrid(footerPad);
 	}
 
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	const slides = gamefile.startSnapshot.slidingPossible;
 
 	for (const line of slides) {
@@ -277,7 +277,7 @@ function update() {
 function removeUnnecessaryArrows(arrows) {
 	if (mode === 0) return;
 
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	let attacklines = [];
 	attack: {
 		if (mode !== 2) break attack;
@@ -429,7 +429,7 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 	if (key in piecesHoveredOver) return; // Legal moves and mesh already calculated.
 
 	// Calculate their legal moves and mesh!
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	const thisRider = gamefileutility.getPieceAtCoords(gamefile, pieceCoords);
 	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
 
@@ -455,7 +455,7 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
  * @param {string} direction - [dx,dy]  where dx can be negative
  */
 function doesTypeHaveDirection(type, direction) {
-	const moveset = legalmoves.getPieceMoveset(game.getGamefile(), type);
+	const moveset = legalmoves.getPieceMoveset(gameslot.getGamefile(), type);
 	if (!moveset.sliding) return false;
 
 	const absoluteDirection = absoluteValueOfDirection(direction); // 'dx,dy'  where dx is always positive

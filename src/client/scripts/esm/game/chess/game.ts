@@ -49,6 +49,12 @@ import options from '../rendering/options.js';
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
 import dragAnimation from '../rendering/draganimation.js';
+// @ts-ignore
+import piecesmodel from '../rendering/piecesmodel.js';
+// @ts-ignore
+import loadbalancer from '../misc/loadbalancer.js';
+// @ts-ignore
+import jsutil from '../../util/jsutil.js';
 import highlights from '../rendering/highlights/highlights.js';
 import gameslot from './gameslot.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -57,6 +63,7 @@ import guinavigation from '../gui/guinavigation.js';
 // Type Definitions -------------------------------------------------------------------------------
 
 
+// @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 
 
@@ -80,12 +87,12 @@ function update() {
 
 	// There is a gamefile, update everything board-related...
 
-	// if (!guinavigation.isCoordinateActive()) {
-	// 	if (input.isKeyDown('`')) options.toggleDeveloperMode();
-	// 	if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(loadedGamefile));
-	// 	if (input.isKeyDown('m')) options.toggleFPS();
-	// 	if (loadedGamefile?.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
-	// }
+	if (!guinavigation.isCoordinateActive()) {
+		if (input.isKeyDown('`')) options.toggleDeveloperMode();
+		if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
+		if (input.isKeyDown('m')) options.toggleFPS();
+		if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+	}
 
 	updateBoard(gamefile); // Other screen, board is visible, update everything board related
 
@@ -102,13 +109,13 @@ function updateSelectionScreen() {
 
 // Called within update() when we are in a game (not title screen)
 function updateBoard(gamefile: gamefile) {
-	// if (!guinavigation.isCoordinateActive()) {
-	// 	if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
-	// 	if (input.isKeyDown('escape')) guipause.toggle();
-	// 	if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
-	// 	if (input.isKeyDown('r')) piecesmodel.regenModel(loadedGamefile, options.getPieceRegenColorArgs(), true);
-	// 	if (input.isKeyDown('n')) guinavigation.toggleNavigationBar();
-	// }
+	if (!guinavigation.isCoordinateActive()) {
+		if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
+		if (input.isKeyDown('escape')) guipause.toggle();
+		if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
+		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
+		if (input.isKeyDown('n')) guinavigation.toggleNavigationBar();
+	}
 
 	const timeWinner = clock.update(gamefile);
 	if (timeWinner) { // undefined if no clock has ran out

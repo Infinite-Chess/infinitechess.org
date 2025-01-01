@@ -8,15 +8,15 @@
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
-import game from './game.js';
 import backcompatible from '../../chess/logic/backcompatible.js';
-import gamefile from '../../chess/logic/gamefile.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import statustext from '../gui/statustext.js';
 import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import guinavigation from '../gui/guinavigation.js';
+import gameloader from './gameloader.js';
+import gameslot from './gameslot.js';
 // Import End
 
 "use strict";
@@ -42,7 +42,7 @@ const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeCont
 function callbackCopy(event) {
 	if (guinavigation.isCoordinateActive()) return;
 
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
 	const primedGamefile = primeGamefileForCopying(gamefile);
@@ -106,7 +106,7 @@ async function callbackPaste(event) {
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
 
 	// Make sure it's legal in a private match
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && game.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
+	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard;
@@ -217,7 +217,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	// Create a new gamefile from the longformat...
 
 	// Retain most of the existing metadata on the currently loaded gamefile
-	const currentGameMetadata = game.getGamefile().metadata;
+	const currentGameMetadata = gameslot.getGamefile().metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformat.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined) longformat.metadata[metadataName] = currentGameMetadata[metadataName];
@@ -266,11 +266,13 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	// What is the warning message if pasting in a private match?
 	const privateMatchWarning = onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : "";
 
-	game.unloadGame();
-	await game.loadGamefile(longformat.metadata, { moves: longformat.moves, variantOptions });
+	const fromWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective();
+	const allowEditCoords = guinavigation.areCoordsAllowedToBeEdited();
+	gameloader.unloadGame();
+	await gameloader.loadGame({ metadata: longformat.metadata, moves: longformat.moves, variantOptions }, fromWhitePerspective, allowEditCoords);
+	const gamefile = gameslot.getGamefile();
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
-	const gamefile = game.getGamefile();
 	const tooManyPieces = gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate;
 	if (tooManyPieces) { // TOO MANY pieces!
 		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);

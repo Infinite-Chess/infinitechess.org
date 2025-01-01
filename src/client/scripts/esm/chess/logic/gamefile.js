@@ -66,7 +66,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		fullMove: undefined,
 		/** The number of players in this game (the number of unique colors in the turn order) */
 		playerCount: undefined,
-		/** The count of pieces the game started with. */
+		/** The count of pieces the game started with. @type {number} */
 		pieceCount: undefined,
 		/** The bounding box surrounding the starting position, without padding.
          * @type {BoundingBox} */
@@ -248,6 +248,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.attackers = undefined;
 	/** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
 	this.checksGiven = undefined;
+	/** @type {false | string} */
+	this.gameConclusion = false;
 
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);

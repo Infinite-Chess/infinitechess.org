@@ -11,13 +11,13 @@ import options from './options.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
-import game from '../chess/game.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /** 
@@ -297,7 +297,7 @@ function isOffsetOutOfRangeOfRegenRange(offset, regenRange) { // offset: [x,y]
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme() {
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	if (gamefile && gamefileutility.isGameOver(gamefile)) darkenColor(); // Reset to slightly darkened board
 	else resetColor(); // Reset to defaults
 	updateSkyColor();

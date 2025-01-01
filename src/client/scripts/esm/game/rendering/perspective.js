@@ -8,12 +8,12 @@ import statustext from '../gui/statustext.js';
 import { createModel } from './buffermodel.js';
 import onlinegame from '../misc/onlinegame.js';
 import mat4 from './gl-matrix.js';
-import game from '../chess/game.js';
 import input from '../input.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
 import preferences from '../../components/header/preferences.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /**
@@ -74,7 +74,7 @@ function enable() {
 	lockMouse();
 
 	initCrosshairModel();
-	piecesmodel.initRotatedPiecesModel(game.getGamefile()); // Async
+	piecesmodel.initRotatedPiecesModel(gameslot.getGamefile()); // Async
 
 	statustext.showStatus(translations.rendering.movement_tutorial);
 }
@@ -91,7 +91,7 @@ function disable() {
     
 	resetRotations();
 
-	piecesmodel.eraseRotatedModel(game.getGamefile());
+	piecesmodel.eraseRotatedModel(gameslot.getGamefile());
 }
 
 // Sets rotations to orthographic view. Sensitive to if we're white or black.

@@ -14,59 +14,59 @@
  */
 
 // @ts-ignore
-import gamefile from "../../chess/logic/gamefile";
+import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
-import movepiece from "../../chess/logic/movepiece";
+import movepiece from "../../chess/logic/movepiece.js";
 // @ts-ignore
-import { gl } from "../rendering/webgl";
+import { gl } from "../rendering/webgl.js";
 // @ts-ignore
-import sound from "../misc/sound";
+import sound from "../misc/sound.js";
 // @ts-ignore
-import copypastegame from "./copypastegame";
+import copypastegame from "./copypastegame.js";
 // @ts-ignore
-import gamefileutility from "../../chess/util/gamefileutility";
+import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
-import onlinegame from "../misc/onlinegame";
+import onlinegame from "../misc/onlinegame.js";
 // @ts-ignore
-import piecesmodel from "../rendering/piecesmodel";
+import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
-import options from "../rendering/options";
+import options from "../rendering/options.js";
 // @ts-ignore
-import selection from "./selection";
+import selection from "./selection.js";
 // @ts-ignore
-import transition from "../rendering/transition";
+import transition from "../rendering/transition.js";
 // @ts-ignore
-import board from "../rendering/board";
+import board from "../rendering/board.js";
 // @ts-ignore
-import guiclock from "../gui/guiclock";
+import guiclock from "../gui/guiclock.js";
 // @ts-ignore
-import miniimage from "../rendering/miniimage";
+import miniimage from "../rendering/miniimage.js";
 // @ts-ignore
-import area from "../rendering/area";
+import area from "../rendering/area.js";
 // @ts-ignore
-import movement from "../rendering/movement";
+import movement from "../rendering/movement.js";
 // @ts-ignore
-import arrows from "../rendering/arrows";
+import arrows from "../rendering/arrows.js";
 // @ts-ignore
-import winconutil from "../../chess/util/winconutil";
+import winconutil from "../../chess/util/winconutil.js";
 // @ts-ignore
-import moveutil from "../../chess/util/moveutil";
+import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
-import clock from "../../chess/logic/clock";
+import clock from "../../chess/logic/clock.js";
 // @ts-ignore
-import guigameinfo from "../gui/guigameinfo";
+import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
-import guipause from "../gui/guipause";
-import guinavigation from "../gui/guinavigation";
-import guipromotion from "../gui/guipromotion";
-import loadingscreen from "../gui/loadingscreen";
-import spritesheet from "../rendering/spritesheet";
+import guipause from "../gui/guipause.js";
+import guinavigation from "../gui/guinavigation.js";
+import guipromotion from "../gui/guipromotion.js";
+import loadingscreen from "../gui/loadingscreen.js";
+import spritesheet from "../rendering/spritesheet.js";
 
 
 // Type Definitions ---------------------------------------------------------------
 
 
-import type { MetaData } from "../../chess/util/metadata";
+import type { MetaData } from "../../chess/util/metadata.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -88,7 +88,7 @@ let youAreColor: string;
  * The timeout id of the timer that animates the latest-played
  * move when rejoining a game, after a short delay
  */
-let animateLastMoveTimeoutID;
+let animateLastMoveTimeoutID: ReturnType<typeof setTimeout> | undefined;
 /**
  * The delay, in millis, until the latest-played
  * move is animated, after rejoining a game.
@@ -159,7 +159,7 @@ async function loadGamefile(
 	try {
 		await spritesheet.initSpritesheetForGame(gl, newGamefile);
 	} catch (e) { // An error ocurred during the fetching of piece svgs and spritesheet gen
-		await loadingscreen.onError(e);
+		await loadingscreen.onError(e as Event);
 	}
 	guipromotion.initUI(newGamefile.gameRules.promotionsAllowed);
 
