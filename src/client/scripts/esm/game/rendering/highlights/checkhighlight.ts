@@ -22,9 +22,7 @@ import { BufferModel, createModel } from '../buffermodel.js';
 
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
-
-// TO DO: MOVE TO coordutil.ts ONCE THAT'S CONVERTED TO TS
-type Coords = [number,number];
+import type { Coords } from '../../../chess/util/coordutil.js';
 
 
 // Functions -----------------------------------------------------------------------

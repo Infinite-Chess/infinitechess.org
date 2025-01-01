@@ -5,9 +5,7 @@ import board from "./board.js";
 import shapes from "./shapes.js";
 
 
-
-type Coords = [number,number];
-
+import type { Coords } from "../../chess/util/coordutil.js";
 
 
 // Variables ------------------------------------------------------------------------------

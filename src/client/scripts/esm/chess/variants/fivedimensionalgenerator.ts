@@ -1,17 +1,15 @@
 /* eslint-disable max-depth */
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
-// @ts-ignore
 import coordutil from "../util/coordutil.js";
 
 // Type definitions...
 
 import type { Movesets } from "../logic/movesets.js";
 import type { Position } from "./variant.js";
+import type { Coords, CoordsKey } from "../util/coordutil.js";
 
 
-
-'use strict';
 
 const BOARDS_X = 8;
 const BOARDS_Y = 8;
@@ -31,8 +29,7 @@ function genPositionOfFiveDimensional() {
 	const standardPosStr = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 
 	// Store the standard position so we can reference it later
-	const standardPos = formatconverter.ShortToLong_Format(standardPosStr).startingPosition;
-
+	const standardPos: { [coordsKey: CoordsKey]: string } = formatconverter.ShortToLong_Format(standardPosStr).startingPosition;
 	const resultPos: Position = {};
 
 	// Loop through from the leftmost column that should be voids to the right most, and also vertically
@@ -46,9 +43,11 @@ function genPositionOfFiveDimensional() {
 				if ((i % BOARD_SPACING === 0) && (j % BOARD_SPACING) === 0
 					&& i !== MAX_X && j !== MAX_Y) {
 					for (const square in standardPos) {
-						resultPos[coordutil.getKeyFromCoords(coordutil.getCoordsFromKey(square).map((value: number, index: number) => {
+						const coords = coordutil.getCoordsFromKey(square as CoordsKey);
+						const key = coordutil.getKeyFromCoords(coords.map((value: number, index: number) => {
 							return value + [i, j][index]!;
-						}))] = standardPos[square];
+						}) as Coords);
+						resultPos[key] = standardPos[square as CoordsKey]!;
 					}
 				}
 			}

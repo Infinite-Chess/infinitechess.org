@@ -16,9 +16,8 @@ import colorutil from '../util/colorutil.js';
 import type { gamefile } from './gamefile.js';
 // @ts-ignore
 import type { Piece } from './movepiece.js';
+import type { Coords } from '../util/coordutil.js';
 
-// TODO: move this to coordutil.js after that is converted to typescript.
-type Coords = [number, number];
 
 /**
  * A Movesets object containing the movesets for every piece type in a game
