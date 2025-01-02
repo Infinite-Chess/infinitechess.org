@@ -339,7 +339,7 @@ function getVariantGameRuleModifications({ Variant, UTCDate = timeutil.getCurren
 	UTCTime: string
 }): GameRuleModifications {
 
-	const variantEntry: Variant = variantDictionary[Variant];
+	const variantEntry = variantDictionary[Variant];
 	if (!variantEntry) throw Error(`Cannot get gameruleModifications of invalid variant "${Variant}".`);
 
 	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?

@@ -63,7 +63,7 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 	// Edit the closk if we're re-loading an online game
 	if (currentTimes) edit(gamefile, currentTimes);
 	else { // No current time specified, start both players with the default.
-		gamefile.gameRules.turnOrder.forEach(color => {
+		gamefile.gameRules.turnOrder.forEach((color: string) => {
 			clocks.currentTime[color] = clocks.startTime.millis;
 		});
 	}
@@ -87,7 +87,7 @@ function edit(gamefile: gamefile, clockValues: ClockValues) {
 	const now = Date.now();
 	clocks.timeAtTurnStart = now;
 
-	if (clockValues.accountForPing && moveutil.isGameResignable(gamefile) && !gamefileutility.isGameOver(gamefile)) {
+	if (clockValues['accountForPing'] && moveutil.isGameResignable(gamefile) && !gamefileutility.isGameOver(gamefile)) {
 	// 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// 	// time that has elapsed since the server sent us the correct clock values
 	// 	const halfPing = pingManager.getHalfPing();
@@ -159,11 +159,13 @@ function update(gamefile: gamefile): string | undefined {
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
 
 	for (const [color,time] of Object.entries(clocks.currentTime)) {
-		if (time! <= 0) {
+		if (time as number <= 0) {
 			clocks.currentTime[color] = 0;
 			return color;
 		}
 	}
+
+	return; // Without this, typescript complains not all code paths return a value.
 }
 
 function printClocks(gamefile: gamefile) {
