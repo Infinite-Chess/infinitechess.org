@@ -46,6 +46,7 @@ import winconutil from "../../chess/util/winconutil.js";
 // @ts-ignore
 import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
+// eslint-disable-next-line no-unused-vars
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
@@ -61,6 +62,8 @@ import spritesheet from "../rendering/spritesheet.js";
 
 
 import type { MetaData } from "../../chess/util/metadata.js";
+// eslint-disable-next-line no-unused-vars
+import type { ClockValues } from "../../chess/logic/clock.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -125,7 +128,7 @@ function isLoadedGameViewingWhitePerspective() {
  * @param {string[]} [options.moves] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
- * @param {Object} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, accountForPing }`
+ * @param {ClockValues} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, accountForPing }`
  */
 async function loadGamefile(
 	metadata: MetaData,

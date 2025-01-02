@@ -192,3 +192,7 @@ export default {
 	isGameUntimed,
 	adjustClockValuesForPing,
 };
+
+export type {
+	ClockValues,
+};
