@@ -10,7 +10,7 @@
 
 
 interface MetaData {
-	/** This phrase goes: "Casual/Rated variantName infinite chess game."" */
+	/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game". This phrase goes: "Casual/Rated variantName infinite chess game." */
 	Event: string,
 	/** What website the game was played on. Right now this has no application because infinitechess.org is the ONLY site you can play this game on. */
 	Site: 'https://www.infinitechess.org/',
@@ -37,7 +37,7 @@ interface MetaData {
 	BlackID?: string,
 	/** How many points each side received from the game (e.g. `"1-0"` means white won, `"1/2-1/2"` means a draw) */
 	Result?: string,
-	/** What caused the game to end? Whether it's the wincondition, time, resignation, moverule, repetition, draw agreement, etc. */
+	/** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
 	Termination: string,
 }
 

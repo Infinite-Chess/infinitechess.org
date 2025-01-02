@@ -17,40 +17,27 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
+/** @typedef {import('../util/metadata.js').MetaData} MetaData */
+/** @typedef {import('./clock.js').ClockValues} ClockValues */
 
 'use strict';
 
 /**
  * Constructs a gamefile from provided arguments. Use the *new* keyword.
- * @param {Object} metadata - An object containing the property `Variant`, and optionally `UTCDate` and `UTCTime`, which can be used to extract the version of the variant. Without the date, the latest version will be used.
+ * @param {MetaData} metadata - An object containing the property `Variant`, and optionally `UTCDate` and `UTCTime`, which can be used to extract the version of the variant. Without the date, the latest version will be used.
  * @param {Object} [options] - Options for constructing the gamefile.
  * @param {string[]} [options.moves=[]] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
- * @param {Object} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, accountForPing }`
+ * @param {ClockValues} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, accountForPing }`
  * @returns {Object} The gamefile
  */
 function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues } = {}) {
 
 	// Everything for JSDoc stuff...
 
-	/** Information about the game */
-	this.metadata = {
-		Variant: undefined,
-		White: undefined,
-		Black: undefined,
-		TimeControl: undefined,
-		UTCDate: undefined,
-		UTCTime: undefined,
-		/** 1-0 = White won */
-		Result: undefined,
-		/** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
-		Termination: undefined,
-		/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game" */
-		Event: undefined,
-		/** What website hosted the game. "https://www.infinitechess.org/" */
-		Site: undefined,
-	};
+	/** Information about the game @type {MetaData} */
+	this.metadata = metadata;
     
 	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
 	this.startSnapshot = {
@@ -189,8 +176,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** Contains the methods for undo'ing special moves for this game. */
 	this.specialUndos = undefined;
 
+	/** The clocks of the game, if the game is timed. */
 	this.clocks = {
-		/** The time each player has remaining, in milliseconds. */
+		/** The time each player has remaining, in milliseconds. @type {{ [color: string]: number | null }}*/
 		currentTime: {
 			white: undefined,
 			black: undefined,
@@ -198,29 +186,26 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 		/** Contains information about the start time of the game. */
 		startTime: {
-			/** The number of minutes both sides started with. */
+			/** The number of minutes both sides started with. @type {null | number} */
 			minutes: undefined,
-			/** The number of miliseconds both sides started with. */
+			/** The number of miliseconds both sides started with. @type {null | number}  */
 			millis: undefined,
-			/** The increment used, in milliseconds. */
+			/** The increment used, in milliseconds. @type {null | number} */
 			increment: undefined,
 		},
 		/** We need this separate from gamefile's "whosTurn", because when we are
 		 * in an online game and we make a move, we want our Clock to continue
-		 * ticking until we receive the Clock information back from the server! */
+		 * ticking until we receive the Clock information back from the server! @type {string} */
 		colorTicking: undefined,
 		/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
-		 * When set to undefined no clocks are ticking */
+		 * When set to undefined no clocks are ticking @type {number | undefined} */
 		timeRemainAtTurnStart: undefined,
-		/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. */
+		/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. @type {number | undefined} */
 		timeAtTurnStart: undefined,
 		/** True if the game is not timed. @type {Boolean}*/
 		untimed: undefined,
 	};
 	// JSDoc stuff over...
-
-	// this.metadata = metadata; // Breaks the above JSDoc
-	jsutil.copyPropertiesToObject(metadata, this.metadata);
 
 	// Init things related to the variant, and the startSnapshot of the position
 	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
