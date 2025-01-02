@@ -1,31 +1,49 @@
 
-// Import Start
+/**
+ * This script keeps track of both players timer,
+ * updates them each frame,
+ * and the update() method will return the loser
+ * if somebody loses on time.
+ */
+
+// @ts-ignore
 import onlinegame from '../../game/misc/onlinegame.js';
+// @ts-ignore
 import moveutil from '../util/moveutil.js';
+// @ts-ignore
 import clockutil from '../util/clockutil.js';
+// @ts-ignore
 import timeutil from '../../util/timeutil.js';
+// @ts-ignore
 import gamefileutility from '../util/gamefileutility.js';
+// @ts-ignore
 import pingManager from '../../util/pingManager.js';
+// @ts-ignore
 import options from '../../game/rendering/options.js';
-// Import End
+
+
+// Type Definitions ---------------------------------------------------------------
+
+// @ts-ignore
+import type gamefile from './gamefile.js';
+
+/** An object containing each color in the game for the keys, and that color's time left in milliseconds for the values. */
+interface ClockValues { [color: string]: number };
+
+
+// Functions -----------------------------------------------------------------------
+
+
+
+
 
 /**
- * @typedef {import('./gamefile.js').gamefile} gamefile
+ * Sets the clocks. If no current clock values are specified, clocks will
+ * be set to the starting values, according to the game's TimeControl metadata.
+ * @param gamefile 
+ * @param [currentTimes] Optional. An object containing the current times of the players. Often used if we re-joining an online game.
  */
-
-"use strict";
-
-/**
- * This script keeps track of both players timer, updates them,
- * and ends game if somebody loses on time.
- */
-/**
- * Sets the clocks.
- * @param {gamefile} gamefile 
- * @param {string} clock - The clock value (e.g. "600+5" => 10m+5s).
- * @param {Object} [currentTimes] - Optional. An object containing the properties `timerWhite`, `timerBlack`, and `accountForPing` (if an online game) for the current time of the players. Often used if we re-joining an online game.
- */
-function set(gamefile, currentTimes) {
+function set(gamefile: gamefile, currentTimes?: ClockValues) {
 	const clock = gamefile.metadata.TimeControl; // "600+5"
 	const clocks = gamefile.clocks;
 
@@ -36,7 +54,7 @@ function set(gamefile, currentTimes) {
 	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock); // { minutes, increment }
 	if (clockPartsSplit !== null) {
 		clocks.startTime.minutes = clockPartsSplit.minutes;
-		clocks.startTime.millis = timeutil.minutesToMillis(clocks.startTime.minutes);
+		clocks.startTime.millis = timeutil.minutesToMillis(clocks.startTime.minutes!);
 		clocks.startTime.increment = clockPartsSplit.increment;
 	}
 
@@ -45,8 +63,9 @@ function set(gamefile, currentTimes) {
 	// Edit the closk if we're re-loading an online game
 	if (currentTimes) edit(gamefile, currentTimes);
 	else { // No current time specified, start both players with the default.
-		clocks.currentTime.white = clocks.startTime.millis;
-		clocks.currentTime.black = clocks.startTime.millis;
+		gamefile.gameRules.turnOrder.forEach(color => {
+			clocks.currentTime[color] = clocks.startTime.millis;
+		});
 	}
 
 	clocks.untimed = clockutil.isClockValueInfinite(clock);
@@ -56,11 +75,8 @@ function set(gamefile, currentTimes) {
  * Updates the gamefile with new clock information received from the server.
  * @param {gamefile} gamefile - The current game state object containing clock information.
  * @param {object} clockValues - An object containing the updated clock values.
- * @param {number} clockValues.timerWhite - White's current time, in milliseconds.
- * @param {number} clockValues.timerBlack - Black's current time, in milliseconds.
- * @param {number} clockValues.accountForPing - True if it's an online game
  */
-function edit(gamefile, clockValues) {
+function edit(gamefile: gamefile, clockValues: ClockValues) {
 	if (!clockValues) return; // Likely a no-timed game
 	const { timerWhite, timerBlack } = clockValues;
 	const clocks = gamefile.clocks;
@@ -72,21 +88,36 @@ function edit(gamefile, clockValues) {
 	clocks.timeAtTurnStart = now;
 
 	if (clockValues.accountForPing && moveutil.isGameResignable(gamefile) && !gamefileutility.isGameOver(gamefile)) {
-		// Ping is round-trip time (RTT), So divided by two to get the approximate
-		// time that has elapsed since the server sent us the correct clock values
-		const halfPing = pingManager.getHalfPing();
-		clocks.currentTime[gamefile.whosTurn] -= halfPing; 
-		if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
-		if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${gamefile.whosTurn}'s clock.`);
+	// 	// Ping is round-trip time (RTT), So divided by two to get the approximate
+	// 	// time that has elapsed since the server sent us the correct clock values
+	// 	const halfPing = pingManager.getHalfPing();
+	// 	clocks.currentTime[gamefile.whosTurn] -= halfPing; 
+	// 	if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
+	// 	if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${gamefile.whosTurn}'s clock.`);
 	}
 	clocks.timeRemainAtTurnStart = clocks.colorTicking === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
 }
 
 /**
- * Call after flipping whosTurn. Flips colorTicking in local games.
- * @param {gamefile} gamefile 
+ * Modifies the clock values to account for ping.
  */
-function push(gamefile) {
+function adjustClockValuesForPing(clockValues: ClockValues, whosTurn: string) {
+	// Ping is round-trip time (RTT), So divided by two to get the approximate
+	// time that has elapsed since the server sent us the correct clock values
+	const halfPing = pingManager.getHalfPing();
+	if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
+	if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${whosTurn}'s clock.`);
+
+	if (clockValues[whosTurn] === undefined) throw Error(`Invalid color "${whosTurn}" to modify clock value to account for ping.`);
+	clockValues[whosTurn] -= halfPing;
+
+	return clockValues;
+}
+
+/**
+ * Call after flipping whosTurn. Flips colorTicking in local games.
+ */
+function push(gamefile: gamefile) {
 	const clocks = gamefile.clocks;
 	if (onlinegame.areInOnlineGame()) return; // Only the server can push clocks
 	if (clocks.untimed) return;
@@ -97,14 +128,14 @@ function push(gamefile) {
 	// Add increment if the last move has a clock ticking
 	if (clocks.timeAtTurnStart !== undefined) {
 		const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
-		clocks.currentTime[prevcolor] += timeutil.secondsToMillis(clocks.startTime.increment);
+		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
 	}
 
-	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking];
+	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking]!;
 	clocks.timeAtTurnStart = Date.now();
 }
 
-function endGame(gamefile) {
+function endGame(gamefile: gamefile) {
 	const clocks = gamefile.clocks;
 	clocks.timeRemainAtTurnStart = undefined;
 	clocks.timeAtTurnStart = undefined;
@@ -112,36 +143,30 @@ function endGame(gamefile) {
 
 /**
  * Called every frame, updates values.
- * @param {gamefile} gamefile
- * @returns {undefined | string} undefined if clocks still have time, otherwise it's the color who won.
+ * @param gamefile
+ * @returns undefined if clocks still have time, otherwise it's the color who won.
 */
-function update(gamefile) {
+function update(gamefile: gamefile): string | undefined {
 	const clocks = gamefile.clocks;
 	if (clocks.untimed || gamefileutility.isGameOver(gamefile) || !moveutil.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
 
 	// Update current values
 	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
 
-	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
+	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart! - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
 	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
-	// TODO: update when lose conditions are added
-	if (clocks.currentTime.white <= 0) {
-		clocks.currentTime.white = 0;
-		return 'black';
-	}
-	else if (clocks.currentTime.black <= 0) {
-		clocks.currentTime.black = 0;
-		return 'white';
+
+	for (const [color,time] of Object.entries(clocks.currentTime)) {
+		if (time! <= 0) {
+			clocks.currentTime[color] = 0;
+			return color;
+		}
 	}
 }
 
-/**
- * 
- * @param {gamefile} gamefile 
- */
-function printClocks(gamefile) {
+function printClocks(gamefile: gamefile) {
 	const clocks = gamefile.clocks;
 	for (const color in clocks.currentTime) {
 		console.log(`${color} time: ${clocks.currentTime[color]}`);
@@ -152,9 +177,8 @@ function printClocks(gamefile) {
 
 /**
  * Returns true if the current game is untimed (infinite clocks) 
- * @param {gamefile} gamefile 
  */
-function isGameUntimed(gamefile) {
+function isGameUntimed(gamefile: gamefile): boolean {
 	return gamefile.clocks.untimed;
 }
 
@@ -166,4 +190,5 @@ export default {
 	push,
 	printClocks,
 	isGameUntimed,
+	adjustClockValuesForPing,
 };
