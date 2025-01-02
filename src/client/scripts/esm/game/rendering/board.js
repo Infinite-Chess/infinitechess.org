@@ -144,7 +144,7 @@ function recalcTileWidth_Pixels() {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = options.isDebugModeOn() ? camera.getScreenBoundingBox(true) : camera.getScreenBoundingBox(false);
 	// In physical pixels, not virtual. Physical pixels is greater for retina displays.
-	const pixelsPerTile = (camera.canvas.height * 0.5 / screenBoundingBox.top) / camera.getPixelDensity(); // When scale is 1
+	const pixelsPerTile = (camera.canvas.height * 0.5 / screenBoundingBox.top) / window.devicePixelRatio; // When scale is 1
 	tileWidth_Pixels = pixelsPerTile * movement.getBoardScale();
 }
 

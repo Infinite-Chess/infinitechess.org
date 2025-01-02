@@ -48,8 +48,6 @@ const zFar = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  perspective.
 // Header = 40
 // Footer = 59.5
 const MARGIN_OF_HEADER_AND_FOOTER = 41; // UPDATE with the html document  ---  !!! This is the sum of the heights of the page's navigation bar and footer. 40 + 1 for border
-// How many physical pixels per virtual pixel on the device screen? For retina displays this is usually 2 or 3.
-const pixelDensity = window.devicePixelRatio;
 let PIXEL_HEIGHT_OF_TOP_NAV = undefined; // In virtual pixels
 let PIXEL_HEIGHT_OF_BOTTOM_NAV = undefined; // In virtual pixels.
 
@@ -90,15 +88,6 @@ function getPosition(ignoreDevmode) {
 
 function getZFar() {
 	return zFar;
-}
-
-/**
- * Returns the pixel density of the screen using window.devicePixelRatio.
- * 1 is non-retina, 2+ is retina.
- * @returns {number} The pixel density
- */
-function getPixelDensity() {
-	return pixelDensity;
 }
 
 function getPIXEL_HEIGHT_OF_TOP_NAV() {
@@ -198,8 +187,8 @@ function updateCanvasDimensions() {
 	canvasHeightVirtualPixels = (window.innerHeight - MARGIN_OF_HEADER_AND_FOOTER);
 
 	// Size of entire window in physical pixels, not virtual. Retina displays have a greater width.
-	canvas.width = canvasWidthVirtualPixels * pixelDensity; 
-	canvas.height = canvasHeightVirtualPixels * pixelDensity;
+	canvas.width = canvasWidthVirtualPixels * window.devicePixelRatio; 
+	canvas.height = canvasHeightVirtualPixels * window.devicePixelRatio;
 
 	gl.viewport(0, 0, canvas.width, canvas.height);
 
@@ -226,7 +215,7 @@ function recalcCanvasVariables() {
 
 	// Recalculate scale at which 1 tile = 1 pixel       world-space                physical pixels
 	movement.setScale_When1TileIs1Pixel_Physical((screenBoundingBox.right * 2) / canvas.width);
-	movement.setScale_When1TileIs1Pixel_Virtual(movement.getScale_When1TileIs1Pixel_Physical() * pixelDensity);
+	movement.setScale_When1TileIs1Pixel_Virtual(movement.getScale_When1TileIs1Pixel_Physical() * window.devicePixelRatio);
 	// console.log(`Screen width: ${camera.getScreenBoundingBox(false).right * 2}. Canvas width: ${camera.canvas.width}`)
 
 	miniimage.recalcWidthWorld();
@@ -329,7 +318,6 @@ function onPositionChange() {
 
 export default {
 	getPosition,
-	getPixelDensity,
 	getPIXEL_HEIGHT_OF_TOP_NAV,
 	getPIXEL_HEIGHT_OF_BOTTOM_NAV,
 	canvas,

@@ -107,7 +107,7 @@ function update() {
 	model = undefined;
 
 	// Are we zoomed in enough?
-	const scaleWhenAtLimit = ((camera.getScreenBoundingBox(false).right * 2) / camera.canvas.width) * camera.getPixelDensity() * renderZoomLimit;
+	const scaleWhenAtLimit = ((camera.getScreenBoundingBox(false).right * 2) / camera.canvas.width) * window.devicePixelRatio * renderZoomLimit;
 	if (movement.getBoardScale() < scaleWhenAtLimit) return;
 
 	modelArrows = undefined;

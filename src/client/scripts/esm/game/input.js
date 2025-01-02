@@ -257,8 +257,8 @@ function convertCoords_CenterOrigin(object) { // object is the event, or touch o
 	// From canvas bottom left
 	const rawX = object.clientX - camera.getCanvasRect().left;
 	const rawY = -(object.clientY - camera.getCanvasRect().top);
-	const canvasPixelWidth = camera.canvas.width / camera.getPixelDensity(); // In virtual pixels, NOT physical
-	const canvasPixelHeight = camera.canvas.height / camera.getPixelDensity(); // In virtual pixels, NOT physical
+	const canvasPixelWidth = camera.canvas.width / window.devicePixelRatio; // In virtual pixels, NOT physical
+	const canvasPixelHeight = camera.canvas.height / window.devicePixelRatio; // In virtual pixels, NOT physical
 	// in pixels, relative to screen center
 	return [rawX - canvasPixelWidth / 2, rawY + canvasPixelHeight / 2];
 }

@@ -25,7 +25,7 @@ interface ShaderProgram {
 /** This script handles the creation of, and stores our shaders. */
 
 /** The size of GL_POINTS in **physical** pixels, not virtual.
- * Naviary's system's max is 8191. Perhaps multiply by {@link camera.getPixelDensity}
+ * Naviary's system's max is 8191. Perhaps multiply by {@link window.devicePixelRatio}
  * to make it look the same size on retina displays as non-retina? */
 const pointSize = 1;
 
@@ -66,7 +66,7 @@ function initPrograms() {
  */
 function createColorProgram(): ShaderProgram {
 	const specifyPointSize = false; // Can toggle true if we start rendering with gl.POINTS somewhere in the project
-	const pointSizeLine = specifyPointSize ? `gl_PointSize = ${(pointSize * camera.getPixelDensity()).toFixed(1)};` : ''; // Default: 7.0
+	const pointSizeLine = specifyPointSize ? `gl_PointSize = ${(pointSize * window.devicePixelRatio).toFixed(1)};` : ''; // Default: 7.0
 	const vsSource = `#version 300 es
 		in vec4 aVertexPosition;
 		in vec4 aVertexColor;
