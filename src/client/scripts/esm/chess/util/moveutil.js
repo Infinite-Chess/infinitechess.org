@@ -9,8 +9,8 @@ import coordutil from './coordutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../variants/gamerules.js').GameRules} GameRules
 */
-
 
 "use strict";
 
@@ -184,6 +184,19 @@ function getWhosTurnAtFront(gamefile) {
 }
 
 /**
+ * Returns whos turn it is at the front of the game,
+ * provided the only information you have is the existing moves list
+ * and the turnOrder gamerule.
+ * 
+ * You may need this if the gamefile hasn't actually been contructed yet.
+ * @param {number} numberOfMoves - The number of moves played in the game so far (length of the current moves list).
+ * @param {GameRules['turnOrder']} turnOrder - The order of colors turns in the game.
+ */
+function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves, turnOrder) {
+	return turnOrder[numberOfMoves % turnOrder];
+}
+
+/**
  * Returns total ply count (or half-moves) of the game so far.
  * @param {Move[]} moves - The moves list
  * @returns {number} The ply count
@@ -314,6 +327,8 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 	return false;
 }
 
+
+
 // Type export DO NOT USE
 export { Move };
 
@@ -327,6 +342,7 @@ export default {
 	areWeViewingLatestMove,
 	isIndexTheLastMove,
 	getWhosTurnAtFront,
+	getWhosTurnAtFrom_ByMoveCountAndTurnOrder,
 	getPlyCount,
 	hasPieceMoved,
 	deleteLastMove,
