@@ -12,8 +12,8 @@ import coordutil from './coordutil.js';
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
  * @typedef {import('../logic/boardchanges.js').Change} Change
  * @typedef {import('../logic/movepiece.js').Move} Move
-*/
-
+ * @typedef {import('../variants/gamerules.js').GameRules} GameRules
+ */
 
 "use strict";
 
@@ -122,6 +122,19 @@ function isIndexTheLastMove(moves, index) {
  */
 function getWhosTurnAtFront(gamefile) {
 	return getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
+}
+
+/**
+ * Returns whos turn it is at the front of the game,
+ * provided the only information you have is the existing moves list
+ * and the turnOrder gamerule.
+ * 
+ * You may need this if the gamefile hasn't actually been contructed yet.
+ * @param {number} numberOfMoves - The number of moves played in the game so far (length of the current moves list).
+ * @param {GameRules['turnOrder']} turnOrder - The order of colors turns in the game.
+ */
+function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves, turnOrder) {
+	return turnOrder[numberOfMoves % turnOrder];
 }
 
 /**
@@ -256,6 +269,7 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]]; }
 
 
+
 export default {
 	isIncrementingLegal,
 	isDecrementingLegal,
@@ -266,6 +280,7 @@ export default {
 	areWeViewingLatestMove,
 	isIndexTheLastMove,
 	getWhosTurnAtFront,
+	getWhosTurnAtFrom_ByMoveCountAndTurnOrder,
 	getPlyCount,
 	hasPieceMoved,
 	// flagLastMoveAsCheck,
