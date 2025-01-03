@@ -36,14 +36,14 @@ interface Contributor {
 			iconImg.src = contributor.iconUrl;
 
 			const githubStatsContainer = document.createElement("div");
-			githubStatsContainer.className = "github-stats";
+			githubStatsContainer.classList.add("github-stats");
 
 			const name = document.createElement("p");
-			name.className = "name";
+			name.classList.add("name");
 			name.innerText = contributor.name;
 
 			const paragraph = document.createElement("p");
-			paragraph.className = "contribution-count";
+			paragraph.classList.add("contribution-count");
 			paragraph.innerText = `${translations['contribution_count']?.[0] || ""}${contributor.contributionCount}${translations['contribution_count']?.[1] || ""}`;
 
 			githubStatsContainer.appendChild(name);
