@@ -14,7 +14,6 @@ import guipromotion from './guipromotion.js';
 import style from './style.js';
 // @ts-ignore
 import statustext from './statustext.js';
-// @ts-ignore
 import frametracker from '../rendering/frametracker.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
@@ -23,7 +22,7 @@ import movement from '../rendering/movement.js';
 // Variables ------------------------------------------------------------------------------
 
 
-const element_overlay = document.getElementById('overlay')!;
+const element_overlay: HTMLElement = document.getElementById('overlay')!;
 
 
 // Functions ------------------------------------------------------------------------------

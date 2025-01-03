@@ -25,7 +25,6 @@ import stats from './stats.js';
 import movepiece from '../../chess/logic/movepiece.js';
 // @ts-ignore
 import selection from '../chess/selection.js';
-// @ts-ignore
 import frametracker from '../rendering/frametracker.js';
 // @ts-ignore
 import guigameinfo from './guigameinfo.js';
