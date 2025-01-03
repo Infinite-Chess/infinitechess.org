@@ -103,10 +103,10 @@ async function callbackPaste(event) {
 	if (guinavigation.isCoordinateActive()) return;
 	
 	// Make sure we're not in a public match
-	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
+	if (gameloader.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
 
 	// Make sure it's legal in a private match
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
+	if (gameloader.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard;
@@ -256,7 +256,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		gameRules: longformat.gameRules
 	};
 
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
+	if (gameloader.areInOnlineGame() && onlinegame.getIsPrivate()) {
 		// Playing a custom private game! Save the pasted position in browser
 		// storage so that we can remember it upon refreshing.
 		const gameID = onlinegame.getGameID();

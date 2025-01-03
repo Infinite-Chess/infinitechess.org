@@ -86,8 +86,12 @@ interface VariantOptions {
  */
 let inAGame: boolean = false;
 
+/** The type of game we are in, whether local or online, if we are in a game. */
+let typeOfGameWeAreIn: undefined | 'local' | 'online';
+
 
 // Functions --------------------------------------------------------------------
+
 
 /**
  * Returns true if we are in ANY type of game, whether local, online, analysis, or editor.
@@ -96,6 +100,14 @@ let inAGame: boolean = false;
  */
 function areInAGame(): boolean {
 	return inAGame;
+}
+
+function areInLocalGame(): boolean {
+	return typeOfGameWeAreIn === 'local';
+}
+
+function areInOnlineGame(): boolean {
+	return typeOfGameWeAreIn === 'online';
 }
 
 
@@ -127,6 +139,7 @@ async function startLocalGame(options: {
 	guigameinfo.hidePlayerNames();
 	// @ts-ignore
 	loadGame(gameOptions, true, true);
+	typeOfGameWeAreIn = 'local';
 }
 
 /**
@@ -162,6 +175,7 @@ async function startOnlineGame(options: {
 	options.variantOptions = generateVariantOptionsIfReloadingPrivateCustomGame();
 	const fromWhitePerspective = options.youAreColor === 'white';
 	await loadGame(options, fromWhitePerspective, false);
+	typeOfGameWeAreIn = 'online';
 
 	onlinegame.initOnlineGame(options);
 	guigameinfo.setAndRevealPlayerNames(options);
@@ -246,11 +260,14 @@ function unloadGame() {
 	perspective.disable();
 	gui.prepareForOpen();
 	inAGame = false;
+	typeOfGameWeAreIn = undefined;
 }
 
 
 export default {
 	areInAGame,
+	areInLocalGame,
+	areInOnlineGame,
 	startLocalGame,
 	startOnlineGame,
 	loadGame,

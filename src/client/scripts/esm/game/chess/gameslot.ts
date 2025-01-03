@@ -46,7 +46,6 @@ import winconutil from "../../chess/util/winconutil.js";
 // @ts-ignore
 import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
-// eslint-disable-next-line no-unused-vars
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
@@ -62,8 +61,8 @@ import spritesheet from "../rendering/spritesheet.js";
 
 
 import type { MetaData } from "../../chess/util/metadata.js";
-// eslint-disable-next-line no-unused-vars
 import type { ClockValues } from "../../chess/logic/clock.js";
+import gameloader from "./gameloader.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -267,7 +266,7 @@ function concludeGame() {
 	onlinegame.onGameConclude();
 
 	const delayToPlayConcludeSoundSecs = 0.65;
-	if (!onlinegame.areInOnlineGame()) {
+	if (!gameloader.areInOnlineGame()) {
 		if (!loadedGamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game

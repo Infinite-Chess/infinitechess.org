@@ -7,8 +7,6 @@
  */
 
 // @ts-ignore
-import onlinegame from '../../game/misc/onlinegame.js';
-// @ts-ignore
 import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import clockutil from '../util/clockutil.js';
@@ -20,6 +18,7 @@ import gamefileutility from '../util/gamefileutility.js';
 import pingManager from '../../util/pingManager.js';
 // @ts-ignore
 import options from '../../game/rendering/options.js';
+import gameloader from '../../game/chess/gameloader.js';
 
 
 // Type Definitions ---------------------------------------------------------------
@@ -143,7 +142,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
  */
 function push(gamefile: gamefile) {
 	const clocks = gamefile.clocks;
-	if (onlinegame.areInOnlineGame()) return; // Only the server can push clocks
+	if (gameloader.areInOnlineGame()) return; // Only the server can push clocks
 	if (clocks.untimed) return;
 	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 
@@ -180,7 +179,7 @@ function update(gamefile: gamefile): string | undefined {
 	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart! - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
-	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
+	if (gameloader.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
 
 	for (const [color,time] of Object.entries(clocks.currentTime)) {
 		if (time as number <= 0) {

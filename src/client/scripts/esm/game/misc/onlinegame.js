@@ -41,8 +41,6 @@ import gameloader from '../chess/gameloader.js';
 
 /** This module keeps trap of the data of the onlinegame we are currently in. */
 
-/** Whether we are currently in an online game. */
-let inOnlineGame = false;
 /** The id of the online game we are in, if we are in one. @type {string} */
 let gameID;
 /** Whether the game is a private one (joined from an invite code). */
@@ -133,7 +131,7 @@ function addWarningLeaveGamePopupsToHyperlinks() {
 function confirmNavigationAwayFromGame(event) {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
-	if (!inOnlineGame || gamefileutility.isGameOver(gameslot.getGamefile())) return;
+	if (!gameloader.areInOnlineGame() || gamefileutility.isGameOver(gameslot.getGamefile())) return;
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?'); 
 	if (userConfirmed) return; // Follow link like normal. Server starts a 20-second auto-resign timer for disconnecting on purpose.
@@ -159,8 +157,6 @@ function confirmNavigationAwayFromGame(event) {
  */
 function getGameID() { return gameID; }
 
-function areInOnlineGame() { return inOnlineGame; }
-
 function getIsPrivate() { return isPrivate; }
 
 function getOurColor() { return ourColor; }
@@ -175,7 +171,7 @@ function hasGameConcluded() { return gameHasConcluded; }
 function setInSyncFalse() { inSync = false; }
 
 function update() {
-	if (!inOnlineGame) return;
+	if (!gameloader.areInOnlineGame()) return;
 
 	updateAFK();
 }
@@ -277,7 +273,7 @@ function onmessage(data) { // { sub, action, value, id }
 			handleOpponentsMove(data.value);
 			break;
 		case "clock": { // Contain this case in a block so that it's variables are not hoisted 
-			if (!inOnlineGame) return;
+			if (!gameloader.areInOnlineGame()) return;
 			const message = data.value; // { clockValues: { timerWhite, timerBlack } }
 			const gamefile = gameslot.getGamefile();
 			// Adjust the timer whos turn it is depending on ping.
@@ -431,7 +427,7 @@ function handleJoinGame(message) {
  * @param {Object} message - The server's socket message, with the properties `move`, `gameConclusion`, `moveNumber`, `clockValues`.
  */
 function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, clockValues }
-	if (!inOnlineGame) return;
+	if (!gameloader.areInOnlineGame()) return;
 	const moveAndConclusion = { move: message.move, gameConclusion: message.gameConclusion };
     
 	// Make sure the move number matches the expected.
@@ -521,7 +517,7 @@ function cancelMoveSound() {
 }
 
 function resyncToGame() {
-	if (!inOnlineGame) return;
+	if (!gameloader.areInOnlineGame()) return;
 	function onReplyFunc() { inSync = true; }
 	websocket.sendmessage('game', 'resync', gameID, false, onReplyFunc);
 }
@@ -533,7 +529,7 @@ function resyncToGame() {
  * `gameConclusion`, `clockValues`, `moves`, `millisUntilAutoAFKResign`, `offerDraw`
  */
 function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: ClockValues, moves, millisUntilAutoAFKResign, offerDraw }
-	if (!inOnlineGame) return;
+	if (!gameloader.areInOnlineGame()) return;
 	const gamefile = gameslot.getGamefile();
 	const claimedGameConclusion = messageContents.gameConclusion;
 
@@ -678,7 +674,6 @@ function reportOpponentsMove(reason) {
  * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `millisUntilAutoAFKResign`, `disconnect`, `serverRestartingAt`
  */
 function setColorAndGameID(gameOptions) {
-	inOnlineGame = true;
 	ourColor = gameOptions.youAreColor;
 	gameID = gameOptions.id;
 	isPrivate = gameOptions.publicity === 'private';
@@ -706,7 +701,6 @@ function initOnlineGame(gameOptions) {
 
 // Call when we leave an online game
 function closeOnlineGame() {
-	inOnlineGame = false;
 	gameID = undefined;
 	isPrivate = undefined;
 	ourColor = undefined;
@@ -744,7 +738,7 @@ function isItOurTurn() { return gameslot.getGamefile().whosTurn === ourColor; }
 function areWeColor(color) { return color === ourColor; }
 
 function sendMove() {
-	if (!inOnlineGame || !inSync) return; // Don't do anything if it's a local game
+	if (!gameloader.areInOnlineGame() || !inSync) return; // Don't do anything if it's a local game
 	if (config.DEV_BUILD) console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile();
@@ -768,7 +762,7 @@ function sendMove() {
 
 // Aborts / Resigns
 function onMainMenuPress() {
-	if (!inOnlineGame) return;
+	if (!gameloader.areInOnlineGame()) return;
 	const gamefile = gameslot.getGamefile();
 	if (gameHasConcluded) { // The server has concluded the game, not us
 		if (websocket.getSubs().game) {
@@ -819,7 +813,7 @@ async function askServerIfWeAreInGame() {
  * and the server may change the players elos!
  */
 function requestRemovalFromPlayersInActiveGames() {
-	if (!inOnlineGame) return;
+	if (!gameloader.areInOnlineGame()) return;
 	websocket.sendmessage('game', 'removefromplayersinactivegames');
 }
 
@@ -879,7 +873,6 @@ function onGameConclude() {
 
 export default {
 	onmessage,
-	areInOnlineGame,
 	getIsPrivate,
 	getOurColor,
 	setInSyncFalse,

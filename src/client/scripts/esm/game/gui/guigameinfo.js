@@ -1,10 +1,10 @@
 
 // Import Start
-import style from './style.js';
 import onlinegame from '../misc/onlinegame.js';
 import winconutil from '../../chess/util/winconutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
+import gameloader from '../chess/gameloader.js';
 // Import End
 
 /** 
@@ -67,7 +67,7 @@ function updateWhosTurn(gamefile) {
 		throw new Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
 
 	let textContent = "";
-	if (onlinegame.areInOnlineGame()) {
+	if (gameloader.areInOnlineGame()) {
 		const ourTurn = onlinegame.isItOurTurn(gamefile);
 		textContent = ourTurn ? translations.your_move : translations.their_move;
 	} else textContent = color === "white" ? translations.white_to_move : translations.black_to_move;
@@ -92,7 +92,7 @@ function gameEnd(conclusion) {
 	const resultTranslations = translations.results;
 	element_dot.classList.add('hidden');
 
-	if (onlinegame.areInOnlineGame()) {
+	if (gameloader.areInOnlineGame()) {
 
 		if (onlinegame.areWeColor(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
                                                                             : condition === 'time' ? resultTranslations.you_time

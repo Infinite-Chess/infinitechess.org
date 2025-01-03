@@ -19,8 +19,8 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import frametracker from '../../game/rendering/frametracker.js';
 import stats from '../../game/gui/stats.js';
-import onlinegame from '../../game/misc/onlinegame.js';
 import gameslot from '../../game/chess/gameslot.js';
+import gameloader from '../../game/chess/gameloader.js';
 // Import End
 
 /** 
@@ -93,7 +93,7 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
 	updateInCheck(gamefile, recordMove);
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
-		if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
+		if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !gameloader.areInOnlineGame()) gameslot.concludeGame();
 	}
 
 	if (updateData) {

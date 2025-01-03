@@ -23,6 +23,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import space from '../misc/space.js';
 import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
+import gameloader from '../chess/gameloader.js';
 // Import End
 
 /**
@@ -437,7 +438,7 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = colorutil.getPieceColorFromType(type);
-	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
+	const opponentColor = gameloader.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
