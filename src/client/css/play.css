@@ -1210,14 +1210,6 @@ a {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
 }
 
-.unavailable {
-    color: rgb(190, 190, 190);
-}
-
-.flex {
-    display: flex;
-}
-
 .hidden {
     display: none;
 }
