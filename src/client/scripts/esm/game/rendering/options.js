@@ -15,6 +15,7 @@ import timeutil from '../../util/timeutil.js';
 import themes from '../../components/header/themes.js';
 import preferences from '../../components/header/preferences.js';
 import gameslot from '../chess/gameslot.js';
+import gameloader from '../chess/gameloader.js';
 // Import End
 
 "use strict";
@@ -85,8 +86,8 @@ function isFPSOn() {
 function toggleEM() {
 
 	// Make sure it's legal
-	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
-	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
+	const legalInPrivate = gameloader.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
+	if (gameloader.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	em = !em;

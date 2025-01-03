@@ -8,8 +8,6 @@ import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
 // @ts-ignore
-import style from './style.js';
-// @ts-ignore
 import input from '../input.js';
 // @ts-ignore
 import guipause from './guipause.js';
@@ -29,12 +27,11 @@ import frametracker from '../rendering/frametracker.js';
 // @ts-ignore
 import guigameinfo from './guigameinfo.js';
 // @ts-ignore
-import onlinegame from '../misc/onlinegame.js';
-// @ts-ignore
 import camera from '../rendering/camera.js';
 
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
+import gameloader from '../chess/gameloader.js';
 
 /**
  * This script handles the navigation bar, in a game,
@@ -103,7 +100,7 @@ function onToggleNavigationBar() {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) throw Error("Should not have toggled navigation bar when there's no game. The listener should have been closed.");
 	if (navigationOpen) {
-		open(gamefile, { allowEditCoords: !onlinegame.areInOnlineGame() });
+		open(gamefile, { allowEditCoords: !gameloader.areInOnlineGame() });
 		guigameinfo.open();
 	}
 	else close();

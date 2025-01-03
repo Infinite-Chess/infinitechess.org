@@ -8,6 +8,7 @@ import sound from './sound.js';
 import moveutil from '../../chess/util/moveutil.js';
 import onlinegame from './onlinegame.js';
 import gameslot from '../chess/gameslot.js';
+import gameloader from '../chess/gameloader.js';
 // Import End
 
 'use strict';
@@ -42,7 +43,7 @@ let isAcceptingDraw = false;
  */
 function isOfferingDrawLegal() {
 	const gamefile = gameslot.getGamefile();
-	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
+	if (!gameloader.areInOnlineGame()) return false; // Can't offer draws in local games
 	if (!moveutil.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
 	if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer

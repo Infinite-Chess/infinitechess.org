@@ -16,6 +16,7 @@ import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
 import gameslot from './chess/gameslot.js';
+import gameloader from './chess/gameloader.js';
 // Import End
 
 "use strict";
@@ -726,7 +727,7 @@ function moveMouse(touch1, touch2) { // touch2 optional. If provided, will take 
 		setTouchesChangeInXYTo0(touch2);
 	}
 
-	const oneOrNegOne = onlinegame.areInOnlineGame() && onlinegame.areWeColor('black') ? -1 : 1;
+	const oneOrNegOne = gameloader.areInOnlineGame() && onlinegame.areWeColor('black') ? -1 : 1;
 
 	mouseWorldLocation[0] -= touchMovementX * dampeningToMoveMouseInTouchMode * oneOrNegOne;
 	mouseWorldLocation[1] -= touchMovementY * dampeningToMoveMouseInTouchMode * oneOrNegOne;

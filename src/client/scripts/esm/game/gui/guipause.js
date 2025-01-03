@@ -1,7 +1,6 @@
 
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
-import style from './style.js';
 import arrows from '../rendering/arrows.js';
 import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
@@ -61,7 +60,7 @@ function updatePasteButtonTransparency() {
 	const moves = gameslot.getGamefile().moves;
 	const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
 
-	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
+	if (gameloader.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
 	else                                                      element_pastegame.classList.remove('opacity-0_5');
 }
 
@@ -100,7 +99,7 @@ function onReceiveOpponentsMove() {
 function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
 	if (!isPaused) return;
 
-	if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
+	if (!gameloader.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
 
 	if (moveutil.isGameResignable(gameslot.getGamefile())) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
