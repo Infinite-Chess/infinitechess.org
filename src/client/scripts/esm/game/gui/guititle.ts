@@ -1,30 +1,33 @@
 
-// Import Start
-import style from './style.js';
-import gui from './gui.js';
-import movement from '../rendering/movement.js';
-import guiguide from './guiguide.js';
-import guiplay from './guiplay.js';
-// Import End
-
-"use strict";
-
 /**
  * This script handles our Title Screen
  */
 
-// Variables
+// @ts-ignore
+import style from './style.js';
+// @ts-ignore
+import gui from './gui.js';
+// @ts-ignore
+import guiguide from './guiguide.js';
+// @ts-ignore
+import guiplay from './guiplay.js';
+
+
+// Variables ----------------------------------------------------------------------------
+
 
 // Title Screen
 const boardVel = 0.6; // Speed at which board slowly moves while on title screen
 
-const titleElement = document.getElementById('title'); // Visible when on the title screen
-const element_play = document.getElementById('play');
-const element_guide = document.getElementById('rules');
-const element_boardEditor = document.getElementById('board-editor');
-const element_menuExternalLinks = document.getElementById('menu-external-links');
+const titleElement = document.getElementById('title')!; // Visible when on the title screen
+const element_play = document.getElementById('play')!;
+const element_guide = document.getElementById('rules')!;
+const element_boardEditor = document.getElementById('board-editor')!;
+const element_menuExternalLinks = document.getElementById('menu-external-links')!;
 
-// Functions
+
+// Functions ----------------------------------------------------------------------------
+
 
 // Call when title screen is loaded
 function open() {
@@ -51,15 +54,17 @@ function closeListeners() {
 	element_boardEditor.removeEventListener('click', gui.callback_featurePlanned);
 }
 
-function callback_Play(event) {
+function callback_Play(event: Event) {
 	close();
 	guiplay.open();
 }
 
-function callback_Guide(event) {
+function callback_Guide(event: Event) {
 	close();
 	guiguide.open();
 }
+
+
 
 export default {
 	boardVel,
