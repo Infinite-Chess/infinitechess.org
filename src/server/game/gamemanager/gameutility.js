@@ -643,10 +643,17 @@ function sendUpdatedClockToColor(game, color) {
  */
 function getGameClockValues(game) {
 	updateClockValues(game);
-	return {
-		timerWhite: game.timerWhite,
-		timerBlack: game.timerBlack,
+	const clockValues = {
+		white: game.timerWhite,
+		black: game.timerBlack,
 	};
+	
+	// Let the client know which clock is ticking so that they can immediately adjust for ping.
+	// * If less than 2 moves have been played, no color is considered ticking.
+	// * If the game is over, no color is considered ticking.
+	if (isGameResignable(game) && !isGameOver(game)) clockValues.colorTicking = game.whosTurn;
+
+	return clockValues;
 }
 
 /**
