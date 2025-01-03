@@ -25,7 +25,6 @@ import statustext from './statustext.js';
 import stats from './stats.js';
 // @ts-ignore
 import selection from '../chess/selection.js';
-// @ts-ignore
 import frametracker from '../rendering/frametracker.js';
 // @ts-ignore
 import guigameinfo from './guigameinfo.js';

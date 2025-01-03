@@ -21,7 +21,6 @@ import camera from '../camera.js';
 import board from '../board.js';
 // @ts-ignore
 import math, { BoundingBox } from '../../../util/math.js';
-// @ts-ignore
 import frametracker from '../frametracker.js';
 // @ts-ignore
 import preferences from '../../../components/header/preferences.js';

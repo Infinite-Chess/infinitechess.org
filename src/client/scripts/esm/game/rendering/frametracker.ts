@@ -8,7 +8,7 @@
  */
 
 /** Whether there has been a visual change on-screen the past frame. */
-let hasBeenVisualChange = true;
+let hasBeenVisualChange: boolean = true;
 
 
 /** The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen. */
@@ -21,10 +21,14 @@ function doWeRenderNextFrame() {
 	return hasBeenVisualChange;
 }
 
-/** Resets {@link hasBeenVisualChange} to false, to prepare for next frame. */
+/**
+ * Resets {@link hasBeenVisualChange} to false, to prepare for next frame.
+ * Call right after we finish a render frame.
+ */
 function onFrameRender() {
 	hasBeenVisualChange = false;
 }
+
 
 
 export default {
