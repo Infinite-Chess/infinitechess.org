@@ -38,7 +38,7 @@ interface MetaData {
 	/** How many points each side received from the game (e.g. `"1-0"` means white won, `"1/2-1/2"` means a draw) */
 	Result?: string,
 	/** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
-	Termination: string,
+	Termination?: string,
 }
 
 // getMetadataOfGame()

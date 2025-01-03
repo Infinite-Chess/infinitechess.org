@@ -685,6 +685,11 @@ function setColorAndGameID(gameOptions) {
  * @param {Object} gameOptions - An object that contains the properties `id`, `publicity`, `youAreColor`, `millisUntilAutoAFKResign`, `disconnect`, `serverRestartingAt`
  */
 function initOnlineGame(gameOptions) {
+	ourColor = gameOptions.youAreColor;
+	gameID = gameOptions.id;
+	isPrivate = gameOptions.publicity === 'private';
+	gameHasConcluded = false;
+
 	rescheduleAlertServerWeAFK();
 	// If Opponent is currently afk, display that countdown
 	if (gameOptions.millisUntilAutoAFKResign !== undefined) startOpponentAFKCountdown(gameOptions.millisUntilAutoAFKResign);
