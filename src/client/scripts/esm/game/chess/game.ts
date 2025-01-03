@@ -7,7 +7,6 @@
 
 // @ts-ignore
 import onlinegame from '../misc/onlinegame.js';
-// @ts-ignore
 import gui from '../gui/gui.js';
 // @ts-ignore
 import arrows from '../rendering/arrows.js';
@@ -15,7 +14,6 @@ import arrows from '../rendering/arrows.js';
 import pieces from '../rendering/pieces.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-// @ts-ignore
 import guititle from '../gui/guititle.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';

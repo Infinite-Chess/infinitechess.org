@@ -130,7 +130,7 @@ function initListeners() {
 	element_playBack.addEventListener('click', callback_playBack);
 	element_online.addEventListener('click', callback_online);
 	element_local.addEventListener('click', callback_local);
-	element_computer.addEventListener('click', gui.callback_featurePlanned);
+	element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_createInvite.addEventListener('click', callback_createInvite);
 	element_optionColor.addEventListener('change', callback_updateOptions);
 	element_optionClock.addEventListener('change', callback_updateOptions);
@@ -143,7 +143,7 @@ function closeListeners() {
 	element_playBack.removeEventListener('click', callback_playBack);
 	element_online.removeEventListener('click', callback_online);
 	element_local.removeEventListener('click', callback_local);
-	element_computer.removeEventListener('click', gui.callback_featurePlanned);
+	element_computer.removeEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_createInvite.removeEventListener('click', callback_createInvite);
 	element_optionColor.removeEventListener('change', callback_updateOptions);
 	element_optionClock.removeEventListener('change', callback_updateOptions);

@@ -45,13 +45,13 @@ function close() {
 function initListeners() {
 	element_play.addEventListener('click', callback_Play);
 	element_guide.addEventListener('click', callback_Guide);
-	element_boardEditor.addEventListener('click', gui.callback_featurePlanned);
+	element_boardEditor.addEventListener('click', gui.displayStatus_FeaturePlanned);
 }
 
 function closeListeners() {
 	element_play.removeEventListener('click', callback_Play);
 	element_guide.removeEventListener('click', callback_Guide);
-	element_boardEditor.removeEventListener('click', gui.callback_featurePlanned);
+	element_boardEditor.removeEventListener('click', gui.displayStatus_FeaturePlanned);
 }
 
 function callback_Play(event: Event) {
