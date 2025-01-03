@@ -90,7 +90,7 @@ let inAGame: boolean = false;
 let typeOfGameWeAreIn: undefined | 'local' | 'online';
 
 
-// Functions --------------------------------------------------------------------
+// Getters --------------------------------------------------------------------
 
 
 /**
@@ -111,9 +111,7 @@ function areInOnlineGame(): boolean {
 }
 
 
-
-
-
+// Start Game --------------------------------------------------------------------
 
 
 /** Starts a local game according to the options provided. */
@@ -122,22 +120,19 @@ async function startLocalGame(options: {
 	Variant: string,
 	TimeControl: MetaData['TimeControl'],
 }) {
-	// console.log("Starting local game with invite options:");
-	// console.log(options);
-
-	// [Event "Casual Space Classic infinite chess game"] [Site "https://www.infinitechess.org/"] [Round "-"]
 	const gameOptions = {
 		metadata: {
+			...options,
 			Event: `Casual local ${translations[options.Variant]} infinite chess game`,
 			Site: "https://www.infinitechess.org/",
 			Round: "-",
-			Variant: options.Variant,
-			TimeControl: options.TimeControl
-		}
+			UTCDate: timeutil.getCurrentUTCDate(),
+			UTCTime: timeutil.getCurrentUTCTime()
+		} as MetaData
 	};
 
-	guigameinfo.hidePlayerNames();
-	// @ts-ignore
+	guigameinfo.hidePlayerNames(); // --------------------------
+
 	loadGame(gameOptions, true, true);
 	typeOfGameWeAreIn = 'local';
 }
@@ -164,16 +159,16 @@ async function startOnlineGame(options: {
 	/** Provide if the game is timed. */
 	clockValues?: ClockValues,
 }) {
-	console.log("Starting online game with invite options:");
-	console.log(jsutil.deepCopyObject(options));
+	// console.log("Starting online game with invite options:");
+	// console.log(jsutil.deepCopyObject(options));
 
 	// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 	if (options.clockValues) options.clockValues = clock.adjustClockValuesForPing(options.clockValues);
 	
 	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
-	onlinegame.setColorAndGameID(options);
 	options.variantOptions = generateVariantOptionsIfReloadingPrivateCustomGame();
 	const fromWhitePerspective = options.youAreColor === 'white';
+
 	await loadGame(options, fromWhitePerspective, false);
 	typeOfGameWeAreIn = 'online';
 
@@ -231,10 +226,6 @@ async function loadGame(
 ) {
 	// console.log("Loading game with game options:");
 	// console.log(gameOptions);
-
-	// If the date is not already specified, set that here.
-	gameOptions.metadata['UTCDate'] = gameOptions.metadata['UTCDate'] || timeutil.getCurrentUTCDate();
-	gameOptions.metadata['UTCTime'] = gameOptions.metadata['UTCTime'] || timeutil.getCurrentUTCTime();
 
 	await gameslot.loadGamefile(gameOptions.metadata, fromWhitePerspective, { // Pass in the pre-existing moves
 		moves: gameOptions.moves,
