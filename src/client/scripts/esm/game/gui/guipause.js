@@ -48,7 +48,7 @@ function open() {
 	updateTextOfMainMenuButton();
 	updatePasteButtonTransparency();
 	updateDrawOfferButton();
-	style.revealElement(element_pauseUI);
+	element_pauseUI.classList.remove('hidden');
 	initListeners();
 }
 
@@ -142,7 +142,7 @@ function closeListeners() {
 function callback_Resume() {
 	if (!isPaused) return;
 	isPaused = false;
-	style.hideElement(element_pauseUI);
+	element_pauseUI.classList.add('hidden');
 	closeListeners();
 	frametracker.onVisualChange();
 }

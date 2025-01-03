@@ -30,8 +30,8 @@ let drawOfferUICramped = false;
 
 /** Reveals the draw offer UI on the bottom navigation bar */
 function open() {
-	style.revealElement(element_draw_offer_ui);
-	style.hideElement(element_whosturn);
+	element_draw_offer_ui.classList.remove('hidden');
+	element_whosturn.classList.add('hidden');
 	initDrawOfferListeners();
 	// Do the names and clocks need to be hidden to make room for the draw offer UI?
 	updateVisibilityOfNamesAndClocksWithDrawOffer();
@@ -39,8 +39,8 @@ function open() {
 
 /** Hides the draw offer UI on the bottom navigation bar */
 function close() {
-	style.hideElement(element_draw_offer_ui);
-	style.revealElement(element_whosturn);
+	element_draw_offer_ui.classList.add('hidden');
+	element_whosturn.classList.remove('hidden');
 	closeDrawOfferListeners();
 
 	if (!drawOfferUICramped) return;

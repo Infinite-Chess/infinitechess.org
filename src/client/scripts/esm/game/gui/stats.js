@@ -43,12 +43,12 @@ function showMoves(durationSecs = 2.5) {
 	setTextContentOfMoves();
 	setTimeout(hideMoves, durationSecs * 1000);
 
-	if (visibilityWeight === 1) style.revealElement(elementStatusMoves);
+	if (visibilityWeight === 1) elementStatusMoves.classList.remove('hidden');
 }
 
 function hideMoves() {
 	visibilityWeight--;
-	if (visibilityWeight === 0) style.hideElement(elementStatusMoves);
+	if (visibilityWeight === 0) elementStatusMoves.classList.add('hidden');
 }
 
 function setTextContentOfMoves() {
@@ -65,7 +65,7 @@ function updateStatsCSS() {
 
 function showPiecesMesh() {
 	if (config.VIDEO_MODE) return;
-	style.revealElement(elementStatusPiecesMesh);
+	elementStatusPiecesMesh.classList.remove('hidden');
 }
 
 function updatePiecesMesh(percent) {
@@ -74,16 +74,16 @@ function updatePiecesMesh(percent) {
 }
 
 function hidePiecesMesh() {
-	style.hideElement(elementStatusPiecesMesh);
+	elementStatusPiecesMesh.classList.add('hidden');
 }
 
 function showFPS() {
 	if (config.VIDEO_MODE) return;
-	style.revealElement(elementStatusFPS);
+	elementStatusFPS.classList.remove('hidden');
 }
 
 function hideFPS() {
-	style.hideElement(elementStatusFPS);
+	elementStatusFPS.classList.add('hidden');
 }
 
 function updateFPS(fps) {
@@ -94,7 +94,7 @@ function updateFPS(fps) {
 
 function showRotateMesh() {
 	if (config.VIDEO_MODE) return;
-	style.revealElement(elementStatusRotateMesh);
+	elementStatusRotateMesh.classList.remove('hidden');
 }
 
 function updateRotateMesh(percent) {
@@ -103,19 +103,10 @@ function updateRotateMesh(percent) {
 }
 
 function hideRotateMesh() {
-	style.hideElement(elementStatusRotateMesh);
+	elementStatusRotateMesh.classList.add('hidden');
 }
 
-// NO LONGER USED. These were for the aynchronious checkmate algorithm.
-// showMoveLooking() {
-//     if (config.VIDEO_MODE) return;
-//     style.revealElement(elementStatusMoveLooking);
-// },
-// updateMoveLooking(percent) {
-//     const percentString = math.decimalToPercent(percent);
-//     showMoveLooking();
-//     elementStatusMoveLooking.textContent = `Looking for moves... ${percentString}`;
-// },
+
 
 export default {
 	showMoves,

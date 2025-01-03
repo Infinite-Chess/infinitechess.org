@@ -31,12 +31,12 @@ const element_playerBlack = document.getElementById('playerblack');
 
 function open() {
 	if (gameslot.getGamefile().gameConclusion) return;
-	style.revealElement(element_dot);
+	element_dot.classList.remove('hidden');
 }
 
 function hidePlayerNames() {
-	style.hideElement(element_playerWhite);
-	style.hideElement(element_playerBlack);
+	element_playerWhite.classList.add('hidden');
+	element_playerBlack.classList.add('hidden');
 }
 
 function setAndRevealPlayerNames(gameOptions) {
@@ -47,8 +47,8 @@ function setAndRevealPlayerNames(gameOptions) {
 		element_playerWhite.textContent = onlinegame.areWeColor('white') && white === translations.guest_indicator ? translations.you_indicator : white;
 		element_playerBlack.textContent = onlinegame.areWeColor('black') && black === translations.guest_indicator ? translations.you_indicator : black;
 	}
-	style.revealElement(element_playerWhite);
-	style.revealElement(element_playerBlack);
+	element_playerWhite.classList.remove('hidden');
+	element_playerBlack.classList.remove('hidden');
 }
 
 /**
@@ -74,7 +74,7 @@ function updateWhosTurn(gamefile) {
 
 	element_whosturn.textContent = textContent;
 
-	style.revealElement(element_dot);
+	element_dot.classList.remove('hidden');
 	if (color === 'white') {
 		element_dot.classList.remove('dotblack');
 		element_dot.classList.add('dotwhite');
@@ -90,7 +90,7 @@ function gameEnd(conclusion) {
 
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	const resultTranslations = translations.results;
-	style.hideElement(element_dot);
+	element_dot.classList.add('hidden');
 
 	if (onlinegame.areInOnlineGame()) {
 

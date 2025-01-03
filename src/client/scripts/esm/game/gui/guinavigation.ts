@@ -116,7 +116,7 @@ function onToggleNavigationBar() {
 function open(gamefile: gamefile, { allowEditCoords = true }: { allowEditCoords?: boolean } = {}) {
 
 	activeGamefile = gamefile;
-	style.revealElement(element_Navigation);
+	element_Navigation.classList.remove('hidden');
 	initListeners_Navigation();
 	update_MoveButtons();
 	initCoordinates({ allowEditCoords });
@@ -139,7 +139,7 @@ function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }) {
 
 function close() {
 	activeGamefile = undefined;
-	style.hideElement(element_Navigation);
+	element_Navigation.classList.add('hidden');
 	closeListeners_Navigation();
 	navigationOpen = false;
 }
