@@ -73,6 +73,8 @@ import type gamefile from '../../chess/logic/gamefile.js';
 function init() {
 	options.initTheme();
 
+	gui.prepareForOpen();
+
 	guititle.open();
 
 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
@@ -80,7 +82,7 @@ function init() {
 
 // Update the game every single frame
 function update() {
-	if (gui.getScreen() === 'title play') invites.update();
+	invites.update();
 
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return updateSelectionScreen();

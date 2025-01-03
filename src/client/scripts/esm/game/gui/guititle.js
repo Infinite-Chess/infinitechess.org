@@ -4,7 +4,6 @@ import style from './style.js';
 import gui from './gui.js';
 import movement from '../rendering/movement.js';
 import guiguide from './guiguide.js';
-import perspective from '../rendering/perspective.js';
 import guiplay from './guiplay.js';
 // Import End
 
@@ -29,20 +28,15 @@ const element_menuExternalLinks = document.getElementById('menu-external-links')
 
 // Call when title screen is loaded
 function open() {
-	perspective.disable();
-	if (!gui.getScreen()?.includes('title')) movement.randomizePanVelDir(); // Randomize pan velocity direction
-	gui.setScreen('title');
-	movement.setBoardScale(1.8); // 1.8
 	style.revealElement(titleElement);
 	style.revealElement(element_menuExternalLinks);
-	initListeners(); // These need to be canceled when leaving screen
-}
+	initListeners();
+};
 
 function close() {
-	// Cancel all title screen button event listeners to save cpu...
-	closeListeners();
 	style.hideElement(titleElement);
 	style.hideElement(element_menuExternalLinks);
+	closeListeners();
 }
 
 function initListeners() {
