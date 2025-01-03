@@ -46,11 +46,6 @@ function prepareForOpen() {
 	movement.setBoardScale(1.8); // 1.8
 }
 
-// Fades-in the overlay element over 1 second
-function fadeInOverlay1s() {
-	style.fadeIn1s(element_overlay);
-}
-
 /** Displays the status message on screen "Feature is planned". */
 function displayStatus_FeaturePlanned() {
 	statustext.showStatus(translations['planned_feature']);
@@ -59,6 +54,5 @@ function displayStatus_FeaturePlanned() {
 
 export default {
 	prepareForOpen,
-	fadeInOverlay1s,
 	displayStatus_FeaturePlanned,
 };
