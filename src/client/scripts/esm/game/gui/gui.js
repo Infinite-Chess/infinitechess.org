@@ -1,11 +1,10 @@
 
-// Import Start
 import selection from '../chess/selection.js';
 import guipromotion from './guipromotion.js';
 import style from './style.js';
 import statustext from './statustext.js';
 import frametracker from '../rendering/frametracker.js';
-// Import End
+import movement from '../rendering/movement.js';
 
 "use strict";
 
@@ -16,8 +15,6 @@ import frametracker from '../rendering/frametracker.js';
  */
 
 // Variables
-
-let screen = ''; // Current screen location in the game.  title/online/computer/local/board  
 
 const element_overlay = document.getElementById('overlay');
 
@@ -31,13 +28,6 @@ function callback_CancelPromotionIfUIOpen() {
 
 // Functions
 
-function getScreen() {
-	return screen;
-}
-
-function setScreen(value) {
-	screen = value;
-}
 
 // Fades-in the overlay element over 1 second
 function fadeInOverlay1s() {
@@ -56,10 +46,19 @@ function makeOverlaySelectable() {
 	element_overlay.classList.remove('unselectable');
 }
 
+/**
+ * Call when we first load the page, or leave any game. This prepares the board
+ * for either the title screen or lobby (any screen that's not in a game)
+ */
+function prepareForOpen() {
+	// Randomize pan velocity direction for the title screen and lobby menus
+	movement.randomizePanVelDir();
+	movement.setBoardScale(1.8); // 1.8
+}
+
 export default {
+	prepareForOpen,
 	fadeInOverlay1s,
-	getScreen,
-	setScreen,
 	callback_featurePlanned,
 	makeOverlayUnselectable,
 	makeOverlaySelectable

@@ -23,13 +23,15 @@ import sound from '../misc/sound.js';
 // @ts-ignore
 import onlinegame from "../misc/onlinegame.js";
 // @ts-ignore
-import gui from "../gui/gui.js";
-// @ts-ignore
 import drawoffers from "../misc/drawoffers.js";
 // @ts-ignore
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import jsutil from "../../util/jsutil.js";
+// @ts-ignore
+import perspective from "../rendering/perspective.js";
+// @ts-ignore
+import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import clock from "../../chess/logic/clock.js";
 
@@ -42,6 +44,10 @@ import type { GameRules } from "../../chess/variants/gamerules.js";
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
+
+
+// Type Definitions --------------------------------------------------------------------
+
 
 /**
  * Variant options that can be used to load a custom game,
@@ -71,7 +77,32 @@ interface VariantOptions {
 }
 
 
-// Type Definitions --------------------------------------------------------------------
+// Variables --------------------------------------------------------------------
+
+
+/**
+ * True if we are in ANY type of game, whether local, online, analysis, or editor.
+ * 
+ * If we're on the title screen or the lobby, this will be false.
+ */
+let inAGame: boolean = false;
+
+
+// Functions --------------------------------------------------------------------
+
+/**
+ * Returns true if we are in ANY type of game, whether local, online, analysis, or editor.
+ * 
+ * If we're on the title screen or the lobby, this will be false.
+ */
+function areInAGame(): boolean {
+	return inAGame;
+}
+
+
+
+
+
 
 
 /** Starts a local game according to the options provided. */
@@ -82,8 +113,6 @@ async function startLocalGame(options: {
 }) {
 	// console.log("Starting local game with invite options:");
 	// console.log(options);
-
-	gui.setScreen('game local'); // Change screen location
 
 	// [Event "Casual Space Classic infinite chess game"] [Site "https://www.infinitechess.org/"] [Round "-"]
 	const gameOptions = {
@@ -129,7 +158,6 @@ async function startOnlineGame(options: {
 	// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 	if (options.clockValues) options.clockValues = clock.adjustClockValuesForPing(options.clockValues);
 	
-	gui.setScreen('game online'); // Change screen location
 	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
 	onlinegame.setColorAndGameID(options);
 	options.variantOptions = generateVariantOptionsIfReloadingPrivateCustomGame();
@@ -184,6 +212,7 @@ async function loadGame(
 		 */
 		variantOptions?: VariantOptions,
 	},
+	/** If false, we'll be viewing black's perspective. */
 	fromWhitePerspective: boolean,
 	allowEditCoords: boolean
 ) {
@@ -207,16 +236,22 @@ async function loadGame(
 	guigameinfo.updateWhosTurn(gamefile);
     
 	sound.playSound_gamestart();
+
+	inAGame = true;
 }
 
 function unloadGame() {
 	onlinegame.closeOnlineGame();
 	guinavigation.close();
 	gameslot.unloadGame();
+	perspective.disable();
+	gui.prepareForOpen();
+	inAGame = false;
 }
 
 
 export default {
+	areInAGame,
 	startLocalGame,
 	startOnlineGame,
 	loadGame,

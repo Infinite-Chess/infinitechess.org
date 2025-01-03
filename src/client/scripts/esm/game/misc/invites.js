@@ -51,7 +51,7 @@ function gelement_iCodeCode() {
 }
 
 function update() {
-	if (!guiplay.onPlayPage()) return; // Not on the play screen
+	if (!guiplay.isOpen()) return; // Not on the play screen
 	if (loadbalancer.gisHibernating()) statustext.showStatus(translations.invites.move_mouse, false, 0.1);
 }
 
@@ -276,7 +276,7 @@ function clear({ recentUsersInLastList = false } = {}) {
 
 // Deletes all invites and resets create invite button if on play page
 function clearIfOnPlayPage() {
-	if (!guiplay.onPlayPage()) return; // Not on the play screen
+	if (!guiplay.isOpen()) return; // Not on the play screen
 	clear();
 	updateCreateInviteButton();
 }
@@ -407,7 +407,7 @@ function doWeHave() {
  * @param {ignoreAlreadySubbed} *true* If the socket closed unexpectedly and we need to resub. subs.invites will already be true so we ignore that.
  * */
 async function subscribeToInvites(ignoreAlreadySubbed) { // Set to true when we are restarting the connection and need to resub to everything we were to before.
-	if (!guiplay.onPlayPage()) return; // Don't subscribe to invites if we're not on the play page!
+	if (!guiplay.isOpen()) return; // Don't subscribe to invites if we're not on the play page!
 	const subs = websocket.getSubs();
 	if (!ignoreAlreadySubbed && subs.invites) return;
 	// console.log("Subbing to invites!");

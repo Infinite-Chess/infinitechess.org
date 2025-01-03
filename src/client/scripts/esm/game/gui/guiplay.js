@@ -108,7 +108,6 @@ function showElement_inviteCode() { style.revealElement(element_inviteCode); }
 
 function open() {
 	pageIsOpen = true;
-	gui.setScreen('title play');
 	style.revealElement(element_PlaySelection);
 	style.revealElement(element_menuExternalLinks);
 	changePlayMode('online');
@@ -398,14 +397,6 @@ function onSocketClose() {
 	unlockAcceptInviteButton();
 }
 
-/**
- * Returns *true* if we are on the play page.
- * @returns {boolean}
- */
-function onPlayPage() {
-	return gui.getScreen() === 'title play';
-}
-
 export default {
 	isOpen,
 	hideElement_joinPrivate,
@@ -418,7 +409,6 @@ export default {
 	setElement_CreateInviteTextContent,
 	initListeners_Invites,
 	closeListeners_Invites,
-	onPlayPage,
 	lockCreateInviteButton,
 	unlockCreateInviteButton,
 	isCreateInviteButtonLocked,
