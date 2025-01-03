@@ -27,8 +27,26 @@ import options from '../../game/rendering/options.js';
 // @ts-ignore
 import type gamefile from './gamefile.js';
 
-/** An object containing each color in the game for the keys, and that color's time left in milliseconds for the values. */
-interface ClockValues { [color: string]: number };
+/** An object containg the values of each color's clock, and which one is currently counting down, if any. */
+interface ClockValues {
+	/** The actual clock values. An object containing each color in the game for the keys, and that color's time left in milliseconds for the values. */
+	clocks: { [color: string]: number }
+	/**
+	 * If a player's timer is currently counting down, this should be specified.
+	 * No clock is ticking if less than 2 moves are played, or if game is over.
+	 * 
+	 * The color specified should have their time immediately accomodated for ping.
+	 */
+	colorTicking?: string,
+	/**
+	 * The timestamp the color ticking (if there is one) will lose by timeout.
+	 * This should be calulated AFTER we adjust the clock values for ping.
+	 * 
+	 * The server should NOT specify this when sending the clock information
+	 * to the client, because the server and client's clocks are not always in sync.
+	 */
+	timeColorTickingLosesAt?: number,
+};
 
 
 // Functions -----------------------------------------------------------------------
@@ -76,40 +94,46 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
  * @param {gamefile} gamefile - The current game state object containing clock information.
  * @param {object} clockValues - An object containing the updated clock values.
  */
-function edit(gamefile: gamefile, clockValues: ClockValues) {
+function edit(gamefile: gamefile, clockValues?: ClockValues) {
 	if (!clockValues) return; // Likely a no-timed game
-	const { timerWhite, timerBlack } = clockValues;
 	const clocks = gamefile.clocks;
 
-	clocks.colorTicking = gamefile.whosTurn;
-	clocks.currentTime.white = timerWhite;
-	clocks.currentTime.black = timerBlack;
+	const colorTicking = gamefile.whosTurn;
+
+	if (clockValues.colorTicking !== undefined) {
+		// Adjust the clock value according to the precalculated time they will lost by timeout.
+		if (clockValues.timeColorTickingLosesAt === undefined) throw Error('clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() beore edit()');
+		const colorTickingTrueTimeRemaining = clockValues.timeColorTickingLosesAt - Date.now();
+		clockValues.clocks[colorTicking] = colorTickingTrueTimeRemaining;
+	}
+
+	clocks.colorTicking = colorTicking;
+	clocks.currentTime = { ...clockValues.clocks };
+
 	const now = Date.now();
 	clocks.timeAtTurnStart = now;
 
-	if (clockValues['accountForPing'] && moveutil.isGameResignable(gamefile) && !gamefileutility.isGameOver(gamefile)) {
-	// 	// Ping is round-trip time (RTT), So divided by two to get the approximate
-	// 	// time that has elapsed since the server sent us the correct clock values
-	// 	const halfPing = pingManager.getHalfPing();
-	// 	clocks.currentTime[gamefile.whosTurn] -= halfPing; 
-	// 	if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
-	// 	if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${gamefile.whosTurn}'s clock.`);
-	}
 	clocks.timeRemainAtTurnStart = clocks.colorTicking === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
 }
 
 /**
  * Modifies the clock values to account for ping.
  */
-function adjustClockValuesForPing(clockValues: ClockValues, whosTurn: string) {
+function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
+	if (!clockValues.colorTicking) return clockValues; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
+
 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// time that has elapsed since the server sent us the correct clock values
 	const halfPing = pingManager.getHalfPing();
 	if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
-	if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${whosTurn}'s clock.`);
+	if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${clockValues.colorTicking}'s clock.`);
 
-	if (clockValues[whosTurn] === undefined) throw Error(`Invalid color "${whosTurn}" to modify clock value to account for ping.`);
-	clockValues[whosTurn] -= halfPing;
+	if (clockValues.clocks[clockValues.colorTicking] === undefined) throw Error(`Invalid color "${clockValues.colorTicking}" to modify clock value to account for ping.`);
+	clockValues.clocks[clockValues.colorTicking]! -= halfPing;
+
+	// Flag what time the player who's clock is ticking will lose on time.
+	// Do this because while while the gamefile is being constructed, the time left may become innacurate.
+	clockValues.timeColorTickingLosesAt = Date.now() + clockValues.clocks[clockValues.colorTicking]!;
 
 	return clockValues;
 }
@@ -137,7 +161,7 @@ function push(gamefile: gamefile) {
 
 function endGame(gamefile: gamefile) {
 	const clocks = gamefile.clocks;
-	clocks.timeRemainAtTurnStart = undefined;
+	clocks.timeRemainAtTurnStart = null;
 	clocks.timeAtTurnStart = undefined;
 }
 

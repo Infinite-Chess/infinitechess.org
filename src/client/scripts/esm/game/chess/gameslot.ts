@@ -122,13 +122,13 @@ function isLoadedGameViewingWhitePerspective() {
  * Loads a gamefile onto the board.
  * Generates the gamefile and organizes its lines. Inits the promotion UI,
  * mesh of all the pieces, and toggles miniimage rendering. (everything visual)
- * @param {Object} metadata - An object containing the property `Variant`, and optionally `UTCDate` and `UTCTime`, which can be used to extract the version of the variant. Without the date, the latest version will be used.
- * @param {Object} viewWhitePerspective - True if we should be viewing the game from white's perspective, false for black's perspective.
- * @param {Object} [options] - Options for constructing the gamefile.
- * @param {string[]} [options.moves] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
- * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
- * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
- * @param {ClockValues} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, accountForPing }`
+ * @param metadata - An object containing the property `Variant`, and optionally `UTCDate` and `UTCTime`, which can be used to extract the version of the variant. Without the date, the latest version will be used.
+ * @param viewWhitePerspective - True if we should be viewing the game from white's perspective, false for black's perspective.
+ * @param [options] - Options for constructing the gamefile.
+ * @param [options.moves] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
+ * @param [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
+ * @param [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
+ * @param [options.clockValues] - Any already existing clock values for the gamefile.
  */
 async function loadGamefile(
 	metadata: MetaData,
@@ -137,7 +137,7 @@ async function loadGamefile(
 		moves?: string[],
 		variantOptions?: any,
 		gameConclusion?: string | false,
-		clockValues?: any,
+		clockValues?: ClockValues,
 	} = {}
 ) {
 
@@ -164,7 +164,6 @@ async function loadGamefile(
 	// spinny pawn animation has time to fade away.
 	animateLastMoveTimeoutID = setTimeout(movepiece.forwardToFront, delayOfLatestMoveAnimationOnRejoinMillis, newGamefile, { flipTurn: false, updateProperties: false });
 
-	loadedGamefile = newGamefile;
 	youAreColor = viewWhitePerspective ? 'white' : 'black';
 
 	// If the game has more lines than this, then we turn off arrows at the start to prevent a lag spike.
@@ -178,18 +177,20 @@ async function loadGamefile(
 		arrows.setMode(0);
 	}
 
+	// The only time the document should listen for us pasting a game, is when a game is already loaded.
+	// If a game WASN'T loaded, then we wouldn't be on a screen that COULD load a game!!
+	initCopyPastGameListeners();
+
+	loadedGamefile = newGamefile;
+
 	// Immediately conclude the game if we loaded a game that's over already
 	if (gamefileutility.isGameOver(newGamefile)) {
 		concludeGame();
 		onlinegame.requestRemovalFromPlayersInActiveGames();
 	}
-
-	// The only time the document should listen for us pasting a game, is when a game is already loaded.
-	// If a game WASN'T loaded, then we wouldn't be on a screen that COULD load a game!!
-	initCopyPastGameListeners();
-
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.close();
+	
 	startStartingTransition();
 	console.log('Finished loading');
 

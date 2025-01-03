@@ -193,7 +193,7 @@ function getWhosTurnAtFront(gamefile) {
  * @param {GameRules['turnOrder']} turnOrder - The order of colors turns in the game.
  */
 function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves, turnOrder) {
-	return turnOrder[numberOfMoves % turnOrder];
+	return turnOrder[numberOfMoves % turnOrder.length];
 }
 
 /**

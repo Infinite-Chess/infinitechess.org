@@ -378,20 +378,20 @@ function getGameRules(modifications: GameRuleModifications = {}, position?: { [c
 	return jsutil.deepCopyObject(gameRules) as GameRules; // Copy it so the game doesn't modify the values in this module.
 }
 
-/**
- * Returns the turnOrder of the provided variant at the date (if specified).
- */
-function getVariantTurnOrder({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
-	Variant: string,
-	UTCDate: string,
-	UTCTime: string
-}): GameRules['turnOrder'] {
+// /**
+//  * Returns the turnOrder of the provided variant at the date (if specified).
+//  */
+// function getVariantTurnOrder({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
+// 	Variant: string,
+// 	UTCDate: string,
+// 	UTCTime: string
+// }): GameRules['turnOrder'] {
 
-	const gameruleModifications = getVariantGameRuleModifications({ Variant, UTCDate, UTCTime });
-	// If the gamerule modifications have a turnOrder modification, return that,
-	// otherwise return the default instead.
-	return gameruleModifications.turnOrder || defaultTurnOrder;
-}
+// 	const gameruleModifications = getVariantGameRuleModifications({ Variant, UTCDate, UTCTime });
+// 	// If the gamerule modifications have a turnOrder modification, return that,
+// 	// otherwise return the default instead.
+// 	return gameruleModifications.turnOrder || defaultTurnOrder;
+// }
 
 /**
  * Returns the `promotionsAllowed` property of the variant's gamerules.
@@ -521,7 +521,7 @@ export default {
 	isVariantValid,
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
-	getVariantTurnOrder,
+	// getVariantTurnOrder,
 	getPromotionsAllowed,
 	getMovesetsOfVariant,
 };

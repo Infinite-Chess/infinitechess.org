@@ -36,6 +36,7 @@ import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 /**
  * @typedef {import('../TypeDefinitions.js').Game} Game
  * @typedef {import('../../../client/scripts/esm/chess/variants/gamerules.js').GameRules} GameRules
+ * @typedef {import('../../../client/scripts/esm/chess/logic/clock.js').ClockValues} ClockValues
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -638,16 +639,20 @@ function sendUpdatedClockToColor(game, color) {
 
 /**
  * Return the clock values of the game that can be sent to a client.
- * This also updates the clocks, as the players current time should not be the same as when they return first started
+ * It also includes who's clock is currently counting down, if one is.
+ * This also updates the clocks, as the players current time should not be the same as when their turn firs started.
  * @param {Game} game - The game
+ * @returns {ClockValues}
  */
 function getGameClockValues(game) {
 	updateClockValues(game);
 	const clockValues = {
-		white: game.timerWhite,
-		black: game.timerBlack,
+		clocks: {
+			white: game.timerWhite,
+			black: game.timerBlack,
+		}
 	};
-	
+		
 	// Let the client know which clock is ticking so that they can immediately adjust for ping.
 	// * If less than 2 moves have been played, no color is considered ticking.
 	// * If the game is over, no color is considered ticking.
