@@ -43,6 +43,9 @@ button {
 /* Loading Page. A COUPLE OF THSEE CLASSES are also used for the game's loading animation page! */
 
 .animation-container {
+    transition: opacity 0.4s;
+    z-index: 1;
+    pointer-events: none;
     display: flex;
     background-color: black;
     justify-content: center; /* Center horizontally */
@@ -52,7 +55,6 @@ button {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: -1;
     overflow: hidden;
 }
 
