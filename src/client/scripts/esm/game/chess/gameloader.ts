@@ -30,7 +30,6 @@ import localstorage from "../../util/localstorage.js";
 import jsutil from "../../util/jsutil.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-// @ts-ignore
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import clock from "../../chess/logic/clock.js";

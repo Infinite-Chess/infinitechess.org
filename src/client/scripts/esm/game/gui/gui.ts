@@ -1,22 +1,33 @@
 
-import selection from '../chess/selection.js';
-import guipromotion from './guipromotion.js';
-import style from './style.js';
-import statustext from './statustext.js';
-import frametracker from '../rendering/frametracker.js';
-import movement from '../rendering/movement.js';
-
-"use strict";
-
 /**
- * This is the parent gui script of all gui scripts.
- * Here we remember what page we're on,
- * and we have a reference to the overlay element above the entire canvas.
+ * This script adds event listeners for our main overlay html element that
+ * contains all of our gui pages.
+ * 
+ * We also prepare the board here whenever ANY gui page (non-game) is opened.
  */
 
-// Variables
+// @ts-ignore
+import selection from '../chess/selection.js';
+// @ts-ignore
+import guipromotion from './guipromotion.js';
+// @ts-ignore
+import style from './style.js';
+// @ts-ignore
+import statustext from './statustext.js';
+// @ts-ignore
+import frametracker from '../rendering/frametracker.js';
+// @ts-ignore
+import movement from '../rendering/movement.js';
 
-const element_overlay = document.getElementById('overlay');
+
+// Variables ------------------------------------------------------------------------------
+
+
+const element_overlay = document.getElementById('overlay')!;
+
+
+// Functions ------------------------------------------------------------------------------
+
 
 element_overlay.addEventListener('click', callback_CancelPromotionIfUIOpen);
 
@@ -24,26 +35,6 @@ function callback_CancelPromotionIfUIOpen() {
 	if (!guipromotion.isUIOpen()) return;
 	selection.unselectPiece();
 	frametracker.onVisualChange();
-}
-
-// Functions
-
-
-// Fades-in the overlay element over 1 second
-function fadeInOverlay1s() {
-	style.fadeIn1s(element_overlay);
-}
-
-function callback_featurePlanned() {
-	statustext.showStatus(translations.planned_feature);
-}
-
-function makeOverlayUnselectable() {
-	element_overlay.classList.add('unselectable');
-}
-
-function makeOverlaySelectable() {
-	element_overlay.classList.remove('unselectable');
 }
 
 /**
@@ -56,10 +47,19 @@ function prepareForOpen() {
 	movement.setBoardScale(1.8); // 1.8
 }
 
+// Fades-in the overlay element over 1 second
+function fadeInOverlay1s() {
+	style.fadeIn1s(element_overlay);
+}
+
+/** Displays the status message on screen "Feature is planned". */
+function displayStatus_FeaturePlanned() {
+	statustext.showStatus(translations['planned_feature']);
+}
+
+
 export default {
 	prepareForOpen,
 	fadeInOverlay1s,
-	callback_featurePlanned,
-	makeOverlayUnselectable,
-	makeOverlaySelectable
+	displayStatus_FeaturePlanned,
 };

@@ -375,7 +375,6 @@ function initListeners_Mouse() {
 		if (ignoreMouseDown) return;
 
 		if (event.target.id === 'overlay') event.preventDefault();
-		// if (clickedOverlay) gui.makeOverlayUnselectable();
         
 		pushMouseDown(event);
 
@@ -402,7 +401,6 @@ function initListeners_Mouse() {
 
 	overlayElement.addEventListener("mouseup", (event) => {
 		event = event || window.event;
-		// gui.makeOverlaySelectable();
 		removeMouseHeld(event);
 		setTimeout(perspective.relockMouse, 1); // 1 millisecond, to give time for pause listener to fire
 
