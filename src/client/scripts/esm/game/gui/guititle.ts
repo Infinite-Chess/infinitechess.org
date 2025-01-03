@@ -31,14 +31,14 @@ const element_menuExternalLinks = document.getElementById('menu-external-links')
 
 // Call when title screen is loaded
 function open() {
-	style.revealElement(titleElement);
-	style.revealElement(element_menuExternalLinks);
+	titleElement.classList.remove('hidden');
+	element_menuExternalLinks.classList.remove('hidden');
 	initListeners();
 };
 
 function close() {
-	style.hideElement(titleElement);
-	style.hideElement(element_menuExternalLinks);
+	titleElement.classList.add('hidden');
+	element_menuExternalLinks.classList.add('hidden');
 	closeListeners();
 }
 

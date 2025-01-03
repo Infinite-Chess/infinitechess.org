@@ -32,21 +32,6 @@ function reinstateClass(element, className) {
 
 // Hide and show elements...
 
-/**
- * Hides the provided document element by giving it a class with the property "display: none".
- * @param {HTMLElement} element - The document element
- */
-function hideElement(element) {
-	addClass(element, "hidden");
-}
-
-/**
- * Reveals the provided document element by **removing** the class with the property "display: none".
- * @param {HTMLElement} element - The document element
- */
-function revealElement(element) {
-	removeClass(element, "hidden");
-}
 
 
 // Other operations
@@ -107,8 +92,6 @@ function arrayToCssColor(colorArray) {
 
 
 export default {
-	hideElement,
-	revealElement,
 	setNavStyle,
 	getChildrenTextContents,
 	arrayToCssColor,

@@ -63,13 +63,13 @@ const countdown = {
 
 function hideClocks() {
 	for (const color in element_timers) {
-		style.hideElement(element_timers[color].container);
+		element_timers[color].container.classList.add('hidden');
 	}
 }
 
 function showClocks() {
 	for (const color in element_timers) {
-		style.revealElement(element_timers[color].container);
+		element_timers[color].container.classList.remove('hidden');
 	}
 }
 

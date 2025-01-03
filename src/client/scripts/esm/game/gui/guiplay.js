@@ -101,15 +101,15 @@ function isOpen() { return pageIsOpen; }
  */
 function getModeSelected() { return modeSelected; }
 
-function hideElement_joinPrivate() { style.hideElement(element_joinPrivate); }
-function showElement_joinPrivate() { style.revealElement(element_joinPrivate); }
-function hideElement_inviteCode() { style.hideElement(element_inviteCode); }
-function showElement_inviteCode() { style.revealElement(element_inviteCode); }
+function hideElement_joinPrivate() { element_joinPrivate.classList.add('hidden'); }
+function showElement_joinPrivate() { element_joinPrivate.classList.remove('hidden'); }
+function hideElement_inviteCode() { element_inviteCode.classList.add('hidden'); }
+function showElement_inviteCode() { element_inviteCode.classList.remove('hidden'); }
 
 function open() {
 	pageIsOpen = true;
-	style.revealElement(element_PlaySelection);
-	style.revealElement(element_menuExternalLinks);
+	element_PlaySelection.classList.remove('hidden');
+	element_menuExternalLinks.classList.remove('hidden');
 	changePlayMode('online');
 	initListeners();
 	invites.subscribeToInvites(); // Subscribe to the invites list subscription service!
@@ -117,8 +117,8 @@ function open() {
 
 function close() {
 	pageIsOpen = false;
-	style.hideElement(element_PlaySelection);
-	style.hideElement(element_menuExternalLinks);
+	element_PlaySelection.classList.add('hidden');
+	element_menuExternalLinks.classList.add('hidden');
 	hideElement_inviteCode();
 	closeListeners();
 	// This will auto-cancel our existing invite
