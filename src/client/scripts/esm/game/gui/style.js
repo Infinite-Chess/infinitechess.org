@@ -48,40 +48,6 @@ function revealElement(element) {
 	removeClass(element, "hidden");
 }
 
-// Animate elements
-
-// Fades in the element over the span of 1 second
-function fadeIn1s(element) {
-	revealElement(element); // Make sure the element no longer has the 'display: none' property.
-	reinstateClass(element, 'fade-in-2_3s'); // This class contain the fade-in animation that begins immediately upon receiving this property
-
-	if (!element.fadeIn1sLayers) element.fadeIn1sLayers = 1;
-	else element.fadeIn1sLayers++;
-
-	setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
-		element.fadeIn1sLayers--;
-		if (element.fadeIn1sLayers > 0) return; // The fade-in-1s animation was RENEWED
-		delete element.fadeIn1sLayers;
-		removeClass(element, 'fade-in-2_3s');
-	}, 1000);
-}
-
-// Fades out the element over the span of 1 second
-function fadeOut1s(element) {
-	revealElement(element);
-	reinstateClass(element,'fade-out-2_3s'); // This class contain the fade-out animation that begins immediately upon receiving this property.
-    
-	if (!element.fadeOut1sLayers) element.fadeOut1sLayers = 1;
-	else element.fadeOut1sLayers++;
-
-	setTimeout(() => { // After that 1 second, remove this no longer needed animation class from them.
-		element.fadeOut1sLayers--;
-		if (element.fadeOut1sLayers > 0) return; // The fade-in-1s animation was RENEWED
-		delete element.fadeOut1sLayers;
-		removeClass(element, 'fade-out-2_3s');
-		hideElement(element);
-	}, 1000);
-}
 
 // Other operations
 
@@ -144,8 +110,6 @@ export default {
 	hideElement,
 	revealElement,
 	setNavStyle,
-	fadeIn1s,
-	fadeOut1s,
 	getChildrenTextContents,
 	arrayToCssColor,
 };
