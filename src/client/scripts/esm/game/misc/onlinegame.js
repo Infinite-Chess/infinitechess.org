@@ -280,9 +280,10 @@ function onmessage(data) { // { sub, action, value, id }
 		case "clock": { // Contain this case in a block so that it's variables are not hoisted 
 			if (!inOnlineGame) return;
 			const message = data.value; // { clockValues: { timerWhite, timerBlack } }
-			message.clockValues.accountForPing = true; // We are in an online game so we need to inform the clock script to account for ping
 			const gamefile = gameslot.getGamefile();
-			clock.edit(gamefile, message.clockValues, options.isDebugModeOn()); // Edit the clocks
+			// Adjust the timer whos turn it is depending on ping.
+			if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
+			clock.edit(gamefile, message.clockValues); // Edit the clocks
 			guiclock.edit(gamefile);
 			break;
 		} case "gameupdate": // When the game has ended by time/disconnect/resignation/aborted, OR we are resyncing to the game.
@@ -410,8 +411,8 @@ function handleJoinGame(message) {
 	// The server's message looks like:
 	// {
 	//     metadata: { Variant, White, Black, TimeControl, UTCDate, UTCTime, Rated },
-	//	   clockValues: { timerWhite, timerBlack }
-	//     id, clock, publicity, youAreColor, , moves, millisUntilAutoAFKResign, disconnect, gameConclusion, drawOffer,
+	//	   clockValues: ClockValues,
+	//     id, clock, publicity, youAreColor, moves, millisUntilAutoAFKResign, disconnect, gameConclusion, drawOffer,
 	// }
 
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
@@ -421,7 +422,7 @@ function handleJoinGame(message) {
 	inSync = true;
 	guititle.close();
 	guiplay.close();
-	guiplay.startOnlineGame(message);
+	gameloader.startOnlineGame(message);
 }
 
 /**
@@ -476,8 +477,10 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
-	if (message.clockValues !== undefined) message.clockValues.accountForPing = true; // Set this to true so our clock knows to account for ping.
-	clock.edit(gamefile, message.clockValues, options.isDebugModeOn());
+	
+	// Adjust the timer whos turn it is depending on ping.
+	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues, gamefile.whosTurn);
+	clock.edit(gamefile, message.clockValues);
 	guiclock.edit(gamefile);
 
 	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
@@ -530,9 +533,8 @@ function resyncToGame() {
  * @param {Object} messageContents - The contents of the server message, with the properties:
  * `gameConclusion`, `clockValues`, `moves`, `millisUntilAutoAFKResign`, `offerDraw`
  */
-function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack }, moves, millisUntilAutoAFKResign, offerDraw }
+function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: ClockValues, moves, millisUntilAutoAFKResign, offerDraw }
 	if (!inOnlineGame) return;
-	if (messageContents.clockValues !== undefined) messageContents.clockValues.accountForPing = true; // Set this too true so our clock knows to account for ping
 	const gamefile = gameslot.getGamefile();
 	const claimedGameConclusion = messageContents.gameConclusion;
 
@@ -564,8 +566,9 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
 	// Must be set before editing the clocks.
 	gamefile.gameConclusion = claimedGameConclusion;
 
-	// When the game has ended by time/disconnect/resignation/aborted
-	clock.edit(gamefile, messageContents.clockValues, options.isDebugModeOn());
+	// Adjust the timer whos turn it is depending on ping.
+	if (messageContents.clockValues) messageContents.clockValues = clock.adjustClockValuesForPing(messageContents.clockValues);
+	clock.edit(gamefile, messageContents.clockValues);
 
 	if (gamefileutility.isGameOver(gamefile)) {
 		gameslot.concludeGame();

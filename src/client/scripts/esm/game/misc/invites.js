@@ -15,6 +15,7 @@ import validatorama from '../../util/validatorama.js';
 
 "use strict";
 
+
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
  * @property {string} name - Who owns the invite. If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
@@ -26,6 +27,9 @@ import validatorama from '../../util/validatorama.js';
  * @property {string} publicity - public/private
  * @property {string} rated - rated/casual
  */
+
+/** @typedef {import('../gui/guiplay.js').InviteOptions} InviteOptions */
+
 
 /** This script manages the invites on the Play page. */
 
@@ -79,8 +83,20 @@ function onmessage(data) { // { sub, action, value, id }
 	}
 }
 
-function create(inviteOptions) { // { variant, clock, color, rated, publicity }
+/**
+ * Sends the create invite request message from the given InviteOptions specified on the invite creation screen.
+ * @param {InviteOptions} variantOptions
+ */
+function create(variantOptions) {
 	if (weHaveInvite) return console.error("We already have an existing invite, can't create more.");
+
+	const inviteOptions = {
+		variant: variantOptions.variant,
+		clock: variantOptions.clock,
+		color: variantOptions.color,
+		publicity: variantOptions.private, // Only the `private` property is changed to `publicity`
+		rated: variantOptions.rated,
+	};
 
 	generateTagForInvite(inviteOptions);
 
@@ -88,6 +104,9 @@ function create(inviteOptions) { // { variant, clock, color, rated, publicity }
 
 	// The function to execute when we hear back the server's response
 	const onreplyFunc = guiplay.unlockCreateInviteButton;
+
+	// console.log("Invite options before sending create invite:");
+	// console.log(inviteOptions);
 
 	websocket.sendmessage("invites", "createinvite", inviteOptions, true, onreplyFunc);
 }
@@ -375,7 +394,7 @@ function updatePrivateInviteCode(privateInviteID) { // If undefined, we know we 
 }
 
 function updateActiveGameCount(newCount) {
-	if (newCount == null) return;
+	if (newCount === undefined) throw Error('Need to specify active game count');
 	element_joinExisting.textContent = `${translations.invites.join_existing_active_games} ${newCount}`;
 }
 
