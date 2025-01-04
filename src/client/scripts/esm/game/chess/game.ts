@@ -51,7 +51,6 @@ import dragAnimation from '../rendering/draganimation.js';
 import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
-// @ts-ignore
 import jsutil from '../../util/jsutil.js';
 import highlights from '../rendering/highlights/highlights.js';
 import gameslot from './gameslot.js';

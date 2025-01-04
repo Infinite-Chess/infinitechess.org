@@ -225,8 +225,7 @@ function getPieceCount_IncludingUndefineds(gamefile) {
 function deleteIndexFromPieceList(list, pieceIndex) {
 	list[pieceIndex] = undefined;
 	// Keep track of where the undefined indices are! Have an "undefineds" array property.
-	const undefinedsInsertIndex = jsutil.binarySearch_findSplitPoint(list.undefineds, pieceIndex);
-	list.undefineds.splice(undefinedsInsertIndex, 0, pieceIndex);
+	list.undefineds = jsutil.addElementToOrganizedArray(list.undefineds, pieceIndex);
 }
 
 

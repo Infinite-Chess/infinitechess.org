@@ -114,7 +114,7 @@ function trimFrames() {
 	const splitPoint = runTime - fpsWindow;
 
 	// Use binary search to find the split point.
-	const indexToSplit = jsutil.binarySearch_findValue(frames, splitPoint);
+	const indexToSplit = jsutil.findIndexOfPointInOrganizedArray(frames, splitPoint);
 
 	// This will not delete a timestamp if it falls exactly on the split point.
 	frames.splice(0, indexToSplit);
