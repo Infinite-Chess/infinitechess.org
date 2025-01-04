@@ -222,8 +222,7 @@ function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = 
 		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
 
 		// Remove the undefined from the undefineds list
-		const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
-		if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
+		gamefile.ourPieces[type].undefineds = jsutil.deleteElementFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
 
 		list[desiredIndex] = coords;
 	}
