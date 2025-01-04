@@ -5,11 +5,6 @@
  * ZERO dependancies.
  */
 
-
-
-/** All types that are deep-copyable by {@link deepCopyObject} */
-type DeepCopyable = object | string | number | bigint | boolean | null;
-
 /**
  * Deep copies an entire object, no matter how deep its nested.
  * No properties will contain references to the source object.
@@ -18,17 +13,17 @@ type DeepCopyable = object | string | number | bigint | boolean | null;
  * 
  * SLOW. Avoid using for very massive objects.
  */
-function deepCopyObject(src: DeepCopyable): DeepCopyable {
+function deepCopyObject<T>(src: T): T {
 	if (typeof src !== "object" || src === null) return src;
     
-	const copy = Array.isArray(src) ? [] : {}; // Create an empty array or object
+	const copy: any = Array.isArray(src) ? [] : {}; // Create an empty array or object
     
 	for (const key in src) {
 		const value = src[key];
 		copy[key] = deepCopyObject(value); // Recursively copy each property
 	}
     
-	return copy; // Return the copied object
+	return copy as T; // Return the copied object
 }
 
 /**
@@ -42,7 +37,7 @@ function copyFloat32Array(src: Float32Array): Float32Array {
 	const copy = new Float32Array(src.length);
     
 	for (let i = 0; i < src.length; i++) {
-		copy[i] = src[i];
+		copy[i]! = src[i]!;
 	}
     
 	return copy;
@@ -57,20 +52,20 @@ function copyFloat32Array(src: Float32Array): Float32Array {
  * @returns An object telling you whether the value was found, and the index of that value, or where it can be inserted to remain organized.
  */
 function binarySearch(sortedArray: number[], value: number): { found: boolean, index: number } {
-    let left = 0;
-    let right = sortedArray.length - 1;
+	let left = 0;
+	let right = sortedArray.length - 1;
 
-    while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        const midValue = sortedArray[mid];
+	while (left <= right) {
+		const mid = Math.floor((left + right) / 2);
+		const midValue = sortedArray[mid]!;
 
-        if (value < midValue) right = mid - 1;
-        else if (value > midValue) left = mid + 1;
-        else return { found: true, index: mid };
-    }
+		if (value < midValue) right = mid - 1;
+		else if (value > midValue) left = mid + 1;
+		else return { found: true, index: mid };
+	}
 
 	// The left is the correct index to insert at, while retaining order!
-    return { found: false, index: left };
+	return { found: false, index: left };
 }
 
 /**
@@ -83,10 +78,10 @@ function binarySearch(sortedArray: number[], value: number): { found: boolean, i
  * @returns The new array with the sorted element.
  */
 function addElementToOrganizedArray(sortedArray: number[], value: number): number[] {
-    const { found, index } = binarySearch(sortedArray, value);
-    if (found) throw Error(`Cannot add element to sorted array when it already contains the value! ${value}. List: ${JSON.stringify(sortedArray)}`);
-    sortedArray.splice(index, 0, value);
-    return sortedArray;
+	const { found, index } = binarySearch(sortedArray, value);
+	if (found) throw Error(`Cannot add element to sorted array when it already contains the value! ${value}. List: ${JSON.stringify(sortedArray)}`);
+	sortedArray.splice(index, 0, value);
+	return sortedArray;
 }
 
 /**
@@ -107,14 +102,14 @@ function findIndexOfPointInOrganizedArray(sortedArray: number[], point: number):
  * @returns The new array with the element deleted
  */
 function deleteElementFromOrganizedArray(sortedArray: number[], value: number): number[] {
-    const { found, index } = binarySearch(sortedArray, value);
-    if (!found) throw Error(`Cannot delete value "${value}" from organized array (not found). Array: ${JSON.stringify(sortedArray)}`);
-    sortedArray.splice(index, 1);
-    return sortedArray;
+	const { found, index } = binarySearch(sortedArray, value);
+	if (!found) throw Error(`Cannot delete value "${value}" from organized array (not found). Array: ${JSON.stringify(sortedArray)}`);
+	sortedArray.splice(index, 1);
+	return sortedArray;
 }
 
 // Removes specified object from given array. Throws error if it fails. The object cannot be an object or array, only a single value.
-function removeObjectFromArray(array: Array, object: any) { // object can't be an array
+function removeObjectFromArray(array: any[], object: any) { // object can't be an array
 	const index = array.indexOf(object);
 	if (index !== -1) array.splice(index, 1);
 	else throw Error(`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`);
@@ -131,10 +126,10 @@ function isFloat32Array(param: any) {
  * @param objSrc - The source object
  * @param objDest - The destination object
  */
-function copyPropertiesToObject(objSrc: object, objDest: object) {
+function copyPropertiesToObject(objSrc: Record<string, any>, objDest: Record<string, any>) {
 	const objSrcKeys = Object.keys(objSrc);
 	for (let i = 0; i < objSrcKeys.length; i++) {
-		const key = objSrcKeys[i];
+		const key = objSrcKeys[i]!;
 		objDest[key] = objSrc[key];
 	}
 }
@@ -169,10 +164,10 @@ function isJson(str: string): boolean {
  * @param obj - The object to invert
  * @returns The inverted object
  */
-function invertObj(obj: object): object {
-	const inv = {};
+function invertObj(obj: Record<string, string>): Record<string, string> {
+	const inv: Record<string, string> = {};
 	for (const key in obj) {
-		inv[obj[key]] = key;
+		inv[obj[key]!] = key;
 	}
 	return inv;
 }
@@ -186,7 +181,7 @@ function invertObj(obj: object): object {
 function getMissingStringsFromArray(array1: string[], array2: string[]): string[] {
 	// Convert array1 to a Set for efficient lookup
 	const set1 = new Set(array1);
-	const missing = [];
+	const missing: string[] = [];
  
 	// Check if each element in array2 is present in set1
 	for (const item of array2) {
