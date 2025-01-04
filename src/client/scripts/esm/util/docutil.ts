@@ -18,7 +18,7 @@ function isLocalEnvironment(): boolean {
         hostname === '127.0.0.1' || // Loopback IP address
         hostname.startsWith('192.168.') || // Private IPv4 address space
         hostname.startsWith('10.') || // Private IPv4 address space
-        hostname.startsWith('172.') && parseInt(hostname.split('.')[1], 10) >= 16 && parseInt(hostname.split('.')[1], 10) <= 31 // Private IPv4 address space
+        hostname.startsWith('172.') && parseInt(hostname.split('.')[1]!, 10) >= 16 && parseInt(hostname.split('.')[1]!, 10) <= 31 // Private IPv4 address space
 	);
 }
 
@@ -55,8 +55,8 @@ function isTouchSupported(): boolean {
 function getLastSegmentOfURL(): string {
 	const url = new URL(window.location.href);
 	const pathname = url.pathname;
-	const segments = pathname.split('/');
-	return segments[segments.length - 1] || segments[segments.length - 2]; // Handle situation if trailing '/' is present
+	const segments = pathname.split('/').filter(Boolean); // Remove empty segments caused by leading/trailing slashes
+	return segments[segments.length - 1] ?? ''; // Fallback to an empty string if no segment exists
 }
 
 /**
@@ -79,9 +79,11 @@ function getCookieValue(cookieName: string): string | undefined {
 	const cookieArray = document.cookie.split("; ");
 	
 	for (let i = 0; i < cookieArray.length; i++) {
-		const cookiePair = cookieArray[i].split("=");
+		const cookiePair = cookieArray[i]!.split("=");
 		if (cookiePair[0] === cookieName) return cookiePair[1];
 	}
+
+	return; // Typescript is angry without this
 }
 
 /**
