@@ -41,8 +41,6 @@ function start() {
 
 	onlinegame.askServerIfWeAreInGame();
 
-	localstorage.eraseExpiredItems();
-
 	gameLoop(); // Update & draw the scene repeatedly
 }
 
