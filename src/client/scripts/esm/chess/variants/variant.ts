@@ -14,7 +14,6 @@ import omega4generator from './omega4generator.js';
 import colorutil from '../util/colorutil.js';
 // @ts-ignore
 import typeutil from '../util/typeutil.js';
-// @ts-ignore
 import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import timeutil from '../../util/timeutil.js';
@@ -509,7 +508,7 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	} = {};
 
 	for (const [piece, moves] of Object.entries(origMoveset)) {
-		pieceMovesets[piece] = movesetModifications[piece] ? () => jsutil.deepCopyObject(movesetModifications[piece])
+		pieceMovesets[piece] = movesetModifications[piece] ? () => jsutil.deepCopyObject(movesetModifications[piece]!)
 														   : () => jsutil.deepCopyObject(moves);
 	}
 

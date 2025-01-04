@@ -26,7 +26,6 @@ import onlinegame from "../misc/onlinegame.js";
 import drawoffers from "../misc/drawoffers.js";
 // @ts-ignore
 import localstorage from "../../util/localstorage.js";
-// @ts-ignore
 import jsutil from "../../util/jsutil.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";

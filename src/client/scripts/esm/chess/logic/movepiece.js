@@ -27,6 +27,7 @@ import gameloader from '../../game/chess/gameloader.js';
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
  * @typedef {import('../util/moveutil.js').Move} Move
+ * @typedef {import('../util/coordutil.js').Coords} Coords
 */
 
 "use strict";
@@ -40,7 +41,7 @@ import gameloader from '../../game/chess/gameloader.js';
  * The Piece Object.
  * @typedef {Object} Piece
  * @property {string} type - The type of the piece (e.g. `queensW`).
- * @property {[number,number]} coords - The coordinates of the piece: `[x,y]`
+ * @property {Coords} coords - The coordinates of the piece: `[x,y]`
  * @property {number} index - The index of the piece within the gamefile's piece list.
  */
 
@@ -222,8 +223,7 @@ function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = 
 		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
 
 		// Remove the undefined from the undefineds list
-		const deleteSuccussful = jsutil.deleteValueFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex) !== false;
-		if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
+		gamefile.ourPieces[type].undefineds = jsutil.deleteElementFromOrganizedArray(gamefile.ourPieces[type].undefineds, desiredIndex);
 
 		list[desiredIndex] = coords;
 	}
