@@ -108,7 +108,7 @@ function updateDeltaTime(runtime) {
 	lastFrameTime = runTime;
 }
 
-// Deletes frame timestamps from out list over 1 second ago
+// Deletes frame timestamps from our list over 1 second ago
 function trimFrames() {
 	// What time was it 1 second ago
 	const splitPoint = runTime - fpsWindow;

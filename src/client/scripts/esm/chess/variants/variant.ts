@@ -508,7 +508,7 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	} = {};
 
 	for (const [piece, moves] of Object.entries(origMoveset)) {
-		pieceMovesets[piece] = movesetModifications[piece] ? () => jsutil.deepCopyObject(movesetModifications[piece])
+		pieceMovesets[piece] = movesetModifications[piece] ? () => jsutil.deepCopyObject(movesetModifications[piece]!)
 														   : () => jsutil.deepCopyObject(moves);
 	}
 
