@@ -11,7 +11,6 @@ import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.
 import { convertSVGsToImages } from '../../chess/rendering/svgtoimageconverter.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
-// @ts-ignore
 import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import texture from './texture.js';
