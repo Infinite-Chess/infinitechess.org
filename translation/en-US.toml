@@ -261,11 +261,6 @@ rewind_move = "Rewind move"
 forward_move = "Forward move"
 pause = "Pause"
 
-[play.footer]
-white_to_move = "White to move"
-player_white = "Player white"
-player_black = "Player black"
-
 [play.pause]
 title = "Paused"
 resume = "Resume"
