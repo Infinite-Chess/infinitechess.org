@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "27"
+version = "28"
 maintainer = "Naviary"
 
 [header]
@@ -343,8 +343,6 @@ regenerated_pieces = "Regenerated pieces."
 
 [play.javascript.invites]
 move_mouse = "Move the mouse to reconnect."
-unknown_action_received_1 = "Unknown action"
-unknown_action_received_2 = "received from the server in the invites subscription!"
 cannot_cancel = "Cannot cancel invite of undefined ID."
 you_indicator = "(You)"
 you_are_white = "You're: White"
