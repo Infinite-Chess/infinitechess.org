@@ -277,6 +277,8 @@ question = "Accept draw offer?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
+player_name_white_generic = "White"
+player_name_black_generic = "Black"
 white_to_move = "White to move"
 black_to_move = "Black to move"
 your_move = "Your move"
