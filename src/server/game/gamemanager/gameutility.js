@@ -246,7 +246,6 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 	const gameOptions = {
 		metadata,
 		id: game.id,
-		clock: game.clock,
 		publicity: game.publicity,
 		youAreColor: playerColor,
 		moves: game.moves,
@@ -629,9 +628,7 @@ function sendUpdatedClockToColor(game, color) {
 	if (color !== 'white' && color !== 'black') return console.error(`color must be white or black! ${color}`);
 	if (game.untimed) return; // Don't send clock values in an untimed game
 
-	const message = {
-		clockValues: getGameClockValues(game),
-	};
+	const message = getGameClockValues(game);
 	const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
 	if (!playerSocket) return; // They are not connected, can't send message
 	sendSocketMessage(playerSocket, "game", "clock", message);

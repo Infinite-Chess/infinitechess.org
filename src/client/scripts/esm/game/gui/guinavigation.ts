@@ -34,6 +34,7 @@ import gameslot from '../chess/gameslot.js';
 // eslint-disable-next-line no-unused-vars
 import type gamefile from '../../chess/logic/gamefile.js';
 import gameloader from '../chess/gameloader.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 
 /**
  * This script handles the navigation bar, in a game,
@@ -41,7 +42,7 @@ import gameloader from '../chess/gameloader.js';
  * buttons, rewind move, forward move, and pause buttons.
  */
 
-const element_Navigation = document.getElementById('navigation')!;
+const element_Navigation = document.getElementById('navigation-bar')!;
 
 // Navigation
 const element_Recenter = document.getElementById('recenter')!;
@@ -87,30 +88,12 @@ function isOpen() {
 }
 
 /** Called when we push 'N' on the keyboard */
-function toggleNavigationBar() {
-	// We should only ever do this if we are in a game!
-	if (!activeGamefile) return;
+function toggle() {
 	if (navigationOpen) close();
-	else open(activeGamefile);
-
-	navigationOpen = !navigationOpen;
-
-	onToggleNavigationBar();
+	else open(activeGamefile!, { allowEditCoords: !onlinegame.areInOnlineGame() });
 }
 
-function onToggleNavigationBar() {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) throw Error("Should not have toggled navigation bar when there's no game. The listener should have been closed.");
-	if (navigationOpen) {
-		open(gamefile, { allowEditCoords: !gameloader.areInOnlineGame() });
-		guigameinfo.open();
-	}
-	else close();
-
-	camera.updatePIXEL_HEIGHT_OF_NAVS();
-}
-
-function open(gamefile: gamefile, { allowEditCoords = true }: { allowEditCoords?: boolean } = {}) {
+function open(gamefile: gamefile, { allowEditCoords = true }: { allowEditCoords?: boolean }) {
 
 	activeGamefile = gamefile;
 	element_Navigation.classList.remove('hidden');
@@ -491,6 +474,6 @@ export default {
 	update,
 	isCoordinateActive,
 	recenter,
-	toggleNavigationBar,
+	toggle,
 	areCoordsAllowedToBeEdited,
 };

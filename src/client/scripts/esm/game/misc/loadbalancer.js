@@ -4,7 +4,7 @@ import websocket from '../websocket.js';
 import invites from './invites.js';
 import stats from '../gui/stats.js';
 import input from '../input.js';
-import onlinegame from './onlinegame.js';
+import onlinegame from './onlinegame/onlinegame.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
 // Import End

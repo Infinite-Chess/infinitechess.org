@@ -5,7 +5,7 @@
  */
 
 // Import Start
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import backcompatible from '../../chess/logic/backcompatible.js';
@@ -103,10 +103,10 @@ async function callbackPaste(event) {
 	if (guinavigation.isCoordinateActive()) return;
 	
 	// Make sure we're not in a public match
-	if (gameloader.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
+	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
 
 	// Make sure it's legal in a private match
-	if (gameloader.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
+	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard;
@@ -256,7 +256,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		gameRules: longformat.gameRules
 	};
 
-	if (gameloader.areInOnlineGame() && onlinegame.getIsPrivate()) {
+	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
 		// Playing a custom private game! Save the pasted position in browser
 		// storage so that we can remember it upon refreshing.
 		const gameID = onlinegame.getGameID();

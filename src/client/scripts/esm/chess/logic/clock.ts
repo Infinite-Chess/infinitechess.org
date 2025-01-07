@@ -25,6 +25,7 @@ import gameloader from '../../game/chess/gameloader.js';
 
 // @ts-ignore
 import type gamefile from './gamefile.js';
+import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
 interface ClockValues {
@@ -142,7 +143,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
  */
 function push(gamefile: gamefile) {
 	const clocks = gamefile.clocks;
-	if (gameloader.areInOnlineGame()) return; // Only the server can push clocks
+	if (onlinegame.areInOnlineGame()) return; // Only the server can push clocks
 	if (clocks.untimed) return;
 	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 
@@ -179,7 +180,7 @@ function update(gamefile: gamefile): string | undefined {
 	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart! - timePassedSinceTurnStart);
 
 	// Has either clock run out of time?
-	if (gameloader.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
+	if (onlinegame.areInOnlineGame()) return; // Don't conclude game by time if in an online game, only the server does that.
 
 	for (const [color,time] of Object.entries(clocks.currentTime)) {
 		if (time as number <= 0) {

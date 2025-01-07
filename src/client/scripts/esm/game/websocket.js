@@ -3,7 +3,7 @@
 import statustext from './gui/statustext.js';
 import invites from './misc/invites.js';
 import guiplay from './gui/guiplay.js';
-import onlinegame from './misc/onlinegame.js';
+import onlinegame from './misc/onlinegame/onlinegame.js';
 import localstorage from '../util/localstorage.js';
 import timeutil from '../util/timeutil.js';
 import uuid from '../util/uuid.js';
@@ -12,6 +12,7 @@ import thread from '../util/thread.js';
 import validatorama from '../util/validatorama.js';
 import wsutil from '../util/wsutil.js';
 import options from './rendering/options.js';
+import onlinegamerouter from './misc/onlinegamerouter.js';
 // Import End
 
 "use strict";
@@ -139,7 +140,6 @@ async function establishSocket() {
 		// Request came back with an error
 		noConnection = true;
 		statustext.showStatusForDuration(translations.websocket.no_connection, timeToResubAfterNetworkLossMillis);
-		onlinegame.onLostConnection();
 		invites.clearIfOnPlayPage(); // Erase on-screen invites.
 		await thread.sleep(timeToResubAfterNetworkLossMillis);
 		success = await openSocket();
@@ -290,7 +290,7 @@ function onmessage(serverMessage) { // data: { sub, action, value, id, replyto }
 			invites.onmessage(message);
 			break;
 		case "game":
-			onlinegame.onmessage(message);
+			onlinegamerouter.routeMessage(message);
 			break;
 		default:
 			console.error("Unknown socket subscription received from the server! Message:");
@@ -505,8 +505,8 @@ function leaveTimeout() {
  * Sends a message to the server with the provided route, action, and values
  * @param {string} route - Where the server needs to forward this to. general/invites/game
  * @param {string} action - What action to take within the route.
- * @param {*} value - The contents of the message
- * @param {boolean} isUserAction - Whether this message is a direct result of a user action. If so, and we happen to receive the "Too many requests" error, then that will be displayed on screen. Default: false
+ * @param {*} [value] - The contents of the message
+ * @param {boolean} [isUserAction] - Whether this message is a direct result of a user action. If so, and we happen to receive the "Too many requests" error, then that will be displayed on screen. Default: false
  * @param {Function} [onreplyFunc] An optional function to execute when we receive the server's response to this message, or to execute immediately if we can't establish a socket, or after 5 seconds if we don't hear anything back.
  * @returns {boolean} *true* if the message was able to send.
  */
@@ -671,7 +671,7 @@ async function resubAll() {
 function unsubFromInvites() {
 	invites.clear({ recentUsersInLastList: true });
 	if (subs.invites === false) return; // Already unsubbed
-	subs.invites = false;
+	deleteSub('invites');
 	sendmessage("general", "unsub", "invites");
 }
 
@@ -722,10 +722,22 @@ async function onAuthenticationNeeded() {
 	resubAll();
 }
 
+/**
+ * Marks ourself as no longer subscribed to a subscription list.
+ * 
+ * If our websocket happens to close unexpectedly, we won't re-subscribe to it.
+ * @param {'invites' | 'game'} sub - The name of the sub to delete
+ */
+function deleteSub(sub) {
+	if (!validSubs.includes(sub)) throw Error(`Can't delete invalid sub "${sub}".`);
+	subs[sub] = false;
+}
+
 export default {
 	closeSocket,
 	sendmessage,
 	unsubFromInvites,
 	getSubs,
-	addTimerIDToCancelOnNewSocket
+	deleteSub,
+	addTimerIDToCancelOnNewSocket,
 };

@@ -46,6 +46,7 @@ function close() {
 	if (!drawOfferUICramped) return;
 	// We had hid the names and clocks to make room for the UI, reveal them here!
 	// console.log("revealing");
+	throw Error("Don't know how");
 	guigameinfo.setAndRevealPlayerNames();
 	guiclock.showClocks();
 	drawOfferUICramped = false; // Reset for next draw offer UI opening
@@ -68,20 +69,22 @@ function closeDrawOfferListeners() {
  */
 function updateVisibilityOfNamesAndClocksWithDrawOffer() {
 	if (!drawoffers.areWeAcceptingDraw()) return; // No open draw offer
+
+	throw Error("Don't know how to hide or show player names to make room for draw offer.");
     
-	if (isDrawOfferUICramped()) { // Hide the player names and clocks
-		if (drawOfferUICramped) return; // Already hidden
-		// console.log("hiding");
-		drawOfferUICramped = true;
-		guigameinfo.hidePlayerNames();
-		guiclock.hideClocks();
-	} else { // We have space now, reveal them!
-		if (!drawOfferUICramped) return; // Already revealed
-		// console.log("revealing");
-		drawOfferUICramped = false;
-		guigameinfo.setAndRevealPlayerNames();
-		guiclock.showClocks();
-	}
+	// if (isDrawOfferUICramped()) { // Hide the player names and clocks
+	// 	if (drawOfferUICramped) return; // Already hidden
+	// 	// console.log("hiding");
+	// 	drawOfferUICramped = true;
+	// 	guigameinfo.hidePlayerNames();
+	// 	guiclock.hideClocks();
+	// } else { // We have space now, reveal them!
+	// 	if (!drawOfferUICramped) return; // Already revealed
+	// 	// console.log("revealing");
+	// 	drawOfferUICramped = false;
+	// 	guigameinfo.setAndRevealPlayerNames();
+	// 	guiclock.showClocks();
+	// }
 }
 
 /**

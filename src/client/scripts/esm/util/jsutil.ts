@@ -192,6 +192,62 @@ function getMissingStringsFromArray(array1: string[], array2: string[]): string[
 }
 
 
+/**
+ * Estimates the size, in memory, of ANY object, no matter how deep it's nested,
+ * and returns that number in a human-readable string.
+ * 
+ * This takes into account added overhead from each object/array created,
+ * as those have extra prototype methods, etc, adding more memory.
+ * 
+ * For that reason, it'd be good to avoid the number of objects we create being
+ * linear with the number of pieces in our game.
+ */
+function estimateMemorySizeOf(obj: any): string {
+	// Credit: Liangliang Zheng https://stackoverflow.com/a/6367736
+	function roughSizeOfObject(value: any, level?: number ) {
+		if (level === undefined) level = 0;
+		let bytes = 0;
+	
+		if (typeof value === 'boolean') bytes = 4;
+		else if (typeof value === 'string' ) bytes = value.length * 2;
+		else if (typeof value === 'number') bytes = 8;
+		else if (value === null) bytes = 1;
+		else if (typeof value === 'object') {
+			if (value['__visited__']) return 0;
+			value['__visited__'] = 1;
+			for (const i in value) {
+				bytes += i.length * 2;
+				bytes += 8; // an assumed existence overhead
+				bytes += roughSizeOfObject(value[i], 1);
+			}
+		}
+	
+		if (level === 0) clear__visited__(value);
+		return bytes;
+	}
+	
+	function clear__visited__(value: any) {
+		if (typeof value === 'object' && value !== null) {
+			delete value['__visited__'];
+			for (const i in value) {
+				clear__visited__(value[i]);
+			}
+		}
+	}
+
+	// Turns the number into a human-readable string
+	function formatByteSize(bytes: number): string {
+		if (bytes < 1000) return bytes + " bytes";
+		else if (bytes < 1000000) return (bytes / 1000).toFixed(3) + " KB";
+		else if (bytes < 1000000000) return (bytes / 1000000).toFixed(3) + " MB";
+		else return (bytes / 1000000000).toFixed(3) + " GB";
+	};
+
+	return formatByteSize(roughSizeOfObject(obj));
+};
+
+
+
 
 export default {
 	deepCopyObject,
@@ -206,4 +262,5 @@ export default {
 	invertObj,
 	removeObjectFromArray,
 	getMissingStringsFromArray,
+	estimateMemorySizeOf,
 };

@@ -3,7 +3,7 @@
 import guipause from '../gui/guipause.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import movepiece from '../../chess/logic/movepiece.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
@@ -123,7 +123,7 @@ function promoteToType(type) { promoteTo = type; }
 function update() {
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile();
-	// if (gameloader.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn
+	// if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn
 	if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
 	if (pawnIsPromoting) { // Do nothing else this frame but wait for a promotion piece to be selected
 		if (promoteTo) makePromotionMove();
@@ -299,9 +299,9 @@ function selectPiece(type, index, coords) {
 	legalMoves = legalmoves.calculate(gameslot.getGamefile(), pieceSelected);
 
 	const pieceColor = colorutil.getPieceColorFromType(pieceSelected.type);
-	isOpponentPiece = gameloader.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
+	isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
     /* Local Game */ : pieceColor !== gameslot.getGamefile().whosTurn;
-	isPremove = !isOpponentPiece && gameloader.areInOnlineGame() && !onlinegame.isItOurTurn();
+	isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
@@ -401,10 +401,10 @@ function canMovePieceType(pieceType) {
 	if (!pieceType || pieceType === 'voidsN') return false; // Never move voids
 	else if (options.getEM()) return true; //Edit mode allows pieces to be moved on any turn.
 	const pieceColor = colorutil.getPieceColorFromType(pieceType);
-	const isOpponentPiece = gameloader.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
+	const isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
 	/* Local Game */ : pieceColor !== gameslot.getGamefile().whosTurn;
 	if (isOpponentPiece) return false; // Don't move opponent pieces
-	const isPremove = !isOpponentPiece && gameloader.areInOnlineGame() && !onlinegame.isItOurTurn();
+	const isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 	return (!isPremove /*|| premovesEnabled*/);
 }
 

@@ -748,7 +748,7 @@ button.join-button, button.copy-button {
 
 /* Top Navigation: Zoom buttons, coordinates, rewind/forward game, pause */
 
-.navigation {
+.navigation-bar {
     position: absolute;
     top: 0;
     width: 100%;
@@ -828,7 +828,7 @@ button.join-button, button.copy-button {
 	margin: 0;
 }
 
-.navigation .button {
+.navigation-bar .button {
     position: relative;
     width: 0.74em;
     height: 0.74em;
@@ -841,28 +841,28 @@ button.join-button, button.copy-button {
     -webkit-tap-highlight-color: transparent; /* No more blue highlight when tapping buttons on mobile */
 }
 
-.navigation .button:hover {
+.navigation-bar .button:hover {
     transform: scale(1.07);
 }
 
-.navigation .button:active {
+.navigation-bar .button:active {
     transform: scale(1);
 }
 
-.navigation svg {
+.navigation-bar svg {
     position: absolute;
 }
 
 /* Start shrinking top navigation bar */
 @media only screen and (max-width: 700px) { /* 700px needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
+    .navigation-bar {
         font-size: 12vw; /* Update with doc!! */
     }
 }
 
 /* Small screens. HIDE the coords and make the buttons bigger! */
 @media only screen and (max-width: 550px) {  /* 550 needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
+    .navigation-bar {
         justify-content: space-between;
         font-size: 66px; /* Update with doc!! */
     }
@@ -874,7 +874,7 @@ button.join-button, button.copy-button {
 
 /* Mobile screen, start shrinking the size again */
 @media only screen and (max-width: 368px) {  /* 368 needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
+    .navigation-bar {
         font-size: 17.9vw; /* Update with doc!! */
     }
 }
@@ -883,7 +883,7 @@ button.join-button, button.copy-button {
 
 /* Bottom Navigation: Color to move, clocks, player names, draw offer UI */
 
-.footer {
+.game-info-bar {
     position: absolute;
     bottom: 0;
     width: 100%;

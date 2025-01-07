@@ -2,7 +2,7 @@
 // Import Start
 import guipause from './gui/guipause.js';
 import bufferdata from './rendering/bufferdata.js';
-import onlinegame from './misc/onlinegame.js';
+import onlinegame from './misc/onlinegame/onlinegame.js';
 import perspective from './rendering/perspective.js';
 import movement from './rendering/movement.js';
 import options from './rendering/options.js';
@@ -727,7 +727,7 @@ function moveMouse(touch1, touch2) { // touch2 optional. If provided, will take 
 		setTouchesChangeInXYTo0(touch2);
 	}
 
-	const oneOrNegOne = gameloader.areInOnlineGame() && onlinegame.areWeColor('black') ? -1 : 1;
+	const oneOrNegOne = onlinegame.areWeColorInOnlineGame('black') ? -1 : 1;
 
 	mouseWorldLocation[0] -= touchMovementX * dampeningToMoveMouseInTouchMode * oneOrNegOne;
 	mouseWorldLocation[1] -= touchMovementY * dampeningToMoveMouseInTouchMode * oneOrNegOne;

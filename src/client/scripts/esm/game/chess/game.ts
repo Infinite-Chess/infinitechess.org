@@ -5,9 +5,18 @@
  * And contains our main update() and render() methods
  */
 
+
 // @ts-ignore
-import onlinegame from '../misc/onlinegame.js';
+import type gamefile from '../../chess/logic/gamefile.js';
+
+
 import gui from '../gui/gui.js';
+import jsutil from '../../util/jsutil.js';
+import highlights from '../rendering/highlights/highlights.js';
+import gameslot from './gameslot.js';
+import guinavigation from '../gui/guinavigation.js';
+// @ts-ignore
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import arrows from '../rendering/arrows.js';
 // @ts-ignore
@@ -51,17 +60,11 @@ import dragAnimation from '../rendering/draganimation.js';
 import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
-import jsutil from '../../util/jsutil.js';
-import highlights from '../rendering/highlights/highlights.js';
-import gameslot from './gameslot.js';
-import guinavigation from '../gui/guinavigation.js';
-
-
-// Type Definitions -------------------------------------------------------------------------------
-
-
 // @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
+import camera from '../rendering/camera.js';
+// @ts-ignore
+import guigameinfo from '../gui/guigameinfo.js';
+import gameloader from './gameloader.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -88,14 +91,17 @@ function update() {
 
 	if (!guinavigation.isCoordinateActive()) {
 		if (input.isKeyDown('`')) options.toggleDeveloperMode();
-		if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
+		if (input.isKeyDown('2')) {
+			console.log(jsutil.deepCopyObject(gamefile));
+			console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
+		}
 		if (input.isKeyDown('m')) options.toggleFPS();
 		if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 	}
 
 	updateBoard(gamefile); // Other screen, board is visible, update everything board related
 
-	onlinegame.update();
+	gameloader.update(); // Updates whatever game is currently loaded.
 
 	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
 }
@@ -113,7 +119,11 @@ function updateBoard(gamefile: gamefile) {
 		if (input.isKeyDown('escape')) guipause.toggle();
 		if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
 		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
-		if (input.isKeyDown('n')) guinavigation.toggleNavigationBar();
+		if (input.isKeyDown('n')) {
+			guinavigation.toggle();
+			guigameinfo.toggle();
+			camera.updatePIXEL_HEIGHT_OF_NAVS();
+		}
 	}
 
 	const timeWinner = clock.update(gamefile);
