@@ -26,7 +26,6 @@ import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
 import pingManager from '../../util/pingManager.js';
 import movesequence from '../chess/movesequence.js';
-import options from '../rendering/options.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 // Import End

@@ -1,7 +1,7 @@
 
 // Import Start
 import input from '../input.js';
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import stats from '../gui/stats.js';
 import perspective from './perspective.js';
 import selection from '../chess/selection.js';
@@ -86,8 +86,8 @@ function isFPSOn() {
 function toggleEM() {
 
 	// Make sure it's legal
-	const legalInPrivate = gameloader.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
-	if (gameloader.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
+	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
+	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	em = !em;

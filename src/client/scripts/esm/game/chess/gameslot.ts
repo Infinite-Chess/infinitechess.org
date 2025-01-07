@@ -20,7 +20,7 @@ import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
-import onlinegame from "../misc/onlinegame.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
@@ -270,7 +270,7 @@ function concludeGame() {
 	onlinegame.onGameConclude();
 
 	const delayToPlayConcludeSoundSecs = 0.65;
-	if (!gameloader.areInOnlineGame()) {
+	if (!onlinegame.areInOnlineGame()) {
 		if (!loadedGamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game

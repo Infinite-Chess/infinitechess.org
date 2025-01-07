@@ -6,7 +6,7 @@ import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import statustext from '../gui/statustext.js';
 import { createModel } from './buffermodel.js';
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import mat4 from './gl-matrix.js';
 import input from '../input.js';
 import selection from '../chess/selection.js';

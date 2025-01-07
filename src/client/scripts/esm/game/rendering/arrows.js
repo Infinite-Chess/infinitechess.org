@@ -3,7 +3,7 @@
 import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
 import legalmovehighlights from './highlights/legalmovehighlights.js';
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
@@ -438,7 +438,7 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = colorutil.getPieceColorFromType(type);
-	const opponentColor = gameloader.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
+	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });

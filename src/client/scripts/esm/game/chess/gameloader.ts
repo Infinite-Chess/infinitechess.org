@@ -21,12 +21,11 @@ import guinavigation from "../gui/guinavigation.js";
 // @ts-ignore
 import sound from '../misc/sound.js';
 // @ts-ignore
-import onlinegame from "../misc/onlinegame.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import drawoffers from "../misc/drawoffers.js";
 // @ts-ignore
 import localstorage from "../../util/localstorage.js";
-import jsutil from "../../util/jsutil.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
 import gui from "../gui/gui.js";
@@ -42,6 +41,8 @@ import type { GameRules } from "../../chess/variants/gamerules.js";
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
+import type { DisconnectInfo, DrawOfferInfo } from "../misc/onlinegamerouter.js";
+import localgame from "../misc/localgame/localgame.js";
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -101,12 +102,11 @@ function areInAGame(): boolean {
 	return inAGame;
 }
 
-function areInLocalGame(): boolean {
-	return typeOfGameWeAreIn === 'local';
-}
-
-function areInOnlineGame(): boolean {
-	return typeOfGameWeAreIn === 'online';
+/**
+ * Updates whatever game is currently loaded, for what needs to be updated.
+ */
+function update() {
+	if (typeOfGameWeAreIn === 'online') onlinegame.update();
 }
 
 
@@ -123,31 +123,24 @@ async function startLocalGame(options: {
 		metadata: {
 			...options,
 			Event: `Casual local ${translations[options.Variant]} infinite chess game`,
-			Site: "https://www.infinitechess.org/",
-			Round: "-",
+			Site: 'https://www.infinitechess.org/' as 'https://www.infinitechess.org/',
+			Round: '-' as '-',
 			UTCDate: timeutil.getCurrentUTCDate(),
 			UTCTime: timeutil.getCurrentUTCTime()
-		} as MetaData
+		}
 	};
 
-	guigameinfo.hidePlayerNames(); // --------------------------
-
-	loadGame(gameOptions, true, true);
+	await loadGame(gameOptions, true, true);
 	typeOfGameWeAreIn = 'local';
+	localgame.initLocalGame();
 }
 
 /**
  * Starts an online game according to the options provided by the server.
  */
 async function startOnlineGame(options: {
-	clock: MetaData['TimeControl'],
-	drawOffer: {
-		/** True if our opponent has extended a draw offer we haven't yet confirmed/denied */
-		unconfirmed: boolean,
-		/** The move ply WE HAVE last offered a draw, if we have, otherwise undefined. */
-		lastOfferPly?: number,
-	},
 	gameConclusion: string | false,
+	/** The id of the online game */
 	id: string,
 	metadata: MetaData,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
@@ -157,6 +150,16 @@ async function startOnlineGame(options: {
 	youAreColor: 'white' | 'black',
 	/** Provide if the game is timed. */
 	clockValues?: ClockValues,
+	drawOffer: DrawOfferInfo,
+	/** If our opponent has disconnected, this will be present. */
+	disconnect?: DisconnectInfo,
+	/**
+	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
+	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
+	 */
+	millisUntilAutoAFKResign?: number,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
 }) {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
@@ -165,27 +168,15 @@ async function startOnlineGame(options: {
 	if (options.clockValues) options.clockValues = clock.adjustClockValuesForPing(options.clockValues);
 	
 	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
-	options.variantOptions = generateVariantOptionsIfReloadingPrivateCustomGame();
+	if (options.publicity === 'private') options.variantOptions = localstorage.loadItem(options.id);
 	const fromWhitePerspective = options.youAreColor === 'white';
 
 	await loadGame(options, fromWhitePerspective, false);
 	typeOfGameWeAreIn = 'online';
-
 	onlinegame.initOnlineGame(options);
-	guigameinfo.setAndRevealPlayerNames(options);
-	drawoffers.set(options.drawOffer);
 }
 
 
-
-
-
-function generateVariantOptionsIfReloadingPrivateCustomGame() {
-	if (!onlinegame.getIsPrivate()) return; // Can't play/paste custom position in public matches.
-	const gameID = onlinegame.getGameID();
-	if (!gameID) return console.error("Can't generate variant options when reloading private custom game because gameID isn't defined yet.");
-	return localstorage.loadItem(gameID);
-}
 
 
 
@@ -235,8 +226,8 @@ async function loadGame(
 	
 	const gamefile = gameslot.getGamefile()!;
 	guinavigation.open(gamefile, { allowEditCoords }); // Editing your coords allowed in local games
+	guigameinfo.open(gameOptions.metadata);
 	guiclock.set(gamefile);
-	guigameinfo.updateWhosTurn(gamefile);
     
 	sound.playSound_gamestart();
 
@@ -246,6 +237,7 @@ async function loadGame(
 function unloadGame() {
 	onlinegame.closeOnlineGame();
 	guinavigation.close();
+	guigameinfo.close();
 	gameslot.unloadGame();
 	perspective.disable();
 	gui.prepareForOpen();
@@ -256,8 +248,7 @@ function unloadGame() {
 
 export default {
 	areInAGame,
-	areInLocalGame,
-	areInOnlineGame,
+	update,
 	startLocalGame,
 	startOnlineGame,
 	loadGame,

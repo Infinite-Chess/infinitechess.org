@@ -6,7 +6,7 @@ import websocket from '../websocket.js';
 import guipause from '../gui/guipause.js';
 import sound from './sound.js';
 import moveutil from '../../chess/util/moveutil.js';
-import onlinegame from './onlinegame.js';
+import onlinegame from './onlinegame/onlinegame.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 // Import End
@@ -43,9 +43,9 @@ let isAcceptingDraw = false;
  */
 function isOfferingDrawLegal() {
 	const gamefile = gameslot.getGamefile();
-	if (!gameloader.areInOnlineGame()) return false; // Can't offer draws in local games
+	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
 	if (!moveutil.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
-	if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
+	if (onlinegame.hasServerConcludedGame()) return false; // Can't offer draws after the game has ended
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND
 }
@@ -76,6 +76,11 @@ function onOpponentExtendedOffer() {
 	guidrawoffer.open();
 	sound.playSound_base(); //playSound_drawOffer()
 	guipause.updateDrawOfferButton();
+}
+
+/** Is called when our opponent declines our draw offer */
+function onOpponentDeclinedOffer() {
+	statustext.showStatus(`Opponent declined draw offer.`);
 }
 
 /**
@@ -152,6 +157,7 @@ export default {
 	callback_AcceptDraw,
 	callback_declineDraw,
 	onOpponentExtendedOffer,
+	onOpponentDeclinedOffer,
 	extendOffer,
 	set,
 	reset,
