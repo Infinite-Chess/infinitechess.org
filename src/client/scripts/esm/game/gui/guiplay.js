@@ -123,7 +123,7 @@ function close() {
 	closeListeners();
 	// This will auto-cancel our existing invite
 	// IT ALSO clears the existing invites in the document!
-	websocket.unsubFromInvites();
+	invites.unsubFromInvites();
 }
 
 function initListeners() {

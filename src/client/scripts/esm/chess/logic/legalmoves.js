@@ -296,7 +296,7 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
  * @param {gamefile} gamefile - The gamefile
  * @param {Move | undefined} move - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
- * @returns {boolean | string} *true* If the move is legal, otherwise a string containing why it is illegal.
+ * @returns {true | string} *true* If the move is legal, otherwise a string containing why it is illegal.
  */
 function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	if (!move) {

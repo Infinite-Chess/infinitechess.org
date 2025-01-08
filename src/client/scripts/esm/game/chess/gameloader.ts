@@ -10,6 +10,14 @@
  * but also prepares and opens the UI elements for that type of game.
  */
 
+
+import type { GameRules } from "../../chess/variants/gamerules.js";
+import type { MetaData } from "../../chess/util/metadata.js";
+import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
+import type { ClockValues } from "../../chess/logic/clock.js";
+import type { JoinGameMessage } from "../misc/onlinegamerouter.js";
+
+
 // @ts-ignore
 import timeutil from "../../util/timeutil.js";
 // @ts-ignore
@@ -28,25 +36,33 @@ import drawoffers from "../misc/drawoffers.js";
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
+import localgame from "../misc/localgame/localgame.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import clock from "../../chess/logic/clock.js";
 
 
-// Type Definitions --------------------------------------------------------------------
 
-
-// @ts-ignore
-import type { GameRules } from "../../chess/variants/gamerules.js";
-import type { MetaData } from "../../chess/util/metadata.js";
-import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
-import type { ClockValues } from "../../chess/logic/clock.js";
-import type { DisconnectInfo, DrawOfferInfo } from "../misc/onlinegamerouter.js";
-import localgame from "../misc/localgame/localgame.js";
-
-
-// Type Definitions --------------------------------------------------------------------
-
+interface GameOptions {
+	metadata: MetaData,
+	/** Should be provided if we're rejoining an online game. */
+	clockValues?: ClockValues,
+	/** Should be provided if we're rejoining an online game. */
+	gameConclusion?: string | false,
+	/**
+	 * This will be a string array of all the moves played thus far, in the most compact notation (e.g. `["5,2>5,4", ...]`)
+	 * 
+	 * Should be provided if we're pasting a game, or rejoining an online game.
+	 */
+	moves?: string[],
+	/**
+	 * Provide to load a custom variant game, or a normal variant where moves have been played,
+	 * instead of starting the variant that is specified in the metadata.
+	 * 
+	 * Should be provided if we're pasting a game, or rejoining a custom online private game.
+	 */
+	variantOptions?: VariantOptions,
+}
 
 /**
  * Variant options that can be used to load a custom game,
@@ -138,40 +154,20 @@ async function startLocalGame(options: {
 /**
  * Starts an online game according to the options provided by the server.
  */
-async function startOnlineGame(options: {
-	gameConclusion: string | false,
-	/** The id of the online game */
-	id: string,
-	metadata: MetaData,
-	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: string[],
-	publicity: 'public' | 'private',
-	variantOptions?: VariantOptions,
-	youAreColor: 'white' | 'black',
-	/** Provide if the game is timed. */
-	clockValues?: ClockValues,
-	drawOffer: DrawOfferInfo,
-	/** If our opponent has disconnected, this will be present. */
-	disconnect?: DisconnectInfo,
-	/**
-	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign?: number,
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number,
-}) {
+async function startOnlineGame(options: JoinGameMessage) {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
 
+	const gameOptions: GameOptions = { ...options };
+
 	// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
-	if (options.clockValues) options.clockValues = clock.adjustClockValuesForPing(options.clockValues);
+	if (gameOptions.clockValues) gameOptions.clockValues = clock.adjustClockValuesForPing(gameOptions.clockValues);
 	
 	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
-	if (options.publicity === 'private') options.variantOptions = localstorage.loadItem(options.id);
+	if (options.publicity === 'private') gameOptions.variantOptions = localstorage.loadItem(options.id);
 	const fromWhitePerspective = options.youAreColor === 'white';
 
-	await loadGame(options, fromWhitePerspective, false);
+	await loadGame(gameOptions, fromWhitePerspective, false);
 	typeOfGameWeAreIn = 'online';
 	onlinegame.initOnlineGame(options);
 }
@@ -190,26 +186,7 @@ async function startOnlineGame(options: {
  * @param {boolean} allowEditCoords - Whether the loaded game should allow you to edit your coords directly
  */
 async function loadGame(
-	gameOptions: {
-		metadata: MetaData,
-		/** Should be provided if we're rejoining an online game. */
-		clockValues?: ClockValues,
-		/** Should be provided if we're rejoining an online game. */
-		gameConclusion?: string | false,
-		/**
-		 * This will be a string array of all the moves played thus far, in the most compact notation (e.g. `["5,2>5,4", ...]`)
-		 * 
-		 * Should be provided if we're pasting a game, or rejoining an online game.
-		 */
-		moves?: string[],
-		/**
-		 * Provide to load a custom variant game, or a normal variant where moves have been played,
-		 * instead of starting the variant that is specified in the metadata.
-		 * 
-		 * Should be provided if we're pasting a game, or rejoining a custom online private game.
-		 */
-		variantOptions?: VariantOptions,
-	},
+	gameOptions: GameOptions,
 	/** If false, we'll be viewing black's perspective. */
 	fromWhitePerspective: boolean,
 	allowEditCoords: boolean

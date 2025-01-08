@@ -63,8 +63,14 @@ function resetServerRestarting() {
 	timeoutID = undefined;
 }
 
+/** Called when the online game is closed */
+function onGameClose() {
+	resetServerRestarting();
+}
+
 
 export default {
 	initServerRestart,
 	resetServerRestarting,
+	onGameClose,
 };

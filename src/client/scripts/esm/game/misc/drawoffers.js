@@ -144,7 +144,7 @@ function set(drawOffer) {
  * Called when an online game concludes or is closed. Closes any open draw
  * offer and resets all draw for values for future games.
  */
-function reset() {
+function onGameClose() {
 	plyOfLastOfferedDraw = undefined;
 	isAcceptingDraw = false;
 	guidrawoffer.close();
@@ -160,5 +160,5 @@ export default {
 	onOpponentDeclinedOffer,
 	extendOffer,
 	set,
-	reset,
+	onGameClose,
 };

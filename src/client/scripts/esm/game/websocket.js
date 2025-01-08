@@ -102,10 +102,6 @@ function alertUserLostConnection() {
 	statustext.showStatusForDuration(translations.websocket.no_connection, timeToWaitForHTTPMillis); // Alert the user
 }
 
-function getSubs() {
-	return subs;
-}
-
 /**
  * Repeatedly tries to open a web socket to the server until it is successful,
  * **unless** we are in timeout, then it will refuse.
@@ -666,15 +662,6 @@ async function resubAll() {
 	}
 }
 
-/** Unsubscribes from the invites subscriptions list.
- * Closes the socket if we have no more subscripions. */
-function unsubFromInvites() {
-	invites.clear({ recentUsersInLastList: true });
-	if (subs.invites === false) return; // Already unsubbed
-	deleteSub('invites');
-	sendmessage("general", "unsub", "invites");
-}
-
 window.addEventListener('pageshow', function(event) {
 	if (event.persisted) {
 		// The page was loaded from the back/forward cache (bfcache)
@@ -723,6 +710,15 @@ async function onAuthenticationNeeded() {
 }
 
 /**
+ * Whether we are subbed to the given subscription list.
+ * @param {'invites' | 'game'} sub - The name of the sub
+ */
+function areSubbedToSub(sub) {
+	if (!validSubs.includes(sub)) throw Error(`Can't ask if we're subbed to invalid sub "${sub}".`);
+	return subs[sub] !== false;
+}
+
+/**
  * Marks ourself as no longer subscribed to a subscription list.
  * 
  * If our websocket happens to close unexpectedly, we won't re-subscribe to it.
@@ -733,11 +729,37 @@ function deleteSub(sub) {
 	subs[sub] = false;
 }
 
+/**
+ * Unsubs from the provided subscription list,
+ * informing the server we no longer want updates.
+ * @param {'invites' | 'game'} sub - The name of the sub to add
+ */
+function addSub(sub) {
+	if (!validSubs.includes(sub)) throw Error(`Can't sub to invalid sub "${sub}".`);
+	subs[sub] = true;
+}
+
+/**
+ * Unsubs from the provided subscription list,
+ * informing the server we no longer want updates.
+ * @param {'invites' | 'game'} sub - The name of the sub to delete
+ */
+function unsubFromSub(sub) {
+	if (!validSubs.includes(sub)) throw Error(`Can't unsub from invalid sub "${sub}".`);
+
+	if (subs[sub] === false) return; // Already unsubbed.
+
+	deleteSub(sub);
+	// Tell the server we no longer want updates.
+	sendmessage('general', 'unsub', sub);
+}
+
 export default {
 	closeSocket,
 	sendmessage,
-	unsubFromInvites,
-	getSubs,
+	areSubbedToSub,
+	addSub,
 	deleteSub,
+	unsubFromSub,
 	addTimerIDToCancelOnNewSocket,
 };
