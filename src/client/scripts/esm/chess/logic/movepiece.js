@@ -54,14 +54,18 @@ function generateMove(gamefile, move) {
 }
 
 /**
- * Changes the board with move.changes
+ * Applies a moves changes to the gamefile
  * Does not apply any graphical effects
  * @param {*} gamefile 
  * @param {*} move 
  * @param {*} forward 
  */
-function applyMove(gamefile, move, forward = true) {
+function applyMove(gamefile, move, forward = true, {global = false} = {}) {
+	// Stops stupid missing piece errors
+	if (gamefile.moveIndex + !forward !== move.generateIndex) return new Error(`Move was expected at index ${move.generateIndex} but applied at ${gamefile.moveIndex + !forward} (forward: ${forward})!`);
+	
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
+	state.applyMove(gamefile, move, forward, {globalChange: global});
 }
 
 /**
@@ -72,14 +76,12 @@ function applyMove(gamefile, move, forward = true) {
  * @param {Move} move 
  */
 function makeMove(gamefile, move) {
-	applyMove(gamefile, move);
-	state.applyMove(gamefile, move, true, {globalChange: true});
-
 	gamefile.moveIndex++;
-	if (gamefile.moveIndex !== move.generateIndex) console.warn(`Move was expected at index ${move.generateIndex} but applied at ${gamefile.moveIndex}, this is unintended and may cause some issues!`);
 	gamefile.moves.push(move);
 
 	updateTurn(gamefile);
+
+	applyMove(gamefile, move, true, { global: true });
 
 	// The "check" property will be added inside updateInCheck()...
 	// The "mate" property will be added inside our game conclusion checks...
@@ -256,7 +258,8 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
 }
 
 /**
- * Iterates from a certain move to the target index
+ * Iterates from moveIndex to the target index
+ * Callbacks should not update the board
  * @param {gamefile} gamefile 
  * @param {number} targetIndex 
  * @param {CallableFunction} callback 
@@ -265,14 +268,14 @@ function forEachMove(gamefile, targetIndex, callback) {
 	if (targetIndex === gamefile.moveIndex) return;
 
 	const forwards = targetIndex >= gamefile.moveIndex;
-	targetIndex = forwards ? targetIndex : targetIndex + 1; 
-	let i = forwards ? gamefile.moveIndex : gamefile.moveIndex + 1;
+	const offset = forwards ? 0 : 1;
+	let i = gamefile.moveIndex;
 	
-	if (gamefile.moves.length <= targetIndex || targetIndex < 0) throw new Error("Target index is outside of the movelist!");
+	if (gamefile.moves.length <= targetIndex + offset || targetIndex + offset < 0) throw new Error("Target index is outside of the movelist!");
 
 	while (i !== targetIndex) {
 		i = math.moveTowards(i, targetIndex, 1);
-		const move = gamefile.moves[i];
+		const move = gamefile.moves[i + offset];
 
 		if (move === undefined) {
 			console.log(`Undefined! ${i}, ${targetIndex}`);
@@ -284,14 +287,33 @@ function forEachMove(gamefile, targetIndex, callback) {
 }
 
 /**
- * Iterates to a certain move index. Callable should be a move application function
+ * Iterates to a certain move index.
+ * Callable should be a move application function
  * @param {gamefile} gamefile 
  * @param {number} index 
  * @param {CallableFunction} callback 
  */
 function gotoMove(gamefile, index, callback) {
-	forEachMove(gamefile, index, callback);
-	gamefile.moveIndex = index;
+	if (index === gamefile.moveIndex) return;
+
+	const forwards = index >= gamefile.moveIndex;
+	const offset = forwards ? 0 : 1;
+	let i = gamefile.moveIndex;
+	
+	if (gamefile.moves.length <= index + offset || index + offset < 0) throw new Error("Target index is outside of the movelist!");
+
+	while (i !== index) {
+		i = math.moveTowards(i, index, 1);
+		const move = gamefile.moves[i + offset];
+
+		if (move === undefined) {
+			console.log(`Undefined! ${i}, ${index}`);
+			continue;
+		}
+		gamefile.moveIndex = i;
+		callback(move);
+	}
+
 }
 
 /**
@@ -308,12 +330,11 @@ function rewindMove(gamefile) {
 
 	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
 
-	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, false);
-	state.applyMove(gamefile, move, false, { globalChange: true });
+	gamefile.moveIndex--;
+	applyMove(gamefile, move, false, { global: true });
 
 	// Finally, delete the move off the top of our moves [] array list
 	moveutil.deleteLastMove(gamefile.moves);
-	gamefile.moveIndex--;
 	updateTurn(gamefile);
 }
 

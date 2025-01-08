@@ -232,14 +232,13 @@ async function loadGamefile(newGamefile) {
 	if (lastmove !== undefined) {
 		gamefile.moveIndex--;
 		movepiece.applyMove(gamefile, lastmove, false);
-		state.applyMove(gamefile, lastmove, false);
 
 		// A small delay to animate the very last move, so the loading screen
 		// spinny pawn animation has time to fade away.
 		animateLastMoveTimeoutID = setTimeout(() => {
-			movesequence.viewMove(gamefile, lastmove, true);
+			if (moveutil.areWeViewingLatestMove(gamefile)) return;
+			movesequence.viewFront(gamefile); // Updates to front even when they view different moves
 			movesequence.animateMove(lastmove, true);
-			gamefile.moveIndex++;
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 	}
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.

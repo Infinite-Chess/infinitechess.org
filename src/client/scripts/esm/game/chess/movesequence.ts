@@ -23,7 +23,6 @@ import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import coordutil from "../../chess/util/coordutil.js";
 
-import state from "../../chess/logic/state.js";
 import boardchanges from "../../chess/logic/boardchanges.js";
 import { animatableChanges, meshChanges } from "./graphicalchanges.js";
 
@@ -132,7 +131,6 @@ function viewFront(gamefile: gamefile) {
 function viewMove(gamefile: gamefile, move: Move, forward = true) {
 	movepiece.applyMove(gamefile, move, forward);
 	boardchanges.runMove(gamefile, move, meshChanges, forward);
-	state.applyMove(gamefile, move, forward);
 }
 
 /**
