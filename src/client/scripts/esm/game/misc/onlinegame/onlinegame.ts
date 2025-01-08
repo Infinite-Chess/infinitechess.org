@@ -72,58 +72,13 @@ let serverHasConcludedGame: boolean | undefined;
 
 /**
  * Whether we are in sync with the game on the server.
- * If false, we do not submit our move. (move auto-submitted upon resyncing)
- * Set to false whenever the socket closes, or we unsub from the game.
+ * If false, we do not submit our move. (move will be auto-submitted upon resyncing)
+ * Set to false whenever we lose connection, or the socket closes.
  * Set to true whenever we join game, or successfully resync.
+ * 
+ * If we aren't subbed to a game, then it's automatically assumed we are out of sync.
  */
 let inSync: boolean | undefined;
-
-
-
-// Functions ------------------------------------------------------------------------------------------------------
-
-
-(function init() {
-	addWarningLeaveGamePopupsToHyperlinks();
-})();
-
-/**
- * Add an listener for every single hyperlink on the page that will
- * confirm to us if we actually want to leave if we are in an online game.
- */
-function addWarningLeaveGamePopupsToHyperlinks() {
-	document.querySelectorAll('a').forEach((link) => {
-		link.addEventListener('click', confirmNavigationAwayFromGame);
-	});
-}
-
-/**
- * Confirm that the user DOES actually want to leave the page if they are in an online game.
- * 
- * Sometimes they could leave by accident, or even hit the "Logout" button by accident,
- * which just ejects them out of the game
- * @param {Event} event 
- */
-function confirmNavigationAwayFromGame(event) {
-	// Check if Command (Meta) or Ctrl key is held down
-	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
-	if (!areInOnlineGame() || gamefileutility.isGameOver(gameslot.getGamefile()!)) return;
-
-	const userConfirmed = confirm('Are you sure you want to leave the game?'); 
-	if (userConfirmed) return; // Follow link like normal. Server then starts a 20-second auto-resign timer for disconnecting on purpose.
-	// Cancel the following of the link.
-	event.preventDefault();
-
-	/*
-	 * KEEP IN MIND that if we leave the pop-up open for 10 seconds,
-	 * JavaScript is frozen in that timeframe, which means as
-	 * far as the server can tell we're not communicating anymore,
-	 * so it automatically closes our websocket connection,
-	 * thinking we've disconnected, and starts a 60-second auto-resign timer.
-	 * 
-	 * As soon as we hit cancel, we are communicating again.
-	 */
-}
 
 
 // Getters --------------------------------------------------------------------------------------------------------------
@@ -133,9 +88,7 @@ function areInOnlineGame(): boolean {
 	return inOnlineGame;
 }
 
-/**
- * Returns the game id of the online game we're in.
- */
+/** Returns the game id of the online game we're in.  */
 function getGameID(): string {
 	if (!inOnlineGame) throw Error("Cannot get id of online game when we're not in an online game.");
 	return id!;
@@ -174,17 +127,128 @@ function hasServerConcludedGame(): boolean {
 	return serverHasConcludedGame!;
 }
 
+function setInSyncTrue() {
+	inSync = true;
+}
+
+function setInSyncFalse() {
+	if (!inOnlineGame) return;
+	inSync = false;
+}
 
 
-
-function setInSyncFalse() { inSync = false; }
-function setInSyncTrue() { inSync = true; }
+// Functions ------------------------------------------------------------------------------------------------------
 
 
+function initOnlineGame(options: {
+	/** The id of the online game */
+	id: string,
+	youAreColor: 'white' | 'black',
+	publicity: 'public' | 'private',
+	drawOffer: DrawOfferInfo,
+	/** If our opponent has disconnected, this will be present. */
+	disconnect?: DisconnectInfo,
+	/**
+	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
+	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
+	 */
+	millisUntilAutoAFKResign?: number,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
+}) {
+	inOnlineGame = true;
+	id = options.id;
+	ourColor = options.youAreColor;
+	isPrivate = options.publicity === 'private';
+	inSync = true;
 
+	drawoffers.set(options.drawOffer);
+	
 
+	if (options.disconnect) disconnect.startOpponentDisconnectCountdown(options.disconnect);
+	afk.onGameStart();
+	// If Opponent is currently afk, display that countdown
+	if (options.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(options.millisUntilAutoAFKResign);
+	if (options.serverRestartingAt) serverrestart.initServerRestart(options.serverRestartingAt);
 
+	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
+    
+	// These make sure it will place us in black's perspective
+	// perspective.resetRotations();
 
+	serverHasConcludedGame = false;
+
+	initEventListeners();
+}
+
+// Call when we leave an online game
+function closeOnlineGame() {
+	inOnlineGame = false;
+	id = undefined;
+	isPrivate = undefined;
+	ourColor = undefined;
+	inSync = undefined;
+	serverHasConcludedGame = undefined;
+	afk.onGameClose();
+	tabnameflash.onGameClose();
+	serverrestart.onGameClose();
+	drawoffers.onGameClose();
+	// perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
+	closeEventListeners();
+}
+
+function initEventListeners() {
+	// Add the event listeners for when we lose connection or the socket closes,
+	// to set our inSync variable to false
+	document.addEventListener('connection-lost', setInSyncFalse); // Custom event
+	document.addEventListener('socket-closed', setInSyncFalse); // Custom event
+
+	/**
+	 * Leave-game warning popups on every hyperlink.
+	 * 
+	 * Add an listener for every single hyperlink on the page that will
+	 * confirm to us if we actually want to leave if we are in an online game.
+	 */
+	document.querySelectorAll('a').forEach((link) => {
+		link.addEventListener('click', confirmNavigationAwayFromGame);
+	});
+}
+
+function closeEventListeners() {
+	document.removeEventListener('connection-lost', setInSyncFalse);
+	document.removeEventListener('socket-closed', setInSyncFalse);
+	document.querySelectorAll('a').forEach((link) => {
+		link.removeEventListener('click', confirmNavigationAwayFromGame);
+	});
+}
+
+/**
+ * Confirm that the user DOES actually want to leave the page if they are in an online game.
+ * 
+ * Sometimes they could leave by accident, or even hit the "Logout" button by accident,
+ * which just ejects them out of the game
+ * @param {Event} event 
+ */
+function confirmNavigationAwayFromGame(event) {
+	// Check if Command (Meta) or Ctrl key is held down
+	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return;
+
+	const userConfirmed = confirm('Are you sure you want to leave the game?'); 
+	if (userConfirmed) return; // Follow link like normal. Server then starts a 20-second auto-resign timer for disconnecting on purpose.
+	// Cancel the following of the link.
+	event.preventDefault();
+
+	/*
+	 * KEEP IN MIND that if we leave the pop-up open for 10 seconds,
+	 * JavaScript is frozen in that timeframe, which means as
+	 * far as the server can tell we're not communicating anymore,
+	 * so it automatically closes our websocket connection,
+	 * thinking we've disconnected, and starts a 60-second auto-resign timer.
+	 * 
+	 * As soon as we hit cancel, we are communicating again.
+	 */
+}
 
 function update() {
 	afk.updateAFK();
@@ -194,9 +258,13 @@ function update() {
  * Requests a game update from the server, since we are out of sync.
  */
 function resyncToGame() {
-	if (!areInOnlineGame()) return;
-	function onReplyFunc() { inSync = true; }
-	websocket.sendmessage('game', 'resync', id, false, onReplyFunc);
+	inSync = false;
+	websocket.sendmessage('game', 'resync', id);
+}
+
+function onReceivedOpponentsMove() {
+	afk.onMovePlayed({ isOpponents: true });
+	tabnameflash.onMovePlayed({ isOpponents: true });
 }
 
 /**
@@ -296,62 +364,8 @@ function reportOpponentsMove(reason: string) {
 }
 
 
-function initOnlineGame(options: {
-	/** The id of the online game */
-	id: string,
-	youAreColor: 'white' | 'black',
-	publicity: 'public' | 'private',
-	drawOffer: DrawOfferInfo,
-	/** If our opponent has disconnected, this will be present. */
-	disconnect?: DisconnectInfo,
-	/**
-	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign?: number,
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number,
-}) {
-
-	id = options.id;
-	ourColor = options.youAreColor;
-	isPrivate = options.publicity === 'private';
-
-	drawoffers.set(options.drawOffer);
-	
-
-	if (options.disconnect) disconnect.startOpponentDisconnectCountdown(options.disconnect);
-	afk.onGameStart();
-	// If Opponent is currently afk, display that countdown
-	if (options.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(options.millisUntilAutoAFKResign);
-	if (options.serverRestartingAt) serverrestart.initServerRestart(options.serverRestartingAt);
-
-	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
-    
-	// These make sure it will place us in black's perspective
-	// perspective.resetRotations();
-
-	serverHasConcludedGame = false;
-
-}
-
-// Call when we leave an online game
-function closeOnlineGame() {
-	id = undefined;
-	isPrivate = undefined;
-	ourColor = undefined;
-	inSync = false;
-	serverHasConcludedGame = undefined;
-	afk.onGameClose();
-	tabnameflash.onGameClose();
-	serverrestart.onGameClose();
-	drawoffers.onGameClose();
-	// perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
-}
-
-
 function sendMove() {
-	if (!inOnlineGame || !inSync) return; // Don't do anything if it's a local game
+	if (!inOnlineGame || !inSync || !websocket.areSubbedToSub('game')) return; // Skip
 	if (config.DEV_BUILD) console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
@@ -384,18 +398,28 @@ function onMainMenuPress() {
 	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
 
 	const gamefile = gameslot.getGamefile()!;
-	if (moveutil.isGameResignable(gamefile)) resign();
-	else abort();
+	if (moveutil.isGameResignable(gamefile)) websocket.sendmessage('game','resign');
+	else 									 websocket.sendmessage('game','abort');
 }
 
-function resign() {
-	inSync = false;
-	websocket.sendmessage('game','resign');
+
+
+/** Called when an online game is concluded (termination shown on-screen) */
+function onGameConclude() {
+	if (!inOnlineGame) return; // The game concluded wasn't an online game.
+
+	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
+	afk.onGameClose();
+	tabnameflash.onGameClose();
+	serverrestart.onGameClose();
+	deleteCustomVariantOptions();
+	drawoffers.onGameClose();
+	requestRemovalFromPlayersInActiveGames();
 }
 
-function abort() {
-	inSync = false;
-	websocket.sendmessage('game','abort');
+function deleteCustomVariantOptions() {
+	// Delete any custom pasted position in a private game.
+	if (isPrivate) localstorage.deleteItem(id!);
 }
 
 /**
@@ -411,44 +435,17 @@ function requestRemovalFromPlayersInActiveGames() {
 	websocket.sendmessage('game', 'removefromplayersinactivegames');
 }
 
-
-
-/** Called when an online game is concluded (termination shown on-screen) */
-function onGameConclude() {
-	if (!inOnlineGame) return; // The game concluded wasn't an online game.
-
-	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
-	afk.onGameClose();
-	tabnameflash.onGameClose();
-	serverrestart.onGameClose();
-	deleteCustomVariantOptions();
-	drawoffers.onGameClose();
-	onlinegame.requestRemovalFromPlayersInActiveGames();
-}
-
-function deleteCustomVariantOptions() {
-	// Delete any custom pasted position in a private game.
-	if (isPrivate) localstorage.deleteItem(id!);
-}
-
-function onReceivedOpponentsMove() {
-	afk.onMovePlayed({ isOpponents: true });
-	tabnameflash.onMovePlayed({ isOpponents: true });
-}
-
 export default {
 	onmessage,
 	getGameID,
 	getIsPrivate,
 	getOurColor,
-	setInSyncFalse,
 	setInSyncTrue,
 	initOnlineGame,
 	closeOnlineGame,
 	isItOurTurn,
 	sendMove,
 	onMainMenuPress,
-	requestRemovalFromPlayersInActiveGames,
 	resyncToGame,
 	update,
 	onGameConclude,

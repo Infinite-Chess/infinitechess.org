@@ -391,7 +391,6 @@ function onclose(event) {
 	cancelAllEchoTimers(); // If the connection closed, we shouldn't expect any echo's for previous sent messages.
 	resetOnreplyFuncs(); // Immediately invoke all functions we wanted to execute upon hearing replies.
 
-	onlinegame.setInSyncFalse();
 	guiplay.onSocketClose();
 
 
