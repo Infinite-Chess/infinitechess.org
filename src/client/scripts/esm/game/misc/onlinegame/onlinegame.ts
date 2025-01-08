@@ -168,14 +168,9 @@ function initOnlineGame(options: {
 	isPrivate = options.publicity === 'private';
 	inSync = true;
 
-	drawoffers.set(options.drawOffer);
-	
+	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options);
 
-	if (options.disconnect) disconnect.startOpponentDisconnectCountdown(options.disconnect);
 	afk.onGameStart();
-	// If Opponent is currently afk, display that countdown
-	if (options.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(options.millisUntilAutoAFKResign);
-	if (options.serverRestartingAt) serverrestart.initServerRestart(options.serverRestartingAt);
 
 	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
     
@@ -185,6 +180,33 @@ function initOnlineGame(options: {
 	serverHasConcludedGame = false;
 
 	initEventListeners();
+}
+
+function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options: {
+	drawOffer: DrawOfferInfo,
+	/** If our opponent has disconnected, this will be present. */
+	disconnect?: DisconnectInfo,
+	/**
+	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
+	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
+	 */
+	millisUntilAutoAFKResign?: number,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
+}) {
+	drawoffers.set(options.drawOffer);
+
+	// If opponent is currently disconnected, display that countdown
+	if (options.disconnect) disconnect.startOpponentDisconnectCountdown(options.disconnect);
+	else disconnect.stopOpponentDisconnectCountdown();
+
+	// If Opponent is currently afk, display that countdown
+	if (options.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(options.millisUntilAutoAFKResign);
+	else afk.stopOpponentAFKCountdown();
+
+	// If the server is restarting, start displaying that info.
+	if (options.serverRestartingAt !== undefined) serverrestart.initServerRestart(options.serverRestartingAt);
+	else serverrestart.resetServerRestarting();
 }
 
 // Call when we leave an online game
@@ -276,89 +298,6 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean}) {
 	drawoffers.onMovePlayed({ isOpponents });
 }
 
-/**
- * Adds or deletes moves in the game until it matches the server's provided moves.
- * This can rarely happen when we move after the game is already over,
- * or if we're disconnected when our opponent made their move.
- * @param gamefile - The gamefile
- * @param moves - The moves list in the most compact form: `['1,2>3,4','5,6>7,8Q']`
- * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
- * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
- */
-function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameConclusion: string | false): { opponentPlayedIllegalMove: boolean } {
-
-	// Early exit case. If we have played exactly 1 more move than the server,
-	// and the rest of the moves list matches, don't modify our moves,
-	// just re-submit our move!
-	const hasOneMoreMoveThanServer = gamefile.moves.length === moves.length + 1;
-	const finalMoveIsOurMove = gamefile.moves.length > 0 && moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) === ourColor;
-	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1) || gamefile.moves.length > 1 && moves.length > 0 && gamefile.moves[gamefile.moves.length - 2].compact === moves[moves.length - 1];
-	if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
-		console.log("Sending our move again after resyncing..");
-		movesendreceive.sendMove();
-		return { opponentPlayedIllegalMove: false };
-	}
-
-	const originalMoveIndex = gamefile.moveIndex;
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateProperties: false });
-	let aChangeWasMade = false;
-
-	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..
-		movepiece.rewindMove(gamefile, { animate: false });
-		console.log("Rewound one move while resyncing to online game.");
-		aChangeWasMade = true;
-	}
-
-	let i = moves.length - 1;
-	while (true) { // Decrement i until we find the latest move at which we're in sync, agreeing with the server about.
-		if (i === -1) break; // Beginning of game
-		const thisGamefileMove = gamefile.moves[i];
-		if (thisGamefileMove) { // The move is defined
-			if (thisGamefileMove.compact === moves[i]) break; // The moves MATCH
-			// The moves don't match... remove this one off our list.
-			movepiece.rewindMove(gamefile, { animate: false });
-			console.log("Rewound one INCORRECT move while resyncing to online game.");
-			aChangeWasMade = true;
-		}
-		i--;
-	}
-
-	// i is now the index of the latest move that MATCHES in both ours and the server's moves lists.
-
-	const opponentColor = getOpponentColor();
-	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
-		i++;
-		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		const move = movepiece.calculateMoveFromShortmove(gamefile, thisShortmove);
-
-		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
-		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
-
-
-		if (opponentPlayedThisMove) { // Perform legality checks
-			// If not legal, this will be a string for why it is illegal.
-			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, move, claimedGameConclusion);
-			if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${thisShortmove} ${claimedGameConclusion}`);
-			if (moveIsLegal !== true && !isPrivate) { // Allow illegal moves in private games
-				reportOpponentsMove(moveIsLegal);
-				return { opponentPlayedIllegalMove: true };
-			}
-		}
-
-		onMovePlayed({ isOpponents: opponentPlayedThisMove });
-        
-		const isLastMove = i === moves.length - 1;
-		movepiece.makeMove(gamefile, move!, { doGameOverChecks: isLastMove, concludeGameIfOver: false, animate: isLastMove });
-		console.log("Forwarded one move while resyncing to online game.");
-		aChangeWasMade = true;
-	}
-
-	if (!aChangeWasMade) movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false });
-	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
-
-	return { opponentPlayedIllegalMove: false }; // No cheating detected
-}
-
 function reportOpponentsMove(reason: string) {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
 	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
@@ -427,8 +366,10 @@ export default {
 	getGameID,
 	getIsPrivate,
 	getOurColor,
+	getOpponentColor,
 	setInSyncTrue,
 	initOnlineGame,
+	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting,
 	closeOnlineGame,
 	isItOurTurn,
 	areInSync,
@@ -439,7 +380,6 @@ export default {
 	hasServerConcludedGame,
 	reportOpponentsMove,
 	onMovePlayed,
-	synchronizeMovesList,
 	areInOnlineGame,
 	areWeColorInOnlineGame,
 };
