@@ -207,7 +207,6 @@ function handleJoinGame(message: JoinGameMessage) {
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
 	websocket.deleteSub('invites');
 	websocket.addSub('game');
-	onlinegame.setInSyncTrue();
 	guititle.close();
 	guiplay.close();
 	gameloader.startOnlineGame(message);
@@ -223,7 +222,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	// Otherwise, we need to re-sync
 	const expectedMoveNumber = gamefile.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
-		console.log(`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
+		console.error(`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
 		return onlinegame.resyncToGame();
 	}
 
@@ -333,7 +332,6 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
  */
 function handleUnsubbing() {
 	websocket.deleteSub('game');
-	onlinegame.setInSyncFalse();
 }
 
 /**
@@ -344,7 +342,6 @@ function handleUnsubbing() {
 function handleLogin(gamefile: gamefile) {
 	statustext.showStatus(translations['onlinegame'].not_logged_in, true, 100);
 	websocket.deleteSub('game');
-	onlinegame.setInSyncFalse();
 	clock.endGame(gamefile);
 	guiclock.stopClocks(gamefile);
 	selection.unselectPiece();
@@ -364,7 +361,6 @@ function handleLogin(gamefile: gamefile) {
 function handleNoGame(gamefile: gamefile) {
 	statustext.showStatus(translations['onlinegame'].game_no_longer_exists, false, 1.5);
 	websocket.deleteSub('game');
-	onlinegame.setInSyncFalse();
 	gamefile.gameConclusion = 'aborted';
 	gameslot.concludeGame();
 }
@@ -380,7 +376,6 @@ function handleNoGame(gamefile: gamefile) {
 function handleLeaveGame() {
 	statustext.showStatus(translations['onlinegame'].another_window_connected);
 	websocket.deleteSub('game');
-	onlinegame.setInSyncFalse();
 	gameloader.unloadGame();
 	guititle.open();
 }
