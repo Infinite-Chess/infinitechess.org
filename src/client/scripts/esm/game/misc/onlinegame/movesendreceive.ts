@@ -5,6 +5,8 @@
  */
 
 import type gamefile from "../../../chess/logic/gamefile";
+import type { OpponentsMoveMessage } from "../onlinegamerouter";
+import type { Move } from "../../../chess/util/moveutil";
 
 import legalmoves from "../../../chess/logic/legalmoves";
 import movepiece from "../../../chess/logic/movepiece";
@@ -12,14 +14,13 @@ import specialdetect from "../../../chess/logic/specialdetect";
 import gamefileutility from "../../../chess/util/gamefileutility";
 import clock from "../../../chess/logic/clock";
 import formatconverter from "../../../chess/logic/formatconverter";
-import moveutil, { Move } from "../../../chess/util/moveutil";
+import moveutil from "../../../chess/util/moveutil";
 import jsutil from "../../../util/jsutil";
 import gameslot from "../../chess/gameslot";
 import selection from "../../chess/selection";
 import guiclock from "../../gui/guiclock";
 import guipause from "../../gui/guipause";
 import websocket from "../../websocket";
-import { OpponentsMoveMessage } from "../onlinegamerouter";
 import onlinegame from "./onlinegame";
 
 

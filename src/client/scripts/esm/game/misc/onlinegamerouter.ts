@@ -48,6 +48,7 @@ import disconnect from "./onlinegame/disconnect.js";
 import afk from "./onlinegame/afk.js";
 import serverrestart from "./onlinegame/serverrestart.js";
 import movesendreceive from "./onlinegame/movesendreceive.js";
+import resyncer from "./onlinegame/resyncer.js";
 
 
 // Type Definitions --------------------------------------------------------------------------------------
@@ -224,48 +225,6 @@ function handleUpdatedClock(gamefile: gamefile, clockValues: ClockValues) {
 }
 
 /**
- * Called when the server sends us the conclusion of the game when it ends,
- * OR we just need to resync! The game may not always be over.
- */
-function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) {
-	const claimedGameConclusion = message.gameConclusion;
-
-	/**
-     * Make sure we are in sync with the final move list.
-     * We need to do this because sometimes the game can end before the
-     * server sees our move, but on our screen we have still played it.
-     */
-	if (!onlinegame.synchronizeMovesList(gamefile, message.moves, claimedGameConclusion)) { // Cheating detected. Already reported, don't 
-		afk.stopOpponentAFKCountdown(); 
-		return;
-	}
-	guigameinfo.updateWhosTurn();
-
-	// If Opponent is currently afk, display that countdown
-	if (message.millisUntilAutoAFKResign !== undefined && !onlinegame.isItOurTurn()) afk.startOpponentAFKCountdown(message.millisUntilAutoAFKResign);
-	else afk.stopOpponentAFKCountdown();
-
-	// If opponent is currently disconnected, display that countdown
-	if (message.disconnect !== undefined) disconnect.startOpponentDisconnectCountdown(message.disconnect); // { millisUntilAutoDisconnectResign, wasByChoice }
-	else disconnect.stopOpponentDisconnectCountdown();
-
-	// If the server is restarting, start displaying that info.
-	if (message.serverRestartingAt) serverrestart.initServerRestart(message.serverRestartingAt);
-	else serverrestart.resetServerRestarting();
-
-	drawoffers.set(message.drawOffer);
-
-	// Must be set before editing the clocks.
-	gamefile.gameConclusion = claimedGameConclusion;
-
-	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
-	clock.edit(gamefile, message.clockValues);
-
-	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
-}
-
-/**
  * Called after the server deletes the game after it has ended.
  * It basically tells us the server will no longer be sending updates related to the game,
  * so we should just unsub.
@@ -333,5 +292,6 @@ export type {
 	JoinGameMessage,
 	DisconnectInfo,
 	DrawOfferInfo,
+	GameUpdateMessage,
 	OpponentsMoveMessage,
 };
