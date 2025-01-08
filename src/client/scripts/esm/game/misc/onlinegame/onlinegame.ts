@@ -41,13 +41,14 @@ import { DisconnectInfo, DrawOfferInfo } from '../onlinegamerouter.js';
 import tabnameflash from './tabnameflash.js';
 import disconnect from './disconnect.js';
 import serverrestart from './serverrestart.js';
+import movesendreceive from './movesendreceive.js';
 
 
 // Variables ------------------------------------------------------------------------------------------------------
 
 
 /** Whether or not we are currently in an online game. */
-const inOnlineGame: boolean = false;
+let inOnlineGame: boolean = false;
 
 /**
  * The id of the online game we are in, if we are in one. @type {string}
@@ -116,6 +117,11 @@ function areWeColorInOnlineGame(color: string): boolean {
 function isItOurTurn(): boolean {
 	if (!inOnlineGame) throw Error("Cannot get isItOurTurn of online game when we're not in an online game.");
 	return gameslot.getGamefile()!.whosTurn === ourColor;
+}
+
+function areInSync(): boolean {
+	if (!inOnlineGame) throw Error("Cannot get inSync of online game when we're not in an online game.");
+	return inSync!;
 }
 
 /**
@@ -262,9 +268,12 @@ function resyncToGame() {
 	websocket.sendmessage('game', 'resync', id);
 }
 
-function onReceivedOpponentsMove() {
-	afk.onMovePlayed({ isOpponents: true });
-	tabnameflash.onMovePlayed({ isOpponents: true });
+function onMovePlayed({ isOpponents }: { isOpponents: boolean}) {
+	// Inform all the scripts that rely on online game
+	// logic that a move occurred, so they can update accordingly
+	afk.onMovePlayed({ isOpponents });
+	tabnameflash.onMovePlayed({ isOpponents });
+	drawoffers.onMovePlayed({ isOpponents });
 }
 
 /**
@@ -286,7 +295,7 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1) || gamefile.moves.length > 1 && moves.length > 0 && gamefile.moves[gamefile.moves.length - 2].compact === moves[moves.length - 1];
 	if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
 		console.log("Sending our move again after resyncing..");
-		sendMove();
+		movesendreceive.sendMove();
 		return { opponentPlayedIllegalMove: false };
 	}
 
@@ -334,10 +343,9 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 				reportOpponentsMove(moveIsLegal);
 				return { opponentPlayedIllegalMove: true };
 			}
+		}
 
-			afk.onMovePlayed({ isOpponents: true });
-			tabnameflash.onMovePlayed({ isOpponents: true });
-		} else tabnameflash.onMovePlayed({ isOpponents: false });
+		onMovePlayed({ isOpponents: opponentPlayedThisMove });
         
 		const isLastMove = i === moves.length - 1;
 		movepiece.makeMove(gamefile, move!, { doGameOverChecks: isLastMove, concludeGameIfOver: false, animate: isLastMove });
@@ -364,27 +372,6 @@ function reportOpponentsMove(reason: string) {
 }
 
 
-function sendMove() {
-	if (!inOnlineGame || !inSync || !websocket.areSubbedToSub('game')) return; // Skip
-	if (config.DEV_BUILD) console.log("Sending our move..");
-
-	const gamefile = gameslot.getGamefile()!;
-	const shortmove = moveutil.getLastMove(gamefile.moves)!.compact; // "x,y>x,yN"
-
-	const data = {
-		move: shortmove,
-		moveNumber: gamefile.moves.length,
-		gameConclusion: gamefile.gameConclusion,
-	};
-
-	websocket.sendmessage('game', 'submitmove', data, true);
-
-	// Declines any open draw offer from our opponent. We don't need to inform
-	// the server because the server auto declines when we submit our move.
-	drawoffers.callback_declineDraw({ informServer: false });
-    
-	afk.onMovePlayed({ isOpponents: false });
-}
 
 // Aborts / Resigns
 function onMainMenuPress() {
@@ -444,14 +431,14 @@ export default {
 	initOnlineGame,
 	closeOnlineGame,
 	isItOurTurn,
-	sendMove,
+	areInSync,
 	onMainMenuPress,
 	resyncToGame,
 	update,
 	onGameConclude,
 	hasServerConcludedGame,
 	reportOpponentsMove,
-	onReceivedOpponentsMove,
+	onMovePlayed,
 	synchronizeMovesList,
 	areInOnlineGame,
 	areWeColorInOnlineGame,

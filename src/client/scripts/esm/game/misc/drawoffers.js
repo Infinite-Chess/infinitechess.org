@@ -140,6 +140,12 @@ function set(drawOffer) {
 	onOpponentExtendedOffer();
 }
 
+function onMovePlayed({ isOpponents }) {
+	// Declines any open draw offer from our opponent. We don't need to inform
+	// the server because the server auto declines when we submit our move.
+	if (!isOpponents) callback_declineDraw({ informServer: false });
+}
+
 /**
  * Called when an online game concludes or is closed. Closes any open draw
  * offer and resets all draw for values for future games.
@@ -160,5 +166,6 @@ export default {
 	onOpponentDeclinedOffer,
 	extendOffer,
 	set,
+	onMovePlayed,
 	onGameClose,
 };

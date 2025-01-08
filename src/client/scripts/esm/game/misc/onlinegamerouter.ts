@@ -47,6 +47,7 @@ import board from "../rendering/board.js";
 import disconnect from "./onlinegame/disconnect.js";
 import afk from "./onlinegame/afk.js";
 import serverrestart from "./onlinegame/serverrestart.js";
+import movesendreceive from "./onlinegame/movesendreceive.js";
 
 
 // Type Definitions --------------------------------------------------------------------------------------
@@ -146,7 +147,7 @@ function routeMessage(data: WebsocketMessage) { // { sub, action, value, id }
 
 	switch (data.action) {
 		case "move":
-			handleOpponentsMove(gamefile, data.value);
+			movesendreceive.handleOpponentsMove(gamefile, data.value);
 			break;
 		case "clock": 
 			handleUpdatedClock(gamefile, data.value);
@@ -210,64 +211,6 @@ function handleJoinGame(message: JoinGameMessage) {
 	guititle.close();
 	guiplay.close();
 	gameloader.startOnlineGame(message);
-}
-
-/**
- * Called when we received our opponents move. This verifies they're move
- * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
- * If it is legal, it forwards the game to the front, then forwards their move.
- */
-function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) {
-	// Make sure the move number matches the expected.
-	// Otherwise, we need to re-sync
-	const expectedMoveNumber = gamefile.moves.length + 1;
-	if (message.moveNumber !== expectedMoveNumber) {
-		console.error(`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
-		return onlinegame.resyncToGame();
-	}
-
-	// Convert the move from compact short format "x,y>x,yN"
-	let move: Move; // { startCoords, endCoords, promotion }
-	try {
-		move = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
-	} catch {
-		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`);
-		const reason = 'Incorrectly formatted.';
-		return onlinegame.reportOpponentsMove(reason);
-	}
-
-	// If not legal, this will be a string for why it is illegal.
-	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, move as Move, message.gameConclusion);
-	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
-	if (moveIsLegal !== true && !onlinegame.getIsPrivate()) return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
-
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateProperties: false });
-
-	// Forward the move...
-
-	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)!;
-	const legalMoves = legalmoves.calculate(gamefile, piecemoved);
-	const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
-	legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
-
-	move.type = piecemoved.type;
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move);
-	movepiece.makeMove(gamefile, move);
-
-	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
-
-	// Edit the clocks
-	
-	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
-	clock.edit(gamefile, message.clockValues);
-	guiclock.edit(gamefile);
-
-	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
-	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
-
-	onlinegame.onReceivedOpponentsMove();
-	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 }
 
 /** 
@@ -390,4 +333,5 @@ export type {
 	JoinGameMessage,
 	DisconnectInfo,
 	DrawOfferInfo,
+	OpponentsMoveMessage,
 };

@@ -26,6 +26,7 @@ import space from '../misc/space.js';
 import preferences from '../../components/header/preferences.js';
 import gameslot from './gameslot.js';
 import gameloader from './gameloader.js';
+import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 // Import End
 
 /**
@@ -359,7 +360,7 @@ function moveGamefilePiece(coords) {
 	move.compact = compact;
 
 	movepiece.makeMove(gameslot.getGamefile(), move, { animate: !draggingPiece, animateSecondary: draggingPiece });
-	onlinegame.sendMove();
+	movesendreceive.sendMove();
 
 	unselectPiece();
 }
