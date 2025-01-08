@@ -205,9 +205,8 @@ function routeMessage(data: WebsocketMessage) { // { sub, action, value, id }
  */
 function handleJoinGame(message: JoinGameMessage) {
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
-	const subs = websocket.getSubs();
-	subs.invites = false;
-	subs.game = true;
+	websocket.deleteSub('invites');
+	websocket.addSub('game');
 	onlinegame.setInSyncTrue();
 	guititle.close();
 	guiplay.close();
@@ -266,10 +265,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	guiclock.edit(gamefile);
 
 	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
-	if (gamefileutility.isGameOver(gamefile)) {
-		gameslot.concludeGame();
-		onlinegame.requestRemovalFromPlayersInActiveGames();
-	}
+	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
 	onlinegame.onReceivedOpponentsMove();
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
@@ -324,10 +320,7 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
 	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
 	clock.edit(gamefile, message.clockValues);
 
-	if (gamefileutility.isGameOver(gamefile)) {
-		gameslot.concludeGame();
-		onlinegame.requestRemovalFromPlayersInActiveGames();
-	}
+	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 }
 
 /**
@@ -339,7 +332,7 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
  * At this point we should leave the game.
  */
 function handleUnsubbing() {
-	websocket.getSubs().game = false;
+	websocket.deleteSub('game');
 	onlinegame.setInSyncFalse();
 }
 
@@ -370,11 +363,10 @@ function handleLogin(gamefile: gamefile) {
  */
 function handleNoGame(gamefile: gamefile) {
 	statustext.showStatus(translations['onlinegame'].game_no_longer_exists, false, 1.5);
-	websocket.getSubs().game = false;
+	websocket.deleteSub('game');
 	onlinegame.setInSyncFalse();
 	gamefile.gameConclusion = 'aborted';
 	gameslot.concludeGame();
-	onlinegame.requestRemovalFromPlayersInActiveGames();
 }
 
 /**
@@ -400,6 +392,7 @@ export default {
 };
 
 export type {
+	JoinGameMessage,
 	DisconnectInfo,
 	DrawOfferInfo,
 };

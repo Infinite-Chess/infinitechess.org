@@ -295,11 +295,7 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
  * Tests if the provided move is legal to play in this game.
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
  * @param {gamefile} gamefile - The gamefile
-<<<<<<< HEAD
  * @param {MoveDraft} moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
-=======
- * @param {Move | undefined} move - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
->>>>>>> 87570d74 (Split onlinegame.js into several smaller files)
  * @returns {boolean | string} *true* If the move is legal, otherwise a string containing why it is illegal.
  */
 function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {

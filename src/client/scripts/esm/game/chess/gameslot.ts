@@ -188,10 +188,7 @@ async function loadGamefile(
 	loadedGamefile = newGamefile;
 
 	// Immediately conclude the game if we loaded a game that's over already
-	if (gamefileutility.isGameOver(newGamefile)) {
-		concludeGame();
-		onlinegame.requestRemovalFromPlayersInActiveGames();
-	}
+	if (gamefileutility.isGameOver(newGamefile)) concludeGame();
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.close();
 	

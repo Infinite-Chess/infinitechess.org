@@ -269,10 +269,10 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 
 			afk.onMovePlayed({ isOpponents: true });
 			tabnameflash.onMovePlayed({ isOpponents: true });
-		} else cancelFlashTabTimer();
+		} else tabnameflash.onMovePlayed({ isOpponents: false });
         
 		const isLastMove = i === moves.length - 1;
-		movepiece.makeMove(gamefile, move, { doGameOverChecks: isLastMove, concludeGameIfOver: false, animate: isLastMove });
+		movepiece.makeMove(gamefile, move!, { doGameOverChecks: isLastMove, concludeGameIfOver: false, animate: isLastMove });
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
@@ -280,12 +280,12 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	if (!aChangeWasMade) movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false });
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
-	return true; // No cheating detected
+	return { opponentPlayedIllegalMove: false }; // No cheating detected
 }
 
-function reportOpponentsMove(reason) {
+function reportOpponentsMove(reason: string) {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
-	const opponentsMoveNumber = gameslot.getGamefile().moves.length + 1;
+	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
 
 	const message = {
 		reason,
@@ -344,20 +344,18 @@ function closeOnlineGame() {
 	serverHasConcludedGame = undefined;
 	afk.onGameClose();
 	tabnameflash.onGameClose();
-	resetServerRestarting();
-	cancelFlashTabTimer();
-	perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
-	drawoffers.reset();
+	serverrestart.onGameClose();
+	drawoffers.onGameClose();
+	// perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
 }
 
 
 function sendMove() {
-	if (!areInOnlineGame() || !inSync) return; // Don't do anything if it's a local game
+	if (!inOnlineGame || !inSync) return; // Don't do anything if it's a local game
 	if (config.DEV_BUILD) console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
-
-	const shortmove = moveutil.getLastMove(gamefile.moves).compact; // "x,y>x,yN"
+	const shortmove = moveutil.getLastMove(gamefile.moves)!.compact; // "x,y>x,yN"
 
 	const data = {
 		move: shortmove,
@@ -376,42 +374,28 @@ function sendMove() {
 
 // Aborts / Resigns
 function onMainMenuPress() {
-	if (!areInOnlineGame()) return;
-	const gamefile = gameslot.getGamefile();
-	if (serverHasConcludedGame) { // The server has concluded the game, not us
-		if (websocket.getSubs().game) {
-			websocket.sendmessage('general','unsub','game');
-			websocket.getSubs().game = false;
-		}
-		return;
-	}
+	if (!inOnlineGame) return;
+	
+	// Tell the server we no longer want game updates.
+	// Just resigning isn't enough for the server
+	// to deduce we don't want future game updates.
+	websocket.unsubFromSub('game');
+	
+	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
 
+	const gamefile = gameslot.getGamefile()!;
 	if (moveutil.isGameResignable(gamefile)) resign();
 	else abort();
 }
 
 function resign() {
-	websocket.getSubs().game = false;
 	inSync = false;
 	websocket.sendmessage('game','resign');
 }
 
 function abort() {
-	websocket.getSubs().game = false;
 	inSync = false;
 	websocket.sendmessage('game','abort');
-}
-
-/**
- * Opens a websocket, asks the server if we are in
- * a game to connect us to it and send us the game info.
- */
-async function askServerIfWeAreInGame() {
-	// The server only allows sockets if we are either logged in, or have a browser-id cookie.
-	// browser-id cookies are issued/renewed on every html request.
-
-	const messageContents = undefined;
-	websocket.sendmessage('game', 'joingame', messageContents, true);
 }
 
 /**
@@ -428,20 +412,23 @@ function requestRemovalFromPlayersInActiveGames() {
 }
 
 
-function deleteCustomVariantOptions() {
-	// Delete any custom pasted position in a private game.
-	if (isPrivate) localstorage.deleteItem(id);
-}
 
 /** Called when an online game is concluded (termination shown on-screen) */
 function onGameConclude() {
-	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.reset(), as that relies on this!
-	cancelAFKTimer();
-	cancelFlashTabTimer();
-	cancelMoveSound();
-	resetServerRestarting();
+	if (!inOnlineGame) return; // The game concluded wasn't an online game.
+
+	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
+	afk.onGameClose();
+	tabnameflash.onGameClose();
+	serverrestart.onGameClose();
 	deleteCustomVariantOptions();
-	drawoffers.reset();
+	drawoffers.onGameClose();
+	onlinegame.requestRemovalFromPlayersInActiveGames();
+}
+
+function deleteCustomVariantOptions() {
+	// Delete any custom pasted position in a private game.
+	if (isPrivate) localstorage.deleteItem(id!);
 }
 
 function onReceivedOpponentsMove() {
@@ -461,7 +448,6 @@ export default {
 	isItOurTurn,
 	sendMove,
 	onMainMenuPress,
-	askServerIfWeAreInGame,
 	requestRemovalFromPlayersInActiveGames,
 	resyncToGame,
 	update,
