@@ -9,7 +9,6 @@ import gameloader from '../chess/gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
-// @ts-ignore
 import gamefileutility from '../../chess/util/gamefileutility.js';
 
 

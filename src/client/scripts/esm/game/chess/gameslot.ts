@@ -17,7 +17,6 @@ import { gl } from "../rendering/webgl.js";
 import sound from "../misc/sound.js";
 // @ts-ignore
 import copypastegame from "./copypastegame.js";
-// @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";

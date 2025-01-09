@@ -3,45 +3,22 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  * */
 
-import type gamefile from '../../../chess/logic/gamefile.js';
-import type { Move } from '../../../chess/util/moveutil.js';
-import type { WebsocketMessage } from '../../websocket.js';
 
+import type { DisconnectInfo, DrawOfferInfo } from '../onlinegamerouter.js';
 
-import legalmoves from '../../../chess/logic/legalmoves.js';
 import localstorage from '../../../util/localstorage.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
-import drawoffers from '../drawoffers.js';
-import guititle from '../../gui/guititle.js';
-import clock from '../../../chess/logic/clock.js';
-import guiclock from '../../gui/guiclock.js';
-import statustext from '../../gui/statustext.js';
-import movepiece from '../../../chess/logic/movepiece.js';
-import specialdetect from '../../../chess/logic/specialdetect.js';
-import selection from '../../chess/selection.js';
-import board from '../../rendering/board.js';
-import moveutil from '../../../chess/util/moveutil.js';
-import websocket from '../../websocket.js';
-import perspective from '../../rendering/perspective.js';
-import sound from '../sound.js';
-import guiplay from '../../gui/guiplay.js';
-import input from '../../input.js';
-import loadbalancer from '../loadbalancer.js';
-import formatconverter from '../../../chess/logic/formatconverter.js';
-import guipause from '../../gui/guipause.js';
-import guigameinfo from '../../gui/guigameinfo.js';
 import colorutil from '../../../chess/util/colorutil.js';
-import jsutil from '../../../util/jsutil.js';
-import config from '../../config.js';
-import pingManager from '../../../util/pingManager.js';
 import gameslot from '../../chess/gameslot.js';
-import gameloader from '../../chess/gameloader.js';
 import afk from './afk.js';
-import { DisconnectInfo, DrawOfferInfo } from '../onlinegamerouter.js';
 import tabnameflash from './tabnameflash.js';
 import disconnect from './disconnect.js';
 import serverrestart from './serverrestart.js';
-import movesendreceive from './movesendreceive.js';
+import drawoffers from './drawoffers.js';
+// @ts-ignore
+import moveutil from '../../../chess/util/moveutil.js';
+// @ts-ignore
+import websocket from '../../websocket.js';
 
 
 // Variables ------------------------------------------------------------------------------------------------------

@@ -8,22 +8,24 @@
  * if we have done so, in the current online game.
  */
 
-import onlinegame from './onlinegame/onlinegame.js';
-import gameslot from '../chess/gameslot.js';
 
+import type { DrawOfferInfo } from '../onlinegamerouter.js';
+
+
+import gameslot from '../../chess/gameslot.js';
+import onlinegame from './onlinegame.js';
 // @ts-ignore
-import guidrawoffer from '../gui/guidrawoffer.js';
+import guidrawoffer from '../../gui/guidrawoffer.js';
 // @ts-ignore
-import statustext from '../gui/statustext.js';
+import statustext from '../../gui/statustext.js';
 // @ts-ignore
-import websocket from '../websocket.js';
+import websocket from '../../websocket.js';
 // @ts-ignore
-import guipause from '../gui/guipause.js';
+import guipause from '../../gui/guipause.js';
 // @ts-ignore
-import sound from './sound.js';
+import sound from '../sound.js';
 // @ts-ignore
-import moveutil from '../../chess/util/moveutil.js';
-import { DrawOfferInfo } from './onlinegamerouter.js';
+import moveutil from '../../../chess/util/moveutil.js';
 
 
 // Variables ---------------------------------------------------

@@ -10,18 +10,10 @@ import type { Move } from "../../chess/util/moveutil.js";
 import type gamefile from "../../chess/logic/gamefile.js";
 
 
-import gameloader from "../chess/gameloader.js";
-import gameslot from "../chess/gameslot.js";
-import guititle from "../gui/guititle.js";
-import jsutil from "../../util/jsutil.js";
-import clock from "../../chess/logic/clock.js";
-import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
 import guiplay from "../gui/guiplay.js";
 // @ts-ignore
 import websocket from "../websocket.js";
-// @ts-ignore
-import onlinegame from "./onlinegame/onlinegame.js";
 // @ts-ignore
 import statustext from "../gui/statustext.js";
 // @ts-ignore
@@ -31,8 +23,6 @@ import legalmoves from "../../chess/logic/legalmoves.js";
 // @ts-ignore
 import movepiece from "../../chess/logic/movepiece.js";
 // @ts-ignore
-import gamefileutility from "../../chess/util/gamefileutility.js";
-// @ts-ignore
 import specialdetect from "../../chess/logic/specialdetect.js";
 // @ts-ignore
 import selection from "../chess/selection.js";
@@ -41,14 +31,21 @@ import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
 // @ts-ignore
-import drawoffers from "./drawoffers.js";
-// @ts-ignore
 import board from "../rendering/board.js";
 import disconnect from "./onlinegame/disconnect.js";
 import afk from "./onlinegame/afk.js";
 import serverrestart from "./onlinegame/serverrestart.js";
 import movesendreceive from "./onlinegame/movesendreceive.js";
 import resyncer from "./onlinegame/resyncer.js";
+import drawoffers from "./onlinegame/drawoffers.js";
+import gameloader from "../chess/gameloader.js";
+import gameslot from "../chess/gameslot.js";
+import guititle from "../gui/guititle.js";
+import jsutil from "../../util/jsutil.js";
+import clock from "../../chess/logic/clock.js";
+import guigameinfo from "../gui/guigameinfo.js";
+import onlinegame from "./onlinegame/onlinegame.js";
+import gamefileutility from "../../chess/util/gamefileutility.js";
 
 
 // Type Definitions --------------------------------------------------------------------------------------
@@ -154,7 +151,7 @@ function routeMessage(data: WebsocketMessage) { // { sub, action, value, id }
 			handleUpdatedClock(gamefile, data.value);
 			break;
 		case "gameupdate":
-			handleServerGameUpdate(gamefile, data.value);
+			resyncer.handleServerGameUpdate(gamefile, data.value);
 			break;
 		case "unsub":
 			handleUnsubbing();
