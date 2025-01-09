@@ -47,6 +47,8 @@ import type { LegalMoves } from '../../chess/selection.js';
 import type { Piece } from '../../../chess/logic/movepiece.js';
 import { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import { Color } from '../../../chess/util/colorutil.js';
+import { start } from 'repl';
+import { IgnoreFunction } from '../../../chess/logic/movesets.js';
 
 
 
@@ -437,7 +439,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) throw Error(`Line only has one intersect with square.`);
         
-		concatData_HighlightedMoves_Diagonal(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[lineKey], gamefile);
+		concatData_HighlightedMoves_Diagonal(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[lineKey], legalMoves.ignoreFunc, gamefile);
 	}
 }
 
@@ -452,13 +454,13 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
  * @param limits - Slide limit: [-7,Infinity]
  * @param gamefile - A reference to the current loaded gamefile
  */
-function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Coords, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, gamefile: gamefile) {
+function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Coords, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile) {
 	// Right moveset
-	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		    gamefile);
+	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		    ignoreFunc, gamefile);
     
 	// Left moveset
 	const negStep: Coords = [step[0] * -1, step[1] * -1];
-	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), gamefile);
+	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), ignoreFunc, gamefile);
 }
 
 /**
@@ -472,7 +474,7 @@ function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[],
  * @param limit - Needs to be POSITIVE.
  * @param gamefile - A reference to the current loaded gamefile
  */
-function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Coords, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, gamefile: gamefile) {
+function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Coords, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: gamefile) {
 	if (limit === 0) return; // Quick exit
 
 	const lineIsVertical = step[0] === 0;
@@ -514,7 +516,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
 	if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
 	const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
 
-	addDataDiagonalVariant(instanceData_NonCapture, instanceData_Capture, firstInstancePositionOffset, step, iterationCount, startCoords, gamefile);
+	addDataDiagonalVariant(instanceData_NonCapture, instanceData_Capture, firstInstancePositionOffset, step, iterationCount, startCoords, coords, ignoreFunc, gamefile);
 }
 
 /**
@@ -528,12 +530,14 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
  * @param startCoords - The start coordiantes of the first legal move highlight instance
  * @param gamefile - A reference to the current loaded gamefile
  */
-function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Coords, iterateCount: number, startCoords: Coords, gamefile: gamefile) {
+function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Coords, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile) {
 	for (let i = 0; i < iterateCount; i++) { 
 		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i];
-		const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, thisCoord);
-		if (isPieceOnCoords) instanceData_Capture.push(   ...firstInstancePositionOffset);
-		else 				 instanceData_NonCapture.push(...firstInstancePositionOffset);
+		if (!ignoreFunc(pieceCoords, thisCoord as Coords)) {
+			const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, thisCoord);
+			if (isPieceOnCoords) instanceData_Capture.push(...firstInstancePositionOffset);
+			else                 instanceData_NonCapture.push(...firstInstancePositionOffset);
+		}
 		firstInstancePositionOffset[0] += step[0];
 		firstInstancePositionOffset[1] += step[1];
 	}
