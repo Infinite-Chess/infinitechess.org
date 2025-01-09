@@ -111,18 +111,18 @@ interface DrawOfferInfo {
  * This handles all messages related to the active game we're in.
  * @param {WebsocketMessage} data - The incoming server websocket message
  */
-function routeMessage(data: WebsocketMessage) { // { sub, action, value, id }
+function routeMessage(data: WebsocketMessage): void { // { sub, action, value, id }
 	// console.log(`Received ${data.action} from server! Message contents:`)
 	// console.log(data.value)
 	
 	// This action is listened to, even when we're not in a game.
 
-	if (data.action === 'joingame') handleJoinGame(data.value);
+	if (data.action === 'joingame') return handleJoinGame(data.value);
 
 	// All other actions should be ignored if we're not in a game...
 
 	if (!onlinegame.areInOnlineGame()) {
-		console.log(`Received server 'game' message when we're not in an online game. Ignoring. Message: ${JSON.stringify(data.value)}`);
+		console.log(`Received server 'game' message when we're not in an online game. Ignoring. Message: ${JSON.stringify(data)}`);
 		return;
 	}
 
