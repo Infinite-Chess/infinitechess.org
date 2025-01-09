@@ -42,7 +42,6 @@ import loadingscreen from '../gui/loadingscreen.js';
 import frametracker from '../rendering/frametracker.js';
 import area from '../rendering/area.js';
 import dragAnimation from '../rendering/draganimation.js';
-import state from '../../chess/logic/state.js';
 // Import End
 
 /** 

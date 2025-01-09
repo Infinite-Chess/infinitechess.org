@@ -98,11 +98,11 @@ function makeMove(gamefile, move) {
  * @param {Move} move
  */
 function deleteEnpassantAndSpecialRightsProperties(gamefile, move) {
-	state.queueSetState(gamefile, move, "enpassant", undefined);
+	state.queueState(move, "enpassant", gamefile.enpassant, undefined);
 	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.queueSetState(gamefile, move, `specialRights.${key}`, undefined);
+	state.queueState(move, `specialRights`, gamefile.specialRights[key], undefined, { coords: key });
 	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.queueSetState(gamefile, move, `specialRights.${key}`, undefined); // We also delete the captured pieces specialRights for ANY move.
+	state.queueState(move, `specialRights`, gamefile.specialRights[key], undefined, { coords: key }); // We also delete the captured pieces specialRights for ANY move.
 }
 
 /**
@@ -137,7 +137,7 @@ function incrementMoveRule(gamefile, move, wasACapture) {
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
-	state.queueSetState(gamefile, move, 'moveRuleState', newMoveRule, {global: true});
+	state.queueState(move, 'moverulestate', gamefile.moveRuleState, newMoveRule, {global: true});
 }
 
 /**
@@ -158,10 +158,11 @@ function createCheckState(gamefile, move) {
 	state.setState(
 		gamefile,
 		move,
-		"inCheck",
+		"check",
+		gamefile.inCheck,
 		checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers)
 	); // Passes in the gamefile as an argument
-	state.setState(gamefile, move, "attackers", attackers || []); // Erase the checking pieces calculated from previous turn and pass in new on
+	state.setState(gamefile, move, "attackers", gamefile.attackers, attackers || []); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
 /**
