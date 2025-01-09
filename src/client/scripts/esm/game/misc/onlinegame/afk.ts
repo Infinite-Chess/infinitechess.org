@@ -11,16 +11,21 @@
  * if they are the one that is afk.
  */
 
-// @ts-ignore
-import clock from "../../../chess/logic/clock.js";
-import gamefileutility from "../../../chess/util/gamefileutility.js";
-import moveutil from "../../../chess/util/moveutil.js";
-import gameslot from "../../chess/gameslot.js";
-import input from "../../input.js";
-import websocket from "../../websocket.js";
 import onlinegame from "./onlinegame.js";
+import clock from "../../../chess/logic/clock.js";
+import gameslot from "../../chess/gameslot.js";
+import gamefileutility from "../../../chess/util/gamefileutility.js";
+// @ts-ignore
+import moveutil from "../../../chess/util/moveutil.js";
+// @ts-ignore
+import input from "../../input.js";
+// @ts-ignore
+import websocket from "../../websocket.js";
+// @ts-ignore
 import sound from "../sound.js";
+// @ts-ignore
 import statustext from "../../gui/statustext.js";
+// @ts-ignore
 import pingManager from "../../../util/pingManager.js";
 
 

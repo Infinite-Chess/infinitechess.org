@@ -32,8 +32,10 @@ import wincondition from '../logic/wincondition.js';
 
 
 /** A function meant to be called once for each piece in any organized list. */
+// eslint-disable-next-line no-unused-vars
 type PieceIterator = (type: string, coords: Coords, gamefile?: gamefile) => {};
 /** A function meant to be called once for each piece's coordinates in any organized list. */
+// eslint-disable-next-line no-unused-vars
 type CoordsIterator = (coords: Coords) => {};
 
 /** An object containing all our pieces, organized by type. */
@@ -501,4 +503,4 @@ export default {
 export type {
 	PiecesByType,
 	PiecesByKey,
-}
+};

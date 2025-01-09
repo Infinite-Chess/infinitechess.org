@@ -24,7 +24,6 @@ import math, { BoundingBox } from '../../../util/math.js';
 import frametracker from '../frametracker.js';
 // @ts-ignore
 import preferences from '../../../components/header/preferences.js';
-// @ts-ignore
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 // @ts-ignore
 import legalmoveshapes from '../legalmoveshapes.js';
@@ -529,7 +528,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
  */
 function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Coords, iterateCount: number, startCoords: Coords, gamefile: gamefile) {
 	for (let i = 0; i < iterateCount; i++) { 
-		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i];
+		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i] as Coords;
 		const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, thisCoord);
 		if (isPieceOnCoords) instanceData_Capture.push(   ...firstInstancePositionOffset);
 		else 				 instanceData_NonCapture.push(...firstInstancePositionOffset);

@@ -145,6 +145,6 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 
 
 export default {
-    handleServerGameUpdate,
-    synchronizeMovesList,
-}
+	handleServerGameUpdate,
+	synchronizeMovesList,
+};

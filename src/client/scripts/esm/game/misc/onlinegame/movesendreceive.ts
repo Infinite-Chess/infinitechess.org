@@ -112,4 +112,4 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 export default {
 	sendMove,
 	handleOpponentsMove,
-}
+};

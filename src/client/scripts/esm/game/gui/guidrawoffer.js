@@ -1,14 +1,12 @@
 
-// Import Start
-import style from './style.js';
+
 import guigameinfo from './guigameinfo.js';
-import drawoffers from '../misc/drawoffers.js';
-import guiclock from './guiclock.js';
 import clock from '../../chess/logic/clock.js';
 import gameslot from '../chess/gameslot.js';
-// Import End
+import drawoffers from '../misc/onlinegame/drawoffers.js';
+// @ts-ignore
+import guiclock from './guiclock.js';
 
-"use strict";
 
 /**
  * This script opens and closes our Draw Offer UI

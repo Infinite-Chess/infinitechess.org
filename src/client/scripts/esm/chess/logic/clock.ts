@@ -12,7 +12,6 @@ import moveutil from '../util/moveutil.js';
 import clockutil from '../util/clockutil.js';
 // @ts-ignore
 import timeutil from '../../util/timeutil.js';
-// @ts-ignore
 import gamefileutility from '../util/gamefileutility.js';
 // @ts-ignore
 import pingManager from '../../util/pingManager.js';

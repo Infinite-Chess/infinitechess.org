@@ -31,8 +31,6 @@ import sound from '../misc/sound.js';
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
-import drawoffers from "../misc/drawoffers.js";
-// @ts-ignore
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
@@ -212,7 +210,8 @@ async function loadGame(
 }
 
 function unloadGame() {
-	onlinegame.closeOnlineGame();
+	if (typeOfGameWeAreIn === 'local') localgame.closeLocalGame();
+	else if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
 	guinavigation.close();
 	guigameinfo.close();
 	gameslot.unloadGame();
