@@ -58,8 +58,14 @@ interface Variant {
 			castleWith?: string
 		}
 	},
+	/**
+	 * A function that returns the movesetModifications for the variant.
+	 * The movesetModifications do NOT need to contain the movesets of every piece,
+	 * but only of the pieces you do not want to use their default movement!
+	 */
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
+
 }
 
 /** A position in keys format. Entries look like: `"5,2": "pawnsW"` */
