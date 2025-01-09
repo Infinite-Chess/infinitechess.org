@@ -7,6 +7,11 @@
  * It also has the loader and unloader methods for the gamefile.
  */
 
+
+import type { MetaData } from "../../chess/util/metadata.js";
+import type { ClockValues } from "../../chess/logic/clock.js";
+
+
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -50,18 +55,12 @@ import clock from "../../chess/logic/clock.js";
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
+// @ts-ignore
+import perspective from "../rendering/perspective.js";
 import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import loadingscreen from "../gui/loadingscreen.js";
 import spritesheet from "../rendering/spritesheet.js";
-
-
-// Type Definitions ---------------------------------------------------------------
-
-
-import type { MetaData } from "../../chess/util/metadata.js";
-import type { ClockValues } from "../../chess/logic/clock.js";
-import gameloader from "./gameloader.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -102,13 +101,18 @@ function getGamefile(): gamefile | undefined {
 	return loadedGamefile;
 }
 
-function areInGame() {
+function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
 /** Returns true if a new gamefile is currently being loaded */
-function areWeLoading() {
+function areWeLoading(): boolean {
 	return gameIsLoading;
+}
+
+/** Returns what color we are viewing the current loaded game by default. */
+function getOurColor(): string {
+	return youAreColor;
 }
 
 function isLoadedGameViewingWhitePerspective() {
@@ -188,6 +192,8 @@ async function loadGamefile(
 	
 	startStartingTransition();
 	console.log('Finished loading');
+
+	perspective.resetRotations();
 
 	// Regenerate the mesh of all the pieces.
 	piecesmodel.regenModel(newGamefile, options.getPieceRegenColorArgs());
@@ -283,6 +289,7 @@ export default {
 	getGamefile,
 	areInGame,
 	areWeLoading,
+	getOurColor,
 	isLoadedGameViewingWhitePerspective,
 	loadGamefile,
 	unloadGame,

@@ -150,9 +150,6 @@ function initOnlineGame(options: {
 	afk.onGameStart();
 
 	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
-    
-	// These make sure it will place us in black's perspective
-	// perspective.resetRotations();
 
 	serverHasConcludedGame = false;
 

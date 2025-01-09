@@ -58,7 +58,8 @@ function toggle() {
 
 function updatePasteButtonTransparency() {
 	const moves = gameslot.getGamefile().moves;
-	const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
+
+	const legalInPrivateMatch = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && moves.length === 0;
 
 	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
 	else                                                      element_pastegame.classList.remove('opacity-0_5');
