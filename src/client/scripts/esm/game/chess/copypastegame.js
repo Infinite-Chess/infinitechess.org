@@ -264,7 +264,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	}
 
 	// What is the warning message if pasting in a private match?
-	const privateMatchWarning = onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : "";
+	const privateMatchWarning = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : '';
 
 	const fromWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective();
 	const allowEditCoords = guinavigation.areCoordsAllowedToBeEdited();
