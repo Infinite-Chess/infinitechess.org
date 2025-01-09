@@ -1,8 +1,7 @@
 
-import websocketserver from '../socket/wsserver.js';
 import { logEvents } from '../middleware/logEvents.js';
-import { deleteAllInvitesOfMember } from '../game/invitesmanager/invitesmanager.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
+import { deleteRefreshTokenFromMemberData } from '../database/refreshTokenManager.js';
 
 
 async function handleLogout(req, res) {
@@ -18,31 +17,22 @@ async function handleLogout(req, res) {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return res.redirect('/'); // Cookie already deleted. (Already logged out)
 
-	if (!req.memberInfo.signedIn) { // Existing refresh token cookie was invalid (tampered, expired, manually invalidated, or account deleted)
-		// We can't use the higher-order doStuffOnLogout() here because we don't know their user_id and username
-		// BUT this will delete their existing session cookies!
-		revokeSession(res); 
-		return res.redirect('/');
-	}
+	// Delete their existing session cookies WHETHER OR NOT they
+	// are signed in, because they may THINK they are...
+	revokeSession(res);
+
+	if (!req.memberInfo.signedIn) return res.redirect('/'); // Existing refresh token cookie was invalid (tampered, expired, manually invalidated, or account deleted)
 
 	const { user_id, username } = req.memberInfo;
 	
-	doStuffOnLogout(res, user_id, username, refreshToken);
+	// Now invalidate the refresh token from the database by deleting it.
+	deleteRefreshTokenFromMemberData(user_id, refreshToken);
 
 	res.redirect('/');
 
 	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
 };
 
-function doStuffOnLogout(res, user_id, username, refreshToken) {
-	// Revoke our session and invalidate the refresh token from the database
-	revokeSession(res, user_id, refreshToken);
-
-	websocketserver.closeAllSocketsOfMember(username, 1008, "Logged out");
-	deleteAllInvitesOfMember(username);
-}
-
 export {
 	handleLogout,
-	doStuffOnLogout,
 };

@@ -2,7 +2,6 @@
 // Import Start
 import websocket from '../websocket.js';
 import guigameinfo from './guigameinfo.js';
-import area from '../rendering/area.js';
 import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import style from './style.js';
@@ -14,11 +13,10 @@ import statustext from './statustext.js';
 import invites from '../misc/invites.js';
 import gui from './gui.js';
 import drawoffers from '../misc/drawoffers.js';
-import gamefile from '../../chess/logic/gamefile.js';
 import guititle from './guititle.js';
 import timeutil from '../../util/timeutil.js';
-import frametracker from '../rendering/frametracker.js';
 import docutil from '../../util/docutil.js';
+import gameloader from '../chess/gameloader.js';
 // Import End
 
 "use strict";
@@ -306,7 +304,7 @@ function callback_inviteClicked(event) {
  * Starts a local game according to the options provided.
  * @param {Object} inviteOptions - An object that contains the invite properties `variant`, `clock`, `color`, `publicity`, `rated`.
  */
-function startLocalGame(inviteOptions) {
+async function startLocalGame(inviteOptions) {
 	// console.log("Starting local game with invite options:")
 	// console.log(inviteOptions);
 	gui.setScreen('game local'); // Change screen location
@@ -321,8 +319,9 @@ function startLocalGame(inviteOptions) {
 			TimeControl: inviteOptions.clock
 		}
 	};
-	loadGame(gameOptions);
+
 	guigameinfo.hidePlayerNames();
+	gameloader.loadGame(gameOptions, true, true);
 }
 
 /**
@@ -334,15 +333,17 @@ function startLocalGame(inviteOptions) {
  * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.
  * The `clockValues` property contains the properties `timerWhite`, `timerBlack`, `accountForPing`.
  */
-function startOnlineGame(gameOptions) {
+async function startOnlineGame(gameOptions) {
 	if (gameOptions.clockValues !== undefined) gameOptions.clockValues.accountForPing = true; // Set this to true so our clock knows to account for ping.
 	gui.setScreen('game online'); // Change screen location
 	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
 	onlinegame.setColorAndGameID(gameOptions);
 	gameOptions.variantOptions = generateVariantOptionsIfReloadingPrivateCustomGame();
-	loadGame(gameOptions);
+	const fromWhitePerspective = gameOptions.youAreColor === 'white';
+	await gameloader.loadGame(gameOptions, fromWhitePerspective, false);
+
 	onlinegame.initOnlineGame(gameOptions);
-	guigameinfo.revealPlayerNames(gameOptions);
+	guigameinfo.setAndRevealPlayerNames(gameOptions);
 	drawoffers.set(gameOptions.drawOffer);
 }
 
@@ -365,35 +366,6 @@ function generateVariantOptionsIfReloadingPrivateCustomGame() {
 	// }
 }
 
-/**
- * Starts a game according to the options provided.
- * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`
- * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`.
- */
-function loadGame(gameOptions) {
-	console.log("Loading game with game options:");
-	console.log(gameOptions);
-	frametracker.onVisualChange();
-	movement.eraseMomentum();
-	options.disableEM();
-
-	gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || timeutil.getCurrentUTCDate();
-	gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || timeutil.getCurrentUTCTime();
-
-	const newGamefile = new gamefile(gameOptions.metadata, { // Pass in the pre-existing moves
-		moves: gameOptions.moves,
-		variantOptions: gameOptions.variantOptions,
-		gameConclusion: gameOptions.gameConclusion,
-		clockValues: gameOptions.clockValues
-	});
-	game.loadGamefile(newGamefile);
-
-	const centerArea = area.calculateFromUnpaddedBox(newGamefile.startSnapshot.box);
-	movement.setPositionToArea(centerArea);
-    
-	options.setNavigationBar(true);
-	sound.playSound_gamestart();
-}
 
 /**
  * Locks the create invite button to disable it.

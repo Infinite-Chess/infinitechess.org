@@ -54,38 +54,10 @@ function forEachPieceType(callback, { ignoreNeutrals, ignoreVoids } = {}) { // C
 	});
 }
 
-/**
- * A variant of {@link forEachPieceType} that allows an asynchronous callback function to be used.
- * 
- * Iterates through every single piece TYPE in the game state and performs the specified function on the type.
- * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
- * @param {Object} [options] - An object that may contain the options `ignoreNeutrals` or `ignoreVoids`. These default to *false*.
- */
-async function forEachPieceType_Async(callback, { ignoreNeutrals = false, ignoreVoids = false } = {}) { // Callback needs to have 1 parameter: type
-	// Iterate through all colors in reverse order.
-	for (const color of Object.keys(colorsTypes).reverse()) {
-		if (ignoreNeutrals && color === colorutil.colorOfNeutrals) continue; // Skip 'neutral' if ignoreNeutrals is true
-		for (const type of colorsTypes[color]) {
-			if (ignoreVoids && type.startsWith('voids')) continue; // Skip voids if ignoreVoids is true
-			await callback(type);
-		}
-	}
-}
-
-// Iterates through every single piece TYPE in the game state of specified COLOR,
-// and performs specified function on the type
-function forEachPieceTypeOfColor(color, callback) {
-	if (!colorutil.isValidColor_NoNeutral(color)) throw new Error(`Cannot iterate through each piece type of invalid color '${color}'!`);
-	for (let i = 0; i < types.length; i++) {
-		callback(colorsTypes[color][i]);
-	}
-}
-
 export default {
+	neutralTypes,
 	colorsTypes,
 	royals,
 	jumpingRoyals,
 	forEachPieceType,
-	forEachPieceType_Async,
-	forEachPieceTypeOfColor,
 };

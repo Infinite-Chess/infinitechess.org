@@ -5,8 +5,7 @@ import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { intervalForRemovalOfOldUnverifiedAccountsMillis, maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js';
 import db from './database.js';
 import { logEvents } from '../middleware/logEvents.js';
-import { doStuffOnLogout } from '../controllers/logoutController.js';
-import { deleteUser } from './memberManager.js';
+import { deleteAccount } from '../controllers/deleteAccountController.js';
 
 // Automatic deletion of old, unverified accounts...
 
@@ -38,10 +37,13 @@ function removeOldUnverifiedMembers() {
 
 			// If the account has been unverified for longer than the threshold, delete it
 			if (timeSinceJoined > maxExistenceTimeForUnverifiedAccountMillis) {
-				deleteUser(user_id, reason_deleted);
-				// Close their sockets, delete their invites, delete their session cookies
-				doStuffOnLogout(undefined, user_id, username);
-				logEvents(`Removed unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt', { print: true });
+				// Delete the account.
+				const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
+				if (result.success) {
+					logEvents(`Removed unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt', { print: true });
+				} else { // Failure, either invalid delete reason, or they do not exist.
+					logEvents(`FAILED to remove unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days!!! Reason: ${result.reason}`, 'errorLog.txt', { print: true });
+				}
 			}
 		}
 		// console.log("Done!");

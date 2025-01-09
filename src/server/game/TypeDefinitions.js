@@ -5,73 +5,8 @@
 
 
 
-/** A Socket constructor, **PURELY** for useful JSDoc dropdowns.
- * This should NEVER be called! Objects type's can be declared as this. */
-function Socket() {
-	console.error("THIS CONSTRUCTOR SHOULD NOT BE CALLED. It is purely for JSDoc info.");
 
-	
-	/** The parsed cookie object, this will contain the 'browser-id' cookie if they are not signed in */
-	this.cookies = {
-		/** If they are not signed in, this is present. */
-		'browser-id': undefined,
-		/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
-		i18next: undefined,
-	},
-
-	/** Our custom-entered information about this websocket.
-     * To my knowledge (Naviary), the `metadata` property isn't already in use. */
-	this.metadata = {
-		/** What subscription lists they are subscribed to. Possible: "invites" / "game" */
-		subscriptions: {
-			/** Whether they are subscribed to the invites list. */
-			invites: undefined,
-			/** Will be defined if they are subscribed to, or in, a game. */
-			game: {
-				/** The id of the game they're in. @type {string} */
-				id: undefined,
-				/** The color they are playing as. @type {string} */
-				color: undefined
-			}
-		},
-		/** The user-agent property of the original websocket upgrade's req.headers */
-		userAgent: undefined,
-		memberInfo: {
-			/** True if they are signed in, if not they MUST have a browser-id cookie! */
-			signedIn: undefined,
-			user_id: undefined,
-			username: undefined,
-			roles: undefined,
-		},
-		cookies: undefined,
-		/** The id of their websocket. */
-		id: undefined,
-		/** The socket's IP address. */
-		IP: undefined,
-		/** The timeout ID that can be used to cancel the timer that will
-         * expire the socket connection. This is useful if it closes early. */
-		clearafter: undefined,
-		/** A reference to websocketserver.js's `sendmessage` function.
-         * Sends a message to the client. */
-		sendmessage: undefined,
-		/** The timeout ID to cancel the timer that will send an empty
-         * message to this socket just to verify they are alive and thinking. */
-		renewConnectionTimeoutID: undefined,
-		/** A function that when called, returns true if this socket has an open invite. @type {Function} */
-		hasInvite: undefined,
-	};
-}
-
-
-// I can declare this type definition like so, because there's no nesting.
-/**
- * An incoming websocket server message.
- * @typedef {Object} WebsocketMessage
- * @property {string} route - What subscription/route the message should be forwarded to (e.g. "general", "invites", "game").
- * @property {string} action - What action to perform with this message's data (e.g. sub/unsub/createinvite/cancelinvite/acceptinvite).
- * @property {*} value - The message contents.
- * @property {number} id - The ID of the message to echo, so the client knows we're still connected.
- */
+/** @typedef {import("../socket/socketUtility").CustomWebSocket} CustomWebSocket */
 
 
 /** The Game type definition. THIS SHOULD NOT be called, it is purely for JSDoc dropdowns. */
@@ -162,9 +97,9 @@ function Game() {
      * whos turn it currently is when they run out of time. */
 	this.autoTimeLossTimeoutID = undefined;
 
-	/** Player white's socket, if they are connected. @type {Socket} */
+	/** Player white's socket, if they are connected. @type {CustomWebSocket} */
 	this.whiteSocket = undefined;
-	/** Player black's socket, if they are connected. @type {Socket} */
+	/** Player black's socket, if they are connected. @type {CustomWebSocket} */
 	this.blackSocket = undefined;
 
 	/** The ID of the timeout which will auto-lose the player
@@ -218,7 +153,5 @@ function Game() {
 }
 
 export {
-	Socket,
-	//WebsocketMessage, // Type definitions declared in this manner don't need to be exported for some reason? Other scripts can still import it
 	Game
 };

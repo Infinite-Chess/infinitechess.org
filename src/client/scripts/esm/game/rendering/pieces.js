@@ -8,7 +8,7 @@ import voids from './voids.js';
 import board from './board.js';
 import onlinegame from '../misc/onlinegame.js';
 import options from './options.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import shapes from './shapes.js';
 import spritesheet from './spritesheet.js';
 // Import End
@@ -34,6 +34,15 @@ const ghostOpacity = 0.4;
 // These placeholders are utilized when pieces are added or pawns promote!
 const extraUndefineds = 5; // After this many promotions, need to add more undefineds and recalc the model!
 
+/**
+ * A tiny z offset, to prevent the pieces from tearing with highlights while in perspective.
+ * 
+ * We can't solve that problem by using blending mode ALWAYS because we need animations
+ * to be able to block out the currently-animated piece by rendering a transparent square
+ * on the animated piece's destination that is higher in the depth buffer.
+ */
+const z = 0.001;
+
 function renderPiecesInGame(gamefile) {
 	renderPieces(gamefile);
 	voids.render(gamefile);
@@ -57,7 +66,7 @@ function renderPieces(gamefile) {
 	const position = [ // Translate
         -boardPos[0] + gamefile.mesh.offset[0], // Add the model's offset. 
         -boardPos[1] + gamefile.mesh.offset[1],
-        0
+        z
     ]; // While separate these are each big decimals, TOGETHER they are small number! That's fast for rendering!
 
 	const boardScale = movement.getBoardScale();
@@ -69,14 +78,14 @@ function renderPieces(gamefile) {
 
 	modelToUse.render(position, scale);
 	// Use this line when rendering with the tinted texture shader program.
-	// modelToUse.render(position, scale, { uVertexColor: [1,0,0, 1] }); // Specifies the tint uniform value before rendering
+	// modelToUse.render(position, scale, { tintColor: [1,0,0, 1] }); // Specifies the tint uniform value before rendering
 }
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type, coords) {
 	const color = options.getColorOfType(type); color.a *= ghostOpacity;
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
-	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 2, "TRIANGLES", spritesheet.getSpritesheet());
+	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
 }
 

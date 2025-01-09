@@ -12,6 +12,8 @@ import frametracker from './frametracker.js';
 import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
+import selection from '../chess/selection.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -55,15 +57,20 @@ let scale_When1TileIs1Pixel_Virtual; // Scale limit where each tile takes up exa
 let scaleIsLess1Pixel_Physical = false;
 let scaleIsLess1Pixel_Virtual = false; // Set to true when we're so zoomed out, 1 cell is smaller than 1 pixel!! Everything renders differently!
 
-// Returns a copy of the boardPos in memory, otherwise the memory location
-// could be used to modify the original.
+// 
+
+/**
+ * Returns a copy of the boardPos in memory, otherwise the memory location
+ * could be used to modify the original.
+ * @returns {[number,number]}
+ */
 function getBoardPos() {
 	return coordutil.copyCoords(boardPos);
 }
 
 function setBoardPos(newPos) {
-	if (!Array.isArray(newPos)) return console.error(`New position must be an array! ${newPos}`);
-	if (isNaN(newPos[0]) || isNaN(newPos[1])) return console.error(`Cannot set position to ${newPos}!`);
+	if (!Array.isArray(newPos)) throw new Error(`New position must be an array! ${newPos}`);
+	if (isNaN(newPos[0]) || isNaN(newPos[1])) throw new Error(`Cannot set position to ${newPos}!`);
 	boardPos = newPos;
 	frametracker.onVisualChange();
 }
@@ -74,11 +81,8 @@ function getBoardScale() {
 }
 
 function setBoardScale(newScale) {
-	if (isNaN(newScale)) return console.error(`Cannot set scale to ${newScale}!`);
-	if (newScale <= 0) {
-		console.error(`Cannot set scale to ${newScale}!!`);
-		return console.trace();
-	}
+	if (isNaN(newScale)) throw new Error(`Cannot set scale to ${newScale}!`);
+	if (newScale <= 0) throw new Error(`Cannot set scale to ${newScale}!`);
 
 	boardScale = newScale;
 
@@ -136,7 +140,7 @@ function recalcPosition() {
 
 // Updates board position dependant on panVel
 function panBoard() {
-	if (loadbalancer.gisAFK() && !game.areInGame()) return; // Exit if we're AFK. Save our CPU!
+	if (loadbalancer.gisAFK() && gameslot.areWeLoading()) return; // Exit if we're AFK. Save our CPU!
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
     
 	frametracker.onVisualChange(); // Visual change, render the screen this frame.
@@ -168,9 +172,6 @@ function updateNavControls() {
 		return; 
 	}
 
-	// Mouse clicks
-	checkIfBoardDragged();
-
 	// Keyboard
 	detectPanning(); // Movement (WASD)
 	detectZooming(); // Zoom/Scale (Space shift, mouse wheel)
@@ -182,9 +183,8 @@ function checkIfBoardDropped() {
 	if (boardIsGrabbed === 1) { // Mouse grabbed
 
 		if (!input.isMouseHeld_Left()) { // Dropped board
-			boardIsGrabbed = 0;
 			throwBoard(); // Mouse throws the board
-			clearPositionHistory();
+			cancelBoardDrag();
 		}
 		return;
 	}
@@ -199,10 +199,17 @@ function checkIfBoardDropped() {
 	throwBoard(now); //Both fingers have been released.
 	
 	// Drop board
-	boardIsGrabbed = 0;
 	boardPosFingerTwoGrabbed = undefined;
-	clearPositionHistory();
+	cancelBoardDrag();
 	return;
+}
+
+/**
+ * Forcefully terminates a board drag WITHOUT throwing the board.
+ */
+function cancelBoardDrag() {
+	boardIsGrabbed = 0;
+	clearPositionHistory();
 }
 
 /** Called after letting go of the board. Applies velocity to the board according to how fast the mouse was moving */
@@ -246,7 +253,7 @@ function removeOldPositions(time) {
 // Checks if the mouse or finger has started dragging the board. Keep in mind if the
 // user clicked a piece, then the click event has been removed, so you can't do both at once.
 function checkIfBoardDragged() {
-	if (perspective.getEnabled()) return;
+	if (perspective.getEnabled() || transition.areWeTeleporting() || selection.areDraggingPiece()) return;
 
 	if (boardIsGrabbed === 0) { // Not already grabbed
 		if (input.isMouseDown_Left()) grabBoard_WithMouse();
@@ -520,6 +527,14 @@ function eraseMomentum() {
 	scaleVel = 0;
 }
 
+function boardOrScaleHasMomentum() {
+	return panVel[0] !== 0 || panVel[1] !== 0 || scaleVel !== 0;
+}
+
+function boardHasMomentum() {
+	return panVel[0] !== 0 || panVel[1] !== 0;
+}
+
 function setPositionToArea(area) {
 	if (!area) console.error("Cannot set position to an undefined area.");
 
@@ -544,6 +559,10 @@ export default {
 	updateNavControls,
 	randomizePanVelDir,
 	dragBoard,
+	boardOrScaleHasMomentum,
+	boardHasMomentum,
 	eraseMomentum,
-	setPositionToArea
+	setPositionToArea,
+	checkIfBoardDragged,
+	cancelBoardDrag,
 };

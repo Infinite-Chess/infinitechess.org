@@ -3,14 +3,12 @@
 import legalmoves from '../../chess/logic/legalmoves.js';
 import localstorage from '../../util/localstorage.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
-import guinavigation from '../gui/guinavigation.js';
 import drawoffers from './drawoffers.js';
 import guititle from '../gui/guititle.js';
 import clock from '../../chess/logic/clock.js';
 import guiclock from '../gui/guiclock.js';
 import statustext from '../gui/statustext.js';
 import movepiece from '../../chess/logic/movepiece.js';
-import game from '../chess/game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import selection from '../chess/selection.js';
 import board from '../rendering/board.js';
@@ -28,6 +26,8 @@ import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
 import pingManager from '../../util/pingManager.js';
+import gameslot from '../chess/gameslot.js';
+import gameloader from '../chess/gameloader.js';
 // Import End
 
 /** 
@@ -133,7 +133,7 @@ function addWarningLeaveGamePopupsToHyperlinks() {
 function confirmNavigationAwayFromGame(event) {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
-	if (!inOnlineGame || gamefileutility.isGameOver(game.getGamefile())) return;
+	if (!inOnlineGame || gamefileutility.isGameOver(gameslot.getGamefile())) return;
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?'); 
 	if (userConfirmed) return; // Follow link like normal. Server starts a 20-second auto-resign timer for disconnecting on purpose.
@@ -181,7 +181,7 @@ function update() {
 }
 
 function updateAFK() {
-	if (!input.atleast1InputThisFrame() || game.getGamefile().gameConclusion) return;
+	if (!input.atleast1InputThisFrame() || gameslot.getGamefile().gameConclusion) return;
 	// Has been mouse movement, restart the afk auto-resign timer.
 	if (afk.timeWeLoseFromAFK) tellServerWeBackFromAFK();
 	rescheduleAlertServerWeAFK();
@@ -189,12 +189,12 @@ function updateAFK() {
 
 function rescheduleAlertServerWeAFK() {
 	clearTimeout(afk.timeoutID);
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	if (!isItOurTurn() || gamefileutility.isGameOver(gamefile) || isPrivate && clock.isGameUntimed(gamefile) || !clock.isGameUntimed(gamefile) && moveutil.isGameResignable(gamefile)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
 	const timeUntilAFKSecs = !moveutil.isGameResignable(gamefile) ? afk.timeUntilAFKSecs_Abortable
-        : clock.isGameUntimed(gamefile) ? afk.timeUntilAFKSecs_Untimed
-            : afk.timeUntilAFKSecs;
+						   : clock.isGameUntimed(gamefile) ? afk.timeUntilAFKSecs_Untimed
+						   : afk.timeUntilAFKSecs;
 	afk.timeoutID = setTimeout(tellServerWeAFK, timeUntilAFKSecs * 1000);
 }
 
@@ -228,7 +228,7 @@ function tellServerWeBackFromAFK() {
 }
 
 function displayWeAFK(secsRemaining) {
-	const resigningOrAborting = moveutil.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
 	statustext.showStatusForDuration(`${translations.onlinegame.afk_warning} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
@@ -280,7 +280,7 @@ function onmessage(data) { // { sub, action, value, id }
 			if (!inOnlineGame) return;
 			const message = data.value; // { clockValues: { timerWhite, timerBlack } }
 			message.clockValues.accountForPing = true; // We are in an online game so we need to inform the clock script to account for ping
-			const gamefile = game.getGamefile();
+			const gamefile = gameslot.getGamefile();
 			clock.edit(gamefile, message.clockValues); // Edit the clocks
 			guiclock.edit(gamefile);
 			break;
@@ -295,9 +295,9 @@ function onmessage(data) { // { sub, action, value, id }
 			statustext.showStatus(translations.onlinegame.not_logged_in, true, 100);
 			websocket.getSubs().game = false;
 			inSync = false;
-			clock.endGame(game.getGamefile());
-			guiclock.stopClocks(game.getGamefile());
-			game.getGamefile().gameConclusion = 'limbo';
+			clock.endGame(gameslot.getGamefile());
+			guiclock.stopClocks(gameslot.getGamefile());
+			gameslot.getGamefile().gameConclusion = 'limbo';
 			selection.unselectPiece();
 			board.darkenColor();
 			break;
@@ -305,17 +305,15 @@ function onmessage(data) { // { sub, action, value, id }
 			statustext.showStatus(translations.onlinegame.game_no_longer_exists, false, 1.5);
 			websocket.getSubs().game = false;
 			inSync = false;
-			game.getGamefile().gameConclusion = 'aborted';
-			game.concludeGame();
+			gameslot.getGamefile().gameConclusion = 'aborted';
+			gameslot.concludeGame();
 			requestRemovalFromPlayersInActiveGames();
 			break;
 		case "leavegame": // Another window connected
 			statustext.showStatus(translations.onlinegame.another_window_connected);
 			websocket.getSubs().game = false;
 			inSync = false;
-			closeOnlineGame();
-			game.unloadGame();
-			guinavigation.close();
+			gameloader.unloadGame();
 			guititle.open();
 			break;
 		case "opponentafk":
@@ -366,7 +364,7 @@ function stopOpponentAFKCountdown() {
 }
 
 function displayOpponentAFK(secsRemaining) {
-	const resigningOrAborting = moveutil.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
 	statustext.showStatusForDuration(`${translations.onlinegame.opponent_afk} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
@@ -396,7 +394,7 @@ function stopOpponentDisconnectCountdown() {
 
 function displayOpponentDisconnect(secsRemaining, wasByChoice) {
 	const opponent_disconnectedOrLostConnection = wasByChoice ? translations.onlinegame.opponent_disconnected : translations.onlinegame.opponent_lost_connection;
-	const resigningOrAborting = moveutil.isGameResignable(game.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
 	// The "You are AFK" message should overwrite, be on top of, this message,
 	// so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
 	if (!afk.timeWeLoseFromAFK) statustext.showStatusForDuration(`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`, 1000);
@@ -437,7 +435,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
     
 	// Make sure the move number matches the expected.
 	// Otherwise, we need to re-sync
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	const expectedMoveNumber = gamefile.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
 		console.log(`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's whole move: ${JSON.stringify(moveAndConclusion)}`);
@@ -483,7 +481,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 
 	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
 	if (gamefileutility.isGameOver(gamefile)) {
-		game.concludeGame();
+		gameslot.concludeGame();
 		requestRemovalFromPlayersInActiveGames();
 	}
 
@@ -509,7 +507,7 @@ function cancelFlashTabTimer() {
 
 function scheduleMoveSound_timeoutID() {
 	if (!loadbalancer.isPageHidden()) return;
-	if (!moveutil.isGameResignable(game.getGamefile())) return;
+	if (!moveutil.isGameResignable(gameslot.getGamefile())) return;
 	const timeNextFlashFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
 	tabNameFlash.moveSound_timeoutID = setTimeout(() => { sound.playSound_move(0); }, timeNextFlashFromNow);
 }
@@ -534,7 +532,7 @@ function resyncToGame() {
 function handleServerGameUpdate(messageContents) { // { gameConclusion, clockValues: { timerWhite, timerBlack }, moves, millisUntilAutoAFKResign, offerDraw }
 	if (!inOnlineGame) return;
 	if (messageContents.clockValues !== undefined) messageContents.clockValues.accountForPing = true; // Set this too true so our clock knows to account for ping
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	const claimedGameConclusion = messageContents.gameConclusion;
 
 	/**
@@ -569,7 +567,7 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
 	clock.edit(gamefile, messageContents.clockValues);
 
 	if (gamefileutility.isGameOver(gamefile)) {
-		game.concludeGame();
+		gameslot.concludeGame();
 		requestRemovalFromPlayersInActiveGames();
 	}
 }
@@ -661,7 +659,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 
 function reportOpponentsMove(reason) {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
-	const opponentsMoveNumber = game.getGamefile().moves.length + 1;
+	const opponentsMoveNumber = gameslot.getGamefile().moves.length + 1;
 
 	const message = {
 		reason,
@@ -733,7 +731,7 @@ function resetAFKValues() {
  * Tests if it's our turn to move
  * @returns {boolean} *true* if it's currently our turn to move
  */
-function isItOurTurn() { return game.getGamefile().whosTurn === ourColor; }
+function isItOurTurn() { return gameslot.getGamefile().whosTurn === ourColor; }
 
 /**
  * Tests if we are this color in the online game.
@@ -746,7 +744,7 @@ function sendMove() {
 	if (!inOnlineGame || !inSync) return; // Don't do anything if it's a local game
 	if (config.DEV_BUILD) console.log("Sending our move..");
 
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 
 	const shortmove = moveutil.getLastMove(gamefile.moves).compact; // "x,y>x,yN"
 
@@ -768,7 +766,7 @@ function sendMove() {
 // Aborts / Resigns
 function onMainMenuPress() {
 	if (!inOnlineGame) return;
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	if (gameHasConcluded) { // The server has concluded the game, not us
 		if (websocket.getSubs().game) {
 			websocket.sendmessage('general','unsub','game');

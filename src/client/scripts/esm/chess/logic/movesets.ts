@@ -1,17 +1,22 @@
 
-'use strict';
-
 /**
  * This script contains the movesets for all pieces except specials (pawns, castling)
  */
 
+'use strict';
+
 // @ts-ignore
-import isprime from './isprime.js'; //For Huygens
+import isprime from './isprime.js';
+import colorutil from '../util/colorutil.js';
 
 // Type definitions...
 
 // @ts-ignore
 import type { gamefile } from './gamefile.js';
+// @ts-ignore
+import type { Piece } from './movepiece.js';
+import type { Coords } from '../util/coordutil.js';
+
 
 /**
  * A Movesets object containing the movesets for every piece type in a game
@@ -20,23 +25,84 @@ interface Movesets {
 	[pieceType: string]: PieceMoveset
 };
 
-// eslint-disable-next-line no-unused-vars
-type IgnoreFunction = (distance?: number, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
-	coords: number[],
-	slidingCheck: boolean
-}) => boolean) => boolean;
-
 /**
  * A moveset for an single piece type in a game
  */
 interface PieceMoveset {
-    individual: number[][],
+	/**
+	 * Jumping moves immediately surrounding the piece where it can move to.
+	 * 
+	 * TODO: Separate moving-moves from capturing-moves.
+	 */
+    individual: Coords[],
+	/**
+	 * Sliding moves the piece can make.
+	 * 
+	 * `"1,0": [-Infinity, Infinity]` => Lets the piece slide horizontally infinitely in both directions.
+	 * 
+	 * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
+	 * 
+	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!!
+	 */
 	sliding?: {
-		[slideDirection: string]: number[]
+		[slideDirection: string]: Coords
 	},
+	/**
+	 * The initial function that determines how far a piece is legally able to slide
+	 * according to what pieces block it.
+	 */
+	blocking?: BlockingFunction,
+	/**
+	 * The secondary function that *actually* determines whether each individual
+	 * square in a slide is legal to move to.
+	 */
 	ignore?: IgnoreFunction
 }
 
+/**
+ * This runs once for every square you can slide to that's visible on the screen.
+ * It returns true if the square is legal to move to, false otherwise.
+ * 
+ * If no ignore function is specified, the default ignore function that every piece
+ * has by default always returns *true*.
+ * 
+ * The start and end coords arguments are useful for the Huygen, as it can
+ * calculate the distance traveled, and then test if it's prime.
+ * 
+ * The gamefile and detectCheck method may be used for the Royal Queen,
+ * as it can test if the squares are check for positive.
+ */
+// eslint-disable-next-line no-unused-vars
+type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
+	coords: Coords,
+	slidingCheck: boolean
+}) => boolean) => boolean;
+
+/**
+ * This runs once for every piece on the same line of the selected piece.
+ * 
+ * 0 => Piece doesn't block
+ * 1 => Blocked (friendly piece)
+ * 2 => Blocked 1 square after (enemy piece)
+ * 
+ * The return value of 0 will be useful in the future for allowing pieces
+ * to *phase* through other pieces.
+ * An example of this would be the "witch", which makes all adjacent friendly
+ * pieces "transparent", allowing friendly pieces to phase through them.
+ */
+// eslint-disable-next-line no-unused-vars
+type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile) => 0 | 1 | 2;
+
+
+
+/** The default blocking function of each piece's sliding moves, if not specified. */
+// eslint-disable-next-line no-unused-vars
+function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile): 0 | 1 | 2 {
+	const colorOfBlockingPiece = colorutil.getPieceColorFromType(blockingPiece.type);
+	const isVoid = blockingPiece.type === 'voidsN';
+	if (friendlyColor === colorOfBlockingPiece || isVoid) return 1; // Block where it is if it is a friendly OR a void square.
+	else return 2; // Allow the capture if enemy, but block afterward
+}
 
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
@@ -52,7 +118,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 	return {
 		// Finitely moving
 		pawns: {
-			individual: []
+			individual: [],
 		},
 		knights: {
 			individual: [
@@ -91,7 +157,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		bishops: {
 			individual: [],
 			sliding: {
-				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
@@ -100,7 +166,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
@@ -109,7 +175,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
@@ -141,7 +207,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit], // These represent the x limit of the piece sliding diagonally
+				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
@@ -198,8 +264,14 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit]
 			},
-			ignore: function(distance: number = 0) {
-				return !isprime.primalityTest(Math.abs(distance), null);
+			ignore: function (startCoords: Coords, endCoords: Coords) {
+				if (startCoords[0] == endCoords[0]) {
+					return !isprime.primalityTest(Math.abs(startCoords[1] - endCoords[1]), null);	
+				}
+				if (startCoords[1] == endCoords[1]) {
+					return !isprime.primalityTest(Math.abs(startCoords[0] - endCoords[0]), null);	
+				}
+				return true;
 			}
 		},
 		roses: {
@@ -212,6 +284,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 
 export default {
 	getPieceDefaultMovesets,
+	defaultBlockingFunction,
 };
 
-export type { Movesets, PieceMoveset };
+export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction };

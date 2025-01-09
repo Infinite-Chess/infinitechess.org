@@ -3,8 +3,8 @@
     <div class="hidden"> 
         <!-- The pawn svg and loading animation svg we use in several places -->
         <svg>
-            <symbol id="svg-play" viewBox="0 0 45 45">
-                <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#666" fill-opacity="1" fill-rule="nonzero" stroke="#666" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/>
+            <symbol id="svg-pawn" viewBox="0 0 45 45">
+                <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill-opacity="1" fill-rule="nonzero" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/>
             </symbol>
         </svg>
         <!-- Checkmark svg commonly found in the settings dropdowns -->
@@ -49,6 +49,12 @@
                 <path d="M120 160a30 30 0 10 0-60 30 30 0 00 0 60Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/><path d="M30 168V92c0-11.2 0-16.8 2.2-21a20 20 0 01 8.7-8.8C45.2 60 50.9 60 62 60h13a10 10 0 00 7.2-4.5l1.1-2.2 2.3-4.2a20 20 0 01 14.5-9h39.8a20 20 0 01 14.5 9l2.3 4.2 1.1 2.2a10 10 0 00 7.2 4.4h13c11.2 0 16.8 0 21 2.3 3.8 2 7 5 8.8 8.7 2.2 4.3 2.2 10 2.2 21v76.1c0 11.2 0 16.8-2.2 21a20 20 0 01-8.7 8.8c-4.3 2.2-9.9 2.2-21 2.2H62c-11.2 0-16.8 0-21-2.2a20 20 0 01-8.8-8.7C30 184.8 30 179.2 30 168.1Z" stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/>
             </symbol>
         </svg>
+        <!-- Selection svg -->
+        <svg>
+            <symbol id="svg-selection" fill="none" viewBox="0 0 24 24">
+              <path d="M7.92098 2.29951C6.93571 1.5331 5.5 2.23523 5.5 3.48349V20.4923C5.5 21.9145 7.2945 22.5382 8.17661 21.4226L12.3676 16.1224C12.6806 15.7267 13.1574 15.4958 13.6619 15.4958H20.5143C21.9425 15.4958 22.5626 13.6887 21.4353 12.8119L7.92098 2.29951Z" stroke="#555" stroke-linecap="round" stroke-width="3"/>
+            </symbol>
+        </svg>          
         <!-- Undo arrow for resetting to default -->
         <svg>
             <symbol id="svg-undo" fill="none" viewBox="-200 0 1900 1900">
@@ -68,7 +74,7 @@
     <nav class="compact-3">
         <a href="/play">
             <span><%=t('header.play')%></span>
-            <svg class="svg-play"><use href="#svg-play"></use></svg>
+            <svg class="svg-pawn"><use href="#svg-pawn"></use></svg>
         </a>
         <a href="/news">
             <span><%=t('header.news')%></span>
@@ -106,6 +112,11 @@
                 <span class="text"><%=t('header.settings.legalmoves')%></span>
                 <span class="arrow-head-right"></span>
             </div>
+            <div id="selection-settings-dropdown-item" class="settings-dropdown-item">
+                <svg class="svg-selection"><use href="#svg-selection"></use></svg>
+                <span class="text"><%=t('header.settings.selection')%></span>
+                <span class="arrow-head-right"></span>
+            </div>
             <div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden"> <!-- Hidden Initially until we test if mouse (& perspective mode) is supported -->
                 <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
                 <span class="text"><%=t('header.settings.perspective')%></span>
@@ -124,7 +135,7 @@
                     <div class="ping-bar" style="height: 24px;"></div>
                     <div class="ping-glow"></div>
                 </div>
-                <svg class="svg-play hidden"><use href="#svg-play"></use></svg>
+                <svg class="svg-pawn spinny-pawn hidden"><use href="#svg-pawn"></use></svg>
             </div>
         </div>
         <div class="language-dropdown dropdown visibility-hidden">
@@ -170,6 +181,29 @@
                 </div>
             </div>
         </div>
+        <div class="selection-dropdown dropdown visibility-hidden">
+            <div class="dropdown-title">
+                <span class="arrow-head-left"></span>
+                <svg class="svg-selection"><use href="#svg-selection"></use></svg>
+                <span class="text"><%=t('header.settings.selection')%></span>
+            </div>
+            <div class="selection-options">
+                <label class="selection-option drag">
+                    <span class="text"><%=t('header.settings.selection-drag')%></span>
+                    <div class="switch">
+                        <input type="checkbox">
+                        <span></span>
+                    </div>
+                </label>
+                <label class="selection-option premove">
+                    <span class="text"><%=t('header.settings.selection-premove')%></span>
+                    <div class="switch">
+                        <input type="checkbox" disabled>
+                        <span></span>
+                    </div>
+                </label>
+            </div>
+        </div>
         <div class="perspective-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
@@ -181,7 +215,7 @@
                     <div class="perspective-option-title">
                         <svg class="svg-mouse"><use href="#svg-mouse"></use></svg>
                         <p><%=t('header.settings.perspective-mouse-sensitivity')%></p>
-                    </div>          
+                    </div>
                     <div class="slider-container">
                         <input class="slider" type="range" min="25" max="200" value="100">
                         <span class="value"></span>

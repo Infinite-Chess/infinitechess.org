@@ -40,10 +40,10 @@ function detectCheck(gamefile, color, attackers) {
 	// Input validation
 	if (!gamefile) throw new Error("Cannot detect check of an undefined game!");
 	if (color !== 'white' && color !== 'black') throw new Error(`Cannot detect check of the team of color ${color}!`);
-	if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
+	if (attackers !== undefined && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
 
 	// Coordinates of ALL royals of this color!
-	const royalCoords = gamefileutility.getRoyalCoords(gamefile, color); // [ coords1, coords2 ]
+	const royalCoords = gamefileutility.getRoyalCoordsOfColor(gamefile, color); // [ coords1, coords2 ]
 	// Array of coordinates of royal pieces that are in check
 	const royalsInCheck = [];
 
@@ -91,7 +91,7 @@ function doesVicinityAttackSquare(gamefile, coords, color, attackers) {
 	for (const key in vicinity) {
 		const thisVicinity = vicinity[key];
 		const thisSquare = coordutil.getCoordsFromKey(key); // Part of the moveset ( [1,2], [2,1] ... )
-		const actualSquare = [coords[0] + thisSquare[0], coords[1] + thisSquare[1]];
+		const actualSquare = [coords[0] - thisSquare[0], coords[1] - thisSquare[1]];
 
 		// Fetch the square from our pieces organized by key
 		const key2 = coordutil.getKeyFromCoords(actualSquare);
@@ -187,11 +187,13 @@ function doesLineAttackSquare(gamefile, line, direction, coords, color, attacker
 
 		if (!thisPieceMoveset.sliding) continue; // Piece has no sliding movesets.
 		const moveset = thisPieceMoveset.sliding[directionKey];
+		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
+		const ignoreFunc = legalmoves.getIgnoreFuncFromPieceMoveset(thisPieceMoveset);
 		if (!moveset) continue; // Piece can't slide in the direction our line is going
-		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(line, direction, moveset, thisPiece.coords, thisPieceColor, legalmoves.getIgnoreFunction(thisPieceMoveset));
+		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(blockingFunc, ignoreFunc, line, direction, moveset, thisPiece.coords, thisPieceColor);
 		if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
-		if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords, legalmoves.getIgnoreFunction(thisPieceMoveset))) continue; // This piece can't slide so far as to reach us, NEXT piece!
+		if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords, ignoreFunc)) continue; // This piece can't slide so far as to reach us, NEXT piece!
 
 		// This piece is attacking this square!
 
@@ -273,13 +275,14 @@ function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, col
 	if (!moves.sliding) return; // No sliding moves to remove
 
 	/** List of coordinates of all our royal jumping pieces @type {number[][]} */
-	const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color);
+	const royalCoords = gamefileutility.getJumpingRoyalCoordsOfColor(gamefile, color);
 	if (royalCoords.length === 0) return; // No king, no open discoveries, don't remove any sliding moves
 
 	// There are 2 ways a sliding move can put you in check:
 
 	// 1. By not blocking, or capturing an already-existing check.
-	if (addressExistingChecks(gamefile, moves, gamefile.inCheck, pieceSelected.coords, color)) return;
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+	if (addressExistingChecks(gamefile, moves, royalsInCheck, pieceSelected.coords, color)) return;
 
 	// 2. By opening a discovered on your king.
 	royalCoords.forEach(thisRoyalCoords => { // Don't let the piece open a discovered on ANY of our royals! Not just one.
@@ -297,7 +300,7 @@ function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, col
  * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
  */
 function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
-	if (!gamefile.inCheck) return false; // Exit if not in check
+	if (royalCoords.length === 0) return false; // Exit if nothing in check
 	if (!isColorInCheck(gamefile, color)) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
 	const attackerCount = gamefile.attackers.length;
@@ -343,8 +346,12 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
  * @returns {boolean} true if atleast one of our royals is included in the gamefile's list of royals in check this turn
  */
 function isColorInCheck(gamefile, color) {
-	const royals = gamefileutility.getRoyalCoords(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
-	const checkedRoyals = gamefile.inCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const royals = gamefileutility.getRoyalCoordsOfColor(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+	if (royalsInCheck.length === 0) return false;
+
+	const checkedRoyals = royalsInCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	// If the set is the same length as our royals + checkedRoyals, in means none of them has matching coordinates.
 	return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length);
 }
 

@@ -55,31 +55,31 @@ element_usernameInput.addEventListener('input', () => { // When username field c
 	updateSubmitButton();
 });
 element_usernameInput.addEventListener('focusout', () => {
-    // Check username availability...
-    if (element_usernameInput.value.length === 0 || usernameHasError) return;
+	// Check username availability...
+	if (element_usernameInput.value.length === 0 || usernameHasError) return;
 
-    fetch(`/createaccount/username/${element_usernameInput.value}`, fetchOptions)
-        .then((response) => response.json())
-        .then((result) => {
-            // { allowed, reason }
-            // We've got the result back from the server,
-            // Is this username available to use?
-            if (result.allowed === true) return; // Not in use
+	fetch(`/createaccount/username/${element_usernameInput.value}`, fetchOptions)
+		.then((response) => response.json())
+		.then((result) => {
+			// { allowed, reason }
+			// We've got the result back from the server,
+			// Is this username available to use?
+			if (result.allowed === true) return; // Not in use
 
-            // ERROR! In use!
-            usernameHasError = true;
-            createErrorElement('usernameerror', "usernameinputline");
-            // Change input box to red outline
-            element_usernameInput.style.outline = 'solid 1px red';
-            // Reset variable because it now exists.
-            const usernameError = document.getElementById("usernameerror");
+			// ERROR! In use!
+			usernameHasError = true;
+			createErrorElement('usernameerror', "usernameinputline");
+			// Change input box to red outline
+			element_usernameInput.style.outline = 'solid 1px red';
+			// Reset variable because it now exists.
+			const usernameError = document.getElementById("usernameerror");
 
-            // translate the message from the server if a translation is available
-            let result_message = result.reason;
-            if (translations[result_message]) result_message = translations[result_message];
-            usernameError.textContent = result_message;
-            updateSubmitButton();
-        });
+			// translate the message from the server if a translation is available
+			let result_message = result.reason;
+			if (translations[result_message]) result_message = translations[result_message];
+			usernameError.textContent = result_message;
+			updateSubmitButton();
+		});
 });
 
 
@@ -255,7 +255,7 @@ function validEmail(string) {
 
 function validPassword(string) {
 	 
-	const regex = /^[a-zA-Z0-9!@#$%^&*\?]+$/;
+	const regex = /^[a-zA-Z0-9!@#$%^&*?]+$/;
 
 	if (regex.test(string) === true) return true;
 	return false;

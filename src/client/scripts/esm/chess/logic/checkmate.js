@@ -37,14 +37,12 @@ function detectCheckmateOrDraw(gamefile) {
 	const teamTypes = typeutil.colorsTypes[whosTurn];
 	for (const thisType of teamTypes) {
 		const thesePieces = gamefile.ourPieces[thisType];
-		for (let a = 0; a < thesePieces.length; a++) {
-			const coords = thesePieces[a];
+		if (!thesePieces) continue; // The game doesn't have this type of piece
+		for (const coords of thesePieces) {
 			if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-			const index = gamefileutility.getPieceIndexByTypeAndCoords(gamefile, thisType, coords);
-			const thisPiece = { type: thisType, coords, index }; // { index, coords }
+			const thisPiece = gamefileutility.getPieceFromTypeAndCoords(gamefile, thisType, coords);
 			const moves = legalmoves.calculate(gamefile, thisPiece);
-			if (!legalmoves.hasAtleast1Move(moves)) continue;
-			return false;
+			if (legalmoves.hasAtleast1Move(moves)) return false; // Not checkmate
 		}
 	}
 
@@ -52,7 +50,7 @@ function detectCheckmateOrDraw(gamefile) {
 	// So is this draw or checkmate? Depends on whether the current state is check!
 	// Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
 	const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'checkmate');
-	if (gamefile.inCheck && usingCheckmate) {
+	if (gamefileutility.isCurrentViewedPositionInCheck(gamefile) && usingCheckmate) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
 		return `${colorThatWon} checkmate`;
 	} else return 'draw stalemate';
@@ -82,7 +80,7 @@ function detectCheckmateOrDraw(gamefile) {
 //     // know the game is not over yet.
 
 //     // How much time can we spend on this potentially long task?
-//     const ourPieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, whosTurn);
+//     const ourPieceCount = gamefileutility.getPieceCountOfColor(gamefile, whosTurn);
 //     let pieceLimitToRecalcTime = 50;
 //     let piecesSinceLastCheck = 0;
 //     let piecesComplete = 0;
@@ -161,7 +159,7 @@ function detectCheckmateOrDraw(gamefile) {
 //     // So is this draw or checkmate? Depends on whether the current state is check!
 //     // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
 //     const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'checkmate')
-//     if (gamefile.inCheck && usingCheckmate) {
+//     if (gamefileutility.isCurrentViewedPositionInCheck && usingCheckmate) {
 
 //         if (whosTurn === 'white') return 'black checkmate' // Black wins
 //         else                      return 'white checkmate' // White wins

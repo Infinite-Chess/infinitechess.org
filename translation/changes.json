@@ -1,4 +1,20 @@
 {
+	"27": {
+		"note": "Added index.github_title and index.javascript.contribution_count, lines 57-60",
+		"changes": []
+	},
+	"26": {
+		"note": "Modified webgl_unsupported, line 303",
+		"changes": ["play.javascript.webgl_unsupported"]
+	},
+	"25": {
+		"note": "Added the following in header.settings, lines 21-23: selection, selection-drag, selection-premove.",
+		"changes": []
+	},
+	"24": {
+		"note": "Deleted play.javascript.copypaste.loaded, line 323",
+		"changes": []
+	},
 	"23": {
 		"note": [
 			"Deleted member.rating, line 105",

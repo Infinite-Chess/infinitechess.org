@@ -7,9 +7,10 @@ import options from './options.js';
 import board from './board.js';
 import math from '../../util/math.js';
 import perspective from './perspective.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
 import spritesheet from './spritesheet.js';
+import shapes from './shapes.js';
 // Import End
 
 /**
@@ -25,7 +26,13 @@ import spritesheet from './spritesheet.js';
  * Also plays our sounds!
  */
 
-const z = 0.01;
+/**
+ * The z offset of the transparent square meant to block out the default
+ * rendering of the pieces while the animation is visible.
+ * 
+ * THIS MUST BE GREATER THAN THE Z AT WHICH PIECES ARE RENDERED.
+ */
+const transparentSquareZ = 0.01;
 
 const timeToPlaySoundEarly = 100;
 
@@ -130,16 +137,8 @@ function renderTransparentSquares() {
 	if (animations.length === 0) return;
 
 	const transparentModel = genTransparentModel();
-	// render.renderModel(transparentModel, undefined, undefined, "TRIANGLES");
-	transparentModel.render();
-}
-
-function renderPieces() {
-	if (animations.length === 0) return;
-
-	const pieceModel = genPieceModel();
-	// render.renderModel(pieceModel, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet());
-	pieceModel.render();
+	const position = [0,0,transparentSquareZ];
+	transparentModel.render(position);
 }
 
 /**
@@ -154,35 +153,18 @@ function genTransparentModel() {
 
 	const color = [0, 0, 0, 0];
 	for (const thisAnimation of animations) {
-		data.push(...getDataOfSquare3D(thisAnimation.endCoords, color));
+		data.push(...shapes.getTransformedDataQuad_Color_FromCoord(thisAnimation.endCoords, color));
 	}
 
-	// return buffermodel.createModel_Color3D(new Float32Array(data))
-	return buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	return createModel(data, 2, "TRIANGLES", true);
 }
 
-// This can be merged with the functions within buferdata module
-function getDataOfSquare3D(coords, color) {
-    
-	const boardPos = movement.getBoardPos();
-	const boardScale = movement.getBoardScale();
-	const startX = (coords[0] - boardPos[0] - board.gsquareCenter()) * boardScale;
-	const startY = (coords[1] - boardPos[1] - board.gsquareCenter()) * boardScale;
-	const endX = startX + 1 * boardScale;
-	const endY = startY + 1 * boardScale;
+function renderPieces() {
+	if (animations.length === 0) return;
 
-	const [ r, g, b, a ] = color;
-
-	return [
-    //      Vertex              Color
-        startX, startY, z,       r, g, b, a,
-        startX, endY, z,         r, g, b, a,
-        endX, startY, z,         r, g, b, a,
-
-        endX, startY, z,         r, g, b, a,
-        startX, endY, z,         r, g, b, a,
-        endX, endY, z,           r, g, b, a
-    ];
+	const pieceModel = genPieceModel();
+	// render.renderModel(pieceModel, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet());
+	pieceModel.render();
 }
 
 /**
@@ -237,16 +219,15 @@ function genPieceModel() {
 
 		const newCoords = [newX, newY];
 
-		if (thisAnimation.captured) appendDataOfPiece3D(data, thisAnimation.captured.type, thisAnimation.captured.coords);
+		if (thisAnimation.captured) appendDataOfPiece(data, thisAnimation.captured.type, thisAnimation.captured.coords);
 
-		appendDataOfPiece3D(data, thisAnimation.type, newCoords);
+		appendDataOfPiece(data, thisAnimation.type, newCoords);
 	}
 
-	// return buffermodel.createModel_ColorTexture3D(new Float32Array(data))
-	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", spritesheet.getSpritesheet());
+	return createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 
-function appendDataOfPiece3D(data, type, coords) {
+function appendDataOfPiece(data, type, coords) {
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
@@ -260,7 +241,7 @@ function appendDataOfPiece3D(data, type, coords) {
 
 	const { r, g, b, a } = options.getColorOfType(type);
 
-	const bufferData = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texleft, texbottom, texright, textop, r, g, b, a);
+	const bufferData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, a);
 
 	data.push(...bufferData);
 }

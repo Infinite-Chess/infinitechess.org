@@ -16,11 +16,15 @@ function setSupportedLanguages(list) { supportedLanguages = list; }
 /**
  * Determines the language to be used for serving an HTML file to a request.
  * The language is determined in the following order of precedence:
- * 1. The 'lng' query parameter.
- * 2. The 'i18next' cookie.
- * 3. The Accept-Language header (typical of users' first-connection to the site)
- * 4. A default language if none of the above are present.
- * The selected language is validated against supported languages.
+ * 1. The 'lng' query parameter, which can be different than the others.
+ * 2. The 'i18next' cookie, which can also be different than the others.
+ * 3. The value of req.i18n.resolvedLanguage (typical of users' first-connection to the site),
+ * which is ALWAYS defined! This is determined by several different factors,
+ * but i18next also takes into account the 'Accept-Language' header for this property.
+ * 4. A default language, if none of the above are supported.
+ * 
+ * The selected language is validated against supported languages,
+ * using a default language if none are supported.
  * @param {Object} req - The Express request object.
  * @returns {string} The language to be used.
  */
@@ -28,6 +32,7 @@ function getLanguageToServe(req) {
 	let language = req.query.lng || req.cookies.i18next || req.i18n.resolvedLanguage;
 	if (!supportedLanguages.includes(language)) language = req.cookies.i18next; // Query param language not supported
 	if (!supportedLanguages.includes(language)) language = req.i18n.resolvedLanguage; // Cookie language not supported
+	if (!supportedLanguages.includes(language)) language = defaultLanguage; // Resolved language from i18next not supported
 	return language;
 }
 

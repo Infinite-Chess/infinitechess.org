@@ -37,7 +37,7 @@ function getFunctions() {
 // Called when the piece moved is a king.
 // Tests if the move contains "castle" special move, if so it executes it!
 // RETURNS FALSE if special move was not executed!
-function kings(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
+function kings(gamefile, piece, move, { updateData = true, animate = true, animateSecondary = false, updateProperties = true, simulated = false } = {}) {
 
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
@@ -55,8 +55,8 @@ function kings(gamefile, piece, move, { updateData = true, animate = true, updat
 	delete gamefile.specialRights[key];
 	movepiece.movePiece(gamefile, pieceToCastleWith, landSquare, { updateData }); // Make normal move
 
-	if (animate) {
-		animation.animatePiece(piece.type, piece.coords, move.endCoords); // King
+	if (animate) animation.animatePiece(piece.type, piece.coords, move.endCoords); // King
+	if (animate || animateSecondary) {
 		const resetAnimations = false;
 		animation.animatePiece(pieceToCastleWith.type, pieceToCastleWith.coords, landSquare, undefined, resetAnimations); // Castled piece
 	}
@@ -90,7 +90,7 @@ function pawns(gamefile, piece, move, { updateData = true, animate = true, updat
 		// Delete original pawn
 		movepiece.deletePiece(gamefile, piece, { updateData });
 
-		movepiece.addPiece(gamefile, promotionTag, move.endCoords, null, { updateData });
+		movepiece.addPiece(gamefile, promotionTag, move.endCoords, undefined, { updateData });
 
 	} else /* enpassantTag */ {
 		// Move the pawn

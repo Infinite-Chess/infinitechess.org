@@ -10,14 +10,14 @@ import movement from './movement.js';
 import options from './options.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
-import buffermodel from './buffermodel.js';
-import game from '../chess/game.js';
+import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /** 
@@ -129,7 +129,7 @@ function glimitToDampScale() {
 
 // Recalculate board velicity, scale, and other common variables.
 function recalcVariables() {
-	recalcTileWidth_Pixels(); // This needs to be after recalcPosition(), else dragging & scaling has a spring to it.
+	recalcTileWidth_Pixels();
 	recalcTile_MouseCrosshairOver();
 	recalcTiles_FingersOver();
 	recalcBoundingBox();
@@ -144,7 +144,7 @@ function recalcTileWidth_Pixels() {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = options.isDebugModeOn() ? camera.getScreenBoundingBox(true) : camera.getScreenBoundingBox(false);
 	// In physical pixels, not virtual. Physical pixels is greater for retina displays.
-	const pixelsPerTile = (camera.canvas.height * 0.5 / screenBoundingBox.top) / camera.getPixelDensity(); // When scale is 1
+	const pixelsPerTile = (camera.canvas.height * 0.5 / screenBoundingBox.top) / window.devicePixelRatio; // When scale is 1
 	tileWidth_Pixels = pixelsPerTile * movement.getBoardScale();
 }
 
@@ -203,6 +203,8 @@ function getTileMouseOver() {
 	const mouseWorld = input.getMouseWorldLocation(); // [x, y]
 	const tile_Float = space.convertWorldSpaceToCoords(mouseWorld);
 	const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
+
+	if (options.isDebugModeOn()) console.log("Getting tile mouse over: " + JSON.stringify(mouseWorld) + "   " + JSON.stringify(tile_Float) + "   " + JSON.stringify(tile_Int));
     
 	return { tile_Float, tile_Int };
 }
@@ -271,7 +273,7 @@ function regenBoardModel() {
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
     
 	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texCoordStartX, texCoordStartY, texCoordEndX, texCoordEndY, 1, 1, 1, 1);
-	return buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
+	return createModel(data, 3, "TRIANGLES", true, boardTexture);
 }
 
 function renderMainBoard() {
@@ -295,7 +297,7 @@ function isOffsetOutOfRangeOfRegenRange(offset, regenRange) { // offset: [x,y]
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme() {
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	if (gamefile && gamefileutility.isGameOver(gamefile)) darkenColor(); // Reset to slightly darkened board
 	else resetColor(); // Reset to defaults
 	updateSkyColor();
@@ -428,7 +430,7 @@ function renderSolidCover() {
 	const boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
 	data.push(...bufferdata.getDataQuad_Color3D(boundingBox, z, [r, g, b, a])); // Floor of the box
 
-	const model = buffermodel.createModel_Colored(new Float32Array(data), 3, "TRIANGLES");
+	const model = createModel(data, 3, "TRIANGLES", true);
 
 	model.render();
 }
@@ -463,7 +465,7 @@ function renderZoomedBoard(zoom, opacity) {
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
     
 	const data = bufferdata.getDataQuad_ColorTexture3D(startX, startY, endX, endY, z, texleft, texbottom, texright, textop, 1, 1, 1, opacity);
-	const model = buffermodel.createModel_ColorTextured(new Float32Array(data), 3, "TRIANGLES", boardTexture);
+	const model = createModel(data, 3, "TRIANGLES", true, boardTexture);
 
 	model.render();
 }

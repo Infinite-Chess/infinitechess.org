@@ -1,13 +1,26 @@
 
+/**
+ * This script contains many utility methods for working with gamefiles.
+ */
+
+"use strict";
+
 // Import Start
-import wincondition from '../logic/wincondition.js';
+// THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
+import wincondition from '../logic/wincondition.js'; 
+// Healthy dependancies below
 import colorutil from './colorutil.js';
 import typeutil from './typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from './coordutil.js';
 import winconutil from './winconutil.js';
 import gamerules from '../variants/gamerules.js';
+import metadata from './metadata.js';
 // Import End
+
+
+// Type Definitions -----------------------------------------------------------------------------------------------
+
 
 /** 
  * Type Definitions 
@@ -15,71 +28,66 @@ import gamerules from '../variants/gamerules.js';
  * @typedef {import('../logic/movepiece.js').Piece} Piece
 */
 
-"use strict";
 
-/**
- * This script contains many utility methods for working with gamefiles
- * and *should* (theoretically) have zero dependancies,
- * except for maybe the math script.
- */
+// Variables -----------------------------------------------------------------------------------------------
+
 
 /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
 const pieceCountToDisableCheckmate = 50_000;
 
-/**
- * Counts the number of pieces in the gamefile of a specific type. Adjusts for undefined placeholders.
- * @param {gamefile} gamefile - The gamefile.
- * @param {string} type - The type of piece to count (e.g. "pawnsW")
- * @returns {number} The number of pieces of this type in the gamefile
- */
-function getPieceCountOfType(gamefile, type) {
-	const typeList = gamefile.ourPieces[type];
-	if (typeList == null) return 0; // Unknown piece
-	return typeList.length - typeList.undefineds.length;
-}
 
-// Iterates through EVERY piece in the game state, and performs specified function on the type.
-// Callback parameters should be: (type, coords, gamefile)
-// USE THIS instead of forEachPieceInTypeList() when you need the gamefile passed into the callback!
-function forEachPieceInGame(gamefile, callback, ignoreVoids) {
+// Iterating Through All Pieces -----------------------------------------------------------------------------------------------
+
+
+/**
+ * Iterates through EVERY piece in the game state, and performs specified function on the piece.
+ * @param {*} gamefile 
+ * @param {Function} callback - (type, coords, gamefile) => {}
+ * @param {boolean} ignoreVoids - If true, we won't run the callback for voids
+ */
+function forEachPieceInGame(gamefile, callback) {
 	if (!gamefile) return console.log("Cannot iterate through each piece in an undefined game!");
 	if (!gamefile.ourPieces) return console.error("Cannot iterate through every piece of game when there's no piece list.");
-
+	const ignoreVoids = false;
 	forEachPieceInPiecesByType(callback, gamefile.ourPieces, ignoreVoids, gamefile);
 }
 
-// Callback params should be:  type, coords, gamefile (optional)
-// USE THIS instead of forEachPieceInGame() when you don't need the gamefile passed into the callback!
+/**
+ * Iterates through each piece in a `piecesByType` list and executes the specified callback function.
+ * Skips over undefined placeholders in the list.
+ * @param {Function} callback - (type, coords, gamefile) => {}
+ * @param {number[][]} typeList - A list of pieces organized by type.
+ * @param {boolean} ignoreVoids - If true, skips piece types starting with "voids".
+ * @param {Object} gamefile
+ */
 function forEachPieceInPiecesByType(callback, typeList, ignoreVoids, gamefile) { // typeList = pieces organized by type 
 	if (!typeList) return console.log("Cannot iterate through each piece in an undefined typeList!");
-
-	for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
-
-		const thisWhiteType = typeutil.colorsTypes.white[i];
-		const thisBlackType = typeutil.colorsTypes.black[i];
-
-		const theseWhitePieces = typeList[thisWhiteType];
-		const theseBlackPieces = typeList[thisBlackType];
-
-		// First it inserts the type of piece into the callback, then coords of piece 
-		if (theseWhitePieces) for (let a = 0; a < theseWhitePieces.length; a++) callback(thisWhiteType, theseWhitePieces[a], gamefile); 
-		if (theseBlackPieces) for (let a = 0; a < theseBlackPieces.length; a++) callback(thisBlackType, theseBlackPieces[a], gamefile); 
+	for (const type in typeList) {
+		if (ignoreVoids && type.startsWith('voids')) continue;
+		const thisTypeList = typeList[type];
+		for (const thisPieceCoords of thisTypeList) {
+			if (thisPieceCoords === undefined) continue; // An undefined placeholder
+			callback(type, thisPieceCoords, gamefile); 
+		}
 	}
-	for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
+}
 
-		const thisNeutralType = typeutil.colorsTypes.neutral[i];
-		if (ignoreVoids && thisNeutralType.startsWith('voids')) continue;
-
-		const theseNeutralPieces = typeList[thisNeutralType];
-
-		// First it inserts the type of piece into the callback, then coords of piece 
-		if (theseNeutralPieces) for (let a = 0; a < theseNeutralPieces.length; a++) callback(thisNeutralType, theseNeutralPieces[a], gamefile); 
+/**
+ * Iterates through each piece's coords in a type list and executes the specified callback function on it.
+ * Skips over undefined placeholders.
+ * @param {Function} callback - (type, coords) => {}
+ * @param {number[]} typeList - A list of piece coordinates of a specific type, that MAY include undefined placeholders.
+ */
+function forEachPieceInTypeList(callback, typeList) { // typeList = pieces organized by type 
+	for (const coords of typeList) {
+		if (coords === undefined) continue; // An undefined placeholder
+		callback(coords); 
 	}
 }
 
 /**
  * Iterates through each piece in the provided keys-state and executes a callback function.
- * @param {Function} callback - The callback function to execute for each piece. The function will receive two arguments: the type of the piece and its coordinates.
+ * @param {Function} callback - The callback function to execute for each piece: `(type, coords) => {}`
  * @param {Object} state - The keys-state object containing pieces organized by key.
  * @param {Object} [options] - Optional settings.
  * @param {boolean} [options.ignoreNeutrals] - If true, neutral pieces (those with types ending in 'N') will be ignored.
@@ -94,7 +102,7 @@ function forEachPieceInKeysState(callback, state, { ignoreNeutrals, ignoreVoids 
 	if (ignoreNeutrals) {
 		for (const key in state) {
 			const thisPieceType = state[key];
-			if (thisPieceType.endsWith('N')) continue;
+			if (thisPieceType.endsWith(colorutil.colorExtensionOfNeutrals)) continue;
 			// First it inserts the type of piece into the callback, then coords of piece 
 			callback(thisPieceType, coordutil.getCoordsFromKey(key)); 
 		}
@@ -114,7 +122,99 @@ function forEachPieceInKeysState(callback, state, { ignoreNeutrals, ignoreVoids 
 	}
 }
 
+
+// Counting Pieces ----------------------------------------------------------------------------------------------
+
+
 /**
+ * Counts the number of pieces in the gamefile. Doesn't count undefined placeholders.
+ * @param {Object} gamefile - The gamefile object containing piece data.
+ * @param {Object} [options] - Optional settings.
+ * @param {boolean} [options.ignoreVoids] - Whether to ignore void pieces.
+ * @param {boolean} [options.ignoreObstacles] - Whether to ignore obstacle pieces.
+ * @returns {number} The number of pieces in the gamefile.
+ */
+// Returns piece count of game, excluding undefineds.
+function getPieceCountOfGame(gamefile, { ignoreVoids, ignoreObstacles } = {}) {
+	if (!gamefile.ourPieces) return console.error("Cannot count pieces, ourPieces is not defined");
+
+	let count = 0; // Running count list
+
+	for (const key in gamefile.ourPieces) { // 'pawnsW'
+		if (ignoreVoids && key.startsWith('voids')) continue;
+		if (ignoreObstacles && key.startsWith('obstacles')) continue;
+
+		const typeList = gamefile.ourPieces[key];
+		count += getPieceCountInTypeList(typeList);
+	}
+
+	return count;
+}
+
+/**
+ * Returns the number of pieces of a SPECIFIC color in a game,
+ * EXCLUDING undefined placeholders
+ * @param {gamefile} gamefile 
+ * @param {string} color 
+ * @returns {number}
+ */
+function getPieceCountOfColor(gamefile, color) {
+	const piecesByType = gamefile.ourPieces;
+	let pieceCount = 0;
+
+	for (const type in piecesByType) {
+		const thisTypesColor = colorutil.getPieceColorFromType(type);
+		if (thisTypesColor !== color) continue; // Different color
+		// Same color! Increment the counter
+		const thisTypeList = piecesByType[type];
+		pieceCount += getPieceCountInTypeList(thisTypeList);
+	}
+
+	return pieceCount;
+}
+
+/**
+ * Counts the number of pieces in the gamefile of a specific type. Subtracts the number of undefined placeholders.
+ * @param {gamefile} gamefile - The gamefile.
+ * @param {string} type - The type of piece to count (e.g. "pawnsW")
+ * @returns {number} The number of pieces of this type in the gamefile
+ */
+function getPieceCountOfType(gamefile, type) {
+	const typeList = gamefile.ourPieces[type];
+	if (typeList === undefined) return 0; // Unknown piece
+	return getPieceCountInTypeList(typeList);
+}
+
+/**
+ * Returns the number of pieces in a given type list (e.g. "pawnsW"),
+ * EXCLUDING undefined placeholders
+ * @param {number[][]} typeList - An array of coordinates where you can find all the pieces of that given type
+ * @returns {number}
+ */
+function getPieceCountInTypeList(typeList) {
+	if (typeList.undefineds) return typeList.length - typeList.undefineds.length;
+	return typeList.length;
+}
+
+/**
+ * Calculates and returns the total number of pieces in the `piecesByType` list, INCLUDING undefined placeholders.
+ * @param {gamefile} gamefile
+ * @returns {number} - The total count of all pieces in the list, including undefineds.
+ */
+function getPieceCount_IncludingUndefineds(gamefile) {
+	const ourPieces = gamefile.ourPieces;
+	let pieceCount = 0;
+	for (const type in ourPieces) pieceCount += ourPieces[type].length;
+	return pieceCount;
+}
+
+
+// Modifying Piece Data --------------------------------------------------------------------
+
+
+/**
+ * TODO: Perhaps move this method into a utility script that works with pieces organize by TYPE ?
+ * 
  * Deletes the index from the provided piece list and updates its `undefineds` property.
  * No deleting a piece ever changes the size of this list, because the index becomes *undefined*,
  * this is so that the mesh doesn't get screwed up.
@@ -124,41 +224,117 @@ function forEachPieceInKeysState(callback, state, { ignoreNeutrals, ignoreVoids 
 function deleteIndexFromPieceList(list, pieceIndex) {
 	list[pieceIndex] = undefined;
 	// Keep track of where the undefined indices are! Have an "undefineds" array property.
-	const insertIndex = jsutil.binarySearch_findSplitPoint(list.undefineds, pieceIndex);
-	list.undefineds.splice(insertIndex, 0, pieceIndex);
+	const undefinedsInsertIndex = jsutil.binarySearch_findSplitPoint(list.undefineds, pieceIndex);
+	list.undefineds.splice(undefinedsInsertIndex, 0, pieceIndex);
 }
+
+
+// Getting All Pieces -------------------------------------------------------------------------------------------------
+
+
+/**
+ * Retrieves the coordinates of all pieces from the provided gamefile.
+ * @param {Object} gamefile - The gamefile containing the board and pieces data.
+ * @returns {number[][]} - A list of coordinates of all pieces.
+ */
+function getCoordsOfAllPieces(gamefile) {
+	const allCoords = [];
+	forEachPieceInGame(gamefile, (type, coords) => allCoords.push(coords));
+	return allCoords;
+}
+
+/**
+ * Retrieves the coordinates of all pieces from the provided pieces organized by key.
+ * @param {Object} piecesByKey - The pieces organized by key
+ * @returns {number[][]} - A list of coordinates of all pieces, where each coordinate is represented as an array [x, y].
+ */
+function getCoordsOfAllPiecesByKey(piecesByKey) {
+	const allCoords = [];
+	forEachPieceInKeysState((type, coords) => allCoords.push(coords), piecesByKey);
+	return allCoords;
+}
+
+/**
+ * Returns an array containing the coordinates of ALL royal pieces of the specified color.
+ * @param {gamefile} gamefile 
+ * @param {string} color - The color of the royals to look for.
+ * @returns {number[][]} - A list of coordinates where all the royals of the provided color are at.
+ */
+function getRoyalCoordsOfColor(gamefile, color) {
+	const ourPieces = gamefile.ourPieces;
+	const royals = typeutil.royals; // ['kings', ...]
+	const colorExtension = colorutil.getColorExtensionFromColor(color);
+
+	const royalCoords = [];
+
+	for (let i = 0; i < royals.length; i++) {
+		const thisRoyalType = royals[i] + colorExtension;
+		const thisTypeList = ourPieces[thisRoyalType];
+		if (!thisTypeList) continue; // That piece type isn't present in this game
+		forEachPieceInTypeList(coords => royalCoords.push(coords), thisTypeList);
+	}
+
+	return royalCoords;
+}
+
+/**
+ * Returns a list of all the jumping royal pieces of a specific color.
+ * @param {Object} gamefile
+ * @param {string} color - The color of the jumping royals to look for.
+ * @returns {number[][]} - A list of coordinates where all the jumping royals of the provided color are at.
+ */
+function getJumpingRoyalCoordsOfColor(gamefile, color) {
+	const ourPieces = gamefile.ourPieces;
+	const jumpingRoyals = typeutil.jumpingRoyals;
+	const colorExtension = colorutil.getColorExtensionFromColor(color); // 'W' | 'B'
+
+	const royalCoordsList = []; // A running list of all the jumping royals of this color
+
+	for (let i = 0; i < jumpingRoyals.length; i++) {
+		const thisRoyalType = jumpingRoyals[i] + colorExtension;
+		const thisTypeList = ourPieces[thisRoyalType];
+		if (!thisTypeList) continue; // This piece type isn't in our game
+		forEachPieceInTypeList(coords => royalCoordsList.push(coords), thisTypeList);
+	}
+
+	return royalCoordsList;
+}
+
+
+
+// Finding / Retrieving a Piece by Criteria, Or Getting Information About a Piece -----------------------------------------------------------------
+
 
 /**
  * Returns the specified piece's index in its type-array in the `ourPieces` property of the gamefile.
  * @param {gamefile} gamefile - The gamefile
  * @param {string} type - The type of the piece
  * @param {number[]} coords - The coordinates of the piece
- * @returns {number} The index of the piece
+ * @returns {Piece} The index of the piece
  */
-function getPieceIndexByTypeAndCoords(gamefile, type, coords) {
-	const thesePieces = gamefile.ourPieces[type];
-	if (!thesePieces) return console.error("Cannot find piece index. Type array doesn't exist."); // Break if there are none of those piece ty
-	for (let i = 0; i < thesePieces.length; i++) {
-		const thisPieceCoords = thesePieces[i];
+function getPieceFromTypeAndCoords(gamefile, type, coords) {
+	const piecesOfType = gamefile.ourPieces[type];
+	if (!piecesOfType) return console.error("Cannot find piece index. Type array doesn't exist."); // Break if there are none of those piece ty
+	for (let i = 0; i < piecesOfType.length; i++) {
+		const thisPieceCoords = piecesOfType[i];
 		// Piece is undefined. Deleted pieces are left as "undefined" so others keep their indexes!
 		if (!thisPieceCoords) continue;
-
 		// Does this piece match the coords? If so, return the piece index.
-		if (coordutil.areCoordsEqual_noValidate(thisPieceCoords, coords)) return i;
+		if (coordutil.areCoordsEqual_noValidate(thisPieceCoords, coords)) return { type, coords, index: i};
 	}
-	console.error("Unable to find index of piece!");
+	throw new Error('Unable to find index of piece!');
 }
 
 /**
- * Returns the piece at the specified coords.
+ * Returns the piece at the indicated coordinates, if there is one.
  * @param {gamefile} gamefile - The gamefile
- * @param {string} type - The type of the piece
- * @param {number[]} coords - The coordinates of the piece
- * @returns {Piece} The piece object
+ * @param {number[]} coords - The coordinates to retreive the piece at
+ * @returns {Piece | undefined} The piece, or *undefined* if there isn't one: `{ type, index, coords }`
  */
-function getPieceFromTypeAndCoords(gamefile, type, coords) {
-	const index = getPieceIndexByTypeAndCoords(gamefile, type, coords);
-	return { type, coords, index };
+function getPieceAtCoords(gamefile, coords) {
+	const type = getPieceTypeAtCoords(gamefile, coords);
+	if (!type) return undefined; // No piece present
+	return getPieceFromTypeAndCoords(gamefile, type, coords);
 }
 
 /**
@@ -173,17 +349,38 @@ function getPieceTypeAtCoords(gamefile, coords) {
 }
 
 /**
- * Returns the piece at the indicated coordinates, if there is one.
+ * Calculates the piece's index position among EVERY piece in the game.
+ * Used to calculate its index within in the mesh vertex data.
+ * IGNORES VOIDS.
  * @param {gamefile} gamefile - The gamefile
- * @param {number[]} coords - The coordinates to retreive the piece at
- * @returns {Piece | undefined} The piece, or *undefined* if there isn't one: `{ type, index, coords }`
+ * @param {Object} piece - The piece: `{ type, index }`
+ * @returns {number} The index of the piece
  */
-function getPieceAtCoords(gamefile, coords) {
-	const type = getPieceTypeAtCoords(gamefile, coords);
-	if (!type) return undefined;
-	const index = getPieceIndexByTypeAndCoords(gamefile, type, coords);
-	return { type, index, coords };
+function calcPieceIndexInAllPieces(gamefile, piece) {
+	const type = piece.type;
+	const pieceIndex = piece.index;
+	if (!gamefile.ourPieces[type]) throw new Error("Cannot calculate piece index in all pieces when that type of piece isn't found in the game.");
+
+	let index = 0; // Running index
+
+	// We need to use the same iteration function that our regenPiecesModel() uses!
+	for (const listType in gamefile.ourPieces) { // 'pawnsW'
+		if (listType.startsWith('voids')) continue; // SKIP Voids!
+		const list = gamefile.ourPieces[listType];
+
+		if (listType !== type) index += list.length; // Our piece isnt in this list 
+		else { // Same list our piece is in!
+			index += pieceIndex;
+			break;
+		}
+	}
+
+	return index;
 }
+
+
+// Miscellanous --------------------------------------------------------------------------
+
 
 /**
  * Whether a piece is on the provided coords
@@ -193,14 +390,6 @@ function getPieceAtCoords(gamefile, coords) {
  */
 function isPieceOnCoords(gamefile, coords) {
 	return getPieceTypeAtCoords(gamefile, coords) !== undefined;
-}
-
-/**
- * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
- * @param {gamefile} gamefile - The gamefile
- */
-function doGameOverChecks(gamefile) {
-	gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
 }
 
 /**
@@ -215,6 +404,25 @@ function isGameOver(gamefile) {
 }
 
 /**
+ * Returns true if the currently-viewed position of the game file is in check
+ * @param {gamefile} gamefile 
+ * @returns {boolean}
+ */
+function isCurrentViewedPositionInCheck(gamefile) {
+	return gamefile.inCheck !== false;
+}
+
+/**
+ * Returns a list of coordinates of all royals
+ * in check in the currently-viewed position.
+ * @param {gamefile} gamefile 
+ * @returns {[number,number][]}
+ */
+function getCheckCoordsOfCurrentViewedPosition(gamefile) {
+	return gamefile.inCheck || []; // Return an empty array if we're not in check.
+}
+
+/**
  * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
  * @param {gamefile} gamefile - The gamefile
  */
@@ -222,230 +430,11 @@ function setTerminationMetadata(gamefile) {
 	if (!gamefile.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
 	const victorAndCondition = winconutil.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
-	const condition = wincondition.getTerminationInEnglish(gamefile, victorAndCondition.condition);
+	const condition = winconutil.getTerminationInEnglish(gamefile, victorAndCondition.condition);
 	gamefile.metadata.Termination = condition;
 
 	const victor = victorAndCondition.victor; // white/black/draw/undefined
-	gamefile.metadata.Result = winconutil.getResultFromVictor(victor);
-}
-
-// Returns a list of all the jumping royal it comes across of a specific color.
-function getJumpingRoyalCoords(gamefile, color) {
-	const state = gamefile.ourPieces;
-	const jumpingRoyals = typeutil.jumpingRoyals;
-
-	const royalCoordsList = []; // A running list of all the jumping royals of this color
-
-	if (color === 'white') {
-		for (let i = 0; i < jumpingRoyals.length; i++) {
-			const thisRoyalType = jumpingRoyals[i] + 'W';
-			if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
-			state[thisRoyalType].forEach(coords => { // [x,y]
-				if (!coords) return;
-				royalCoordsList.push(coords);
-			});
-		}
-	} else if (color === 'black') {
-		for (let i = 0; i < jumpingRoyals.length; i++) {
-			const thisRoyalType = jumpingRoyals[i] + 'B';
-			if (!state[thisRoyalType]) return console.error(`Cannot fetch jumping royal coords when list ${thisRoyalType} is undefined!`);
-			state[thisRoyalType].forEach(coords => { // [x,y]
-				if (!coords) return;
-				royalCoordsList.push(coords);
-			});
-		}
-	} else console.error(`Cannot get jumping royal coords from a side with color ${color}!`);
-
-	return royalCoordsList;
-}
-
-// Accepts an array list of pieces to count up from a specific color.
-// Returns the total counted amount.
-// IGNORES UNDEFINEDS
-function getCountOfTypesFromPiecesByType(piecesByType, arrayOfPieces, color) { // arrayOfPieces = ['kings', 'royalCentaurs', ...]
-	const WorB = colorutil.getColorExtensionFromColor(color);
-
-	let count = 0;
-	for (let i = 0; i < arrayOfPieces.length; i++) {
-		const thisType = arrayOfPieces[i] + WorB;
-
-		if (!piecesByType[thisType]) return console.error(`Cannot fetch royal count of type ${thisType} when the list is undefined!`);
-        
-		let length = piecesByType[thisType].length;
-		if (piecesByType[thisType].undefineds) length -= piecesByType[thisType].undefineds.length;
-
-		count += length;
-	}
-
-	return count;
-}
-
-function getCoordsOfAllPieces(gamefile) {
-
-	const allCoords = [];
-
-	forEachPieceInPiecesByType(callback, gamefile.ourPieces);
-
-	function callback(type, coords) {
-		if (coords) allCoords.push(coords); // Only push coords if it's defined
-	}
-
-	return allCoords;
-}
-
-function getCoordsOfAllPiecesByKey(piecesByKey) {
-	const allCoords = [];
-
-	forEachPieceInKeysState(callback, piecesByKey);
-	function callback(type, coords) {
-		allCoords.push(coords);
-	}
-
-	return allCoords;
-}
-
-// Calculates and returns the amount of pieces in the pieces by type list, including undefineds!
-// Time complexity: O(1)
-function getPieceCount(piecesByType) {
-	let pieceCount = 0;
-
-	typeutil.forEachPieceType(appendCount);
-
-	function appendCount(type) {
-		pieceCount += piecesByType[type].length;
-	}
-
-	return pieceCount;
-}
-
-function getPieceCountOfColorFromPiecesByType(piecesByType, color) {
-	let pieceCount = 0;
-
-	typeutil.forEachPieceTypeOfColor(color, appendCount);
-
-	function appendCount(type) {
-		const thisTypeList = piecesByType[type];
-
-		for (let i = 0; i < thisTypeList.length; i++) {
-			const thisPiece = thisTypeList[i];
-			if (thisPiece) pieceCount++; // Only increment piece count if its not an undefined placeholder
-		}
-	}
-
-	return pieceCount;
-}
-
-/**
- * Counts the number of pieces in the gamefile. Adjusts for undefined placeholders.
- * 
- * @param {Object} gamefile - The gamefile object containing piece data.
- * @param {Object} [options] - Optional settings.
- * @param {boolean} [options.ignoreVoids] - Whether to ignore void pieces.
- * @param {boolean} [options.ignoreObstacles] - Whether to ignore obstacle pieces.
- * @returns {number} The number of pieces in the gamefile.
- */
-// Returns piece count of game, excluding undefineds.
-function getPieceCountOfGame(gamefile, { ignoreVoids, ignoreObstacles } = {}) {
-	if (!gamefile.ourPieces) return console.error("Cannot count pieces, ourPieces is not defined");
-
-	let count = 0;
-	for (const key in gamefile.ourPieces) {
-		if (ignoreVoids && key === 'voidsN') continue;
-		if (ignoreObstacles && key === 'obstaclesN') continue;
-
-		const typeList = gamefile.ourPieces[key];
-		count += typeList.length;
-		if (typeList.undefineds) count -= typeList.undefineds.length;
-	}
-	return count;
-}
-
-/**
- * Calculates the piece's index position among EVERY piece in the game.
- * Used to calculate its index within in the mesh vertex data.
- * IGNORES VOIDS.
- * @param {gamefile} gamefile - The gamefile
- * @param {Object} piece - The piece: `{ type, index }`
- * @returns {number} The index of the piece
- */
-function calcPieceIndexInAllPieces(gamefile, piece) {
-	const type = piece.type;
-	const pieceIndex = piece.index;
-
-	let index = 0;
-	let foundPiece = false;
-
-	// We need to use the same iteration function that our regenPiecesModel() uses!
-	typeutil.forEachPieceType(iterate);
-
-	function iterate(listType) {
-		if (foundPiece) return;
-
-		if (listType.startsWith('voids')) return; // SKIP Voids!
-
-		const list = gamefile.ourPieces[listType];
-
-		if (listType === type) { // Same list our piece is in!
-			index += pieceIndex;
-			foundPiece = true;
-			return;
-		} else { // Our piece isnt in this list
-			index += list.length;
-		}
-	}
-
-	if (foundPiece) return index;
-
-	return console.error(`Could not find piece type ${piece.type} with index ${piece.index} when calculating its index in all the pieces!`);
-}
-
-/**
- * Returns an array containing the coordinates of ALL royal pieces of the specified color.
- * @param {gamefile} gamefile 
- * @param {string} color 
- * @returns {number[][]}
- */
-function getRoyalCoords(gamefile, color) {
-	const royals = typeutil.royals; // ['kings', ...]
-	const WorB = colorutil.getColorExtensionFromColor(color);
-
-	const piecesByType = gamefile.ourPieces;
-	const royalCoords = [];
-
-	for (let i = 0; i < royals.length; i++) {
-		const thisRoyalType = royals[i] + WorB;
-		const thisTypeList = piecesByType[thisRoyalType];
-		if (!thisTypeList) return console.error(`Cannot fetch royal coords of type ${thisRoyalType} when the list is undefined!`);
-        
-		for (let a = 0; a < thisTypeList.length; a++) {
-			const thisPieceCoords = thisTypeList[a]; // [x,y]
-			if (thisPieceCoords) royalCoords.push(thisPieceCoords); // Only add if it's not an undefined placeholder
-		}
-	}
-
-	return royalCoords;
-}
-
-/**
- * Returns an number of the royal pieces a side has
- * @param {gamefile.piecesOrganizedByKey} piecesByKey - Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }`
- * @param {string} color - `white` | `black` | `neutral` a string that represents the color of pieces the function will return
- * @returns {number} the count of the royal pieces of color `color`
- */
-function getRoyalCountOfColor(piecesByKey, color) {
-	const royals = typeutil.royals; // ['kings', ...]
-	const WorB = colorutil.getColorExtensionFromColor(color);
-
-	let royalCount = 0;
-	for (const key in piecesByKey) {
-		const type = piecesByKey[key];
-		const thisColor = colorutil.getPieceColorFromType(type);
-		if (!thisColor.endsWith(WorB)) return; // Different color
-		const strippedType = colorutil.trimColorExtensionFromType(type);
-		if (!royals.includes(strippedType)) continue; // Not royalty
-		royalCount++;
-	}
-	return royalCount;
+	gamefile.metadata.Result = metadata.getResultFromVictor(victor);
 }
 
 /**
@@ -461,30 +450,45 @@ function isOpponentUsingWinCondition(gamefile, friendlyColor, winCondition) {
 	return gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, winCondition);
 }
 
+
+
+
+// FUNCTIONS THAT SHOULD BE MOVED ELSEWHERE!!!!! They introduce too many dependancies ----------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+/**
+ * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
+ * @param {gamefile} gamefile - The gamefile
+ */
+function doGameOverChecks(gamefile) {
+	gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
 export default {
 	pieceCountToDisableCheckmate,
-	getPieceCountOfType,
 	forEachPieceInGame,
-	forEachPieceInPiecesByType,
-	forEachPieceInKeysState,
+	getPieceCountOfGame,
+	getPieceCountOfColor,
+	getPieceCountOfType,
+	getPieceCount_IncludingUndefineds,
 	deleteIndexFromPieceList,
-	getPieceIndexByTypeAndCoords,
-	getPieceTypeAtCoords,
-	getPieceAtCoords,
-	isPieceOnCoords,
-	getPieceFromTypeAndCoords,
-	doGameOverChecks,
-	getJumpingRoyalCoords,
-	getCountOfTypesFromPiecesByType,
 	getCoordsOfAllPieces,
 	getCoordsOfAllPiecesByKey,
-	getPieceCount,
-	getPieceCountOfColorFromPiecesByType,
+	getRoyalCoordsOfColor,
+	getJumpingRoyalCoordsOfColor,
+	getPieceFromTypeAndCoords,
+	getPieceAtCoords,
+	getPieceTypeAtCoords,
 	calcPieceIndexInAllPieces,
-	getRoyalCoords,
-	getRoyalCountOfColor,
-	getPieceCountOfGame,
+	isPieceOnCoords,
 	isGameOver,
-	isOpponentUsingWinCondition,
+	isCurrentViewedPositionInCheck,
+	getCheckCoordsOfCurrentViewedPosition,
 	setTerminationMetadata,
+	isOpponentUsingWinCondition,
+	doGameOverChecks,
 };

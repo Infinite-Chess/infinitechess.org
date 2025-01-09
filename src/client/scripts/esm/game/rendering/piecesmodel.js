@@ -2,26 +2,23 @@
 // Import Start
 import loadbalancer from '../misc/loadbalancer.js';
 import math from '../../util/math.js';
-import onlinegame from '../misc/onlinegame.js';
 import bufferdata from './bufferdata.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
-import game from '../chess/game.js';
 import stats from '../gui/stats.js';
-import coin from './coin.js';
 import voids from './voids.js';
 import statustext from '../gui/statustext.js';
 import movement from './movement.js';
 import perspective from './perspective.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import options from './options.js';
 import colorutil from '../../chess/util/colorutil.js';
-import typeutil from '../../chess/util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import thread from '../../util/thread.js';
 import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
 import shapes from './shapes.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /** 
@@ -52,7 +49,7 @@ const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrilli
 
 
 /**
- * Generates the model that contains every single piece on the board, *including* coins, but *excluding* voids.
+ * Generates the model that contains every single piece on the board, but *excluding* voids.
  * (But will herein call the method that regenerates the void mesh)
  * This is expensive. This is ~200 times slower than just rendering. Minimize calling this.
  * When drawing, we'll need to specify the uniform transformations according to our camera position.
@@ -74,10 +71,9 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
 
 	// How many indeces will we need?
-	const coinCount = coin.getCoinCount();
-	const totalPieceCount = gamefileutility.getPieceCount(game.getGamefile().ourPieces) + coinCount;
+	const totalPieceCount = gamefileutility.getPieceCount_IncludingUndefineds(gamefile);
 	const thisStride = colorArgs ? strideWithColoredTexture : strideWithTexture; // 4 or 8
-	const indicesPerPiece = thisStride * POINTS_PER_SQUARE; // 4|8 * 6
+	const indicesPerPiece = thisStride * POINTS_PER_SQUARE; // (4|8) * 6
 	const totalElements = totalPieceCount * indicesPerPiece;
 
 	const usingColoredTextures = colorArgs !== undefined;
@@ -90,13 +86,10 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 		usingColoredTextures
 	};
 
-	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
-	const rotation = weAreBlack ? -1 : 1;
+	const weAreWhite = gameslot.isLoadedGameViewingWhitePerspective();
+	const rotation = weAreWhite ? 1 : -1;
 
 	let currIndex = 0;
-
-	// First, add the data of the coins!
-	currIndex = coin.appDat(gamefile, currIndex, mesh, usingColoredTextures);
 
 	// How much time can we spend on this potentially long task?
 	let pieceLimitToRecalcTime = 1000;
@@ -108,12 +101,15 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	stats.showPiecesMesh();
 
 	// Iterates through every single piece and performs specified function on said piece
-	await typeutil.forEachPieceType_Async(concatBufferData, { ignoreVoids: true });
+	for (const pieceType in gamefile.ourPieces) {
+		if (pieceType.startsWith('voids')) continue;
+		await concatBufferData(pieceType);
+	}
 
 	// Adds pieces of that type's buffer to the overall data
 	async function concatBufferData(pieceType) {
 		if (gamefile.mesh.terminate) return;
-		const thesePieces = game.getGamefile().ourPieces[pieceType];
+		const thesePieces = gamefile.ourPieces[pieceType];
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
 
@@ -185,23 +181,22 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	if (gamefile.mesh.terminate) {
 		console.log("Mesh generation terminated.");
 		gamefile.mesh.terminate = false;
-		gamefile.mesh.locked--;
+		gamefile.mesh.releaseLock();
 		gamefile.mesh.isGenerating--;
 		return;
 	}
 
-	mesh.model = colorArgs ? buffermodel.createModel_ColorTextured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-                            : buffermodel.createModel_Textured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
-	//                     : buffermodel.createModel_TintTextured(mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+	mesh.model = colorArgs ? createModel(mesh.data32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+                            : createModel(mesh.data32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
 
 	jsutil.copyPropertiesToObject(mesh, gamefile.mesh);
     
 	// If we are also in perspective mode, init the rotated model as well!
-	if (perspective.getEnabled()) await initRotatedPiecesModel(game.getGamefile(), true); // ignoreLock
+	if (perspective.getEnabled()) await initRotatedPiecesModel(gamefile, true); // ignoreLock
 
 	if (gamefile.mesh.terminate) {
 		gamefile.mesh.terminate = false;
-		gamefile.mesh.locked--;
+		gamefile.mesh.releaseLock();
 		gamefile.mesh.isGenerating--;
 		return;
 	}
@@ -212,7 +207,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
     
 	frametracker.onVisualChange();
 
-	gamefile.mesh.locked--;
+	gamefile.mesh.releaseLock();
 	gamefile.mesh.isGenerating--;
 }
 
@@ -228,7 +223,7 @@ function movebufferdata(gamefile, piece, newCoords) {
 	if (!gamefile.mesh.data64) throw new Error("Should not be moving piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) throw new Error("Should not be moving piece data when data32 is not defined!");
     
-	const index = getPieceIndexInData(gamefile, piece);
+	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 
@@ -282,7 +277,7 @@ function movebufferdata(gamefile, piece, newCoords) {
 function deletebufferdata(gamefile, piece) {
 	if (!gamefile.mesh.data64) throw new Error("Should not be deleting piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) throw new Error("Should not be deleting piece data when data32 is not defined!");
-	const index = getPieceIndexInData(gamefile, piece);
+	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece; // Start index of deleted piece
@@ -322,13 +317,13 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 	if (!gamefile.mesh.data64) return console.error("Should not be overwriting piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) return console.error("Should not be overwriting piece data when data32 is not defined!");
     
-	const index = getPieceIndexInData(gamefile, undefinedPiece);
+	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, undefinedPiece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece;
 
-	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
-	const rotation = weAreBlack ? -1 : 1;
+	const weAreWhite = gameslot.isLoadedGameViewingWhitePerspective();
+	const rotation = weAreWhite ? 1 : -1;
 
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const offsetCoord = coordutil.subtractCoordinates(coords, gamefile.mesh.offset);
@@ -370,22 +365,6 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 	if (perspective.getEnabled()) gamefile.mesh.rotatedModel.updateBufferIndices(i, numbIndicesChanged);
 }
 
-// Appends the index to account for coins within the data!
-
-/**
- * Calculates the specified piece's index, or position in line,
- * within the mesh vertex data of the gamefile.
- * Takes into account that coins are in the mesh as well.
- * @param {gamefile} gamefile - The gamefile
- * @param {Object} piece - The piece: { type, index }
- * @returns {number} The index of the piece within the mesh
- */
-function getPieceIndexInData(gamefile, piece) { // { type, index }
-	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
-	// Add onto it the coin count, because they are before the pieces in the data!
-	return index + coin.getCoinCount(); 
-}
-
 /**
  * Utility function for printing the vertex data of the specific piece at
  * the specified coords, within the mesh data of the gamefile.
@@ -397,7 +376,7 @@ function printbufferdataOnCoords(gamefile, coords) {
 	const piece = gamefileutility.getPieceAtCoords(gamefile, coords);
 	if (!piece) console.log("No piece at these coords to retrieve data from!");
 
-	const index = getPieceIndexInData(gamefile, piece);
+	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 	printbufferdataOnIndex(index);
 }
 
@@ -459,9 +438,8 @@ function shiftPiecesModel(gamefile) {
 			gamefile.mesh.data32[i + 1] = gamefile.mesh.data64[i + 1];
 		}
 
-		// gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.data32)
-		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? createModel(gamefile.mesh.data32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+            : createModel(gamefile.mesh.data32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
 	}
 
 	function shiftBothModels() {            
@@ -476,12 +454,10 @@ function shiftPiecesModel(gamefile) {
 			gamefile.mesh.rotatedData32[i + 1] = gamefile.mesh.rotatedData64[i + 1];
 		}
 
-		// gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.data32)
-		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.data32, 2, "TRIANGLES", spritesheet.getSpritesheet());
-		// gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
-		gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-            : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+		gamefile.mesh.model = gamefile.mesh.usingColoredTextures ? createModel(gamefile.mesh.data32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+            : createModel(gamefile.mesh.data32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
+		gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? createModel(gamefile.mesh.rotatedData32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+            : createModel(gamefile.mesh.rotatedData32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
 	}
 
 	voids.shiftModel(gamefile, diffXOffset, diffYOffset);
@@ -506,9 +482,9 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 	// console.log('Begin rotating model..')
 
 	// Amount to transition the points
-	const weAreBlack = onlinegame.areInOnlineGame() && onlinegame.areWeColor("black");
+	const weAreWhite = gameslot.isLoadedGameViewingWhitePerspective();
 	const spritesheetPieceWidth = spritesheet.getSpritesheetDataPieceWidth();
-	const texWidth = weAreBlack ? -spritesheetPieceWidth : spritesheetPieceWidth;
+	const texWidth = weAreWhite ? spritesheetPieceWidth : -spritesheetPieceWidth;
 
 	gamefile.mesh.rotatedData64 = new Float64Array(gamefile.mesh.data32.length); // Empty it for re-initialization
 	gamefile.mesh.rotatedData32 = new Float32Array(gamefile.mesh.data32.length); // Empty it for re-initialization
@@ -516,8 +492,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 	const stride = gamefile.mesh.stride; // 4 / 8
 	const indicesPerPiece = stride * POINTS_PER_SQUARE; // 4|8 * 6
     
-	const coinCount = coin.getCoinCount();
-	const totalPieceCount = (gamefileutility.getPieceCount(game.getGamefile().ourPieces) + coinCount) * 2; // * 2 for the data32 and data64 arrays
+	const totalPieceCount = gamefileutility.getPieceCount_IncludingUndefineds(gamefile) * 2; // * 2 for the data32 and data64 arrays
 
 	// How much time can we spend on this potentially long task?
 	let pieceLimitToRecalcTime = 1000;
@@ -536,7 +511,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 		console.log("Mesh generation terminated.");
 		stats.hideRotateMesh();
 		if (!ignoreGenerating) gamefile.mesh.terminate = false;
-		gamefile.mesh.locked--;
+		gamefile.mesh.releaseLock();
 		gamefile.mesh.isGenerating--;
 		return;
 	}
@@ -545,7 +520,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 		console.log("Mesh generation terminated.");
 		stats.hideRotateMesh();
 		if (!ignoreGenerating) gamefile.mesh.terminate = false;
-		gamefile.mesh.locked--;
+		gamefile.mesh.releaseLock();
 		gamefile.mesh.isGenerating--;
 		return;
 	}
@@ -700,11 +675,10 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 
 	stats.hideRotateMesh();
 
-	// gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTexture(gamefile.mesh.rotatedData32)
-	gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? buffermodel.createModel_ColorTextured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet())
-        : buffermodel.createModel_Textured(gamefile.mesh.rotatedData32, 2, "TRIANGLES", spritesheet.getSpritesheet());
+	gamefile.mesh.rotatedModel = gamefile.mesh.usingColoredTextures ? createModel(gamefile.mesh.rotatedData32, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
+        : createModel(gamefile.mesh.rotatedData32, 2, "TRIANGLES", false, spritesheet.getSpritesheet());
 
-	gamefile.mesh.locked--;
+	gamefile.mesh.releaseLock();
 	gamefile.mesh.isGenerating--;
 	frametracker.onVisualChange();
 }

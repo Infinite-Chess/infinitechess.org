@@ -1,4 +1,8 @@
 
+/**
+ * This script calculates legal moves
+ */
+
 // Import Start
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
@@ -10,6 +14,7 @@ import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
+import movesets from './movesets.js';
 // Import End
 
 /** 
@@ -17,6 +22,9 @@ import winconutil from '../util/winconutil.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
  * @typedef {import('../util/moveutil.js').Move} Move
  * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('./movesets.js').PieceMoveset} PieceMoveset
+ * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction
+ * @typedef {import('./movesets.js').IgnoreFunction} IgnoreFunction
 */
 
 
@@ -29,11 +37,11 @@ import winconutil from '../util/winconutil.js';
  * @typedef {Object} LegalMoves
  * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
  * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
+ * @property {IgnoreFunction} ignoreFunc - The ignore function of the piece, to skip over moves.
  */
 
-/**
- * This script calculates legal moves
- */
+
+
 
 /**
  * Calculates the area around you in which jumping pieces can land on you from that distance.
@@ -78,7 +86,7 @@ function genVicinity(gamefile) {
  * Gets the moveset of the type of piece specified.
  * @param {gamefile} gamefile - The gamefile 
  * @param {string} pieceType - The type of piece
- * @returns {Object} A moveset object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
+ * @returns {PieceMoveset} A moveset object.
  */
 function getPieceMoveset(gamefile, pieceType) {
 	pieceType = colorutil.trimColorExtensionFromType(pieceType); // Remove the 'W'/'B' from end of type
@@ -88,11 +96,30 @@ function getPieceMoveset(gamefile, pieceType) {
 }
 
 /**
+ * Return the piece move that's blocking function if it is specified, or the default otherwise.
+ * @param {PieceMoveset} pieceMoveset 
+ * @returns {BlockingFunction}
+ */
+function getBlockingFuncFromPieceMoveset(pieceMoveset) {
+	return pieceMoveset.blocking || movesets.defaultBlockingFunction;
+}
+
+
+/**
+ * Return the piece move ignore function if it is specified, or the default otherwise.
+ * @param {PieceMoveset} pieceMoveset 
+ * @returns {IgnoreFunction}
+ */
+function getIgnoreFuncFromPieceMoveset(pieceMoveset) {
+	return pieceMoveset.ignore ? pieceMoveset.ignore : () => false;
+}
+
+/**
  * Calculates the legal moves of the provided piece in the provided gamefile.
  * @param {gamefile} gamefile - The gamefile
  * @param {Piece} piece - The piece: `{ type, coords, index }`
  * @param {Object} options - An object that may contain the `onlyCalcSpecials` option, that when *true*, will only calculate the legal special moves of the piece. Default: *false*
- * @returns {LegalMoves} The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
+ * @returns {LegalMoves} The legalmoves object.
  */
 function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piece: { type, coords }
 	if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
@@ -104,10 +131,11 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	// if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
 
 	const thisPieceMoveset = getPieceMoveset(gamefile, type); // Default piece moveset
-
+	
 	let legalIndividualMoves = [];
 	const legalSliding = {};
 
+	const ignoreFunc = getIgnoreFuncFromPieceMoveset(thisPieceMoveset);
 	if (!onlyCalcSpecials) {
 
 		// Legal jumping/individual moves
@@ -117,12 +145,14 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
         
 		// Legal sliding moves
 		if (thisPieceMoveset.sliding) {
+			const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 			const lines = gamefile.startSnapshot.slidingPossible;
 			for (let i = 0; i < lines.length; i++) {
-				const line = lines[i];
-				if (!thisPieceMoveset.sliding[line]) continue;
-				const key = organizedlines.getKeyFromLine(line,coords);
-				legalSliding[line] = slide_CalcLegalLimit(gamefile.piecesOrganizedByLines[line][key], line, thisPieceMoveset.sliding[line], coords, color, getIgnoreFunction(thisPieceMoveset));
+				const line = lines[i]; // [x,y]
+				const lineKey = coordutil.getKeyFromCoords(line); // 'x,y'
+				if (!thisPieceMoveset.sliding[lineKey]) continue;
+				const key = organizedlines.getKeyFromLine(line, coords);
+				legalSliding[line] = slide_CalcLegalLimit(blockingFunc, ignoreFunc, gamefile.piecesOrganizedByLines[line][key], line, thisPieceMoveset.sliding[lineKey], coords, color);
 			};
 		};
 
@@ -132,9 +162,9 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves);
 
 	const moves = {
-		ignore: getIgnoreFunction(thisPieceMoveset),
 		individual: legalIndividualMoves,
-		sliding: legalSliding
+		sliding: legalSliding,
+		ignoreFunc: ignoreFunc,
 	};
     
 	checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
@@ -181,13 +211,15 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
 /**
  * Takes in specified organized list, direction of the slide, the current moveset...
  * Shortens the moveset by pieces that block it's path.
+ * @param {BlockingFunction} blockingFunc - The function that will check if each piece on the same line needs to block the piece
+ * @param {IgnoreFunction} ignoreFunc - The function that will check if each piece on the same line needs to block the piece
  * @param {Piece[]} line - The list of pieces on this line 
  * @param {number[]} direction - The direction of the line: `[dx,dy]` 
  * @param {number[]} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
  * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
  * @param {string} color - The color of friendlies
  */
-function slide_CalcLegalLimit(line, direction, slideMoveset, coords, color, ignoreFunction) {
+function slide_CalcLegalLimit(blockingFunc, ignoreFunc, line, direction, slideMoveset, coords, color) {
 
 	if (!slideMoveset) return; // Return undefined if there is no slide moveset
 
@@ -198,26 +230,37 @@ function slide_CalcLegalLimit(line, direction, slideMoveset, coords, color, igno
 	const limit = coordutil.copyCoords(slideMoveset);
 	// Iterate through all pieces on same line
 	for (let i = 0; i < line.length; i++) {
-		// What are the coords of this piece?
+
 		const thisPiece = line[i]; // { type, coords }
-		const thisPieceSteps = Math.floor((thisPiece.coords[axis] - coords[axis]) / direction[axis]);
-		const thisPieceColor = colorutil.getPieceColorFromType(thisPiece.type);
-		const isFriendlyPiece = color === thisPieceColor;
-		const isVoid = thisPiece.type === 'voidsN';
+
+		if (ignoreFunc(coords, thisPiece.coords)) {
+			continue;
+		}
+
+		/**
+		 * 0 => Piece doesn't block
+		 * 1 => Blocked (friendly piece)
+		 * 2 => Blocked 1 square after (enemy piece)
+		 */
+		const blockResult = blockingFunc(color, thisPiece); // 0 | 1 | 2
+		if (blockResult !== 0 && blockResult !== 1 && blockResult !== 2) throw new Error(`slide_CalcLegalLimit() not built to handle block result of "${blockResult}"!`);
+		if (blockResult === 0) continue; // Not blocked
+
 		// Is the piece to the left of us or right of us?
+		const thisPieceSteps = Math.floor((thisPiece.coords[axis] - coords[axis]) / direction[axis]);
 		if (thisPieceSteps < 0) { // To our left
 
 			// What would our new left slide limit be? If it's an opponent, it's legal to capture it.
-			const newLeftSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps + 1 : thisPieceSteps;
+			const newLeftSlideLimit = blockResult === 1 ? thisPieceSteps + 1 : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
-			if (newLeftSlideLimit > limit[0] && !ignoreFunction(thisPieceSteps, direction)) limit[0] = newLeftSlideLimit;
+			if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
 
 		} else if (thisPieceSteps > 0) { // To our right
 
 			// What would our new right slide limit be? If it's an opponent, it's legal to capture it.
-			const newRightSlideLimit = isFriendlyPiece || isVoid ? thisPieceSteps - 1 : thisPieceSteps;
+			const newRightSlideLimit = blockResult === 1 ? thisPieceSteps - 1 : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
-			if (newRightSlideLimit < limit[1] && !ignoreFunction(thisPieceSteps, direction)) limit[1] = newRightSlideLimit;
+			if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
 
 		} // else this is us, don't do anything.
 	}
@@ -261,17 +304,10 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
 		const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
 		if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
-		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignore)) continue;
+		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue;
 		return true;
 	}
 	return false;
-}
-
-/**
- * TODO
- */
-function getIgnoreFunction(moves) {
-	return moves.ignore ? moves.ignore : () => false;
 }
 
 /**
@@ -379,9 +415,10 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
  * @param {number[]} direction - The direction of the line: `[dx,dy]`
  * @param {number[]} pieceCoords - The coordinates of the piece with the provided sliding net
  * @param {number[]} coords - The coordinates we want to know if they can reach.
+ * @param {IgnoreFunction} ignoreFunc - The ignore function.
  * @returns {boolean} true if the piece is able to slide to the coordinates
  */
-function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords, ignoreFunction) {
+function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords, ignoreFunc) {
 	// const step = math.getLineSteps(direction, pieceCoords, coords)
 	// return step >= slideMoveset[0] && step <= slideMoveset[1];
 
@@ -391,7 +428,7 @@ function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, c
 	const relCoords = (coordMag - pieceCoords[axis]) / Math.abs(direction[axis]);
 	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
 	const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
-	return coordMag >= min && coordMag <= max && !ignoreFunction(relCoords, direction);
+	return coordMag >= min && coordMag <= max && !ignoreFunc(pieceCoords, coords);
 }
 
 /**
@@ -422,5 +459,6 @@ export default {
 	hasAtleast1Move,
 	slide_CalcLegalLimit,
 	isOpponentsMoveLegal,
-	getIgnoreFunction
+	getBlockingFuncFromPieceMoveset,
+	getIgnoreFuncFromPieceMoveset,
 };

@@ -58,13 +58,11 @@ function closeListeners() {
 }
 
 function callback_Play(event) {
-	event = event || window.event;
 	close();
 	guiplay.open();
 }
 
 function callback_Guide(event) {
-	event = event || window.event;
 	close();
 	guiguide.open();
 }
@@ -72,5 +70,5 @@ function callback_Guide(event) {
 export default {
 	boardVel,
 	open,
-	close
+	close,
 };

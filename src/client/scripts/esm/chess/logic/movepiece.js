@@ -20,7 +20,7 @@ import coordutil from '../util/coordutil.js';
 import frametracker from '../../game/rendering/frametracker.js';
 import stats from '../../game/gui/stats.js';
 import onlinegame from '../../game/misc/onlinegame.js';
-import game from '../../game/chess/game.js';
+import gameslot from '../../game/chess/gameslot.js';
 // Import End
 
 /** 
@@ -34,9 +34,13 @@ import game from '../../game/chess/game.js';
 // Custom type definitions...
 
 /**
+ * TODO: Move this type definition to a new pieceutil TYPESCRIPT,
+ * and make the coordinates only length-2.
+ * 
+ * The Piece Object.
  * @typedef {Object} Piece
  * @property {string} type - The type of the piece (e.g. `queensW`).
- * @property {number[]} coords - The coordinates of the piece: `[x,y]`
+ * @property {[number,number]} coords - The coordinates of the piece: `[x,y]`
  * @property {number} index - The index of the piece within the gamefile's piece list.
  */
 
@@ -55,11 +59,12 @@ import game from '../../game/chess/game.js';
  * - `doGameOverChecks`: Whether to perform game-over checks, such as checkmate or other win conditions.
  * - `concludeGameIfOver`: If true, and `doGameOverChecks` is true, then if this move ends the game, we will not stop the clocks, darken the board, display who won, or play a sound effect.
  * - `animate`: Whether to animate this move.
+ * - `animateSecondary`: Animate the pieces affected by the move without the piece that made the move. Used after dragging the king to castle. Is only used when `animate` is false.
  * - `updateData`: Whether to modify the mesh of all the pieces. Should be false for simulated moves, or if you're planning on regenerating the mesh after this.
  * - `updateProperties`: Whether to update gamefile properties that game-over algorithms rely on, such as the 50-move-rule's status, or 3-Check's check counter.
  * - `simulated`: Whether you plan on undo'ing this move. If true, the `rewindInfo` property will be added to the `move` for easy restoring of the gamefile's properties when undo'ing the move.
  */
-function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushClock = true, doGameOverChecks = true, concludeGameIfOver = true, animate = true, updateData = true, updateProperties = true, simulated = false } = {}) {                
+function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushClock = true, doGameOverChecks = true, concludeGameIfOver = true, animate = true, animateSecondary = false, updateData = true, updateProperties = true, simulated = false } = {}) {                
 	const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
 	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
 	move.type = piece.type;
@@ -71,9 +76,9 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
 	if (recordMove || updateProperties) deleteEnpassantAndSpecialRightsProperties(gamefile, move.startCoords, move.endCoords);
     
 	let specialMoveMade;
-	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, updateProperties, simulated });
+	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move, { updateData, animate, animateSecondary, updateProperties, simulated });
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move, { updateData, recordMove, animate, simulated }); // Move piece regularly (no special tag)
-	const wasACapture = move.captured != null;
+	const wasACapture = move.captured !== undefined;
 
 	gamefile.moveIndex++;
 	if (recordMove) gamefile.moves.push(move);
@@ -88,7 +93,7 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
 	updateInCheck(gamefile, recordMove);
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
-		if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) game.concludeGame();
+		if (!simulated && concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
 	if (updateData) {
@@ -109,7 +114,7 @@ function makeMove(gamefile, move, { flipTurn = true, recordMove = true, pushCloc
  * - `simulated`: Whether you plan on undo'ing this move. If *true*, then `capturedIndex` and `pawnIndex` will also be remembered, so the mesh doesn't get screwed up when rewinding. Default: *false*
  */
 function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false } = {}) {
-	const rewindInfoAlreadyPresent = move.rewindInfo != null;
+	const rewindInfoAlreadyPresent = move.rewindInfo !== undefined;
 	const rewindInfo = move.rewindInfo || {};
 
 	if (simulated && move.promotion) rewindInfo.pawnIndex = pieceIndex; // `capturedIndex` is saved elsewhere within movePiece_NoSpecial()
@@ -118,7 +123,7 @@ function storeRewindInfoOnMove(gamefile, move, pieceIndex, { simulated = false }
 		rewindInfo.gameConclusion = gamefile.gameConclusion;
 		if (gamefile.attackers) rewindInfo.attackers = jsutil.deepCopyObject(gamefile.attackers);
 		if (gamefile.enpassant) rewindInfo.enpassant = gamefile.enpassant;
-		if (gamefile.moveRuleState != null) rewindInfo.moveRuleState = gamefile.moveRuleState;
+		if (gamefile.moveRuleState !== undefined) rewindInfo.moveRuleState = gamefile.moveRuleState;
 		if (gamefile.checksGiven) rewindInfo.checksGiven = gamefile.checksGiven;
 		let key = coordutil.getKeyFromCoords(move.startCoords);
 		if (gamefile.specialRights[key]) rewindInfo.specialRightStart = true;
@@ -205,15 +210,15 @@ function addPiece(gamefile, type, coords, desiredIndex, { updateData = true } = 
 	const list = gamefile.ourPieces[type];
 
 	// If no index specified, make the default the first undefined in the list!
-	if (desiredIndex == null) desiredIndex = list.undefineds[0];
+	if (desiredIndex === undefined) desiredIndex = list.undefineds[0];
 
 	// If there are no undefined placeholders left, updateData better be false, because we are going to append on the end!
-	if (desiredIndex == null && updateData) throw new Error("Cannot add a piece and update the data when there are no undefined placeholders remaining!");
+	if (desiredIndex === undefined && updateData) throw new Error("Cannot add a piece and update the data when there are no undefined placeholders remaining!");
 
-	if (desiredIndex == null) list.push(coords);
+	if (desiredIndex === undefined) list.push(coords);
 	else { // desiredIndex specified
 
-		const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, coords) != null;
+		const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, coords) !== undefined;
 		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
 
 		// Remove the undefined from the undefineds list
@@ -333,14 +338,12 @@ function makeAllMovesInGame(gamefile, moves) {
 
 		// Make the move in the game!
 
-		const isLastMove = i === moves.length - 1;
-		const animate = isLastMove;
-		makeMove(gamefile, move, { pushClock: false, updateData: false, concludeGameIfOver: false, doGameOverChecks: false, animate });
+		// const isLastMove = i === moves.length - 1;
+		// const animate = isLastMove;
+		makeMove(gamefile, move, { pushClock: false, updateData: false, concludeGameIfOver: false, doGameOverChecks: false, animate: false });
 	}
 
 	if (moves.length === 0) updateInCheck(gamefile, false);
-
-	gamefileutility.doGameOverChecks(gamefile); // Update the gameConclusion
 }
 
 /**
@@ -400,6 +403,11 @@ function calculateMoveFromShortmove(gamefile, shortmove) {
  */
 
 function forwardToFront(gamefile, { flipTurn = true, animateLastMove = true, updateData = true, updateProperties = true, simulated = false } = {}) {
+	if (updateData && gamefile.mesh.locked > 0) { // The mesh is locked (we cannot forward moves right now)
+		// Call this function again with the same arguments as soon as the mesh is unlocked
+		gamefile.mesh.callbacksOnUnlock.push(gamefile => forwardToFront(gamefile, { flipTurn, animateLastMove, updateData, updateProperties, simulated }));
+		return;
+	}
 
 	while (true) { // For as long as we have moves to forward...
 		const nextIndex = gamefile.moveIndex + 1;

@@ -109,7 +109,7 @@ function cancel(id = ourInviteID) {
 // Generates a tag id for the invite parameters before we send off action "createinvite" to the server
 function generateTagForInvite(inviteOptions) {
 	// Create and send invite with a tag so we know which ones ours
-	const tag = uuid.generateID(8);
+	const tag = uuid.generateID_Base62(8);
 
 	// NEW browser storage method!
 	localstorage.saveItem('invite-tag', tag);
@@ -339,17 +339,6 @@ function click(element) {
 	} else { // Not our invite, accept the one we clicked
 		if (!guiplay.isAcceptInviteButtonLocked()) accept(invite.id, true);
 	}
-}
-
-function getInviteFromID(id) {
-	if (!id) return console.error('Cannot find the invite with undefined id!');
-
-	for (let i = 0; i < activeInvites.length; i++) {
-		const invite = activeInvites[i];
-		if (invite.id === id) return invite;
-	}
-
-	console.error(`Could not find invite with id ${id} in the document!`);
 }
 
 function updateCreateInviteButton() {

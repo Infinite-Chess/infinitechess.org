@@ -37,6 +37,8 @@ import { handleLogin } from '../controllers/loginController.js';
 import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
+import { processCommand } from "../api/AdminPanel.js";
+import { getContributors } from '../api/GitHub.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -63,6 +65,7 @@ function configureMiddleware(app) {
 
 	app.use(credentials); // Handle credentials check. Must be before CORS.
 
+	/** This sets req.i18n, and req.i18n.resolvedLanguage */
 	app.use(middleware.handle(i18next, { removeLngFromUrl: false }));
 
 	/**
@@ -125,6 +128,11 @@ function configureMiddleware(app) {
 		res.send(""); // Doesn't work without this for some reason
 	});
 
+	app.get("/api/contributors", (req, res) => {
+		const contributors = getContributors();
+		res.send(JSON.stringify(contributors));
+	});
+
 	// Token Authenticator -------------------------------------------------------
 
 	/**
@@ -144,6 +152,8 @@ function configureMiddleware(app) {
 	app.post('/api/set-preferences', postPrefs);
 
 	app.get("/logout", handleLogout);
+
+	app.get("/command/:command", processCommand);
 
 	// Member routes that do require authentication
 	app.get('/member/:member/data', getMemberData);

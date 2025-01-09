@@ -28,6 +28,7 @@ import { execSync } from 'node:child_process';
 const entryPoints = [
 	'dist/client/scripts/esm/game/main.js',
 	'dist/client/scripts/esm/components/header/header.js',
+	'dist/client/scripts/esm/views/index.js',
 	'dist/client/scripts/esm/views/member.js',
 ];
 
@@ -126,9 +127,9 @@ await remove("./dist", {
 
 
 /**
-	 * Start by copying all files to dist, including script files so they can be compiled without cluttering pull requests.
-	 * Files will be bundled later if bundling is enabled.
-	 */
+ * Start by copying all files to dist, including script files so they can be compiled without cluttering pull requests.
+ * Files will be bundled later if bundling is enabled.
+ */
 
 await copy("./src", "./dist", {
 	recursive: true,

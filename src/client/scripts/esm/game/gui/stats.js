@@ -4,9 +4,9 @@ import moveutil from '../../chess/util/moveutil.js';
 import style from './style.js';
 import options from '../rendering/options.js';
 import camera from '../rendering/camera.js';
-import game from '../chess/game.js';
 import math from '../../util/math.js';
 import config from '../config.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -20,7 +20,6 @@ import config from '../config.js';
 const element_Statuses = document.getElementById('stats');
 
 // Various statuses
-const elementStatusMoveLooking = document.getElementById('status-move-looking');
 const elementStatusFPS = document.getElementById('status-fps');
 const elementStatusPiecesMesh = document.getElementById('status-pieces-mesh');
 const elementStatusRotateMesh = document.getElementById('status-rotate-mesh');
@@ -54,8 +53,8 @@ function hideMoves() {
 
 function setTextContentOfMoves() {
 
-	const currentPly = game.getGamefile().moveIndex + 1;
-	const totalPlyCount = moveutil.getPlyCount(game.getGamefile().moves);
+	const currentPly = gameslot.getGamefile().moveIndex + 1;
+	const totalPlyCount = moveutil.getPlyCount(gameslot.getGamefile().moves);
 
 	elementStatusMoves.textContent = `${translations.move_counter} ${currentPly}/${totalPlyCount}`;
 }

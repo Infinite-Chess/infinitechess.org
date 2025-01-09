@@ -8,13 +8,13 @@ import transition from './transition.js';
 import movement from './movement.js';
 import options from './options.js';
 import statustext from '../gui/statustext.js';
-import buffermodel from './buffermodel.js';
-import game from '../chess/game.js';
+import { createModel } from './buffermodel.js';
 import area from './area.js';
 import typeutil from '../../chess/util/typeutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import spritesheet from './spritesheet.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /**
@@ -114,7 +114,7 @@ function genModel() {
 
 	// Adds pieces of that type's buffer to the overall data
 	function concatBufferData(pieceType) {
-		const thesePieces = game.getGamefile().ourPieces[pieceType];
+		const thesePieces = gameslot.getGamefile().ourPieces[pieceType];
 
 		if (!thesePieces) return; // Don't concat data if there are no pieces of this type
 
@@ -161,9 +161,7 @@ function genModel() {
 		}
 	}
 
-	const floatData = new Float32Array(data);
-	// model = buffermodel.createModel_ColorTexture(data)
-	model = buffermodel.createModel_ColorTextured(floatData, 2, "TRIANGLES", spritesheet.getSpritesheet());
+	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 
 	// Teleport to clicked pieces
 	if (piecesClicked.length > 0) {
