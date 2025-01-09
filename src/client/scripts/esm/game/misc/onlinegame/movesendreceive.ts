@@ -4,24 +4,35 @@
  * and receiving moves from our opponent.
  */
 
-import type gamefile from "../../../chess/logic/gamefile";
-import type { OpponentsMoveMessage } from "../onlinegamerouter";
-import type { Move } from "../../../chess/util/moveutil";
+import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
+// @ts-ignore
+import type gamefile from "../../../chess/logic/gamefile.js";
+// @ts-ignore
+import type { Move } from "../../../chess/util/moveutil.js";
 
-import legalmoves from "../../../chess/logic/legalmoves";
-import movepiece from "../../../chess/logic/movepiece";
-import specialdetect from "../../../chess/logic/specialdetect";
-import gamefileutility from "../../../chess/util/gamefileutility";
-import clock from "../../../chess/logic/clock";
-import formatconverter from "../../../chess/logic/formatconverter";
-import moveutil from "../../../chess/util/moveutil";
-import jsutil from "../../../util/jsutil";
-import gameslot from "../../chess/gameslot";
-import selection from "../../chess/selection";
-import guiclock from "../../gui/guiclock";
-import guipause from "../../gui/guipause";
-import websocket from "../../websocket";
-import onlinegame from "./onlinegame";
+import onlinegame from "./onlinegame.js";
+import gamefileutility from "../../../chess/util/gamefileutility.js";
+import clock from "../../../chess/logic/clock.js";
+import jsutil from "../../../util/jsutil.js";
+import gameslot from "../../chess/gameslot.js";
+// @ts-ignore
+import legalmoves from "../../../chess/logic/legalmoves.js";
+// @ts-ignore
+import movepiece from "../../../chess/logic/movepiece.js";
+// @ts-ignore
+import specialdetect from "../../../chess/logic/specialdetect.js";
+// @ts-ignore
+import formatconverter from "../../../chess/logic/formatconverter.js";
+// @ts-ignore
+import moveutil from "../../../chess/util/moveutil.js";
+// @ts-ignore
+import selection from "../../chess/selection.js";
+// @ts-ignore
+import guiclock from "../../gui/guiclock.js";
+// @ts-ignore
+import guipause from "../../gui/guipause.js";
+// @ts-ignore
+import websocket from "../../websocket.js";
 
 
 // Functions -------------------------------------------------------------------

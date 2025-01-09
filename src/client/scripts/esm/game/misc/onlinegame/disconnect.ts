@@ -8,11 +8,14 @@
  * extra time to reconnect.
  */
 
-import moveutil from "../../../chess/util/moveutil";
-import pingManager from "../../../util/pingManager";
-import gameslot from "../../chess/gameslot";
-import statustext from "../../gui/statustext";
-import afk from "./afk";
+import afk from "./afk.js";
+import gameslot from "../../chess/gameslot.js";
+// @ts-ignore
+import moveutil from "../../../chess/util/moveutil.js";
+// @ts-ignore
+import pingManager from "../../../util/pingManager.js";
+// @ts-ignore
+import statustext from "../../gui/statustext.js";
 
 
 /** The timestamp our opponent will lose from disconnection, if they don't reconnect before then. */
@@ -51,8 +54,8 @@ function stopOpponentDisconnectCountdown() {
 }
 
 function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean) {
-	const opponent_disconnectedOrLostConnection = wasByChoice ? translations.onlinegame.opponent_disconnected : translations.onlinegame.opponent_lost_connection;
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
+	const opponent_disconnectedOrLostConnection = wasByChoice ? translations['onlinegame'].opponent_disconnected : translations['onlinegame'].opponent_lost_connection;
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
 	// The "You are AFK" message should overwrite, be on top of, this message,
 	// so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
 	if (!afk.isOurAFKAutoResignTimerRunning()) statustext.showStatusForDuration(`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`, 1000);

@@ -151,8 +151,8 @@ function tellServerWeBackFromAFK() {
 }
 
 function displayWeAFK(secsRemaining: number) {
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
-	statustext.showStatusForDuration(`${translations.onlinegame.afk_warning} ${resigningOrAborting} ${secsRemaining}...`, 1000);
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
+	statustext.showStatusForDuration(`${translations['onlinegame'].afk_warning} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
 	const timeRemainUntilAFKLoss = timeWeLoseFromAFK! - Date.now();
@@ -196,8 +196,8 @@ function stopOpponentAFKCountdown() {
 }
 
 function displayOpponentAFK(secsRemaining: number) {
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!) ? translations.onlinegame.auto_resigning_in : translations.onlinegame.auto_aborting_in;
-	statustext.showStatusForDuration(`${translations.onlinegame.opponent_afk} ${resigningOrAborting} ${secsRemaining}...`, 1000);
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
+	statustext.showStatusForDuration(`${translations['onlinegame'].opponent_afk} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
 	const timeRemainUntilAFKLoss = timeOpponentLoseFromAFK! - Date.now();

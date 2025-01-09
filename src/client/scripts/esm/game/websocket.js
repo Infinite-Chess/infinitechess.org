@@ -12,7 +12,7 @@ import thread from '../util/thread.js';
 import validatorama from '../util/validatorama.js';
 import wsutil from '../util/wsutil.js';
 import options from './rendering/options.js';
-import onlinegamerouter from './misc/onlinegamerouter.js';
+import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
 // Import End
 
 "use strict";

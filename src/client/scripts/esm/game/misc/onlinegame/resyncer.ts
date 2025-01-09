@@ -11,19 +11,26 @@
  * or it could be because the socket closed...
  */
 
-import type gamefile from "../../../chess/logic/gamefile";
-import type { GameUpdateMessage } from "../onlinegamerouter";
 
-import legalmoves from "../../../chess/logic/legalmoves";
-import movepiece from "../../../chess/logic/movepiece";
-import moveutil from "../../../chess/util/moveutil";
-import selection from "../../chess/selection";
-import movesendreceive from "./movesendreceive";
-import onlinegame from "./onlinegame";
-import guigameinfo from "../../gui/guigameinfo";
-import clock from "../../../chess/logic/clock";
-import gamefileutility from "../../../chess/util/gamefileutility";
-import gameslot from "../../chess/gameslot";
+import type { GameUpdateMessage } from "./onlinegamerouter.js";
+// @ts-ignore
+import type gamefile from "../../../chess/logic/gamefile.js";
+
+
+import movesendreceive from "./movesendreceive.js";
+import onlinegame from "./onlinegame.js";
+import guigameinfo from "../../gui/guigameinfo.js";
+import clock from "../../../chess/logic/clock.js";
+import gamefileutility from "../../../chess/util/gamefileutility.js";
+import gameslot from "../../chess/gameslot.js";
+// @ts-ignore
+import legalmoves from "../../../chess/logic/legalmoves.js";
+// @ts-ignore
+import movepiece from "../../../chess/logic/movepiece.js";
+// @ts-ignore
+import moveutil from "../../../chess/util/moveutil.js";
+// @ts-ignore
+import selection from "../../chess/selection.js";
 
 
 // Functions -----------------------------------------------------------------------------
