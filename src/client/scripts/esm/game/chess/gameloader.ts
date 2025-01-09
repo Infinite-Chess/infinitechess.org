@@ -10,12 +10,12 @@
  * but also prepares and opens the UI elements for that type of game.
  */
 
-
-import type { GameRules } from "../../chess/variants/gamerules.js";
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
-import type { JoinGameMessage } from "../misc/onlinegamerouter.js";
+import type { JoinGameMessage } from "../misc/onlinegame/onlinegamerouter.js";
+// @ts-ignore
+import type { GameRules } from "../../chess/variants/gamerules.js";
 
 
 // @ts-ignore

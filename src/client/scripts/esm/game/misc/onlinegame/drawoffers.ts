@@ -9,7 +9,7 @@
  */
 
 
-import type { DrawOfferInfo } from '../onlinegamerouter.js';
+import type { DrawOfferInfo } from './onlinegamerouter.js';
 
 
 import gameslot from '../../chess/gameslot.js';
@@ -150,7 +150,7 @@ function set(drawOffer: DrawOfferInfo) {
 }
 
 /** Called whenever a move is played in an online game */
-function onMovePlayed({ isOpponents }) {
+function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
 	// Declines any open draw offer from our opponent. We don't need to inform
 	// the server because the server auto declines when we submit our move.
 	if (!isOpponents) callback_declineDraw({ informServer: false });

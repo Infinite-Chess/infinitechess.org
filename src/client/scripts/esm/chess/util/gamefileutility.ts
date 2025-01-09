@@ -3,10 +3,11 @@
  * This script contains many utility methods for working with gamefiles.
  */
 
-
-import type gamefile from '../logic/gamefile.js';
-import type { Piece } from '../logic/movepiece.js';
 import { Coords, CoordsKey } from './coordutil.js';
+// @ts-ignore
+import type gamefile from '../logic/gamefile.js';
+// @ts-ignore
+import type { Piece } from '../logic/movepiece.js';
 
 
 import metadata from './metadata.js';
@@ -84,9 +85,8 @@ function forEachPieceInGame(gamefile: gamefile, callback: PieceIterator) {
  */
 function forEachPieceInPiecesByType(callback: PieceIterator, piecesByType: PiecesByType, ignoreVoids: boolean, gamefile: gamefile) {
 	if (!piecesByType) return console.log("Cannot iterate through each piece in an undefined piecesByType!");
-	for (const type in piecesByType) {
+	for (const [type, thisTypeList] of Object.entries(piecesByType)) {
 		if (ignoreVoids && type.startsWith('voids')) continue;
-		const thisTypeList = piecesByType[type];
 		for (const thisPieceCoords of thisTypeList) {
 			if (thisPieceCoords === undefined) continue; // An undefined placeholder
 			callback(type, thisPieceCoords, gamefile); 
@@ -124,22 +124,19 @@ function forEachPieceInKeysState(
 	// WHETHER that's using Object.keys(), or the time until the first iteration of "for (let key in state)"
 
 	if (ignoreNeutrals) {
-		for (const key in state) {
-			const thisPieceType: string = state[key];
+		for (const [key, thisPieceType] of Object.entries(state)) {
 			if (thisPieceType.endsWith(colorutil.colorExtensionOfNeutrals)) continue;
 			// First it inserts the type of piece into the callback, then coords of piece 
 			callback(thisPieceType, coordutil.getCoordsFromKey(key as CoordsKey)); 
 		}
 	} else if (ignoreVoids) {
-		for (const key in state) {
-			const thisPieceType: string = state[key];
+		for (const [key, thisPieceType] of Object.entries(state)) {
 			if (thisPieceType.startsWith('voids')) continue;
 			// First it inserts the type of piece into the callback, then coords of piece 
 			callback(thisPieceType, coordutil.getCoordsFromKey(key as CoordsKey)); 
 		}
 	} else {
-		for (const key in state) {
-			const thisPieceType: string = state[key];
+		for (const [key, thisPieceType] of Object.entries(state)) {
 			// First it inserts the type of piece into the callback, then coords of piece 
 			callback(thisPieceType, coordutil.getCoordsFromKey(key as CoordsKey)); 
 		}

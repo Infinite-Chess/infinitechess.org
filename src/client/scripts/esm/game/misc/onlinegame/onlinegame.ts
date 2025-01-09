@@ -4,7 +4,7 @@
  * */
 
 
-import type { DisconnectInfo, DrawOfferInfo } from '../onlinegamerouter.js';
+import type { DisconnectInfo, DrawOfferInfo } from './onlinegamerouter.js';
 
 import localstorage from '../../../util/localstorage.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
@@ -232,9 +232,9 @@ function closeEventListeners() {
  * 
  * Sometimes they could leave by accident, or even hit the "Logout" button by accident,
  * which just ejects them out of the game
- * @param {Event} event 
+ * @param event 
  */
-function confirmNavigationAwayFromGame(event) {
+function confirmNavigationAwayFromGame(event: MouseEvent) {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return;

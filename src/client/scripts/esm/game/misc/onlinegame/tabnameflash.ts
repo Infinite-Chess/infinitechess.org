@@ -4,10 +4,13 @@
  * when it is your turn and your in another tab.
  */
 
-import moveutil from "../../../chess/util/moveutil.js";
 import gameslot from "../../chess/gameslot.js";
-import loadbalancer from "../loadbalancer.js";
 import afk from "./afk.js";
+// @ts-ignore
+import moveutil from "../../../chess/util/moveutil.js";
+// @ts-ignore
+import loadbalancer from "../loadbalancer.js";
+// @ts-ignore
 import sound from "../sound.js";
 
 

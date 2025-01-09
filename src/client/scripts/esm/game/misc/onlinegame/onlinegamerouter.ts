@@ -1,51 +1,36 @@
 
 
-import type { ClockValues } from "../../chess/logic/clock.js";
-import type { MetaData } from "../../chess/util/metadata.js";
+import type { ClockValues } from "../../../chess/logic/clock.js";
+import type { MetaData } from "../../../chess/util/metadata.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";
-// @ts-ignore
-import type { Move } from "../../chess/util/moveutil.js";
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
 
 
+import disconnect from "./disconnect.js";
+import afk from "./afk.js";
+import serverrestart from "./serverrestart.js";
+import movesendreceive from "./movesendreceive.js";
+import resyncer from "./resyncer.js";
+import drawoffers from "./drawoffers.js";
+import gameloader from "../../chess/gameloader.js";
+import gameslot from "../../chess/gameslot.js";
+import guititle from "../../gui/guititle.js";
+import clock from "../../../chess/logic/clock.js";
+import onlinegame from "./onlinegame.js";
 // @ts-ignore
-import guiplay from "../gui/guiplay.js";
+import guiplay from "../../gui/guiplay.js";
 // @ts-ignore
-import websocket from "../websocket.js";
+import websocket from "../../websocket.js";
 // @ts-ignore
-import statustext from "../gui/statustext.js";
+import statustext from "../../gui/statustext.js";
 // @ts-ignore
-import formatconverter from "../../chess/logic/formatconverter.js";
+import selection from "../../chess/selection.js";
 // @ts-ignore
-import legalmoves from "../../chess/logic/legalmoves.js";
+import guiclock from "../../gui/guiclock.js";
 // @ts-ignore
-import movepiece from "../../chess/logic/movepiece.js";
-// @ts-ignore
-import specialdetect from "../../chess/logic/specialdetect.js";
-// @ts-ignore
-import selection from "../chess/selection.js";
-// @ts-ignore
-import guiclock from "../gui/guiclock.js";
-// @ts-ignore
-import guipause from "../gui/guipause.js";
-// @ts-ignore
-import board from "../rendering/board.js";
-import disconnect from "./onlinegame/disconnect.js";
-import afk from "./onlinegame/afk.js";
-import serverrestart from "./onlinegame/serverrestart.js";
-import movesendreceive from "./onlinegame/movesendreceive.js";
-import resyncer from "./onlinegame/resyncer.js";
-import drawoffers from "./onlinegame/drawoffers.js";
-import gameloader from "../chess/gameloader.js";
-import gameslot from "../chess/gameslot.js";
-import guititle from "../gui/guititle.js";
-import jsutil from "../../util/jsutil.js";
-import clock from "../../chess/logic/clock.js";
-import guigameinfo from "../gui/guigameinfo.js";
-import onlinegame from "./onlinegame/onlinegame.js";
-import gamefileutility from "../../chess/util/gamefileutility.js";
+import board from "../../rendering/board.js";
 
 
 // Type Definitions --------------------------------------------------------------------------------------

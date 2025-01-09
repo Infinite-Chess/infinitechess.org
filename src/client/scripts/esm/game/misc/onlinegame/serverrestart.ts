@@ -5,6 +5,7 @@
  * stating the server will restart in N minutes.
  */
 
+// @ts-ignore
 import statustext from "../../gui/statustext.js";
 
 
@@ -38,12 +39,12 @@ function initServerRestart(timeToRestart: number) {
 /** Displays the next "Server restaring..." message, and schedules the next one. */
 function displayServerRestarting(minutesLeft: number) {
 	if (minutesLeft === 0) {
-		statustext.showStatus(translations.onlinegame.server_restarting, false, 2);
+		statustext.showStatus(translations['onlinegame'].server_restarting, false, 2);
 		time = undefined;
 		return; // Print no more server restarting messages
 	}
-	const minutes_plurality = minutesLeft === 1 ? translations.onlinegame.minute : translations.onlinegame.minutes;
-	statustext.showStatus(`${translations.onlinegame.server_restarting_in} ${minutesLeft} ${minutes_plurality}...`, false, 2);
+	const minutes_plurality = minutesLeft === 1 ? translations['onlinegame'].minute : translations['onlinegame'].minutes;
+	statustext.showStatus(`${translations['onlinegame'].server_restarting_in} ${minutesLeft} ${minutes_plurality}...`, false, 2);
 	let nextKeyMinute: number;
 	for (const keyMinute of keyMinutes) {
 		if (keyMinute < minutesLeft) {
