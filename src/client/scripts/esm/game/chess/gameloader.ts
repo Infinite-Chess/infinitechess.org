@@ -147,6 +147,11 @@ async function startLocalGame(options: {
 	await loadGame(gameOptions, true, true);
 	typeOfGameWeAreIn = 'local';
 	localgame.initLocalGame();
+
+	// Open the gui stuff AFTER initiating the logical stuff,
+	// because the gui DEPENDS on the other stuff.
+
+	guigameinfo.open(gameOptions.metadata);
 }
 
 /**
@@ -168,6 +173,11 @@ async function startOnlineGame(options: JoinGameMessage) {
 	await loadGame(gameOptions, fromWhitePerspective, false);
 	typeOfGameWeAreIn = 'online';
 	onlinegame.initOnlineGame(options);
+	
+	// Open the gui stuff AFTER initiating the logical stuff,
+	// because the gui DEPENDS on the other stuff.
+
+	guigameinfo.open(gameOptions.metadata);
 }
 
 
@@ -201,7 +211,6 @@ async function loadGame(
 	
 	const gamefile = gameslot.getGamefile()!;
 	guinavigation.open(gamefile, { allowEditCoords }); // Editing your coords allowed in local games
-	guigameinfo.open(gameOptions.metadata);
 	guiclock.set(gamefile);
     
 	sound.playSound_gamestart();

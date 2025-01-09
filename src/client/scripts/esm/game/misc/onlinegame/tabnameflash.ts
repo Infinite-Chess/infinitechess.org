@@ -91,4 +91,5 @@ export default {
 	onGameStart,
 	onGameClose,
 	onMovePlayed,
+	cancelMoveSound,
 };
