@@ -38,7 +38,7 @@ let contributors = (() => {
 	if (fileIfExists) return JSON.parse(fileIfExists);
 	return [];
 })();
-// console.log(contributors);
+console.log(contributors);
 
 /** The interval, in milliseconds, to use GitHub's API to refresh the contributor list. */
 const intervalToRefreshContributorsMillis = 1000 * 60 * 60 * 3; // 3 hours
@@ -46,7 +46,7 @@ const intervalToRefreshContributorsMillis = 1000 * 60 * 60 * 3; // 3 hours
 
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
 const intervalId = setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis);
-// refreshGitHubContributorsList(); // Initial refreshal for dev testing
+refreshGitHubContributorsList(); // Initial refreshal for dev testing
 
 if (process.env.GITHUB_API_KEY === undefined || process.env.GITHUB_REPO === undefined) throw new Error('.env file is missing GITHUB_API_KEY or GITHUB_REPO, please regenerate the file or add the lines manually.');
 
@@ -107,7 +107,7 @@ function refreshGitHubContributorsList() {
 
 				if (currentContributors.length > 0) {
 					contributors = currentContributors;
-					await writeFile(join(dirname, PATH_TO_CONTRIBUTORS_FILE), JSON.stringify(contributors, null, 2));
+					await writeFile(join(__dirname, PATH_TO_CONTRIBUTORS_FILE), JSON.stringify(contributors, null, 2));
 					console.log("Contributors updated!");
 				}
 			} catch {
