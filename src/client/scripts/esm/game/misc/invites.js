@@ -56,7 +56,13 @@ function update() {
 }
 
 function unsubIfWeNotHave() {
-	if (!weHaveInvite) websocket.unsubFromInvites();
+	if (!weHaveInvite) unsubFromInvites();
+}
+
+/** Unsubscribes from the invites subscriptions list. */
+function unsubFromInvites() {
+	clear({ recentUsersInLastList: true });
+	websocket.unsubFromSub('invites');
 }
 
 
@@ -408,10 +414,11 @@ function doWeHave() {
  * */
 async function subscribeToInvites(ignoreAlreadySubbed) { // Set to true when we are restarting the connection and need to resub to everything we were to before.
 	if (!guiplay.isOpen()) return; // Don't subscribe to invites if we're not on the play page!
-	const subs = websocket.getSubs();
-	if (!ignoreAlreadySubbed && subs.invites) return;
+
+	const alreadySubbed = websocket.areSubbedToSub('invites');
+	if (!ignoreAlreadySubbed && alreadySubbed) return;
 	// console.log("Subbing to invites!");
-	subs.invites = true;
+	websocket.addSub('invites');
 	websocket.sendmessage("general", "sub", "invites");
 }
 
@@ -429,5 +436,6 @@ export default {
 	clearIfOnPlayPage,
 	unsubIfWeNotHave,
 	deleteInviteTagInLocalStorage,
-	subscribeToInvites
+	subscribeToInvites,
+	unsubFromInvites,
 };

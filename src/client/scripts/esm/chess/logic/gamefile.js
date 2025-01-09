@@ -19,6 +19,9 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
+/** @typedef {import('../util/coordutil.js').Coords} Coords */
+/** @typedef {import('../util/gamefileutility.js').PiecesByType} PiecesByType */
+/** @typedef {import('../util/gamefileutility.js').PiecesByKey} PiecesByKey */
 
 'use strict';
 
@@ -83,9 +86,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		moveRule: undefined
 	};
 
-	/** Pieces organized by type: `{ queensW:[[1,2],[2,3]] }` */
+	/** Pieces organized by type: `{ queensW:[[1,2],[2,3]] }` @type {PiecesByType} */
 	this.ourPieces = undefined;
-	/** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` */
+	/** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` @type {PiecesByKey} */
 	this.piecesOrganizedByKey = undefined;
 	/** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` */
 	this.piecesOrganizedByLines = undefined;
@@ -225,7 +228,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * which is whos turn it was at the *beginning* of the game. */
 	this.whosTurn = this.gameRules.turnOrder[0];
 	/** If the currently-viewed move is in check, this will be a list of coordinates
-     * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {number[][]} */
+     * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {Coords[] | false} */
 	this.inCheck = false;
 	/** List of maximum 2 pieces currently checking whoever's turn is next,
      * with their coords and slidingCheck property. ONLY USED with `checkmate` wincondition!!

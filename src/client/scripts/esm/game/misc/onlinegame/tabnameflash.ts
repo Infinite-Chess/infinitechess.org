@@ -30,15 +30,21 @@ function onGameStart({ isOurMove }: { isOurMove: boolean }) {
 	onMovePlayed({ isOpponents: isOurMove });
 }
 
+/** Called when the online game is closed */
 function onGameClose() {
-	timeoutID = undefined;
+	cancelFlashTabTimer();
+	cancelMoveSound();
 }
 
 function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
-	if (!isOpponents) return;
-	// Flash the tab name
-	flashTabNameYOUR_MOVE(true);
-	scheduleMoveSound_timeoutID();
+	if (isOpponents) {
+		// Flash the tab name
+		flashTabNameYOUR_MOVE(true);
+		scheduleMoveSound_timeoutID();
+	} else { // our move
+		// Stop flashing the tab name
+		cancelFlashTabTimer();
+	}
 }
 
 /**

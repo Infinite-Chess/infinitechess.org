@@ -210,7 +210,7 @@ function onHibernate() {
 	//console.log("Set hibernating to true!")
 
 	// Unsub from invites list
-	websocket.unsubFromInvites();
+	invites.unsubFromInvites();
 }
 
 

@@ -39,7 +39,9 @@ function start() {
 
 	initListeners();
 
-	onlinegame.askServerIfWeAreInGame();
+	// Immediately asks the server if we are in a game.
+	// If so, it will send the info to join it.
+	websocket.sendmessage('game', 'joingame', undefined, true);
 
 	gameLoop(); // Update & draw the scene repeatedly
 }
