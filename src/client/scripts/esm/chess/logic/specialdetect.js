@@ -102,7 +102,7 @@ function kings(gamefile, coords, color, individualMoves) {
 
 	const oppositeColor = colorutil.getOppositeColor(color);
 	if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, 'checkmate')) {
-		if (gamefile.inCheck) return; // Not legal if in check
+		if (gamefileutility.isCurrentViewedPositionInCheck(gamefile)) return; // Not legal if in check
 
 		// Simulate the space in-between
 

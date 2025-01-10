@@ -3,10 +3,10 @@
 import movement from './movement.js';
 import options from './options.js';
 import piecesmodel from './piecesmodel.js';
-import game from '../chess/game.js';
 import { createModel } from './buffermodel.js';
 import board from './board.js';
 import coordutil from '../../chess/util/coordutil.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /** 
@@ -31,7 +31,7 @@ const POINTS_PER_SQUARE_WIREFRAME = 12; // Compared to  piecesmodel.POINTS_PER_S
 
 function regenModel(gamefile) {
 	/** A list of coordinates of all voids in the gamefile */
-	const voidList = game.getGamefile().ourPieces.voidsN;
+	const voidList = gameslot.getGamefile().ourPieces.voidsN;
 	if (!voidList) return; // No voids are present in this game
 
 	// Simplify the mesh by combining adjacent voids into larger rectangles!

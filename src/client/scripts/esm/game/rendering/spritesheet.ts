@@ -108,7 +108,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	// This is what may take a while, waiting for the fetch requests to return.
 	await fetchMissingPieceSVGs(typesNeeded);
 
-	console.log("Finished acquiring all piece SVGs!");
+	// console.log("Finished acquiring all piece SVGs!");
 
 	/** The SVG elements we will use in the game to construct our spritesheet */
 	const svgElements = getCachedSVGElements(svgIDs);
@@ -143,8 +143,12 @@ async function fetchMissingPieceSVGs(typesNeeded: string[]) {
 	// Remove the classical pieces, are they are being fetched already by fetchAndCacheClassicalPieceSVGs()
 	typesMissing = typesMissing.filter((type: string) => !piecesInTheClassicalSVGGroup.includes(type));
 
-	if (typesMissing.length === 0) return console.log("All piece SVGs for the game are present! No need to fetch more.");
-	else console.log(`Fetching missing piece types: ${JSON.stringify(typesMissing)}`);
+	if (typesMissing.length === 0) {
+		// console.log("All piece SVGs for the game are present! No need to fetch more.");
+		return;
+	} else {
+		// console.log(`Fetching missing piece types: ${JSON.stringify(typesMissing)}`);
+	}
 
 	return await fetchAllPieceSVGs(typesMissing);
 }
@@ -214,7 +218,7 @@ function getSVG_IDs_From_PieceType(type: string): string[] {
 
 // Do this by default whenever we load the page, as EVERY variant requires most of these pieces!
 (async function fetchAndCacheClassicalPieceSVGs() {
-	console.log("Fetching all Classical SVGs...");
+	// console.log("Fetching all Classical SVGs...");
 	const svgIDs = getSVG_IDsFromPieceTypes(piecesInTheClassicalSVGGroup);
 	const classicalSVGElements = await fetchPieceSVGs('classical.svg', svgIDs);
 	// cachedPieceTypes.push(...piecesInTheClassicalSVGGroup);
@@ -223,7 +227,7 @@ function getSVG_IDs_From_PieceType(type: string): string[] {
 		if (cachedPieceSVGs[svg.id]) return console.error(`Skipping caching piece svg of id ${svg.id} because it was already cached. This fetch request was a duplicate.`);
 		else cachedPieceSVGs[svg.id] = svg;
 	});
-	console.log("Fetched all Classical SVGs!");
+	// console.log("Fetched all Classical SVGs!");
 })();
 
 function getCachedSVGElements(svgIDs: string[]) {

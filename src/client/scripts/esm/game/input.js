@@ -15,7 +15,7 @@ import jsutil from '../util/jsutil.js';
 import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
-import game from './chess/game.js';
+import gameslot from './chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -257,8 +257,8 @@ function convertCoords_CenterOrigin(object) { // object is the event, or touch o
 	// From canvas bottom left
 	const rawX = object.clientX - camera.getCanvasRect().left;
 	const rawY = -(object.clientY - camera.getCanvasRect().top);
-	const canvasPixelWidth = camera.canvas.width / camera.getPixelDensity(); // In virtual pixels, NOT physical
-	const canvasPixelHeight = camera.canvas.height / camera.getPixelDensity(); // In virtual pixels, NOT physical
+	const canvasPixelWidth = camera.canvas.width / window.devicePixelRatio; // In virtual pixels, NOT physical
+	const canvasPixelHeight = camera.canvas.height / window.devicePixelRatio; // In virtual pixels, NOT physical
 	// in pixels, relative to screen center
 	return [rawX - canvasPixelWidth / 2, rawY + canvasPixelHeight / 2];
 }
@@ -456,7 +456,7 @@ function initMouseSimulatedClick() {
 function executeMouseSimulatedClick() {
 	if (!timeMouseDownSeconds || !mouseIsSupported) return;
 	// THIS PREVENTS A BUG THAT RANDOMLY SELECTS A PIECE AS SOON AS YOU START A GAME
-	if (!game.areInGame()) return;
+	if (gameslot.areWeLoading()) return;
 
 	// See if the mouse was released fast enough to simulate a click!
 	const nowSeconds = new Date().getTime() / 1000;

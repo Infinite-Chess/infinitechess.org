@@ -1,9 +1,9 @@
 
 // Import Start
 import board from './board.js';
-import game from '../chess/game.js';
 import movement from './movement.js';
 import { createModel } from './buffermodel.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /**
@@ -19,7 +19,7 @@ const startEnd = [-3, 12];
 const thickness = 0.010;
 
 function render() {
-	if (!game.getGamefile().gameRules.promotionRanks) return; // No promotion ranks in this game
+	if (!gameslot.getGamefile().gameRules.promotionRanks) return; // No promotion ranks in this game
 	const model = initModel();
 
 	const boardPos = movement.getBoardPos();
@@ -48,7 +48,7 @@ function initModel() {
 	const startX = startEnd[0] - board.gsquareCenter();
 	const endX = startEnd[1] + 1 - board.gsquareCenter();
 
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
     
 	const yLow1 = gamefile.gameRules.promotionRanks[0] + 1 - board.gsquareCenter() - thickness;
 	const yHigh1 = gamefile.gameRules.promotionRanks[0] + 1 - board.gsquareCenter() + thickness;

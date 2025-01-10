@@ -55,7 +55,7 @@ function hasItemExpired(save) {
 function eraseExpiredItems() {
 	const keys = Object.keys(localStorage);
 
-	if (keys.length > 0) console.log(`Items in local storage: ${JSON.stringify(keys)}`);
+	// if (keys.length > 0) console.log(`Items in local storage: ${JSON.stringify(keys)}`);
 
 	for (const key of keys) {
 		loadItem(key); // Auto-deletes expired items

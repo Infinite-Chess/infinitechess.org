@@ -15,6 +15,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from './coordutil.js';
 import winconutil from './winconutil.js';
 import gamerules from '../variants/gamerules.js';
+import metadata from './metadata.js';
 // Import End
 
 
@@ -403,6 +404,25 @@ function isGameOver(gamefile) {
 }
 
 /**
+ * Returns true if the currently-viewed position of the game file is in check
+ * @param {gamefile} gamefile 
+ * @returns {boolean}
+ */
+function isCurrentViewedPositionInCheck(gamefile) {
+	return gamefile.inCheck !== false;
+}
+
+/**
+ * Returns a list of coordinates of all royals
+ * in check in the currently-viewed position.
+ * @param {gamefile} gamefile 
+ * @returns {[number,number][]}
+ */
+function getCheckCoordsOfCurrentViewedPosition(gamefile) {
+	return gamefile.inCheck || []; // Return an empty array if we're not in check.
+}
+
+/**
  * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
  * @param {gamefile} gamefile - The gamefile
  */
@@ -414,7 +434,7 @@ function setTerminationMetadata(gamefile) {
 	gamefile.metadata.Termination = condition;
 
 	const victor = victorAndCondition.victor; // white/black/draw/undefined
-	gamefile.metadata.Result = winconutil.getResultFromVictor(victor);
+	gamefile.metadata.Result = metadata.getResultFromVictor(victor);
 }
 
 /**
@@ -466,6 +486,8 @@ export default {
 	calcPieceIndexInAllPieces,
 	isPieceOnCoords,
 	isGameOver,
+	isCurrentViewedPositionInCheck,
+	getCheckCoordsOfCurrentViewedPosition,
 	setTerminationMetadata,
 	isOpponentUsingWinCondition,
 	doGameOverChecks,

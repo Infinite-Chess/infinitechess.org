@@ -25,7 +25,6 @@ import wincondition from './wincondition.js';
 // Custom type definitions...
 
 
-
 /** Here lies the universal methods for moving pieces, forward or rewinding. */
 
 /**

@@ -11,13 +11,13 @@ import options from './options.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
-import game from '../chess/game.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /** 
@@ -144,7 +144,7 @@ function recalcTileWidth_Pixels() {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = options.isDebugModeOn() ? camera.getScreenBoundingBox(true) : camera.getScreenBoundingBox(false);
 	// In physical pixels, not virtual. Physical pixels is greater for retina displays.
-	const pixelsPerTile = (camera.canvas.height * 0.5 / screenBoundingBox.top) / camera.getPixelDensity(); // When scale is 1
+	const pixelsPerTile = (camera.canvas.height * 0.5 / screenBoundingBox.top) / window.devicePixelRatio; // When scale is 1
 	tileWidth_Pixels = pixelsPerTile * movement.getBoardScale();
 }
 
@@ -297,7 +297,7 @@ function isOffsetOutOfRangeOfRegenRange(offset, regenRange) { // offset: [x,y]
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme() {
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	if (gamefile && gamefileutility.isGameOver(gamefile)) darkenColor(); // Reset to slightly darkened board
 	else resetColor(); // Reset to defaults
 	updateSkyColor();

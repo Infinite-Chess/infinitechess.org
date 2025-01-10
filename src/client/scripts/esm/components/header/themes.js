@@ -161,6 +161,7 @@ const themeDictionary = {
 		[legalMovesHighlightColor_Opponent]: [1, 0.72, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.26, 0.36],
 		[lastMoveHighlightColor]: [0.28, 1, 0, 0.28],
+		[boxOutlineColor]: [0, 0, 0, 0.25],
 	},
 	poison: {
 		[lightTiles]: [0.93, 0.93, 0.93, 1],

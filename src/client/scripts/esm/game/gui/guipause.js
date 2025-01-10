@@ -2,9 +2,7 @@
 // Import Start
 import onlinegame from '../misc/onlinegame.js';
 import style from './style.js';
-import game from '../chess/game.js';
 import arrows from '../rendering/arrows.js';
-import guinavigation from './guinavigation.js';
 import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
 import drawoffers from '../misc/drawoffers.js';
@@ -12,6 +10,8 @@ import guititle from './guititle.js';
 import moveutil from '../../chess/util/moveutil.js';
 import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
+import gameloader from '../chess/gameloader.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -58,7 +58,7 @@ function toggle() {
 }
 
 function updatePasteButtonTransparency() {
-	const moves = game.getGamefile().moves;
+	const moves = gameslot.getGamefile().moves;
 	const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
 
 	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
@@ -102,7 +102,7 @@ function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = 
 
 	if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
 
-	if (moveutil.isGameResignable(game.getGamefile())) {
+	if (moveutil.isGameResignable(gameslot.getGamefile())) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
 		if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations.abort_game) {
 			element_mainmenu.disabled = true;
@@ -149,11 +149,9 @@ function callback_Resume() {
 
 function callback_MainMenu() {
 	onlinegame.onMainMenuPress();
-	onlinegame.closeOnlineGame();
 	callback_Resume();
-	game.unloadGame();
+	gameloader.unloadGame();
 
-	guinavigation.close();
 	guititle.open();
 }
 

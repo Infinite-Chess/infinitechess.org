@@ -35,7 +35,7 @@ function start() {
 
 	browsersupport.checkBrowserSupport();
 
-	game.init(); // Initiates textures, buffer models for rendering, and the title screen.
+	game.init();
 
 	initListeners();
 

@@ -3,14 +3,11 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame.js";
 // @ts-ignore
-import game from "./game.js";
-// @ts-ignore
 import arrows from "../rendering/arrows.js";
 // @ts-ignore
 import frametracker from "../rendering/frametracker.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
-// @ts-ignore
 import guinavigation from "../gui/guinavigation.js";
 // @ts-ignore
 import movepiece from "../../chess/logic/movepiece.js";
@@ -20,8 +17,8 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import clock from "../../chess/logic/clock.js";
-// @ts-ignore
 import coordutil from "../../chess/util/coordutil.js";
+import gameslot from "./gameslot.js";
 
 import boardchanges from "../../chess/logic/boardchanges.js";
 import { animatableChanges, meshChanges } from "./graphicalchanges.js";
@@ -52,7 +49,7 @@ function makeMove(gamefile: gamefile, move: Move, { doGameOverChecks = true, con
 
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
-		if (concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) game.concludeGame();
+		if (concludeGameIfOver && gamefile.gameConclusion && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
 	guinavigation.update_MoveButtons();

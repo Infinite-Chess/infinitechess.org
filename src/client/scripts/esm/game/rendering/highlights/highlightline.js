@@ -1,35 +1,33 @@
 
+/**
+ * This script renders our single-line legal sliding moves
+ * when we are zoomed out far.
+ */
+
 // Import Start
-import input from '../input.js';
-import bufferdata from './bufferdata.js';
-import perspective from './perspective.js';
-import miniimage from './miniimage.js';
-import board from './board.js';
-import transition from './transition.js';
-import organizedlines from '../../chess/logic/organizedlines.js';
-import options from './options.js';
-import selection from '../chess/selection.js';
-import camera from './camera.js';
-import math from '../../util/math.js';
-import movement from './movement.js';
-import { createModel } from './buffermodel.js';
-import jsutil from '../../util/jsutil.js';
-import coordutil from '../../chess/util/coordutil.js';
-import space from '../misc/space.js';
-import spritesheet from './spritesheet.js';
+import input from '../../input.js';
+import bufferdata from '../bufferdata.js';
+import perspective from '../perspective.js';
+import miniimage from '../miniimage.js';
+import board from '../board.js';
+import transition from '../transition.js';
+import organizedlines from '../../../chess/logic/organizedlines.js';
+import options from '../options.js';
+import selection from '../../chess/selection.js';
+import camera from '../camera.js';
+import math from '../../../util/math.js';
+import movement from '../movement.js';
+import { createModel } from '../buffermodel.js';
+import jsutil from '../../../util/jsutil.js';
+import coordutil from '../../../chess/util/coordutil.js';
+import space from '../../misc/space.js';
+import spritesheet from '../spritesheet.js';
 // Import End
 
 /**
  * Type Definitions
- * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- */
-
-"use strict";
-
-/**
- * This script renders our single-line legal sliding moves
- * when we are zoomed out far.
+ * @typedef {import('../buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../../../util/math.js').BoundingBox} BoundingBox
  */
 
 /** The buffer model of the legal move lines when zoomed out.

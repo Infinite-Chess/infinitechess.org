@@ -11,12 +11,13 @@ import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
+import guinavigation from '../gui/guinavigation.js';
+import movement from './movement.js';
 // Import End
 
 /**
  * Type Definitions
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
  */
 
 "use strict";
@@ -47,12 +48,10 @@ const zFar = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  perspective.
 // Header = 40
 // Footer = 59.5
 const MARGIN_OF_HEADER_AND_FOOTER = 41; // UPDATE with the html document  ---  !!! This is the sum of the heights of the page's navigation bar and footer. 40 + 1 for border
-// How many physical pixels per virtual pixel on the device screen? For retina displays this is usually 2 or 3.
-const pixelDensity = window.devicePixelRatio;
 let PIXEL_HEIGHT_OF_TOP_NAV = undefined; // In virtual pixels
 let PIXEL_HEIGHT_OF_BOTTOM_NAV = undefined; // In virtual pixels.
 
-/** The canvas document element that WebGL renders the game onto. */
+/** The canvas document element that WebGL renders the game onto. @type {HTMLCanvasElement} */
 const canvas = document.getElementById('game');
 let canvasWidthVirtualPixels;
 let canvasHeightVirtualPixels;
@@ -89,15 +88,6 @@ function getPosition(ignoreDevmode) {
 
 function getZFar() {
 	return zFar;
-}
-
-/**
- * Returns the pixel density of the screen using window.devicePixelRatio.
- * 1 is non-retina, 2+ is retina.
- * @returns {number} The pixel density
- */
-function getPixelDensity() {
-	return pixelDensity;
 }
 
 function getPIXEL_HEIGHT_OF_TOP_NAV() {
@@ -197,8 +187,8 @@ function updateCanvasDimensions() {
 	canvasHeightVirtualPixels = (window.innerHeight - MARGIN_OF_HEADER_AND_FOOTER);
 
 	// Size of entire window in physical pixels, not virtual. Retina displays have a greater width.
-	canvas.width = canvasWidthVirtualPixels * pixelDensity; 
-	canvas.height = canvasHeightVirtualPixels * pixelDensity;
+	canvas.width = canvasWidthVirtualPixels * window.devicePixelRatio; 
+	canvas.height = canvasHeightVirtualPixels * window.devicePixelRatio;
 
 	gl.viewport(0, 0, canvas.width, canvas.height);
 
@@ -208,12 +198,12 @@ function updateCanvasDimensions() {
 }
 
 function updatePIXEL_HEIGHT_OF_NAVS() {
-	PIXEL_HEIGHT_OF_TOP_NAV = !options.getNavigationVisible() ? 0
+	PIXEL_HEIGHT_OF_TOP_NAV = !guinavigation.isOpen() ? 0
                                     : window.innerWidth > 700 ? 84  // Update with the css stylesheet!
                                     : window.innerWidth > 550 ? window.innerWidth * 0.12
                                     : window.innerWidth > 368 ? 66
                                                                 : window.innerWidth * 0.179;
-	PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.getNavigationVisible() ? 0 : 84;
+	PIXEL_HEIGHT_OF_BOTTOM_NAV = !guinavigation.isOpen() ? 0 : 84;
 	frametracker.onVisualChange();
 
 	stats.updateStatsCSS();
@@ -223,7 +213,11 @@ function recalcCanvasVariables() {
 	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	initScreenBoundingBox();
 
-	game.updateVariablesAfterScreenResize();
+	// Recalculate scale at which 1 tile = 1 pixel       world-space                physical pixels
+	movement.setScale_When1TileIs1Pixel_Physical((screenBoundingBox.right * 2) / canvas.width);
+	movement.setScale_When1TileIs1Pixel_Virtual(movement.getScale_When1TileIs1Pixel_Physical() * window.devicePixelRatio);
+	// console.log(`Screen width: ${camera.getScreenBoundingBox(false).right * 2}. Canvas width: ${camera.canvas.width}`)
+
 	miniimage.recalcWidthWorld();
 }
 
@@ -324,7 +318,6 @@ function onPositionChange() {
 
 export default {
 	getPosition,
-	getPixelDensity,
 	getPIXEL_HEIGHT_OF_TOP_NAV,
 	getPIXEL_HEIGHT_OF_BOTTOM_NAV,
 	canvas,

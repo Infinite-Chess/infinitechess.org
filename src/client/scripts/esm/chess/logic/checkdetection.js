@@ -282,7 +282,8 @@ function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, col
 	// There are 2 ways a sliding move can put you in check:
 
 	// 1. By not blocking, or capturing an already-existing check.
-	if (addressExistingChecks(gamefile, moves, gamefile.inCheck, pieceSelected.coords, color)) return;
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+	if (addressExistingChecks(gamefile, moves, royalsInCheck, pieceSelected.coords, color)) return;
 
 	// 2. By opening a discovered on your king.
 	royalCoords.forEach(thisRoyalCoords => { // Don't let the piece open a discovered on ANY of our royals! Not just one.
@@ -300,7 +301,7 @@ function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, col
  * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
  */
 function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
-	if (!gamefile.inCheck) return false; // Exit if not in check
+	if (royalCoords.length === 0) return false; // Exit if nothing in check
 	if (!isColorInCheck(gamefile, color)) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
 	const attackerCount = gamefile.attackers.length;
@@ -347,7 +348,11 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
  */
 function isColorInCheck(gamefile, color) {
 	const royals = gamefileutility.getRoyalCoordsOfColor(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
-	const checkedRoyals = gamefile.inCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+	if (royalsInCheck.length === 0) return false;
+
+	const checkedRoyals = royalsInCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	// If the set is the same length as our royals + checkedRoyals, in means none of them has matching coordinates.
 	return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length);
 }
 

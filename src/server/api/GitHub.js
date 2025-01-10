@@ -13,7 +13,10 @@ import { join } from 'node:path';
 import { readFileIfExists } from '../utility/fileUtils.js';
 import { writeFile } from 'node:fs/promises';
 import { HOST_NAME } from '../config/config.js';
-const dirname = import.meta.dirname;
+import path from 'path';
+
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 // Variables ---------------------------------------------------------------------------
@@ -31,7 +34,7 @@ const PATH_TO_CONTRIBUTORS_FILE = '../../../database/contributors.json';
   }
  */
 let contributors = (() => {
-	const fileIfExists = readFileIfExists(join(dirname, PATH_TO_CONTRIBUTORS_FILE));
+	const fileIfExists = readFileIfExists(join(__dirname, PATH_TO_CONTRIBUTORS_FILE));
 	if (fileIfExists) return JSON.parse(fileIfExists);
 	return [];
 })();
@@ -104,7 +107,7 @@ function refreshGitHubContributorsList() {
 
 				if (currentContributors.length > 0) {
 					contributors = currentContributors;
-					await writeFile(join(dirname, PATH_TO_CONTRIBUTORS_FILE), JSON.stringify(contributors, null, 2));
+					await writeFile(join(__dirname, PATH_TO_CONTRIBUTORS_FILE), JSON.stringify(contributors, null, 2));
 					console.log("Contributors updated!");
 				}
 			} catch {

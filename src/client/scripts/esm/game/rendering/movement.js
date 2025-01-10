@@ -13,6 +13,7 @@ import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -56,8 +57,13 @@ let scale_When1TileIs1Pixel_Virtual; // Scale limit where each tile takes up exa
 let scaleIsLess1Pixel_Physical = false;
 let scaleIsLess1Pixel_Virtual = false; // Set to true when we're so zoomed out, 1 cell is smaller than 1 pixel!! Everything renders differently!
 
-// Returns a copy of the boardPos in memory, otherwise the memory location
-// could be used to modify the original.
+// 
+
+/**
+ * Returns a copy of the boardPos in memory, otherwise the memory location
+ * could be used to modify the original.
+ * @returns {[number,number]}
+ */
 function getBoardPos() {
 	return coordutil.copyCoords(boardPos);
 }
@@ -134,7 +140,7 @@ function recalcPosition() {
 
 // Updates board position dependant on panVel
 function panBoard() {
-	if (loadbalancer.gisAFK() && !game.areInGame()) return; // Exit if we're AFK. Save our CPU!
+	if (loadbalancer.gisAFK() && gameslot.areWeLoading()) return; // Exit if we're AFK. Save our CPU!
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
     
 	frametracker.onVisualChange(); // Visual change, render the screen this frame.

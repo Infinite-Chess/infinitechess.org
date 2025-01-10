@@ -13,9 +13,6 @@ import organizedlines from "../../chess/logic/organizedlines.js";
 
 
 // Type Definitions -----------------------------------------------------------------------------------------
-
-
-// @ts-ignore
 import type { ChangeApplication, Change, genericChangeFunc } from "../../chess/logic/boardchanges.js";
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";

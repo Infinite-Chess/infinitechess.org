@@ -1,23 +1,42 @@
 
-// Import Start
+// @ts-ignore
 import board from '../rendering/board.js';
+// @ts-ignore
 import moveutil from '../../chess/util/moveutil.js';
+// @ts-ignore
 import movement from '../rendering/movement.js';
-import game from '../chess/game.js';
+// @ts-ignore
 import style from './style.js';
+// @ts-ignore
 import input from '../input.js';
+// @ts-ignore
 import guipause from './guipause.js';
+// @ts-ignore
 import area from '../rendering/area.js';
+// @ts-ignore
 import transition from '../rendering/transition.js';
+// @ts-ignore
 import gamefileutility from '../../chess/util/gamefileutility.js';
+// @ts-ignore
 import statustext from './statustext.js';
+// @ts-ignore
 import stats from './stats.js';
+// @ts-ignore
 import selection from '../chess/selection.js';
+// @ts-ignore
 import frametracker from '../rendering/frametracker.js';
+// @ts-ignore
+import guigameinfo from './guigameinfo.js';
+// @ts-ignore
+import onlinegame from '../misc/onlinegame.js';
+// @ts-ignore
+import camera from '../rendering/camera.js';
 import movesequence from '../chess/movesequence.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
-"use strict";
+// @ts-ignore
+import type gamefile from '../../chess/logic/gamefile.js';
 
 /**
  * This script handles the navigation bar, in a game,
@@ -25,19 +44,19 @@ import movesequence from '../chess/movesequence.js';
  * buttons, rewind move, forward move, and pause buttons.
  */
 
-const element_Navigation = document.getElementById('navigation');
+const element_Navigation = document.getElementById('navigation')!;
 
 // Navigation
-const element_Recenter = document.getElementById('recenter');
-const element_Expand = document.getElementById('expand');
-const element_Back = document.getElementById('back');
+const element_Recenter = document.getElementById('recenter')!;
+const element_Expand = document.getElementById('expand')!;
+const element_Back = document.getElementById('back')!;
 
-const element_CoordsX = document.getElementById('x');
-const element_CoordsY = document.getElementById('y');
+const element_CoordsX = document.getElementById('x') as HTMLInputElement;
+const element_CoordsY = document.getElementById('y') as HTMLInputElement;
 
-const element_moveRewind = document.getElementById('move-left');
-const element_moveForward = document.getElementById('move-right');
-const element_pause = document.getElementById('pause');
+const element_moveRewind = document.getElementById('move-left')!;
+const element_moveForward = document.getElementById('move-right')!;
+const element_pause = document.getElementById('pause')!;
 
 const MAX_TELEPORT_DIST = Infinity;
 
@@ -46,29 +65,65 @@ const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind
 const minimumRewindIntervalMillis = 20; // Rewinding can never be spammed faster than this
 let lastRewindOrForward = 0;
 
-let leftArrowTimeoutID; // setTimeout to BEGIN rewinding
-let leftArrowIntervalID; // setInterval to CONTINUE rewinding
+let leftArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN rewinding
+let leftArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE rewinding
 let touchIsInsideLeft = false;
 
-let rightArrowTimeoutID; // setTimeout to BEGIN rewinding
-let rightArrowIntervalID; // setInterval to CONTINUE rewinding
+let rightArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN rewinding
+let rightArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE rewinding
 let touchIsInsideRight = false;
 
 let rewindIsLocked = false;
 const durationToLockRewindAfterMoveForwardingMillis = 750;
 
+/** The gamefile the navigation UI was opened for. */
+let activeGamefile: gamefile | undefined;
+
+/** Whether the navigation UI is visible (not hidden) */
+let navigationOpen = true;
 
 
-// Functions
+// Functions'
 
-function open({ allowEditCoords = true } = {}) {
+function isOpen() {
+	return open;
+}
+
+/** Called when we push 'N' on the keyboard */
+function toggleNavigationBar() {
+	// We should only ever do this if we are in a game!
+	if (!activeGamefile) return;
+	if (navigationOpen) close();
+	else open(activeGamefile);
+
+	navigationOpen = !navigationOpen;
+
+	onToggleNavigationBar();
+}
+
+function onToggleNavigationBar() {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) throw Error("Should not have toggled navigation bar when there's no game. The listener should have been closed.");
+	if (navigationOpen) {
+		open(gamefile, { allowEditCoords: !onlinegame.areInOnlineGame() });
+		guigameinfo.open();
+	}
+	else close();
+
+	camera.updatePIXEL_HEIGHT_OF_NAVS();
+}
+
+function open(gamefile: gamefile, { allowEditCoords = true }: { allowEditCoords?: boolean } = {}) {
+
+	activeGamefile = gamefile;
 	style.revealElement(element_Navigation);
 	initListeners_Navigation();
 	update_MoveButtons();
-	initCoordinates({allowEditCoords});
+	initCoordinates({ allowEditCoords });
+	navigationOpen = true;
 }
 
-function initCoordinates({ allowEditCoords }) {
+function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }) {
 	if (allowEditCoords) {
 		element_CoordsX.disabled = false;
 		element_CoordsY.disabled = false;
@@ -83,9 +138,16 @@ function initCoordinates({ allowEditCoords }) {
 }
 
 function close() {
+	activeGamefile = undefined;
 	style.hideElement(element_Navigation);
 	closeListeners_Navigation();
+	navigationOpen = false;
 }
+
+
+
+
+
 
 // Update the division on the screen displaying your current coordinates
 function updateElement_Coords() {
@@ -189,29 +251,35 @@ function callback_CoordsChange() {
 	movement.setBoardPos([newX, newY]);
 }
 
-function callback_Back(event) {
+function callback_Back() {
 	transition.telToPrevTel();
 }
 
-function callback_Expand(event) {
-	const allCoords = gamefileutility.getCoordsOfAllPieces(game.getGamefile());
+function callback_Expand() {
+	const allCoords = gamefileutility.getCoordsOfAllPieces(activeGamefile);
 	area.initTelFromCoordsList(allCoords);
 }
 
-function callback_Recenter(event) {
-	const boundingBox = game.getGamefile().startSnapshot.box;
+function callback_Recenter() {
+	if (!activeGamefile) throw Error('Should not call Recenter when activeGamefile not defined.');
+	recenter(activeGamefile);
+
+}
+
+function recenter(gamefile: gamefile) {
+	const boundingBox = gamefile!.startSnapshot.box;
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
 
-function callback_MoveRewind(event) {
+function callback_MoveRewind() {
 	if (rewindIsLocked) return;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrForward = Date.now();
 	rewindMove();
 }
 
-function callback_MoveForward(event) {
+function callback_MoveForward() {
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrForward = Date.now();
 	forwardMove();
@@ -227,8 +295,8 @@ function isItOkayToRewindOrForward() {
  * the very beginning or end of the game.
  */
 function update_MoveButtons() {
-	const decrementingLegal = moveutil.isDecrementingLegal(game.getGamefile());
-	const incrementingLegal = moveutil.isIncrementingLegal(game.getGamefile());
+	const decrementingLegal = moveutil.isDecrementingLegal(activeGamefile!);
+	const incrementingLegal = moveutil.isIncrementingLegal(activeGamefile!);
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -237,7 +305,7 @@ function update_MoveButtons() {
 	else element_moveForward.classList.add('opacity-0_5');
 }
 
-function callback_Pause(event) {
+function callback_Pause() {
 	guipause.open();
 }
 
@@ -291,10 +359,9 @@ function callback_MoveRewindTouchStart() {
 	}, timeToHoldMillis);
 }
 
-function callback_MoveRewindTouchMove(event) {
-	event = event || window.event;
+function callback_MoveRewindTouchMove(event: TouchEvent) {
 	if (!touchIsInsideLeft) return;
-	const touch = event.touches[0];
+	const touch = event.touches[0]!;
 	const rect = element_moveRewind.getBoundingClientRect();
 	if (touch.clientX > rect.left &&
         touch.clientX < rect.right &&
@@ -322,10 +389,10 @@ function callback_MoveForwardTouchStart() {
 	}, timeToHoldMillis);
 }
 
-function callback_MoveForwardTouchMove(event) {
+function callback_MoveForwardTouchMove(event: TouchEvent) {
 	event = event || window.event;
 	if (!touchIsInsideRight) return;
-	const touch = event.touches[0];
+	const touch = event.touches[0]!;
 	const rect = element_moveForward.getBoundingClientRect();
 	if (touch.clientX > rect.left &&
         touch.clientX < rect.right &&
@@ -379,14 +446,12 @@ function testIfForwardMove() {
 
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function rewindMove() {
-	const gamefile = game.getGamefile();
-
-	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
-	if (!moveutil.isDecrementingLegal(game.getGamefile())) return stats.showMoves();
+	if (activeGamefile!.mesh.locked) return statustext.pleaseWaitForTask();
+	if (!moveutil.isDecrementingLegal(activeGamefile!)) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
-	movesequence.navigateMove(gamefile, false);
+	movesequence.navigateMove(activeGamefile!, false);
     
 	selection.unselectPiece();
 
@@ -397,21 +462,27 @@ function rewindMove() {
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
-	const gamefile = game.getGamefile();
 
-	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
-	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
+	if (activeGamefile!.mesh.locked) return statustext.pleaseWaitForTask();
+	if (!moveutil.isIncrementingLegal(activeGamefile!)) return stats.showMoves();
 
-	movesequence.navigateMove(gamefile, true);
-
-	// transition.teleportToLastMove()
+	movesequence.navigateMove(activeGamefile!, true);
 
 	update_MoveButtons();
 
 	stats.showMoves();
 }
 
+/**
+ * Returns true if the coords input box is currently not allowed to be edited.
+ * This was set at the time they were opened.
+ */
+function areCoordsAllowedToBeEdited() {
+	return element_CoordsX.disabled;
+}
+
 export default {
+	isOpen,
 	open,
 	close,
 	updateElement_Coords,
@@ -420,5 +491,7 @@ export default {
 	lockRewind,
 	update,
 	isCoordinateActive,
-	callback_Recenter,
+	recenter,
+	toggleNavigationBar,
+	areCoordsAllowedToBeEdited,
 };

@@ -9,6 +9,8 @@ import preferences from "../../components/header/preferences.js";
 // @ts-ignore
 import themes from "../../components/header/themes.js";
 // @ts-ignore
+import thread from "../../util/thread.js";
+// @ts-ignore
 import style from "./style.js";
 
 
@@ -47,19 +49,25 @@ function initColorOfLoadingBackground() {
 	loadingScreen!.style.background = `repeating-conic-gradient(${darkTilesCSS} 0% 25%, ${lightTilesCSS} 0% 50%) 50% / ${widthOfTiles}vmin ${widthOfTiles}vmin`;
 }
 
-function open() {
+async function open() {
 	loadingScreen.classList.remove('transparent');
+	// This gives the document a chance to repaint, as otherwise our javascript
+	// will continue to run until the next animation frame, which could be a long time.
+	await thread.sleep(0);
 }
 
-function close() {
+async function close() {
 	loadingScreen.classList.add('transparent');
 
 	// Hide the error text and show the spinny pawn
 	element_spinnyPawn!.classList.remove('hidden');
 	element_loadingError!.classList.add('hidden');
+	// This gives the document a chance to repaint, as otherwise our javascript
+	// will continue to run until the next animation frame, which could be a long time.
+	await thread.sleep(0);
 }
 
-function onError(event: Event) {
+async function onError(event: Event) {
 	// const type = event.type; // Event type: "error"/"abort"
 	// const target = event.target; // Element that triggered the event
 	// const elementType = target?.tagName.toLowerCase();
@@ -73,6 +81,10 @@ function onError(event: Event) {
 	// const lostNetwork = !navigator.onLine;
 	// element_loadingErrorText!.textContent = lostNetwork ? translations['lost_network'] : translations['failed_to_load'];
 	element_loadingErrorText!.textContent = translations['failed_to_load'];
+	
+	// This gives the document a chance to repaint, as otherwise our javascript
+	// will continue to run until the next animation frame, which could be a long time.
+	await thread.sleep(0);
 }
 
 export default {

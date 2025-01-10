@@ -8,12 +8,12 @@ import statustext from '../gui/statustext.js';
 import { createModel } from './buffermodel.js';
 import onlinegame from '../misc/onlinegame.js';
 import mat4 from './gl-matrix.js';
-import game from '../chess/game.js';
 import input from '../input.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
 import preferences from '../../components/header/preferences.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /**
@@ -40,9 +40,6 @@ const mouseSensitivityMultiplier = 0.13; // 0.13 Default   This is Multiplied by
 
 // How far to render the board into the distance
 const distToRenderBoard = 1500; // Default 1500. When changing this, also change  camera.getZFar()
-
-// If in perspective, our box to render highlights gets out of range of this distance, they are regenerated.
-const viewRange = 1000;
 
 // Crosshair
 const crosshairThickness = 2.5; // Default: 2.5
@@ -77,7 +74,7 @@ function enable() {
 	lockMouse();
 
 	initCrosshairModel();
-	piecesmodel.initRotatedPiecesModel(game.getGamefile()); // Async
+	piecesmodel.initRotatedPiecesModel(gameslot.getGamefile()); // Async
 
 	statustext.showStatus(translations.rendering.movement_tutorial);
 }
@@ -94,7 +91,7 @@ function disable() {
     
 	resetRotations();
 
-	piecesmodel.eraseRotatedModel(game.getGamefile());
+	piecesmodel.eraseRotatedModel(gameslot.getGamefile());
 }
 
 // Sets rotations to orthographic view. Sensitive to if we're white or black.
@@ -277,7 +274,6 @@ export default {
 	getRotX,
 	getRotZ,
 	distToRenderBoard,
-	viewRange,
 	getIsViewingBlackPerspective,
 	toggle,
 	disable,

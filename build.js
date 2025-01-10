@@ -28,6 +28,7 @@ import { execSync } from 'node:child_process';
 const entryPoints = [
 	'dist/client/scripts/esm/game/main.js',
 	'dist/client/scripts/esm/components/header/header.js',
+	'dist/client/scripts/esm/views/index.js',
 	'dist/client/scripts/esm/views/member.js',
 ];
 

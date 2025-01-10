@@ -5,10 +5,9 @@ import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
 import onlinegame from '../misc/onlinegame.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
-import game from './game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import guipromotion from '../gui/guipromotion.js';
-import highlights from '../rendering/highlights.js';
+import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
@@ -25,6 +24,7 @@ import movesequence from './movesequence.js';
 import draganimation from '../rendering/draganimation.js';
 import space from '../misc/space.js';
 import preferences from '../../components/header/preferences.js';
+import gameslot from './gameslot.js';
 // Import End
 
 /**
@@ -121,7 +121,7 @@ function promoteToType(type) { promoteTo = type; }
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update() {
 	// Guard clauses...
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	// if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn
 	if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
 	if (pawnIsPromoting) { // Do nothing else this frame but wait for a promotion piece to be selected
@@ -201,7 +201,7 @@ function cancelDragging() {
  * @param {string} [pieceClickedType] - The type of piece clicked on, if there is one.
  */
 function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 
 	tag: if (pieceClickedType) {
 
@@ -257,7 +257,7 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
  * @param {string} [pieceClickedType] - The type of piece clicked on, if there is one.
  */
 function handleSelectingPiece(pieceClickedType) {
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 
 	// If we're viewing history, return. But also if we clicked a piece, forward moves.
 	if (!moveutil.areWeViewingLatestMove(gamefile)) {
@@ -293,14 +293,14 @@ function selectPiece(type, index, coords) {
 	frametracker.onVisualChange();
 	pieceSelected = { type, index, coords };
 	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-	legalMoves = legalmoves.calculate(game.getGamefile(), pieceSelected);
+	legalMoves = legalmoves.calculate(gameslot.getGamefile(), pieceSelected);
 
 	const pieceColor = colorutil.getPieceColorFromType(pieceSelected.type);
 	isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
-    /* Local Game */ : pieceColor !== game.getGamefile().whosTurn;
+    /* Local Game */ : pieceColor !== gameslot.getGamefile().whosTurn;
 	isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 
-	highlights.regenModel(); // Generate the buffer model for the blue legal move fields.
+	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
 
 /**
@@ -310,7 +310,7 @@ function selectPiece(type, index, coords) {
  */
 function reselectPiece() {
 	if (!pieceSelected) return; // No piece to reselect.
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	// Test if the piece is no longer there
 	// This will work for us long as it is impossible to capture friendly's
 	const pieceTypeOnCoords = gamefileutility.getPieceTypeAtCoords(gamefile, pieceSelected.coords);
@@ -319,7 +319,7 @@ function reselectPiece() {
 		return;
 	}
 
-	if (game.getGamefile().gameConclusion) return; // Don't reselect, game is over
+	if (gameslot.getGamefile().gameConclusion) return; // Don't reselect, game is over
 
 	// Reselect! Recalc its legal moves, and recolor.
 	const newIndex = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords).index;
@@ -339,6 +339,7 @@ function unselectPiece() {
 	guipromotion.close(); // Close the promotion UI
 	if (draggingPiece) cancelDragging();
 	frametracker.onVisualChange();
+	legalmovehighlights.onPieceUnselected();
 }
 
 /**
@@ -355,7 +356,7 @@ function moveGamefilePiece(coords) {
 	move.compact = compact;
 	const animateSelectedPiece = !draggingPiece;
 
-	movesequence.makeMove(game.getGamefile(), move);
+	movesequence.makeMove(gameslot.getGamefile(), move);
 	movesequence.animateMove(move, true, animateSelectedPiece);
 	onlinegame.sendMove();
 
@@ -366,7 +367,7 @@ function moveGamefilePiece(coords) {
 function makePromotionMove() {
 	const coords = pawnIsPromoting;
 	coords.promotion = promoteTo; // Add a tag on the coords of what piece we're promoting to
-	if (draggingPiece) draganimation.dropPiece(true, gamefileutility.isPieceOnCoords(game.getGamefile(), coords));
+	if (draggingPiece) draganimation.dropPiece(true, gamefileutility.isPieceOnCoords(gameslot.getGamefile(), coords));
 	moveGamefilePiece(coords);
 	perspective.relockMouse();
 }
@@ -382,7 +383,7 @@ function updateHoverSquareLegal() {
 		return;
 	}
 
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
 	const hoverSquareIsSameColor = typeAtHoverCoords && colorutil.getPieceColorFromType(pieceSelected.type) === colorutil.getPieceColorFromType(typeAtHoverCoords);
 	const hoverSquareIsVoid = !hoverSquareIsSameColor && typeAtHoverCoords === 'voidsN';
@@ -400,7 +401,7 @@ function canMovePieceType(pieceType) {
 	else if (options.getEM()) return true; //Edit mode allows pieces to be moved on any turn.
 	const pieceColor = colorutil.getPieceColorFromType(pieceType);
 	const isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
-	/* Local Game */ : pieceColor !== game.getGamefile().whosTurn;
+	/* Local Game */ : pieceColor !== gameslot.getGamefile().whosTurn;
 	if (isOpponentPiece) return false; // Don't move opponent pieces
 	const isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
 	return (!isPremove /*|| premovesEnabled*/);
