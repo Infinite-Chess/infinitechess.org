@@ -47,7 +47,7 @@ interface Change {
  * depending on the function, BUT NOT BOTH.
  */
 // eslint-disable-next-line no-unused-vars
-type genericChangeFunc = (gamefile: gamefile, change: any) => void;
+type genericChangeFunc = (gamefile: gamefile, change: Change) => void;
 
 /**
  * An actionlist is a dictionary links actions to functions.
