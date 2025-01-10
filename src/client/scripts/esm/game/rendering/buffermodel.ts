@@ -171,7 +171,7 @@ function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): { 
 	} else if (usingTexture) {
 		return {
 			vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }],
-			instanceDataAttribInfo: [{ name: 'instancetexcoord', numComponents: 2 }]
+			instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancetexcoord', numComponents: 2 }]
 		};
 	} else throw new Error('Well we must be using ONE of either color or texcoord in our vertex data..');
 }
