@@ -399,10 +399,6 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
  * @returns {boolean} true if the piece is able to slide to the coordinates
  */
 function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords) {
-	// const step = math.getLineSteps(direction, pieceCoords, coords)
-	// return step >= slideMoveset[0] && step <= slideMoveset[1];
-
-
 	const axis = direction[0] === 0 ? 1 : 0;
 	const coordMag = coords[axis];
 	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];

@@ -69,7 +69,7 @@ function showPiecesMesh() {
 }
 
 function updatePiecesMesh(percent) {
-	const percentString = math.decimalToPercent(percent);
+	const percentString = decimalToPercent(percent);
 	elementStatusPiecesMesh.textContent = `${translations.constructing_mesh} ${percentString}`;
 }
 
@@ -98,7 +98,7 @@ function showRotateMesh() {
 }
 
 function updateRotateMesh(percent) {
-	const percentString = math.decimalToPercent(percent);
+	const percentString = decimalToPercent(percent);
 	elementStatusRotateMesh.textContent = `${translations.rotating_mesh} ${percentString}`;
 }
 
@@ -106,6 +106,14 @@ function hideRotateMesh() {
 	elementStatusRotateMesh.classList.add('hidden');
 }
 
+
+function decimalToPercent(decimal) {
+	// Multiply by 100 to convert to percentage, then round
+	const percent = Math.round(decimal * 100);
+    
+	// Convert the rounded percentage to a string with a percentage sign
+	return percent.toString() + "%";
+}
 
 
 export default {

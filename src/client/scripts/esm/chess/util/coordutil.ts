@@ -33,6 +33,18 @@ function areCoordsIntegers(coords: Coords): boolean {
 	return Number.isInteger(coords[0]) && Number.isInteger(coords[1]);
 }
 
+// /**
+//  * ALTERNATIVE to {@link areCoordsIntegers}, if we end up having floating point imprecision problems!
+//  *
+//  * Checks if a number is effectively an integer considering floating point imprecision.
+//  * @param {number} num - The number to check.
+//  * @param {number} [epsilon=Number.EPSILON] - The tolerance for floating point imprecision.
+//  * @returns {boolean} - Returns true if the number is effectively an integer, otherwise false.
+//  */
+// function isEffectivelyInteger(num, epsilon = Number.EPSILON) {
+//     return Math.abs(num - Math.round(num)) < epsilon;
+// }
+
 /**
  * Returns the key string of the coordinates: [x,y] => 'x,y'
  */

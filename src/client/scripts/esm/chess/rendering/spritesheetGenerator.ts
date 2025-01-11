@@ -42,7 +42,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	 */
 	const maxImgSizePerMaxTextureSize = maxTextureSize / gridSize;
 
-	const spritesheetSizeIfPreferredImgSizeUsed = math.roundUpToPowerOf2(preferredImgSize * gridSize); // Round up to nearest power of 2
+	const spritesheetSizeIfPreferredImgSizeUsed = math.roundUpToNextPowerOf2(preferredImgSize * gridSize); // Round up to nearest power of 2
 	const actualImgSizeIfUsingPreferredImgSize = spritesheetSizeIfPreferredImgSizeUsed / gridSize; 
 
 	/** Whichever is smaller of the two */

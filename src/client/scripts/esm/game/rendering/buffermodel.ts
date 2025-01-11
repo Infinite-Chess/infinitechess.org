@@ -4,15 +4,18 @@
  * game objects that the shader programs can use. It receives the object's vertex data to do so.
  */
 
-// @ts-ignore
-import shaders, { ShaderProgram } from './shaders.js';
+
+import type { Vec3 } from '../../util/math.js';
+import type { ShaderProgram } from './shaders.js';
+
+import { createBufferFromData, updateBufferIndices } from './buffers.js';
+import shaders from './shaders.js';
 // @ts-ignore
 import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';
 // @ts-ignore
 import camera from './camera.js';
-import { createBufferFromData, updateBufferIndices } from './buffers.js';
 
 "use strict";
 
@@ -293,8 +296,8 @@ function ensureFloat32Array(data: number[] | Float32Array): Float32Array {
 function render(
 	buffer: WebGLBuffer,
 	attribInfo: AttributeInfo,
-	position: [number,number,number],
-	scale: [number,number,number],
+	position: Vec3,
+	scale: Vec3,
 	stride: number,
 	BYTES_PER_ELEMENT: number,
 	uniforms: { [uniform: string]: any },
@@ -349,8 +352,8 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
 	instanceBuffer: WebGLBuffer,
 	vertexDataAttribInfo: AttributeInfo,
 	instanceDataAttribInfo: AttributeInfo,
-	position: [number,number,number],
-	scale: [number,number,number],
+	position: Vec3,
+	scale: Vec3,
 	vertexDataStride: number,
 	instanceDataStride: number,
 	BYTES_PER_ELEMENT: number,
@@ -435,7 +438,7 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
  * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
  */
-function setUniforms(shader: ShaderProgram, position: [number,number,number], scale: [number,number,number], uniforms: { [uniform: string]: any }, texture?: WebGLTexture): void {
+function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniforms: { [uniform: string]: any }, texture?: WebGLTexture): void {
 
 	{
 		// Update the transformMatrix on the gpu, EVERY render call!!
@@ -485,7 +488,7 @@ function setUniforms(shader: ShaderProgram, position: [number,number,number], sc
  * The gpu works with matrices REALLY FAST, so this is the most optimal way
  * to translate our models into position.
  */
-function genWorldMatrix(position: [number,number,number], scale: [number,number,number]) {
+function genWorldMatrix(position: Vec3, scale: Vec3) {
 	const worldMatrix = mat4.create();
 	mat4.scale(worldMatrix, worldMatrix, scale);
 	mat4.translate(worldMatrix, worldMatrix, position);
