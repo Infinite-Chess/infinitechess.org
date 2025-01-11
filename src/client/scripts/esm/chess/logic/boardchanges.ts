@@ -137,7 +137,9 @@ function queueMovePiece(changes: Array<Change>, piece: Piece, endCoords: Coords)
 
 
 /**
- * Applies the board changes of a move either forward or backward, modifying the piece lists.
+ * Applies the board changes of a move either forward or backward,
+ * either modifying the piece lists, or modifying the mesh,
+ * depending on what changeFuncs are passed in.
  */
 function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication<genericChangeFunc>, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
