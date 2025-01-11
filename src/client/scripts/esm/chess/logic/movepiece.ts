@@ -64,7 +64,7 @@ function generateMove(gamefile: gamefile, move: Move) {
  */
 function applyMove(gamefile: gamefile, move: Move, forward = true, {global = false} = {}) {
 	// Stops stupid missing piece errors
-	if (gamefile.moveIndex + Number(forward) !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${gamefile.moveIndex + Number(forward)} (forward: ${forward})!`);
+	if (gamefile.moveIndex + Number(!forward) !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${gamefile.moveIndex + Number(!forward)} (forward: ${forward})!`);
 	
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
 	state.applyMove(gamefile, move, forward, {globalChange: global});
