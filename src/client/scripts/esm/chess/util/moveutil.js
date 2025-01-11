@@ -245,6 +245,27 @@ function areMovesIn2DFormat(longmoves) {
  * @returns {Move[]} Moves converted to the new 1D array format
  */
 function convertMovesTo1DFormat(moves, results) {
+
+	/*
+	// This is the format of outdated 2D moves list in game ICN notation.
+	[
+		[null, DepricatedMove],
+		[DepricatedMove, DepricatedMove],
+		...
+	]
+	// Where if the first move in the first array is null, that means it's black to move first.
+
+	interface DepricatedMove {
+		startCoords: Coords,
+		endCoords: Coords,
+		type: string,
+		captured?: string,
+		enpassant?: 1 | -1,
+		promotion?: string,
+		castle?: { coord: Coords, dir: 1 | -1 }
+	}
+	*/
+
 	results.turn = 'white';
 	const moves1D = [];
 	for (let a = 0; a < moves.length; a++) {
