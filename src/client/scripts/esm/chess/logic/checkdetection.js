@@ -20,6 +20,7 @@ import moveutil from '../util/moveutil.js';
  * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../util/coordutil.js').Coords} Coords
  */
 
 "use strict";
@@ -36,7 +37,7 @@ import moveutil from '../util/moveutil.js';
  * @param {gamefile} gamefile - The gamefile
  * @param {string} color - The side to test if their king is in check. "white" or "black"
  * @param {[]} [attackers] - An empty array [], or undefined if we don't care about who is checking us, just whether we are in check or not, this can save compute.
- * @returns {boolean} true if in check
+ * @returns {false | Coords[]} true if in check
  */
 function detectCheck(gamefile, color, attackers) {
 	// Input validation
@@ -142,7 +143,7 @@ function doesPawnAttackSquare(gamefile, coords, color, attackers) {
  * Calculates if any sliding piece can attack the specified square.
  * Appends attackers to the provided `attackers` array.
  * @param {gamefile} gamefile 
- * @param {number[]} coords - The square to test if it can be attacked
+ * @param {Coords} coords - The square to test if it can be attacked
  * @param {string} color - The color of friendly pieces
  * @param {Object[]} attackers - A running list of attackers on this square. Any new found attackers will be appended to this this.
  * @returns {boolean} true if this square is under attack
@@ -166,7 +167,7 @@ function doesSlideAttackSquare(gamefile, coords, color, attackers) {
  * Appends any attackeres to the provided `attackers` array.
  * @param {gamefile} gamefile 
  * @param {Piece[]} line - The line of pieces
- * @param {number[]} direction - Step of the line: [dx,dy]
+ * @param {Coords} direction - Step of the line: [dx,dy]
  * @param {number} coords - The coordinates of the square to test if any piece on the line can move to.
  * @param {string} color - The color of friendlies. We will exclude pieces of the same color, because they cannot capture friendlies.
  * @param {Object[]} [attackers] - The running list of attackers threatening these coordinates. Any attackers found will be appended to this list. LEAVE BLANK to save compute not adding them to this list!
@@ -275,7 +276,7 @@ function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pie
 function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) {
 	if (!moves.sliding) return; // No sliding moves to remove
 
-	/** List of coordinates of all our royal jumping pieces @type {number[][]} */
+	/** List of coordinates of all our royal jumping pieces @type {Coords[]} */
 	const royalCoords = gamefileutility.getJumpingRoyalCoordsOfColor(gamefile, color);
 	if (royalCoords.length === 0) return; // No king, no open discoveries, don't remove any sliding moves
 
@@ -295,8 +296,8 @@ function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, col
  * If there's an existing check: Returns true and removes all sliding moves that don't address the check.
  * @param {gamefile} gamefile - The gamefile
  * @param {LegalMoves} legalMoves - The legal moves object of which to delete moves that don't address check.
- * @param {number[][]} royalCoords - A list of our friendly jumping royal pieces
- * @param {number[]} selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
+ * @param {Coords[]} royalCoords - A list of our friendly jumping royal pieces
+ * @param {Coords} selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
  * @param {string} color - The color of friendlies
  * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
  */
@@ -361,7 +362,7 @@ function isColorInCheck(gamefile, color) {
  * open up a discovered attack on the specified coordinates
  * @param {gamefile} gamefile 
  * @param {LegalMoves} moves - The running legal moves of the selected piece
- * @param {number[]} kingCoords - The coordinates to see what sliding moves open up a discovered on
+ * @param {Coords} kingCoords - The coordinates to see what sliding moves open up a discovered on
  * @param {Piece} pieceSelected - The piece with the provided running legal moves
  * @param {string} color - The color of friendlies
  */
@@ -464,10 +465,10 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 /**
  * Appends legal blocking moves to the provided moves object if the piece
  * is able to get between squares 1 & 2.
- * @param {number[]} square1 - `[x,y]`
- * @param {number[]} square2 - `[x,y]`
+ * @param {Coords} square1 - `[x,y]`
+ * @param {Coords} square2 - `[x,y]`
  * @param {LegalMoves} moves - The moves object of the piece
- * @param {number[]} coords - The coordinates of the piece with the provided legal moves: `[x,y]`
+ * @param {Coords} coords - The coordinates of the piece with the provided legal moves: `[x,y]`
  */
 function appendBlockingMoves(square1, square2, moves, coords) { // coords is of the selected piece
 	// What is the line between our king and the attacking piece?

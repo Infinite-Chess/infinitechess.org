@@ -27,6 +27,7 @@ import type gamefile from './gamefile.js';
 // @ts-ignore
 import type { Move } from '../util/moveutil.js';
 import type { Piece } from './boardchanges.js';
+import type { Coords } from '../util/coordutil.js';
 
 "use strict";
 
@@ -96,11 +97,11 @@ function makeMove(gamefile: gamefile, move: Move) {
  * This needs to be done every time we make a move.
  */
 function deleteEnpassantAndSpecialRightsProperties(gamefile: gamefile, move: Move) {
-	state.queueState(move, "enpassant", gamefile.enpassant, undefined);
+	state.createState(move, "enpassant", gamefile.enpassant, undefined);
 	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.queueState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key });
+	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key });
 	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.queueState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key }); // We also delete the captured pieces specialRights for ANY move.
+	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key }); // We also delete the captured pieces specialRights for ANY move.
 }
 
 /**
@@ -135,7 +136,7 @@ function incrementMoveRule(gamefile: gamefile, move: Move, wasACapture: boolean)
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
-	state.queueState(move, 'moverulestate', gamefile.moveRuleState, newMoveRule, {global: true});
+	state.createState(move, 'moverulestate', gamefile.moveRuleState, newMoveRule);
 }
 
 /**
@@ -153,14 +154,15 @@ function createCheckState(gamefile: gamefile, move: Move) {
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
 	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 
-	state.setState(
-		gamefile,
+	state.createState(
 		move,
 		"check",
 		gamefile.inCheck,
-		checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers)
+		checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers),
+		{},
+		gamefile
 	); // Passes in the gamefile as an argument
-	state.setState(gamefile, move, "attackers", gamefile.attackers, attackers || []); // Erase the checking pieces calculated from previous turn and pass in new on
+	state.createState(move, "attackers", gamefile.attackers, attackers || [], {}, gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
 function updateInCheck(gamefile: gamefile) {
@@ -170,7 +172,6 @@ function updateInCheck(gamefile: gamefile) {
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
 	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 
-	//@ts-ignore
 	gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
 	gamefile.attackers = attackers || []; // Erase the checking pieces calculated from previous turn and pass in new ones!
 }
@@ -353,7 +354,7 @@ function simulateMoveWrapper<R>(gamefile: gamefile, move: Move, callback: () => 
  * @param {*} colorToTestInCheck 
  * @returns 
  */
-function getSimulatedCheck(gamefile: gamefile, move: Move, colorToTestInCheck: string): boolean {
+function getSimulatedCheck(gamefile: gamefile, move: Move, colorToTestInCheck: string): boolean | Coords[] {
 	return simulateMoveWrapper(
 		gamefile,
 		move,

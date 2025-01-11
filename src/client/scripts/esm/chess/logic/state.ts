@@ -73,34 +73,21 @@ function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
  * @param current 
  * @param future 
  * @param param4 An object containing additional state change properties, shared across both 'current' and 'future'. For example, the coordinates of a specialrights state change.
- */
-function queueState(
+ * @param gamefileToSet The gamefile to set state, if not supplied it will just queue it in move
+*/
+function createState(
 	move: Move,
 	stateType: StateNames,
 	current: any,
 	future: any,
-	changeProperties: { [changeProperty: string]: any } = {}
-) {
-
-	const newStateChange = { type: stateType, current, future, ...changeProperties };
-	const targetStateChangeList = stateTypes.global.includes(stateType) ? move.state.global : move.state.local;
-
-	targetStateChangeList.push(newStateChange);
-}
-
-function setState(
-	gamefile: gamefile,
-	move: Move,
-	stateType: StateNames,
-	current: any,
-	future: any,
-	changeProperties: { [changeProperty: string]: any } = {}
+	changeProperties: { [changeProperty: string]: any } = {},
+	gamefileToSet: gamefile | undefined = undefined
 ) {
 	const newStateChange = { type: stateType, current, future, ...changeProperties };
 	const targetStateChangeList = stateTypes.global.includes(stateType) ? move.state.global : move.state.local;
 
 	targetStateChangeList.push(newStateChange);
-	applyState(gamefile, newStateChange, true);
+	if (gamefileToSet !== undefined) applyState(gamefileToSet, newStateChange, true);
 }
 
 function applyMove(gamefile: gamefile, move: Move, forward: boolean, { globalChange = false } = {}) {
@@ -119,8 +106,7 @@ export type {
 
 export default {
 	initMoveStates,
-	queueState,
 	applyState,
 	applyMove,
-	setState,
+	createState,
 };
