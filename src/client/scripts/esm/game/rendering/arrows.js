@@ -239,7 +239,7 @@ function update() {
 				if (piece.type === 'voidsN') continue;
 				const isLeft = side === "l";
 				const corner = math.getAABBCornerOfLine(direction, isLeft);
-				const renderCoords = math.getLineIntersectionEntryTile(direction[0], direction[1], intersect, paddedBoundingBox, corner);
+				const renderCoords = math.getLineIntersectionEntryPoint(direction[0], direction[1], intersect, paddedBoundingBox, corner);
 				if (!renderCoords) continue;
 				const arrowDirection = isLeft ? [-direction[0],-direction[1]] : direction;
 				concatData(renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);

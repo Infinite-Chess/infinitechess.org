@@ -376,7 +376,7 @@ function panAccel_Perspective(angle) {
 	const baseAngle = -perspective.getRotZ();
 	const dirOfTravel = baseAngle + angle;
 
-	const angleRad = math.toRadians(dirOfTravel);
+	const angleRad = math.degreesToRadians(dirOfTravel);
 
 	const XYComponents = math.getXYComponents_FromAngle(angleRad);
 

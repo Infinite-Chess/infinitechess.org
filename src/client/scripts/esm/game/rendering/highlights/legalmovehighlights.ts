@@ -429,8 +429,8 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 
 		const corner1 = math.getAABBCornerOfLine(line, true); // "right"
 		const corner2 = math.getAABBCornerOfLine(line, false); // "bottomleft"
-		const intsect1Tile = math.getLineIntersectionEntryTile(line[0], line[1], C, boundingBoxOfRenderRange, corner1);
-		const intsect2Tile = math.getLineIntersectionEntryTile(line[0], line[1], C, boundingBoxOfRenderRange, corner2);
+		const intsect1Tile = math.getLineIntersectionEntryPoint(line[0], line[1], C, boundingBoxOfRenderRange, corner1);
+		const intsect2Tile = math.getLineIntersectionEntryPoint(line[0], line[1], C, boundingBoxOfRenderRange, corner2);
 
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) throw Error(`Line only has one intersect with square.`);
