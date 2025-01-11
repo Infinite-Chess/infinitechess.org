@@ -78,7 +78,7 @@ function getLineIntersection(dx1: number, dy1: number, c1: number, dx2: number, 
  * @returns A tuple containing the X and Y components, both between -1 and 1.
  */
 function getXYComponents_FromAngle(theta: number): Coords {
-    return [Math.cos(theta), Math.sin(theta)]; // When hypotenuse is 1.0
+	return [Math.cos(theta), Math.sin(theta)]; // When hypotenuse is 1.0
 }
 
 /**
@@ -97,45 +97,45 @@ function roundPointToNearestGridpoint(point: Coords, gridSize: number): Coords {
  * Determines if one bounding box (`innerBox`) is entirely contained within another bounding box (`outerBox`).
  */
 function boxContainsBox(outerBox: BoundingBox, innerBox: BoundingBox): boolean {
-    if (innerBox.left < outerBox.left) return false;
-    if (innerBox.right > outerBox.right) return false;
-    if (innerBox.bottom < outerBox.bottom) return false;
-    if (innerBox.top > outerBox.top) return false;
+	if (innerBox.left < outerBox.left) return false;
+	if (innerBox.right > outerBox.right) return false;
+	if (innerBox.bottom < outerBox.bottom) return false;
+	if (innerBox.top > outerBox.top) return false;
 
-    return true;
+	return true;
 }
 
 /**
  * Returns true if the provided box contains the square coordinate.
  */
 function boxContainsSquare(box: BoundingBox, square: Coords): boolean {
-    if (square[0] < box.left) return false;
-    if (square[0] > box.right) return false;
-    if (square[1] < box.bottom) return false;
-    if (square[1] > box.top) return false;
+	if (square[0] < box.left) return false;
+	if (square[0] > box.right) return false;
+	if (square[1] < box.bottom) return false;
+	if (square[1] > box.top) return false;
 
-    return true;
+	return true;
 }
 
 /**
  * Calculates the minimum bounding box that contains all the provided coordinates.
  */
 function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
-    // Initialize the bounding box using the first coordinate
-    const firstPiece = coordsList.shift()!;
-    const box: BoundingBox = {
-        left: firstPiece[0],
-        right: firstPiece[0],
-        bottom: firstPiece[1],
-        top: firstPiece[1],
-    };
+	// Initialize the bounding box using the first coordinate
+	const firstPiece = coordsList.shift()!;
+	const box: BoundingBox = {
+		left: firstPiece[0],
+		right: firstPiece[0],
+		bottom: firstPiece[1],
+		top: firstPiece[1],
+	};
 
-    // Expands the bounding box to include every coordinate
-    for (const coord of coordsList) {
-        expandBoxToContainSquare(box, coord);
-    }
+	// Expands the bounding box to include every coordinate
+	for (const coord of coordsList) {
+		expandBoxToContainSquare(box, coord);
+	}
 
-    return box;
+	return box;
 }
 
 /**
@@ -154,10 +154,10 @@ function expandBoxToContainSquare(box: BoundingBox, coord: Coords): void {
  */
 function mergeBoundingBoxes(box1: BoundingBox, box2: BoundingBox): BoundingBox {
 	return {
-        left: Math.min(box1.left, box2.left),
-        right: Math.max(box1.right, box2.right),
-        bottom: Math.min(box1.bottom, box2.bottom),
-        top: Math.max(box1.top, box2.top),
+		left: Math.min(box1.left, box2.left),
+		right: Math.max(box1.right, box2.right),
+		bottom: Math.min(box1.bottom, box2.bottom),
+		top: Math.max(box1.top, box2.top),
 	};
 }
 
@@ -265,6 +265,8 @@ function getLineIntersectionEntryPoint(dx: number, dy: number, c: number, boundi
 	}
 
 	// Doesn't intersect any tile in the box.
+
+	return; // We need this so typescript is happy
 }
 
 /**
@@ -272,13 +274,13 @@ function getLineIntersectionEntryPoint(dx: number, dy: number, c: number, boundi
  */
 function areLinesCollinear(lines: Vec2[]): boolean {
 	let gradient: number | undefined;
-    for (const line of lines) {
-        const lgradient = line[1] / line[0];
-        if (gradient === undefined) gradient = lgradient;
-        else if (!Number.isFinite(gradient) && !Number.isFinite(lgradient)) continue;
-        else if (!isAproxEqual(lgradient, gradient)) return false;
-    }
-    return true;
+	for (const line of lines) {
+		const lgradient = line[1] / line[0];
+		if (gradient === undefined) gradient = lgradient;
+		else if (!Number.isFinite(gradient) && !Number.isFinite(lgradient)) continue;
+		else if (!isAproxEqual(lgradient, gradient)) return false;
+	}
+	return true;
 }
 
 
@@ -300,8 +302,10 @@ function GCD(a: number, b: number) {
 function LCM(array: number[]): number {
 	// Copied from https://www.geeksforgeeks.org/lcm-of-given-array-elements/
 
+	if (array.length === 0) throw Error('Array of numbers must have atleast one number to calculate the LCM.');
+
 	// Initialize result
-	let answer = array[0]; 
+	let answer: number = array[0]!;
 
 	// answer will contain the LCM of arr[0], ..arr[i] after the i'th iteration, 
 	for (let i = 1; i < array.length; i++) {
@@ -363,7 +367,7 @@ function isPowerOfTwo(value: number): boolean {
  * @returns `true` if the values are approximately equal within the epsilon tolerance, otherwise `false`.
  */
 function isAproxEqual(a: number, b: number, epsilon: number = 0.000001): boolean {
-    return Math.abs(a - b) < epsilon;
+	return Math.abs(a - b) < epsilon;
 }
 
 /**
@@ -410,14 +414,14 @@ function degreesToRadians(angleDegrees: number): number {
  * @returns The nearest power of two greater than or equal to the given number.
  */
 function roundUpToNextPowerOf2(num: number): number {
-  if (num <= 1) return 1; // Handle edge case for numbers 0 and 1
-  num--; // Step 1: Decrease by 1 to handle numbers like 8
-  num |= num >> 1; // Step 2: Propagate the most significant bit to the right
-  num |= num >> 2;
-  num |= num >> 4;
-  num |= num >> 8;
-  num |= num >> 16; // Additional shift for 32-bit numbers
-  return num + 1; // Step 3: Add 1 to get the next power of 2
+	if (num <= 1) return 1; // Handle edge case for numbers 0 and 1
+	num--; // Step 1: Decrease by 1 to handle numbers like 8
+	num |= num >> 1; // Step 2: Propagate the most significant bit to the right
+	num |= num >> 2;
+	num |= num >> 4;
+	num |= num >> 8;
+	num |= num >> 16; // Additional shift for 32-bit numbers
+	return num + 1; // Step 3: Add 1 to get the next power of 2
 }
 
 /**
@@ -435,38 +439,38 @@ function posMod(a: number, b: number): number {
 
 
 class PseudoRandomGenerator {
-    private a: number = 16807;
-    private c: number = 2491057;
+	private a: number = 16807;
+	private c: number = 2491057;
 	private b: number = 2147483647;
 
-    private current: number;
+	private current: number;
 
-    constructor(seed: number) {
-        this.current = seed;
-    }
-
-	private iterate() {
-        const next = (this.current * this.a + this.c) % this.b;
-        this.current = next;
+	constructor(seed: number) {
+		this.current = seed;
 	}
 
-    /**
+	private iterate() {
+		const next = (this.current * this.a + this.c) % this.b;
+		this.current = next;
+	}
+
+	/**
      * Generates the next random integer in the sequence.
      * @returns A pseudo-random integer between 0 and 2147483647.
      */
-    nextInt(): number {
+	nextInt(): number {
 		this.iterate();
-        return this.current;
-    }
+		return this.current;
+	}
 
-    /**
+	/**
      * Generates the next random floating point number in the sequence.
      * @returns A pseudo-random float between 0 and 1.
      */
-    nextFloat(): number {
+	nextFloat(): number {
 		this.iterate();
-        return this.current / this.b;
-    }
+		return this.current / this.b;
+	}
 }
 
 
@@ -502,6 +506,8 @@ export default {
 };
 
 export type {
+	BoundingBox,
 	Vec2,
 	Vec3,
-}
+	Corner,
+};
