@@ -27,7 +27,6 @@ import config from '../config.js';
 import pingManager from '../../util/pingManager.js';
 import movesequence from '../chess/movesequence.js';
 import options from '../rendering/options.js';
-import movepiece from '../../chess/logic/movepiece.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 // Import End
@@ -35,7 +34,7 @@ import gameloader from '../chess/gameloader.js';
 /** 
  * Type Definitions 
  * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
- * @typedef {import('../chess/movesequence.js').MoveDraft} MoveDraft
+ * @typedef {import('../../chess/logic/movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
 */
 
@@ -650,7 +649,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		const isLastMove = i === moves.length - 1;
 		// Animate only if it's the last move.
 		const animationLevel = isLastMove ? 2 : 0;
-		movesequence.makeMove(gamefile, move, { animationLevel, doGameOverChecks: isLastMove, concludeGameIfOver: false});
+		movesequence.makeMove(gamefile, move, { animationLevel, doGameOverChecks: isLastMove});
 
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;

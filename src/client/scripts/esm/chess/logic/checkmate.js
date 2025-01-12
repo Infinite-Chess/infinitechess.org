@@ -9,7 +9,7 @@ import typeutil from '../util/typeutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
+ * @typedef {import('../logic/movepiece.js').Move} Move
 */
 
 "use strict";

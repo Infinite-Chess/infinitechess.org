@@ -1,7 +1,7 @@
 
 
 // @ts-ignore
-import type { Move } from "../util/moveutil.js";
+import type { Move } from "./movepiece.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
 

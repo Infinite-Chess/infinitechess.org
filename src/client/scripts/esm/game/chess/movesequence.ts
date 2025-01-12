@@ -8,13 +8,12 @@
 
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
-import type { MoveState } from "../../chess/logic/state.js";
+import type { Move, MoveDraft } from "../../chess/logic/movepiece.js";
 
-
-import coordutil, { Coords } from "../../chess/util/coordutil.js";
+import coordutil from "../../chess/util/coordutil.js";
 import gameslot from "./gameslot.js";
 import guinavigation from "../gui/guinavigation.js";
-import boardchanges, { Change } from "../../chess/logic/boardchanges.js";
+import boardchanges from "../../chess/logic/boardchanges.js";
 import { animatableChanges, meshChanges } from "./graphicalchanges.js";
 // @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
@@ -22,8 +21,6 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 import onlinegame from "../misc/onlinegame.js";
 // @ts-ignore
 import arrows from "../rendering/arrows.js";
-// @ts-ignore
-import frametracker from "../rendering/frametracker.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 // @ts-ignore
@@ -34,55 +31,10 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import clock from "../../chess/logic/clock.js";
-// @ts-ignore
-import formatconverter from "../../chess/logic/formatconverter.js";
-
-
-
-
-/** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
-interface MoveDraft {
-	startCoords: Coords,
-	endCoords: Coords,
-	/** Present if the move was special-move enpassant capture. This will be
-	 * 1 for the captured piece is 1 square above, or -1 for 1 square below. */
-	enpassant?: -1 | 1,
-	/** Present if the move was a special-move promotion. This will be
-	 * a string of the type of piece being promoted to: "queensW" */
-	promotion?: string,
-	/** Present if the move was a special-move casle. This may look like an
-	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
-	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
-	castle?: { coord: Coords, dir: 1 | -1 },
-}
-
-/**
- * Contains all properties a {@link MoveDraft} has, and more!
- * Including the changes it made to the board, the gamefile
- * state before and after the move, etc.
- */
-interface Move extends MoveDraft {
-	/** The type of piece moved */
-	type: string,
-	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
-	changes: Array<Change>,
-	/** The state of the move is used to know how to modify specific gamefile
-	 * properties when forwarding/rewinding this move. */
-	state: MoveState,
-	generateIndex: number,
-	/** The move in most compact notation: `8,7>8,8Q` */
-	compact: string,
-	/** Whether the move delivered check. */
-	check: boolean,
-	/** Whether the move delivered mate (or the killing move). */
-	mate: boolean,
-}
-
-	
+// // @ts-ignore
+// import formatconverter from "../../chess/logic/formatconverter.js";
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
-
-
 
 /** Makes a global forward move in the game. */
 function makeMove(
@@ -91,12 +43,10 @@ function makeMove(
 	{
 		animationLevel = 2,
 		doGameOverChecks = true,
-		concludeGameIfOver = true,
 	}: {
 		/**  0 = No animation.  1 = Animate only secondary pieces.  2 = Animate all.  */
 		animationLevel?: 0 | 1 | 2,
 		doGameOverChecks?: boolean,
-		concludeGameIfOver?: boolean,
 	} = {}
 ) {
 	const move = movepiece.generateMove(gamefile, moveDraft);
@@ -112,7 +62,7 @@ function makeMove(
 
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
-		if (concludeGameIfOver && gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
+		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
 	updateGui({ showMoveCounter: false });
@@ -257,9 +207,4 @@ export default {
 	viewMove,
 	viewFront,
 	viewIndex,
-};
-
-export type {
-	MoveDraft,
-	Move
 };

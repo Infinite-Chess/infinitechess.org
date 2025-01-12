@@ -15,7 +15,7 @@ import shapes from './shapes.js';
 
 /**
  * Type Definitions
- * @typedef {import('../chess/movesequence.js').Move} Move
+ * @typedef {import('../../chess/logic/movepiece.js').Move} Move
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  * @typedef {import('../../chess/logic/boardchanges.js').Piece} Piece
  */

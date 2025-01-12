@@ -13,7 +13,7 @@ import gamerules from '../variants/gamerules.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
-/** @typedef {import('../../game/chess/movesequence.js').Move} Move */
+/** @typedef {import('./movepiece.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */

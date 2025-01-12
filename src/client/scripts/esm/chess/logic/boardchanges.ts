@@ -23,7 +23,7 @@ import jsutil from "../../util/jsutil.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
 // @ts-ignore
-import type { Move } from "../util/moveutil.js";
+import type { Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 
 interface Piece {

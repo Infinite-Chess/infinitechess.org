@@ -11,11 +11,10 @@
 
 // @ts-ignore
 import type gamefile from './gamefile.js';
-import type { Move } from '../../game/chess/movesequence.js';
 import type { Piece } from './boardchanges.js';
 import type { Coords } from '../util/coordutil.js';
-import type { MoveDraft } from '../../game/chess/movesequence.js';
-
+import type { MoveState } from './state.js';
+import type { Change } from './boardchanges.js';
 
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
@@ -39,6 +38,43 @@ import formatconverter from './formatconverter.js';
 import wincondition from './wincondition.js';
 
 
+/** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
+interface MoveDraft {
+	startCoords: Coords,
+	endCoords: Coords,
+	/** Present if the move was special-move enpassant capture. This will be
+	 * 1 for the captured piece is 1 square above, or -1 for 1 square below. */
+	enpassant?: -1 | 1,
+	/** Present if the move was a special-move promotion. This will be
+	 * a string of the type of piece being promoted to: "queensW" */
+	promotion?: string,
+	/** Present if the move was a special-move casle. This may look like an
+	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
+	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
+	castle?: { coord: Coords, dir: 1 | -1 },
+}
+
+/**
+ * Contains all properties a {@link MoveDraft} has, and more!
+ * Including the changes it made to the board, the gamefile
+ * state before and after the move, etc.
+ */
+interface Move extends MoveDraft {
+	/** The type of piece moved */
+	type: string,
+	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
+	changes: Array<Change>,
+	/** The state of the move is used to know how to modify specific gamefile
+	 * properties when forwarding/rewinding this move. */
+	state: MoveState,
+	generateIndex: number,
+	/** The move in most compact notation: `8,7>8,8Q` */
+	compact: string,
+	/** Whether the move delivered check. */
+	check: boolean,
+	/** Whether the move delivered mate (or the killing move). */
+	mate: boolean,
+}
 
 /**
  * Generates a full Move object from a MoveDraft
@@ -379,6 +415,11 @@ function getSimulatedConclusion(gamefile: gamefile, move: Move): string | false 
 		() => wincondition.getGameConclusion(gamefile)
 	);
 }
+
+export type {
+	Move,
+	MoveDraft,
+};
 
 export default {
 	updateInCheck,
