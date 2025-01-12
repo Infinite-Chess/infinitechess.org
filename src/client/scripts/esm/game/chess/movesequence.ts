@@ -95,7 +95,6 @@ function makeMove(
 	}: {
 		/**  0 = No animation.  1 = Animate only secondary pieces.  2 = Animate all.  */
 		animationLevel?: 0 | 1 | 2,
-		updateMesh?: boolean,
 		doGameOverChecks?: boolean,
 		concludeGameIfOver?: boolean,
 	} = {}
