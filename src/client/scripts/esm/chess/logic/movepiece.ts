@@ -323,7 +323,8 @@ function forEachMove(gamefile: gamefile, targetIndex: number, callback: Callable
 
 /**
  * Iterates to a certain move index.
- * Callable should be a move application function
+ * Callable should be a move application function,
+ * either {@link applyMove}, or movesequence.viewMove.
  * @param {gamefile} gamefile 
  * @param {number} index 
  * @param {CallableFunction} callback 
@@ -348,7 +349,6 @@ function gotoMove(gamefile: gamefile, index: number, callback: CallableFunction)
 		gamefile.moveIndex = i;
 		callback(move);
 	}
-
 }
 
 /**

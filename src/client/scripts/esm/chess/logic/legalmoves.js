@@ -20,7 +20,7 @@ import movesets from './movesets.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../../game/chess/movesequence.js').MoveDraft} MoveDraft
+ * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('./movesets.js').PieceMoveset} PieceMoveset
  * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction

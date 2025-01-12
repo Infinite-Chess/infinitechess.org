@@ -14,7 +14,7 @@ import fivedimensionalpromote from './fivedimensionalpromote.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../../game/chess/movesequence.js').MoveDraft} MoveDraft
+ * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
 */
 
 "use strict";

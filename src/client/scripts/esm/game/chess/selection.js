@@ -28,7 +28,7 @@ import gameslot from './gameslot.js';
 
 /**
  * Type Definitions
- * @typedef {import('./movesequence.js').MoveDraft} MoveDraft
+ * @typedef {import('../../chess/logic/movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('../../chess/logic/legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('../../chess/logic/boardchanges.js').Piece} Piece
  */
