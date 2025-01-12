@@ -35,7 +35,7 @@ import gameloader from '../chess/gameloader.js';
 /** 
  * Type Definitions 
  * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
- * @typedef {import('../../chess/util/moveutil.js').Move} Move
+ * @typedef {import('../chess/movesequence.js').MoveDraft} MoveDraft
  * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
 */
 
@@ -446,7 +446,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 
 	// Convert the move from compact short format "x,y>x,yN"
 	// to long format { startCoords, endCoords, promotion }
-	/** @type {Move} */
+	/** @type {MoveDraft} */
 	let move;
 	try {
 		move = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
@@ -461,7 +461,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(moveAndConclusion)}`);
 	if (moveIsLegal !== true && !isPrivate) return reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movesequence.viewFront(gamefile);
+	movesequence.viewFront(gamefile, { animateLastMove: false });
 
 	// // Forward the move...
 
@@ -470,10 +470,8 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
 	legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
-	move.type = piecemoved.type;
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move);
 	movesequence.makeMove(gamefile, move);
-	movesequence.animateMove(move, true);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
@@ -598,7 +596,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	}
 
 	const originalMoveIndex = gamefile.moveIndex;
-	movesequence.viewFront(gamefile);
+	movesequence.viewFront(gamefile, { animateLastMove: false });
 	let aChangeWasMade = false;
 
 	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..
@@ -627,7 +625,8 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		const move = movepiece.calculateMoveFromShortmove(gamefile, thisShortmove);
+		/** @type {MoveDraft} */
+		const move = formatconverter.ShortToLong_CompactMove(thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
@@ -649,8 +648,10 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		} else cancelFlashTabTimer();
         
 		const isLastMove = i === moves.length - 1;
-		movesequence.makeMove(gamefile, move, { doGameOverChecks: isLastMove, concludeGameIfOver: false});
-		if (isLastMove) movesequence.animateMove(move, true);
+		// Animate only if it's the last move.
+		const animationLevel = isLastMove ? 2 : 0;
+		movesequence.makeMove(gamefile, move, { animationLevel, doGameOverChecks: isLastMove, concludeGameIfOver: false});
+
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}

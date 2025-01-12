@@ -1,5 +1,26 @@
 
-// Import Start
+/**
+ * This script only ever handles global moves, because it
+ * purely only affects the gamefile logically.
+ * Handling ZERO gui stuff.
+ * 
+ * Both ends, client & server, should be able to use this script.
+ * It SHOULD have a healthy dependancy tree (need to work on that).
+ */
+
+
+// @ts-ignore
+import type gamefile from './gamefile.js';
+import type { Move } from '../../game/chess/movesequence.js';
+import type { Piece } from './boardchanges.js';
+import type { Coords } from '../util/coordutil.js';
+import type { MoveDraft } from '../../game/chess/movesequence.js';
+
+
+import colorutil from '../util/colorutil.js';
+import coordutil from '../util/coordutil.js';
+import state from './state.js';
+import boardchanges from './boardchanges.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
 // @ts-ignore
@@ -16,47 +37,40 @@ import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
-import colorutil from '../util/colorutil.js';
-import coordutil from '../util/coordutil.js';
-import state from './state.js';
-import boardchanges from './boardchanges.js';
-// Import End
-
-// @ts-ignore
-import type gamefile from './gamefile.js';
-// @ts-ignore
-import type { Move } from '../util/moveutil.js';
-import type { Piece } from './boardchanges.js';
-import type { Coords } from '../util/coordutil.js';
-
-"use strict";
-
-// Custom type definitions...
 
 
-/** Here lies the universal methods for moving pieces, forward or rewinding. */
 
 /**
- * Generates all move data needed before move execution
+ * Generates a full Move object from a MoveDraft
  */
-function generateMove(gamefile: gamefile, move: Move) {
-	move.changes = [];
-	move.generateIndex = gamefile.moveIndex + 1;
-	state.initMoveStates(move);
+function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 
-	const piece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
-	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${move.startCoords}.`);
-	move.type = piece.type;
+	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
+	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
+
+	const move: Move = {
+		...moveDraft,
+		type: piece.type,
+		changes: [],
+		generateIndex: gamefile.moveIndex + 1,
+		state: { local: [], global: [] },
+		compact: formatconverter.LongToShort_CompactMove(moveDraft),
+		check: false, // This will be set later
+		mate: false, // This will be set later
+	};
+
 	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
 
 	// Do this before making the move, so that if its a pawn double push, enpassant can be reinstated and not deleted.
 	deleteEnpassantAndSpecialRightsProperties(gamefile, move);
     
-	let specialMoveMade;
+	let specialMoveMade: boolean = false;
 	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
 	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move); // Move piece regularly (no special tag)
 
 	incrementMoveRule(gamefile, move, boardchanges.wasACapture(move));
+
+	return move;
 }
 
 /**
@@ -72,7 +86,7 @@ function applyMove(gamefile: gamefile, move: Move, forward = true, {global = fal
 }
 
 /**
- * **Universal** function for executing forward (not rewinding) moves.
+ * **Universal** function for executing forward global (not rewinding) moves.
  * Called when we move the selected piece, receive our opponent's move,
  * or need to simulate a move within the checkmate algorithm.
  */
@@ -188,22 +202,15 @@ function updateInCheck(gamefile: gamefile) {
  * @param {string[]} moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
 function makeAllMovesInGame(gamefile: gamefile, moves: string[]) {
-	if (gamefile.moveIndex !== -1) throw new Error("Cannot make all moves in game when we're not at the beginning.");
-    
-	gamefile.moves = [];
+	if (gamefile.moves.length > 0) throw new Error("Cannot make all moves in game when there are already moves played.");
 
-	for (let i = 0; i < moves.length; i++) {
-
-		const shortmove = moves[i]!;
+	moves.forEach((shortmove, i) => {
 		const move = calculateMoveFromShortmove(gamefile, shortmove);
-		// The makeMove() method auto-reconstructs the `captured` property.
-
 		if (!move) throw new Error(`Cannot make all moves in game! There was a move in an invalid format: ${shortmove}. Index: ${i}`);
 
 		// Make the move in the game!
-
 		makeMove(gamefile, move);
-	}
+	});
 }
 
 /**
@@ -222,10 +229,9 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 
 	// Reconstruct the startCoords, endCoords, and promotion properties of the longmove
 
-	/** @type {Move} */
-	let move;
+	let moveDraft: MoveDraft;
 	try {
-		move = formatconverter.ShortToLong_CompactMove(shortmove); // { startCoords, endCoords, promotion }
+		moveDraft = formatconverter.ShortToLong_CompactMove(shortmove); // { startCoords, endCoords, promotion }
 	} catch (error) {
 		console.error(error);
 		console.error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);
@@ -236,22 +242,22 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 	// special moves this piece can make, comparing them to the move's endCoords,
 	// and if there's a match, pass on the special move flag.
 
-	const selectedPiece = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
-	if (!selectedPiece) return move; // Return without any special move properties, this will automatically be an illegal move.
+	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
+	if (!piece) return; // No piece on start coordinates, can't calculate Move, because it's illegal
 
-	const legalSpecialMoves = legalmoves.calculate(gamefile, selectedPiece, { onlyCalcSpecials: true }).individual;
+	const legalSpecialMoves: Coords[] = legalmoves.calculate(gamefile, piece, { onlyCalcSpecials: true }).individual;
 	for (let i = 0; i < legalSpecialMoves.length; i++) {
-		const thisCoord = legalSpecialMoves[i];
-		if (!coordutil.areCoordsEqual(thisCoord, move.endCoords)) continue;
+		const thisCoord = legalSpecialMoves[i]!;
+		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
-		specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, move);
+		specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, moveDraft);
 		break;
 	}
 
-	generateMove(gamefile, move);
-
-	return move;
+	return generateMove(gamefile, moveDraft);
 }
+
+
 
 /**
  * Iterates from moveIndex to the target index
@@ -330,9 +336,9 @@ function rewindMove(gamefile: gamefile) {
  * Wraps a function in a simulated move
  * @returns whatever is returned by the callback
  */
-function simulateMoveWrapper<R>(gamefile: gamefile, move: Move, callback: () => R): R {
+function simulateMoveWrapper<R>(gamefile: gamefile, moveDraft: MoveDraft, callback: () => R): R {
 	// Moves the piece without unselecting it or regenerating the pieces model.
-	generateMove(gamefile, move);
+	const move = generateMove(gamefile, moveDraft);
 	makeMove(gamefile, move);
 
 	// What info can we pull from the game after simulating this move?
@@ -382,7 +388,6 @@ export default {
 	forEachMove,
 	gotoMove,
 	makeAllMovesInGame,
-	calculateMoveFromShortmove,
 	applyMove,
 	rewindMove,
 	simulateMoveWrapper,

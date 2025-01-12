@@ -13,7 +13,7 @@ import gamerules from '../variants/gamerules.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
-/** @typedef {import('../util/moveutil.js').Move} Move */
+/** @typedef {import('../../game/chess/movesequence.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
@@ -254,7 +254,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
 
-	// THIS HAS TO BE BEFORE movepiece.makeAllMovesInGame() AS THAT PERFORMS GAME-OVER CHECKS!!!
+	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
     

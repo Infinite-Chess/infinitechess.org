@@ -14,7 +14,7 @@ import fivedimensionalpromote from './fivedimensionalpromote.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
+ * @typedef {import('../../game/chess/movesequence.js').MoveDraft} MoveDraft
 */
 
 "use strict";
@@ -310,7 +310,7 @@ function isPawnPromotion(gamefile, type, coordsClicked) {
 /**
  * Transfers any special move flags from the provided coordinates to the move.
  * @param {number[]} coords - The coordinates
- * @param {Move} move - The move
+ * @param {MoveDraft} move - The move
  */
 function transferSpecialFlags_FromCoordsToMove(coords, move) {
 	for (const special of allSpecials) {
@@ -323,7 +323,7 @@ function transferSpecialFlags_FromCoordsToMove(coords, move) {
 /**
  * Transfers any special move flags from the provided move to the coordinates.
  * @param {number[]} coords - The coordinates
- * @param {Move} move - The move
+ * @param {MoveDraft} move - The move
  */
 function transferSpecialFlags_FromMoveToCoords(move, coords) {
 	for (const special of allSpecials) {

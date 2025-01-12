@@ -156,7 +156,9 @@ async function loadGamefile(
 
 	const lastmove = newGamefile.moves[newGamefile.moveIndex];
 	if (lastmove !== undefined) {
-		// Rewinds the last move LOGICALLY so we can animate it
+		// Rewinds the last move LOGICALLY so we can animate it in a sec
+		// TODO: Does applyMove automatically decrement the moveIndex??
+		// I feel movepiece should know when the moveIndex needs to be incremented/decremented.
 		newGamefile.moveIndex--;
 		movepiece.applyMove(newGamefile, lastmove, false);
 
@@ -164,8 +166,7 @@ async function loadGamefile(
 		// spinny pawn animation has time to fade away.
 		animateLastMoveTimeoutID = setTimeout(() => {
 			if (moveutil.areWeViewingLatestMove(newGamefile)) return;
-			movesequence.viewFront(newGamefile); // Updates to front even when they view different moves
-			movesequence.animateMove(lastmove, true);
+			movesequence.viewFront(newGamefile, { animateLastMove: true }); // Updates to front even when they view different moves
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 	}
 

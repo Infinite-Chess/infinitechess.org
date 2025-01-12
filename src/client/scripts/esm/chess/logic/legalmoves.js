@@ -20,7 +20,7 @@ import movesets from './movesets.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
+ * @typedef {import('../../game/chess/movesequence.js').MoveDraft} MoveDraft
  * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('./movesets.js').PieceMoveset} PieceMoveset
  * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction
@@ -295,7 +295,7 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
  * Tests if the provided move is legal to play in this game.
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
  * @param {gamefile} gamefile - The gamefile
- * @param {Move} move - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
+ * @param {MoveDraft} move - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
  * @returns {boolean | string} *true* If the move is legal, otherwise a string containing why it is illegal.
  */
 function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {

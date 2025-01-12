@@ -40,7 +40,7 @@ function showMoves(durationSecs = 2.5) {
 
 	visibilityWeight++;
 
-	setTextContentOfMoves();
+	updateTextContentOfMoves();
 	setTimeout(hideMoves, durationSecs * 1000);
 
 	if (visibilityWeight === 1) style.revealElement(elementStatusMoves);
@@ -51,7 +51,7 @@ function hideMoves() {
 	if (visibilityWeight === 0) style.hideElement(elementStatusMoves);
 }
 
-function setTextContentOfMoves() {
+function updateTextContentOfMoves() {
 
 	const currentPly = gameslot.getGamefile().moveIndex + 1;
 	const totalPlyCount = moveutil.getPlyCount(gameslot.getGamefile().moves);
@@ -129,5 +129,5 @@ export default {
 	showRotateMesh,
 	updateRotateMesh,
 	hideRotateMesh,
-	setTextContentOfMoves,
+	updateTextContentOfMoves,
 };

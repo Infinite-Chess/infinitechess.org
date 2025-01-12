@@ -16,7 +16,7 @@ import moveutil from '../util/moveutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
+ * @typedef {import('../../game/chess/movesequence.js').MoveDraft} MoveDraft
  * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
@@ -256,7 +256,7 @@ function removeIndividualMovesThatPutYouInCheck(gamefile, individualMoves, piece
 
 // Simulates the move, tests for check, undos the move. Color is the color of the piece we're moving
 function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pieceSelected: { type, index, coords }
-	/** @type {Move} */
+	/** @type {MoveDraft} */
 	const move = { type: pieceSelected.type, startCoords: jsutil.deepCopyObject(pieceSelected.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, move);
 	return movepiece.getSimulatedCheck(gamefile, move, color);

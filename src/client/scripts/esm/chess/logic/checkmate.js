@@ -190,7 +190,6 @@ function detectRepetitionDraw(gamefile) {
 	while (index >= 0) {
 
 		// Moves are in the format: { type, startCoords, endCoords, captured: 'type'}
-		/** @type {Move} */
 		const thisMove = moveList[index];
 
 		// If the move was a pawn push or capture, no further equal positions, terminate the loop.

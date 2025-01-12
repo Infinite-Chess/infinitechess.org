@@ -60,11 +60,6 @@ type StateType = 'specialrights' | 'check' | 'attackers' | 'enpassant' | 'moveru
 // Functions ---------------------------------------------------------------------------------------------
 
 
-/** Initializes the `state` property of the {@link Move} object */
-function initMoveStates(move: Move) {
-	move.state = { local: [], global: [] };
-}
-
 /**
  * Applies all the StateChanges of a Move, in order, to the gamefile,
  * whether forward or backward, local or global.
@@ -152,7 +147,6 @@ export type {
 };
 
 export default {
-	initMoveStates,
 	applyState,
 	applyMove,
 	createState,

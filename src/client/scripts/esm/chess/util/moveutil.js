@@ -1,64 +1,22 @@
 
-// This contains methods for working with the gamefile's moves list,
-// and detects if we're rewinding or fast-forwarding to view the game's history.
+/**
+ * This script contains methods for working with the gamefile's moves list.
+ */
 
-// Import Start
+
 import coordutil from './coordutil.js';
-// Import End
+
 
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
  * @typedef {import('../logic/boardchanges.js').Change} Change
- * @typedef {import('../logic/state.js').MoveState} MoveState
+ * @typedef {import('../../game/chess/movesequence.js').Move} Move
 */
+
 
 "use strict";
 
-// Custom type definitions...
-
-/** The `Move` custom type. This should not be called, it is for JSDoc dropdown info. */
-function Move() {
-	console.error('This Move constructor should NEVER be called! It is purely for useful JSDoc dropdown info when working with the `Move` type.');
-
-	/** The type of piece moved (e.g. `queensW`). */
-	this.type = undefined;
-	/** @type {Array<Change>} */
-	this.changes = undefined;
-
-	/** @type {MoveState} */
-	this.state = undefined;
-
-	/** @type {number} */
-	this.generateIndex = undefined;
-
-	/** The start coordinates of the piece: `[x,y]` */
-	this.startCoords = undefined;
-	/** The end coordinates of the piece: `[x,y]`  */
-	this.endCoords = undefined;
-	/** The type of piece captured (e.g. `knightsB`), if one was made. @type {string} */
-	this.captured = undefined;
-	/** Whether the move delivered check. */
-	this.check = undefined;
-	/** Whether the move delivered mate (or the killing move). */
-	this.mate = undefined;
-	/** Present if the move was special-move enpassant capture. This will be
-	 * 1 for the captured piece is 1 square above, or -1 for 1 square below. */
-	this.enpassant = undefined;
-	/** Present if the move was a special-move promotion. This will be
-	 * a string of the type of piece being promoted to: "queensW" */
-	this.promotion = undefined;
-	/** Present if the move was a special-move casle. This may look like an
-	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
-	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
-	this.castle = undefined;
-	/** The move in most compact notation: `8,7>8,8Q` */
-	this.compact = undefined;
-}
-
-/**
- * This script contains methods for working with the gamefile's moves list.
- */
 
 /**
  * Returns the move one forward from the current position we're viewing, if it exists.
@@ -305,8 +263,6 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
  */
 function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]]; }
 
-// Type export DO NOT USE
-export { Move };
 
 export default {
 	isIncrementingLegal,

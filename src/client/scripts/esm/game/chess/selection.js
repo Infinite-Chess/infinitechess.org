@@ -8,7 +8,6 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
-import formatconverter from '../../chess/logic/formatconverter.js';
 import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 import pieces from '../rendering/pieces.js';
@@ -29,7 +28,7 @@ import gameslot from './gameslot.js';
 
 /**
  * Type Definitions
- * @typedef {import('../../chess/util/moveutil.js').Move} Move
+ * @typedef {import('./movesequence.js').MoveDraft} MoveDraft
  * @typedef {import('../../chess/logic/legalmoves.js').LegalMoves} LegalMoves
  * @typedef {import('../../chess/logic/boardchanges.js').Piece} Piece
  */
@@ -265,8 +264,7 @@ function handleSelectingPiece(pieceClickedType) {
 		//     options.getEM() && pieceClickedType !== 'voidsN') 
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
 		// it will still forward you to front!
-		movesequence.viewFront(gamefile);
-		movesequence.animateMove(gamefile.moves[gamefile.moveIndex]);
+		movesequence.viewFront(gamefile, { animateLastMove: true });
 		return;
 	}
 
@@ -349,15 +347,13 @@ function unselectPiece() {
  */
 function moveGamefilePiece(coords) {
 	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords);
-	/** @type {Move} */
-	const move = { type: pieceSelected.type, startCoords: pieceSelected.coords, endCoords: strippedCoords };
+	/** @type {MoveDraft} */
+	const move = { startCoords: pieceSelected.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move);
-	const compact = formatconverter.LongToShort_CompactMove(move);
-	move.compact = compact;
-	const animateSelectedPiece = !draggingPiece;
 
-	movesequence.makeMove(gameslot.getGamefile(), move);
-	movesequence.animateMove(move, true, animateSelectedPiece);
+	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
+	const animationLevel = draggingPiece ? 1 : 2;
+	movesequence.makeMove(gameslot.getGamefile(), move, { animationLevel });
 	onlinegame.sendMove();
 
 	unselectPiece();

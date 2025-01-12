@@ -454,10 +454,6 @@ function rewindMove() {
 	movesequence.navigateMove(activeGamefile!, false);
     
 	selection.unselectPiece();
-
-	update_MoveButtons();
-
-	stats.showMoves();
 }
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
@@ -467,10 +463,6 @@ function forwardMove() {
 	if (!moveutil.isIncrementingLegal(activeGamefile!)) return stats.showMoves();
 
 	movesequence.navigateMove(activeGamefile!, true);
-
-	update_MoveButtons();
-
-	stats.showMoves();
 }
 
 /**
