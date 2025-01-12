@@ -446,9 +446,9 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	// Convert the move from compact short format "x,y>x,yN"
 	// to long format { startCoords, endCoords, promotion }
 	/** @type {MoveDraft} */
-	let move;
+	let moveDraft;
 	try {
-		move = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
+		moveDraft = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
 	} catch {
 		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`);
 		const reason = 'Incorrectly formatted.';
@@ -456,21 +456,22 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	}
 
 	// If not legal, this will be a string for why it is illegal.
-	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, move, message.gameConclusion);
+	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(moveAndConclusion)}`);
 	if (moveIsLegal !== true && !isPrivate) return reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
 	movesequence.viewFront(gamefile, { animateLastMove: false });
 
-	// // Forward the move...
+	// Forward the move...
 
-	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
+	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
 	const legalMoves = legalmoves.calculate(gamefile, piecemoved);
-	const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
-	legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
+	const endCoordsToAppendSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
+	legalmoves.checkIfMoveLegal(legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move);
-	movesequence.makeMove(gamefile, move);
+	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
+	const move = movesequence.makeMove(gamefile, moveDraft);
+	movesequence.animateMove(move, true);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
@@ -648,8 +649,8 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
         
 		const isLastMove = i === moves.length - 1;
 		// Animate only if it's the last move.
-		const animationLevel = isLastMove ? 2 : 0;
-		movesequence.makeMove(gamefile, move, { animationLevel, doGameOverChecks: isLastMove});
+		movesequence.makeMove(gamefile, move, { doGameOverChecks: isLastMove});
+		if (isLastMove) movesequence.animateMove(move, true); // Only animate on the last forwarded move.
 
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;

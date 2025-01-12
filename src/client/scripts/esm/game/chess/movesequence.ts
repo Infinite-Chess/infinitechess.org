@@ -31,24 +31,17 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import clock from "../../chess/logic/clock.js";
-// // @ts-ignore
-// import formatconverter from "../../chess/logic/formatconverter.js";
+
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
 
-/** Makes a global forward move in the game. */
-function makeMove(
-	gamefile: gamefile,
-	moveDraft: MoveDraft,
-	{
-		animationLevel = 2,
-		doGameOverChecks = true,
-	}: {
-		/**  0 = No animation.  1 = Animate only secondary pieces.  2 = Animate all.  */
-		animationLevel?: 0 | 1 | 2,
-		doGameOverChecks?: boolean,
-	} = {}
-) {
+
+/**
+ * Makes a global forward move in the game. 
+ * 
+ * This returns the constructed Move object so that we have the option to animate it if we so choose.
+ */
+function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	movepiece.makeMove(gamefile, move);
 	boardchanges.runMove(gamefile, move, meshChanges, true);
@@ -65,11 +58,11 @@ function makeMove(
 		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
-	updateGui({ showMoveCounter: false });
+	updateGui(false);
 
 	arrows.clearListOfHoveredPieces();
 
-	if (animationLevel !== 0) animateMove(move, true, animationLevel);
+	return move;
 }
 
 /** Makes a global backward move in the game. */
@@ -79,7 +72,7 @@ function rewindMove(gamefile: gamefile) {
 	// Make the mesh changes
 	boardchanges.runMove(gamefile, gamefile.moves[gamefile.moveIndex], meshChanges, false);
 	// Make the gui changes
-	updateGui({ showMoveCounter: false });
+	updateGui(false);
 }
 
 
@@ -99,7 +92,7 @@ function viewFront(gamefile: gamefile, { animateLastMove }: { animateLastMove: b
 	// TODO: What happens if we try to view front when we're already at front?
 	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (move: Move) => viewMove(gamefile, move, true));
 	if (animateLastMove) animateMove(gamefile.moves[gamefile.moveIndex]);
-	updateGui({ showMoveCounter: false });
+	updateGui(false);
 }
 
 /**
@@ -136,7 +129,7 @@ function navigateMove(gamefile: gamefile, forward: boolean): void {
 
 	viewMove(gamefile, gamefile.moves[idx], forward);
 	animateMove(gamefile.moves[idx], forward);
-	updateGui({ showMoveCounter: true });
+	updateGui(true);
 }
 
 /**
@@ -146,7 +139,7 @@ function navigateMove(gamefile: gamefile, forward: boolean): void {
  */
 function viewIndex(gamefile: gamefile, index: number) {
 	movepiece.gotoMove(gamefile, index, (m: Move) => viewMove(gamefile, m, index >= gamefile.moveIndex));
-	updateGui({ showMoveCounter: false });
+	updateGui(false);
 }
 
 
@@ -159,8 +152,9 @@ function viewIndex(gamefile: gamefile, index: number) {
  * We don't use boardchanges because custom functionality is needed.
  * @param move the move to animate
  * @param forward whether this is a forward or back animation
+ * @param animateMain Whether the targeted piece should be animated. All secondary pieces are guaranteed affected.
  */
-function animateMove(move: Move, forward = true, animationLevel: 1 | 2 = 2) {
+function animateMove(move: Move, forward = true, animateMain = true) {
 	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
 	let clearanimations = true; // The first animation of a turn should clear prev turns animation
 	// TODO: figure out a way to animate multiple moves of the same piece
@@ -171,7 +165,7 @@ function animateMove(move: Move, forward = true, animationLevel: 1 | 2 = 2) {
 	// How does the rose animate?
 	for (const change of move.changes) {
 		if (!(change.action in funcs)) continue;
-		if (animationLevel === 1 && change['piece'].type === move.type) {
+		if (!animateMain && change['piece'].type === move.type) {
 			if (coordutil.getKeyFromCoords(change['piece'].coords) === coordutil.getKeyFromCoords(mainCoords)) {
 				mainCoords = change['endCoords'];
 				continue;
@@ -186,11 +180,9 @@ function animateMove(move: Move, forward = true, animationLevel: 1 | 2 = 2) {
  * Updates the transparency of the rewind/forward move buttons,
  * updates the move number below the move buttons,
  * and flags the next frame to be rendered.
+ * @param showMoveCounter Whether to show the move counter below the move buttons in the navigation bar.
  */
-function updateGui({ showMoveCounter }: {
-	/** Whether to show the move counter below the move buttons in the navigation bar. */
-	showMoveCounter: boolean
-}) {
+function updateGui(showMoveCounter: boolean) {
 	if (showMoveCounter) stats.showMoves();
 	else stats.updateTextContentOfMoves(); // While we may not be OPENING the move counter, if it WAS already open we should still update the number!
 	guinavigation.update_MoveButtons();
@@ -207,4 +199,5 @@ export default {
 	viewMove,
 	viewFront,
 	viewIndex,
+	animateMove,
 };

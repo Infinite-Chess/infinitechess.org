@@ -348,12 +348,13 @@ function unselectPiece() {
 function moveGamefilePiece(coords) {
 	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords);
 	/** @type {MoveDraft} */
-	const move = { startCoords: pieceSelected.coords, endCoords: strippedCoords };
-	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move);
+	const moveDraft = { startCoords: pieceSelected.coords, endCoords: strippedCoords };
+	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
 
+	const move = movesequence.makeMove(gameslot.getGamefile(), moveDraft);
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
-	const animationLevel = draggingPiece ? 1 : 2;
-	movesequence.makeMove(gameslot.getGamefile(), move, { animationLevel });
+	const animateMain = !draggingPiece;
+	movesequence.animateMove(move, true, animateMain);
 	onlinegame.sendMove();
 
 	unselectPiece();
