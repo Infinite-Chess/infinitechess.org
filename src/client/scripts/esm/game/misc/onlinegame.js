@@ -460,7 +460,7 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(moveAndConclusion)}`);
 	if (moveIsLegal !== true && !isPrivate) return reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movesequence.viewFront(gamefile, { animateLastMove: false });
+	movesequence.viewFront(gamefile);
 
 	// Forward the move...
 
@@ -596,7 +596,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	}
 
 	const originalMoveIndex = gamefile.moveIndex;
-	movesequence.viewFront(gamefile, { animateLastMove: false });
+	movesequence.viewFront(gamefile);
 	let aChangeWasMade = false;
 
 	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..

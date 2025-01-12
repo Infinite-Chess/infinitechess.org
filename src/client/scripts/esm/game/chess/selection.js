@@ -264,7 +264,7 @@ function handleSelectingPiece(pieceClickedType) {
 		//     options.getEM() && pieceClickedType !== 'voidsN') 
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
 		// it will still forward you to front!
-		movesequence.viewFront(gamefile, { animateLastMove: true });
+		movesequence.viewFront(gamefile);
 		return;
 	}
 

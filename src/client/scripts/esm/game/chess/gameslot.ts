@@ -166,7 +166,8 @@ async function loadGamefile(
 		// spinny pawn animation has time to fade away.
 		animateLastMoveTimeoutID = setTimeout(() => {
 			if (moveutil.areWeViewingLatestMove(newGamefile)) return;
-			movesequence.viewFront(newGamefile, { animateLastMove: true }); // Updates to front even when they view different moves
+			movesequence.viewFront(newGamefile); // Updates to front even when they view different moves
+			movesequence.animateMove(lastmove, true);
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 	}
 

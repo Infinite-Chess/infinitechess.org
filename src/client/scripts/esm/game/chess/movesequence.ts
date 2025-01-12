@@ -88,10 +88,9 @@ function rewindMove(gamefile: gamefile) {
 /**
  * Makes the game view the last move
  */
-function viewFront(gamefile: gamefile, { animateLastMove }: { animateLastMove: boolean }) {
+function viewFront(gamefile: gamefile) {
 	// TODO: What happens if we try to view front when we're already at front?
 	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (move: Move) => viewMove(gamefile, move, true));
-	if (animateLastMove) animateMove(gamefile.moves[gamefile.moveIndex]);
 	updateGui(false);
 }
 
