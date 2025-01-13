@@ -80,7 +80,7 @@ interface Move extends MoveDraft {
 }
 
 
-// Functions --------------------------------------------------------------------------------------------------
+// Move Generating --------------------------------------------------------------------------------------------------
 
 
 /**
@@ -124,54 +124,6 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 }
 
 /**
- * Applies a move's board changes to the gamefile, no graphical changes.
- * Also updates the gamefile's `moveIndex`.
- * @param gamefile 
- * @param move 
- * @param forward - Whether the move's board changes should be applied forward or backward.
- * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
- */
-function applyMove(gamefile: gamefile, move: Move, forward = true, { global = false } = {}) {
-	gamefile.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
-
-	// Stops stupid missing piece errors
-	const indexToApply = gamefile.moveIndex + Number(!forward);
-	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
-
-	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward); // Logical board changes
-	state.applyMove(gamefile, move, forward, { globalChange: global }); // Apply the State of the move
-}
-
-/**
- * Executes all the logical board changes of a global forward move in the game, no graphical changes.
- */
-function makeMove(gamefile: gamefile, move: Move) {
-	gamefile.moves.push(move);
-
-	applyMove(gamefile, move, true, { global: true }); // Apply the logical board changes.
-
-	// This needs to be after the moveIndex is updated
-	updateTurn(gamefile);
-
-	// Now we can test for check, and modify the state of the gamefile if it is.
-	createCheckState(gamefile, move);
-	if (gamefile.inCheck) move.check = true;
-	// The "mate" property of the move will be added after our game conclusion checks...
-}
-
-/**
- * Queues a gamefile StateChange to delete the gamefile's current `enpassant`,
- * and the specialRights of the piece moved and its destination.
- */
-function queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile: gamefile, move: Move) {
-	state.createState(move, 'enpassant', gamefile.enpassant, undefined);
-	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key });
-	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key }); // We also delete the captured pieces specialRights for ANY move.
-}
-
-/**
  * Calculates all of a move's board changes, and "queues" them,
  * adding them to the move's Changes list.
  * 
@@ -192,6 +144,17 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 	boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
 }
 
+/**
+ * Queues a gamefile StateChange to delete the gamefile's current `enpassant`,
+ * and the specialRights of the piece moved and its destination.
+ */
+function queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile: gamefile, move: Move) {
+	state.createState(move, 'enpassant', gamefile.enpassant, undefined);
+	let key = coordutil.getKeyFromCoords(move.startCoords);
+	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key });
+	key = coordutil.getKeyFromCoords(move.endCoords);
+	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key }); // We also delete the captured pieces specialRights for ANY move.
+}
 
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
@@ -203,6 +166,46 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
 	state.createState(move, 'moverulestate', gamefile.moveRuleState, newMoveRule);
+}
+
+
+// Forwarding -------------------------------------------------------------------------------------------------------
+
+
+/**
+ * Executes all the logical board changes of a global forward move in the game, no graphical changes.
+ */
+function makeMove(gamefile: gamefile, move: Move) {
+	gamefile.moves.push(move);
+
+	applyMove(gamefile, move, true, { global: true }); // Apply the logical board changes.
+
+	// This needs to be after the moveIndex is updated
+	updateTurn(gamefile);
+
+	// Now we can test for check, and modify the state of the gamefile if it is.
+	createCheckState(gamefile, move);
+	if (gamefile.inCheck) move.check = true;
+	// The "mate" property of the move will be added after our game conclusion checks...
+}
+
+/**
+ * Applies a move's board changes to the gamefile, no graphical changes.
+ * Also updates the gamefile's `moveIndex`.
+ * @param gamefile 
+ * @param move 
+ * @param forward - Whether the move's board changes should be applied forward or backward.
+ * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
+ */
+function applyMove(gamefile: gamefile, move: Move, forward = true, { global = false } = {}) {
+	gamefile.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
+
+	// Stops stupid missing piece errors
+	const indexToApply = gamefile.moveIndex + Number(!forward);
+	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
+
+	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward); // Logical board changes
+	state.applyMove(gamefile, move, forward, { globalChange: global }); // Apply the State of the move
 }
 
 /**
@@ -297,6 +300,51 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 }
 
 
+// Rewinding -------------------------------------------------------------------------------------------------------
+
+
+/**
+ * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
+ */
+function rewindMove(gamefile: gamefile) {
+	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex);
+
+	applyMove(gamefile, move, false, { global: true });
+
+	// Delete the move off the end of our moves list
+	gamefile.moves.pop();
+	updateTurn(gamefile);
+}
+
+
+// Dynamic -------------------------------------------------------------------------------------------------------
+
+
+/**
+ * Iterates to a certain move index, performing a callback function on each move.
+ * The callback should be a move application function, either {@link applyMove}, or movesequence.viewMove(),
+ * depending on if each move should make graphical changes or not. Both methods make logical board changes.
+ * @param {gamefile} gamefile 
+ * @param {number} index 
+ * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
+ */
+function goToMove(gamefile: gamefile, index: number, callback: CallableFunction) {
+	if (index === gamefile.moveIndex) return;
+
+	const forwards = index >= gamefile.moveIndex;
+	const offset = forwards ? 0 : 1;
+	let i = gamefile.moveIndex;
+	
+	if (gamefile.moves.length <= index + offset || index + offset < 0) throw Error("Target index is outside of the movelist!");
+
+	while (i !== index) {
+		i = math.moveTowards(i, index, 1);
+		const move = gamefile.moves[i + offset];
+		if (move === undefined) throw Error(`Undefined move in goToMove()! ${i}, ${index}`);
+		callback(move);
+	}
+}
+
 // COMMENTED-OUT because it's 99% identical to goToMove(), and no other part of the code implements it.
 /**
  * Iterates from moveIndex to the target index
@@ -324,43 +372,9 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 // 	}
 // }
 
-/**
- * Iterates to a certain move index, performing a callback function on each move.
- * The callback should be a move application function, either {@link applyMove}, or movesequence.viewMove(),
- * depending on if each move should make graphical changes or not. Both methods make logical board changes.
- * @param {gamefile} gamefile 
- * @param {number} index 
- * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
- */
-function goToMove(gamefile: gamefile, index: number, callback: CallableFunction) {
-	if (index === gamefile.moveIndex) return;
 
-	const forwards = index >= gamefile.moveIndex;
-	const offset = forwards ? 0 : 1;
-	let i = gamefile.moveIndex;
-	
-	if (gamefile.moves.length <= index + offset || index + offset < 0) throw Error("Target index is outside of the movelist!");
+// Move Wrappers ----------------------------------------------------------------------------------------------------
 
-	while (i !== index) {
-		i = math.moveTowards(i, index, 1);
-		const move = gamefile.moves[i + offset];
-		if (move === undefined) throw Error(`Undefined move in goToMove()! ${i}, ${index}`);
-		callback(move);
-	}
-}
-
-/**
- * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
- */
-function rewindMove(gamefile: gamefile) {
-	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex);
-
-	applyMove(gamefile, move, false, { global: true });
-
-	// Delete the move off the end of our moves list
-	gamefile.moves.pop();
-	updateTurn(gamefile);
-}
 
 /**
  * Wraps a function in a simulated move.
@@ -402,6 +416,8 @@ function getSimulatedConclusion(gamefile: gamefile, move: Move): string | false 
 	);
 }
 
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 
 export type {
