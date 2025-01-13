@@ -139,7 +139,20 @@ function createState(
 								: stateTypes.local .includes(stateType) ? move.state.local
 								: (() => { throw Error(`Cannot create State for invalid state type "${stateType}".`); })();
 
-	targetStateChangeList.push(newStateChange);
+	let modifiedExistingEnpassantState = false;
+	if (stateType === 'enpassant') {
+		// Check to make sure there isn't already an enpassant state change,
+		// If so, we need to overwrite that one's future value, instead of queueing a new one.
+		const preExistingEnpassantState = targetStateChangeList.find(state => state.type === 'enpassant');
+		if (preExistingEnpassantState !== undefined) {
+			preExistingEnpassantState.future = future;
+			modifiedExistingEnpassantState = true;
+		}
+	}
+
+	// Only queue it if we didn't modify an existing state of this type
+	if (!modifiedExistingEnpassantState) targetStateChangeList.push(newStateChange);
+	// Only apply it immediately if the gamefile is specified
 	if (gamefileToSet !== undefined) applyState(gamefileToSet, newStateChange, true);
 }
 
