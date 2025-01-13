@@ -130,10 +130,6 @@ function navigateMove(gamefile: gamefile, forward: boolean): void {
 	// if it does, but just in case we forget to check.
 	const move = gamefile.moves[idx];
 	if (move === undefined) throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
-
-	// Adjust move index based on direction
-	if (forward) gamefile.moveIndex++;
-	else gamefile.moveIndex--;
 	
 	viewMove(gamefile, move, forward); // Apply the logical + graphical changes
 	animateMove(move, forward); // Animate

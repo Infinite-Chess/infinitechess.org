@@ -156,10 +156,6 @@ async function loadGamefile(
 
 	const lastmove = moveutil.getLastMove(newGamefile.moves);
 	if (lastmove !== undefined) {
-		// Rewinds the last move LOGICALLY so we can animate it in a sec
-		// TODO: Does applyMove automatically decrement the moveIndex??
-		// I feel movepiece should know when the moveIndex needs to be incremented/decremented.
-		newGamefile.moveIndex--;
 		movepiece.applyMove(newGamefile, lastmove, false);
 
 		// A small delay to animate the very last move, so the loading screen

@@ -125,16 +125,19 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 
 /**
  * Applies a move's board changes to the gamefile, no graphical changes.
+ * Also updates the gamefile's `moveIndex`.
  * @param gamefile 
  * @param move 
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
 function applyMove(gamefile: gamefile, move: Move, forward = true, { global = false } = {}) {
+	gamefile.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
+
 	// Stops stupid missing piece errors
 	const indexToApply = gamefile.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
-	
+
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward); // Logical board changes
 	state.applyMove(gamefile, move, forward, { globalChange: global }); // Apply the State of the move
 }
@@ -143,12 +146,12 @@ function applyMove(gamefile: gamefile, move: Move, forward = true, { global = fa
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
 function makeMove(gamefile: gamefile, move: Move) {
-	gamefile.moveIndex++;
 	gamefile.moves.push(move);
 
-	updateTurn(gamefile);
-
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical board changes.
+
+	// This needs to be after the moveIndex is updated
+	updateTurn(gamefile);
 
 	// Now we can test for check, and modify the state of the gamefile if it is.
 	createCheckState(gamefile, move);
@@ -336,13 +339,12 @@ function goToMove(gamefile: gamefile, index: number, callback: CallableFunction)
 	const offset = forwards ? 0 : 1;
 	let i = gamefile.moveIndex;
 	
-	if (gamefile.moves.length <= index + offset || index + offset < 0) throw new Error("Target index is outside of the movelist!");
+	if (gamefile.moves.length <= index + offset || index + offset < 0) throw Error("Target index is outside of the movelist!");
 
 	while (i !== index) {
 		i = math.moveTowards(i, index, 1);
 		const move = gamefile.moves[i + offset];
 		if (move === undefined) throw Error(`Undefined move in goToMove()! ${i}, ${index}`);
-		gamefile.moveIndex = i;
 		callback(move);
 	}
 }
@@ -353,7 +355,6 @@ function goToMove(gamefile: gamefile, index: number, callback: CallableFunction)
 function rewindMove(gamefile: gamefile) {
 	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex);
 
-	gamefile.moveIndex--;
 	applyMove(gamefile, move, false, { global: true });
 
 	// Delete the move off the end of our moves list
