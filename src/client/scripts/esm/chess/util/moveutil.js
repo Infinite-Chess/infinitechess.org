@@ -146,15 +146,6 @@ function hasPieceMoved(gamefile, coords) {
 }
 
 /**
- * Deletes the latest move played.
- * @param {Move[]} moves - The moves list
- */
-function deleteLastMove(moves) {
-	if (moves.length === 0) return console.error("Cannot delete last move when there are none");
-	moves.pop();
-}
-
-/**
  * Returns true if the moves are in the old 2D array format.
  * @param {Move[]} longmoves - The gamefile's moves parameter
  * @returns {boolean} *true* if the moves are in the old 2D format, false if in new 1D format.
@@ -276,7 +267,6 @@ export default {
 	getWhosTurnAtFront,
 	getPlyCount,
 	hasPieceMoved,
-	deleteLastMove,
 	// flagLastMoveAsCheck,
 	flagLastMoveAsMate,
 	areMovesIn2DFormat,

@@ -311,7 +311,7 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.attackers);
 
 	const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
-	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
+	movepiece.goToMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
 	movepiece.updateTurn(gamefile);
 
 	// Make sure a piece exists on the start coords
@@ -378,14 +378,14 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// ...
 
 	// Rewind the game back to the index we were originally on before simulating
-	movepiece.gotoMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
+	movepiece.goToMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
 	movepiece.updateTurn(gamefile);
 
 	return true; // By this point, nothing illegal!
 
 	function rewindGameAndReturnReason(reasonIllegal) {
 		// Rewind the game back to the index we were originally on
-		movepiece.gotoMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
+		movepiece.goToMove(gamefile, originalMoveIndex, (m) => movepiece.applyMove(gamefile, m, false));
 		movepiece.updateTurn(gamefile);
 		return reasonIllegal;
 	}

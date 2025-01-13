@@ -96,12 +96,12 @@ function viewMove(gamefile: gamefile, move: Move, forward = true) {
 }
 
 /**
- * Makes the game veiw a set move index
+ * Makes the game view a set move index
  * @param gamefile the gamefile
  * @param index the move index to goto
  */
 function viewIndex(gamefile: gamefile, index: number) {
-	movepiece.gotoMove(gamefile, index, (move: Move) => viewMove(gamefile, move, index >= gamefile.moveIndex));
+	movepiece.goToMove(gamefile, index, (move: Move) => viewMove(gamefile, move, index >= gamefile.moveIndex));
 	updateGui(false);
 }
 

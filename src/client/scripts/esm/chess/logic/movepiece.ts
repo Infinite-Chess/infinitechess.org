@@ -192,9 +192,6 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
- * @param gamefile - The gamefile
- * @param move - The move
- * @param wasACapture Whether the move made a capture
  */
 function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
@@ -206,13 +203,16 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 }
 
 /**
- * Flips the `whosTurn` property of the gamefile.
- * @param gamefile - The gamefile
+ * Updates the `whosTurn` property of the gamefile, according to the move index we're on.
  */
 function updateTurn(gamefile: gamefile) {
 	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 }
 
+/**
+ * Tests if the gamefile is currently in check,
+ * then creates and set's the game state to reflect that.
+ */
 function createCheckState(gamefile: gamefile, move: Move) {
 	let attackers: [] | undefined = undefined;
 	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
@@ -220,26 +220,10 @@ function createCheckState(gamefile: gamefile, move: Move) {
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
 	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 
-	state.createState(
-		move,
-		"check",
-		gamefile.inCheck,
-		checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers),
-		{},
-		gamefile
-	); // Passes in the gamefile as an argument
+	const currentPositionIsCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers);
+	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
+	state.createState(move, "check", gamefile.inCheck, currentPositionIsCheck, {}, gamefile); // Passes in the gamefile as an argument
 	state.createState(move, "attackers", gamefile.attackers, attackers || [], {}, gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
-}
-
-function updateInCheck(gamefile: gamefile) {
-	let attackers: [] | undefined = undefined;
-	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
-	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
-	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
-	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
-
-	gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
-	gamefile.attackers = attackers || []; // Erase the checking pieces calculated from previous turn and pass in new ones!
 }
 
 /**
@@ -247,36 +231,36 @@ function updateInCheck(gamefile: gamefile) {
  * reconstructs each move's properties, INCLUDING special flags, and makes that move
  * in the game. At each step it has to calculate what legal special
  * moves are possible, so it can pass on those flags.
- * On the very final move it test if the game is over, and animate the move.
  * 
  * **THROWS AN ERROR** if any move during the process is in an invalid format.
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
 function makeAllMovesInGame(gamefile: gamefile, moves: string[]) {
-	if (gamefile.moves.length > 0) throw new Error("Cannot make all moves in game when there are already moves played.");
+	if (gamefile.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
 		const move = calculateMoveFromShortmove(gamefile, shortmove);
-		if (!move) throw new Error(`Cannot make all moves in game! There was a move in an invalid format: ${shortmove}. Index: ${i}`);
+		if (!move) throw Error(`Cannot make all moves in game! There was one invalid move: ${shortmove}. Index: ${i}`);
 		makeMove(gamefile, move);
 	});
 }
 
 /**
- * Accepts a move in the most compact short form, and constructs the Move object
- * and most of its properties, EXCLUDING `type` and `captured` which are reconstructed by makeMove().
- * This has to calculate the piece's legal special moves to do add special move flags.
+ * Accepts a move in the most compact short form, and constructs the whole Move object.
+ * This has to calculate the piece's legal special
+ * moves to be able to deduce if the move was a special move.
  * 
  * **Returns undefined** if there was an error anywhere in the conversion.
+ * 
  * This does NOT perform legality checks, so still do that afterward.
  * @param {gamefile} gamefile - The gamefile
  * @param {string} shortmove - The move in most compact form: `1,2>3,4Q`
  * @returns {Move | undefined} The move object, or undefined if there was an error.
  */
 function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move | undefined {
-	if (!moveutil.areWeViewingLatestMove(gamefile)) {console.error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move."); return;}
+	if (!moveutil.areWeViewingLatestMove(gamefile)) throw Error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
 
-	// Reconstruct the startCoords, endCoords, and promotion properties of the longmove
+	// Reconstruct the startCoords, endCoords, and special move properties of the MoveDraft
 
 	let moveDraft: MoveDraft;
 	try {
@@ -287,16 +271,19 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 		return;
 	}
 
-	// Reconstruct the enpassant and castle properties by calculating what legal
+	// Reconstruct the special move properties by calculating what legal
 	// special moves this piece can make, comparing them to the move's endCoords,
 	// and if there's a match, pass on the special move flag.
 
 	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
-	if (!piece) return; // No piece on start coordinates, can't calculate Move, because it's illegal
+	if (!piece) {
+		console.error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove}`);
+		return; // No piece on start coordinates, can't calculate Move, because it's illegal
+	}
 
 	const legalSpecialMoves: Coords[] = legalmoves.calculate(gamefile, piece, { onlyCalcSpecials: true }).individual;
 	for (let i = 0; i < legalSpecialMoves.length; i++) {
-		const thisCoord = legalSpecialMoves[i]!;
+		const thisCoord: Coords = legalSpecialMoves[i]!;
 		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
 		specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, moveDraft);
@@ -307,42 +294,42 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 }
 
 
-
+// COMMENTED-OUT because it's 99% identical to goToMove(), and no other part of the code implements it.
 /**
  * Iterates from moveIndex to the target index
  * Callbacks should not update the board
  */
-function forEachMove(gamefile: gamefile, targetIndex: number, callback: CallableFunction) {
-	if (targetIndex === gamefile.moveIndex) return;
+// function forEachMove(gamefile: gamefile, targetIndex: number, callback: CallableFunction) {
+// 	if (targetIndex === gamefile.moveIndex) return;
 
-	const forwards = targetIndex >= gamefile.moveIndex;
-	const offset = forwards ? 0 : 1;
-	let i = gamefile.moveIndex;
+// 	const forwards = targetIndex >= gamefile.moveIndex;
+// 	const offset = forwards ? 0 : 1;
+// 	let i = gamefile.moveIndex;
 	
-	if (gamefile.moves.length <= targetIndex + offset || targetIndex + offset < 0) throw new Error("Target index is outside of the movelist!");
+// 	if (gamefile.moves.length <= targetIndex + offset || targetIndex + offset < 0) throw new Error("Target index is outside of the movelist!");
 
-	while (i !== targetIndex) {
-		i = math.moveTowards(i, targetIndex, 1);
-		const move = gamefile.moves[i + offset];
+// 	while (i !== targetIndex) {
+// 		i = math.moveTowards(i, targetIndex, 1);
+// 		const move = gamefile.moves[i + offset];
 
-		if (move === undefined) {
-			console.log(`Undefined! ${i}, ${targetIndex}`);
-			continue;
-		}
+// 		if (move === undefined) {
+// 			console.log(`Undefined! ${i}, ${targetIndex}`);
+// 			continue;
+// 		}
 
-		callback(move);
-	}
-}
+// 		callback(move);
+// 	}
+// }
 
 /**
- * Iterates to a certain move index.
- * Callable should be a move application function,
- * either {@link applyMove}, or movesequence.viewMove.
+ * Iterates to a certain move index, performing a callback function on each move.
+ * The callback should be a move application function, either {@link applyMove}, or movesequence.viewMove(),
+ * depending on if each move should make graphical changes or not. Both methods make logical board changes.
  * @param {gamefile} gamefile 
  * @param {number} index 
- * @param {CallableFunction} callback 
+ * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
  */
-function gotoMove(gamefile: gamefile, index: number, callback: CallableFunction) {
+function goToMove(gamefile: gamefile, index: number, callback: CallableFunction) {
 	if (index === gamefile.moveIndex) return;
 
 	const forwards = index >= gamefile.moveIndex;
@@ -354,66 +341,51 @@ function gotoMove(gamefile: gamefile, index: number, callback: CallableFunction)
 	while (i !== index) {
 		i = math.moveTowards(i, index, 1);
 		const move = gamefile.moves[i + offset];
-
-		if (move === undefined) {
-			console.log(`Undefined! ${i}, ${index}`);
-			continue;
-		}
+		if (move === undefined) throw Error(`Undefined move in goToMove()! ${i}, ${index}`);
 		gamefile.moveIndex = i;
 		callback(move);
 	}
 }
 
 /**
- * **Universal** function for undo'ing or rewinding moves.
- * Called when we're rewinding the game to view past moves,
- * or when the checkmate algorithm is undo'ing a move.
+ * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
 function rewindMove(gamefile: gamefile) {
-
-	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex); // { type, startCoords, endCoords, captured }
+	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.moveIndex);
 
 	gamefile.moveIndex--;
 	applyMove(gamefile, move, false, { global: true });
 
-	// Finally, delete the move off the top of our moves [] array list
-	moveutil.deleteLastMove(gamefile.moves);
+	// Delete the move off the end of our moves list
+	gamefile.moves.pop();
 	updateTurn(gamefile);
 }
 
 /**
- * Wraps a function in a simulated move
- * @returns whatever is returned by the callback
+ * Wraps a function in a simulated move.
+ * The callback may be used to obtain whatever
+ * property of the gamefile we want after the move is made.
+ * The move is automatically rewound when it's done.
+ * @returns Whatever is returned by the callback
  */
 function simulateMoveWrapper<R>(gamefile: gamefile, moveDraft: MoveDraft, callback: () => R): R {
-	// Moves the piece without unselecting it or regenerating the pieces model.
 	const move = generateMove(gamefile, moveDraft);
 	makeMove(gamefile, move);
-
 	// What info can we pull from the game after simulating this move?
 	const info = callback();
-
-	// Undo the move, REWIND.
-	// We don't have to worry about the index changing, it is the same.
-	// BUT THE CAPTURED PIECE MUST be inserted in the exact location!
-	// Only remove the move
 	rewindMove(gamefile);
-
 	return info;
 }
 
 /**
  * Simulates a move to get the check
- * @param {gamefile} gamefile 
- * @param {Move} move 
- * @param {*} colorToTestInCheck 
- * @returns 
+ * @returns false if the move does not result in check, otherwise a list of the coords of all the royals in check.
  */
-function getSimulatedCheck(gamefile: gamefile, move: Move, colorToTestInCheck: string): boolean | Coords[] {
+function getSimulatedCheck(gamefile: gamefile, moveDraft: MoveDraft, colorToTestInCheck: string): false | Coords[] {
 	return simulateMoveWrapper(
 		gamefile,
-		move,
-		() => checkdetection.detectCheck(gamefile, colorToTestInCheck, []),
+		moveDraft,
+		() => checkdetection.detectCheck(gamefile, colorToTestInCheck),
 	);	
 }
 
@@ -429,18 +401,19 @@ function getSimulatedConclusion(gamefile: gamefile, move: Move): string | false 
 	);
 }
 
+
+
 export type {
 	Move,
 	MoveDraft,
 };
 
 export default {
-	updateInCheck,
 	generateMove,
 	makeMove,
 	updateTurn,
-	forEachMove,
-	gotoMove,
+	// forEachMove,
+	goToMove,
 	makeAllMovesInGame,
 	applyMove,
 	rewindMove,

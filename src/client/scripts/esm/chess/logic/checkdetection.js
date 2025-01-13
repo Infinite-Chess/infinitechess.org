@@ -257,9 +257,9 @@ function removeIndividualMovesThatPutYouInCheck(gamefile, individualMoves, piece
 // Simulates the move, tests for check, undos the move. Color is the color of the piece we're moving
 function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pieceSelected: { type, index, coords }
 	/** @type {MoveDraft} */
-	const move = { type: pieceSelected.type, startCoords: jsutil.deepCopyObject(pieceSelected.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
-	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, move);
-	return movepiece.getSimulatedCheck(gamefile, move, color);
+	const moveDraft = { type: pieceSelected.type, startCoords: jsutil.deepCopyObject(pieceSelected.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
+	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
+	return movepiece.getSimulatedCheck(gamefile, moveDraft, color);
 }
 
 
