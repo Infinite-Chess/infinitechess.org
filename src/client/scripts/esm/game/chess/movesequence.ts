@@ -156,21 +156,15 @@ function viewIndex(gamefile: gamefile, index: number) {
 function animateMove(move: Move, forward = true, animateMain = true) {
 	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
 	let clearanimations = true; // The first animation of a turn should clear prev turns animation
+
 	// TODO: figure out a way to animate multiple moves of the same piece
 	// Keyframing or smth
 
-	let mainCoords = move.startCoords;
-
 	// How does the rose animate?
 	for (const change of move.changes) {
-		if (!(change.action in funcs)) continue;
-		if (!animateMain && change['piece'].type === move.type) {
-			if (coordutil.getKeyFromCoords(change['piece'].coords) === coordutil.getKeyFromCoords(mainCoords)) {
-				mainCoords = change['endCoords'];
-				continue;
-			}
-		}
-		funcs[change.action]!(change, clearanimations);
+		if (!(change.action in funcs)) continue; // There is no animation change function for this type of Change
+		if (!animateMain && change.main) continue; // Skip animating the main piece if animateMain is false, and this change IS for the main piece.
+		funcs[change.action]!(change, clearanimations); // Call the animation function
 		clearanimations = false;
 	}
 }

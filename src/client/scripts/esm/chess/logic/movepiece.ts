@@ -118,7 +118,7 @@ function applyMove(gamefile: gamefile, move: Move, forward = true, {global = fal
 	if (gamefile.moveIndex + Number(!forward) !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${gamefile.moveIndex + Number(!forward)} (forward: ${forward})!`);
 	
 	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
-	state.applyMove(gamefile, move, forward, {globalChange: global});
+	state.applyMove(gamefile, move, forward, { globalChange: global });
 }
 
 /**
@@ -166,11 +166,11 @@ function movePiece_NoSpecial(gamefile: gamefile, piece: Piece, move: Move) {
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 
 	if (capturedPiece) {
-		boardchanges.queueCapture(move.changes, piece, move.endCoords, capturedPiece);
+		boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
 		return;
 	};
 
-	boardchanges.queueMovePiece(move.changes, piece, move.endCoords);
+	boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
 
 }
 

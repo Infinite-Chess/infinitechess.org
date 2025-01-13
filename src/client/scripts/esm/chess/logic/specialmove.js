@@ -43,7 +43,7 @@ function kings(gamefile, piece, move) {
 
 	// Move the king to new square
 
-	boardchanges.queueMovePiece(moveChanges, piece, move.endCoords); // Make normal move
+	boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Make normal move
 
 	// Move the rook to new square
 
@@ -53,7 +53,7 @@ function kings(gamefile, piece, move) {
 	const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
 	state.createState(move, `specialRights`, gamefile.specialRights[key], undefined, { coords: key });
 
-	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, landSquare); // Make normal move
+	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, false, landSquare); // Make normal move
 
 	// Special move was executed!
 	// There is no captured piece with castling
@@ -80,17 +80,17 @@ function pawns(gamefile, piece, move, { updateProperties = true } = {}) {
 	// Delete the piece captured
 
 	if (capturedPiece) {
-		boardchanges.queueCapture(moveChanges, piece, move.endCoords, capturedPiece);
+		boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece);
 	} else {
 		// Move the pawn
-		boardchanges.queueMovePiece(moveChanges, piece, move.endCoords);
+		boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords);
 	}
 
 	if (promotionTag) {
 		// Delete original pawn
-		boardchanges.queueDeletePiece(moveChanges, {type: piece.type, coords: move.endCoords, index: piece.index});
+		boardchanges.queueDeletePiece(moveChanges, { type: piece.type, coords: move.endCoords, index: piece.index }, true);
 
-		boardchanges.queueAddPiece(moveChanges, {type: promotionTag, coords: move.endCoords, index: undefined });
+		boardchanges.queueAddPiece(moveChanges, { type: promotionTag, coords: move.endCoords, index: undefined });
 	}
 
 	// Special move was executed!

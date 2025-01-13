@@ -381,7 +381,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	if (sameLines.length === 0) return;
 
 	// Delete the piece, and add it back when we're done!
-	const deleteChange = boardchanges.queueDeletePiece([], pieceSelected);
+	const deleteChange = boardchanges.queueDeletePiece([], pieceSelected, true);
 	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.forward);
     
 	// let checklines = []; // For Idon's code below

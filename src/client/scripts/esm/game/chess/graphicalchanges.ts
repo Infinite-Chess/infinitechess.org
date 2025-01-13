@@ -88,7 +88,7 @@ function captureMeshPiece(gamefile: gamefile, change: Change) {
 
 function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 	returnMeshPiece(gamefile, change);
-	addMeshPiece(gamefile, {action: "add", piece: change['capturedPiece']});
+	addMeshPiece(gamefile, { action: "add", main: change.main, piece: change['capturedPiece'] });
 }
 
 

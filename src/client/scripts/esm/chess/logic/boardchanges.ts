@@ -37,7 +37,10 @@ interface Piece {
  */
 interface Change {
 	// The action is used to differentiated the type of change made and the data it has
-	action: 'add' | "delete" | "move" | "capture", 
+	action: 'add' | 'delete' | 'move' | 'capture',
+	/** Whether this change affects the main piece moved.
+	 * This would be true if the change was for moving the king during castling, but false for moving the rook. */
+	main: boolean,
 	[changeData: string]: any
 }
 
@@ -94,11 +97,12 @@ const changeFuncs: ChangeApplication<genericChangeFunc> = {
  * Need to differentiate this from move so animations can work and so that royal capture can be recognised
  * @param changes
  * @param piece The piece moved. Its coords are used as starting coords
+ * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  * @param endCoords 
  * @param capturedPiece The piece captured
  */
-function queueCapture(changes: Array<Change>, piece: Piece, endCoords: Coords, capturedPiece: Piece) {
-	changes.push({ action: 'capture', piece: piece, endCoords: endCoords, capturedPiece: capturedPiece });
+function queueCapture(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords, capturedPiece: Piece) {
+	changes.push({ action: 'capture', main, piece: piece, endCoords: endCoords, capturedPiece: capturedPiece });
 	return changes;
 }
 
@@ -109,15 +113,18 @@ function queueCapture(changes: Array<Change>, piece: Piece, endCoords: Coords, c
  * the pieces index is optional and will get assigned one if none is present
  */
 function queueAddPiece(changes: Array<Change>, piece: Piece) {
-	changes.push({ action: 'add', piece });
+	changes.push({ action: 'add', main: false, piece }); // It's impossible for an 'add' change to affect the main piece moved, because before this move this piece didn't exist.
 	return changes;
 };
 
 /**
- * Queues the removal of a piece
+ * Queues the removal of a piece by adding that Change to the Changes list.
+ * @param changes - The running list of Changes for the move.
+ * @param piece - The piece this change affects
+ * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  */
-function queueDeletePiece(changes: Array<Change>, piece: Piece) {
-	changes.push({ action: 'delete', piece });
+function queueDeletePiece(changes: Array<Change>, piece: Piece, main: boolean) {
+	changes.push({ action: 'delete', main, piece });
 	return changes;
 }
 
@@ -125,10 +132,11 @@ function queueDeletePiece(changes: Array<Change>, piece: Piece) {
  * Moves a piece without capture
  * @param changes 
  * @param piece The piece moved. Its coords are used as starting coords
+ * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  * @param endCoords 
  */
-function queueMovePiece(changes: Array<Change>, piece: Piece, endCoords: Coords) {
-	changes.push({ action: 'move', piece: piece, endCoords });
+function queueMovePiece(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords) {
+	changes.push({ action: 'move', main, piece: piece, endCoords });
 	return changes;
 }
 
@@ -253,11 +261,9 @@ function returnPiece(gamefile: gamefile, change: Change) {
  * Captures a piece.
  * 
  * This is differentiated from move changes so it can be animated.
- * @param gamefile 
- * @param change 
  */
 function capturePiece(gamefile: gamefile, change: Change) {
-	deletePiece(gamefile, { piece: change['capturedPiece'], action: "add" });
+	deletePiece(gamefile, { piece: change['capturedPiece'], main: change.main, action: "add" });
 	movePiece(gamefile, change);
 }
 
@@ -266,7 +272,7 @@ function capturePiece(gamefile: gamefile, change: Change) {
  */
 function uncapturePiece(gamefile: gamefile, change: Change) {
 	returnPiece(gamefile, change);
-	addPiece(gamefile, { piece: change['capturedPiece'], action: "add" });
+	addPiece(gamefile, { piece: change['capturedPiece'], main: change.main, action: "add" });
 }
 
 const captureActions = new Set("capture");
