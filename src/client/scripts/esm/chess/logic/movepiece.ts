@@ -151,9 +151,9 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 function queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile: gamefile, move: Move) {
 	state.createState(move, 'enpassant', gamefile.enpassant, undefined);
 	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key });
+	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coordsKey: key });
 	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key }); // We also delete the captured pieces specialRights for ANY move.
+	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coordsKey: key }); // We also delete the captured pieces specialRights for ANY move.
 }
 
 /**
