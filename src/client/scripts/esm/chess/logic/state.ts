@@ -90,19 +90,19 @@ function applyMove(
 function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
 	const newValue = forward ? state.future : state.current;
 	switch (state.type) {
-		case 'specialrights': { // Use brackets to prevent these variables from being hoisted
-			const coordsKey = coordutil.getKeyFromCoords(state['coords']);
-			if (newValue === undefined) delete gamefile.specialRights[coordsKey];
-			else gamefile.specialRights[coordsKey] = newValue;	
+		case 'specialrights':
+			if (newValue === undefined) delete gamefile.specialRights[state['coordsKey']];
+			else gamefile.specialRights[state['coordsKey']] = newValue;	
 			break;
-		} case 'check':
+		case 'check':
 			gamefile.inCheck = newValue;
 			break;
 		case 'attackers':
 			gamefile.attackers = newValue;
 			break;
-		case 'enpassant':
-			gamefile.enpassant = newValue;
+		case 'enpassant': 
+			if (newValue === undefined) delete gamefile.enpassant;
+			else gamefile.enpassant = newValue;
 			break;
 		case 'moverulestate':
 			gamefile.moveRuleState = newValue;
@@ -134,7 +134,9 @@ function createState(
 	gamefileToSet?: gamefile
 ) {
 	const newStateChange = { type: stateType, current, future, ...changeProperties };
-	const targetStateChangeList = stateTypes.global.includes(stateType) ? move.state.global : move.state.local;
+	const targetStateChangeList = stateTypes.global.includes(stateType) ? move.state.global
+								: stateTypes.local .includes(stateType) ? move.state.local
+								: (() => { throw Error(`Cannot create State for invalid state type "${stateType}".`); })();
 
 	targetStateChangeList.push(newStateChange);
 	if (gamefileToSet !== undefined) applyState(gamefileToSet, newStateChange, true);

@@ -51,7 +51,7 @@ function kings(gamefile, piece, move) {
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	// Delete the rook's special move rights
 	const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
-	state.createState(move, `specialRights`, gamefile.specialRights[key], undefined, { coords: key });
+	state.createState(move, 'specialrights', gamefile.specialRights[key], undefined, { coordsKey: key });
 
 	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, false, landSquare); // Make normal move
 
@@ -63,9 +63,9 @@ function kings(gamefile, piece, move) {
 function pawns(gamefile, piece, move, { updateProperties = true } = {}) {
 	const moveChanges = move.changes;
 
-	// If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
+	// If it was a double push, then queue adding the new enpassant square to the gamefile!
 	if (updateProperties && isPawnMoveADoublePush(piece.coords, move.endCoords)) {
-		state.createState(move, "enpassant", gamefile.enpassant, getEnPassantSquare(piece.coords, move.endCoords));
+		state.createState(move, 'enpassant', gamefile.enpassant, getEnPassantSquare(piece.coords, move.endCoords));
 	}
 
 	const enpassantTag = move.enpassant; // -1/1
