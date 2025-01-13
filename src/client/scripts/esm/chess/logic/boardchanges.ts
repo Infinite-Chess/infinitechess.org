@@ -290,8 +290,11 @@ function getCapturedPieces(move: Move): Piece[] {
 
 /**
  * Returns true if any piece was captured by the move, whether directly or by special actions.
- * */
+ */
 function wasACapture(move: Move): boolean {
+	// Safety net if we ever accidentally call this method too soon.
+	// There will never be a valid move with zero changes, that's just absurd.
+	if (move.changes.length === 0) throw Error("Move doesn't have it's changes calculated yet, do that before this.");
 	for (const change of move.changes) {
 		if ((change.action in captureActions)) return true; // This was a capture action
 	}

@@ -311,7 +311,7 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.attackers);
 
 	const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
-	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (m) => movepiece.applyMove(gamefile, m, true));
+	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
 	movepiece.updateTurn(gamefile);
 
 	// Make sure a piece exists on the start coords

@@ -265,7 +265,6 @@ function concludeGame() {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
 	if (loadedGamefile.gameConclusion === false) throw Error("Cannot conclude game when the game hasn't ended.");
 
-	if (winconutil.isGameConclusionDecisive(loadedGamefile.gameConclusion)) moveutil.flagLastMoveAsMate(loadedGamefile);
 	clock.endGame(loadedGamefile);
 	guiclock.stopClocks(loadedGamefile);
 	board.darkenColor();

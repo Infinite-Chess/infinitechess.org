@@ -1,8 +1,6 @@
 
 /**
- * This script only ever handles global moves, because it
- * purely only affects the gamefile logically.
- * Handling ZERO gui stuff.
+ * This script handles the logical side of moving pieces, nothing graphical.
  * 
  * Both ends, client & server, should be able to use this script.
  * It SHOULD have a healthy dependancy tree (need to work on that).
@@ -38,6 +36,9 @@ import formatconverter from './formatconverter.js';
 import wincondition from './wincondition.js';
 
 
+// Type Definitions ---------------------------------------------------------------------------------------------------------------
+
+
 /** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
 interface MoveDraft {
 	startCoords: Coords,
@@ -55,7 +56,7 @@ interface MoveDraft {
 }
 
 /**
- * Contains all properties a {@link MoveDraft} has, and more!
+ * Contains all properties a {@link MoveDraft} has, and more.
  * Including the changes it made to the board, the gamefile
  * state before and after the move, etc.
  */
@@ -67,6 +68,8 @@ interface Move extends MoveDraft {
 	/** The state of the move is used to know how to modify specific gamefile
 	 * properties when forwarding/rewinding this move. */
 	state: MoveState,
+	/** The index this move was generated for. This can act as a safety net
+	 * so we don't accidentally make the move on the wrong index of the game. */
 	generateIndex: number,
 	/** The move in most compact notation: `8,7>8,8Q` */
 	compact: string,
@@ -76,14 +79,21 @@ interface Move extends MoveDraft {
 	mate: boolean,
 }
 
+
+// Functions --------------------------------------------------------------------------------------------------
+
+
 /**
- * Generates a full Move object from a MoveDraft
+ * Generates a full Move object from a MoveDraft,
+ * calculating and appending its board changes to its Changes list,
+ * and queueing its gamefile StateChanges.
  */
 function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
-
 	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
 	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
+	// Construct the full Move object
+	// Initialize the state, and change list, as empty for now.
 	const move: Move = {
 		...moveDraft,
 		type: piece.type,
@@ -95,36 +105,42 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		mate: false, // This will be set later
 	};
 
+	// This needs to be before calculating the moves changes,
+	// as special moves functions may add MORE enpassant or specialRights,
+	// and if this comes afterward, then those values will be overwritten with undefined.
+	queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile, move);
+
 	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
-
-	// Do this before making the move, so that if its a pawn double push, enpassant can be reinstated and not deleted.
-	deleteEnpassantAndSpecialRightsProperties(gamefile, move);
-    
 	let specialMoveMade: boolean = false;
-	if (gamefile.specialMoves[trimmedType]) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
-	if (!specialMoveMade) movePiece_NoSpecial(gamefile, piece, move); // Move piece regularly (no special tag)
+	// If a special move function exists for this piece type, run it.
+	// The actual function will return whether a special move was actually made or not.
+	// If a special move IS made, we skip the normal move piece method.
+	if (trimmedType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
+	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
 
-	incrementMoveRule(gamefile, move, boardchanges.wasACapture(move));
+	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
 }
 
 /**
- * Applies a moves changes to the gamefile
- * Does not apply any graphical effects
+ * Applies a move's board changes to the gamefile, no graphical changes.
+ * @param gamefile 
+ * @param move 
+ * @param forward - Whether the move's board changes should be applied forward or backward.
+ * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(gamefile: gamefile, move: Move, forward = true, {global = false} = {}) {
+function applyMove(gamefile: gamefile, move: Move, forward = true, { global = false } = {}) {
 	// Stops stupid missing piece errors
-	if (gamefile.moveIndex + Number(!forward) !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${gamefile.moveIndex + Number(!forward)} (forward: ${forward})!`);
+	const indexToApply = gamefile.moveIndex + Number(!forward);
+	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 	
-	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward);
-	state.applyMove(gamefile, move, forward, { globalChange: global });
+	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward); // Logical board changes
+	state.applyMove(gamefile, move, forward, { globalChange: global }); // Apply the State of the move
 }
 
 /**
- * **Universal** function for executing forward global (not rewinding) moves.
- * Called when we move the selected piece, receive our opponent's move,
- * or need to simulate a move within the checkmate algorithm.
+ * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
 function makeMove(gamefile: gamefile, move: Move) {
 	gamefile.moveIndex++;
@@ -132,22 +148,20 @@ function makeMove(gamefile: gamefile, move: Move) {
 
 	updateTurn(gamefile);
 
-	applyMove(gamefile, move, true, { global: true });
+	applyMove(gamefile, move, true, { global: true }); // Apply the logical board changes.
 
-	// The "check" property will be added inside updateInCheck()...
-	// The "mate" property will be added inside our game conclusion checks...
-
-	// ALWAYS DO THIS NOW, no matter what.
+	// Now we can test for check, and modify the state of the gamefile if it is.
 	createCheckState(gamefile, move);
 	if (gamefile.inCheck) move.check = true;
+	// The "mate" property of the move will be added after our game conclusion checks...
 }
 
 /**
- * Deletes the gamefile's enpassant property, and the moving piece's special right.
- * This needs to be done every time we make a move.
+ * Queues a gamefile StateChange to delete the gamefile's current `enpassant`,
+ * and the specialRights of the piece moved and its destination.
  */
-function deleteEnpassantAndSpecialRightsProperties(gamefile: gamefile, move: Move) {
-	state.createState(move, "enpassant", gamefile.enpassant, undefined);
+function queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile: gamefile, move: Move) {
+	state.createState(move, 'enpassant', gamefile.enpassant, undefined);
 	let key = coordutil.getKeyFromCoords(move.startCoords);
 	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coords: key });
 	key = coordutil.getKeyFromCoords(move.endCoords);
@@ -155,13 +169,15 @@ function deleteEnpassantAndSpecialRightsProperties(gamefile: gamefile, move: Mov
 }
 
 /**
- * Standardly moves a piece. Deletes any captured piece. Animates if specified.
- * If the move is a special move, a separate method is needed.
+ * Calculates all of a move's board changes, and "queues" them,
+ * adding them to the move's Changes list.
+ * 
+ * This should NOT be used if the move is a special move.
  * @param gamefile - The gamefile
- * @param piece - The piece to move
+ * @param piece - The piece that's being moved
  * @param move - The move that's being made
-*/
-function movePiece_NoSpecial(gamefile: gamefile, piece: Piece, move: Move) {
+ */
+function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 
@@ -171,7 +187,6 @@ function movePiece_NoSpecial(gamefile: gamefile, piece: Piece, move: Move) {
 	};
 
 	boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
-
 }
 
 
@@ -181,8 +196,9 @@ function movePiece_NoSpecial(gamefile: gamefile, piece: Piece, move: Move) {
  * @param move - The move
  * @param wasACapture Whether the move made a capture
  */
-function incrementMoveRule(gamefile: gamefile, move: Move, wasACapture: boolean) {
+function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
+	const wasACapture = boardchanges.wasACapture(move);
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
@@ -234,17 +250,14 @@ function updateInCheck(gamefile: gamefile) {
  * On the very final move it test if the game is over, and animate the move.
  * 
  * **THROWS AN ERROR** if any move during the process is in an invalid format.
- * @param {gamefile} gamefile - The gamefile
- * @param {string[]} moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
+ * @param gamefile - The gamefile
+ * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
 function makeAllMovesInGame(gamefile: gamefile, moves: string[]) {
 	if (gamefile.moves.length > 0) throw new Error("Cannot make all moves in game when there are already moves played.");
-
 	moves.forEach((shortmove, i) => {
 		const move = calculateMoveFromShortmove(gamefile, shortmove);
 		if (!move) throw new Error(`Cannot make all moves in game! There was a move in an invalid format: ${shortmove}. Index: ${i}`);
-
-		// Make the move in the game!
 		makeMove(gamefile, move);
 	});
 }
@@ -252,7 +265,7 @@ function makeAllMovesInGame(gamefile: gamefile, moves: string[]) {
 /**
  * Accepts a move in the most compact short form, and constructs the Move object
  * and most of its properties, EXCLUDING `type` and `captured` which are reconstructed by makeMove().
- * Has to calculate the piece's legal special moves to do add special move flags.
+ * This has to calculate the piece's legal special moves to do add special move flags.
  * 
  * **Returns undefined** if there was an error anywhere in the conversion.
  * This does NOT perform legality checks, so still do that afterward.

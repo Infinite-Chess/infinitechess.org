@@ -186,15 +186,15 @@ function convertMovesTo1DFormat(moves, results) {
 	return moves1D;
 }
 
-/**
- * Flags the gamefile's very last move as a "check".
- * @param {gamefile} gamefile - The gamefile
- */
-function flagLastMoveAsCheck(gamefile) {
-	if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.");
-	const lastMove = getLastMove(gamefile.moves);
-	lastMove.check = true;
-}
+// /**
+//  * Flags the gamefile's very last move as a "check".
+//  * @param {gamefile} gamefile - The gamefile
+//  */
+// function flagLastMoveAsCheck(gamefile) {
+// 	if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.");
+// 	const lastMove = getLastMove(gamefile.moves);
+// 	lastMove.check = true;
+// }
 
 /**
  * Flags the gamefile's very last move as a "mate".
@@ -277,7 +277,7 @@ export default {
 	getPlyCount,
 	hasPieceMoved,
 	deleteLastMove,
-	flagLastMoveAsCheck,
+	// flagLastMoveAsCheck,
 	flagLastMoveAsMate,
 	areMovesIn2DFormat,
 	convertMovesTo1DFormat,

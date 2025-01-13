@@ -98,7 +98,8 @@ function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
 			gamefile.inCheck = newValue;
 			break;
 		case 'attackers':
-			gamefile.attackers = newValue;
+			if (newValue === undefined) delete gamefile.attackers;
+			else gamefile.attackers = newValue;
 			break;
 		case 'enpassant': 
 			if (newValue === undefined) delete gamefile.enpassant;
