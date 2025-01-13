@@ -353,9 +353,9 @@ function moveGamefilePiece(coords) {
 	const moveDraft = { startCoords: pieceSelected.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
 
+	const animateMain = !draggingPiece; // This needs to be above makeMove(), since that will terminate the drag if the move ends the game.
 	const move = movesequence.makeMove(gameslot.getGamefile(), moveDraft);
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
-	const animateMain = !draggingPiece;
 	movesequence.animateMove(move, true, animateMain);
 	onlinegame.sendMove();
 
