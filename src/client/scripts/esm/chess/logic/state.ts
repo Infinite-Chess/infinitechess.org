@@ -134,6 +134,8 @@ function createState(
 	 */
 	gamefileToSet?: gamefile
 ) {
+	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
+
 	const newStateChange = { type: stateType, current, future, ...changeProperties };
 	const targetStateChangeList = stateTypes.global.includes(stateType) ? move.state.global
 								: stateTypes.local .includes(stateType) ? move.state.local
