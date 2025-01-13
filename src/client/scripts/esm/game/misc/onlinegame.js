@@ -626,7 +626,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		i++;
 		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
 		/** @type {MoveDraft} */
-		const move = formatconverter.ShortToLong_CompactMove(thisShortmove);
+		const moveDraft = formatconverter.ShortToLong_CompactMove(thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
@@ -634,7 +634,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 
 		if (opponentPlayedThisMove) { // Perform legality checks
 			// If not legal, this will be a string for why it is illegal.
-			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, move, claimedGameConclusion);
+			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion);
 			if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${thisShortmove} ${claimedGameConclusion}`);
 			if (moveIsLegal !== true && !isPrivate) { // Allow illegal moves in private games
 				reportOpponentsMove(moveIsLegal);
@@ -649,7 +649,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
         
 		const isLastMove = i === moves.length - 1;
 		// Animate only if it's the last move.
-		movesequence.makeMove(gamefile, move, { doGameOverChecks: isLastMove});
+		const move = movesequence.makeMove(gamefile, moveDraft, { doGameOverChecks: isLastMove});
 		if (isLastMove) movesequence.animateMove(move, true); // Only animate on the last forwarded move.
 
 		console.log("Forwarded one move while resyncing to online game.");

@@ -1,8 +1,9 @@
 
 /**
- * This script handles executing global moves, local moves, and animating moves.
+ * This is a client-side script that executes global and local moves,
+ * making both the logical, and graphical changes.
  * 
- * This is a client-side script, as the server has no need to animate anything.
+ * We also have the animate move method here.
  */
 
 
@@ -10,7 +11,6 @@
 import type gamefile from "../../chess/logic/gamefile.js";
 import type { Move, MoveDraft } from "../../chess/logic/movepiece.js";
 
-import coordutil from "../../chess/util/coordutil.js";
 import gameslot from "./gameslot.js";
 import guinavigation from "../gui/guinavigation.js";
 import boardchanges from "../../chess/logic/boardchanges.js";
@@ -31,6 +31,8 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import clock from "../../chess/logic/clock.js";
+// @ts-ignore
+import frametracker from "../rendering/frametracker.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -43,10 +45,13 @@ import clock from "../../chess/logic/clock.js";
  */
 function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
-	movepiece.makeMove(gamefile, move);
-	boardchanges.runMove(gamefile, move, meshChanges, true);
-
+	movepiece.makeMove(gamefile, move); // Logical changes
+	boardchanges.runMove(gamefile, move, meshChanges, true); // Graphical changes
+	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
+	
+	// GUI changes
 	guigameinfo.updateWhosTurn(gamefile);
+	updateGui(false);
 
 	if (!onlinegame.areInOnlineGame()) {
 		clock.push(gamefile);
@@ -58,8 +63,6 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
-	updateGui(false);
-
 	arrows.clearListOfHoveredPieces();
 
 	return move;
@@ -67,32 +70,15 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 
 /** Makes a global backward move in the game. */
 function rewindMove(gamefile: gamefile) {
-	// Make the logical changes
-	movepiece.rewindMove(gamefile);
-	// Make the mesh changes
-	boardchanges.runMove(gamefile, gamefile.moves[gamefile.moveIndex], meshChanges, false);
-	// Make the gui changes
-	updateGui(false);
+	movepiece.rewindMove(gamefile); // Logical changes
+	boardchanges.runMove(gamefile, gamefile.moves[gamefile.moveIndex], meshChanges, false); // Graphical changes
+	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
+	updateGui(false); // GUI changes
 }
-
-
-
 
 
 // Local Moving ----------------------------------------------------------------------------------------------------------
 
-
-
-
-
-/**
- * Makes the game view the last move
- */
-function viewFront(gamefile: gamefile) {
-	// TODO: What happens if we try to view front when we're already at front?
-	movepiece.gotoMove(gamefile, gamefile.moves.length - 1, (move: Move) => viewMove(gamefile, move, true));
-	updateGui(false);
-}
 
 /**
  * Apply the move to the board state and the mesh, whether forward or backward,
@@ -104,31 +90,9 @@ function viewFront(gamefile: gamefile) {
  * But it does change the check state.
  */
 function viewMove(gamefile: gamefile, move: Move, forward = true) {
-	// TODO:
-	// Rename to make it clear this forwards/rewinds a LOCAL move.
-	movepiece.applyMove(gamefile, move, forward);
-	boardchanges.runMove(gamefile, move, meshChanges, forward);
-}
-
-/**
- * Called when we hit the left/right arrows keys,
- * or click the rewind/forward move buttons.
- * 
- * This VIEWS the next move, whether forward or backward,
- * animates it,
- * and updates the GUI stuff.
- */
-function navigateMove(gamefile: gamefile, forward: boolean): void {
-	// Determine the index of the move to apply
-	const idx = forward ? gamefile.moveIndex + 1 : gamefile.moveIndex;
-
-	// Adjust move index based on direction
-	if (forward) gamefile.moveIndex++;
-	else gamefile.moveIndex--;
-
-	viewMove(gamefile, gamefile.moves[idx], forward);
-	animateMove(gamefile.moves[idx], forward);
-	updateGui(true);
+	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
+	boardchanges.runMove(gamefile, move, meshChanges, forward); // Apply the graphical changes.
+	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
 
 /**
@@ -137,10 +101,44 @@ function navigateMove(gamefile: gamefile, forward: boolean): void {
  * @param index the move index to goto
  */
 function viewIndex(gamefile: gamefile, index: number) {
-	movepiece.gotoMove(gamefile, index, (m: Move) => viewMove(gamefile, m, index >= gamefile.moveIndex));
+	movepiece.gotoMove(gamefile, index, (move: Move) => viewMove(gamefile, move, index >= gamefile.moveIndex));
 	updateGui(false);
 }
 
+/**
+ * Makes the game view the last move
+ */
+function viewFront(gamefile: gamefile) {
+	/** Call {@link viewIndex} with the index of the last move in the game */
+	viewIndex(gamefile, gamefile.moves.length - 1);
+}
+
+/**
+ * Called when we hit the left/right arrows keys,
+ * or click the rewind/forward move buttons.
+ * 
+ * This VIEWS the next move, whether forward or backward,
+ * makes the graphical (mesh) changes, animates it, and updates the GUI.
+ * 
+ * ASSUMES that it is legal to navigate in the direction.
+ */
+function navigateMove(gamefile: gamefile, forward: boolean): void {
+	// Determine the index of the move to apply
+	const idx = forward ? gamefile.moveIndex + 1 : gamefile.moveIndex;
+
+	// Make sure the move exists. Normally we'd never call this method
+	// if it does, but just in case we forget to check.
+	const move = gamefile.moves[idx];
+	if (move === undefined) throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
+
+	// Adjust move index based on direction
+	if (forward) gamefile.moveIndex++;
+	else gamefile.moveIndex--;
+	
+	viewMove(gamefile, move, forward); // Apply the logical + graphical changes
+	animateMove(move, forward); // Animate
+	updateGui(true);
+}
 
 
 // Animating ---------------------------------------------------------------------------------------------------------------
@@ -171,17 +169,14 @@ function animateMove(move: Move, forward = true, animateMain = true) {
 
 /**
  * Updates the transparency of the rewind/forward move buttons,
- * updates the move number below the move buttons,
- * and flags the next frame to be rendered.
+ * updates the move number below the move buttons.
  * @param showMoveCounter Whether to show the move counter below the move buttons in the navigation bar.
  */
 function updateGui(showMoveCounter: boolean) {
 	if (showMoveCounter) stats.showMoves();
 	else stats.updateTextContentOfMoves(); // While we may not be OPENING the move counter, if it WAS already open we should still update the number!
 	guinavigation.update_MoveButtons();
-	// frametracker.onVisualChange();
 }
-
 
 
 

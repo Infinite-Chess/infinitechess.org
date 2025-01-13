@@ -154,7 +154,7 @@ async function loadGamefile(
 	}
 	guipromotion.initUI(newGamefile.gameRules.promotionsAllowed);
 
-	const lastmove = newGamefile.moves[newGamefile.moveIndex];
+	const lastmove = moveutil.getLastMove(newGamefile.moves);
 	if (lastmove !== undefined) {
 		// Rewinds the last move LOGICALLY so we can animate it in a sec
 		// TODO: Does applyMove automatically decrement the moveIndex??

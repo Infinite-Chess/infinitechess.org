@@ -265,6 +265,8 @@ function handleSelectingPiece(pieceClickedType) {
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
 		// it will still forward you to front!
 		movesequence.viewFront(gamefile);
+		const lastMove = moveutil.getLastMove(gamefile.moves);
+		movesequence.animateMove(lastMove);
 		return;
 	}
 
