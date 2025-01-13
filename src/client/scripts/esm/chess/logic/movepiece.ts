@@ -220,9 +220,9 @@ function createCheckState(gamefile: gamefile, move: Move) {
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
 	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
 
-	const currentPositionIsCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers);
+	const futureInCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers);
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
-	state.createState(move, "check", gamefile.inCheck, currentPositionIsCheck, {}, gamefile); // Passes in the gamefile as an argument
+	state.createState(move, "check", gamefile.inCheck, futureInCheck, {}, gamefile); // Passes in the gamefile as an argument
 	state.createState(move, "attackers", gamefile.attackers, attackers || [], {}, gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
