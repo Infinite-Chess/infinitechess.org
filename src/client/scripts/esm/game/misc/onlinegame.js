@@ -8,7 +8,6 @@ import guititle from '../gui/guititle.js';
 import clock from '../../chess/logic/clock.js';
 import guiclock from '../gui/guiclock.js';
 import statustext from '../gui/statustext.js';
-import movepiece from '../../chess/logic/movepiece.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import selection from '../chess/selection.js';
 import board from '../rendering/board.js';
@@ -26,14 +25,16 @@ import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
 import pingManager from '../../util/pingManager.js';
+import movesequence from '../chess/movesequence.js';
+import options from '../rendering/options.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 // Import End
 
 /** 
  * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js'} gamefile
- * @typedef {import('../../chess/util/moveutil.js').Move} Move
+ * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
 */
 
@@ -281,7 +282,7 @@ function onmessage(data) { // { sub, action, value, id }
 			const message = data.value; // { clockValues: { timerWhite, timerBlack } }
 			message.clockValues.accountForPing = true; // We are in an online game so we need to inform the clock script to account for ping
 			const gamefile = gameslot.getGamefile();
-			clock.edit(gamefile, message.clockValues); // Edit the clocks
+			clock.edit(gamefile, message.clockValues, options.isDebugModeOn()); // Edit the clocks
 			guiclock.edit(gamefile);
 			break;
 		} case "gameupdate": // When the game has ended by time/disconnect/resignation/aborted, OR we are resyncing to the game.
@@ -444,10 +445,10 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 
 	// Convert the move from compact short format "x,y>x,yN"
 	// to long format { startCoords, endCoords, promotion }
-	/** @type {Move} */
-	let move;
+	/** @type {MoveDraft} */
+	let moveDraft;
 	try {
-		move = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
+		moveDraft = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
 	} catch {
 		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`);
 		const reason = 'Incorrectly formatted.';
@@ -455,28 +456,28 @@ function handleOpponentsMove(message) { // { move, gameConclusion, moveNumber, c
 	}
 
 	// If not legal, this will be a string for why it is illegal.
-	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, move, message.gameConclusion);
+	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(moveAndConclusion)}`);
 	if (moveIsLegal !== true && !isPrivate) return reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateProperties: false });
+	movesequence.viewFront(gamefile);
 
 	// Forward the move...
 
-	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
+	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
 	const legalMoves = legalmoves.calculate(gamefile, piecemoved);
-	const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
-	legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
+	const endCoordsToAppendSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
+	legalmoves.checkIfMoveLegal(legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
-	move.type = piecemoved.type;
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move);
-	movepiece.makeMove(gamefile, move);
+	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
+	const move = movesequence.makeMove(gamefile, moveDraft);
+	movesequence.animateMove(move, true);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
 	if (message.clockValues !== undefined) message.clockValues.accountForPing = true; // Set this to true so our clock knows to account for ping.
-	clock.edit(gamefile, message.clockValues);
+	clock.edit(gamefile, message.clockValues, options.isDebugModeOn());
 	guiclock.edit(gamefile);
 
 	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
@@ -564,7 +565,7 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// When the game has ended by time/disconnect/resignation/aborted
-	clock.edit(gamefile, messageContents.clockValues);
+	clock.edit(gamefile, messageContents.clockValues, options.isDebugModeOn());
 
 	if (gamefileutility.isGameOver(gamefile)) {
 		gameslot.concludeGame();
@@ -582,6 +583,7 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
  * @returns {boolean} *false* if it detected an illegal move played by our opponent.
  */
 function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
+	// console.log("Resyncing...");
 
 	// Early exit case. If we have played exactly 1 more move than the server,
 	// and the rest of the moves list matches, don't modify our moves,
@@ -595,11 +597,11 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	}
 
 	const originalMoveIndex = gamefile.moveIndex;
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateProperties: false });
+	movesequence.viewFront(gamefile);
 	let aChangeWasMade = false;
 
 	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..
-		movepiece.rewindMove(gamefile, { animate: false });
+		movesequence.rewindMove(gamefile);
 		console.log("Rewound one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
@@ -611,7 +613,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		if (thisGamefileMove) { // The move is defined
 			if (thisGamefileMove.compact === moves[i]) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
-			movepiece.rewindMove(gamefile, { animate: false });
+			movesequence.rewindMove(gamefile);
 			console.log("Rewound one INCORRECT move while resyncing to online game.");
 			aChangeWasMade = true;
 		}
@@ -624,7 +626,8 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		const move = movepiece.calculateMoveFromShortmove(gamefile, thisShortmove);
+		/** @type {MoveDraft} */
+		const moveDraft = formatconverter.ShortToLong_CompactMove(thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
@@ -632,7 +635,7 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 
 		if (opponentPlayedThisMove) { // Perform legality checks
 			// If not legal, this will be a string for why it is illegal.
-			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, move, claimedGameConclusion);
+			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion);
 			if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${thisShortmove} ${claimedGameConclusion}`);
 			if (moveIsLegal !== true && !isPrivate) { // Allow illegal moves in private games
 				reportOpponentsMove(moveIsLegal);
@@ -646,12 +649,15 @@ function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
 		} else cancelFlashTabTimer();
         
 		const isLastMove = i === moves.length - 1;
-		movepiece.makeMove(gamefile, move, { doGameOverChecks: isLastMove, concludeGameIfOver: false, animate: isLastMove });
+		// Animate only if it's the last move.
+		const move = movesequence.makeMove(gamefile, moveDraft, { doGameOverChecks: isLastMove});
+		if (isLastMove) movesequence.animateMove(move, true); // Only animate on the last forwarded move.
+
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
 
-	if (!aChangeWasMade) movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false });
+	if (!aChangeWasMade) movesequence.viewIndex(gamefile, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
 	return true; // No cheating detected

@@ -42,8 +42,6 @@ import movement from "../rendering/movement.js";
 // @ts-ignore
 import arrows from "../rendering/arrows.js";
 // @ts-ignore
-import winconutil from "../../chess/util/winconutil.js";
-// @ts-ignore
 import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
 import clock from "../../chess/logic/clock.js";
@@ -55,7 +53,7 @@ import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import loadingscreen from "../gui/loadingscreen.js";
 import spritesheet from "../rendering/spritesheet.js";
-
+import movesequence from "./movesequence.js";
 
 // Type Definitions ---------------------------------------------------------------
 
@@ -147,9 +145,6 @@ async function loadGamefile(
 
 	const newGamefile = new gamefile(metadata, { moves, variantOptions, gameConclusion, clockValues });
 
-	// Rewind one move so that we can animate the very final move.
-	if (newGamefile.moveIndex > -1) movepiece.rewindMove(newGamefile,  { updateData: false, removeMove: false, animate: false });
-
 	try {
 		await spritesheet.initSpritesheetForGame(gl, newGamefile);
 	} catch (e) { // An error ocurred during the fetching of piece svgs and spritesheet gen
@@ -157,9 +152,19 @@ async function loadGamefile(
 	}
 	guipromotion.initUI(newGamefile.gameRules.promotionsAllowed);
 
-	// A small delay to animate the very last move, so the loading screen
-	// spinny pawn animation has time to fade away.
-	animateLastMoveTimeoutID = setTimeout(movepiece.forwardToFront, delayOfLatestMoveAnimationOnRejoinMillis, newGamefile, { flipTurn: false, updateProperties: false });
+	// Rewind one move so that we can, after a short delay, animate the most recently played move.
+	const lastmove = moveutil.getLastMove(newGamefile.moves);
+	if (lastmove !== undefined) {
+		// Rewind one move
+		movepiece.applyMove(newGamefile, lastmove, false);
+
+		// A small delay to animate the most recently played move.
+		animateLastMoveTimeoutID = setTimeout(() => {
+			if (moveutil.areWeViewingLatestMove(newGamefile)) return; // Already viewing the lastest move
+			movesequence.viewFront(newGamefile); // Updates to front even when they view different moves
+			movesequence.animateMove(lastmove, true);
+		}, delayOfLatestMoveAnimationOnRejoinMillis);
+	}
 
 	loadedGamefile = newGamefile;
 	youAreColor = viewWhitePerspective ? 'white' : 'black';
@@ -255,7 +260,6 @@ function concludeGame() {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
 	if (loadedGamefile.gameConclusion === false) throw Error("Cannot conclude game when the game hasn't ended.");
 
-	if (winconutil.isGameConclusionDecisive(loadedGamefile.gameConclusion)) moveutil.flagLastMoveAsMate(loadedGamefile);
 	clock.endGame(loadedGamefile);
 	guiclock.stopClocks(loadedGamefile);
 	board.darkenColor();

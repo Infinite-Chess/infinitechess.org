@@ -220,8 +220,8 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
  * @param {number[]} newCoords - The destination coordinates
  */
 function movebufferdata(gamefile, piece, newCoords) {
-	if (!gamefile.mesh.data64) throw new Error("Should not be moving piece data when data64 is not defined!");
-	if (!gamefile.mesh.data32) throw new Error("Should not be moving piece data when data32 is not defined!");
+	if (!gamefile.mesh.data64) throw Error("Should not be moving piece data when data64 is not defined!");
+	if (!gamefile.mesh.data32) throw Error("Should not be moving piece data when data32 is not defined!");
     
 	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 
@@ -275,8 +275,8 @@ function movebufferdata(gamefile, piece, newCoords) {
  * @param {Object} piece - The piece: `{ type, index }`
  */
 function deletebufferdata(gamefile, piece) {
-	if (!gamefile.mesh.data64) throw new Error("Should not be deleting piece data when data64 is not defined!");
-	if (!gamefile.mesh.data32) throw new Error("Should not be deleting piece data when data32 is not defined!");
+	if (!gamefile.mesh.data64) throw Error("Should not be deleting piece data when data64 is not defined!");
+	if (!gamefile.mesh.data32) throw Error("Should not be deleting piece data when data32 is not defined!");
 	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
@@ -314,8 +314,8 @@ function deletebufferdata(gamefile, piece) {
  * @param {string} type - The type of piece to write
  */
 function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
-	if (!gamefile.mesh.data64) return console.error("Should not be overwriting piece data when data64 is not defined!");
-	if (!gamefile.mesh.data32) return console.error("Should not be overwriting piece data when data32 is not defined!");
+	if (!gamefile.mesh.data64) throw Error("Should not be overwriting piece data when data64 is not defined!");
+	if (!gamefile.mesh.data32) throw Error("Should not be overwriting piece data when data32 is not defined!");
     
 	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, undefinedPiece);
 

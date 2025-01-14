@@ -4,12 +4,10 @@ import guipause from '../gui/guipause.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
 import onlinegame from '../misc/onlinegame.js';
-import movepiece from '../../chess/logic/movepiece.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
-import formatconverter from '../../chess/logic/formatconverter.js';
 import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 import pieces from '../rendering/pieces.js';
@@ -21,6 +19,7 @@ import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
+import movesequence from './movesequence.js';
 import draganimation from '../rendering/draganimation.js';
 import space from '../misc/space.js';
 import preferences from '../../components/header/preferences.js';
@@ -29,9 +28,9 @@ import gameslot from './gameslot.js';
 
 /**
  * Type Definitions
- * @typedef {import('../../chess/util/moveutil.js').Move} Move
+ * @typedef {import('../../chess/logic/movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('../../chess/logic/legalmoves.js').LegalMoves} LegalMoves
- * @typedef {import('../../chess/logic/movepiece.js').Piece} Piece
+ * @typedef {import('../../chess/logic/boardchanges.js').Piece} Piece
  */
 
 "use strict";
@@ -265,13 +264,14 @@ function handleSelectingPiece(pieceClickedType) {
 		//     options.getEM() && pieceClickedType !== 'voidsN') 
 		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
 		// it will still forward you to front!
-        
-		return movepiece.forwardToFront(gamefile, { flipTurn: false, updateProperties: false });
+		movesequence.viewFront(gamefile);
+		const lastMove = moveutil.getLastMove(gamefile.moves);
+		movesequence.animateMove(lastMove);
+		return;
 	}
 
 	// If it's your turn, select that piece.
 
-	// if (clickedPieceColor !== gamefile.whosTurn && !options.getEM()) return; // Don't select opposite color
 	if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
 	const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
 	if (!options.getEM() && clickedPieceColor === colorutil.colorOfNeutrals) return; // Don't select neutrals, unless we're in edit mode
@@ -350,14 +350,15 @@ function unselectPiece() {
  * @param {number[]} coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
 function moveGamefilePiece(coords) {
-	const strippedCoords = movepiece.stripSpecialMoveTagsFromCoords(coords);
-	/** @type {Move} */
-	const move = { type: pieceSelected.type, startCoords: pieceSelected.coords, endCoords: strippedCoords };
-	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, move);
-	const compact = formatconverter.LongToShort_CompactMove(move);
-	move.compact = compact;
+	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords);
+	/** @type {MoveDraft} */
+	const moveDraft = { startCoords: pieceSelected.coords, endCoords: strippedCoords };
+	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
 
-	movepiece.makeMove(gameslot.getGamefile(), move, { animate: !draggingPiece, animateSecondary: draggingPiece });
+	const animateMain = !draggingPiece; // This needs to be above makeMove(), since that will terminate the drag if the move ends the game.
+	const move = movesequence.makeMove(gameslot.getGamefile(), moveDraft);
+	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
+	movesequence.animateMove(move, true, animateMain);
 	onlinegame.sendMove();
 
 	unselectPiece();

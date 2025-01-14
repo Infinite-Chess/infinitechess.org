@@ -20,8 +20,8 @@ import movesets from './movesets.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
- * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
+ * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('./movesets.js').PieceMoveset} PieceMoveset
  * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction
 */
@@ -295,57 +295,58 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
  * Tests if the provided move is legal to play in this game.
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
  * @param {gamefile} gamefile - The gamefile
- * @param {Move} move - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
+ * @param {MoveDraft} moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
  * @returns {boolean | string} *true* If the move is legal, otherwise a string containing why it is illegal.
  */
-function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
-	if (!move) {
+function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
+	if (!moveDraft) {
 		console.log("Opponents move is illegal because it is not defined. There was likely an error in converting it to long format.");
 		return 'Move is not defined. Probably an error in converting it to long format.';
 	}
 	// Don't modify the original move. This is because while it's simulated,
 	// more properties are added such as `rewindInfo`.
-	const moveCopy = jsutil.deepCopyObject(move);
+	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 
 	const inCheckB4Forwarding = jsutil.deepCopyObject(gamefile.inCheck);
 	const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.attackers);
 
 	const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateData: false, updateProperties: false, simulated: true });
+	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating)
+	movepiece.goToMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
 
 	// Make sure a piece exists on the start coords
-	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveCopy.startCoords); // { type, index, coords }
+	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraftCopy.startCoords); // { type, index, coords }
 	if (!piecemoved) {
-		console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveCopy)}`);
+		console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason('No piece exists at start coords.');
 	}
 
 	// Make sure it's the same color as your opponent.
 	const colorOfPieceMoved = colorutil.getPieceColorFromType(piecemoved.type);
 	if (colorOfPieceMoved !== gamefile.whosTurn) {
-		console.log(`Opponent's move is illegal because you can't move a non-friendly piece. Move: ${JSON.stringify(moveCopy)}`);
+		console.log(`Opponent's move is illegal because you can't move a non-friendly piece. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason("Can't move a non-friendly piece.");
 	}
 
 	// If there is a promotion, make sure that's legal
-	if (moveCopy.promotion) {
+	if (moveDraftCopy.promotion) {
 		if (!piecemoved.type.startsWith('pawns')) {
-			console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveCopy)}`);
+			console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Can't promote a non-pawn.");
 		}
-		const colorPromotedTo = colorutil.getPieceColorFromType(moveCopy.promotion);
+		const colorPromotedTo = colorutil.getPieceColorFromType(moveDraftCopy.promotion);
 		if (gamefile.whosTurn !== colorPromotedTo) {
-			console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveCopy)}`);
+			console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Can't promote to opposite color.");
 		}
-		const strippedPromotion = colorutil.trimColorExtensionFromType(moveCopy.promotion);
+		const strippedPromotion = colorutil.trimColorExtensionFromType(moveDraftCopy.promotion);
 		if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(strippedPromotion)) {
-			console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveCopy)}`);
+			console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason('Specified promotion is illegal.');
 		}
 	} else { // No promotion, make sure they AREN'T moving to a promotion rank! That's also illegal.
-		if (specialdetect.isPawnPromotion(gamefile, piecemoved.type, moveCopy.endCoords)) {
-			console.log(`Opponent's move is illegal because they didn't promote at the promotion line. Move: ${JSON.stringify(moveCopy)}`);
+		if (specialdetect.isPawnPromotion(gamefile, piecemoved.type, moveDraftCopy.endCoords)) {
+			console.log(`Opponent's move is illegal because they didn't promote at the promotion line. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Didn't promote when moved to promotion line.");
 		}
 	}
@@ -353,8 +354,8 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// Test if that piece's legal moves contain the destinationCoords.
 	const legalMoves = calculate(gamefile, piecemoved);
 	// This should pass on any special moves tags at the same time.
-	if (!checkIfMoveLegal(legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
-		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveCopy)}`);
+	if (!checkIfMoveLegal(legalMoves, moveDraftCopy.startCoords, moveDraftCopy.endCoords)) { // Illegal move
+		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
 	}
 
@@ -362,11 +363,10 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// Only do so if the win condition is decisive (exclude win conditions declared by the server,
 	// such as time, aborted, resignation, disconnect)
 	if (claimedGameConclusion === false || winconutil.isGameConclusionDecisive(claimedGameConclusion)) {
-		const color = colorutil.getPieceColorFromType(piecemoved.type);
-		const infoAboutSimulatedMove = movepiece.simulateMove(gamefile, moveCopy, color, { doGameOverChecks: true }); // { isCheck, gameConclusion }
-		if (infoAboutSimulatedMove.gameConclusion !== claimedGameConclusion) {
-			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${infoAboutSimulatedMove.gameConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`);
-			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${infoAboutSimulatedMove.gameConclusion}`);
+		const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
+		if (simulatedConclusion !== claimedGameConclusion) {
+			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${simulatedConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveDraftCopy)}`);
+			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${simulatedConclusion}`);
 		}
 	}
 
@@ -378,13 +378,13 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// ...
 
 	// Rewind the game back to the index we were originally on before simulating
-	movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false, updateData: false });
+	movepiece.goToMove(gamefile, originalMoveIndex, (move) => movepiece.applyMove(gamefile, move, false));
 
 	return true; // By this point, nothing illegal!
 
 	function rewindGameAndReturnReason(reasonIllegal) {
 		// Rewind the game back to the index we were originally on
-		movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false, updateData: false });
+		movepiece.goToMove(gamefile, originalMoveIndex, (move) => movepiece.applyMove(gamefile, move, false));
 		return reasonIllegal;
 	}
 }

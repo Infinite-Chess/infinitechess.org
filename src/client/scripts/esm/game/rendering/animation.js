@@ -15,8 +15,9 @@ import shapes from './shapes.js';
 
 /**
  * Type Definitions
- * @typedef {import('../../chess/util/moveutil.js').Move} Move
+ * @typedef {import('../../chess/logic/movepiece.js').Move} Move
  * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../../chess/logic/boardchanges.js').Piece} Piece
  */
 
 "use strict";
@@ -53,7 +54,7 @@ const moveAnimationDuration = {
  * @param {string} type - The type of piece to animate
  * @param {number[]} startCoords - [x,y]
  * @param {number[]} endCoords - [x,y]
- * @param {string} [captured] The type of piece captured, if one was captured.
+ * @param {Piece} [captured] The piece captured, if one was captured.
  * @param {boolean} [resetAnimations] If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
 function animatePiece(type, startCoords, endCoords, captured, resetAnimations = true) { // captured: { type, coords }

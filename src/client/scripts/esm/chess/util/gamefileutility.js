@@ -16,6 +16,7 @@ import coordutil from './coordutil.js';
 import winconutil from './winconutil.js';
 import gamerules from '../variants/gamerules.js';
 import metadata from './metadata.js';
+import moveutil from './moveutil.js';
 // Import End
 
 
@@ -25,7 +26,7 @@ import metadata from './metadata.js';
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
- * @typedef {import('../logic/movepiece.js').Piece} Piece
+ * @typedef {import('../logic/boardchanges.js').Piece} Piece
 */
 
 
@@ -461,6 +462,7 @@ function isOpponentUsingWinCondition(gamefile, friendlyColor, winCondition) {
  */
 function doGameOverChecks(gamefile) {
 	gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
+	if (isGameOver(gamefile) && winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

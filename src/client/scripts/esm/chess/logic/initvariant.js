@@ -1,6 +1,5 @@
 
 // Import Start
-import specialundo from './specialundo.js';
 import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
 import specialdetect from './specialdetect.js';
@@ -106,7 +105,6 @@ function initPieceMovesets(gamefile, { Variant, UTCDate, UTCTime }) {
 	gamefile.pieceMovesets = variant.getMovesetsOfVariant({ Variant, UTCDate, UTCTime });
 	gamefile.specialDetects = specialdetect.getSpecialMoves();
 	gamefile.specialMoves = specialmove.getFunctions();
-	gamefile.specialUndos = specialundo.getFunctions();
 	gamefile.vicinity = legalmoves.genVicinity(gamefile);
 }
 

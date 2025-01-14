@@ -10,13 +10,13 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
-
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
-/** @typedef {import('../util/moveutil.js').Move} Move */
+/** @typedef {import('./movepiece.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
+/** @typedef {import('../util/coordutil.js').Coords} Coords */
 
 'use strict';
 
@@ -73,7 +73,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		box: undefined,
 		/** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
 		existingTypes: undefined,
-		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {number[][]}*/
+		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Coords[]}*/
 		slidingPossible: undefined
 	};
     
@@ -240,7 +240,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * which is whos turn it was at the *beginning* of the game. */
 	this.whosTurn = this.gameRules.turnOrder[0];
 	/** If the currently-viewed move is in check, this will be a list of coordinates
-     * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {number[][]} */
+     * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {false | Coords[]} */
 	this.inCheck = false;
 	/** List of maximum 2 pieces currently checking whoever's turn is next,
      * with their coords and slidingCheck property. ONLY USED with `checkmate` wincondition!!
@@ -254,12 +254,11 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
 
-	// THIS HAS TO BE BEFORE movepiece.makeAllMovesInGame() AS THAT PERFORMS GAME-OVER CHECKS!!!
+	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
     
 	organizedlines.initOrganizedPieceLists(this);
-	// THIS HAS TO BE AFTER gamerules.swapCheckmateForRoyalCapture() AS THIS DOES GAME-OVER CHECKS!!!
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
