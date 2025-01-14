@@ -61,6 +61,7 @@ import loadingscreen from "../gui/loadingscreen.js";
 import spritesheet from "../rendering/spritesheet.js";
 import movesequence from "./movesequence.js";
 
+
 // Variables ---------------------------------------------------------------
 
 

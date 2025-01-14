@@ -10,10 +10,9 @@ import coordutil from './coordutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
- * @typedef {import('../logic/boardchanges.js').Change} Change
  * @typedef {import('../logic/movepiece.js').Move} Move
  * @typedef {import('../variants/gamerules.js').GameRules} GameRules
- */
+*/
 
 "use strict";
 
