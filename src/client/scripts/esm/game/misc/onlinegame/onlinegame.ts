@@ -148,7 +148,6 @@ function initOnlineGame(options: {
 	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options);
 
 	afk.onGameStart();
-
 	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
 
 	serverHasConcludedGame = false;

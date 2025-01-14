@@ -4,11 +4,12 @@
  * spritesheet, also returning the textue locations of each image.
  */
 
-// @ts-ignore
+
+import type { Coords } from "../logic/movesets.js";
+
+
 import math from "../../util/math.js";
 
-// @ts-ignore
-import type { Coords } from "../logic/movesets.js";
 
 
 /**

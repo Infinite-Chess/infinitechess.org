@@ -20,7 +20,7 @@ import camera from '../camera.js';
 // @ts-ignore
 import board from '../board.js';
 // @ts-ignore
-import math, { BoundingBox } from '../../../util/math.js';
+import math from '../../../util/math.js';
 import frametracker from '../frametracker.js';
 // @ts-ignore
 import preferences from '../../../components/header/preferences.js';
@@ -43,6 +43,7 @@ import type gamefile from '../../../chess/logic/gamefile.js';
 import type { LegalMoves } from '../../chess/selection.js';
 // @ts-ignore
 import type { Piece } from '../../../chess/logic/movepiece.js';
+import type { BoundingBox } from '../../../util/math.js';
 import { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import { Color } from '../../../chess/util/colorutil.js';
 

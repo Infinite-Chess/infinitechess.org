@@ -3,13 +3,14 @@
 import { MetaData } from '../../chess/util/metadata.js';
 
 
+import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
-import gameloader from '../chess/gameloader.js';
 // @ts-ignore
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
+// @ts-ignore
+import camera from '../rendering/camera.js';
 
 
 
@@ -73,6 +74,8 @@ function close() {
 function toggle() {
 	if (isOpen) close();
 	else open(gameslot.getGamefile()!.metadata);
+
+	// camera.updatePIXEL_HEIGHT_OF_NAVS();
 }
 
 function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string } {

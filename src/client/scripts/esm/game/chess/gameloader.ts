@@ -18,6 +18,10 @@ import type { JoinGameMessage } from "../misc/onlinegame/onlinegamerouter.js";
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
 
+import localgame from "../misc/localgame/localgame.js";
+import gui from "../gui/gui.js";
+import gameslot from "./gameslot.js";
+import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import timeutil from "../../util/timeutil.js";
 // @ts-ignore
@@ -34,10 +38,8 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-import localgame from "../misc/localgame/localgame.js";
-import gui from "../gui/gui.js";
-import gameslot from "./gameslot.js";
-import clock from "../../chess/logic/clock.js";
+// @ts-ignore
+import camera from "../rendering/camera.js";
 
 
 
@@ -151,7 +153,7 @@ async function startLocalGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	guigameinfo.open(gameOptions.metadata);
+	openGUI(gameOptions.metadata);
 }
 
 /**
@@ -177,21 +179,19 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	guigameinfo.open(gameOptions.metadata);
+	openGUI(gameOptions.metadata);
 }
 
-
-
-
-
-
-
+function openGUI(metadata: MetaData) {
+	guigameinfo.open(metadata);
+	camera.updatePIXEL_HEIGHT_OF_NAVS();
+}
 
 /**
  * Starts a game according to the options provided.
- * @param {Object} gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`, `variantOptions`, `clockValues`
- * @param {boolean} fromWhitePerspective - True if the game should be loaded from white's perspective, false for black's perspective
- * @param {boolean} allowEditCoords - Whether the loaded game should allow you to edit your coords directly
+ * @param gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`, `variantOptions`, `clockValues`
+ * @param fromWhitePerspective - True if the game should be loaded from white's perspective, false for black's perspective
+ * @param allowEditCoords - Whether the loaded game should allow you to edit your coords directly
  */
 async function loadGame(
 	gameOptions: GameOptions,
@@ -209,8 +209,9 @@ async function loadGame(
 		clockValues: gameOptions.clockValues
 	});
 	
+	// Opening the guinavigation needs to be done in here so that pasting a game still opens it.
 	const gamefile = gameslot.getGamefile()!;
-	guinavigation.open(gamefile, { allowEditCoords }); // Editing your coords allowed in local games
+	guinavigation.open({ allowEditCoords }); // Editing your coords allowed in local games
 	guiclock.set(gamefile);
     
 	sound.playSound_gamestart();
@@ -229,6 +230,7 @@ function unloadGame() {
 	inAGame = false;
 	typeOfGameWeAreIn = undefined;
 }
+
 
 
 export default {

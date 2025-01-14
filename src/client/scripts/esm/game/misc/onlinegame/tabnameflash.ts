@@ -60,6 +60,7 @@ function flashTabNameYOUR_MOVE(parity: boolean) {
 		// The page is no longer hidden, restore the tab's original title,
 		// and stop flashing "YOUR MOVE"
 		document.title = originalDocumentTitle;
+		return;
 	}
 
 	document.title = parity ? "YOUR MOVE" : originalDocumentTitle;

@@ -243,7 +243,7 @@ function startStartingTransition() {
 	const centerArea = area.calculateFromUnpaddedBox(loadedGamefile!.startSnapshot.box);
 	movement.setPositionToArea(centerArea);
 	movement.setBoardScale(movement.getBoardScale() * 1.75);
-	guinavigation.recenter(loadedGamefile!);
+	guinavigation.recenter();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */

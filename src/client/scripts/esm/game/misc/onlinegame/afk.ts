@@ -116,8 +116,8 @@ function rescheduleAlertServerWeAFK() {
 	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(gamefile) || onlinegame.getIsPrivate() && clock.isGameUntimed(gamefile) || !clock.isGameUntimed(gamefile) && moveutil.isGameResignable(gamefile)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
 	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(gamefile) ? timeUntilAFKSecs_Abortable
-						   : clock.isGameUntimed(gamefile) ? timeUntilAFKSecs_Untimed
-						   : timeUntilAFKSecs;
+										: clock.isGameUntimed(gamefile) ? timeUntilAFKSecs_Untimed
+										: timeUntilAFKSecs;
 	timeoutID = setTimeout(tellServerWeAFK, timeUntilAlertServerWeAFKSecs * 1000);
 }
 
@@ -163,7 +163,6 @@ function displayWeAFK(secsRemaining: number) {
 function playStaccatoNote(note: 'c3' | 'c4', secsRemaining: number) {
 	if (note === 'c3') sound.playSound_viola_c3();
 	else if (note === 'c4') sound.playSound_violin_c4();
-	else return console.error("Invalid violin note");
     
 	const nextSecsRemaining = secsRemaining > 5 ? secsRemaining - 1 : secsRemaining - 0.5;
 	if (nextSecsRemaining === 0) return; // Stop
