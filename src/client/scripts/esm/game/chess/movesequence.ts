@@ -53,7 +53,7 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes
-	guigameinfo.updateWhosTurn(gamefile);
+	guigameinfo.updateWhosTurn();
 	updateGui(false);
 
 	if (!onlinegame.areInOnlineGame()) {

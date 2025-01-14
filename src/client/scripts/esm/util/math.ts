@@ -436,11 +436,8 @@ function posMod(a: number, b: number): number {
 
 /**
  * Starts with `s`, steps it by +-`progress` towards `e`, then returns that number.
- * @param {Number} s 
- * @param {Number} e 
- * @param {Number} progress 
  */
-function moveTowards(s, e, progress) {
+function moveTowards(s: number, e: number, progress: number): number {
 	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
 }
 

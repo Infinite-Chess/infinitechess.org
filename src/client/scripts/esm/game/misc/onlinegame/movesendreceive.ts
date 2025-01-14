@@ -8,7 +8,7 @@ import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile.js";
 // @ts-ignore
-import type { Move } from "../../../chess/util/moveutil.js";
+import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 
 import onlinegame from "./onlinegame.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
@@ -17,8 +17,6 @@ import jsutil from "../../../util/jsutil.js";
 import gameslot from "../../chess/gameslot.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import movepiece from "../../../chess/logic/movepiece.js";
 // @ts-ignore
 import specialdetect from "../../../chess/logic/specialdetect.js";
 // @ts-ignore
@@ -33,6 +31,7 @@ import guiclock from "../../gui/guiclock.js";
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
+import movesequence from "../../chess/movesequence.js";
 
 
 // Functions -------------------------------------------------------------------
@@ -75,9 +74,9 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	}
 
 	// Convert the move from compact short format "x,y>x,yN"
-	let move: Move; // { startCoords, endCoords, promotion }
+	let moveDraft: MoveDraft; // { startCoords, endCoords, promotion }
 	try {
-		move = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
+		moveDraft = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
 	} catch {
 		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`);
 		const reason = 'Incorrectly formatted.';
@@ -85,22 +84,22 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	}
 
 	// If not legal, this will be a string for why it is illegal.
-	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, move as Move, message.gameConclusion);
+	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
 	if (moveIsLegal !== true && !onlinegame.getIsPrivate()) return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateProperties: false });
+	movesequence.viewFront(gamefile);
 
 	// Forward the move...
 
-	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)!;
+	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords)!;
 	const legalMoves = legalmoves.calculate(gamefile, piecemoved);
-	const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
-	legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
+	const endCoordsToAppendSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
+	legalmoves.checkIfMoveLegal(legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
-	move.type = piecemoved.type;
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, move);
-	movepiece.makeMove(gamefile, move);
+	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
+	const move = movesequence.makeMove(gamefile, moveDraft);
+	movesequence.animateMove(move, true);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 

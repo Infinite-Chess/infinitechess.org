@@ -31,6 +31,9 @@ import movepiece from "../../../chess/logic/movepiece.js";
 import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
 import selection from "../../chess/selection.js";
+// @ts-ignore
+import formatconverter from "../../../chess/logic/formatconverter.js";
+import movesequence from "../../chess/movesequence.js";
 
 
 // Functions -----------------------------------------------------------------------------
@@ -76,6 +79,7 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
 function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameConclusion: string | false): { opponentPlayedIllegalMove: boolean } {
+	// console.log("Resyncing...");
 
 	// Early exit case. If we have played exactly 1 more move than the server,
 	// and the rest of the moves list matches, don't modify our moves,
@@ -90,11 +94,11 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	}
 
 	const originalMoveIndex = gamefile.moveIndex;
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateProperties: false });
+	movesequence.viewFront(gamefile);
 	let aChangeWasMade = false;
 
 	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..
-		movepiece.rewindMove(gamefile, { animate: false });
+		movesequence.rewindMove(gamefile);
 		console.log("Rewound one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
@@ -106,7 +110,7 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 		if (thisGamefileMove) { // The move is defined
 			if (thisGamefileMove.compact === moves[i]) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
-			movepiece.rewindMove(gamefile, { animate: false });
+			movesequence.rewindMove(gamefile);
 			console.log("Rewound one INCORRECT move while resyncing to online game.");
 			aChangeWasMade = true;
 		}
@@ -119,7 +123,8 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		const move = movepiece.calculateMoveFromShortmove(gamefile, thisShortmove);
+		/** @type {MoveDraft} */
+		const moveDraft = formatconverter.ShortToLong_CompactMove(thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
@@ -127,7 +132,7 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 
 		if (opponentPlayedThisMove) { // Perform legality checks
 			// If not legal, this will be a string for why it is illegal.
-			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, move, claimedGameConclusion);
+			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion);
 			if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${thisShortmove} ${claimedGameConclusion}`);
 			if (moveIsLegal !== true && !onlinegame.getIsPrivate()) { // Allow illegal moves in private games
 				onlinegame.reportOpponentsMove(moveIsLegal);
@@ -137,13 +142,15 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 
 		onlinegame.onMovePlayed({ isOpponents: opponentPlayedThisMove });
         
-		const isLastMove = i === moves.length - 1;
-		movepiece.makeMove(gamefile, move!, { doGameOverChecks: isLastMove, concludeGameIfOver: false, animate: isLastMove });
+		const isLastMove = i === moves.length - 1;		// Animate only if it's the last move.
+		const move = movesequence.makeMove(gamefile, moveDraft, { doGameOverChecks: isLastMove});
+		if (isLastMove) movesequence.animateMove(move, true); // Only animate on the last forwarded move.
+
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
 
-	if (!aChangeWasMade) movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false });
+	if (!aChangeWasMade) movesequence.viewIndex(gamefile, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
 	return { opponentPlayedIllegalMove: false }; // No cheating detected

@@ -10,7 +10,6 @@ import type gamefile from '../logic/gamefile.js';
 import type { Piece } from '../logic/movepiece.js';
 
 
-import metadata from './metadata.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from './coordutil.js';
 import colorutil from './colorutil.js';
@@ -20,9 +19,9 @@ import typeutil from './typeutil.js';
 import winconutil from './winconutil.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
-import metadata from './metadata.js';
+// @ts-ignore
 import moveutil from './moveutil.js';
-// Import End
+import metadata from './metadata.js';
 
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 // @ts-ignore
