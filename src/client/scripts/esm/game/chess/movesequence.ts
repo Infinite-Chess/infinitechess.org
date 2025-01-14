@@ -11,6 +11,7 @@
 import type gamefile from "../../chess/logic/gamefile.js";
 import type { Move, MoveDraft } from "../../chess/logic/movepiece.js";
 
+
 import gameslot from "./gameslot.js";
 import guinavigation from "../gui/guinavigation.js";
 import boardchanges from "../../chess/logic/boardchanges.js";
@@ -33,6 +34,8 @@ import guiclock from "../gui/guiclock.js";
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import frametracker from "../rendering/frametracker.js";
+// @ts-ignore
+import moveutil from "../../chess/util/moveutil.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -68,10 +71,14 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 	return move;
 }
 
-/** Makes a global backward move in the game. */
+/**
+ * Makes a global backward move in the game.
+ */
 function rewindMove(gamefile: gamefile) {
+	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
+	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
-	boardchanges.runMove(gamefile, gamefile.moves[gamefile.moveIndex], meshChanges, false); // Graphical changes
+	boardchanges.runMove(gamefile, lastMove, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	updateGui(false); // GUI changes
 }
@@ -174,6 +181,8 @@ function updateGui(showMoveCounter: boolean) {
 	guinavigation.update_MoveButtons();
 }
 
+
+// --------------------------------------------------------------------------------------------------------------------------
 
 
 export default {
