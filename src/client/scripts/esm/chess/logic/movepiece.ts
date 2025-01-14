@@ -408,10 +408,10 @@ function getSimulatedCheck(gamefile: gamefile, moveDraft: MoveDraft, colorToTest
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
-function getSimulatedConclusion(gamefile: gamefile, move: Move): string | false {
+function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): string | false {
 	return simulateMoveWrapper(
 		gamefile,
-		move,
+		moveDraft,
 		() => wincondition.getGameConclusion(gamefile)
 	);
 }
