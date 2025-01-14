@@ -312,9 +312,7 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 
 	const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
 	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating)
-	console.log('turn before: ' + gamefile.whosTurn);
 	movepiece.goToMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
-	console.log('turn after: ' + gamefile.whosTurn);
 
 	// Make sure a piece exists on the start coords
 	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraftCopy.startCoords); // { type, index, coords }
