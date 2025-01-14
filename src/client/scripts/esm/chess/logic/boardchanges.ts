@@ -17,6 +17,13 @@ import gamefileutility from "../util/gamefileutility.js";
 import jsutil from "../../util/jsutil.js";
 
 
+// Variables -------------------------------------------------------------------------
+
+
+/** All Change actions that capture a piece. */
+const captureActions = ['capture'];
+
+
 // Type Definitions-------------------------------------------------------------------------
 
 
@@ -156,7 +163,7 @@ function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication<
 }
 
 /**
- * Applies the board changes of a change list in the provided order, modifying the piece lists.
+ * Applies the logical board changes of a change list in the provided order, modifying the piece lists.
  * @param gamefile the gamefile
  * @param changes the changes to apply
  * @param funcs the object contain change funcs
@@ -275,15 +282,13 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
 	addPiece(gamefile, { piece: change['capturedPiece'], main: change.main, action: "add" });
 }
 
-const captureActions = new Set("capture");
 /**
  * Gets every captured piece in changes
  */
 function getCapturedPieces(move: Move): Piece[] {
 	const pieces: Piece[] = [];
 	for (const change of move.changes) {
-		if (!(change.action in captureActions)) continue; // This change isn't a capture
-		pieces.push(change['capturedPiece']);
+		if (captureActions.includes(change.action)) pieces.push(change['capturedPiece']); // This was a capture action
 	}
 	return pieces;
 }
@@ -296,7 +301,7 @@ function wasACapture(move: Move): boolean {
 	// There will never be a valid move with zero changes, that's just absurd.
 	if (move.changes.length === 0) throw Error("Move doesn't have it's changes calculated yet, do that before this.");
 	for (const change of move.changes) {
-		if ((change.action in captureActions)) return true; // This was a capture action
+		if (captureActions.includes(change.action)) return true; // This was a capture action
 	}
 	return false;
 }

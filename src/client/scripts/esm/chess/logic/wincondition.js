@@ -132,20 +132,19 @@ function detectMoveRule(gamefile) {
 // Returns true if the very last move captured a royal piece.
 function wasLastMoveARoyalCapture(gamefile) {
 	const lastMove = moveutil.getLastMove(gamefile.moves);
-
 	if (!lastMove) return false;
 
 	const capturedTypes = new Set();
 
-	for (const pieceType of boardchanges.getCapturedPieces(lastMove)) {
-		capturedTypes.add(colorutil.trimColorExtensionFromType(pieceType));
-	}
+	boardchanges.getCapturedPieces(lastMove).forEach((piece) => {
+		capturedTypes.add(colorutil.trimColorExtensionFromType(piece.type));
+	});
 
 	if (!capturedTypes.size) return false; // Last move not a capture
 
 	// Does the piece type captured equal any royal piece?
-	// Idk why vscode does not hve set methods
-	return !capturedTypes.isDisjointFrom(new Set(typeutil.royals));
+	// Idk why vscode does not have set methods
+	return !capturedTypes.isDisjointFrom(new Set(typeutil.royals)); // disjoint if they share nothing in common
 }
 
 /**
