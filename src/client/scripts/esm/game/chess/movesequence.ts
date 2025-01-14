@@ -19,7 +19,7 @@ import { animatableChanges, meshChanges } from "./graphicalchanges.js";
 // @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
-import onlinegame from "../misc/onlinegame.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import arrows from "../rendering/arrows.js";
 // @ts-ignore
