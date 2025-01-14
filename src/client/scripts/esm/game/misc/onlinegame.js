@@ -583,7 +583,8 @@ function handleServerGameUpdate(messageContents) { // { gameConclusion, clockVal
  * @returns {boolean} *false* if it detected an illegal move played by our opponent.
  */
 function synchronizeMovesList(gamefile, moves, claimedGameConclusion) {
-	console.log("Resyncing...");
+	// console.log("Resyncing...");
+
 	// Early exit case. If we have played exactly 1 more move than the server,
 	// and the rest of the moves list matches, don't modify our moves,
 	// just re-submit our move!

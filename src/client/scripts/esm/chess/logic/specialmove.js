@@ -37,12 +37,12 @@ function getFunctions() {
 // RETURNS FALSE if special move was not executed!
 function kings(gamefile, piece, move) {
 
-	const moveChanges = move.changes;
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	// Move the king to new square
 
+	const moveChanges = move.changes;
 	boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Make normal move
 
 	// Move the rook to new square
@@ -60,11 +60,11 @@ function kings(gamefile, piece, move) {
 	return true;
 }
 
-function pawns(gamefile, piece, move, { updateProperties = true } = {}) {
+function pawns(gamefile, piece, move) {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
-	if (updateProperties && isPawnMoveADoublePush(piece.coords, move.endCoords)) {
+	if (isPawnMoveADoublePush(piece.coords, move.endCoords)) {
 		state.createState(move, 'enpassant', gamefile.enpassant, getEnPassantSquare(piece.coords, move.endCoords));
 	}
 

@@ -478,7 +478,7 @@ function roundUpToPowerOf2(num) {
 }
 
 /**
- * Produces a number that is `progress` away from `s` in the direction of `e` from `s`
+ * Starts with `s`, steps it by +-`progress` towards `e`, then returns that number.
  * @param {Number} s 
  * @param {Number} e 
  * @param {Number} progress 
@@ -486,6 +486,8 @@ function roundUpToPowerOf2(num) {
 function moveTowards(s, e, progress) {
 	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
 }
+
+
 
 export default {
 	isPowerOfTwo,

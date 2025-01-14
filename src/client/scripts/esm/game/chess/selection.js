@@ -270,6 +270,8 @@ function handleSelectingPiece(pieceClickedType) {
 		return;
 	}
 
+	// If it's your turn, select that piece.
+
 	if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
 	const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
 	if (!options.getEM() && clickedPieceColor === colorutil.colorOfNeutrals) return; // Don't select neutrals, unless we're in edit mode

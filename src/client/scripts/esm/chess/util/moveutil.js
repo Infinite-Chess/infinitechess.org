@@ -1,6 +1,6 @@
 
 /**
- * This script contains methods for working with the gamefile's moves list.
+ * This script contains utility methods for working with the gamefile's moves list.
  */
 
 
@@ -177,6 +177,7 @@ function convertMovesTo1DFormat(moves, results) {
 	return moves1D;
 }
 
+// COMMENTED-OUT because it's not used anywhere in the code
 // /**
 //  * Flags the gamefile's very last move as a "check".
 //  * @param {gamefile} gamefile - The gamefile

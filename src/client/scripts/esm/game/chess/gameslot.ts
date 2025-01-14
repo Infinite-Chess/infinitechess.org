@@ -42,8 +42,6 @@ import movement from "../rendering/movement.js";
 // @ts-ignore
 import arrows from "../rendering/arrows.js";
 // @ts-ignore
-import winconutil from "../../chess/util/winconutil.js";
-// @ts-ignore
 import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
 import clock from "../../chess/logic/clock.js";
@@ -154,14 +152,15 @@ async function loadGamefile(
 	}
 	guipromotion.initUI(newGamefile.gameRules.promotionsAllowed);
 
+	// Rewind one move so that we can, after a short delay, animate the most recently played move.
 	const lastmove = moveutil.getLastMove(newGamefile.moves);
 	if (lastmove !== undefined) {
+		// Rewind one move
 		movepiece.applyMove(newGamefile, lastmove, false);
 
-		// A small delay to animate the very last move, so the loading screen
-		// spinny pawn animation has time to fade away.
+		// A small delay to animate the most recently played move.
 		animateLastMoveTimeoutID = setTimeout(() => {
-			if (moveutil.areWeViewingLatestMove(newGamefile)) return;
+			if (moveutil.areWeViewingLatestMove(newGamefile)) return; // Already viewing the lastest move
 			movesequence.viewFront(newGamefile); // Updates to front even when they view different moves
 			movesequence.animateMove(lastmove, true);
 		}, delayOfLatestMoveAnimationOnRejoinMillis);

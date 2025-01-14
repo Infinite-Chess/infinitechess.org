@@ -1,4 +1,6 @@
 
+import movesequence from '../chess/movesequence.js';
+import gameslot from '../chess/gameslot.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -31,9 +33,6 @@ import guigameinfo from './guigameinfo.js';
 import onlinegame from '../misc/onlinegame.js';
 // @ts-ignore
 import camera from '../rendering/camera.js';
-import movesequence from '../chess/movesequence.js';
-import gameslot from '../chess/gameslot.js';
-// Import End
 
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';

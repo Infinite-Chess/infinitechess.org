@@ -1,12 +1,14 @@
 
+/**
+ * This script creates, queues, and applies gamefile states
+ * to the gamefile when a Move is created, and executed.
+ */
+
 
 // @ts-ignore
 import type { Move } from "./movepiece.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
-
-
-import coordutil from "../util/coordutil.js";
 
 
 // Type Definitions ------------------------------------------------------------------------------------
@@ -86,7 +88,9 @@ function applyMove(
 	}
 }
 
-/** Applies the state of a move to the gamefile, whether forward or backward. */
+/**
+ * Applies the state of a move to the gamefile, whether forward or backward.
+ */
 function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
 	const newValue = forward ? state.future : state.current;
 	switch (state.type) {

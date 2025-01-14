@@ -4,6 +4,12 @@
  * and what animations to make, according to each action of a move's actions list.
  */
 
+
+import type { ChangeApplication, Change, genericChangeFunc } from "../../chess/logic/boardchanges.js";
+// @ts-ignore
+import type gamefile from "../../chess/logic/gamefile.js";
+
+
 // @ts-ignore
 import animation from "../rendering/animation.js";
 // @ts-ignore
@@ -13,9 +19,7 @@ import organizedlines from "../../chess/logic/organizedlines.js";
 
 
 // Type Definitions -----------------------------------------------------------------------------------------
-import type { ChangeApplication, Change, genericChangeFunc } from "../../chess/logic/boardchanges.js";
-// @ts-ignore
-import type gamefile from "../../chess/logic/gamefile.js";
+
 
 /**
  * An object mapping move changes to a function that performs the graphical mesh change for that action.
