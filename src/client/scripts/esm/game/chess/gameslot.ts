@@ -158,8 +158,6 @@ async function loadGamefile(loadOptions: LoadOptions) {
 
 	// First load the LOGICAL stuff...
 	loadedGamefile = loadLogical(loadOptions);
-
-	// LOGICAL STUFF IS DONE LOADING
 	console.log('Finished loading LOGICAL game stuff.');
 	gameIsLoading = false;
 	// Play the start game sound once LOGICAL stuff is finished loading,
