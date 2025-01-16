@@ -21,6 +21,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedlines.js').PiecesByType} PiecesByType */
 /** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
+/** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
 
 'use strict';
 
@@ -89,7 +90,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.ourPieces = undefined;
 	/** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` @type {PiecesByKey} */
 	this.piecesOrganizedByKey = undefined;
-	/** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` */
+	/** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` @type {LinesByStep} */
 	this.piecesOrganizedByLines = undefined;
 
 	/** The object that contains the buffer model to render the pieces */

@@ -1,39 +1,49 @@
 
-// Import Start
-//@ts-ignore
-import gamefileutility from '../util/gamefileutility.js';
-//@ts-ignore
+/**
+ * This script manages the organized lines of all pieces in the current game.
+ * For example, pieces organized by type, coordinate, vertical, horizontal, diagonal, etc.
+ * 
+ * These dramatically increase speed of legal move calculation.
+ */
+
 import math from '../../util/math.js';
-//@ts-ignore
-import typeutil from '../util/typeutil.js';
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
-// Import End
+// @ts-ignore
+import gamefileutility from '../util/gamefileutility.js';
+//@ts-ignore
+import typeutil from '../util/typeutil.js';
 
 // @ts-ignore
 import type gamefile from './gamefile.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Piece } from './boardchanges.js';
 
+
+
 // Amount of extra undefined pieces to store with each type array!
 // These placeholders are utilized when pieces are added or pawns promote!
 const extraUndefineds = 5; // After this many promotions, need to add more undefineds and recalc the model!
 
+
+// Type Definitions ---------------------------------------------------------------------------------------
+
+
+/** The string-key of a line's step value, or a 2-dimensional vector. */
+// Separated from CoordsKey so that it's clear this is meant for directions, not coordinates
+type Vec2Key = `${number},${number}`;
+
+
+
+
 /** An object containing all our pieces, organized by type. */
 type PiecesByType = { [pieceType: string]: PooledArray<Coords> }
 
-
 /**
- * An object containing all pieces organized by coordinates,
- * where the value is the type of piece on the coordinates.
- */
-type PiecesByKey = { [coordsKey: CoordsKey]: string }
-
-/**
- * A list containing all pieces of a single type
- * 
- * Type Lists, even though they are arrays, have an "undefineds" property that
- * keeps track of all the undefined indexes in the array, which is also ordered.
+ * An array type that allows for undefined placeholders,
+ * and contains an `undefined` property that is an ordered (ascending)
+ * array containing all the indexes that *are undefined*.
+ * This allows us to efficiently keep track of them.
  */
 class PooledArray<T> extends Array<T|undefined> {
 	undefineds: Array<number>;
@@ -42,30 +52,35 @@ class PooledArray<T> extends Array<T|undefined> {
 		this.undefineds = [];
 	}
 
+	/** Adds a single undefined placeholder to the end of this pooled array. */
 	addUndefineds() {
 		const insertedIndex = this.push(undefined) - 1; // insertedIndex = New length - 1
 		this.undefineds.push(insertedIndex);
 	}
 }
 
+/** An object containing all pieces organized by coordinates,
+ * where the value is the type of piece on the coordinates. */
+type PiecesByKey = { [coordsKey: CoordsKey]: string }
+
+/** An object containing our pieces organized by lines */
 interface LinesByStep {
-	[line: CoordsKey]: PiecesByKey
+	[line: Vec2Key]: PieceLinesByKey
 }
 
+/** An object containing the pieces organized by a single line direction. */
 interface PieceLinesByKey {
 	[line: LineKey]: Array<Piece>
 }
 
+/** A unique identifier for a single line of pieces. */
 type LineKey = `${number}|${number}`
 
-"use strict";
+// (Deleted "use strict" as I don't think it has an effect if we're using typescript)
 
-/**
- * This script manages the organized lines of all pieces in the current game.
- * For example, pieces organized by type, coordinate, vertical, horizontal, diagonal, etc.
- * 
- * These dramatically increase speed of legal move calculation.
- */
+
+// Functions ----------------------------------------------------------------------------
+
 
 /**
  * Organizes all the pieces of the specified game into many different lists,
@@ -89,7 +104,7 @@ function initOrganizedPieceLists(gamefile: gamefile) {
     
 	// console.log("Finished organizing lists!")
 
-	initUndefineds(gamefile);
+	// We no longer initUndefineds() since that is done in the PooledArray contructor
 }
 
 function resetOrganizedLists(gamefile: gamefile) {
@@ -105,14 +120,14 @@ function resetOrganizedLists(gamefile: gamefile) {
 // Inserts given piece into all the organized piece lists (key, row, column...)
 function organizePiece(type: string, coords: Coords, gamefile?: gamefile): void {
 	if (!coords) return; // Piece is undefined, skip this one!
-	if (typeof(gamefile) === "undefined") throw new Error("Cannot organize piece without gamefile");
+	if (typeof(gamefile) === "undefined") throw Error("Cannot organize piece without gamefile");
 	const piece = { type, coords };
 
 	// Organize by key
 	// First, turn the coords into a key in the format 'x,y'
 	let key: string = coordutil.getKeyFromCoords(coords);
 	// Is there already a piece there? (Desync)
-	if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`);
+	if (gamefile.piecesOrganizedByKey[key]) throw Error(`While organizing a piece, there was already an existing piece there!! ${coords}`);
 	gamefile.piecesOrganizedByKey[key] = type;
     
 	// Organize by line
@@ -132,18 +147,17 @@ function organizePiece(type: string, coords: Coords, gamefile?: gamefile): void 
 function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 
 	// Make the piece key undefined in piecesOrganizedByKey object  
-	let key: string = coordutil.getKeyFromCoords(coords);
-	if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`);
+	let vec2Key: CoordsKey = coordutil.getKeyFromCoords(coords);
+	if (!gamefile.piecesOrganizedByKey[vec2Key]) throw Error(`No organized piece at coords ${coords} to delete!`);
 	// Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
-	delete gamefile.piecesOrganizedByKey[key]; 
+	delete gamefile.piecesOrganizedByKey[vec2Key]; 
 
 	const lines = gamefile.startSnapshot.slidingPossible;
-	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i];
-		key = coordutil.getKeyFromCoords(line);
+	lines.forEach((line: Coords) => { // For every line possible in the game...
+		vec2Key = coordutil.getKeyFromCoords(line);
 		const linekey = getKeyFromLine(line,coords);
-		removePieceFromLine(gamefile.piecesOrganizedByLines[key], linekey);
-	}
+		removePieceFromLine(gamefile.piecesOrganizedByLines[vec2Key], linekey);
+	});
 
 	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
 	function removePieceFromLine(organizedPieces: PieceLinesByKey, lineKey: LineKey) {
@@ -159,20 +173,6 @@ function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 			}
 		}
 	}
-}
-
-function initUndefineds(gamefile: gamefile) {
-
-	// Add extra undefined pieces into each type array!
-	for (const pieceType in gamefile.ourPieces) {
-		gamefile.ourPieces[pieceType].undefineds = [];
-	}
-
-	// typeutil.forEachPieceType(init);
-	// function init(listType) {
-	// 	const list = gamefile.ourPieces[listType];
-	// 	list.undefineds = [];
-	// }
 }
 
 function areWeShortOnUndefineds(gamefile: gamefile) {
@@ -247,11 +247,10 @@ function buildStateFromKeyList(gamefile: gamefile): PiecesByType {
 	// For some reason, does not iterate through inherited properties?
 	for (const key in keyList) {
 		const type = keyList[key];
-		// @ts-ignore CoordKey is interprited as str for some reason
-		const coords = coordutil.getCoordsFromKey(key);
+		const coords = coordutil.getCoordsFromKey(key as CoordsKey);
 		// Does the type parameter exist?
 		// if (!state[type]) state[type] = []
-		if (!state[type]) throw new Error(`Error when building state from key list. Type ${type} is undefined!`);
+		if (!state[type]) throw Error(`Error when building state from key list. Type ${type} is undefined!`);
 		// Push the coords
 		state[type].push(coords);
 	}
@@ -330,7 +329,7 @@ function getCFromLine(step: Coords, coords: Coords): number {
  * @param {number[]} coords - Coordinates that are on the line
  * @returns {number} The X in the line's key: `C|X`
  */
-function getXFromLine(step: Coords, coords: Coords) {
+function getXFromLine(step: Coords, coords: Coords): number {
 	// See these desmos graphs for inspiration for finding what line the coords are on:
 	// https://www.desmos.com/calculator/d0uf1sqipn
 	// https://www.desmos.com/calculator/t9wkt3kbfo
@@ -374,7 +373,6 @@ function areColinearSlidesPresentInGame(gamefile: gamefile) {
 
 export type {
 	PooledArray,
-
 	PiecesByKey,
 	PiecesByType,
 	PieceLinesByKey,
