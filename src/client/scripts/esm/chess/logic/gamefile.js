@@ -4,7 +4,6 @@
 import organizedlines from './organizedlines.js';
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
-import area from '../../game/rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
@@ -20,8 +19,9 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
-/** @typedef {import('../util/gamefileutility.js').PiecesByType} PiecesByType */
-/** @typedef {import('../util/gamefileutility.js').PiecesByKey} PiecesByKey */
+/** @typedef {import('./organizedlines.js').PiecesByType} PiecesByType */
+/** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
+/** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
 
 'use strict';
 
@@ -44,7 +44,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
     
 	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
 	this.startSnapshot = {
-		/** In key format 'x,y':'type' */
+		/** In key format 'x,y':'type' @type {PiecesByKey} */
 		position: undefined,
 		positionString: undefined,
 		specialRights: undefined,
@@ -90,7 +90,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.ourPieces = undefined;
 	/** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` @type {PiecesByKey} */
 	this.piecesOrganizedByKey = undefined;
-	/** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` */
+	/** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` @type {LinesByStep} */
 	this.piecesOrganizedByLines = undefined;
 
 	/** The object that contains the buffer model to render the pieces */
@@ -214,7 +214,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
 	/** The number of half-moves played since the last capture or pawn push. */
 	this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
-	area.initStartingAreaBox(this);
+
+	gamefileutility.initStartingAreaBox(this);
+
 	/** The move list. @type {Move[]} */
 	this.moves = [];
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */

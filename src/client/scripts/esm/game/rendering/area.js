@@ -4,7 +4,6 @@ import transition from './transition.js';
 import movement from './movement.js';
 import camera from './camera.js';
 import board from './board.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
 import math from '../../util/math.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
@@ -268,22 +267,10 @@ function getAreaOfAllPieces(gamefile) {
 	return calculateFromUnpaddedBox(gamefile.startSnapshot.box);
 }
 
-/**
- * Saves the bounding box of the game's starting position to the startSnapshot property
- * @param {gamefile} gamefile - The gamefile
- */
-function initStartingAreaBox(gamefile) {
-	const startingPosition = gamefile.startSnapshot.position;
-	const coordsList = gamefileutility.getCoordsOfAllPiecesByKey(startingPosition);
-	const box = math.getBoxFromCoordsList(coordsList);
-	gamefile.startSnapshot.box = box;
-}
-
 export default {
 	calculateFromCoordsList,
 	calculateFromUnpaddedBox,
 	getAreaOfAllPieces,
-	initStartingAreaBox,
 	initTelFromUnpaddedBox,
 	initTelFromCoordsList,
 	initTelFromArea

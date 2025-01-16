@@ -3,11 +3,11 @@
  * This script contains many utility methods for working with gamefiles.
  */
 
-import { Coords, CoordsKey } from './coordutil.js';
+import type { Coords, CoordsKey } from './coordutil.js';
+import type { PiecesByType, PiecesByKey, PooledArray } from '../logic/organizedlines.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
-// @ts-ignore
-import type { Piece } from '../logic/movepiece.js';
+import type { Piece } from '../logic/boardchanges.js';
 
 
 import jsutil from '../../util/jsutil.js';
@@ -22,39 +22,21 @@ import gamerules from '../variants/gamerules.js';
 // @ts-ignore
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-
+import math from '../../util/math.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 // @ts-ignore
 import wincondition from '../logic/wincondition.js'; 
+// Import End
 
 
 // Type Definitions -----------------------------------------------------------------------------------------
 
-
 /** A function meant to be called once for each piece in any organized list. */
 // eslint-disable-next-line no-unused-vars
-type PieceIterator = (type: string, coords: Coords, gamefile?: gamefile) => {};
+type PieceIterator = (type: string, coords: Coords, gamefile?: gamefile) => void;
 /** A function meant to be called once for each piece's coordinates in any organized list. */
 // eslint-disable-next-line no-unused-vars
 type CoordsIterator = (coords: Coords) => {};
-
-/** An object containing all our pieces, organized by type. */
-type PiecesByType = { [pieceType: string]: TypeList }
-/**
- * A list containing all pieces of a single type
- * 
- * Using an intersection type allows us to merge the properties of multiple types.
- * Type Lists, even though they are arrays, have an "undefineds" property that
- * keeps track of all the undefined indexes in the array, which is also ordered.
- */
-type TypeList = (Coords | undefined)[] & { undefineds: number[] };
-
-/**
- * An object containing all pieces organized by coordinates,
- * where the value is the type of piece on the coordinates.
- */
-type PiecesByKey = { [coordsKey: CoordsKey]: string }
-
 
 // Variables -----------------------------------------------------------------------------------------------
 
@@ -196,7 +178,7 @@ function getPieceCountOfColor(gamefile: gamefile, color: 'white' | 'black'): num
  * @returns The number of pieces of this type in the gamefile
  */
 function getPieceCountOfType(gamefile: gamefile, type: string): number {
-	const typeList: TypeList = gamefile.ourPieces[type];
+	const typeList: PooledArray<Coords> = gamefile.ourPieces[type];
 	if (typeList === undefined) return 0; // Unknown piece
 	return getPieceCountInTypeList(typeList);
 }
@@ -206,7 +188,7 @@ function getPieceCountOfType(gamefile: gamefile, type: string): number {
  * EXCLUDING undefined placeholders
  * @param typeList - An array of coordinates where you can find all the pieces of that given type
  */
-function getPieceCountInTypeList(typeList: TypeList): number {
+function getPieceCountInTypeList(typeList: PooledArray<Coords>): number {
 	if (typeList.undefineds) return typeList.length - typeList.undefineds.length;
 	return typeList.length;
 }
@@ -234,7 +216,7 @@ function getPieceCount_IncludingUndefineds(gamefile: gamefile): number {
  * @param list - The list of pieces of a specific type.
  * @param {number} pieceIndex - The index to delete
  */
-function deleteIndexFromPieceList(typeList: TypeList, pieceIndex: number) {
+function deleteIndexFromPieceList(typeList: PooledArray<Coords>, pieceIndex: number) {
 	typeList[pieceIndex] = undefined;
 	// Keep track of where the undefined indices are! Have an "undefineds" array property.
 	typeList.undefineds = jsutil.addElementToOrganizedArray(typeList.undefineds, pieceIndex);
@@ -466,6 +448,16 @@ function doGameOverChecks(gamefile: gamefile) {
 	if (isGameOver(gamefile) && winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile);
 }
 
+// TODO: Move to a more suitable place
+/**
+ * Saves the bounding box of the game's starting position to the startSnapshot property
+ */
+function initStartingAreaBox(gamefile: gamefile) {
+	const startingPosition = gamefile.startSnapshot.position;
+	const coordsList = getCoordsOfAllPiecesByKey(startingPosition);
+	const box = math.getBoxFromCoordsList(coordsList);
+	gamefile.startSnapshot.box = box;
+}
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -494,9 +486,5 @@ export default {
 	setTerminationMetadata,
 	isOpponentUsingWinCondition,
 	doGameOverChecks,
-};
-
-export type {
-	PiecesByType,
-	PiecesByKey,
+	initStartingAreaBox,
 };
