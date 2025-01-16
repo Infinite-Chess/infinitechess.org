@@ -132,7 +132,7 @@ function organizePiece(type: string, coords: Coords, gamefile?: gamefile): void 
 function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 
 	// Make the piece key undefined in piecesOrganizedByKey object  
-	const key: string = coordutil.getKeyFromCoords(coords);
+	let key: string = coordutil.getKeyFromCoords(coords);
 	if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`);
 	// Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
 	delete gamefile.piecesOrganizedByKey[key]; 
@@ -140,8 +140,9 @@ function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 	const lines = gamefile.startSnapshot.slidingPossible;
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
-		const key = getKeyFromLine(line,coords);
-		removePieceFromLine(gamefile.piecesOrganizedByLines[key],key);
+		key = coordutil.getKeyFromCoords(line);
+		const linekey = getKeyFromLine(line,coords);
+		removePieceFromLine(gamefile.piecesOrganizedByLines[key], linekey);
 	}
 
 	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
