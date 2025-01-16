@@ -1,20 +1,62 @@
 
 // Import Start
+//@ts-ignore
 import gamefileutility from '../util/gamefileutility.js';
-import pieces from '../../game/rendering/pieces.js';
+//@ts-ignore
 import math from '../../util/math.js';
-import piecesmodel from '../../game/rendering/piecesmodel.js';
-import options from '../../game/rendering/options.js';
-import colorutil from '../util/colorutil.js';
+//@ts-ignore
 import typeutil from '../util/typeutil.js';
+import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 // Import End
 
-/** 
- * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
-*/
+// @ts-ignore
+import type gamefile from './gamefile.js';
+import type { Coords, CoordsKey } from '../util/coordutil.js';
+import type { Piece } from './boardchanges.js';
 
+// Amount of extra undefined pieces to store with each type array!
+// These placeholders are utilized when pieces are added or pawns promote!
+const extraUndefineds = 5; // After this many promotions, need to add more undefineds and recalc the model!
+
+/** An object containing all our pieces, organized by type. */
+type PiecesByType = { [pieceType: string]: PooledArray<Coords> }
+
+
+/**
+ * An object containing all pieces organized by coordinates,
+ * where the value is the type of piece on the coordinates.
+ */
+type PiecesByKey = { [coordsKey: CoordsKey]: string }
+
+/**
+ * A list containing all pieces of a single type
+ * 
+ * Type Lists, even though they are arrays, have an "undefineds" property that
+ * keeps track of all the undefined indexes in the array, which is also ordered.
+ */
+class PooledArray<T> extends Array<T|undefined> {
+	undefineds: Array<number>;
+	constructor(...items: T[]) {
+		super(...items);
+		this.undefineds = [];
+	}
+
+	addUndefineds() {
+		const insertedIndex = this.push(undefined) - 1; // insertedIndex = New length - 1
+		this.undefineds.push(insertedIndex);
+	}
+}
+
+interface LinesByStep {
+	[line: CoordsKey]: PiecesByKey
+}
+
+interface PieceLinesByKey {
+	[line: LineKey]: Array<Piece>
+}
+
+type LineKey = `${number}|${number}`
 
 "use strict";
 
@@ -33,9 +75,8 @@ import coordutil from '../util/coordutil.js';
  * These are helpful because they vastly improve performance. For instance,
  * if we know the coordinates of a piece, we don't have to iterate
  * through the entire list of pieces to find its type.
- * @param {gamefile} gamefile - The gamefile
  */
-function initOrganizedPieceLists(gamefile) {
+function initOrganizedPieceLists(gamefile: gamefile) {
 	if (!gamefile.ourPieces) return console.error("Cannot init the organized lines before ourPieces is defined.");
     
 	// console.log("Begin organizing lists...")
@@ -51,7 +92,7 @@ function initOrganizedPieceLists(gamefile) {
 	initUndefineds(gamefile);
 }
 
-function resetOrganizedLists(gamefile) {
+function resetOrganizedLists(gamefile: gamefile) {
 	gamefile.piecesOrganizedByKey = {};
 	gamefile.piecesOrganizedByLines = {};
 
@@ -62,14 +103,14 @@ function resetOrganizedLists(gamefile) {
 }
 
 // Inserts given piece into all the organized piece lists (key, row, column...)
-function organizePiece(type, coords, gamefile) {
+function organizePiece(type: string, coords: Coords, gamefile?: gamefile): void {
 	if (!coords) return; // Piece is undefined, skip this one!
-
+	if (typeof(gamefile) === "undefined") throw new Error("Cannot organize piece without gamefile");
 	const piece = { type, coords };
 
 	// Organize by key
 	// First, turn the coords into a key in the format 'x,y'
-	let key = coordutil.getKeyFromCoords(coords);
+	let key: string = coordutil.getKeyFromCoords(coords);
 	// Is there already a piece there? (Desync)
 	if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`);
 	gamefile.piecesOrganizedByKey[key] = type;
@@ -88,10 +129,10 @@ function organizePiece(type, coords, gamefile) {
 }
 
 // Remove specified piece from all the organized piece lists (piecesOrganizedByKey, etc.)
-function removeOrganizedPiece(gamefile, coords) {
+function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 
 	// Make the piece key undefined in piecesOrganizedByKey object  
-	let key = coordutil.getKeyFromCoords(coords);
+	const key: string = coordutil.getKeyFromCoords(coords);
 	if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`);
 	// Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
 	delete gamefile.piecesOrganizedByKey[key]; 
@@ -99,16 +140,16 @@ function removeOrganizedPiece(gamefile, coords) {
 	const lines = gamefile.startSnapshot.slidingPossible;
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
-		key = getKeyFromLine(line,coords);
-		removePieceFromLine(gamefile.piecesOrganizedByLines[line],key);
+		const key = getKeyFromLine(line,coords);
+		removePieceFromLine(gamefile.piecesOrganizedByLines[key],key);
 	}
 
 	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
-	function removePieceFromLine(organizedPieces, lineKey) {
-		const line = organizedPieces[lineKey];
+	function removePieceFromLine(organizedPieces: PieceLinesByKey, lineKey: LineKey) {
+		const line = organizedPieces[lineKey]!;
 
 		for (let i = 0; i < line.length; i++) {
-			const thisPieceCoords = line[i].coords;
+			const thisPieceCoords = line[i]!.coords;
 			if (thisPieceCoords[0] === coords[0] && thisPieceCoords[1] === coords[1]) {
 				line.splice(i, 1); // Delete
 				// If the line length is now 0, remove itself from the organizedPieces
@@ -119,7 +160,7 @@ function removeOrganizedPiece(gamefile, coords) {
 	}
 }
 
-function initUndefineds(gamefile) {
+function initUndefineds(gamefile: gamefile) {
 
 	// Add extra undefined pieces into each type array!
 	for (const pieceType in gamefile.ourPieces) {
@@ -133,12 +174,12 @@ function initUndefineds(gamefile) {
 	// }
 }
 
-function areWeShortOnUndefineds(gamefile) {
+function areWeShortOnUndefineds(gamefile: gamefile) {
 
 	let weShort = false;
 	typeutil.forEachPieceType(areWeShort);
 
-	function areWeShort(listType) {
+	function areWeShort(listType: string) {
 		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
 
 		const list = gamefile.ourPieces[listType];
@@ -155,25 +196,23 @@ function areWeShortOnUndefineds(gamefile) {
  * Makes sure each piece list has the bare minimum number of undefineds.
  * These placeholders are used up when pawns promote.
  * When they're gone, we have to regenerate the mesh, with more empty placeholders.
- * @param {gamefile} gamefile - The gamefile
- * @param {Object} options - An object containing the various properties:
+ * @param gamefile - The gamefile
+ * @param options - An object containing the various properties:
  * - `regenModel`: Whether to renegerate the model of all the pieces afterward. Default: *true*.
  * - `log`: Whether to log to the console that we're adding more undefineds. Default: *false*
  */
-function addMoreUndefineds(gamefile, { regenModel = true, log = false } = {}) {
+function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
 	if (log) console.log('Adding more placeholder undefined pieces.');
     
 	typeutil.forEachPieceType(add);
 
-	function add(listType) {
+	function add(listType: string) {
 		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
 
 		const list = gamefile.ourPieces[listType];
 		const undefinedCount = list.undefineds.length;
-		for (let i = undefinedCount; i < pieces.extraUndefineds; i++) insertUndefinedIntoList(list);
+		for (let i = undefinedCount; i < extraUndefineds; i++) list.addUndefineds();
 	}
-
-	if (regenModel) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
 }
 
 /**
@@ -185,7 +224,7 @@ function addMoreUndefineds(gamefile, { regenModel = true, log = false } = {}) {
  * @param {string} type - The type of piece (e.g. "pawnsW")
  * @returns {boolean} *true* if we need to append placeholders for this type.
  */
-function isTypeATypeWereAppendingUndefineds(gamefile, type) {
+function isTypeATypeWereAppendingUndefineds(gamefile: gamefile, type: string): boolean {
 	if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
 	const color = colorutil.getPieceColorFromType(type);
@@ -196,27 +235,22 @@ function isTypeATypeWereAppendingUndefineds(gamefile, type) {
 	return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
 }
 
-function insertUndefinedIntoList(list) {
-	const insertedIndex = list.push(undefined) - 1; // insertedIndex = New length - 1
-	list.undefineds.push(insertedIndex);
-}
-
 /**
  * Converts a piece list organized by key to organized by type.
- * @param {gamefile} gamefile
- * @returns {Object} Pieces organized by type: `{ pawnsW: [ [1,2], [2,2], ...]}`
+ * @returns Pieces organized by type: `{ pawnsW: [ [1,2], [2,2], ...]}`
  */
-function buildStateFromKeyList(gamefile) {
+function buildStateFromKeyList(gamefile: gamefile): PiecesByType {
 	const keyList = gamefile.startSnapshot.position;
 	const state = getEmptyTypeState(gamefile);
 
 	// For some reason, does not iterate through inherited properties?
 	for (const key in keyList) {
 		const type = keyList[key];
+		// @ts-ignore CoordKey is interprited as str for some reason
 		const coords = coordutil.getCoordsFromKey(key);
 		// Does the type parameter exist?
 		// if (!state[type]) state[type] = []
-		if (!state[type]) return console.error(`Error when building state from key list. Type ${type} is undefined!`);
+		if (!state[type]) throw new Error(`Error when building state from key list. Type ${type} is undefined!`);
 		// Push the coords
 		state[type].push(coords);
 	}
@@ -228,22 +262,22 @@ function buildStateFromKeyList(gamefile) {
  * 
  * @param {gamefile} gamefile
  */
-function getEmptyTypeState(gamefile) {
+function getEmptyTypeState(gamefile: gamefile) {
 	const typesInGame = gamefile.startSnapshot.existingTypes; // ['pawns','queens']
-	const state = {};
+	const state: PiecesByType = {};
 
 	const neutralTypes = typeutil.neutralTypes; // ['obstacles', 'voids']
 
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
 	const neutralExt = colorutil.getColorExtensionFromColor('neutral');
-	
+
 	for (const type of typesInGame) {
-		if (neutralTypes.includes(type)) {
-			state[type + neutralExt] = [];
+		if (neutralTypes.includes(type)) { 
+			state[type + neutralExt] = new PooledArray();
 		} else {
-			state[type + whiteExt] = [];
-			state[type + blackExt] = [];
+			state[type + whiteExt] = new PooledArray();
+			state[type + blackExt] = new PooledArray();
 		}
 	}
 
@@ -264,7 +298,7 @@ function getEmptyTypeState(gamefile) {
  * @param {Number[]} coords `[x,y]` - A point the line intersects
  * @returns {String} the key `C|X`
  */
-function getKeyFromLine(step, coords) {
+function getKeyFromLine(step: Coords, coords: Coords): LineKey {
 	const C = getCFromLine(step, coords);
 	const X = getXFromLine(step, coords);
 	return `${C}|${X}`;
@@ -278,7 +312,7 @@ function getKeyFromLine(step, coords) {
  * @param {number[]} coords - A point the line intersects: `[x,y]`
  * @returns {number} The C in the line's key: `C|X`
  */
-function getCFromLine(step, coords) {
+function getCFromLine(step: Coords, coords: Coords): number {
 	return step[0] * coords[1] - step[1] * coords[0];
 }
 
@@ -295,7 +329,7 @@ function getCFromLine(step, coords) {
  * @param {number[]} coords - Coordinates that are on the line
  * @returns {number} The X in the line's key: `C|X`
  */
-function getXFromLine(step, coords) {
+function getXFromLine(step: Coords, coords: Coords) {
 	// See these desmos graphs for inspiration for finding what line the coords are on:
 	// https://www.desmos.com/calculator/d0uf1sqipn
 	// https://www.desmos.com/calculator/t9wkt3kbfo
@@ -312,9 +346,8 @@ function getXFromLine(step, coords) {
  * For example, [2,0] and [3,0]. We typically like to know this information because
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
- * @param {gamefile} gamefile 
  */
-function areColinearSlidesPresentInGame(gamefile) {
+function areColinearSlidesPresentInGame(gamefile: gamefile) {
 	const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
 
 	// How to know if 2 lines are colinear?
@@ -337,6 +370,15 @@ function areColinearSlidesPresentInGame(gamefile) {
 	}
 	return false;
 }
+
+export type {
+	PooledArray,
+
+	PiecesByKey,
+	PiecesByType,
+	PieceLinesByKey,
+	LinesByStep
+};
 
 export default {
 	initOrganizedPieceLists,

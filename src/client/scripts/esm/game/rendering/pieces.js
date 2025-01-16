@@ -30,10 +30,6 @@ import spritesheet from './spritesheet.js';
 /** Opacity of ghost piece over legal move highlights. Default: 0.4 */
 const ghostOpacity = 0.4;
 
-// Amount of extra undefined pieces to store with each type array!
-// These placeholders are utilized when pieces are added or pawns promote!
-const extraUndefineds = 5; // After this many promotions, need to add more undefineds and recalc the model!
-
 /**
  * A tiny z offset, to prevent the pieces from tearing with highlights while in perspective.
  * 
@@ -90,7 +86,6 @@ function renderGhostPiece(type, coords) {
 }
 
 export default {
-	extraUndefineds,
 	renderPiecesInGame,
 	renderGhostPiece,
 };

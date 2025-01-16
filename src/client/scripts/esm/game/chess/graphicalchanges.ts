@@ -16,6 +16,8 @@ import animation from "../rendering/animation.js";
 import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
 import organizedlines from "../../chess/logic/organizedlines.js";
+// @ts-ignore
+import options from "../rendering/options.js";
 
 
 // Type Definitions -----------------------------------------------------------------------------------------
@@ -70,7 +72,10 @@ function addMeshPiece(gamefile: gamefile, change: Change) {
 
 	// Do we need to add more undefineds?
 	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
-	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
+	if (organizedlines.areWeShortOnUndefineds(gamefile)) {
+		organizedlines.addMoreUndefineds(gamefile, { log: true });
+		piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+	}
 }
 
 function deleteMeshPiece(gamefile: gamefile, change: Change) {

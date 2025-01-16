@@ -20,8 +20,8 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
-/** @typedef {import('../util/gamefileutility.js').PiecesByType} PiecesByType */
-/** @typedef {import('../util/gamefileutility.js').PiecesByKey} PiecesByKey */
+/** @typedef {import('./organizedlines.js').PiecesByType} PiecesByType */
+/** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
 
 'use strict';
 
@@ -44,7 +44,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
     
 	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
 	this.startSnapshot = {
-		/** In key format 'x,y':'type' */
+		/** In key format 'x,y':'type' @type {PiecesByKey} */
 		position: undefined,
 		positionString: undefined,
 		specialRights: undefined,
