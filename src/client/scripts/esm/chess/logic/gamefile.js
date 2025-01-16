@@ -4,7 +4,6 @@
 import organizedlines from './organizedlines.js';
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
-import area from '../../game/rendering/area.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
@@ -214,7 +213,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
 	/** The number of half-moves played since the last capture or pawn push. */
 	this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
-	area.initStartingAreaBox(this);
+
+	gamefileutility.initStartingAreaBox(this);
+
 	/** The move list. @type {Move[]} */
 	this.moves = [];
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */

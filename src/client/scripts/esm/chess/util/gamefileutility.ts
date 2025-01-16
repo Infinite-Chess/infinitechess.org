@@ -22,10 +22,11 @@ import gamerules from '../variants/gamerules.js';
 // @ts-ignore
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-
+import math from '../../util/math.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 // @ts-ignore
 import wincondition from '../logic/wincondition.js'; 
+// Import End
 
 
 // Type Definitions -----------------------------------------------------------------------------------------
@@ -447,6 +448,17 @@ function doGameOverChecks(gamefile: gamefile) {
 	if (isGameOver(gamefile) && winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile);
 }
 
+// TODO: Move to a more suitable place
+/**
+ * Saves the bounding box of the game's starting position to the startSnapshot property
+ * @param {gamefile} gamefile - The gamefile
+ */
+function initStartingAreaBox(gamefile) {
+	const startingPosition = gamefile.startSnapshot.position;
+	const coordsList = getCoordsOfAllPiecesByKey(startingPosition);
+	const box = math.getBoxFromCoordsList(coordsList);
+	gamefile.startSnapshot.box = box;
+}
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -475,9 +487,5 @@ export default {
 	setTerminationMetadata,
 	isOpponentUsingWinCondition,
 	doGameOverChecks,
-};
-
-export type {
-	PiecesByType,
-	PiecesByKey,
+	initStartingAreaBox,
 };
