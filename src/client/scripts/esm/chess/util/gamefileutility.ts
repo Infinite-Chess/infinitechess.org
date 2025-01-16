@@ -451,9 +451,8 @@ function doGameOverChecks(gamefile: gamefile) {
 // TODO: Move to a more suitable place
 /**
  * Saves the bounding box of the game's starting position to the startSnapshot property
- * @param {gamefile} gamefile - The gamefile
  */
-function initStartingAreaBox(gamefile) {
+function initStartingAreaBox(gamefile: gamefile) {
 	const startingPosition = gamefile.startSnapshot.position;
 	const coordsList = getCoordsOfAllPiecesByKey(startingPosition);
 	const box = math.getBoxFromCoordsList(coordsList);
