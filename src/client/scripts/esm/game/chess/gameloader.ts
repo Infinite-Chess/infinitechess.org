@@ -19,7 +19,6 @@ import type { GameRules } from "../../chess/variants/gamerules.js";
 import type { Additional } from "./gameslot.js";
 
 
-import localgame from "../misc/localgame/localgame.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import clock from "../../chess/logic/clock.js";
@@ -147,7 +146,6 @@ async function startLocalGame(options: {
 	});
 
 	typeOfGameWeAreIn = 'local';
-	localgame.initLocalGame();
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
@@ -193,8 +191,7 @@ function openGUI(metadata: MetaData) {
 }
 
 function unloadGame() {
-	if (typeOfGameWeAreIn === 'local') localgame.closeLocalGame();
-	else if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
+	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
 	guinavigation.close();
 	guigameinfo.close();
 	gameslot.unloadGame();
