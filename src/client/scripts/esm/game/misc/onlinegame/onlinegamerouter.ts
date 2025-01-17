@@ -52,7 +52,7 @@ interface JoinGameMessage extends GameUpdateMessage {
 	youAreColor: 'white' | 'black',
 };
 
-/** The message contents expected when we receive a server websocket 'move' message.  */
+/** The message contents expected when we receive a server websocket 'gameupdate' message.  */
 interface GameUpdateMessage {
 	gameConclusion: string | false,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */

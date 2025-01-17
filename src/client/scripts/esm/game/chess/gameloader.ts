@@ -16,6 +16,7 @@ import type { ClockValues } from "../../chess/logic/clock.js";
 import type { JoinGameMessage } from "../misc/onlinegame/onlinegamerouter.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
+import type { Additional } from "./gameslot.js";
 
 
 import localgame from "../misc/localgame/localgame.js";
@@ -130,25 +131,28 @@ async function startLocalGame(options: {
 	Variant: string,
 	TimeControl: MetaData['TimeControl'],
 }) {
-	const gameOptions = {
-		metadata: {
-			...options,
-			Event: `Casual local ${translations[options.Variant]} infinite chess game`,
-			Site: 'https://www.infinitechess.org/' as 'https://www.infinitechess.org/',
-			Round: '-' as '-',
-			UTCDate: timeutil.getCurrentUTCDate(),
-			UTCTime: timeutil.getCurrentUTCTime()
-		}
+	const metadata = {
+		...options,
+		Event: `Casual local ${translations[options.Variant]} infinite chess game`,
+		Site: 'https://www.infinitechess.org/' as 'https://www.infinitechess.org/',
+		Round: '-' as '-',
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime()
 	};
 
-	await loadGame(gameOptions, true, true);
+	await gameslot.loadGamefile({
+		metadata,
+		viewWhitePerspective: true,
+		allowEditCoords: true,
+	});
+
 	typeOfGameWeAreIn = 'local';
 	localgame.initLocalGame();
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGUI(gameOptions.metadata);
+	openGUI(metadata);
 }
 
 /**
@@ -160,14 +164,20 @@ async function startOnlineGame(options: JoinGameMessage) {
 
 	const gameOptions: GameOptions = { ...options };
 
-	// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
-	if (gameOptions.clockValues) gameOptions.clockValues = clock.adjustClockValuesForPing(gameOptions.clockValues);
-	
-	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
-	if (options.publicity === 'private') gameOptions.variantOptions = localstorage.loadItem(options.id);
-	const viewWhitePerspective = options.youAreColor === 'white';
+	const additional: Additional = {
+		moves: options.moves,
+		variantOptions: localstorage.loadItem(options.id),
+		gameConclusion: options.gameConclusion,
+		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
+		clockValues: options.clockValues ? clock.adjustClockValuesForPing(options.clockValues) : undefined,
+	};
 
-	await loadGame(gameOptions, viewWhitePerspective, false);
+	await gameslot.loadGamefile({
+		metadata: options.metadata,
+		viewWhitePerspective: options.youAreColor === 'white',
+		allowEditCoords: false,
+		additional
+	});
 	typeOfGameWeAreIn = 'online';
 	onlinegame.initOnlineGame(options);
 	
@@ -180,31 +190,6 @@ async function startOnlineGame(options: JoinGameMessage) {
 function openGUI(metadata: MetaData) {
 	guigameinfo.open(metadata);
 	camera.updatePIXEL_HEIGHT_OF_NAVS();
-}
-
-/**
- * Starts a game according to the options provided.
- * @param gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`, `variantOptions`, `clockValues`
- * @param viewWhitePerspective - True if the game should be loaded from white's perspective, false for black's perspective
- * @param allowEditCoords - Whether the loaded game should allow you to edit your coords directly
- */
-async function loadGame(
-	gameOptions: GameOptions,
-	/** If false, we'll be viewing black's perspective. */
-	viewWhitePerspective: boolean,
-	allowEditCoords: boolean
-) {
-	gameslot.loadGamefile({
-		metadata: gameOptions.metadata,
-		viewWhitePerspective,
-		allowEditCoords,
-		additional: { // Pass in the pre-existing moves
-			moves: gameOptions.moves,
-			variantOptions: gameOptions.variantOptions,
-			gameConclusion: gameOptions.gameConclusion,
-			clockValues: gameOptions.clockValues
-		}
-	});
 }
 
 function unloadGame() {
@@ -225,6 +210,5 @@ export default {
 	update,
 	startLocalGame,
 	startOnlineGame,
-	loadGame,
 	unloadGame,
 };
