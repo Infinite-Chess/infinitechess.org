@@ -198,7 +198,7 @@ async function loadGamefile(loadOptions: LoadOptions) {
 		// Logical and Graphical loadings are done!
 		// We can now close the loading screen.
 	
-		// I don't one has to be awaited since we're  pretty much
+		// I don't think this one has to be awaited since we're pretty much
 		// done with loading, there's not gonna be another lag spike..
 		loadingscreen.close();
 		startStartingTransition();
