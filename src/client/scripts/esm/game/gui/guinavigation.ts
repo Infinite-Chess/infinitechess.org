@@ -429,7 +429,7 @@ function forwardMove() {
  * This was set at the time they were opened.
  */
 function areCoordsAllowedToBeEdited() {
-	return element_CoordsX.disabled;
+	return !element_CoordsX.disabled;
 }
 
 export default {

@@ -101,6 +101,8 @@ function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for
  */
 async function callbackPaste(event) {
 	if (guinavigation.isCoordinateActive()) return;
+	// Can't paste a game when the current gamefile isn't finished loading all the way.
+	if (gameslot.areWeLoadingGraphics()) return statustext.pleaseWaitForTask();
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
@@ -265,11 +267,12 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 
 	// What is the warning message if pasting in a private match?
 	const privateMatchWarning = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : '';
+	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective();
 
-	gameloader.unloadGame();
+	gameslot.unloadGame();
 	await gameslot.loadGamefile({
 		metadata: longformat.metadata,
-		viewWhitePerspective: gameslot.isLoadedGameViewingWhitePerspective(),
+		viewWhitePerspective,
 		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
 		additional: {
 			moves: longformat.moves,

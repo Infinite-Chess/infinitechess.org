@@ -139,7 +139,11 @@ function areWeLoadingLogical(): boolean {
 	return logicLoading;
 }
 
-/** Returns true if the graphics of the gamefile are currently being loaded (spritesheet generating). */
+/**
+ * Returns true if the graphics of the gamefile are currently being loaded (spritesheet generating).
+ * 
+ * We know the gamefile is finished loading once the graphics are done, because they are last.
+ */
 function areWeLoadingGraphics(): boolean {
 	return graphicsLoading;
 }
@@ -170,10 +174,10 @@ async function loadGamefile(loadOptions: LoadOptions) {
 	
 	// The game should be considered loaded once the LOGICAL stuff is finished,
 	// but the loading animation should only be closed when
-	// both the LOGICAL and GRAPHICAL stuff are both finished.
+	// both the LOGICAL and GRAPHICAL stuff are finished.
 
 	// First load the LOGICAL stuff...
-	loadedGamefile = loadLogical(loadOptions);
+	loadLogical(loadOptions);
 	// console.log('Finished loading LOGICAL game stuff.');
 	logicLoading = false;
 	// Play the start game sound once LOGICAL stuff is finished loading,
@@ -202,7 +206,7 @@ async function loadGamefile(loadOptions: LoadOptions) {
 }
 
 /** Loads all of the logical components of a game */
-function loadLogical(loadOptions: LoadOptions): gamefile {
+function loadLogical(loadOptions: LoadOptions) {
 
 	const newGamefile = new gamefile(loadOptions.metadata, loadOptions.additional);
 
@@ -222,9 +226,8 @@ function loadLogical(loadOptions: LoadOptions): gamefile {
 	initCopyPastGameListeners();
 
 	// Immediately conclude the game if we loaded a game that's over already
+	loadedGamefile = newGamefile;
 	if (gamefileutility.isGameOver(newGamefile)) concludeGame();
-
-	return newGamefile;
 }
 
 /** Loads all of the graphical components of a game */
@@ -263,6 +266,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 /** The canvas will no longer render the current game */
 function unloadGame() {
+	if (graphicsLoading) throw Error("Cannot unload current gamefile when the previous one hasn't loaded all the way yet.");
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
 	
 	// Terminate the mesh algorithm.
