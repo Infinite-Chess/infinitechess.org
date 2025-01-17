@@ -280,6 +280,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		}
 	});
 	const gamefile = gameslot.getGamefile();
+	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
 	const tooManyPieces = gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate;

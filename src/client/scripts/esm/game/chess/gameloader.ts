@@ -40,6 +40,7 @@ import localstorage from "../../util/localstorage.js";
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import camera from "../rendering/camera.js";
+import gamefileutility from "../../chess/util/gamefileutility.js";
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -183,6 +184,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// because the gui DEPENDS on the other stuff.
 
 	openGUI(gameOptions.metadata);
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
 }
 
 function openGUI(metadata: MetaData) {

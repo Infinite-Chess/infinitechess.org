@@ -227,7 +227,6 @@ function loadLogical(loadOptions: LoadOptions) {
 
 	// Immediately conclude the game if we loaded a game that's over already
 	loadedGamefile = newGamefile;
-	if (gamefileutility.isGameOver(newGamefile)) concludeGame();
 }
 
 /** Loads all of the graphical components of a game */
