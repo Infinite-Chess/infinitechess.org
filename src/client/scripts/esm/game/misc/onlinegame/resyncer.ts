@@ -64,6 +64,7 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
 	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
 	clock.edit(gamefile, message.clockValues);
 
+	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
 	onlinegame.setInSyncTrue();
