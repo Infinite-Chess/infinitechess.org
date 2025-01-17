@@ -61,6 +61,34 @@ import spritesheet from "../rendering/spritesheet.js";
 import movesequence from "./movesequence.js";
 
 
+// Type Definitions ----------------------------------------------------------
+
+
+/** Options for loading a game. */
+interface LoadOptions {
+	/** The metadata of the game */
+	metadata: MetaData,
+	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
+	viewWhitePerspective: boolean,
+	/** Whether the coordinate field box should be editable. */
+	allowEditCoords: boolean,
+	additional?: Additional
+}
+
+/** Additional options that may go into the gamefile constructor.
+ * Typically used if we're pasting a game, or reloading an online one. */
+interface Additional {
+	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
+	moves?: string[],
+	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
+	variantOptions?: any,
+	/** The conclusion of the game, if loading an online game that has already ended. */
+	gameConclusion?: string | false,
+	/** Any already existing clock values for the gamefile. */
+	clockValues?: ClockValues,
+}
+
+
 // Variables ---------------------------------------------------------------
 
 
@@ -125,30 +153,6 @@ function isLoadedGameViewingWhitePerspective() {
 	if (!loadedGamefile) throw Error("Cannot ask if loaded game is from white's perspective when there isn't a loaded game.");
 	return youAreColor === 'white';
 };
-
-/** Options for loading a game. */
-interface LoadOptions {
-	/** The metadata of the game */
-	metadata: MetaData,
-	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
-	viewWhitePerspective: boolean,
-	/** Whether the coordinate field box should be editable. */
-	allowEditCoords: boolean,
-	additional?: Additional
-}
-
-/** Additional options that may go into the gamefile constructor.
- * Typically used if we're pasting a game, or reloading an online one. */
-interface Additional {
-	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves?: string[],
-	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
-	variantOptions?: any,
-	/** The conclusion of the game, if loading an online game that has already ended. */
-	gameConclusion?: string | false,
-	/** Any already existing clock values for the gamefile. */
-	clockValues?: ClockValues,
-}
 
 
 
