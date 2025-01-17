@@ -68,6 +68,7 @@ const animatableChanges: ChangeApplication<animationFunc> = {
 
 
 function addMeshPiece(gamefile: gamefile, change: Change) {
+	if (gamefile.mesh.model === undefined) return; // Mesh isn't generated yet. Don't make this graphical change.
 	piecesmodel.overwritebufferdata(gamefile, change['piece'], change['piece'].coords, change['piece'].type);
 
 	// Do we need to add more undefineds?
@@ -79,23 +80,28 @@ function addMeshPiece(gamefile: gamefile, change: Change) {
 }
 
 function deleteMeshPiece(gamefile: gamefile, change: Change) {
+	if (gamefile.mesh.model === undefined) return console.log(`Mesh isn't generated yet. Skipping applying this graphical change: ${JSON.stringify(change)}`);
 	piecesmodel.deletebufferdata(gamefile, change['piece']);
 }
 
 function moveMeshPiece(gamefile: gamefile, change: Change) {
+	if (gamefile.mesh.model === undefined) return console.log(`Mesh isn't generated yet. Skipping applying this graphical change: ${JSON.stringify(change)}`);
 	piecesmodel.movebufferdata(gamefile, change['piece'], change['endCoords']);
 }
 
 function returnMeshPiece(gamefile: gamefile, change: Change) {
+	if (gamefile.mesh.model === undefined) return console.log(`Mesh isn't generated yet. Skipping applying this graphical change: ${JSON.stringify(change)}`);
 	piecesmodel.movebufferdata(gamefile, change['piece'], change['piece'].coords);
 }
 
 function captureMeshPiece(gamefile: gamefile, change: Change) {
+	if (gamefile.mesh.model === undefined) return console.log(`Mesh isn't generated yet. Skipping applying this graphical change: ${JSON.stringify(change)}`);
 	piecesmodel.deletebufferdata(gamefile, change['capturedPiece']);
 	moveMeshPiece(gamefile, change);
 }
 
 function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
+	if (gamefile.mesh.model === undefined) return console.log(`Mesh isn't generated yet. Skipping applying this graphical change: ${JSON.stringify(change)}`);
 	returnMeshPiece(gamefile, change);
 	addMeshPiece(gamefile, { action: "add", main: change.main, piece: change['capturedPiece'] });
 }

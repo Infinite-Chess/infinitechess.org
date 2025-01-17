@@ -258,7 +258,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	}
 
 	// Regenerate the mesh of all the pieces.
-	piecesmodel.regenModel(loadedGamefile!, options.getPieceRegenColorArgs());
+	await piecesmodel.regenModel(loadedGamefile!, options.getPieceRegenColorArgs());
 }
 
 /** The canvas will no longer render the current game */
