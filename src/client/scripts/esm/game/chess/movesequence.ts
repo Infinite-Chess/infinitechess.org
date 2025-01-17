@@ -53,7 +53,6 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes
-	guigameinfo.updateWhosTurn();
 	updateGui(false);
 
 	if (!onlinegame.areInOnlineGame()) {
@@ -171,7 +170,8 @@ function animateMove(move: Move, forward = true, animateMain = true) {
 }
 
 /**
- * Updates the transparency of the rewind/forward move buttons,
+ * Updates the display of whos turn it is (if it changed),
+ * the transparency of the rewind/forward move buttons,
  * updates the move number below the move buttons.
  * @param showMoveCounter Whether to show the move counter below the move buttons in the navigation bar.
  */
@@ -179,6 +179,7 @@ function updateGui(showMoveCounter: boolean) {
 	if (showMoveCounter) stats.showMoves();
 	else stats.updateTextContentOfMoves(); // While we may not be OPENING the move counter, if it WAS already open we should still update the number!
 	guinavigation.update_MoveButtons();
+	guigameinfo.updateWhosTurn();
 }
 
 

@@ -90,8 +90,8 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 
 /**
  * Updates the gamefile with new clock information received from the server.
- * @param {gamefile} gamefile - The current game state object containing clock information.
- * @param {object} clockValues - An object containing the updated clock values.
+ * @param gamefile - The current game state object containing clock information.
+ * @param [clockValues] - An object containing the updated clock values.
  */
 function edit(gamefile: gamefile, clockValues?: ClockValues) {
 	if (!clockValues) return; // Likely a no-timed game

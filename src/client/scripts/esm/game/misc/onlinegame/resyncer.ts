@@ -12,6 +12,7 @@
  */
 
 
+import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 import type { GameUpdateMessage } from "./onlinegamerouter.js";
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile.js";
@@ -54,8 +55,6 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
 	const result = synchronizeMovesList(gamefile, message.moves, claimedGameConclusion); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
-	guigameinfo.updateWhosTurn();
-
 	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(message);
 
 	// Must be set before editing the clocks.
@@ -66,6 +65,8 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
 	clock.edit(gamefile, message.clockValues);
 
 	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
+
+	onlinegame.setInSyncTrue();
 }
 
 
@@ -123,8 +124,7 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		/** @type {MoveDraft} */
-		const moveDraft = formatconverter.ShortToLong_CompactMove(thisShortmove);
+		const moveDraft: MoveDraft = formatconverter.ShortToLong_CompactMove(thisShortmove) as MoveDraft;
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
