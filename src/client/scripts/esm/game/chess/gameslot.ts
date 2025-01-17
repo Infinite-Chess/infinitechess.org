@@ -59,17 +59,19 @@ import guipromotion from "../gui/guipromotion.js";
 import loadingscreen from "../gui/loadingscreen.js";
 import spritesheet from "../rendering/spritesheet.js";
 import movesequence from "./movesequence.js";
-import thread from "../../util/thread.js";
 
 
 // Variables ---------------------------------------------------------------
 
 
+/** True when the gamefile is currently loading the logical stuff (ignores graphics such as the spritesheet). */
+let logicLoading: boolean = false;
+
 /**
- * True when a game is currently loading and SVGs are being requested
- * or the spritesheet is being generated.
+ * True when the gamefile is currently loading the graphical stuff,
+ * such as the SVG requests and spritesheet generation.
  */
-let gameIsLoading: boolean = false;
+let graphicsLoading: boolean = false;
 
 /** The currently loaded game. */
 let loadedGamefile: gamefile | undefined;
@@ -104,9 +106,14 @@ function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
-/** Returns true if a new gamefile is currently being loaded */
-function areWeLoading(): boolean {
-	return gameIsLoading;
+/** Returns true if the gamefile is currently loading logically (doesn't care about graphics). */
+function areWeLoadingLogical(): boolean {
+	return logicLoading;
+}
+
+/** Returns true if the graphics of the gamefile are currently being loaded (spritesheet generating). */
+function areWeLoadingGraphics(): boolean {
+	return graphicsLoading;
 }
 
 /** Returns what color we are viewing the current loaded game by default. */
@@ -151,8 +158,9 @@ interface Additional {
 async function loadGamefile(loadOptions: LoadOptions) {
 	if (loadedGamefile) throw new Error("Must unloadGame() before loading a new one.");
 
-	console.log('Started loading game...');
-	gameIsLoading = true;
+	// console.log('Started loading game...');
+	logicLoading = true;
+	graphicsLoading = true;
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 	
@@ -162,23 +170,31 @@ async function loadGamefile(loadOptions: LoadOptions) {
 
 	// First load the LOGICAL stuff...
 	loadedGamefile = loadLogical(loadOptions);
-	console.log('Finished loading LOGICAL game stuff.');
-	gameIsLoading = false;
+	// console.log('Finished loading LOGICAL game stuff.');
+	logicLoading = false;
 	// Play the start game sound once LOGICAL stuff is finished loading,
 	// so that the sound will still play in chrome, with the tab hidden, and
 	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
 	sound.playSound_gamestart();
 
 	// Next start loading the GRAPHICAL stuff...
-	await loadGraphical(loadOptions);
-
-	// Logical and Graphical loadings are done!
-	// We can now close the loading screen.
-
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.close();
-	startStartingTransition();
-	console.log('Finished loading GRAPHICAL game stuff.');
+	/*
+	 * The reason we attach a .then() to this instead of just 'await'ing,
+	 * is because we need loadGamefile() to return as soon as the logical
+	 * stuff has finished loading. The graphics may finish on its own time.
+	 */
+	loadGraphical(loadOptions).then(async() => {
+		// console.log('Finished loading GRAPHICAL game stuff.');
+		graphicsLoading = false;
+	
+		// Logical and Graphical loadings are done!
+		// We can now close the loading screen.
+	
+		// I don't one has to be awaited since we're  pretty much
+		// done with loading, there's not gonna be another lag spike..
+		loadingscreen.close();
+		startStartingTransition();
+	});
 }
 
 /** Loads all of the logical components of a game */
@@ -211,8 +227,7 @@ function loadLogical(loadOptions: LoadOptions): gamefile {
 async function loadGraphical(loadOptions: LoadOptions) {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
-	guiclock.set(gamefile);
-	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
+	guiclock.set(loadedGamefile);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
 	try {
@@ -220,6 +235,9 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	} catch (e) { // An error ocurred during the fetching of piece svgs and spritesheet gen
 		await loadingscreen.onError(e as Event);
 	}
+
+	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
+	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
 	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
@@ -325,7 +343,8 @@ function concludeGame() {
 export default {
 	getGamefile,
 	areInGame,
-	areWeLoading,
+	areWeLoadingLogical,
+	areWeLoadingGraphics,
 	getOurColor,
 	isLoadedGameViewingWhitePerspective,
 	loadGamefile,

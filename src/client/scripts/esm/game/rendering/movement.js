@@ -140,7 +140,7 @@ function recalcPosition() {
 
 // Updates board position dependant on panVel
 function panBoard() {
-	if (loadbalancer.gisAFK() && gameslot.areWeLoading()) return; // Exit if we're AFK. Save our CPU!
+	if (loadbalancer.gisAFK() && gameslot.areWeLoadingGraphics()) return; // Exit if we're AFK. Save our CPU!
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
     
 	frametracker.onVisualChange(); // Visual change, render the screen this frame.

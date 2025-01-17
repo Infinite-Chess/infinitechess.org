@@ -455,7 +455,7 @@ function initMouseSimulatedClick() {
 function executeMouseSimulatedClick() {
 	if (!timeMouseDownSeconds || !mouseIsSupported) return;
 	// THIS PREVENTS A BUG THAT RANDOMLY SELECTS A PIECE AS SOON AS YOU START A GAME
-	if (gameslot.areWeLoading()) return;
+	if (gameslot.areWeLoadingGraphics()) return;
 
 	// See if the mouse was released fast enough to simulate a click!
 	const nowSeconds = new Date().getTime() / 1000;

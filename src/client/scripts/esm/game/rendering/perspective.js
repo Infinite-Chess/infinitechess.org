@@ -98,7 +98,6 @@ function disable() {
 function resetRotations(viewWhitePerspective) {
 	rotX = 0;
 	rotZ = viewWhitePerspective ? 0 : 180;
-	console.log(rotZ);
 
 	updateIsViewingBlackPerspective();
 

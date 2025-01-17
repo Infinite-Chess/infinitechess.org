@@ -83,9 +83,10 @@ function init() {
 // Update the game every single frame
 function update() {
 	invites.update();
+	if (gameslot.areWeLoadingGraphics()) return; // If the graphics aren't finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return updateSelectionScreen();
+	if (!gamefile) return updateSelectionScreen(); // On title screen
 
 	// There is a gamefile, update everything board-related...
 
@@ -153,7 +154,7 @@ function updateBoard(gamefile: gamefile) {
 } 
 
 function render() {
-	if (gameslot.areWeLoading()) return; // If the loading animation is visible, nothing in-game is (and the gamefile isn't defined anyway)
+	if (gameslot.areWeLoadingGraphics()) return; // If the loading animation is visible, nothing in-game is (and the gamefile isn't defined anyway)
 
 	board.render(); // Renders the infinite checkerboard
 
