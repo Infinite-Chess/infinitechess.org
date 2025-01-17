@@ -165,9 +165,9 @@ async function startOnlineGame(options: JoinGameMessage) {
 	
 	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
 	if (options.publicity === 'private') gameOptions.variantOptions = localstorage.loadItem(options.id);
-	const fromWhitePerspective = options.youAreColor === 'white';
+	const viewWhitePerspective = options.youAreColor === 'white';
 
-	await loadGame(gameOptions, fromWhitePerspective, false);
+	await loadGame(gameOptions, viewWhitePerspective, false);
 	typeOfGameWeAreIn = 'online';
 	onlinegame.initOnlineGame(options);
 	
@@ -185,18 +185,18 @@ function openGUI(metadata: MetaData) {
 /**
  * Starts a game according to the options provided.
  * @param gameOptions - An object that contains the properties `metadata`, `moves`, `gameConclusion`, `variantOptions`, `clockValues`
- * @param fromWhitePerspective - True if the game should be loaded from white's perspective, false for black's perspective
+ * @param viewWhitePerspective - True if the game should be loaded from white's perspective, false for black's perspective
  * @param allowEditCoords - Whether the loaded game should allow you to edit your coords directly
  */
 async function loadGame(
 	gameOptions: GameOptions,
 	/** If false, we'll be viewing black's perspective. */
-	fromWhitePerspective: boolean,
+	viewWhitePerspective: boolean,
 	allowEditCoords: boolean
 ) {
 	gameslot.loadGamefile({
 		metadata: gameOptions.metadata,
-		viewWhitePerspective: fromWhitePerspective,
+		viewWhitePerspective,
 		allowEditCoords,
 		additional: { // Pass in the pre-existing moves
 			moves: gameOptions.moves,

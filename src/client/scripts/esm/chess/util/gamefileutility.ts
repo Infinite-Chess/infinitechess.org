@@ -81,7 +81,7 @@ function forEachPieceInPiecesByType(callback: PieceIterator, piecesByType: Piece
  * @param callback
  * @param typeList - A list of piece coordinates of a specific type, that MAY include undefined placeholders.
  */
-function forEachPieceInTypeList(callback: CoordsIterator, typeList: TypeList) { // typeList = pieces organized by type 
+function forEachPieceInTypeList(callback: CoordsIterator, typeList: PooledArray<Coords>) { // typeList = pieces organized by type 
 	for (const coords of typeList) {
 		if (coords === undefined) continue; // An undefined placeholder
 		callback(coords); 
