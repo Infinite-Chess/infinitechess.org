@@ -49,7 +49,7 @@ import moveutil from "../../chess/util/moveutil.js";
 function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	movepiece.makeMove(gamefile, move); // Logical changes
-	boardchanges.runMove(gamefile, move, meshChanges, true); // Graphical changes
+	if (gamefile.mesh.model !== undefined) boardchanges.runMove(gamefile, move, meshChanges, true); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes
