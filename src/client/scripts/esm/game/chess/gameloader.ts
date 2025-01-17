@@ -42,6 +42,8 @@ import perspective from "../rendering/perspective.js";
 import camera from "../rendering/camera.js";
 
 
+// Type Definitions --------------------------------------------------------------------
+
 
 interface GameOptions {
 	metadata: MetaData,
@@ -95,13 +97,6 @@ interface VariantOptions {
 // Variables --------------------------------------------------------------------
 
 
-/**
- * True if we are in ANY type of game, whether local, online, analysis, or editor.
- * 
- * If we're on the title screen or the lobby, this will be false.
- */
-let inAGame: boolean = false;
-
 /** The type of game we are in, whether local or online, if we are in a game. */
 let typeOfGameWeAreIn: undefined | 'local' | 'online';
 
@@ -115,7 +110,7 @@ let typeOfGameWeAreIn: undefined | 'local' | 'online';
  * If we're on the title screen or the lobby, this will be false.
  */
 function areInAGame(): boolean {
-	return inAGame;
+	return typeOfGameWeAreIn !== undefined;
 }
 
 /**
@@ -199,24 +194,17 @@ async function loadGame(
 	fromWhitePerspective: boolean,
 	allowEditCoords: boolean
 ) {
-	// console.log("Loading game with game options:");
-	// console.log(gameOptions);
-
-	await gameslot.loadGamefile(gameOptions.metadata, fromWhitePerspective, { // Pass in the pre-existing moves
-		moves: gameOptions.moves,
-		variantOptions: gameOptions.variantOptions,
-		gameConclusion: gameOptions.gameConclusion,
-		clockValues: gameOptions.clockValues
+	gameslot.loadGamefile({
+		metadata: gameOptions.metadata,
+		viewWhitePerspective: fromWhitePerspective,
+		allowEditCoords,
+		additional: { // Pass in the pre-existing moves
+			moves: gameOptions.moves,
+			variantOptions: gameOptions.variantOptions,
+			gameConclusion: gameOptions.gameConclusion,
+			clockValues: gameOptions.clockValues
+		}
 	});
-	
-	// Opening the guinavigation needs to be done in here so that pasting a game still opens it.
-	const gamefile = gameslot.getGamefile()!;
-	guinavigation.open({ allowEditCoords }); // Editing your coords allowed in local games
-	guiclock.set(gamefile);
-    
-	sound.playSound_gamestart();
-
-	inAGame = true;
 }
 
 function unloadGame() {
@@ -227,7 +215,6 @@ function unloadGame() {
 	gameslot.unloadGame();
 	perspective.disable();
 	gui.prepareForOpen();
-	inAGame = false;
 	typeOfGameWeAreIn = undefined;
 }
 

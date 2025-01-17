@@ -95,9 +95,9 @@ function disable() {
 }
 
 // Sets rotations to orthographic view. Sensitive to if we're white or black.
-function resetRotations() {
+function resetRotations(viewWhitePerspective) {
 	rotX = 0;
-	rotZ = gameslot.getOurColor() === 'black' ? 180 : 0; // Will be undefined if not in online game
+	rotZ = viewWhitePerspective ? 0 : 180;
 	console.log(rotZ);
 
 	updateIsViewingBlackPerspective();

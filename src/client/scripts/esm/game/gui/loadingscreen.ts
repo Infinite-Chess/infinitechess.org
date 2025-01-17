@@ -1,7 +1,8 @@
 
 /**
  * This script manages the spinny pawn loading animation
- * while a game is loading a gamefile and generating the spritesheet
+ * while a game is loading both the LOGICAL and
+ * GRAPHICAL (spritesheet) aspects.
  */
 
 // @ts-ignore
@@ -14,7 +15,7 @@ import thread from "../../util/thread.js";
 import style from "./style.js";
 
 
-const loadingScreen: HTMLElement = (document.querySelector('.game-loading-screen') as HTMLElement);
+const loadingScreen: HTMLElement = document.querySelector('.game-loading-screen') as HTMLElement;
 
 /** Lower = loading checkerboard closer to black */
 const darknessLevel = 0.22;
