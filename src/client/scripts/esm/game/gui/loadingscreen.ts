@@ -54,7 +54,8 @@ async function open() {
 	loadingScreen.classList.remove('transparent');
 	// This gives the document a chance to repaint, as otherwise our javascript
 	// will continue to run until the next animation frame, which could be a long time.
-	await thread.sleep(0);
+	// FOR SOME REASON sometimes it occasionally still doesn't repaint unless this is ~10??? Idk why
+	await thread.sleep(10);
 }
 
 async function close() {

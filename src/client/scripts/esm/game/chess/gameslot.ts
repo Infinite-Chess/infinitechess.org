@@ -11,6 +11,12 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 
 
+import guinavigation from "../gui/guinavigation.js";
+import guipromotion from "../gui/guipromotion.js";
+import loadingscreen from "../gui/loadingscreen.js";
+import spritesheet from "../rendering/spritesheet.js";
+import movesequence from "./movesequence.js";
+import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -21,7 +27,6 @@ import { gl } from "../rendering/webgl.js";
 import sound from "../misc/sound.js";
 // @ts-ignore
 import copypastegame from "./copypastegame.js";
-import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
@@ -54,11 +59,6 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guipause from "../gui/guipause.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-import guinavigation from "../gui/guinavigation.js";
-import guipromotion from "../gui/guipromotion.js";
-import loadingscreen from "../gui/loadingscreen.js";
-import spritesheet from "../rendering/spritesheet.js";
-import movesequence from "./movesequence.js";
 
 
 // Type Definitions ----------------------------------------------------------
