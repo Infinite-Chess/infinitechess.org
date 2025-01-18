@@ -242,7 +242,7 @@ function slide_CalcLegalLimit(blockingFunc, ignoreFunc, line, direction, slideMo
 		 * 1 => Blocked (friendly piece)
 		 * 2 => Blocked 1 square after (enemy piece)
 		 */
-		const blockResult = blockingFunc(color, thisPiece); // 0 | 1 | 2
+		const blockResult = blockingFunc(color, thisPiece, coords); // 0 | 1 | 2
 		if (blockResult !== 0 && blockResult !== 1 && blockResult !== 2) throw new Error(`slide_CalcLegalLimit() not built to handle block result of "${blockResult}"!`);
 		if (blockResult === 0) continue; // Not blocked
 

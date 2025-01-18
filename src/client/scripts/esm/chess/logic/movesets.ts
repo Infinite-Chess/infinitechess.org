@@ -16,6 +16,7 @@ import type { gamefile } from './gamefile.js';
 // @ts-ignore
 import type { Piece } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
+import { block } from 'sharp';
 
 
 /**
@@ -91,17 +92,29 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefi
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
 // eslint-disable-next-line no-unused-vars
-type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile) => 0 | 1 | 2;
+type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords, gamefile?: gamefile) => 0 | 1 | 2;
 
 
 
 /** The default blocking function of each piece's sliding moves, if not specified. */
 // eslint-disable-next-line no-unused-vars
-function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile): 0 | 1 | 2 {
+function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece, coords?: Coords, gamefile?: gamefile): 0 | 1 | 2 {
 	const colorOfBlockingPiece = colorutil.getPieceColorFromType(blockingPiece.type);
 	const isVoid = blockingPiece.type === 'voidsN';
 	if (friendlyColor === colorOfBlockingPiece || isVoid) return 1; // Block where it is if it is a friendly OR a void square.
 	else return 2; // Allow the capture if enemy, but block afterward
+}
+
+/** The Huygens ignore function. */
+// eslint-disable-next-line no-unused-vars
+function huygensIgnore(startCoords: Coords, endCoords: Coords) {
+	if (startCoords[0] == endCoords[0]) {
+		return !isprime.primalityTest(Math.abs(startCoords[1] - endCoords[1]), null);	
+	}
+	if (startCoords[1] == endCoords[1]) {
+		return !isprime.primalityTest(Math.abs(startCoords[0] - endCoords[0]), null);	
+	}
+	return true;
 }
 
 /**
@@ -122,29 +135,29 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		},
 		knights: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
-            ]
+				[-2, 1], [-1, 2], [1, 2], [2, 1],
+				[-2, -1], [-1, -2], [1, -2], [2, -1]
+			]
 		},
 		hawks: {
 			individual: [
-                [-3,0],[-2,0],[2,0],[3,0],
-                [0,-3],[0,-2],[0,2],[0,3],
-                [-2,-2],[-2,2],[2,-2],[2,2],
-                [-3,-3],[-3,3],[3,-3],[3,3]
-            ]
+				[-3, 0], [-2, 0], [2, 0], [3, 0],
+				[0, -3], [0, -2], [0, 2], [0, 3],
+				[-2, -2], [-2, 2], [2, -2], [2, 2],
+				[-3, -3], [-3, 3], [3, -3], [3, 3]
+			]
 		},
 		kings: {
 			individual: [
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1]
-            ]
+				[-1, 0], [-1, 1], [0, 1], [1, 1],
+				[1, 0], [1, -1], [0, -1], [-1, -1]
+			]
 		},
 		guards: {
 			individual: [
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1]
-            ]
+				[-1, 0], [-1, 1], [0, 1], [1, 1],
+				[1, 0], [1, -1], [0, -1], [-1, -1]
+			]
 		},
 		// Infinitely moving
 		rooks: {
@@ -181,9 +194,9 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		},
 		chancellors: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
-            ],
+				[-2, 1], [-1, 2], [1, 2], [2, 1],
+				[-2, -1], [-1, -2], [1, -2], [2, -1]
+			],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit]
@@ -191,9 +204,9 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		},
 		archbishops: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
-            ],
+				[-2, 1], [-1, 2], [1, 2], [2, 1],
+				[-2, -1], [-1, -2], [1, -2], [2, -1]
+			],
 			sliding: {
 				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
@@ -201,9 +214,9 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		},
 		amazons: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
-            ],
+				[-2, 1], [-1, 2], [1, 2], [2, 1],
+				[-2, -1], [-1, -2], [1, -2], [2, -1]
+			],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
@@ -213,50 +226,50 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		},
 		camels: {
 			individual: [
-                [-3,1],[-1,3],[1,3],[3,1],
-                [-3,-1],[-1,-3],[1,-3],[3,-1]
-            ]
+				[-3, 1], [-1, 3], [1, 3], [3, 1],
+				[-3, -1], [-1, -3], [1, -3], [3, -1]
+			]
 		},
 		giraffes: {
 			individual: [
-                [-4,1],[-1,4],[1,4],[4,1],
-                [-4,-1],[-1,-4],[1,-4],[4,-1]
-            ]
+				[-4, 1], [-1, 4], [1, 4], [4, 1],
+				[-4, -1], [-1, -4], [1, -4], [4, -1]
+			]
 		},
 		zebras: {
 			individual: [
-                [-3,2],[-2,3],[2,3],[3,2],
-                [-3,-2],[-2,-3],[2,-3],[3,-2]
-            ]
+				[-3, 2], [-2, 3], [2, 3], [3, 2],
+				[-3, -2], [-2, -3], [2, -3], [3, -2]
+			]
 		},
 		knightriders: {
 			individual: [],
 			sliding: {
-				'1,2' : [-slideLimit, slideLimit],
-				'1,-2' : [-slideLimit,slideLimit],
-				'2,1' : [-slideLimit,slideLimit],
-				'2,-1' : [-slideLimit,slideLimit],
+				'1,2': [-slideLimit, slideLimit],
+				'1,-2': [-slideLimit, slideLimit],
+				'2,1': [-slideLimit, slideLimit],
+				'2,-1': [-slideLimit, slideLimit],
 			}
 		},
 		centaurs: {
 			individual: [
-                // Guard moveset
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1],
-                // + Knight moveset!
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
-            ]
+				// Guard moveset
+				[-1, 0], [-1, 1], [0, 1], [1, 1],
+				[1, 0], [1, -1], [0, -1], [-1, -1],
+				// + Knight moveset!
+				[-2, 1], [-1, 2], [1, 2], [2, 1],
+				[-2, -1], [-1, -2], [1, -2], [2, -1]
+			]
 		},
 		royalCentaurs: {
 			individual: [
-                // Guard moveset
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1],
-                // + Knight moveset!
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
-            ]
+				// Guard moveset
+				[-1, 0], [-1, 1], [0, 1], [1, 1],
+				[1, 0], [1, -1], [0, -1], [-1, -1],
+				// + Knight moveset!
+				[-2, 1], [-1, 2], [1, 2], [2, 1],
+				[-2, -1], [-1, -2], [1, -2], [2, -1]
+			]
 		},
 		huygens: {
 			individual: [],
@@ -264,15 +277,13 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit]
 			},
-			ignore: function (startCoords: Coords, endCoords: Coords) {
-				if (startCoords[0] == endCoords[0]) {
-					return !isprime.primalityTest(Math.abs(startCoords[1] - endCoords[1]), null);	
+			blocking: function (friendlyColor: string, blockingPiece: Piece, coords: Coords) {
+				if (huygensIgnore(blockingPiece.coords, coords)) {
+					return 0;
 				}
-				if (startCoords[1] == endCoords[1]) {
-					return !isprime.primalityTest(Math.abs(startCoords[0] - endCoords[0]), null);	
-				}
-				return true;
-			}
+				return defaultBlockingFunction(friendlyColor, blockingPiece);
+			},
+			ignore: huygensIgnore
 		},
 		roses: {
 			individual: []

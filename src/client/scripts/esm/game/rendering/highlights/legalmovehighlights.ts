@@ -452,6 +452,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
  * @param intsect1Tile - What point this line intersect the left side of the screen box.
  * @param intsect2Tile - What point this line intersect the right side of the screen box.
  * @param limits - Slide limit: [-7,Infinity]
+ * @param ignoreFunc - The ignore function, to ignore squares
  * @param gamefile - A reference to the current loaded gamefile
  */
 function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Coords, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile) {
@@ -472,6 +473,7 @@ function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[],
  * @param intsect1Tile - What point this line intersect the left side of the screen box.
  * @param intsect2Tile - What point this line intersect the right side of the screen box.
  * @param limit - Needs to be POSITIVE.
+ * @param ignoreFunc - The ignore function, to ignore squares
  * @param gamefile - A reference to the current loaded gamefile
  */
 function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Coords, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: gamefile) {
@@ -528,6 +530,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
  * @param step - Of the line / moveset
  * @param iterateCount - How many times to shift the {@link firstInstancePositionOffset} by the {@link step}, adding each iteration as another instance of the legal move highlight.
  * @param startCoords - The start coordiantes of the first legal move highlight instance
+ * @param ignoreFunc - The ignore function, to ignore squares
  * @param gamefile - A reference to the current loaded gamefile
  */
 function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Coords, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile) {
