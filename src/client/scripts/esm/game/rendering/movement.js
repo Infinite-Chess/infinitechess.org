@@ -133,6 +133,7 @@ function isScaleLess1Pixel_Virtual() {
 // Called from game.updateBoard()
 function recalcPosition() {
 	if (transition.areWeTeleporting()) return; // Exit if we are teleporting
+	if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
 
 	panBoard();
 	recalcScale();
@@ -140,7 +141,6 @@ function recalcPosition() {
 
 // Updates board position dependant on panVel
 function panBoard() {
-	if (loadbalancer.gisAFK() && gameslot.areWeLoadingGraphics()) return; // Exit if we're AFK. Save our CPU!
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
     
 	frametracker.onVisualChange(); // Visual change, render the screen this frame.

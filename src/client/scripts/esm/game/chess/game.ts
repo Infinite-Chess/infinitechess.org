@@ -109,7 +109,6 @@ function update() {
 
 function updateSelectionScreen() {
 	// When we're not inside a game, the board should have a constant slow pan.
-	// movement.panBoard(); // Animate background if not afk
 	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
 }
 

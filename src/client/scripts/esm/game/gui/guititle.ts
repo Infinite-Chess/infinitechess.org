@@ -4,8 +4,6 @@
  */
 
 // @ts-ignore
-import style from './style.js';
-// @ts-ignore
 import gui from './gui.js';
 // @ts-ignore
 import guiguide from './guiguide.js';
