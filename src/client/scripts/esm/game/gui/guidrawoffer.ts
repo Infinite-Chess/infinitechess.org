@@ -18,6 +18,7 @@ import guiclock from './guiclock.js';
 
 // Variables -------------------------------------------------------------------
 
+
 const element_draw_offer_ui = document.getElementById('draw_offer_ui')!;
 const element_acceptDraw = document.getElementById('acceptdraw')!;
 const element_declineDraw = document.getElementById('declinedraw')!;
@@ -89,9 +90,8 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
 /**
  * Returns true if the screen is small enough for the
  * draw offer UI to not fit with everything on the header bar.
- * @returns {boolean}
  */
-function isDrawOfferUICramped() {
+function isDrawOfferUICramped(): boolean {
 	if (clock.isGameUntimed(gameslot.getGamefile()!)) return false; // Clocks not visible, we definitely have room
 	if (window.innerWidth > 560) return false; // Screen is wide, we have room
 	return true; // Cramped
