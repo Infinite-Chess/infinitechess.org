@@ -85,8 +85,6 @@ function hidePlayerNames() {
 function toggle() {
 	if (isOpen) close();
 	else open(gameslot.getGamefile()!.metadata);
-
-	// camera.updatePIXEL_HEIGHT_OF_NAVS();
 }
 
 function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string } {
@@ -117,7 +115,7 @@ function updateWhosTurn() {
 
 	// In the scenario we forward the game to front after the game has adjudicated,
 	// don't modify the game over text saying who won!
-	if (gamefileutility.isGameOver(gamefile)) return;
+	if (gamefileutility.isGameOver(gamefile)) return gameEnd(gamefile.gameConclusion);
 
 	const color = gamefile.whosTurn;
 
@@ -141,9 +139,10 @@ function updateWhosTurn() {
 	}
 }
 
-// Updates the whosTurn text to say who won!
-function gameEnd(conclusion: string) {
+/** Updates the whosTurn text to say who won! */
+function gameEnd(conclusion: string | false) {
 	// 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
+	if (conclusion === false) throw Error("Should not call gameEnd when game isn't over.");
 
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	const resultTranslations = translations['results'];
