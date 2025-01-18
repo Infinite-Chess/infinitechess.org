@@ -1,12 +1,10 @@
 
 // Import Start
 import moveutil from '../../chess/util/moveutil.js';
-import style from './style.js';
 import options from '../rendering/options.js';
-import camera from '../rendering/camera.js';
-import math from '../../util/math.js';
 import config from '../config.js';
 import gameslot from '../chess/gameslot.js';
+import guinavigation from './guinavigation.js';
 // Import End
 
 "use strict";
@@ -60,7 +58,7 @@ function updateTextContentOfMoves() {
 }
 
 function updateStatsCSS() {
-	element_Statuses.style = `top: ${camera.getPIXEL_HEIGHT_OF_TOP_NAV()}px`;
+	element_Statuses.style = `top: ${guinavigation.getHeightOfNavBar()}px`;
 }
 
 function showPiecesMesh() {

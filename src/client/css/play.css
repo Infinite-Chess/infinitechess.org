@@ -854,14 +854,14 @@ button.join-button, button.copy-button {
 }
 
 /* Start shrinking top navigation bar */
-@media only screen and (max-width: 700px) { /* 700px needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
+@media only screen and (max-width: 700px) {
     .navigation-bar {
         font-size: 12vw; /* Update with doc!! */
     }
 }
 
 /* Small screens. HIDE the coords and make the buttons bigger! */
-@media only screen and (max-width: 550px) {  /* 550 needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
+@media only screen and (max-width: 550px) {
     .navigation-bar {
         justify-content: space-between;
         font-size: 66px; /* Update with doc!! */
@@ -873,7 +873,7 @@ button.join-button, button.copy-button {
 }
 
 /* Mobile screen, start shrinking the size again */
-@media only screen and (max-width: 368px) {  /* 368 needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
+@media only screen and (max-width: 368px) {
     .navigation-bar {
         font-size: 17.9vw; /* Update with doc!! */
     }

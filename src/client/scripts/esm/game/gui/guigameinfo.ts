@@ -1,30 +1,24 @@
 
+/**
+ * This script handles the game info bar, during a game,
+ * displaying the clocks, and whos turn it currently is.
+ */
 
-import { MetaData } from '../../chess/util/metadata.js';
+import type { MetaData } from '../../chess/util/metadata.js';
 
 
+import frametracker from '../rendering/frametracker.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 // @ts-ignore
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
-// @ts-ignore
-import camera from '../rendering/camera.js';
 
 
-
-/** 
- * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
-*/
 
 "use strict";
 
-/**
- * This script handles the game info bar, during a game,
- * displaying the clocks, and whos turn it currently is.
- */
 
 // Variables
 
@@ -85,6 +79,8 @@ function hidePlayerNames() {
 function toggle() {
 	if (isOpen) close();
 	else open(gameslot.getGamefile()!.metadata);
+	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
+	frametracker.onVisualChange();
 }
 
 function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string } {
@@ -212,6 +208,11 @@ function gameEnd(conclusion: string | false) {
 	}
 }
 
+/** Returns the height of the game info bar in the document, in virtual pixels. */
+function getHeightOfGameInfoBar(): number {
+	return element_gameInfoBar.getBoundingClientRect().height;
+}
+
 export default {
 	open,
 	close,
@@ -219,5 +220,6 @@ export default {
 	hidePlayerNames,
 	toggle,
 	updateWhosTurn,
-	gameEnd
+	gameEnd,
+	getHeightOfGameInfoBar,
 };

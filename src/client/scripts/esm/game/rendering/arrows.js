@@ -23,7 +23,8 @@ import coordutil from '../../chess/util/coordutil.js';
 import space from '../misc/space.js';
 import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
-import gameloader from '../chess/gameloader.js';
+import guinavigation from '../gui/guinavigation.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
 /**
@@ -126,8 +127,8 @@ function update() {
 
 	const slideArrows = {};
 
-	let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_TOP_NAV());
-	let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV());
+	let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
+	let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guigameinfo.getHeightOfGameInfoBar());
 
 	// Reverse header and footer pads if we're viewing blacks side
 	if (perspective.getIsViewingBlackPerspective() && !perspective.getEnabled()) {

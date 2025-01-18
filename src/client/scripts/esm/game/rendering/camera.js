@@ -2,7 +2,6 @@
 // Import Start
 import perspective from './perspective.js';
 import miniimage from './miniimage.js';
-import game from '../chess/game.js';
 import stats from '../gui/stats.js';
 import options from './options.js';
 import mat4 from './gl-matrix.js';
@@ -11,7 +10,6 @@ import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
-import guinavigation from '../gui/guinavigation.js';
 import movement from './movement.js';
 // Import End
 
@@ -44,9 +42,6 @@ let fieldOfView;
 // and less often things appear out of order. Should be within 5-6 magnitude orders.
 const zNear = 1;
 const zFar = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  perspective.distToRenderBoard * sqrt(2)
-    
-let PIXEL_HEIGHT_OF_TOP_NAV = undefined; // In virtual pixels
-let PIXEL_HEIGHT_OF_BOTTOM_NAV = undefined; // In virtual pixels.
 
 /** The canvas document element that WebGL renders the game onto. @type {HTMLCanvasElement} */
 const canvas = document.getElementById('game');
@@ -85,14 +80,6 @@ function getPosition(ignoreDevmode) {
 
 function getZFar() {
 	return zFar;
-}
-
-function getPIXEL_HEIGHT_OF_TOP_NAV() {
-	return PIXEL_HEIGHT_OF_TOP_NAV;
-}
-
-function getPIXEL_HEIGHT_OF_BOTTOM_NAV() {
-	return PIXEL_HEIGHT_OF_BOTTOM_NAV;
 }
 
 function getCanvasWidthVirtualPixels() {
@@ -188,21 +175,7 @@ function updateCanvasDimensions() {
 
 	gl.viewport(0, 0, canvas.width, canvas.height);
 
-	updatePIXEL_HEIGHT_OF_NAVS();
-
 	recalcCanvasVariables(); // Recalculate canvas-dependant variables
-}
-
-function updatePIXEL_HEIGHT_OF_NAVS() {
-	PIXEL_HEIGHT_OF_TOP_NAV = !guinavigation.isOpen() ? 0
-                                    : window.innerWidth > 700 ? 84  // Update with the css stylesheet!
-                                    : window.innerWidth > 550 ? window.innerWidth * 0.12
-                                    : window.innerWidth > 368 ? 66
-                                                                : window.innerWidth * 0.179;
-	PIXEL_HEIGHT_OF_BOTTOM_NAV = !guinavigation.isOpen() ? 0 : 84;
-	frametracker.onVisualChange();
-
-	stats.updateStatsCSS();
 }
 
 function recalcCanvasVariables() {
@@ -286,6 +259,7 @@ function initScreenBoundingBox() {
 
 function onScreenResize() {
 	updateCanvasDimensions(); // Also updates viewport
+	stats.updateStatsCSS();
 	initPerspective(); // The projection matrix needs to be recalculated every screen resize
 	perspective.initCrosshairModel();
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
@@ -315,8 +289,6 @@ function onPositionChange() {
 
 export default {
 	getPosition,
-	getPIXEL_HEIGHT_OF_TOP_NAV,
-	getPIXEL_HEIGHT_OF_BOTTOM_NAV,
 	canvas,
 	getCanvasWidthVirtualPixels,
 	getCanvasHeightVirtualPixels,
@@ -327,7 +299,6 @@ export default {
 	setViewMatrix,
 	getProjAndViewMatrixes,
 	init,
-	updatePIXEL_HEIGHT_OF_NAVS,
 	onPositionChange,
 	initViewMatrix,
 	getZFar,

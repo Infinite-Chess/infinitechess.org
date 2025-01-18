@@ -7,6 +7,8 @@ import board from './board.js';
 import math from '../../util/math.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
+import guinavigation from '../gui/guinavigation.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
 /** 
@@ -84,8 +86,8 @@ function applyPaddingToBox(box) { // { left, right, bottom, top }
 	if (!box) { console.error("Cannot apply padding to an undefined box."); return box; }
 	const boxCopy = jsutil.deepCopyObject(box);
     
-	const topNavHeight = camera.getPIXEL_HEIGHT_OF_TOP_NAV();
-	const bottomNavHeight = camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV();
+	const topNavHeight = guinavigation.getHeightOfNavBar();
+	const bottomNavHeight = guigameinfo.getHeightOfGameInfoBar();
 	const navHeight = topNavHeight + bottomNavHeight;
 	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
     

@@ -10,6 +10,7 @@
 import type gamefile from '../../chess/logic/gamefile.js';
 
 
+import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
 import jsutil from '../../util/jsutil.js';
 import highlights from '../rendering/highlights/highlights.js';
@@ -61,10 +62,7 @@ import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 // @ts-ignore
-import camera from '../rendering/camera.js';
-// @ts-ignore
 import guigameinfo from '../gui/guigameinfo.js';
-import gameloader from './gameloader.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -122,7 +120,6 @@ function updateBoard(gamefile: gamefile) {
 		if (input.isKeyDown('n')) {
 			guinavigation.toggle();
 			guigameinfo.toggle();
-			camera.updatePIXEL_HEIGHT_OF_NAVS();
 		}
 	}
 

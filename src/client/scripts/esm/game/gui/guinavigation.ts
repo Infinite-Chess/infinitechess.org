@@ -86,6 +86,7 @@ function open({ allowEditCoords = true }: { allowEditCoords?: boolean }) {
 	update_MoveButtons();
 	initCoordinates({ allowEditCoords });
 	navigationOpen = true;
+	stats.updateStatsCSS();
 }
 
 function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }) {
@@ -106,6 +107,7 @@ function close() {
 	element_Navigation.classList.add('hidden');
 	closeListeners_Navigation();
 	navigationOpen = false;
+	stats.updateStatsCSS();
 }
 
 
@@ -432,6 +434,11 @@ function areCoordsAllowedToBeEdited() {
 	return !element_CoordsX.disabled;
 }
 
+/** Returns the height of the navigation bar in the document, in virtual pixels. */
+function getHeightOfNavBar(): number {
+	return element_Navigation.getBoundingClientRect().height;
+}
+
 export default {
 	isOpen,
 	open,
@@ -445,4 +452,5 @@ export default {
 	recenter,
 	toggle,
 	areCoordsAllowedToBeEdited,
+	getHeightOfNavBar,
 };

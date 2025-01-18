@@ -25,21 +25,15 @@ import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import timeutil from "../../util/timeutil.js";
 // @ts-ignore
-import guiclock from "../gui/guiclock.js";
-// @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
 import guinavigation from "../gui/guinavigation.js";
-// @ts-ignore
-import sound from '../misc/sound.js';
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-// @ts-ignore
-import camera from "../rendering/camera.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 
 
@@ -151,7 +145,7 @@ async function startLocalGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGUI(metadata);
+	guigameinfo.open(metadata);
 }
 
 /**
@@ -160,8 +154,6 @@ async function startLocalGame(options: {
 async function startOnlineGame(options: JoinGameMessage) {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
-
-	const gameOptions: GameOptions = { ...options };
 
 	const additional: Additional = {
 		moves: options.moves,
@@ -183,13 +175,8 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGUI(gameOptions.metadata);
+	guigameinfo.open(options.metadata);
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
-}
-
-function openGUI(metadata: MetaData) {
-	guigameinfo.open(metadata);
-	camera.updatePIXEL_HEIGHT_OF_NAVS();
 }
 
 function unloadGame() {
