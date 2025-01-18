@@ -11,8 +11,6 @@ import selection from '../chess/selection.js';
 // @ts-ignore
 import guipromotion from './guipromotion.js';
 // @ts-ignore
-import style from './style.js';
-// @ts-ignore
 import statustext from './statustext.js';
 import frametracker from '../rendering/frametracker.js';
 // @ts-ignore

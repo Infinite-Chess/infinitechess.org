@@ -24,7 +24,6 @@ import draganimation from '../rendering/draganimation.js';
 import space from '../misc/space.js';
 import preferences from '../../components/header/preferences.js';
 import gameslot from './gameslot.js';
-import gameloader from './gameloader.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 // Import End
 

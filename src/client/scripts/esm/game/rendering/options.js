@@ -15,7 +15,6 @@ import timeutil from '../../util/timeutil.js';
 import themes from '../../components/header/themes.js';
 import preferences from '../../components/header/preferences.js';
 import gameslot from '../chess/gameslot.js';
-import gameloader from '../chess/gameloader.js';
 // Import End
 
 "use strict";

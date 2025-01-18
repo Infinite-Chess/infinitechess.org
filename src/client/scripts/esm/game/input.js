@@ -16,7 +16,6 @@ import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
 import gameslot from './chess/gameslot.js';
-import gameloader from './chess/gameloader.js';
 // Import End
 
 "use strict";

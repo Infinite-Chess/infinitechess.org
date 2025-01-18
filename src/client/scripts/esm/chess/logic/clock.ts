@@ -17,7 +17,6 @@ import gamefileutility from '../util/gamefileutility.js';
 import pingManager from '../../util/pingManager.js';
 // @ts-ignore
 import options from '../../game/rendering/options.js';
-import gameloader from '../../game/chess/gameloader.js';
 import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
 
 
