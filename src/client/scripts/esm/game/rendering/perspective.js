@@ -6,7 +6,7 @@ import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import statustext from '../gui/statustext.js';
 import { createModel } from './buffermodel.js';
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import mat4 from './gl-matrix.js';
 import input from '../input.js';
 import selection from '../chess/selection.js';
@@ -89,15 +89,16 @@ function disable() {
 
 	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.off}`;
     
-	resetRotations();
+	const viewWhitePerspective = gameslot.areInGame() ? gameslot.isLoadedGameViewingWhitePerspective() : true;
+	resetRotations(viewWhitePerspective);
 
 	piecesmodel.eraseRotatedModel(gameslot.getGamefile());
 }
 
 // Sets rotations to orthographic view. Sensitive to if we're white or black.
-function resetRotations() {
+function resetRotations(viewWhitePerspective = true) {
 	rotX = 0;
-	rotZ = onlinegame.getOurColor() === 'black' ? 180 : 0; // Will be undefined if not in online game
+	rotZ = viewWhitePerspective ? 0 : 180;
 
 	updateIsViewingBlackPerspective();
 

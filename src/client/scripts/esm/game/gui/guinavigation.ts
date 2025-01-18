@@ -1,5 +1,8 @@
 
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 // @ts-ignore
 import board from '../rendering/board.js';
@@ -7,8 +10,6 @@ import board from '../rendering/board.js';
 import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
-// @ts-ignore
-import style from './style.js';
 // @ts-ignore
 import input from '../input.js';
 // @ts-ignore
@@ -18,24 +19,12 @@ import area from '../rendering/area.js';
 // @ts-ignore
 import transition from '../rendering/transition.js';
 // @ts-ignore
-import gamefileutility from '../../chess/util/gamefileutility.js';
-// @ts-ignore
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
 // @ts-ignore
 import selection from '../chess/selection.js';
-// @ts-ignore
-import frametracker from '../rendering/frametracker.js';
-// @ts-ignore
-import guigameinfo from './guigameinfo.js';
-// @ts-ignore
-import onlinegame from '../misc/onlinegame.js';
-// @ts-ignore
-import camera from '../rendering/camera.js';
 
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
 
 /**
  * This script handles the navigation bar, in a game,
@@ -43,7 +32,7 @@ import type gamefile from '../../chess/logic/gamefile.js';
  * buttons, rewind move, forward move, and pause buttons.
  */
 
-const element_Navigation = document.getElementById('navigation')!;
+const element_Navigation = document.getElementById('navigation-bar')!;
 
 // Navigation
 const element_Recenter = document.getElementById('recenter')!;
@@ -75,9 +64,6 @@ let touchIsInsideRight = false;
 let rewindIsLocked = false;
 const durationToLockRewindAfterMoveForwardingMillis = 750;
 
-/** The gamefile the navigation UI was opened for. */
-let activeGamefile: gamefile | undefined;
-
 /** Whether the navigation UI is visible (not hidden) */
 let navigationOpen = true;
 
@@ -85,41 +71,22 @@ let navigationOpen = true;
 // Functions'
 
 function isOpen() {
-	return open;
+	return navigationOpen;
 }
 
 /** Called when we push 'N' on the keyboard */
-function toggleNavigationBar() {
-	// We should only ever do this if we are in a game!
-	if (!activeGamefile) return;
+function toggle() {
 	if (navigationOpen) close();
-	else open(activeGamefile);
-
-	navigationOpen = !navigationOpen;
-
-	onToggleNavigationBar();
+	else open({ allowEditCoords: !onlinegame.areInOnlineGame() });
 }
 
-function onToggleNavigationBar() {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) throw Error("Should not have toggled navigation bar when there's no game. The listener should have been closed.");
-	if (navigationOpen) {
-		open(gamefile, { allowEditCoords: !onlinegame.areInOnlineGame() });
-		guigameinfo.open();
-	}
-	else close();
-
-	camera.updatePIXEL_HEIGHT_OF_NAVS();
-}
-
-function open(gamefile: gamefile, { allowEditCoords = true }: { allowEditCoords?: boolean } = {}) {
-
-	activeGamefile = gamefile;
-	style.revealElement(element_Navigation);
+function open({ allowEditCoords = true }: { allowEditCoords?: boolean }) {
+	element_Navigation.classList.remove('hidden');
 	initListeners_Navigation();
 	update_MoveButtons();
 	initCoordinates({ allowEditCoords });
 	navigationOpen = true;
+	stats.updateStatsCSS();
 }
 
 function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }) {
@@ -137,10 +104,10 @@ function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }) {
 }
 
 function close() {
-	activeGamefile = undefined;
-	style.hideElement(element_Navigation);
+	element_Navigation.classList.add('hidden');
 	closeListeners_Navigation();
 	navigationOpen = false;
+	stats.updateStatsCSS();
 }
 
 
@@ -165,9 +132,8 @@ function updateElement_Coords() {
 
 /**
  * Returns true if one of the coordinate fields is active (currently editing)
- * @returns {boolean}
  */
-function isCoordinateActive() {
+function isCoordinateActive(): boolean {
 	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
 }
 
@@ -177,7 +143,7 @@ function initListeners_Navigation() {
 	element_Navigation.addEventListener("touchstart", input.doIgnoreMouseDown);
 	//element_Navigation.addEventListener("touchend", input.doIgnoreMouseDown)
 
-	element_Recenter.addEventListener('click', callback_Recenter);
+	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);
 	element_Back.addEventListener('click', callback_Back);
 	element_moveRewind.addEventListener('click', callback_MoveRewind);
@@ -208,7 +174,7 @@ function closeListeners_Navigation() {
 	element_Navigation.removeEventListener("touchstart", input.doIgnoreMouseDown);
 	//element_Navigation.removeEventListener("touchend", input.doIgnoreMouseDown)
 
-	element_Recenter.removeEventListener('click', callback_Recenter);
+	element_Recenter.removeEventListener('click', recenter);
 	element_Expand.removeEventListener('click', callback_Expand);
 	element_Back.removeEventListener('click', callback_Back);
 	element_moveRewind.removeEventListener('click', callback_MoveRewind);
@@ -255,18 +221,12 @@ function callback_Back() {
 }
 
 function callback_Expand() {
-	const allCoords = gamefileutility.getCoordsOfAllPieces(activeGamefile);
+	const allCoords = gamefileutility.getCoordsOfAllPieces(gameslot.getGamefile()!);
 	area.initTelFromCoordsList(allCoords);
 }
 
-function callback_Recenter() {
-	if (!activeGamefile) throw Error('Should not call Recenter when activeGamefile not defined.');
-	recenter(activeGamefile);
-
-}
-
-function recenter(gamefile: gamefile) {
-	const boundingBox = gamefile!.startSnapshot.box;
+function recenter() {
+	const boundingBox = gameslot.getGamefile()!.startSnapshot.box;
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
@@ -294,8 +254,9 @@ function isItOkayToRewindOrForward() {
  * the very beginning or end of the game.
  */
 function update_MoveButtons() {
-	const decrementingLegal = moveutil.isDecrementingLegal(activeGamefile!);
-	const incrementingLegal = moveutil.isIncrementingLegal(activeGamefile!);
+	const gamefile = gameslot.getGamefile()!;
+	const decrementingLegal = moveutil.isDecrementingLegal(gamefile);
+	const incrementingLegal = moveutil.isIncrementingLegal(gamefile);
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -445,23 +406,24 @@ function testIfForwardMove() {
 
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function rewindMove() {
-	if (activeGamefile!.mesh.locked) return statustext.pleaseWaitForTask();
-	if (!moveutil.isDecrementingLegal(activeGamefile!)) return stats.showMoves();
+	const gamefile = gameslot.getGamefile()!;
+	if (gamefile.mesh.locked > 0) return statustext.pleaseWaitForTask();
+	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
-	movesequence.navigateMove(activeGamefile!, false);
+	movesequence.navigateMove(gamefile, false);
     
 	selection.unselectPiece();
 }
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
+	const gamefile = gameslot.getGamefile()!;
+	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
+	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
 
-	if (activeGamefile!.mesh.locked) return statustext.pleaseWaitForTask();
-	if (!moveutil.isIncrementingLegal(activeGamefile!)) return stats.showMoves();
-
-	movesequence.navigateMove(activeGamefile!, true);
+	movesequence.navigateMove(gamefile, true);
 }
 
 /**
@@ -469,7 +431,12 @@ function forwardMove() {
  * This was set at the time they were opened.
  */
 function areCoordsAllowedToBeEdited() {
-	return element_CoordsX.disabled;
+	return !element_CoordsX.disabled;
+}
+
+/** Returns the height of the navigation bar in the document, in virtual pixels. */
+function getHeightOfNavBar(): number {
+	return element_Navigation.getBoundingClientRect().height;
 }
 
 export default {
@@ -483,6 +450,7 @@ export default {
 	update,
 	isCoordinateActive,
 	recenter,
-	toggleNavigationBar,
+	toggle,
 	areCoordsAllowedToBeEdited,
+	getHeightOfNavBar,
 };

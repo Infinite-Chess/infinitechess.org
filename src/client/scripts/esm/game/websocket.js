@@ -3,7 +3,7 @@
 import statustext from './gui/statustext.js';
 import invites from './misc/invites.js';
 import guiplay from './gui/guiplay.js';
-import onlinegame from './misc/onlinegame.js';
+import onlinegame from './misc/onlinegame/onlinegame.js';
 import localstorage from '../util/localstorage.js';
 import timeutil from '../util/timeutil.js';
 import uuid from '../util/uuid.js';
@@ -12,6 +12,7 @@ import thread from '../util/thread.js';
 import validatorama from '../util/validatorama.js';
 import wsutil from '../util/wsutil.js';
 import options from './rendering/options.js';
+import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
 // Import End
 
 "use strict";
@@ -101,10 +102,6 @@ function alertUserLostConnection() {
 	statustext.showStatusForDuration(translations.websocket.no_connection, timeToWaitForHTTPMillis); // Alert the user
 }
 
-function getSubs() {
-	return subs;
-}
-
 /**
  * Repeatedly tries to open a web socket to the server until it is successful,
  * **unless** we are in timeout, then it will refuse.
@@ -139,7 +136,6 @@ async function establishSocket() {
 		// Request came back with an error
 		noConnection = true;
 		statustext.showStatusForDuration(translations.websocket.no_connection, timeToResubAfterNetworkLossMillis);
-		onlinegame.onLostConnection();
 		invites.clearIfOnPlayPage(); // Erase on-screen invites.
 		await thread.sleep(timeToResubAfterNetworkLossMillis);
 		success = await openSocket();
@@ -290,7 +286,7 @@ function onmessage(serverMessage) { // data: { sub, action, value, id, replyto }
 			invites.onmessage(message);
 			break;
 		case "game":
-			onlinegame.onmessage(message);
+			onlinegamerouter.routeMessage(message);
 			break;
 		default:
 			console.error("Unknown socket subscription received from the server! Message:");
@@ -395,7 +391,6 @@ function onclose(event) {
 	cancelAllEchoTimers(); // If the connection closed, we shouldn't expect any echo's for previous sent messages.
 	resetOnreplyFuncs(); // Immediately invoke all functions we wanted to execute upon hearing replies.
 
-	onlinegame.setInSyncFalse();
 	guiplay.onSocketClose();
 
 
@@ -505,8 +500,8 @@ function leaveTimeout() {
  * Sends a message to the server with the provided route, action, and values
  * @param {string} route - Where the server needs to forward this to. general/invites/game
  * @param {string} action - What action to take within the route.
- * @param {*} value - The contents of the message
- * @param {boolean} isUserAction - Whether this message is a direct result of a user action. If so, and we happen to receive the "Too many requests" error, then that will be displayed on screen. Default: false
+ * @param {*} [value] - The contents of the message
+ * @param {boolean} [isUserAction] - Whether this message is a direct result of a user action. If so, and we happen to receive the "Too many requests" error, then that will be displayed on screen. Default: false
  * @param {Function} [onreplyFunc] An optional function to execute when we receive the server's response to this message, or to execute immediately if we can't establish a socket, or after 5 seconds if we don't hear anything back.
  * @returns {boolean} *true* if the message was able to send.
  */
@@ -666,15 +661,6 @@ async function resubAll() {
 	}
 }
 
-/** Unsubscribes from the invites subscriptions list.
- * Closes the socket if we have no more subscripions. */
-function unsubFromInvites() {
-	invites.clear({ recentUsersInLastList: true });
-	if (subs.invites === false) return; // Already unsubbed
-	subs.invites = false;
-	sendmessage("general", "unsub", "invites");
-}
-
 window.addEventListener('pageshow', function(event) {
 	if (event.persisted) {
 		// The page was loaded from the back/forward cache (bfcache)
@@ -722,10 +708,57 @@ async function onAuthenticationNeeded() {
 	resubAll();
 }
 
+/**
+ * Whether we are subbed to the given subscription list.
+ * @param {'invites' | 'game'} sub - The name of the sub
+ */
+function areSubbedToSub(sub) {
+	if (!validSubs.includes(sub)) throw Error(`Can't ask if we're subbed to invalid sub "${sub}".`);
+	return subs[sub] !== false;
+}
+
+/**
+ * Marks ourself as no longer subscribed to a subscription list.
+ * 
+ * If our websocket happens to close unexpectedly, we won't re-subscribe to it.
+ * @param {'invites' | 'game'} sub - The name of the sub to delete
+ */
+function deleteSub(sub) {
+	if (!validSubs.includes(sub)) throw Error(`Can't delete invalid sub "${sub}".`);
+	subs[sub] = false;
+}
+
+/**
+ * Unsubs from the provided subscription list,
+ * informing the server we no longer want updates.
+ * @param {'invites' | 'game'} sub - The name of the sub to add
+ */
+function addSub(sub) {
+	if (!validSubs.includes(sub)) throw Error(`Can't sub to invalid sub "${sub}".`);
+	subs[sub] = true;
+}
+
+/**
+ * Unsubs from the provided subscription list,
+ * informing the server we no longer want updates.
+ * @param {'invites' | 'game'} sub - The name of the sub to delete
+ */
+function unsubFromSub(sub) {
+	if (!validSubs.includes(sub)) throw Error(`Can't unsub from invalid sub "${sub}".`);
+
+	if (subs[sub] === false) return; // Already unsubbed.
+
+	deleteSub(sub);
+	// Tell the server we no longer want updates.
+	sendmessage('general', 'unsub', sub);
+}
+
 export default {
 	closeSocket,
 	sendmessage,
-	unsubFromInvites,
-	getSubs,
-	addTimerIDToCancelOnNewSocket
+	areSubbedToSub,
+	addSub,
+	deleteSub,
+	unsubFromSub,
+	addTimerIDToCancelOnNewSocket,
 };

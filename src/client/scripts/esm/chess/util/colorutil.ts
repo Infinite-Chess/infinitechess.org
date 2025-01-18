@@ -93,7 +93,7 @@ function getColorFromExtension(colorExtention: string): string {
  * @param {string} color - "White" / "Black"
  * @returns {string} The opposite color, "White" / "Black"
  */
-function getOppositeColor(color: string): string {
+function getOppositeColor(color: string): 'white' | 'black' {
 	if (color === 'white') return 'black';
 	else if (color === 'black') return 'white';
 	else throw new Error(`Cannot return the opposite color of color ${color}!`);

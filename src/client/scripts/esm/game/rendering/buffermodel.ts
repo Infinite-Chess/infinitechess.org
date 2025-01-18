@@ -4,21 +4,27 @@
  * game objects that the shader programs can use. It receives the object's vertex data to do so.
  */
 
-// @ts-ignore
-import shaders, { ShaderProgram } from './shaders.js';
+
+import type { Vec3 } from '../../util/math.js';
+import type { ShaderProgram } from './shaders.js';
+
+import { createBufferFromData, updateBufferIndices } from './buffers.js';
+import shaders from './shaders.js';
 // @ts-ignore
 import { gl } from './webgl.js';
 // @ts-ignore
 import mat4 from './gl-matrix.js';
 // @ts-ignore
 import camera from './camera.js';
-import { createBufferFromData, updateBufferIndices } from './buffers.js';
 
 "use strict";
 
 
 // Type Definitions -----------------------------------------------------------------------
 
+
+/** All valid primitive shapes we can render with */
+type PrimitiveType = 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES';
 
 /** An object describing a single attribute inside our vertex data, and how many components it has per stride/vertex. */
 interface Attribute {
@@ -87,9 +93,6 @@ interface BufferModelInstanced extends BaseBufferModel {
 // Variables ----------------------------------------------------------------------------------
 
 
-/** Valid primitives to render. */
-const validRenderModes = ["TRIANGLES", "TRIANGLE_STRIP", "TRIANGLE_FAN", "POINTS", "LINE_LOOP", "LINE_STRIP", "LINES"];
-
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -105,7 +108,7 @@ function createModel(
 	/** The number of position components for a single vertex: x,y,z */
 	numPositionComponents: 2 | 3,
 	/** What drawing primitive to use. */
-	mode: 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES',
+	mode: PrimitiveType,
 	/** Whether the vertex data contains color attributes. */
 	usingColor: boolean,
 	/** If applicable, a texture to be bound when rendering (vertex data should contain texcoord attributes). */
@@ -126,7 +129,7 @@ function createModel_Instanced(
 	/** The instance-specific vertex data of the mesh. */
 	instanceData: number[] | Float32Array,
 	/** What drawing primitive to use. */
-	mode: 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES',
+	mode: PrimitiveType,
 	/** Whether the vertex data of a single instance contains color attributes, NOT THE INSTANCE-SPECIFIC DATA. */
 	usingColor: boolean,
 	/** If applicable, a texture to be bound when rendering (instance data should contain texcoord attributes). */
@@ -171,7 +174,7 @@ function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): { 
 	} else if (usingTexture) {
 		return {
 			vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }],
-			instanceDataAttribInfo: [{ name: 'instancetexcoord', numComponents: 2 }]
+			instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancetexcoord', numComponents: 2 }]
 		};
 	} else throw new Error('Well we must be using ONE of either color or texcoord in our vertex data..');
 }
@@ -182,10 +185,9 @@ function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): { 
 function createModel_GivenAttribInfo(
 	data: number[] | Float32Array,
 	attribInfo: AttributeInfo,
-	mode: 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES',
+	mode: PrimitiveType,
 	texture?: WebGLTexture
 ): BufferModel {
-	if (!validRenderModes.includes(mode)) throw new Error(`Primitive mode "${mode}" is not an accepted value!`);
 	const stride = getStrideFromAttributeInfo(attribInfo);
 	if (data.length % stride !== 0) throw new Error("Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.");
 
@@ -219,10 +221,9 @@ function createModel_Instanced_GivenAttribInfo(
 	instanceData: number[] | Float32Array,
 	vertexDataAttribInfo: AttributeInfo,
 	instanceDataAttribInfo: AttributeInfo,
-	mode: 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES',
+	mode: PrimitiveType,
 	texture?: WebGLTexture
 ): BufferModelInstanced {
-	if (!validRenderModes.includes(mode)) throw new Error(`Primitive mode "${mode}" is not an accepted value!`);
 	const vertexDataStride = getStrideFromAttributeInfo(vertexDataAttribInfo);
 	const instanceDataStride = getStrideFromAttributeInfo(instanceDataAttribInfo);
 	if (vertexData.length % vertexDataStride !== 0) throw new Error("Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
@@ -295,13 +296,13 @@ function ensureFloat32Array(data: number[] | Float32Array): Float32Array {
 function render(
 	buffer: WebGLBuffer,
 	attribInfo: AttributeInfo,
-	position: [number,number,number],
-	scale: [number,number,number],
+	position: Vec3,
+	scale: Vec3,
 	stride: number,
 	BYTES_PER_ELEMENT: number,
 	uniforms: { [uniform: string]: any },
 	vertexCount: number,
-	mode: 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES',
+	mode: PrimitiveType,
 	texture?: WebGLTexture
 ) {
 	// Use the optimal shader to get the job done! Whichever shader uses the attributes and uniforms we need!
@@ -351,15 +352,15 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
 	instanceBuffer: WebGLBuffer,
 	vertexDataAttribInfo: AttributeInfo,
 	instanceDataAttribInfo: AttributeInfo,
-	position: [number,number,number],
-	scale: [number,number,number],
+	position: Vec3,
+	scale: Vec3,
 	vertexDataStride: number,
 	instanceDataStride: number,
 	BYTES_PER_ELEMENT: number,
 	uniforms: { [uniform: string]: any },
 	instanceVertexCount: number,
 	instanceCount: number,
-	mode: 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES',
+	mode: PrimitiveType,
 	texture?: WebGLTexture
 ) {
 	// Use the optimal shader to get the job done! Whichever shader uses the attributes and uniforms we need!
@@ -437,7 +438,7 @@ function enableAttributes(shader: ShaderProgram, buffer: WebGLBuffer, attribInfo
  * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'tintColor'. Uniforms that are NOT custom are [transformMatrix, uSampler]
  * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
  */
-function setUniforms(shader: ShaderProgram, position: [number,number,number], scale: [number,number,number], uniforms: { [uniform: string]: any }, texture?: WebGLTexture): void {
+function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniforms: { [uniform: string]: any }, texture?: WebGLTexture): void {
 
 	{
 		// Update the transformMatrix on the gpu, EVERY render call!!
@@ -487,7 +488,7 @@ function setUniforms(shader: ShaderProgram, position: [number,number,number], sc
  * The gpu works with matrices REALLY FAST, so this is the most optimal way
  * to translate our models into position.
  */
-function genWorldMatrix(position: [number,number,number], scale: [number,number,number]) {
+function genWorldMatrix(position: Vec3, scale: Vec3) {
 	const worldMatrix = mat4.create();
 	mat4.scale(worldMatrix, worldMatrix, scale);
 	mat4.translate(worldMatrix, worldMatrix, position);

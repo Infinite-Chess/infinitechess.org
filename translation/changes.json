@@ -1,4 +1,12 @@
 {
+	"28": {
+		"note": [
+			"Deleted unknown_action_received_1 & unknown_action_received_2 on lines 346-347",
+			"Deleted all of play.footer, lines 264-267",
+			"Added player_name_white_generic and player_name_black_generic, lines 280 & 281"
+		],
+		"changes": []
+	},
 	"27": {
 		"note": "Added index.github_title and index.javascript.contribution_count, lines 57-60",
 		"changes": []

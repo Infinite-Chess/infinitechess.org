@@ -5,7 +5,7 @@
  */
 
 // Import Start
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import backcompatible from '../../chess/logic/backcompatible.js';
@@ -101,6 +101,8 @@ function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for
  */
 async function callbackPaste(event) {
 	if (guinavigation.isCoordinateActive()) return;
+	// Can't paste a game when the current gamefile isn't finished loading all the way.
+	if (gameslot.areWeLoadingGraphics()) return statustext.pleaseWaitForTask();
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
@@ -264,13 +266,21 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	}
 
 	// What is the warning message if pasting in a private match?
-	const privateMatchWarning = onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : "";
+	const privateMatchWarning = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : '';
+	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective();
 
-	const fromWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective();
-	const allowEditCoords = guinavigation.areCoordsAllowedToBeEdited();
-	gameloader.unloadGame();
-	await gameloader.loadGame({ metadata: longformat.metadata, moves: longformat.moves, variantOptions }, fromWhitePerspective, allowEditCoords);
+	gameslot.unloadGame();
+	await gameslot.loadGamefile({
+		metadata: longformat.metadata,
+		viewWhitePerspective,
+		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
+		additional: {
+			moves: longformat.moves,
+			variantOptions,
+		}
+	});
 	const gamefile = gameslot.getGamefile();
+	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
 	const tooManyPieces = gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate;

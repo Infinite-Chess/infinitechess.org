@@ -43,6 +43,9 @@ button {
 /* Loading Page. A COUPLE OF THSEE CLASSES are also used for the game's loading animation page! */
 
 .animation-container {
+    transition: opacity 0.4s;
+    z-index: 1;
+    pointer-events: none;
     display: flex;
     background-color: black;
     justify-content: center; /* Center horizontally */
@@ -52,7 +55,6 @@ button {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: -1;
     overflow: hidden;
 }
 
@@ -746,7 +748,7 @@ button.join-button, button.copy-button {
 
 /* Top Navigation: Zoom buttons, coordinates, rewind/forward game, pause */
 
-.navigation {
+.navigation-bar {
     position: absolute;
     top: 0;
     width: 100%;
@@ -826,7 +828,7 @@ button.join-button, button.copy-button {
 	margin: 0;
 }
 
-.navigation .button {
+.navigation-bar .button {
     position: relative;
     width: 0.74em;
     height: 0.74em;
@@ -839,28 +841,28 @@ button.join-button, button.copy-button {
     -webkit-tap-highlight-color: transparent; /* No more blue highlight when tapping buttons on mobile */
 }
 
-.navigation .button:hover {
+.navigation-bar .button:hover {
     transform: scale(1.07);
 }
 
-.navigation .button:active {
+.navigation-bar .button:active {
     transform: scale(1);
 }
 
-.navigation svg {
+.navigation-bar svg {
     position: absolute;
 }
 
 /* Start shrinking top navigation bar */
-@media only screen and (max-width: 700px) { /* 700px needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
+@media only screen and (max-width: 700px) {
+    .navigation-bar {
         font-size: 12vw; /* Update with doc!! */
     }
 }
 
 /* Small screens. HIDE the coords and make the buttons bigger! */
-@media only screen and (max-width: 550px) {  /* 550 needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
+@media only screen and (max-width: 550px) {
+    .navigation-bar {
         justify-content: space-between;
         font-size: 66px; /* Update with doc!! */
     }
@@ -871,8 +873,8 @@ button.join-button, button.copy-button {
 }
 
 /* Mobile screen, start shrinking the size again */
-@media only screen and (max-width: 368px) {  /* 368 needs to be updated within camera.updatePIXEL_HEIGHT_OF_NAVS() !!! */
-    .navigation {
+@media only screen and (max-width: 368px) {
+    .navigation-bar {
         font-size: 17.9vw; /* Update with doc!! */
     }
 }
@@ -881,7 +883,7 @@ button.join-button, button.copy-button {
 
 /* Bottom Navigation: Color to move, clocks, player names, draw offer UI */
 
-.footer {
+.game-info-bar {
     position: absolute;
     bottom: 0;
     width: 100%;
@@ -1206,14 +1208,6 @@ button.join-button, button.copy-button {
 
 a {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
-}
-
-.unavailable {
-    color: rgb(190, 190, 190);
-}
-
-.flex {
-    display: flex;
 }
 
 .hidden {

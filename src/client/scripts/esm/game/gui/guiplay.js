@@ -1,23 +1,35 @@
 
 // Import Start
 import websocket from '../websocket.js';
-import guigameinfo from './guigameinfo.js';
-import onlinegame from '../misc/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import style from './style.js';
-import game from '../chess/game.js';
-import sound from '../misc/sound.js';
-import movement from '../rendering/movement.js';
-import options from '../rendering/options.js';
 import statustext from './statustext.js';
 import invites from '../misc/invites.js';
 import gui from './gui.js';
-import drawoffers from '../misc/drawoffers.js';
 import guititle from './guititle.js';
 import timeutil from '../../util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
 // Import End
+
+
+// Type Definitions --------------------------------------------------------------------
+
+/** @typedef {import('../../chess/util/metadata.js').MetaData} MetaData*/
+
+/**
+ * An object containing the values of each of the invite options on the invite creation screen.
+ * @typedef {Object} InviteOptions
+ * @property {string} variant
+ * @property {MetaData['TimeControl']} clock
+ * @property {'White' | 'Black' | 'Random'} color
+ * @property {'public' | 'private'} private
+ * @property {'casual'} rated
+ */
+
+
+// Variables --------------------------------------------------------------------
+
 
 "use strict";
 
@@ -89,16 +101,15 @@ function isOpen() { return pageIsOpen; }
  */
 function getModeSelected() { return modeSelected; }
 
-function hideElement_joinPrivate() { style.hideElement(element_joinPrivate); }
-function showElement_joinPrivate() { style.revealElement(element_joinPrivate); }
-function hideElement_inviteCode() { style.hideElement(element_inviteCode); }
-function showElement_inviteCode() { style.revealElement(element_inviteCode); }
+function hideElement_joinPrivate() { element_joinPrivate.classList.add('hidden'); }
+function showElement_joinPrivate() { element_joinPrivate.classList.remove('hidden'); }
+function hideElement_inviteCode() { element_inviteCode.classList.add('hidden'); }
+function showElement_inviteCode() { element_inviteCode.classList.remove('hidden'); }
 
 function open() {
 	pageIsOpen = true;
-	gui.setScreen('title play');
-	style.revealElement(element_PlaySelection);
-	style.revealElement(element_menuExternalLinks);
+	element_PlaySelection.classList.remove('hidden');
+	element_menuExternalLinks.classList.remove('hidden');
 	changePlayMode('online');
 	initListeners();
 	invites.subscribeToInvites(); // Subscribe to the invites list subscription service!
@@ -106,20 +117,20 @@ function open() {
 
 function close() {
 	pageIsOpen = false;
-	style.hideElement(element_PlaySelection);
-	style.hideElement(element_menuExternalLinks);
+	element_PlaySelection.classList.add('hidden');
+	element_menuExternalLinks.classList.add('hidden');
 	hideElement_inviteCode();
 	closeListeners();
 	// This will auto-cancel our existing invite
 	// IT ALSO clears the existing invites in the document!
-	websocket.unsubFromInvites();
+	invites.unsubFromInvites();
 }
 
 function initListeners() {
 	element_playBack.addEventListener('click', callback_playBack);
 	element_online.addEventListener('click', callback_online);
 	element_local.addEventListener('click', callback_local);
-	element_computer.addEventListener('click', gui.callback_featurePlanned);
+	element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_createInvite.addEventListener('click', callback_createInvite);
 	element_optionColor.addEventListener('change', callback_updateOptions);
 	element_optionClock.addEventListener('change', callback_updateOptions);
@@ -132,7 +143,7 @@ function closeListeners() {
 	element_playBack.removeEventListener('click', callback_playBack);
 	element_online.removeEventListener('click', callback_online);
 	element_local.removeEventListener('click', callback_local);
-	element_computer.removeEventListener('click', gui.callback_featurePlanned);
+	element_computer.removeEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_createInvite.removeEventListener('click', callback_createInvite);
 	element_optionColor.removeEventListener('change', callback_updateOptions);
 	element_optionClock.removeEventListener('change', callback_updateOptions);
@@ -197,21 +208,35 @@ function callback_local() {
 // Also starts local games
 function callback_createInvite() {
 
-	const gameOptions = {
+	const inviteOptions = getInviteOptions();
+
+	if (modeSelected === 'local') {
+		// Load options the game loader needs to load a local loaded game
+		const options = {
+			Variant: inviteOptions.variant,
+			TimeControl: inviteOptions.clock,
+		};
+		close(); // Close the invite creation screen
+		gameloader.startLocalGame(options); // Actually load the game
+	} else if (modeSelected === 'online') {
+		if (invites.doWeHave()) invites.cancel();
+		else invites.create(inviteOptions);
+	}
+}
+
+
+/**
+ * Returns an object containing the values of each of the invite options on the invite creation screen.
+ * @returns {InviteOptions}
+ */
+function getInviteOptions() {
+	return {
 		variant: element_optionVariant.value,
 		clock: element_optionClock.value,
 		color: element_optionColor.value,
+		private: element_optionPrivate.value,
 		rated: element_optionRated.value,
-		publicity: element_optionPrivate.value
 	};
-
-	if (modeSelected === 'local') {
-		close();
-		startLocalGame(gameOptions);
-	} else if (modeSelected === 'online') {
-		if (invites.doWeHave()) invites.cancel();
-		else invites.create(gameOptions);
-	}
 }
 
 // Call whenever the Clock or Color inputs change, or play mode changes
@@ -300,72 +325,6 @@ function callback_inviteClicked(event) {
 	invites.click(event.currentTarget);
 }
 
-/**
- * Starts a local game according to the options provided.
- * @param {Object} inviteOptions - An object that contains the invite properties `variant`, `clock`, `color`, `publicity`, `rated`.
- */
-async function startLocalGame(inviteOptions) {
-	// console.log("Starting local game with invite options:")
-	// console.log(inviteOptions);
-	gui.setScreen('game local'); // Change screen location
-
-	// [Event "Casual Space Classic infinite chess game"] [Site "https://www.infinitechess.org/"] [Round "-"]
-	const gameOptions = {
-		metadata: {
-			Event: `Casual local ${translations[inviteOptions.variant]} infinite chess game`,
-			Site: "https://www.infinitechess.org/",
-			Round: "-",
-			Variant: inviteOptions.variant,
-			TimeControl: inviteOptions.clock
-		}
-	};
-
-	guigameinfo.hidePlayerNames();
-	gameloader.loadGame(gameOptions, true, true);
-}
-
-/**
- * Starts an online game according to the options provided by the server.
- * @param {Object} gameOptions - An object that contains the properties
- * `metadata`, `clockValues`, `id`, `publicity`, `youAreColor`, `moves`, `millisUntilAutoAFKResign`,
- * `disconnect`, `gameConclusion`, `serverRestartingAt`, `drawOffer`
- * 
- * The `metadata` property contains the properties `Variant`, `White`, `Black`, `TimeControl`, `UTCDate`, `UTCTime`, `Rated`.
- * The `clockValues` property contains the properties `timerWhite`, `timerBlack`, `accountForPing`.
- */
-async function startOnlineGame(gameOptions) {
-	if (gameOptions.clockValues !== undefined) gameOptions.clockValues.accountForPing = true; // Set this to true so our clock knows to account for ping.
-	gui.setScreen('game online'); // Change screen location
-	// Must be set BEFORE loading the game, because the mesh generation relies on the color we are.
-	onlinegame.setColorAndGameID(gameOptions);
-	gameOptions.variantOptions = generateVariantOptionsIfReloadingPrivateCustomGame();
-	const fromWhitePerspective = gameOptions.youAreColor === 'white';
-	await gameloader.loadGame(gameOptions, fromWhitePerspective, false);
-
-	onlinegame.initOnlineGame(gameOptions);
-	guigameinfo.setAndRevealPlayerNames(gameOptions);
-	drawoffers.set(gameOptions.drawOffer);
-}
-
-function generateVariantOptionsIfReloadingPrivateCustomGame() {
-	if (!onlinegame.getIsPrivate()) return; // Can't play/paste custom position in public matches.
-	const gameID = onlinegame.getGameID();
-	if (!gameID) return console.error("Can't generate variant options when reloading private custom game because gameID isn't defined yet.");
-	return localstorage.loadItem(gameID);
-
-	// The variant options passed into the variant loader needs to contain the following properties:
-	// `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
-	// const variantOptions = {
-	//     fullMove: longformat.fullMove,
-	//     enpassant: longformat.enpassant,
-	//     moveRule: longformat.moveRule,
-	//     positionString: longformat.shortposition,
-	//     startingPosition: longformat.startingPosition,
-	//     specialRights: longformat.specialRights,
-	//     gameRules: longformat.gameRules
-	// }
-}
-
 
 /**
  * Locks the create invite button to disable it.
@@ -438,14 +397,6 @@ function onSocketClose() {
 	unlockAcceptInviteButton();
 }
 
-/**
- * Returns *true* if we are on the play page.
- * @returns {boolean}
- */
-function onPlayPage() {
-	return gui.getScreen() === 'title play';
-}
-
 export default {
 	isOpen,
 	hideElement_joinPrivate,
@@ -455,11 +406,9 @@ export default {
 	getModeSelected,
 	open,
 	close,
-	startOnlineGame,
 	setElement_CreateInviteTextContent,
 	initListeners_Invites,
 	closeListeners_Invites,
-	onPlayPage,
 	lockCreateInviteButton,
 	unlockCreateInviteButton,
 	isCreateInviteButtonLocked,

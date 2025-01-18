@@ -10,10 +10,9 @@ import coordutil from './coordutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
- * @typedef {import('../logic/boardchanges.js').Change} Change
  * @typedef {import('../logic/movepiece.js').Move} Move
+ * @typedef {import('../variants/gamerules.js').GameRules} GameRules
 */
-
 
 "use strict";
 
@@ -125,6 +124,19 @@ function getWhosTurnAtFront(gamefile) {
 }
 
 /**
+ * Returns whos turn it is at the front of the game,
+ * provided the only information you have is the existing moves list
+ * and the turnOrder gamerule.
+ * 
+ * You may need this if the gamefile hasn't actually been contructed yet.
+ * @param {number} numberOfMoves - The number of moves played in the game so far (length of the current moves list).
+ * @param {GameRules['turnOrder']} turnOrder - The order of colors turns in the game.
+ */
+function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves, turnOrder) {
+	return turnOrder[numberOfMoves % turnOrder.length];
+}
+
+/**
  * Returns total ply count (or half-moves) of the game so far.
  * @param {Move[]} moves - The moves list
  * @returns {number} The ply count
@@ -164,6 +176,27 @@ function areMovesIn2DFormat(longmoves) {
  * @returns {Move[]} Moves converted to the new 1D array format
  */
 function convertMovesTo1DFormat(moves, results) {
+
+	/*
+	// This is the format of outdated 2D moves list in game ICN notation.
+	[
+		[null, DepricatedMove],
+		[DepricatedMove, DepricatedMove],
+		...
+	]
+	// Where if the first move in the first array is null, that means it's black to move first.
+
+	interface DepricatedMove {
+		startCoords: Coords,
+		endCoords: Coords,
+		type: string,
+		captured?: string,
+		enpassant?: 1 | -1,
+		promotion?: string,
+		castle?: { coord: Coords, dir: 1 | -1 }
+	}
+	*/
+
 	results.turn = 'white';
 	const moves1D = [];
 	for (let a = 0; a < moves.length; a++) {
@@ -256,6 +289,7 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]]; }
 
 
+
 export default {
 	isIncrementingLegal,
 	isDecrementingLegal,
@@ -266,6 +300,7 @@ export default {
 	areWeViewingLatestMove,
 	isIndexTheLastMove,
 	getWhosTurnAtFront,
+	getWhosTurnAtFrom_ByMoveCountAndTurnOrder,
 	getPlyCount,
 	hasPieceMoved,
 	// flagLastMoveAsCheck,

@@ -1,11 +1,10 @@
 
 // Import Start
-import onlinegame from '../misc/onlinegame.js';
-import style from './style.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows.js';
 import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
-import drawoffers from '../misc/drawoffers.js';
+import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guititle from './guititle.js';
 import moveutil from '../../chess/util/moveutil.js';
 import perspective from '../rendering/perspective.js';
@@ -48,7 +47,7 @@ function open() {
 	updateTextOfMainMenuButton();
 	updatePasteButtonTransparency();
 	updateDrawOfferButton();
-	style.revealElement(element_pauseUI);
+	element_pauseUI.classList.remove('hidden');
 	initListeners();
 }
 
@@ -59,7 +58,8 @@ function toggle() {
 
 function updatePasteButtonTransparency() {
 	const moves = gameslot.getGamefile().moves;
-	const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
+
+	const legalInPrivateMatch = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && moves.length === 0;
 
 	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
 	else                                                      element_pastegame.classList.remove('opacity-0_5');
@@ -100,7 +100,7 @@ function onReceiveOpponentsMove() {
 function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
 	if (!isPaused) return;
 
-	if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
+	if (!onlinegame.areInOnlineGame() || onlinegame.hasServerConcludedGame()) return element_mainmenu.textContent = translations.main_menu;
 
 	if (moveutil.isGameResignable(gameslot.getGamefile())) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
@@ -142,7 +142,7 @@ function closeListeners() {
 function callback_Resume() {
 	if (!isPaused) return;
 	isPaused = false;
-	style.hideElement(element_pauseUI);
+	element_pauseUI.classList.add('hidden');
 	closeListeners();
 	frametracker.onVisualChange();
 }

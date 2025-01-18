@@ -181,7 +181,7 @@ async function isAllowedToCreateInvite(ws, replyto) {
 	printActiveGameCount();
 	const timeUntilRestart = getMinutesUntilServerRestart();
 	const message = timeUntilRestart ? 'server.javascript.ws-server_restarting' : 'server.javascript.ws-server_under_maintenance'; 
-	sendNotify(ws, message, { number: timeUntilRestart, replyto });
+	sendNotify(ws, message, { customNumber: timeUntilRestart, replyto });
 
 	return false; // NOT allowed to make an invite!
 }

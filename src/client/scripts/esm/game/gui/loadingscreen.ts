@@ -1,7 +1,8 @@
 
 /**
  * This script manages the spinny pawn loading animation
- * while a game is loading a gamefile and generating the spritesheet
+ * while a game is loading both the LOGICAL and
+ * GRAPHICAL (spritesheet) aspects.
  */
 
 // @ts-ignore
@@ -14,7 +15,7 @@ import thread from "../../util/thread.js";
 import style from "./style.js";
 
 
-const loadingScreen: HTMLElement = (document.querySelector('.game-loading-screen') as HTMLElement);
+const loadingScreen: HTMLElement = document.querySelector('.game-loading-screen') as HTMLElement;
 
 /** Lower = loading checkerboard closer to black */
 const darknessLevel = 0.22;
@@ -53,7 +54,8 @@ async function open() {
 	loadingScreen.classList.remove('transparent');
 	// This gives the document a chance to repaint, as otherwise our javascript
 	// will continue to run until the next animation frame, which could be a long time.
-	await thread.sleep(0);
+	// FOR SOME REASON sometimes it occasionally still doesn't repaint unless this is ~10??? Idk why
+	await thread.sleep(10);
 }
 
 async function close() {

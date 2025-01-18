@@ -3,7 +3,7 @@
 import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
 import legalmovehighlights from './highlights/legalmovehighlights.js';
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
@@ -23,6 +23,8 @@ import coordutil from '../../chess/util/coordutil.js';
 import space from '../misc/space.js';
 import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
+import guinavigation from '../gui/guinavigation.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
 /**
@@ -125,8 +127,8 @@ function update() {
 
 	const slideArrows = {};
 
-	let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_TOP_NAV());
-	let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV());
+	let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
+	let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guigameinfo.getHeightOfGameInfoBar());
 
 	// Reverse header and footer pads if we're viewing blacks side
 	if (perspective.getIsViewingBlackPerspective() && !perspective.getEnabled()) {
@@ -238,7 +240,7 @@ function update() {
 				if (piece.type === 'voidsN') continue;
 				const isLeft = side === "l";
 				const corner = math.getAABBCornerOfLine(direction, isLeft);
-				const renderCoords = math.getLineIntersectionEntryTile(direction[0], direction[1], intersect, paddedBoundingBox, corner);
+				const renderCoords = math.getLineIntersectionEntryPoint(direction[0], direction[1], intersect, paddedBoundingBox, corner);
 				if (!renderCoords) continue;
 				const arrowDirection = isLeft ? [-direction[0],-direction[1]] : direction;
 				concatData(renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);

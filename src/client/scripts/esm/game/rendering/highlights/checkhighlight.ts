@@ -12,7 +12,6 @@ import movement from '../movement.js';
 import options from '../options.js';
 // @ts-ignore
 import space from '../../misc/space.js';
-// @ts-ignore
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 import { BufferModel, createModel } from '../buffermodel.js';
 

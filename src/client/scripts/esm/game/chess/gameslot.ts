@@ -1,12 +1,22 @@
 
 /**
- * 
  * Whether we're in a local game, online game, analysis board, or board editor,
  * what they ALL have in common is a gamefile! This script stores THAT gamefile!
  * 
  * It also has the loader and unloader methods for the gamefile.
  */
 
+
+import type { MetaData } from "../../chess/util/metadata.js";
+import type { ClockValues } from "../../chess/logic/clock.js";
+
+
+import guinavigation from "../gui/guinavigation.js";
+import guipromotion from "../gui/guipromotion.js";
+import loadingscreen from "../gui/loadingscreen.js";
+import spritesheet from "../rendering/spritesheet.js";
+import movesequence from "./movesequence.js";
+import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -18,9 +28,7 @@ import sound from "../misc/sound.js";
 // @ts-ignore
 import copypastegame from "./copypastegame.js";
 // @ts-ignore
-import gamefileutility from "../../chess/util/gamefileutility.js";
-// @ts-ignore
-import onlinegame from "../misc/onlinegame.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
@@ -49,26 +57,49 @@ import clock from "../../chess/logic/clock.js";
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
-import guinavigation from "../gui/guinavigation.js";
-import guipromotion from "../gui/guipromotion.js";
-import loadingscreen from "../gui/loadingscreen.js";
-import spritesheet from "../rendering/spritesheet.js";
-import movesequence from "./movesequence.js";
-
-// Type Definitions ---------------------------------------------------------------
+// @ts-ignore
+import perspective from "../rendering/perspective.js";
 
 
-import type { MetaData } from "../../chess/util/metadata.js";
+// Type Definitions ----------------------------------------------------------
+
+
+/** Options for loading a game. */
+interface LoadOptions {
+	/** The metadata of the game */
+	metadata: MetaData,
+	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
+	viewWhitePerspective: boolean,
+	/** Whether the coordinate field box should be editable. */
+	allowEditCoords: boolean,
+	additional?: Additional
+}
+
+/** Additional options that may go into the gamefile constructor.
+ * Typically used if we're pasting a game, or reloading an online one. */
+interface Additional {
+	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
+	moves?: string[],
+	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
+	variantOptions?: any,
+	/** The conclusion of the game, if loading an online game that has already ended. */
+	gameConclusion?: string | false,
+	/** Any already existing clock values for the gamefile. */
+	clockValues?: ClockValues,
+}
 
 
 // Variables ---------------------------------------------------------------
 
 
+/** True when the gamefile is currently loading the logical stuff (ignores graphics such as the spritesheet). */
+let logicLoading: boolean = false;
+
 /**
- * True when a game is currently loading and SVGs are being requested
- * or the spritesheet is being generated.
+ * True when the gamefile is currently loading the graphical stuff,
+ * such as the SVG requests and spritesheet generation.
  */
-let gameIsLoading: boolean = false;
+let graphicsLoading: boolean = false;
 
 /** The currently loaded game. */
 let loadedGamefile: gamefile | undefined;
@@ -99,13 +130,27 @@ function getGamefile(): gamefile | undefined {
 	return loadedGamefile;
 }
 
-function areInGame() {
+function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
-/** Returns true if a new gamefile is currently being loaded */
-function areWeLoading() {
-	return gameIsLoading;
+/** Returns true if the gamefile is currently loading logically (doesn't care about graphics). */
+function areWeLoadingLogical(): boolean {
+	return logicLoading;
+}
+
+/**
+ * Returns true if the graphics of the gamefile are currently being loaded (spritesheet generating).
+ * 
+ * We know the gamefile is finished loading once the graphics are done, because they are last.
+ */
+function areWeLoadingGraphics(): boolean {
+	return graphicsLoading;
+}
+
+/** Returns what color we are viewing the current loaded game by default. */
+function getOurColor(): string {
+	return youAreColor;
 }
 
 function isLoadedGameViewingWhitePerspective() {
@@ -113,61 +158,59 @@ function isLoadedGameViewingWhitePerspective() {
 	return youAreColor === 'white';
 };
 
+
+
 /**
  * Loads a gamefile onto the board.
- * Generates the gamefile and organizes its lines. Inits the promotion UI,
- * mesh of all the pieces, and toggles miniimage rendering. (everything visual)
- * @param {Object} metadata - An object containing the property `Variant`, and optionally `UTCDate` and `UTCTime`, which can be used to extract the version of the variant. Without the date, the latest version will be used.
- * @param {Object} viewWhitePerspective - True if we should be viewing the game from white's perspective, false for black's perspective.
- * @param {Object} [options] - Options for constructing the gamefile.
- * @param {string[]} [options.moves] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
- * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
- * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
- * @param {Object} [options.clockValues] - Any already existing clock values for the gamefile, in the format `{ timerWhite, timerBlack, accountForPing }`
  */
-async function loadGamefile(
-	metadata: MetaData,
-	viewWhitePerspective: boolean,
-	{ moves, variantOptions, gameConclusion, clockValues }: {
-		moves?: string[],
-		variantOptions?: any,
-		gameConclusion?: string | false,
-		clockValues?: any,
-	} = {}
-) {
-
+async function loadGamefile(loadOptions: LoadOptions) {
 	if (loadedGamefile) throw new Error("Must unloadGame() before loading a new one.");
 
-	console.log('Started loading');
-	gameIsLoading = true;
+	// console.log('Started loading game...');
+	logicLoading = true;
+	graphicsLoading = true;
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
+	
+	// The game should be considered loaded once the LOGICAL stuff is finished,
+	// but the loading animation should only be closed when
+	// both the LOGICAL and GRAPHICAL stuff are finished.
 
-	const newGamefile = new gamefile(metadata, { moves, variantOptions, gameConclusion, clockValues });
+	// First load the LOGICAL stuff...
+	loadLogical(loadOptions);
+	// console.log('Finished loading LOGICAL game stuff.');
+	logicLoading = false;
+	// Play the start game sound once LOGICAL stuff is finished loading,
+	// so that the sound will still play in chrome, with the tab hidden, and
+	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
+	sound.playSound_gamestart();
 
-	try {
-		await spritesheet.initSpritesheetForGame(gl, newGamefile);
-	} catch (e) { // An error ocurred during the fetching of piece svgs and spritesheet gen
-		await loadingscreen.onError(e as Event);
-	}
-	guipromotion.initUI(newGamefile.gameRules.promotionsAllowed);
+	// Next start loading the GRAPHICAL stuff...
+	/*
+	 * The reason we attach a .then() to this instead of just 'await'ing,
+	 * is because we need loadGamefile() to return as soon as the logical
+	 * stuff has finished loading. The graphics may finish on its own time.
+	 */
+	loadGraphical(loadOptions).then(async() => {
+		// console.log('Finished loading GRAPHICAL game stuff.');
+		graphicsLoading = false;
+	
+		// Logical and Graphical loadings are done!
+		// We can now close the loading screen.
+	
+		// I don't think this one has to be awaited since we're pretty much
+		// done with loading, there's not gonna be another lag spike..
+		loadingscreen.close();
+		startStartingTransition();
+	});
+}
 
-	// Rewind one move so that we can, after a short delay, animate the most recently played move.
-	const lastmove = moveutil.getLastMove(newGamefile.moves);
-	if (lastmove !== undefined) {
-		// Rewind one move
-		movepiece.applyMove(newGamefile, lastmove, false);
+/** Loads all of the logical components of a game */
+function loadLogical(loadOptions: LoadOptions) {
 
-		// A small delay to animate the most recently played move.
-		animateLastMoveTimeoutID = setTimeout(() => {
-			if (moveutil.areWeViewingLatestMove(newGamefile)) return; // Already viewing the lastest move
-			movesequence.viewFront(newGamefile); // Updates to front even when they view different moves
-			movesequence.animateMove(lastmove, true);
-		}, delayOfLatestMoveAnimationOnRejoinMillis);
-	}
+	const newGamefile = new gamefile(loadOptions.metadata, loadOptions.additional);
 
-	loadedGamefile = newGamefile;
-	youAreColor = viewWhitePerspective ? 'white' : 'black';
+	youAreColor = loadOptions.viewWhitePerspective ? 'white' : 'black';
 
 	// If the game has more lines than this, then we turn off arrows at the start to prevent a lag spike.
 	const lineCountToDisableArrows = 16;
@@ -180,29 +223,49 @@ async function loadGamefile(
 		arrows.setMode(0);
 	}
 
-	// Immediately conclude the game if we loaded a game that's over already
-	if (gamefileutility.isGameOver(newGamefile)) {
-		concludeGame();
-		onlinegame.requestRemovalFromPlayersInActiveGames();
-	}
-
-	// The only time the document should listen for us pasting a game, is when a game is already loaded.
-	// If a game WASN'T loaded, then we wouldn't be on a screen that COULD load a game!!
 	initCopyPastGameListeners();
 
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.close();
-	startStartingTransition();
-	console.log('Finished loading');
+	// Immediately conclude the game if we loaded a game that's over already
+	loadedGamefile = newGamefile;
+}
+
+/** Loads all of the graphical components of a game */
+async function loadGraphical(loadOptions: LoadOptions) {
+	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
+	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
+	guiclock.set(loadedGamefile);
+	perspective.resetRotations(loadOptions.viewWhitePerspective);
+
+	try {
+		await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
+	} catch (e) { // An error ocurred during the fetching of piece svgs and spritesheet gen
+		await loadingscreen.onError(e as Event);
+	}
+
+	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
+	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
+
+	// Rewind one move so that we can, after a short delay, animate the most recently played move.
+	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
+	if (lastmove !== undefined) {
+		// Rewind one move
+		movepiece.applyMove(loadedGamefile!, lastmove, false);
+		
+		// A small delay to animate the most recently played move.
+		animateLastMoveTimeoutID = setTimeout(() => {
+			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
+			movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
+			movesequence.animateMove(lastmove, true);
+		}, delayOfLatestMoveAnimationOnRejoinMillis);
+	}
 
 	// Regenerate the mesh of all the pieces.
-	piecesmodel.regenModel(newGamefile, options.getPieceRegenColorArgs());
-
-	gameIsLoading = false;
+	await piecesmodel.regenModel(loadedGamefile!, options.getPieceRegenColorArgs());
 }
 
 /** The canvas will no longer render the current game */
 function unloadGame() {
+	if (graphicsLoading) throw Error("Cannot unload current gamefile when the previous one hasn't loaded all the way yet.");
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
 	
 	// Terminate the mesh algorithm.
@@ -237,7 +300,7 @@ function startStartingTransition() {
 	const centerArea = area.calculateFromUnpaddedBox(loadedGamefile!.startSnapshot.box);
 	movement.setPositionToArea(centerArea);
 	movement.setBoardScale(movement.getBoardScale() * 1.75);
-	guinavigation.recenter(loadedGamefile!);
+	guinavigation.recenter();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
@@ -287,9 +350,15 @@ function concludeGame() {
 export default {
 	getGamefile,
 	areInGame,
-	areWeLoading,
+	areWeLoadingLogical,
+	areWeLoadingGraphics,
+	getOurColor,
 	isLoadedGameViewingWhitePerspective,
 	loadGamefile,
 	unloadGame,
 	concludeGame,
+};
+
+export type {
+	Additional
 };

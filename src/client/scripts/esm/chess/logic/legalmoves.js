@@ -296,7 +296,7 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
  * @param {gamefile} gamefile - The gamefile
  * @param {MoveDraft} moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
- * @returns {boolean | string} *true* If the move is legal, otherwise a string containing why it is illegal.
+ * @returns {true | string} *true* If the move is legal, otherwise a string containing why it is illegal.
  */
 function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 	if (!moveDraft) {
@@ -399,10 +399,6 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
  * @returns {boolean} true if the piece is able to slide to the coordinates
  */
 function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords) {
-	// const step = math.getLineSteps(direction, pieceCoords, coords)
-	// return step >= slideMoveset[0] && step <= slideMoveset[1];
-
-
 	const axis = direction[0] === 0 ? 1 : 0;
 	const coordMag = coords[axis];
 	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];

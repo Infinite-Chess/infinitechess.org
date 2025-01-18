@@ -1,15 +1,4 @@
 
-// Import Start
-import style from './style.js';
-import guigameinfo from './guigameinfo.js';
-import drawoffers from '../misc/drawoffers.js';
-import guiclock from './guiclock.js';
-import clock from '../../chess/logic/clock.js';
-import gameslot from '../chess/gameslot.js';
-// Import End
-
-"use strict";
-
 /**
  * This script opens and closes our Draw Offer UI
  * on the bottom navigation bar.
@@ -18,20 +7,34 @@ import gameslot from '../chess/gameslot.js';
  * nor does it keep track of our current offers!
  */
 
-const element_draw_offer_ui = document.getElementById('draw_offer_ui');
-const element_acceptDraw = document.getElementById('acceptdraw');
-const element_declineDraw = document.getElementById('declinedraw');
-const element_whosturn = document.getElementById('whosturn');
+
+import guigameinfo from './guigameinfo.js';
+import clock from '../../chess/logic/clock.js';
+import gameslot from '../chess/gameslot.js';
+import drawoffers from '../misc/onlinegame/drawoffers.js';
+// @ts-ignore
+import guiclock from './guiclock.js';
+
+
+// Variables -------------------------------------------------------------------
+
+
+const element_draw_offer_ui = document.getElementById('draw_offer_ui')!;
+const element_acceptDraw = document.getElementById('acceptdraw')!;
+const element_declineDraw = document.getElementById('declinedraw')!;
+const element_whosturn = document.getElementById('whosturn')!;
 
 /** Whether the player names and clocks have been hidden to give space for the draw offer UI */
-let drawOfferUICramped = false;
+let drawOfferUICramped: boolean = false;
 
+
+// Functions -------------------------------------------------------------------
 
 
 /** Reveals the draw offer UI on the bottom navigation bar */
 function open() {
-	style.revealElement(element_draw_offer_ui);
-	style.hideElement(element_whosturn);
+	element_draw_offer_ui.classList.remove('hidden');
+	element_whosturn.classList.add('hidden');
 	initDrawOfferListeners();
 	// Do the names and clocks need to be hidden to make room for the draw offer UI?
 	updateVisibilityOfNamesAndClocksWithDrawOffer();
@@ -39,14 +42,14 @@ function open() {
 
 /** Hides the draw offer UI on the bottom navigation bar */
 function close() {
-	style.hideElement(element_draw_offer_ui);
-	style.revealElement(element_whosturn);
+	element_draw_offer_ui.classList.add('hidden');
+	element_whosturn.classList.remove('hidden');
 	closeDrawOfferListeners();
 
 	if (!drawOfferUICramped) return;
 	// We had hid the names and clocks to make room for the UI, reveal them here!
 	// console.log("revealing");
-	guigameinfo.setAndRevealPlayerNames();
+	guigameinfo.revealPlayerNames();
 	guiclock.showClocks();
 	drawOfferUICramped = false; // Reset for next draw offer UI opening
 }
@@ -68,7 +71,7 @@ function closeDrawOfferListeners() {
  */
 function updateVisibilityOfNamesAndClocksWithDrawOffer() {
 	if (!drawoffers.areWeAcceptingDraw()) return; // No open draw offer
-    
+	    
 	if (isDrawOfferUICramped()) { // Hide the player names and clocks
 		if (drawOfferUICramped) return; // Already hidden
 		// console.log("hiding");
@@ -79,7 +82,7 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
 		if (!drawOfferUICramped) return; // Already revealed
 		// console.log("revealing");
 		drawOfferUICramped = false;
-		guigameinfo.setAndRevealPlayerNames();
+		guigameinfo.revealPlayerNames();
 		guiclock.showClocks();
 	}
 }
@@ -87,13 +90,13 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
 /**
  * Returns true if the screen is small enough for the
  * draw offer UI to not fit with everything on the header bar.
- * @returns {boolean}
  */
-function isDrawOfferUICramped() {
-	if (clock.isGameUntimed(gameslot.getGamefile())) return false; // Clocks not visible, we definitely have room
+function isDrawOfferUICramped(): boolean {
+	if (clock.isGameUntimed(gameslot.getGamefile()!)) return false; // Clocks not visible, we definitely have room
 	if (window.innerWidth > 560) return false; // Screen is wide, we have room
 	return true; // Cramped
 }
+
 
 export default {
 	open,

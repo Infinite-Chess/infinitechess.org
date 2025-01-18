@@ -489,12 +489,6 @@ function appendBlockingMoves(square1, square2, moves, coords) { // coords is of 
 		const c2 = organizedlines.getCFromLine(direction,square2); // Line between our 2 squares
 		const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2); // The intersection point of the 2 lines.
 
-		// Idon us's old code
-		// if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
-		//     !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) {console.log("A"); continue}; // Block is off grid so probably not valid
-		// blockPoint=[Math.round(blockPoint[0]), Math.round(blockPoint[1])]
-		// if (organizedlines.getKeyFromLine(line,blockPoint)!==organizedlines.getKeyFromLine(line, coords)) {console.log("C"); continue}; // stop line multiples being annoying
-
 		// Naviary's new code
 		if (blockPoint === null) continue; // None (or infinite) intersection points!
 		if (!math.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.

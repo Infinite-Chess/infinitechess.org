@@ -5,17 +5,25 @@
  * And contains our main update() and render() methods
  */
 
+
 // @ts-ignore
-import onlinegame from '../misc/onlinegame.js';
-// @ts-ignore
+import type gamefile from '../../chess/logic/gamefile.js';
+
+
+import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
+import jsutil from '../../util/jsutil.js';
+import highlights from '../rendering/highlights/highlights.js';
+import gameslot from './gameslot.js';
+import guinavigation from '../gui/guinavigation.js';
+// @ts-ignore
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import arrows from '../rendering/arrows.js';
 // @ts-ignore
 import pieces from '../rendering/pieces.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-// @ts-ignore
 import guititle from '../gui/guititle.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
@@ -54,17 +62,7 @@ import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 // @ts-ignore
-import jsutil from '../../util/jsutil.js';
-import highlights from '../rendering/highlights/highlights.js';
-import gameslot from './gameslot.js';
-import guinavigation from '../gui/guinavigation.js';
-
-
-// Type Definitions -------------------------------------------------------------------------------
-
-
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
+import guigameinfo from '../gui/guigameinfo.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -73,6 +71,8 @@ import type gamefile from '../../chess/logic/gamefile.js';
 function init() {
 	options.initTheme();
 
+	gui.prepareForOpen();
+
 	guititle.open();
 
 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
@@ -80,30 +80,33 @@ function init() {
 
 // Update the game every single frame
 function update() {
-	if (gui.getScreen() === 'title play') invites.update();
+	invites.update();
+	if (gameslot.areWeLoadingGraphics()) return; // If the graphics aren't finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return updateSelectionScreen();
+	if (!gamefile) return updateSelectionScreen(); // On title screen
 
 	// There is a gamefile, update everything board-related...
 
 	if (!guinavigation.isCoordinateActive()) {
 		if (input.isKeyDown('`')) options.toggleDeveloperMode();
-		if (input.isKeyDown('2')) console.log(jsutil.deepCopyObject(gamefile));
+		if (input.isKeyDown('2')) {
+			console.log(jsutil.deepCopyObject(gamefile));
+			console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
+		}
 		if (input.isKeyDown('m')) options.toggleFPS();
 		if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 	}
 
 	updateBoard(gamefile); // Other screen, board is visible, update everything board related
 
-	onlinegame.update();
+	gameloader.update(); // Updates whatever game is currently loaded.
 
 	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
 }
 
 function updateSelectionScreen() {
 	// When we're not inside a game, the board should have a constant slow pan.
-	// movement.panBoard(); // Animate background if not afk
 	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
 }
 
@@ -114,7 +117,10 @@ function updateBoard(gamefile: gamefile) {
 		if (input.isKeyDown('escape')) guipause.toggle();
 		if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
 		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
-		if (input.isKeyDown('n')) guinavigation.toggleNavigationBar();
+		if (input.isKeyDown('n')) {
+			guinavigation.toggle();
+			guigameinfo.toggle();
+		}
 	}
 
 	const timeWinner = clock.update(gamefile);
@@ -144,7 +150,7 @@ function updateBoard(gamefile: gamefile) {
 } 
 
 function render() {
-	if (gameslot.areWeLoading()) return; // If the loading animation is visible, nothing in-game is (and the gamefile isn't defined anyway)
+	if (gameslot.areWeLoadingGraphics()) return; // If the loading animation is visible, nothing in-game is (and the gamefile isn't defined anyway)
 
 	board.render(); // Renders the infinite checkerboard
 
