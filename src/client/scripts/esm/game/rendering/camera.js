@@ -45,9 +45,6 @@ let fieldOfView;
 const zNear = 1;
 const zFar = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  perspective.distToRenderBoard * sqrt(2)
     
-// Header = 40
-// Footer = 59.5
-const MARGIN_OF_HEADER_AND_FOOTER = 41; // UPDATE with the html document  ---  !!! This is the sum of the heights of the page's navigation bar and footer. 40 + 1 for border
 let PIXEL_HEIGHT_OF_TOP_NAV = undefined; // In virtual pixels
 let PIXEL_HEIGHT_OF_BOTTOM_NAV = undefined; // In virtual pixels.
 
@@ -165,6 +162,7 @@ function initMatrixes() {
     
 	projMatrix = mat4.create(); // Same for every shader program
 
+	updateCanvasDimensions();
 	initPerspective(); // Initiates perspective, including the projection matrix
 
 	initViewMatrix(); // Camera
@@ -174,17 +172,15 @@ function initMatrixes() {
 
 // Call this when window resized. Also updates the projection matrix.
 function initPerspective() {
-
-	updateCanvasDimensions(); // Also updates viewport
-
 	initProjMatrix();
 }
 
 // Also updates viewport, and updates canvas-dependant variables
 function updateCanvasDimensions() {
-
-	canvasWidthVirtualPixels = window.innerWidth;
-	canvasHeightVirtualPixels = (window.innerHeight - MARGIN_OF_HEADER_AND_FOOTER);
+	// Get the canvas element's bounding rectangle
+	const rect = canvas.getBoundingClientRect();
+	canvasWidthVirtualPixels = rect.width;
+	canvasHeightVirtualPixels = rect.height;
 
 	// Size of entire window in physical pixels, not virtual. Retina displays have a greater width.
 	canvas.width = canvasWidthVirtualPixels * window.devicePixelRatio; 
@@ -289,6 +285,7 @@ function initScreenBoundingBox() {
 }
 
 function onScreenResize() {
+	updateCanvasDimensions(); // Also updates viewport
 	initPerspective(); // The projection matrix needs to be recalculated every screen resize
 	perspective.initCrosshairModel();
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
