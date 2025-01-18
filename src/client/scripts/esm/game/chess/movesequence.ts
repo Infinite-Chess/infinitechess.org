@@ -62,6 +62,7 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
+		// Only conclude the game if it's not an online game (in that scenario, server is boss)
 		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 

@@ -110,7 +110,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	clock.edit(gamefile, message.clockValues);
 	guiclock.edit(gamefile);
 
-	// For online games, we do NOT EVER conclude the game, so do that here if our opponents move concluded the game
+	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
 	onlinegame.onMovePlayed({ isOpponents: true });

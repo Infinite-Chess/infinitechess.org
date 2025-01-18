@@ -1,4 +1,12 @@
 
+/**
+ * This script opens and closes our Draw Offer UI
+ * on the bottom navigation bar.
+ * 
+ * It does NOT calculate if extending an offer is legal,
+ * nor does it keep track of our current offers!
+ */
+
 
 import guigameinfo from './guigameinfo.js';
 import clock from '../../chess/logic/clock.js';
@@ -8,22 +16,18 @@ import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guiclock from './guiclock.js';
 
 
-/**
- * This script opens and closes our Draw Offer UI
- * on the bottom navigation bar.
- * 
- * It does NOT calculate if extending an offer is legal,
- * nor does it keep track of our current offers!
- */
+// Variables -------------------------------------------------------------------
 
-const element_draw_offer_ui = document.getElementById('draw_offer_ui');
-const element_acceptDraw = document.getElementById('acceptdraw');
-const element_declineDraw = document.getElementById('declinedraw');
-const element_whosturn = document.getElementById('whosturn');
+const element_draw_offer_ui = document.getElementById('draw_offer_ui')!;
+const element_acceptDraw = document.getElementById('acceptdraw')!;
+const element_declineDraw = document.getElementById('declinedraw')!;
+const element_whosturn = document.getElementById('whosturn')!;
 
 /** Whether the player names and clocks have been hidden to give space for the draw offer UI */
-let drawOfferUICramped = false;
+let drawOfferUICramped: boolean = false;
 
+
+// Functions -------------------------------------------------------------------
 
 
 /** Reveals the draw offer UI on the bottom navigation bar */
@@ -44,8 +48,7 @@ function close() {
 	if (!drawOfferUICramped) return;
 	// We had hid the names and clocks to make room for the UI, reveal them here!
 	// console.log("revealing");
-	throw Error("Don't know how");
-	guigameinfo.setAndRevealPlayerNames();
+	guigameinfo.revealPlayerNames();
 	guiclock.showClocks();
 	drawOfferUICramped = false; // Reset for next draw offer UI opening
 }
@@ -67,22 +70,20 @@ function closeDrawOfferListeners() {
  */
 function updateVisibilityOfNamesAndClocksWithDrawOffer() {
 	if (!drawoffers.areWeAcceptingDraw()) return; // No open draw offer
-
-	throw Error("Don't know how to hide or show player names to make room for draw offer.");
-    
-	// if (isDrawOfferUICramped()) { // Hide the player names and clocks
-	// 	if (drawOfferUICramped) return; // Already hidden
-	// 	// console.log("hiding");
-	// 	drawOfferUICramped = true;
-	// 	guigameinfo.hidePlayerNames();
-	// 	guiclock.hideClocks();
-	// } else { // We have space now, reveal them!
-	// 	if (!drawOfferUICramped) return; // Already revealed
-	// 	// console.log("revealing");
-	// 	drawOfferUICramped = false;
-	// 	guigameinfo.setAndRevealPlayerNames();
-	// 	guiclock.showClocks();
-	// }
+	    
+	if (isDrawOfferUICramped()) { // Hide the player names and clocks
+		if (drawOfferUICramped) return; // Already hidden
+		// console.log("hiding");
+		drawOfferUICramped = true;
+		guigameinfo.hidePlayerNames();
+		guiclock.hideClocks();
+	} else { // We have space now, reveal them!
+		if (!drawOfferUICramped) return; // Already revealed
+		// console.log("revealing");
+		drawOfferUICramped = false;
+		guigameinfo.revealPlayerNames();
+		guiclock.showClocks();
+	}
 }
 
 /**
@@ -91,10 +92,11 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
  * @returns {boolean}
  */
 function isDrawOfferUICramped() {
-	if (clock.isGameUntimed(gameslot.getGamefile())) return false; // Clocks not visible, we definitely have room
+	if (clock.isGameUntimed(gameslot.getGamefile()!)) return false; // Clocks not visible, we definitely have room
 	if (window.innerWidth > 560) return false; // Screen is wide, we have room
 	return true; // Cramped
 }
+
 
 export default {
 	open,
