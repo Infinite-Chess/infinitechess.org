@@ -1,12 +1,10 @@
 
 // Import Start
 import moveutil from '../../chess/util/moveutil.js';
-import style from './style.js';
 import options from '../rendering/options.js';
-import camera from '../rendering/camera.js';
-import math from '../../util/math.js';
 import config from '../config.js';
 import gameslot from '../chess/gameslot.js';
+import guinavigation from './guinavigation.js';
 // Import End
 
 "use strict";
@@ -43,12 +41,12 @@ function showMoves(durationSecs = 2.5) {
 	updateTextContentOfMoves();
 	setTimeout(hideMoves, durationSecs * 1000);
 
-	if (visibilityWeight === 1) style.revealElement(elementStatusMoves);
+	if (visibilityWeight === 1) elementStatusMoves.classList.remove('hidden');
 }
 
 function hideMoves() {
 	visibilityWeight--;
-	if (visibilityWeight === 0) style.hideElement(elementStatusMoves);
+	if (visibilityWeight === 0) elementStatusMoves.classList.add('hidden');
 }
 
 function updateTextContentOfMoves() {
@@ -60,30 +58,30 @@ function updateTextContentOfMoves() {
 }
 
 function updateStatsCSS() {
-	element_Statuses.style = `top: ${camera.getPIXEL_HEIGHT_OF_TOP_NAV()}px`;
+	element_Statuses.style = `top: ${guinavigation.getHeightOfNavBar()}px`;
 }
 
 function showPiecesMesh() {
 	if (config.VIDEO_MODE) return;
-	style.revealElement(elementStatusPiecesMesh);
+	elementStatusPiecesMesh.classList.remove('hidden');
 }
 
 function updatePiecesMesh(percent) {
-	const percentString = math.decimalToPercent(percent);
+	const percentString = decimalToPercent(percent);
 	elementStatusPiecesMesh.textContent = `${translations.constructing_mesh} ${percentString}`;
 }
 
 function hidePiecesMesh() {
-	style.hideElement(elementStatusPiecesMesh);
+	elementStatusPiecesMesh.classList.add('hidden');
 }
 
 function showFPS() {
 	if (config.VIDEO_MODE) return;
-	style.revealElement(elementStatusFPS);
+	elementStatusFPS.classList.remove('hidden');
 }
 
 function hideFPS() {
-	style.hideElement(elementStatusFPS);
+	elementStatusFPS.classList.add('hidden');
 }
 
 function updateFPS(fps) {
@@ -94,28 +92,27 @@ function updateFPS(fps) {
 
 function showRotateMesh() {
 	if (config.VIDEO_MODE) return;
-	style.revealElement(elementStatusRotateMesh);
+	elementStatusRotateMesh.classList.remove('hidden');
 }
 
 function updateRotateMesh(percent) {
-	const percentString = math.decimalToPercent(percent);
+	const percentString = decimalToPercent(percent);
 	elementStatusRotateMesh.textContent = `${translations.rotating_mesh} ${percentString}`;
 }
 
 function hideRotateMesh() {
-	style.hideElement(elementStatusRotateMesh);
+	elementStatusRotateMesh.classList.add('hidden');
 }
 
-// NO LONGER USED. These were for the aynchronious checkmate algorithm.
-// showMoveLooking() {
-//     if (config.VIDEO_MODE) return;
-//     style.revealElement(elementStatusMoveLooking);
-// },
-// updateMoveLooking(percent) {
-//     const percentString = math.decimalToPercent(percent);
-//     showMoveLooking();
-//     elementStatusMoveLooking.textContent = `Looking for moves... ${percentString}`;
-// },
+
+function decimalToPercent(decimal) {
+	// Multiply by 100 to convert to percentage, then round
+	const percent = Math.round(decimal * 100);
+    
+	// Convert the rounded percentage to a string with a percentage sign
+	return percent.toString() + "%";
+}
+
 
 export default {
 	showMoves,

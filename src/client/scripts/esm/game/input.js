@@ -2,7 +2,7 @@
 // Import Start
 import guipause from './gui/guipause.js';
 import bufferdata from './rendering/bufferdata.js';
-import onlinegame from './misc/onlinegame.js';
+import onlinegame from './misc/onlinegame/onlinegame.js';
 import perspective from './rendering/perspective.js';
 import movement from './rendering/movement.js';
 import options from './rendering/options.js';
@@ -375,7 +375,6 @@ function initListeners_Mouse() {
 		if (ignoreMouseDown) return;
 
 		if (event.target.id === 'overlay') event.preventDefault();
-		// if (clickedOverlay) gui.makeOverlayUnselectable();
         
 		pushMouseDown(event);
 
@@ -402,7 +401,6 @@ function initListeners_Mouse() {
 
 	overlayElement.addEventListener("mouseup", (event) => {
 		event = event || window.event;
-		// gui.makeOverlaySelectable();
 		removeMouseHeld(event);
 		setTimeout(perspective.relockMouse, 1); // 1 millisecond, to give time for pause listener to fire
 
@@ -456,7 +454,7 @@ function initMouseSimulatedClick() {
 function executeMouseSimulatedClick() {
 	if (!timeMouseDownSeconds || !mouseIsSupported) return;
 	// THIS PREVENTS A BUG THAT RANDOMLY SELECTS A PIECE AS SOON AS YOU START A GAME
-	if (gameslot.areWeLoading()) return;
+	if (gameslot.areWeLoadingGraphics()) return;
 
 	// See if the mouse was released fast enough to simulate a click!
 	const nowSeconds = new Date().getTime() / 1000;
@@ -728,7 +726,7 @@ function moveMouse(touch1, touch2) { // touch2 optional. If provided, will take 
 		setTouchesChangeInXYTo0(touch2);
 	}
 
-	const oneOrNegOne = onlinegame.areInOnlineGame() && onlinegame.areWeColor('black') ? -1 : 1;
+	const oneOrNegOne = onlinegame.areWeColorInOnlineGame('black') ? -1 : 1;
 
 	mouseWorldLocation[0] -= touchMovementX * dampeningToMoveMouseInTouchMode * oneOrNegOne;
 	mouseWorldLocation[1] -= touchMovementY * dampeningToMoveMouseInTouchMode * oneOrNegOne;

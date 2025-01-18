@@ -1,12 +1,11 @@
 
 // Import Start
-import websocket from '../websocket.js';
 import invites from './invites.js';
 import stats from '../gui/stats.js';
 import input from '../input.js';
-import onlinegame from './onlinegame.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
+import tabnameflash from './onlinegame/tabnameflash.js';
 // Import End
 
 'use strict';
@@ -108,13 +107,13 @@ function updateDeltaTime(runtime) {
 	lastFrameTime = runTime;
 }
 
-// Deletes frame timestamps from out list over 1 second ago
+// Deletes frame timestamps from our list over 1 second ago
 function trimFrames() {
 	// What time was it 1 second ago
 	const splitPoint = runTime - fpsWindow;
 
 	// Use binary search to find the split point.
-	const indexToSplit = jsutil.binarySearch_findValue(frames, splitPoint);
+	const indexToSplit = jsutil.findIndexOfPointInOrganizedArray(frames, splitPoint);
 
 	// This will not delete a timestamp if it falls exactly on the split point.
 	frames.splice(0, indexToSplit);
@@ -210,7 +209,7 @@ function onHibernate() {
 	//console.log("Set hibernating to true!")
 
 	// Unsub from invites list
-	websocket.unsubFromInvites();
+	invites.unsubFromInvites();
 }
 
 
@@ -245,7 +244,7 @@ document.addEventListener("visibilitychange", function() {
 		// Cancel the timer to delete our invite after not returning to the page
 		cancelTimerToDeleteInviteAfterLeavingPage();
 
-		onlinegame.cancelMoveSound();
+		tabnameflash.cancelMoveSound();
 	}
 });
 

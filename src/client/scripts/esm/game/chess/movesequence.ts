@@ -19,7 +19,7 @@ import { animatableChanges, meshChanges } from "./graphicalchanges.js";
 // @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
-import onlinegame from "../misc/onlinegame.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import arrows from "../rendering/arrows.js";
 // @ts-ignore
@@ -49,11 +49,10 @@ import moveutil from "../../chess/util/moveutil.js";
 function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	movepiece.makeMove(gamefile, move); // Logical changes
-	boardchanges.runMove(gamefile, move, meshChanges, true); // Graphical changes
+	if (gamefile.mesh.model !== undefined) boardchanges.runMove(gamefile, move, meshChanges, true); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes
-	guigameinfo.updateWhosTurn(gamefile);
 	updateGui(false);
 
 	if (!onlinegame.areInOnlineGame()) {
@@ -63,6 +62,7 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 
 	if (doGameOverChecks) {
 		gamefileutility.doGameOverChecks(gamefile);
+		// Only conclude the game if it's not an online game (in that scenario, server is boss)
 		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
@@ -171,7 +171,8 @@ function animateMove(move: Move, forward = true, animateMain = true) {
 }
 
 /**
- * Updates the transparency of the rewind/forward move buttons,
+ * Updates the display of whos turn it is (if it changed),
+ * the transparency of the rewind/forward move buttons,
  * updates the move number below the move buttons.
  * @param showMoveCounter Whether to show the move counter below the move buttons in the navigation bar.
  */
@@ -179,6 +180,7 @@ function updateGui(showMoveCounter: boolean) {
 	if (showMoveCounter) stats.showMoves();
 	else stats.updateTextContentOfMoves(); // While we may not be OPENING the move counter, if it WAS already open we should still update the number!
 	guinavigation.update_MoveButtons();
+	guigameinfo.updateWhosTurn();
 }
 
 

@@ -20,12 +20,10 @@ import camera from '../camera.js';
 // @ts-ignore
 import board from '../board.js';
 // @ts-ignore
-import math, { BoundingBox } from '../../../util/math.js';
-// @ts-ignore
+import math from '../../../util/math.js';
 import frametracker from '../frametracker.js';
 // @ts-ignore
 import preferences from '../../../components/header/preferences.js';
-// @ts-ignore
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 // @ts-ignore
 import legalmoveshapes from '../legalmoveshapes.js';
@@ -45,6 +43,7 @@ import type gamefile from '../../../chess/logic/gamefile.js';
 import type { LegalMoves } from '../../chess/selection.js';
 // @ts-ignore
 import type { Piece } from '../../../chess/logic/movepiece.js';
+import type { BoundingBox } from '../../../util/math.js';
 import { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import { Color } from '../../../chess/util/colorutil.js';
 import { start } from 'repl';
@@ -433,8 +432,8 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 
 		const corner1 = math.getAABBCornerOfLine(line, true); // "right"
 		const corner2 = math.getAABBCornerOfLine(line, false); // "bottomleft"
-		const intsect1Tile = math.getLineIntersectionEntryTile(line[0], line[1], C, boundingBoxOfRenderRange, corner1);
-		const intsect2Tile = math.getLineIntersectionEntryTile(line[0], line[1], C, boundingBoxOfRenderRange, corner2);
+		const intsect1Tile = math.getLineIntersectionEntryPoint(line[0], line[1], C, boundingBoxOfRenderRange, corner1);
+		const intsect2Tile = math.getLineIntersectionEntryPoint(line[0], line[1], C, boundingBoxOfRenderRange, corner2);
 
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) throw Error(`Line only has one intersect with square.`);
@@ -535,7 +534,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
  */
 function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Coords, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile) {
 	for (let i = 0; i < iterateCount; i++) { 
-		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i];
+		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i] as Coords;
 		if (!ignoreFunc(pieceCoords, thisCoord as Coords)) {
 			const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, thisCoord);
 			if (isPieceOnCoords) instanceData_Capture.push(...firstInstancePositionOffset);

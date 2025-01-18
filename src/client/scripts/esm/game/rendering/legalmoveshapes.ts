@@ -1,4 +1,13 @@
 
+/**
+ * This scripts calculates the vertex data of a single instance
+ * of our legal moves shapes, like the square, dot, or corner triangles.
+ * 
+ * We can further use instanced rendering to render the vertex data
+ * in any location, for as many legal moves as the piece has.
+ */
+
+
 // @ts-ignore
 import board from "./board.js";
 // @ts-ignore
@@ -49,7 +58,7 @@ const CORNER_TRIS = {
  * @returns The vertex data for the legal move square.
  */
 function getDataLegalMoveSquare(color: [number,number,number,number]): number[] {
-	const coords = [0,0]; // The instance is going to be at [0,0]
+	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
 
 	// Generate and return the vertex data for the legal move square.
 	return shapes.getDataQuad_Color_FromCoord(coords, color);
@@ -88,7 +97,7 @@ function getDataLegalMoveCornerTris(color: [number,number,number,number]): numbe
 	a = Math.min(a, 1); // Cap it
 
 	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
-	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
+	// The calculated vertex data's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
 	const x = coords[0] + (1 - board.gsquareCenter()) - 0.5;
 	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
 

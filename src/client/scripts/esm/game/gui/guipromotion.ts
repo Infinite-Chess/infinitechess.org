@@ -32,18 +32,18 @@ function isUIOpen() { return selectionOpen; }
 
 function open(color: string) {
 	selectionOpen = true;
-	style.revealElement(element_Promote!);
-	if (color === 'white') style.revealElement(element_PromoteWhite!);
-	else if (color === 'black') style.revealElement(element_PromoteBlack!);
+	element_Promote?.classList.remove('hidden');
+	if (color === 'white') element_PromoteWhite?.classList.remove('hidden');
+	else if (color === 'black') element_PromoteBlack?.classList.remove('hidden');
 	else throw new Error(`Promotion UI does not support color "${color}"`);
 }
 
 /** Closes the promotion UI */
 function close() {
 	selectionOpen = false;
-	style.hideElement(element_PromoteWhite!);
-	style.hideElement(element_PromoteBlack!);
-	style.hideElement(element_Promote!);
+	element_PromoteWhite?.classList.add('hidden');
+	element_PromoteBlack?.classList.add('hidden');
+	element_Promote?.classList.add('hidden');
 }
 
 /**

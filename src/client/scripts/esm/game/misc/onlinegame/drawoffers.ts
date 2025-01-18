@@ -1,16 +1,4 @@
 
-// Import Start
-import guidrawoffer from '../gui/guidrawoffer.js';
-import statustext from '../gui/statustext.js';
-import websocket from '../websocket.js';
-import guipause from '../gui/guipause.js';
-import sound from './sound.js';
-import moveutil from '../../chess/util/moveutil.js';
-import onlinegame from './onlinegame.js';
-import gameslot from '../chess/gameslot.js';
-// Import End
-
-'use strict';
 
 /**
  * This script stores the logic surrounding draw extending and acceptance
@@ -20,6 +8,29 @@ import gameslot from '../chess/gameslot.js';
  * if we have done so, in the current online game.
  */
 
+
+import type { DrawOfferInfo } from './onlinegamerouter.js';
+
+
+import gameslot from '../../chess/gameslot.js';
+import onlinegame from './onlinegame.js';
+// @ts-ignore
+import guidrawoffer from '../../gui/guidrawoffer.js';
+// @ts-ignore
+import statustext from '../../gui/statustext.js';
+// @ts-ignore
+import websocket from '../../websocket.js';
+// @ts-ignore
+import guipause from '../../gui/guipause.js';
+// @ts-ignore
+import sound from '../sound.js';
+// @ts-ignore
+import moveutil from '../../../chess/util/moveutil.js';
+
+
+// Variables ---------------------------------------------------
+
+
 /**
  * Minimum number of plies (half-moves) that
  * must span between 2 consecutive draw offers
@@ -27,24 +38,26 @@ import gameslot from '../chess/gameslot.js';
  * 
  * THIS MUST ALWAYS MATCH THE SERVER-SIDE!!!!
  */
-const movesBetweenDrawOffers = 2;
+const movesBetweenDrawOffers: number = 2;
 
 /** The last move we extended a draw, if we have, otherwise undefined. */
-let plyOfLastOfferedDraw;
+let plyOfLastOfferedDraw: number | undefined;
 
 /** Whether we have an open draw offer FROM OUR OPPONENT */
-let isAcceptingDraw = false;
+let isAcceptingDraw: boolean = false;
+
+
+// Functions ---------------------------------------------------
 
 
 /**
- * Returns true if us extending a dropper to our opponent is legal.
- * @returns {boolean}
+ * Returns true if us extending a draw offer to our opponent is legal.
  */
-function isOfferingDrawLegal() {
-	const gamefile = gameslot.getGamefile();
+function isOfferingDrawLegal(): boolean {
+	const gamefile = gameslot.getGamefile()!;
 	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
 	if (!moveutil.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
-	if (onlinegame.hasGameConcluded()) return false; // Can't offer draws after the game has ended
+	if (onlinegame.hasServerConcludedGame()) return false; // Can't offer draws after the game has ended
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND
 }
@@ -52,10 +65,9 @@ function isOfferingDrawLegal() {
 /**
  * Returns true if it's been too soon since our last draw offer extension
  * for us to extend another one. We cannot extend them too rapidly.
- * @returns {boolean}
  */
-function isTooSoonToOfferDraw() {
-	const gamefile = gameslot.getGamefile();
+function isTooSoonToOfferDraw(): boolean {
+	const gamefile = gameslot.getGamefile()!;
 	if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
 
 	const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
@@ -65,16 +77,22 @@ function isTooSoonToOfferDraw() {
 
 /**
  * Returns *true* if we have an open draw offer from our OPPONENT.
- * @returns {boolean}
  */
-function areWeAcceptingDraw() { return isAcceptingDraw; }
+function areWeAcceptingDraw(): boolean {
+	return isAcceptingDraw;
+}
 
 /** Is called when we receive a draw offer from our opponent */
 function onOpponentExtendedOffer() {
 	isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
 	guidrawoffer.open();
-	sound.playSound_base(); //playSound_drawOffer()
+	sound.playSound_base();
 	guipause.updateDrawOfferButton();
+}
+
+/** Is called when our opponent declines our draw offer */
+function onOpponentDeclinedOffer() {
+	statustext.showStatus(`Opponent declined draw offer.`);
 }
 
 /**
@@ -83,9 +101,9 @@ function onOpponentExtendedOffer() {
  */
 function extendOffer() {
 	websocket.sendmessage('game', 'offerdraw');
-	const gamefile = gameslot.getGamefile();
+	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.moves.length;
-	statustext.showStatus(`Waiting for opponent to accept...`);
+	statustext.showStatus(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
 	guipause.updateDrawOfferButton();
 }
 
@@ -103,19 +121,25 @@ function callback_AcceptDraw() {
 /**
  * This fires when we click the X-mark in
  * the draw offer UI on the bottom navigation bar,
- * or when we click "Accept Draw" in the pause menu,
- * OR when we make a move while there's an open offer!
-* @param {Object} [options] - Optional settings.
-* @param {boolean} [options.informServer=true] - If true, the server will be informed that the draw offer has been declined.
-* We'll want to set this to false if we call this after making a move, because the server auto-declines it.
-*/
-function callback_declineDraw({ informServer = true } = {}) {
+ * or when we click "Accept Draw" in the pause menu!
+ * @param [options] - Optional settings.
+ * @param [options.informServer=true] - If true, the server will be informed that the draw offer has been declined.
+ * We'll want to set this to false if we call this after making a move, because the server auto-declines it.
+ */
+function callback_declineDraw() {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
+	closeDraw();
+	// Notify the server
+	websocket.sendmessage('game', 'declinedraw');
+	statustext.showStatus(`Draw declined`); // TODO: This needs to be localized to the user's language
+}
 
-	if (informServer) {
-		websocket.sendmessage('game', 'declinedraw');
-		statustext.showStatus(`Draw declined`);
-	}
+/**
+ * Closes the current draw offer, if there is one, from our opponent.
+ * This does NOT notify the server.
+ */
+function closeDraw() {
+	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 	guidrawoffer.close();
 	isAcceptingDraw = false;
 }
@@ -123,27 +147,33 @@ function callback_declineDraw({ informServer = true } = {}) {
 /**
  * Set the current draw offer values according to the information provided.
  * This is called after a page refresh when we're in a game.
- * @param {Object} drawOffer - An object that looks like: `{ unconfirmed, lastOfferPly }`, where `unconfirmed` is
- * a boolean that's true if the opponent has an open draw offer we have not yet confirmed/rejected,
- * and `lastOfferPly` is the last move ply WE EXTENDED an offer, if we have, otherwise undefined.
  */
-function set(drawOffer) {
+function set(drawOffer: DrawOfferInfo) {
 	plyOfLastOfferedDraw = drawOffer.lastOfferPly;
 	if (!drawOffer.unconfirmed) return; // No open draw offer
 	// Open draw offer!!
 	onOpponentExtendedOffer();
 }
 
+/** Called whenever a move is played in an online game */
+function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
+	// Declines any open draw offer from our opponent. We don't need to inform
+	// the server because the server knows to auto decline when we submit our move.
+	if (!isOpponents) closeDraw();
+}
+
 /**
  * Called when an online game concludes or is closed. Closes any open draw
  * offer and resets all draw for values for future games.
  */
-function reset() {
+function onGameClose() {
 	plyOfLastOfferedDraw = undefined;
 	isAcceptingDraw = false;
 	guidrawoffer.close();
 	guipause.updateDrawOfferButton();
 }
+
+
 
 export default {
 	isOfferingDrawLegal,
@@ -151,7 +181,9 @@ export default {
 	callback_AcceptDraw,
 	callback_declineDraw,
 	onOpponentExtendedOffer,
+	onOpponentDeclinedOffer,
 	extendOffer,
 	set,
-	reset,
+	onMovePlayed,
+	onGameClose,
 };

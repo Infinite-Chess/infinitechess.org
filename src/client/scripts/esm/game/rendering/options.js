@@ -1,7 +1,7 @@
 
 // Import Start
 import input from '../input.js';
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import stats from '../gui/stats.js';
 import perspective from './perspective.js';
 import selection from '../chess/selection.js';

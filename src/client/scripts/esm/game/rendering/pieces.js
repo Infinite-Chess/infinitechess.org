@@ -6,7 +6,7 @@ import movement from './movement.js';
 import piecesmodel from './piecesmodel.js';
 import voids from './voids.js';
 import board from './board.js';
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import options from './options.js';
 import { createModel } from './buffermodel.js';
 import shapes from './shapes.js';
@@ -29,10 +29,6 @@ import spritesheet from './spritesheet.js';
 
 /** Opacity of ghost piece over legal move highlights. Default: 0.4 */
 const ghostOpacity = 0.4;
-
-// Amount of extra undefined pieces to store with each type array!
-// These placeholders are utilized when pieces are added or pawns promote!
-const extraUndefineds = 5; // After this many promotions, need to add more undefineds and recalc the model!
 
 /**
  * A tiny z offset, to prevent the pieces from tearing with highlights while in perspective.
@@ -73,7 +69,7 @@ function renderPieces(gamefile) {
 	const scale = [boardScale, boardScale, 1];
 
 	let modelToUse;
-	if (onlinegame.areWeColor('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel !== undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
+	if (onlinegame.areWeColorInOnlineGame('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel !== undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
 	else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel !== undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
 
 	modelToUse.render(position, scale);
@@ -90,7 +86,6 @@ function renderGhostPiece(type, coords) {
 }
 
 export default {
-	extraUndefineds,
 	renderPiecesInGame,
 	renderGhostPiece,
 };

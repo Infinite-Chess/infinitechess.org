@@ -1,6 +1,6 @@
-import style from "./style.js";
+
 import moveutil from "../../chess/util/moveutil.js";
-import onlinegame from "../misc/onlinegame.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
 import sound from "../misc/sound.js";
 import clockutil from "../../chess/util/clockutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
@@ -63,13 +63,13 @@ const countdown = {
 
 function hideClocks() {
 	for (const color in element_timers) {
-		style.hideElement(element_timers[color].container);
+		element_timers[color].container.classList.add('hidden');
 	}
 }
 
 function showClocks() {
 	for (const color in element_timers) {
-		style.revealElement(element_timers[color].container);
+		element_timers[color].container.classList.remove('hidden');
 	}
 }
 
