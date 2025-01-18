@@ -9,7 +9,7 @@ import typeutil from '../util/typeutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
+ * @typedef {import('./movepiece.js').Move} Move
 */
 
 "use strict";
@@ -190,7 +190,6 @@ function detectRepetitionDraw(gamefile) {
 	while (index >= 0) {
 
 		// Moves are in the format: { type, startCoords, endCoords, captured: 'type'}
-		/** @type {Move} */
 		const thisMove = moveList[index];
 
 		// If the move was a pawn push or capture, no further equal positions, terminate the loop.

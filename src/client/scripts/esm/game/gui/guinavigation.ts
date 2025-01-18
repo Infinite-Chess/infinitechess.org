@@ -1,4 +1,6 @@
 
+import movesequence from '../chess/movesequence.js';
+import gameslot from '../chess/gameslot.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -22,8 +24,6 @@ import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
 // @ts-ignore
-import movepiece from '../../chess/logic/movepiece.js';
-// @ts-ignore
 import selection from '../chess/selection.js';
 // @ts-ignore
 import frametracker from '../rendering/frametracker.js';
@@ -33,10 +33,8 @@ import guigameinfo from './guigameinfo.js';
 import onlinegame from '../misc/onlinegame.js';
 // @ts-ignore
 import camera from '../rendering/camera.js';
-import gameslot from '../chess/gameslot.js';
 
 // @ts-ignore
-// eslint-disable-next-line no-unused-vars
 import type gamefile from '../../chess/logic/gamefile.js';
 
 /**
@@ -452,28 +450,18 @@ function rewindMove() {
 
 	frametracker.onVisualChange();
 
-	movepiece.rewindMove(activeGamefile!, { removeMove: false });
+	movesequence.navigateMove(activeGamefile!, false);
     
 	selection.unselectPiece();
-
-	update_MoveButtons();
-
-	stats.showMoves();
 }
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
+
 	if (activeGamefile!.mesh.locked) return statustext.pleaseWaitForTask();
 	if (!moveutil.isIncrementingLegal(activeGamefile!)) return stats.showMoves();
 
-	const move = moveutil.getMoveOneForward(activeGamefile!)!;
-
-	// Only leave animate and updateData as true
-	movepiece.makeMove(activeGamefile!, move, { flipTurn: false, recordMove: false, pushClock: false, doGameOverChecks: false, updateProperties: false });
-
-	update_MoveButtons();
-
-	stats.showMoves();
+	movesequence.navigateMove(activeGamefile!, true);
 }
 
 /**
