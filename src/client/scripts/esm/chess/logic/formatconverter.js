@@ -308,7 +308,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		// Splice the extra gamerules out of the ICN, so that its nested [ and ] don't break the metadata parser
 		shortformat = shortformat.substring(0, indexOfGameRulesStart) + shortformat.substring(indexOfGameRulesEnd + 1, shortformat.length);
         
-		if (!isJson(stringifiedExtraGamerules)) throw new Error("Extra optional arguments not in JSON format");
+		if (!isJson(stringifiedExtraGamerules)) throw new Error(`Extra optional arguments not in valid JSON format: ${stringifiedExtraGamerules}`);
 
 		const parsedGameRules = JSON.parse(stringifiedExtraGamerules);
 		Object.assign(longformat.gameRules, parsedGameRules); // Copy over the parsed gamerules to the longformat
