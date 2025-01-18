@@ -47,6 +47,9 @@ import movesequence from "../../chess/movesequence.js";
 function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) {
 	const claimedGameConclusion = message.gameConclusion;
 
+	// This needs to be BEFORE synchronizeMovesList(), otherwise it won't resend our move since it thinks we're not in sync
+	onlinegame.setInSyncTrue();
+
 	/**
      * Make sure we are in sync with the final move list.
      * We need to do this because sometimes the game can end before the
@@ -66,8 +69,6 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
-
-	onlinegame.setInSyncTrue();
 }
 
 
