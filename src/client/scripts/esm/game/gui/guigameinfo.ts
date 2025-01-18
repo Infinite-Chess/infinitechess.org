@@ -57,7 +57,7 @@ function close() {
 	// Restore the player names to original content
 	element_playerWhite.textContent = '';
 	element_playerBlack.textContent = '';
-	revealPlayerNames();
+	// revealPlayerNames();
 	// Restore the whosturn marker to original content
 	element_whosturn.textContent = '';
 	element_dot.classList.remove('dotblack');
