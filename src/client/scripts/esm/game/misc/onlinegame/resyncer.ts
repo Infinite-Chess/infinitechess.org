@@ -20,14 +20,11 @@ import type gamefile from "../../../chess/logic/gamefile.js";
 
 import movesendreceive from "./movesendreceive.js";
 import onlinegame from "./onlinegame.js";
-import guigameinfo from "../../gui/guigameinfo.js";
 import clock from "../../../chess/logic/clock.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import gameslot from "../../chess/gameslot.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import movepiece from "../../../chess/logic/movepiece.js";
 // @ts-ignore
 import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
