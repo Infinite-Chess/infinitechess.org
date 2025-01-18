@@ -71,13 +71,13 @@ function close() {
 }
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
-funtion revealPlayerNames() {
+function revealPlayerNames() {
 	element_playerWhite.classList.remove('hidden');
 	element_playerBlack.classList.remove('hidden');
 }
 
 /** Hides the player names. Typically to make room for the draw offer UI */
-funtion hidePlayerNames() {
+function hidePlayerNames() {
 	element_playerWhite.classList.add('hidden');
 	element_playerBlack.classList.add('hidden');
 }

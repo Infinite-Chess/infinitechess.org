@@ -92,7 +92,7 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
  * @returns {boolean}
  */
 function isDrawOfferUICramped() {
-	if (clock.isGameUntimed(gameslot.getGamefile())) return false; // Clocks not visible, we definitely have room
+	if (clock.isGameUntimed(gameslot.getGamefile()!)) return false; // Clocks not visible, we definitely have room
 	if (window.innerWidth > 560) return false; // Screen is wide, we have room
 	return true; // Cramped
 }

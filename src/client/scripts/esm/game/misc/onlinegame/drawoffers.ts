@@ -103,7 +103,7 @@ function extendOffer() {
 	websocket.sendmessage('game', 'offerdraw');
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.moves.length;
-	statustext.showStatus(`Waiting for opponent to accept...`);
+	statustext.showStatus(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
 	guipause.updateDrawOfferButton();
 }
 
@@ -121,19 +121,25 @@ function callback_AcceptDraw() {
 /**
  * This fires when we click the X-mark in
  * the draw offer UI on the bottom navigation bar,
- * or when we click "Accept Draw" in the pause menu,
- * OR when we make a move while there's an open offer!
+ * or when we click "Accept Draw" in the pause menu!
  * @param [options] - Optional settings.
  * @param [options.informServer=true] - If true, the server will be informed that the draw offer has been declined.
  * We'll want to set this to false if we call this after making a move, because the server auto-declines it.
  */
-function callback_declineDraw({ informServer = true }: { informServer?: boolean } = {}) {
+function callback_declineDraw() {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
+	closeDraw();
+	// Notify the server
+	websocket.sendmessage('game', 'declinedraw');
+	statustext.showStatus(`Draw declined`); // TODO: This needs to be localized to the user's language
+}
 
-	if (informServer) {
-		websocket.sendmessage('game', 'declinedraw');
-		statustext.showStatus(`Draw declined`);
-	}
+/**
+ * Closes the current draw offer, if there is one, from our opponent.
+ * This does NOT notify the server.
+ */
+function closeDraw() {
+	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 	guidrawoffer.close();
 	isAcceptingDraw = false;
 }
@@ -152,8 +158,8 @@ function set(drawOffer: DrawOfferInfo) {
 /** Called whenever a move is played in an online game */
 function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
 	// Declines any open draw offer from our opponent. We don't need to inform
-	// the server because the server auto declines when we submit our move.
-	if (!isOpponents) callback_declineDraw({ informServer: false });
+	// the server because the server knows to auto decline when we submit our move.
+	if (!isOpponents) closeDraw();
 }
 
 /**
