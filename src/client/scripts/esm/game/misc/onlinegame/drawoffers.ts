@@ -86,7 +86,7 @@ function areWeAcceptingDraw(): boolean {
 function onOpponentExtendedOffer() {
 	isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
 	guidrawoffer.open();
-	sound.playSound_base(); //playSound_drawOffer()
+	sound.playSound_base();
 	guipause.updateDrawOfferButton();
 }
 

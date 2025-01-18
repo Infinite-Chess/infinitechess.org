@@ -57,8 +57,7 @@ function close() {
 	// Restore the player names to original content
 	element_playerWhite.textContent = '';
 	element_playerBlack.textContent = '';
-	element_playerWhite.classList.remove('hidden');
-	element_playerBlack.classList.remove('hidden');
+	revealPlayerNames();
 	// Restore the whosturn marker to original content
 	element_whosturn.textContent = '';
 	element_dot.classList.remove('dotblack');
@@ -69,6 +68,18 @@ function close() {
 	element_gameInfoBar.classList.add('hidden');
 
 	isOpen = false;
+}
+
+/** Reveales the player names. Typically called after the draw offer UI is closed */
+funtion revealPlayerNames() {
+	element_playerWhite.classList.remove('hidden');
+	element_playerBlack.classList.remove('hidden');
+}
+
+/** Hides the player names. Typically to make room for the draw offer UI */
+funtion hidePlayerNames() {
+	element_playerWhite.classList.add('hidden');
+	element_playerBlack.classList.add('hidden');
 }
 
 function toggle() {
@@ -205,6 +216,8 @@ function gameEnd(conclusion: string) {
 export default {
 	open,
 	close,
+	revealPlayerNames,
+	hidePlayerNames,
 	toggle,
 	updateWhosTurn,
 	gameEnd
