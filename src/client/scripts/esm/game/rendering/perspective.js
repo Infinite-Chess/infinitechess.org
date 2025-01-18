@@ -89,13 +89,14 @@ function disable() {
 
 	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.off}`;
     
-	resetRotations();
+	const viewWhitePerspective = gameslot.areInGame() ? gameslot.isLoadedGameViewingWhitePerspective() : true;
+	resetRotations(viewWhitePerspective);
 
 	piecesmodel.eraseRotatedModel(gameslot.getGamefile());
 }
 
 // Sets rotations to orthographic view. Sensitive to if we're white or black.
-function resetRotations(viewWhitePerspective) {
+function resetRotations(viewWhitePerspective = true) {
 	rotX = 0;
 	rotZ = viewWhitePerspective ? 0 : 180;
 

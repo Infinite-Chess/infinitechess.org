@@ -194,7 +194,6 @@ function closeOnlineGame() {
 	tabnameflash.onGameClose();
 	serverrestart.onGameClose();
 	drawoffers.onGameClose();
-	// perspective.resetRotations(); // Without this, leaving an online game of which we were black, won't reset our rotation.
 	closeEventListeners();
 }
 
