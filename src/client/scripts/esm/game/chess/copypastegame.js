@@ -15,8 +15,8 @@ import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import guinavigation from '../gui/guinavigation.js';
-import gameloader from './gameloader.js';
 import gameslot from './gameslot.js';
+import gameloader from './gameloader.js';
 // Import End
 
 "use strict";
@@ -280,7 +280,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		}
 	});
 	const gamefile = gameslot.getGamefile();
-	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
+	gameloader.openGameinfoBarAndConcludeGameIfOver(gamefile.metadata);
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
 	const tooManyPieces = gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate;

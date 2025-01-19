@@ -9,6 +9,9 @@
 
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
+import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
+// @ts-ignore
+import type { GameRules } from "../../chess/variants/gamerules.js";
 
 
 import guinavigation from "../gui/guinavigation.js";
@@ -81,11 +84,38 @@ interface Additional {
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves?: string[],
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
-	variantOptions?: any,
+	variantOptions?: VariantOptions,
 	/** The conclusion of the game, if loading an online game that has already ended. */
 	gameConclusion?: string | false,
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues,
+}
+
+/**
+ * Variant options that can be used to load a custom game,
+ * whether local or online, instead of one of the default variants.
+ */
+interface VariantOptions {
+	/**
+	 * The full move number of the turn at the provided position. Default: 1.
+	 * Can be higher if you copy just the positional information in a game with some moves played already.
+	 */
+	fullMove: number,
+	/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
+	enpassant?: Coords,
+	gameRules: GameRules,
+	/** If the move moveRule gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
+	moveRule?: `${number}/${number}`,
+	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
+	positionString: string,
+	/**
+	 * The starting position object, containing the pieces organized by key.
+	 * The key of the object is the coordinates of the piece as a string,
+	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
+	 */
+	startingPosition: { [key: CoordsKey]: string }
+	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
+	specialRights: { [key: CoordsKey]: true },
 }
 
 
@@ -360,5 +390,6 @@ export default {
 };
 
 export type {
-	Additional
+	Additional,
+	VariantOptions
 };

@@ -11,12 +11,8 @@
  */
 
 import type { MetaData } from "../../chess/util/metadata.js";
-import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
-import type { ClockValues } from "../../chess/logic/clock.js";
 import type { JoinGameMessage } from "../misc/onlinegame/onlinegamerouter.js";
-// @ts-ignore
-import type { GameRules } from "../../chess/variants/gamerules.js";
-import type { Additional } from "./gameslot.js";
+import type { Additional, VariantOptions } from "./gameslot.js";
 
 
 import gui from "../gui/gui.js";
@@ -39,54 +35,6 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 
 // Type Definitions --------------------------------------------------------------------
 
-
-interface GameOptions {
-	metadata: MetaData,
-	/** Should be provided if we're rejoining an online game. */
-	clockValues?: ClockValues,
-	/** Should be provided if we're rejoining an online game. */
-	gameConclusion?: string | false,
-	/**
-	 * This will be a string array of all the moves played thus far, in the most compact notation (e.g. `["5,2>5,4", ...]`)
-	 * 
-	 * Should be provided if we're pasting a game, or rejoining an online game.
-	 */
-	moves?: string[],
-	/**
-	 * Provide to load a custom variant game, or a normal variant where moves have been played,
-	 * instead of starting the variant that is specified in the metadata.
-	 * 
-	 * Should be provided if we're pasting a game, or rejoining a custom online private game.
-	 */
-	variantOptions?: VariantOptions,
-}
-
-/**
- * Variant options that can be used to load a custom game,
- * whether local or online, instead of one of the default variants.
- */
-interface VariantOptions {
-	/**
-	 * The full move number of the turn at the provided position. Default: 1.
-	 * Can be higher if you copy just the positional information in a game with some moves played already.
-	 */
-	fullMove: number,
-	/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
-	enpassant?: Coords,
-	gameRules: GameRules,
-	/** If the move moveRule gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
-	moveRule?: `${number}/${number}`,
-	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
-	positionString: string,
-	/**
-	 * The starting position object, containing the pieces organized by key.
-	 * The key of the object is the coordinates of the piece as a string,
-	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
-	 */
-	startingPosition: { [key: CoordsKey]: string }
-	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
-	specialRights: { [key: CoordsKey]: true },
-}
 
 
 // Variables --------------------------------------------------------------------
@@ -139,13 +87,12 @@ async function startLocalGame(options: {
 		viewWhitePerspective: true,
 		allowEditCoords: true,
 	});
-
 	typeOfGameWeAreIn = 'local';
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	guigameinfo.open(metadata);
+	openGameinfoBarAndConcludeGameIfOver(metadata);
 }
 
 /**
@@ -157,7 +104,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: localstorage.loadItem(options.id),
+		variantOptions: localstorage.loadItem(options.id) as VariantOptions,
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues ? clock.adjustClockValuesForPing(options.clockValues) : undefined,
@@ -175,7 +122,12 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	guigameinfo.open(options.metadata);
+	openGameinfoBarAndConcludeGameIfOver(options.metadata);
+}
+
+/** These items must be done after the logical parts of the gamefile are fully loaded. */
+function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData) {
+	guigameinfo.open(metadata);
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
 }
 
@@ -196,5 +148,6 @@ export default {
 	update,
 	startLocalGame,
 	startOnlineGame,
+	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,
 };
