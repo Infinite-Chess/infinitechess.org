@@ -193,10 +193,12 @@ function doesLineAttackSquare(gamefile, line, direction, coords, color, attacker
 		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 		const ignoreFunc = legalmoves.getIgnoreFuncFromPieceMoveset(thisPieceMoveset);
 		if (!moveset) continue; // Piece can't slide in the direction our line is going
-		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(blockingFunc, ignoreFunc, line, direction, moveset, thisPiece.coords, thisPieceColor);
+		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(blockingFunc, line, direction, moveset, thisPiece.coords, thisPieceColor);
 		if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
 		if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords, ignoreFunc)) continue; // This piece can't slide so far as to reach us, NEXT piece!
+		// Make sure the square passes the ignore function test
+		if (!ignoreFunc(thisPiece.coords, coords)) continue;
 
 		// This piece is attacking this square!
 

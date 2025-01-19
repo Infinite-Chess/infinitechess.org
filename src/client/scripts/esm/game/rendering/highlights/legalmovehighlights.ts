@@ -44,10 +44,9 @@ import type { LegalMoves } from '../../chess/selection.js';
 // @ts-ignore
 import type { Piece } from '../../../chess/logic/movepiece.js';
 import type { BoundingBox } from '../../../util/math.js';
-import { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
-import { Color } from '../../../chess/util/colorutil.js';
-import { start } from 'repl';
-import { IgnoreFunction } from '../../../chess/logic/movesets.js';
+import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
+import type { Color } from '../../../chess/util/colorutil.js';
+import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 
 
 
@@ -529,13 +528,15 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
  * @param step - Of the line / moveset
  * @param iterateCount - How many times to shift the {@link firstInstancePositionOffset} by the {@link step}, adding each iteration as another instance of the legal move highlight.
  * @param startCoords - The start coordiantes of the first legal move highlight instance
+ * @param pieceCoords - The coordinates of the piece with the legal moves
  * @param ignoreFunc - The ignore function, to ignore squares
  * @param gamefile - A reference to the current loaded gamefile
  */
 function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Coords, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile) {
 	for (let i = 0; i < iterateCount; i++) { 
 		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i] as Coords;
-		if (!ignoreFunc(pieceCoords, thisCoord as Coords)) {
+		if (ignoreFunc(pieceCoords, thisCoord)) { // Ignore function PASSED. This move is LEGAL
+			// Should we add instance data to the capturing or non-capturing model?
 			const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, thisCoord);
 			if (isPieceOnCoords) instanceData_Capture.push(...firstInstancePositionOffset);
 			else                 instanceData_NonCapture.push(...firstInstancePositionOffset);

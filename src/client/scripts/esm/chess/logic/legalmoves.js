@@ -111,7 +111,7 @@ function getBlockingFuncFromPieceMoveset(pieceMoveset) {
  * @returns {IgnoreFunction}
  */
 function getIgnoreFuncFromPieceMoveset(pieceMoveset) {
-	return pieceMoveset.ignore ? pieceMoveset.ignore : () => false;
+	return pieceMoveset.ignore || movesets.defaultIgnoreFunction;
 }
 
 /**
@@ -152,7 +152,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 				const lineKey = coordutil.getKeyFromCoords(line); // 'x,y'
 				if (!thisPieceMoveset.sliding[lineKey]) continue;
 				const key = organizedlines.getKeyFromLine(line, coords);
-				legalSliding[line] = slide_CalcLegalLimit(blockingFunc, ignoreFunc, gamefile.piecesOrganizedByLines[line][key], line, thisPieceMoveset.sliding[lineKey], coords, color);
+				legalSliding[line] = slide_CalcLegalLimit(blockingFunc, gamefile.piecesOrganizedByLines[line][key], line, thisPieceMoveset.sliding[lineKey], coords, color);
 			};
 		};
 
@@ -219,7 +219,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
  * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
  * @param {string} color - The color of friendlies
  */
-function slide_CalcLegalLimit(blockingFunc, ignoreFunc, line, direction, slideMoveset, coords, color) {
+function slide_CalcLegalLimit(blockingFunc, line, direction, slideMoveset, coords, color) {
 
 	if (!slideMoveset) return; // Return undefined if there is no slide moveset
 
@@ -232,10 +232,6 @@ function slide_CalcLegalLimit(blockingFunc, ignoreFunc, line, direction, slideMo
 	for (let i = 0; i < line.length; i++) {
 
 		const thisPiece = line[i]; // { type, coords }
-
-		if (ignoreFunc(coords, thisPiece.coords)) {
-			continue;
-		}
 
 		/**
 		 * 0 => Piece doesn't block
@@ -421,10 +417,9 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords, ignoreFunc) {
 	const axis = direction[0] === 0 ? 1 : 0;
 	const coordMag = coords[axis];
-	const relCoords = (coordMag - pieceCoords[axis]) / Math.abs(direction[axis]);
 	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
 	const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
-	return coordMag >= min && coordMag <= max && !ignoreFunc(pieceCoords, coords);
+	return coordMag >= min && coordMag <= max && ignoreFunc(pieceCoords, coords);
 }
 
 /**
@@ -435,8 +430,9 @@ function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, c
 function hasAtleast1Move(moves) { // { individual, horizontal, vertical, ... }
     
 	if (moves.individual.length > 0) return true;
-	for (const line in moves.sliding)
+	for (const line in moves.sliding) {
 		if (doesSlideHaveWidth(moves.sliding[line])) return true;
+	}
 
 	function doesSlideHaveWidth(slide) { // [-Infinity, Infinity]
 		if (!slide) return false;
