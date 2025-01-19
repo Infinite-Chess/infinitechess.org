@@ -67,7 +67,7 @@ variants_credits = [
 "Core designed by Andreas Tsevas.",
 "Space designed by Andreas Tsevas.",
 "Space Classic designed by Andreas Tsevas.",
-"Coaip (Chess on an Infinite Plane) designed by Vickalan.",
+"Coaip (Chess on an Infinite Plane) designed by V. Reinhart.",
 "Pawn Horde designed by Inaccessible Cardinal.",
 "Abundance designed by Clicktuck Suskriberz.",
 "Pawndard by SexyLexi.",
@@ -78,6 +78,8 @@ variants_credits = [
 "designed by Andreas Tsevas.",
 "designed by Cory Evans and Joel Hamkins.",
 "designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
+"Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
+"Trappist-1 by V. Reinhart"
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures licensed under the"
