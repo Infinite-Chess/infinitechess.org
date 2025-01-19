@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "28"
+version = "29"
 maintainer = "Naviary"
 
 [header]
@@ -227,6 +227,8 @@ CoaIP_Limit_7 = "Coaip - Limit 7"
 Chess = "Chess"
 Classical_KOTH = "Experimental: Classical - KOTH"
 CoaIP_KOTH = "Experimental: Coaip - KOTH"
+CoaIP_HO = "Chess on an Infinite Plane - Huygens Option"
+Trappist_1 = "Trappist-1"
 Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"

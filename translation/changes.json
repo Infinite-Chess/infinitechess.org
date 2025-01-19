@@ -1,4 +1,8 @@
 {
+	"29": {
+		"note": "Added CoaIP_HO and Trappist_1, lines 230-231. These contain the names of the new variants.",
+		"changes": []
+	},
 	"28": {
 		"note": [
 			"Deleted unknown_action_received_1 & unknown_action_received_2 on lines 346-347",
