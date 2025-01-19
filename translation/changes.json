@@ -1,6 +1,9 @@
 {
 	"29": {
-		"note": "Added CoaIP_HO and Trappist_1, lines 230-231. These contain the names of the new variants.",
+		"note": [
+			"Added CoaIP_HO and Trappist_1, lines 230-231. These contain the names of the new variants.",
+			"Added Confined_Classical, line 213."
+		],
 		"changes": []
 	},
 	"28": {
