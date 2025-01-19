@@ -168,7 +168,7 @@ function handleDragging(pieceHoveredType, allowDrop = true) {
 	}
 	if (input.getPointerHeld()) { // still dragging.
 		// Render the piece at the pointer.
-		draganimation.dragPiece(input.getPointerWorldLocation(), allowDrop ? hoverSquare : null);
+		draganimation.dragPiece(input.getPointerWorldLocation(), allowDrop ? hoverSquare : undefined);
 	} else {
 		if (!allowDrop) cancelDragging();
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);

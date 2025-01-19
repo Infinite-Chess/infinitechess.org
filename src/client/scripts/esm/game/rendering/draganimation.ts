@@ -1,64 +1,80 @@
 
-// Import start
-import shapes from "./shapes.js";
-import { createModel } from "./buffermodel.js";
-import bufferdata from "./bufferdata.js";
-import options from "./options.js";
-import spritesheet from "./spritesheet.js";
-import perspective from "./perspective.js";
-import sound from "../misc/sound.js";
-import frametracker from "./frametracker.js";
-import movement from "./movement.js";
-import input from "../input.js";
-import camera from "./camera.js";
-import coordutil from "../../chess/util/coordutil.js";
-import themes from "../../components/header/themes.js";
-import preferences from "../../components/header/preferences.js";
-import board from "./board.js";
-// Import end
-
-/**
- * Type Definitions
- * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- */
-
-"use strict";
-
 /**
  * This script hides the original piece and renders a copy at the pointer location.
  * It also highlights the square that the piece would be dropped on (to do)
  * and plays the sound when the piece is dropped.
  */
 
-const z = 0.01;
+
+import type { BufferModel } from "./buffermodel.js";
+import type { Color } from "../../chess/util/colorutil.js";
+import type { Coords } from "../../chess/util/coordutil.js";
+import type { BoundingBox } from "../../util/math.js";
+
+import spritesheet from "./spritesheet.js";
+import coordutil from "../../chess/util/coordutil.js";
+import frametracker from "./frametracker.js";
+import { createModel } from "./buffermodel.js";
+// @ts-ignore
+import shapes from "./shapes.js";
+// @ts-ignore
+import bufferdata from "./bufferdata.js";
+// @ts-ignore
+import options from "./options.js";
+// @ts-ignore
+import perspective from "./perspective.js";
+// @ts-ignore
+import sound from "../misc/sound.js";
+// @ts-ignore
+import movement from "./movement.js";
+// @ts-ignore
+import input from "../input.js";
+// @ts-ignore
+import camera from "./camera.js";
+// @ts-ignore
+import themes from "../../components/header/themes.js";
+// @ts-ignore
+import preferences from "../../components/header/preferences.js";
+// @ts-ignore
+import board from "./board.js";
+
+
+// Variables --------------------------------------------------------------------------------------
+
+
+const z: number = 0.01;
 /** When not in perspective the pieces size is independent of board scale. */
-const touchscreenScale = 2;
-const mouseScale = 1;
+const touchscreenScale: number = 2;
+const mouseScale: number = 1;
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
-const touchscreenOffset = 1.6; // Default: 2
+const touchscreenOffset: number = 1.6; // Default: 2
 /**
  * The minimum size of the dragged piece relative to the stationary pieces.
  * When zoomed in, this prevents it becoming tiny relative to the others.
  */
-const minScale = 1;
+const minScale: number = 1;
 /** When the scale is smaller (more zoomed out) than this, we render rank/column outlines instead of the box. */
-const maxScaleToDrawOutline = 0.65;
+const maxScaleToDrawOutline: number = 0.65;
 /** The width of the box outline used to emphasize the hovered square. */
-const outlineWidth_Mouse = 0.08; // Default: 0.1
-const outlineWidth_Touch = 0.05;
+const outlineWidth_Mouse: number = 0.08; // Default: 0.1
+const outlineWidth_Touch: number = 0.05;
 
 /** The hight the piece is rendered above the board when in perspective mode. */
-const perspectiveHeight = 0.6;
-const shadowColor = [0.1, 0.1, 0.1, 0.5];
+const perspectiveHeight: number = 0.6;
+const shadowColor: Color = [0.1, 0.1, 0.1, 0.5];
 
-/** The coordinates of the piece before it was dragged. @type {number[]} */
-let startCoords;
-/** The world location the piece has been dragged to. @type {number[]} */
-let worldLocation;
-/** The square that will be outlined. @type {number[]} */
-let hoveredCoords;
-/** The type of piece being dragged. @type {string} */
-let pieceType;
+/** The coordinates of the piece before it was dragged. */
+let startCoords: Coords | undefined;
+/** The world location the piece has been dragged to. */
+let worldLocation: Coords | undefined;
+/** The square that will be outlined. */
+let hoveredCoords: Coords | undefined;
+/** The type of piece being dragged. */
+let pieceType: string | undefined;
+
+
+// Functions --------------------------------------------------------------------------------------
+
 
 // Hides the original piece
 function renderTransparentSquare() {
@@ -71,20 +87,18 @@ function renderTransparentSquare() {
 function renderPiece() {
 	if (perspective.isLookingUp() || !worldLocation) return;
 
-	let outlineModel;
-	if (hoveredCoords) outlineModel = genOutlineModel();
-	else outlineModel = genIntersectingLines();
+	const outlineModel: BufferModel = hoveredCoords !== undefined ? genOutlineModel() : genIntersectingLines();
 	outlineModel.render();
 
 	const draggedPieceModel = genPieceModel();
-	draggedPieceModel.render();
+	if (draggedPieceModel !== undefined) draggedPieceModel.render();
 }
 
 /**
  * Generates a transparent model to hide the original piece.
- * @returns {BufferModel} The buffer model
+ * @returns The buffer model
  */
-function genTransparentModel() {
+function genTransparentModel(): BufferModel {
 	const color = [0,0,0,0];
 	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
 	return createModel(data, 2, "TRIANGLES", true);
@@ -92,9 +106,9 @@ function genTransparentModel() {
 
 /**
  * Generates the model of the dragged piece and its shadow.
- * @returns {BufferModel} The buffer model
+ * @returns The buffer model
  */
-function genPieceModel() {
+function genPieceModel(): BufferModel | undefined {
 	if (perspective.isLookingUp()) return;
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreen = input.getPointerIsTouch();
@@ -120,12 +134,12 @@ function genPieceModel() {
 		if (size < minScale) size = minScale;
 	}
 	const halfSize = size / 2;
-	const left = worldLocation[0] - halfSize;
-	const bottom = worldLocation[1] - halfSize + (touchscreen ? touchscreenOffset : 0);
-	const right = worldLocation[0] + halfSize;
-	const top = worldLocation[1] + halfSize + (touchscreen ? touchscreenOffset : 0);
+	const left = worldLocation![0] - halfSize;
+	const bottom = worldLocation![1] - halfSize + (touchscreen ? touchscreenOffset : 0);
+	const right = worldLocation![0] + halfSize;
+	const top = worldLocation![1] + halfSize + (touchscreen ? touchscreenOffset : 0);
 	
-	const data = [];
+	const data: number[] = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor)); // Shadow
 	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a)); // Piece
 	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
@@ -135,13 +149,13 @@ function genPieceModel() {
  * Generates a model to enphasize the hovered square.
  * If mouse is being used the square is outlined.
  * On touchscreen the entire rank and file are outlined.
- * @returns {BufferModel} The buffer model
+ * @returns The buffer model
  */
-function genOutlineModel() {
+function genOutlineModel(): BufferModel {
 	const boardScale = movement.getBoardScale();
-	const data = [];
+	const data: number[] = [];
 	const pointerIsTouch = input.getPointerIsTouch();
-	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords);
+	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);
 	const width = (pointerIsTouch ? outlineWidth_Touch : outlineWidth_Mouse) * movement.getBoardScale();
 	const color = options.getDefaultOutlineColor();
 	
@@ -160,7 +174,7 @@ function genOutlineModel() {
 		data.push(...bufferdata.getDataQuad_Color({ left: boundingBox.left, right: boundingBox.right, bottom: top - width, top }, color)); // top
 	} else {
 		// Outline the hovered square
-		data.push(...getBoxFrameData(hoveredCoords));
+		data.push(...getBoxFrameData(hoveredCoords!));
 	}
 	
 	return createModel(data, 2, "TRIANGLES", true);
@@ -168,10 +182,10 @@ function genOutlineModel() {
 
 /**
  * Generates vertex data for a rectangular frame (box).
- * @param {number[]} coords - The coordinate of the box frame
- * @returns {number[]} The vertex data for the frame.
+ * @param coords - The coordinate of the box frame
+ * @returns The vertex data for the frame.
  */
-function getBoxFrameData(coords) {
+function getBoxFrameData(coords: Coords): number[] {
 	const boardPos = movement.getBoardPos();
 	const boardScale = movement.getBoardScale();
 	const squareCenter = board.gsquareCenter();
@@ -183,7 +197,7 @@ function getBoxFrameData(coords) {
 	const centerX = (centerXOfBox - boardPos[0]) * boardScale;
 	const centerY = (centerYOfBox - boardPos[1]) * boardScale;
 
-	const vertices = [];
+	const vertices: number[] = [];
 	const [r, g, b, a] = color;
 
 	// Calculate outer bounds
@@ -200,7 +214,7 @@ function getBoxFrameData(coords) {
 	const innerBottom = outerBottom + edgeWidth;
 
 	// Helper function to add a rectangle (two triangles)
-	function addRectangle(x1, y1, x2, y2, x3, y3, x4, y4) {
+	function addRectangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
 		vertices.push(
 			x1, y1, r, g, b, a, // Triangle 1, Vertex 1
 			x2, y2, r, g, b, a, // Triangle 1, Vertex 2
@@ -250,10 +264,10 @@ function getBoxFrameData(coords) {
  * Generates a model of two lines intersecting at the piece.
  * Used when the piece is unable to be dropped such as when
  * zoomed far out or teleporting.
- * @returns {BufferModel} The buffer model
+ * @returns The buffer model
  */
-function genIntersectingLines() {
-	let boundingBox;
+function genIntersectingLines(): BufferModel {
+	let boundingBox: BoundingBox;
 	if (perspective.getEnabled()) {
 		const dist = perspective.distToRenderBoard;
 		boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
@@ -262,30 +276,30 @@ function genIntersectingLines() {
 	const { left, right, bottom, top } = boundingBox;
 	const [ r, g, b, a ] = options.getDefaultOutlineColor();
 	const data = [
-		left, worldLocation[1], r, g, b, a,
-		right, worldLocation[1],r, g, b, a,
-		worldLocation[0], bottom, r, g, b, a,
-		worldLocation[0], top, r, g, b, a,
+		left, worldLocation![1], r, g, b, a,
+		right, worldLocation![1],r, g, b, a,
+		worldLocation![0], bottom, r, g, b, a,
+		worldLocation![0], top, r, g, b, a,
 	];
 	return createModel(data, 2, "LINES", true);
 }
 
 /**
  * Start dragging a piece.
- * @param {string} type - The type of piece being dragged
- * @param {number} pieceCoords - the square the piece was on
+ * @param type - The type of piece being dragged
+ * @param pieceCoords - the square the piece was on
  */
-function pickUpPiece(type, pieceCoords) {
+function pickUpPiece(type: string, pieceCoords: Coords) {
 	startCoords = pieceCoords;
 	pieceType = type;
 }
 
 /**
  * Update the location of the piece being dragged.
- * @param {number[]} coords - the world coordinates the piece has been dragged to
- * @param {number[]} [hoverSquare] - The square the piece would be moved to if dropped now.
+ * @param  coords - the world coordinates the piece has been dragged to
+ * @param [hoverSquare] - The square the piece would be moved to if dropped now.
  */
-function dragPiece(coords, hoverSquare) {
+function dragPiece(coords: Coords, hoverSquare?: Coords) {
 	worldLocation = coords;
 	hoveredCoords = hoverSquare;
 	frametracker.onVisualChange();
@@ -293,19 +307,21 @@ function dragPiece(coords, hoverSquare) {
 
 /**
  * Stop dragging the piece and optionally play a sound.
- * @param {boolean} playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
- * @param {boolean} wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
+ * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
+ * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
  */
-function dropPiece( playSound = false, wasCapture = false ) {
+function dropPiece(playSound: boolean = false, wasCapture: boolean = false) {
 	if (playSound) {
 		if (wasCapture) sound.playSound_capture(0, false);
 		else sound.playSound_move(0, false);
 	}
-	pieceType = null;
-	startCoords = null;
-	worldLocation = null;
+	pieceType = undefined;
+	startCoords = undefined;
+	worldLocation = undefined;
 	frametracker.onVisualChange();
 }
+
+
 
 export default {
 	pickUpPiece,
