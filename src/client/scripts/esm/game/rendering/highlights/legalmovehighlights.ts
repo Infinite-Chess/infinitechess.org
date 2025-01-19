@@ -450,7 +450,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
  * @param intsect1Tile - What point this line intersect the left side of the screen box.
  * @param intsect2Tile - What point this line intersect the right side of the screen box.
  * @param limits - Slide limit: [-7,Infinity]
- * @param ignoreFunc - The ignore function, to ignore squares
+ * @param ignoreFunc - The ignore function
  * @param gamefile - A reference to the current loaded gamefile
  */
 function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Coords, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile) {

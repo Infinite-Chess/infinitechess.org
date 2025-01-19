@@ -212,7 +212,6 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
  * Takes in specified organized list, direction of the slide, the current moveset...
  * Shortens the moveset by pieces that block it's path.
  * @param {BlockingFunction} blockingFunc - The function that will check if each piece on the same line needs to block the piece
- * @param {IgnoreFunction} ignoreFunc - The function that will check if each piece on the same line needs to block the piece
  * @param {Piece[]} line - The list of pieces on this line 
  * @param {number[]} direction - The direction of the line: `[dx,dy]` 
  * @param {number[]} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`

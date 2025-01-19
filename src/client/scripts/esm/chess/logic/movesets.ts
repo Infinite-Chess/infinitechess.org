@@ -1,12 +1,10 @@
 
 /**
- * This script contains the movesets for all pieces except specials (pawns, castling)
+ * This script contains the default movesets for all pieces except specials (pawns, castling)
  */
 
-'use strict';
-
 // @ts-ignore
-import isprime from './isprime.js';
+import isprime from '../../util/isprime.js';
 import colorutil from '../util/colorutil.js';
 import math from '../../util/math.js';
 
@@ -106,7 +104,7 @@ function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece): 0
 
 /** The default ignore function of each piece's sliding moves, if not specified. */
 function defaultIgnoreFunction() {
-	return true;
+	return true; // Square allowed
 }
 
 /**
@@ -270,11 +268,6 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'0,1': [-slideLimit, slideLimit]
 			},
 			blocking: (friendlyColor: string, blockingPiece: Piece, coords: Coords) => {
-
-				// * 0 => Piece doesn't block
-				// * 1 => Blocked (friendly piece)
-				// * 2 => Blocked 1 square after (enemy piece)
-
 				const distance = math.chebyshevDistance(coords, blockingPiece.coords);
 				const isPrime = isprime.primalityTest(distance, null);
 				if (!isPrime) return 0; // Doesn't block
