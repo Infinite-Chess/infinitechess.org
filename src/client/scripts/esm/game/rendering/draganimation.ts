@@ -123,7 +123,7 @@ function genPieceModel(): BufferModel | undefined {
 	
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
-	let size;
+	let size: number;
 	if (touchscreen) {
 		size = boardScale;
 		if (size < touchscreenScale) size = touchscreenScale;
