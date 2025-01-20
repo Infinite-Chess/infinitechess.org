@@ -151,7 +151,7 @@ function shiftModel(gamefile, diffXOffset, diffYOffset) {
 		data32[i + 1] = data64[i + 1];
 	}
 
-	gamefile.voidMesh.model.updateBuffer(); // Reinit the model because its data has been updated
+	gamefile.voidMesh.model.updateBufferIndices(0, data64.length); // Reinit the model because its data has been updated
 }
 
 /**

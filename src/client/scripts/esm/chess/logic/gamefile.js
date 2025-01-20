@@ -151,9 +151,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	/** The object that contains the buffer model to render the voids */
 	this.voidMesh = {
-		/** High precision Float64Array for performing arithmetic. */
+		/** High precision Float64Array for performing arithmetic. @type {Float64Array} */
 		data64: undefined,
-		/** Low precision Float32Array for passing into gpu. */
+		/** Low precision Float32Array for passing into gpu. @type {Float32Array} */
 		data32: undefined,
 		/** The buffer model of the void squares. These are rendered separately
          * from the pieces because we can simplify the mesh greatly.
