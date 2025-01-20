@@ -204,7 +204,7 @@ function getTileMouseOver() {
 	const tile_Float = space.convertWorldSpaceToCoords(mouseWorld);
 	const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
 
-	if (options.isDebugModeOn()) console.log("Getting tile mouse over: " + JSON.stringify(mouseWorld) + "   " + JSON.stringify(tile_Float) + "   " + JSON.stringify(tile_Int));
+	// if (options.isDebugModeOn()) console.log("Getting tile mouse over: " + JSON.stringify(mouseWorld) + "   " + JSON.stringify(tile_Float) + "   " + JSON.stringify(tile_Int));
     
 	return { tile_Float, tile_Int };
 }
