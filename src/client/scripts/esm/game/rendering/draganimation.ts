@@ -37,6 +37,7 @@ import themes from "../../components/header/themes.js";
 import preferences from "../../components/header/preferences.js";
 // @ts-ignore
 import board from "./board.js";
+import space from "../misc/space.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -49,10 +50,10 @@ const mouseScale: number = 1;
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
 const touchscreenOffset: number = 1.6; // Default: 2
 /**
- * The minimum size of the dragged piece relative to the stationary pieces.
- * When zoomed in, this prevents it becoming tiny relative to the others.
+ * The minimum size of the dragged piece rendered on screen, in virtual pixels.
+ * When zoomed in, this prevents it becoming tiny relative to the other pieces.
  */
-const minScale: number = 1;
+const minSizeVirtualPixels: number = 64;
 /** When the scale is smaller (more zoomed out) than this, we render rank/column outlines instead of the box. */
 const maxScaleToDrawOutline: number = 0.65;
 /** The width of the box outline used to emphasize the hovered square. */
@@ -131,7 +132,9 @@ function genPieceModel(): BufferModel | undefined {
 		size = boardScale;
 	} else { // 2D Mode
 		size = mouseScale * boardScale;
-		if (size < minScale) size = minScale;
+		// The minimum world space the dragged piece should be rendered
+		const minSizeWorldSpace = space.convertPixelsToWorldSpace_Virtual(minSizeVirtualPixels)
+		if (size < minSizeWorldSpace) size = minSizeWorldSpace;
 	}
 	const halfSize = size / 2;
 	const left = worldLocation![0] - halfSize;
