@@ -8,11 +8,11 @@
  */
 
 import type { BufferModel, BufferModelInstanced } from './buffermodel.js';
-import type { Coords } from '../../chess/util/coordutil.js';
+import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { LegalMoves } from '../chess/selection.js';
 import type { Color } from '../../chess/util/colorutil.js';
 import type { Corner, Vec2 } from '../../util/math.js';
-import type { PieceLinesByKey } from '../../chess/logic/organizedlines.js';
+import type { LinesByStep, PieceLinesByKey } from '../../chess/logic/organizedlines.js';
 
 import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
@@ -183,7 +183,7 @@ function update() {
 	// Same as above, but doesn't round
 	const boundingBoxFloat = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat(); 
 
-	const slideArrows = {};
+	const slideArrows: { [vec2Key: CoordsKey]: { [lineKey: string]: { l?: Piece, r?: Piece } } } = {};
 
 	let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
 	let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guigameinfo.getHeightOfGameInfoBar());
@@ -212,19 +212,19 @@ function update() {
 		const boardCornerLeft: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerLeft_AB);
 		const boardCornerRight: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerRight_AB);
 
-		const boardSlidesRight = organizedlines.getCFromLine(slideDir, boardCornerLeft);
-		const boardSlidesLeft = organizedlines.getCFromLine(slideDir, boardCornerRight);
+		const boardSlidesRight: number = organizedlines.getCFromLine(slideDir, boardCornerLeft);
+		const boardSlidesLeft: number = organizedlines.getCFromLine(slideDir, boardCornerRight);
 
 		const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
 		const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
 		// For all our lines in the game with this slope...
 		const slideDirKey = coordutil.getKeyFromCoords(slideDir);
-		for (const [key,piecesByDir] of Object.entries(gamefile.piecesOrganizedByLines[slideDirKey])) {
+		for (const [key,organizedLine] of Object.entries(gamefile.piecesOrganizedByLines[slideDirKey])) {
 			const [X,C] = key.split("|").map(Number);
 			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen
-			const pieces = calcPiecesOffScreen(slideDir, piecesByDir);
+			const pieces = calcPiecesOffScreen(slideDir, organizedLine);
 
-			if (jsutil.isEmpty(pieces)) continue;
+			if (jsutil.isEmpty(pieces)) continue; // This line of pieces is empty
 
 			if (!slideArrows[slideDirKey]) slideArrows[slideDirKey] = {};
             
@@ -232,17 +232,18 @@ function update() {
 		}
 	}
 
-	function calcPiecesOffScreen(slideDir: Vec2, organizedline: PieceLinesByKey) {
+	function calcPiecesOffScreen(slideDir: Vec2, organizedline: Array<Piece>): { l?: Piece, r?: Piece } {
 
 		const rightCorner = math.getCornerOfBoundingBox(boundingBoxFloat, math.getAABBCornerOfLine(slideDir,false));
 
-		let left;
-		let right;
+		let left: Piece | undefined;
+		let right: Piece | undefined;
 		for (const piece of organizedline) {
-			if (!piece.coords) continue;
+			if (!piece.coords) continue; // Undefined placeholder
             
 			// Is the piece off-screen?
-			if (math.boxContainsSquare(boundingBoxInt, piece.coords)) continue;
+
+			if (math.boxContainsSquare(boundingBoxInt, piece.coords)) continue; // On-screen, no arrow needed
             
 			const x = piece.coords[0];
 			const y = piece.coords[1];
@@ -250,18 +251,15 @@ function update() {
 
 			const rightSide = x > boundingBoxFloat.right || y > rightCorner[1] === (rightCorner[1] === boundingBoxFloat.top);
 			if (rightSide) {
-				if (!right) right = piece;
+				if (right === undefined) right = piece;
 				else if (piece.coords[axis] < right.coords[axis]) right = piece;
 			} else {
-				if (!left) left = piece;
+				if (left === undefined) left = piece;
 				else if (piece.coords[axis] > left.coords[axis]) left = piece;
 			}
 		}
 
-		const dirs = {};
-		if (right) dirs.r = right;
-		if (left) dirs.l = left;
-		return dirs;
+		return { l: left, r: right };
 	}
 
 	// If we are in only-show-attackers mode
@@ -274,52 +272,52 @@ function update() {
 	const worldWidth = width * boardScale;
 	let padding = (worldWidth / 2) + sidePadding * boardScale;
 	const cpadding = padding / boardScale;
-	{
-		boundingBoxFloat.top -= cpadding;
-		boundingBoxFloat.right -= cpadding;
-		boundingBoxFloat.bottom += cpadding;
-		boundingBoxFloat.left += cpadding;
-	}
-
-	/** A running list of of piece arrows being hovered over this frame, in the form: `{ type, coords, dir }` @type {Object[]} */
-	const piecesHoveringOverThisFrame = [];
-
 	if (perspective.getEnabled()) padding = 0;
+
+	boundingBoxFloat.top -= cpadding;
+	boundingBoxFloat.right -= cpadding;
+	boundingBoxFloat.bottom += cpadding;
+	boundingBoxFloat.left += cpadding;
+
+	/** A running list of of piece arrows being hovered over this frame */
+	const piecesHoveringOverThisFrame: Array<{ type: string, coords: Coords, dir: Vec2 }> = [];
+
 	for (const strline in slideArrows) {
-		const line = coordutil.getCoordsFromKey(strline);
-		iterateThroughDiagLine(slideArrows[strline], line);
+		const line = coordutil.getCoordsFromKey(strline as CoordsKey);
+		iterateThroughLines(slideArrows[strline], line);
 	}
 
-	function iterateThroughDiagLine(lines, direction) {
-		for (const diag in lines) {
-			for (const side in lines[diag]) {
-				const piece = lines[diag][side];
-				const intersect = Number(diag.split("|")[0]);
+	function iterateThroughLines(lines: { [lineKey: string]: { l?: Piece; r?: Piece } }, direction: Vec2) {
+		for (const lineKey in lines) {
+			for (const side in lines[lineKey]) { // 'r' | 'l'
+				const piece: Piece = lines[lineKey][side]; //
+				const intersect = Number(lineKey.split("|")[0]); // 'X|C' => X (the nearest X on or after y=0 that the line intersects)
 				if (piece.type === 'voidsN') continue;
 				const isLeft = side === "l";
-				const corner = math.getAABBCornerOfLine(direction, isLeft);
+				const corner: Corner = math.getAABBCornerOfLine(direction, isLeft);
 				const renderCoords = math.getLineIntersectionEntryPoint(direction[0], direction[1], intersect, boundingBoxFloat, corner);
 				if (!renderCoords) continue;
-				const arrowDirection = isLeft ? [-direction[0],-direction[1]] : direction;
+				const arrowDirection: Vec2 = isLeft ? [-direction[0],-direction[1]] : direction;
 				concatData(renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
 			}
 		}
 	}
 
-	// Do not render line highlights upon arrow hover, when game is rewinded
+	// Do not render line highlights upon arrow hover, when game is rewinded,
+	// since calculating their legal moves means overwriting game's move history.
 	if (!moveutil.areWeViewingLatestMove(gamefile)) piecesHoveringOverThisFrame.length = 0;
 
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves. 
 	const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => coordutil.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
 	for (const key of Object.keys(hoveredArrows)) {
-		if (piecesHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
+		if (piecesHoveringOverThisFrame_Keys.includes(key as CoordsKey)) continue; // Still being hovered over
 		delete hoveredArrows[key]; // No longer being hovered over
 	}
 
-	if (data.length === 0) return;
+	if (data.length === 0) return; // No visible arrows, don't generate the model
 
-	for (const pieceHovered of piecesHoveringOverThisFrame) { // { type, coords, dir }
+	for (const pieceHovered of piecesHoveringOverThisFrame) {
 		onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
 	}
     
@@ -486,7 +484,7 @@ function renderThem() {
 function onPieceIndicatorHover(type, pieceCoords, direction) {
 	// Check if their legal moves and mesh have already been stored
 	const key = coordutil.getKeyFromCoords(pieceCoords);
-	if (key in hoveredArrows) return; // Legal moves and mesh already calculated.
+	if (key in hoveredArrows) return console.error("Moves alreadfy stored"); // Legal moves and mesh already calculated.
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile();
