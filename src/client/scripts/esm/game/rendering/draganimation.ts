@@ -37,31 +37,51 @@ import themes from "../../components/header/themes.js";
 import preferences from "../../components/header/preferences.js";
 // @ts-ignore
 import board from "./board.js";
+// @ts-ignore
+import space from "../misc/space.js";
 
 
 // Variables --------------------------------------------------------------------------------------
 
 
 const z: number = 0.01;
-/** When not in perspective the pieces size is independent of board scale. */
-const touchscreenScale: number = 2;
-const mouseScale: number = 1;
+
+/**
+ * The minimum size of the rendered dragged piece on screen, in virtual pixels.
+ * When zoomed out, this prevents it becoming tiny relative to the other pieces.
+ */
+const dragMinSizeVirtualPixels = {
+	/** 2D desktop mode */
+	mouse: 56, // Only applicable in 2D mode, not perspective
+	/** Mobile/touchscreen mode */
+	touch: 50
+};
+
+/**
+ * The width of the box/rank/file outline used to emphasize the hovered square.
+ */
+const outlineWidth = {
+	/** 2D desktop mode */
+	mouse: 0.08,
+	// Since on touchscreen the rank/column outlines are ALWAYS enabled,
+	// make them a little less noticeable/distracting.
+	/** Mobile/touchscreen mode */
+	touch: 0.065
+};
+
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
 const touchscreenOffset: number = 1.6; // Default: 2
-/**
- * The minimum size of the dragged piece relative to the stationary pieces.
- * When zoomed in, this prevents it becoming tiny relative to the others.
- */
-const minScale: number = 1;
-/** When the scale is smaller (more zoomed out) than this, we render rank/column outlines instead of the box. */
-const maxScaleToDrawOutline: number = 0.65;
-/** The width of the box outline used to emphasize the hovered square. */
-const outlineWidth_Mouse: number = 0.08; // Default: 0.1
-const outlineWidth_Touch: number = 0.05;
+/** When each square becomes smaller than this in virtual pixels, we render rank/column outlines instead of the outline box. */
+const minSizeToDrawOutline: number = 40;
 
-/** The hight the piece is rendered above the board when in perspective mode. */
-const perspectiveHeight: number = 0.6;
-const shadowColor: Color = [0.1, 0.1, 0.1, 0.5];
+/** Adjustments for the dragged piece while in perspective mode. */
+const perspectiveConfigs: { z: number, shadowColor: Color } = {
+	/** The height the piece is rendered above the board when in perspective mode. */
+	z: 0.6,
+	/** The color of the shadow of the dragged piece. */
+	shadowColor: [0.1, 0.1, 0.1, 0.5]
+};
+
 
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
@@ -111,7 +131,7 @@ function genTransparentModel(): BufferModel {
 function genPieceModel(): BufferModel | undefined {
 	if (perspective.isLookingUp()) return;
 	const perspectiveEnabled = perspective.getEnabled();
-	const touchscreen = input.getPointerIsTouch();
+	const touchscreenUsed = input.getPointerIsTouch();
 	const boardScale = movement.getBoardScale();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
@@ -119,28 +139,26 @@ function genPieceModel(): BufferModel | undefined {
 	const { r, g, b, a } = options.getColorOfType(pieceType);
 	
 	// In perspective the piece is rendered above the surface of the board.
-	const height = perspectiveEnabled ? perspectiveHeight * boardScale : z;
+	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
 	
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
-	let size: number;
-	if (touchscreen) {
-		size = boardScale;
-		if (size < touchscreenScale) size = touchscreenScale;
-	} else if (perspectiveEnabled) {
-		size = boardScale;
-	} else { // 2D Mode
-		size = mouseScale * boardScale;
-		if (size < minScale) size = minScale;
-	}
+	let size: number = boardScale;
+
+	// The minimum world space the dragged piece should be rendered
+	const minSizeWorldSpace = touchscreenUsed     ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.touch) // Mobile/touchscreen mode
+							: !perspectiveEnabled ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.mouse) // 2D desktop mode
+							: 0; // No minimum size in perspective mode
+	size = Math.max(size, minSizeWorldSpace); // Apply the minimum size
+		
 	const halfSize = size / 2;
 	const left = worldLocation![0] - halfSize;
-	const bottom = worldLocation![1] - halfSize + (touchscreen ? touchscreenOffset : 0);
+	const bottom = worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset : 0);
 	const right = worldLocation![0] + halfSize;
-	const top = worldLocation![1] + halfSize + (touchscreen ? touchscreenOffset : 0);
+	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset : 0);
 	
 	const data: number[] = [];
-	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...shadowColor)); // Shadow
+	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
 	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a)); // Piece
 	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
@@ -156,13 +174,15 @@ function genOutlineModel(): BufferModel {
 	const data: number[] = [];
 	const pointerIsTouch = input.getPointerIsTouch();
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);
-	const width = (pointerIsTouch ? outlineWidth_Touch : outlineWidth_Mouse) * movement.getBoardScale();
+	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * movement.getBoardScale();
 	const color = options.getDefaultOutlineColor();
 	
-	// Checking if the coords are equal prevents the large lines flashing when tapping to select.
-	if ((pointerIsTouch || boardScale < maxScaleToDrawOutline) && !coordutil.areCoordsEqual(hoveredCoords, startCoords)) {
+	// Outline the enire rank & file when:
+	// 1. We're not hovering over the start square.
+	// 2. It is a touch screen, OR we are zoomed out enough.
+	if (!coordutil.areCoordsEqual(hoveredCoords, startCoords) && (pointerIsTouch || board.gtileWidth_Pixels() < minSizeToDrawOutline)) {
 		// Outline the entire rank and file
-		let boundingBox;
+		let boundingBox: BoundingBox;
 		if (perspective.getEnabled()) {
 			const dist = perspective.distToRenderBoard;
 			boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
