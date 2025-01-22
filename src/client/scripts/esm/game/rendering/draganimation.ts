@@ -54,9 +54,9 @@ const touchscreenOffset: number = 1.6; // Default: 2
  * The minimum size of the dragged piece rendered on screen, in virtual pixels.
  * When zoomed in, this prevents it becoming tiny relative to the other pieces.
  */
-const minSizeVirtualPixels: number = 64;
+const minSizeVirtualPixels: number = 56;
 /** When each square becomes smaller than this in virtual pixels, we render rank/column outlines instead of the outline box. */
-const minSizeToDrawOutline: number = 50;
+const minSizeToDrawOutline: number = 40;
 /** The width of the box outline used to emphasize the hovered square. */
 const outlineWidth_Mouse: number = 0.08; // Default: 0.1
 const outlineWidth_Touch: number = 0.05;
@@ -134,7 +134,7 @@ function genPieceModel(): BufferModel | undefined {
 	} else { // 2D Mode
 		size = mouseScale * boardScale;
 		// The minimum world space the dragged piece should be rendered
-		const minSizeWorldSpace = space.convertPixelsToWorldSpace_Virtual(minSizeVirtualPixels)
+		const minSizeWorldSpace = space.convertPixelsToWorldSpace_Virtual(minSizeVirtualPixels);
 		if (size < minSizeWorldSpace) size = minSizeWorldSpace;
 	}
 	const halfSize = size / 2;
