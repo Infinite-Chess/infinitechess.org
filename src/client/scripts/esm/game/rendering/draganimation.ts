@@ -46,8 +46,7 @@ import space from "../misc/space.js";
 
 const z: number = 0.01;
 /** When not in perspective the pieces size is independent of board scale. */
-const touchscreenScale: number = 2;
-const mouseScale: number = 1;
+const minSizeVirtualPixels_Touchscreen: number = 50;
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
 const touchscreenOffset: number = 1.6; // Default: 2
 /**
@@ -59,7 +58,7 @@ const minSizeVirtualPixels: number = 56;
 const minSizeToDrawOutline: number = 40;
 /** The width of the box outline used to emphasize the hovered square. */
 const outlineWidth_Mouse: number = 0.08; // Default: 0.1
-const outlineWidth_Touch: number = 0.05;
+const outlineWidth_Touch: number = 0.055;
 
 /** The hight the piece is rendered above the board when in perspective mode. */
 const perspectiveHeight: number = 0.6;
@@ -125,14 +124,12 @@ function genPieceModel(): BufferModel | undefined {
 	
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
-	let size: number;
+	let size: number = boardScale;
 	if (touchscreen) {
-		size = boardScale;
-		if (size < touchscreenScale) size = touchscreenScale;
-	} else if (perspectiveEnabled) {
-		size = boardScale;
-	} else { // 2D Mode
-		size = mouseScale * boardScale;
+		// The minimum world space the dragged piece should be rendered
+		const minSizeWorldSpace = space.convertPixelsToWorldSpace_Virtual(minSizeVirtualPixels_Touchscreen);
+		if (size < minSizeWorldSpace) size = minSizeWorldSpace;
+	} else if (!perspectiveEnabled) { // 2D Mode
 		// The minimum world space the dragged piece should be rendered
 		const minSizeWorldSpace = space.convertPixelsToWorldSpace_Virtual(minSizeVirtualPixels);
 		if (size < minSizeWorldSpace) size = minSizeWorldSpace;
