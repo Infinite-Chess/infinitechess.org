@@ -37,6 +37,7 @@ import themes from "../../components/header/themes.js";
 import preferences from "../../components/header/preferences.js";
 // @ts-ignore
 import board from "./board.js";
+// @ts-ignore
 import space from "../misc/space.js";
 
 
@@ -54,8 +55,8 @@ const touchscreenOffset: number = 1.6; // Default: 2
  * When zoomed in, this prevents it becoming tiny relative to the other pieces.
  */
 const minSizeVirtualPixels: number = 64;
-/** When the scale is smaller (more zoomed out) than this, we render rank/column outlines instead of the box. */
-const maxScaleToDrawOutline: number = 0.65;
+/** When each square becomes smaller than this in virtual pixels, we render rank/column outlines instead of the outline box. */
+const minSizeToDrawOutline: number = 50;
 /** The width of the box outline used to emphasize the hovered square. */
 const outlineWidth_Mouse: number = 0.08; // Default: 0.1
 const outlineWidth_Touch: number = 0.05;
@@ -162,10 +163,12 @@ function genOutlineModel(): BufferModel {
 	const width = (pointerIsTouch ? outlineWidth_Touch : outlineWidth_Mouse) * movement.getBoardScale();
 	const color = options.getDefaultOutlineColor();
 	
-	// Checking if the coords are equal prevents the large lines flashing when tapping to select.
-	if ((pointerIsTouch || boardScale < maxScaleToDrawOutline) && !coordutil.areCoordsEqual(hoveredCoords, startCoords)) {
+	// Outline the enire rank & file when:
+	// 1. We're not hovering over the start square.
+	// 2. It is a touch screen, OR we are zoomed out enough.
+	if (!coordutil.areCoordsEqual(hoveredCoords, startCoords) && (pointerIsTouch || board.gtileWidth_Pixels() < minSizeToDrawOutline)) {
 		// Outline the entire rank and file
-		let boundingBox;
+		let boundingBox: BoundingBox;
 		if (perspective.getEnabled()) {
 			const dist = perspective.distToRenderBoard;
 			boundingBox = { left: -dist, right: dist, bottom: -dist, top: dist };
