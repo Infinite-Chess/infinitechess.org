@@ -64,7 +64,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
 		existingTypes: undefined,
 		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Coords[]}*/
-		slidingPossible: undefined
+		slidingPossible: undefined,
+		/** Whether hippogonal lines, or greater, are present in the gamefile.
+		 * True if there are knightriders, or greater, riders. @type {boolean} */
+		hippogonalsPresent: undefined,
 	};
     
 	/** @type {GameRules} */

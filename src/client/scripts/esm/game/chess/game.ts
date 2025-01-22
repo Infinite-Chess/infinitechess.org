@@ -115,7 +115,7 @@ function updateBoard(gamefile: gamefile) {
 	if (!guinavigation.isCoordinateActive()) {
 		if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
 		if (input.isKeyDown('escape')) guipause.toggle();
-		if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
+		if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
 		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
 		if (input.isKeyDown('n')) {
 			guinavigation.toggle();
@@ -139,7 +139,9 @@ function updateBoard(gamefile: gamefile) {
 
 	guinavigation.update();
 	selection.update();
-	arrows.update(); // NEEDS TO BE AFTER selection.update(), because the arrows model regeneration DEPENDS on the piece selected!
+	// NEEDS TO BE AFTER selection.update(), because the arrows model regeneration DEPENDS on the piece selected!
+	// The attack lines of the piece selected determines what arrows we draw for that frame.
+	arrows.update();
 	movement.checkIfBoardDragged(); // ALSO depends on whether or not a piece is selected/being dragged!
 	miniimage.genModel();
 	highlightline.genModel();

@@ -7,6 +7,7 @@ import specialmove from './specialmove.js';
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
+import organizedlines from './organizedlines.js';
 // Import End
 
 /** 
@@ -70,6 +71,7 @@ function initExistingTypes(gamefile) {
  */
 function initSlidingMoves(gamefile) {
 	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
+	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
 }
 
 /**

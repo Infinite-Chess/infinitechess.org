@@ -299,6 +299,7 @@ accept_draw = "Accept Draw" # Offer draw button text in the pause menu
 arrows_off = "Arrows: Off"
 arrows_defense = "Arrows: Defense"
 arrows_all = "Arrows: All"
+arrows_all_hippogonals = "Arrows: All (with hippogonals)"
 toggled = "Toggled"
 menu_online = "Play - Online"
 menu_local = "Play - Local"

@@ -1,127 +1,185 @@
 
-// Import Start
-import legalmoves from '../../chess/logic/legalmoves.js';
-import input from '../input.js';
-import legalmovehighlights from './highlights/legalmovehighlights.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import bufferdata from './bufferdata.js';
-import perspective from './perspective.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
-import transition from './transition.js';
-import organizedlines from '../../chess/logic/organizedlines.js';
-import movement from './movement.js';
-import options from './options.js';
-import selection from '../chess/selection.js';
-import camera from './camera.js';
-import board from './board.js';
-import math from '../../util/math.js';
-import moveutil from '../../chess/util/moveutil.js';
-import { createModel } from './buffermodel.js';
-import colorutil from '../../chess/util/colorutil.js';
-import jsutil from '../../util/jsutil.js';
-import coordutil from '../../chess/util/coordutil.js';
-import space from '../misc/space.js';
+/**
+ * This script calculates and renders the arrow indicators
+ * on the sides of the screen, pointing to pieces off-screen
+ * that are in that direction.
+ * 
+ * If the pictues are clicked, we initiate a teleport to that piece.
+ */
+
+import type { BufferModel, BufferModelInstanced } from './buffermodel.js';
+import type { Coords } from '../../chess/util/coordutil.js';
+import type { LegalMoves } from '../chess/selection.js';
+import type { Color } from '../../chess/util/colorutil.js';
+import type { Corner, Vec2 } from '../../util/math.js';
+import type { PieceLinesByKey } from '../../chess/logic/organizedlines.js';
+
 import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
 import guinavigation from '../gui/guinavigation.js';
 import guigameinfo from '../gui/guigameinfo.js';
-// Import End
+import { createModel } from './buffermodel.js';
+import colorutil from '../../chess/util/colorutil.js';
+import jsutil from '../../util/jsutil.js';
+import coordutil from '../../chess/util/coordutil.js';
+import math from '../../util/math.js';
+import organizedlines from '../../chess/logic/organizedlines.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import legalmovehighlights from './highlights/legalmovehighlights.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import bufferdata from './bufferdata.js';
+// @ts-ignore
+import legalmoves from '../../chess/logic/legalmoves.js';
+// @ts-ignore
+import input from '../input.js';
+// @ts-ignore
+import perspective from './perspective.js';
+// @ts-ignore
+import transition from './transition.js';
+// @ts-ignore
+import movement from './movement.js';
+// @ts-ignore
+import options from './options.js';
+// @ts-ignore
+import selection from '../chess/selection.js';
+// @ts-ignore
+import camera from './camera.js';
+// @ts-ignore
+import board from './board.js';
+// @ts-ignore
+import moveutil from '../../chess/util/moveutil.js';
+// @ts-ignore
+import space from '../misc/space.js';
+import { Piece } from '../../chess/logic/boardchanges.js';
+import frametracker from './frametracker.js';
 
-/**
- * Type Definitions
- * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- */
 
-"use strict";
+// Type Definitions --------------------------------------------------------------------
 
-/**
- * This script handles the rendering of arrows poointing to pieces off-screen
- * and detects if they are clicked
- */
+
+/** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
+interface ArrowLegalMoves {
+	/** The Piece this arrow is pointing to, including its coords & type. */
+	piece: Piece,
+	/** The calculated legal moves of the piece. */
+	legalMoves: LegalMoves,
+	/** The buffer model for rendering the non-capturing legal moves of the piece. */
+	model_NonCapture: BufferModelInstanced,
+	/** The buffer model for rendering the capturing legal moves of the piece. */
+	model_Capture: BufferModelInstanced,
+	/** The [r,b,g,a] values these legal move highlights should be rendered.
+	 * Depends on whether the piece is ours, a premove, or an opponent's piece. */
+	color: Color
+}
+
+
+// Variables ----------------------------------------------------------------------------
+
 
 /** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */
-const width = 0.65;
+const width: number = 0.65;
 /** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
-const sidePadding = 0.15;
+const sidePadding: number = 0.15;
 /** Opacity of the mini images of the pieces and arrows. */
-const opacity = 0.6;
+const opacity: number = 0.6;
 /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
-const renderZoomLimit = 10; // virtual pixels. Default: 14
+const renderZoomLimitVirtualPixels: number = 10; // virtual pixels. Default: 14
 
 /** The distance in perspective mode to render the arrow indicators from the camera.
  * We need this because there is no normal edge of the screen like in 2D mode. */
 const perspectiveDist = 17;
 
-let data;
 /** The buffer model of the piece mini images on
- * the edge of the screen. **Doesn't include** the little arrows.
- * @type {BufferModel} */
-let model;
+ * the edge of the screen. **Doesn't include** the little arrows. */
+let modelPictures: BufferModel | undefined;
 
-let dataArrows = undefined;
 /** The buffer model of the little arrows on
- * the edge of the screen next to the mini piece images.
- * @type {BufferModel} */
-let modelArrows = undefined;
+ * the edge of the screen next to the mini piece images. */
+let modelArrows: BufferModel | undefined;
 
-/** The mode the arrow indicators on the edges of the screen is currently in.
- * 0 = Off, 1 = Defense, 2 = All */
-let mode = 1;
+/**
+ * The mode the arrow indicators on the edges of the screen is currently in.
+ * 0 = Off,
+ * 1 = Defense,
+ * 2 = All (orthogonals & diagonals)
+ * 3 = All (including hippogonals, only used in variants using hippogonals)
+ */
+let mode: 0 | 1 | 2 | 3 = 1;
 
 /** Whether our mouse is currently hovering over one arrow indicator.
  * Could be used to cancel other mouse events. */
-let hovering = false;
+let hovering: boolean = false;
 
 /**
- * An object that stores the LegalMoves and model for rendering the legal move highlights
+ * An array storing the LegalMoves, model and other info, for rendering the legal move highlights
  * of piece arrow indicators currently being hovered over!
- * `{ '1,8': { legalMoves, model_NonCapture, model_Capture, color } }`
  */
-let piecesHoveredOver = {};
+const hoveredArrows: ArrowLegalMoves[] = [];
+
+
+// Functions ------------------------------------------------------------------------------
+
 
 /**
  * Returns the mode the arrow indicators on the edges of the screen is currently in.
- * 0 = Off, 1 = Defense, 2 = All
  * @returns {number} The current mode
  */
-function getMode() { return mode; }
+function getMode(): typeof mode {
+	return mode;
+}
 
 /**
  * Sets the rendering mode of the arrow indicators on the edges of the screen.
- * 0 = Off, 1 = Defense, 2 = All
- * @param {number} value - The new mode
  */
-function setMode(value) {
+function setMode(value: typeof mode) {
 	mode = value;
-	if (mode === 0) piecesHoveredOver = {}; // Erase, otherwise their legal move highlights continue to render
+	if (mode === 0) hoveredArrows.length = 0; // Erase, otherwise their legal move highlights continue to render
+}
+
+function toggleArrows() {
+	frametracker.onVisualChange();
+	mode++;
+	const gamefile = gameslot.getGamefile();
+	const hippogonalsPresent = gamefile !== undefined ? gamefile.startSnapshot.hippogonalsPresent : false;
+	const cap = hippogonalsPresent ? 3 : 2;
+	if (mode > cap) mode = 0; // Wrap back to zero
 }
 
 /**
  * Returns *true* if the mouse is hovering over any one arrow indicator.
- * @returns {boolean}
  */
-function isMouseHovering() { return hovering; }
+function isMouseHovering(): boolean {
+	return hovering;
+}
 
+
+/**
+ * Calculates what arrows should be visible this frame.
+ * 
+ * Needs to be done every frame, even if the mouse isn't moved,
+ * since actions such as rewinding/forwarding may change them,
+ * or board velocity.
+ */
 function update() {
 	if (mode === 0) return;
 
 	// generate model
-	model = undefined;
+	modelPictures = undefined;
 
 	// Are we zoomed in enough?
-	const scaleWhenAtLimit = ((camera.getScreenBoundingBox(false).right * 2) / camera.canvas.width) * window.devicePixelRatio * renderZoomLimit;
+	const scaleWhenAtLimit: number = ((camera.getScreenBoundingBox(false).right * 2) / camera.canvas.width) * window.devicePixelRatio * renderZoomLimitVirtualPixels;
 	if (movement.getBoardScale() < scaleWhenAtLimit) return;
 
 	modelArrows = undefined;
-	data = [];
-	dataArrows = [];
+	const data: number[] = [];
+	const dataArrows: number[] = [];
 
 	hovering = false;
 
 	// How do we find out what pieces are off-screen?
 
-	// If any part of the square is on screen, this box rounds to it.
-	const boundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
+	// If any part of the square is on screen, this box rounds outward to contain it.
+	const boundingBoxInt = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
 	// Same as above, but doesn't round
 	const boundingBoxFloat = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat(); 
 
@@ -129,54 +187,54 @@ function update() {
 
 	let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
 	let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guigameinfo.getHeightOfGameInfoBar());
-
 	// Reverse header and footer pads if we're viewing blacks side
-	if (perspective.getIsViewingBlackPerspective() && !perspective.getEnabled()) {
+	if (!perspective.getEnabled() && !gameslot.isLoadedGameViewingWhitePerspective()) {
 		const a = headerPad;
 		headerPad = footerPad;
 		footerPad = a;
 	}
 
-	const paddedBoundingBox = jsutil.deepCopyObject(boundingBoxFloat);
+	// Apply the padding to the bounding box
 	if (!perspective.getEnabled()) {
-		paddedBoundingBox.top -= space.convertWorldSpaceToGrid(headerPad);
-		paddedBoundingBox.bottom += space.convertWorldSpaceToGrid(footerPad);
+		boundingBoxFloat.top -= space.convertWorldSpaceToGrid(headerPad);
+		boundingBoxFloat.bottom += space.convertWorldSpaceToGrid(footerPad);
 	}
 
-	const gamefile = gameslot.getGamefile();
-	const slides = gamefile.startSnapshot.slidingPossible;
+	const gamefile = gameslot.getGamefile()!;
+	const slidesPossible = gamefile.startSnapshot.slidingPossible;
 
-	for (const line of slides) {
-		const perpendicular = [-line[1], line[0]];
-		const linestr = coordutil.getKeyFromCoords(line);
+	for (const slideDir of slidesPossible) {
+		const perpendicularSlideDir: Vec2 = [-slideDir[1], slideDir[0]]; // Rotates left 90deg
         
-		let boardCornerLeft = math.getAABBCornerOfLine(perpendicular,true);
-		let boardCornerRight = math.getAABBCornerOfLine(perpendicular,false);
+		const boardCornerLeft_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,true);
+		const boardCornerRight_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,false);
 
-		boardCornerLeft = math.getCornerOfBoundingBox(paddedBoundingBox,boardCornerLeft);
-		boardCornerRight = math.getCornerOfBoundingBox(paddedBoundingBox,boardCornerRight);
+		const boardCornerLeft: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerLeft_AB);
+		const boardCornerRight: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerRight_AB);
 
-		const boardSlidesRight = organizedlines.getCFromLine(line, boardCornerLeft);
-		const boardSlidesLeft = organizedlines.getCFromLine(line, boardCornerRight);
+		const boardSlidesRight = organizedlines.getCFromLine(slideDir, boardCornerLeft);
+		const boardSlidesLeft = organizedlines.getCFromLine(slideDir, boardCornerRight);
 
 		const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
 		const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
-		for (const key in gamefile.piecesOrganizedByLines[linestr]) {
-			const intsects = key.split("|").map(Number);
-			if (boardSlidesStart > intsects[0] || boardSlidesEnd < intsects[0]) continue;
-			const pieces = calcPiecesOffScreen(line, gamefile.piecesOrganizedByLines[linestr][key]);
+		// For all our lines in the game with this slope...
+		const slideDirKey = coordutil.getKeyFromCoords(slideDir);
+		for (const [key,piecesByDir] of Object.entries(gamefile.piecesOrganizedByLines[slideDirKey])) {
+			const [X,C] = key.split("|").map(Number);
+			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen
+			const pieces = calcPiecesOffScreen(slideDir, piecesByDir);
 
 			if (jsutil.isEmpty(pieces)) continue;
 
-			if (!slideArrows[linestr]) slideArrows[linestr] = {};
+			if (!slideArrows[slideDirKey]) slideArrows[slideDirKey] = {};
             
-			slideArrows[linestr][key] = pieces;
+			slideArrows[slideDirKey][key] = pieces;
 		}
 	}
 
-	function calcPiecesOffScreen(line, organizedline) {
+	function calcPiecesOffScreen(slideDir: Vec2, organizedline: PieceLinesByKey) {
 
-		const rightCorner = math.getCornerOfBoundingBox(paddedBoundingBox, math.getAABBCornerOfLine(line,false));
+		const rightCorner = math.getCornerOfBoundingBox(boundingBoxFloat, math.getAABBCornerOfLine(slideDir,false));
 
 		let left;
 		let right;
@@ -184,13 +242,13 @@ function update() {
 			if (!piece.coords) continue;
             
 			// Is the piece off-screen?
-			if (math.boxContainsSquare(boundingBox, piece.coords)) continue;
+			if (math.boxContainsSquare(boundingBoxInt, piece.coords)) continue;
             
 			const x = piece.coords[0];
 			const y = piece.coords[1];
-			const axis = line[0] === 0 ? 1 : 0;
+			const axis = slideDir[0] === 0 ? 1 : 0;
 
-			const rightSide = x > paddedBoundingBox.right || y > rightCorner[1] === (rightCorner[1] === paddedBoundingBox.top);
+			const rightSide = x > boundingBoxFloat.right || y > rightCorner[1] === (rightCorner[1] === boundingBoxFloat.top);
 			if (rightSide) {
 				if (!right) right = piece;
 				else if (piece.coords[axis] < right.coords[axis]) right = piece;
@@ -217,10 +275,10 @@ function update() {
 	let padding = (worldWidth / 2) + sidePadding * boardScale;
 	const cpadding = padding / boardScale;
 	{
-		paddedBoundingBox.top -= cpadding;
-		paddedBoundingBox.right -= cpadding;
-		paddedBoundingBox.bottom += cpadding;
-		paddedBoundingBox.left += cpadding;
+		boundingBoxFloat.top -= cpadding;
+		boundingBoxFloat.right -= cpadding;
+		boundingBoxFloat.bottom += cpadding;
+		boundingBoxFloat.left += cpadding;
 	}
 
 	/** A running list of of piece arrows being hovered over this frame, in the form: `{ type, coords, dir }` @type {Object[]} */
@@ -240,7 +298,7 @@ function update() {
 				if (piece.type === 'voidsN') continue;
 				const isLeft = side === "l";
 				const corner = math.getAABBCornerOfLine(direction, isLeft);
-				const renderCoords = math.getLineIntersectionEntryPoint(direction[0], direction[1], intersect, paddedBoundingBox, corner);
+				const renderCoords = math.getLineIntersectionEntryPoint(direction[0], direction[1], intersect, boundingBoxFloat, corner);
 				if (!renderCoords) continue;
 				const arrowDirection = isLeft ? [-direction[0],-direction[1]] : direction;
 				concatData(renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
@@ -254,9 +312,9 @@ function update() {
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves. 
 	const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => coordutil.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
-	for (const key of Object.keys(piecesHoveredOver)) {
+	for (const key of Object.keys(hoveredArrows)) {
 		if (piecesHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
-		delete piecesHoveredOver[key]; // No longer being hovered over
+		delete hoveredArrows[key]; // No longer being hovered over
 	}
 
 	if (data.length === 0) return;
@@ -265,7 +323,7 @@ function update() {
 		onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
 	}
     
-	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+	modelPictures = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	modelArrows = createModel(dataArrows, 2, "TRIANGLES", true);
 }
 
@@ -410,10 +468,10 @@ function applyTransform(points, rotation, translation) {
 
 function renderThem() {
 	if (mode === 0) return;
-	if (!model) return;
+	if (!modelPictures) return;
 
 	// render.renderModel(model, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet())
-	model.render();
+	modelPictures.render();
 	// render.renderModel(modelArrows, undefined, undefined, "TRIANGLES")
 	modelArrows.render();
 }
@@ -428,7 +486,7 @@ function renderThem() {
 function onPieceIndicatorHover(type, pieceCoords, direction) {
 	// Check if their legal moves and mesh have already been stored
 	const key = coordutil.getKeyFromCoords(pieceCoords);
-	if (key in piecesHoveredOver) return; // Legal moves and mesh already calculated.
+	if (key in hoveredArrows) return; // Legal moves and mesh already calculated.
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile();
@@ -446,7 +504,7 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
 
 	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(pieceCoords, thisPieceLegalMoves, color);
 	// Store both these objects inside piecesHoveredOver
-	piecesHoveredOver[key] = { legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color };
+	hoveredArrows[key] = { legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color };
 }
 
 /**
@@ -490,7 +548,7 @@ function renderEachHoveredPieceLegalMoves() {
 	const boardScale = movement.getBoardScale();
 	const scale = [boardScale, boardScale, 1];
 
-	for (const [key, value] of Object.entries(piecesHoveredOver)) { // 'x,y': { legalMoves, model, color }
+	for (const [key, value] of Object.entries(hoveredArrows)) { // 'x,y': { legalMoves, model, color }
 		// Skip it if the rider being hovered over IS the piece selected! (Its legal moves are already being rendered)
 		if (selection.isAPieceSelected()) {
 			const coords = coordutil.getCoordsFromKey(key);
@@ -508,11 +566,11 @@ function renderEachHoveredPieceLegalMoves() {
  * over to account for the new offset.
  */
 function regenModelsOfHoveredPieces() {
-	if (!Object.keys(piecesHoveredOver).length) return; // No arrows being hovered over
+	if (!Object.keys(hoveredArrows).length) return; // No arrows being hovered over
 
 	console.log("Updating models of hovered piece's legal moves..");
 
-	for (const [coordsKey, hoveredArrow] of Object.entries(piecesHoveredOver)) { // { legalMoves, model, color }
+	for (const [coordsKey, hoveredArrow] of Object.entries(hoveredArrows)) { // { legalMoves, model, color }
 		const coords = coordutil.getCoordsFromKey(coordsKey);
 
 		// Calculate the mesh...
@@ -529,15 +587,17 @@ function regenModelsOfHoveredPieces() {
  * This is typically called when a move is made in-game, so that the arrows' legal moves don't leak from move to move.
  */
 function clearListOfHoveredPieces() {
-	for (const hoveredPieceKey in piecesHoveredOver) {
-		delete piecesHoveredOver[hoveredPieceKey];
+	for (const hoveredPieceKey in hoveredArrows) {
+		delete hoveredArrows[hoveredPieceKey];
 	}
 }
 
 export default {
 	getMode,
-	update,
 	setMode,
+	toggleArrows,
+	
+	update,
 	renderThem,
 	isMouseHovering,
 	renderEachHoveredPieceLegalMoves,
