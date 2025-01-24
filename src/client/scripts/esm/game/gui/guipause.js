@@ -121,7 +121,7 @@ function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = 
 
 function initListeners() {
 	element_resume.addEventListener('click', callback_Resume);
-	element_pointers.addEventListener('click', callback_TogglePointers);
+	element_pointers.addEventListener('click', callback_ToggleArrows);
 	element_copygame.addEventListener('click', copypastegame.callbackCopy);
 	element_pastegame.addEventListener('click', copypastegame.callbackPaste);
 	element_mainmenu.addEventListener('click', callback_MainMenu);
@@ -131,7 +131,7 @@ function initListeners() {
 
 function closeListeners() {
 	element_resume.removeEventListener('click', callback_Resume);
-	element_pointers.removeEventListener('click', callback_TogglePointers);
+	element_pointers.removeEventListener('click', callback_ToggleArrows);
 	element_copygame.removeEventListener('click', copypastegame.callbackCopy);
 	element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
 	element_mainmenu.removeEventListener('click', callback_MainMenu);
@@ -174,15 +174,13 @@ function callback_OfferDraw() {
 	statustext.showStatus("Can't offer draw.");
 }
 
-function callback_TogglePointers() {
-	frametracker.onVisualChange();
-	let mode = arrows.getMode();
-	mode++;
-	if (mode > 2) mode = 0;
-	arrows.setMode(mode);
+function callback_ToggleArrows() {
+	arrows.toggleArrows();
+	const mode = arrows.getMode();
 	const text = mode === 0 ? translations.arrows_off
-                : mode === 1 ? translations.arrows_defense
-                            : translations.arrows_all;
+               : mode === 1 ? translations.arrows_defense
+			   : mode === 2 ? translations.arrows_all
+                            : translations.arrows_all_hippogonals;
 	element_pointers.textContent = text;
 	if (!isPaused) statustext.showStatus(translations.toggled + " " + text);
 }
@@ -200,5 +198,5 @@ export default {
 	onReceiveOpponentsMove,
 	updateTextOfMainMenuButton,
 	callback_Resume,
-	callback_TogglePointers,
+	callback_ToggleArrows,
 };

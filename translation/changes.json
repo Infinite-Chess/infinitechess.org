@@ -2,7 +2,8 @@
 	"29": {
 		"note": [
 			"Added CoaIP_HO and Trappist_1, lines 230-231. These contain the names of the new variants.",
-			"Added Confined_Classical, line 213."
+			"Added Confined_Classical, line 213.",
+			"Added arrows_all_hippogonals, line 302"
 		],
 		"changes": []
 	},

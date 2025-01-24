@@ -26,6 +26,13 @@ interface BoundingBox {
 /** A length-2 number array. Commonly used for storing directions. */
 type Vec2 = [number,number]
 
+/** 
+ * A pair of x & y vectors, represented in a string, separated by a `,`.
+ * 
+ * This is often used as the key for a slide direction in an object.
+ */
+type Vec2Key = `${number},${number}`
+
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
 type Vec3 = [number,number,number]
 
@@ -283,6 +290,13 @@ function areLinesCollinear(lines: Vec2[]): boolean {
 	return true;
 }
 
+/**
+ * Returns the key string of the coordinates: [dx,dy] => 'dx,dy'
+ */
+function getKeyFromVec2(coords: Vec2): Vec2Key {
+	return `${coords[0]},${coords[1]}`;
+}
+
 
 // Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
 
@@ -496,6 +510,7 @@ export default {
 	getCornerOfBoundingBox,
 	getLineIntersectionEntryPoint,
 	areLinesCollinear,
+	getKeyFromVec2,
 	GCD,
 	LCM,
 	euclideanDistance,
@@ -516,6 +531,7 @@ export default {
 export type {
 	BoundingBox,
 	Vec2,
+	Vec2Key,
 	Vec3,
 	Corner,
 };

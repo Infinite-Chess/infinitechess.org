@@ -18,6 +18,7 @@ import typeutil from '../util/typeutil.js';
 import type gamefile from './gamefile.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Piece } from './boardchanges.js';
+import type { Vec2 } from '../../util/math.js';
 
 
 
@@ -340,6 +341,11 @@ function getXFromLine(step: Coords, coords: Coords): number {
 	return math.posMod(coordAxis, deltaAxis);
 }
 
+/** Splits the `C` value out of the line key */
+function getCFromKey(lineKey: LineKey): number {
+	return Number(lineKey.split('|')[0]);
+}
+
 /**
  * Tests if the provided gamefile has colinear organized lines present in the game.
  * This can occur if there are sliders that can move in the same exact direction as others.
@@ -347,7 +353,7 @@ function getXFromLine(step: Coords, coords: Coords): number {
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
  */
-function areColinearSlidesPresentInGame(gamefile: gamefile) {
+function areColinearSlidesPresentInGame(gamefile: gamefile): boolean {
 	const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
 
 	// How to know if 2 lines are colinear?
@@ -371,12 +377,26 @@ function areColinearSlidesPresentInGame(gamefile: gamefile) {
 	return false;
 }
 
+/**
+ * Tests if the provided gamefile has hippogonal lines present in the game.
+ * True if there are knightriders or higher riders.
+ */
+function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
+	for (let i = 0; i < slidingPossible.length; i++) {
+		const thisSlideDir: Vec2 = slidingPossible[i]!;
+		if (Math.abs(thisSlideDir[0]) > 1) return true;
+		if (Math.abs(thisSlideDir[1]) > 1) return true;
+	}
+	return false;
+}
+
 export type {
 	PooledArray,
 	PiecesByKey,
 	PiecesByType,
 	PieceLinesByKey,
-	LinesByStep
+	LinesByStep,
+	LineKey,
 };
 
 export default {
@@ -388,5 +408,7 @@ export default {
 	buildStateFromKeyList,
 	getKeyFromLine,
 	getCFromLine,
+	getCFromKey,
 	areColinearSlidesPresentInGame,
+	areHippogonalsPresentInGame,
 };
