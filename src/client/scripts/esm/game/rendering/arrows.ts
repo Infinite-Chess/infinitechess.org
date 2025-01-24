@@ -9,10 +9,13 @@
 
 import type { BufferModel, BufferModelInstanced } from './buffermodel.js';
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
+// @ts-ignore
 import type { LegalMoves } from '../chess/selection.js';
 import type { Color } from '../../chess/util/colorutil.js';
-import type { Corner, Vec2 } from '../../util/math.js';
-import type { LinesByStep, PieceLinesByKey } from '../../chess/logic/organizedlines.js';
+import type { Corner, Vec2, Vec2Key } from '../../util/math.js';
+import type { LineKey, LinesByStep, PieceLinesByKey } from '../../chess/logic/organizedlines.js';
+// @ts-ignore
+import type gamefile from '../../chess/logic/gamefile.js';
 
 import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
@@ -27,6 +30,7 @@ import organizedlines from '../../chess/logic/organizedlines.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import legalmovehighlights from './highlights/legalmovehighlights.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
+// @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
 import legalmoves from '../../chess/logic/legalmoves.js';
@@ -60,7 +64,7 @@ import frametracker from './frametracker.js';
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
 interface ArrowLegalMoves {
 	/** The Piece this arrow is pointing to, including its coords & type. */
-	piece: Piece,
+	// piece: Piece,
 	/** The calculated legal moves of the piece. */
 	legalMoves: LegalMoves,
 	/** The buffer model for rendering the non-capturing legal moves of the piece. */
@@ -114,7 +118,7 @@ let hovering: boolean = false;
  * An array storing the LegalMoves, model and other info, for rendering the legal move highlights
  * of piece arrow indicators currently being hovered over!
  */
-const hoveredArrows: ArrowLegalMoves[] = [];
+let hoveredArrows: Record<CoordsKey, ArrowLegalMoves> = {};
 
 
 // Functions ------------------------------------------------------------------------------
@@ -133,7 +137,7 @@ function getMode(): typeof mode {
  */
 function setMode(value: typeof mode) {
 	mode = value;
-	if (mode === 0) hoveredArrows.length = 0; // Erase, otherwise their legal move highlights continue to render
+	if (mode === 0) hoveredArrows = {}; // Erase, otherwise their legal move highlights continue to render
 }
 
 function toggleArrows() {
@@ -183,7 +187,7 @@ function update() {
 	// Same as above, but doesn't round
 	const boundingBoxFloat = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat(); 
 
-	const slideArrows: { [vec2Key: CoordsKey]: { [lineKey: string]: { l?: Piece, r?: Piece } } } = {};
+	const slideArrows: { [vec2Key: Vec2Key]: { [lineKey: string]: { l?: Piece, r?: Piece } } } = {};
 
 	let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
 	let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guigameinfo.getHeightOfGameInfoBar());
@@ -219,16 +223,16 @@ function update() {
 		const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
 		// For all our lines in the game with this slope...
 		const slideDirKey = coordutil.getKeyFromCoords(slideDir);
-		for (const [key,organizedLine] of Object.entries(gamefile.piecesOrganizedByLines[slideDirKey])) {
-			const [X,C] = key.split("|").map(Number);
+		for (const [lineKey,organizedLine] of Object.entries(gamefile.piecesOrganizedByLines[slideDirKey])) {
+			const X = organizedlines.getCFromKey(lineKey as LineKey);
 			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen
-			const pieces = calcPiecesOffScreen(slideDir, organizedLine);
+			const pieces = calcPiecesOffScreen(slideDir, organizedLine as Piece[]);
 
 			if (jsutil.isEmpty(pieces)) continue; // This line of pieces is empty
 
 			if (!slideArrows[slideDirKey]) slideArrows[slideDirKey] = {};
             
-			slideArrows[slideDirKey][key] = pieces;
+			slideArrows[slideDirKey][lineKey] = pieces;
 		}
 	}
 
@@ -280,17 +284,19 @@ function update() {
 	boundingBoxFloat.left += cpadding;
 
 	/** A running list of of piece arrows being hovered over this frame */
-	const piecesHoveringOverThisFrame: Array<{ type: string, coords: Coords, dir: Vec2 }> = [];
+	const piecesHoveringOverThisFrame: Array<Piece> = [];
 
 	for (const strline in slideArrows) {
-		const line = coordutil.getCoordsFromKey(strline as CoordsKey);
-		iterateThroughLines(slideArrows[strline], line);
+		const line = coordutil.getCoordsFromKey(strline as Vec2Key);
+		iterateThroughLines(slideArrows[strline as Vec2Key]!, line);
 	}
 
 	function iterateThroughLines(lines: { [lineKey: string]: { l?: Piece; r?: Piece } }, direction: Vec2) {
 		for (const lineKey in lines) {
 			for (const side in lines[lineKey]) { // 'r' | 'l'
-				const piece: Piece = lines[lineKey][side]; //
+				// @ts-ignore
+				const piece: Piece | undefined = lines[lineKey][side]; //
+				if (piece === undefined) continue;
 				const intersect = Number(lineKey.split("|")[0]); // 'X|C' => X (the nearest X on or after y=0 that the line intersects)
 				if (piece.type === 'voidsN') continue;
 				const isLeft = side === "l";
@@ -298,7 +304,7 @@ function update() {
 				const renderCoords = math.getLineIntersectionEntryPoint(direction[0], direction[1], intersect, boundingBoxFloat, corner);
 				if (!renderCoords) continue;
 				const arrowDirection: Vec2 = isLeft ? [-direction[0],-direction[1]] : direction;
-				concatData(renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
+				concatData(data, dataArrows, renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
 			}
 		}
 	}
@@ -310,15 +316,16 @@ function update() {
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves. 
 	const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => coordutil.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
+	
 	for (const key of Object.keys(hoveredArrows)) {
-		if (piecesHoveringOverThisFrame_Keys.includes(key as CoordsKey)) continue; // Still being hovered over
-		delete hoveredArrows[key]; // No longer being hovered over
+		if (piecesHoveringOverThisFrame_Keys.includes(key as Vec2Key)) continue; // Still being hovered over
+		delete hoveredArrows[key as Vec2Key]; // No longer being hovered over
 	}
 
 	if (data.length === 0) return; // No visible arrows, don't generate the model
 
 	for (const pieceHovered of piecesHoveringOverThisFrame) {
-		onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords, pieceHovered.dir); // Generate their legal moves and highlight model
+		onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords); // Generate their legal moves and highlight model
 	}
     
 	modelPictures = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
@@ -332,48 +339,65 @@ function update() {
  * Will not return anything as it alters the object it is given.
  * @param {Object} arrows 
  */
-function removeUnnecessaryArrows(arrows) {
+function removeUnnecessaryArrows(arrows: { [vec2Key: Vec2Key]: { [lineKey: LineKey]: { l?: Piece, r?: Piece } } }) {
 	if (mode === 0) return;
 
-	const gamefile = gameslot.getGamefile();
-	let attacklines = [];
+	const gamefile = gameslot.getGamefile()!;
+	let attacklines: Array<Vec2Key> = [];
 	attack: {
 		if (mode !== 2) break attack;
 		const piece = selection.getPieceSelected();
 		if (!piece) break attack;
 		const slidingMoveset = legalmoves.getPieceMoveset(gamefile, piece.type).sliding;
 		if (!slidingMoveset) break attack;
-		attacklines = Object.keys(slidingMoveset);
+		attacklines = Object.keys(slidingMoveset) as Array<Vec2Key>;
 	}
-	for (const strline in arrows) {
-		if (attacklines.includes(strline)) continue;
-		removeTypesWithIncorrectMoveset(arrows[strline],strline);
-		if (jsutil.isEmpty(arrows[strline])) delete arrows[strline];
+	for (const direction in arrows) {
+		if (attacklines.includes(direction as Vec2Key)) continue;
+		removeTypesWithIncorrectMoveset(arrows[direction as Vec2Key]!, direction as Vec2Key);
+		if (jsutil.isEmpty(arrows[direction as Vec2Key]!)) delete arrows[direction as Vec2Key];
 	}
 
-	function removeTypesWithIncorrectMoveset(object, direction) { // horzRight, vertical/diagonalUp
-		for (const key in object) {
-			// { type, coords }
-			for (const side in object[key]) {
-				const type = object[key][side].type;
-				if (!doesTypeHaveMoveset(gamefile, type, direction)) delete object[key][side];
+	function removeTypesWithIncorrectMoveset(object: { [lineKey: LineKey]: { l?: Piece, r?: Piece } }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
+		for (const key in object) { // LineKey
+			for (const side in object[key as LineKey]) { // l: Piece | r: Piece
+				// @ts-ignore
+				const piece: Piece | undefined = object[key as LineKey][side];
+				if (piece === undefined) continue;
+				const type = piece.type;
+				// @ts-ignore
+				if (!doesTypeHaveMoveset(gamefile, type, direction)) delete object[key as LineKey][side];
 			}
-			if (jsutil.isEmpty(object[key])) delete object[key];
+			if (jsutil.isEmpty(object[key as LineKey]!)) delete object[key as LineKey];
 		}
 	}
 
-	function doesTypeHaveMoveset(gamefile, type, direction) {
+	/** Whether the given type of piece can slide in the direction provided. */
+	function doesTypeHaveMoveset(gamefile: gamefile, type: string, direction: Vec2Key) {
 		const moveset = legalmoves.getPieceMoveset(gamefile, type);
 		if (!moveset.sliding) return false;
 		return moveset.sliding[direction] !== undefined;
 	}
 }
 
-function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCoords, direction, piecesHoveringOverThisFrame) {
+/**
+ * 
+ * @param data 
+ * @param dataArrows 
+ * @param renderCoords 
+ * @param type 
+ * @param paddingDir 
+ * @param worldWidth - Of the piece image to render
+ * @param padding 
+ * @param pieceCoords 
+ * @param direction 
+ * @param piecesHoveringOverThisFrame 
+ */
+function concatData(data: number[], dataArrows: number[], renderCoords: Coords, type: string, paddingDir: Corner, worldWidth: number, padding: number, pieceCoords: Coords, direction: Vec2, piecesHoveringOverThisFrame: Array<Piece>) {
 	const worldHalfWidth = worldWidth / 2;
 
 	// Convert to world-space
-	const worldCoords = space.convertCoordToWorldSpace(renderCoords);
+	const worldCoords: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
@@ -407,13 +431,13 @@ function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCo
 	const mouseWorldX = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[0] : mouseWorldLocation[0];
 	const mouseWorldY = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1];
 	if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) { // Mouse is hovering over
-		piecesHoveringOverThisFrame.push({ type, coords: pieceCoords, dir: direction });
+		piecesHoveringOverThisFrame.push({ type, coords: pieceCoords } as Piece);
 		thisOpacity = 1;
 		hovering = true;
 		// If we also clicked, then teleport!
 		if (input.isMouseDown_Left() || input.getTouchClicked()) {
 			const startCoords = movement.getBoardPos();
-			let telCoords;
+			let telCoords: Coords;
 			if      (paddingDir === 'right' || paddingDir === 'left') telCoords = [pieceCoords[0], startCoords[1]];
 			else if (paddingDir === 'top' || paddingDir === 'bottom') telCoords = [startCoords[0], pieceCoords[1]];
 			else                                                      telCoords = [pieceCoords[0], pieceCoords[1]];
@@ -430,7 +454,7 @@ function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCo
 
 	const dist = worldHalfWidth * 1;
 	const size = 0.3 * worldHalfWidth;
-	const points = [
+	const points: Coords[] = [
         [dist, -size],
         [dist, +size],
         [dist + size, 0]
@@ -440,19 +464,24 @@ function concatData(renderCoords, type, paddingDir, worldWidth, padding, pieceCo
 	const ad = applyTransform(points, angle, worldCoords);
 
 	for (let i = 0; i < ad.length; i++) {
-		const thisPoint = ad[i];
-		//                          x             y                color
+		const thisPoint = ad[i]!;
+		//                   x             y             color
 		dataArrows.push(thisPoint[0], thisPoint[1], 0,0,0, thisOpacity );
 	}
 }
 
-function applyTransform(points, rotation, translation) {
+/**
+ * Applies a rotational & translational transformation to an array of points.
+ * 
+ * TODO: Move to maybe bufferdata?
+ */
+function applyTransform(points: Coords[], rotation: number, translation: Coords): Coords[] {
 	// convert rotation angle to radians
+	const cos = Math.cos(rotation);
+	const sin = Math.sin(rotation);
     
 	// apply rotation matrix and translation vector to each point
-	const transformedPoints = points.map(point => {
-		const cos = Math.cos(rotation);
-		const sin = Math.sin(rotation);
+	const transformedPoints: Coords[] = points.map(point => {
 		const xRot = point[0] * cos - point[1] * sin;
 		const yRot = point[0] * sin + point[1] * cos;
 		const xTrans = xRot + translation[0];
@@ -465,8 +494,8 @@ function applyTransform(points, rotation, translation) {
 }
 
 function renderThem() {
-	if (mode === 0) return;
-	if (!modelPictures) return;
+	// if (mode === 0) return;
+	if (modelPictures === undefined || modelArrows === undefined) return;
 
 	// render.renderModel(model, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet())
 	modelPictures.render();
@@ -477,18 +506,17 @@ function renderThem() {
 /**
  * Call when a piece's arrow is hovered over.
  * Calculates their legal moves and model for rendering them.
- * @param {string} type - The type of piece of this arrow indicator
- * @param {number[]} pieceCoords - The coordinates of the piece the arrow is pointing to
- * @param {number[]} direction - The direction/line the arrow is pointing: `[dx,dy]`
+ * @param type - The type of piece of this arrow indicator
+ * @param pieceCoords - The coordinates of the piece the arrow is pointing to
  */
-function onPieceIndicatorHover(type, pieceCoords, direction) {
+function onPieceIndicatorHover(type: string, pieceCoords: Coords) {
 	// Check if their legal moves and mesh have already been stored
 	const key = coordutil.getKeyFromCoords(pieceCoords);
-	if (key in hoveredArrows) return console.error("Moves alreadfy stored"); // Legal moves and mesh already calculated.
+	if (key in hoveredArrows) return; // Legal moves and mesh already calculated.
 
 	// Calculate their legal moves and mesh!
-	const gamefile = gameslot.getGamefile();
-	const thisRider = gamefileutility.getPieceAtCoords(gamefile, pieceCoords);
+	const gamefile = gameslot.getGamefile()!;
+	const thisRider = gamefileutility.getPieceAtCoords(gamefile, pieceCoords)!;
 	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
 
 	// Calculate the mesh...
@@ -509,24 +537,24 @@ function onPieceIndicatorHover(type, pieceCoords, direction) {
  * Tests if the piece type can move in the specified direction in the game.
  * This works even with directions in the negative-x direction.
  * For example, a piece can move [-2,-1] if it has the slide moveset [2,1].
- * @param {string} type - 'knightridersW'
- * @param {string} direction - [dx,dy]  where dx can be negative
+ * @param type - 'knightridersW'
+ * @param direction - [dx,dy]  where dx can be negative
  */
-function doesTypeHaveDirection(type, direction) {
-	const moveset = legalmoves.getPieceMoveset(gameslot.getGamefile(), type);
+function doesTypeHaveDirection(type: string, direction: Vec2) {
+	const moveset = legalmoves.getPieceMoveset(gameslot.getGamefile()!, type);
 	if (!moveset.sliding) return false;
 
 	const absoluteDirection = absoluteValueOfDirection(direction); // 'dx,dy'  where dx is always positive
-	const key = coordutil.getKeyFromCoords(absoluteDirection);
+	const key = math.getKeyFromVec2(absoluteDirection);
 	return key in moveset.sliding;
 }
 
 /**
  * Returns the absolute value of the direction/line.
  * If it's in the negative-x direction, it negates it.
- * @param {string} direction - `[dx,dy]`
+ * @param direction - `[dx,dy]`
  */
-function absoluteValueOfDirection(direction) {
+function absoluteValueOfDirection(direction: Vec2): Vec2 {
 	let [dx,dy] = direction;
 	if (dx < 0 || dx === 0 && dy < 0) { // Negate
 		dx *= -1;
@@ -538,19 +566,19 @@ function absoluteValueOfDirection(direction) {
 function renderEachHoveredPieceLegalMoves() {
 	const boardPos = movement.getBoardPos();
 	const model_Offset = legalmovehighlights.getOffset();
-	const position = [
+	const position: [number,number,number] = [
         -boardPos[0] + model_Offset[0], // Add the highlights offset
         -boardPos[1] + model_Offset[1],
         0
     ];
 	const boardScale = movement.getBoardScale();
-	const scale = [boardScale, boardScale, 1];
+	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
 	for (const [key, value] of Object.entries(hoveredArrows)) { // 'x,y': { legalMoves, model, color }
 		// Skip it if the rider being hovered over IS the piece selected! (Its legal moves are already being rendered)
 		if (selection.isAPieceSelected()) {
-			const coords = coordutil.getCoordsFromKey(key);
-			const pieceSelectedCoords = selection.getPieceSelected().coords;
+			const coords = coordutil.getCoordsFromKey(key as CoordsKey);
+			const pieceSelectedCoords = selection.getPieceSelected()!.coords;
 			if (coordutil.areCoordsEqual(coords, pieceSelectedCoords)) continue; // Skip (already rendering its legal moves, because it's selected)
 		}
 		value.model_NonCapture.render(position, scale);
@@ -569,7 +597,7 @@ function regenModelsOfHoveredPieces() {
 	console.log("Updating models of hovered piece's legal moves..");
 
 	for (const [coordsKey, hoveredArrow] of Object.entries(hoveredArrows)) { // { legalMoves, model, color }
-		const coords = coordutil.getCoordsFromKey(coordsKey);
+		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
 
 		// Calculate the mesh...
 		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(coords, hoveredArrow.legalMoves, hoveredArrow.color);
@@ -586,7 +614,7 @@ function regenModelsOfHoveredPieces() {
  */
 function clearListOfHoveredPieces() {
 	for (const hoveredPieceKey in hoveredArrows) {
-		delete hoveredArrows[hoveredPieceKey];
+		delete hoveredArrows[hoveredPieceKey as CoordsKey];
 	}
 }
 
