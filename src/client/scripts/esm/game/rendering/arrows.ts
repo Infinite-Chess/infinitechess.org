@@ -322,23 +322,14 @@ function addArrowsPaddingToBoundingBox(boundingBoxFloat: BoundingBox) {
  * Generates all the arrows for a game, as if All (plus hippogonals) mode was on.
  */
 function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox): SlideArrows {
+	/** The running list of arrows that should be visible */
 	const slideArrows: SlideArrows = {};
-
-	/**
-	 * TODO:
-	 * 
-	 * Depending on what mode we're on, calculate what slides we should ignore, and ONLY
-	 * add arrows for the non-ignored slides!
-	 */
-
-
+	/** All lines excluding hippogonals (or ones included in mode 3) */
 	const orthogsAndDiags: Vec2[] = [[1,0],[0,1],[1,1],[1,-1]];
-
 	const gamefile = gameslot.getGamefile()!;
-	const slidesPossible = gamefile.startSnapshot.slidingPossible;
-	slidesPossible.forEach(slide => { // For each slide direction in the game...
+	gamefile.startSnapshot.slidingPossible.forEach(slide => { // For each slide direction in the game...
 		// Are arrows visible for this slide direction (correct mode enabled)?
-		if ((mode === 1 || mode === 2) && !orthogsAndDiags.some(thisSlide => coordutil.areCoordsEqual_noValidate(slide, thisSlide))) {
+		if ((mode === 1 || mode === 2) && !orthogsAndDiags.some(thisSlide => coordutil.areCoordsEqual_noValidate(thisSlide, slide))) {
 			console.log(`Skipping calculating arrows for slide ${JSON.stringify(slide)}, it is not visible in the current mode.`);
 			return;
 		}
