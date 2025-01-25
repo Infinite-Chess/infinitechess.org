@@ -8,6 +8,7 @@ import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
 import organizedlines from './organizedlines.js';
+import movesets from './movesets.js';
 // Import End
 
 /** 
@@ -72,6 +73,8 @@ function initExistingTypes(gamefile) {
 function initSlidingMoves(gamefile) {
 	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
 	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
+	gamefile.startSnapshot.atleastOneCustomBlocking = movesets.doMovesetsContainAtleastOneCustomBlocking(gamefile.pieceMovesets);
+	console.log("Game contains atleast one custom blocking: " + gamefile.startSnapshot.atleastOneCustomBlocking);
 }
 
 /**

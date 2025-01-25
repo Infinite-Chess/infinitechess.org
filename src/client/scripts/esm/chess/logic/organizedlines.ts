@@ -342,7 +342,7 @@ function getXFromLine(step: Coords, coords: Coords): number {
 }
 
 /** Splits the `C` value out of the line key */
-function getCFromKey(lineKey: LineKey): number {
+function getXFromKey(lineKey: LineKey): number {
 	return Number(lineKey.split('|')[0]);
 }
 
@@ -408,7 +408,7 @@ export default {
 	buildStateFromKeyList,
 	getKeyFromLine,
 	getCFromLine,
-	getCFromKey,
+	getXFromKey,
 	areColinearSlidesPresentInGame,
 	areHippogonalsPresentInGame,
 };
